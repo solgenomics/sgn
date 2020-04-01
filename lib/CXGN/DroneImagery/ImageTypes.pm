@@ -44,7 +44,8 @@ sub get_all_project_md_image_observation_unit_plot_polygon_types {
         nir => 'NIR (780-3000nm)',
         mir => 'MIR (3000-50000nm)',
         fir => 'FIR (50000-1000000nm)',
-        tir => 'Thermal IR (9000-14000nm)'
+        tir => 'Thermal IR (9000-14000nm)',
+        raster_dsm => 'Raster DSM'
     );
     return {
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_bw_imagery', 'project_md_image')->cvterm_id() => {
@@ -92,6 +93,9 @@ sub get_all_project_md_image_observation_unit_plot_polygon_types {
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_tir_imagery', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_tir_imagery', channels=>[0], corresponding_channel=>0, display_name=>'Thermal IR Image(s)', ISOL_name=>'Thermal IR Denoised Original Image|ISOL:0000114', drone_run_project_types=>[$project_type_lookup{tir}], standard_process=>['minimal']
         },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_raster_dsm_imagery', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_raster_dsm_imagery', channels=>[0], corresponding_channel=>0, display_name=>'Raster DSM Image(s)', ISOL_name=>'Raster DSM Denoised Original Image|ISOL:0000321', drone_run_project_types=>[$project_type_lookup{raster_dsm}], standard_process=>['minimal']
+        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_bw_background_removed_threshold_imagery', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_bw_background_removed_threshold_imagery', channels=>[0], corresponding_channel=>0, display_name=>'Black and White Image(s) with Background Removed via Threshold', ISOL_name=>'Thresholded Black and White Denoised Original Image|ISOL:0000117', drone_run_project_types=>[$project_type_lookup{black_and_white}], standard_process=>['minimal']
         },
@@ -127,6 +131,9 @@ sub get_all_project_md_image_observation_unit_plot_polygon_types {
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_tir_background_removed_threshold_imagery', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_tir_background_removed_threshold_imagery', channels=>[0], corresponding_channel=>0, display_name=>'Thermal IR Image(s) with Background Removed via Threshold', ISOL_name=>'Thresholded Thermal IR Denoised Original Image|ISOL:0000128', drone_run_project_types=>[$project_type_lookup{tir}], standard_process=>['minimal']
+        },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_raster_dsm_background_removed_threshold_imagery', 'project_md_image')->cvterm_id() => {
+            name=>'observation_unit_polygon_raster_dsm_background_removed_threshold_imagery', channels=>[0], corresponding_channel=>0, display_name=>'Raster DSM Image(s) with Background Removed via Threshold', ISOL_name=>'Thresholded Raster DSM Denoised Original Image|ISOL:0000322', drone_run_project_types=>[$project_type_lookup{raster_dsm}], standard_process=>['minimal']
         },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_tgi_imagery', 'project_md_image')->cvterm_id() => {
             name=>'observation_unit_polygon_tgi_imagery', channels=>[0], corresponding_channel=>0, display_name=>'TGI Vegetative Index Image(s)', ISOL_name=>'TGI Vegetative Index Image|ISOL:0000129', drone_run_project_types=>[$project_type_lookup{rgb_color_image}, $project_type_lookup{bgr}], standard_process=>['minimal', 'minimal_vi']
@@ -909,6 +916,15 @@ sub get_base_imagery_observation_unit_plot_polygon_term_map {
                 }
             }
         },
+        'Raster DSM' => {
+            imagery_types => {
+                threshold_background => ['threshold_background_removed_stitched_drone_imagery_raster_dsm']
+            },
+            observation_unit_plot_polygon_types => {
+                base => ['observation_unit_polygon_raster_dsm_imagery'],
+                threshold_background => ['observation_unit_polygon_raster_dsm_background_removed_threshold_imagery']
+            }
+        },
         'Black and White Image' => {
             imagery_types => {
                 threshold_background => ['threshold_background_removed_stitched_drone_imagery_bw'],
@@ -1577,6 +1593,9 @@ sub get_all_project_md_image_types_whole_images {
         SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_stitched_drone_imagery_tir', 'project_md_image')->cvterm_id() => {
             name=>'threshold_background_removed_stitched_drone_imagery_tir', channels=>[0], corresponding_channel=>0
         },
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_stitched_drone_imagery_raster_dsm', 'project_md_image')->cvterm_id() => {
+            name=>'threshold_background_removed_stitched_drone_imagery_raster_dsm', channels=>[0], corresponding_channel=>0
+        },
         SGN::Model::Cvterm->get_cvterm_row($schema, 'threshold_background_removed_stitched_drone_imagery_bw', 'project_md_image')->cvterm_id() => {
             name=>'threshold_background_removed_stitched_drone_imagery_bw', channels=>[0], corresponding_channel=>0
         },
@@ -2145,6 +2164,11 @@ sub get_imagery_attribute_map {
             name => 'threshold',
             key => 'drone_run_band_background_removed_threshold',
             observation_unit_plot_polygon_type => 'observation_unit_polygon_tir_background_removed_threshold_imagery'
+        },
+        'threshold_background_removed_stitched_drone_imagery_raster_dsm' => {
+            name => 'threshold',
+            key => 'drone_run_band_background_removed_threshold',
+            observation_unit_plot_polygon_type => 'observation_unit_polygon_raster_dsm_background_removed_threshold_imagery'
         },
         'threshold_background_removed_stitched_drone_imagery_bw' => {
             name => 'threshold',

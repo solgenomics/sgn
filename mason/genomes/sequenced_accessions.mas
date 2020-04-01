@@ -27,55 +27,99 @@
 </div>
 <!-- Dialog for adding sequencing info -->
 
- <div class="modal fade" id="edit_sequencing_info_dialog" role="dialog">
-<div class="modal-dialog" role="modal">
- <div class="modal-content">
-
-   <div class="modal-header">
-     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <div aria-hidden="true">&times;</div>
-     </button>
-
-         <h5 class="modal-title">Enter sequencing info for accession:</h5>
-   </div> <!-- modal-header -->
-<form id="sequencing_info_form">
-   <div class="modal-body">
-         <div class="form-search">
-           <input type="text" class="form-control" alt="Organization" placeholder="Sequencing organization" name="organization" id="organization" size="30"/>
-<br />
-       <input type="text" class="form-control mb-4" placeholder="Sequencing year" name="sequencing_year" id="sequencing_year" size="6"></input><br />
-       <div class="input-group">
-             <span class="input-group-addon" id="https-prefix">https:&sol;&sol;</span>
-         <input type="text" class="form-control" placeholder="Website" aria-label="https-prefix" aria-describedby="https-prefix" name="website"  id="website" size="10" />
-</div> <!-- input-group -->
-<br />
-   <input type="text" class="form-control" placeholder="Contact email" name="contact_email"  id="contact_email" size="10" />
-<br />
-<input type="text" class="form-control" placeholder="Genbank Accession" name="genbank_accession"  id="genbank_accession" size="10" />
-<br />
-<input type="text" class="form-control" placeholder="Funding organization" name="funded_by"  id="funded_by" size="10" />
-<br />
-<input type="text" class="form-control" placeholder="Funding organization project ID"  name="funder_project_id" id="funder_project_id" size="10" />
-   <br />
-          <div class="input-group mb-3">
-        <input type="text" class="form-control" placeholder="Jbrowse link" name="jbrowse_link" id="jbrowse_link" size="20"></input><br />
-      </div> <!-- input group -->
-          <br />
-      <div class="input-group mb-3">
-        <input type="text" class="form-control" placeholder="BLAST link" name="blast_link" id="blast_link" size="20"></input><br />
-</div> <!-- input group -->
-
-<input id="stock_id"  name="stock_id" value="`+stock_id+`" />
-<input type="hidden" id="stockprop_id"  name="stockprop_id" value="`+stockprop_id+`" />
-   </div> <!-- form-search -->
-  </div> <!-- modal-body -->
-  <div class="modal-footer">
-        <button id="save_sequencing_info_button" type="submit" class="btn btn-primary">Save changes</button>
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-  </div> <!-- modal-footer -->
-</form> <!-- sequencing_info form -->
-</div> <!-- modal-content -->
-</div> <!-- modal-dialog -->
+<div class="modal fade" id="edit_sequencing_info_dialog" role="dialog">
+    <div class="modal-dialog" role="modal">
+        <div class="form-search">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><div aria-hidden="true">&times;</div></button>
+                    <h5 class="modal-title">Enter sequencing info for accession:</h5>
+                </div> <!-- modal-header -->
+                <form id="sequencing_info_form" class="form-horizontal">
+                    <div class="modal-body">
+                        <div class="row">
+                            <label class="col-sm-3 control-label">Organization: </label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" alt="Organization" placeholder="Sequencing organization" name="organization" id="organization" size="30" /><br />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="col-sm-3 control-label">Year: </label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" placeholder="Sequencing year" name="sequencing_year" id="sequencing_year" size="6" /><br />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="col-sm-3 control-label">Website: </label>
+                            <div class="col-sm-9">
+                                <div class="input-group">
+                                    <span class="input-group-addon" id="https-prefix">https:&sol;&sol;</span>
+                                    <input type="text" class="form-control" placeholder="Website" aria-label="https-prefix" aria-describedby="https-prefix" name="website"  id="website" size="10" />
+                                </div>
+                            </div> <!-- input-group -->
+                            <br />
+                        </div>
+                        <div class="row">
+                            <label class="col-sm-3 control-label">Contact email: </label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" placeholder="Contact email" name="contact_email"  id="contact_email" size="10" /><br />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="col-sm-3 control-label">Genbank accession: </label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" placeholder="Genbank Accession" name="genbank_accession"  id="genbank_accession" size="10" /><br />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="col-sm-3 control-label">Funding agency: </label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" placeholder="Funding organization" name="funded_by"  id="funded_by" size="10" /><br />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="col-sm-3 control-label">Funding agency project id: </label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" placeholder="Funding organization project ID"  name="funder_project_id" id="funder_project_id" size="10" /><br />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="col-sm-3 control-label">JBrowse link: </label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" placeholder="Jbrowse link" name="jbrowse_link" id="jbrowse_link" size="20" /><br />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="col-sm-3 control-label">BLAST link</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" placeholder="BLAST link" name="blast_link" id="blast_link" size="20" /><br />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="col-sm-3 control-label">FTP link</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" placeholder="FTP link" name="ftp_link" id="ftp_link" size="20" /><br />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="col-sm-3 control-label">NCBI link</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" placeholder="NCBI link" name="ncbi_link" id="ncbi_link" size="20" /><br />
+                            </div>
+                        </div>
+                        <div>
+                            <input type="hidden" id="stock_id"  name="stock_id" value="`+stock_id+`" />
+                            <input type="hidden" id="stockprop_id"  name="stockprop_id" value="`+stockprop_id+`" />
+                        </div>
+                    </div> <!-- modal-body -->
+                    <div class="modal-footer">
+                        <button id="save_sequencing_info_button" type="submit" class="btn btn-primary">Save changes</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div> <!-- modal-footer -->
+                </form> <!-- sequencing_info form -->
+            </div> <!-- modal-content -->
+        </div> <!-- form-search -->
+    </div> <!-- modal-dialog -->
 </div> <!-- modal -->
 
 

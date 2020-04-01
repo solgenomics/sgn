@@ -97,7 +97,7 @@ sub validate {
             $validate_result{'error'} = "Request body is not valid. An observation object is missing required field \"observationVariableDbId\"";
             return \%validate_result;
         }
-        if (!$obs->{'value'}) {
+        if (!$obs->{'value'} && $obs->{'value'} != '0') {
             $validate_result{'error'} = "Request body is not valid. An observation object is missing required field \"value\"";
             return \%validate_result;
         }

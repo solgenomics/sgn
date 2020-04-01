@@ -78,6 +78,16 @@ sub retrieve_sequencing_infos {
 		    $jbrowse_link = qq | <a href="$info->{jbrowse_link}">JBrowse</a> |;
 		}
 
+        my $ftp_link = "FTP";
+        if ($info->{ftp_link}) {
+        	$ftp_link = qq | <a href="$info->{ftp_link}">FTP</a> |;
+        }
+
+        my $ncbi_link = "NCBI";
+        if ($info->{ncbi_link}) {
+        	$ncbi_link = qq | <a href="$info->{ncbi_link}">NCBI</a> |;
+        }
+
 		my $delete_link_js = "window.jsMod['sequenced_accessions'].delete_sequencing_info(".$info->{stockprop_id}.");";
 
 		my $edit_link_js = "window.jsMod['sequenced_accessions'].edit_sequencing_info(".$info->{stockprop_id}.");";
@@ -93,14 +103,14 @@ sub retrieve_sequencing_infos {
 		    $info->{sequencing_year},
 		    $info->{organization},
 		    $website,
-		    $blast_link." | ".$jbrowse_link,
+		    $blast_link." | ".$jbrowse_link." | ".$ftp_link." | ".$ncbi_link,
 		    $edit_delete_html,
 		];
 	    }
 	}
     }
 
-    print STDERR "Sequencing Data for this stock: ".Dumper(\@data);
+    #print STDERR "Sequencing Data for this stock: ".Dumper(\@data);
     return @data;
 }
 

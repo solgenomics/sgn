@@ -41,7 +41,7 @@ if (length(relWeightsFile) == 0)
   stop("There is no file with relative weights of traits.")
 
 
-relWeights           <- data.frame(fread(relWeightsFile))
+relWeights           <- data.frame(fread(relWeightsFile, header = TRUE))
 rownames(relWeights) <- relWeights[, 1]
 relWeights[, 1]      <- NULL 
 
@@ -53,7 +53,7 @@ combinedRelGebvs <- c()
 
 for (i in 1:traitsTotal) {
   traitFile           <- traitFilesList[[i]]
-  traitGEBV           <- data.frame(fread(traitFile))
+  traitGEBV           <- data.frame(fread(traitFile, header = TRUE))
   rownames(traitGEBV) <- traitGEBV[, 1]
   traitGEBV[, 1]      <- NULL
   traitGEBV           <- traitGEBV[order(rownames(traitGEBV)),,drop=FALSE] 

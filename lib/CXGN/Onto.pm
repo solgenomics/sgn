@@ -134,14 +134,14 @@ sub store_composed_term {
 
     #print STDERR "New term cvterm_id = " . $new_term->cvterm_id();
 
-        my $variable_rel = $schema->resultset('Cv::CvtermRelationship')->create({
+        my $variable_rel = $schema->resultset('Cv::CvtermRelationship')->find_or_create({
             subject_id => $new_term->cvterm_id(),
             object_id  => $parent_term->cvterm_id(),
             type_id    => $variable_relationship->cvterm_id()
         });
 
         foreach my $component_id (@component_ids) {
-            my $contains_rel = $schema->resultset('Cv::CvtermRelationship')->create({
+            my $contains_rel = $schema->resultset('Cv::CvtermRelationship')->find_or_create({
                 subject_id => $component_id,
                 object_id  => $new_term->cvterm_id(),
                 type_id    => $contains_relationship->cvterm_id()
