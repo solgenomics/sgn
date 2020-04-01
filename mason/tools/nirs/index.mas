@@ -112,11 +112,21 @@
 
 
   <div class="form-group form-inline">
+    <input type="checkbox" id="rf_var_imp_select" name="rf_var_imp_select" value="rfvarim">
+    <label for="rf_var_imp_select">&nbspShow random forest variable importance? (Note this may take a long time to run)</label>
+    <br>
+    <br>
+  </div>
+
+
+<!-- 
+  <div class="form-group form-inline">
     <input type="checkbox" id="saveModel_select" name="saveModel_select" value="save_model">
     <label for="saveModel_select">&nbspSave model?</label>
     <br>
     <br>
-  </div>
+  </div> 
+--> 
 
 
   </div>
@@ -173,7 +183,7 @@ jQuery(document).ready(function() {
     get_select_box("datasets", "dataset_select");
   }
   else {
-    alert('You must be logged in to perform Spectral Analysis');
+    alert('You must be logged in to perform spectral analysis');
   }
   $('#pheno_select').attr("disabled",true).html('');
   jQuery('#dataset_select').click(function() {
@@ -221,7 +231,7 @@ jQuery(document).ready(function() {
       var trait = jQuery('#pheno_select').val();
       //alert(trait);
       jQuery.ajax( {
-          url: '/ajax/NIRS/getdata',
+          url: '/ajax/Nirs/getdata',
           data: { 'file' : tempfile },
           success: function(r)  {
           //alert("data grabbed "+JSON.stringify(r.data));
@@ -257,18 +267,24 @@ jQuery(document).ready(function() {
   });
 
 
-  jQuery('#runH2').click( function () {
+  jQuery('#runTestModelPerformance').click( function () {
     if (!jQuery('#pheno_select').val()) {
       alert("Please select a dataset and trait.")
       $('#heritability_output').empty();
     } else {
       $('#heritability_output').empty();
       if ($('#pheno_select').val() != ""){
+        var cv_id = $('#cv_select').val();
         var dataset_id = $('#available_datasets').val();
         var trait_id = $('#pheno_select').val();
+        var preprocessing_bool = $('preprocessing').val();
+        var niter = $('niter_select').val();
+        var model_alg = $('model_algorithm_select').val();
+        var tunelen = $('tuneLength_select').val();
+        var rf_var_imp = $('rfvarim').val()
         $.ajax({
-          url: '/ajax/heritability/generate_results',
-          data: {'dataset_id': dataset_id, 'trait_id': trait_id},
+          url: '/ajax/Nirs/generate_results',
+          data: {'cv_id' : cv_id,'dataset_id': dataset_id, 'trait_id': trait_id, 'preprocessing_bool': preprocessing_bool, 'niter':niter, 'model_alg': model_alg, 'tunelen':tunelen, 'rf_var_imp':rf_var_imp},
           beforeSend: function() {
             jQuery("#working_modal").modal("show");
           },

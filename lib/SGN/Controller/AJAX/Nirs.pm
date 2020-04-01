@@ -130,19 +130,25 @@ sub generate_results: Path('/ajax/Nirs/generate_results') : {
 
     # my $figure3file = $tempfile . "_" . "figure3.png";
     # my $figure4file = $tempfile . "_" . "figure4.png";
-    my $pheno_name, # args[1]
-    my $preprocessing_boolean, # args[2]
-    my $num_iterations, # args[3]
-    my $modelmethod, # args[4]
-    my $tune_length, # args[5]
-    my $rf_var_imp, # args[6]
-    my $cv_scheme, # args[7]
+    my $pheno_name; # args[1]
+    my $preprocessing_boolean = $c->req->param('preprocessing_bool'); # args[2]
+    my $num_iterations = $c->req->param('niter'); # args[3]
+    my $modelmethod = $c->req->param('model_alg'); # args[4]
+    my $tune_length= $c->req->param('tunelen'); # args[5]
+    my $rf_var_imp = $c->req->param('rf_var_imp'); # args[6]
+    my $cv_scheme = $c->req->param('cv_id'); # args[7]
     my $pheno_filepath = $tempfile . "_phenotype.txt"; # args[8]
     my $testset_filepath, # args[9]
     my $trial1_filepath, # args[10]
     my $trial2_filepath, # args[11]
     my $trial3_filepath, # args[12]
     my $nirs_output_filepath = $tempfile . "_" . "nirsFile.txt"; # args[13]
+
+
+    my $modelmethod,
+    my $tune_length,
+    my $cv_scheme; 
+
 
     # $trait_id =~ tr/ /./;
     # $trait_id =~ tr/\//./;
