@@ -55,6 +55,8 @@ use Time::Piece;
 use CXGN::Pedigree::AddCrossingtrial;
 use CXGN::Pedigree::AddCrosses;
 use CXGN::Pedigree::AddCrossInfo;
+use Scalar::Util qw(looks_like_number);
+
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -206,7 +208,10 @@ sub save_ona_cross_info {
     $wishlist_file_name_loc =~ s/cross_wishlist_//;
     my @wishlist_file_name_loc_array = split '_', $wishlist_file_name_loc;
     $wishlist_file_name_loc = $wishlist_file_name_loc_array[0];
-    print STDERR $wishlist_file_name_loc."\n";
+
+    print STDERR "WISHLIST FILE NAME =".Dumper($wishlist_file_name)."\n";
+    print STDERR "WISHLIST LOCATION =".Dumper($wishlist_file_name_loc)."\n";
+
 
     my $cross_trial_id;
     my $location_id;
@@ -232,7 +237,7 @@ sub save_ona_cross_info {
         my $store_return = $add_crossingtrial->save_crossingtrial();
         $cross_trial_id = $store_return->{trial_id};
     }
-
+    print STDERR "CROSSING EXPERIMENT ID =".Dumper($cross_trial_id)."\n";
 
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
@@ -242,7 +247,7 @@ sub save_ona_cross_info {
     if ($resp->is_success) {
         my $message = $resp->decoded_content;
         my $message_hash = decode_json $message;
-        #print STDERR Dumper $message_hash;
+#        print STDERR "ONA DATA =".Dumper($message_hash)."\n";
 
         my %user_categories = (
             'field' => 'FieldActivities',
@@ -257,6 +262,15 @@ sub save_ona_cross_info {
         my %rooting_cross_lookup;
         my %rooting_subculture_lookup;
         my %rooting_activeseed_lookup;
+
+        my $odk_female_plot_data;
+        my $odk_male_plot_data;
+        my $db_female_accession_name;
+        my $db_male_accession_name;
+        my $odk_cross_unique_id;
+        my $female_plot_name;
+        my $male_plot_name;
+
         foreach my $activity_hash (@$message_hash){
             #print STDERR Dumper $activity_hash;
 
@@ -436,12 +450,46 @@ sub save_ona_cross_info {
                         $plant_status_info{$plot_name}->{'flowering'} = $a;
                     }
                     elsif ($a->{'FieldActivities/fieldActivity'} eq 'firstPollination'){
+
                         push @{$cross_info{$a->{'FieldActivities/FirstPollination/print_crossBarcode/crossID'}}->{$a->{'FieldActivities/fieldActivity'}}}, $a;
 
                         my $female_accession_name = $a->{'FieldActivities/FirstPollination/FemaleName'};
                         my $male_accession_name = $a->{'FieldActivities/FirstPollination/selectedMaleName'};
                         my $cycle_id = $a->{'FieldActivities/FirstPollination/cycleID'} || 1;
                         $cross_parents{$female_accession_name}->{$male_accession_name}->{$cycle_id}->{$a->{'FieldActivities/FirstPollination/print_crossBarcode/crossID'}}++;
+
+#                        $odk_female_plot_id = $a->{'FieldActivities/FirstPollination/FemalePlotID'};
+#                        $odk_male_plot_id = $a->{'FieldActivities/FirstPollination/MalePlotID'};
+
+                        $odk_female_plot_data = $a->{'FieldActivities/FirstPollination/femaleID'};
+                        $odk_male_plot_data = $a->{'FieldActivities/FirstPollination/maleID'};
+
+                        if (looks_like_number($odk_female_plot_data)) {
+                            my $female_plot_rs = $schema->resultset("Stock::Stock")->find( { stock_id => $odk_female_plot_data, 'me.type_id' => $plot_cvterm_id} );
+                            $female_plot_name = $female_plot_rs->uniquename;
+                        } else {
+                            $female_plot_name = $odk_female_plot_data;
+                        }
+
+                        if (looks_like_number($odk_male_plot_data)) {
+                            my $male_plot_rs = $schema->resultset("Stock::Stock")->find( { stock_id => $odk_male_plot_data, 'me.type_id' => $plot_cvterm_id} );
+                            $male_plot_name = $male_plot_rs->uniquename;
+                        } else {
+                            $male_plot_name = $odk_male_plot_data;
+                        }
+
+
+                        $db_female_accession_name = $self-> _get_accession_from_plot_name($female_plot_name);
+                        $db_male_accession_name = $self-> _get_accession_from_plot_name($male_plot_name);
+
+                        $odk_cross_unique_id = $a->{'FieldActivities/FirstPollination/print_crossBarcode/crossID'};
+
+                        print STDERR "ODK FEMALE PLOT NAME =".Dumper($female_plot_name)."\n";
+                        print STDERR "ODK MALE PLOT NAME =".Dumper($male_plot_name)."\n";
+                        print STDERR "DB FEMALE ACCESSION NAME =".Dumper($db_female_accession_name)."\n";
+                        print STDERR "DB MALE ACCESSION NAME =".Dumper($db_male_accession_name)."\n";
+                        print STDERR "ODK CROSS ID =".Dumper($odk_cross_unique_id)."\n";
+
                     }
                     elsif ($a->{'FieldActivities/fieldActivity'} eq 'repeatPollination'){
                         push @{$cross_info{$a->{'FieldActivities/RepeatPollination/getCrossID'}}->{'repeatPollination'}}, $a;
@@ -899,8 +947,8 @@ sub create_odk_cross_progress_tree {
                                                             $barcode_male_plot_name = _get_plot_name_from_barcode_id($action_hash->{'FieldActivities/FirstPollination/malID'}),
                                                             $barcode_female_plot_id = _get_plot_id_from_barcode_id($action_hash->{'FieldActivities/FirstPollination/femID'}),
                                                             $barcode_male_plot_id = _get_plot_id_from_barcode_id($action_hash->{'FieldActivities/FirstPollination/malID'}),
-                                                            $db_female_accession_name = $self-> _get_accession_from_plot($barcode_female_plot_id),
-                                                            $db_male_accession_name = $self-> _get_accession_from_plot($barcode_male_plot_id),
+                                                            $db_female_accession_name = $self-> _get_accession_from_plot_id($barcode_female_plot_id),
+                                                            $db_male_accession_name = $self-> _get_accession_from_plot_id($barcode_male_plot_id),
                                                             my $activity_summary = {
                                                                 #femaleAccessionName => $action_hash->{'FieldActivities/FirstPollination/FemaleName'},
                                                                 #maleAccessionName => $action_hash->{'FieldActivities/FirstPollination/selectedMaleName'},
@@ -1170,7 +1218,7 @@ sub create_odk_cross_progress_tree {
     }
     #print STDERR Dumper \%parsed_data;
 
-#    my $cross_trial_id;
+    my $cross_trial_id;
 #    my $location_id;
 #    my $location = $bcs_schema->resultset("NaturalDiversity::NdGeolocation")->find({description=>$wishlist_file_name_loc});
 #    if ($location){
@@ -1258,10 +1306,11 @@ sub _get_plot_id_from_barcode_id {
 }
 
 
-sub _get_accession_from_plot {
+sub _get_accession_from_plot_id {
     my $self = shift;
     my $plot_id = shift;
     #print STDERR "PLOT ID =".Dumper($plot_id)."\n";
+
     my $schema = $self->bcs_schema;
     my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
     my $accession_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
@@ -1284,6 +1333,38 @@ sub _get_accession_from_plot {
 
     return $accession_name;
 
+}
+
+
+sub _get_accession_from_plot_name {
+    my $self = shift;
+    my $plot_name = shift;
+
+    my $schema = $self->bcs_schema;
+    my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+    my $accession_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $plot_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+
+
+
+    my $q = "SELECT accession.uniquename FROM stock
+            JOIN stock_relationship ON (stock.stock_id = stock_relationship.subject_id) and stock.type_id = ?
+            JOIN stock AS accession ON (stock_relationship.object_id = accession.stock_id) AND accession.type_id = ?
+            WHERE stock.uniquename = ? AND stock_relationship.type_id =?";
+
+    my $h = $schema->storage->dbh->prepare($q);
+    $h->execute($plot_type_id, $accession_type_id, $plot_name, $plot_of_type_id);
+
+    my @accession= $h->fetchrow_array();
+    my $accession_name;
+    if (scalar(@accession) > 1) {
+        print STDERR "This plot name is associated with more than one accession uniquename\n";
+    } else {
+        $accession_name = $accession[0];
+    }
+    #print STDERR "ACCESSION NAME =".Dumper($accession_name)."\n";
+
+    return $accession_name;
 }
 
 
