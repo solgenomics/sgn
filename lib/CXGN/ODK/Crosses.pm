@@ -199,6 +199,40 @@ sub save_ona_cross_info {
         }
     }
 
+    my $wishlist_file_name = $self->_ona_cross_wishlist_file_name;
+
+    $wishlist_file_name =~ s/.csv//;
+    my $wishlist_file_name_loc = $wishlist_file_name;
+    $wishlist_file_name_loc =~ s/cross_wishlist_//;
+    my @wishlist_file_name_loc_array = split '_', $wishlist_file_name_loc;
+    $wishlist_file_name_loc = $wishlist_file_name_loc_array[0];
+    print STDERR $wishlist_file_name_loc."\n";
+
+    my $cross_trial_id;
+    my $location_id;
+    my $location = $schema->resultset("NaturalDiversity::NdGeolocation")->find({description=>$wishlist_file_name_loc});
+    if ($location){
+        $location_id = $location->nd_geolocation_id;
+    }
+    my $previous_crossing_trial_rs = $schema->resultset("Project::Project")->find({name => $wishlist_file_name});
+    my $iita_breeding_program_id = $schema->resultset("Project::Project")->find({name => 'IITA'})->project_id();
+    my $t = Time::Piece->new();
+    if ($previous_crossing_trial_rs){
+        $cross_trial_id = $previous_crossing_trial_rs->project_id;
+    } else {
+        my $add_crossingtrial = CXGN::Pedigree::AddCrossingtrial->new({
+            chado_schema => $schema,
+            dbh => $schema->storage->dbh,
+            breeding_program_id => $iita_breeding_program_id,
+            year => $t->year,
+            project_description => 'ODK ONA crosses from wishlist',
+            crossingtrial_name => $wishlist_file_name,
+            nd_geolocation_id => $location_id
+        });
+        my $store_return = $add_crossingtrial->save_crossingtrial();
+        $cross_trial_id = $store_return->{trial_id};
+    }
+
 
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
@@ -523,16 +557,16 @@ sub create_odk_cross_progress_tree {
     my $phenome_schema = $self->phenome_schema;
     my $metadata_schema = $self->metadata_schema;
     my $cross_wishlist_temp_file_path = $self->cross_wishlist_temp_file_path;
-    my $wishlist_file_name = $self->_ona_cross_wishlist_file_name;
+#    my $wishlist_file_name = $self->_ona_cross_wishlist_file_name;
     my $germplasm_info_file_name = $self->_ona_germplasm_info_file_name;
     my $form_id = $self->odk_crossing_data_service_form_id;
 
-    $wishlist_file_name =~ s/.csv//;
-    my $wishlist_file_name_loc = $wishlist_file_name;
-    $wishlist_file_name_loc =~ s/cross_wishlist_//;
-    my @wishlist_file_name_loc_array = split '_', $wishlist_file_name_loc;
-    $wishlist_file_name_loc = $wishlist_file_name_loc_array[0];
-    print STDERR $wishlist_file_name_loc."\n";
+#    $wishlist_file_name =~ s/.csv//;
+#    my $wishlist_file_name_loc = $wishlist_file_name;
+#    $wishlist_file_name_loc =~ s/cross_wishlist_//;
+#    my @wishlist_file_name_loc_array = split '_', $wishlist_file_name_loc;
+#    $wishlist_file_name_loc = $wishlist_file_name_loc_array[0];
+#    print STDERR $wishlist_file_name_loc."\n";
 
     my %combined;
 
@@ -859,7 +893,6 @@ sub create_odk_cross_progress_tree {
 
                                                     my $user_category = $action_hash->{'userCategory'};
                                                     if ($user_category eq 'field'){
-                                                        #print STDERR "WISHLIST FILE NAME =".Dumper($wishlist_file_name)."\n";
                                                         my $activity_name = $action_hash->{'FieldActivities/fieldActivity'};
                                                         if ($activity_name eq 'firstPollination'){
                                                             $barcode_female_plot_name = _get_plot_name_from_barcode_id($action_hash->{'FieldActivities/FirstPollination/femID'}),
@@ -1137,30 +1170,30 @@ sub create_odk_cross_progress_tree {
     }
     #print STDERR Dumper \%parsed_data;
 
-    my $cross_trial_id;
-    my $location_id;
-    my $location = $bcs_schema->resultset("NaturalDiversity::NdGeolocation")->find({description=>$wishlist_file_name_loc});
-    if ($location){
-        $location_id = $location->nd_geolocation_id;
-    }
-    my $previous_crossing_trial_rs = $bcs_schema->resultset("Project::Project")->find({name => $wishlist_file_name});
-    my $iita_breeding_program_id = $bcs_schema->resultset("Project::Project")->find({name => 'IITA'})->project_id();
-    my $t = Time::Piece->new();
-    if ($previous_crossing_trial_rs){
-        $cross_trial_id = $previous_crossing_trial_rs->project_id;
-    } else {
-        my $add_crossingtrial = CXGN::Pedigree::AddCrossingtrial->new({
-            chado_schema => $bcs_schema,
-            dbh => $bcs_schema->storage->dbh,
-            breeding_program_id => $iita_breeding_program_id,
-            year => $t->year,
-            project_description => 'ODK ONA crosses from wishlist',
-            crossingtrial_name => $wishlist_file_name,
-            nd_geolocation_id => $location_id
-        });
-        my $store_return = $add_crossingtrial->save_crossingtrial();
-        $cross_trial_id = $store_return->{trial_id};
-    }
+#    my $cross_trial_id;
+#    my $location_id;
+#    my $location = $bcs_schema->resultset("NaturalDiversity::NdGeolocation")->find({description=>$wishlist_file_name_loc});
+#    if ($location){
+#        $location_id = $location->nd_geolocation_id;
+#    }
+#    my $previous_crossing_trial_rs = $bcs_schema->resultset("Project::Project")->find({name => $wishlist_file_name});
+#    my $iita_breeding_program_id = $bcs_schema->resultset("Project::Project")->find({name => 'IITA'})->project_id();
+#    my $t = Time::Piece->new();
+#    if ($previous_crossing_trial_rs){
+#        $cross_trial_id = $previous_crossing_trial_rs->project_id;
+#    } else {
+#        my $add_crossingtrial = CXGN::Pedigree::AddCrossingtrial->new({
+#            chado_schema => $bcs_schema,
+#            dbh => $bcs_schema->storage->dbh,
+#            breeding_program_id => $iita_breeding_program_id,
+#            year => $t->year,
+#            project_description => 'ODK ONA crosses from wishlist',
+#            crossingtrial_name => $wishlist_file_name,
+#            nd_geolocation_id => $location_id
+#        });
+#        my $store_return = $add_crossingtrial->save_crossingtrial();
+#        $cross_trial_id = $store_return->{trial_id};
+#    }
 
     if ($parsed_data{crosses} && scalar(@{$parsed_data{crosses}}) > 0){
 
