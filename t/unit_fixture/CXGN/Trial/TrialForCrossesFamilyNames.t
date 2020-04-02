@@ -386,20 +386,26 @@ my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession",
 
 my @accessions_westcott;
 for (my $i = 1; $i <= 2; $i++) {
-    push(@accessions_westcott, "check_accession_for_westcott_trial".$i);
+    push @accessions_westcott, "check_accession_for_westcott_trial".$i;
 }
+
+print STDERR "ACCESSIONS WESTCOTT: ".Dumper(\@accessions_westcott);
+
 foreach my $accession (@accessions_westcott) {
-    my $accession_stock = $schema->resultset('Stock::Stock')->create({
+    my $accession_stock = $schema->resultset('Stock::Stock')->create(
+	{
 	    organism_id => $organism->organism_id,
-	    name       => $accession,
-	    uniquename => $accession,
-	    type_id     => $accession_type_id,
-    });
-};
+	    name        => $accession,
+	    uniquename  => $accession,
+	    #type_id     => $accession_type_id,
+	    type_id     => $cross_type_id,
+	});
+    print STDERR "Created accession $accession with type_id $accession_type_id\n";
+}
 
 ok(my $trial_design = CXGN::Trial::TrialDesign->new(), "create trial design object");
+
 ok($trial_design->set_trial_name("cross_westcott_trial"), "set trial name");
-#ok($trial_design->set_stock_list(\@cross_unique_ids_westcott), "set stock list");
 ok($trial_design->set_stock_list(\@cross_unique_ids_westcott), "set stock list");
 ok($trial_design->set_plot_start_number(1), "set plot start number");
 ok($trial_design->set_plot_number_increment(1), "set plot increment");

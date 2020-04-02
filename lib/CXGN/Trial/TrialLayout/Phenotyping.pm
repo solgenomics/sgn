@@ -6,16 +6,22 @@ use namespace::autoclean;
 
 extends 'CXGN::Trial::TrialLayout::AbstractLayout';
 
+has 'block_numbers' => (isa => 'ArrayRef', is => 'ro', predicate => 'has_block_numbers', reader => 'get_block_numbers', writer => '_set_block_numbers');
+
+
 sub BUILD {
     my $self = shift;
 
     print STDERR "BUILD CXGN::Trial::TrialLayout::Phenotyping...\n";
-    $self->set_source_stock_types([ 'plot', 'cross', 'family_name', 'subplot', 'plant' ] );
-    $self->convert_source_stock_types_to_ids();
+    $self->set_source_stock_types([ 'accession', 'cross', 'family_name', 'subplot', 'plant', 'grafted_accession' ] );
+    $self->set_relationship_types([ 'plot_of', 'member_of', 'plant_of_subplot', 'tissue_sample_of' ]);
 
+    $self->set_target_stock_types( [ 'plot','cross', 'family_name' ] );
+    
     print STDERR "Set source stock types to ".join(", ", @{$self->get_source_stock_types()});
         # probably better to lazy load the action design...
     #
+    $self->convert_source_stock_types_to_ids();
     $self->_lookup_trial_id();
     #$self->_get_design_from_trial();
 }
@@ -27,6 +33,11 @@ has 'plot_dimensions' => (
     lazy     => 1,
     builder  => '_retrieve_plot_dimensions',
 );
+
+after 'lookup_trial_id' => sub { 
+    $self->_set_block_numbers($self->_get_plot_info_fields_from_trial("block_number") || []);
+}
+
 
 
 sub _retrieve_plot_dimensions {
