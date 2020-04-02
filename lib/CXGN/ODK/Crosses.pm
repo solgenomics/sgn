@@ -170,6 +170,7 @@ sub save_ona_cross_info {
     my $context = shift; #Needed for SGN::Image to store images to plots
     my $schema = $self->bcs_schema;
     my $metadata_schema = $self->metadata_schema;
+    my $phenome_schema = $self->phenome_schema;
     my $cross_wishlist_temp_file_path = $self->cross_wishlist_temp_file_path;
     my $germplasm_info_temp_file_path = $self->germplasm_info_temp_file_path;
     my $form_id = $self->odk_crossing_data_service_form_id;
@@ -270,6 +271,8 @@ sub save_ona_cross_info {
         my $odk_cross_unique_id;
         my $female_plot_name;
         my $male_plot_name;
+        my $cross_combination;
+        my @new_crosses;
 
         foreach my $activity_hash (@$message_hash){
             #print STDERR Dumper $activity_hash;
@@ -483,12 +486,29 @@ sub save_ona_cross_info {
                         $db_male_accession_name = $self-> _get_accession_from_plot_name($male_plot_name);
 
                         $odk_cross_unique_id = $a->{'FieldActivities/FirstPollination/print_crossBarcode/crossID'};
+                        $cross_combination = $db_female_accession_name.'/'.$db_male_accession_name;
 
                         print STDERR "ODK FEMALE PLOT NAME =".Dumper($female_plot_name)."\n";
                         print STDERR "ODK MALE PLOT NAME =".Dumper($male_plot_name)."\n";
                         print STDERR "DB FEMALE ACCESSION NAME =".Dumper($db_female_accession_name)."\n";
                         print STDERR "DB MALE ACCESSION NAME =".Dumper($db_male_accession_name)."\n";
                         print STDERR "ODK CROSS ID =".Dumper($odk_cross_unique_id)."\n";
+                        print STDERR "CROSS COMBINATION =".Dumper($cross_combination)."\n";
+
+                        my $cross_exists_rs = $schema->resultset("Stock::Stock")->find({uniquename => $odk_cross_unique_id});
+                        if ((!defined $cross_exists_rs) && defined $db_female_accession_name && defined $db_male_accession_name && defined $female_plot_name && defined $male_plot_name) {
+                            my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name => $odk_cross_unique_id, cross_combination=>$cross_combination, cross_type =>'biparental');
+                            my $female_parent_individual = Bio::GeneticRelationships::Individual->new(name => $db_female_accession_name);
+                            $pedigree->set_female_parent($female_parent_individual);
+                            my $male_parent_individual = Bio::GeneticRelationships::Individual->new(name => $db_male_accession_name);
+                            $pedigree->set_male_parent($male_parent_individual);
+                            my $female_plot_individual = Bio::GeneticRelationships::Individual->new(name => $female_plot_name);
+                            $pedigree->set_female_plot($female_plot_individual);
+                            my $male_plot_individual = Bio::GeneticRelationships::Individual->new(name => $male_plot_name);
+                            $pedigree->set_male_plot($male_plot_individual);
+                            push @new_crosses, $pedigree;
+                       }
+                       print STDERR "NEW CROSSES =".Dumper(\@new_crosses)."\n";
 
                     }
                     elsif ($a->{'FieldActivities/fieldActivity'} eq 'repeatPollination'){
@@ -573,6 +593,23 @@ sub save_ona_cross_info {
                 }
             }
         }
+
+        my $cross_add = CXGN::Pedigree::AddCrosses->new({
+            chado_schema => $schema,
+            phenome_schema => $phenome_schema,
+            metadata_schema => $metadata_schema,
+            dbh => $schema->storage->dbh,
+            crossing_trial_id => $cross_trial_id,
+            crosses => \@new_crosses,
+            owner_name => $self->sp_person_username
+        });
+        if (!$cross_add->validate_crosses()){
+            return {error => 'Error validating crosses'};
+        }
+        if (!$cross_add->add_crosses()){
+            return {error => 'Error saving crosses'};
+        }
+
         #print STDERR Dumper \%cross_info;
         #print STDERR Dumper \%plant_status_info;
         #print STDERR Dumper \%cross_parents;
@@ -1218,7 +1255,7 @@ sub create_odk_cross_progress_tree {
     }
     #print STDERR Dumper \%parsed_data;
 
-    my $cross_trial_id;
+#    my $cross_trial_id;
 #    my $location_id;
 #    my $location = $bcs_schema->resultset("NaturalDiversity::NdGeolocation")->find({description=>$wishlist_file_name_loc});
 #    if ($location){
@@ -1243,47 +1280,47 @@ sub create_odk_cross_progress_tree {
 #        $cross_trial_id = $store_return->{trial_id};
 #    }
 
-    if ($parsed_data{crosses} && scalar(@{$parsed_data{crosses}}) > 0){
+#    if ($parsed_data{crosses} && scalar(@{$parsed_data{crosses}}) > 0){
 
-        my @new_crosses;
-        foreach (@{$parsed_data{crosses}}){
-            my $cross_exists_rs = $bcs_schema->resultset("Stock::Stock")->find({uniquename=>$_->get_name});
-            if ($cross_exists_rs){
-                print STDERR "Already saved ".$cross_exists_rs->uniquename.". Skipping AddCrosses\n";
-            } else {
-                push @new_crosses, $_;
-            }
-        }
+#        my @new_crosses;
+#        foreach (@{$parsed_data{crosses}}){
+#            my $cross_exists_rs = $bcs_schema->resultset("Stock::Stock")->find({uniquename=>$_->get_name});
+#            if ($cross_exists_rs){
+#                print STDERR "Already saved ".$cross_exists_rs->uniquename.". Skipping AddCrosses\n";
+#            } else {
+#                push @new_crosses, $_;
+#            }
+#        }
 
-        my $cross_add = CXGN::Pedigree::AddCrosses->new({
-            chado_schema => $bcs_schema,
-            phenome_schema => $phenome_schema,
-            metadata_schema => $metadata_schema,
-            dbh => $bcs_schema->storage->dbh,
+#        my $cross_add = CXGN::Pedigree::AddCrosses->new({
+#            chado_schema => $bcs_schema,
+#            phenome_schema => $phenome_schema,
+#            metadata_schema => $metadata_schema,
+#            dbh => $bcs_schema->storage->dbh,
 #            location => $wishlist_file_name_loc,
-            crossing_trial_id => $cross_trial_id,
-            crosses => \@new_crosses,
-            owner_name => $self->sp_person_username
-        });
-        if (!$cross_add->validate_crosses()){
-            return {error => 'Error validating crosses'};
-        }
-        if (!$cross_add->add_crosses()){
-            return {error => 'Error saving crosses'};
-        }
-    }
+#            crossing_trial_id => $cross_trial_id,
+#            crosses => \@new_crosses,
+#            owner_name => $self->sp_person_username
+#        });
+#        if (!$cross_add->validate_crosses()){
+#            return {error => 'Error validating crosses'};
+#        }
+#        if (!$cross_add->add_crosses()){
+#            return {error => 'Error saving crosses'};
+#        }
+#    }
 
-    my @cross_properties = split ',', $self->allowed_cross_properties;
-    foreach my $info_type (@cross_properties){
-        if ($parsed_data{$info_type}) {
-            my %info_hash = %{$parsed_data{$info_type}};
-            foreach my $cross_name_key (keys %info_hash) {
-                my $value = $info_hash{$cross_name_key};
-                my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $bcs_schema, cross_name => $cross_name_key, key => $info_type, value => $value });
-                $cross_add_info->add_info();
-            }
-        }
-    }
+#    my @cross_properties = split ',', $self->allowed_cross_properties;
+#    foreach my $info_type (@cross_properties){
+#        if ($parsed_data{$info_type}) {
+#            my %info_hash = %{$parsed_data{$info_type}};
+#            foreach my $cross_name_key (keys %info_hash) {
+#                my $value = $info_hash{$cross_name_key};
+#                my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $bcs_schema, cross_name => $cross_name_key, key => $info_type, value => $value });
+#                $cross_add_info->add_info();
+#            }
+#        }
+#    }
 
     return {success => 1};
 }
