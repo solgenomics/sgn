@@ -2,6 +2,7 @@ package SGN::Controller::solGS::Utils;
 
 use Moose;
 use namespace::autoclean;
+
 use File::Slurp qw /write_file read_file/;
 
 
@@ -42,6 +43,29 @@ sub read_file_data {
    
     return \@data;
 
+}
+
+
+sub structure_downloadable_data {
+    my ($self, $file, $row_name) = @_;
+
+    my @data;
+    if (-s $file) 
+    {
+	my $count = 1;
+	foreach my $row (read_file($file) )
+	{
+	    $row_name = "\t" if !$row_name;
+	    $row = $row_name . $row  if $count == 1;	              
+	    $row = join("\t", split(/\s/, $row));
+	    $row .= "\n";
+	    
+	    push @data, [ $row ];
+	    $count++;
+	}
+    }
+
+    return \@data;
 }
 
 
@@ -141,6 +165,66 @@ sub acronymize_traits {
     };
 
     return $acronym_data;
+}
+
+
+sub clean_traits {
+    my ($self, $terms) = @_;
+
+    $terms =~ s/(\|\w+:\d+)//g;
+    $terms =~ s/\|/ /g;
+    $terms =~ s/^\s+|\s+$//g;
+
+    return $terms;
+}
+
+
+sub remove_ontology {
+    my ($self, $traits) = @_;
+
+    my @clean_traits;
+
+    foreach my $tr (@$traits) {
+	my $name = $tr->[1];
+	$name= $self->clean_traits($name);
+
+	my $id_nm = {'trait_id' => $tr->[0], 'trait_name' => $name};
+ 	push @clean_traits, $id_nm;	    	    
+    }
+
+    return \@clean_traits;
+
+}
+
+
+sub get_clean_trial_trait_names {
+    my ($self, $c, $trial_id) = @_;
+
+    my $traits = $c->model('solGS::solGS')->trial_traits($trial_id);
+    my $clean_traits = $c->controller('solGS::Utils')->remove_ontology($traits);
+    my @trait_names;
+
+    foreach my $tr (@$clean_traits)
+    {
+	push @trait_names, $tr->{trait_name};
+    }
+
+    return \@trait_names;
+}
+
+
+sub save_metadata {
+    my ($self, $c) = @_;
+
+    $c->controller('solGS::Files')->phenotype_metadata_file($c);
+    my $metadata_file = $c->stash->{phenotype_metadata_file};
+
+    if (!-s $metadata_file)
+    {
+	my $metadata   = $c->model('solGS::solGS')->trial_metadata();   
+	write_file($metadata_file, join("\t", @$metadata));
+    }
+    
 }
 
 

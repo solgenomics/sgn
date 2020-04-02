@@ -51,7 +51,12 @@ solGS.sIndex = {
 	jQuery(".si_dropdown dt a").click(function() {
             jQuery(".si_dropdown dd ul").toggle();
         });
-        
+
+	var selectedPopId;
+	var selectedPopName;
+	var selectedPopType;
+	var modelId;
+	
 	jQuery(".si_dropdown dd ul li a").click(function() {
 	    
             var text = jQuery(this).html();
@@ -70,11 +75,13 @@ solGS.sIndex = {
             jQuery("#si_canvas #selected_population_name").val(selectedPopName);
             jQuery("#si_canvas #selected_population_id").val(selectedPopId);
             jQuery("#si_canvas #selected_population_type").val(selectedPopType);        
-            
-           this.getSelectionPopTraits(modelId, selectedPopId);
-            
+
+	    solGS.sIndex.getSelectionPopTraits(modelId, selectedPopId);
+                
 	});
-        
+
+
+	
 	jQuery(".si_dropdown").bind('click', function(e) {
             var clicked = jQuery(e.target);
             
@@ -93,14 +100,15 @@ solGS.sIndex = {
 	if (indexed) {
 
 	    for (var i = 0; i < indexed.length; i++) {
+		
 		var indexData = {
-		    'id': indexed[i],
-		    'name': indexed[i],
+		    'id': indexed[i].sindex_id,
+		    'name': indexed[i].sindex_name,
 		    'pop_type': 'selection_index'
 		};
 
 		indexData = JSON.stringify(indexData);
-		sIndexList += '<li><a href="#">' + indexed[i] + '<span class=value>' + indexData + '</span></a></li>';
+		sIndexList += '<li><a href="#">' + indexed[i].sindex_name + '<span class=value>' + indexData + '</span></a></li>';
 	    }
 	}
 	
@@ -151,7 +159,9 @@ solGS.sIndex = {
 
 	if (modelId === selectedPopId) {selectedPopId=undefined;}
 
+	var protocolId = jQuery('#genotyping_protocol_id').val();
 	var trainingTraitsIds = jQuery('#training_traits_ids').val();
+	
 	if (trainingTraitsIds) {
 	    trainingTraitsIds = trainingTraitsIds.split(',');
 	}
@@ -159,7 +169,8 @@ solGS.sIndex = {
 	var args = {
 	    'selection_pop_id': selectedPopId,
 	    'training_pop_id': modelId,
-	    'training_traits_ids': trainingTraitsIds
+	    'training_traits_ids': trainingTraitsIds,
+	    'genotyping_protocol_id': protocolId
 	};
 
 	jQuery.ajax({
@@ -225,14 +236,16 @@ solGS.sIndex = {
 	    if (trainingTraitsIds) {
 		trainingTraitsIds = trainingTraitsIds.split(',');
 	    }
-
+	    var protocolId = jQuery('#genotyping_protocol_id').val();
+	    
 	    if (trainingPopId == selectionPopId) { selectionPopId = "";}
 
 	    var siArgs = {
 		'training_pop_id': trainingPopId,
 		'selection_pop_id': selectionPopId,
 		'rel_wts': params,
-		'training_traits_ids': trainingTraitsIds
+		'training_traits_ids': trainingTraitsIds,
+		'genotyping_protocol_id': protocolId
 	    };
 	    
             jQuery.ajax({
@@ -278,11 +291,16 @@ solGS.sIndex = {
 		                     
 		    var popType = jQuery("#si_canvas #selected_population_type").val();
 		    var popId   = jQuery("#si_canvas #selected_population_id").val();
-                    formatGenCorInputData(popId, popType, indexFile);
+                    solGS.correlation.formatGenCorInputData(popId, popType, indexFile);
 
 		    jQuery('#si_canvas #selected_pop').val('');
-
-		    solGS.sIndex.saveIndexedPops(res.sindex_name);
+	
+		    var sIndexed = {
+			'sindex_id': popId,
+			'sindex_name': res.sindex_name
+		    };
+		    
+		    solGS.sIndex.saveIndexedPops(sIndexed);
 		    solGS.cluster.listClusterPopulations();
 		},
 		error: function(res){

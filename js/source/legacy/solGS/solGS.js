@@ -13,7 +13,7 @@ JSAN.use('jquery.form');
 var solGS = solGS || function solGS () {};
 
 solGS.waitPage = function (page, args) {
-
+  
     var matchItems = 'solgs/population/'
 	+ '|solgs/populations/combined/' 
 	+ '|solgs/trait/' 
@@ -29,18 +29,18 @@ solGS.waitPage = function (page, args) {
 	var multiTraitsUrls = 'solgs/traits/all/population/'
 	    + '|solgs/models/combined/trials/';
 
-	if (page.match(multiTraitsUrls)) {
+	if (page.match(multiTraitsUrls)) {	  
 	    getTraitsSelectionId(page, args);	    
 	} else {
 	    //if (page.match(/list_/)) {
 	//	askUser(page, args)
-	   // } else {
-		checkCachedResult(page, args);
+	    // } else {
+	  
+	    checkCachedResult(page, args);
 	   // }
 	}
     }
     else {
-
     	blockPage(page, args);
     }
 
@@ -48,7 +48,7 @@ solGS.waitPage = function (page, args) {
 
 	var trainingTraitsIds = jQuery('#training_traits_ids').val();
 
-	if (trainingTraitsIds) {
+	if (trainingTraitsIds ) {
 	    trainingTraitsIds = trainingTraitsIds.split(',');
 	    
 	    if (args === undefined) {
@@ -60,7 +60,7 @@ solGS.waitPage = function (page, args) {
 
 	args = getArgsFromUrl(page, args);
 	args = JSON.stringify(args);
-	
+
 	jQuery.ajax({
 	    type    : 'POST',
 	    dataType: 'json',
@@ -260,7 +260,8 @@ solGS.waitPage = function (page, args) {
     function getTraitsSelectionId (page, args) {
 
 	var traitIds = args.training_traits_ids;
-	
+	var protocolId = jQuery('#genotyping_protocol_id').val();
+
 	jQuery.ajax({
 	    dataType: 'json',
 	    type    : 'POST',
@@ -268,7 +269,7 @@ solGS.waitPage = function (page, args) {
 	    url     : '/solgs/get/traits/selection/id',
 	    success : function (res){
 		var traitsSelectionId = res.traits_selection_id;
-		page = page  + '/traits/' + traitsSelectionId;
+		page = page  + '/traits/' + traitsSelectionId + '/gp/' + protocolId;
 		
 		//if (page.match(/list_/)) {
 		//    askUser(page, args)
@@ -295,7 +296,7 @@ solGS.waitPage = function (page, args) {
 	if (page.match(matchItems)) {
 	    window.location = page;
 	}  else if (page.match(/solgs\/populations\/combined\//)) {
-	    solGS.combinedTrials.displayCombinedTrialsTrainingPopPage(args.combo_pops_list);  
+	    solGS.combinedTrials.displayCombinedTrialsTrainingPopPage(args);  
 	} else if (page.match(/solgs\/population\//)) {
 	    // if (page.match(/solgs\/population\/list_/)) {
 	    // 	var listId = args.list_id;
@@ -333,17 +334,19 @@ solGS.waitPage = function (page, args) {
     function wrapTraitsForm () {
 	
 	var popId  = jQuery('#population_id').val();
+	var protocolId = jQuery('#genotyping_protocol_id').val();
+	
 	var formId = ' id="traits_selection_form"';
 	
 	var action;   
 	var referer = window.location.href;
 	
 	if ( referer.match(/solgs\/populations\/combined\//) ) {
-	    action = ' action="/solgs/models/combined/trials/' + popId + '"';		 		 
+	    action = ' action="/solgs/models/combined/trials/' + popId + '/gp/' + protocolId + '"';		 		 
 	}
 
 	if ( referer.match(/solgs\/population\//) ) {
-	    action = ' action="/solgs/traits/all/population/' + popId + '"';
+	    action = ' action="/solgs/traits/all/population/' + popId + '/gp/' + protocolId + '"';
 	}
 	
 	var method = ' method="POST"';
@@ -432,8 +435,9 @@ solGS.waitPage = function (page, args) {
     function getArgsFromUrl (url, args) {
 
 	var referer = document.URL;
+
 	var trainingTraitsIds = jQuery('#training_traits_ids').val();
-	
+
 	if (trainingTraitsIds) {
 	    trainingTraitsIds = trainingTraitsIds.split(','); 
 	    args['training_traits_ids'] = trainingTraitsIds;	   
@@ -500,17 +504,20 @@ solGS.waitPage = function (page, args) {
 	} else if (url.match(/solgs\/population\//)) {
 	    
 	    var urlStr = url.split(/\/+/);
-	 
+	    var gpr = urlStr[6];
+	   
 	    if (args === undefined) {
 		args = { 
 		    'training_pop_id' : [ urlStr[4] ], 
 		    'analysis_type' : 'population download',
-		    'data_set_type' : 'single population'
+		    'data_set_type' : 'single population',
+		    'genotyping_protocol_id': urlStr[6]
 		};
 	    } else {
 		args['training_pop_id'] = [ urlStr[4] ];
 		args['analysis_type'] = 'population download';
-		args['data_set_type'] = 'single population';	
+		args['data_set_type'] = 'single population';
+		args['genotyping_protocol_id'] = urlStr[6];
 	    }
 	} else if (url.match(/solgs\/model\/\d+\/prediction\/|solgs\/model\/\w+_\d+\/prediction\//)) {
 
@@ -544,7 +551,15 @@ solGS.waitPage = function (page, args) {
 		args['data_set_type']    = dataSetType;	
 	    }
 	}
- 
+
+	var protocolId = args.genotyping_protocol_id;
+	
+	if(!protocolId) {
+	    protocolId = jQuery('#genotyping_protocol_id').val();
+	}
+	
+	args['genotyping_protocol_id'] = protocolId;
+	
 	return args;
 
     }
@@ -595,7 +610,6 @@ solGS.waitPage = function (page, args) {
 	    success : function(response) {
 		if (response.result) {
 		    runAnalysis(profile);
-		    ////confirmRequest();
 		    
 		} else {
 		    var message = 'Failed saving your analysis profile.';
@@ -680,7 +694,8 @@ jQuery(document).ready(function (){
 	 }
 
 	 var traitIds = jQuery("#traits_selection_div :checkbox").fieldValue();
-	 var popId    = jQuery('#population_id').val(); 
+	 var popId    = jQuery('#population_id').val();
+	 var protocolId = jQuery('#genotyping_protocol_id').val();
 	 
 	 if (traitIds.length) {	  
 	     var page;
@@ -711,18 +726,16 @@ jQuery(document).ready(function (){
 		 if ( referer.match(/solgs\/populations\/combined\//) ) {
 		     
 		     page = hostName 
-			 + '/solgs/model/combined/trials/' 
-			 + popId 
-			 + '/trait/' 
-			 + traitIds[0];		 
+			 + '/solgs/model/combined/trials/' + popId 
+			 + '/trait/' + traitIds[0]
+			 + '/gp/' + protocolId;		 
 		     
 		 } else if ( referer.match(/solgs\/population\//)) {
 		     
 		     page = hostName 
-			 + '/solgs/trait/' 
-			 + traitIds[0] 
-			 + '/population/' 
-			 + popId;		 
+			 + '/solgs/trait/' + traitIds[0] 
+			 + '/population/' + popId
+			 + '/gp/' + protocolId;		 
 		 }
 			 
 	     } else {
@@ -730,15 +743,10 @@ jQuery(document).ready(function (){
 		 analysisType = 'multiple models';
 		 
 		 if ( referer.match(/solgs\/populations\/combined\//) ) {
-		     page = hostName 
-			 + '/solgs/models/combined/trials/' 
-			 + popId;
+		     page = hostName + '/solgs/models/combined/trials/' + popId;
 		     
-		 } else {
-		     
-		     page = hostName 
-			 + '/solgs/traits/all/population/' 
-			 + popId;
+		 } else {		     
+		     page = hostName + '/solgs/traits/all/population/' + popId;
 		 }	    
 	     }
 	    
@@ -773,8 +781,8 @@ solGS.alertMessage = function (msg, msgTitle, divId) {
     jQuery('<div />', {id: divId})
 	.html(msg)
 	.dialog({
-	    height : 200,
-	    width  : 250,
+	    maxHeight : 400,
+	    maxWidth  : 500,
 	    modal  : true,
 	    title  : msgTitle,
 	    buttons: {

@@ -46,6 +46,8 @@ genoMetaData     <- c()
 filteredGenoFile <- c()
 phenoData        <- c()
 
+set.seed(235)
+
 pcF <- grepl("genotype", ignore.case=TRUE, inputFiles)
 dataType <- ifelse(isTRUE(pcF[1]), 'genotype', 'phenotype')
 
@@ -119,9 +121,10 @@ if (is.null(genoData) && is.null(phenoData)) {
   q("no", 1, FALSE)
 } 
 
+
 genoDataMissing <- c()
 if (dataType == 'genotype') {
-    if (is.null(filteredGenoFile) == TRUE) {
+   # if (is.null(filteredGenoFile) == TRUE) {
         ##genoDataFilter::filterGenoData
         genoData <- convertToNumeric(genoData)
         genoData <- filterGenoData(genoData, maf=0.01)
@@ -130,12 +133,11 @@ if (dataType == 'genotype') {
         message("No. of geno missing values, ", sum(is.na(genoData)) )
         if (sum(is.na(genoData)) > 0) {
             genoDataMissing <- c('yes')
-            genoData <- na.roughfix(genoData)
+           # genoData <- na.roughfix(genoData)
         }
-    }
-
-    genoData <- data.frame(genoData)
 }
+
+
 ## nCores <- detectCores()
 ## message('no cores: ', nCores)
 ## if (nCores > 1) {
@@ -151,6 +153,12 @@ if (!is.null(genoData)) {
 } else if(!is.null(phenoData)) {
     pcaData <- phenoData
     phenoData <- NULL
+}
+
+
+message("No. of missing values, ", sum(is.na(pcaData)) )
+if (sum(is.na(pcaData)) > 0) {
+    pcaData <- na.roughfix(pcaData)
 }
 
 pcsCnt <- ifelse(ncol(pcaData) < 10, ncol(pcaData), 10)

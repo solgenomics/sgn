@@ -53,6 +53,7 @@ solGS.geneticGain = {
 	var selectionPopId  = jQuery('#gg_canvas #selection_pop_id').val();
 	var trainingTraitsIds = jQuery('#gg_canvas').find('#training_traits_ids').val();
 	var traitId         = jQuery('#trait_id').val();
+	var protocolId      = jQuery('#genotyping_protocol_id').val();
 
 	if(document.URL.match(/solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//)) {
 	    if (trainingTraitsIds) {
@@ -65,7 +66,8 @@ solGS.geneticGain = {
 	    'training_pop_name' : trainingPopName,
 	    'selection_pop_id' : selectionPopId,
 	    'training_traits_ids' : trainingTraitsIds,
-	    'trait_id'         : traitId
+	    'trait_id'         : traitId,
+	    'genotyping_protocol_id': protocolId
 	}
 	
 	return ggArgs;

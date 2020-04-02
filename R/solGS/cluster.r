@@ -34,16 +34,16 @@ errorFile   <- grep("error", outputFiles, value = TRUE)
 
 combinedDataFile <- grep("combined_cluster_data_file", outputFiles, value = TRUE)
 
-plotPamFile      <- grep("plot_pam", outputFiles, value = TRUE)
-plotKmeansFile   <- grep("plot_kmeans", outputFiles, value = TRUE)
-
+plotPamFile    <- grep("plot_pam", outputFiles, value = TRUE)
+plotKmeansFile <- grep("k-means-plot", outputFiles, value = TRUE)
 optionsFile    <- grep("options", inputFiles,  value = TRUE)
+
 clusterOptions <- read.table(optionsFile,
                              header = TRUE,
                              sep = "\t",
                              stringsAsFactors = FALSE,
                              na.strings = "")
-
+print(clusterOptions)
 clusterOptions <- column_to_rownames(clusterOptions, var = "Params")
 userKNumbers   <- as.numeric(clusterOptions["k numbers", 1])
 dataType       <- clusterOptions["data type", 1]
@@ -63,14 +63,16 @@ genoDataMissing <- c()
 extractGenotype <- function(inputFiles) {
 
     genoFiles <- grep("genotype_data", inputFiles,  value = TRUE)
+   
     genoMetaData <- c()
     filteredGenoFile <- c()
 
     if (length(genoFiles) > 1) {   
         genoData <- combineGenoData(genoFiles)
-        
+    
         genoMetaData   <- genoData$trial
         genoData$trial <- NULL
+        
     } else {
         genoFile <- genoFiles
         genoData <- fread(genoFile,
@@ -79,10 +81,13 @@ extractGenotype <- function(inputFiles) {
         
         if (is.null(genoData)) { 
             filteredGenoFile <- grep("filtered_genotype_data_",  genoFile, value = TRUE)
-            genoData <- fread(filteredGenoFile, header = TRUE)         
+            genoData <- fread(filteredGenoFile, header = TRUE)
         }
-    }
 
+        genoData <- unique(genoData, by = 'V1')
+        genoData <- data.frame(genoData)
+        genoData <- column_to_rownames(genoData, 'V1')               
+    }
    
     if (is.null(genoData)) {
         stop("There is no genotype dataset.")
@@ -90,24 +95,18 @@ extractGenotype <- function(inputFiles) {
     } else {
 
         ##genoDataFilter::filterGenoData
-        genoData <- unique(genoData, by = 'V1')
-        genoData <- data.frame(genoData)
-        genoData <- column_to_rownames(genoData, 'V1')       
-    
-
         genoData <- convertToNumeric(genoData)
         genoData <- filterGenoData(genoData, maf=0.01)
         genoData <- roundAlleleDosage(genoData)
 
         message("No. of geno missing values, ", sum(is.na(genoData)))
         if (sum(is.na(genoData)) > 0) {
-        genoDataMissing <- c('yes')
-        genoData <- na.roughfix(genoData)
+            genoDataMissing <- c('yes')
+            genoData <- na.roughfix(genoData)
         }
-    
+
         genoData <- data.frame(genoData)
-    }
-      
+    } 
 }
 
 set.seed(235)
@@ -116,7 +115,7 @@ clusterDataNotScaled <- c()
 
 if (grepl('genotype', dataType, ignore.case = TRUE)) {
     clusterData <- extractGenotype(inputFiles)   
-
+    
     pca    <- prcomp(clusterData, retx = TRUE)
     pca    <- summary(pca)
 
