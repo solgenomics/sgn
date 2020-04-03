@@ -30,6 +30,7 @@ $combo_pops_id =  $pop_id;
 }
 
 $pop_id = undef if $list_id || $combo_pops_id;
+my $url = $c->req->path;
 
 </%perl>
 
@@ -38,6 +39,13 @@ $pop_id = undef if $list_id || $combo_pops_id;
 
 <br />
 
+
+% if ($url =~ /pca\/analysis/) {
+
+<& /solgs/genotyping_protocol.mas &>
+
+%}
+  
 <&| /page/info_section.mas, 
     collapsible => 0, 
     collapsed   => 0,

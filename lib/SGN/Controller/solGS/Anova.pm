@@ -85,28 +85,10 @@ sub anova_traits {
 
      my $trial_id = $c->stash->{trial_id};
 
-     my $traits = $c->controller('solGS::Utils')->trial_traits($c, $trial_id);
-     my $clean_traits = $self->remove_ontology($c, $traits);
+     my $traits = $c->model('solGS::solGS')->trial_traits($trial_id);
+     my $clean_traits = $c->controller('solGS::Utils')->remove_ontology($traits);
 
      $c->stash->{rest}{anova_traits} = $clean_traits;
-
-}
-
-
-sub remove_ontology {
-    my ($self, $c, $traits) = @_;
-
-    my @clean_traits;
-
-    foreach my $tr (@$traits) {
-	my $name = $tr->[1];
-	$name= $c->controller('solGS::solGS')->clean_traits($name);
-
-	my $id_nm = {'trait_id' => $tr->[0], 'trait_name' => $name};
- 	push @clean_traits, $id_nm;	    	    
-    }
-
-    return \@clean_traits;
 
 }
 

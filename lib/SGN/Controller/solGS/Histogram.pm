@@ -19,6 +19,7 @@ sub histogram_phenotype_data :Path('/histogram/phenotype/data/') Args(0) {
     my ($self, $c) = @_;
     
     $c->stash->{pop_id} = $c->req->param('training_pop_id');
+    $c->stash->{training_pop_id} = $c->req->param('training_pop_id');
     $c->stash->{trait_id} = $c->req->param('trait_id');
 
     if ($c->req->referer =~ /combined/) 

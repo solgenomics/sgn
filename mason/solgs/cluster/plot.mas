@@ -49,6 +49,8 @@ $pop_id = undef if $list_id || $combo_pops_id;
 }
 </style>
 
+<div id="cluster_canvas">
+  
 <& /solgs/spinner.mas &>
 <div id="cluster_message" style="font-weight:bold;text-align:center;color:#A7C942"> </div>
 
@@ -62,4 +64,4 @@ $pop_id = undef if $list_id || $combo_pops_id;
     <input type="hidden"  id="data_structure" value="<% $data_structure %>" />
 </div>
 
-
+</div>

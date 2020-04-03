@@ -750,14 +750,17 @@ sub search_stock_using_plot_name {
  
 
 sub genotype_data {
-    my ($self, $trial_id) = @_;
+    my ($self, $args) = @_;
 
-    #my $training_pop_id  = $args->{training_pop_id};
-    #my $selection_pop_id = $args->{selection_pop_id};
+    my $trial_id  = $args->{trial_id};
+    my $protocol_id = $args->{genotyping_protocol_id};  
+  
+    if (!$protocol_id)
+    {
+	my $protocol_detail= $self->protocol_detail(); 
+	$protocol_id = $protocol_detail->{protocol_id};
+    }
     
-    my $protocol_id = $self->protocol_id();  
-   # my $trial_id = $selection_pop_id ? $selection_pop_id : $training_pop_id;
- 
     my $geno_search = CXGN::Genotype::Search->new({
 	bcs_schema => $self->schema(),
 	people_schema => $self->people_schema,
@@ -771,7 +774,7 @@ sub genotype_data {
 
     $geno_search->init_genotype_iterator();
     return $geno_search;
-   
+  
 }
 
 
@@ -803,9 +806,13 @@ sub structure_genotype_data {
 
 
 sub genotypes_list_genotype_data {
-    my ($self, $genotypes_ids) = @_;
-
-    my $protocol_id = $self->protocol_id();
+    my ($self, $genotypes_ids, $protocol_id) = @_;
+     
+    if (!$protocol_id) 
+    {
+	my $protocol_detail= $self->protocol_detail() if !$protocol_id;
+	$protocol_id = $protocol_detail->{protocol_id};
+    }
     
     my $geno_search = CXGN::Genotype::Search->new(
 	bcs_schema => $self->schema(),
@@ -1267,23 +1274,6 @@ sub prediction_pops {
 }
 
 
-# sub plots_list_phenotype_data {
-#     my ($self, $plots_names) = @_;
-   
-#     if (@$plots_names) 
-#     {
-# 	my $stock_pheno_data_rs = $self->plots_list_phenotype_data_rs($plots_names);  
-# 	my $data                = $self->structure_plots_list_phenotype_data($stock_pheno_data_rs);
-
-# 	return \$data;
-#     }
-#     else
-#     {
-# 	return;
-#     }
-   
-# }
-
 
 sub plots_list_phenotype_data {
     my ($self, $plots_ids) = @_;
@@ -1313,35 +1303,6 @@ sub trial_traits {
  
 }
 
-
-# sub project_trait_phenotype_data_rs {
-#     my ($self, $project_id, $trait_id) = @_;
-  
-#     my $rs = $self->schema->resultset("Stock::Stock")->search(
-#         {
-#             'observable.cvterm_id' => $trait_id ,
-#             'project.project_id'   => $project_id,           
-#         }, {
-#             join => [
-#                 { stock_relationship_subjects => 'object',     
-# 		  nd_experiment_stocks => {
-# 		      nd_experiment => {
-# 			  nd_experiment_phenotypes => {
-# 			      phenotype => 'observable'                    
-# 			  },
-# 				  nd_experiment_projects => 'project',
-# 		      },
-# 		  },
-# 		},		 
-#                 ],
-#             select   => [ qw/ object.uniquename object.stock_id me.uniquename phenotype.value / ],
-#             as       => [ qw/ stock_name stock_id uniquename value / ],
-          
-#         });
-              
-#     return $rs;
-
-# }
 
 sub project_trait_phenotype_data_rs {
     my ($self, $project_id, $trait_id) = @_;
@@ -1973,24 +1934,63 @@ sub genotyping_protocol {
 }
 
 
-sub protocol_id {
+sub protocol_detail {
     my ($self, $protocol) = @_;
 
     unless ($protocol) 
     {
 	$protocol = $self->context->config->{default_genotyping_protocol};
     }
-   
-    my $q = 'SELECT nd_protocol_id FROM nd_protocol WHERE name = ?';
-    my $sth = $self->context->dbc->dbh->prepare($q);
-
-    $sth->execute($protocol);
-
-    my $protocol_id = $sth->fetchrow_array(); 
-   
-    return $protocol_id;
-
     
+    my $where;
+    if ($protocol =~ /\D+/)
+    {
+	$where = 'WHERE name = ?';
+    }
+    else
+    { 
+	$where = 'WHERE nd_protocol_id = ?';	
+    }
+    
+    my $q = 'SELECT nd_protocol_id, name, description FROM nd_protocol ' .  $where;    
+    my $sth = $self->context->dbc->dbh->prepare($q);
+    $sth->execute($protocol);
+    my ($protocol_id, $name, $desc) = $sth->fetchrow_array(); 
+
+    return {
+	'protocol_id' => $protocol_id, 
+	'name'        => $name,
+	'description' => $desc
+    };
+   
+}
+
+
+sub get_all_genotyping_protocols {
+    my ($self, $trial_id) = @_;
+
+    my $where = ' WHERE genotyping_protocol_id > 0';
+    if ($trial_id)
+    {
+	$where = ' WHERE trial_id = ?';
+    }
+
+    my $q = 'SELECT distinct(genotyping_protocol_id)
+                    FROM genotyping_protocolsXtrials' . $where;
+
+   
+    my $sth = $self->context->dbc->dbh->prepare($q);
+    
+    $trial_id ? $sth->execute($trial_id) : $sth->execute();
+
+    my @protocol_ids;
+    
+    while ( my $protocol_id = $sth->fetchrow_array()) 
+    {
+	push @protocol_ids, $protocol_id;
+    }
+
+    return \@protocol_ids;
 }
 
 
@@ -2043,16 +2043,29 @@ sub get_dataset_name {
     my $dataset = CXGN::Dataset->new({
 	people_schema => $self->people_schema,
 	schema  => $self->schema,
-	sp_dataset_id =>$dataset_id}); 
+	sp_dataset_id => $dataset_id}); 
    
     return $dataset->name();
 }
 
 
-sub get_dataset_genotype_data {
+sub get_dataset_owner {
     my ($self, $dataset_id) = @_;
    
-    my $protocol_id = $self->protocol_id();
+    my $dataset = CXGN::Dataset->new({
+	people_schema => $self->people_schema,
+	schema  => $self->schema,
+	sp_dataset_id => $dataset_id}); 
+   
+    return $dataset->sp_person_id();
+}
+
+
+sub get_dataset_genotype_data {
+    my ($self, $dataset_id, $protocol_id) = @_;
+   
+    my $protocol_detail = $self->protocol_detail($protocol_id);
+    $protocol_id = $protocol_detail->{protocol_id};
 
     my $geno_search = CXGN::Genotype::Search->new(
 	bcs_schema => $self->schema(),
