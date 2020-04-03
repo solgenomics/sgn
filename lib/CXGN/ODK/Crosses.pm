@@ -610,6 +610,21 @@ sub save_ona_cross_info {
             return {error => 'Error saving crosses'};
         }
 
+
+
+        #    my @cross_properties = split ',', $self->allowed_cross_properties;
+        #    foreach my $info_type (@cross_properties){
+        #        if ($parsed_data{$info_type}) {
+        #            my %info_hash = %{$parsed_data{$info_type}};
+        #            foreach my $cross_name_key (keys %info_hash) {
+        #                my $value = $info_hash{$cross_name_key};
+        #                my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $bcs_schema, cross_name => $cross_name_key, key => $info_type, value => $value });
+        #                $cross_add_info->add_info();
+        #            }
+        #        }
+        #    }
+
+
         #print STDERR Dumper \%cross_info;
         #print STDERR Dumper \%plant_status_info;
         #print STDERR Dumper \%cross_parents;
@@ -645,13 +660,6 @@ sub create_odk_cross_progress_tree {
 #    my $wishlist_file_name = $self->_ona_cross_wishlist_file_name;
     my $germplasm_info_file_name = $self->_ona_germplasm_info_file_name;
     my $form_id = $self->odk_crossing_data_service_form_id;
-
-#    $wishlist_file_name =~ s/.csv//;
-#    my $wishlist_file_name_loc = $wishlist_file_name;
-#    $wishlist_file_name_loc =~ s/cross_wishlist_//;
-#    my @wishlist_file_name_loc_array = split '_', $wishlist_file_name_loc;
-#    $wishlist_file_name_loc = $wishlist_file_name_loc_array[0];
-#    print STDERR $wishlist_file_name_loc."\n";
 
     my %combined;
 
@@ -1254,73 +1262,6 @@ sub create_odk_cross_progress_tree {
         }
     }
     #print STDERR Dumper \%parsed_data;
-
-#    my $cross_trial_id;
-#    my $location_id;
-#    my $location = $bcs_schema->resultset("NaturalDiversity::NdGeolocation")->find({description=>$wishlist_file_name_loc});
-#    if ($location){
-#        $location_id = $location->nd_geolocation_id;
-#    }
-#    my $previous_crossing_trial_rs = $bcs_schema->resultset("Project::Project")->find({name => $wishlist_file_name});
-#    my $iita_breeding_program_id = $bcs_schema->resultset("Project::Project")->find({name => 'IITA'})->project_id();
-#    my $t = Time::Piece->new();
-#    if ($previous_crossing_trial_rs){
-#        $cross_trial_id = $previous_crossing_trial_rs->project_id;
-#    } else {
-#        my $add_crossingtrial = CXGN::Pedigree::AddCrossingtrial->new({
-#            chado_schema => $bcs_schema,
-#            dbh => $bcs_schema->storage->dbh,
-#            breeding_program_id => $iita_breeding_program_id,
-#            year => $t->year,
-#            project_description => 'ODK ONA crosses from wishlist',
-#            crossingtrial_name => $wishlist_file_name,
-#            nd_geolocation_id => $location_id
-#        });
-#        my $store_return = $add_crossingtrial->save_crossingtrial();
-#        $cross_trial_id = $store_return->{trial_id};
-#    }
-
-#    if ($parsed_data{crosses} && scalar(@{$parsed_data{crosses}}) > 0){
-
-#        my @new_crosses;
-#        foreach (@{$parsed_data{crosses}}){
-#            my $cross_exists_rs = $bcs_schema->resultset("Stock::Stock")->find({uniquename=>$_->get_name});
-#            if ($cross_exists_rs){
-#                print STDERR "Already saved ".$cross_exists_rs->uniquename.". Skipping AddCrosses\n";
-#            } else {
-#                push @new_crosses, $_;
-#            }
-#        }
-
-#        my $cross_add = CXGN::Pedigree::AddCrosses->new({
-#            chado_schema => $bcs_schema,
-#            phenome_schema => $phenome_schema,
-#            metadata_schema => $metadata_schema,
-#            dbh => $bcs_schema->storage->dbh,
-#            location => $wishlist_file_name_loc,
-#            crossing_trial_id => $cross_trial_id,
-#            crosses => \@new_crosses,
-#            owner_name => $self->sp_person_username
-#        });
-#        if (!$cross_add->validate_crosses()){
-#            return {error => 'Error validating crosses'};
-#        }
-#        if (!$cross_add->add_crosses()){
-#            return {error => 'Error saving crosses'};
-#        }
-#    }
-
-#    my @cross_properties = split ',', $self->allowed_cross_properties;
-#    foreach my $info_type (@cross_properties){
-#        if ($parsed_data{$info_type}) {
-#            my %info_hash = %{$parsed_data{$info_type}};
-#            foreach my $cross_name_key (keys %info_hash) {
-#                my $value = $info_hash{$cross_name_key};
-#                my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $bcs_schema, cross_name => $cross_name_key, key => $info_type, value => $value });
-#                $cross_add_info->add_info();
-#            }
-#        }
-#    }
 
     return {success => 1};
 }
