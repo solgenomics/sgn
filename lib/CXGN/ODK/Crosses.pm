@@ -532,7 +532,11 @@ sub save_ona_cross_info {
 
                         foreach my $harvested_info( @{ $crosses_harvested } ) {
                             my $cross_id =  $harvested_info->{'FieldActivities/harvesting/multiple_harvests/harvest/harvestID'} || $harvested_info->{'FieldActivities/harvesting/multiple_harvests/harvestID'};
-                            my $harvest_date = $harvested_info->{'FieldActivities/harvesting/multiple_harvests/harvesting_date_grab'};
+                            my $odk_harvest_date = $harvested_info->{'FieldActivities/harvesting/multiple_harvests/harvesting_date_grab'};
+                            (my $harvest_date) = ($odk_harvest_date =~ /^([^T]+)/);
+
+#                            print STDERR "ODK HARVEST DATE =".Dumper($odk_harvest_date)."\n";
+#                            print STDERR "HARVEST DATE =".Dumper($harvest_date)."\n";
                             $cross_property = 'Harvest Date';
                             $field_cross_info{$cross_property}{$cross_id} = $harvest_date;
                         }
