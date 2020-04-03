@@ -275,6 +275,7 @@ sub save_ona_cross_info {
         my @new_crosses;
 
         my %field_cross_info;
+        my $cross_property;
 
         foreach my $activity_hash (@$message_hash){
             #print STDERR Dumper $activity_hash;
@@ -511,8 +512,9 @@ sub save_ona_cross_info {
                             push @new_crosses, $pedigree;
                        }
 #                       print STDERR "NEW CROSSES =".Dumper(\@new_crosses)."\n";
+                        $cross_property = 'First Pollination Date';
                         my $firstPollinationDate = $a->{'FieldActivities/FirstPollination/firstpollination_date'};
-                        $field_cross_info{'First Pollination Date'}{$odk_cross_unique_id} = $firstPollinationDate;
+                        $field_cross_info{$cross_property}{$odk_cross_unique_id} = $firstPollinationDate;
                     }
                     elsif ($a->{'FieldActivities/fieldActivity'} eq 'repeatPollination'){
                         push @{$cross_info{$a->{'FieldActivities/RepeatPollination/getCrossID'}}->{'repeatPollination'}}, $a;
@@ -524,8 +526,17 @@ sub save_ona_cross_info {
                     elsif ($a->{'FieldActivities/fieldActivity'} eq 'harvesting'){
                         my $cross_id = $a->{'FieldActivities/harvesting/harvest/harvestID'} || $a->{'FieldActivities/harvesting/harvestID'};
                         push @{$cross_info{$cross_id}->{'harvesting'}}, $a;
+                        my $cross_id = $a->{'FieldActivities/harvesting/harvest/harvestID'} || $a->{'FieldActivities/harvesting/harvestID'};
 
-#                        print STDERR "HARVESTING INFO =".Dumper(\%cross_info)."\n";
+                        my $crosses_harvested = $a->{'FieldActivities/harvesting/multiple_harvests'};
+
+                        foreach my $harvested_info( @{ $crosses_harvested } ) {
+                            my $cross_id =  $harvested_info->{'FieldActivities/harvesting/multiple_harvests/harvest/harvestID'} || $harvested_info->{'FieldActivities/harvesting/multiple_harvests/harvestID'};
+                            my $harvest_date = $harvested_info->{'FieldActivities/harvesting/multiple_harvests/harvesting_date_grab'};
+                            $cross_property = 'Harvest Date';
+                            $field_cross_info{$cross_property}{$cross_id} = $harvest_date;
+                        }
+#                        print STDERR "HARVEST CROSS INFO =".Dumper(\%field_cross_info)."\n";
                     }
                     elsif ($a->{'FieldActivities/fieldActivity'} eq 'seedExtraction'){
                         my $cross_id = $a->{'FieldActivities/seedExtraction/extractionID'} || $a->{'FieldActivities/seedExtraction/extraction/extractionID'};
@@ -616,7 +627,6 @@ sub save_ona_cross_info {
         }
 
 #        print STDERR "FIELD CROSS INFO =".Dumper(\%field_cross_info)."\n";
-
 
         my @cross_properties = split ',', $self->allowed_cross_properties;
 #        print STDERR "ALLOWED CROSS INFO =".Dumper(\@cross_properties)."\n";
