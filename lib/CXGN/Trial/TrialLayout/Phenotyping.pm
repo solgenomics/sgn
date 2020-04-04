@@ -34,9 +34,10 @@ has 'plot_dimensions' => (
     builder  => '_retrieve_plot_dimensions',
 );
 
-after 'lookup_trial_id' => sub { 
+after '_lookup_trial_id' => sub {
+    my $self = shift;
     $self->_set_block_numbers($self->_get_plot_info_fields_from_trial("block_number") || []);
-}
+};
 
 
 

@@ -96,7 +96,9 @@ has 'trial_id' => (isa => 'Int',
 
 =cut
 
-has 'layout' => (isa => 'CXGN::Trial::TrialLayout',
+has 'layout' => (isa => 'CXGN::Trial::TrialLayout::Phenotyping | 
+                         CXGN::Trial::TrialLayout::Genotyping | 
+                         CXGN::Trial::TrialLayout::Analysis',
 		 is => 'rw',
 		 reader => 'get_layout',
 		 writer => 'set_layout',

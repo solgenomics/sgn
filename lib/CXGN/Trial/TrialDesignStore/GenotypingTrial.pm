@@ -9,7 +9,8 @@ BEGIN { extends 'CXGN::Trial::TrialDesignStore::AbstractTrial';}
 sub BUILD {
     my $self = shift;
     my $args = shift;
-    
+
+    print STDERR "BUILD CXGN::Trial::TrialDesignStore::AbstractTrial\n";
     $self->set_nd_experiment_type_id(SGN::Model::Cvterm->get_cvterm_row($self->get_bcs_schema(), 'genotyping_layout', 'experiment_type')->cvterm_id());
     $self->set_stock_type_id($self->get_tissue_sample_cvterm_id);
     $self->set_stock_relationship_type_id($self->get_tissue_sample_of_cvterm_id);

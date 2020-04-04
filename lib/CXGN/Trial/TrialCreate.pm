@@ -285,7 +285,7 @@ sub save_trial {
 		trial_id => $project->project_id()
 	});
 
-	print STDERR "TRIAL TYPE = ".ref($t)."!!!!\n";
+	#print STDERR "TRIAL TYPE = ".ref($t)."!!!!\n";
 	my $nd_experiment_type_id;
 	if ($self->get_is_genotyping()) {
 	    print STDERR "Generating a genotyping trial...\n";
