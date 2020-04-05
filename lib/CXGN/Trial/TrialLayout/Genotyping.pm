@@ -33,7 +33,7 @@ sub retrieve_plot_info {
      my $design = shift;
 
      print STDERR "DESIGN INFO = ".Dumper($design);
-     
+
      $self->SUPER::retrieve_plot_info($plot, $design);
 
      my $plot_properties = $plot->search_related('stockprops', { type_id => { -in => [ $self->cvterm_id('plot number') ] }});
@@ -67,19 +67,18 @@ sub retrieve_plot_info {
      print STDERR "RETRIEVED: genotyping_user_id: $design->{genotyping_user_id}\n";
      $design->{$plot_number}->{genotyping_project_name} = $genotyping_project_name;
      print STDERR "RETRIEVED: genotyping_project_name: $design->{genotyping_project_name}\n";
-
-
      
      my $source_rs = $plot->search_related('stock_relationship_subjects')->search(
-	 { 'me.type_id' => { -in => $self->get_target_stock_type_ids() }, 'object.type_id' => { -in => $self->get_source_stock_type_ids() } },
+	 { 'me.type_id' => { -in => $self->get_relationship_type_ids() }, 'object.type_id' => { -in => $self->get_source_stock_type_ids() } },
 	 { 'join' => 'object' }
 	 )->search_related('object');
 
 	 # was $accession_cvterm_id, $plot_cvterm_id, $plant_cvterm_id, $tissue_cvterm_id, $subplot_cvterm_id
 
 
-     print STDERR "Now dealing with metadata...\n";
+     print STDERR "Now dealing with metadata... [".$source_rs->count()."]\n";
      while (my $r=$source_rs->next){
+	 print STDERR "TYPE= ".$r->type_id()."\n";
 	 if ($r->type_id == $self->cvterm_id('accession')){
 	     print STDERR "Dealing with accession metadata.\n";
 	     $design->{$plot_number}->{"source_accession_id"} = $r->stock_id;
