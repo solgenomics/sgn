@@ -173,7 +173,7 @@ sub _lookup_trial_id {
 
     my $design = $self->_set_design($self->_get_design_from_trial());
 
-  print STDERR "_lookup_trial_id TRIAL design is now ".Dumper($self->get_design());
+###  print STDERR "_lookup_trial_id TRIAL design is now ".Dumper($self->get_design());
     
   $self->_set_plot_names($self->_get_plot_info_fields_from_trial("plot_name") || []);
 # moved to subclass  $self->_set_block_numbers($self->_get_plot_info_fields_from_trial("block_number") || []);
@@ -256,26 +256,26 @@ sub _get_unique_control_accession_names_from_trial {
 }
 
 sub _get_plot_info_fields_from_trial {
-  my $self = shift;
-  my $field_name = shift;
-  my %design = %{$self->get_design()};
-  my @field_values;
-  my %unique_field_values;
-  foreach my $key (sort { $a cmp $b} keys %design) {
-    my %design_info = %{$design{$key}};
-    if (exists($design_info{$field_name})) {
-	if (! exists($unique_field_values{$design_info{$field_name}})) {
-	    #print STDERR "pushing $design_info{$field_name}...\n";
-	    push(@field_values, $design_info{$field_name});
+    my $self = shift;
+    my $field_name = shift;
+    my %design = %{$self->get_design()};
+    my @field_values;
+    my %unique_field_values;
+    foreach my $key (sort { $a cmp $b} keys %design) {
+	my %design_info = %{$design{$key}};
+	if (exists($design_info{$field_name})) {
+	    if (! exists($unique_field_values{$design_info{$field_name}})) {
+		#print STDERR "pushing $design_info{$field_name}...\n";
+		push(@field_values, $design_info{$field_name});
+	    }
+	    $unique_field_values{$design_info{$field_name}} = 1;
 	}
-	$unique_field_values{$design_info{$field_name}} = 1;
     }
-  }
-
-  if (! scalar(@field_values) >= 1){
-    return;
-  }
-  return \@field_values;
+    
+    if (! scalar(@field_values) >= 1){
+	return;
+    }
+    return \@field_values;
 }
 
 
@@ -384,7 +384,7 @@ sub retrieve_plot_info {
     my $plot = shift;
     my $design = shift;
 
-    #print STDERR "_get_design_from_trial. Working on plot ".$plot->uniquename()."\n";
+    print STDERR "retrieve_plot_info()... Working on plot ".$plot->uniquename()."\n";
     my %design_info;
     
     my $json = JSON->new();
@@ -432,45 +432,45 @@ sub retrieve_plot_info {
     if ($accession_rs->count != 1){
 	die "There is more than one or no (".$accession_rs->count.") accession/cross/family_name linked  here!\n";
     }
-    if ($self->get_experiment_type eq 'genotyping_layout'){
-	my $source_rs = $plot->search_related('stock_relationship_subjects')->search(
-	    { 'me.type_id' => { -in => $self->get_relationship_type_ids() }, 'object.type_id' => { -in => $self->get_relationship_type_ids() } },
-	    # was $accession_cvterm_id, $plot_cvterm_id, $plant_cvterm_id, $tissue_cvterm_id, $subplot_cvterm_id
-	    { 'join' => 'object' }
-	    )->search_related('object');
-	while (my $r=$source_rs->next){
-	    if ($r->type_id == $self->cvterm_id('accession')){
-		$design_info{"source_accession_id"} = $r->stock_id;
-		$design_info{"source_accession_name"} = $r->uniquename;
-		$design_info{"source_observation_unit_name"} = $r->uniquename;
-		$design_info{"source_observation_unit_id"} = $r->stock_id;
-	    }
-	    if ($r->type_id == $self->cvterm_id('plot')){
-		$design_info{"source_plot_id"} = $r->stock_id;
-		$design_info{"source_plot_name"} = $r->uniquename;
-		$design_info{"source_observation_unit_name"} = $r->uniquename;
-		$design_info{"source_observation_unit_id"} = $r->stock_id;
-	    }
-	    if ($r->type_id == $self->cvterm_id('plant')){
-		$design_info{"source_plant_id"} = $r->stock_id;
-		$design_info{"source_plant_name"} = $r->uniquename;
-		$design_info{"source_observation_unit_name"} = $r->uniquename;
-		$design_info{"source_observation_unit_id"} = $r->stock_id;
-	    }
-	    if ($r->type_id == $self->cvterm_id('tissue')){
-		$design_info{"source_tissue_id"} = $r->stock_id;
-		$design_info{"source_tissue_name"} = $r->uniquename;
-		$design_info{"source_observation_unit_name"} = $r->uniquename;
-		$design_info{"source_observation_unit_id"} = $r->stock_id;
-	    }
-	}
-	my $organism_q = "SELECT species, genus FROM organism WHERE organism_id = ?;";
-	my $h = $self->get_schema->storage->dbh()->prepare($organism_q);
-	$h->execute($plot->organism_id);
-	my ($species, $genus) = $h->fetchrow_array;
-	$design_info{"species"} = $species;
-	$design_info{"genus"} = $genus;
-    }
+    # if ($self->get_experiment_type eq 'genotyping_layout'){
+    # 	my $source_rs = $plot->search_related('stock_relationship_subjects')->search(
+    # 	    { 'me.type_id' => { -in => $self->get_relationship_type_ids() }, 'object.type_id' => { -in => $self->get_relationship_type_ids() } },
+    # 	    # was $accession_cvterm_id, $plot_cvterm_id, $plant_cvterm_id, $tissue_cvterm_id, $subplot_cvterm_id
+    # 	    { 'join' => 'object' }
+    # 	    )->search_related('object');
+    # 	while (my $r=$source_rs->next){
+    # 	    if ($r->type_id == $self->cvterm_id('accession')){
+    # 		$design_info{"source_accession_id"} = $r->stock_id;
+    # 		$design_info{"source_accession_name"} = $r->uniquename;
+    # 		$design_info{"source_observation_unit_name"} = $r->uniquename;
+    # 		$design_info{"source_observation_unit_id"} = $r->stock_id;
+    # 	    }
+    # 	    if ($r->type_id == $self->cvterm_id('plot')){
+    # 		$design_info{"source_plot_id"} = $r->stock_id;
+    # 		$design_info{"source_plot_name"} = $r->uniquename;
+    # 		$design_info{"source_observation_unit_name"} = $r->uniquename;
+    # 		$design_info{"source_observation_unit_id"} = $r->stock_id;
+    # 	    }
+    # 	    if ($r->type_id == $self->cvterm_id('plant')){
+    # 		$design_info{"source_plant_id"} = $r->stock_id;
+    # 		$design_info{"source_plant_name"} = $r->uniquename;
+    # 		$design_info{"source_observation_unit_name"} = $r->uniquename;
+    # 		$design_info{"source_observation_unit_id"} = $r->stock_id;
+    # 	    }
+    # 	    if ($r->type_id == $self->cvterm_id('tissue')){
+    # 		$design_info{"source_tissue_id"} = $r->stock_id;
+    # 		$design_info{"source_tissue_name"} = $r->uniquename;
+    # 		$design_info{"source_observation_unit_name"} = $r->uniquename;
+    # 		$design_info{"source_observation_unit_id"} = $r->stock_id;
+    # 	    }
+    # 	}
+    # 	my $organism_q = "SELECT species, genus FROM organism WHERE organism_id = ?;";
+    # 	my $h = $self->get_schema->storage->dbh()->prepare($organism_q);
+    # 	$h->execute($plot->organism_id);
+    # 	my ($species, $genus) = $h->fetchrow_array;
+    # 	$design_info{"species"} = $species;
+    # 	$design_info{"genus"} = $genus;
+    # }
     my $accession = $accession_rs->first->object;
     my $plants = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $self->cvterm_id('plant_of')})->search_related('object', {'object.type_id' => $self->cvterm_id('plant') }, {order_by=>"object.stock_id"});
     
