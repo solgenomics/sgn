@@ -1073,7 +1073,7 @@ my $plate_data = {
 
 $mech->post_ok('http://localhost:3010/ajax/breeders/storegenotypetrial', [ "sgn_session_id"=>$sgn_session_id, plate_data => encode_json($plate_data) ]);
 $response = decode_json $mech->content;
-print STDERR Dumper $response;
+print STDERR "RESPONSE: ".Dumper $response;
 
 ok($response->{trial_id});
 my $geno_trial_id = $response->{trial_id};
@@ -1081,8 +1081,8 @@ $mech->get_ok("http://localhost:3010/breeders/trial/$geno_trial_id/download/layo
 my $intertek_download = $mech->content;
 my $contents = ReadData $intertek_download;
 print STDERR Dumper $contents;
-is($contents->[0]->{'type'}, 'xls', "check that type of file is correct");
-is($contents->[0]->{'sheets'}, '1', "check that type of file is correct");
+is($contents->[0]->{'type'}, 'xls', "check that type of file is correct #1");
+is($contents->[0]->{'sheets'}, '1', "check that type of file is correct #2");
 
 my $columns = $contents->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns);
