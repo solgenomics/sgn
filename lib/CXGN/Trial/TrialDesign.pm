@@ -165,13 +165,14 @@ sub isint{
 
 
 sub validate_field_colNumber {
-  my $colNum = shift;
-  if (isint($colNum)){
-    return $colNum;
-  } else {
-      die "Choose a different row number for field map generation. The product of number of stocks and rep when divided by row number should give an integer\n";
-      return;
-  }
+    my $colNum = shift;
+    if (isint($colNum)){
+	
+	return $colNum;
+    } else {
+	die "Choose a different row number for field map generation. The product of number of stocks and rep when divided by row number should give an integer\n";
+	return;
+    }
 
 }
 
