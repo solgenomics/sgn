@@ -103,6 +103,12 @@ my $pop_link = qq | <a href="/solgs/population/$pop_id/gp/$genotyping_protocol_i
    blups_download_url => $blups_download_url,
    pop_id             => $pop_id,
   trait_id            => $trait_id
+  &>
+
+  <& /solgs/population/gebvs_pheno_regression.mas,
+        pop_id        => $pop_id,
+       trait_id      => $trait_id,
+       combo_pops_id => $combo_pops_id,
 &>
 
 <& /solgs/model/marker_effects.mas, 
