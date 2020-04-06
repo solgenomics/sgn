@@ -274,7 +274,7 @@ sub save_ona_cross_info {
         my $cross_combination;
         my @new_crosses;
 
-        my %field_cross_info;
+        my %musa_cross_info;
         my $cross_property;
 
         foreach my $activity_hash (@$message_hash){
@@ -464,7 +464,7 @@ sub save_ona_cross_info {
                         my $cycle_id = $a->{'FieldActivities/FirstPollination/cycleID'} || 1;
                         $cross_parents{$female_accession_name}->{$male_accession_name}->{$cycle_id}->{$a->{'FieldActivities/FirstPollination/print_crossBarcode/crossID'}}++;
 
-#                        $odk_female_plot_id = $a->{'FieldActivities/FirstPollination/FemalePlotID'};
+#                        $odk_female_plot_id = $a->{'FieldActivities/FirstPollination/FemalePlotID'}; (Note: values of FemalePlotID and MalePlotID do not always correspond to stock_ids in database!!!!!)
 #                        $odk_male_plot_id = $a->{'FieldActivities/FirstPollination/MalePlotID'};
 
                         $odk_female_plot_data = $a->{'FieldActivities/FirstPollination/femaleID'};
@@ -514,7 +514,7 @@ sub save_ona_cross_info {
 #                       print STDERR "NEW CROSSES =".Dumper(\@new_crosses)."\n";
                         $cross_property = 'First Pollination Date';
                         my $firstPollinationDate = $a->{'FieldActivities/FirstPollination/firstpollination_date'};
-                        $field_cross_info{$cross_property}{$odk_cross_unique_id} = $firstPollinationDate;
+                        $musa_cross_info{$cross_property}{$odk_cross_unique_id} = $firstPollinationDate;
                     }
                     elsif ($a->{'FieldActivities/fieldActivity'} eq 'repeatPollination'){
                         push @{$cross_info{$a->{'FieldActivities/RepeatPollination/getCrossID'}}->{'repeatPollination'}}, $a;
@@ -538,13 +538,24 @@ sub save_ona_cross_info {
 #                            print STDERR "ODK HARVEST DATE =".Dumper($odk_harvest_date)."\n";
 #                            print STDERR "HARVEST DATE =".Dumper($harvest_date)."\n";
                             $cross_property = 'Harvest Date';
-                            $field_cross_info{$cross_property}{$cross_id} = $harvest_date;
+                            $musa_cross_info{$cross_property}{$cross_id} = $harvest_date;
                         }
-#                        print STDERR "HARVEST CROSS INFO =".Dumper(\%field_cross_info)."\n";
+#                        print STDERR "HARVEST CROSS INFO =".Dumper(\%musa_cross_info)."\n";
                     }
                     elsif ($a->{'FieldActivities/fieldActivity'} eq 'seedExtraction'){
                         my $cross_id = $a->{'FieldActivities/seedExtraction/extractionID'} || $a->{'FieldActivities/seedExtraction/extraction/extractionID'};
                         push @{$cross_info{$cross_id}->{'seedExtraction'}}, $a;
+
+                        my $odk_extraction_date = $a->{'FieldActivities/seedExtraction/extraction_date'};
+                        $cross_property = 'Seed Extraction Date';
+                        $musa_cross_info{$cross_property}{$cross_id} = $odk_extraction_date;
+
+                        my $number_of_seeds_extracted = $a->{'FieldActivities/seedExtraction/totalSeedsExtracted'};
+                        $cross_property = 'Number of Seeds Extracted';
+                        $musa_cross_info{$cross_property}{$cross_id} = $number_of_seeds_extracted;
+
+#                        'FieldActivities/seedExtraction/embryorescueseeds' => '5',
+#                        'FieldActivities/seedExtraction/earlygerminationseeds' => '0'
                     }
                     else {
                         print STDERR "UNKNOWN ONA ODK activity in $activity_category\n";
@@ -630,14 +641,14 @@ sub save_ona_cross_info {
             return {error => 'Error saving crosses'};
         }
 
-#        print STDERR "FIELD CROSS INFO =".Dumper(\%field_cross_info)."\n";
+#        print STDERR "FIELD CROSS INFO =".Dumper(\%musa_cross_info)."\n";
 
         my @cross_properties = split ',', $self->allowed_cross_properties;
 #        print STDERR "ALLOWED CROSS INFO =".Dumper(\@cross_properties)."\n";
 
         foreach my $info_type(@cross_properties){
-            if ($field_cross_info{$info_type}) {
-                my %info_hash = %{$field_cross_info{$info_type}};
+            if ($musa_cross_info{$info_type}) {
+                my %info_hash = %{$musa_cross_info{$info_type}};
                 foreach my $cross_name_key (keys %info_hash){
                     my $value = $info_hash{$cross_name_key};
                     my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({
