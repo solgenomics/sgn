@@ -273,6 +273,8 @@ sub save_ona_cross_info {
         my $male_plot_name;
         my $cross_combination;
         my @new_crosses;
+        my @checking_female_plots;
+        my @checking_male_plots;
 
         my %musa_cross_info;
         my $cross_property;
@@ -456,6 +458,7 @@ sub save_ona_cross_info {
                         $plant_status_info{$plot_name}->{'flowering'} = $a;
                     }
                     elsif ($a->{'FieldActivities/fieldActivity'} eq 'firstPollination'){
+#                        print STDERR "CHECKING FIRST POLLINATION =".Dumper($a)."\n";
 
                         push @{$cross_info{$a->{'FieldActivities/FirstPollination/print_crossBarcode/crossID'}}->{$a->{'FieldActivities/fieldActivity'}}}, $a;
 
@@ -488,7 +491,17 @@ sub save_ona_cross_info {
                         $db_female_accession_name = $self-> _get_accession_from_plot_name($female_plot_name);
                         $db_male_accession_name = $self-> _get_accession_from_plot_name($male_plot_name);
 
+#                        if (!defined $db_female_accession_name) {
+#                            push @checking_female_plots, $odk_female_plot_data;
+#                        }
+
+#                       if (!defined $db_male_accession_name) {
+#                            push @checking_male_plots, $odk_male_plot_data;
+#                        }
+
+
                         $odk_cross_unique_id = $a->{'FieldActivities/FirstPollination/print_crossBarcode/crossID'};
+
                         $cross_combination = $db_female_accession_name.'/'.$db_male_accession_name;
 
 #                        print STDERR "ODK FEMALE PLOT NAME =".Dumper($female_plot_name)."\n";
@@ -624,6 +637,9 @@ sub save_ona_cross_info {
                 }
             }
         }
+
+#        print STDERR "CHECKING FEMALE PLOT =".Dumper(\@checking_female_plots)."\n";
+#        print STDERR "CHECKING MALE PLOT =".Dumper(\@checking_male_plots)."\n;
 
         my $cross_add = CXGN::Pedigree::AddCrosses->new({
             chado_schema => $schema,
