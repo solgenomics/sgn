@@ -46,12 +46,13 @@ $pop_id = $trial_id if $trial_id;
   title       => "GEBVs vs observed phenotypes" 
     &>
     
-<div id="gebv_pheno_regression_canvas"></div>
-<div id="gebv_pheno_regrssion_plot"></div>
-<br/>
+<div id="gebv_pheno_regression_canvas">
+  <div id="gebv_pheno_regrssion_plot"></div>
+  
+  <input type="hidden" id="population_id" value="<% $pop_id %>" /> 
+  <input type="hidden" id="combo_pops_id" value="<% $combo_pops_id %>" /> 
+  <input type="hidden" id="trait_id" value="<% $trait_id %>" />
 
-<input type="hidden" id="population_id" value="<% $pop_id %>" /> 
-<input type="hidden" id="combo_pops_id" value="<% $combo_pops_id %>" /> 
-<input type="hidden" id="trait_id" value="<% $trait_id %>" />  
+</div>
 
 </&>
