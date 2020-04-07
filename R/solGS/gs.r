@@ -49,21 +49,22 @@ if (length(datasetInfoFile) != 0 ) {
     datasetInfo <- c('single population')  
   }
 
-validationTrait <- paste("validation", trait, sep = "_")
-validationFile  <- grep(validationTrait, outputFiles, value = TRUE)
+#validationTrait <- paste("validation", trait, sep = "_")
+validationFile  <- grep('validation', outputFiles, value = TRUE)
 
 if (is.null(validationFile)) {
   stop("Validation output file is missing.")
 }
 
-kinshipTrait <- paste("rrblup_training_gebvs", trait, sep = "_")
-blupFile     <- grep(kinshipTrait, outputFiles, value = TRUE)
+#kinshipTrait <- paste("rrblup_training_gebvs", trait, sep = "_")
+blupFile     <- grep('rrblup_training_gebvs', outputFiles, value = TRUE)
 
 if (is.null(blupFile)) {
   stop("GEBVs file is missing.")
 }
-markerTrait <- paste("marker_effects", trait, sep = "_")
-markerFile  <- grep(markerTrait, outputFiles, value = TRUE)
+
+#markerTrait <- paste("marker_effects", trait, sep = "_")
+markerFile  <- grep('marker_effects', outputFiles, value = TRUE)
 
 traitPhenoFile <- paste("phenotype_data", trait, sep = "_")
 traitPhenoFile <- grep(traitPhenoFile, outputFiles, value = TRUE)

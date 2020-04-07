@@ -24,6 +24,7 @@ sub check_pheno_corr_result :Path('/phenotype/correlation/check/result/') Args(1
     my ($self, $c, $pop_id) = @_;
 
     $c->stash->{pop_id} = $pop_id;
+    $c->stash->{training_pop_id} = $pop_id;
 
     $self->pheno_correlation_output_files($c);
     my $corre_output_file = $c->stash->{corre_coefficients_json_file};
@@ -48,10 +49,10 @@ sub correlation_phenotype_data :Path('/correlation/phenotype/data/') Args(0) {
    
     my $pop_id = $c->req->param('population_id');
     $c->stash->{pop_id} = $pop_id;
-    my $referer = $c->req->referer;
-   
+    $c->stash->{training_pop_id} = $pop_id;
+     
     my $phenotype_file;
-    
+    my $referer = $c->req->referer;
     if ($referer =~ /qtl/)
     {    
   	my $phenotype_dir = $c->stash->{solqtl_cache_dir};
@@ -93,7 +94,10 @@ sub correlation_genetic_data :Path('/correlation/genetic/data/') Args(0) {
     my $model_id    = $c->req->param('model_id');
     my @traits_ids  = $c->req->param('traits_ids[]');
     my $index_file  = $c->req->param('index_file');
+    my $protocol_id  = $c->req->param('genotyping_protocol_id');
 
+    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
+    
     $c->stash->{selection_index_only_file} = $index_file;   
     $c->stash->{model_id} = $model_id;
     $c->stash->{pop_id}   = $model_id;
@@ -115,6 +119,7 @@ sub correlation_genetic_data :Path('/correlation/genetic/data/') Args(0) {
         $ret->{status} = 'success'; 
         $ret->{gebvs_file} = $combined_gebvs_file;
 	$ret->{index_file} = $index_file;
+	$ret->{genotyping_protocol_id} = $protocol_id;
 
     }
 
@@ -249,7 +254,8 @@ sub pheno_correlation_analysis_output :Path('/phenotypic/correlation/analysis/ou
    
     my $pop_id = $c->req->param('population_id');
     $c->stash->{pop_id} = $pop_id;
-   
+    $c->stash->{training_pop_id} = $pop_id;
+    
     $self->pheno_correlation_output_files($c);
     my $corre_json_file = $c->stash->{corre_coefficients_json_file};
    
@@ -257,6 +263,7 @@ sub pheno_correlation_analysis_output :Path('/phenotypic/correlation/analysis/ou
   
     if (!-s $corre_json_file)
     {
+	$c->controller('solGS::Utils')->save_metadata($c);
         $self->run_pheno_correlation_analysis($c);  
         $corre_json_file = $c->stash->{corre_coefficients_json_file}; 
     }
@@ -292,6 +299,9 @@ sub genetic_correlation_analysis_output :Path('/genetic/correlation/analysis/out
 
     my $gebvs_file = $c->req->param('gebvs_file');
     my $index_file = $c->req->param('index_file');
+
+    my $protocol_id  = $c->req->param('genotyping_protocol_id');
+    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
     
     $c->stash->{data_input_file} = $gebvs_file;
 

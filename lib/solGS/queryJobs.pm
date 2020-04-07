@@ -81,9 +81,10 @@ sub trial_genotype_data {
 
     my $args       = retrieve($self->args_file);
     my $geno_file  = $args->{genotype_file}; 
+
     my $model = $self->get_model();
 					      
-    my $search_obj = $model->genotype_data($args->{trial_id}); 
+    my $search_obj = $model->genotype_data($args); 
     $self->write_geno_data($model, $search_obj, $geno_file);
    
 }
@@ -98,15 +99,21 @@ sub write_geno_data {
    
     while (my $geno = $search_obj->get_next_genotype_info()) 
     {
+	my $geno_data;
 	$count++;	
 	if ($count == 1)
 	{
 	    my $geno_hash = $geno->{selected_genotype_hash};
 	    $marker_headers = $model->get_dataset_markers($geno_hash);
+	    $geno_data  = $model->structure_genotype_data($geno, $marker_headers, $count);   
+	    write_file($file, $$geno_data);
 	}
+	else
+	{
 
-	my $geno_data  = $model->structure_genotype_data($geno, $marker_headers, $count);   
-	write_file($file, {append => 1}, $$geno_data);
+	    $geno_data  = $model->structure_genotype_data($geno, $marker_headers, $count);   
+	    write_file($file, {append => 1}, $$geno_data);
+	}
 
 	if ($self->check_data_exists) 
 	{	    
@@ -146,10 +153,13 @@ sub genotypes_list_genotype_data {
     
     my $args = retrieve($self->args_file);    
     my $genotypes_ids = $args->{genotypes_ids};
-    
-    my $model = $self->get_model();
-    my $search_obj = $model->genotypes_list_genotype_data($genotypes_ids);
+    my $data_dir      = $args->{data_dir};
     my $geno_file     = $args->{genotype_file};
+    my $protocol_id   = $args->{genotyping_protocol_id};
+
+    my $model = $self->get_model();   
+    my $search_obj = $model->genotypes_list_genotype_data($genotypes_ids, $protocol_id);
+    
     $self->write_geno_data($model, $search_obj, $geno_file);
 
 }
