@@ -210,8 +210,8 @@ sub save_ona_cross_info {
     my @wishlist_file_name_loc_array = split '_', $wishlist_file_name_loc;
     $wishlist_file_name_loc = $wishlist_file_name_loc_array[0];
 
-    print STDERR "WISHLIST FILE NAME =".Dumper($wishlist_file_name)."\n";
-    print STDERR "WISHLIST LOCATION =".Dumper($wishlist_file_name_loc)."\n";
+#    print STDERR "WISHLIST FILE NAME =".Dumper($wishlist_file_name)."\n";
+#    print STDERR "WISHLIST LOCATION =".Dumper($wishlist_file_name_loc)."\n";
 
 
     my $cross_trial_id;
@@ -238,7 +238,7 @@ sub save_ona_cross_info {
         my $store_return = $add_crossingtrial->save_crossingtrial();
         $cross_trial_id = $store_return->{trial_id};
     }
-    print STDERR "CROSSING EXPERIMENT ID =".Dumper($cross_trial_id)."\n";
+#    print STDERR "CROSSING EXPERIMENT ID =".Dumper($cross_trial_id)."\n";
 
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
@@ -275,7 +275,6 @@ sub save_ona_cross_info {
         my @new_crosses;
         my @checking_female_plots;
         my @checking_male_plots;
-
         my %musa_cross_info;
         my $cross_property;
 
@@ -467,11 +466,12 @@ sub save_ona_cross_info {
                         my $cycle_id = $a->{'FieldActivities/FirstPollination/cycleID'} || 1;
                         $cross_parents{$female_accession_name}->{$male_accession_name}->{$cycle_id}->{$a->{'FieldActivities/FirstPollination/print_crossBarcode/crossID'}}++;
 
-#                        $odk_female_plot_id = $a->{'FieldActivities/FirstPollination/FemalePlotID'}; (Note: values of FemalePlotID and MalePlotID do not always correspond to stock_ids in database!!!!!)
-#                        $odk_male_plot_id = $a->{'FieldActivities/FirstPollination/MalePlotID'};
-
                         $odk_female_plot_data = $a->{'FieldActivities/FirstPollination/femaleID'};
                         $odk_male_plot_data = $a->{'FieldActivities/FirstPollination/maleID'};
+
+                        if ($odk_male_plot_data eq 'Males_ITCO712_Cv_Rose_r2c1_plot21') {
+                            $odk_male_plot_data = 'Males_ITC0712_Cv_Rose_r2c1_plot21'
+                        }
 
                         if (looks_like_number($odk_female_plot_data)) {
                             my $female_plot_rs = $schema->resultset("Stock::Stock")->find( { stock_id => $odk_female_plot_data, 'me.type_id' => $plot_cvterm_id} );
@@ -487,21 +487,19 @@ sub save_ona_cross_info {
                             $male_plot_name = $odk_male_plot_data;
                         }
 
-
                         $db_female_accession_name = $self-> _get_accession_from_plot_name($female_plot_name);
                         $db_male_accession_name = $self-> _get_accession_from_plot_name($male_plot_name);
 
+                         # debugging
 #                        if (!defined $db_female_accession_name) {
 #                            push @checking_female_plots, $odk_female_plot_data;
 #                        }
 
-#                       if (!defined $db_male_accession_name) {
+#                        if (!defined $db_male_accession_name) {
 #                            push @checking_male_plots, $odk_male_plot_data;
 #                        }
 
-
                         $odk_cross_unique_id = $a->{'FieldActivities/FirstPollination/print_crossBarcode/crossID'};
-
                         $cross_combination = $db_female_accession_name.'/'.$db_male_accession_name;
 
 #                        print STDERR "ODK FEMALE PLOT NAME =".Dumper($female_plot_name)."\n";
@@ -512,7 +510,7 @@ sub save_ona_cross_info {
 #                        print STDERR "CROSS COMBINATION =".Dumper($cross_combination)."\n";
 
                         my $cross_exists_rs = $schema->resultset("Stock::Stock")->find({uniquename => $odk_cross_unique_id});
-                        if ((!defined $cross_exists_rs) && defined $db_female_accession_name && defined $db_male_accession_name && defined $female_plot_name && defined $male_plot_name) {
+                        if (!defined $cross_exists_rs) {
                             my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name => $odk_cross_unique_id, cross_combination=>$cross_combination, cross_type =>'biparental');
                             my $female_parent_individual = Bio::GeneticRelationships::Individual->new(name => $db_female_accession_name);
                             $pedigree->set_female_parent($female_parent_individual);
@@ -553,7 +551,6 @@ sub save_ona_cross_info {
                             $cross_property = 'Harvest Date';
                             $musa_cross_info{$cross_property}{$cross_id} = $harvest_date;
                         }
-#                        print STDERR "HARVEST CROSS INFO =".Dumper(\%musa_cross_info)."\n";
                     }
                     elsif ($a->{'FieldActivities/fieldActivity'} eq 'seedExtraction'){
                         my $cross_id = $a->{'FieldActivities/seedExtraction/extractionID'} || $a->{'FieldActivities/seedExtraction/extraction/extractionID'};
@@ -639,7 +636,7 @@ sub save_ona_cross_info {
         }
 
 #        print STDERR "CHECKING FEMALE PLOT =".Dumper(\@checking_female_plots)."\n";
-#        print STDERR "CHECKING MALE PLOT =".Dumper(\@checking_male_plots)."\n;
+#        print STDERR "CHECKING MALE PLOT =".Dumper(\@checking_male_plots)."\n";
 
         my $cross_add = CXGN::Pedigree::AddCrosses->new({
             chado_schema => $schema,
