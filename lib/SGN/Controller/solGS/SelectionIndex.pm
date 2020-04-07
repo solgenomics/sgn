@@ -20,11 +20,14 @@ sub selection_index_form :Path('/solgs/selection/index/form') Args(0) {
     my $selection_pop_id = $c->req->param('selection_pop_id');
     my $training_pop_id  = $c->req->param('training_pop_id');
     my @traits_ids       = $c->req->param('training_traits_ids[]');
-   
+    my $protocol_id      = $c->req->param('genotyping_protocol_id');
+    
     $c->stash->{model_id} = $training_pop_id;
     $c->stash->{training_pop_id} = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
     $c->stash->{training_traits_ids} = \@traits_ids;
+
+    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
     
     my $traits;
     if ($selection_pop_id) 
@@ -53,7 +56,7 @@ sub calculate_selection_index :Path('/solgs/calculate/selection/index') Args() {
 
     my $selection_pop_id = $c->req->param('selection_pop_id');
     my $training_pop_id = $c->req->param('training_pop_id');
-   
+    
     my @training_traits_ids = $c->req->param('training_traits_ids[]');
         
     my $traits_wts = $c->req->param('rel_wts');
@@ -64,7 +67,7 @@ sub calculate_selection_index :Path('/solgs/calculate/selection/index') Args() {
     $c->stash->{model_id} = $training_pop_id;
     $c->stash->{training_pop_id} = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
-
+    $c->stash->{genotyping_protocol_id} = $c->req->param('genotyping_protocol_id');
     $c->stash->{training_traits_ids} = \@training_traits_ids;
    
     my @traits = keys (%$rel_wts);    
@@ -149,8 +152,8 @@ sub calc_selection_index {
         );
     
    
-    $c->controller('solGS::Files')->create_file_id($c);
-    my $file_id = $c->stash->{file_id};
+    my $file_id = $c->controller('solGS::Files')->create_file_id($c);
+    $c->stash->{file_id} = $file_id;
     
     my $out_name = "output_files_selection_index_${file_id}";
     my $temp_dir = $c->stash->{selection_index_temp_dir};
@@ -177,8 +180,8 @@ sub get_top_10_selection_indices {
     my ($self, $c) = @_;
     
     my $si_file = $c->stash->{selection_index_only_file};
-      
-    my $top_10 = $c->controller('solGS::Utils')->top_10($si_file); 
+    my $top_10 = $c->controller('solGS::Utils')->top_10($si_file);
+   
     $c->stash->{top_10_selection_indices} = $top_10;
 }
 
@@ -199,7 +202,7 @@ sub gebv_rel_weights {
     my @si_wts;
     my $rel_wts_txt = "trait" . "\t" . 'relative_weight' . "\n";
     
-    foreach my $tr (keys %$rel_wts)
+    foreach my $tr (sort keys %$rel_wts)
     {      
         my $wt = $rel_wts->{$tr};
         unless ($tr eq 'rank')
@@ -223,9 +226,9 @@ sub gebv_rel_weights {
 sub gebvs_selection_index_file {
     my ($self, $c) = @_;
 
-   $c->controller('solGS::Files')->create_file_id($c);
-    my $file_id = $c->stash->{file_id};
-  
+   my $file_id = $c->controller('solGS::Files')->create_file_id($c);
+   # my $file_id = $c->stash->{file_id};
+   
     my $name = "gebvs_selection_index_${file_id}";
     my $dir = $c->stash->{selection_index_cache_dir};
  
@@ -246,8 +249,8 @@ sub selection_index_file {
     my $file_id = $c->stash->{sindex_name};
     if (!$file_id) 
     {
-	$c->controller('solGS::Files')->create_file_id($c);
-	$file_id = $c->stash->{file_id};
+	$file_id = $c->controller('solGS::Files')->create_file_id($c);
+	#$file_id = $c->stash->{file_id};
     }
     
     my $name = "selection_index_only_${file_id}";
@@ -267,8 +270,8 @@ sub selection_index_file {
 sub rel_weights_file {
     my ($self, $c) = @_;
 
-    $c->controller('solGS::Files')->create_file_id($c);
-    my $file_id = $c->stash->{file_id};
+    my $file_id = $c->controller('solGS::Files')->create_file_id($c);
+    ###my $file_id = $c->stash->{file_id};
 
     my $dir = $c->stash->{selection_index_cache_dir};
     my $name =  "rel_weights_${file_id}";

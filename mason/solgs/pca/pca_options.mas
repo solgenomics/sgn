@@ -16,10 +16,10 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <%args>
 </%args>
 
-
+<div class="container">
 <div id="pca_options">
  
-  <div class="form-group  col-sm-2"
+  <div class="form-group  col-sm-3"
        id="data_type_opts"
        value="">
 
@@ -37,7 +37,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
   </div>
 
 </div>
-
+</div>
 
  
 

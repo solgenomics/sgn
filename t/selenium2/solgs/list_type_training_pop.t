@@ -213,7 +213,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->get('/solgs', 'solgs home page');
     sleep(4); 
 
-    $d->find_element_ok('//select[@id="list_type_training_pops_list_select"]/option[text()="kasese_nacrri_trials"]', 'xpath', 'trials list')->click();
+    $d->find_element_ok('//select[@id="list_type_training_pops_list_select"]/option[text()="Trials list"]', 'xpath', 'trials list')->click();
     sleep(10);
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'select list sel pop')->click();
     sleep(20);

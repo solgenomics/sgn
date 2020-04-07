@@ -16,6 +16,7 @@ library(phenoAnalysis)
 library(dplyr)
 #library(rbenchmark)
 library(methods)
+library(na.tools)
 
 allArgs <- commandArgs()
 
@@ -91,6 +92,29 @@ for (i in 40:ncol(phenoData)){
   print(paste0('test', test))
   if (test == 'FALSE'){
     phenoData[,i] <- NULL
+  }
+}
+
+#Removing non variance data
+z=0
+i=ncol(phenoData)
+j=1
+traits <- ncol(phenoData)-39
+while (i > 39){
+  test2 <- var(na.replace(phenoData[,i], na.mean))
+  if (test2 == 0){
+    cat("removing trait ",allNames[i],"\n")
+    phenoData[,i]<-NULL
+  }
+  z=z+1
+  i=i-1
+  cat(i,"\n")
+  if (i < 40){
+    if (j < traits ){
+      print("changing i")
+      i = ncol(phenoData)
+      j=j+1
+    }
   }
 }
 

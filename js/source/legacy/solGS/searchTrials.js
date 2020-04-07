@@ -106,11 +106,13 @@ function listAllTrials (trials)  {
 
 
 function checkTrainingPopulation (popId) {
- 
+
+    var protocolId = jQuery('#genotyping_protocol_id').val();
+    
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
-        url: '/solgs/check/training/population/' + popId,
+        url: '/solgs/check/training/population/' + popId + '/gp/' + protocolId,
         success: function(response) {
             if (response.is_training_population) {
 		jQuery("#searched_trials_message").hide();

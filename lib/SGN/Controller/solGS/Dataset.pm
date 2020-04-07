@@ -7,7 +7,7 @@ use Carp qw/ carp confess croak /;
 use File::Slurp qw /write_file read_file :edit prepend_file/;
 use JSON;
 use POSIX qw(strftime);
-
+use Scalar::Util qw /weaken reftype/;
 #BEGIN { extends 'Catalyst::Controller' }
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -32,15 +32,11 @@ sub get_dataset_trials :Path('/solgs/get/dataset/trials') Args(0) {
     
     $c->stash->{dataset_id} = $dataset_id;
     $self->get_dataset_trials_details($c);
-    
-    my $trials_ids = $c->stash->{trials_ids};
-    my $combo_pops_id = $c->stash->{combo_pops_id};
-    my $trials_names = $c->stash->{trials_names};
-    
-    $c->stash->{rest}{'trials_ids'} = $trials_ids;
-    $c->stash->{rest}{'combo_pops_id'} = $combo_pops_id;
-    $c->stash->{rest}{'trials_names'} = $trials_names;
-       
+     
+    $c->stash->{rest}{'trials_ids'} = $c->stash->{trials_ids};
+    $c->stash->{rest}{'combo_pops_id'} = $c->stash->{combo_pops_id};
+    $c->stash->{rest}{'trials_names'} = $c->stash->{trials_names};;
+    $c->stash->{rest}{'genotyping_protocol_id'} = $c->stash->{genotyping_protocol_id};  
 }
 
 
@@ -55,6 +51,7 @@ sub check_predicted_dataset_selection :Path('/solgs/check/predicted/dataset/sele
     my $training_pop_id  = $args->{training_pop_id};
     my $selection_pop_id = $args->{selection_pop_id};
     $c->stash->{training_traits_ids} = $args->{training_traits_ids};
+    $c->stash->{genotyping_protocol_id} = $args->{genotyping_protocol_id};
     
     $c->controller("solGS::solGS")->download_prediction_urls($c, $training_pop_id, $selection_pop_id);
    
@@ -75,6 +72,12 @@ sub get_dataset_trials_ids {
     my $model = $self->get_model();
     my $data = $model->get_dataset_data($dataset_id);
     my $trials_ids = $data->{categories}->{trials};
+   
+    $c->controller('solGS::combinedTrials')->catalogue_combined_pops($c, $trials_ids);
+   
+    my $protocol_id = $self->get_dataset_genotyping_protocol($c);
+   
+    $c->stash->{genotyping_protocol_id} = $protocol_id;
     $c->stash->{dataset_trials_ids} = $trials_ids;
     $c->stash->{trials_ids} = $trials_ids;
 
@@ -120,7 +123,9 @@ sub submit_dataset_training_data_query {
    
     my $model = $self->get_model();
     my $data = $model->get_dataset_data($dataset_id);
-       
+
+    my $geno_protocol = $self->get_dataset_genotyping_protocol($c);
+
     my $query_jobs_file;
 
     if (@{$data->{categories}->{plots}})	
@@ -135,7 +140,8 @@ sub submit_dataset_training_data_query {
     elsif (@{$data->{categories}->{trials}})	
     {	
 	my $trials = $data->{categories}->{trials};
-	$c->controller('solGS::solGS')->get_training_pop_data_query_job_args_file($c, $trials);
+		
+	$c->controller('solGS::solGS')->get_training_pop_data_query_job_args_file($c, $trials, $geno_protocol);
 	$query_jobs_file  = $c->stash->{training_pop_data_query_job_args_file};
     }
     
@@ -207,6 +213,8 @@ sub create_dataset_geno_data_query_jobs {
 
     my $model = $self->get_model();
     my $data = $model->get_dataset_data($dataset_id);
+    
+    my $geno_protocol = $self->get_dataset_genotyping_protocol($c);
 
     if ($data->{categories}->{accessions}->[0])	
     {
@@ -216,13 +224,36 @@ sub create_dataset_geno_data_query_jobs {
 	$c->stash->{dataset_geno_data_query_jobs} = $c->stash->{genotypes_list_genotype_query_job};
     } 
     elsif ($data->{categories}->{trials}->[0])
-    {
+    {	
 	my $trials_ids = $data->{categories}->{trials};
 	$c->controller('solGS::combinedTrials')->multi_pops_geno_files($c, $trials_ids);
 	$c->stash->{genotype_files_list} = $c->stash->{multi_pops_geno_files};
-	$c->controller('solGS::solGS')->get_cluster_genotype_query_job_args($c, $trials_ids);
+
+	$c->controller('solGS::solGS')->get_cluster_genotype_query_job_args($c, $trials_ids, $geno_protocol);
 	$c->stash->{dataset_geno_data_query_jobs} = $c->stash->{cluster_genotype_query_job_args};
     }    
+}
+
+
+sub get_dataset_genotyping_protocol {
+    my ($self, $c, $dataset_id) = @_;
+
+    $dataset_id = $c->stash->{dataset_id} if !$dataset_id;
+  
+    my $model = $self->get_model();
+    my $data = $model->get_dataset_data($dataset_id);
+  
+    my $protocol_id = $data->{categories}->{genotyping_protocols};
+
+    if (reftype($protocol_id) eq 'ARRAY')
+    {
+	$protocol_id = $protocol_id->[0];
+    }
+
+    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
+    $protocol_id = $c->stash->{genotyping_protocol_id};
+    
+    return $protocol_id;
 }
 
 
@@ -268,7 +299,7 @@ sub dataset_population_summary {
     else
     {
 	my $user_name = $c->user->id;  
-        my $protocol  = $c->controller('solGS::solGS')->create_protocol_url($c);
+        my $protocol  = $c->controller('solGS::genotypingProtocol')->create_protocol_url($c);
 
 	if ($dataset_id) 
 	{
@@ -342,8 +373,8 @@ sub create_dataset_pop_data_files {
     #my $dataset_id = $c->stash->{dataset_id}
     $c->controller('solGS::Files')->phenotype_file_name($c, $file_id);
     my $pheno_file = $c->stash->{phenotype_file_name};
-
-    $c->controller('solGS::Files')->genotype_file_name($c, $file_id);
+    my $protocol_id = $self->get_dataset_genotyping_protocol($c);
+    $c->controller('solGS::Files')->genotype_file_name($c, $file_id, $protocol_id);
     my $geno_file = $c->stash->{genotype_file_name};
     
     my $files = { pheno_file => $pheno_file, geno_file => $geno_file};

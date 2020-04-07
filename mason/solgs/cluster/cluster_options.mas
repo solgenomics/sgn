@@ -16,7 +16,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <%args>
 </%args>
 
-
+<div class="container">
 <div id="cluster_options"   style="display:none;">
   <div style="padding-right:1px; padding-left:1px;"
        class="form-group  col-sm-2"
@@ -55,7 +55,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 </div>
 
-
+</div>
  
 
   

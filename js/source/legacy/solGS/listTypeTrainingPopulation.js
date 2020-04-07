@@ -150,10 +150,15 @@ function askTrainingJobQueueing (listId) {
  
     var args = createTrainingReqArgs(listId);
     var modelId = args.training_pop_id;
-      
+    var protocolId = args.genotyping_protocol_id;
+    
     var hostName = window.location.protocol + '//' + window.location.host;    
     var page     = hostName + '/solgs/population/' + modelId;
 
+    if (protocolId) {
+	page = page + '/gp/' + protocolId;
+    }
+    
     solGS.waitPage(page, args);
 
 }
@@ -165,7 +170,7 @@ function createTrainingReqArgs (listId) {
     var listName  = genoList.name;
     var list      = genoList.list;
     var popId     = getModelId(listId);
- 
+    var protocolId = jQuery('#genotyping_protocol_id').val();
     var popType = 'list_reference';
 
     var args = {
@@ -175,6 +180,7 @@ function createTrainingReqArgs (listId) {
 	'data_set_type'   : 'single population',
         'training_pop_id' : popId,
 	'population_type' : popType,
+	'genotyping_protocol_id': protocolId
     };  
 
     return args;

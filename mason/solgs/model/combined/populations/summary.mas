@@ -19,7 +19,7 @@ $project_name
 $project_desc
 $stocks_no
 $markers_no
-$protocol
+$protocol_url
 $traits_no =>''
 $owner=>''
 
@@ -43,7 +43,7 @@ $owner=>''
       <& /page/columnar_table.mas,        
          data       => [['No. of lines', $stocks_no],
                         ['No. of markers', $markers_no],
-			['Genotyping version', $protocol],
+			['Genotyping version', $protocol_url],
                        ],
         __alt_freq  => 1,
         __align     => "l",

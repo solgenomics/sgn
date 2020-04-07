@@ -63,7 +63,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('combine_trait_trials', 'id', 'combine trials')->click();
     sleep(8);
 
-# $d->get('/solgs/populations/combined/2804608595', 'combo trials tr pop page');
+# $d->get('/solgs/populations/combined/2804608595/gp/1', 'combo trials tr pop page');
    # sleep(4);
 
     $d->find_element_ok('dry matter', 'partial_link_text',  'build model')->click();
@@ -81,7 +81,7 @@ $d->while_logged_in_as("submitter", sub {
 
     ### combined trials training population: single trait prediction of trial type selection population
 
-    #$d->get('/solgs/model/combined/populations/2804608595/trait/70741', 'combo trials tr pop page');
+    #$d->get('/solgs/model/combined/populations/2804608595/trait/70741/gp/1', 'combo trials tr pop page');
    # sleep(2);
 
     my $sel_pred = $d->find_element('Predict', 'partial_link_text', 'scroll to selection pred');
@@ -168,7 +168,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(10);
  
    
-    $d->get('/solgs/populations/combined/2804608595', 'combo trials tr pop page');
+    $d->get('/solgs/populations/combined/2804608595/gp/1', 'combo trials tr pop page');
 
     $d->find_element_ok('//table[@id="population_traits_list"]/tbody/tr[1]/td/input', 'xpath', 'select 1st trait')->click();
     sleep(1);
