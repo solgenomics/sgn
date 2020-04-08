@@ -551,7 +551,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 $plot_image_url = $image->get_image_url('original');
                 $plot_image_id = $image->get_image_id();
             }
-            
+
             push @results, ["TimeSeries", $result_matrix, $plot_image_url];
         }
     }
@@ -1368,7 +1368,7 @@ sub _perform_image_background_remove_threshold {
     my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $image_type, 'project_md_image')->cvterm_id();
     my $drone_run_band_remove_background_threshold_type_id;
     my $imagery_attribute_map = CXGN::DroneImagery::ImageTypes::get_imagery_attribute_map();
-    
+
     if ($imagery_attribute_map->{$image_type}->{name} eq 'threshold') {
         $drone_run_band_remove_background_threshold_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $imagery_attribute_map->{$image_type}->{key}, 'project_property')->cvterm_id();
     }
@@ -1475,7 +1475,7 @@ sub _perform_image_background_remove_threshold_percentage {
     my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $image_type, 'project_md_image')->cvterm_id();
     my $drone_run_band_remove_background_threshold_type_id;
     my $imagery_attribute_map = CXGN::DroneImagery::ImageTypes::get_imagery_attribute_map();
-    
+
     if ($imagery_attribute_map->{$image_type}->{name} eq 'threshold') {
         $drone_run_band_remove_background_threshold_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $imagery_attribute_map->{$image_type}->{key}, 'project_property')->cvterm_id();
     }
@@ -2574,7 +2574,7 @@ sub _perform_standard_process_extended_vi_calc {
     my $h = $bcs_schema->storage->dbh()->prepare($q);
     $h->execute();
     my ($index_image_id) = $h->fetchrow_array();
-    
+
     #my $fourier_transform_hpf20_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $index_image_id, $merged_drone_run_band_project_id, (%{$vi_map{$vi}->{ft_hpf20}})[0], '20', 'frequency', $user_id, $user_name, $user_role);
 
     #my $plot_polygon_ft_hpf20_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_hpf20_return->{ft_image_id}, $merged_drone_run_band_project_id, $plot_polygons_value, $vi_map{$vi}->{ft_hpf20}->{(%{$vi_map{$vi}->{ft_hpf20}})[0]}->[0], $user_id, $user_name, $user_role, 0, 0);
@@ -2667,11 +2667,11 @@ sub _perform_standard_process_extended_vi_calc {
     # my $masked_image_id = $masked_return->{masked_image_id};
 
     # $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, $vi_map{$vi}->{original_index_mask_background}->{(%{$vi_map{$vi}->{original_index_mask_background}})[0]}->[0], $user_id, $user_name, $user_role, 0, 0);
-    # 
+    #
     # $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, $vi_map{$vi}->{original_index_mask_background}->{(%{$vi_map{$vi}->{original_index_mask_background}})[0]}->[1], $user_id, $user_name, $user_role, 0, 0);
-    # 
+    #
     # $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, $vi_map{$vi}->{original_index_mask_background}->{(%{$vi_map{$vi}->{original_index_mask_background}})[0]}->[2], $user_id, $user_name, $user_role, 0, 0);
-    # 
+    #
     # if ($vi_map{$vi}->{original_index_mask_background}->{(%{$vi_map{$vi}->{original_index_mask_background}})[0]}->[3]) {
     #     $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, $vi_map{$vi}->{original_index_mask_background}->{(%{$vi_map{$vi}->{original_index_mask_background}})[0]}->[3], $user_id, $user_name, $user_role, 0, 0);
     # }
@@ -3954,7 +3954,7 @@ sub _perform_phenotype_calculation {
             my $image_url = $image->get_image_url("original");
             my $image_fullpath = $image->get_filename('original_converted', 'full');
             my $image_source_tag_small = $image->get_img_src_tag("tiny");
-            
+
             push @{$stock_images{$stock_id}}, $image_fullpath;
             $stock_info{$stock_id} = {
                 stock_id => $stock_id,
@@ -4644,7 +4644,7 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
             push @loss_history, $columns[0];
         }
     close($fh3);
-    
+
     print STDERR "Train loss PLOT $archive_temp_loss_history_file \n";
     my $rmatrix = R::YapRI::Data::Matrix->new({
         name => 'matrix1',
@@ -5334,7 +5334,7 @@ sub _perform_keras_cnn_predict {
     $r_block->add_command('dataframe.matrix1$prediction <- as.numeric(dataframe.matrix1$prediction)');
     $r_block->add_command('mixed.lmer.matrix <- matrix(NA,nrow = 1, ncol = 1)');
     $r_block->add_command('mixed.lmer.matrix[1,1] <- cor(dataframe.matrix1$previous_value, dataframe.matrix1$prediction)');
-    
+
     $r_block->add_command('png(filename=\''.$archive_temp_output_corr_plot_file.'\')');
     $r_block->add_command('plot(dataframe.matrix1$previous_value, dataframe.matrix1$prediction)');
     $r_block->add_command('dev.off()');
@@ -5364,7 +5364,7 @@ sub _perform_keras_cnn_predict {
             colnames => \@data_matrix_colnames,
             data => \@data_matrix_clean
         });
-        
+
         my $rbase = R::YapRI::Base->new();
         my $r_block = $rbase->create_block('r_block');
         $rmatrix->send_rbase($rbase, 'r_block');
@@ -5376,7 +5376,7 @@ sub _perform_keras_cnn_predict {
         # $r_block->add_command('mixed.lmer.summary <- summary(mixed.lmer)');
         $r_block->add_command('mixed.lmer.matrix <- matrix(NA,nrow = 1, ncol = 2)');
         $r_block->add_command('mixed.lmer.matrix[1,1] <- cor(predict(mixed.lmer), dataframe.matrix1$previous_value)');
-        
+
         $r_block->add_command('mixed.lmer <- lmer(prediction ~ replicate + (1|germplasm_stock_id), data = dataframe.matrix1 )');
         # $r_block->add_command('mixed.lmer.summary <- summary(mixed.lmer)');
         $r_block->add_command('mixed.lmer.matrix[1,2] <- cor(predict(mixed.lmer), dataframe.matrix1$previous_value)');
