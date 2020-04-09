@@ -2,6 +2,7 @@
 package CXGN::Trial::TrialDesign::Plugin::CRD;
 
 use Moose::Role;
+use Data::Dumper;
 
 sub create_design {
     my $self = shift;
@@ -51,7 +52,7 @@ sub create_design {
     if ($self->has_fieldmap_row_number()) {
       $fieldmap_row_number = $self->get_fieldmap_row_number();
       my $colNumber = ((scalar(@stock_list) * $number_of_reps)/$fieldmap_row_number);
-      $fieldmap_col_number = $self->CXGN::Trial::TrialDesign::validate_field_colNumber($colNumber);
+      $fieldmap_col_number = CXGN::Trial::TrialDesign::validate_field_colNumber($colNumber);
 
       #if (isint($colNumber)){
         #$fieldmap_col_number = $colNumber;
@@ -93,10 +94,10 @@ sub create_design {
         $r_block->add_command('crd<-as.matrix(crd)');
         $r_block->run_block();
         $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','crd');
-        #print STDERR Dumper $result_matrix;
+        print STDERR "RESULT MATRIX: ".Dumper($result_matrix);
 
         @plot_numbers = $result_matrix->get_column("plots");
-        #print STDERR Dumper \@plot_numbers;
+        print STDERR "PLOT NUMBERS : ".Dumper(\@plot_numbers);
 
         @rep_numbers = $result_matrix->get_column("r");
         @stock_names = $result_matrix->get_column("trt");
@@ -172,7 +173,7 @@ sub create_design {
         $crd_design{$converted_plot_numbers[$i]} = \%plot_info;
     }
 
-    #print STDERR Dumper \%crd_design;
+    print STDERR "CRD DESIGN: ". Dumper(\%crd_design);
 
     %crd_design = %{$self->_build_plot_names(\%crd_design)};
     return \%crd_design;
