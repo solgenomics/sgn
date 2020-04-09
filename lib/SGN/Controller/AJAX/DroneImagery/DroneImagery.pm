@@ -3688,6 +3688,34 @@ sub drone_imagery_get_drone_run_image_counts_GET : Args(0) {
     $c->stash->{rest} = {data => \@return};
 }
 
+sub drone_imagery_update_details : Path('/api/drone_imagery/update_details') : ActionClass('REST') { }
+sub drone_imagery_update_details_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $drone_run_project_id = $c->req->param('drone_run_project_id');
+    my $drone_run_date = $c->req->param('drone_run_date');
+    my $description = $c->req->param('description');
+    my $drone_run_name = $c->req->param('drone_run_name');
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$drone_run_project_id});
+
+    if ($drone_run_date) {
+        $trial->set_drone_run_date($drone_run_date);
+    }
+    if ($description) {
+        $trial->set_description($description);
+    }
+    if ($drone_run_name) {
+        $trial->set_name($drone_run_name);
+    }
+
+    $c->stash->{rest} = {success => 1};
+}
+
 sub drone_imagery_calculate_phenotypes : Path('/api/drone_imagery/calculate_phenotypes') : ActionClass('REST') { }
 sub drone_imagery_calculate_phenotypes_POST : Args(0) {
     my $self = shift;

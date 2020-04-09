@@ -157,6 +157,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         $c->stash->{template} = '/breeders_toolbox/genotype_data_project.mas';
     }
     elsif ($design_type eq "drone_run"){
+        $c->stash->{drone_run_date} = $trial->get_drone_run_date;
         $c->stash->{template} = '/breeders_toolbox/drone_run_project.mas';
     }
     elsif ($trial_type_name eq "crossing_trial"){
