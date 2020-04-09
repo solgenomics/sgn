@@ -848,6 +848,7 @@ sub trait :Path('/solgs/trait') Args() {
 	    $self->get_trait_details($c, $trait_id);	    
 	    $self->gs_modeling_files($c);
 
+	    $self->cross_validation_stat($c, $pop_id, $c->stash->{trait_abbr});
 	    $c->controller('solGS::Files')->traits_acronym_file($c, $pop_id);
 	    my $acronym_file = $c->stash->{traits_acronym_file};
 		    
@@ -1476,11 +1477,55 @@ sub model_accuracy {
     }
     else
     {
-	$accuracy = $c->controller('solGS::Utils')->read_file_data($file);	
+	#$accuracy = $c->controller('solGS::Utils')->read_file_data($file);
+	my $model_id = $c->stash->{training_pop_id};
+	my $trait_abbr = $c->stash->{trait_abbr};
+	
+	$self->cross_validation_stat($c, $model_id, $trait_abbr);
     }
 
-    $c->stash->{accuracy_report} = $accuracy;
+    #$c->stash->{accuracy_report} = $accuracy;
  
+}
+
+
+sub cross_validation_stat {
+    my ($self, $c, $model_id, $trait_abbr) = @_;
+
+    my $cv_data = $self->get_cross_validations($c, $model_id, $trait_abbr);
+    my @data = map {$_->[1] } @$cv_data;
+    my $count  = scalar(@$cv_data);
+
+    my $stat = Statistics::Descriptive::Full->new();
+    $stat->add_data(@data);
+    
+    my $min  = $stat->min; 
+    my $max  = $stat->max; 
+    my $mean = $stat->mean;
+    my $med  = $stat->median;
+    my $std  = $stat->standard_deviation;
+    my $cv   = ($std / $mean) * 100;
+
+    my $round = Math::Round::Var->new(0.01);
+    $std  = $round->round($std);
+    $mean = $round->round($mean);
+    $cv   = $round->round($cv);
+    $cv   = $cv . '%';
+
+    my @desc_stat =  (
+	[ 'No. of K-folds', 10],
+	['Replications', 2],
+	['No. of total cross-validation runs', $count],
+	[ 'Minimum accuracy (r)', $min ], 
+	[ 'Maximum accuracy (r)', $max ],
+	[ 'Standard deviation', $std ],
+	[ 'Coefficient of variation', $cv ],		    
+	[ 'Median accuracy (r)', $med ],  
+	[ "<b>Model mean accuracy</b>", '<b>' . $mean .'</b>' ]);
+      
+     
+    $c->stash->{accuracy_report} = \@desc_stat;
+    
 }
 
 
@@ -2003,13 +2048,6 @@ sub get_trait_details_of_trait_abbr {
     
     my $trait_abbr = $c->stash->{trait_abbr};
    
-    # if (!$c->stash->{pop_id}) 
-    # {	
-    # 	$c->stash->{pop_id} = $c->stash->{training_pop_id} || $c->stash->{combo_pops_id}; 
-    # }
-
-    my $trait_id;
-   
     my $acronym_pairs = $self->get_acronym_pairs($c, $c->stash->{training_pop_id});                   
     
     if ($acronym_pairs)
@@ -2021,7 +2059,7 @@ sub get_trait_details_of_trait_abbr {
 		my $trait_name =  $r->[1];
 		$trait_name    =~ s/^\s+|\s+$//g;                                
 		
-		$trait_id = $c->model('solGS::solGS')->get_trait_id($trait_name);
+		my $trait_id = $c->model('solGS::solGS')->get_trait_id($trait_name);
 		$self->get_trait_details($c, $trait_id);
 	    }
 	}
@@ -2209,11 +2247,9 @@ sub traits_with_valid_models {
 
 }
 
+
 sub get_model_accuracy_value {
     my ($self, $c, $model_id, $trait_abbr) = @_;
-
-    my $dir = $c->stash->{solgs_cache_dir};
-    opendir my $dh, $dir or die "can't open $dir: $!\n";
 
     $c->stash->{training_pop_id} = $model_id;
     $c->stash->{trait_abbr} = $trait_abbr;
@@ -2227,6 +2263,23 @@ sub get_model_accuracy_value {
     $accuracy_value =~ s/\s+//g;
     $c->stash->{accuracy_value} = $accuracy_value;
   
+}
+
+
+sub get_cross_validations {
+    my ($self, $c, $model_id, $trait_abbr) = @_;
+
+    $c->stash->{training_pop_id} = $model_id;
+    $c->stash->{trait_abbr} = $trait_abbr;
+
+    $c->controller('solGS::Files')->validation_file($c);
+    my $file = $c->stash->{validation_file};
+
+    my $cvs = $c->controller('solGS::Utils')->read_file_data($file);
+    
+    my @raw_cvs = grep { $_->[0] ne 'Average'} @$cvs;
+
+    return \@raw_cvs;
 }
 
 
