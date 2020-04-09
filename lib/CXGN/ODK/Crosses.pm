@@ -311,7 +311,7 @@ sub save_ona_cross_info {
             }
 
             foreach my $a (@$actions){
-                #print STDERR Dumper $a;
+#                print STDERR "CHECKING HASH =".Dumper($a);
 
                 $a->{userCategory} = $activity_hash->{userCategory};
                 $a->{startTime} = $activity_hash->{startTime};
@@ -322,7 +322,6 @@ sub save_ona_cross_info {
                 $a->{'fieldgroup/gps'} = $activity_hash->{'fieldgroup/gps'} || '';
 
                 if ($activity_category eq 'field'){
-                    #MISSING
                     if ($a->{'FieldActivities/fieldActivity'} eq 'status'){
                         #print STDERR Dumper $a;
 
@@ -523,9 +522,9 @@ sub save_ona_cross_info {
                             push @new_crosses, $pedigree;
                        }
 #                       print STDERR "NEW CROSSES =".Dumper(\@new_crosses)."\n";
-                        $cross_property = 'First Pollination Date';
+                        my $pollination_date_property = 'First Pollination Date';
                         my $firstPollinationDate = $a->{'FieldActivities/FirstPollination/firstpollination_date'};
-                        $musa_cross_info{$cross_property}{$odk_cross_unique_id} = $firstPollinationDate;
+                        $musa_cross_info{$pollination_date_property}{$odk_cross_unique_id} = $firstPollinationDate;
                     }
                     elsif ($a->{'FieldActivities/fieldActivity'} eq 'repeatPollination'){
                         push @{$cross_info{$a->{'FieldActivities/RepeatPollination/getCrossID'}}->{'repeatPollination'}}, $a;
@@ -548,8 +547,8 @@ sub save_ona_cross_info {
 
 #                            print STDERR "ODK HARVEST DATE =".Dumper($odk_harvest_date)."\n";
 #                            print STDERR "HARVEST DATE =".Dumper($harvest_date)."\n";
-                            $cross_property = 'Harvest Date';
-                            $musa_cross_info{$cross_property}{$cross_id} = $harvest_date;
+                            my $harvest_date_property = 'Harvest Date';
+                            $musa_cross_info{$harvest_date_property}{$cross_id} = $harvest_date;
                         }
                     }
                     elsif ($a->{'FieldActivities/fieldActivity'} eq 'seedExtraction'){
@@ -557,15 +556,15 @@ sub save_ona_cross_info {
                         push @{$cross_info{$cross_id}->{'seedExtraction'}}, $a;
 
                         my $odk_extraction_date = $a->{'FieldActivities/seedExtraction/extraction_date'};
-                        $cross_property = 'Seed Extraction Date';
-                        $musa_cross_info{$cross_property}{$cross_id} = $odk_extraction_date;
+                        my $extraction_date_property = 'Seed Extraction Date';
+                        $musa_cross_info{$extraction_date_property}{$cross_id} = $odk_extraction_date;
 
                         my $number_of_seeds_extracted = $a->{'FieldActivities/seedExtraction/totalSeedsExtracted'};
-                        $cross_property = 'Number of Seeds Extracted';
-                        $musa_cross_info{$cross_property}{$cross_id} = $number_of_seeds_extracted;
+                        my $num_seeds_extracted_property = 'Number of Seeds Extracted';
+                        $musa_cross_info{$num_seeds_extracted_property}{$cross_id} = $number_of_seeds_extracted;
 
-#                        'FieldActivities/seedExtraction/embryorescueseeds' => '5',
-#                        'FieldActivities/seedExtraction/earlygerminationseeds' => '0'
+#                        'FieldActivities/seedExtraction/embryorescueseeds',
+#                        'FieldActivities/seedExtraction/earlygerminationseeds',
                     }
                     else {
                         print STDERR "UNKNOWN ONA ODK activity in $activity_category\n";
@@ -573,9 +572,28 @@ sub save_ona_cross_info {
                     }
                 }
                 elsif ($activity_category eq 'laboratory'){
-                    #MISSING
                     if ($a->{'Laboratory/labActivity'} eq 'embryoRescue'){
+#                        print STDERR "CHECKING EMBRYO RESCUE =".Dumper($a)."\n";
+
                         push @{$cross_info{$a->{'Laboratory/embryoRescue/embryorescueID'}}->{'embryoRescue'}}, $a;
+
+                        my $cross_id = $a->{'Laboratory/embryoRescue/embryorescueID'};
+                        my $embryorescue_date = $a->{'Laboratory/embryoRescue/embryorescue_date'};
+                        my $embryorescue_date_property = 'Embryo Rescue Date';
+                        $musa_cross_info{$embryorescue_date_property}{$cross_id} = $embryorescue_date;
+
+                        my $embryorescue_total_seeds = $a->{'Laboratory/embryoRescue/embryorescueID_Total_Seeds'};
+                        my $embryorescue_total_seeds_property = 'Embryo Rescue Total Seeds';
+                        $musa_cross_info{$embryorescue_total_seeds_property}{$cross_id} = $embryorescue_total_seeds;
+
+                        my $embryorescue_good_seeds = $a->{'Laboratory/embryoRescue/goodSeeds'};
+                        my $embryorescue_good_seeds_property = 'Embryo Rescue Good Seeds';
+                        $musa_cross_info{$embryorescue_good_seeds_property}{$cross_id} = $embryorescue_good_seeds;
+
+                        my $embryorescue_bad_seeds = $a->{'Laboratory/embryoRescue/badseeds'};
+                        my $embryorescue_bad_seeds_property = 'Embryo Rescue Bad Seeds';
+                        $musa_cross_info{$embryorescue_bad_seeds_property}{$cross_id} = $embryorescue_bad_seeds;
+
                     }
                     elsif ($a->{'Laboratory/labActivity'} eq 'germinating_after_2wks'){
                         push @{$cross_info{$a->{'Laboratory/embryo_germinatn_after_2wks/germinating_2wksID'}}->{'germinating_after_2wks'}}, $a;
@@ -614,6 +632,7 @@ sub save_ona_cross_info {
                     }
                 }
                 elsif ($activity_category eq 'screenhouse'){
+
                     #MISSING
                     if ($a->{'screenhse_activities/screenhouseActivity'} eq 'screenhouse_humiditychamber'){
                         push @{$cross_info{$rooting_cross_lookup{$a->{'screenhse_activities/screenhouse/getRoot_ID'}}}->{'screenhouse_humiditychamber'}}, $a;
@@ -629,7 +648,7 @@ sub save_ona_cross_info {
                     }
                 }
                 else {
-                    print STDERR "UNKNOWN ONA ODK $activity_category\n";
+                  print STDERR "UNKNOWN ONA ODK $activity_category\n";
                     #print STDERR Dumper $a;
                 }
             }
