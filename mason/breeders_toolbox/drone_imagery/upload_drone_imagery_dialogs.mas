@@ -134,7 +134,7 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Imaging Event Date (Must be after the planting date):</label>
+                                <label class="col-sm-3 control-label">Imaging Event Date (Must be after the planting date and must be less than 365 days after planting date):</label>
                                 <div class="col-sm-9" >
                                     <input class="form-control" id="drone_run_date" name="drone_run_date" title="drone_run_date" type="text" />
                                 </div>
@@ -268,7 +268,7 @@
             </div>
 
             <canvas id="upload_drone_imagery_raw_images_boundary_tr_show"></canvas>
-            
+
             <br/><br/>
             <center>
             <button class="btn btn-primary" onclick="return false;" id="drone_image_upload_raw_image_boundaries_tr_continue">Go to Next Step</button>
@@ -566,7 +566,7 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#drone_image_upload_drone_run_band_continue').click(function(){
-    
+
         var drone_run_band_number = jQuery('#drone_run_band_number').val();
         var drone_run_band_unstitched = jQuery('#drone_image_upload_drone_run_band_stitching').val();
         var drone_run_camera_info = jQuery('#drone_image_upload_camera_info').val();
