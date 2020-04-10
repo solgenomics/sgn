@@ -2,7 +2,8 @@ library(dplyr)
 library(magrittr)
 library(devtools)
 library(rjson)
-install_github("GoreLab/waves", auth_token = github_pat())
+
+# install_github("GoreLab/waves", auth_token = github_pat())
 library(waves)
 
 # error handling 
