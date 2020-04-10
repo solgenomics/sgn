@@ -56,7 +56,8 @@ use CXGN::Pedigree::AddCrossingtrial;
 use CXGN::Pedigree::AddCrosses;
 use CXGN::Pedigree::AddCrossInfo;
 use Scalar::Util qw(looks_like_number);
-
+use List::Util qw(max);
+#my $highest = max values %height;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -277,6 +278,8 @@ sub save_ona_cross_info {
         my @checking_male_plots;
         my %musa_cross_info;
         my $cross_property;
+        my %number_germinating;
+
 
         foreach my $activity_hash (@$message_hash){
             #print STDERR Dumper $activity_hash;
@@ -655,10 +658,21 @@ sub save_ona_cross_info {
                         my $embryorescue_bad_seeds = $activity_hash->{'Laboratory/embryoRescue/badseeds'};
                         my $embryorescue_bad_seeds_property = 'Embryo Rescue Bad Seeds';
                         $musa_cross_info{$embryorescue_bad_seeds_property}{$embryo_rescue_cross_id} = $embryorescue_bad_seeds;
-                   }
+
+                   } elsif ($activity_hash->{'Laboratory/labActivity'} eq 'germination') {
+                       my $germination_cross_id = $activity_hash->{'Laboratory/EmbryoGermination/embryo_germinationID'};
+                       my $germination_date = $activity_hash->{'Laboratory/EmbryoGermination/germination_date'};
+                       my $number_germinating = $activity_hash->{'Laboratory/EmbryoGermination/number_germinating'};
+                       my $previous_number_germinating = $activity_hash->{'Laboratory/EmbryoGermination/previousNumberGerminating'};
+                       my $total_number_germinating = $number_germinating + $previous_number_germinating;
+                       $number_germinating{$germination_cross_id}{$germination_date} = $total_number_germinating;
+                    }
+
                 }
             }
         }
+
+        print STDERR "GERMINATING HASH =".Dumper(\%number_germinating)."\n";
 
 #        print STDERR "CHECKING FEMALE PLOT =".Dumper(\@checking_female_plots)."\n";
 #        print STDERR "CHECKING MALE PLOT =".Dumper(\@checking_male_plots)."\n";
