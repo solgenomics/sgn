@@ -56,6 +56,25 @@ sub shared_phenotypes: Path('/ajax/Nirs/shared_phenotypes') : {
         tempfile => $tempfile."_phenotype.txt",
 #        tempfile => $file_response,
     };
+
+    $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $ps = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id);
+    my $plots = $ps->retrieve_plots();
+    my @plot_info;
+    foreach my $w (@$plots) {
+          my $tbj = CXGN::Cvterm->new({ schema=>$schema, cvterm_id => $w });
+        push @plot_info, [ $tbj->cvterm_id(), $tbj->name()];
+    }
+
+    my $dbh = $c->dbc->dbh();
+    my $stock_id = $plots->stock_id();
+    my $h = $dbh->prepare("SELECT * 
+                            FROM metadata.md_json           
+                            JOIN phenome.nd_experiment_md_json USING(json_id)  
+                            JOIN nd_experiment_stock USING(nd_experiment_id)              
+                            JOIN stock using(stock_id) WHERE stock_id=?;")
+
 }
 
 # TODO change this to JSON
@@ -113,6 +132,7 @@ sub generate_results: Path('/ajax/Nirs/generate_results') : {
     my $trait_id = $c->req->param('trait_id');
     print STDERR $dataset_id;
     print STDERR $trait_id;
+
     $c->tempfiles_subdir("nirs_files");
     my $nirs_tmp_output = $c->config->{cluster_shared_tempdir}."/nirs_files";
     mkdir $nirs_tmp_output if ! -d $nirs_tmp_output;
@@ -128,6 +148,8 @@ sub generate_results: Path('/ajax/Nirs/generate_results') : {
     my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath);
     my $phenotype_data_ref = $ds->retrieve_phenotypes($pheno_filepath);
 
+ 
+
     # my $figure3file = $tempfile . "_" . "figure3.png";
     # my $figure4file = $tempfile . "_" . "figure4.png";
     my $pheno_name; # args[1]
@@ -137,7 +159,7 @@ sub generate_results: Path('/ajax/Nirs/generate_results') : {
     my $tune_length= $c->req->param('tunelen'); # args[5]
     my $rf_var_imp = $c->req->param('rf_var_imp'); # args[6]
     my $cv_scheme = $c->req->param('cv_id'); # args[7]
-    my $pheno_filepath = $tempfile . "_phenotype.txt"; # args[8]
+    # my $pheno_filepath = $tempfile . "_phenotype.txt"; # args[8]
     my $testset_filepath, # args[9]
     my $trial1_filepath, # args[10]
     my $trial2_filepath, # args[11]
