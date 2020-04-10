@@ -289,7 +289,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 
 =head2 view_by_organism_name
 
-Public Path: /stock/view_by_name/$organism/$name
+Public Path: /stock/view_by_organism/$organism/$name
 Path Params:
     organism = organism name (abbreviation, genus, species, common name)
     name = stock unique name
@@ -300,7 +300,7 @@ If 1 match is found, display the stock detail page.  Display an error for
 
 =cut
 
-sub view_by_organism_name : Path('/stock/view_by_name') Args(2) {
+sub view_by_organism_name : Path('/stock/view_by_organism') Args(2) {
     my ($self, $c, $organism_query, $stock_query) = @_;
     $self->search_stock($c, $organism_query, $stock_query);
 }
@@ -478,12 +478,12 @@ sub search_stock : Private {
     # Search by name and organism
     if ( defined($organism_query) && defined($stock_query) ) {
         $matches = $rs->search({
-                uniquename => $stock_query,
+                'UPPER(uniquename)' => uc($stock_query),
                 -or => [
-                    'organism.abbreviation' => $organism_query,
-                    'organism.genus' => $organism_query,
-                    'organism.species' => $organism_query,
-                    'organism.common_name' => {'like', '%' . $organism_query .'%'}
+                    'UPPER(organism.abbreviation)' => uc($organism_query),
+                    'UPPER(organism.genus)' => uc($organism_query),
+                    'UPPER(organism.species)' => uc($organism_query),
+                    'UPPER(organism.common_name)' => {'like', '%' . uc($organism_query) .'%'}
                 ],
                 is_obsolete => 'false'
             },
@@ -495,7 +495,7 @@ sub search_stock : Private {
     # Search by name
     elsif ( defined($stock_query) ) {
         $matches = $rs->search({
-                uniquename => $stock_query, 
+                'UPPER(uniquename)' => uc($stock_query), 
                 is_obsolete => 'false'
             }, 
             {join => 'organism'}
