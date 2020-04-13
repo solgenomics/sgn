@@ -848,7 +848,7 @@ sub trait :Path('/solgs/trait') Args() {
 	    $self->get_trait_details($c, $trait_id);	    
 	    $self->gs_modeling_files($c);
 
-	    $self->cross_validation_stat($c, $pop_id, $c->stash->{trait_abbr});
+	    $c->controller('solGS::modelAccuracy')->cross_validation_stat($c, $pop_id, $c->stash->{trait_abbr});
 	    $c->controller('solGS::Files')->traits_acronym_file($c, $pop_id);
 	    my $acronym_file = $c->stash->{traits_acronym_file};
 		    
@@ -870,7 +870,7 @@ sub gs_modeling_files {
   
     $self->output_files($c);
     $self->input_files($c);
-    $self->model_accuracy($c);
+    $c->controller('solGS::modelAccuracy')->model_accuracy_report($c);
     $self->top_blups($c, $c->stash->{rrblup_training_gebvs_file});
     $self->download_urls($c);
     $self->top_markers($c, $c->stash->{marker_effects_file});
@@ -1065,7 +1065,7 @@ sub download_urls {
     }
     else 
     {
-        $pop_id         = $c->stash->{pop_id}; 
+        $pop_id         = $c->stash->{pop_id} || $c->stash->{training_pop_id}; 
     }
     
     my $trait_id          = $c->stash->{trait_id};
@@ -1093,29 +1093,6 @@ sub top_blups {
     my ($self, $c, $gebv_file) = @_;
        
     $c->stash->{top_blups} = $c->controller('solGS::Utils')->top_10($gebv_file);
-}
-
-
-sub download_validation :Path('/solgs/download/validation/pop') Args() {
-    my ($self, $c, $pop_id, $trait, $trait_id, $gp, $protocol_id) = @_;   
- 
-    $c->stash->{pop_id} = $pop_id;
-    $c->stash->{genotyping_protocol_id} = $protocol_id;
-    
-    $self->get_trait_details($c, $trait_id);
-    my $trait_abbr = $c->stash->{trait_abbr};
-        
-    $c->controller('solGS::Files')->validation_file($c);
-    my $validation_file = $c->stash->{validation_file};
-  
-    unless (!-e $validation_file || -s $validation_file == 0) 
-    {
-        my @validation =  map { [ split(/\t/) ] }  read_file($validation_file);
-    
-        $c->res->content_type("text/plain");
-        $c->res->body(join "", map { $_->[0] . "\t" . $_->[1] }  @validation);  
-    } 
-
 }
 
 
@@ -1461,73 +1438,6 @@ sub download_prediction_urls {
   
 }
     
-
-sub model_accuracy {
-    my ($self, $c) = @_;
-    my $file = $c->stash->{validation_file};
-
-    my $accuracy;
-    if (!-e $file) 
-    { 
-	$accuracy = [["Validation file doesn't exist.", "None"]];
-    }
-    elsif (!-s $file) 
-    { 
-	$accuracy = [["There is no cross-validation output report.", "None"]];
-    }
-    else
-    {
-	#$accuracy = $c->controller('solGS::Utils')->read_file_data($file);
-	my $model_id = $c->stash->{training_pop_id};
-	my $trait_abbr = $c->stash->{trait_abbr};
-	
-	$self->cross_validation_stat($c, $model_id, $trait_abbr);
-    }
-
-    #$c->stash->{accuracy_report} = $accuracy;
- 
-}
-
-
-sub cross_validation_stat {
-    my ($self, $c, $model_id, $trait_abbr) = @_;
-
-    my $cv_data = $self->get_cross_validations($c, $model_id, $trait_abbr);
-    my @data = map {$_->[1] } @$cv_data;
-    my $count  = scalar(@$cv_data);
-
-    my $stat = Statistics::Descriptive::Full->new();
-    $stat->add_data(@data);
-    
-    my $min  = $stat->min; 
-    my $max  = $stat->max; 
-    my $mean = $stat->mean;
-    my $med  = $stat->median;
-    my $std  = $stat->standard_deviation;
-    my $cv   = ($std / $mean) * 100;
-
-    my $round = Math::Round::Var->new(0.01);
-    $std  = $round->round($std);
-    $mean = $round->round($mean);
-    $cv   = $round->round($cv);
-    $cv   = $cv . '%';
-
-    my @desc_stat =  (
-	[ 'No. of K-folds', 10],
-	['Replications', 2],
-	['No. of total cross-validation runs', $count],
-	[ 'Minimum accuracy (r)', $min ], 
-	[ 'Maximum accuracy (r)', $max ],
-	[ 'Standard deviation', $std ],
-	[ 'Coefficient of variation', $cv ],		    
-	[ 'Median accuracy (r)', $med ],  
-	[ "<b>Model mean accuracy</b>", '<b>' . $mean .'</b>' ]);
-      
-     
-    $c->stash->{accuracy_report} = \@desc_stat;
-    
-}
-
 
 sub model_parameters {
     my ($self, $c) = @_;
@@ -2199,7 +2109,7 @@ sub create_model_summary {
 	$trait_page = qq | <a href="/solgs/model/combined/populations/$model_id/trait/$trait_id/gp/$protocol_id" onclick="solGS.waitPage()">$tr_abbr</a>|;
     }
 	            
-    $c->controller("solGS::solGS")->get_model_accuracy_value($c, $model_id, $tr_abbr);
+    $c->controller("solGS::modelAccuracy")->get_model_accuracy_value($c, $model_id, $tr_abbr);
     my $accuracy_value = $c->stash->{accuracy_value};
      
     $c->controller("solGS::Heritability")->get_heritability($c);
@@ -2226,7 +2136,7 @@ sub traits_with_valid_models {
 
     foreach my $analyzed_trait (@analyzed_traits) 
     {   
-        $self->get_model_accuracy_value($c, $pop_id, $analyzed_trait);        
+        $c->controller('solGS::modelAccuracy')->get_model_accuracy_value($c, $pop_id, $analyzed_trait);        
         my $av = $c->stash->{accuracy_value};            
         if ($av && $av =~ m/\d+/ && $av > 0)
         { 
@@ -2245,41 +2155,6 @@ sub traits_with_valid_models {
     $c->stash->{traits_with_valid_models} = \@filtered_analyzed_traits;
     $c->stash->{traits_ids_with_valid_models} = \@valid_traits_ids;
 
-}
-
-
-sub get_model_accuracy_value {
-    my ($self, $c, $model_id, $trait_abbr) = @_;
-
-    $c->stash->{training_pop_id} = $model_id;
-    $c->stash->{trait_abbr} = $trait_abbr;
-
-    $c->controller('solGS::Files')->validation_file($c);
-    my $validation_file = $c->stash->{validation_file};
-
-    my ($row) = grep {/Average/} read_file($validation_file);
-    my ($text, $accuracy_value) = split(/\t/,  $row);
-
-    $accuracy_value =~ s/\s+//g;
-    $c->stash->{accuracy_value} = $accuracy_value;
-  
-}
-
-
-sub get_cross_validations {
-    my ($self, $c, $model_id, $trait_abbr) = @_;
-
-    $c->stash->{training_pop_id} = $model_id;
-    $c->stash->{trait_abbr} = $trait_abbr;
-
-    $c->controller('solGS::Files')->validation_file($c);
-    my $file = $c->stash->{validation_file};
-
-    my $cvs = $c->controller('solGS::Utils')->read_file_data($file);
-    
-    my @raw_cvs = grep { $_->[0] ne 'Average'} @$cvs;
-
-    return \@raw_cvs;
 }
 
 
@@ -2770,7 +2645,7 @@ sub analyzed_traits {
 	    $self->get_trait_details($c);
 	    my $trait = $c->stash->{trait_abbr};
   
-            $self->get_model_accuracy_value($c, $training_pop_id, $trait);
+            $c->controller('solGS::modelAccuracy')->get_model_accuracy_value($c, $training_pop_id, $trait);
             my $av = $c->stash->{accuracy_value};
 
 	    my $trait_file;
