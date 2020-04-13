@@ -93,7 +93,7 @@ sub BUILD {
     my $self = shift;
     my $args = shift;
     
-    print STDERR "Build CXGN::Trial::TrialLayout::AbstractLayout...\n";
+    print STDERR "Build CXGN::Trial::TrialLayout::AbstractLayout... ($args->{trial_id})\n";
     
     $self->_build_cvterm_hash();
 }
@@ -757,10 +757,12 @@ sub _get_design_type_from_project {
     my $project;
     
     if (!$self->has_trial_id()) {
+	print STDERR "Have no trial_id, aborting...\n";
 	return;
     }
     $project = $self->get_project();
     if (!$project) {
+	print STDERR "Have no project row, aborting...\n";
 	return;
     }
     $design_prop =  $project->projectprops->find(
@@ -850,7 +852,7 @@ sub _build_cvterm_hash {
     my $stockprop_rs = $self->get_schema->resultset("Cv::Cvterm")->search( { 'cv.name' => { -in => [ 'stock_property', 'stock_type', 'experiment_property', 'experiment_type', 'stock_relationship', 'project_property', 'project_relationship' ] } }, { join => 'cv' });
 
     while (my $sp = $stockprop_rs->next()) {
-	print STDERR "Adding ".$sp->name()."...\n";
+	#print STDERR "Adding ".$sp->name()."...\n";
 	if (exists($hash{ $sp->name() })) {
 	    die "Duplicate term detected (".$sp->name()."). Sorry, but you cannot continue.";
 	}

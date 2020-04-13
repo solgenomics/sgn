@@ -17,7 +17,8 @@ $ds->name("ephemeral dataset");
 $ds->accessions( [ 'test_accession1', 'test_accession2', 'test_accession4' ] );
 $ds->store();
 
-my $a = CXGN::Analysis->new({ bcs_schema => $schema, people_schema => $people_schema });
+print STDERR "Creating new Analysis object...\n";
+my $a = CXGN::Analysis->new({ bcs_schema => $schema,  people_schema => $people_schema, name => "test_analysis2" });
 
 print STDERR "Accession test...\n";
 
@@ -25,8 +26,7 @@ $a->accession_names( [ 'test_accession1', 'test_accession2', 'test_accession4' ]
 #$a->nd_geolocation_id(23); # test location
 $a->metadata()->dataset_id($ds->sp_dataset_id());
 $a->user_id(41);
-
-$a->name("test_analysis");
+$a->set_year(2020);
 
 print STDERR Dumper($a->accession_names());
 
@@ -45,10 +45,10 @@ my $rows = $h->fetchall_arrayref();
 
 print STDERR "STORED: ".Dumper($rows);
 
-print STDERR "RETRIEVING Analysis...\n";
-my $a2 = CXGN::Analysis->new( { bcs_schema => $t->bcs_schema, project_id => $project_id });
+print STDERR "RETRIEVING Analysis... with trial_id = $project_id\n";
+my $a2 = CXGN::Analysis->new( { bcs_schema => $t->bcs_schema, people_schema => $t->people_schema(), trial_id => $project_id });
 
-is($a2->name(), "test_analysis", "analysis name test");
+is($a2->name(), "test_analysis2", "analysis name test");
 is($a2->metadata()->dataset_id(), 1);
 
 print STDERR Dumper($a2->metadata()->to_json());

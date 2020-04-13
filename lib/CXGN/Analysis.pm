@@ -58,9 +58,13 @@ Lukas Mueller <lam87@cornell.edu>
 package CXGN::Analysis;
 
 use Moose;
+
+extends 'CXGN::Project';
+
 use Try::Tiny;
 use DateTime;
 use Data::Dumper;
+use CXGN::Trial::TrialCreate;
 use CXGN::Trial::TrialDesign;
 use CXGN::Trial::TrialDesignStore;
 use CXGN::Trial::TrialLayout;
@@ -70,37 +74,36 @@ use CXGN::List::Transform;
 use CXGN::Dataset;
 
 
-#BEGIN { extends 'CXGN::Project' };
 
 =head2 bcs_schema()
 
 =cut
     
- has 'bcs_schema' => (is => 'rw', isa => 'Ref', required => 1 );
+# has 'bcs_schema' => (is => 'rw', isa => 'Ref', required => 1 );
 
 =head2 people_schema()
 
 =cut
     
-has 'people_schema' => (is => 'rw', isa => 'CXGN::People::Schema');
+has 'people_schema' => (is => 'rw', isa => 'CXGN::People::Schema', required=>1);
 
 =head2 project_id()
 
 =cut
 
-has 'project_id' => (is => 'rw', isa => 'Int');
+#has 'project_id' => (is => 'rw', isa => 'Int');
 
 =head2 name()
 
 =cut
 
-has 'name' => (is => 'rw', isa => 'Str');
+#has 'name' => (is => 'rw', isa => 'Str');
 
 =head2 description()
 
 =cut
 
-has 'description' => (is => 'rw', isa => 'Str', default => "No description");
+##has 'description' => (is => 'rw', isa => 'Str', default => "No description");
 
 #=head2 accession_ids()
 #
@@ -157,37 +160,51 @@ has 'metadata' => (isa => 'Maybe[CXGN::Analysis::AnalysisMetadata]', is => 'rw')
 #    $args->{trial_id} = $args->{project_id};
 #}
 
-has 'project' => (isa => 'CXGN::Project', is => 'rw');
+#has 'project' => (isa => 'CXGN::Project', is => 'rw');
+
+=head2 year()
+
+year the analysis was done.
+
+=cut
+
+#has 'year' => (isa => 'Str', is => 'rw');
+
+
+
 
 sub BUILD {
     my $self = shift;
     my $args = shift;
 
+    print STDERR "BUILD CXGN::Analysis...\n";
     my $metadata;
-    
-    if ($args->{project_id}) {
+
+    if ($self->get_trial_id()) {
 	
 	# with a project ID, we load all associated metadata
 	# first, get project row and retrieve name
 	#
 
-	my $project = CXGN::Project->new( { bcs_schema => $args->{bcs_schema}, trial_id => $args->{project_id}});
+#	my $project = CXGN::Project->new( { bcs_schema => $args->{bcs_schema}, trial_id => $args->{project_id}});
 	
-	if (! $project) { return undef; }
+#	if (! $project) { die "No analysis with this project_id ($args->{project_id}) exists"; }
 
-	$self->project($project);
+#	$self->project($project);
 	
-	$self->name($project->get_name());
-	$self->description($project->get_description());
+#	$self->name($project->get_name());
+#	$self->description($project->get_description());
 
-	print STDERR "LOcation id retrieved : = ".$project->get_location()->[0]."\n";
-	$self->nd_geolocation_id($project->get_location()->[0]);
+	print STDERR "LOcation id retrieved : = ".$self->get_location()->[0]."\n";
+	$self->nd_geolocation_id($self->get_location()->[0]);
+
+#	$self->year($project->get_year());
 	
 	# retrieve associated metadata from projectprop
 	#
 	my $metadata_json_id = SGN::Model::Cvterm->get_cvterm_row($args->{bcs_schema}, 'analysis_metadata_json', 'project_property')->cvterm_id();
 	
-	my $rs = $args->{bcs_schema}->resultset("Project::Projectprop")->search( { project_id => $args->{project_id}, type_id => $metadata_json_id });
+	my $rs = $self->bcs_schema()->resultset("Project::Projectprop")->search( { project_id => $self->get_trial_id(), type_id => $metadata_json_id });
 
 	#  create the  metadata object
 	#
@@ -211,8 +228,8 @@ sub BUILD {
 	# empty object
 	#
 	if (! defined($stockprop_id)) {
-	    print STDERR "project_id = $args->{project_id} with stockprop_id = undefined...storing metadata...\n";
-	    $metadata->parent_id($args->{project_id});
+	    print STDERR "project_id = ".$self->get_trial_id()." with stockprop_id = undefined...storing metadata...\n";
+	    $metadata->parent_id($self->get_trial_id());
 	    $metadata->store();
 	}
     }
@@ -220,9 +237,10 @@ sub BUILD {
 
 	# otherwise create an empty project object with an empty metadata object...
 	#
-	print STDERR "Create an empty metadata object with parent_id $args->{project_id}...\n";
-	$metadata = CXGN::Analysis::AnalysisMetadata->new ( { bcs_schema => $args->{bcs_schema} });
-	$metadata->parent_id($args->{project_id});
+	# print STDERR "Create an empty metadata object with parent_id ".$self->project_id()."...\n";
+	# $metadata = CXGN::Analysis::AnalysisMetadata->new ( { bcs_schema => $args->{bcs_schema} });
+	# $metadata->parent_id($self->project_id());
+	die "need a project id...";
     }
     $self->metadata($metadata);
 }
@@ -257,7 +275,7 @@ sub retrieve_analyses_by_user {
     my @analyses = ();
     while (my ($project_id) = $h->fetchrow_array()) {
 	print STDERR "Instantiating analysis project for project ID $project_id...\n";
-	push @analyses, CXGN::Analysis->new( { bcs_schema => $schema, project_id=> $project_id });
+	push @analyses, CXGN::Analysis->new( { bcs_schema => $schema, trial_id=> $project_id });
     }
 
     return @analyses;
@@ -271,12 +289,21 @@ sub create_and_store_analysis_design {
     if (!$self->user_id()) {
 	die "Need an sp_person_id to store an analysis.";
     }
-    if (!$self->description()) {
+    if (!$self->get_description()) {
 	die "Need a description to store an analysis.";
     }
 
-    if (!$self->name()) {
+    if (!$self->get_name()) {
 	die "Need a name to store an analysis.";
+    }
+
+    print STDERR "Year is : ".$self->year()."\n";
+    if (!$self->year()) {
+	my $dt = DateTime->now();
+	my $year = $dt->year();
+	print STDERR "Year: $year\n";
+	print STDERR "No year provided. Using current year ($year).\n";
+	$self->year($year);
     }
 
     print STDERR "Retrieving geolocation entry...\n";
@@ -290,30 +317,28 @@ sub create_and_store_analysis_design {
 	->resultset("Project::Project")
 	->find( { name => $self->name() });
 
-    if ($check_name) {
-	die "An analysis with name ".$self->name()." already exists in the database. Please choose another name.";
-	return;
-    }
+#    if ($check_name) {
+#	die "An analysis with name ".$self->name()." already exists in the database. Please choose another name.";
+#	return;
+#    }
 
     # create project row
     #
-    my $analysis = $self->bcs_schema()
-	->resultset("Project::Project")
-	->create(
-	{
-	    name => $self->name(),
-	    description => $self->description(),
-	});
+    #  my $analysis = $self->bcs_schema()
+    # 	->resultset("Project::Project")
+    # 	->create(
+    # 	{
+    # 	    name => $self->name(),
+    # 	    description => $self->description(),
+    # 	});
 
-    my $analysis_id = $analysis->project_id();
+    # my $analysis_id = $analysis->project_id();
 
-    print STDERR "Created analysis id $analysis_id.\n";
+#    print STDERR "Created analysis id $analysis_id.\n";
 
     # store nd_location_id
     #
-    my $project = CXGN::Project->new( { bcs_schema => $self->bcs_schema(), trial_id => $analysis_id });
-
-    $project->set_location($calculation_location_id);
+    $self->set_location($calculation_location_id);
     
     # store user info
     #
@@ -321,7 +346,7 @@ sub create_and_store_analysis_design {
     my $project_sp_person_term = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'project_sp_person_id', 'project_property');
     my $row = $self->bcs_schema()->resultset("Project::Projectprop")->create( 
 	{
-	    project_id => $analysis_id, 
+	    project_id => $self->get_trial_id(), 
 	    type_id=>$project_sp_person_term->cvterm_id(), 
 	    value=>$self->user_id(), 
 	});
@@ -340,8 +365,8 @@ sub create_and_store_analysis_design {
     if (!$self->metadata()) {
 	print STDERR "Storing metadata...\n";
 	my $metadata = CXGN::Analysis::AnalysisMetadata->new({ bcs_schema => $self->bcs_schema() });
-	print STDERR "Analysis ID = $analysis_id\n";
-	$metadata->parent_id($analysis_id);
+	print STDERR "Analysis ID = ".$self->get_trial_id()."\n";
+	$metadata->parent_id($self->get_trial_id());
 	$self->metadata( $metadata );
 	$self->metadata()->create_timestamp($time->ymd()." ".$time->hms());
     }
@@ -362,7 +387,7 @@ sub create_and_store_analysis_design {
 	print STDERR "No dataset_id provided...\n";
     }
 
-    $self->metadata()->parent_id($analysis_id);
+    $self->metadata()->parent_id($self->get_trial_id());
     $self->metadata()->modified_timestamp($time->ymd()." ".$time->hms());
     $self->metadata()->store();
     
@@ -402,36 +427,68 @@ sub create_and_store_analysis_design {
     }
 
     print STDERR "Store design...\n";
-    my $design_store = CXGN::Trial::TrialDesignStore->new(
-	{ 
-	    bcs_schema => $self->bcs_schema(),
-	    trial_id => $analysis_id,
-	    trial_name => $self->name(),
-	    nd_geolocation_id => $self->nd_geolocation_id(),
-	    design_type => 'Analysis', 
-	    design => $design,
-	    is_genotyping => 0,
-	    is_analysis => 1,
-	    operator => "janedoe",
-	}); 
-    
-    my $validate_error = $design_store->validate_design(); 
-    my $store_error; 
-    if ($validate_error) {
-	print STDERR "VALIDATE ERROR! "; #.Dumper($validate_error)."\n";
-    } 
-    else {
-	print STDERR "Valiation successful. Storing...\n";
-	try { $store_error = $design_store->store() }
-	catch { $store_error = $_ };
-    } 
-    if ($store_error) { 
-	die "ERROR SAVING TRIAL!: $store_error\n"; 
-    }
+    # my $design_store = CXGN::Trial::TrialDesignStore->new(
+    # 	{ 
+    # 	    bcs_schema => $self->bcs_schema(),
+    # 	    trial_id => $analysis_id,
+    # 	    trial_name => $self->name(),
+    # 	    nd_geolocation_id => $self->nd_geolocation_id(),
+    # 	    design_type => 'Analysis', 
+    # 	    design => $design,
+    # 	    is_genotyping => 0,
+    # 	    is_analysis => 1,
+    # 	    operator => "janedoe",
+    # 	}); 
 
+     my $trial_create = CXGN::Trial::TrialCreate->new({
+        chado_schema => $self->bcs_schema(),
+        dbh => $self->bcs_schema()->storage->dbh(),
+        operator => "computer",
+        design => $design,
+	design_type => "analysis",
+	program => "user",
+	trial_year => $self->year(),
+	trial_description => $self->description(),
+	trial_location => '[ Computation ]',
+        trial_name => $self->name(),
+	trial_type => 'analysis',
+	is_analysis => 1,
+#        field_size => $field_size, #(ha)
+#        plot_width => $plot_width, #(m)
+#        plot_length => $plot_length, #(m)
+#        field_trial_is_planned_to_cross => 'yes', #yes or no
+#        field_trial_is_planned_to_be_genotyped => 'no', #yes or no
+#        field_trial_from_field_trial => ['source_trial_id1', 'source_trial_id2'],
+#        genotyping_trial_from_field_trial => ['genotyping_trial_id1'],
+#        crossing_trial_from_field_trial => ['crossing_trial_id1']
+    });
+
+    
+#    my $validate_error = $trial_create->validate_design(); 
+#    my $store_error; 
+#    if ($validate_error) {
+#	print STDERR "VALIDATE ERROR! "; #.Dumper($validate_error)."\n";
+#    } 
+#    else {
+##	print STDERR "Valiation successful. Storing...\n";
+#	try { $store_error = $design_store->store() }
+#	catch { $store_error = $_ };
+#    } 
+#    if ($store_error) { 
+#	die "ERROR SAVING TRIAL!: $store_error\n"; 
+#    }
+
+    try { 
+	$trial_create->save_trial();
+    }
+    catch {
+	die "Error saving trial: $_";
+    };
+    
+    
     print STDERR "Done with design create & store.\n";
 
-    return $analysis_id;
+    return $self->get_trial_id();
 }
 
 
@@ -507,7 +564,7 @@ sub _load_design {
 
     # Load the design
     #
-    my $design = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema(), trial_id => $self->project_id(), experiment_type=> 'analysis_experiment'} );
+    my $design = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema(), trial_id => $self->get_trial_id(), experiment_type=> 'analysis_experiment'} );
 
     print STDERR "_load_design: design = ".Dumper($design->get_design);
 
@@ -526,7 +583,7 @@ sub get_phenotype_matrix {
 	search_type => "Native",
 	data_level => "analysis_instance",
 	experiment_type => "analysis_experiment",
-	trial_list=> [ $self->project_id() ],
+	trial_list=> [ $self->get_trial_id() ],
 	); 
     
     my @data = $phenotypes_search->get_phenotype_matrix();
@@ -556,3 +613,5 @@ sub _load_accession_names {
 #}
 
 1;
+
+#__PACKAGE__->meta->make_immutable;

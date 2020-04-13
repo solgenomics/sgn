@@ -26,6 +26,7 @@ Lukas Mueller <lam87@cornell.edu>
 package CXGN::Project;
 
 use Moose;
+
 use Data::Dumper;
 use Try::Tiny;
 use Data::Dumper;
@@ -61,19 +62,80 @@ has 'phenome_schema' => (
     is => 'rw',
 );
 
+has 'project_id' => (
+    isa => 'Maybe[Int]',
+    is => 'rw',
+    trigger => \&set_trial_id,
+    builder => 'get_trial_id',
+    );
 
+has 'name' => (
+    isa => 'Str',
+    is => 'rw',
+    trigger => \&set_name,
+    builder => 'get_name',
+    lazy => 1,
+    );
+
+has 'description' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    trigger => \&set_description,
+    builder => 'get_description',
+    lazy => 1,
+    );
+
+has 'year' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    trigger => \&get_year,
+    builder => 'set_year',
+    lazy => 1,
+    );
 
 sub BUILD {
     my $self = shift;
+    my $args = shift;
+    
+    print STDERR "BUILD CXGN::Project... with ".$args->{trial_id}."\n";
 
-    my $row = $self->bcs_schema->resultset("Project::Project")->find( { project_id => $self->get_trial_id() });
+    if (! $args->{description}) { 
+	$args->{description} = "(No description provided)"; 
+    }
+    
+    my $row = $self->bcs_schema()->resultset("Project::Project")->find( { project_id => $args->{trial_id} });
 
+    print STDERR "PROJECT ID = $args->{trial_id}\n";
     if ($row){
-	#print STDERR "Found row for ".$self->get_trial_id()." ".$row->name()."\n";
+	$self->name( $row->name() );
+    }
+    
+    if ($args->{trial_id} && ! $row) { 
+	die "The trial ".$args->{trial_id}." does not exist - aborting.";
     }
 
-    if (!$row) {
-        die "The trial ".$self->get_trial_id()." does not exist";
+    $row = $self->bcs_schema()->resultset("Project::Project")->find( { name => $args->{name } } );
+
+    
+    if (! $args->{trial_id} && $row) {
+	die "A trial with the name $args->{name} already exists. Please choose another name.";
+    }
+
+    if (! $args->{trial_id} && ! $row) { 
+	print STDERR "INSERTING A NEW ROW...\n";
+	
+        my $new_row = $args->{bcs_schema}->resultset("Project::Project")->create( { name => $args->{name}, description => $args->{description} });
+	my $project_id = $new_row->project_id();
+	print STDERR "new project object has project id $project_id\n";
+	
+	$self->set_trial_id($project_id);
+    }
+
+    if ($args->{trial_id} && $row) {
+	print STDERR "Existing project... populating object.\n";
+	$self->set_trial_id($args->{trial_id});
+	$self->name($args->{name});
+	$self->description($args->{description});
     }
 }
 
@@ -124,6 +186,10 @@ getter/setter for the year property. The setter modifies the database.
 sub get_year {
     my $self = shift;
 
+    print STDERR "get_year()...\n";
+    
+    if ($self->year()) { return $self->year(); }
+
     my $type_id = $self->get_year_type_id();
 
     my $rs = $self->bcs_schema->resultset('Project::Project')->search( { 'me.project_id' => $self->get_trial_id() })->search_related('projectprops', { type_id => $type_id } );
@@ -134,28 +200,39 @@ sub get_year {
     else {
 	return $rs->first()->value();
     }
+   
 }
 
 sub set_year {
     my $self = shift;
     my $year = shift;
 
+    if (!$year) {
+	print STDERR "set_year(): No year provided, not setting.\n";
+	return;
+    }
+
+    print STDERR "set_year()... (with parameter $year)\n";
     my $type_id = $self->get_year_type_id();
 
     my $row = $self->bcs_schema->resultset('Project::Projectprop')->find( { project_id => $self->get_trial_id(), type_id => $type_id  });
 
     if ($row) {
+	print STDERR "Updating year to $year...\n";
 	$row->value($year);
 	$row->update();
     }
     else {
+	print STDERR "inserting new year ($year)...\n";
 	$row = $self->bcs_schema->resultset('Project::Projectprop')->create(
 	    {
 		type_id => $type_id,
 		value => $year,
 		project_id =>  $self->get_trial_id()
 	    } );
+	$year =  $row->value();
     }
+    return $year;
 }
 
 =head2 accessors get_description(), set_description()
@@ -167,6 +244,7 @@ getter/setter for the description
 sub get_description {
     my $self = shift;
 
+    print STDERR "Get description for trial id ".$self->get_trial_id()."\n";
     my $rs = $self->bcs_schema->resultset('Project::Project')->search( { project_id => $self->get_trial_id() });
 
     return $rs->first()->description();
@@ -3876,3 +3954,5 @@ sub cross_count {
 }
 
 1;
+
+##__PACKAGE__->meta->make_immutable;
