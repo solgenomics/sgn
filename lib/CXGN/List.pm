@@ -549,7 +549,7 @@ sub add_bulk {
 		foreach (@$elements) {
 			if ($_ && !exists $elements_in_list{$_}){
 				my $content = $_;
-				$content =~ tr/'/\'/;
+				$content =~ s/\'/\'\'/g;
 				push @values, [$list_item_id, $list_id, $content];
 				$elements_in_list{$content} = 1;
 				push @elements_added, $content;
