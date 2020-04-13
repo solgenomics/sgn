@@ -471,6 +471,10 @@ sub retrieve_genotypes {
     my $protocolprop_top_key_select = shift || [];
     my $protocolprop_marker_hash_select = shift || [];
     my $return_only_first_genotypeprop_for_stock = shift || 1;
+    my $chromosome_list = shift || [];
+    my $start_position = shift;
+    my $end_position = shift;
+    my $marker_name_list = shift || [];
 
     my $genotypes_search = CXGN::Genotype::Search->new(
         bcs_schema => $self->schema(),
@@ -478,6 +482,10 @@ sub retrieve_genotypes {
         accession_list => $self->accessions(),
         trial_list => $self->trials(),
         protocol_id_list => [$protocol_id],
+        chromosome_list => $chromosome_list,
+        start_position => $start_position,
+        end_position => $end_position,
+        marker_name_list => $marker_name_list,
         genotypeprop_hash_select=>$genotypeprop_hash_select, #THESE ARE THE KEYS IN THE GENOTYPEPROP OBJECT
         protocolprop_top_key_select=>$protocolprop_top_key_select, #THESE ARE THE KEYS AT THE TOP LEVEL OF THE PROTOCOLPROP OBJECT
         protocolprop_marker_hash_select=>$protocolprop_marker_hash_select, #THESE ARE THE KEYS IN THE MARKERS OBJECT IN THE PROTOCOLPROP OBJECT

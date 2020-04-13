@@ -105,7 +105,7 @@ override('retrieve_genotypes',
             return $genotypes;
         }
         else {
-            my $genotypes = $self->SUPER::retrieve_genotypes($protocol_id, $genotypeprop_hash_select, $protocolprop_top_key_select, $protocolprop_marker_hash_select, $return_only_first_genotypeprop_for_stock);
+            my $genotypes = $self->SUPER::retrieve_genotypes($protocol_id, $genotypeprop_hash_select, $protocolprop_top_key_select, $protocolprop_marker_hash_select, $return_only_first_genotypeprop_for_stock, $chromosome_list, $start_position, $end_position, $marker_name_list);
             my $genotype_json = JSON::Any->encode($genotypes);
             $self->cache()->set($key, $genotype_json, $self->cache_expiry());
             undef $genotype_json;

@@ -81,6 +81,9 @@ $species_name => undef
 $create_date => undef
 $sample_observation_unit_type_name => undef
 
+#Specific to drone run detail page
+$drone_run_date => undef
+
 </%args>
 
 <& /util/import_javascript.mas,
@@ -140,7 +143,7 @@ $sample_observation_unit_type_name => undef
                                 <& /solgs/anova/analysis.mas,
                                     trial_id => $trial_id
                                 &>
-                           
+
                                  <!-- Population structure analysis PCA -->
                                 <& /solgs/pca/analysis.mas,
                                     trial_id => $trial_id
@@ -339,7 +342,9 @@ $sample_observation_unit_type_name => undef
 % if ($info_section_id eq 'manage_drone_imagery_standard_process_generate_plot_polygons_section'){
                                 <& /breeders_toolbox/drone_imagery/generate_plot_polygons_standard_process_section.mas &>
 % } #End manage_drone_imagery_generate_plot_polygons_section
-
+% if ($info_section_id eq 'drone_run_project_details'){
+                                <& /breeders_toolbox/drone_imagery/drone_run_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, trial_description=>$trial_description, identifier_prefix=>$identifier_prefix, drone_run_date=>$drone_run_date &>
+% } #End trial_details
 % if (!$info_section_id){
                                 <p>No section specified! Main content goes here!</p>
 % }
