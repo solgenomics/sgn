@@ -57,7 +57,6 @@ use CXGN::Pedigree::AddCrosses;
 use CXGN::Pedigree::AddCrossInfo;
 use Scalar::Util qw(looks_like_number);
 use List::Util qw(max);
-#my $highest = max values %height;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -672,7 +671,16 @@ sub save_ona_cross_info {
             }
         }
 
-        print STDERR "GERMINATING HASH =".Dumper(\%number_germinating)."\n";
+
+        foreach my $name_hash (keys %number_germinating) {
+            my $germination_date_ref = $number_germinating{$name_hash};
+            my %germination_info = %$germination_date_ref;
+            my $latest_total_number = max values %germination_info;
+            my $germinating_number_property = 'Number of Embryo Germinating';
+            $musa_cross_info{$germinating_number_property}{$name_hash} = $latest_total_number;
+#            print STDERR "LATEST NUMBER =".Dumper($latest_number)."\n";
+        }
+
 
 #        print STDERR "CHECKING FEMALE PLOT =".Dumper(\@checking_female_plots)."\n";
 #        print STDERR "CHECKING MALE PLOT =".Dumper(\@checking_male_plots)."\n";
