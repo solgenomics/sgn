@@ -279,6 +279,7 @@ sub save_ona_cross_info {
         my $cross_property;
         my %number_germinating;
         my %number_subcultures;
+        my %number_rooting;
 
 
         foreach my $activity_hash (@$message_hash){
@@ -659,16 +660,23 @@ sub save_ona_cross_info {
                         my $previous_number_germinating = $activity_hash->{'Laboratory/EmbryoGermination/previousNumberGerminating'};
                         my $total_number_germinating = $number_germinating + $previous_number_germinating;
                         $number_germinating{$germination_cross_id}{$germination_date} = $total_number_germinating;
+
                     } elsif ($activity_hash->{'Laboratory/labActivity'} eq 'subculture') {
                         my $subculture_cross_id = $activity_hash->{'Laboratory/subculturing/cross_Sub'};
                         my $subculture_id = $activity_hash->{'Laboratory/subculturing/subcultureID'};
                         $number_subcultures{$subculture_cross_id}++;
+
+                    } elsif ($activity_hash->{'Laboratory/labActivity'} eq 'rooting') {
+                        my $rooting_cross_id = $activity_hash->{'Laboratory/rooting/getRoot_crossid'};
+                        my $rooting_id = $activity_hash->{'Laboratory/rooting/rootingID'};
+                        if (defined $rooting_cross_id) {
+                            $number_rooting{$rooting_cross_id}++;
+                        }
                     }
 
                 }
             }
         }
-
 
         foreach my $name_hash (keys %number_germinating) {
             my $germination_date_ref = $number_germinating{$name_hash};
@@ -681,6 +689,10 @@ sub save_ona_cross_info {
 
         my $subculture_property = 'Number of Subcultures';
         $musa_cross_info{$subculture_property} = \%number_subcultures;
+
+        my $rooting_property = 'Number of Rooting';
+        $musa_cross_info{$rooting_property} = \%number_rooting;
+
 
 #        print STDERR "CHECKING FEMALE PLOT =".Dumper(\@checking_female_plots)."\n";
 #        print STDERR "CHECKING MALE PLOT =".Dumper(\@checking_male_plots)."\n";
