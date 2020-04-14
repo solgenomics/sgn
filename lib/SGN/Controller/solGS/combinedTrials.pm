@@ -346,6 +346,7 @@ sub selection_combined_pops_trait :Path('/solgs/combined/model/') Args() {
     my $training_pop = "Training population $model_id";
     my $model_link   = qq | <a href="/solgs/populations/combined/$model_id/gp/$protocol_id">$training_pop </a>|;
     $c->stash->{model_link} = $model_link;
+    $c->stash->{training_pop_name} = $training_pop;
     
     my $identifier    = $model_id . '_' . $selection_pop_id;
     $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
