@@ -280,6 +280,7 @@ sub save_ona_cross_info {
         my %number_germinating;
         my %number_subcultures;
         my %number_rooting;
+        my %number_weaning1;
 
 
         foreach my $activity_hash (@$message_hash){
@@ -672,6 +673,11 @@ sub save_ona_cross_info {
                         if (defined $rooting_cross_id) {
                             $number_rooting{$rooting_cross_id}++;
                         }
+
+                    } elsif ($activity_hash->{'Laboratory/labActivity'} eq 'weaning1') {
+                        my $weaning1_cross_id = $activity_hash->{'Laboratory/weaning1/getWeaning1_crossid'};
+                        my $weaning1_id = $activity_hash->{'Laboratory/weaning1/weaning1ID'};
+                        $number_weaning1{$weaning1_cross_id}++;
                     }
 
                 }
@@ -690,9 +696,11 @@ sub save_ona_cross_info {
         my $subculture_property = 'Number of Subcultures';
         $musa_cross_info{$subculture_property} = \%number_subcultures;
 
-        my $rooting_property = 'Number of Rooting';
+        my $rooting_property = 'Number of Rooting Plantlets';
         $musa_cross_info{$rooting_property} = \%number_rooting;
 
+        my $weaning1_property = 'Number of Weaning1 Plantlets';
+        $musa_cross_info{$weaning1_property} = \%number_weaning1;
 
 #        print STDERR "CHECKING FEMALE PLOT =".Dumper(\@checking_female_plots)."\n";
 #        print STDERR "CHECKING MALE PLOT =".Dumper(\@checking_male_plots)."\n";
