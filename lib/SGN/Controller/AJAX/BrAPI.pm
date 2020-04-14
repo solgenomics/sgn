@@ -3157,7 +3157,7 @@ sub observations_GET {
 
 =head2 brapi/v1/markers
 
- Usage: To retrieve observations
+ Usage: To retrieve markers
  Desc: BrAPI v1.3
  Args:
  Side Effects: deprecated on BrAPI v2.0
@@ -3191,6 +3191,66 @@ sub markers_search_retrieve : Chained('brapi') PathPart('search/markers') Args(1
     my $search_id = shift;
     retrieve_results($self, $c, $search_id, 'Markers');
 }
+
+
+=head2 brapi/v2/variants
+
+ Usage: To retrieve variants
+ Desc: BrAPI v2.0
+ Args:
+ Side Effects: 
+
+=cut
+
+sub variants_search  : Chained('brapi') PathPart('variants') Args(0) : ActionClass('REST') { }
+
+sub variants_search_GET {
+    my $self = shift;
+    my $c = shift;
+    my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Variants');
+	my $brapi_package_result = $brapi_module->search($clean_inputs);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub variants_single :  Chained('brapi') PathPart('variants') CaptureArgs(1) {
+     my $self = shift;
+     my $c = shift;
+     print STDERR " Capturing variants id\n";
+     $c->stash->{variants_id} = shift;
+}
+
+sub variants_detail :  Chained('variants_single') PathPart('') Args(0) ActionClass('REST') { }
+
+sub variants_detail_GET {
+    my $self = shift;
+    my $c = shift;
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Variants');
+    my $brapi_package_result = $brapi_module->detail({ 
+    	variantDbId => $c->stash->{variants_id}
+    });
+    _standard_response_construction($c, $brapi_package_result);
+}
+
+sub variants_search_save  : Chained('brapi') PathPart('search/variants') Args(0) : ActionClass('REST') { }
+
+sub variants_search_save_POST {
+    my $self = shift;
+    my $c = shift;
+    save_results($self,$c,$c->stash->{clean_inputs},'Variants');
+}
+
+sub variants_search_retrieve : Chained('brapi') PathPart('search/variants') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'Variants');
+}
+
 
 =head2 brapi/v1/observations-search
 

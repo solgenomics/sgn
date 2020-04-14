@@ -8,10 +8,13 @@ use JSON;
 use CXGN::BrAPI::FileResponse;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
+use List::Util qw(sum);
 
 extends 'CXGN::BrAPI::v2::Common';
 
-sub search { #returns triple, should be just one
+
+
+sub search {
     my $self = shift;
     my $inputs = shift;
     my $c = $self->context;
@@ -36,37 +39,27 @@ sub search { #returns triple, should be just one
         }
     }
 
-    my $genotypes_search = CXGN::Genotype::Search->new({
-        bcs_schema=>$self->bcs_schema,
-        cache_root=>$c->config->{cache_file_path},
-        trial_list=>\@variantset_id,
-        genotypeprop_hash_select=>['DS'],
-        protocolprop_top_key_select=>[],
-        protocolprop_marker_hash_select=>[],
-        # offset=>$page_size*$page,
-        # limit=>$page_size
+    my $genotype_search = CXGN::Genotype::Search->new({
+            bcs_schema=>$self->bcs_schema,
+            cache_root=>$c->config->{cache_file_path},
+            trial_list=>\@variantset_id,
+            genotypeprop_hash_select=>['DS'],
+            protocolprop_top_key_select=>[],
+            protocolprop_marker_hash_select=>[],
     });
-    my $file_handle = $genotypes_search->get_cached_file_search_json($c, 1); #Metadata only returned
-    my @data;
 
-    my $start_index = $page*$page_size;
-    my $end_index = $page*$page_size + $page_size - 1;
-    my $counter = 0;
-    my $callset_counter = 0;
+    my %genotypingDataProjects;
 
-    open my $fh, "<&", $file_handle or die "Can't open output file: $!";
-    my $header_line = <$fh>;
-    # my %marker_objects = decode_json $header_line;print Dumper \%marker_objects;
-    # my $aa=scalar(keys %{$marker_objects{genotypingDataProjectDbId}}); print $aa; #probar q lea como obj y luego saque el scalar
-    while( <$fh> ) {
-        if ($counter >= $start_index && $counter <= $end_index) {
-            my $gt = decode_json $_;
+    $genotype_search->init_genotype_iterator();
+
+    while (my ($count, $gt) = $genotype_search->get_next_genotype_info) {
+
+        my $project_id = $gt->{genotypingDataProjectDbId};
+
+        if( ! $genotypingDataProjects{$project_id}{'analysisIds'} {$gt->{analysisMethodDbId}}) {
             my @analysis;
-            my @additionalInfo;
-            my @availableFormats;
-
             push @analysis, {
-                analysisDbId=>$gt->{analysisMethodDbId},
+                analysisDbId=> qq|$gt->{analysisMethodDbId}|, #protocolid
                 analysisName=> $gt->{analysisMethod},
                 created=>undef,
                 description=>undef,
@@ -74,25 +67,40 @@ sub search { #returns triple, should be just one
                 type=>undef,
                 updated=>undef,
             };
-            push @additionalInfo,{
-            };
-            push @availableFormats,{
-                dataFormat => "json",
-                fileFormat => "json",
-                fileURL => undef,
-            };
-            push @data, {
-                additionalInfo=>\@additionalInfo,
-                analysis =>\@analysis,
-                availableFormats => \@availableFormats,
-                # callSetCount
-                # referenceSetDbId                
-                studyDbId => $gt->{genotypingDataProjectDbId},          
-                variantCount => $gt->{resultCount},
-                variantSetDbId => $gt->{genotypingDataProjectDbId},
-                variantSetName => $gt->{genotypingDataProjectName},
-            };
+            
+            push( @{ $genotypingDataProjects { $project_id  }{'analysisIds'} {$gt->{analysisMethodDbId}} }, 1 );
+            push( @{ $genotypingDataProjects { $project_id  }{'markerCount'}}, $gt->{resultCount} );
+            push( @{ $genotypingDataProjects { $project_id  }{'analysis'}  }, @analysis);
         }
+
+        push( @{ $genotypingDataProjects { $project_id  } {'genotypes'} }, $gt->{genotypeDbId});
+        $genotypingDataProjects { $project_id  } {'name'}  = $gt->{genotypingDataProjectName};
+      
+    }
+
+    my @data;
+    my $counter=0;
+    
+    foreach my $project (keys %genotypingDataProjects){
+
+        my @availableFormats; 
+ 
+        push @availableFormats,{
+            dataFormat => "json",
+            fileFormat => "json",
+            fileURL => undef,
+        };
+        push @data, {
+            additionalInfo=>{},
+            analysis =>$genotypingDataProjects{$project} {'analysis'},
+            availableFormats => \@availableFormats,
+            callSetCount => scalar @{$genotypingDataProjects{$project}{'genotypes'}},
+            referenceSetDbId => undef, #    from protocol           
+            studyDbId => $project,          
+            variantCount => _sum($genotypingDataProjects{$project}{'markerCount'}),
+            variantSetDbId => qq|$project|,
+            variantSetName => $genotypingDataProjects{$project} {'name'},
+        };
         $counter++;
     }
 
@@ -111,9 +119,7 @@ sub detail { #returns triple, should be just one
     my $status = $self->status;
     my $variantset_id = $inputs->{variantSetDbId};
 
-print Dumper \$inputs;
-
-    my $genotypes_search = CXGN::Genotype::Search->new({
+    my $genotype_search = CXGN::Genotype::Search->new({
         bcs_schema=>$self->bcs_schema,
         cache_root=>$c->config->{cache_file_path},
         trial_list=>[$variantset_id],
@@ -123,7 +129,7 @@ print Dumper \$inputs;
         # offset=>$page_size*$page,
         # limit=>$page_size
     });
-    my $file_handle = $genotypes_search->get_cached_file_search_json($c, 1); #Metadata only returned
+    my $file_handle = $genotype_search->get_cached_file_search_json($c, 1); #Metadata only returned
     my @data;
 
     my $start_index = $page*$page_size;
@@ -131,19 +137,18 @@ print Dumper \$inputs;
     my $counter = 0;
     my $callset_counter = 0;
 
-    open my $fh, "<&", $file_handle or die "Can't open output file: $!";
-    my $header_line = <$fh>;
-    # my %marker_objects = decode_json $header_line;print Dumper \%marker_objects;
-    # my $aa=scalar(keys %{$marker_objects{genotypingDataProjectDbId}}); print $aa; #probar q lea como obj y luego saque el scalar
-    while( <$fh> ) {
-        if ($counter >= $start_index && $counter <= $end_index) {
-            my $gt = decode_json $_;
-            my @analysis;
-            my @additionalInfo;
-            my @availableFormats;
+    my %genotypingDataProjects;
 
+    $genotype_search->init_genotype_iterator();
+
+    while (my ($count, $gt) = $genotype_search->get_next_genotype_info) {
+
+        my $project_id = $gt->{genotypingDataProjectDbId};
+
+        if( ! $genotypingDataProjects{$project_id}{'analysisIds'} {$gt->{analysisMethodDbId}}) {
+            my @analysis;
             push @analysis, {
-                analysisDbId=>$gt->{analysisMethodDbId},
+                analysisDbId=> qq|$gt->{analysisMethodDbId}|, #protocolid
                 analysisName=> $gt->{analysisMethod},
                 created=>undef,
                 description=>undef,
@@ -151,32 +156,44 @@ print Dumper \$inputs;
                 type=>undef,
                 updated=>undef,
             };
-            push @additionalInfo,{
-            };
-            push @availableFormats,{
-                dataFormat => "json",
-                fileFormat => "json",
-                fileURL => undef,
-            };
-            push @data, {
-                additionalInfo=>\@additionalInfo,
-                analysis =>\@analysis,
-                availableFormats => \@availableFormats,
-                # callSetCount
-                # referenceSetDbId                
-                studyDbId => $gt->{genotypingDataProjectDbId},          
-                variantCount => $gt->{resultCount},
-                variantSetDbId => $gt->{genotypingDataProjectDbId},
-                variantSetName => $gt->{genotypingDataProjectName},
-            };
+            
+            push( @{ $genotypingDataProjects { $project_id  }{'analysisIds'} {$gt->{analysisMethodDbId}} }, 1 );
+            push( @{ $genotypingDataProjects { $project_id  }{'markerCount'}}, $gt->{resultCount} );
+            push( @{ $genotypingDataProjects { $project_id  }{'analysis'}  }, @analysis);
         }
+
+        push( @{ $genotypingDataProjects { $project_id  } {'genotypes'} }, $gt->{genotypeDbId});
+        $genotypingDataProjects { $project_id  } {'name'}  = $gt->{genotypingDataProjectName};
+      
+    }
+
+   
+    foreach my $project (keys %genotypingDataProjects){
+
+        my @availableFormats; 
+ 
+        push @availableFormats,{
+            dataFormat => "json",
+            fileFormat => "json",
+            fileURL => undef,
+        };
+        push @data, {
+            additionalInfo=>{},
+            analysis =>$genotypingDataProjects{$project} {'analysis'},
+            availableFormats => \@availableFormats,
+            callSetCount => scalar @{$genotypingDataProjects{$project}{'genotypes'}},
+            referenceSetDbId => undef, #    from protocol           
+            studyDbId => $project,          
+            variantCount => _sum($genotypingDataProjects{$project}{'markerCount'}),
+            variantSetDbId => qq|$project|,
+            variantSetName => $genotypingDataProjects{$project} {'name'},
+        };
         $counter++;
     }
 
-    my %result = (data => \@data);
     my @data_files;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'VariantSets result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success(@data, $pagination, \@data_files, $status, 'VariantSets result constructed');
 }
 
 sub callsets {
@@ -326,6 +343,16 @@ sub calls {
 
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'VariantSets result constructed');
+}
+
+sub _sum{
+    my $array = shift;
+    my $sum=0;
+
+    foreach my $num (@$array){
+        $sum += $num;
+    }
+    return $sum;
 }
 
 1;

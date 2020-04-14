@@ -172,12 +172,17 @@ sub search {
     my $season_arrayref = $params->{seasonDbId} || ($params->{seasonDbIds} || ());
     my $location_ids_arrayref = $params->{locationDbId} || ($params->{locationDbIds} || ());
     my $study_ids_arrayref = $params->{studyDbId} || ($params->{studyDbIds} || ());
+    my $trial_ids_arrayref = $params->{trialDbId} || ($params->{trialDbIds} || ());
     my $accession_ids_arrayref = $params->{germplasmDbId} || ($params->{germplasmDbIds} || ());
     my $program_ids_arrayref = $params->{programDbId} || ($params->{programDbIds} || ());
     my $start_time = $params->{observationTimeStampRangeStart}->[0] || undef;
     my $end_time = $params->{observationTimeStampRangeEnd}->[0] || undef;
     my $observation_unit_db_id = $params->{observationUnitDbId} || "";
 
+    my $trial_ids;
+    if ($study_ids_arrayref || $trial_ids_arrayref){
+        $trial_ids = ($study_ids_arrayref, $trial_ids_arrayref); 
+    }
 
     my $limit = $page_size*($page+1)-1;
     my $offset = $page_size*$page;
@@ -187,7 +192,7 @@ sub search {
         {
             bcs_schema=>$self->bcs_schema,
             data_level=>$observation_level,
-            trial_list=>$study_ids_arrayref,
+            trial_list=>$trial_ids,
             include_timestamp=>1,
             year_list=>$season_arrayref,
             location_list=>$location_ids_arrayref,
@@ -199,7 +204,6 @@ sub search {
         }
     );
     my ($data, $unique_traits) = $phenotypes_search->search();
-    #print STDERR Dumper $data;
 
     my @data_window;
     my $total_count = 0;
