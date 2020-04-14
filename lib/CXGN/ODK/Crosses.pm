@@ -278,6 +278,7 @@ sub save_ona_cross_info {
         my %musa_cross_info;
         my $cross_property;
         my %number_germinating;
+        my %number_subcultures;
 
 
         foreach my $activity_hash (@$message_hash){
@@ -563,6 +564,7 @@ sub save_ona_cross_info {
                             #print STDERR Dumper $a;
 #                        }
                     } elsif ($activity_category eq 'laboratory'){
+#                        print STDERR "CHECK LABOTATORY HASH =".Dumper($activity_hash)."\n";
                         if ($a->{'Laboratory/labActivity'} eq 'embryoRescue'){
 #                            print STDERR "CHECKING EMBRYO RESCUE =".Dumper($a)."\n";
 
@@ -626,15 +628,7 @@ sub save_ona_cross_info {
                             push @{$cross_info{$rooting_cross_lookup{$a->{'screenhse_activities/hardening/hardeningID'}}}->{'hardening'}}, $a;
                             $cross_info{$rooting_cross_lookup{$a->{'screenhse_activities/hardening/hardeningID'}}}->{'active_seeds'}->{$rooting_activeseed_lookup{$a->{'screenhse_activities/hardening/hardeningID'}}}->{'subcultures'}->{$rooting_subculture_lookup{$a->{'screenhse_activities/hardening/hardeningID'}}}->{'rooting'}->{$a->{'screenhse_activities/hardening/hardeningID'}}->{'hardening'}->{$a->{'screenhse_activities/hardening/hardeningID'}} = $a;
                         }
-#                        else {
-#                            print STDERR "UNKNOWN ONA ODK activity in $activity_category\n";
-                            #print STDERR Dumper $a;
-#                        }
                     }
-#                    else {
-#                        print STDERR "UNKNOWN ONA ODK $activity_category\n";
-                    #print STDERR Dumper $a;
-#                    }
                 }
 
             } elsif (!defined $actions) {
@@ -658,13 +652,17 @@ sub save_ona_cross_info {
                         my $embryorescue_bad_seeds_property = 'Embryo Rescue Bad Seeds';
                         $musa_cross_info{$embryorescue_bad_seeds_property}{$embryo_rescue_cross_id} = $embryorescue_bad_seeds;
 
-                   } elsif ($activity_hash->{'Laboratory/labActivity'} eq 'germination') {
-                       my $germination_cross_id = $activity_hash->{'Laboratory/EmbryoGermination/embryo_germinationID'};
-                       my $germination_date = $activity_hash->{'Laboratory/EmbryoGermination/germination_date'};
-                       my $number_germinating = $activity_hash->{'Laboratory/EmbryoGermination/number_germinating'};
-                       my $previous_number_germinating = $activity_hash->{'Laboratory/EmbryoGermination/previousNumberGerminating'};
-                       my $total_number_germinating = $number_germinating + $previous_number_germinating;
-                       $number_germinating{$germination_cross_id}{$germination_date} = $total_number_germinating;
+                    } elsif ($activity_hash->{'Laboratory/labActivity'} eq 'germination') {
+                        my $germination_cross_id = $activity_hash->{'Laboratory/EmbryoGermination/embryo_germinationID'};
+                        my $germination_date = $activity_hash->{'Laboratory/EmbryoGermination/germination_date'};
+                        my $number_germinating = $activity_hash->{'Laboratory/EmbryoGermination/number_germinating'};
+                        my $previous_number_germinating = $activity_hash->{'Laboratory/EmbryoGermination/previousNumberGerminating'};
+                        my $total_number_germinating = $number_germinating + $previous_number_germinating;
+                        $number_germinating{$germination_cross_id}{$germination_date} = $total_number_germinating;
+                    } elsif ($activity_hash->{'Laboratory/labActivity'} eq 'subculture') {
+                        my $subculture_cross_id = $activity_hash->{'Laboratory/subculturing/cross_Sub'};
+                        my $subculture_id = $activity_hash->{'Laboratory/subculturing/subcultureID'};
+                        $number_subcultures{$subculture_cross_id}++;
                     }
 
                 }
@@ -681,6 +679,8 @@ sub save_ona_cross_info {
 #            print STDERR "LATEST NUMBER =".Dumper($latest_number)."\n";
         }
 
+        my $subculture_property = 'Number of Subcultures';
+        $musa_cross_info{$subculture_property} = \%number_subcultures;
 
 #        print STDERR "CHECKING FEMALE PLOT =".Dumper(\@checking_female_plots)."\n";
 #        print STDERR "CHECKING MALE PLOT =".Dumper(\@checking_male_plots)."\n";
