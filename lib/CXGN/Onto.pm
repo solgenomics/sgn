@@ -223,7 +223,7 @@ sub store_ontology_identifier {
             new_term => [$cvterm_rs->cvterm_id(), $cvterm_rs->name()]
         };
     };
-    
+
     try {
         $schema->txn_do($coderef);
     } catch {
@@ -391,7 +391,7 @@ sub store_observation_variable_trait_method_scale {
                 dbxref_id => $new_term_method_dbxref->dbxref_id()
             });
             $selected_method_cvterm_id = $new_method_cvterm->cvterm_id();
-            
+
             my $method_rel = $schema->resultset('Cv::CvtermRelationship')->create({
                 subject_id => $new_method_cvterm->cvterm_id(),
                 object_id  => $parent_method_cvterm_id,
@@ -472,7 +472,7 @@ sub store_observation_variable_trait_method_scale {
             new_term => [$new_observation_variable_cvterm->cvterm_id(), $new_observation_variable_cvterm->name()]
         };
     };
-    
+
     try {
         $schema->txn_do($coderef);
     } catch {

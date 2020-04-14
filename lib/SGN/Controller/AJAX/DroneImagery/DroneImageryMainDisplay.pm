@@ -3,7 +3,7 @@
 
 SGN::Controller::AJAX::DroneImagery::DroneImageryMainDisplay - a REST controller class to provide the
 functions for showing the main drone imagery display of all images. All other functions are
-controlled by SGN::Controller::AJAX::DroneImagery 
+controlled by SGN::Controller::AJAX::DroneImagery
 
 =head1 DESCRIPTION
 
@@ -129,7 +129,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
             $drone_run_html .= '<div class="well well-sm">';
 
             $drone_run_html .= '<div class="row"><div class="col-sm-6">';
-            $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Imaging Event Name</b>:</div><div class="col-sm-7">'.$v->{drone_run_project_name}.'</div></div>';
+            $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Imaging Event Name</b>:</div><div class="col-sm-7"><a href="/breeders_toolbox/trial/'.$k.'" _target="blank">'.$v->{drone_run_project_name}.'</a></div></div>';
             $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Imaging Event Type</b>:</div><div class="col-sm-7">'.$v->{drone_run_type}.'</div></div>';
             $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Description</b>:</div><div class="col-sm-7">'.$v->{drone_run_project_description}.'</div></div>';
             $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Date</b>:</div><div class="col-sm-7">'.$drone_run_date.'</div></div>';
@@ -140,7 +140,7 @@ sub raw_drone_imagery_summary_GET : Args(0) {
                 $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Growing Degree Days</b>:</div><div class="col-sm-7"><button class="btn btn-default btn-sm" name="drone_imagery_drone_run_calculate_gdd" data-drone_run_project_id="'.$k.'" data-field_trial_id="'.$v->{trial_id}.'">Calculate</button></div></div>';
             }
             $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Growing Season Days</b>:</div><div class="col-sm-7">'.$v->{drone_run_related_time_cvterm_json}->{day}.'</div></div>';
-            $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Field Trial</b>:</div><div class="col-sm-7"><a href="/breeders_toolbox/trial/'.$v->{trial_id}.'">'.$v->{trial_name}.'</a></div></div>';
+            $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Field Trial</b>:</div><div class="col-sm-7"><a href="/breeders_toolbox/trial/'.$v->{trial_id}.'" _target="blank">'.$v->{trial_name}.'</a></div></div>';
             $drone_run_html .= '</div><div class="col-sm-3">';
             if ($v->{drone_run_indicator}) {
                 $drone_run_html .= '<span class="label label-info" ><span class="glyphicon glyphicon-hourglass"></span>&nbsp;&nbsp;&nbsp;Processing Images in Progress</span><br/><br/>';
