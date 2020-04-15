@@ -253,7 +253,7 @@ sub save_ona_cross_info {
         my %user_categories = (
             'field' => 'FieldActivities',
             'laboratory' => 'Laboratory',
-            'screenhouse' => 'screenhse_activities'
+            'nursery' => 'Nursery'
         );
         my %cross_info;
         my %cross_parents;
@@ -281,7 +281,8 @@ sub save_ona_cross_info {
         my %number_subcultures;
         my %number_rooting;
         my %number_weaning1;
-
+        my %number_weaning2;
+        my %number_screenhouse;
 
         foreach my $activity_hash (@$message_hash){
             #print STDERR Dumper $activity_hash;
@@ -616,22 +617,35 @@ sub save_ona_cross_info {
                             $rooting_activeseed_lookup{$a->{'Laboratory/embryo_contamination/lab_econtaminationID'}} = $cross_activeseed_lookup{$a->{'Laboratory/embryo_contamination/lab_econtaminationID'}};
                             $rooting_subculture_lookup{$a->{'Laboratory/embryo_contamination/lab_econtaminationID'}} = $a->{'Laboratory/embryo_contamination/lab_econtaminationID'};
                         }
-#                        else {
-#                            print STDERR "UNKNOWN ONA ODK activity in $activity_category\n";
-                            #print STDERR Dumper $a;
-#                        }
-                    } elsif ($activity_category eq 'screenhouse'){
 
-                        #MISSING
-                        if ($a->{'screenhse_activities/screenhouseActivity'} eq 'screenhouse_humiditychamber'){
-                            push @{$cross_info{$rooting_cross_lookup{$a->{'screenhse_activities/screenhouse/getRoot_ID'}}}->{'screenhouse_humiditychamber'}}, $a;
-                            $cross_info{$rooting_cross_lookup{$a->{'screenhse_activities/screenhouse/getRoot_ID'}}}->{'active_seeds'}->{$rooting_activeseed_lookup{$a->{'screenhse_activities/screenhouse/getRoot_ID'}}}->{'subcultures'}->{$rooting_subculture_lookup{$a->{'screenhse_activities/screenhouse/getRoot_ID'}}}->{'rooting'}->{$a->{'screenhse_activities/screenhouse/getRoot_ID'}}->{'screenhouse_humiditychamber'}->{$a->{'screenhse_activities/screenhouse/getRoot_ID'}} = $a;
-                        } elsif ($a->{'screenhse_activities/screenhouseActivity'} eq 'hardening'){
-                            push @{$cross_info{$rooting_cross_lookup{$a->{'screenhse_activities/hardening/hardeningID'}}}->{'hardening'}}, $a;
-                            $cross_info{$rooting_cross_lookup{$a->{'screenhse_activities/hardening/hardeningID'}}}->{'active_seeds'}->{$rooting_activeseed_lookup{$a->{'screenhse_activities/hardening/hardeningID'}}}->{'subcultures'}->{$rooting_subculture_lookup{$a->{'screenhse_activities/hardening/hardeningID'}}}->{'rooting'}->{$a->{'screenhse_activities/hardening/hardeningID'}}->{'hardening'}->{$a->{'screenhse_activities/hardening/hardeningID'}} = $a;
+                    } elsif ($activity_category eq 'nursery'){
+#                        print STDERR "NURSERY HASHES =".Dumper($activity_hash)."\n";
+                        if ($a->{'Nursery/nurseryActivity'} eq 'weaning2'){
+                            my $weaning2_cross_id = $a->{'Nursery/Weaning2/getweaning2_crossid'};
+                            my $weaning2_id = $a->{'Nursery/Weaning2/weaning2ID'};
+                            my $number_of_weaning2_plantlets = $a->{'Nursery/Weaning2/number_of_weaning2_plantlets'};
+
+                        } elsif ($a->{'Nursery/nurseryActivity'} eq 'screenhouse'){
+                            my $screenhouse_cross_id = $a->{'Nursery/Screenhouse/crossid_of_screenhouseID'};
+                            my $screenhouse_id = $a->{'Nursery/Screenhouse/screenhouseID'};
+                            my $number_of_screenhouse_plantlets = $a->{'Nursery/Screenhouse/number_of_screenhouse_plantlets'};
+
+                        } elsif ($a->{'Nursery/nurseryActivity'} eq 'status'){
+
                         }
+
                     }
                 }
+#                    elsif ($activity_category eq 'screenhouse'){
+#                        if ($a->{'screenhse_activities/screenhouseActivity'} eq 'screenhouse_humiditychamber'){
+#                            push @{$cross_info{$rooting_cross_lookup{$a->{'screenhse_activities/screenhouse/getRoot_ID'}}}->{'screenhouse_humiditychamber'}}, $a;
+#                            $cross_info{$rooting_cross_lookup{$a->{'screenhse_activities/screenhouse/getRoot_ID'}}}->{'active_seeds'}->{$rooting_activeseed_lookup{$a->{'screenhse_activities/screenhouse/getRoot_ID'}}}->{'subcultures'}->{$rooting_subculture_lookup{$a->{'screenhse_activities/screenhouse/getRoot_ID'}}}->{'rooting'}->{$a->{'screenhse_activities/screenhouse/getRoot_ID'}}->{'screenhouse_humiditychamber'}->{$a->{'screenhse_activities/screenhouse/getRoot_ID'}} = $a;
+#                        } elsif ($a->{'screenhse_activities/screenhouseActivity'} eq 'hardening'){
+#                            push @{$cross_info{$rooting_cross_lookup{$a->{'screenhse_activities/hardening/hardeningID'}}}->{'hardening'}}, $a;
+#                            $cross_info{$rooting_cross_lookup{$a->{'screenhse_activities/hardening/hardeningID'}}}->{'active_seeds'}->{$rooting_activeseed_lookup{$a->{'screenhse_activities/hardening/hardeningID'}}}->{'subcultures'}->{$rooting_subculture_lookup{$a->{'screenhse_activities/hardening/hardeningID'}}}->{'rooting'}->{$a->{'screenhse_activities/hardening/hardeningID'}}->{'hardening'}->{$a->{'screenhse_activities/hardening/hardeningID'}} = $a;
+#                        }
+#                    }
+#                }
 
             } elsif (!defined $actions) {
                 if ($activity_category eq 'laboratory'){
