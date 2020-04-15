@@ -27,6 +27,7 @@ __PACKAGE__->config(
     );
 
 # TODO to JSON?
+
 sub shared_phenotypes: Path('/ajax/Nirs/shared_phenotypes') : {
     my $self = shift;
     my $c = shift;
@@ -37,7 +38,7 @@ sub shared_phenotypes: Path('/ajax/Nirs/shared_phenotypes') : {
     my $traits = $ds->retrieve_traits();
     my @trait_info;
     foreach my $t (@$traits) {
-	      my $tobj = CXGN::Cvterm->new({ schema=>$schema, cvterm_id => $t });
+          my $tobj = CXGN::Cvterm->new({ schema=>$schema, cvterm_id => $t });
         push @trait_info, [ $tobj->cvterm_id(), $tobj->name()];
     }
 
@@ -56,26 +57,8 @@ sub shared_phenotypes: Path('/ajax/Nirs/shared_phenotypes') : {
         tempfile => $tempfile."_phenotype.txt",
 #        tempfile => $file_response,
     };
-
-    $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-    my $ps = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id);
-    my $plots = $ps->retrieve_plots();
-    my @plot_info;
-    foreach my $w (@$plots) {
-          my $tbj = CXGN::Cvterm->new({ schema=>$schema, cvterm_id => $w });
-        push @plot_info, [ $tbj->cvterm_id(), $tbj->name()];
-    }
-
-    my $dbh = $c->dbc->dbh();
-    my $stock_id = $plots->stock_id();
-    my $h = $dbh->prepare("SELECT * 
-                            FROM metadata.md_json           
-                            JOIN phenome.nd_experiment_md_json USING(json_id)  
-                            JOIN nd_experiment_stock USING(nd_experiment_id)              
-                            JOIN stock using(stock_id) WHERE stock_id=?;")
-
 }
+
 
 # TODO change this to JSON
 sub extract_trait_data :Path('/ajax/Nirs/getdata') Args(0) {
@@ -148,7 +131,39 @@ sub generate_results: Path('/ajax/Nirs/generate_results') : {
     my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath);
     my $phenotype_data_ref = $ds->retrieve_phenotypes($pheno_filepath);
 
- 
+    my $plot_name = $c->req->param("plot_name");
+    my $stock = $schema->resultset("Stock::Stock")->find( { uniquename=>$plot_name });
+    # my $stock_id = $stock->stock_id();
+    print STDERR $stock;
+
+
+    my ($fh, $tempfile2) = tempfile(
+      "nirs_XXXXX",
+      DIR=> $nirs_tmp_output,
+      SUFFIX => "_spectra.txt"
+    );
+
+    my $dbh = $c->dbc->dbh();
+
+    $fh = $dbh->prepare("SELECT *
+                            FROM metadata.md_json         
+                            JOIN phenome.nd_experiment_md_json USING(json_id)  
+                            JOIN nd_experiment_stock USING(nd_experiment_id)              
+                            JOIN stock using(stock_id);");
+
+
+    # $fh = $dbh->prepare("SELECT stock.uniquename AS unit_name,
+    #                       jsonb_pretty(json - 'spectra')  AS nirs_metadata,
+    #                       jsonb_pretty(cast(json->>'spectra' AS jsonb)) AS nirs_spectra
+    #                     FROM metadata.md_json
+    #                     JOIN phenome.nd_experiment_md_json USING(json_id)
+    #                     JOIN nd_experiment_stock USING(nd_experiment_id)
+    #                     JOIN stock using(stock_id) where stock.uniquename=?;");
+
+    # my $stock_id = 39819;
+    $fh->execute();
+    
+    # my $phenotype_data_ref2 = $h->retrieve_phenotypes($pheno_filepath);
 
     # my $figure3file = $tempfile . "_" . "figure3.png";
     # my $figure4file = $tempfile . "_" . "figure4.png";
