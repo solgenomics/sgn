@@ -624,12 +624,13 @@ sub save_ona_cross_info {
                             my $weaning2_cross_id = $a->{'Nursery/Weaning2/getweaning2_crossid'};
                             my $weaning2_id = $a->{'Nursery/Weaning2/weaning2ID'};
                             my $number_of_weaning2_plantlets = $a->{'Nursery/Weaning2/number_of_weaning2_plantlets'};
+                            $number_weaning2{$weaning2_cross_id}{$weaning2_id}++;
 
                         } elsif ($a->{'Nursery/nurseryActivity'} eq 'screenhouse'){
                             my $screenhouse_cross_id = $a->{'Nursery/Screenhouse/crossid_of_screenhouseID'};
                             my $screenhouse_id = $a->{'Nursery/Screenhouse/screenhouseID'};
                             my $number_of_screenhouse_plantlets = $a->{'Nursery/Screenhouse/number_of_screenhouse_plantlets'};
-
+                            $number_screenhouse{$screenhouse_cross_id}{$screenhouse_id}++;
                         } elsif ($a->{'Nursery/nurseryActivity'} eq 'status'){
 
                         }
@@ -716,6 +717,15 @@ sub save_ona_cross_info {
         my $weaning1_property = 'Number of Weaning1 Plantlets';
         $musa_cross_info{$weaning1_property} = \%number_weaning1;
 
+        foreach my $weaning2_cross (keys %number_weaning2) {
+            my $weaning2_ref = $number_weaning2{$weaning2_cross};
+            my %weaning2_info = %$weaning2_ref;
+            my $weaning2_count = keys %weaning2_info;
+            my $weaning2_property = 'Weaning2 Count';
+            $musa_cross_info{$weaning2_property}{$weaning2_cross} = $weaning2_count;
+        }
+
+        print STDERR "CHECKING CROSS INFO =".Dumper(\%musa_cross_info)."\n";
 #        print STDERR "CHECKING FEMALE PLOT =".Dumper(\@checking_female_plots)."\n";
 #        print STDERR "CHECKING MALE PLOT =".Dumper(\@checking_male_plots)."\n";
 
