@@ -32,8 +32,8 @@ $combined_populations => ''
 
 <%perl>
 
-if (!$owner) {$owner = 'NextGen Cassava Project'; } 
-$traits_no = 1 if !$traits_no;
+$owner = 'NA' if !$owner;
+$traits_no = 'NA' if !$traits_no;
 
 my $project_link; 
  
