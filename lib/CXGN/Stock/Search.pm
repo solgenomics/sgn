@@ -610,21 +610,25 @@ sub search {
     # Get additional properties (pedigree, synonyms, speciesAuthority, subtaxa, subtaxaAuthority, donors)
     ##
     
-    # Get accession properties:
-    #   add donors (donor, donor institute, donor PUI)
-    # SQL Query to get additional stock properties (pedigree, synonyms)
-# SELECT stock.stock_id AS stock_id, stock.uniquename AS uniquename,
-#        mother.uniquename AS female_parent, father.uniquename AS male_parent, m_rel.value AS cross_type,
-#        props.stock_synonym
-# FROM stock
-# LEFT JOIN stock_relationship m_rel ON (stock.stock_id = m_rel.object_id AND m_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'female_parent'))
-# LEFT JOIN stock mother ON (m_rel.subject_id = mother.stock_id)
-# LEFT JOIN stock_relationship f_rel ON (stock.stock_id = f_rel.object_id AND f_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent'))
-# LEFT JOIN stock father ON (f_rel.subject_id = father.stock_id)
-# LEFT JOIN materialized_stockprop props ON (stock.stock_id = props.stock_id)
-# WHERE stock.stock_id IN (SELECT stock_id FROM stock WHERE type_id = 76392);
+    # Get additional stock properties (pedigree, synonyms)
+    # TODO: add donors (donor, donor institute, donor PUI)
+    my $stock_query = "SELECT stock.stock_id, stock.organism_id, stock.uniquename,
+               mother.uniquename AS female_parent, father.uniquename AS male_parent, m_rel.value AS cross_type,
+               props.stock_synonym
+        FROM stock
+        LEFT JOIN stock_relationship m_rel ON (stock.stock_id = m_rel.object_id AND m_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'female_parent'))
+        LEFT JOIN stock mother ON (m_rel.subject_id = mother.stock_id)
+        LEFT JOIN stock_relationship f_rel ON (stock.stock_id = f_rel.object_id AND f_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent'))
+        LEFT JOIN stock father ON (f_rel.subject_id = father.stock_id)
+        LEFT JOIN materialized_stockprop props ON (stock.stock_id = props.stock_id)
+        WHERE stock.stock_id IN (?);";
+    my $sth = $schema->storage()->dbh()->prepare($stock_query);
+    $sth->execute(@result_stock_ids);
+    while (my @r = $sth->fetchrow_array()) {
+        print STDERR Dumper \@r;
+    }
 
-    # Get organism properties: 
+    # Get additional organism properties: 
     #   Get distinct list of orgamism ids
     #   Get properties for each organism (species authority, subtaxa, subtaxa authority)
     #   Add organism properties to each stock based on organism id
