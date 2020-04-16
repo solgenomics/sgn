@@ -548,9 +548,11 @@ sub add_bulk {
 		my @values;
 		foreach (@$elements) {
 			if ($_ && !exists $elements_in_list{$_}){
-				push @values, [$list_item_id, $list_id, $_];
-				$elements_in_list{$_} = 1;
-				push @elements_added, $_;
+				my $content = $_;
+				$content =~ s/\'/\'\'/g;
+				push @values, [$list_item_id, $list_id, $content];
+				$elements_in_list{$content} = 1;
+				push @elements_added, $content;
 				$list_item_id++;
 				$count++;
 			} else {
