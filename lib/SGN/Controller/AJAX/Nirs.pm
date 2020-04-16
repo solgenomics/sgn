@@ -18,6 +18,7 @@ use CXGN::Blast::Parse;
 use CXGN::Blast::SeqQuery;
 use Cwd qw(cwd);
 
+
 BEGIN { extends 'Catalyst::Controller::REST' }
 
 __PACKAGE__->config(
@@ -131,38 +132,47 @@ sub generate_results: Path('/ajax/Nirs/generate_results') : {
     my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath);
     my $phenotype_data_ref = $ds->retrieve_phenotypes($pheno_filepath);
 
-    my $plot_name = $c->req->param("plot_name");
-    my $stock = $schema->resultset("Stock::Stock")->find( { uniquename=>$plot_name });
-    # my $stock_id = $stock->stock_id();
-    print STDERR $stock;
+    print "***************************************\n";
 
+    my @plot_name;
+    open(my $f, '<', $pheno_filepath) or die;
 
-    my ($fh, $tempfile2) = tempfile(
+    while (my $line = <$f>){
+        my @elements = split ' ', $line;
+        # print join "\t", $elements[25];
+        # print "\n";
+        push @plot_name, $elements[25];
+    }
+    close($f);
+    
+    my ($fh, $filename) = tempfile(
       "nirs_XXXXX",
       DIR=> $nirs_tmp_output,
-      SUFFIX => "_spectra.txt"
+      SUFFIX => "_spectra.txt",
+      EXLOCK => 0
     );
 
     my $dbh = $c->dbc->dbh();
 
-    $fh = $dbh->prepare("SELECT *
-                            FROM metadata.md_json         
-                            JOIN phenome.nd_experiment_md_json USING(json_id)  
-                            JOIN nd_experiment_stock USING(nd_experiment_id)              
-                            JOIN stock using(stock_id);");
-
-
-    # $fh = $dbh->prepare("SELECT stock.uniquename AS unit_name,
-    #                       jsonb_pretty(json - 'spectra')  AS nirs_metadata,
-    #                       jsonb_pretty(cast(json->>'spectra' AS jsonb)) AS nirs_spectra
-    #                     FROM metadata.md_json
-    #                     JOIN phenome.nd_experiment_md_json USING(json_id)
-    #                     JOIN nd_experiment_stock USING(nd_experiment_id)
-    #                     JOIN stock using(stock_id) where stock.uniquename=?;");
-
-    # my $stock_id = 39819;
-    $fh->execute();
+    foreach my $name (@plot_name){
+        my $sql = "SELECT stock.uniquename AS plot_name,
+                  jsonb_pretty(cast(json->>'spectra' AS jsonb)) AS nirs_spectra
+                FROM metadata.md_json
+                JOIN phenome.nd_experiment_md_json USING(json_id)
+                JOIN nd_experiment_stock USING(nd_experiment_id)
+                JOIN stock using(stock_id) where stock.uniquename=?;";
     
+        my $fh_db= $dbh->prepare($sql);    
+        $fh_db->execute($name);
+        while (my @spt = $fh_db->fetchrow_array()) {
+            print "It is working: $spt[0]\n";
+            print $fh @spt;
+          }
+        
+    }
+
+
+     
     # my $phenotype_data_ref2 = $h->retrieve_phenotypes($pheno_filepath);
 
     # my $figure3file = $tempfile . "_" . "figure3.png";
