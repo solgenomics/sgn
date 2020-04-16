@@ -74,6 +74,7 @@ sub search {
         }
     }
 
+    print STDERR "\n\n\n===> START STOCK SEARCH <==== (" . localtime . ")\n";
     my $stock_search = CXGN::Stock::Search->new({
         bcs_schema=>$self->bcs_schema,
         people_schema=>$self->people_schema,
@@ -92,6 +93,7 @@ sub search {
         display_pedigree=>1
     });
     my ($result, $total_count) = $stock_search->search();
+    print STDERR "====> STOP STOCK SEARCH <==== (" . localtime . ")\n";
 
     my @data;
     foreach (@$result){

@@ -35,7 +35,8 @@ my $stock_search = CXGN::Stock::Search->new({
     limit=>$limit,
     offset=>$offset,
     minimal_info=>o  #for only returning stock_id and uniquenames
-    display_pedigree=>1 #to calculate and display pedigree
+    display_pedigree=>1 #to calculate and display pedigree,
+    selected_loci=>\@selected_loci #to filter accessions by loci allele values
 });
 my ($result, $records_total) = $stock_search->search();
 
@@ -240,6 +241,11 @@ has 'display_pedigree' => (
 	default => 0
 );
 
+has 'selected_loci' => (
+    isa => 'ArrayRef|Undef',
+    is => 'rw'
+);
+
 sub search {
     my $self = shift;
     print STDERR "CXGN::Stock::Search search start\n";
@@ -268,6 +274,7 @@ sub search {
     my @stock_ids_array = $self->stock_id_list ? @{$self->stock_id_list} : ();
     my $limit = $self->limit;
     my $offset = $self->offset;
+    my @selected_loci = $self->selected_loci ? @{$self->selected_loci} : ();
 
     unless ($matchtype eq 'exactly') { #trim whitespace from both ends unless exact search was specified
         $any_name =~ s/^\s+|\s+$//g;
@@ -431,6 +438,33 @@ sub search {
         }
     }
 
+    # Get Stock IDs of stock with matching loci allele values
+    if ( @selected_loci ) {
+        my @stock_ids;
+        my $init_stock_ids = 0;
+        foreach (@selected_loci) {
+            if ($_) {
+                my $rs = $phenome_schema->resultset("StockAllele")->search({
+                    allele_id => $_->{'allele_id'}
+                });
+                my @s;
+                while ( my $r = $rs->next ) {
+                    my $stock_id = $r->stock_id;
+                    if ( !$init_stock_ids || grep /^$stock_id$/, @stock_ids ) {     # only add stock id if already present ("AND" stocks for multiple loci)
+                        push @s, $stock_id;
+                    }
+                }
+                $init_stock_ids = 1;
+                @stock_ids = ();
+                foreach (@s) {
+                    push @stock_ids, $_;
+                }
+            }
+        }
+        $and_conditions->{'me.stock_id'} = { '-in' => \@stock_ids };
+    }
+    
+
     my @stockprop_filtered_stock_ids;
     my $using_stockprop_filter;
     if ($self->stockprops_values && scalar(keys %{$self->stockprops_values})>0){
@@ -500,6 +534,7 @@ sub search {
         $search_query->{'me.stock_id'} = {'in'=>\@stockprop_filtered_stock_ids};
     }
 
+    print STDERR "---> START SEARCH QUERY (" . localtime . ")\n";
     my $rs = $schema->resultset("Stock::Stock")->search(
     $search_query,
     {
@@ -509,6 +544,7 @@ sub search {
         order_by  => 'me.name',
         distinct=>1
     });
+    print STDERR "---> STOP SEARCH QUERY (" . localtime . ")\n";
 
     my $records_total = $rs->count();
     if (defined($limit) && defined($offset)){
@@ -521,6 +557,7 @@ sub search {
         $owners_hash = $stock_lookup->get_owner_hash_lookup();
     }
 
+    print STDERR "---> START PROCESSING RESULTS (" . localtime . ")\n";
     my @result;
     my %result_hash;
     my @result_stock_ids;
@@ -530,7 +567,7 @@ sub search {
         push @result_stock_ids, $stock_id;
 
         if (!$self->minimal_info){
-            my $stock_object = CXGN::Stock::Accession->new({schema=>$self->bcs_schema, stock_id=>$stock_id});
+            # my $stock_object = CXGN::Stock::Accession->new({schema=>$self->bcs_schema, stock_id=>$stock_id});
             my @owners = $owners_hash->{$stock_id} ? @{$owners_hash->{$stock_id}} : ();
             my $type_id     = $a->type_id ;
             my $type        = $a->get_column('cvterm_name');
@@ -551,12 +588,12 @@ sub search {
                 common_name => $common_name,
                 organism_id => $organism_id,
                 owners => \@owners,
-                pedigree=>$self->display_pedigree ? $stock_object->get_pedigree_string('Parents') : 'DISABLED',
-                synonyms=> $stock_object->synonyms,
-                speciesAuthority=>$stock_object->get_species_authority,
-                subtaxa=>$stock_object->get_subtaxa,
-                subtaxaAuthority=>$stock_object->get_subtaxa_authority,
-                donors=>$stock_object->donors,
+                # pedigree=>$self->display_pedigree ? $stock_object->get_pedigree_string('Parents') : 'DISABLED',
+                # synonyms=> $stock_object->synonyms,
+                # speciesAuthority=>$stock_object->get_species_authority,
+                # subtaxa=>$stock_object->get_subtaxa,
+                # subtaxaAuthority=>$stock_object->get_subtaxa_authority,
+                # donors=>$stock_object->donors,
             };
         } else {
             $result_hash{$stock_id} = {
@@ -566,6 +603,31 @@ sub search {
         }
     }
     #print STDERR Dumper \%result_hash;
+    print STDERR "---> STOP PROCESSING RESULTS (" . localtime . ")\n";
+    print STDERR "     RESULTS TOTAL: " . scalar @result_stock_ids . "\n";
+
+    ## TODO: ##
+    # Get additional properties (pedigree, synonyms, speciesAuthority, subtaxa, subtaxaAuthority, donors)
+    ##
+    
+    # Get accession properties:
+    #   add donors (donor, donor institute, donor PUI)
+    # SQL Query to get additional stock properties (pedigree, synonyms)
+# SELECT stock.stock_id AS stock_id, stock.uniquename AS uniquename,
+#        mother.uniquename AS female_parent, father.uniquename AS male_parent, m_rel.value AS cross_type,
+#        props.stock_synonym
+# FROM stock
+# LEFT JOIN stock_relationship m_rel ON (stock.stock_id = m_rel.object_id AND m_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'female_parent'))
+# LEFT JOIN stock mother ON (m_rel.subject_id = mother.stock_id)
+# LEFT JOIN stock_relationship f_rel ON (stock.stock_id = f_rel.object_id AND f_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent'))
+# LEFT JOIN stock father ON (f_rel.subject_id = father.stock_id)
+# LEFT JOIN materialized_stockprop props ON (stock.stock_id = props.stock_id)
+# WHERE stock.stock_id IN (SELECT stock_id FROM stock WHERE type_id = 76392);
+
+    # Get organism properties: 
+    #   Get distinct list of orgamism ids
+    #   Get properties for each organism (species authority, subtaxa, subtaxa authority)
+    #   Add organism properties to each stock based on organism id
 
     if ($self->stockprop_columns_view && scalar(keys %{$self->stockprop_columns_view})>0 && scalar(@result_stock_ids)>0){
         my @stockprop_view = keys %{$self->stockprop_columns_view};
