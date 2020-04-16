@@ -29,8 +29,8 @@ $goto_url => ''
 % }
                         <br />
                         <div style="margin-bottom:40px">
-                            <button class="btn btn-default btn-sm" id="reset_password_modal_show" style="float:left">Forgot password?</button>
-                            <button class="btn btn-default btn-sm" id="new_user_modal_show" style="float:right">New User</button>
+                            <a class="btn btn-default btn-sm" id="reset_password_modal_show" style="float:left">Forgot password?</a>
+                            <a class="btn btn-default btn-sm" id="new_user_modal_show" style="float:right">New User</a>
                         </div>
 
                         <input type="hidden" value="<% $goto_url %>" id="login_goto_url" name="login_goto_url" />
