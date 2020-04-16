@@ -19,9 +19,9 @@ sub login : Path('/ajax/user/login') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    my $username = $c->req->param("username");
-    my $password = $c->req->param("password");
-    my $goto_url = $c->req->param("goto_url");
+    my $username = $c->req->param("login_username");
+    my $password = $c->req->param("login_password");
+    my $goto_url = $c->req->param("login_goto_url");
 
     print STDERR "Goto URL = $goto_url\n";
 
@@ -497,7 +497,7 @@ HTML
 	    print STDERR "ERROR: $@\n";
 	    $c->stash->{rest} = { error => $@ };
 	}
-	return $c->stash->{rest} = { html => $html };
+	return $c->stash->{rest} = { html => $html, logged_in => $c->user_exists };
     }
 }
 

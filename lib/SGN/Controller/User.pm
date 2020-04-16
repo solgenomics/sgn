@@ -15,13 +15,6 @@ sub login :Path('/user/login') Args(0) {
     $c->stash->{template} = '/user/login.mas';
 }
 
-sub new_account :Path('/user/new') Args(0) {
-    my $self = shift;
-    my $c = shift;
-    
-    $c->stash->{template} = '/user/new_account.mas';
-}
-
 sub update_account :Path('/user/update') Args(0) { 
     my $self = shift;
     my $c = shift;
@@ -35,13 +28,6 @@ sub update_account :Path('/user/update') Args(0) {
     $c->stash->{private_email} = $c->user()->get_private_email();
 	
     $c->stash->{template} = '/user/change_account.mas';
-}
-
-sub reset_password :Path('/user/reset_password') Args(0) { 
-    my $self = shift;
-    my $c = shift;
-    
-    $c->stash->{template} = '/user/reset_password.mas';
 }
 
 sub confirm_user :Path('/user/confirm') Args(0) { 
