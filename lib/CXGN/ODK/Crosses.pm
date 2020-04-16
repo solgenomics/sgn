@@ -680,19 +680,19 @@ sub save_ona_cross_info {
                     } elsif ($activity_hash->{'Laboratory/labActivity'} eq 'subculture') {
                         my $subculture_cross_id = $activity_hash->{'Laboratory/subculturing/cross_Sub'};
                         my $subculture_id = $activity_hash->{'Laboratory/subculturing/subcultureID'};
-                        $number_subcultures{$subculture_cross_id}++;
+                        $number_subcultures{$subculture_cross_id}{$subculture_id}++;
 
                     } elsif ($activity_hash->{'Laboratory/labActivity'} eq 'rooting') {
                         my $rooting_cross_id = $activity_hash->{'Laboratory/rooting/getRoot_crossid'};
                         my $rooting_id = $activity_hash->{'Laboratory/rooting/rootingID'};
                         if (defined $rooting_cross_id) {
-                            $number_rooting{$rooting_cross_id}++;
+                            $number_rooting{$rooting_cross_id}{$rooting_id}++;
                         }
 
                     } elsif ($activity_hash->{'Laboratory/labActivity'} eq 'weaning1') {
                         my $weaning1_cross_id = $activity_hash->{'Laboratory/weaning1/getWeaning1_crossid'};
                         my $weaning1_id = $activity_hash->{'Laboratory/weaning1/weaning1ID'};
-                        $number_weaning1{$weaning1_cross_id}++;
+                        $number_weaning1{$weaning1_cross_id}{$weaning1_id}++;
                     }
 
                 }
@@ -703,29 +703,52 @@ sub save_ona_cross_info {
             my $germination_date_ref = $number_germinating{$name_hash};
             my %germination_info = %$germination_date_ref;
             my $latest_total_number = max values %germination_info;
-            my $germinating_number_property = 'Number of Embryo Germinating';
+            my $germinating_number_property = 'Number of Germinating Embryos';
             $musa_cross_info{$germinating_number_property}{$name_hash} = $latest_total_number;
 #            print STDERR "LATEST NUMBER =".Dumper($latest_number)."\n";
         }
 
-        my $subculture_property = 'Number of Subcultures';
-        $musa_cross_info{$subculture_property} = \%number_subcultures;
+        foreach my $subculture_cross (keys %number_subcultures) {
+            my $subculture_ref = $number_subcultures{$subculture_cross};
+            my %subculture_info = %$subculture_ref;
+            my $subculture_id_count = keys %subculture_info;
+            my $subculture_property = 'Subculture ID Count';
+            $musa_cross_info{$subculture_property}{$subculture_cross} = $subculture_id_count;
+        }
 
-        my $rooting_property = 'Number of Rooting Plantlets';
-        $musa_cross_info{$rooting_property} = \%number_rooting;
+        foreach my $rooting_cross (keys %number_rooting) {
+            my $rooting_ref = $number_rooting{$rooting_cross};
+            my %rooting_info = %$rooting_ref;
+            my $rooting_id_count = keys %rooting_info;
+            my $rooting_property = 'Rooting ID Count';
+            $musa_cross_info{$rooting_property}{$rooting_cross} = $rooting_id_count;
+        }
 
-        my $weaning1_property = 'Number of Weaning1 Plantlets';
-        $musa_cross_info{$weaning1_property} = \%number_weaning1;
+        foreach my $weaning1_cross (keys %number_weaning1) {
+            my $weaning1_ref = $number_weaning1{$weaning1_cross};
+            my %weaning1_info = %$weaning1_ref;
+            my $weaning1_id_count = keys %weaning1_info;
+            my $weaning1_property = 'Weaning1 ID Count';
+            $musa_cross_info{$weaning1_property}{$weaning1_cross} = $weaning1_id_count;
+        }
 
         foreach my $weaning2_cross (keys %number_weaning2) {
             my $weaning2_ref = $number_weaning2{$weaning2_cross};
             my %weaning2_info = %$weaning2_ref;
-            my $weaning2_count = keys %weaning2_info;
-            my $weaning2_property = 'Weaning2 Count';
-            $musa_cross_info{$weaning2_property}{$weaning2_cross} = $weaning2_count;
+            my $weaning2_id_count = keys %weaning2_info;
+            my $weaning2_property = 'Weaning2 ID Count';
+            $musa_cross_info{$weaning2_property}{$weaning2_cross} = $weaning2_id_count;
         }
 
-        print STDERR "CHECKING CROSS INFO =".Dumper(\%musa_cross_info)."\n";
+        foreach my $screenhouse_cross (keys %number_screenhouse) {
+            my $screenhouse_ref = $number_screenhouse{$screenhouse_cross};
+            my %screenhouse_info = %$screenhouse_ref;
+            my $screenhouse_id_count = keys %screenhouse_info;
+            my $screenhouse_property = 'Screenhouse ID Count';
+            $musa_cross_info{$screenhouse_property}{$screenhouse_cross} = $screenhouse_id_count;
+        }
+
+#        print STDERR "CHECKING CROSS INFO =".Dumper(\%musa_cross_info)."\n";
 #        print STDERR "CHECKING FEMALE PLOT =".Dumper(\@checking_female_plots)."\n";
 #        print STDERR "CHECKING MALE PLOT =".Dumper(\@checking_male_plots)."\n";
 
