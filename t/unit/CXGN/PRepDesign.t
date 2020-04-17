@@ -27,7 +27,7 @@ my $col_in_design_number = 26;
 my $row_in_design_number = 26;
 my @stock_list = (1..319);
 
-ok(my $trial_design = CXGN::Trial::TrialDesign->new(), "Create TrialDesign object");
+ok(my $trial_design = CXGN::Trial::TrialDesign->new( { design_type => 'p-rep' }), "Create TrialDesign object");
 $trial_design->set_trial_name("TESTTRIAL");
 ok($trial_design->set_replicated_accession_no($number_of_replicated_accession), "Set replicated accessions for trial design");
 is_deeply($trial_design->get_replicated_accession_no(),$number_of_replicated_accession, "Get replicated accessions for trial design");
@@ -46,7 +46,7 @@ is_deeply($trial_design->get_row_in_design_number(),$row_in_design_number, "Get 
 ok($trial_design->set_stock_list(\@stock_list), "Set stock names for trial design");
 is_deeply($trial_design->get_stock_list(),\@stock_list, "Get stock names for trial design");
 
-ok($trial_design->set_design_type("p-rep"), "Set design type to p-rep");
+#ok($trial_design->set_design_type("p-rep"), "Set design type to p-rep");
 ok($trial_design->calculate_design(), "Calculate p-rep trial design");
 ok(%design = %{$trial_design->get_design()}, "Get p-rep trial design");
 ok($design{'1'}->{row_number} == 1, "First plot row_number is 1");
