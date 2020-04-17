@@ -440,18 +440,21 @@ sub create_and_store_analysis_design {
     # 	    operator => "janedoe",
     # 	}); 
 
-     my $trial_create = CXGN::Trial::TrialCreate->new({
+    my $analysis_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'analysis_experiment', 'experiment_type')->cvterm_id(); 
+    
+    my $trial_create = CXGN::Trial::TrialCreate->new({
+	trial_id => $self->get_trial_id(),
         chado_schema => $self->bcs_schema(),
         dbh => $self->bcs_schema()->storage->dbh(),
         operator => "computer",
         design => $design,
-	design_type => "analysis",
-	program => "user",
+	design_type => $analysis_experiment_type_id,
+	program => 'test',
 	trial_year => $self->year(),
 	trial_description => $self->description(),
-	trial_location => '[ Computation ]',
+	trial_location => '[Computation]',
         trial_name => $self->name(),
-	trial_type => 'analysis',
+	trial_type => $analysis_experiment_type_id,
 	is_analysis => 1,
 #        field_size => $field_size, #(ha)
 #        plot_width => $plot_width, #(m)

@@ -12,6 +12,8 @@ my $schema = $t->bcs_schema();
 my $dbh = $t->dbh();
 my $people_schema = $t->people_schema();
 
+
+eval { 
 my $ds = CXGN::Dataset->new( { schema => $t->bcs_schema(), people_schema => $t->people_schema() });
 $ds->name("ephemeral dataset");
 $ds->accessions( [ 'test_accession1', 'test_accession2', 'test_accession4' ] );
@@ -65,6 +67,10 @@ my $dataref = $a2->get_phenotype_matrix();
 print STDERR "Phenotype Matrix: ".Dumper($dataref);
 
 $ds->delete();
+};
+
+print STDERR "Rolling back...\n";
+$dbh->rollback();
 
 done_testing();
 

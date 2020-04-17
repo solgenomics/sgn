@@ -192,15 +192,17 @@ has 'is_analysis' => (isa => 'Bool', is => 'rw', required => 0, default => 0, );
 
 
 sub trial_name_already_exists {
-  my $self = shift;
-  my $trial_name = $self->get_trial_name();
-  my $schema = $self->get_chado_schema();
-  if($schema->resultset('Project::Project')->find({name => $trial_name})){
-    return 1;
-  }
-  else {
-    return;
-  }
+    my $self = shift;
+
+    if ($self->get_is_analysis()) { return; }
+    my $trial_name = $self->get_trial_name();
+    my $schema = $self->get_chado_schema();
+    if($schema->resultset('Project::Project')->find({name => $trial_name})){
+	return 1;
+    }
+    else {
+	return;
+    }
 }
 
 sub get_breeding_program_id {
@@ -259,7 +261,7 @@ sub save_trial {
 	$geolocation_lookup->set_location_name($self->get_trial_location());
 	$geolocation = $geolocation_lookup->get_geolocation();
 	if (!$geolocation) {
-		print STDERR "Can't create trial: Location not found\n";
+		print STDERR "Can't create trial: Location not found: ".$self->get_trial_location()."\n";
 		return { error => "Trial not saved: location not found" };
 	}
 
@@ -281,11 +283,19 @@ sub save_trial {
 	my $genotyping_project_name_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_project_name', 'nd_experiment_property');
 	my $trial_stock_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'trial_stock_type', 'project_property');
 
-	my $project = $chado_schema->resultset('Project::Project')
-	->create({
+
+    my $project;
+    if ($self->has_trial_id()) {
+	$project = $chado_schema->resultset('Project::Project')->find( { project_id => $self->get_trial_id() });
+	if (! $project) {  die "The specified project id ".$self->get_trial_id()." does not exit in the database\n"; }
+    }
+    else {
+	$project = $chado_schema->resultset('Project::Project')
+	    ->create({
 		name => $trial_name,
 		description => $self->get_trial_description(),
-	});
+		     });
+    }
     
     my $t = CXGN::Trial->new({
 	bcs_schema => $chado_schema,
@@ -301,7 +311,7 @@ sub save_trial {
     } 
     elsif ($self->get_is_analysis()) { 
 	print STDERR "Generating an analysis trial...\n";
-	$nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, , 'analysis_experiment')->cvterm_id();
+	$nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, , 'analysis_experiment', 'experiment_type')->cvterm_id();
     }
     else {
 	print STDERR "Generating a phenotyping trial...\n";
