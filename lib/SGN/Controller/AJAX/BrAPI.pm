@@ -3236,6 +3236,32 @@ sub variants_detail_GET {
     _standard_response_construction($c, $brapi_package_result);
 }
 
+sub variants_calls_detail : Chained('variants_single') PathPart('calls') Args(0) : ActionClass('REST') { }
+
+sub variants_calls_detail_POST {
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+}
+
+sub variants_calls_detail_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Variants');
+	my $brapi_package_result = $brapi_module->calls({
+		variantDbId => $c->stash->{variants_id},
+		variantSetDbId => $c->stash->{variantSetDbId},
+		unknown_string => $clean_inputs->{unknownString}->[0],
+		sep_phased => $clean_inputs->{sepPhased}->[0],
+		sep_unphased => $clean_inputs->{sepUnphased}->[0],
+		expand_homozygotes => $clean_inputs->{expandHomozygotes}->[0],
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
 sub variants_search_save  : Chained('brapi') PathPart('search/variants') Args(0) : ActionClass('REST') { }
 
 sub variants_search_save_POST {

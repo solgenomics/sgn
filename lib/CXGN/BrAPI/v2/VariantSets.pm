@@ -46,6 +46,8 @@ sub search {
             genotypeprop_hash_select=>['DS'],
             protocolprop_top_key_select=>[],
             protocolprop_marker_hash_select=>[],
+            offset=>$page_size*$page,
+            limit=>$page_size
     });
 
     my %genotypingDataProjects;
@@ -75,32 +77,36 @@ sub search {
 
         push( @{ $genotypingDataProjects { $project_id  } {'genotypes'} }, $gt->{genotypeDbId});
         $genotypingDataProjects { $project_id  } {'name'}  = $gt->{genotypingDataProjectName};
-      
+
     }
 
     my @data;
-    my $counter=0;
+    my $start_index = $page*$page_size;
+    my $end_index = $page*$page_size + $page_size - 1;
+    my $counter = 0;
     
     foreach my $project (keys %genotypingDataProjects){
 
-        my @availableFormats; 
- 
-        push @availableFormats,{
-            dataFormat => "json",
-            fileFormat => "json",
-            fileURL => undef,
-        };
-        push @data, {
-            additionalInfo=>{},
-            analysis =>$genotypingDataProjects{$project} {'analysis'},
-            availableFormats => \@availableFormats,
-            callSetCount => scalar @{$genotypingDataProjects{$project}{'genotypes'}},
-            referenceSetDbId => undef, #    from protocol           
-            studyDbId => $project,          
-            variantCount => _sum($genotypingDataProjects{$project}{'markerCount'}),
-            variantSetDbId => qq|$project|,
-            variantSetName => $genotypingDataProjects{$project} {'name'},
-        };
+        if ($counter >= $start_index && $counter <= $end_index) {
+            my @availableFormats; 
+     
+            push @availableFormats,{
+                dataFormat => "json",
+                fileFormat => "json",
+                fileURL => undef,
+            };
+            push @data, {
+                additionalInfo=>{},
+                analysis =>$genotypingDataProjects{$project} {'analysis'},
+                availableFormats => \@availableFormats,
+                callSetCount => scalar @{$genotypingDataProjects{$project}{'genotypes'}},
+                referenceSetDbId => undef, #    from protocol           
+                studyDbId => $project,          
+                variantCount => _sum($genotypingDataProjects{$project}{'markerCount'}),
+                variantSetDbId => qq|$project|,
+                variantSetName => $genotypingDataProjects{$project} {'name'},
+            };
+        }
         $counter++;
     }
 
@@ -110,7 +116,7 @@ sub search {
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'VariantSets result constructed');
 }
 
-sub detail { #returns triple, should be just one
+sub detail { 
     my $self = shift;
     my $inputs = shift;
     my $c = $self->context;
@@ -130,13 +136,8 @@ sub detail { #returns triple, should be just one
         # limit=>$page_size
     });
     my $file_handle = $genotype_search->get_cached_file_search_json($c, 1); #Metadata only returned
+
     my @data;
-
-    my $start_index = $page*$page_size;
-    my $end_index = $page*$page_size + $page_size - 1;
-    my $counter = 0;
-    my $callset_counter = 0;
-
     my %genotypingDataProjects;
 
     $genotype_search->init_genotype_iterator();
@@ -167,7 +168,6 @@ sub detail { #returns triple, should be just one
       
     }
 
-   
     foreach my $project (keys %genotypingDataProjects){
 
         my @availableFormats; 
@@ -188,11 +188,10 @@ sub detail { #returns triple, should be just one
             variantSetDbId => qq|$project|,
             variantSetName => $genotypingDataProjects{$project} {'name'},
         };
-        $counter++;
     }
 
     my @data_files;
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response(1,$page_size,$page);
     return CXGN::BrAPI::JSONResponse->return_success(@data, $pagination, \@data_files, $status, 'VariantSets result constructed');
 }
 
@@ -345,7 +344,7 @@ sub calls {
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'VariantSets result constructed');
 }
 
-sub _sum{
+sub _sum {
     my $array = shift;
     my $sum=0;
 
