@@ -534,19 +534,25 @@ sub save_ona_cross_info {
                         } elsif ($a->{'FieldActivities/fieldActivity'} eq 'harvesting'){
 #                            my $cross_id = $a->{'FieldActivities/harvesting/harvest/harvestID'} || $a->{'FieldActivities/harvesting/harvestID'};
 #                            push @{$cross_info{$cross_id}->{'harvesting'}}, $a;
+                            my $harvest_cross_id;
+                            my $harvest_date;
+                            my $harvest_date_property = 'Harvest Date';
 
                             my $crosses_harvested = $a->{'FieldActivities/harvesting/multiple_harvests'};
-
-                            foreach my $harvested_info( @{ $crosses_harvested } ) {
-                                my $harvest_cross_id =  $harvested_info->{'FieldActivities/harvesting/multiple_harvests/harvest/harvestID'} || $harvested_info->{'FieldActivities/harvesting/multiple_harvests/harvestID'};
-                                my $odk_harvest_date = $harvested_info->{'FieldActivities/harvesting/multiple_harvests/harvesting_date_grab'};
-                                (my $harvest_date) = ($odk_harvest_date =~ /^([^T]+)/);
-
-#                                print STDERR "ODK HARVEST DATE =".Dumper($odk_harvest_date)."\n";
-#                                print STDERR "HARVEST DATE =".Dumper($harvest_date)."\n";
-                                my $harvest_date_property = 'Harvest Date';
-                               $musa_cross_info{$harvest_date_property}{$harvest_cross_id} = $harvest_date;
+                            if (defined $crosses_harvested){
+                                foreach my $harvested_info( @{ $crosses_harvested } ) {
+                                    $harvest_cross_id =  $harvested_info->{'FieldActivities/harvesting/multiple_harvests/harvest/harvestID'} || $harvested_info->{'FieldActivities/harvesting/multiple_harvests/harvestID'};
+                                    my $odk_harvest_date = $harvested_info->{'FieldActivities/harvesting/multiple_harvests/harvesting_date_grab'};
+                                    ($harvest_date) = ($odk_harvest_date =~ /^([^T]+)/);
+#                                    print STDERR "ODK HARVEST DATE =".Dumper($odk_harvest_date)."\n";
+#                                    print STDERR "HARVEST DATE =".Dumper($harvest_date)."\n";
+                                }
+                            } else {
+                                $harvest_cross_id = $a->{'FieldActivities/harvesting/harvest/harvestID'};
+                                $harvest_date = $a->{'FieldActivities/harvesting/harvesting_date'};
                             }
+                            $musa_cross_info{$harvest_date_property}{$harvest_cross_id} = $harvest_date;
+
                         } elsif ($a->{'FieldActivities/fieldActivity'} eq 'seedExtraction'){
                             my $seed_extraction_cross_id = $a->{'FieldActivities/seedExtraction/extractionID'} || $a->{'FieldActivities/seedExtraction/extraction/extractionID'};
                             push @{$cross_info{$seed_extraction_cross_id}->{'seedExtraction'}}, $a;
