@@ -23,7 +23,7 @@ is ($sample_class->foo(), 42, "foo test");
 
 # etc...
 
-The database handle is instantiated with AutoCommit => 0 by default, and is therefore initiating a transaction if the test script is wrapped in an eval {}; statement. (Recommended).
+The database handle is instantiated with AutoCommit => 0 by default, and is recommended to start the transaction by wrapping the test in an in an eval {}; statement and then calling $dbh->rollback() at the end of the script. Note that it will rollback also without the eval and express rollback, but will generate a warning.
 
 To turn transactions off, use {  AutoCommit => 1 } in the constructor.
 
