@@ -161,8 +161,7 @@ sub model_combined_trials_trait :Path('/solgs/model/combined/trials') Args() {
 
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id); 
     
-    $self->combine_trait_data($c); 
-    $self->build_model_combined_trials_trait($c);
+    
     
     $c->controller('solGS::Files')->rrblup_training_gebvs_file($c, $combo_pops_id, $trait_id);    
     my $gebv_file = $c->stash->{rrblup_training_gebvs_file};
@@ -172,7 +171,11 @@ sub model_combined_trials_trait :Path('/solgs/model/combined/trials') Args() {
         $c->res->redirect("/solgs/model/combined/populations/$combo_pops_id/trait/$trait_id/gp/$protocol_id");
         $c->detach();
     }           
-
+    else
+    {
+###	$self->combine_trait_data($c); 
+	$self->build_model_combined_trials_trait($c);
+    }
 }
 
 
@@ -809,7 +812,8 @@ sub build_model_combined_trials_trait {
     my $gebv_file = $c->stash->{rrblup_training_gebvs_file};
 
     unless  ( -s $gebv_file ) 
-    {   
+    {
+	
 	$self->get_combine_populations_args_file($c);
 	my $combine_job_file = $c->stash->{combine_populations_args_file};
 
@@ -1035,21 +1039,40 @@ sub get_combine_populations_args_file {
     my ($self, $c) = @_;
   
     my $traits = $c->stash->{training_traits_ids} || [$c->stash->{trait_id}];
-    my $args = [];
-
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    
+    my $combine_jobs = [];
+	
+    $self->get_combined_pops_list($c);
+    my $trials = $c->stash->{combo_pops_list};
+	
+    $c->controller('solGS::solGS')->training_pop_data_query_job_args($c, $trials, $protocol_id);
+    my $query_jobs = $c->stash->{training_pop_data_query_job_args};
+    
+    my $preq_jobs = {};
+    
     foreach my $trait_id (@$traits)
     {
 	$c->stash->{trait_id} = $trait_id;
 	$c->controller('solGS::solGS')->get_trait_details($c);
 	$self->r_combine_populations_args($c);
-	push @$args,  $c->stash->{combine_populations_args};
+	push @$combine_jobs,  $c->stash->{combine_populations_args};
     }
 
-    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+    if ($query_jobs->[0]) 
+    {
+	$preq_jobs->{1} = $query_jobs;
+	$preq_jobs->{2} = $combine_jobs;	
+    }
+    else
+    {
+	$preq_jobs = $combine_jobs;
+    }
     
+    my $temp_dir = $c->stash->{solgs_tempfiles_dir};  
     my $args_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, 'combine_pops_args_file');   
 	
-    nstore $args, $args_file 
+    nstore $preq_jobs, $args_file 
 	or croak "combine pops args file: $! serializing combine pops args  to $args_file ";
 
     $c->stash->{combine_populations_args_file} = $args_file;
