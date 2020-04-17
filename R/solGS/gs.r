@@ -323,6 +323,7 @@ if (length(relationshipMatrixFile) != 0) {
 relationshipMatrixFiltered <- relationshipMatrix[(rownames(relationshipMatrix) %in% rownames(commonObs)), ]
 relationshipMatrixFiltered <- relationshipMatrixFiltered[, (colnames(relationshipMatrixFiltered) %in% rownames(commonObs))]
 relationshipMatrix         <- data.frame(relationshipMatrix)
+relationshipMatrix         <- round(relationshipMatrix, 3)
 
 nCores <- detectCores()
 
