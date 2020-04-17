@@ -18,22 +18,21 @@ has 'file_name' => ( isa => 'Str',
 override('retrieve_genotypes',
 	sub {
 	    my $self = shift;
-		my $c = shift;
 	    my $protocol_id = shift;
 	    my $file = shift || $self->file_name()."_genotype.txt";
+		my $cache_root_dir = shift;
+		my $cluster_shared_tempdir_config = shift;
+		my $backend_config = shift;
+		my $cluster_host_config = shift;
+		my $web_cluster_queue_config = shift;
+		my $basepath_config	= shift;
+		my $forbid_cache = shift;
 
 		my $accessions_list_ref = $self->accessions();
 		my $genotypeprop_hash_select = shift || ['DS'];
 		my $protocolprop_top_key_select = shift || [];
 		my $protocolprop_marker_hash_select = shift || [];
 		my $return_only_first_genotypeprop_for_stock = shift || 1;
-		my $cache_root_dir = $c->config->{cache_file_path};
-		my $cluster_shared_tempdir_config = $c->config->{cluster_shared_tempdir};
-		my $backend_config = $c->config->{backend};
-		my $cluster_host_config = $c->config->{cluster_host};
-		my $web_cluster_queue_config = $c->config->{'web_cluster_queue'};
-		my $basepath_config	= $c->config->{basepath};
-		my $forbid_cache = defined($c->req->param('forbid_cache')) ? $c->req->param('forbid_cache') : 0;
 
 #		 my $accessions_list_ref = ['38884','38889','38890','38891','38893'];
 		my @accessions_list = @$accessions_list_ref;
