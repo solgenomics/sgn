@@ -188,23 +188,24 @@ sub projects_links {
 }
 
 
-sub search_trials_trait : Path('/solgs/search/trials/trait') Args(1) {
-    my ($self, $c, $trait_id) = @_;
+sub search_trials_trait : Path('/solgs/search/trials/trait') Args() {
+    my ($self, $c, $trait_id, $gp, $protocol_id) = @_;
     
     $self->get_trait_details($c, $trait_id);
-    
+    $c->stash->{genotyping_protocol_id} = $protocol_id;
+   
     $c->stash->{template} = $c->controller('solGS::Files')->template('/search/trials/trait.mas');
 
 }
 
 
-sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
-    my ($self, $c, $trait_id) = @_;
+sub show_search_result_pops : Path('/solgs/search/result/populations') Args() {
+    my ($self, $c, $trait_id, $gp, $protocol_id) = @_;
     
     my $combine = $c->req->param('combine');
     my $page = $c->req->param('page') || 1;
 
-    my $projects_ids = $c->model('solGS::solGS')->search_trait_trials($trait_id);
+    my $projects_ids = $c->model('solGS::solGS')->search_trait_trials($trait_id, $protocol_id);
         
     my $ret->{status} = 'failed';
     my $formatted_projects = [];
@@ -217,7 +218,7 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
 	$self->get_projects_details($c, $projects_rs);
 	my $projects = $c->stash->{projects_details};
 
-	$self->format_trait_gs_projects($c, $trait_id, $projects);
+	$self->format_trait_gs_projects($c, $trait_id, $projects, $protocol_id);
 	$formatted_projects = $c->stash->{formatted_gs_projects}; 
 	
 	$ret->{status} = 'success';        
@@ -234,11 +235,11 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
 
 
 sub format_trait_gs_projects {
-   my ($self, $c, $trait_id, $projects) = @_; 
+   my ($self, $c, $trait_id, $projects, $protocol_id) = @_; 
 
    my @formatted_projects;
-
-   foreach my $pr_id (keys %$projects) 
+   $c->stash->{genotyping_protocol_id} = $protocol_id;
+    foreach my $pr_id (keys %$projects) 
    { 
        my $pr_name     = $projects->{$pr_id}{project_name};
        my $pr_desc     = $projects->{$pr_id}{project_desc};
@@ -251,15 +252,15 @@ sub format_trait_gs_projects {
 
        if ($has_genotype) 
        {
-	   my $trial_compatibility_file = $self->trial_compatibility_file($c);
+	   #my $trial_compatibility_file = $self->trial_compatibility_file($c);
 	   
-	   $self->trial_compatibility_table($c, $has_genotype);
-	   my $match_code = $c->stash->{trial_compatibility_code};
+	   #$self->trial_compatibility_table($c, $has_genotype);
+	   #my $match_code = $c->stash->{trial_compatibility_code};
 
 	   my $checkbox = qq |<form> <input  type="checkbox" name="project" value="$pr_id" onclick="solGS.combinedTrials.getPopIds()"/> </form> |;
-	   $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
+	   #$match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
 
-	   push @formatted_projects, [ $checkbox, qq|<a href="/solgs/trait/$trait_id/population/$pr_id" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $match_code];
+	   push @formatted_projects, [ $checkbox, qq|<a href="/solgs/trait/$trait_id/population/$pr_id/gp/$protocol_id" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year];
        }
    }     
 
@@ -406,8 +407,8 @@ sub store_project_marker_count {
 } 
 
 
-sub search_traits : Path('/solgs/search/traits/') Args(1) {
-    my ($self, $c, $query) = @_;
+sub search_traits : Path('/solgs/search/traits/') Args() {
+    my ($self, $c, $query, $gp, $protocol_id) = @_;
      
     my $traits = $c->model('solGS::solGS')->search_trait($query); 
     my $result = $c->model('solGS::solGS')->trait_details($traits);
@@ -415,7 +416,8 @@ sub search_traits : Path('/solgs/search/traits/') Args(1) {
     my $ret->{status} = 0;
     if ($result->first)
     {
-	$ret->{status} = 1;      
+	$ret->{status} = 1; 
+	$ret->{genotyping_protocol_id} = $protocol_id;
     }
   
     $ret = to_json($ret);
@@ -426,8 +428,8 @@ sub search_traits : Path('/solgs/search/traits/') Args(1) {
 }
 
 
-sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
-    my ($self, $c, $query) = @_;
+sub show_search_result_traits : Path('/solgs/search/result/traits') Args() {
+    my ($self, $c, $query, $gp, $protocol_id) = @_;
    
     my $traits = $c->model('solGS::solGS')->search_trait($query);
     my $result    = $c->model('solGS::solGS')->trait_details($traits);
@@ -439,7 +441,7 @@ sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
         my $name = $row->name;
         my $def  = $row->definition;
        
-        push @rows, [ qq |<a href="/solgs/search/trials/trait/$id"  onclick="solGS.waitPage()">$name</a>|, $def];      
+        push @rows, [ qq |<a href="/solgs/search/trials/trait/$id/gp/$protocol_id"  onclick="solGS.waitPage()">$name</a>|, $def];      
     }
   
     if (@rows)
@@ -447,6 +449,7 @@ sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
 	$c->stash(template   => $c->controller('solGS::Files')->template('/search/result/traits.mas'),
 		  result     => \@rows,
 		  query      => $query,
+		  genotyping_protocol_id => $protocol_id
 	    );
     }
 
@@ -1739,7 +1742,7 @@ sub check_population_has_genotype {
     
     if (!$has_genotype)
     {
-	$has_genotype = $c->model('solGS::solGS')->has_genotype($pop_id);
+	$has_genotype = $c->model('solGS::solGS')->has_genotype($pop_id, $protocol_id);
     }
   
     $c->stash->{population_has_genotype} = $has_genotype;
