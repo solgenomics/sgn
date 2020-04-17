@@ -23,6 +23,10 @@ is ($sample_class->foo(), 42, "foo test");
 
 # etc...
 
+The database handle is instantiated with AutoCommit => 0 by default, and is therefore initiating a transaction if the test script is wrapped in an eval {}; statement. (Recommended).
+
+To turn transactions off, use {  AutoCommit => 1 } in the constructor.
+
 =head1 AUTHOR
 
 Lukas Mueller <lam87@cornell.edu>
@@ -48,6 +52,9 @@ use CXGN::People::Person;
 
 use warnings;
 
+has 'AutoCommit' => (isa => 'Bool', is => 'rw', default => 0);
+has 'RaiseError' => (isa => 'Bool', is => 'rw', default => 1);
+
 sub BUILD { 
     my $self = shift;
 
@@ -66,17 +73,17 @@ sub BUILD {
 
     my $dsn = 'dbi:Pg:database='.$self->config->{dbname}.";host=".$self->config->{dbhost}.";port=5432";
 
-    $self->dbh(DBI->connect($dsn, $self->config->{dbuser}, $self->config->{dbpass}, { on_connect_do => ['SET search_path TO phenome, public, sgn, metadata' ]} ));
+    $self->dbh(DBI->connect($dsn, $self->config->{dbuser}, $self->config->{dbpass}, { AutoCommit=> $self->AutoCommit, RaiseError => $self->RaiseError, on_connect_do => ['SET search_path TO phenome, public, sgn, metadata' ]} ));
 
-    $self->bcs_schema(Bio::Chado::Schema->connect($dsn, $self->config->{dbuser}, $self->config->{dbpass}));
+    $self->bcs_schema(Bio::Chado::Schema->connect($dsn, $self->config->{dbuser}, $self->config->{dbpass}, { AutoCommit=> $self->AutoCommit, RaiseError => $self->RaiseError } ));
     
-    $self->phenome_schema(CXGN::Phenome::Schema->connect($dsn, $self->config->{dbuser}, $self->config->{dbpass}, { on_connect_do => [ 'SET search_path TO phenome, public, sgn, metadata' ] } ));
+    $self->phenome_schema(CXGN::Phenome::Schema->connect($dsn, $self->config->{dbuser}, $self->config->{dbpass}, { AutoCommit=> $self->AutoCommit, RaiseError => $self->RaiseError, on_connect_do => [ 'SET search_path TO phenome, public, sgn, metadata' ] } ));
     
-    $self->sgn_schema(SGN::Schema->connect($dsn, $self->config->{dbuser}, $self->config->{dbpass}, { on_connect_do => [ 'SET search_path TO metadata, public, sgn' ] }));
+    $self->sgn_schema(SGN::Schema->connect($dsn, $self->config->{dbuser}, $self->config->{dbpass}, { AutoCommit=> $self->AutoCommit, RaiseError => $self->RaiseError,on_connect_do => [ 'SET search_path TO metadata, public, sgn' ] }));
     
-    $self->metadata_schema(CXGN::Metadata::Schema->connect($dsn, $self->config->{dbuser}, $self->{config}->{dbpass}, { on_connect_do => [ 'SET search_path TO metadata, public, sgn' ] }));
+    $self->metadata_schema(CXGN::Metadata::Schema->connect($dsn, $self->config->{dbuser}, $self->{config}->{dbpass}, { AutoCommit=> $self->AutoCommit, RaiseError => $self->RaiseError, on_connect_do => [ 'SET search_path TO metadata, public, sgn' ] }));
 
-    $self->people_schema(CXGN::People::Schema->connect($dsn, $self->config->{dbuser}, $self->{config}->{dbpass}, { on_connect_do => [ 'SET search_path TO sgn_people, public, sgn' ]}));
+    $self->people_schema(CXGN::People::Schema->connect($dsn, $self->config->{dbuser}, $self->{config}->{dbpass}, { AutoCommit=> $self->AutoCommit, RaiseError => $self->RaiseError, on_connect_do => [ 'SET search_path TO sgn_people, public, sgn' ]}));
 
     #Janedoe in fixture db
     my $catalyst_user = Catalyst::Authentication::User->new();
