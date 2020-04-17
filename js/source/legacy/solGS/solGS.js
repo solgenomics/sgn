@@ -472,18 +472,20 @@ solGS.waitPage = function (page, args) {
 	    var traitId      = [];
 	    var populationId = [];
 	    var comboPopsId  = [];
-	    
+	    var protocolId;
 	    if (referer.match(/solgs\/search\/trials\/trait\//)) {
 
 		populationId.push(urlStr[5]);
 		comboPopsId.push(urlStr[5]);
 		traitId.push(urlStr[7]);
+		protocolId = urlStr[9];
 	    }
 	    else if (referer.match(/solgs\/populations\/combined\//)) {
 
 		populationId.push(urlStr[6]);
 		comboPopsId.push(urlStr[6]);
-		traitId.push(urlStr[8]);   
+		traitId.push(urlStr[8]);
+		protocolId = urlStr[10];
 	    }
 	    
 	    if (args === undefined) {
@@ -492,14 +494,16 @@ solGS.waitPage = function (page, args) {
 			'training_pop_id' : populationId, 
 			'combo_pops_id' : comboPopsId,
 			'analysis_type' : 'single model',
-			'data_set_type' : 'combined populations'};
+			'data_set_type' : 'combined populations',
+			'genotyping_protocol_id' : protocolId};
 	    } else {
 
 		args['trait_id']      = traitId;
 		args['training_pop_id'] = populationId;
 		args['combo_pops_id'] = comboPopsId;
 		args['analysis_type'] = 'single model';
-		args['data_set_type'] = 'combined populations';	
+		args['data_set_type'] = 'combined populations';
+		args['genotyping_protocol_id'] = protocolId;
 	    }
 	} else if (url.match(/solgs\/population\//)) {
 	    
