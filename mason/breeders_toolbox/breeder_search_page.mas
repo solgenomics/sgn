@@ -248,6 +248,14 @@ $dataset_id => undef
                     Download Genomic Relationship Matrix (GRM)
                 </button>
             </td>
+            <br/><br/>
+            <td colspan="3">
+                <button class="wizard-download-gwas btn btn-sm btn-primary">
+                    <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
+                    Download Genome Wide Association Study (GWAS)
+                </button>
+                <span class="glyphicon glyphicon-info-sign" title="Select accessions and traits. Be mindful of the default genotyping protocol in your system. GWAS uses a fixed effect for different field trials and a fixed effect for replicate. GWAS uses Kinship matrix calculated from the genotype data. MAF and missing data used to filter prior to GWAS and Kinship matrix calculation, and can calculate for hybrids from genotyped parents."></span>
+            </td>
 
           </div>
         </div>

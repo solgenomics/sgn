@@ -36,6 +36,7 @@ use CXGN::Login;
 use CXGN::Stock::StockLookup;
 use CXGN::Genotype::DownloadFactory;
 use CXGN::Genotype::GRM;
+use CXGN::Genotype::GWAS;
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
     my $self = shift;
@@ -839,6 +840,70 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
         individuals_filter=>$individuals_filter
     });
     my $file_handle = $geno->download_grm();
+
+    $c->res->content_type("application/text");
+    $c->res->cookies->{$dl_cookie} = {
+        value => $dl_token,
+        expires => '+1m',
+    };
+
+    $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
+    $c->res->body($file_handle);
+}
+
+#Used from wizard page for downloading genome wide association study (GWAS) results and plots
+sub download_gwas_action : Path('/breeders/download_gwas_action') {
+    my ($self, $c) = @_;
+    # print STDERR Dumper $c->req->params();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $minor_allele_frequency = $c->req->param("minor_allele_frequency") ? $c->req->param("minor_allele_frequency") + 0 : 0.05;
+    my $marker_filter = $c->req->param("marker_filter") ? $c->req->param("marker_filter") + 0 : 0.60;
+    my $individuals_filter = $c->req->param("individuals_filter") ? $c->req->param("individuals_filter") + 0 : 0.80;
+    my $return_only_first_genotypeprop_for_stock = defined($c->req->param('return_only_first_genotypeprop_for_stock')) ? $c->req->param('return_only_first_genotypeprop_for_stock') : 1;
+    my $dl_token = $c->req->param("gbs_download_token") || "no_token";
+    my $dl_cookie = "download".$dl_token;
+
+    my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, $accession_data, $id_string, $protocol_id, $trait_id_string, @trait_ids);
+
+    $trait_id_string = $c->req->param("trait_ids");
+    if ($trait_id_string){
+        @trait_ids = split(',', $trait_id_string);
+    }
+
+    $id_string = $c->req->param("ids");
+    @accession_ids = split(',',$id_string);
+    $protocol_id = $c->req->param("protocol_id");
+    if (!$protocol_id){
+        my $default_genotyping_protocol = $c->config->{default_genotyping_protocol};
+        $protocol_id = $schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$default_genotyping_protocol})->nd_protocol_id();
+    }
+
+    my $filename = 'BreedBaseGWASDownload.pdf';
+
+    my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
+
+    my $dir = $c->tempfiles_subdir('/grm_download_wizard_gwas');
+    my $gwas_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'download_wizard_gwas/imageXXXX');
+    my $grm_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'download_wizard_gwas_grm/imageXXXX');
+    my $pheno_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'download_wizard_gwas_phenotypes/imageXXXX');
+
+    my $geno = CXGN::Genotype::GWAS->new({
+        bcs_schema=>$schema,
+        grm_temp_file=>$grm_tempfile,
+        gwas_temp_file=>$gwas_tempfile,
+        pheno_temp_file=>$pheno_tempfile,
+        people_schema=>$people_schema,
+        cache_root=>$c->config->{cache_file_path},
+        accession_id_list=>\@accession_ids,
+        trait_id_list=>\@trait_ids,
+        protocol_id=>$protocol_id,
+        get_grm_for_parental_accessions=>$compute_from_parents,
+        minor_allele_frequency=>$minor_allele_frequency,
+        marker_filter=>$marker_filter,
+        individuals_filter=>$individuals_filter
+    });
+    my $file_handle = $geno->download_gwas();
 
     $c->res->content_type("application/text");
     $c->res->cookies->{$dl_cookie} = {
