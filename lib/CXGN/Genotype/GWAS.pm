@@ -50,6 +50,8 @@ use CXGN::Dataset::Cache;
 use Cache::File;
 use Digest::MD5 qw | md5_hex |;
 use File::Slurp qw | write_file |;
+use File::Temp 'tempfile';
+use File::Copy;
 use POSIX;
 
 has 'bcs_schema' => (
@@ -170,7 +172,7 @@ has 'return_only_first_genotypeprop_for_stock' => (
     default => 1
 );
 
-sub get_grm {
+sub get_gwas {
     my $self = shift;
     my $shared_cluster_dir_config = shift;
     my $backend_config = shift;
@@ -231,7 +233,7 @@ sub get_grm {
 
     my $trait_string_sql = join ',', @unique_trait_ids_sorted;
     open(my $F_pheno, ">", $pheno_tempfile) || die "Can't open file ".$pheno_tempfile;
-        print $F_pheno 'gid,field_trial_id,replicate,'.$trait_string_sql;
+        print $F_pheno 'gid,field_trial_id,replicate,'.$trait_string_sql."\n";
         foreach my $stock_id (@unique_stock_ids_sorted) {
             my $d = $unique_observation_units{$stock_id};
             print $F_pheno $d->{germplasm_stock_id}.','.$d->{trial_id}.','.$d->{obsunit_rep};
@@ -288,7 +290,7 @@ sub get_grm {
                             $genotype_string .= $m->{name} . "\t";
                         }
                         $genotype_string .= "\n";
-                        $genotype_string .= "#CHROM\t";
+                        $genotype_string .= "CHROM\t";
                         foreach my $m (@all_marker_objects) {
                             $genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{chrom} . " \t";
                         }
@@ -354,7 +356,7 @@ sub get_grm {
                 cache_root=>$cache_root_dir,
                 accessions=>[$female_stock_id, $male_stock_id]
             });
-            my $genotypes = $dataset->retrieve_genotypes($protocol_id, ['DS'], ['markers'], ['name'], 1, [], undef, undef, []);
+            my $genotypes = $dataset->retrieve_genotypes($protocol_id, ['DS'], ['markers'], ['name', 'chrom', 'pos'], 1, [], undef, undef, []);
 
             if (scalar(@$genotypes) > 0) {
                 # For old genotyping protocols without nd_protocolprop info...
@@ -373,7 +375,7 @@ sub get_grm {
                         $genotype_string .= $m->{name} . "\t";
                     }
                     $genotype_string .= "\n";
-                    $genotype_string .= "#CHROM\t";
+                    $genotype_string .= "CHROM\t";
                     foreach my $m (@all_marker_objects) {
                         $genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{chrom} . " \t";
                     }
@@ -391,6 +393,7 @@ sub get_grm {
                 $genotype_string .= $accession_stock_id."\t".$genotype_string_scores."\n";
                 write_file($grm_tempfile, {append => 1}, $genotype_string);
                 undef $progeny_genotype;
+                $counter++;
             }
         }
     }
@@ -435,7 +438,27 @@ sub get_grm {
     my $marker_filter = $self->marker_filter();
     my $individuals_filter = $self->individuals_filter();
 
-    my $cmd = 'R -e "library(genoDataFilter); library(rrBLUP); library(data.table); pheno <- fread(\''.$pheno_tempfile.'\', header=TRUE, sep=\',\'); geno_mat_marker_first <- fread(\''.$transpose_tempfile.'\', header=TRUE, sep=\'\t\'); geno_mat_sample_first <- data.table(fread(\''.$grm_tempfile.'\', header=FALSE, sep=\'\t\', skip=3), row.names=1); marker_mat <- marker_first[,1:3]; geno_score_mat = t(geno_mat[,-c(1:3)]); rownames(geno_score_mat) <- marker_mat[,1]; mat_clean_sample_first <- filterGenoData(gData=geno_mat_sample_first, maf='.$maf.', markerFilter='.$marker_filter.', indFilter='.$individuals_filter.'); remaining_samples <- row.names(mat_clean_sample_first); remaining_markers <- colnames(mat_clean_sample_first); imputation <- A.mat(mat_clean_sample_first-1, impute.method=\'EM\', n.core='.$number_system_cores.', return.imputed=TRUE); K.mat <- imputation$A; geno.gwas <- imputation$imputed; pdf( \''.$gwas_tempfile.'\', width = 25, height = 100 ); GWAS(pheno[pheno$gid %in% remaining_samples, ], geno_mat_marker_first[geno_mat_marker_first$ID %in% remaining_markers, ], fixed=c(\'field_trial_id\',\'replicate\'), K=K.mat, plot=TRUE, min.MAF='.$maf.')"';
+    my $cmd = 'R -e "library(genoDataFilter); library(rrBLUP); library(data.table);
+    pheno <- fread(\''.$pheno_tempfile.'\', header=TRUE, sep=\',\');
+    pheno\$field_trial_id <- as.factor(pheno\$field_trial_id);
+    pheno\$replicate <- as.factor(pheno\$replicate);
+    geno_mat_marker_first <- fread(\''.$transpose_tempfile.'\', header=TRUE, sep=\'\t\') #has sample names as column names, first 3 columns are marker info;
+    geno_mat_sample_first <- data.frame(fread(\''.$grm_tempfile.'\', header=FALSE, sep=\'\t\', skip=3)) #has sample names in first column, no defined column names;
+    row.names(geno_mat_sample_first) <- geno_mat_sample_first\$V1; #has sample names as row names, no defined column names but they are markers
+    geno_mat_sample_first <- geno_mat_sample_first[,-1]; #remove first column so that row names are sample names and all other columns are markers
+    colnames(geno_mat_sample_first) <- geno_mat_marker_first\$ID; #has sample names as row names, column names are marker names
+    mat_clean_sample_first <- filterGenoData(gData=geno_mat_sample_first, maf='.$maf.', markerFilter='.$marker_filter.', indFilter='.$individuals_filter.');
+    if (\'rn\' %in% colnames(mat_clean_sample_first)) { row.names(mat_clean_sample_first) <- mat_clean_sample_first\$rn; mat_clean_sample_first <- mat_clean_sample_first[,-1]; }
+    remaining_samples <- row.names(mat_clean_sample_first);
+    remaining_markers <- colnames(mat_clean_sample_first);
+    imputation <- A.mat(mat_clean_sample_first-1, impute.method=\'EM\', n.core='.$number_system_cores.', return.imputed=TRUE);
+    K.mat <- imputation\$A;
+    geno_imputed <- imputation\$imputed;
+    geno_gwas <- cbind(geno_mat_marker_first[geno_mat_marker_first\$ID %in% remaining_markers, c(1:3)], t(geno_imputed));
+    gwas_results <- GWAS(pheno[pheno\$gid %in% remaining_samples, ], geno_gwas, fixed=c(\'field_trial_id\',\'replicate\'), K=K.mat, plot=F, min.MAF='.$maf.'); #columns are ID,CHROM,POS,TraitIDs and values in TraitIDs column are -log10 p values
+    pdf( \''.$gwas_tempfile.'\', width = 25, height = 25 );
+    for (i in 4:length(gwas_results)) { alpha_bonferroni=-log10(0.05/length(gwas_results[,i])); chromosome_ids <- as.factor(gwas_results\$CHROM); marker_indicator <- match(unique(gwas_results\$CHROM), gwas_results\$CHROM); plot(gwas_results[,3], gwas_results[,i], col=chromosome_ids, ylab=\'-log10(pvalue)\', main=paste(\'Manhattan Plot \',colnames(gwas_results)[i]), xaxt=\'n\', xlab=\'Position\', ylim=c(0,14)); axis(1,at=marker_indicator,labels=gwas_results\$CHROM[marker_indicator], cex.axis=0.8, las=2); abline(h=alpha_bonferroni,col=\'red\',lwd=2); }
+    "';
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
@@ -465,6 +488,11 @@ sub grm_cache_key {
 
 sub download_gwas {
     my $self = shift;
+    my $shared_cluster_dir_config = shift;
+    my $backend_config = shift;
+    my $cluster_host_config = shift;
+    my $web_cluster_queue_config = shift;
+    my $basepath_config = shift;
 
     my $key = $self->grm_cache_key("download_gwas");
     $self->_cache_key($key);
@@ -475,7 +503,7 @@ sub download_gwas {
         $return = $self->cache()->handle($key);
     }
     else {
-        my ($gwas_tempfile, $status) = $self->get_gwas();
+        my ($gwas_tempfile, $status) = $self->get_gwas($shared_cluster_dir_config, $backend_config, $cluster_host_config, $web_cluster_queue_config, $basepath_config);
 
         open my $out_copy, '<', $gwas_tempfile or die "Can't open output file: $!";
 

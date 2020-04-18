@@ -883,10 +883,10 @@ sub download_gwas_action : Path('/breeders/download_gwas_action') {
 
     my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
 
-    my $dir = $c->tempfiles_subdir('/grm_download_wizard_gwas');
-    my $gwas_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'download_wizard_gwas/imageXXXX');
-    my $grm_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'download_wizard_gwas_grm/imageXXXX');
-    my $pheno_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'download_wizard_gwas_phenotypes/imageXXXX');
+    my $dir = $c->tempfiles_subdir('/download_wizard_gwas');
+    my $gwas_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'download_wizard_gwas/gwasXXXX');
+    my $grm_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'download_wizard_gwas/grmXXXX');
+    my $pheno_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'download_wizard_gwas/phenoXXXX');
 
     my $geno = CXGN::Genotype::GWAS->new({
         bcs_schema=>$schema,
@@ -903,7 +903,13 @@ sub download_gwas_action : Path('/breeders/download_gwas_action') {
         marker_filter=>$marker_filter,
         individuals_filter=>$individuals_filter
     });
-    my $file_handle = $geno->download_gwas();
+    my $file_handle = $geno->download_gwas(
+        $c->config->{cluster_shared_tempdir},
+        $c->config->{backend},
+        $c->config->{cluster_host},
+        $c->config->{'web_cluster_queue'},
+        $c->config->{basepath}
+    );
 
     $c->res->content_type("application/text");
     $c->res->cookies->{$dl_cookie} = {
