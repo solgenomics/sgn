@@ -275,8 +275,10 @@ sub get_gwas {
 
                 # For old genotyping protocols without nd_protocolprop info...
                 if (scalar(@all_marker_objects) == 0) {
+                    my $position_placeholder = 1;
                     foreach my $o (sort genosort keys %{$genotypes->[0]->{selected_genotype_hash}}) {
-                        push @all_marker_objects, {name => $o, chrom => '1', pos => '1'};
+                        push @all_marker_objects, {name => $o, chrom => '1', pos => $position_placeholder};
+                        $position_placeholder++;
                     }
                 }
 
