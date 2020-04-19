@@ -858,6 +858,7 @@ sub download_gwas_action : Path('/breeders/download_gwas_action') {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $minor_allele_frequency = $c->req->param("minor_allele_frequency") ? $c->req->param("minor_allele_frequency") + 0 : 0.05;
+    my $download_format = $c->req->param("download_format") ? $c->req->param("download_format") : 'results_tsv';
     my $marker_filter = $c->req->param("marker_filter") ? $c->req->param("marker_filter") + 0 : 0.60;
     my $individuals_filter = $c->req->param("individuals_filter") ? $c->req->param("individuals_filter") + 0 : 0.80;
     my $return_only_first_genotypeprop_for_stock = defined($c->req->param('return_only_first_genotypeprop_for_stock')) ? $c->req->param('return_only_first_genotypeprop_for_stock') : 1;
@@ -879,7 +880,13 @@ sub download_gwas_action : Path('/breeders/download_gwas_action') {
         $protocol_id = $schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$default_genotyping_protocol})->nd_protocol_id();
     }
 
-    my $filename = 'BreedBaseGWASDownload.pdf';
+    my $filename;
+    if ($download_format eq 'results_tsv') {
+        $filename = 'BreedBaseGWASDownloadResults.tsv';
+    }
+    elsif ($download_format eq 'manhattan_qq_plots') {
+        $filename = 'BreedBaseGWASDownloadManhattanAndQQPlots.pdf';
+    }
 
     my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
 
@@ -895,6 +902,7 @@ sub download_gwas_action : Path('/breeders/download_gwas_action') {
         pheno_temp_file=>$pheno_tempfile,
         people_schema=>$people_schema,
         cache_root=>$c->config->{cache_file_path},
+        download_format=>$download_format,
         accession_id_list=>\@accession_ids,
         trait_id_list=>\@trait_ids,
         protocol_id=>$protocol_id,

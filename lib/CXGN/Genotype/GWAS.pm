@@ -12,6 +12,7 @@ my $geno = CXGN::Genotype::GWAS->new({
     gwas_temp_file=>$file_temp_path_gwas,
     pheno_temp_file=>$file_temp_path_pheno,
     people_schema=>$people_schema,
+    download_format=>$download_format, #either results_tsv or manhattan_qq_plots
     accession_id_list=>\@accession_list,
     trait_id_list=>\@trait_id_list,
     protocol_id=>$protocol_id,
@@ -113,6 +114,12 @@ has 'protocol_id' => (
     required => 1
 );
 
+has 'download_format' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 1
+);
+
 has 'minor_allele_frequency' => (
     isa => 'Num',
     is => 'rw',
@@ -189,6 +196,7 @@ sub get_gwas {
     my $grm_tempfile = $self->grm_temp_file();
     my $gwas_tempfile = $self->gwas_temp_file();
     my $pheno_tempfile = $self->pheno_temp_file();
+    my $download_format = $self->download_format();
 
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
@@ -457,10 +465,16 @@ sub get_gwas {
     K.mat <- imputation\$A;
     geno_imputed <- imputation\$imputed;
     geno_gwas <- cbind(geno_mat_marker_first[geno_mat_marker_first\$ID %in% remaining_markers, c(1:3)], t(geno_imputed));
-    gwas_results <- GWAS(pheno[pheno\$gid %in% remaining_samples, ], geno_gwas, fixed=c(\'field_trial_id\',\'replicate\'), K=K.mat, plot=F, min.MAF='.$maf.'); #columns are ID,CHROM,POS,TraitIDs and values in TraitIDs column are -log10 p values
-    pdf( \''.$gwas_tempfile.'\', width = 25, height = 20 );
-    for (i in 4:length(gwas_results)) { alpha_bonferroni=-log10(0.05/length(gwas_results[,i])); chromosome_ids <- as.factor(gwas_results\$CHROM); marker_indicator <- match(unique(gwas_results\$CHROM), gwas_results\$CHROM); N <- length(gwas_results[,1]); plot(seq(1:N), gwas_results[,i], col=chromosome_ids, ylab=\'-log10(pvalue)\', main=paste(\'Manhattan Plot \',colnames(gwas_results)[i]), xaxt=\'n\', xlab=\'Position\', ylim=c(0,14)); axis(1,at=marker_indicator,labels=gwas_results\$CHROM[marker_indicator], cex.axis=0.8, las=2); abline(h=alpha_bonferroni,col=\'red\',lwd=2); expected.logvalues <- sort( -log10( c(1:N) * (1/N) ) ); observed.logvalues <- sort(gwas_results[,i]); plot(expected.logvalues, observed.logvalues, main=paste(\'QQ Plot \',colnames(gwas_results)[i]), xlab=\'Expected -log p-values \', ylab=\'Observed -log p-values\', col.main=\'black\', col=\'coral1\', pch=20); abline(0,1,lwd=3,col=\'black\'); }
-    "';
+    gwas_results <- GWAS(pheno[pheno\$gid %in% remaining_samples, ], geno_gwas, fixed=c(\'field_trial_id\',\'replicate\'), K=K.mat, plot=F, min.MAF='.$maf.'); #columns are ID,CHROM,POS,TraitIDs and values in TraitIDs column are -log10 p values'."\n";
+    if ($download_format eq 'manhattan_qq_plots') {
+        $cmd .= 'pdf( \''.$gwas_tempfile.'\', width = 11, height = 8.5 );
+        for (i in 4:length(gwas_results)) { alpha_bonferroni=-log10(0.05/length(gwas_results[,i])); chromosome_ids <- as.factor(gwas_results\$CHROM); marker_indicator <- match(unique(gwas_results\$CHROM), gwas_results\$CHROM); N <- length(gwas_results[,1]); plot(seq(1:N), gwas_results[,i], col=chromosome_ids, ylab=\'-log10(pvalue)\', main=paste(\'Manhattan Plot \',colnames(gwas_results)[i]), xaxt=\'n\', xlab=\'Position\', ylim=c(0,14)); axis(1,at=marker_indicator,labels=gwas_results\$CHROM[marker_indicator], cex.axis=0.8, las=2); abline(h=alpha_bonferroni,col=\'red\',lwd=2); expected.logvalues <- sort( -log10( c(1:N) * (1/N) ) ); observed.logvalues <- sort(gwas_results[,i]); plot(expected.logvalues, observed.logvalues, main=paste(\'QQ Plot \',colnames(gwas_results)[i]), xlab=\'Expected -log p-values \', ylab=\'Observed -log p-values\', col.main=\'black\', col=\'coral1\', pch=20); abline(0,1,lwd=3,col=\'black\'); }
+        "';
+    }
+    elsif ($download_format eq 'results_tsv') {
+        $cmd .= 'write.table(gwas_results, file=\''.$gwas_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+        "';
+    }
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
@@ -483,8 +497,9 @@ sub grm_cache_key {
     my $protocolpropmarkerhash = $json->encode( $self->protocolprop_marker_hash_select() || [] );
     my $maf = $self->minor_allele_frequency();
     my $marker_filter = $self->marker_filter();
+    my $download_format = $self->download_format();
     my $individuals_filter = $self->individuals_filter();
-    my $key = md5_hex($accessions.$traits.$protocol.$genotypeprophash.$protocolprophash.$protocolpropmarkerhash.$self->get_grm_for_parental_accessions().$self->return_only_first_genotypeprop_for_stock()."_MAF$maf"."_mfilter$marker_filter"."_ifilter$individuals_filter"."_$datatype");
+    my $key = md5_hex($accessions.$traits.$protocol.$genotypeprophash.$protocolprophash.$protocolpropmarkerhash.$self->get_grm_for_parental_accessions().$self->return_only_first_genotypeprop_for_stock()."_MAF$maf"."_mfilter$marker_filter"."_ifilter$individuals_filter"."format$download_format"."_$datatype");
     return $key;
 }
 

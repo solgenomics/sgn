@@ -237,7 +237,7 @@ $dataset_id => undef
                 <td colspan="6">
                   <span>Format</span>
                   <select class="wizard-download-genotypes-grm-format form-control input-sm" >
-                      <option value="matrix">Genomic Relationship Matrix (tsv)</option>
+                      <option value="matrix">Matrix (tsv)</option>
                       <option value="three_column">3-Column Format (tsv)</option>
                   </select>
                 </td>
@@ -251,8 +251,15 @@ $dataset_id => undef
                 </td>
               </tr>
               <tr>
-                  <td colspan="12">
-                        <span class="glyphicon glyphicon-info-sign" title="Select accessions, traits, and optionally a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol is used in your system. When many traits are selected, several Manhattan plots are returned. Specify minor allele frequency (MAF), marker filter, and individuals filter. Can compute genotypes from parents if the parents of the accessions you selected have genotypes by checking the checkbox. GWAS uses a fixed effect for different field trials and a fixed effect for replicate. GWAS uses Kinship matrix calculated from the genotype data. MAF and missing data used to filter prior to GWAS and Kinship matrix calculation."></span>
+                  <td colspan="6">
+                    <span>Format</span>
+                    <select class="wizard-download-genotypes-gwas-format form-control input-sm" >
+                        <option value="manhattan_qq_plots">Manhattan + QQ Plots (.pdf)</option>
+                        <option value="results_tsv">GWAS Results (.tsv)</option>
+                    </select>
+                  </td>
+                  <td colspan="6">
+                        <span class="glyphicon glyphicon-info-sign" title="Select accessions, traits, and optionally a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol is used in your system. When many traits are selected, several Manhattan plots are returned. Specify minor allele frequency (MAF), marker filter, and individuals filter. Can compute genotypes from parents if the parents of the accessions you selected have genotypes by checking the checkbox. GWAS uses a fixed effect for different field trials and a fixed effect for replicate. GWAS uses Kinship matrix calculated from the genotype data. MAF and missing data used to filter prior to GWAS and Kinship matrix calculation. Can select whether to return results in Manhattan and QQ Plot (.pdf) form or as the tabular results (.tsv)."></span>
                         <span>Download GWAS Manhattan Plot(s)</span>
                       <button class="wizard-download-gwas btn btn-sm btn-primary">
                           <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
