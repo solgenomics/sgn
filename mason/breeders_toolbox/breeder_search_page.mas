@@ -202,14 +202,14 @@ $dataset_id => undef
                 <tr>
                     <td colspan="6">
                         <span class="glyphicon glyphicon-info-sign" title="Select accessions, and optionally a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol is used in your system. If you want to filter genotypes, used the chromosome, start position, end position, and marker set options. Can compute genotypes from parents if the parents of the accessions you selected have genotypes by checking the checkbox. Genotypes can be downloaded in VCF and Dosage Matrix Formats."></span>
-                        <span>Download Genotypes</span>
+                        <span>Download Genotypes</span><br/>
                         <button class="wizard-download-genotypes btn btn-sm btn-primary">
                             <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
                             Download Genotypes
                         </button>
                     </td>
                     <td colspan="6">
-                        <span>Marker Set Filter</span>
+                        <span>Marker Set Filter</span><br/>
                         <button class="btn btn-sm btn-default" onClick="window.open('/breeders/markers', '_blank');">
                             Manage Marker Sets
                         </button>
@@ -243,7 +243,7 @@ $dataset_id => undef
                 </td>
                 <td colspan="6">
                     <span class="glyphicon glyphicon-info-sign" title="Select accessions, and optionally a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol is used in your system. Specify minor allele frequency (MAF), marker filter, and individuals filter. Can compute genotypes from parents if the parents of the accessions you selected have genotypes by checking the checkbox. GRM can be downloaded in a matrix format and a three column format."></span>
-                    <span>Download GRM</span>
+                    <span>Download GRM</span><br/>
                     <button class="wizard-download-genetic-relationship-matrix btn btn-sm btn-primary">
                         <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
                         Download Genomic Relationship Matrix (GRM)
@@ -260,7 +260,7 @@ $dataset_id => undef
                   </td>
                   <td colspan="6">
                         <span class="glyphicon glyphicon-info-sign" title="Select accessions, traits, and optionally a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol is used in your system. When many traits are selected, several Manhattan plots are returned. Specify minor allele frequency (MAF), marker filter, and individuals filter. Can compute genotypes from parents if the parents of the accessions you selected have genotypes by checking the checkbox. GWAS uses a fixed effect for different field trials and a fixed effect for replicate. GWAS uses Kinship matrix calculated from the genotype data. MAF and missing data used to filter prior to GWAS and Kinship matrix calculation. Can select whether to return results in Manhattan and QQ Plot (.pdf) form or as the tabular results (.tsv)."></span>
-                        <span>Download GWAS Manhattan Plot(s)</span>
+                        <span>Download GWAS Manhattan Plot(s)</span><br/>
                       <button class="wizard-download-gwas btn btn-sm btn-primary">
                           <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
                           Download Genome Wide Association Study (GWAS)
