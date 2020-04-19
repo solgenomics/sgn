@@ -458,8 +458,8 @@ sub get_gwas {
     geno_imputed <- imputation\$imputed;
     geno_gwas <- cbind(geno_mat_marker_first[geno_mat_marker_first\$ID %in% remaining_markers, c(1:3)], t(geno_imputed));
     gwas_results <- GWAS(pheno[pheno\$gid %in% remaining_samples, ], geno_gwas, fixed=c(\'field_trial_id\',\'replicate\'), K=K.mat, plot=F, min.MAF='.$maf.'); #columns are ID,CHROM,POS,TraitIDs and values in TraitIDs column are -log10 p values
-    pdf( \''.$gwas_tempfile.'\', width = 25, height = 25 );
-    for (i in 4:length(gwas_results)) { alpha_bonferroni=-log10(0.05/length(gwas_results[,i])); chromosome_ids <- as.factor(gwas_results\$CHROM); marker_indicator <- match(unique(gwas_results\$CHROM), gwas_results\$CHROM); plot(gwas_results[,3], gwas_results[,i], col=chromosome_ids, ylab=\'-log10(pvalue)\', main=paste(\'Manhattan Plot \',colnames(gwas_results)[i]), xaxt=\'n\', xlab=\'Position\', ylim=c(0,14)); axis(1,at=marker_indicator,labels=gwas_results\$CHROM[marker_indicator], cex.axis=0.8, las=2); abline(h=alpha_bonferroni,col=\'red\',lwd=2); }
+    pdf( \''.$gwas_tempfile.'\', width = 25, height = 20 );
+    for (i in 4:length(gwas_results)) { alpha_bonferroni=-log10(0.05/length(gwas_results[,i])); chromosome_ids <- as.factor(gwas_results\$CHROM); marker_indicator <- match(unique(gwas_results\$CHROM), gwas_results\$CHROM); N <- length(gwas_results[,1]); plot(seq(1:N), gwas_results[,i], col=chromosome_ids, ylab=\'-log10(pvalue)\', main=paste(\'Manhattan Plot \',colnames(gwas_results)[i]), xaxt=\'n\', xlab=\'Position\', ylim=c(0,14)); axis(1,at=marker_indicator,labels=gwas_results\$CHROM[marker_indicator], cex.axis=0.8, las=2); abline(h=alpha_bonferroni,col=\'red\',lwd=2); expected.logvalues <- sort( -log10( c(1:N) * (1/N) ) ); observed.logvalues <- sort(gwas_results[,i]); plot(expected.logvalues, observed.logvalues, main=paste(\'QQ Plot \',colnames(gwas_results)[i]), xlab=\'Expected -log p-values \', ylab=\'Observed -log p-values\', col.main=\'black\', col=\'coral1\', pch=20); abline(0,1,lwd=3,col=\'black\'); }
     "';
     print STDERR Dumper $cmd;
     my $status = system($cmd);
