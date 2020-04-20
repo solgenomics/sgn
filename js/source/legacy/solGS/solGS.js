@@ -14,6 +14,9 @@ var solGS = solGS || function solGS () {};
 
 solGS.waitPage = function (page, args) {
   
+    var host = window.location.protocol + '//'  + window.location.host;
+    page = page.replace(host, '');
+     
     var matchItems = 'solgs/population/'
 	+ '|solgs/populations/combined/' 
 	+ '|solgs/trait/' 
@@ -35,7 +38,7 @@ solGS.waitPage = function (page, args) {
 	    //if (page.match(/list_/)) {
 	//	askUser(page, args)
 	    // } else {
-	  
+	
 	    checkCachedResult(page, args);
 	   // }
 	}
@@ -450,18 +453,18 @@ solGS.waitPage = function (page, args) {
 	if (url.match(/solgs\/trait\//)) {
 	    
 	    var urlStr = url.split(/\/+/);
-	    
+	
 	    if (args === undefined) {
-		
-		args = {'trait_id'      : [ urlStr[4] ], 
-			'training_pop_id' : [ urlStr[6] ], 
+	
+		args = {'trait_id'      : [ urlStr[3] ], 
+			'training_pop_id' : [ urlStr[5] ], 
 			'analysis_type' : 'single model',
 			'data_set_type' : 'single population',
 		       };
 	    }
 	    else {
-		args['trait_id']      = [ urlStr[4] ];
-		args['training_pop_id'] = [ urlStr[6] ];
+		args['trait_id']      = [ urlStr[3] ];
+		args['training_pop_id'] = [ urlStr[5] ];
 		args['analysis_type'] = 'single model';
 		args['data_set_type'] = 'single population';		
 	    }
@@ -474,7 +477,6 @@ solGS.waitPage = function (page, args) {
 	    var comboPopsId  = [];
 	    var protocolId;
 	    if (referer.match(/solgs\/search\/trials\/trait\//)) {
-
 		populationId.push(urlStr[5]);
 		comboPopsId.push(urlStr[5]);
 		traitId.push(urlStr[7]);
@@ -482,10 +484,10 @@ solGS.waitPage = function (page, args) {
 	    }
 	    else if (referer.match(/solgs\/populations\/combined\//)) {
 
-		populationId.push(urlStr[6]);
-		comboPopsId.push(urlStr[6]);
-		traitId.push(urlStr[8]);
-		protocolId = urlStr[10];
+		populationId.push(urlStr[5]);
+		comboPopsId.push(urlStr[5]);
+		traitId.push(urlStr[7]);
+		protocolId = urlStr[9];
 	    }
 	    
 	    if (args === undefined) {
@@ -508,20 +510,20 @@ solGS.waitPage = function (page, args) {
 	} else if (url.match(/solgs\/population\//)) {
 	    
 	    var urlStr = url.split(/\/+/);
-	    var gpr = urlStr[6];
+	    var gpr = urlStr[5];
 	   
 	    if (args === undefined) {
 		args = { 
-		    'training_pop_id' : [ urlStr[4] ], 
+		    'training_pop_id' : [ urlStr[3] ], 
 		    'analysis_type' : 'population download',
 		    'data_set_type' : 'single population',
-		    'genotyping_protocol_id': urlStr[6]
+		    'genotyping_protocol_id': urlStr[5]
 		};
 	    } else {
-		args['training_pop_id'] = [ urlStr[4] ];
+		args['training_pop_id'] = [ urlStr[3] ];
 		args['analysis_type'] = 'population download';
 		args['data_set_type'] = 'single population';
-		args['genotyping_protocol_id'] = urlStr[6];
+		args['genotyping_protocol_id'] = urlStr[5];
 	    }
 	} else if (url.match(/solgs\/model\/\d+\/prediction\/|solgs\/model\/\w+_\d+\/prediction\//)) {
 
@@ -541,16 +543,16 @@ solGS.waitPage = function (page, args) {
 		
 		args = {
 		    'trait_id'         : [ traitId ],
-		    'training_pop_id'  : [ urlStr[4] ], 
-		    'selection_pop_id' : [ urlStr[6] ], 
+		    'training_pop_id'  : [ urlStr[3] ], 
+		    'selection_pop_id' : [ urlStr[5] ], 
 		    'analysis_type'    : 'selection prediction',
 		    'data_set_type'    : dataSetType,
 		};
 	    }
 	    else {
 		args['trait_id']         = [ traitId ];
-		args['training_pop_id']  = [ urlStr[4] ];
-		args['selection_pop_id'] = [ urlStr[6] ];
+		args['training_pop_id']  = [ urlStr[3] ];
+		args['selection_pop_id'] = [ urlStr[5] ];
 		args['analysis_type']    = 'selection prediction';
 		args['data_set_type']    = dataSetType;	
 	    }
@@ -707,9 +709,10 @@ jQuery(document).ready(function (){
 	     var dataSetType;
 	 
 		 
-	     var hostName = window.location.protocol 
-		 + '//' 
-		 + window.location.host;
+	     // var hostName = window.location.protocol 
+	     // 	 + '//' 
+	     // 	 + window.location.host;
+	     var hostName ='';
 	     
 	     var referer = window.location.href;
 	     
@@ -760,7 +763,8 @@ jQuery(document).ready(function (){
 			 'analysis_type'   : analysisType,
 			 'data_set_type'   : dataSetType,
 			};
-	     
+
+	  
 	     solGS.waitPage(page, args);
 	     
 	 } else {
