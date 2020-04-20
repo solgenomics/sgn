@@ -546,12 +546,17 @@ sub save_ona_cross_info {
                                     ($harvest_date) = ($odk_harvest_date =~ /^([^T]+)/);
 #                                    print STDERR "ODK HARVEST DATE =".Dumper($odk_harvest_date)."\n";
 #                                    print STDERR "HARVEST DATE =".Dumper($harvest_date)."\n";
+                                    if (defined $harvest_cross_id){
+                                        $musa_cross_info{$harvest_date_property}{$harvest_cross_id} = $harvest_date;
+                                     }
                                 }
                             } else {
                                 $harvest_cross_id = $a->{'FieldActivities/harvesting/harvest/harvestID'};
                                 $harvest_date = $a->{'FieldActivities/harvesting/harvesting_date'};
+                                if (defined $harvest_cross_id){
+                                    $musa_cross_info{$harvest_date_property}{$harvest_cross_id} = $harvest_date;
+                                }
                             }
-                            $musa_cross_info{$harvest_date_property}{$harvest_cross_id} = $harvest_date;
 
                         } elsif ($a->{'FieldActivities/fieldActivity'} eq 'seedExtraction'){
                             my $seed_extraction_cross_id = $a->{'FieldActivities/seedExtraction/extractionID'} || $a->{'FieldActivities/seedExtraction/extraction/extractionID'};
@@ -559,19 +564,15 @@ sub save_ona_cross_info {
 
                             my $odk_extraction_date = $a->{'FieldActivities/seedExtraction/extraction_date'};
                             my $extraction_date_property = 'Seed Extraction Date';
-                            $musa_cross_info{$extraction_date_property}{$seed_extraction_cross_id} = $odk_extraction_date;
 
                             my $number_of_seeds_extracted = $a->{'FieldActivities/seedExtraction/totalSeedsExtracted'};
                             my $num_seeds_extracted_property = 'Number of Seeds Extracted';
-                            $musa_cross_info{$num_seeds_extracted_property}{$seed_extraction_cross_id} = $number_of_seeds_extracted;
 
-#                            'FieldActivities/seedExtraction/embryorescueseeds',
-#                            'FieldActivities/seedExtraction/earlygerminationseeds',
+                            if (defined $seed_extraction_cross_id){
+                                $musa_cross_info{$extraction_date_property}{$seed_extraction_cross_id} = $odk_extraction_date;
+                                $musa_cross_info{$num_seeds_extracted_property}{$seed_extraction_cross_id} = $number_of_seeds_extracted;
+                            }
                         }
-#                        else {
-#                            print STDERR "UNKNOWN ONA ODK activity in $activity_category\n";
-                            #print STDERR Dumper $a;
-#                        }
                     } elsif ($activity_category eq 'laboratory'){
 #                        print STDERR "CHECK LABOTATORY HASH =".Dumper($activity_hash)."\n";
                         if ($a->{'Laboratory/labActivity'} eq 'embryoRescue'){
@@ -1158,19 +1159,7 @@ sub create_odk_cross_progress_tree {
                                                     if ($user_category eq 'field'){
                                                         my $activity_name = $action_hash->{'FieldActivities/fieldActivity'};
                                                         if ($activity_name eq 'firstPollination'){
-                                                            $barcode_female_plot_name = _get_plot_name_from_barcode_id($action_hash->{'FieldActivities/FirstPollination/femID'}),
-                                                            $barcode_male_plot_name = _get_plot_name_from_barcode_id($action_hash->{'FieldActivities/FirstPollination/malID'}),
-                                                            $barcode_female_plot_id = _get_plot_id_from_barcode_id($action_hash->{'FieldActivities/FirstPollination/femID'}),
-                                                            $barcode_male_plot_id = _get_plot_id_from_barcode_id($action_hash->{'FieldActivities/FirstPollination/malID'}),
-                                                            $db_female_accession_name = $self-> _get_accession_from_plot_id($barcode_female_plot_id),
-                                                            $db_male_accession_name = $self-> _get_accession_from_plot_id($barcode_male_plot_id),
                                                             my $activity_summary = {
-                                                                #femaleAccessionName => $action_hash->{'FieldActivities/FirstPollination/FemaleName'},
-                                                                #maleAccessionName => $action_hash->{'FieldActivities/FirstPollination/selectedMaleName'},
-                                                                femaleAccessionName => $db_female_accession_name,
-                                                                maleAccessionName => $db_male_accession_name,
-                                                                femalePlotName => $barcode_female_plot_name,
-                                                                malePlotName => $barcode_male_plot_name,
                                                                 date => $action_hash->{'FieldActivities/FirstPollination/firstpollination_date'},
                                                             };
                                                             push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
