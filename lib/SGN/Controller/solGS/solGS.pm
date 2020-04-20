@@ -1991,7 +1991,7 @@ sub build_multiple_traits_models {
     my $traits;    
     
     for (my $i = 0; $i <= $#selected_traits; $i++)
-    {  
+    {
 	my $tr   = $c->model('solGS::solGS')->trait_name($selected_traits[$i]);
 	my $abbr = $c->controller('solGS::Utils')->abbreviate_term($tr);
 	$traits .= $abbr;
@@ -2010,7 +2010,17 @@ sub build_multiple_traits_models {
     my $file2 = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);
     
     $c->stash->{trait_file} = $file2;  
-   
+
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    my $cached = $c->controller('solGS::CachedResult')->check_single_trial_training_data($c, $pop_id, $protocol_id);
+    
+    if (!$cached)
+    {
+	$self->get_training_pop_data_query_job_args_file($c, [$pop_id], $protocol_id);
+	$c->stash->{prerequisite_jobs} = $c->stash->{training_pop_data_query_job_args_file};
+    }
+
+    
     $self->get_gs_modeling_jobs_args_file($c);	
     $c->stash->{dependent_jobs} =  $c->stash->{gs_modeling_jobs_args_file};
     $self->run_async($c);
