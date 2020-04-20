@@ -31,6 +31,9 @@ sub get_combined_pops_id :Path('/solgs/get/combined/populations/id') Args() {
     my ($self, $c) = @_;
 
     my @pops_ids = $c->req->param('trials[]');
+
+    @pops_ids = uniq(@pops_ids);
+    
     my $protocol_id = $c->req->param('genotyping_protocol_id');
 
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
