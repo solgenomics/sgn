@@ -384,11 +384,12 @@ sub calls : Chained('brapi') PathPart('calls') Args(0) : ActionClass('REST') { }
 sub calls_GET {
 	my $self = shift;
 	my $c = shift;
+	my ($auth) = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Calls');
-	my $brapi_package_result = $brapi_module->calls(
-		$clean_inputs->{datatype}->[0],
+	my $brapi_package_result = $brapi_module->search( 
+		$clean_inputs
 	);
 	_standard_response_construction($c, $brapi_package_result);
 }
@@ -3747,6 +3748,7 @@ sub callsets_search_retrieve : Chained('brapi') PathPart('search/callsets') Args
     retrieve_results($self, $c, $search_id, 'CallSets');
 }
 
+
 =head2 brapi/v2/variantsets
 
  Usage: To retrieve data for variantsets
@@ -3933,6 +3935,96 @@ sub variantsets_search_retrieve : Chained('brapi') PathPart('search/variantsets'
     my $c = shift;
     my $search_id = shift;
     retrieve_results($self, $c, $search_id, 'VariantSets');
+}
+
+
+=head2 brapi/v2/calls
+
+ Usage: To retrieve data for calls
+ Desc:
+ Return JSON example:
+        {
+            "metadata" : {
+                "pagination": {
+                    "pageSize": 10,
+                    "currentPage": 1,
+                    "totalCount": 10,
+                    "totalPages": 1
+                },
+                "status": []
+            },
+
+              "result": {
+			    "data": [
+			      {
+			        "additionalInfo": {},
+			        "callSetDbId": "16466f55",
+			        "callSetName": "Sample_123_DNA_Run_456",
+			        "genotype": {
+			          "values": [
+			            "AA"
+			          ]
+			        },
+			        "genotype_likelihood": [
+			          1
+			        ],
+			        "phaseSet": "6410afc5",
+			        "variantDbId": "538c8ecf",
+			        "variantName": "Marker A"
+			      }
+			    ],
+			    "expandHomozygotes": true,
+			    "sepPhased": "~",
+			    "sepUnphased": "|",
+			    "unknownString": "-"
+			  }
+			}
+        }
+ Args:
+ Side Effects:
+
+=cut
+
+
+sub calls_single : Chained('brapi') PathPart('calls') CaptureArgs(1) {
+	my $self = shift;
+	my $c = shift;
+	my $id = shift;
+	$c->stash->{callset_id} = $id; # this is genotypeprop_id
+}
+
+sub calls_fetch : Chained('callsets_single') PathPart('') Args(0) : ActionClass('REST') { }
+
+sub calls_fetch_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Calls');
+	my $brapi_package_result = $brapi_module->detail({
+		callset_id => $c->stash->{callset_id},
+		unknown_string => $clean_inputs->{unknownString}->[0],
+		sep_phased => $clean_inputs->{sepPhased}->[0],
+		sep_unphased => $clean_inputs->{sepUnphased}->[0],
+		expand_homozygotes => $clean_inputs->{expandHomozygotes}->[0],
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub calls_search_save  : Chained('brapi') PathPart('search/calls') Args(0) : ActionClass('REST') { }
+
+sub calls_search_save_POST {
+    my $self = shift;
+    my $c = shift;
+    save_results($self,$c,$c->stash->{clean_inputs},'Calls');
+}
+
+sub calls_search_retrieve : Chained('brapi') PathPart('search/calls') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'Calls');
 }
 
 
