@@ -564,19 +564,15 @@ sub save_ona_cross_info {
 
                             my $odk_extraction_date = $a->{'FieldActivities/seedExtraction/extraction_date'};
                             my $extraction_date_property = 'Seed Extraction Date';
-                            $musa_cross_info{$extraction_date_property}{$seed_extraction_cross_id} = $odk_extraction_date;
 
                             my $number_of_seeds_extracted = $a->{'FieldActivities/seedExtraction/totalSeedsExtracted'};
                             my $num_seeds_extracted_property = 'Number of Seeds Extracted';
-                            $musa_cross_info{$num_seeds_extracted_property}{$seed_extraction_cross_id} = $number_of_seeds_extracted;
 
-#                            'FieldActivities/seedExtraction/embryorescueseeds',
-#                            'FieldActivities/seedExtraction/earlygerminationseeds',
+                            if (defined $seed_extraction_cross_id){
+                                $musa_cross_info{$extraction_date_property}{$seed_extraction_cross_id} = $odk_extraction_date;
+                                $musa_cross_info{$num_seeds_extracted_property}{$seed_extraction_cross_id} = $number_of_seeds_extracted;
+                            }
                         }
-#                        else {
-#                            print STDERR "UNKNOWN ONA ODK activity in $activity_category\n";
-                            #print STDERR Dumper $a;
-#                        }
                     } elsif ($activity_category eq 'laboratory'){
 #                        print STDERR "CHECK LABOTATORY HASH =".Dumper($activity_hash)."\n";
                         if ($a->{'Laboratory/labActivity'} eq 'embryoRescue'){
