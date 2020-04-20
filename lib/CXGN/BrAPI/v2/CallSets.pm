@@ -18,90 +18,113 @@ sub search {
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
-    my @callset_id = $inputs->{callSetDbId}? @{$inputs->{callSetDbId}} : ();
-    my @callset_names = $inputs->{callSetName} ? @{$inputs->{callSetName}} : ();
-    my @germplasm_ids = $inputs->{germplasmDbId} ? @{$inputs->{germplasmDbId}} : ();
-    # my @study_ids = $inputs->{study_ids} ? @{$inputs->{study_ids}} : ();
-    my @variant_ids = $inputs->{variantSetDbId} ? @{$inputs->{variantSetDbId}} : ();
-    my @sample_ids = $inputs->{sampleDbId} ? @{$inputs->{sampleDbId}} : ();
+    my $sample_ids = $inputs->{sampleDbId} || ($inputs->{sampleDbIds} || ());
+    my $sample_names = $inputs->{sampleName} || ($inputs->{sampleNames} || ());
+    my $variantset_ids = $inputs->{variantSetDbId} || ($inputs->{variantSetDbIds} || ());
+    my $study_ids = $inputs->{studyDbId} || ($inputs->{studyDbIds} || ());
+    my $callset_ids = $inputs->{callSetDbId} || ($inputs->{callSetDbIds} || ());
+    my $callset_names = $inputs->{callSetName} || ($inputs->{callSetNames} || ());
+    my $germplasm_ids = $inputs->{germplasmDbId} || ($inputs->{germplasmDbIds} || ());
+    my $germplasm_names = $inputs->{germplasmName} || ($inputs->{germplasmNames} || ());
 
-    if (scalar(@variant_ids)>0){
-        push @$status, { 'error' => 'Search parameter variantSetDbId not supported' };
+    my @callset_names;
+    if ($callset_names){
+        push @callset_names, @{$callset_names};      
     }
-    if (scalar(@sample_ids)>0){
-        push @$status, { 'error' => 'Search parameter sampleDbId not supported' };
+    if ($sample_names){
+        push @callset_names, @{$sample_names};      
     }
-    if (scalar(@callset_names)>0){
-        push @$status, { 'error' => 'Search parameter callSetName not supported' };
+    my @trial_ids;
+    if ( $variantset_ids){
+        push @trial_ids, @{$variantset_ids};
+    }
+    if ($study_ids){
+        push @trial_ids, @{$study_ids};
+    }
+    my @accession_ids;
+    if ( $callset_ids){
+        push @accession_ids, @{$callset_ids};
+    }
+    if ($sample_ids){
+        push @accession_ids, @{$sample_ids};
+    }
+
+    if (scalar @trial_ids == 0){
+        my $trial_search = CXGN::Trial::Search->new({
+            bcs_schema=>$self->bcs_schema,
+            trial_design_list=>['genotype_data_project']
+        });
+        my ($data, $total_count) = $trial_search->search(); 
+
+        foreach (@$data){
+            push @trial_ids, $_->{trial_id};
+        }
     }
 
     my $genotypes_search = CXGN::Genotype::Search->new({
-        # trial_list=>\@study_ids,
+        trial_list=>\@trial_ids,
         bcs_schema=>$self->bcs_schema,
         cache_root=>$c->config->{cache_file_path},
-        markerprofile_id_list=>\@callset_id,
-        accession_list=>\@germplasm_ids,
-        # offset=>$page_size*$page,
-        # limit=>$page_size
+        genotypeprop_hash_select=>['DS', 'GT', 'NT'],
+        accession_list=>\@accession_ids,
+ 
     });
-    my $file_handle = $genotypes_search->get_cached_file_search_json($c, 1); #Metadata only returned
-    # my $file_handle1 = $genotypes_search->get_cached_file_search_json($c, 0);
 
-    my @data;
- # print Dumper $file_handle;
+    my $file_handle = $genotypes_search->get_cached_file_search_json($c, 1); #Metadata only returned
+
+    my %geno;
+    my @variantsets;
+    my $passes_search;
     my $start_index = $page*$page_size;
     my $end_index = $page*$page_size + $page_size - 1;
     my $counter = 0;
-
-
-    # open my $fh1, "<&", $file_handle1 or die "Can't open output file: $!";
-    # my $header_line1 = <$fh1>;
-
-    # my $marker_objects = decode_json $header_line1;
-    # my $gt_line = <$fh1>;
-    # my $gt = decode_json $gt_line;
-    # my $genotype = $gt->{selected_genotype_hash};
-
-    # my @variants;
-    # foreach my $m_obj (@$marker_objects) {
-    #     my $m = $m_obj->{name};
-    #     if ($counter >= $start_index && $counter <= $end_index) {
-    #         my $geno = '';
-    #         if (exists($genotype->{$m}->{'NT'}) && defined($genotype->{$m}->{'NT'})){
-    #             $geno = $genotype->{$m}->{'NT'};
-    #         }
-    #         elsif (exists($genotype->{$m}->{'GT'}) && defined($genotype->{$m}->{'GT'})){
-    #             $geno = $genotype->{$m}->{'GT'};
-    #         }
-    #         elsif (exists($genotype->{$m}->{'DS'}) && defined($genotype->{$m}->{'DS'})){
-    #             $geno = $genotype->{$m}->{'DS'};
-    #         }
-    #         push @variants, {$m => $geno};
-    #     }
-    #     $counter++;
-    # }
+    my @data;
 
     open my $fh, "<&", $file_handle or die "Can't open output file: $!";
     my $header_line = <$fh>;
     
     while( <$fh> ) {
+        my $gt = decode_json $_;
+
+        $passes_search = 1;
+
+        if ( $germplasm_ids && !grep { $_ eq $gt->{germplasmDbId}} @{$germplasm_ids} ) { $passes_search = 0;};
+        if ( $germplasm_names && !grep { $_ eq $gt->{germplasmName}} @{$germplasm_names} ) { $passes_search = 0;};
+        if ( scalar(@callset_names)>0 && !grep { $_ eq $gt->{stock_name}} @callset_names ) { $passes_search = 0;};
+
+        if ($passes_search){
+
+            if (! exists($geno{$gt->{stock_id}})){
+                @variantsets = (); 
+            }
+            my $variantset = qq|$gt->{genotypingDataProjectDbId}|;
+            push @variantsets, $variantset if !grep{/^$variantset$/}@variantsets;
+
+            $geno{$gt->{stock_id}} = {
+                    callSetName => $gt->{stock_name},
+                    germplasmDbId => $gt->{germplasmDbId},
+                    variantSetDbIds=>[@variantsets],
+            };
+        }
+    }
+
+    foreach my $genoid (keys %geno) {
         if ($counter >= $start_index && $counter <= $end_index) {
-            my $gt = decode_json $_;
             push @data, {
-                callSetDbId => qq|$gt->{markerProfileDbId}|,
-                callSetName => undef,
-                created => undef,
-                sampleDbId => qq|$gt->{stock_id}|,
-                sampleName => qq|$gt->{stock_name}|,
-                studyDbId => qq|$gt->{genotypingDataProjectDbId}|,
-                updated => undef,
-                variantSetIds => undef #\@variants
+                additionalInfo=>{germplasmDbId=>qq|$geno{$genoid}{germplasmDbId}|},
+                callSetDbId=>qq|$genoid|,
+                callSetName=>qq|$geno{$genoid}{callSetName}|,
+                created=>undef,
+                sampleDbId=>qq|$genoid|,
+                studyDbId=>$geno{$genoid}{variantSetDbIds},
+                updated=>undef,
+                variantSetDbIds=>$geno{$genoid}{variantSetDbIds},
             };
         }
         $counter++;
     }
 
-
+    if (scalar @data < 1) { @data = ""};
     my %result = (data => \@data);
     my @data_files;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
@@ -128,46 +151,55 @@ sub detail {
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$self->bcs_schema,
         cache_root=>$c->config->{cache_file_path},
-        markerprofile_id_list=>[$callset_id],
+        accession_list=>[$callset_id],
         genotypeprop_hash_select=>['DS', 'GT', 'NT'],
         protocolprop_top_key_select=>[],
-        protocolprop_marker_hash_select=>[],
+        protocolprop_marker_hash_select=>[]
     });
-    my $file_handle = $genotypes_search->get_cached_file_search_json($c, 0);
+    my $file_handle = $genotypes_search->get_cached_file_search_json($c, 1);
 
-    my $start_index = $page*$page_size;
-    my $end_index = $page*$page_size + $page_size - 1;
     my $counter = 0;
 
     open my $fh, "<&", $file_handle or die "Can't open output file: $!";
     my $header_line = <$fh>;
-    my $marker_objects = decode_json $header_line;
-    my $gt_line = <$fh>;
-    my $gt = decode_json $gt_line;
-    my $genotype = $gt->{selected_genotype_hash};
-
     my @data;
-    foreach my $m_obj (@$marker_objects) {
-        my $m = $m_obj->{name};
-        if ($counter >= $start_index && $counter <= $end_index) {
-            push @data, $m;
+    my %geno;
+    my @variantsets;
+
+    while( <$fh> ) {
+        my $gt = decode_json $_;     
+
+        if (! exists($geno{$gt->{stock_id}})){
+            @variantsets = (); 
         }
+        my $variantset = qq|$gt->{genotypingDataProjectDbId}|;
+        push @variantsets, $variantset if !grep{/^$variantset$/}@variantsets;
+
+        $geno{$gt->{stock_id}} = {
+                callSetName => $gt->{stock_name},
+                germplasmDbId => $gt->{germplasmDbId},
+                variantSetDbIds=>\@variantsets,
+        };
+    }
+
+    foreach my $genoid (keys %geno) {
+        push @data, {
+            additionalInfo=>{germplasmDbId=>qq|$geno{$genoid}{germplasmDbId}|},
+            callSetDbId=>qq|$genoid|,
+            callSetName=>qq|$geno{$genoid}{callSetName}|,
+            created=>undef,
+            sampleDbId=>qq|$genoid|,
+            studyDbId=>$geno{$genoid}{variantSetDbIds},
+            updated=>undef,
+            variantSetDbIds=>$geno{$genoid}{variantSetDbIds},
+        };
         $counter++;
     }
 
-    my %result = (
-        additionalInfo=>{analysisMethod=>$gt->{analysisMethod},germplasmDbId=>qq|$gt->{germplasmDbId}|,uniqueDisplayName=>$gt->{genotypeUniquename}},
-        callSetDbId=>qq|$gt->{markerProfileDbId}|,
-        callSetName=>undef,
-        created=>undef,
-        sampleDbId=>qq|$gt->{stock_id}|,
-        studyDbId=>qq|$gt->{genotypingDataProjectDbId}|,
-        updated=>undef,
-        variantSetIds=> \@data
-    );
-    my $pagination;
+    if (scalar @data < 1) { @data = {}; };
     my @data_files;
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Markerprofiles detail result constructed');
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success(@data, $pagination, \@data_files, $status, 'CallSets detail result constructed');
 }
 
 
@@ -179,7 +211,6 @@ sub calls {
     my $page = $self->page;
     my $status = $self->status;
     my @callset_id = $inputs->{callset_id};
-    my @marker_ids = $inputs->{marker_ids} ? @{$inputs->{marker_ids}} : ();
     my $sep_phased = $inputs->{sep_phased};
     my $sep_unphased = $inputs->{sep_unphased};
     my $unknown_string = $inputs->{unknown_string};
@@ -202,7 +233,7 @@ sub calls {
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$self->bcs_schema,
         cache_root=>$c->config->{cache_file_path},
-        markerprofile_id_list=>\@callset_id,
+        accession_list=>[@callset_id],
         genotypeprop_hash_select=>['DS', 'GT', 'NT'],
         protocolprop_top_key_select=>[],
         protocolprop_marker_hash_select=>[],
@@ -241,26 +272,26 @@ sub calls {
                     additionalInfo=>undef,
                     variantName=>qq|$m|,
                     variantDbId=>qq|$m|,
-                    callSetDbId=>qq|$genotypeprop_id|,
-                    callSetName=>qq|$genotypeprop_id|,
+                    callSetDbId=>qq|$gt->{stock_id}|,
+                    callSetName=>qq|$gt->{stock_name}|,
                     genotype=>{values=>$geno},
                     genotype_likelihood=>undef,
-                    phaseSet=>undef,                    
-                    expandHomozygotes=>undef, 
-                    sepPhased=>undef, 
-                    sepUnphased=>undef, 
-                    unknownString=>undef
+                    phaseSet=>undef,
                 };
             }
             $counter++;
         }
     }
-    #print STDERR Dumper \@scores;
+
 
     my @scores_seen;
     if (!$data_format || $data_format eq 'json' ){
 
-        %result = (data=>\@scores);
+        %result = ( data=>\@scores,
+            expandHomozygotes=>undef, 
+            sepPhased=>undef, 
+            sepUnphased=>undef, 
+            unknownString=>undef);
 
     } elsif ($data_format eq 'tsv' || $data_format eq 'csv' || $data_format eq 'xls') {
 

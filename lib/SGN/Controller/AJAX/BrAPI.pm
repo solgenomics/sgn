@@ -3658,12 +3658,6 @@ sub save_observation_results {
 
 sub callsets : Chained('brapi') PathPart('callsets') Args(0) : ActionClass('REST') { }
 
-sub callsets_POST {
-	my $self = shift;
-	my $c = shift;
-	#my $auth = _authenticate_user($c);
-}
-
 sub callsets_GET {
 	my $self = shift;
 	my $c = shift;
@@ -3691,12 +3685,6 @@ sub callsets_single : Chained('brapi') PathPart('callsets') CaptureArgs(1) {
 
 sub callsets_fetch : Chained('callsets_single') PathPart('') Args(0) : ActionClass('REST') { }
 
-sub callsets_fetch_POST {
-	my $self = shift;
-	my $c = shift;
-	#my $auth = _authenticate_user($c);
-}
-
 sub callsets_fetch_GET {
 	my $self = shift;
 	my $c = shift;
@@ -3715,12 +3703,6 @@ sub callsets_fetch_GET {
 }
 
 sub callsets_call_detail : Chained('callsets_single') PathPart('calls') Args(0) : ActionClass('REST') { }
-
-sub callsets_call_detail_POST {
-	my $self = shift;
-	my $c = shift;
-	#my $auth = _authenticate_user($c);
-}
 
 sub callsets_call_detail_GET {
 	my $self = shift;
@@ -3748,6 +3730,21 @@ sub callsets_call_filter_detail_GET {
 		callset_id => $c->stash->{callset_id},
 	});
 	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub callsets_search_save  : Chained('brapi') PathPart('search/callsets') Args(0) : ActionClass('REST') { }
+
+sub callsets_search_save_POST {
+    my $self = shift;
+    my $c = shift;
+    save_results($self,$c,$c->stash->{clean_inputs},'CallSets');
+}
+
+sub callsets_search_retrieve : Chained('brapi') PathPart('search/callsets') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'CallSets');
 }
 
 =head2 brapi/v2/variantsets
@@ -3812,12 +3809,6 @@ sub callsets_call_filter_detail_GET {
 
 sub variantsets : Chained('brapi') PathPart('variantsets') Args(0) : ActionClass('REST') { }
 
-sub variantsets_POST {
-	my $self = shift;
-	my $c = shift;
-	#my $auth = _authenticate_user($c);
-}
-
 sub variantsets_GET {
 	my $self = shift;
 	my $c = shift;
@@ -3846,11 +3837,6 @@ sub variantsets_single : Chained('brapi') PathPart('variantsets') CaptureArgs(1)
 
 sub variantsets_fetch : Chained('variantsets_single') PathPart('') Args(0) : ActionClass('REST') { }
 
-sub variantsets_fetch_POST {
-	my $self = shift;
-	my $c = shift;
-	#my $auth = _authenticate_user($c);
-}
 
 sub variantsets_fetch_GET {
 	my $self = shift;
@@ -3866,12 +3852,6 @@ sub variantsets_fetch_GET {
 }
 
 sub variantsets_callset_detail : Chained('variantsets_single') PathPart('callsets') Args(0) : ActionClass('REST') { }
-
-sub variantsets_callset_detail_POST {
-	my $self = shift;
-	my $c = shift;
-	#my $auth = _authenticate_user($c);
-}
 
 sub variantsets_callset_detail_GET {
 	my $self = shift;
@@ -3890,12 +3870,6 @@ sub variantsets_callset_detail_GET {
 
 sub variantsets_calls_detail : Chained('variantsets_single') PathPart('calls') Args(0) : ActionClass('REST') { }
 
-sub variantsets_calls_detail_POST {
-	my $self = shift;
-	my $c = shift;
-	#my $auth = _authenticate_user($c);
-}
-
 sub variantsets_calls_detail_GET {
 	my $self = shift;
 	my $c = shift;
@@ -3912,6 +3886,55 @@ sub variantsets_calls_detail_GET {
 	});
 	_standard_response_construction($c, $brapi_package_result);
 }
+
+sub variantsets_variants_detail : Chained('variantsets_single') PathPart('variants') Args(0) : ActionClass('REST') { }
+
+sub variantsets_variants_detail_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('VariantSets');
+	my $brapi_package_result = $brapi_module->variants({
+		variantSetDbId => $c->stash->{variantSetDbId},
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub variantsets_extract : Chained('brapi') PathPart('variantsets/extract') Args(0) : ActionClass('REST') { }
+
+sub variantsets_extract_POST {
+    my $self = shift;
+    my $c = shift;
+    # my $force_authenticate = 1;
+	# my ($auth_success, $user_id, $user_type, $user_pref, $expired) = _authenticate_user($c, $force_authenticate);
+
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('VariantSets');
+    my $brapi_package_result = $brapi_module->extract($clean_inputs);
+	my $status = $brapi_package_result->{status};
+	my $http_status_code = _get_http_status_code($status);
+
+	_standard_response_construction($c, $brapi_package_result, $http_status_code);
+}
+
+sub variantsets_search_save  : Chained('brapi') PathPart('search/variantsets') Args(0) : ActionClass('REST') { }
+
+sub variantsets_search_save_POST {
+    my $self = shift;
+    my $c = shift;
+    save_results($self,$c,$c->stash->{clean_inputs},'VariantSets');
+}
+
+sub variantsets_search_retrieve : Chained('brapi') PathPart('search/variantsets') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'VariantSets');
+}
+
 
 #functions
 sub save_results {
