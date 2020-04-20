@@ -1163,19 +1163,7 @@ sub create_odk_cross_progress_tree {
                                                     if ($user_category eq 'field'){
                                                         my $activity_name = $action_hash->{'FieldActivities/fieldActivity'};
                                                         if ($activity_name eq 'firstPollination'){
-                                                            $barcode_female_plot_name = _get_plot_name_from_barcode_id($action_hash->{'FieldActivities/FirstPollination/femID'}),
-                                                            $barcode_male_plot_name = _get_plot_name_from_barcode_id($action_hash->{'FieldActivities/FirstPollination/malID'}),
-                                                            $barcode_female_plot_id = _get_plot_id_from_barcode_id($action_hash->{'FieldActivities/FirstPollination/femID'}),
-                                                            $barcode_male_plot_id = _get_plot_id_from_barcode_id($action_hash->{'FieldActivities/FirstPollination/malID'}),
-                                                            $db_female_accession_name = $self-> _get_accession_from_plot_id($barcode_female_plot_id),
-                                                            $db_male_accession_name = $self-> _get_accession_from_plot_id($barcode_male_plot_id),
                                                             my $activity_summary = {
-                                                                #femaleAccessionName => $action_hash->{'FieldActivities/FirstPollination/FemaleName'},
-                                                                #maleAccessionName => $action_hash->{'FieldActivities/FirstPollination/selectedMaleName'},
-                                                                femaleAccessionName => $db_female_accession_name,
-                                                                maleAccessionName => $db_male_accession_name,
-                                                                femalePlotName => $barcode_female_plot_name,
-                                                                malePlotName => $barcode_male_plot_name,
                                                                 date => $action_hash->{'FieldActivities/FirstPollination/firstpollination_date'},
                                                             };
                                                             push @{$summary_info{$top_level}->{$cross_name}->{$activity_name}}, $activity_summary;
