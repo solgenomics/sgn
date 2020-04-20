@@ -546,12 +546,17 @@ sub save_ona_cross_info {
                                     ($harvest_date) = ($odk_harvest_date =~ /^([^T]+)/);
 #                                    print STDERR "ODK HARVEST DATE =".Dumper($odk_harvest_date)."\n";
 #                                    print STDERR "HARVEST DATE =".Dumper($harvest_date)."\n";
+                                    if (defined $harvest_cross_id){
+                                        $musa_cross_info{$harvest_date_property}{$harvest_cross_id} = $harvest_date;
+                                     }
                                 }
                             } else {
                                 $harvest_cross_id = $a->{'FieldActivities/harvesting/harvest/harvestID'};
                                 $harvest_date = $a->{'FieldActivities/harvesting/harvesting_date'};
+                                if (defined $harvest_cross_id){
+                                    $musa_cross_info{$harvest_date_property}{$harvest_cross_id} = $harvest_date;
+                                }
                             }
-                            $musa_cross_info{$harvest_date_property}{$harvest_cross_id} = $harvest_date;
 
                         } elsif ($a->{'FieldActivities/fieldActivity'} eq 'seedExtraction'){
                             my $seed_extraction_cross_id = $a->{'FieldActivities/seedExtraction/extractionID'} || $a->{'FieldActivities/seedExtraction/extraction/extractionID'};
