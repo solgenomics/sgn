@@ -15,6 +15,7 @@ my $geno = CXGN::Genotype::GWAS->new({
     download_format=>$download_format, #either results_tsv or manhattan_qq_plots
     accession_id_list=>\@accession_list,
     trait_id_list=>\@trait_id_list,
+    traits_are_repeated_measurements=>$traits_are_repeated_measurements,
     protocol_id=>$protocol_id,
     get_grm_for_parental_accessions=>1,
     cache_root=>$cache_root,
@@ -148,6 +149,12 @@ has 'trait_id_list' => (
     is => 'rw'
 );
 
+has 'traits_are_repeated_measurements' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 0
+);
+
 # If the accessions in the plots you are interested have not been genotyped (as in hybrids), can get this boolean to 1 and give a list of plot_id_list and you will get back a GRM built from the parent accessions for those plots (for the plots whose parents were genotyped)
 has 'get_grm_for_parental_accessions' => (
     isa => 'Bool',
@@ -197,6 +204,7 @@ sub get_gwas {
     my $gwas_tempfile = $self->gwas_temp_file();
     my $pheno_tempfile = $self->pheno_temp_file();
     my $download_format = $self->download_format();
+    my $traits_are_repeated_measurements = $self->traits_are_repeated_measurements();
 
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
@@ -227,9 +235,16 @@ sub get_gwas {
     foreach my $d (@$data) {
         $unique_observation_units{$d->{observationunit_stock_id}} = $d;
         foreach my $o (@{$d->{observations}}) {
-            $unique_trait_ids{$o->{trait_id}}++;
+            my $trait_id_use;
+            if ($traits_are_repeated_measurements) {
+                $trait_id_use = '0001';
+            }
+            else {
+                $trait_id_use = $o->{trait_id};
+            }
+            $unique_trait_ids{$trait_id_use}++;
             if ($o->{value} || $o->{value} == 0) {
-                $phenotype_data_hash{$d->{observationunit_stock_id}}->{$o->{trait_id}} = $o->{value};
+                $phenotype_data_hash{$d->{observationunit_stock_id}}->{$trait_id_use} = $o->{value};
                 $filtered_accession_ids{$d->{germplasm_stock_id}}++;
             }
         }
@@ -499,7 +514,7 @@ sub grm_cache_key {
     my $marker_filter = $self->marker_filter();
     my $download_format = $self->download_format();
     my $individuals_filter = $self->individuals_filter();
-    my $key = md5_hex($accessions.$traits.$protocol.$genotypeprophash.$protocolprophash.$protocolpropmarkerhash.$self->get_grm_for_parental_accessions().$self->return_only_first_genotypeprop_for_stock()."_MAF$maf"."_mfilter$marker_filter"."_ifilter$individuals_filter"."format$download_format"."_$datatype");
+    my $key = md5_hex($accessions.$traits.$protocol.$genotypeprophash.$protocolprophash.$protocolpropmarkerhash.$self->get_grm_for_parental_accessions().$self->return_only_first_genotypeprop_for_stock()."_MAF$maf"."_mfilter$marker_filter"."_ifilter$individuals_filter"."repeated".$self->traits_are_repeated_measurements()."format$download_format"."_$datatype");
     return $key;
 }
 

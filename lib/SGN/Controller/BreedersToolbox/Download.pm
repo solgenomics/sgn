@@ -861,6 +861,7 @@ sub download_gwas_action : Path('/breeders/download_gwas_action') {
     my $download_format = $c->req->param("download_format") ? $c->req->param("download_format") : 'results_tsv';
     my $marker_filter = $c->req->param("marker_filter") ? $c->req->param("marker_filter") + 0 : 0.60;
     my $individuals_filter = $c->req->param("individuals_filter") ? $c->req->param("individuals_filter") + 0 : 0.80;
+    my $traits_are_repeated_measurements = $c->req->param('traits_are_repeated_measurements') eq 'yes' ? 1 : 0;
     my $return_only_first_genotypeprop_for_stock = defined($c->req->param('return_only_first_genotypeprop_for_stock')) ? $c->req->param('return_only_first_genotypeprop_for_stock') : 1;
     my $dl_token = $c->req->param("gbs_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
@@ -905,6 +906,7 @@ sub download_gwas_action : Path('/breeders/download_gwas_action') {
         download_format=>$download_format,
         accession_id_list=>\@accession_ids,
         trait_id_list=>\@trait_ids,
+        traits_are_repeated_measurements=>$traits_are_repeated_measurements,
         protocol_id=>$protocol_id,
         get_grm_for_parental_accessions=>$compute_from_parents,
         minor_allele_frequency=>$minor_allele_frequency,

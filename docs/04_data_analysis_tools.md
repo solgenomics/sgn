@@ -306,9 +306,15 @@ The procedure is:
 
 <img src='{{"assets/images/selection_proportion_clustering.png" | relative_url }}' width="522" />
 
+4.9 Search Wizard Genomic Relationship Matrix (GRM) Download
+--------------
+
+<img src='{{"assets/images/search_wizard_genotype_analyses_intro.png" | relative_url }}' width="522" />
 
 
-
+4.10 Search Wizard Genome Wide Association Study (GWAS)
+--------------
    
+<img src='{{"assets/images/selection_proportion_clustering.png" | relative_url }}' width="522" />
 
 
