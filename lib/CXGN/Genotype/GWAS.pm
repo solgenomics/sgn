@@ -463,20 +463,21 @@ sub get_gwas {
     my $marker_filter = $self->marker_filter();
     my $individuals_filter = $self->individuals_filter();
 
-    my $cmd = 'R -e "library(genoDataFilter); library(rrBLUP); library(data.table);
+    my $cmd = 'R -e "library(genoDataFilter); library(rrBLUP); library(data.table); library(scales);
     pheno <- fread(\''.$pheno_tempfile.'\', header=TRUE, sep=\',\');
     pheno\$field_trial_id <- as.factor(pheno\$field_trial_id);
     pheno\$replicate <- as.factor(pheno\$replicate);
     geno_mat_marker_first <- fread(\''.$transpose_tempfile.'\', header=TRUE, sep=\'\t\') #has sample names as column names, first 3 columns are marker info;
     geno_mat_sample_first <- data.frame(fread(\''.$grm_tempfile.'\', header=FALSE, sep=\'\t\', skip=3)) #has sample names in first column, no defined column names;
-    row.names(geno_mat_sample_first) <- geno_mat_sample_first\$V1; #has sample names as row names, no defined column names but they are markers
+    sample_names <- geno_mat_sample_first\$V1; #no defined column names but they are markers
     geno_mat_sample_first <- geno_mat_sample_first[,-1]; #remove first column so that row names are sample names and all other columns are markers
+    geno_mat_sample_first <- as.data.frame(rescale(as.matrix(geno_mat_sample_first), to = c(-1,1) ) ); #rrBLUP expected -1 to 1
     colnames(geno_mat_sample_first) <- geno_mat_marker_first\$ID; #has sample names as row names, column names are marker names
+    row.names(geno_mat_sample_first) <- sample_names;
     mat_clean_sample_first <- filterGenoData(gData=geno_mat_sample_first, maf='.$maf.', markerFilter='.$marker_filter.', indFilter='.$individuals_filter.');
-    if (\'rn\' %in% colnames(mat_clean_sample_first)) { row.names(mat_clean_sample_first) <- mat_clean_sample_first\$rn; mat_clean_sample_first <- mat_clean_sample_first[,-1]; }
     remaining_samples <- row.names(mat_clean_sample_first);
     remaining_markers <- colnames(mat_clean_sample_first);
-    imputation <- A.mat(mat_clean_sample_first-1, impute.method=\'EM\', n.core='.$number_system_cores.', return.imputed=TRUE);
+    imputation <- A.mat(mat_clean_sample_first, impute.method=\'EM\', n.core='.$number_system_cores.', return.imputed=TRUE);
     K.mat <- imputation\$A;
     geno_imputed <- imputation\$imputed;
     geno_gwas <- cbind(geno_mat_marker_first[geno_mat_marker_first\$ID %in% remaining_markers, c(1:3)], t(geno_imputed));
