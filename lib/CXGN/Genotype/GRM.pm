@@ -400,7 +400,11 @@ sub get_grm {
     my $marker_filter = $self->marker_filter();
     my $individuals_filter = $self->individuals_filter();
 
-    my $cmd = 'R -e "library(genoDataFilter); library(rrBLUP); library(data.table); mat <- fread(\''.$grm_tempfile.'\', header=FALSE, sep=\'\t\'); mat_clean <- filterGenoData(gData=mat, maf='.$maf.', markerFilter='.$marker_filter.', indFilter='.$individuals_filter.'); A_matrix <- A.mat(mat_clean-1, impute.method=\'EM\', n.core='.$number_system_cores.', return.imputed=FALSE); write.table(A_matrix, file=\''.$grm_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\')"';
+    my $cmd = 'R -e "library(genoDataFilter); library(rrBLUP); library(data.table);
+    mat <- fread(\''.$grm_tempfile.'\', header=FALSE, sep=\'\t\');
+    mat_clean <- filterGenoData(gData=mat, maf='.$maf.', markerFilter='.$marker_filter.', indFilter='.$individuals_filter.');
+    A_matrix <- A.mat(mat_clean-1, impute.method=\'EM\', n.core='.$number_system_cores.', return.imputed=FALSE);
+    write.table(A_matrix, file=\''.$grm_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\')"';
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
