@@ -2466,7 +2466,11 @@ sub maps_list_GET {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('GenomeMaps');
 	my $brapi_package_result = $brapi_module->list({
-        config => $c->config
+        config => $c->config,
+        mapDbId => $clean_inputs->{mapDbId},
+        commonCropName => $clean_inputs->{commonCropName},
+        scientificName => $clean_inputs->{scientificName},
+        type => $clean_inputs->{type},
     });
 
 	_standard_response_construction($c, $brapi_package_result);
@@ -2616,6 +2620,64 @@ sub maps_marker_linkagegroup_detail_GET {
 		max => $clean_inputs->{max}->[0],
 	});
 	_standard_response_construction($c, $brapi_package_result);
+}
+
+=head2 brapi/v2/maps/map_id/linkagegroups
+=cut
+
+sub maps_marker_detail_lg : Chained('maps_single') PathPart('linkagegroups') Args(0) : ActionClass('REST') { }
+
+sub maps_marker_detail_lg_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('GenomeMaps');
+	my $brapi_package_result = $brapi_module->linkagegroups({
+		map_id => $c->stash->{map_id},
+		linkage_group_ids => $clean_inputs->{linkageGroupId},
+		min => $clean_inputs->{min}->[0],
+		max => $clean_inputs->{max}->[0],
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+=head2 brapi/v2/markerpositions
+=cut
+
+sub maps_markerpositions : Chained('brapi') PathPart('markerpositions') Args(0) : ActionClass('REST') { }
+
+sub maps_markerpositions_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('MarkerPositions');
+	my $brapi_package_result = $brapi_module->search({
+		mapDbId => $clean_inputs->{mapDbId},
+		variantDbId => $clean_inputs->{variantDbId},
+		linkageGroupName => $clean_inputs->{linkageGroupName},
+		maxPosition => $clean_inputs->{maxPosition},
+		minPosition => $clean_inputs->{minPosition},
+	}, $c );
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub maps_markerpositions_save  : Chained('brapi') PathPart('search/markerpositions') Args(0) : ActionClass('REST') { }
+
+sub maps_markerpositions_save_POST {
+    my $self = shift;
+    my $c = shift;
+    save_results($self,$c,$c->stash->{clean_inputs},'MarkerPositions');
+}
+
+sub maps_markerpositions_retrieve : Chained('brapi') PathPart('search/markerpositions') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'MarkerPositions');
 }
 
 =head2 brapi/<version>/locations
