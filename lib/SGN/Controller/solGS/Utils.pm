@@ -94,7 +94,7 @@ sub abbreviate_term {
     $term =~ s/\// /g;
     $term =~ s/-/_/g;
     $term =~ s/\%/percent/g;
-    $term =~ s/\((\w+)\)//g;
+    $term =~ s/\((\w+\s*\w*)\)/_$2 $1/g;
   
     my @words = split(/\s/, $term);
    
