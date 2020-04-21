@@ -475,6 +475,7 @@ sub get_gwas {
     colnames(geno_mat_sample_first) <- geno_mat_marker_first\$ID; #has sample names as row names, column names are marker names
     row.names(geno_mat_sample_first) <- sample_names;
     mat_clean_sample_first <- filterGenoData(gData=geno_mat_sample_first, maf='.$maf.', markerFilter='.$marker_filter.', indFilter='.$individuals_filter.');
+    if (\'rn\' %in% colnames(mat_clean_sample_first)) { row.names(mat_clean_sample_first) <- mat_clean_sample_first\$rn; mat_clean_sample_first <- mat_clean_sample_first[,-1]; }
     remaining_samples <- row.names(mat_clean_sample_first);
     remaining_markers <- colnames(mat_clean_sample_first);
     imputation <- A.mat(mat_clean_sample_first, impute.method=\'EM\', n.core='.$number_system_cores.', return.imputed=TRUE);
