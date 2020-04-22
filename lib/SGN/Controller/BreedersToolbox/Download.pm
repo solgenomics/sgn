@@ -819,7 +819,13 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
         $protocol_id = $schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$default_genotyping_protocol})->nd_protocol_id();
     }
 
-    my $filename = 'BreedBaseGeneticRelationshipMatrixDownload.tsv';
+    my $filename;
+    if ($download_format eq 'heatmap') {
+        $filename = 'BreedBaseGeneticRelationshipMatrixDownload.pdf';
+    }
+    else {
+        $filename = 'BreedBaseGeneticRelationshipMatrixDownload.tsv';
+    }
 
     my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
 

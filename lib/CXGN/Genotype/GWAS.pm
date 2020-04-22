@@ -482,6 +482,7 @@ sub get_gwas {
     if ($download_format eq 'manhattan_qq_plots') {
         $cmd .= 'pdf( \''.$gwas_tempfile.'\', width = 11, height = 8.5 );
         for (i in 4:length(gwas_results)) { alpha_bonferroni=-log10(0.05/length(gwas_results[,i])); chromosome_ids <- as.factor(gwas_results\$CHROM); marker_indicator <- match(unique(gwas_results\$CHROM), gwas_results\$CHROM); N <- length(gwas_results[,1]); plot(seq(1:N), gwas_results[,i], col=chromosome_ids, ylab=\'-log10(pvalue)\', main=paste(\'Manhattan Plot \',colnames(gwas_results)[i]), xaxt=\'n\', xlab=\'Position\', ylim=c(0,14)); axis(1,at=marker_indicator,labels=gwas_results\$CHROM[marker_indicator], cex.axis=0.8, las=2); abline(h=alpha_bonferroni,col=\'red\',lwd=2); expected.logvalues <- sort( -log10( c(1:N) * (1/N) ) ); observed.logvalues <- sort(gwas_results[,i]); plot(expected.logvalues, observed.logvalues, main=paste(\'QQ Plot \',colnames(gwas_results)[i]), xlab=\'Expected -log p-values \', ylab=\'Observed -log p-values\', col.main=\'black\', col=\'coral1\', pch=20); abline(0,1,lwd=3,col=\'black\'); }
+        dev.off();
         "';
     }
     elsif ($download_format eq 'results_tsv') {
