@@ -6,12 +6,8 @@ library("dplyr")
 library("gridExtra")
 library("agricolae")
 
-
-
 ##### Get data #####
 args = commandArgs(trailingOnly = TRUE)
-
-
 
 pheno <- read.table(args[1], sep = "\t", header = TRUE)
 study_trait <- args[2]
@@ -102,9 +98,18 @@ plot(model, first=0,second=1, number=TRUE, xlab = study_trait)
 dev.off()
 
 #Preparing Germplasm name to be printed
-png(figure2_file_name, height= 300)
-plot(model, type=2, number=TRUE, xlab = study_trait)
-dev.off()
+tam <- nrow(model$analysis)
+if (tam >2){
+  png(figure2_file_name, height= 300)
+  plot(model, type=2, number=TRUE, xlab = study_trait)
+  dev.off()
+}else{
+  png(figure2_file_name, height=5, width=5)
+  y <- tableGrob(message2)
+  grid.arrange(y)
+  dev.off()
+}
+
 
 png(figure3_file_name, height=(21*length(acc)))
 q<-tableGrob(subGen)

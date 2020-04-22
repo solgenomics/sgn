@@ -2,7 +2,7 @@
 
 =head1 NAME
  
-population/multiple_traits_output.mas - displays multiple traits GS analysis output and links to traits' GS detailed output pages
+/solgs/population/multiple_traits_output.mas - displays multiple traits GS analysis output and links to traits' GS detailed output pages
 
 =AUTHOR
 
@@ -27,6 +27,7 @@ $prediction_pop_name => undef
 $prediction_pop_analyzed_traits => undef
 $prediction_pop_analyzed_traits_ids => undef
 $acronym
+$genotyping_protocol_id
 
 </%args>
 
@@ -55,9 +56,6 @@ $selection_traits_ids = join(',', @$prediction_pop_analyzed_traits_ids);
      model_data => $model_data
   &>
   
-  <input type="hidden" id="training_traits_ids" value= "<% $training_traits_ids %>" />
-  <input type="hidden" id="selection_traits_ids" value="<% $selection_traits_ids %>" />
- 
 <& selection_populations.mas,
    download_prediction            => $download_prediction,
    analyzed_traits                => $analyzed_traits,
@@ -107,3 +105,6 @@ $selection_traits_ids = join(',', @$prediction_pop_analyzed_traits_ids);
 &>
 
   
+ <input type="hidden" id="training_traits_ids" value= "<% $training_traits_ids %>" />
+ <input type="hidden" id="selection_traits_ids" value="<% $selection_traits_ids %>" />
+ <input type="hidden" id="genotyping_protocol_id" value="<% $genotyping_protocol_id %>" />

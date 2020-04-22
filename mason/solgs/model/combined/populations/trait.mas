@@ -22,8 +22,10 @@ $list_of_prediction_pops =>''
 $prediction_pop_name => ''
 $analyzed_traits =>''
 $owner =>''
-$protocol
+$protocol_url => ''
+$genotyping_protocol_id => ''
 $model_parameters
+$model_link
 
 </%args>
 
@@ -50,15 +52,15 @@ $model_parameters
   title       => "Training population summary",
 &>
 
-% $project_name = "<a href=\"/solgs/populations/combined/$combo_pops_id\">$project_name</a>";
 
 <& summary.mas,
-    project_name => $project_name,
+    project_name => $model_link,
     project_desc => $project_desc,
     stocks_no    => $stocks_no,
     markers_no   => $markers_no,
     owner        => $owner,
-    protocol     => $protocol,
+    protocol_url => $protocol_url,
+ 
 &>
 
 </&>
@@ -108,3 +110,10 @@ $model_parameters
    prediction_pop_name     => $prediction_pop_name,
    project_name            => $project_name,
 &>
+
+
+<input type="hidden" id="model_id" value="<% $combo_pops_id %>" /> 
+<input type="hidden" id="population_id" value="<% $combo_pops_id %>" /> 
+<input type="hidden" id="combo_pops_id" value="<% $combo_pops_id %>" /> 
+<input type="hidden" id="trait_id" value="<% $trait_id %>" />
+<input type="hidden" id="genotyping_protocol_id" value="<% $genotyping_protocol_id %>" />

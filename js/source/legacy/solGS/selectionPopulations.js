@@ -18,6 +18,8 @@ function checkSelectionPopulations () {
     var popId =  getPopulationId();
     
     var trainingTraitsIds = jQuery('#training_traits_ids').val();
+    var protocolId = jQuery('#genotyping_protocol_id').val();
+    
     if (trainingTraitsIds) {
 	trainingTraitsIds = trainingTraitsIds.split(',');
     }
@@ -26,10 +28,14 @@ function checkSelectionPopulations () {
     if (traitId && !trainingTraitsIds) {
 	trainingTraitsIds = [traitId];
     }
+
+    var args = {'training_traits_ids': trainingTraitsIds,
+		'genotyping_protocol_id': protocolId,
+		'training_pop_id': popId}
     
     jQuery.ajax({
         type: 'POST',
-	data: {'training_traits_ids': trainingTraitsIds},
+	data: args,
         dataType: 'json',
         url: '/solgs/check/selection/populations/' + popId,
         success: function(response) {
@@ -77,7 +83,8 @@ function checkSelectionPopulationRelevance (popName) {
     var dataSetType;
 
     var traitId = jQuery('#trait_id').val();
-   
+    var protocolId = jQuery('#genotyping_protocol_id').val();
+    
     if (combinedPopsId) {
 	dataSetType = 'combined populations';
     }
@@ -91,6 +98,7 @@ function checkSelectionPopulationRelevance (popName) {
 	'training_pop_id'    : trainingPopId,
 	'trait_id'           : traitId,
 	'data_set_type'      : dataSetType,
+	'genotyping_protocol_id': protocolId,
     };
 
     jQuery.ajax({
@@ -159,11 +167,17 @@ function searchSelectionPopulations () {
     if (combinedPopsId) {
 	dataSetType = 'combined populations';
     }
+    var protocolId = jQuery('#genotyping_protocol_id').val();
+
+    var args = {'data_set_type': dataSetType,
+	       	'genotyping_protocol_id': protocolId,
+		'training_pop_id': popId
+	       };
     
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
-	data: {'data_set_type': dataSetType},
+	data: args ,
         url: '/solgs/search/selection/populations/' + popId,
         success: function(res) {
             

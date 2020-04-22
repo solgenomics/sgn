@@ -146,8 +146,8 @@ sub search {
             join => [{'cvterm_relationship_subjects' => 'type'}, {'dbxref' => 'db'} ],
             where => \%where_join,
             order_by => { '-asc' => $order_by },
-            '+select' => ['db.name', 'dbxref.accession'],
-            '+as' => ['db_name', 'db_accession'],
+            '+select' => ['db.name', 'dbxref.accession', 'type.name'],
+            '+as' => ['db_name', 'db_accession', 'cvterm_relationship_name'],
             distinct => 1
         }
     );
@@ -169,6 +169,7 @@ sub search {
             trait_definition => $t->definition,
             db_name => $t->get_column('db_name'),
             accession=> $t->get_column('db_accession'),
+            cvterm_relationship_name=> $t->get_column('cvterm_relationship_name')
         };
     }
 

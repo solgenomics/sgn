@@ -23,7 +23,7 @@ $stocks_no
 $markers_no
 $traits_no
 $trait_name => ''
-$protocol
+$protocol_url
 $list_reference => ''
 $owner => ''
 $combined_populations => ''
@@ -46,7 +46,7 @@ if ($model_link) {
 }
 
 my @data_c1 = (['Name', $project_name],  ['Description', $project_desc], ['Owner', $owner]);
-my @data_c2 = (['No. of lines', $stocks_no],  ['No. of markers', $markers_no], ['Genotyping version', $protocol]);
+my @data_c2 = (['No. of lines', $stocks_no],  ['No. of markers', $markers_no], ['Genotyping version', $protocol_url]);
 
 push @data_c2,  ['No. of traits', $traits_no] if $traits_no > 1;
 push @data_c2,  ['Training model', $model_link] if $model_link;

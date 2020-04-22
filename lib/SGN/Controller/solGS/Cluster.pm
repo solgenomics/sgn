@@ -40,7 +40,7 @@ sub cluster_analysis :Path('/cluster/analysis/') Args() {
 	$c->stash->{data_set_type} = 'combined_populations';	
     }
     
-    $c->stash->{template} = '/solgs/cluster/index.mas';
+    $c->stash->{template} = '/solgs/cluster/analysis.mas';
 
 }
 
@@ -51,6 +51,7 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
     my $training_pop_id  = $c->req->param('training_pop_id');
     my $selection_pop_id = $c->req->param('selection_pop_id');
     my $combo_pops_id    = $c->req->param('combo_pops_id');
+    my $protocol_id    = $c->req->param('genotyping_protocol_id');
     my @traits_ids  = $c->req->param('training_traits_ids[]');
     
     my $list_id     = $c->req->param('list_id');
@@ -71,12 +72,13 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
     my $data_structure =  $c->req->param('data_structure');
     my $k_number       =  $c->req->param('k_number'); 
     my $cluster_type   = $c->req->param('cluster_type');
-    my $selection_prop   = $c->req->param('selection_proportion');
-    my $sindex_name      = $c->req->param('sindex_name');
+    my $selection_prop = $c->req->param('selection_proportion');
+    my $sindex_name    = $c->req->param('sindex_name');
     $cluster_type      = 'k-means' if !$cluster_type;
     my $data_type      =  $c->req->param('data_type');
     $data_type         = 'Genotype' if !$data_type;
 
+    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);  
     $c->stash->{training_pop_id}  = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
     $c->stash->{data_structure}   = $data_structure;
@@ -94,7 +96,9 @@ sub cluster_check_result :Path('/cluster/check/result/') Args() {
     $c->stash->{training_traits_ids} = \@traits_ids;
     
     $c->stash->{pop_id} = $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
-    $c->controller('solGS::Files')->create_file_id($c);
+    
+    my $file_id = $c->controller('solGS::Files')->create_file_id($c);
+    $c->stash->{file_id} = $file_id;
     
     $self->check_cluster_output_files($c);
     my $cluster_plot_exists = $c->stash->{"${cluster_type}_plot_exists"};
@@ -129,7 +133,7 @@ sub check_cluster_output_files {
 	$cluster_result_file = $c->stash->{"${cluster_type}_result_file"};
 	
 	$self->kcluster_plot_kmeans_file($c);
-	$cluster_plot_file = $c->stash->{"${cluster_type}_plot_kmeans_file"};
+	$cluster_plot_file = $c->stash->{"${cluster_type}_plot_file"};
     }
     else
     {
@@ -163,8 +167,8 @@ sub cluster_result :Path('/cluster/result/') Args() {
     my $cluster_type     = $c->req->param('cluster_type');
     my @traits_ids       = $c->req->param('training_traits_ids[]'); 
     my $list_id          = $c->req->param('list_id');
+    my $protocol_id      = $c->req->param('genotyping_protocol_id');
     
-
     my $list_type;   
     my $list_name;
    
@@ -180,7 +184,8 @@ sub cluster_result :Path('/cluster/result/') Args() {
     $cluster_type = 'k-means' if !$cluster_type;
     $data_type    = 'genotype' if !$data_type;
     $data_type    = lc($data_type);
-  
+    
+    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id); 
     $c->stash->{training_pop_id}  = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
     $c->stash->{cluster_pop_id}   = $cluster_pop_id;
@@ -201,10 +206,9 @@ sub cluster_result :Path('/cluster/result/') Args() {
     $c->stash->{training_traits_ids} = \@traits_ids;
    
     my $pop_id = $selection_pop_id || $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
-
-    $c->controller('solGS::Files')->create_file_id($c);
-    my $file_id = $c->stash->{file_id};
-  
+    
+    my $file_id = $c->controller('solGS::Files')->create_file_id($c);
+    $c->stash->{file_id} = $file_id; 
     $c->stash->{pop_id} = $cluster_pop_id || $pop_id;
    
     $self->check_cluster_output_files($c);
@@ -282,7 +286,12 @@ sub _prepare_response {
 
     my $output_link = $c->controller('solGS::Files')->format_cluster_output_url($c, 'cluster/analysis');
 
-    my $result_name = $c->stash->{dataset_name}  || $c->stash->{list_name} || $c->stash->{cluster_pop_name} ;
+    my $result_name = $c->stash->{dataset_name}  || $c->stash->{list_name} || $c->stash->{cluster_pop_name};
+
+    my $cluster_type = $c->stash->{cluster_type};
+    my $file_id = $c->stash->{file_id};
+    my $plot_name = "${cluster_type}-plot-${file_id}";
+    
     my $ret->{kcluster_plot} = $cluster_plot_file;
     $ret->{clusters} = $clusters_file;
     $ret->{cluster_report} = $report;
@@ -299,6 +308,7 @@ sub _prepare_response {
     $ret->{k_number}      = $c->stash->{k_number};
     $ret->{selection_proportion} = $c->stash->{selection_proportion};
     $ret->{training_traits_ids} =  $c->stash->{training_traits_ids};
+    $ret->{plot_name} = $plot_name;
 
     return $ret;
     
@@ -476,8 +486,8 @@ sub kcluster_result_file {
     my $cluster_type = $c->stash->{cluster_type};
     $c->stash->{cache_dir} = $c->stash->{cluster_cache_dir};
 
-    my $cache_data = {key       => "${cluster_type}_result_${file_id}",
-                      file      => "${cluster_type}_result_${file_id}.txt",
+    my $cache_data = {key       => "${cluster_type}-result-${file_id}",
+                      file      => "${cluster_type}-result-${file_id}.txt",
                       stash_key => "${cluster_type}_result_file"
     };
 
@@ -493,9 +503,9 @@ sub kcluster_plot_kmeans_file {
     my $cluster_type = $c->stash->{cluster_type};
     $c->stash->{cache_dir} = $c->stash->{cluster_cache_dir};
 
-     my $cache_data = {key      => "${cluster_type}_plot_kmeans_${file_id}",
-                      file      => "${cluster_type}_plot_kmeans_${file_id}.png",
-                      stash_key => "${cluster_type}_plot_kmeans_file"
+     my $cache_data = {key      => "${cluster_type}-plot-${file_id}",
+                      file      => "${cluster_type}-plot-${file_id}.png",
+                      stash_key => "${cluster_type}_plot_file"
     };
 
     $c->controller('solGS::Files')->cache_file($c, $cache_data);
@@ -573,7 +583,7 @@ sub prep_cluster_download_files {
   my $cluster_type = $c->stash->{cluster_type};   
 
   $self->kcluster_plot_kmeans_file($c);   
-  my $plot_file = $c->stash->{"${cluster_type}_plot_kmeans_file"};
+  my $plot_file = $c->stash->{"${cluster_type}_plot_file"};
   $c->controller('solGS::Files')->copy_file($plot_file, $base_tmp_dir);
   $plot_file = catfile($tmp_dir, basename($plot_file));
   
@@ -610,10 +620,10 @@ sub cluster_output_files {
 	$result_file = $c->stash->{"${cluster_type}_result_file"};
 
 	$self->kcluster_plot_kmeans_file($c);
-	$plot_kmeans_file = $c->stash->{"${cluster_type}_plot_kmeans_file"};
+	$plot_kmeans_file = $c->stash->{"${cluster_type}_plot_file"};
 
-	$self->kcluster_plot_pam_file($c);
-	$plot_pam_file = $c->stash->{"${cluster_type}_plot_pam_file"};
+	#$self->kcluster_plot_pam_file($c);
+	#$plot_pam_file = $c->stash->{"${cluster_type}_plot_pam_file"};
     }
     else
     {
@@ -652,6 +662,7 @@ sub cluster_output_files {
 
 }
 
+
 sub cluster_geno_input_files {
     my ($self, $c) = @_;
     
@@ -659,7 +670,12 @@ sub cluster_geno_input_files {
     my $files;
   
     if ($data_type =~ /genotype/i)
-    {	
+    {
+	my $pop_id = $c->stash->{cluster_pop_id};
+	my $protocol_id = $c->stash->{genotyping_protocol_id};
+	
+	$c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
+	
 	$files = $c->stash->{genotype_files_list} 
 	|| $c->stash->{genotype_file} 
 	|| $c->stash->{genotype_file_name};
@@ -744,7 +760,7 @@ sub cluster_input_files {
     {
 	$self->cluster_gebvs_input_files($c);
 	$files = $c->stash->{cluster_gebvs_input_files};
-    }
+    }   
     
     if ($c->stash->{sindex_name})
     {
@@ -816,7 +832,8 @@ sub create_cluster_genotype_data_query_jobs {
     my ($self, $c) = @_;
 
     my $data_str = $c->stash->{data_structure};
-       
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+  
     if ($data_str =~ /list/)
     {
 	$c->controller('solGS::List')->create_list_geno_data_query_jobs($c);
@@ -830,7 +847,7 @@ sub create_cluster_genotype_data_query_jobs {
     else
     {
 	my $trials = $c->stash->{pops_ids_list} || [$c->stash->{cluster_pop_id}];
-	$c->controller('solGS::solGS')->get_cluster_genotype_query_job_args($c, $trials);
+	$c->controller('solGS::solGS')->get_cluster_genotype_query_job_args($c, $trials, $protocol_id);
 	$c->stash->{cluster_geno_query_jobs} = $c->stash->{cluster_genotype_query_job_args};
     }
     
@@ -841,7 +858,8 @@ sub cluster_query_jobs {
     my ($self, $c) = @_;
 
     my $data_type = $c->stash->{data_type};
-
+    my  $sindex_name = $c->stash->{sindex_name};
+   
     my $jobs = [];
     
     if ($data_type =~ /phenotype/i) 
@@ -849,7 +867,7 @@ sub cluster_query_jobs {
 	$self->create_cluster_phenotype_data_query_jobs($c);
 	$jobs = $c->stash->{cluster_pheno_query_jobs};
     }
-    elsif ($data_type =~ /genotype/i)
+    elsif ($data_type =~ /genotype/i && !$sindex_name)
     {
 	$self->create_cluster_genotype_data_query_jobs($c);
 	$jobs = $c->stash->{cluster_geno_query_jobs};
