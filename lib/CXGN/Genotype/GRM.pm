@@ -453,7 +453,7 @@ sub download_grm {
     my $basepath_config = shift;
     my $download_format = $self->download_format();
 
-    my $key = $self->grm_cache_key("download_grm_".$download_format);
+    my $key = $self->grm_cache_key("download_grm_fixed0".$download_format);
     $self->_cache_key($key);
     $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
 
