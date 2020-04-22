@@ -358,7 +358,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
             $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[1], $plot_text,  'large',  20 ]);
          }
          elsif ($found[$i]->[5] eq 'cross'){
-             $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[1], $found[$i]->[4],  'large',  20  ]);
+             $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[1], $found[$i]->[7],  'large',  20  ]);
          }
          else {
       	  $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [  $found[$i]->[0], $found[$i]->[1], 'large',  20  ]);
@@ -389,10 +389,10 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
             $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[2]."\nplot:".$found[$i]->[6]."\n".$found[$i]->[3]."\n".$found[$i]->[4]."\n".$found[$i]->[8]."\n".$added_text, $fieldbook_barcode ]);
         }
         elsif ($found[$i]->[5] eq 'cross'){
-#            if (defined $found[$i]->[7]){
-                $found[$i]->[7] = "cross combination: ".$found[$i]->[7];
-#            }
-            $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[4]."\n".$added_text."\n".$found[$i]->[7], $fieldbook_barcode]);
+            if (defined $found[$i]->[7]){
+                $found[$i]->[7] = "Combination: ".$found[$i]->[7];
+            }
+            $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[7], $fieldbook_barcode]);
         }
         else {
          $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [  $found[$i]->[0], $found[$i]->[1], $added_text, $fieldbook_barcode ]);
@@ -527,6 +527,9 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
                           $label_text_4 = "pedigree: ".$parents;
                       }
                   }
+                  elsif ($found[$i]->[5] eq 'cross'){
+                    $label_text_5 = $found[$i]->[7];
+                  }
                   else{
                       $label_text_4 = '';
                   }
@@ -602,6 +605,9 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
                       $label_text_4 = "pedigree: ".$parents;
                   }
               }
+              elsif ($found[$i]->[5] eq 'cross'){
+                  $label_text_5 = $found[$i]->[7];
+              }
               else{
                   $label_text_4 = '';
               }
@@ -660,6 +666,9 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
                       $label_text_4 = $parents;
                   }
               }
+              elsif ($found[$i]->[5] eq 'cross'){
+                  $label_text_5 = $found[$i]->[7];
+              }
               else{
                   $label_text_4 = '';
               }
@@ -717,6 +726,9 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
                   }else{
                       $label_text_4 = $parents;
                   }
+              }
+              elsif ($found[$i]->[5] eq 'cross'){
+                  $label_text_5 = $found[$i]->[7];
               }
               else{
                   $label_text_4 = '';
@@ -945,6 +957,9 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
                   }else{
                       $label_text_4 = "pedigree: ".$parents;
                   }
+              }
+              elsif ($found[$i]->[5] eq 'cross'){
+                  $label_text_5 = $found[$i]->[7];
               }
               else{
                   $label_text_4 = '';
