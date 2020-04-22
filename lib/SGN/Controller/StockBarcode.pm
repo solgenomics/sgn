@@ -207,8 +207,8 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
                 $h->execute($plot_of_plant_id);
 
                 my %stockprop_hash;
-                 while (($stockprop_name, $value) = $h->fetchrow_array) {
-                   $stockprop_hash{$stock_id}->{$stockprop_name} = $value;
+                while (($stockprop_name, $value) = $h->fetchrow_array) {
+                    $stockprop_hash{$stock_id}->{$stockprop_name} = $value;
 
                 }
                 $row = $stockprop_hash{$stock_id}->{'replicate'};
@@ -227,61 +227,60 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
             }
         }
 
-      if ($plot_cvterm_id == $type_id){
-          my $dbh = $c->dbc->dbh();
-          my $h = $dbh->prepare("select name, value from cvterm inner join stockprop on cvterm.cvterm_id = stockprop.type_id where stockprop.stock_id=?;");
+        if ($plot_cvterm_id == $type_id){
+            my $dbh = $c->dbc->dbh();
+            my $h = $dbh->prepare("select name, value from cvterm inner join stockprop on cvterm.cvterm_id = stockprop.type_id where stockprop.stock_id=?;");
 
-          $h->execute($stock_id);
+            $h->execute($stock_id);
 
-          my %stockprop_hash;
-           while (($stockprop_name, $value) = $h->fetchrow_array) {
-             $stockprop_hash{$stock_id}->{$stockprop_name} = $value;
+            my %stockprop_hash;
+            while (($stockprop_name, $value) = $h->fetchrow_array) {
+                $stockprop_hash{$stock_id}->{$stockprop_name} = $value;
+            }
+            $row = $stockprop_hash{$stock_id}->{'replicate'};
+            $fdata = "rep:".$stockprop_hash{$stock_id}->{'replicate'}.' '."blk:".$stockprop_hash{$stock_id}->{'block'}.' '."plot:".$stockprop_hash{$stock_id}->{'plot number'};
+            $fdata_block = "blk:".$stockprop_hash{$stock_id}->{'block'};
+            $fdata_rep = "rep:".$stockprop_hash{$stock_id}->{'replicate'};
+            $fdata_plot = "plot:".$stockprop_hash{$stock_id}->{'plot number'};
+            $fdata_rep_block = "block number:".$stockprop_hash{$stock_id}->{'block'}.', '."rep number:".$stockprop_hash{$stock_id}->{'replicate'};
+            $fdata_plot_20A4 = "plot number:".$stockprop_hash{$stock_id}->{'plot number'};
+            $musa_row_col_number = "row number:".$stockprop_hash{$stock_id}->{'row_number'}.', '."column number:".$stockprop_hash{$stock_id}->{'col_number'};
+            $row_col_number = "rw/cl:".$stockprop_hash{$stock_id}->{'row_number'}."/".$stockprop_hash{$stock_id}->{'col_number'};
+            my $h_acc = $dbh->prepare("select stock.uniquename, stock.stock_id FROM stock join stock_relationship on (stock.stock_id = stock_relationship.object_id) where stock_relationship.subject_id =? and stock.type_id=?;");
 
-          }
-          $row = $stockprop_hash{$stock_id}->{'replicate'};
-          $fdata = "rep:".$stockprop_hash{$stock_id}->{'replicate'}.' '."blk:".$stockprop_hash{$stock_id}->{'block'}.' '."plot:".$stockprop_hash{$stock_id}->{'plot number'};
-          $fdata_block = "blk:".$stockprop_hash{$stock_id}->{'block'};
-          $fdata_rep = "rep:".$stockprop_hash{$stock_id}->{'replicate'};
-          $fdata_plot = "plot:".$stockprop_hash{$stock_id}->{'plot number'};
-          $fdata_rep_block = "block number:".$stockprop_hash{$stock_id}->{'block'}.', '."rep number:".$stockprop_hash{$stock_id}->{'replicate'};
-          $fdata_plot_20A4 = "plot number:".$stockprop_hash{$stock_id}->{'plot number'};
-          $musa_row_col_number = "row number:".$stockprop_hash{$stock_id}->{'row_number'}.', '."column number:".$stockprop_hash{$stock_id}->{'col_number'};
-          $row_col_number = "rw/cl:".$stockprop_hash{$stock_id}->{'row_number'}."/".$stockprop_hash{$stock_id}->{'col_number'};
-          my $h_acc = $dbh->prepare("select stock.uniquename, stock.stock_id FROM stock join stock_relationship on (stock.stock_id = stock_relationship.object_id) where stock_relationship.subject_id =? and stock.type_id=?;");
+            $h_acc->execute($stock_id,$accession_cvterm_id);
+            ($accession_name, $accession_id) = $h_acc->fetchrow_array;
+            print STDERR "Accession name for this plot is $accession_name and id is $accession_id\n";
+        }
+        my $synonym_string;
+        if ($plot_cvterm_id == $type_id) {
+            $tract_type_id = 'plot';
+            $parents = CXGN::Stock->new ( schema => $schema, stock_id => $accession_id )->get_pedigree_string('Parents');
+        }
+        elsif ($accession_cvterm_id == $type_id){
+            $tract_type_id = 'accession';
+            $parents = CXGN::Stock->new ( schema => $schema, stock_id => $stock_id )->get_pedigree_string('Parents');
+            my $stock_synonyms = CXGN::Stock::Accession->new({ schema => $schema, stock_id => $stock_id })->synonyms();
+            $synonym_string = join ',', @$stock_synonyms;
+        }
+        elsif ($plant_cvterm_id == $type_id) {
+            $tract_type_id = 'plant';
+            $parents = CXGN::Stock->new ( schema => $schema, stock_id => $accession_id )->get_pedigree_string('Parents');
+        }
+        elsif ($cross_cvterm_id == $type_id){
+            my $dbh = $c->dbc->dbh();
+            $tract_type_id = 'cross';
+            my $h = $dbh->prepare("select value from stockprop where stockprop.stock_id = ? and stockprop.type_id = ? ;");
+            $h->execute($stock_id, $cross_combination_cvterm_id);
+            my @result = $h->fetchrow_array;
+            $synonym_string = $result[0];
+        }
 
-          $h_acc->execute($stock_id,$accession_cvterm_id);
-          ($accession_name, $accession_id) = $h_acc->fetchrow_array;
-          print STDERR "Accession name for this plot is $accession_name and id is $accession_id\n";
-      }
-      my $synonym_string;
-      if ($plot_cvterm_id == $type_id) {
-          $tract_type_id = 'plot';
-          $parents = CXGN::Stock->new ( schema => $schema, stock_id => $accession_id )->get_pedigree_string('Parents');
-      }
-      elsif ($accession_cvterm_id == $type_id){
-          $tract_type_id = 'accession';
-          $parents = CXGN::Stock->new ( schema => $schema, stock_id => $stock_id )->get_pedigree_string('Parents');
-          my $stock_synonyms = CXGN::Stock::Accession->new({ schema => $schema, stock_id => $stock_id })->synonyms();
-          $synonym_string = join ',', @$stock_synonyms;
-      }
-      elsif ($plant_cvterm_id == $type_id) {
-          $tract_type_id = 'plant';
-          $parents = CXGN::Stock->new ( schema => $schema, stock_id => $accession_id )->get_pedigree_string('Parents');
-      }
-      elsif ($cross_cvterm_id == $type_id){
-          my $dbh = $c->dbc->dbh();
-          $tract_type_id = 'cross';
-          my $h = $dbh->prepare("select value from stockprop where stockprop.stock_id = ? and stockprop.type_id = ? ;");
-          $h->execute($stock_id, $cross_combination_cvterm_id);
-          my @result = $h->fetchrow_array;
-          $synonym_string = $result[0];
-      }
-
-      if ($cass_print_format eq 'crossing'){
-          push @found, [ $stock_id, $name, $accession_name, $fdata, $parents, $tract_type_id, $plot_name, $synonym_string, $musa_row_col_number, $fdata_block, $fdata_rep, $fdata_plot, $row_col_number, $fdata_plot_20A4, $fdata_rep_block];
-      }else{
-          push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata, $parents, $tract_type_id, $plot_name, $synonym_string, $musa_row_col_number, $fdata_block, $fdata_rep, $fdata_plot, $row_col_number, $fdata_plot_20A4, $fdata_rep_block];
-      }
+        if ($cass_print_format eq 'crossing'){
+            push @found, [ $stock_id, $name, $accession_name, $fdata, $parents, $tract_type_id, $plot_name, $synonym_string, $musa_row_col_number, $fdata_block, $fdata_rep, $fdata_plot, $row_col_number, $fdata_plot_20A4, $fdata_rep_block];
+        }else{
+            push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata, $parents, $tract_type_id, $plot_name, $synonym_string, $musa_row_col_number, $fdata_block, $fdata_rep, $fdata_plot, $row_col_number, $fdata_plot_20A4, $fdata_rep_block];
+        }
     }
 
     my $dir = $c->tempfiles_subdir('pdfs');
@@ -344,65 +343,65 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     	# generate barcode
     	#
       #####
-      my $tempfile;
-      my $plot_text = "accession: ".$found[$i]->[2]." ".$found[$i]->[3];
-      if ($barcode_type eq "1D"){
-         if ($found[$i]->[5] eq 'plot'){
+        my $tempfile;
+        my $plot_text = "accession: ".$found[$i]->[2]." ".$found[$i]->[3];
+        if ($barcode_type eq "1D"){
+            if ($found[$i]->[5] eq 'plot'){
             #$tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[0], $found[$i]->[2]." ".$found[$i]->[3],  'large',  20  ]);
-            $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[1], $plot_text,  'large',  20 ]);
-         }
-         elsif ($found[$i]->[5] eq 'accession'){
-             $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[1], $found[$i]->[4],  'large',  20  ]);
-         }
-         elsif ($found[$i]->[5] eq 'plant'){
-            $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[1], $plot_text,  'large',  20 ]);
-         }
-         elsif ($found[$i]->[5] eq 'cross'){
-             $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[1], $found[$i]->[7],  'large',  20  ]);
-         }
-         else {
-      	  $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [  $found[$i]->[0], $found[$i]->[1], 'large',  20  ]);
-         }
-      }
-      elsif ($barcode_type eq "2D") {
-
-        if ($found[$i]->[5] eq 'plot'){
-          $parents = $found[$i]->[4];
-          if ($cass_print_format eq 'crossing'){
-              $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], " Accession Name: ".$found[$i]->[2]."\n".$found[$i]->[3]."\n".$found[$i]->[4]."\n".$found[$i]->[8]."\n".$added_text, $fieldbook_barcode, $cass_print_format ]);
-          }
-          else{
-              $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[2]."\n".$found[$i]->[3]."\n".$found[$i]->[4]."\n".$found[$i]->[8]."\n".$added_text, $fieldbook_barcode ]);
-          }
-        }
-        elsif ($found[$i]->[5] eq 'accession'){
-            if ($found[$i]->[7] eq ''){
-                $found[$i]->[7] = "No synonym(s) available";
-            }else{
-                $found[$i]->[7] = "synonym(s): ".$found[$i]->[7];
+                $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[1], $plot_text,  'large',  20 ]);
             }
-            $parents = $found[$i]->[4];
-            $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[4]."\n".$added_text."\n".$found[$i]->[7], $fieldbook_barcode]);
-        }
-        elsif ($found[$i]->[5] eq 'plant'){
-            $parents = $found[$i]->[4];
-            $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[2]."\nplot:".$found[$i]->[6]."\n".$found[$i]->[3]."\n".$found[$i]->[4]."\n".$found[$i]->[8]."\n".$added_text, $fieldbook_barcode ]);
-        }
-        elsif ($found[$i]->[5] eq 'cross'){
-            if (defined $found[$i]->[7]){
-                $found[$i]->[7] = "Combination: ".$found[$i]->[7];
+            elsif ($found[$i]->[5] eq 'accession'){
+                $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[1], $found[$i]->[4],  'large',  20  ]);
             }
-            $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[7], $fieldbook_barcode]);
+            elsif ($found[$i]->[5] eq 'plant'){
+                $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[1], $plot_text,  'large',  20 ]);
+            }
+            elsif ($found[$i]->[5] eq 'cross'){
+                $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[1], $found[$i]->[7],  'large',  20  ]);
+            }
+            else {
+                $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [  $found[$i]->[0], $found[$i]->[1], 'large',  20  ]);
+            }
         }
-        else {
-         $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [  $found[$i]->[0], $found[$i]->[1], $added_text, $fieldbook_barcode ]);
+        elsif ($barcode_type eq "2D") {
+
+            if ($found[$i]->[5] eq 'plot'){
+                $parents = $found[$i]->[4];
+                if ($cass_print_format eq 'crossing'){
+                    $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], " Accession Name: ".$found[$i]->[2]."\n".$found[$i]->[3]."\n".$found[$i]->[4]."\n".$found[$i]->[8]."\n".$added_text, $fieldbook_barcode, $cass_print_format ]);
+                }
+                else {
+                    $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[2]."\n".$found[$i]->[3]."\n".$found[$i]->[4]."\n".$found[$i]->[8]."\n".$added_text, $fieldbook_barcode ]);
+                }
+            }
+            elsif ($found[$i]->[5] eq 'accession'){
+                if ($found[$i]->[7] eq ''){
+                    $found[$i]->[7] = "No synonym(s) available";
+                }else{
+                    $found[$i]->[7] = "synonym(s): ".$found[$i]->[7];
+                }
+                $parents = $found[$i]->[4];
+                $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[4]."\n".$added_text."\n".$found[$i]->[7], $fieldbook_barcode]);
+            }
+            elsif ($found[$i]->[5] eq 'plant'){
+                $parents = $found[$i]->[4];
+                $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[2]."\nplot:".$found[$i]->[6]."\n".$found[$i]->[3]."\n".$found[$i]->[4]."\n".$found[$i]->[8]."\n".$added_text, $fieldbook_barcode ]);
+            }
+            elsif ($found[$i]->[5] eq 'cross'){
+                if (defined $found[$i]->[7]){
+                    $found[$i]->[7] = "Combination: ".$found[$i]->[7];
+                }
+                $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[7], $fieldbook_barcode]);
+            }
+            else {
+                $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [  $found[$i]->[0], $found[$i]->[1], $added_text, $fieldbook_barcode ]);
+            }
+
         }
 
-      }
-
-      print STDERR "$tempfile\n";
-      my $image = $pdf->image($tempfile);
-      #print STDERR "IMAGE: ".Data::Dumper::Dumper($image);
+        print STDERR "$tempfile\n";
+        my $image = $pdf->image($tempfile);
+        #print STDERR "IMAGE: ".Data::Dumper::Dumper($image);
 
     	# note: pdf coord system zero is lower left corner
     	#
