@@ -323,4 +323,6 @@ The GWAS will filter the data by the input MAF and missing data filters provided
 
 <img src='{{"assets/images/search_wizard_genotype_analyses_gwas.png" | relative_url }}' width="522" />
 
-<img src='{{"assets/images/search_wizard_genotype_analyses_gwas_manhattan_qq_plots.png" | relative_url }}' width="522" />
+<img src='{{"assets/images/search_wizard_genotype_analyses_manhattan_plot.png" | relative_url }}' width="522" />
+
+<img src='{{"assets/images/search_wizard_genotype_analyses_qq_plot.png" | relative_url }}' width="522" />
