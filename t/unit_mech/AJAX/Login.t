@@ -16,7 +16,7 @@ my $f = SGN::Test::Fixture->new();
 my $mech = Test::WWW::Mechanize->new;
 my $response;
 
-$mech->get_ok('http://localhost:3010/ajax/user/login?username=janedoe&password=secretpw');
+$mech->get_ok('http://localhost:3010/ajax/user/login?login_username=janedoe&login_password=secretpw');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is($response->{message}, 'Login successful');
@@ -57,7 +57,7 @@ $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is($response->{message}, 'The password was successfully updated.');
 
-$mech->get_ok('http://localhost:3010/ajax/user/login?username=testusername&password=testpasschange');
+$mech->get_ok('http://localhost:3010/ajax/user/login?login_username=testusername&login_password=testpasschange');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is($response->{message}, 'Login successful');
