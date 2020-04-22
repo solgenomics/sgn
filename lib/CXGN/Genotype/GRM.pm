@@ -54,6 +54,7 @@ use Cache::File;
 use Digest::MD5 qw | md5_hex |;
 use File::Slurp qw | write_file |;
 use POSIX;
+use CXGN::Tools::Run;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -169,6 +170,11 @@ has 'return_only_first_genotypeprop_for_stock' => (
 
 sub get_grm {
     my $self = shift;
+    my $shared_cluster_dir_config = shift;
+    my $backend_config = shift;
+    my $cluster_host_config = shift;
+    my $web_cluster_queue_config = shift;
+    my $basepath_config = shift;
     my $schema = $self->bcs_schema();
     my $people_schema = $self->people_schema();
     my $cache_root_dir = $self->cache_root();
@@ -370,48 +376,46 @@ sub get_grm {
     # print STDERR Dumper \@individuals_stock_ids;
     # print STDERR Dumper \@dosage_matrix;
 
-    #my $grm_n = scalar(@individuals_stock_ids);
-    #my $rmatrix = R::YapRI::Data::Matrix->new({
-    #    name => 'geno_matrix1',
-    #    coln => scalar(@all_marker_names),
-    #    rown => $grm_n,
-    #    rownames => \@individuals_stock_ids,
-    #    data => \@dosage_matrix
-    #});
-
-    #my $rbase = R::YapRI::Base->new();
-    #my $r_block = $rbase->create_block('r_block');
-    #$rmatrix->send_rbase($rbase, 'r_block');
-    # $r_block->add_command('geno_data = data.frame(geno_matrix1)');
-
-    #$r_block->add_command('geno_matrix1 <- scale(geno_matrix1, scale = FALSE)');
-    #$r_block->add_command('alfreq <- attributes(geno_matrix1)[["scaled:center"]]/2');
-    #$r_block->add_command('grm <- tcrossprod(geno_matrix1)/((2*crossprod(alfreq, 1-alfreq))[[1]])');
-
-    #$r_block->add_command('library(rrBLUP)');
-    #$r_block->add_command('geno_matrix1 <- geno_matrix1-1'); #Code as -1,0,1
-    #$r_block->add_command('A_matrix <- A.mat(geno_matrix1, min.MAF=0.05, max.missing=NULL, impute.method="mean", tol=0.02, n.core='.$number_system_cores.', shrink=FALSE, return.imputed=FALSE)');
-    #$r_block->add_command('grm <- A_matrix');
-
-    #$r_block->run_block();
-    #my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','grm');
-
     my $maf = $self->minor_allele_frequency();
     my $marker_filter = $self->marker_filter();
     my $individuals_filter = $self->individuals_filter();
 
-    my $cmd = 'R -e "library(genoDataFilter); library(rrBLUP); library(data.table);
+    my $cmd = 'R -e "library(genoDataFilter); library(rrBLUP); library(data.table); library(scales);
     mat <- fread(\''.$grm_tempfile.'\', header=FALSE, sep=\'\t\');
+    mat <- as.data.frame(rescale(as.matrix(mat), to = c(-1,1) ));
     mat_clean <- filterGenoData(gData=mat, maf='.$maf.', markerFilter='.$marker_filter.', indFilter='.$individuals_filter.');
-    A_matrix <- A.mat(mat_clean-1, impute.method=\'EM\', n.core='.$number_system_cores.', return.imputed=FALSE);
+    A_matrix <- A.mat(mat_clean, impute.method=\'EM\', n.core='.$number_system_cores.', return.imputed=FALSE);
     write.table(A_matrix, file=\''.$grm_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\')"';
     print STDERR Dumper $cmd;
-    my $status = system($cmd);
+
+    # my $tmp_output_dir = $shared_cluster_dir_config."/tmp_genotype_download_grm";
+    # mkdir $tmp_output_dir if ! -d $tmp_output_dir;
+    # 
+    # # Do the GRM on the cluster
+    # my $grm_cmd = CXGN::Tools::Run->new(
+    #     {
+    #         backend => $backend_config,
+    #         submit_host => $cluster_host_config,
+    #         temp_base => $tmp_output_dir,
+    #         queue => $web_cluster_queue_config,
+    #         do_cleanup => 0,
+    #         out_file => $grm_tempfile,
+    #         # don't block and wait if the cluster looks full
+    #         max_cluster_jobs => 1_000_000_000,
+    #     }
+    # );
+    # 
+    # # Do the transposition job on the cluster
+    # $grm_cmd->run_cluster($cmd);
+    # $grm_cmd->is_cluster(1);
+    # $grm_cmd->wait;
+    system($cmd);
 
     my @grm;
     open(my $fh, "<", $grm_tempfile) or die "Can't open < $grm_tempfile: $!";
     while (my $row = <$fh>) {
         chomp($row);
+        print STDERR Dumper $row;
         my @vals = split "\t", $row;
         push @grm, \@vals;
     }
@@ -442,6 +446,11 @@ sub grm_cache_key {
 sub download_grm {
     my $self = shift;
     my $return_type = shift || 'filehandle';
+    my $shared_cluster_dir_config = shift;
+    my $backend_config = shift;
+    my $cluster_host_config = shift;
+    my $web_cluster_queue_config = shift;
+    my $basepath_config = shift;
     my $download_format = $self->download_format();
 
     my $key = $self->grm_cache_key("download_grm_".$download_format);
@@ -458,7 +467,7 @@ sub download_grm {
         }
     }
     else {
-        my ($result_matrix, $stock_ids, $all_accession_stock_ids) = $self->get_grm();
+        my ($result_matrix, $stock_ids, $all_accession_stock_ids) = $self->get_grm($shared_cluster_dir_config, $backend_config, $cluster_host_config, $web_cluster_queue_config, $basepath_config);
 
         my $data = '';
         if ($download_format eq 'matrix') {

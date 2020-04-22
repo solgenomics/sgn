@@ -823,8 +823,10 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
 
     my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
 
-    my $dir = $c->tempfiles_subdir('/grm_download_wizard');
-    my $grm_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'grm_download_wizard/imageXXXX');
+    my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
+    my $tmp_grm_dir = $shared_cluster_dir_config."/tmp_genotype_download_grm";
+    mkdir $tmp_grm_dir if ! -d $tmp_grm_dir;
+    my ($grm_tempfile_fh, $grm_tempfile) = tempfile("wizard_download_grm_XXXXX", DIR=> $tmp_grm_dir);
 
     my $geno = CXGN::Genotype::GRM->new({
         bcs_schema=>$schema,
@@ -839,7 +841,14 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
         marker_filter=>$marker_filter,
         individuals_filter=>$individuals_filter
     });
-    my $file_handle = $geno->download_grm();
+    my $file_handle = $geno->download_grm(
+        'filehandle',
+        $shared_cluster_dir_config,
+        $c->config->{backend},
+        $c->config->{cluster_host},
+        $c->config->{'web_cluster_queue'},
+        $c->config->{basepath}
+    );
 
     $c->res->content_type("application/text");
     $c->res->cookies->{$dl_cookie} = {
@@ -891,10 +900,12 @@ sub download_gwas_action : Path('/breeders/download_gwas_action') {
 
     my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
 
-    my $dir = $c->tempfiles_subdir('/download_wizard_gwas');
-    my $gwas_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'download_wizard_gwas/gwasXXXX');
-    my $grm_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'download_wizard_gwas/grmXXXX');
-    my $pheno_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'download_wizard_gwas/phenoXXXX');
+    my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
+    my $tmp_gwas_dir = $shared_cluster_dir_config."/tmp_genotype_download_gwas";
+    mkdir $tmp_gwas_dir if ! -d $tmp_gwas_dir;
+    my ($gwas_tempfile_fh, $gwas_tempfile) = tempfile("wizard_download_gwas_XXXXX", DIR=> $tmp_gwas_dir);
+    my ($grm_tempfile_fh, $grm_tempfile) = tempfile("wizard_download_gwas_grm_XXXXX", DIR=> $tmp_gwas_dir);
+    my ($pheno_tempfile_fh, $pheno_tempfile) = tempfile("wizard_download_gwas_pheno_XXXXX", DIR=> $tmp_gwas_dir);
 
     my $geno = CXGN::Genotype::GWAS->new({
         bcs_schema=>$schema,
@@ -914,7 +925,7 @@ sub download_gwas_action : Path('/breeders/download_gwas_action') {
         individuals_filter=>$individuals_filter
     });
     my $file_handle = $geno->download_gwas(
-        $c->config->{cluster_shared_tempdir},
+        $shared_cluster_dir_config,
         $c->config->{backend},
         $c->config->{cluster_host},
         $c->config->{'web_cluster_queue'},

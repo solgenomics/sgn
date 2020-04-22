@@ -427,12 +427,8 @@ sub get_gwas {
 
     my $tmp_output_dir = $shared_cluster_dir_config."/tmp_genotype_download_gwas";
     mkdir $tmp_output_dir if ! -d $tmp_output_dir;
-    my ($tmp_fh, $tempfile) = tempfile(
-        "wizard_download_XXXXX",
-        DIR=> $tmp_output_dir,
-    );
 
-    my $cmd = CXGN::Tools::Run->new(
+    my $transpose_cmd = CXGN::Tools::Run->new(
         {
             backend => $backend_config,
             submit_host => $cluster_host_config,
@@ -447,13 +443,13 @@ sub get_gwas {
     );
 
     # Do the transposition job on the cluster
-    $cmd->run_cluster(
+    $transpose_cmd->run_cluster(
             "perl ",
             $basepath_config."/bin/transpose_matrix.pl",
             $grm_tempfile,
     );
-    $cmd->is_cluster(1);
-    $cmd->wait;
+    $transpose_cmd->is_cluster(1);
+    $transpose_cmd->wait;
 
     # print STDERR Dumper \@all_marker_names;
     # print STDERR Dumper \@individuals_stock_ids;
@@ -493,7 +489,26 @@ sub get_gwas {
         "';
     }
     print STDERR Dumper $cmd;
-    my $status = system($cmd);
+
+    # Do the GWAS on the cluster
+    my $gwas_cmd = CXGN::Tools::Run->new(
+        {
+            backend => $backend_config,
+            submit_host => $cluster_host_config,
+            temp_base => $tmp_output_dir,
+            queue => $web_cluster_queue_config,
+            do_cleanup => 0,
+            out_file => $gwas_tempfile,
+            # don't block and wait if the cluster looks full
+            max_cluster_jobs => 1_000_000_000,
+        }
+    );
+
+    # Do the transposition job on the cluster
+    $gwas_cmd->run_cluster($cmd);
+    $gwas_cmd->is_cluster(1);
+    $gwas_cmd->wait;
+    my $status;
 
     return ($gwas_tempfile, $status);
 }
