@@ -1425,3 +1425,9 @@ id: ISOL:0000323
 name: Raster DSM
 def: "A single channel image capturing the elevation map from a digital surface map (DSM) as a raster" []
 relationship: is_a ISOL:0000001
+
+[Term]
+id: ISOL:0000324
+name: Keras Predicted Standard 4 Image Montage
+def: "Keras Predicted Standard 4 Image Montage of RGB, NRN, NReN, NIR background removed with threshold images" []
+relationship: is_a ISOL:0000101

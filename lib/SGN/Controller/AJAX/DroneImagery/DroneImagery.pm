@@ -5429,7 +5429,10 @@ sub _perform_keras_cnn_predict {
     my $timestamp = $time->ymd()."_".$time->hms();
 
     my %keras_features_phenotype_data;
+    my $keras_predict_trait = 'Keras Predicted Standard 4 Image Montage|ISOL:0000324';
+
     my $iter = 0;
+    my %seen_stock_names;
     #print STDERR Dumper \%phenotype_data_hash;
     foreach my $sorted_stock_id (sort keys %predicted_stock_ids) {
         my $prediction = $predictions[$iter];
@@ -5438,6 +5441,7 @@ sub _perform_keras_cnn_predict {
         my $image_id = $output_images{$sorted_stock_id}->{image_id};
 
         $keras_features_phenotype_data{$stock_uniquename}->{$keras_predict_trait} = [$prediction, $timestamp, $user_name, '', $image_id];
+        $seen_stock_names{$stock_uniquename}++;
 
         if ($previous_value){
             push @data_matrix, ($sorted_stock_id, $stock_info{$sorted_stock_id}->{germplasm_stock_id}, $stock_info{$sorted_stock_id}->{replicate}, $stock_info{$sorted_stock_id}->{block_number}, $stock_info{$sorted_stock_id}->{row_number}, $stock_info{$sorted_stock_id}->{col_number}, $stock_info{$sorted_stock_id}->{drone_run_related_time_cvterm_json}->{gdd_average_temp}, $previous_value, $prediction);
@@ -5461,7 +5465,7 @@ sub _perform_keras_cnn_predict {
             'operator' => $user_name,
             'date' => $timestamp
         );
-        my @plot_units_seen = keys %predicted_stock_ids;
+        my @plot_units_seen = keys %seen_stock_names;
         my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
         my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
 
