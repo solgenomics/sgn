@@ -27,8 +27,17 @@ sub search {
     my $callset_id = $inputs->{callSetDbId} || ($inputs->{callSetDbIds} || ());
 
     my @trial_ids;
+    my @protocol_ids;
     if ( $variantset_ids){
-        push @trial_ids, @{$variantset_ids};
+        foreach ( @{$variantset_ids} ){
+            my @ids = split /p/, $_;
+            if(scalar @ids>1){
+                push @trial_ids, $ids[0] ? $ids[0] : ();
+                push @protocol_ids, $ids[1] ? $ids[1] : ();
+            } else{
+                push @trial_ids, 0;
+            }
+        }
     }
     if ($study_ids){
         push @trial_ids, @{$study_ids};
@@ -54,9 +63,10 @@ sub search {
             protocolprop_top_key_select=>[],
             protocolprop_marker_hash_select=>[],
             accession_list=>$callset_id,
+            protocol_id_list=>\@protocol_ids,
     });
 
-    my %genotypingDataProjects;
+    my %variant_sets;
 
     $genotype_search->init_genotype_iterator();
 
@@ -64,9 +74,9 @@ sub search {
 
         if( ! $study_names || grep { $_ eq $gt->{genotypingDataProjectName}} @{$study_names} ){
 
-            my $project_id = $gt->{genotypingDataProjectDbId};
+            my $set_id = $gt->{genotypingDataProjectDbId} . "p" . $gt->{analysisMethodDbId};
 
-            if( ! $genotypingDataProjects{$project_id}{'analysisIds'} {$gt->{analysisMethodDbId}}) {
+            if( ! $variant_sets{$set_id}{'analysisIds'} {$gt->{analysisMethodDbId}}) {
                 my @analysis;
                 push @analysis, {
                     analysisDbId=> qq|$gt->{analysisMethodDbId}|, #protocolid
@@ -78,13 +88,14 @@ sub search {
                     updated=>undef,
                 };
                 
-                push( @{ $genotypingDataProjects { $project_id  }{'analysisIds'} {$gt->{analysisMethodDbId}} }, 1 );
-                push( @{ $genotypingDataProjects { $project_id  }{'markerCount'}}, $gt->{resultCount} );
-                push( @{ $genotypingDataProjects { $project_id  }{'analysis'}  }, @analysis);
+                push( @{ $variant_sets { $set_id  }{'analysisIds'} {$gt->{analysisMethodDbId}} }, 1 );
+                push( @{ $variant_sets { $set_id  }{'markerCount'}}, $gt->{resultCount} );
+                push( @{ $variant_sets { $set_id  }{'analysis'}  }, @analysis);
             }
 
-            push( @{ $genotypingDataProjects { $project_id  } {'genotypes'} }, $gt->{genotypeDbId});
-            $genotypingDataProjects { $project_id  } {'name'}  = $gt->{genotypingDataProjectName};
+            push( @{ $variant_sets { $set_id  } {'genotypes'} }, $gt->{genotypeDbId});
+            $variant_sets { $set_id  } {'name'}  = $gt->{genotypingDataProjectName} . " - " . $gt->{analysisMethod};
+            $variant_sets { $set_id  } {'dataProject'} = $gt->{genotypingDataProjectDbId};
         }
     }
 
@@ -93,7 +104,7 @@ sub search {
     my $end_index = $page*$page_size + $page_size - 1;
     my $counter = 0;
     
-    foreach my $project (keys %genotypingDataProjects){
+    foreach my $id (keys %variant_sets){
 
         if ($counter >= $start_index && $counter <= $end_index) {
             my @availableFormats; 
@@ -105,14 +116,14 @@ sub search {
             };
             push @data, {
                 additionalInfo=>{},
-                analysis =>$genotypingDataProjects{$project} {'analysis'},
+                analysis =>$variant_sets{$id} {'analysis'},
                 availableFormats => \@availableFormats,
-                callSetCount => scalar @{$genotypingDataProjects{$project}{'genotypes'}},
+                callSetCount => scalar @{$variant_sets{$id}{'genotypes'}},
                 referenceSetDbId => undef, #  update with referene set           
-                studyDbId => $project,          
-                variantCount => _sum($genotypingDataProjects{$project}{'markerCount'}),
-                variantSetDbId => qq|$project|,
-                variantSetName => $genotypingDataProjects{$project} {'name'},
+                studyDbId => qq|$variant_sets{$id}{'dataProject'}|,          
+                variantCount => _sum($variant_sets{$id}{'markerCount'}),
+                variantSetDbId => qq|$id|,
+                variantSetName => $variant_sets{$id} {'name'},
             };
         }
         $counter++;
@@ -124,6 +135,7 @@ sub search {
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'VariantSets result constructed');
 }
 
+
 sub detail { 
     my $self = shift;
     my $inputs = shift;
@@ -133,10 +145,19 @@ sub detail {
     my $status = $self->status;
     my $variantset_id = $inputs->{variantSetDbId};
 
+    my @trial_ids;
+    my @protocol_ids;
+    if ( $variantset_id){
+        my @ids = split /p/, $variantset_id;
+        push @trial_ids, $ids[0] ? $ids[0] : ();
+        push @protocol_ids, $ids[1] ? $ids[1] : ();
+    }
+
     my $genotype_search = CXGN::Genotype::Search->new({
         bcs_schema=>$self->bcs_schema,
         cache_root=>$c->config->{cache_file_path},
-        trial_list=>[$variantset_id],
+        trial_list=>\@trial_ids,
+        protocol_id_list=>\@protocol_ids,
         genotypeprop_hash_select=>['DS'],
         protocolprop_top_key_select=>[],
         protocolprop_marker_hash_select=>[],
@@ -146,15 +167,15 @@ sub detail {
     my $file_handle = $genotype_search->get_cached_file_search_json($c, 1); #Metadata only returned
 
     my @data;
-    my %genotypingDataProjects;
+    my %variant_sets;
 
     $genotype_search->init_genotype_iterator();
 
     while (my ($count, $gt) = $genotype_search->get_next_genotype_info) {
 
-        my $project_id = $gt->{genotypingDataProjectDbId};
+        my $set_id = $gt->{genotypingDataProjectDbId} . "p" . $gt->{analysisMethodDbId};
 
-        if( ! $genotypingDataProjects{$project_id}{'analysisIds'} {$gt->{analysisMethodDbId}}) {
+        if( ! $variant_sets{$set_id}{'analysisIds'} {$gt->{analysisMethodDbId}}) {
             my @analysis;
             push @analysis, {
                 analysisDbId=> qq|$gt->{analysisMethodDbId}|, #protocolid
@@ -166,18 +187,18 @@ sub detail {
                 updated=>undef,
             };
             
-            push( @{ $genotypingDataProjects { $project_id  }{'analysisIds'} {$gt->{analysisMethodDbId}} }, 1 );
-            push( @{ $genotypingDataProjects { $project_id  }{'markerCount'}}, $gt->{resultCount} );
-            push( @{ $genotypingDataProjects { $project_id  }{'analysis'}  }, @analysis);
+            push( @{ $variant_sets { $set_id  }{'analysisIds'} {$gt->{analysisMethodDbId}} }, 1 );
+            push( @{ $variant_sets { $set_id  }{'markerCount'}}, $gt->{resultCount} );
+            push( @{ $variant_sets { $set_id  }{'analysis'}  }, @analysis);
         }
 
-        push( @{ $genotypingDataProjects { $project_id  } {'genotypes'} }, $gt->{genotypeDbId});
-        $genotypingDataProjects { $project_id  } {'name'}  = $gt->{genotypingDataProjectName};
-      
+        push( @{ $variant_sets { $set_id  } {'genotypes'} }, $gt->{genotypeDbId});
+        $variant_sets { $set_id  } {'name'}  = $gt->{genotypingDataProjectName} . " - " . $gt->{analysisMethod};
+        $variant_sets { $set_id  } {'dataProject'} = $gt->{genotypingDataProjectDbId};
     }
 
-    foreach my $project (keys %genotypingDataProjects){
-
+    foreach my $id (keys %variant_sets){
+ 
         my @availableFormats; 
  
         push @availableFormats,{
@@ -187,14 +208,14 @@ sub detail {
         };
         push @data, {
             additionalInfo=>{},
-            analysis =>$genotypingDataProjects{$project} {'analysis'},
+            analysis =>$variant_sets{$id} {'analysis'},
             availableFormats => \@availableFormats,
-            callSetCount => scalar @{$genotypingDataProjects{$project}{'genotypes'}},
-            referenceSetDbId => undef, #    from protocol           
-            studyDbId => $project,          
-            variantCount => _sum($genotypingDataProjects{$project}{'markerCount'}),
-            variantSetDbId => qq|$project|,
-            variantSetName => $genotypingDataProjects{$project} {'name'},
+            callSetCount => scalar @{$variant_sets{$id}{'genotypes'}},
+            referenceSetDbId => undef, #  update with referene set           
+            studyDbId => qq|$variant_sets{$id}{'dataProject'}|,          
+            variantCount => _sum($variant_sets{$id}{'markerCount'}),
+            variantSetDbId => qq|$id|,
+            variantSetName => $variant_sets{$id} {'name'},
         };
     }
 
@@ -214,14 +235,23 @@ sub callsets {
     my @callset_id = $inputs->{callSetDbId} ? @{$inputs->{callSetDbId}} : ();
     my @callset_name = $inputs->{callSetName} ? @{$inputs->{callSetName}} : ();
 
+    my @trial_ids;
+    my @protocol_ids;
+    if ( $variantset_id){
+        my @ids = split /p/, $variantset_id;
+        push @trial_ids, $ids[0] ? $ids[0] : ();
+        push @protocol_ids, $ids[1] ? $ids[1] : ();
+    }
+
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$self->bcs_schema,
         cache_root=>$c->config->{cache_file_path},
-        trial_list=>[$variantset_id],
-        markerprofile_id_list=>\@callset_id,
+        trial_list=>\@trial_ids,
+        protocol_id_list=>\@protocol_ids,
         genotypeprop_hash_select=>['DS'],
         protocolprop_top_key_select=>[],
         protocolprop_marker_hash_select=>[],
+        accession_list=>\@callset_id,
         # offset=>$page_size*$page,
         # limit=>$page_size
     });
@@ -250,7 +280,7 @@ sub callsets {
                 sampleDbId=>qq|$gt->{stock_id}|,
                 studyDbId=>qq|$gt->{genotypingDataProjectDbId}|, 
                 updated=>undef,
-                variantSetIds => [ qq|$gt->{genotypingDataProjectDbId}|],
+                variantSetIds => [ $gt->{genotypingDataProjectDbId}. "p". $gt->{analysisMethodDbId} ],
             };
         }
         $counter++;
@@ -280,6 +310,14 @@ sub calls {
     if ($sep_phased || $sep_unphased || $expand_homozygotes || $unknown_string){
         push @$status, { 'error' => 'The following parameters are not implemented: expandHomozygotes, unknownString, sepPhased, sepUnphased' };
     }
+    
+    my @trial_ids;
+    my @protocol_ids;
+    if ( $variantset_id){
+        my @ids = split /p/, $variantset_id;
+        push @trial_ids, $ids[0] ? $ids[0] : ();
+        push @protocol_ids, $ids[1] ? $ids[1] : ();
+    }
 
     my @data_files;
     my %result;
@@ -287,7 +325,8 @@ sub calls {
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$self->bcs_schema,
         cache_root=>$c->config->{cache_file_path},
-        trial_list=>[$variantset_id],
+        trial_list=>\@trial_ids,
+        protocol_id_list=>\@protocol_ids,
         genotypeprop_hash_select=>['DS', 'GT', 'NT'],
         protocolprop_top_key_select=>[],
         protocolprop_marker_hash_select=>[],
@@ -362,10 +401,18 @@ sub variants {
     my $schema = $self->bcs_schema;
     my @data_out;
 
+    my @trial_ids;
+    my @protocol_ids;
+    if ( $variantset_id){
+        my @ids = split /p/, $variantset_id;
+        push @trial_ids, $ids[0] ? $ids[0] : ();
+        push @protocol_ids, $ids[1] ? $ids[1] : ();
+    }
+
     my $marker_search = CXGN::Marker::SearchBrAPI->new({
         bcs_schema => $schema,
-        protocol_id_list => [],
-        project_id_list => [$variantset_id],
+        protocol_id_list => \@protocol_ids, 
+        project_id_list => \@trial_ids,
         marker_name_list => $marker_ids,
         offset=>$page_size*$page,
         limit=>$page_size
@@ -396,13 +443,13 @@ sub variants {
                 filtersFailed => ( $_->{filter} eq "PASS" || $_->{filter} eq "." ) ? undef : $_->{filter},
                 filtersPassed => $_->{filter} eq "PASS" ? JSON::true : JSON::false,
                 referenceBases => $_->{ref},
-                referenceName =>  $_->{chrom} ? 'chr_' . $_->{chrom} : undef,
+                referenceName =>  $_->{chrom} ? $_->{chrom} : undef,
                 start => $_->{pos},
                 svlen => @svlen,
                 updated => undef,
                 variantDbId => qq|$_->{marker_name}|,
                 variantNames => $_->{marker_name},
-                variantSetDbId => _quote($_->{project_id}),
+                variantSetDbId => _quote($_->{project_id}, $_->{nd_protocol_id} ),
                 variantType => $svtype,
             );
             push @data_out, \%data_obj;
@@ -417,22 +464,31 @@ sub variants {
 }
 
 sub extract {
-
     my $self = shift;
     my $inputs = shift;
     my $c = $self->context;
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
-    my $variantset_id = $inputs->{variantSetDbIds} || ();
-    my $study_ids = $inputs->{studyDbIds} || ();
-    my $study_names = $inputs->{studyNames} || ();
-    my $variant_id = $inputs->{variantDbIds} || ();
-    my $callset_ids = $inputs->{callSetDbIds} || ();
+    my $variantset_ids = $inputs->{variantSetDbId} || ($inputs->{variantSetDbIds} || ());
+    my $study_ids = $inputs->{studyDbId} || ($inputs->{studyDbIds} || ());
+    my $study_names = $inputs->{studyName} || ($inputs->{studyNames} || ());
+    my $variant_id = $inputs->{variantDbId} || ($inputs->{variantDbIds} || ());
+    my $callset_id = $inputs->{callSetDbId} || ($inputs->{callSetDbIds} || ());
 
     my @trial_ids;
-    if ( $variantset_id){
-        push @trial_ids, @{$variantset_id};
+    my @protocol_ids;
+    if ( $variantset_ids){
+        foreach ( @{$variantset_ids} ){
+            my @ids = split /p/, $_;
+            if(scalar @ids>1){
+                push @trial_ids, $ids[0] ? $ids[0] : ();
+                push @protocol_ids, $ids[1] ? $ids[1] : ();
+            } else {
+                @trial_ids = 0;
+            }
+
+        }
     }
     if ($study_ids){
         push @trial_ids, @{$study_ids};
@@ -457,20 +513,21 @@ sub extract {
             genotypeprop_hash_select=>['DS'],
             protocolprop_top_key_select=>[],
             protocolprop_marker_hash_select=>[],
-            markerprofile_id_list=>$callset_ids,
+            accession_list=>$callset_id,
+            protocol_id_list=>\@protocol_ids,
     });
 
-    my %genotypingDataProjects;
+    my %variant_sets;
 
     $genotype_search->init_genotype_iterator();
 
     while (my ($count, $gt) = $genotype_search->get_next_genotype_info) {
 
-        if( ! $study_names || grep { $_ eq $gt->{genotypingDataProjectName}} @{$study_names}){
+        if( ! $study_names || grep { $_ eq $gt->{genotypingDataProjectName}} @{$study_names} ){
 
-            my $project_id = $gt->{genotypingDataProjectDbId};
+            my $set_id = $gt->{genotypingDataProjectDbId} . "p" . $gt->{analysisMethodDbId};
 
-            if( ! $genotypingDataProjects{$project_id}{'analysisIds'} {$gt->{analysisMethodDbId}}) {
+            if( ! $variant_sets{$set_id}{'analysisIds'} {$gt->{analysisMethodDbId}}) {
                 my @analysis;
                 push @analysis, {
                     analysisDbId=> qq|$gt->{analysisMethodDbId}|, #protocolid
@@ -482,13 +539,14 @@ sub extract {
                     updated=>undef,
                 };
                 
-                push( @{ $genotypingDataProjects { $project_id  }{'analysisIds'} {$gt->{analysisMethodDbId}} }, 1 );
-                push( @{ $genotypingDataProjects { $project_id  }{'markerCount'}}, $gt->{resultCount} );
-                push( @{ $genotypingDataProjects { $project_id  }{'analysis'}  }, @analysis);
+                push( @{ $variant_sets { $set_id  }{'analysisIds'} {$gt->{analysisMethodDbId}} }, 1 );
+                push( @{ $variant_sets { $set_id  }{'markerCount'}}, $gt->{resultCount} );
+                push( @{ $variant_sets { $set_id  }{'analysis'}  }, @analysis);
             }
 
-            push( @{ $genotypingDataProjects { $project_id  } {'genotypes'} }, $gt->{genotypeDbId});
-            $genotypingDataProjects { $project_id  } {'name'}  = $gt->{genotypingDataProjectName};
+            push( @{ $variant_sets { $set_id  } {'genotypes'} }, $gt->{genotypeDbId});
+            $variant_sets { $set_id  } {'name'}  = $gt->{genotypingDataProjectName} . " - " . $gt->{analysisMethod};
+            $variant_sets { $set_id  } {'dataProject'} = $gt->{genotypingDataProjectDbId};
         }
     }
 
@@ -497,7 +555,7 @@ sub extract {
     my $end_index = $page*$page_size + $page_size - 1;
     my $counter = 0;
     
-    foreach my $project (keys %genotypingDataProjects){
+    foreach my $id (keys %variant_sets){
 
         if ($counter >= $start_index && $counter <= $end_index) {
             my @availableFormats; 
@@ -509,14 +567,14 @@ sub extract {
             };
             push @data, {
                 additionalInfo=>{},
-                analysis =>$genotypingDataProjects{$project} {'analysis'},
+                analysis =>$variant_sets{$id} {'analysis'},
                 availableFormats => \@availableFormats,
-                callSetCount => scalar @{$genotypingDataProjects{$project}{'genotypes'}},
-                referenceSetDbId => undef, #    from protocol           
-                studyDbId => $project,          
-                variantCount => _sum($genotypingDataProjects{$project}{'markerCount'}),
-                variantSetDbId => qq|$project|,
-                variantSetName => $genotypingDataProjects{$project} {'name'},
+                callSetCount => scalar @{$variant_sets{$id}{'genotypes'}},
+                referenceSetDbId => undef, #  update with referene set           
+                studyDbId => qq|$variant_sets{$id}{'dataProject'}|,          
+                variantCount => _sum($variant_sets{$id}{'markerCount'}),
+                variantSetDbId => qq|$id|,
+                variantSetName => $variant_sets{$id} {'name'},
             };
         }
         $counter++;
@@ -556,9 +614,10 @@ sub _get_info {
 
 sub _quote {
     my $array = shift;
+    my $protocol = shift;
 
     foreach (@$array) {
-        $_ = "$_";
+        $_ = "$_" . "p". $protocol;
     }
 
     return $array

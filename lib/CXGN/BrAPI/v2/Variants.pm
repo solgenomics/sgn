@@ -33,10 +33,20 @@ sub search {
         push @$status, { 'error' => 'The following search parameters are not implemented: callSetDbIds' };
     }
 
+    my @trial_ids =();
+    my @protocol_ids = ();
+    if ( $variantset_ids){
+        foreach ( @{$variantset_ids} ){
+            my @ids = split /p/, $_;
+            push @trial_ids, $ids[0] ? $ids[0] : ();
+            push @protocol_ids, $ids[1] ? $ids[1] : ();
+        }
+    }
+
     my $marker_search = CXGN::Marker::SearchBrAPI->new({
         bcs_schema => $schema,
-        protocol_id_list => [],
-        project_id_list => $variantset_ids,
+        protocol_id_list => \@protocol_ids, 
+        project_id_list => \@trial_ids,
         marker_name_list => $marker_ids,
         #protocolprop_marker_hash_select=>['name', 'chrom', 'pos', 'alt', 'ref'] Use default which is all marker info
         offset=>$page_size*$page,
@@ -68,13 +78,13 @@ sub search {
                 filtersFailed => ( $_->{filter} eq "PASS" || $_->{filter} eq "." ) ? undef : $_->{filter},
                 filtersPassed => $_->{filter} eq "PASS" ? JSON::true : JSON::false,
                 referenceBases => $_->{ref},
-                referenceName =>  $_->{chrom} ? 'chr_' . $_->{chrom} : undef,
+                referenceName =>  $_->{chrom} ? $_->{chrom} : undef,
                 start => $_->{pos},
-                svlen => @svlen, #length($_->{alt}),
+                svlen => @svlen,
                 updated => undef,
                 variantDbId => qq|$_->{marker_name}|,
                 variantNames => $_->{marker_name},
-                variantSetDbId => _quote($_->{project_id}),
+                variantSetDbId => _quote($_->{project_id}, $_->{nd_protocol_id} ),
                 variantType => $svtype,
             );
             push @data_out, \%data_obj;
@@ -84,7 +94,7 @@ sub search {
 
     my %result = (data=>\@data_out);
     my @data_files;
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,1,0);
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Variants result constructed');
 }
 
@@ -134,7 +144,7 @@ sub detail {
             updated => undef,
             variantDbId => qq|$_->{marker_name}|,
             variantNames => $_->{marker_name},
-            variantSetDbId => _quote($_->{project_id}),
+            variantSetDbId => _quote($_->{project_id}, $_->{nd_protocol_id} ),
             variantType => $svtype,
         );
         push @data_out, \%data_obj;
@@ -142,7 +152,7 @@ sub detail {
 
     my %result = (data=>\@data_out);
     my @data_files;
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,1,0);
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response(1,$page_size,$page);
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Variants result constructed');
 }
 
@@ -159,7 +169,7 @@ sub calls {
     my $unknown_string = $inputs->{unknown_string};
     my $expand_homozygotes = $inputs->{expand_homozygotes};
     my $marker_id = $inputs->{variantDbId};
-    my @variantset_id;
+    my @trial_ids;
 
     if ($sep_phased || $sep_unphased || $expand_homozygotes || $unknown_string){
         push @$status, { 'error' => 'The following parameters are not implemented: expandHomozygotes, unknownString, sepPhased, sepUnphased' };
@@ -172,7 +182,7 @@ sub calls {
     my ($data, $total_count) = $trial_search->search(); 
 
     foreach (@$data){
-        push @variantset_id, $_->{trial_id};
+        push @trial_ids, $_->{trial_id};
     }
 
     my @data_files;
@@ -181,7 +191,7 @@ sub calls {
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$self->bcs_schema,
         cache_root=>$c->config->{cache_file_path},
-        trial_list=>\@variantset_id,
+        trial_list=>\@trial_ids,
         genotypeprop_hash_select=>['DS', 'GT', 'NT'],
         protocolprop_top_key_select=>[],
         protocolprop_marker_hash_select=>[],
@@ -262,9 +272,10 @@ sub _get_info {
 
 sub _quote {
     my $array = shift;
+    my $protocol = shift;
 
     foreach (@$array) {
-        $_ = "$_";
+        $_ = "$_" . "p". $protocol;
     }
 
     return $array

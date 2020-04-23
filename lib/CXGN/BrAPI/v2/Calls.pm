@@ -31,7 +31,18 @@ sub search {
         push @$status, { 'error' => 'The following parameters are not implemented: expandHomozygotes, unknownString, sepPhased, sepUnphased' };
     }
 
-    if (! $variantset_id){
+    my @trial_ids;
+    my @protocol_ids;
+
+    if ( $variantset_id){
+        foreach ( @{$variantset_id} ){
+            my @ids = split /p/, $_;
+            push @trial_ids, $ids[0] ? $ids[0] : ();
+            push @protocol_ids, $ids[1] ? $ids[1] : ();
+        }
+    }
+
+    if (scalar @trial_ids == 0){
         my $trial_search = CXGN::Trial::Search->new({
             bcs_schema=>$self->bcs_schema,
             trial_design_list=>['genotype_data_project']
@@ -39,10 +50,8 @@ sub search {
         my ($data, $total_count) = $trial_search->search(); 
 
         foreach (@$data){
-            push @variantset_id, $_->{trial_id};
+            push @trial_ids, $_->{trial_id};
         }
-    } else {
-        push @variantset_id, @{$variantset_id};
     }
 
     my @data_files;
@@ -51,11 +60,12 @@ sub search {
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$self->bcs_schema,
         cache_root=>$c->config->{cache_file_path},
-        trial_list=>\@variantset_id,
+        trial_list=>\@trial_ids,
         genotypeprop_hash_select=>['DS', 'GT', 'NT'],
         accession_list=>$callset_id,
         protocolprop_top_key_select=>[],
         protocolprop_marker_hash_select=>[],
+        protocol_id_list=>\@protocol_ids,
     });
     my $file_handle = $genotypes_search->get_cached_file_search_json($c, 0);
 

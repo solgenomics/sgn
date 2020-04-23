@@ -27,26 +27,32 @@ sub search {
     my $germplasm_ids = $inputs->{germplasmDbId} || ($inputs->{germplasmDbIds} || ());
     my $germplasm_names = $inputs->{germplasmName} || ($inputs->{germplasmNames} || ());
 
+    my @trial_ids;
+    my @protocol_ids;
+    my @accession_ids;
     my @callset_names;
+
     if ($callset_names){
         push @callset_names, @{$callset_names};      
     }
     if ($sample_names){
         push @callset_names, @{$sample_names};      
     }
-    my @trial_ids;
-    if ( $variantset_ids){
-        push @trial_ids, @{$variantset_ids};
-    }
     if ($study_ids){
         push @trial_ids, @{$study_ids};
     }
-    my @accession_ids;
-    if ( $callset_ids){
+    if ($callset_ids){
         push @accession_ids, @{$callset_ids};
     }
     if ($sample_ids){
         push @accession_ids, @{$sample_ids};
+    }
+    if ($variantset_ids){
+        foreach ( @{$variantset_ids} ){
+            my @ids = split /p/, $_;
+            push @trial_ids, $ids[0] ? $ids[0] : ();
+            push @protocol_ids, $ids[1] ? $ids[1] : ();
+        }
     }
 
     if (scalar @trial_ids == 0){
@@ -67,13 +73,14 @@ sub search {
         cache_root=>$c->config->{cache_file_path},
         genotypeprop_hash_select=>['DS', 'GT', 'NT'],
         accession_list=>\@accession_ids,
- 
+        protocol_id_list=>\@protocol_ids, 
     });
 
     my $file_handle = $genotypes_search->get_cached_file_search_json($c, 1); #Metadata only returned
 
     my %geno;
     my @variantsets;
+    my @studies;
     my $passes_search;
     my $start_index = $page*$page_size;
     my $end_index = $page*$page_size + $page_size - 1;
@@ -96,14 +103,17 @@ sub search {
 
             if (! exists($geno{$gt->{stock_id}})){
                 @variantsets = (); 
+                @studies = ();
             }
-            my $variantset = qq|$gt->{genotypingDataProjectDbId}|;
+            my $variantset = $gt->{genotypingDataProjectDbId} . "p" . $gt->{analysisMethodDbId};
             push @variantsets, $variantset if !grep{/^$variantset$/}@variantsets;
+            push @studies, qq|$gt->{genotypingDataProjectDbId}| if !grep{/^$gt->{genotypingDataProjectDbId}$/}@studies;
 
             $geno{$gt->{stock_id}} = {
                     callSetName => $gt->{stock_name},
                     germplasmDbId => $gt->{germplasmDbId},
                     variantSetDbIds=>[@variantsets],
+                    studyDbIds=>[@studies],
             };
         }
     }
@@ -116,7 +126,7 @@ sub search {
                 callSetName=>qq|$geno{$genoid}{callSetName}|,
                 created=>undef,
                 sampleDbId=>qq|$genoid|,
-                studyDbId=>$geno{$genoid}{variantSetDbIds},
+                studyDbId=>$geno{$genoid}{studyDbIds},
                 updated=>undef,
                 variantSetDbIds=>$geno{$genoid}{variantSetDbIds},
             };
@@ -165,20 +175,24 @@ sub detail {
     my @data;
     my %geno;
     my @variantsets;
+    my @studies;
 
     while( <$fh> ) {
         my $gt = decode_json $_;     
 
         if (! exists($geno{$gt->{stock_id}})){
-            @variantsets = (); 
+            @variantsets = ();
+            @studies = ();
         }
-        my $variantset = qq|$gt->{genotypingDataProjectDbId}|;
+        my $variantset = $gt->{genotypingDataProjectDbId} . "p" . $gt->{analysisMethodDbId};
         push @variantsets, $variantset if !grep{/^$variantset$/}@variantsets;
+        push @studies, qq|$gt->{genotypingDataProjectDbId}| if !grep{/^$gt->{genotypingDataProjectDbId}$/}@studies;
 
         $geno{$gt->{stock_id}} = {
                 callSetName => $gt->{stock_name},
                 germplasmDbId => $gt->{germplasmDbId},
                 variantSetDbIds=>\@variantsets,
+                studyDbIds=>[@studies],
         };
     }
 
@@ -189,7 +203,7 @@ sub detail {
             callSetName=>qq|$geno{$genoid}{callSetName}|,
             created=>undef,
             sampleDbId=>qq|$genoid|,
-            studyDbId=>$geno{$genoid}{variantSetDbIds},
+            studyDbId=>$geno{$genoid}{studyDbIds},
             updated=>undef,
             variantSetDbIds=>$geno{$genoid}{variantSetDbIds},
         };

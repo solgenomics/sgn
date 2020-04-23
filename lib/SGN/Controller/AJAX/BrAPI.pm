@@ -4048,32 +4048,6 @@ sub variantsets_search_retrieve : Chained('brapi') PathPart('search/variantsets'
 =cut
 
 
-sub calls_single : Chained('brapi') PathPart('calls') CaptureArgs(1) {
-	my $self = shift;
-	my $c = shift;
-	my $id = shift;
-	$c->stash->{callset_id} = $id; # this is genotypeprop_id
-}
-
-sub calls_fetch : Chained('callsets_single') PathPart('') Args(0) : ActionClass('REST') { }
-
-sub calls_fetch_GET {
-	my $self = shift;
-	my $c = shift;
-	my ($auth) = _authenticate_user($c);
-	my $clean_inputs = $c->stash->{clean_inputs};
-	my $brapi = $self->brapi_module;
-	my $brapi_module = $brapi->brapi_wrapper('Calls');
-	my $brapi_package_result = $brapi_module->detail({
-		callset_id => $c->stash->{callset_id},
-		unknown_string => $clean_inputs->{unknownString}->[0],
-		sep_phased => $clean_inputs->{sepPhased}->[0],
-		sep_unphased => $clean_inputs->{sepUnphased}->[0],
-		expand_homozygotes => $clean_inputs->{expandHomozygotes}->[0],
-	});
-	_standard_response_construction($c, $brapi_package_result);
-}
-
 sub calls_search_save  : Chained('brapi') PathPart('search/calls') Args(0) : ActionClass('REST') { }
 
 sub calls_search_save_POST {
