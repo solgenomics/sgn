@@ -21,7 +21,7 @@ sub login : Path('/ajax/user/login') Args(0) {
 
     my $username = $c->req->param("login_username");
     my $password = $c->req->param("login_password");
-    my $goto_url = $c->req->param("login_goto_url");
+    my $goto_url = $c->req->param("goto_url");
 
     print STDERR "Goto URL = $goto_url\n";
 

@@ -33,7 +33,7 @@ $goto_url => ''
                             <a class="btn btn-default btn-sm" id="new_user_modal_show" style="float:right">New User</a>
                         </div>
 
-                        <input type="hidden" value="<% $goto_url %>" id="login_goto_url" name="login_goto_url" />
+                        <input type="hidden" value="<% $goto_url %>" id="goto_url" name="goto_url" />
 
                         <div>
                             <button class="btn btn-secondary" id="cancel_login" type="reset" style="float:left" >Reset</button>
