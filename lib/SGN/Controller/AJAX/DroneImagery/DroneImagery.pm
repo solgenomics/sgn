@@ -4713,17 +4713,18 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
         my $model_description = $c->req->param('model_description');
         _perform_save_trained_keras_cnn_model($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $archive_temp_output_model_file, $archive_temp_input_file, $archive_temp_input_aux_file, $model_name, $model_description, $drone_run_ids, $plot_polygon_type_ids, $trait_id, $model_type, $user_id, $user_name, $user_role);
 
-        my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, '', '')->cvterm_id();
-        foreach my $s (keys %output_images){
-            my $image_file = $output_images{$s}->{image_file};
-            my $field_trial_id = $output_images{$s}->{field_trial_id};
+        my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_keras_trained', 'project_md_image')->cvterm_id();
+        foreach my $stock_id (keys %output_images){
+            my $image_file = $output_images{$stock_id}->{image_file};
+            my $field_trial_id = $output_images{$stock_id}->{field_trial_id};
             my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
             my $md5checksum = $image->calculate_md5sum($image_file);
             my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
                 JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id)
-                WHERE md_image.obsolete = 'f' AND md_image.md5sum = ? AND project_md_image.type_id = ? AND project_md_image.project_id = ?;";
+                JOIN phenome.stock_image AS stock_image ON(md_image.image_id = stock_image.image_id)
+                WHERE md_image.obsolete = 'f' AND md_image.md5sum = ? AND project_md_image.type_id = ? AND project_md_image.project_id = ? AND stock_image.stock_id = ?;";
             my $h = $schema->storage->dbh->prepare($q);
-            $h->execute($md5checksum, $linking_table_type_id, $field_trial_id);
+            $h->execute($md5checksum, $linking_table_type_id, $field_trial_id, $stock_id);
             my ($saved_image_id) = $h->fetchrow_array();
 
             my $output_image_id;
@@ -4738,6 +4739,7 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
             } else {
                 $image->set_sp_person_id($user_id);
                 my $ret = $image->process_image($image_file, 'project', $field_trial_id, $linking_table_type_id);
+                my $stock_associate = $image->associate_stock($stock_id, $user_name);
                 $output_image_fullpath = $image->get_filename('original_converted', 'full');
                 $output_image_url = $image->get_image_url('original');
                 $output_image_id = $image->get_image_id();
@@ -5202,9 +5204,10 @@ sub _perform_keras_cnn_predict {
     my $archive_temp_output_activation_file_path = $c->config->{basepath}."/".$archive_temp_output_activation_file;
 
     my %predicted_stock_ids;
+    my %output_images;
 
     open(my $F_aux, ">", $archive_temp_input_aux_file) || die "Can't open file ".$archive_temp_input_aux_file;
-        print $F_aux 'stock_id,value,trait_name,field_trial_id,accession_id,female_id,male_id';
+        print $F_aux 'stock_id,value,trait_name,field_trial_id,accession_id,female_id,male_id,output_image_file';
         if (scalar(@aux_trait_id)>0) {
             my $aux_trait_counter = 0;
             foreach (@aux_trait_id) {
@@ -5226,7 +5229,10 @@ sub _perform_keras_cnn_predict {
                         my $male_parent_stock_id = $plot_pedigrees_found{$stock_id}->{male_stock_id} || 0;
                         if (defined($value)) {
                             my $archive_temp_output_image_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/outputimagefileXXXX');
-
+                            $output_images{$stock_id} = {
+                                image_file => $archive_temp_output_image_file,
+                                field_trial_id => $field_trial_id
+                            };
                             $predicted_stock_ids{$stock_id}++;
                             print $F_aux "$stock_id,";
                             print $F_aux "$value,";
@@ -5264,7 +5270,10 @@ sub _perform_keras_cnn_predict {
                         my $male_parent_stock_id = $plot_pedigrees_found{$stock_id}->{male_stock_id} || 0;
                         if (defined($value)) {
                             my $archive_temp_output_image_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/outputimagefileXXXX');
-                            
+                            $output_images{$stock_id} = {
+                                image_file => $archive_temp_output_image_file,
+                                field_trial_id => $field_trial_id
+                            };
                             $predicted_stock_ids{$stock_id}++;
                             print $F_aux "$stock_id,";
                             print $F_aux "$value,";
@@ -5357,6 +5366,42 @@ sub _perform_keras_cnn_predict {
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
+    my @saved_trained_image_urls;
+    my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_keras_trained', 'project_md_image')->cvterm_id();
+    foreach my $stock_id (keys %output_images){
+        my $image_file = $output_images{$stock_id}->{image_file};
+        my $field_trial_id = $output_images{$stock_id}->{field_trial_id};
+        my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+        my $md5checksum = $image->calculate_md5sum($image_file);
+        my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
+            JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id)
+            JOIN phenome.stock_image AS stock_image ON(md_image.image_id = stock_image.image_id)
+            WHERE md_image.obsolete = 'f' AND md_image.md5sum = ? AND project_md_image.type_id = ? AND project_md_image.project_id = ? AND stock_image.stock_id = ?;";
+        my $h = $schema->storage->dbh->prepare($q);
+        $h->execute($md5checksum, $linking_table_type_id, $field_trial_id, $stock_id);
+        my ($saved_image_id) = $h->fetchrow_array();
+
+        my $output_image_id;
+        my $output_image_url;
+        my $output_image_fullpath;
+        if ($saved_image_id) {
+            print STDERR Dumper "Image $image_file has already been added to the database and will not be added again.";
+            $image = SGN::Image->new( $schema->storage->dbh, $saved_image_id, $c );
+            $output_image_fullpath = $image->get_filename('original_converted', 'full');
+            $output_image_url = $image->get_image_url('original');
+            $output_image_id = $image->get_image_id();
+        } else {
+            $image->set_sp_person_id($user_id);
+            my $ret = $image->process_image($image_file, 'project', $field_trial_id, $linking_table_type_id);
+            my $stock_associate = $image->associate_stock($stock_id, $user_name);
+            $output_image_fullpath = $image->get_filename('original_converted', 'full');
+            $output_image_url = $image->get_image_url('original');
+            $output_image_id = $image->get_image_id();
+        }
+        $output_images{$stock_id}->{image_id} = $output_image_id;
+        push @saved_trained_image_urls, $output_image_url;
+    }
+
     my @result_agg;
     my @data_matrix;
     my $data_matrix_rows = 0;
@@ -5380,17 +5425,26 @@ sub _perform_keras_cnn_predict {
     close($fh);
     #print STDERR Dumper \@predictions;
 
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    my %keras_features_phenotype_data;
     my $iter = 0;
     #print STDERR Dumper \%phenotype_data_hash;
     foreach my $sorted_stock_id (sort keys %predicted_stock_ids) {
         my $prediction = $predictions[$iter];
+        my $stock_uniquename = $stock_info{$sorted_stock_id}->{uniquename};
         my $previous_value = $phenotype_data_hash{$sorted_stock_id} ? $phenotype_data_hash{$sorted_stock_id}->{trait_value}->{value} : '';
+        my $image_id = $output_images{$sorted_stock_id}->{image_id};
+
+        $keras_features_phenotype_data{$stock_uniquename}->{$keras_predict_trait} = [$prediction, $timestamp, $user_name, '', $image_id];
+
         if ($previous_value){
             push @data_matrix, ($sorted_stock_id, $stock_info{$sorted_stock_id}->{germplasm_stock_id}, $stock_info{$sorted_stock_id}->{replicate}, $stock_info{$sorted_stock_id}->{block_number}, $stock_info{$sorted_stock_id}->{row_number}, $stock_info{$sorted_stock_id}->{col_number}, $stock_info{$sorted_stock_id}->{drone_run_related_time_cvterm_json}->{gdd_average_temp}, $previous_value, $prediction);
             push @simple_data_matrix, ($previous_value, $prediction);
             $data_matrix_rows++;
         }
-        push @result_agg, [$stock_info{$sorted_stock_id}->{uniquename}, $sorted_stock_id, $prediction, $previous_value];
+        push @result_agg, [$stock_uniquename, $sorted_stock_id, $prediction, $previous_value];
         $iter++;
     }
 
@@ -5398,56 +5452,20 @@ sub _perform_keras_cnn_predict {
         $keras_predict_trait
     );
 
-            while ( my $row = <$fh> ){
-                my @columns;
-                if ($csv->parse($row)) {
-                    @columns = $csv->fields();
-                }
+    print STDERR "Read $iter lines in results file\n";
 
-                my $stock_id = $columns[0];
-                my $stock_uniquename = $stock_info{$stock_id}->{stock_uniquename};
-                my $image_id = $stock_info{$stock_id}->{image_id};
-
-                #print STDERR Dumper \@columns;
-                $stock_info{$stock_id}->{result} = \@columns;
-
-                $plots_seen{$stock_uniquename} = 1;
-                $zonal_stat_phenotype_data{$stock_uniquename}->{$non_zero_pixel_count_composed_trait_name} = [$columns[1], $timestamp, $user_name, '', $image_id];
-                $zonal_stat_phenotype_data{$stock_uniquename}->{$total_pixel_sum_composed_trait_name} = [$columns[2], $timestamp, $user_name, '', $image_id];
-                $zonal_stat_phenotype_data{$stock_uniquename}->{$mean_pixel_value_composed_trait_name} = [$columns[3], $timestamp, $user_name, '', $image_id];
-                $zonal_stat_phenotype_data{$stock_uniquename}->{$harmonic_mean_pixel_value_composed_trait_name} = [$columns[4], $timestamp, $user_name, '', $image_id];
-                $zonal_stat_phenotype_data{$stock_uniquename}->{$median_pixel_value_composed_trait_name} = [$columns[5], $timestamp, $user_name, '', $image_id];
-                $zonal_stat_phenotype_data{$stock_uniquename}->{$pixel_variance_composed_trait_name} = [$columns[6], $timestamp, $user_name, '', $image_id];
-                $zonal_stat_phenotype_data{$stock_uniquename}->{$pixel_standard_dev_composed_trait_name} = [$columns[7], $timestamp, $user_name, '', $image_id];
-                $zonal_stat_phenotype_data{$stock_uniquename}->{$pixel_pstandard_dev_composed_trait_name} = [$columns[8], $timestamp, $user_name, '', $image_id];
-                $zonal_stat_phenotype_data{$stock_uniquename}->{$minimum_pixel_value_composed_trait_name} = [$columns[9], $timestamp, $user_name, '', $image_id];
-                $zonal_stat_phenotype_data{$stock_uniquename}->{$maximum_pixel_value_composed_trait_name} = [$columns[10], $timestamp, $user_name, '', $image_id];
-                $zonal_stat_phenotype_data{$stock_uniquename}->{$minority_pixel_value_composed_trait_name} = [$columns[11], $timestamp, $user_name, '', $image_id];
-                $zonal_stat_phenotype_data{$stock_uniquename}->{$minority_pixel_count_composed_trait_name} = [$columns[12], $timestamp, $user_name, '', $image_id];
-                $zonal_stat_phenotype_data{$stock_uniquename}->{$majority_pixel_value_composed_trait_name} = [$columns[13], $timestamp, $user_name, '', $image_id];
-                $zonal_stat_phenotype_data{$stock_uniquename}->{$majority_pixel_count_composed_trait_name} = [$columns[14], $timestamp, $user_name, '', $image_id];
-                $zonal_stat_phenotype_data{$stock_uniquename}->{$pixel_group_count_composed_trait_name} = [$columns[15], $timestamp, $user_name, '', $image_id];
-
-                $line++;
-            }
-            @stocks = values %stock_info;
-        }
-
-    close $fh;
-    print STDERR "Read $line lines in results file\n";
-
-    if ($line > 0) {
+    if ($iter > 0) {
         my %phenotype_metadata = (
-            'archived_file' => $archive_temp_results,
-            'archived_file_type' => $archive_file_type,
+            'archived_file' => $archive_temp_output_file,
+            'archived_file_type' => 'image_keras_prediction_output',
             'operator' => $user_name,
             'date' => $timestamp
         );
-        my @plot_units_seen = keys %plots_seen;
+        my @plot_units_seen = keys %predicted_stock_ids;
         my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
         my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
 
-        my $store_args = {
+        my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
             basepath=>$c->config->{basepath},
             dbhost=>$c->config->{dbhost},
             dbname=>$c->config->{dbname},
@@ -5460,43 +5478,19 @@ sub _perform_keras_cnn_predict {
             user_id=>$user_id,
             stock_list=>\@plot_units_seen,
             trait_list=>\@traits_seen,
-            values_hash=>\%zonal_stat_phenotype_data,
+            values_hash=>\%keras_features_phenotype_data,
             has_timestamps=>1,
-            metadata_hash=>\%phenotype_metadata
-        };
-
-        if ($overwrite_phenotype_values) {
-            $store_args->{overwrite_values} = $overwrite_phenotype_values;
-        }
-        if ($ignore_new_phenotype_values) {
-            $store_args->{ignore_new_values} = $ignore_new_phenotype_values;
-        }
-
-        my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
-            $store_args
-        );
+            metadata_hash=>\%phenotype_metadata,
+            ignore_new_values=>undef,
+            overwrite_values=>1
+        });
         my ($verified_warning, $verified_error) = $store_phenotypes->verify();
         my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
 
-        if (!$do_not_run_materialized_view_refresh) {
-            my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
-            my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
-        }
+        my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
     }
 
-    my $iter = 0;
-    #print STDERR Dumper \%phenotype_data_hash;
-    foreach my $sorted_stock_id (sort keys %predicted_stock_ids) {
-        my $prediction = $predictions[$iter];
-        my $previous_value = $phenotype_data_hash{$sorted_stock_id} ? $phenotype_data_hash{$sorted_stock_id}->{trait_value}->{value} : '';
-        if ($previous_value){
-            push @data_matrix, ($sorted_stock_id, $stock_info{$sorted_stock_id}->{germplasm_stock_id}, $stock_info{$sorted_stock_id}->{replicate}, $stock_info{$sorted_stock_id}->{block_number}, $stock_info{$sorted_stock_id}->{row_number}, $stock_info{$sorted_stock_id}->{col_number}, $stock_info{$sorted_stock_id}->{drone_run_related_time_cvterm_json}->{gdd_average_temp}, $previous_value, $prediction);
-            push @simple_data_matrix, ($previous_value, $prediction);
-            $data_matrix_rows++;
-        }
-        push @result_agg, [$stock_info{$sorted_stock_id}->{uniquename}, $sorted_stock_id, $prediction, $previous_value];
-        $iter++;
-    }
     undef %data_hash;
     undef %phenotype_data_hash;
 
