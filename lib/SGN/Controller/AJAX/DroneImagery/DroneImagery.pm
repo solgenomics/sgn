@@ -4477,7 +4477,7 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
                         my $female_parent_stock_id = $plot_pedigrees_found{$stock_id}->{female_stock_id} || 0;
                         my $male_parent_stock_id = $plot_pedigrees_found{$stock_id}->{male_stock_id} || 0;
                         if (defined($value)) {
-                            my $archive_temp_output_image_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/outputimagefileXXXX');
+                            my $archive_temp_output_image_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/outputimagefileXXXX');
                             $output_images{$stock_id} = {
                                 image_file => $archive_temp_output_image_file,
                                 field_trial_id => $field_trial_id
@@ -4490,7 +4490,7 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
                             print $F_aux "$d->{germplasm_stock_id},";
                             print $F_aux "$female_parent_stock_id,";
                             print $F_aux "$male_parent_stock_id,";
-                            print $F_aux "$archive_temp_output_image_file,";
+                            print $F_aux "$archive_temp_output_image_file";
                             if (scalar(@aux_trait_id)>0) {
                                 print $F_aux ',';
                                 my @aux_values;
@@ -4518,7 +4518,7 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
                         my $female_parent_stock_id = $plot_pedigrees_found{$stock_id}->{female_stock_id} || 0;
                         my $male_parent_stock_id = $plot_pedigrees_found{$stock_id}->{male_stock_id} || 0;
                         if (defined($value)) {
-                            my $archive_temp_output_image_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/outputimagefileXXXX');
+                            my $archive_temp_output_image_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/outputimagefileXXXX');
                             $output_images{$stock_id} = {
                                 image_file => $archive_temp_output_image_file,
                                 field_trial_id => $field_trial_id
@@ -4531,7 +4531,7 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
                             print $F_aux "$d->{germplasm_stock_id},";
                             print $F_aux "$female_parent_stock_id,";
                             print $F_aux "$male_parent_stock_id,";
-                            print $F_aux "$archive_temp_output_image_file,";
+                            print $F_aux "$archive_temp_output_image_file";
                             if (scalar(@aux_trait_id)>0) {
                                 print $F_aux ',';
                                 my @aux_values;
