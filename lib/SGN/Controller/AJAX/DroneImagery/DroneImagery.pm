@@ -4444,8 +4444,7 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
     my $archive_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/inputfileXXXX');
     my $archive_temp_input_aux_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/inputfileauxXXXX');
     my $archive_temp_output_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/outputfileXXXX');
-    my $archive_temp_autoencoder_output_model_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/autoencodermodelfileXXXX');
-    mkdir $archive_temp_autoencoder_output_model_file."/variables";
+    my $archive_temp_autoencoder_output_model_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/autoencodermodelfileXXXX').".hdf5";
     my $archive_temp_loss_history_file_string = $c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/losshistoryXXXX');
     my $archive_temp_loss_history_file = $c->config->{basepath}."/".$archive_temp_loss_history_file_string;
 
