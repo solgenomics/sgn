@@ -76,7 +76,7 @@ sub check_predicted_list_selection :Path('/solgs/check/predicted/list/selection'
     $c->stash->{training_traits_ids} = $args->{training_traits_ids};
     $c->stash->{genotyping_protocol_id} = $args->{genotyping_protocol_id};
     
-    $c->controller("solGS::solGS")->download_prediction_urls($c, $training_pop_id, $selection_pop_id);
+    $c->controller('solGS::Download')->selection_prediction_download_urls($c, $training_pop_id, $selection_pop_id);
  
     my $ret->{output} = $c->stash->{download_prediction};
 
@@ -374,7 +374,7 @@ sub predict_list_selection_pop_multi_traits {
 	$self->predict_list_selection_pop_single_pop_model($c);
     }
 
-    $c->controller("solGS::solGS")->download_prediction_urls($c, $training_pop_id, $selection_pop_id );
+    $c->controller('solGS::Download')->selection_prediction_download_urls($c, $training_pop_id, $selection_pop_id );
     my $download_prediction = $c->stash->{download_prediction};
     
 }
@@ -416,7 +416,7 @@ sub predict_list_selection_pop_combined_pops_model {
 	$c->stash->{status} = 'success';
     }
     
-    $c->controller("solGS::solGS")->download_prediction_urls($c, $training_pop_id, $selection_pop_id ); 
+    $c->controller('solGS::Download')->selection_prediction_download_urls($c, $training_pop_id, $selection_pop_id ); 
   
 }
 
