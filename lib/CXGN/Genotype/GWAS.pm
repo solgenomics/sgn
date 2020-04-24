@@ -261,7 +261,8 @@ sub get_gwas {
             my $d = $unique_observation_units{$stock_id};
             print $F_pheno $d->{germplasm_stock_id}.','.$d->{trial_id}.','.$d->{obsunit_rep};
             foreach my $t (@unique_trait_ids_sorted) {
-                print $F_pheno ','.$phenotype_data_hash{$stock_id}->{$t};
+                my $pheno_val = $phenotype_data_hash{$stock_id}->{$t} || '';
+                print $F_pheno ','.$pheno_val;
             }
             print $F_pheno "\n";
         }
