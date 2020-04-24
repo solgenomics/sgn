@@ -21,12 +21,10 @@ __PACKAGE__->config(
 
 
 
-
-
 sub download_validation :Path('/solgs/download/validation/pop') Args() {
-    my ($self, $c, $pop_id, $trait, $trait_id, $gp, $protocol_id) = @_;   
+    my ($self, $c, $training_pop_id, $trait, $trait_id, $gp, $protocol_id) = @_;   
  
-    $c->stash->{pop_id} = $pop_id;
+    $c->stash->{training_pop_id} = $training_pop_id;
     $c->stash->{genotyping_protocol_id} = $protocol_id;
     
     $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
@@ -46,24 +44,23 @@ sub download_validation :Path('/solgs/download/validation/pop') Args() {
 }
 
 
-
 sub download_prediction_GEBVs :Path('/solgs/download/prediction/model') Args() {
-    my ($self, $c, $pop_id, $prediction, $prediction_id, $trait_id, $gp, $protocol_id) = @_;   
+    my ($self, $c, $training_pop_id, $prediction, $selection_pop_id, $trait_id, $gp, $protocol_id) = @_;   
  
     $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
-    $c->stash->{pop_id} = $pop_id;
+    $c->stash->{training_pop_id} = $training_pop_id;
     $c->stash->{genotyping_protocol_id} = $protocol_id;
     
-    my $identifier = $pop_id . "_" . $prediction_id;
+    my $identifier = $training_pop_id . "_" . $selection_pop_id;
     $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
-    my $prediction_gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
+    my $selection_gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
     
-    unless (!-e $prediction_gebvs_file || -s $prediction_gebvs_file == 0) 
+    unless (!-s $selection_gebvs_file) 
     {
-        my @prediction_gebvs =  map { [ split(/\t/) ] }  read_file($prediction_gebvs_file);
+        my @selection_gebvs =  map { [ split(/\t/) ] }  read_file($selection_gebvs_file);
     
         $c->res->content_type("text/plain");
-        $c->res->body(join "", map { $_->[0] . "\t" . $_->[1] }  @prediction_gebvs);
+        $c->res->body(join "", map { $_->[0] . "\t" . $_->[1] }  @selection_gebvs);
     }
  
 }
@@ -71,9 +68,9 @@ sub download_prediction_GEBVs :Path('/solgs/download/prediction/model') Args() {
 
 
 sub download_blups :Path('/solgs/download/blups/pop') Args() {
-    my ($self, $c, $pop_id, $trait, $trait_id, $gp, $protocol_id) = @_;   
+    my ($self, $c, $training_pop_id, $trait, $trait_id, $gp, $protocol_id) = @_;   
 
-    $c->stash->{pop_id} = $pop_id;
+    $c->stash->{training_pop_id} = $training_pop_id;
     $c->stash->{genotyping_protocol_id} = $protocol_id;
     
     $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
@@ -83,18 +80,18 @@ sub download_blups :Path('/solgs/download/blups/pop') Args() {
     if ($referer =~ /combined\/populations\//) 
     {
 	$c->stash->{data_set_type} = 'combined populations';
-	$c->stash->{combo_pops_id} = $pop_id;      
+	$c->stash->{combo_pops_id} = $training_pop_id;      
     }
     
     $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
-    my $blups_file = $c->stash->{rrblup_training_gebvs_file};
+    my $training_gebvs_file = $c->stash->{rrblup_training_gebvs_file};
 
-    unless (!-e $blups_file || -s $blups_file == 0) 
+    unless (!-s $training_gebvs_file) 
     {
-        my @blups =  map { [ split(/\t/) ] }  read_file($blups_file);
+        my @training_gebvs =  map { [ split(/\t/) ] }  read_file($training_gebvs_file);
 	
         $c->res->content_type("text/plain");
-        $c->res->body(join "", map { $_->[0] . "\t" . $_->[1] }  @blups);
+        $c->res->body(join "", map { $_->[0] . "\t" . $_->[1] }  @training_gebvs);
     } 
 
 }
@@ -102,9 +99,9 @@ sub download_blups :Path('/solgs/download/blups/pop') Args() {
 
 
 sub download_marker_effects :Path('/solgs/download/marker/pop') Args() {
-    my ($self, $c, $pop_id, $trait, $trait_id, $gp, $protocol_id) = @_;   
+    my ($self, $c, $training_pop_id, $trait, $trait_id, $gp, $protocol_id) = @_;   
 
-    $c->stash->{pop_id} = $pop_id;
+    $c->stash->{training_pop_id} = $training_pop_id;
     $c->stash->{genotyping_protocol_id} = $protocol_id;
     
     $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
@@ -113,7 +110,7 @@ sub download_marker_effects :Path('/solgs/download/marker/pop') Args() {
     $c->controller('solGS::Files')->marker_effects_file($c);
     my $markers_file = $c->stash->{marker_effects_file};
     
-    unless (!-e $markers_file || -s $markers_file == 0) 
+    unless (!-s $markers_file) 
     {
         my @effects =  map { [ split(/\t/) ] }  read_file($markers_file);
     
@@ -134,18 +131,22 @@ sub training_prediction_download_urls {
 
     if ($data_set_type =~ /combined populations/)
     {
-        $pop_id         = $c->stash->{combo_pops_id};
+        $pop_id = $c->stash->{combo_pops_id};
     }
     else 
     {
-        $pop_id         = $c->stash->{pop_id}; 
+        $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id}; 
     }
     
-    my $trait_id          = $c->stash->{trait_id};
+    my $trait_id = $c->stash->{trait_id};
    
-    my $blups_url      = qq | <a href="/solgs/download/blups/pop/$pop_id/trait/$trait_id/gp/$protocol_id">Download all GEBVs</a> |;
-    my $marker_url     = qq | <a href="/solgs/download/marker/pop/$pop_id/trait/$trait_id/gp/$protocol_id">Download all marker effects</a> |;
-    my $validation_url = qq | <a href="/solgs/download/validation/pop/$pop_id/trait/$trait_id/gp/$protocol_id">Download model accuracy report</a> |;
+    my $blups_url = qq | <a href="/solgs/download/blups/pop/$pop_id/trait/$trait_id/|
+	. qq|gp/$protocol_id">Download all GEBVs</a>|;
+    my $marker_url = qq | <a href="/solgs/download/marker/pop/$pop_id/trait/$trait_id/|
+	. qq|gp/$protocol_id">Download all marker effects</a>|;
+  
+    my $validation_url = qq | <a href="/solgs/download/validation/pop/$pop_id/trait/$trait_id/|
+	. qq|gp/$protocol_id">Download model accuracy report</a>|;
    
     $c->stash(
 	blups_download_url          => $blups_url,
@@ -192,24 +193,24 @@ sub selection_prediction_download_urls {
 	  	    
 	    if ($page =~ /combined/)
 	    {
-		$download_url .= qq |<a href="/solgs/combined/model/$training_pop_id/selection/$selection_pop_id/trait/$trait_id/gp/$protocol_id">$trait_abbr</a> |;
+		$download_url .= qq | <a href="/solgs/combined/model/$training_pop_id/selection/|
+		    . qq|$selection_pop_id/trait/$trait_id/gp/$protocol_id">$trait_abbr</a> |;
 	    }
 	    else 
 	    {
-		$download_url .= qq |<a href="/solgs/selection/$selection_pop_id/model/$training_pop_id/trait/$trait_id/gp/$protocol_id">$trait_abbr</a> |;
+		$download_url .= qq |<a href="/solgs/selection/$selection_pop_id/model/|
+		    . qq|$training_pop_id/trait/$trait_id/gp/$protocol_id">$trait_abbr</a> |;
 	    }	              
 	}
     }
     
-    if ($download_url) 
+    if (!$download_url) 
     {    
-        $c->stash->{download_prediction} = $download_url;         
+	$download_url = qq | <a href ="/solgs/model/$training_pop_id/prediction/$selection_pop_id/|
+	    . qq|gp/$protocol_id"  onclick="solGS.waitPage(this.href); return false;">[ Predict ]</a>|;        
     }
-    else
-    {        
-        $c->stash->{download_prediction} = qq | <a href ="/solgs/model/$training_pop_id/prediction/$selection_pop_id/gp/$protocol_id"  onclick="solGS.waitPage(this.href); return false;">[ Predict ]</a> |;
-
-    }
+    
+    $c->stash->{selection_prediction_download} = $download_url;
   
 }
 
