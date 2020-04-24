@@ -4449,8 +4449,8 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
     my $archive_temp_loss_history_file = $c->config->{basepath}."/".$archive_temp_loss_history_file_string;
 
     my $keras_project_name = basename($c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/keras_tuner_XXXX'));
-    my $archive_temp_output_model_file = $c->config->{temp_keras_cnn_model_dir}.'/model/'.$keras_project_name.'.hdf5';
-    my $keras_tuner_dir = $c->config->{temp_keras_cnn_model_dir}.'/model_tuner/';
+    my $archive_temp_output_model_file = $c->config->{cluster_shared_tempdir}.'/'.$keras_project_name.'.hdf5';
+    my $keras_tuner_dir = $c->config->{cluster_shared_tempdir};
     my $keras_tuner_output_project_dir = $keras_tuner_dir.$keras_project_name;
 
     my %output_images;
@@ -4478,6 +4478,7 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
                         my $male_parent_stock_id = $plot_pedigrees_found{$stock_id}->{male_stock_id} || 0;
                         if (defined($value)) {
                             my $archive_temp_output_image_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/outputimagefileXXXX');
+                            $archive_temp_output_image_file .= ".png";
                             $output_images{$stock_id} = {
                                 image_file => $archive_temp_output_image_file,
                                 field_trial_id => $field_trial_id
@@ -4519,6 +4520,7 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
                         my $male_parent_stock_id = $plot_pedigrees_found{$stock_id}->{male_stock_id} || 0;
                         if (defined($value)) {
                             my $archive_temp_output_image_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/outputimagefileXXXX');
+                            $archive_temp_output_image_file .= ".png";
                             $output_images{$stock_id} = {
                                 image_file => $archive_temp_output_image_file,
                                 field_trial_id => $field_trial_id
@@ -5229,6 +5231,7 @@ sub _perform_keras_cnn_predict {
                         my $male_parent_stock_id = $plot_pedigrees_found{$stock_id}->{male_stock_id} || 0;
                         if (defined($value)) {
                             my $archive_temp_output_image_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/outputimagefileXXXX');
+                            $archive_temp_output_image_file .= ".png";
                             $output_images{$stock_id} = {
                                 image_file => $archive_temp_output_image_file,
                                 field_trial_id => $field_trial_id
@@ -5270,6 +5273,7 @@ sub _perform_keras_cnn_predict {
                         my $male_parent_stock_id = $plot_pedigrees_found{$stock_id}->{male_stock_id} || 0;
                         if (defined($value)) {
                             my $archive_temp_output_image_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/outputimagefileXXXX');
+                            $archive_temp_output_image_file .= ".png";
                             $output_images{$stock_id} = {
                                 image_file => $archive_temp_output_image_file,
                                 field_trial_id => $field_trial_id
