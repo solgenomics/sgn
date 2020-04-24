@@ -148,19 +148,22 @@ sub generate_results: Path('/ajax/Nirs/generate_results') : {
     my ($fh, $filename) = tempfile(
       "nirs_XXXXX",
       DIR=> $nirs_tmp_output,
-      SUFFIX => "_spectra.txt",
+      SUFFIX => "_spectra.json",
       EXLOCK => 0
     );
 
     my $dbh = $c->dbc->dbh();
 
     foreach my $name (@plot_name){
-        my $sql = "SELECT stock.uniquename AS plot_name,
-                  jsonb_pretty(cast(json->>'spectra' AS jsonb)) AS nirs_spectra
-                FROM metadata.md_json
-                JOIN phenome.nd_experiment_md_json USING(json_id)
-                JOIN nd_experiment_stock USING(nd_experiment_id)
-                JOIN stock using(stock_id) where stock.uniquename=?;";
+        my $sql = "SELECT json_agg(t)
+				  FROM (
+				  SELECT
+				    stock.uniquename AS observationUnitId,
+				    jsonb_pretty(cast(json->>'spectra' AS jsonb)) AS nirs_spectra
+				                FROM metadata.md_json
+				                JOIN phenome.nd_experiment_md_json USING(json_id)
+				                JOIN nd_experiment_stock USING(nd_experiment_id)
+				                JOIN stock using(stock_id) where stock.uniquename=?) t;";
     
         my $fh_db= $dbh->prepare($sql);    
         $fh_db->execute($name);
@@ -170,6 +173,24 @@ sub generate_results: Path('/ajax/Nirs/generate_results') : {
           }
         
     }
+
+my $newfile = $filename . ".txt";
+
+open my $in,  '<',  $filename      or die "Can't read old file: $!";
+open my $out, '>', $newfile or die "Can't write new file: $!";
+
+print $out;
+
+while( <$in> )
+    {
+    s/\\//g;
+    s/,n/,/g;
+    s/n}/}/g;
+    s/{n/{/g;
+    print $out $_;
+    }
+
+close $out;
 
 
      
