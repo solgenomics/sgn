@@ -4814,7 +4814,10 @@ sub _perform_save_trained_keras_cnn_model {
         $protocol_row = $schema->resultset("NaturalDiversity::NdProtocol")->create({
             name => $model_name,
             type_id => $keras_cnn_cvterm_id,
-            nd_protocolprops => [{value => encode_json({variable_name => $trait_name, variable_id => $trait_id}), type_id => $keras_cnn_trait_cvterm_id}, {value => encode_json({value=>$model_type}), type_id => $keras_cnn_model_type_cvterm_id}]
+            nd_protocolprops => [
+                {value => encode_json({variable_name => $trait_name, variable_id => $trait_id}), type_id => $keras_cnn_trait_cvterm_id},
+                {value => encode_json({value=>$model_type, image_type=>'standard_4_montage'}), type_id => $keras_cnn_model_type_cvterm_id}
+            ]
         });
         $protocol_id = $protocol_row->nd_protocol_id();
     }
@@ -4949,7 +4952,7 @@ sub drone_imagery_predict_keras_model : Path('/api/drone_imagery/predict_keras_m
 sub drone_imagery_predict_keras_model_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my @field_trial_ids = split ',', $c->req->param('field_trial_ids');
@@ -4960,7 +4963,11 @@ sub drone_imagery_predict_keras_model_POST : Args(0) {
     my $plot_polygon_type_ids = decode_json($c->req->param('plot_polygon_type_ids'));
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    my $return = _perform_keras_cnn_predict($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $model_id, $drone_run_ids, $plot_polygon_type_ids, $model_prediction_type, $population_id, $user_id, $user_name, $user_role);
+    my @allowed_composed_cvs = split ',', $c->config->{composable_cvs};
+    my $composable_cvterm_delimiter = $c->config->{composable_cvterm_delimiter};
+    my $composable_cvterm_format = $c->config->{composable_cvterm_format};
+
+    my $return = _perform_keras_cnn_predict($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $model_id, $drone_run_ids, $plot_polygon_type_ids, $model_prediction_type, $population_id, \@allowed_composed_cvs, $composable_cvterm_format, $composable_cvterm_delimiter, $user_id, $user_name, $user_role);
 
     $c->stash->{rest} = $return;
 }
@@ -4976,6 +4983,9 @@ sub _perform_keras_cnn_predict {
     my $plot_polygon_type_ids = shift;
     my $model_prediction_type = shift;
     my $population_id = shift;
+    my $allowed_composed_cvs = shift;
+    my $composable_cvterm_format = shift;
+    my $composable_cvterm_delimiter = shift;
     my $user_id = shift;
     my $user_name = shift;
     my $user_role = shift;
@@ -5129,6 +5139,7 @@ sub _perform_keras_cnn_predict {
     my $trait_id = $trained_trait_hash->{variable_id};
     my $trained_trait_name = $trained_trait_hash->{variable_name};
     $model_type = $model_type_hash->{value};
+    my $trained_image_type = $model_type_hash->{image_type};
     my $model_file = $filename."/".$basename;
 
     my $model_q_training_input = "SELECT basename, dirname
@@ -5432,9 +5443,65 @@ sub _perform_keras_cnn_predict {
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
 
-    my %keras_features_phenotype_data;
-    my $keras_predict_trait = 'Keras Predicted Standard 4 Image Montage|ISOL:0000324';
+    my $keras_predict_image_type_id;
+    my $keras_predict_model_type_id;
+    if ($trained_image_type eq 'standard_4_montage') {
+        $keras_predict_image_type_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Standard 4 Image Montage|ISOL:0000324')->cvterm_id;
+    }
+    if ($model_type eq 'KerasTunerCNNSequentialSoftmaxCategorical') {
+        $keras_predict_model_type_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Keras Predicted KerasTunerCNNSequentialSoftmaxCategorical|ISOL:0000326')->cvterm_id;
+    }
+    if ($model_type eq 'SimpleKerasTunerCNNSequentialSoftmaxCategorical') {
+        $keras_predict_model_type_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Keras Predicted SimpleKerasTunerCNNSequentialSoftmaxCategorical|ISOL:0000327')->cvterm_id;
+    }
+    if ($model_type eq 'KerasCNNInceptionResNetV2ImageNetWeights') {
+        $keras_predict_model_type_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Keras Predicted KerasCNNInceptionResNetV2ImageNetWeights|ISOL:0000328')->cvterm_id;
+    }
+    if ($model_type eq 'KerasCNNInceptionResNetV2') {
+        $keras_predict_model_type_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Keras Predicted KerasCNNInceptionResNetV2|ISOL:0000329')->cvterm_id;
+    }
+    if ($model_type eq 'KerasCNNLSTMDenseNet121ImageNetWeights') {
+        $keras_predict_model_type_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Keras Predicted KerasCNNLSTMDenseNet121ImageNetWeights|ISOL:0000330')->cvterm_id;
+    }
+    if ($model_type eq 'KerasCNNDenseNet121ImageNetWeights') {
+        $keras_predict_model_type_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Keras Predicted KerasCNNDenseNet121ImageNetWeights|ISOL:0000331')->cvterm_id;
+    }
+    if ($model_type eq 'KerasCNNSequentialSoftmaxCategorical') {
+        $keras_predict_model_type_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Keras Predicted KerasCNNSequentialSoftmaxCategorical|ISOL:0000332')->cvterm_id;
+    }
+    if ($model_type eq 'KerasCNNMLPExample') {
+        $keras_predict_model_type_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Keras Predicted KerasCNNMLPExample|ISOL:0000333')->cvterm_id;
+    }
 
+    my $trained_trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trained_trait_name)->cvterm_id;
+
+    my $traits = SGN::Model::Cvterm->get_traits_from_component_categories($schema, $allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, {
+        object => [],
+        attribute => [$keras_predict_image_type_id],
+        method => [],
+        unit => [],
+        trait => [$trained_trait_cvterm_id],
+        tod => [$keras_predict_model_type_id],
+        toy => [],
+        gen => [],
+    });
+    my $existing_traits = $traits->{existing_traits};
+    my $new_traits = $traits->{new_traits};
+    # print STDERR Dumper $new_traits;
+    # print STDERR Dumper $existing_traits;
+    my %new_trait_names;
+    foreach (@$new_traits) {
+        my $components = $_->[0];
+        $new_trait_names{$_->[1]} = join ',', @$components;
+    }
+
+    my $onto = CXGN::Onto->new( { schema => $schema } );
+    my $new_terms = $onto->store_composed_term(\%new_trait_names);
+
+    my $keras_predict_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$trained_trait_cvterm_id, $keras_predict_image_type_id, $keras_predict_model_type_id]);
+    my $keras_predict_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $keras_predict_composed_cvterm_id, 'extended');
+
+    my %keras_features_phenotype_data;
     my $iter = 0;
     my %seen_stock_names;
     #print STDERR Dumper \%phenotype_data_hash;
@@ -5444,7 +5511,7 @@ sub _perform_keras_cnn_predict {
         my $previous_value = $phenotype_data_hash{$sorted_stock_id} ? $phenotype_data_hash{$sorted_stock_id}->{trait_value}->{value} : '';
         my $image_id = $output_images{$sorted_stock_id}->{image_id};
 
-        $keras_features_phenotype_data{$stock_uniquename}->{$keras_predict_trait} = [$prediction, $timestamp, $user_name, '', $image_id];
+        $keras_features_phenotype_data{$stock_uniquename}->{$keras_predict_composed_trait_name} = [$prediction, $timestamp, $user_name, '', $image_id];
         $seen_stock_names{$stock_uniquename}++;
 
         if ($previous_value){
@@ -5457,7 +5524,7 @@ sub _perform_keras_cnn_predict {
     }
 
     my @traits_seen = (
-        $keras_predict_trait
+        $keras_predict_composed_trait_name
     );
 
     print STDERR "Read $iter lines in results file\n";
