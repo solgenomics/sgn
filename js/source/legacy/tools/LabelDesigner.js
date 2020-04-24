@@ -333,6 +333,11 @@ $(document).ready(function($) {
             jQuery('#label_designer_data_level_select_div').html('<select class="form-control" id="label_designer_data_level" ><option value="" selected>Select a Level</option><option value="plate">Plate</option></select>');
             jQuery("#label_designer_data_level").focus();
 
+        } else if (data_type == 'Crossing Experiments') {
+
+            jQuery('#label_designer_data_level_select_div').html('<select class="form-control" id="label_designer_data_level" ><option value="" selected>Select a Level</option><option value="cross">Cross</option></select>');
+            jQuery("#label_designer_data_level").focus();
+
         } else if ((data_type == 'Lists') || (data_type == 'Public Lists')) {
 
             var html = '<select class="form-control" id="label_designer_data_level" ><option value="" selected>Select a Level</option><option value="list">List Items</option>';

@@ -15,6 +15,7 @@ use Tie::UrlEncoder; our(%urlencode);
 use CXGN::Trial::TrialLayout;
 use CXGN::Trial;
 use CXGN::Trial::TrialLayoutDownload;
+use CXGN::Cross;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -550,7 +551,26 @@ sub get_data {
             $design = filter_by_list_items($design, $list_ids, 'tissue_sample_id');
         }
     }
-    #print STDERR "Design is ".Dumper($design)."\n";
+    elsif ($data_level eq "cross") {
+        my $project = CXGN::Cross->new({ schema => $schema, trial_id => $id});
+        my $result = $project->get_crosses_and_details_in_crossingtrial();
+        my @cross_data = @$result;
+        foreach my $cross (@cross_data){
+            $design->{$cross->[0]} = {'cross_name' => $cross->[1],
+                                      'cross_id' => $cross->[0],
+                                      'cross_combination' => $cross->[2],
+                                      'cross_type' => $cross->[3],
+                                      'female_parent_name' => $cross->[5],
+                                      'female_parent_id' => $cross->[4],
+                                      'male_parent_name' => $cross->[7],
+                                      'male_parent_id' => $cross->[6]
+                                     }
+        }
+    }
+
+
+
+#    print STDERR "Design is ".Dumper($design)."\n";
     return $num_trials, $design;
 }
 
