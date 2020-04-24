@@ -1,31 +1,29 @@
-package CXGN::Genotype::GRM;
+package CXGN::Genotype::GWAS;
 
 =head1 NAME
 
-CXGN::Genotype::GRM - an object to handle fetching a GRM for stocks
+CXGN::Genotype::GWAS - an object to handle GWAS
 
 =head1 USAGE
 
-my $geno = CXGN::Genotype::GRM->new({
+my $geno = CXGN::Genotype::GWAS->new({
     bcs_schema=>$schema,
     grm_temp_file=>$file_temp_path,
+    gwas_temp_file=>$file_temp_path_gwas,
+    pheno_temp_file=>$file_temp_path_pheno,
     people_schema=>$people_schema,
+    download_format=>$download_format, #either results_tsv or manhattan_qq_plots
     accession_id_list=>\@accession_list,
-    plot_id_list=>\@plot_id_list,
+    trait_id_list=>\@trait_id_list,
+    traits_are_repeated_measurements=>$traits_are_repeated_measurements,
     protocol_id=>$protocol_id,
     get_grm_for_parental_accessions=>1,
     cache_root=>$cache_root,
-    download_format=>'matrix',
     minor_allele_frequency=>0.01,
     marker_filter=>0.6,
     individuals_filter=>0.8
 });
-RECOMMENDED
-$geno->download_grm();
-
-OR
-
-my $grm = $geno->get_grm();
+$geno->download_gwas();
 
 =head1 DESCRIPTION
 
@@ -47,15 +45,16 @@ use JSON;
 use CXGN::Stock::Accession;
 use CXGN::Genotype::Protocol;
 use CXGN::Genotype::Search;
+use CXGN::Phenotypes::SearchFactory;
 use R::YapRI::Base;
 use R::YapRI::Data::Matrix;
 use CXGN::Dataset::Cache;
 use Cache::File;
 use Digest::MD5 qw | md5_hex |;
 use File::Slurp qw | write_file |;
-use POSIX;
+use File::Temp 'tempfile';
 use File::Copy;
-use CXGN::Tools::Run;
+use POSIX;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -71,12 +70,6 @@ has 'people_schema' => (
 
 # Uses a cached file system for getting genotype results and getting GRM
 has 'cache_root' => (
-    isa => 'Str',
-    is => 'rw',
-    required => 1
-);
-
-has 'download_format' => (
     isa => 'Str',
     is => 'rw',
     required => 1
@@ -104,8 +97,26 @@ has 'grm_temp_file' => (
     required => 1
 );
 
+has 'gwas_temp_file' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 1
+);
+
+has 'pheno_temp_file' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 1
+);
+
 has 'protocol_id' => (
     isa => 'Int',
+    is => 'rw',
+    required => 1
+);
+
+has 'download_format' => (
+    isa => 'Str',
     is => 'rw',
     required => 1
 );
@@ -133,9 +144,15 @@ has 'accession_id_list' => (
     is => 'rw'
 );
 
-has 'plot_id_list' => (
+has 'trait_id_list' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'rw'
+);
+
+has 'traits_are_repeated_measurements' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 0
 );
 
 # If the accessions in the plots you are interested have not been genotyped (as in hybrids), can get this boolean to 1 and give a list of plot_id_list and you will get back a GRM built from the parent accessions for those plots (for the plots whose parents were genotyped)
@@ -169,7 +186,7 @@ has 'return_only_first_genotypeprop_for_stock' => (
     default => 1
 );
 
-sub get_grm {
+sub get_gwas {
     my $self = shift;
     my $shared_cluster_dir_config = shift;
     my $backend_config = shift;
@@ -180,10 +197,14 @@ sub get_grm {
     my $people_schema = $self->people_schema();
     my $cache_root_dir = $self->cache_root();
     my $accession_list = $self->accession_id_list();
-    my $plot_list = $self->plot_id_list();
+    my $trait_list = $self->trait_id_list();
     my $protocol_id = $self->protocol_id();
     my $get_grm_for_parental_accessions = $self->get_grm_for_parental_accessions();
     my $grm_tempfile = $self->grm_temp_file();
+    my $gwas_tempfile = $self->gwas_temp_file();
+    my $pheno_tempfile = $self->pheno_temp_file();
+    my $download_format = $self->download_format();
+    my $traits_are_repeated_measurements = $self->traits_are_repeated_measurements();
 
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
@@ -194,6 +215,57 @@ sub get_grm {
     my $number_system_cores = `getconf _NPROCESSORS_ONLN` or die "Could not get number of system cores!\n";
     chomp($number_system_cores);
     print STDERR "NUMCORES $number_system_cores\n";
+
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        'MaterializedViewTable',
+        {
+            bcs_schema=>$schema,
+            data_level=>'plot',
+            trait_list=>$trait_list,
+            accession_list=>$accession_list,
+            exclude_phenotype_outlier=>0,
+            include_timestamp=>0
+        }
+    );
+    my ($data, $unique_traits) = $phenotypes_search->search();
+    my %unique_trait_ids;
+    my %unique_observation_units;
+    my %phenotype_data_hash;
+    my %filtered_accession_ids;
+    foreach my $d (@$data) {
+        $unique_observation_units{$d->{observationunit_stock_id}} = $d;
+        foreach my $o (@{$d->{observations}}) {
+            my $trait_id_use;
+            if ($traits_are_repeated_measurements) {
+                $trait_id_use = '0001';
+            }
+            else {
+                $trait_id_use = $o->{trait_id};
+            }
+            $unique_trait_ids{$trait_id_use}++;
+            if ($o->{value} || $o->{value} == 0) {
+                $phenotype_data_hash{$d->{observationunit_stock_id}}->{$trait_id_use} = $o->{value};
+                $filtered_accession_ids{$d->{germplasm_stock_id}}++;
+            }
+        }
+    }
+    my @unique_stock_ids_sorted = sort keys %unique_observation_units;
+    my @unique_trait_ids_sorted = sort keys %unique_trait_ids;
+    my @unique_accession_ids_sorted = sort keys %filtered_accession_ids;
+    $accession_list = \@unique_accession_ids_sorted;
+
+    my $trait_string_sql = join ',', @unique_trait_ids_sorted;
+    open(my $F_pheno, ">", $pheno_tempfile) || die "Can't open file ".$pheno_tempfile;
+        print $F_pheno 'gid,field_trial_id,replicate,'.$trait_string_sql."\n";
+        foreach my $stock_id (@unique_stock_ids_sorted) {
+            my $d = $unique_observation_units{$stock_id};
+            print $F_pheno $d->{germplasm_stock_id}.','.$d->{trial_id}.','.$d->{obsunit_rep};
+            foreach my $t (@unique_trait_ids_sorted) {
+                print $F_pheno ','.$phenotype_data_hash{$stock_id}->{$t};
+            }
+            print $F_pheno "\n";
+        }
+    close($F_pheno);
 
     my $protocol = CXGN::Genotype::Protocol->new({
         bcs_schema => $schema,
@@ -207,6 +279,7 @@ sub get_grm {
 
     my @individuals_stock_ids;
     my @all_individual_accessions_stock_ids;
+    my $counter = 0;
 
     # In this case a list of accessions is given, so get a GRM between these accessions
     if ($accession_list && scalar(@$accession_list)>0 && !$get_grm_for_parental_accessions){
@@ -219,96 +292,53 @@ sub get_grm {
                 cache_root=>$cache_root_dir,
                 accessions=>[$_]
             });
-            my $genotypes = $dataset->retrieve_genotypes($protocol_id, ['DS'], ['markers'], ['name'], 1, [], undef, undef, []);
+            my $genotypes = $dataset->retrieve_genotypes($protocol_id, ['DS'], ['markers'], ['name','chrom','pos'], 1, [], undef, undef, []);
 
             if (scalar(@$genotypes)>0) {
-                my $p1_markers = $genotypes->[0]->{selected_protocol_hash}->{markers};
 
                 # For old genotyping protocols without nd_protocolprop info...
                 if (scalar(@all_marker_objects) == 0) {
+                    my $position_placeholder = 1;
                     foreach my $o (sort genosort keys %{$genotypes->[0]->{selected_genotype_hash}}) {
-                        push @all_marker_objects, {name => $o};
+                        push @all_marker_objects, {name => $o, chrom => '1', pos => $position_placeholder};
+                        $position_placeholder++;
                     }
                 }
 
                 foreach my $p (0..scalar(@$genotypes)-1) {
-                    my $stock_id = $genotypes->[$p]->{stock_id};
+                    my $geno = $genotypes->[$p];
+
                     my $genotype_string = "";
-                    my @row;
-                    foreach my $m (@all_marker_objects) {
-                        push @row, $genotypes->[$p]->{selected_genotype_hash}->{$m->{name}}->{DS};
+                    if ($counter == 0) {
+                        $genotype_string .= "ID\t";
+                        foreach my $m (@all_marker_objects) {
+                            $genotype_string .= $m->{name} . "\t";
+                        }
+                        $genotype_string .= "\n";
+                        $genotype_string .= "CHROM\t";
+                        foreach my $m (@all_marker_objects) {
+                            $genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{chrom} . " \t";
+                        }
+                        $genotype_string .= "\n";
+                        $genotype_string .= "POS\t";
+                        foreach my $m (@all_marker_objects) {
+                            $genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{pos} . " \t";
+                        }
+                        $genotype_string .= "\n";
                     }
-                    my $genotype_string_scores = join "\t", @row;
-                    $genotype_string .= $genotype_string_scores . "\n";
-                    push @individuals_stock_ids, $stock_id;
+                    my $genotype_id = $geno->{stock_id};
+                    my $genotype_data_string = "";
+                    foreach my $m (@all_marker_objects) {
+                        $genotype_data_string .= $geno->{selected_genotype_hash}->{$m->{name}}->{'DS'}."\t";
+                    }
+                    $genotype_string .= $genotype_id."\t".$genotype_data_string."\n";
+
+                    push @individuals_stock_ids, $genotype_id;
                     write_file($grm_tempfile, {append => 1}, $genotype_string);
                     undef $genotypes->[$p];
+                    $counter++;
                 }
                 undef $genotypes;
-            }
-        }
-    }
-    # IN this case of a hybrid evaluation where the parents of the accessions planted in a plot are genotyped
-    elsif ($get_grm_for_parental_accessions && $plot_list && scalar(@$plot_list)>0) {
-        print STDERR "COMPUTING GENOTYPE FROM PARENTS FOR PLOTS\n";
-        my $plot_list_string = join ',', @$plot_list;
-        my $q = "SELECT plot.stock_id, accession.stock_id, female_parent.stock_id, male_parent.stock_id
-            FROM stock AS plot
-            JOIN stock_relationship AS plot_acc_rel ON(plot_acc_rel.subject_id=plot.stock_id AND plot_acc_rel.type_id=$plot_of_cvterm_id)
-            JOIN stock AS accession ON(plot_acc_rel.object_id=accession.stock_id AND accession.type_id=$accession_cvterm_id)
-            JOIN stock_relationship AS female_parent_rel ON(accession.stock_id=female_parent_rel.object_id AND female_parent_rel.type_id=$female_parent_cvterm_id)
-            JOIN stock AS female_parent ON(female_parent_rel.subject_id = female_parent.stock_id AND female_parent.type_id=$accession_cvterm_id)
-            JOIN stock_relationship AS male_parent_rel ON(accession.stock_id=male_parent_rel.object_id AND male_parent_rel.type_id=$male_parent_cvterm_id)
-            JOIN stock AS male_parent ON(male_parent_rel.subject_id = male_parent.stock_id AND male_parent.type_id=$accession_cvterm_id)
-            WHERE plot.type_id=$plot_cvterm_id AND plot.stock_id IN ($plot_list_string);";
-        my $h = $schema->storage->dbh()->prepare($q);
-        $h->execute();
-        my @plot_stock_ids_found = ();
-        my @plot_accession_stock_ids_found = ();
-        my @plot_female_stock_ids_found = ();
-        my @plot_male_stock_ids_found = ();
-        while (my ($plot_stock_id, $accession_stock_id, $female_parent_stock_id, $male_parent_stock_id) = $h->fetchrow_array()) {
-            push @plot_stock_ids_found, $plot_stock_id;
-            push @plot_accession_stock_ids_found, $accession_stock_id;
-            push @plot_female_stock_ids_found, $female_parent_stock_id;
-            push @plot_male_stock_ids_found, $male_parent_stock_id;
-        }
-
-        @all_individual_accessions_stock_ids = @plot_accession_stock_ids_found;
-
-        # print STDERR Dumper \@plot_stock_ids_found;
-        # print STDERR Dumper \@plot_female_stock_ids_found;
-        # print STDERR Dumper \@plot_male_stock_ids_found;
-
-        for my $i (0..scalar(@plot_stock_ids_found)-1) {
-            my $female_stock_id = $plot_female_stock_ids_found[$i];
-            my $male_stock_id = $plot_male_stock_ids_found[$i];
-            my $plot_stock_id = $plot_stock_ids_found[$i];
-
-            my $dataset = CXGN::Dataset::Cache->new({
-                people_schema=>$people_schema,
-                schema=>$schema,
-                cache_root=>$cache_root_dir,
-                accessions=>[$female_stock_id, $male_stock_id]
-            });
-            my $genotypes = $dataset->retrieve_genotypes($protocol_id, ['DS'], ['markers'], ['name'], 1, [], undef, undef, []);
-
-            if (scalar(@$genotypes) > 0) {
-                # For old genotyping protocols without nd_protocolprop info...
-                if (scalar(@all_marker_objects) == 0) {
-                    foreach my $o (sort genosort keys %{$genotypes->[0]->{selected_genotype_hash}}) {
-                        push @all_marker_objects, {name => $o};
-                    }
-                }
-
-                my $genotype_string = "";
-                my $progeny_genotype = _compute_progeny_genotypes($genotypes, \@all_marker_objects);
-
-                push @individuals_stock_ids, $plot_stock_id;
-                my $genotype_string_scores = join "\t", @$progeny_genotype;
-                $genotype_string .= $genotype_string_scores . "\n";
-                write_file($grm_tempfile, {append => 1}, $genotype_string);
-                undef $progeny_genotype;
             }
         }
     }
@@ -351,7 +381,7 @@ sub get_grm {
                 cache_root=>$cache_root_dir,
                 accessions=>[$female_stock_id, $male_stock_id]
             });
-            my $genotypes = $dataset->retrieve_genotypes($protocol_id, ['DS'], ['markers'], ['name'], 1, [], undef, undef, []);
+            my $genotypes = $dataset->retrieve_genotypes($protocol_id, ['DS'], ['markers'], ['name', 'chrom', 'pos'], 1, [], undef, undef, []);
 
             if (scalar(@$genotypes) > 0) {
                 # For old genotyping protocols without nd_protocolprop info...
@@ -361,17 +391,65 @@ sub get_grm {
                     }
                 }
 
+                my $geno = $genotypes->[0];
+
                 my $genotype_string = "";
+                if ($counter == 0) {
+                    $genotype_string .= "ID\t";
+                    foreach my $m (@all_marker_objects) {
+                        $genotype_string .= $m->{name} . "\t";
+                    }
+                    $genotype_string .= "\n";
+                    $genotype_string .= "CHROM\t";
+                    foreach my $m (@all_marker_objects) {
+                        $genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{chrom} . " \t";
+                    }
+                    $genotype_string .= "\n";
+                    $genotype_string .= "POS\t";
+                    foreach my $m (@all_marker_objects) {
+                        $genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{pos} . " \t";
+                    }
+                    $genotype_string .= "\n";
+                }
                 my $progeny_genotype = _compute_progeny_genotypes($genotypes, \@all_marker_objects);
 
                 push @individuals_stock_ids, $accession_stock_id;
                 my $genotype_string_scores = join "\t", @$progeny_genotype;
-                $genotype_string .= $genotype_string_scores . "\n";
+                $genotype_string .= $accession_stock_id."\t".$genotype_string_scores."\n";
                 write_file($grm_tempfile, {append => 1}, $genotype_string);
                 undef $progeny_genotype;
+                $counter++;
             }
         }
     }
+
+    my $transpose_tempfile = $grm_tempfile . "_transpose";
+
+    my $tmp_output_dir = $shared_cluster_dir_config."/tmp_genotype_download_gwas";
+    mkdir $tmp_output_dir if ! -d $tmp_output_dir;
+
+    my $transpose_cmd = CXGN::Tools::Run->new(
+        {
+            backend => $backend_config,
+            submit_host => $cluster_host_config,
+            temp_base => $tmp_output_dir,
+            queue => $web_cluster_queue_config,
+            do_cleanup => 0,
+            out_file => $transpose_tempfile,
+#            out_file => $transpose_tempfile,
+            # don't block and wait if the cluster looks full
+            max_cluster_jobs => 1_000_000_000,
+        }
+    );
+
+    # Do the transposition job on the cluster
+    $transpose_cmd->run_cluster(
+            "perl ",
+            $basepath_config."/bin/transpose_matrix.pl",
+            $grm_tempfile,
+    );
+    $transpose_cmd->is_cluster(1);
+    $transpose_cmd->wait;
 
     # print STDERR Dumper \@all_marker_names;
     # print STDERR Dumper \@individuals_stock_ids;
@@ -381,43 +459,59 @@ sub get_grm {
     my $marker_filter = $self->marker_filter();
     my $individuals_filter = $self->individuals_filter();
 
-    my $grm_tempfile_out = $grm_tempfile . "_out";
-
     my $cmd = 'R -e "library(genoDataFilter); library(rrBLUP); library(data.table); library(scales);
-    mat <- fread(\''.$grm_tempfile.'\', header=FALSE, sep=\'\t\');
-    range_check <- range(as.matrix(mat)[1,]);
-    if (range_check[2] - range_check[1] <= 1) {
-        mat <- as.data.frame(rescale(as.matrix(mat), to = c(-1,1), from = c(0,2) ));
-    } else {
-        mat <- as.data.frame(rescale(as.matrix(mat), to = c(-1,1) ));
+    pheno <- fread(\''.$pheno_tempfile.'\', header=TRUE, sep=\',\');
+    pheno\$field_trial_id <- as.factor(pheno\$field_trial_id);
+    pheno\$replicate <- as.factor(pheno\$replicate);
+    geno_mat_marker_first <- fread(\''.$transpose_tempfile.'\', header=TRUE, sep=\'\t\') #has sample names as column names, first 3 columns are marker info;
+    geno_mat_sample_first <- data.frame(fread(\''.$grm_tempfile.'\', header=FALSE, sep=\'\t\', skip=3)) #has sample names in first column, no defined column names;
+    sample_names <- geno_mat_sample_first\$V1; #no defined column names but they are markers
+    geno_mat_sample_first <- geno_mat_sample_first[,-1]; #remove first column so that row names are sample names and all other columns are markers
+    geno_mat_sample_first <- as.data.frame(rescale(as.matrix(geno_mat_sample_first), to = c(-1,1) ) ); #rrBLUP expected -1 to 1
+    colnames(geno_mat_sample_first) <- geno_mat_marker_first\$ID; #has sample names as row names, column names are marker names
+    row.names(geno_mat_sample_first) <- sample_names;
+    mat_clean_sample_first <- filterGenoData(gData=geno_mat_sample_first, maf='.$maf.', markerFilter='.$marker_filter.', indFilter='.$individuals_filter.');
+    if (\'rn\' %in% colnames(mat_clean_sample_first)) { row.names(mat_clean_sample_first) <- mat_clean_sample_first\$rn; mat_clean_sample_first <- mat_clean_sample_first[,-1]; }
+    remaining_samples <- row.names(mat_clean_sample_first);
+    remaining_markers <- colnames(mat_clean_sample_first);
+    imputation <- A.mat(mat_clean_sample_first, impute.method=\'EM\', n.core='.$number_system_cores.', return.imputed=TRUE);
+    K.mat <- imputation\$A;
+    geno_imputed <- imputation\$imputed;
+    geno_gwas <- cbind(geno_mat_marker_first[geno_mat_marker_first\$ID %in% remaining_markers, c(1:3)], t(geno_imputed));
+    gwas_results <- GWAS(pheno[pheno\$gid %in% remaining_samples, ], geno_gwas, fixed=c(\'field_trial_id\',\'replicate\'), K=K.mat, plot=F, min.MAF='.$maf.'); #columns are ID,CHROM,POS,TraitIDs and values in TraitIDs column are -log10 p values'."\n";
+    if ($download_format eq 'manhattan_qq_plots') {
+        $cmd .= 'pdf( \''.$gwas_tempfile.'\', width = 11, height = 8.5 );
+        for (i in 4:length(gwas_results)) { alpha_bonferroni=-log10(0.05/length(gwas_results[,i])); chromosome_ids <- as.factor(gwas_results\$CHROM); marker_indicator <- match(unique(gwas_results\$CHROM), gwas_results\$CHROM); N <- length(gwas_results[,1]); plot(seq(1:N), gwas_results[,i], col=chromosome_ids, ylab=\'-log10(pvalue)\', main=paste(\'Manhattan Plot \',colnames(gwas_results)[i]), xaxt=\'n\', xlab=\'Position\', ylim=c(0,14)); axis(1,at=marker_indicator,labels=gwas_results\$CHROM[marker_indicator], cex.axis=0.8, las=2); abline(h=alpha_bonferroni,col=\'red\',lwd=2); expected.logvalues <- sort( -log10( c(1:N) * (1/N) ) ); observed.logvalues <- sort(gwas_results[,i]); plot(expected.logvalues, observed.logvalues, main=paste(\'QQ Plot \',colnames(gwas_results)[i]), xlab=\'Expected -log p-values \', ylab=\'Observed -log p-values\', col.main=\'black\', col=\'coral1\', pch=20); abline(0,1,lwd=3,col=\'black\'); }
+        dev.off();
+        "';
     }
-    mat_clean <- filterGenoData(gData=mat, maf='.$maf.', markerFilter='.$marker_filter.', indFilter='.$individuals_filter.');
-    A_matrix <- A.mat(mat_clean, impute.method=\'EM\', n.core='.$number_system_cores.', return.imputed=FALSE);
-    write.table(A_matrix, file=\''.$grm_tempfile_out.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\')"';
+    elsif ($download_format eq 'results_tsv') {
+        $cmd .= 'write.table(gwas_results, file=\''.$gwas_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+        "';
+    }
     print STDERR Dumper $cmd;
 
-    my $tmp_output_dir = $shared_cluster_dir_config."/tmp_genotype_download_grm";
-    mkdir $tmp_output_dir if ! -d $tmp_output_dir;
-
-    # Do the GRM on the cluster
-    my $grm_cmd = CXGN::Tools::Run->new(
+    # Do the GWAS on the cluster
+    my $gwas_cmd = CXGN::Tools::Run->new(
         {
             backend => $backend_config,
             submit_host => $cluster_host_config,
             temp_base => $tmp_output_dir,
             queue => $web_cluster_queue_config,
             do_cleanup => 0,
-            out_file => $grm_tempfile_out,
+            out_file => $gwas_tempfile,
             # don't block and wait if the cluster looks full
             max_cluster_jobs => 1_000_000_000,
         }
     );
 
-    $grm_cmd->run_cluster($cmd);
-    $grm_cmd->is_cluster(1);
-    $grm_cmd->wait;
+    # Do the transposition job on the cluster
+    $gwas_cmd->run_cluster($cmd);
+    $gwas_cmd->is_cluster(1);
+    $gwas_cmd->wait;
+    my $status;
 
-    return ($grm_tempfile_out, \@individuals_stock_ids, \@all_individual_accessions_stock_ids);
+    return ($gwas_tempfile, $status);
 }
 
 sub grm_cache_key {
@@ -429,206 +523,46 @@ sub grm_cache_key {
     #preserve order of hash keys to get same text
     $json = $json->canonical();
     my $accessions = $json->encode( $self->accession_id_list() || [] );
-    my $plots = $json->encode( $self->plot_id_list() || [] );
+    my $traits = $json->encode( $self->trait_id_list() || [] );
     my $protocol = $self->protocol_id() || '';
     my $genotypeprophash = $json->encode( $self->genotypeprop_hash_select() || [] );
     my $protocolprophash = $json->encode( $self->protocolprop_top_key_select() || [] );
     my $protocolpropmarkerhash = $json->encode( $self->protocolprop_marker_hash_select() || [] );
     my $maf = $self->minor_allele_frequency();
     my $marker_filter = $self->marker_filter();
+    my $download_format = $self->download_format();
     my $individuals_filter = $self->individuals_filter();
-    my $key = md5_hex($accessions.$plots.$protocol.$genotypeprophash.$protocolprophash.$protocolpropmarkerhash.$self->get_grm_for_parental_accessions().$self->return_only_first_genotypeprop_for_stock()."_MAF$maf"."_mfilter$marker_filter"."_ifilter$individuals_filter"."_$datatype");
+    my $key = md5_hex($accessions.$traits.$protocol.$genotypeprophash.$protocolprophash.$protocolpropmarkerhash.$self->get_grm_for_parental_accessions().$self->return_only_first_genotypeprop_for_stock()."_MAF$maf"."_mfilter$marker_filter"."_ifilter$individuals_filter"."repeated".$self->traits_are_repeated_measurements()."format$download_format"."_$datatype");
     return $key;
 }
 
-sub download_grm {
+sub download_gwas {
     my $self = shift;
-    my $return_type = shift || 'filehandle';
     my $shared_cluster_dir_config = shift;
     my $backend_config = shift;
     my $cluster_host_config = shift;
     my $web_cluster_queue_config = shift;
     my $basepath_config = shift;
-    my $download_format = $self->download_format();
-    my $grm_tempfile = $self->grm_temp_file();
 
-    my $key = $self->grm_cache_key("download_grm_fixed0".$download_format);
+    my $key = $self->grm_cache_key("download_gwas");
     $self->_cache_key($key);
     $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
 
     my $return;
     if ($self->cache()->exists($key)) {
-        if ($return_type eq 'filehandle') {
-            $return = $self->cache()->handle($key);
-        }
-        elsif ($return_type eq 'data') {
-            $return = $self->cache()->get($key);
-        }
+        $return = $self->cache()->handle($key);
     }
     else {
-        my ($grm_tempfile_out, $stock_ids, $all_accession_stock_ids) = $self->get_grm($shared_cluster_dir_config, $backend_config, $cluster_host_config, $web_cluster_queue_config, $basepath_config);
+        my ($gwas_tempfile, $status) = $self->get_gwas($shared_cluster_dir_config, $backend_config, $cluster_host_config, $web_cluster_queue_config, $basepath_config);
 
-        my @grm;
-        open(my $fh, "<", $grm_tempfile_out) or die "Can't open < $grm_tempfile_out: $!";
-        while (my $row = <$fh>) {
-            chomp($row);
-            my @vals = split "\t", $row;
-            push @grm, \@vals;
-        }
-        
-        my $data = '';
-        if ($download_format eq 'matrix') {
-            my @header = ("stock_id");
-            push @header, @$stock_ids;
+        open my $out_copy, '<', $gwas_tempfile or die "Can't open output file: $!";
 
-            my $header_line = join "\t", @header;
-            $data = "$header_line\n";
+        $self->cache()->set($key, '');
+        my $file_handle = $self->cache()->handle($key);
+        copy($out_copy, $file_handle);
 
-            my $row_num = 0;
-            foreach my $s (@$stock_ids) {
-                my @row = ($s);
-                my $col_num = 0;
-                foreach my $c (@$stock_ids) {
-                    push @row, $grm[$row_num]->[$col_num];
-                    $col_num++;
-                }
-                my $line = join "\t", @row;
-                $data .= "$line\n";
-                $row_num++;
-            }
-
-            $self->cache()->set($key, $data);
-            if ($return_type eq 'filehandle') {
-                $return = $self->cache()->handle($key);
-            }
-            elsif ($return_type eq 'data') {
-                $return = $data;
-            }
-        }
-        elsif ($download_format eq 'three_column') {
-            my %result_hash;
-            my $row_num = 0;
-            my %seen_stock_ids;
-            foreach my $s (@$stock_ids) {
-                my @row = ($s);
-                my $col_num = 0;
-                foreach my $c (@$stock_ids) {
-                    if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
-                        my $val = $grm[$row_num]->[$col_num];
-                        if ($val || $val == 0) {
-                            $result_hash{$s}->{$c} = $val;
-                            $seen_stock_ids{$s}++;
-                            $seen_stock_ids{$c}++;
-                        }
-                    }
-                    $col_num++;
-                }
-                $row_num++;
-            }
-
-            foreach my $r (sort keys %result_hash) {
-                foreach my $s (sort keys %{$result_hash{$r}}) {
-                    my $val = $result_hash{$r}->{$s};
-                    $data .= "$r\t$s\t$val\n";
-                }
-            }
-
-            foreach my $a (@$all_accession_stock_ids) {
-                if (!exists($seen_stock_ids{$a})) {
-                    $data .= "$a\t$a\t1\n";
-                }
-            }
-
-            $self->cache()->set($key, $data);
-            if ($return_type eq 'filehandle') {
-                $return = $self->cache()->handle($key);
-            }
-            elsif ($return_type eq 'data') {
-                $return = $data;
-            }
-        }
-        elsif ($download_format eq 'heatmap') {
-            my %result_hash;
-            my $row_num = 0;
-            my %seen_stock_ids;
-            foreach my $s (@$stock_ids) {
-                my @row = ($s);
-                my $col_num = 0;
-                foreach my $c (@$stock_ids) {
-                    if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
-                        my $val = $grm[$row_num]->[$col_num];
-                        if ($val || $val == 0) {
-                            $result_hash{$s}->{$c} = $val;
-                            $seen_stock_ids{$s}++;
-                            $seen_stock_ids{$c}++;
-                        }
-                    }
-                    $col_num++;
-                }
-                $row_num++;
-            }
-
-            foreach my $r (sort keys %result_hash) {
-                foreach my $s (sort keys %{$result_hash{$r}}) {
-                    my $val = $result_hash{$r}->{$s};
-                    $data .= "$r\t$s\t$val\n";
-                }
-            }
-
-            foreach my $a (@$all_accession_stock_ids) {
-                if (!exists($seen_stock_ids{$a})) {
-                    $data .= "$a\t$a\t1\n";
-                }
-            }
-
-            open(my $heatmap_fh, '>', $grm_tempfile) or die $!;
-                print $heatmap_fh $data;
-            close($heatmap_fh);
-
-            my $grm_tempfile_out = $grm_tempfile . "_plot_out";
-            my $heatmap_cmd = 'R -e "library(ggplot2); library(data.table);
-            mat <- fread(\''.$grm_tempfile.'\', header=FALSE, sep=\'\t\', stringsAsFactors=FALSE);
-            pdf( \''.$grm_tempfile_out.'\', width = 8.5, height = 11);
-            ggplot(data = mat, aes(x=V1, y=V2, fill=V3)) + geom_tile();
-            dev.off();
-            "';
-            print STDERR Dumper $heatmap_cmd;
-
-            my $tmp_output_dir = $shared_cluster_dir_config."/tmp_genotype_download_grm_heatmap";
-            mkdir $tmp_output_dir if ! -d $tmp_output_dir;
-
-            # Do the GRM on the cluster
-            my $plot_cmd = CXGN::Tools::Run->new(
-                {
-                    backend => $backend_config,
-                    submit_host => $cluster_host_config,
-                    temp_base => $tmp_output_dir,
-                    queue => $web_cluster_queue_config,
-                    do_cleanup => 0,
-                    out_file => $grm_tempfile_out,
-                    # don't block and wait if the cluster looks full
-                    max_cluster_jobs => 1_000_000_000,
-                }
-            );
-
-            $plot_cmd->run_cluster($heatmap_cmd);
-            $plot_cmd->is_cluster(1);
-            $plot_cmd->wait;
-
-            if ($return_type eq 'filehandle') {
-                open my $out_copy, '<', $grm_tempfile_out or die "Can't open output file: $!";
-
-                $self->cache()->set($key, '');
-                my $file_handle = $self->cache()->handle($key);
-                copy($out_copy, $file_handle);
-
-                close $out_copy;
-                $return = $self->cache()->handle($key);
-            }
-            elsif ($return_type eq 'data') {
-                die "Can only return the filehandle for GRM heatmap!\n";
-            }
-        }
+        close $out_copy;
+        $return = $self->cache()->handle($key);
     }
     return $return;
 }
