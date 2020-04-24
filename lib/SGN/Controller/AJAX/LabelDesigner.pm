@@ -556,18 +556,39 @@ sub get_data {
         my $result = $project->get_crosses_and_details_in_crossingtrial();
         my @cross_data = @$result;
         foreach my $cross (@cross_data){
+            my $cross_combination;
+            my $male_parent_name;
+            my $male_parent_id;
+
+            if ($cross->[2] eq ''){
+                $cross_combination = 'No cross combination available';
+            } else {
+                $cross_combination = $cross->[2];
+            }
+
+            if ($cross->[7] eq ''){
+                $male_parent_name = 'No male parent available';
+            } else {
+                $male_parent_name = $cross->[7];
+            }
+
+            if ($cross->[6] eq ''){
+                $male_parent_id = 'No male parent available';
+            } else {
+                $male_parent_id = $cross->[6];
+            }
+
             $design->{$cross->[0]} = {'cross_name' => $cross->[1],
                                       'cross_id' => $cross->[0],
-                                      'cross_combination' => $cross->[2],
+                                      'cross_combination' => $cross_combination,
                                       'cross_type' => $cross->[3],
                                       'female_parent_name' => $cross->[5],
                                       'female_parent_id' => $cross->[4],
-                                      'male_parent_name' => $cross->[7],
-                                      'male_parent_id' => $cross->[6]
-                                     }
+                                      'male_parent_name' => $male_parent_name,
+                                      'male_parent_id' => $male_parent_id
+                                     };
         }
     }
-
 
 
 #    print STDERR "Design is ".Dumper($design)."\n";
