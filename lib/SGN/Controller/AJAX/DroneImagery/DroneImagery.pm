@@ -4713,19 +4713,20 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
     if ($c->req->param('save_model') == 1) {
         my $model_name = $c->req->param('model_name');
         my $model_description = $c->req->param('model_description');
-        _perform_save_trained_keras_cnn_model($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $archive_temp_output_model_file, $archive_temp_input_file, $archive_temp_input_aux_file, $model_name, $model_description, $drone_run_ids, $plot_polygon_type_ids, $trait_id, $model_type, $user_id, $user_name, $user_role);
 
         my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_keras_trained', 'project_md_image')->cvterm_id();
+
+        my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
+            JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id)
+            JOIN phenome.stock_image AS stock_image ON(md_image.image_id = stock_image.image_id)
+            WHERE md_image.obsolete = 'f' AND md_image.md5sum = ? AND project_md_image.type_id = ? AND project_md_image.project_id = ? AND stock_image.stock_id = ?;";
+        my $h = $schema->storage->dbh->prepare($q);
+
         foreach my $stock_id (keys %output_images){
             my $image_file = $output_images{$stock_id}->{image_file};
             my $field_trial_id = $output_images{$stock_id}->{field_trial_id};
             my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
             my $md5checksum = $image->calculate_md5sum($image_file);
-            my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
-                JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id)
-                JOIN phenome.stock_image AS stock_image ON(md_image.image_id = stock_image.image_id)
-                WHERE md_image.obsolete = 'f' AND md_image.md5sum = ? AND project_md_image.type_id = ? AND project_md_image.project_id = ? AND stock_image.stock_id = ?;";
-            my $h = $schema->storage->dbh->prepare($q);
             $h->execute($md5checksum, $linking_table_type_id, $field_trial_id, $stock_id);
             my ($saved_image_id) = $h->fetchrow_array();
 
@@ -4748,6 +4749,8 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
             }
             push @saved_trained_image_urls, $output_image_url;
         }
+
+        _perform_save_trained_keras_cnn_model($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $archive_temp_output_model_file, $archive_temp_input_file, $archive_temp_input_aux_file, $model_name, $model_description, $drone_run_ids, $plot_polygon_type_ids, $trait_id, $model_type, $user_id, $user_name, $user_role);
     }
 
     $c->stash->{rest} = { success => 1, results => \@result_agg, model_input_file => $archive_temp_input_file, model_input_aux_file => $archive_temp_input_aux_file, model_temp_file => $archive_temp_output_model_file, trait_id => $trait_id, loss_history => \@loss_history, loss_history_file => $archive_temp_loss_history_file_string, saved_trained_image_urls => \@saved_trained_image_urls };
