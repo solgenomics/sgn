@@ -5001,13 +5001,14 @@ sub drone_imagery_predict_keras_model_POST : Args(0) {
     my $population_id = $c->req->param('population_id');
     my $drone_run_ids = decode_json($c->req->param('drone_run_ids'));
     my $plot_polygon_type_ids = decode_json($c->req->param('plot_polygon_type_ids'));
+    my @aux_trait_ids = $c->req->param('aux_trait_ids[]') ? $c->req->param('aux_trait_ids[]') : ();
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my @allowed_composed_cvs = split ',', $c->config->{composable_cvs};
     my $composable_cvterm_delimiter = $c->config->{composable_cvterm_delimiter};
     my $composable_cvterm_format = $c->config->{composable_cvterm_format};
 
-    my $return = _perform_keras_cnn_predict($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $model_id, $drone_run_ids, $plot_polygon_type_ids, $model_prediction_type, $population_id, \@allowed_composed_cvs, $composable_cvterm_format, $composable_cvterm_delimiter, $user_id, $user_name, $user_role);
+    my $return = _perform_keras_cnn_predict($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $model_id, $drone_run_ids, $plot_polygon_type_ids, $model_prediction_type, $population_id, \@allowed_composed_cvs, $composable_cvterm_format, $composable_cvterm_delimiter, \@aux_trait_ids, $user_id, $user_name, $user_role);
 
     $c->stash->{rest} = $return;
 }
@@ -5026,6 +5027,7 @@ sub _perform_keras_cnn_predict {
     my $allowed_composed_cvs = shift;
     my $composable_cvterm_format = shift;
     my $composable_cvterm_delimiter = shift;
+    my $aux_trait_ids = shift;
     my $user_id = shift;
     my $user_name = shift;
     my $user_role = shift;
