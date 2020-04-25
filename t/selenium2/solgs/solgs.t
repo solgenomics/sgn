@@ -52,6 +52,18 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
     $d->find_element_ok('dry matter', 'partial_link_text',  'build model')->click();
     sleep(10);
+    $d->find_element_ok('Download model accuracy', 'partial_link_text',  'build model')->click();
+    sleep(3);
+    $d->driver->go_back();
+    sleep(5);
+    $d->find_element_ok('Download all GEBVs', 'partial_link_text',  'build model')->click();
+    sleep(3);
+    $d->driver->go_back();
+    sleep(5);
+    $d->find_element_ok('Download all marker', 'partial_link_text',  'build model')->click();
+    sleep(3);
+    $d->driver->go_back();
+    sleep(5);
 
     my $sel_pred = $d->find_element('Predict', 'partial_link_text', 'scroll to selection pred');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
