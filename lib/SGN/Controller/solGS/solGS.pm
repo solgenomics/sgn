@@ -1800,7 +1800,7 @@ sub format_selection_pops {
 	      }
 
 	      $c->controller('solGS::Download')->selection_prediction_download_urls($c, $training_pop_id, $prediction_pop_id);
-	      my $download_prediction = $c->stash->{download_prediction};
+	      my $download_prediction = $c->stash->{selection_prediction_download};
 
 	      push @data,  [$pred_pop_link, $desc, $project_yr, $download_prediction];
           }

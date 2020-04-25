@@ -55,7 +55,7 @@ sub check_predicted_dataset_selection :Path('/solgs/check/predicted/dataset/sele
     
     $c->controller('solGS::Download')->selection_prediction_download_urls($c, $training_pop_id, $selection_pop_id);
    
-    my $ret->{output} = $c->stash->{download_prediction};
+    my $ret->{output} = $c->stash->{selection_prediction_download};
 
     $ret = to_json($ret);
         

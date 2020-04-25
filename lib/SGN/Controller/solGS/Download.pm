@@ -33,7 +33,7 @@ sub download_validation :Path('/solgs/download/validation/pop') Args() {
     $c->controller('solGS::Files')->validation_file($c);
     my $validation_file = $c->stash->{validation_file};
   
-    unless (!-e $validation_file || -s $validation_file == 0) 
+    unless (!-s $validation_file) 
     {
         my @validation =  map { [ split(/\t/) ] }  read_file($validation_file);
     

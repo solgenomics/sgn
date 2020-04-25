@@ -20,7 +20,7 @@ $analyzed_traits_ids => undef
 $pop_id
 $project_name
 $model_data
-$download_prediction => undef
+$selection_prediction_download => undef
 $prediction_pop_id => undef
 $list_of_prediction_pops => undef
 $prediction_pop_name => undef
@@ -57,7 +57,7 @@ $selection_traits_ids = join(',', @$prediction_pop_analyzed_traits_ids);
   &>
   
 <& selection_populations.mas,
-   download_prediction            => $download_prediction,
+   selection_prediction_download  => $selection_prediction_download,
    analyzed_traits                => $analyzed_traits,
    pop_id                         => $pop_id,
    project_name                   => $project_name,
