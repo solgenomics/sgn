@@ -554,8 +554,17 @@ sub get_data {
         }
     }
     elsif ($data_level eq "crosses") {
+        my $project;
+        my $cross_list_ids;
+        my %all_design;
         if ($data_type =~ m/Crossing Experiments/) {
-        my $project = CXGN::Cross->new({ schema => $schema, trial_id => $id});
+            $project = CXGN::Cross->new({ schema => $schema, trial_id => $id});
+        } elsif ($data_type =~ m/List/) {
+            $cross_list_ids = convert_stock_list($c, $schema, $id);
+            my ($crossing_experiment_id, $num_trials) = get_trial_from_stock_list($c, $schema, $cross_list_ids);
+            $project = CXGN::Cross->new({ schema => $schema, trial_id => $crossing_experiment_id});
+        }
+
         my $result = $project->get_crosses_and_details_in_crossingtrial();
         my @cross_data = @$result;
         foreach my $cross (@cross_data){
@@ -581,73 +590,23 @@ sub get_data {
                 $male_parent_id = $cross->[6];
             }
 
-            $design->{$cross->[0]} = {'cross_name' => $cross->[1],
+            $all_design{$cross->[0]} = {'cross_name' => $cross->[1],
                                       'cross_id' => $cross->[0],
                                       'cross_combination' => $cross_combination,
                                       'cross_type' => $cross->[3],
                                       'female_parent_name' => $cross->[5],
                                       'female_parent_id' => $cross->[4],
                                       'male_parent_name' => $male_parent_name,
-                                      'male_parent_id' => $male_parent_id
-                                     };
+                                      'male_parent_id' => $male_parent_id};
         }
-        }
-        elsif ($data_type =~ m/List/) {
-            my $list_ids = convert_stock_list($c, $schema, $id);
-            my ($crossing_experiment_id, $num_trials) = get_trial_from_stock_list($c, $schema, $list_ids);
-            my $project = CXGN::Cross->new({ schema => $schema, trial_id => $crossing_experiment_id});
-            my $result = $project->get_crosses_and_details_in_crossingtrial();
-            my @cross_data = @$result;
-            my $cross_identifier;
-            foreach my $cross (@cross_data){
-                my $cross_combination;
-                my $male_parent_name;
-                my $male_parent_id;
 
-                if ($cross->[2] eq ''){
-                    $cross_combination = 'No cross combination available';
-                } else {
-                    $cross_combination = $cross->[2];
-                }
-
-                if ($cross->[7] eq ''){
-                    $male_parent_name = 'No male parent available';
-                } else {
-                    $male_parent_name = $cross->[7];
-                }
-
-                if ($cross->[6] eq ''){
-                    $male_parent_id = 'No male parent available';
-                } else {
-                    $male_parent_id = $cross->[6];
-                }
-
-                $cross_identifier = $cross->[0];
-                $design->{$cross_identifier} = {'cross_name' => $cross->[1],
-                                          'cross_id' => $cross->[0],
-                                          'cross_combination' => $cross_combination,
-                                          'cross_type' => $cross->[3],
-                                          'female_parent_name' => $cross->[5],
-                                          'female_parent_id' => $cross->[4],
-                                          'male_parent_name' => $male_parent_name,
-                                          'male_parent_id' => $male_parent_id
-                                         };
-            }
-
-            my %design_hash = %$design;
-            my %filtered_hash = map { $_ => $design_hash{$_} } @$list_ids;
+        if ($data_type =~ m/List/) {
+            my %filtered_hash = map { $_ => $all_design{$_} } @$cross_list_ids;
             $design = \%filtered_hash;
-
-
-            print STDERR "FILTER DESIGN =".Dumper(\%filtered_hash)."\n";
+        } else {
+            $design = \%all_design;
         }
-
     }
-
-
-
-
-
 
 #    print STDERR "Design is ".Dumper($design)."\n";
     return $num_trials, $design;
