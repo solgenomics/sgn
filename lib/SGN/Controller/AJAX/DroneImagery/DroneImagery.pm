@@ -5311,7 +5311,7 @@ sub _perform_keras_cnn_predict {
                             print $F_aux "$d->{germplasm_stock_id},";
                             print $F_aux "$female_parent_stock_id,";
                             print $F_aux "$male_parent_stock_id,";
-                            print $F_aux "$archive_temp_output_image_file,";
+                            print $F_aux "$archive_temp_output_image_file";
                             if (scalar(@$aux_trait_ids)>0) {
                                 print $F_aux ',';
                                 my @aux_values;
@@ -5353,7 +5353,7 @@ sub _perform_keras_cnn_predict {
                             print $F_aux "$d->{germplasm_stock_id},";
                             print $F_aux "$female_parent_stock_id,";
                             print $F_aux "$male_parent_stock_id,";
-                            print $F_aux "$archive_temp_output_image_file,";
+                            print $F_aux "$archive_temp_output_image_file";
                             if (scalar(@$aux_trait_ids)>0) {
                                 print $F_aux ',';
                                 my @aux_values;
