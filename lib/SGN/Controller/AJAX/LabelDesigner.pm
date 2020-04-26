@@ -360,10 +360,12 @@ sub get_trial_from_stock_list {
 
     my $genotyping_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_layout', 'experiment_type')->cvterm_id();
     my $field_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_layout', 'experiment_type')->cvterm_id();
+    my $cross_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_experiment', 'experiment_type')->cvterm_id();
+
 
     my $trial_rs = $schema->resultset("NaturalDiversity::NdExperimentStock")->search({
         stock_id => { -in => \@ids }
-    })->search_related('nd_experiment', {'nd_experiment.type_id'=>[$field_experiment_cvterm_id, $genotyping_experiment_cvterm_id]
+    })->search_related('nd_experiment', {'nd_experiment.type_id'=>[$field_experiment_cvterm_id, $genotyping_experiment_cvterm_id, $cross_experiment_cvterm_id]
     })->search_related('nd_experiment_projects');
     my %trials = ();
     while (my $row = $trial_rs->next()) {
@@ -551,7 +553,8 @@ sub get_data {
             $design = filter_by_list_items($design, $list_ids, 'tissue_sample_id');
         }
     }
-    elsif ($data_level eq "cross") {
+    elsif ($data_level eq "crosses") {
+        if ($data_type =~ m/Crossing Experiments/) {
         my $project = CXGN::Cross->new({ schema => $schema, trial_id => $id});
         my $result = $project->get_crosses_and_details_in_crossingtrial();
         my @cross_data = @$result;
@@ -588,7 +591,62 @@ sub get_data {
                                       'male_parent_id' => $male_parent_id
                                      };
         }
+        }
+        elsif ($data_type =~ m/List/) {
+            my $list_ids = convert_stock_list($c, $schema, $id);
+            my ($crossing_experiment_id, $num_trials) = get_trial_from_stock_list($c, $schema, $list_ids);
+            my $project = CXGN::Cross->new({ schema => $schema, trial_id => $crossing_experiment_id});
+            my $result = $project->get_crosses_and_details_in_crossingtrial();
+            my @cross_data = @$result;
+            my $cross_identifier;
+            foreach my $cross (@cross_data){
+                my $cross_combination;
+                my $male_parent_name;
+                my $male_parent_id;
+
+                if ($cross->[2] eq ''){
+                    $cross_combination = 'No cross combination available';
+                } else {
+                    $cross_combination = $cross->[2];
+                }
+
+                if ($cross->[7] eq ''){
+                    $male_parent_name = 'No male parent available';
+                } else {
+                    $male_parent_name = $cross->[7];
+                }
+
+                if ($cross->[6] eq ''){
+                    $male_parent_id = 'No male parent available';
+                } else {
+                    $male_parent_id = $cross->[6];
+                }
+
+                $cross_identifier = $cross->[0];
+                $design->{$cross_identifier} = {'cross_name' => $cross->[1],
+                                          'cross_id' => $cross->[0],
+                                          'cross_combination' => $cross_combination,
+                                          'cross_type' => $cross->[3],
+                                          'female_parent_name' => $cross->[5],
+                                          'female_parent_id' => $cross->[4],
+                                          'male_parent_name' => $male_parent_name,
+                                          'male_parent_id' => $male_parent_id
+                                         };
+            }
+
+            my %design_hash = %$design;
+            my %filtered_hash = map { $_ => $design_hash{$_} } @$list_ids;
+            $design = \%filtered_hash;
+
+
+            print STDERR "FILTER DESIGN =".Dumper(\%filtered_hash)."\n";
+        }
+
     }
+
+
+
+
 
 
 #    print STDERR "Design is ".Dumper($design)."\n";
