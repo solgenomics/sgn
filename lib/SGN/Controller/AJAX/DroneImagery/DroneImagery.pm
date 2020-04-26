@@ -4750,7 +4750,7 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
             push @saved_trained_image_urls, $output_image_url;
         }
 
-        _perform_save_trained_keras_cnn_model($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $archive_temp_output_model_file, $archive_temp_autoencoder_output_model_file, $archive_temp_input_file, $archive_temp_input_aux_file, $model_name, $model_description, $drone_run_ids, $plot_polygon_type_ids, $trait_id, $model_type, $user_id, $user_name, $user_role);
+        _perform_save_trained_keras_cnn_model($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $archive_temp_output_model_file, $archive_temp_autoencoder_output_model_file, $archive_temp_input_file, $archive_temp_input_aux_file, $model_name, $model_description, $drone_run_ids, $plot_polygon_type_ids, $trait_id, $model_type, \@aux_trait_id, $user_id, $user_name, $user_role);
     }
 
     $c->stash->{rest} = { success => 1, results => \@result_agg, model_input_file => $archive_temp_input_file, model_input_aux_file => $archive_temp_input_aux_file, model_temp_file => $archive_temp_output_model_file, model_autoencoder_temp_file => $archive_temp_autoencoder_output_model_file, trait_id => $trait_id, loss_history => \@loss_history, loss_history_file => $archive_temp_loss_history_file_string, saved_trained_image_urls => \@saved_trained_image_urls };
@@ -4771,12 +4771,13 @@ sub drone_imagery_save_keras_model_GET : Args(0) {
     my $model_name = $c->req->param('model_name');
     my $model_description = $c->req->param('model_description');
     my $trait_id = $c->req->param('trait_id');
+    my @aux_trait_id = $c->req->param('aux_trait_id[]') ? $c->req->param('aux_trait_id[]') : ();
     my $model_type = $c->req->param('model_type');
     my $drone_run_ids = decode_json($c->req->param('drone_run_ids'));
     my $plot_polygon_type_ids = decode_json($c->req->param('plot_polygon_type_ids'));
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    _perform_save_trained_keras_cnn_model($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $model_file, $model_input_file, $archive_temp_autoencoder_output_model_file, $model_input_aux_file, $model_name, $model_description, $drone_run_ids, $plot_polygon_type_ids, $trait_id, $model_type, $user_id, $user_name, $user_role);
+    _perform_save_trained_keras_cnn_model($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $model_file, $model_input_file, $archive_temp_autoencoder_output_model_file, $model_input_aux_file, $model_name, $model_description, $drone_run_ids, $plot_polygon_type_ids, $trait_id, $model_type, \@aux_trait_id, $user_id, $user_name, $user_role);
 }
 
 sub _perform_save_trained_keras_cnn_model {
@@ -4795,6 +4796,7 @@ sub _perform_save_trained_keras_cnn_model {
     my $plot_polygon_type_ids = shift;
     my $trait_id = shift;
     my $model_type = shift;
+    my $aux_trait_ids = shift;
     my $user_id = shift;
     my $user_name = shift;
     my $user_role = shift;
@@ -4820,7 +4822,7 @@ sub _perform_save_trained_keras_cnn_model {
             name => $model_name,
             type_id => $keras_cnn_cvterm_id,
             nd_protocolprops => [
-                {value => encode_json({variable_name => $trait_name, variable_id => $trait_id}), type_id => $keras_cnn_trait_cvterm_id},
+                {value => encode_json({variable_name => $trait_name, variable_id => $trait_id, aux_trait_ids => $aux_trait_ids}), type_id => $keras_cnn_trait_cvterm_id},
                 {value => encode_json({value=>$model_type, image_type=>'standard_4_montage'}), type_id => $keras_cnn_model_type_cvterm_id}
             ]
         });
@@ -5180,6 +5182,7 @@ sub _perform_keras_cnn_predict {
     my $model_type_hash = decode_json $model_type;
     my $trait_id = $trained_trait_hash->{variable_id};
     my $trained_trait_name = $trained_trait_hash->{variable_name};
+    my $aux_trait_ids = $trained_trait_hash->{aux_trait_ids};
     $model_type = $model_type_hash->{value};
     my $trained_image_type = $model_type_hash->{image_type};
     my $model_file = $filename."/".$basename;
@@ -5222,9 +5225,8 @@ sub _perform_keras_cnn_predict {
 
     my @trait_ids = ($trait_id);
     print STDERR Dumper \@trait_ids;
-    my @aux_trait_id = ();
-    if (scalar(@aux_trait_id) > 0) {
-        push @trait_ids, @aux_trait_id;
+    if (scalar(@$aux_trait_ids) > 0) {
+        push @trait_ids, @$aux_trait_ids;
     }
 
     my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
@@ -5275,9 +5277,9 @@ sub _perform_keras_cnn_predict {
 
     open(my $F_aux, ">", $archive_temp_input_aux_file) || die "Can't open file ".$archive_temp_input_aux_file;
         print $F_aux 'stock_id,value,trait_name,field_trial_id,accession_id,female_id,male_id,output_image_file';
-        if (scalar(@aux_trait_id)>0) {
+        if (scalar(@$aux_trait_ids)>0) {
             my $aux_trait_counter = 0;
-            foreach (@aux_trait_id) {
+            foreach (@$aux_trait_ids) {
                 print $F_aux ",aux_trait_$aux_trait_counter";
                 $aux_trait_counter++;
             }
@@ -5310,10 +5312,10 @@ sub _perform_keras_cnn_predict {
                             print $F_aux "$female_parent_stock_id,";
                             print $F_aux "$male_parent_stock_id,";
                             print $F_aux "$archive_temp_output_image_file,";
-                            if (scalar(@aux_trait_id)>0) {
+                            if (scalar(@$aux_trait_ids)>0) {
                                 print $F_aux ',';
                                 my @aux_values;
-                                foreach my $aux_trait (@aux_trait_id) {
+                                foreach my $aux_trait (@$aux_trait_ids) {
                                     my $aux_value = $phenotype_data_hash{$stock_id} ? $phenotype_data_hash{$stock_id}->{aux_trait_value}->{$aux_trait} : '';
                                     push @aux_values, $aux_value;
                                 }
@@ -5352,10 +5354,10 @@ sub _perform_keras_cnn_predict {
                             print $F_aux "$female_parent_stock_id,";
                             print $F_aux "$male_parent_stock_id,";
                             print $F_aux "$archive_temp_output_image_file,";
-                            if (scalar(@aux_trait_id)>0) {
+                            if (scalar(@$aux_trait_ids)>0) {
                                 print $F_aux ',';
                                 my @aux_values;
-                                foreach my $aux_trait (@aux_trait_id) {
+                                foreach my $aux_trait (@$aux_trait_ids) {
                                     my $aux_value = $phenotype_data_hash{$stock_id} ? $phenotype_data_hash{$stock_id}->{aux_trait_value}->{$aux_trait} : '';
                                     push @aux_values, $aux_value;
                                 }
