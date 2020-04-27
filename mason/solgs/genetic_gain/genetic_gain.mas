@@ -60,7 +60,7 @@ my $training_traits_ids = join(',', @$analyzed_traits_ids)  if $analyzed_traits_
       training_traits_ids => $training_traits_ids
       &>
     
-% } elsif ($page =~ /solgs\/selection\//) {
+% } elsif ($page =~ /solgs\/selection\/|solgs\/combined\/model\/\d+\/selection\//) {
 
       <& /solgs/genetic_gain/single_trait_genetic_gain.mas,
 	 training_pop_id => $training_pop_id,

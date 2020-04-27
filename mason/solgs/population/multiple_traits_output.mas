@@ -105,6 +105,7 @@ $selection_traits_ids = join(',', @$prediction_pop_analyzed_traits_ids);
 &>
 
   
- <input type="hidden" id="training_traits_ids" value= "<% $training_traits_ids %>" />
+  <input type="hidden" id="training_traits_ids" value= "<% $training_traits_ids %>" />
+  <input type="hidden" id="training_pop_name" value= "<% $project_name %>" />
  <input type="hidden" id="selection_traits_ids" value="<% $selection_traits_ids %>" />
  <input type="hidden" id="genotyping_protocol_id" value="<% $genotyping_protocol_id %>" />

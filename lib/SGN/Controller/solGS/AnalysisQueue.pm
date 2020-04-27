@@ -149,15 +149,22 @@ sub create_selection_pop_page {
     my $protocol_id   = $c->stash->{genotyping_protocol_id};
     
     my $sel_pop_page;
-   
-    if ($data_set_type =~ /combined populations/)
-    {	   
-#	$sel_pop_page  = "/solgs/selection/$sel_pop_id/model/combined/$tr_pop_id/trait/$trait_id/gp/$protocol_id";
-	$sel_pop_page  = "/solgs/combined/model/$tr_pop_id/selection/$sel_pop_id/trait/$trait_id/gp/$protocol_id";
+    my $multi_traits_ids = $c->stash->{training_traits_ids};
+  
+    if ($multi_traits_ids->[0] && scalar(@$multi_traits_ids) > 1)
+    {
+	$sel_pop_page = $c->req->referer;
     }
     else
-    {	
-	$sel_pop_page = "/solgs/selection/$sel_pop_id/model/$tr_pop_id/trait/$trait_id/gp/$protocol_id";
+    {
+	if ($data_set_type =~ /combined populations/)
+	{
+	    $sel_pop_page  = "/solgs/combined/model/$tr_pop_id/selection/$sel_pop_id/trait/$trait_id/gp/$protocol_id";
+	}
+	else
+	{	
+	    $sel_pop_page = "/solgs/selection/$sel_pop_id/model/$tr_pop_id/trait/$trait_id/gp/$protocol_id";
+	}
     }
   
     $c->stash->{selection_pop_page} = $sel_pop_page;
@@ -169,6 +176,7 @@ sub format_log_entry {
     
    
     my $profile = $c->stash->{analysis_profile};
+  
     if ($profile->{analysis_page} =~ /solgs\/model\/(\d+|\w+_\d+)\/prediction\//)
     {
 	 $self->create_selection_pop_page($c);
