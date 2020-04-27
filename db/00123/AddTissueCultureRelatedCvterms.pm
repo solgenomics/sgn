@@ -3,21 +3,22 @@
 
 =head1 NAME
 
- AddTissueCultureRelatedCvterms
+ AddTissueCultureStockPropCvterm
 
 =head1 SYNOPSIS
 
-mx-run AddTissueCultureRelatedCvterms [options] -H hostname -D dbname -u username [-F]
+mx-run AddTissueCultureStockPropCvterm [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
-This patch adds tissue culture related cvterms
+This patch adds tissue_culture_data_json stockprop cvterm
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
 
+Titima Tantikanjana <tt15@cornell.edu>
 
 =head1 COPYRIGHT & LICENSE
 
@@ -29,7 +30,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddTissueCultureRelatedCvterms;
+package AddTissueCultureStockPropCvterm;
 
 use Moose;
 use Bio::Chado::Schema;
@@ -38,7 +39,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch adds the 'tissue_culture' stock_type cvterm, embryo_of, subculture_of, rooting_of, weaning1_of, weaning2_of, screenhouse_of, hardening_of, openfield_of stock_relationship cvterms
+This patch adds the 'tissue_culture_data_json' stock_property cvterm
 
 has '+prereq' => (
 	default => sub {
@@ -46,6 +47,7 @@ has '+prereq' => (
     },
 
 );
+
 
 sub patch {
     my $self=shift;
@@ -60,31 +62,10 @@ sub patch {
 
     print STDERR "INSERTING CV TERMS...\n";
 
-    my $terms = {
-        'stock_type' => [
-            'tissue_culture',
-        ],
-        'stock_relationship' => [
-            'embryo_of',
-            'subculture_of',
-            'rooting_of',
-            'weaning1_of',
-            'weaning2_of',
-            'screenhouse_of',
-            'hardening_of',
-            'openfield_of',
-        ]
-    };
-
-	foreach my $t (keys %$terms){
-		foreach (@{$terms->{$t}}){
-			$schema->resultset("Cv::Cvterm")->create_with({
-				name => $_,
-				cv => $t
-			});
-		}
-	}
-
+    $schema->resultset("Cv::Cvterm")->create_with({
+        name => 'tissue_culture_data_json',
+        cv => 'stock_property'
+    });
 
     print "You're done!\n";
 }
