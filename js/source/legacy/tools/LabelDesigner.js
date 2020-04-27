@@ -333,6 +333,11 @@ $(document).ready(function($) {
             jQuery('#label_designer_data_level_select_div').html('<select class="form-control" id="label_designer_data_level" ><option value="" selected>Select a Level</option><option value="plate">Plate</option></select>');
             jQuery("#label_designer_data_level").focus();
 
+        } else if (data_type == 'Crossing Experiments') {
+
+            jQuery('#label_designer_data_level_select_div').html('<select class="form-control" id="label_designer_data_level" ><option value="" selected>Select a Level</option><option value="crosses">Cross</option></select>');
+            jQuery("#label_designer_data_level").focus();
+
         } else if ((data_type == 'Lists') || (data_type == 'Public Lists')) {
 
             var html = '<select class="form-control" id="label_designer_data_level" ><option value="" selected>Select a Level</option><option value="list">List Items</option>';
@@ -358,6 +363,8 @@ $(document).ready(function($) {
                         html = html + '<option value="plants">Plant Details</option>';
                     } else if (response.list_type == 'tissue_samples') {
                         html = html + '<option value="tissue_samples">Tissue Sample Details</option>';
+                    } else if (response.list_type == 'crosses') {
+                        html = html + '<option value="crosses">Cross Details</option>';
                     } else if (response.list_type == 'identifier_generation') {
                         // remove list item select options and add options for each id batch
                         html = '<select class="form-control" id="label_designer_data_level" ><option value="" selected>Select a Level</option>';
