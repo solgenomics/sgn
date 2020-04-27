@@ -5226,6 +5226,7 @@ sub _perform_keras_cnn_predict {
 
     my @trait_ids = ($trait_id);
     print STDERR Dumper \@trait_ids;
+    print STDERR Dumper $aux_trait_ids;
     if (scalar(@$aux_trait_ids) > 0) {
         push @trait_ids, @$aux_trait_ids;
     }
