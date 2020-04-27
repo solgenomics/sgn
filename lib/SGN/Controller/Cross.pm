@@ -30,6 +30,9 @@ use CXGN::Pedigree::AddProgeny;
 use Scalar::Util qw(looks_like_number);
 use File::Slurp;
 use SGN::Model::Cvterm;
+use File::Temp;
+use File::Basename qw | basename dirname|;
+use File::Spec::Functions;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -440,7 +443,7 @@ sub make_cross_form :Path("/stock/cross/new") :Args(0) {
 
     }
     else {
-      $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+      $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
       return;
     }
 }
@@ -463,7 +466,7 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
     my $visible_to_role = $c->req->param('visible_to_role');
 
     if (! $c->user()) { # redirect
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
 
@@ -578,34 +581,29 @@ sub cross_detail : Path('/cross') Args(1) {
     my $c = shift;
     my $id = shift;
     my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema"), 'cross', 'stock_type')->cvterm_id();
-    my ($cross, $cross_id);
 
-    #get cross info from stock table whether id is the cross stock id or the cross project id
-    $cross = $c->dbic_schema("Bio::Chado::Schema")->resultset("Stock::Stock")->find( { stock_id => $id, type_id => $cross_type_id } );
-    if ($cross) {
-        $cross_id = $cross->stock_id();
-    }
-    else {
-        $cross= $c->dbic_schema("Bio::Chado::Schema")->resultset("Project::Project")->search({ 'me.project_id' => $id })->search_related('nd_experiment_projects')->search_related('nd_experiment')->search_related('nd_experiment_stocks')->search_related('stock', {'stock.type_id'=>$cross_type_id})->first();
-        $cross_id = $cross->stock_id();
+    #get cross from stock id
+    my $cross = $c->dbic_schema("Bio::Chado::Schema")->resultset("Stock::Stock")->search( { stock_id => $id, type_id => $cross_type_id } )->first();
+
+    if (!$cross) { #or from project id
+        $cross = $c->dbic_schema("Bio::Chado::Schema")->resultset("Project::Project")->search({ 'me.project_id' => $id })->search_related('nd_experiment_projects')->search_related('nd_experiment')->search_related('nd_experiment_stocks')->search_related('stock', {'stock.type_id'=>$cross_type_id})->first();
     }
 
-    my $progeny = $c->dbic_schema("Bio::Chado::Schema")->resultset("Stock::StockRelationship") -> search( { object_id => $cross_id, 'type.name' => 'member_of'  }, { join =>  'type' } );
-
-    my $progeny_count = $progeny->count();
-
+    my $cross_id;
 
     if (!$cross) {
-	$c->stash->{template} = '/generic_message.mas';
-	$c->stash->{message} = 'The requested cross does not exist.';
-	return;
+    	$c->stash->{template} = '/generic_message.mas';
+    	$c->stash->{message} = 'The requested cross does not exist.';
+    	return;
+    } else {
+        $cross_id = $cross->stock_id();
     }
 
-    if ($cross->type()->name() ne "cross") {
-	$c->stash->{template} = '/generic_message.mas';
-	$c->stash->{message} = 'The requested id does not correspond to a cross and cannot be displayed by this page.';
-	return;
-    }
+    #print STDERR "Cross stock_id is $cross_id\n";
+
+    my $progeny = $c->dbic_schema("Bio::Chado::Schema")->resultset("Stock::StockRelationship") -> search( { object_id => $cross_id, 'type.name' => 'offspring_of'  }, { join =>  'type' } );
+
+    my $progeny_count = $progeny->count();
 
     $c->stash->{cross_name} = $cross->uniquename();
     $c->stash->{user_id} = $c->user ? $c->user->get_object()->get_sp_person_id() : undef;
@@ -615,5 +613,18 @@ sub cross_detail : Path('/cross') Args(1) {
 
 }
 
+sub cross_wishlist_download : Path('/cross_wishlist/file_download/') Args(1) {
+    my $self  =shift;
+    my $c = shift;
+    my $file_id = shift;
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $file_id});
+    my $file_destination =  catfile($file_row->dirname, $file_row->basename);
+    my $contents = read_file($file_destination);
+    my $file_name = $file_row->basename;
+    $c->res->content_type('Application/xls');
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+    $c->res->body($contents);
+}
 
 1;

@@ -80,6 +80,176 @@ sub compose_trait: Path('/ajax/onto/store_composed_term') Args(0) {
 
 }
 
+=head2 store_ontology_identifier
+
+Creates a ontology identifier by adding an entry in the DB, cv, and cvterm tables.
+
+=cut
+
+sub store_ontology_identifier: Path('/ajax/onto/store_ontology_identifier') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    #print STDERR Dumper $c->req->params();
+
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to create ontology!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to create ontology!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    if ($user_role ne 'curator') {
+        $c->stash->{rest} = {error =>  "You have insufficient privileges to add ontology." };
+        $c->detach();
+    }
+
+    my $ontology_name = $c->req->param("ontology_name");
+    my $ontology_description = $c->req->param("ontology_description");
+    my $ontology_identifier = $c->req->param("ontology_identifier");
+    my $ontology_type = $c->req->param("ontology_type");
+
+    my %finish;
+    if ($c->config->{allow_observation_variable_submission_interface}) {
+        my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
+        my $return = $onto->store_ontology_identifier(
+            $ontology_name,
+            $ontology_description,
+            $ontology_identifier,
+            $ontology_type
+        );
+        if ($return->{error}) {
+            $finish{error} = $return->{error};
+        } elsif ($return->{success}) {
+            $finish{success} = 'Saved new ontology <a href="/cvterm/'.$return->{new_term}->[0].'/view">'.$return->{new_term}->[1].'</a><br>';
+        } else {
+            $finish{error} = 'Something went wrong!';
+        }
+    } else {
+        $finish{error} = 'On this database it is not allowed for users to add their own ontology! Please contact us!';
+    }
+    $c->stash->{rest} = \%finish;
+}
+
+=head2 store_trait_method_scale_observation_variable
+
+Creates a new term in the designated observation variable cv and links it to component trait, method, and scale terms through cvterm_relationship. will create trait, method, and scale terms in their own ontologies if they need to be.
+
+=cut
+
+sub store_trait_method_scale_observation_variable: Path('/ajax/onto/store_trait_method_scale_observation_variable') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    #print STDERR Dumper $c->req->params();
+
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to create observation variables!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to create observation variables!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    if ($user_role ne 'curator') {
+        $c->stash->{rest} = {error =>  "You have insufficient privileges to add observation variables." };
+        $c->detach();
+    }
+
+    my $selected_observation_variable_db_id = $c->req->param("selected_observation_variable_db_id");
+    my $new_observation_variable_name = $c->req->param("new_observation_variable_name");
+    my $new_observation_variable_definition = $c->req->param("new_observation_variable_definition");
+    my $selected_trait_db_id = $c->req->param("selected_trait_db_id");
+    my $selected_trait_cvterm_id = $c->req->param("selected_trait_cvterm_id");
+    my $new_trait_name = $c->req->param("new_trait_name");
+    my $new_trait_definition = $c->req->param("new_trait_definition");
+    my $selected_method_db_id = $c->req->param("selected_method_db_id");
+    my $selected_method_cvterm_id = $c->req->param("selected_method_cvterm_id");
+    my $new_method_name = $c->req->param("new_method_name");
+    my $new_method_definition = $c->req->param("new_method_definition");
+    my $selected_scale_db_id = $c->req->param("selected_scale_db_id");
+    my $selected_scale_cvterm_id = $c->req->param("selected_scale_cvterm_id");
+    my $new_scale_name = $c->req->param("new_scale_name");
+    my $new_scale_definition = $c->req->param("new_scale_definition");
+    my $new_scale_format = $c->req->param("new_scale_format");
+    my $new_scale_minumum = $c->req->param("new_scale_minimum");
+    my $new_scale_maximum = $c->req->param("new_scale_maximum");
+    my $new_scale_default = $c->req->param("new_scale_default");
+    my $new_scale_categories = $c->req->param("new_scale_categories");
+
+    my %finish;
+    if ($c->config->{allow_observation_variable_submission_interface}) {
+        my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
+        my $return = $onto->store_observation_variable_trait_method_scale(
+            $selected_observation_variable_db_id,
+            $new_observation_variable_name,
+            $new_observation_variable_definition,
+            $selected_trait_db_id,
+            $selected_trait_cvterm_id,
+            $new_trait_name,
+            $new_trait_definition,
+            $selected_method_db_id,
+            $selected_method_cvterm_id,
+            $new_method_name,
+            $new_method_definition,
+            $selected_scale_db_id,
+            $selected_scale_cvterm_id,
+            $new_scale_name,
+            $new_scale_definition,
+            $new_scale_format,
+            $new_scale_minumum,
+            $new_scale_maximum,
+            $new_scale_default,
+            $new_scale_categories
+        );
+        if ($return->{error}) {
+            $finish{error} = $return->{error};
+        } elsif ($return->{success}) {
+            $finish{success} = 'Saved new observation variable <a href="/cvterm/'.$return->{new_term}->[0].'/view">'.$return->{new_term}->[1].'</a><br>';
+        } else {
+            $finish{error} = 'Something went wrong!';
+        }
+    } else {
+        $finish{error} = 'On this database it is not allowed for users to add their own observation variables! Please contact us!';
+    }
+    $c->stash->{rest} = \%finish;
+}
+
 =head2 get_trait_from_exact_components
 
 searches for and returns (if found) a composed trait that contains the exact components supplied
@@ -123,8 +293,9 @@ sub get_traits_from_component_categories: Path('/ajax/onto/get_traits_from_compo
   my @tod_ids = $c->req->param("tod_ids[]");
   my @toy_ids = $c->req->param("toy_ids[]");
   my @gen_ids = $c->req->param("gen_ids[]");
+  my @evt_ids = $c->req->param("evt_ids[]");
 
-  print STDERR "Obj ids are @object_ids\n Attr ids are @attribute_ids\n Method ids are @method_ids\n unit ids are @unit_ids\n trait ids are @trait_ids\n tod ids are @tod_ids\n toy ids are @toy_ids\n gen ids are @gen_ids\n";
+  print STDERR "Obj ids are @object_ids\n Attr ids are @attribute_ids\n Method ids are @method_ids\n unit ids are @unit_ids\n trait ids are @trait_ids\n tod ids are @tod_ids\n toy ids are @toy_ids\n gen ids are @gen_ids\n evt ids are @evt_ids\n";
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
   my $traits = SGN::Model::Cvterm->get_traits_from_component_categories($schema, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, {
@@ -136,6 +307,7 @@ sub get_traits_from_component_categories: Path('/ajax/onto/get_traits_from_compo
       tod => \@tod_ids,
       toy => \@toy_ids,
       gen => \@gen_ids,
+      evt => \@evt_ids,
   });
 
   if (!$traits) {

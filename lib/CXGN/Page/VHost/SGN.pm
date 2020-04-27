@@ -61,7 +61,7 @@ sub bar_top {
     }
     else { 
 	
-	$login_logout = '<a class="toplink" style="text-decoration: underline" href="/solpeople/login.pl">log in</a> | 
+	$login_logout = '<a class="toplink" style="text-decoration: underline" href="/user/login">log in</a> | 
 <a class="toplink" style="text-decoration: underline" href="/solpeople/new-account.pl">new user</a>';
     }
 #this code will not work when database connectivity is lost, or when these modules are broken.
@@ -80,7 +80,7 @@ sub bar_top {
                 $welcome      = "<b>$fname $lname</b>";
                 $login_logout = <<HTML
 
-(<a class="toplink" style="text-decoration: underline" href="/solpeople/login.pl?logout=yes">log out</a>)
+(<a class="toplink" style="text-decoration: underline" href="/user/logout">log out</a>)
 <a class="mytools" href="/solpeople/profile/$person_id">My SGN</a>
 HTML
             }

@@ -12,6 +12,14 @@ use CXGN::Dataset::Cache;
 
 my $t = SGN::Test::Fixture->new();
 
+my $cache_root_dir = $t->config->{cache_file_path};
+my $cluster_shared_tempdir_config = $t->config->{cluster_shared_tempdir};
+my $backend_config = $t->config->{backend};
+my $cluster_host_config = $t->config->{cluster_host};
+my $web_cluster_queue_config = $t->config->{'web_cluster_queue'};
+my $basepath_config = $t->config->{basepath};
+my $forbid_cache = 0;
+
 my $ds = CXGN::Dataset->new( people_schema => $t->people_schema(), schema => $t->bcs_schema());
 
 $ds->accessions( [ 38913, 38914, 38915 ]);
@@ -24,6 +32,7 @@ $ds->description("test description");
 
 $ds->name("test");
 $ds->description("test description");
+$ds->sp_person_id(41);
 
 my $sp_dataset_id = $ds->store();
 
@@ -36,20 +45,21 @@ is_deeply($new_ds->plots(), $ds->plots(), "plots store");
 
 is($new_ds->name(), $ds->name(), "name store");
 is($new_ds->description(), $ds->description(), "desc store");
+is($new_ds->sp_person_id(), 41, "dataset owner");
 
-my @datasets = ( 
-    CXGN::Dataset->new( people_schema => $t->people_schema(), schema => $t->bcs_schema()), 
-    CXGN::Dataset::File->new( people_schema => $t->people_schema(), schema => $t->bcs_schema()), 
-    CXGN::Dataset::Cache->new( people_schema => $t->people_schema(), schema => $t->bcs_schema(), cache_root => '/tmp/dataset_cache_root'), 	
+my @datasets = (
+    CXGN::Dataset->new( people_schema => $t->people_schema(), schema => $t->bcs_schema()),
+    CXGN::Dataset::File->new( people_schema => $t->people_schema(), schema => $t->bcs_schema()),
+    CXGN::Dataset::Cache->new( people_schema => $t->people_schema(), schema => $t->bcs_schema(), cache_root => '/tmp/dataset_cache_root'),
     );
 
-foreach my $ds (@datasets) { 
+foreach my $ds (@datasets) {
     if ($ds->can("cache")) { $ds->cache->clear(); }
     $ds->name("test");
     $ds->description("test description");
 
     $ds->accessions( [ 38913, 38914, 38915 ] );
-    
+
     my $sp_dataset_id = $ds->store();
 
     my $trials = $ds->retrieve_trials();
@@ -69,37 +79,42 @@ foreach my $ds (@datasets) {
                          ]
                        ]
 	      , "trial retrieve test");
-    
-    if ($ds->isa("CXGN::Dataset::File")) { 
-	ok(-e $ds->file_name()."_trials.txt", "trial file exists");
+
+    if ($ds->isa("CXGN::Dataset::File")) {
+	       ok(-e $ds->file_name()."_trials.txt", "trial file exists");
     }
-	
-    my $traits = $ds ->retrieve_traits();
+
+    my $traits = $ds->retrieve_traits();
 
     is_deeply($traits, [
 		  [
 		   70741,
-		   'dry matter content percentage|CO:0000092'
+		   'dry matter content percentage|CO_334:0000092'
 		  ],
 		  [
 		   70666,
-		   'fresh root weight|CO:0000012'
+		   'fresh root weight|CO_334:0000012'
 		  ],
 		  [
 		   70773,
-		   'fresh shoot weight measurement in kg|CO:0000016'
+		   'fresh shoot weight measurement in kg|CO_334:0000016'
 		  ],
 		  [
 		   70668,
-		   'harvest index variable|CO:0000015'
+		   'harvest index variable|CO_334:0000015'
 		  ]
 	      ]
 	);
-    
+
     my $phenotypes = $ds->retrieve_phenotypes();
-    
-    my $genotypes = $ds->retrieve_genotypes(1);
-    
+
+    if ($ds->isa("CXGN::Dataset::File")) {
+        my$geno_filename = $ds->file_name()."_genotype.txt";
+        my $genotypes = $ds->retrieve_genotypes(1,$geno_filename,$cache_root_dir,$cluster_shared_tempdir_config,$backend_config,$cluster_host_config,$web_cluster_queue_config,$basepath_config,$forbid_cache);
+    } else {
+        my $genotypes = $ds->retrieve_genotypes(1);
+    }
+
     my $years = $ds->retrieve_years();
 
     is_deeply($years, [], "Year retrieve test");

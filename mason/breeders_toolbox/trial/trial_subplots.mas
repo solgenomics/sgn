@@ -1,0 +1,80 @@
+
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ "jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List", "CXGN.BreederSearch" ] &>
+
+
+<div id="trial_subplots_html">
+</div>
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#trial_subplots_onswitch').one("click", function() {
+
+        jQuery.ajax ( {
+            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/subplots',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+
+                //console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+                html = '<table class="table borderless" alt="breeder search" border="0" ><tr><td><select multiple class="form-control" id="subplot_data" name="1" size="10" style="min-width: 200px;overflow:auto;"></select></td></tr>'
+
+                html += '<tr><td><button class="btn btn-default btn-sm" id="plot_select_all" name="1">Select All</button><br><br>'
+                html += '<div class="well well-sm"><div id="subplot_data_count" name="1">No Selection</div></div>'
+                html += '<div id="subplot_to_list_menu"></div><td><tr></table>'
+
+                jQuery('#trial_subplots_html').html(html);
+
+                var subplot = response.subplots[0] || [];
+
+                subplot_html = format_options_list(subplot);
+                jQuery('#subplot_data').html(subplot_html);
+ 
+                var data = jQuery('#subplot_data').val() || [];
+                show_list_counts('subplot_data_count', response.subplots[0].length, data.length);
+ 
+                if (jQuery('#subplot_data').length) {
+                      addToListMenu('subplot_to_list_menu', 'subplot_data', {
+                      selectText: true,
+                      listType: 'subplots'
+                    });
+                }
+
+                jQuery('#subplot_select_all').click( function() { // select all subplot
+                    var data_id = "subplot_data";
+                    selectAllOptions(document.getElementById(data_id));
+
+                    var data = jQuery("#"+data_id).val() || [];
+                    var count_id = "subplot_data_count";
+                    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
+                });
+
+                jQuery('#subplot_data').change( function() { // update count when data selections change
+                    var data_id = jQuery(this).attr('id');
+                    var data = jQuery('#'+data_id).val() || [];
+                    var count_id = "subplot_data_count";
+                    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
+                });
+
+                jQuery('select').dblclick( function() { // open plot detail page in new window or tab on double-click
+                    window.open("../../stock/"+this.value+"/view");
+                });
+
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert("Error retrieving subplots.");
+            }
+        });
+    });
+});
+
+</script>

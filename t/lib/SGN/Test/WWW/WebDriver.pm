@@ -69,7 +69,7 @@ has 'host' => ( is => 'rw',
 
 has 'driver' => ( is => 'rw',
 		  isa => 'Selenium::Remote::Driver',
-		  default => sub { Selenium::Remote::Driver->new() },
+		  default => sub { Selenium::Remote::Driver->new('base_url' => $ENV{SGN_TEST_SERVER} ) },
     );
 
 has 'user_data' => ( is => 'rw',
@@ -101,20 +101,21 @@ sub login {
     my $username = shift;
     my $password = shift;
     
+    $self->get("/user/login");
     my $d = $self->driver();
-    $self->get("/solpeople/login.pl");
-    $d->find_element("username", "name");
-    my $username_field = $d->find_element("username", "name");
+    my $username_field = $d->find_element("username", "id");
+    $username_field->click();
     $username_field->send_keys($username);
-    $d->find_element("pd", "name");
-    my $password_field = $d->find_element("pd", "name");
+    my $password_field = $d->find_element("password", "name");
+    $password_field->click();
     $password_field->send_keys($password);
-    $password_field->submit();
+    my $login_button = $d->find_element("submit_password", "id");
+    $login_button->click();
 }
 
 sub logout { 
     my $self = shift;
-    return $self->get("/solpeople/login.pl?logout=yes");
+    return $self->get("/user/logout");
 }
 
 sub logout_ok { 
@@ -145,7 +146,7 @@ sub base_url {
 sub get { 
     my $self = shift;
     my $url = shift;
-    return $self->driver->get(catfile($self->base_url(), $url));
+    return $self->driver->get($url);
 }
 
 sub get_ok { 
@@ -196,8 +197,7 @@ sub download_linked_file {
 	    $token = $cookie->{value};
 	}
     }
-    #my $url = $self->host()."/".$href;
-    #print STDERR "Fetching URL $url\n"; 
+
     system("wget --header \"Cookie: sgn_session_id=$token\" --directory-prefix=/tmp $href");
 
 

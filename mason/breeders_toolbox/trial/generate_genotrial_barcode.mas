@@ -1,0 +1,355 @@
+<%args>
+$trial_id => ''
+$trial_name => ''
+$identifier => ''
+$plate_id=> ''
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jqueryui.js', 'jquery.js'] &>
+
+
+<div class="modal fade" id="generate_genotyping_trial_barcode_button_dialog" name="generate_genotyping_trial_barcode_button_dialog" tabindex="-1" role="dialog" aria-labelledby="generateGenotypingTrialBarcodeButtonDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="generateGenotypingTrialBarcodeButtonDialog">Generate Stock Barcode</h4>
+            </div>
+            <div class="modal-body">
+            <div class="container-fluid">
+                <p>
+                    <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                    Generate barcode for tissue samples and plate ID.
+                </p>
+                    <center>
+                    <div class="well">
+                    <& /util/barcode.mas, identifier => "$identifier", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
+                    </div>
+                <p>
+                    <button type="button" class="btn btn-primary" name="geno_trial_accession_barcode" id="geno_trial_accession_barcode">Accessions Barcode</button>
+                    <button type="button" class="btn btn-primary" name="trial_tissue_sample_barcode" id="trial_tissue_sample_barcode">Tissue Samples Barcode</button>
+                    <button type="button" class="btn btn-primary" name="trial_plateID_barcode" id="trial_plateID_barcode">PlateID Barcode</button>
+                    <button type="button" class="btn btn-primary" name="genotyping_custom_barcode" id="genotyping_custom_barcode">Custom Barcode</button>
+                </p>
+
+                      </center>
+              </div>
+          </div>
+          <div class="modal-footer">
+              <button id="geno_trial_barcode_dialog_ok_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+          </div>
+      </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="generate_genotrial_barcode_dialog" name="generate_genotrial_barcode_dialog" tabindex="-1" role="dialog" aria-labelledby="generateGenoTrialBarcodeDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="generateGenoTrialBarcodeDialog">Generate Stock Barcode</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        Generate barcode for plots and accessions.
+                    </p>
+                    OR  <button type="button" class="btn btn-primary" name="custom_barcode_page_link" id="custom_barcode_page_link">Design Custom Barcode</button>  ON LABEL DESIGNER PAGE!
+                    <center>
+                        <div class="well">
+                            <& /util/barcode.mas, identifier => "$identifier $trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
+                        </div>
+                    </center>
+
+                    <div class="well well-sm"> 
+                        <div class="row">
+                          <div class="col-md-1 col-lg-1">
+                          </div>
+                          <div class="col-md-10 col-lg-10">
+
+                            <form class="form-horizontal" role="form" enctype="multipart/form-data" method="post" action="/barcode/stock/download/pdf" >
+
+                             <div class="form-group form-group-sm" >
+                               <label class="col-sm-4 control-label">List of Stock Names: </label>
+                               <div class="col-sm-8" id="geno_trial_accessions">
+                               </div>
+                             </div>
+
+                             <div class="form-group form-group-sm">
+                              <label class="col-sm-4 control-label">Barcode Type: </label>
+                              <div class="col-sm-8">
+                                  <select class="form-control" id="select_barcode_type" name="select_barcode_type">
+                                    <option value="2D">2D Barcode</option>
+                                    <option value="1D">1D Barcode</option>
+                                  </select>
+                              </div>
+                             </div>
+
+                               <div id="2D_fieldbook_option" >
+                               <div class="form-group form-group-sm" >
+                                 <label class="col-sm-4 control-label">Enable 2D Barcode For FieldBook: </label>
+                                 <div class="col-sm-8">
+                                   <input type="checkbox" id="enable_fieldbook_2d_barcode" name="enable_fieldbook_2d_barcode" value="enable_fieldbook_2d_barcode" checked/>
+                                 </div>
+                               </div>
+                               </div>
+
+                               <script defer="defer">
+                                jQuery(document).ready(function() {
+
+                                   jQuery(document).on('change', '#select_barcode_type', function () {
+                                       var barcode_type = jQuery("#select_barcode_type").val();
+                                       if (barcode_type == "2D") {
+                                           jQuery("#2D_fieldbook_option").show();
+                                       }
+                                       else if (barcode_type == "1D") {
+                                         jQuery("#2D_fieldbook_option").hide();
+                                       }
+                                   });
+                                   
+                                   jQuery('#custom_barcode_page_link').click(function () {
+                                       location.href = '/tools/label_designer';
+                                   });
+                                   
+                                   jQuery('#custom_barcode_geno_link').click(function () {
+                                       location.href = '/tools/label_designer';
+                                   });
+
+                                   jQuery(document).on('change', '#select_print_format', function () {
+                                       var format = jQuery("#select_print_format").val();
+                                       if (format == "32A4") {
+                                         var labels_row = 10;
+                                         var labels_cols = 4;
+                                         var tops_margin = 12;
+                                         var lefts_margin = 17;
+                                         var bottoms_margin = 12;
+                                         var rights_margin = 10;
+                                       }
+                                       if (format == "32_unique") {
+                                         var labels_row = 10;
+                                         var labels_cols = 4;
+                                         var tops_margin = 12;
+                                         var lefts_margin = 17;
+                                         var bottoms_margin = 12;
+                                         var rights_margin = 10;
+                                       }
+                                       else if (format == "CASS") {
+                                       var labels_row = 10;
+                                       var labels_cols = 2;
+                                       var tops_margin = 10;
+                                       var lefts_margin = 112;
+                                       var bottoms_margin = 13;
+                                       var rights_margin = 20;
+                                       }
+                                       else if (format == "MUSA") {
+                                       var labels_row = 10;
+                                       var labels_cols = 2;
+                                       var tops_margin = 10;
+                                       var lefts_margin = 112;
+                                       var bottoms_margin = 13;
+                                       var rights_margin = 20;
+                                       }
+                                       else if (format == "NCSU") {
+                                       var labels_row = 10;
+                                       var labels_cols = 3;
+                                       var tops_margin = 12;
+                                       var lefts_margin = 10;
+                                       var bottoms_margin = 12;
+                                       var rights_margin = 10;
+                                       var text = 'year,location';
+                                       }
+                                       else if (format == "20A4") {
+                                       var labels_row = 10;
+                                       var labels_cols = 2;
+                                       var tops_margin = 12;
+                                       var lefts_margin = 10;
+                                       var bottoms_margin = 12;
+                                       var rights_margin = 10;
+                                       }
+                                       else if (format == "IITA-3") {
+                                       var labels_row = 20;
+                                       var labels_cols = 3;
+                                       var tops_margin = 13;
+                                       var lefts_margin = 130;
+                                       var bottoms_margin = 11;
+                                       var rights_margin = 10;
+                                       }
+                                       else if (format == "IITA-2") {
+                                       var labels_row = 20;
+                                       var labels_cols = 2;
+                                       var tops_margin = 13;
+                                       var lefts_margin = 130;
+                                       var bottoms_margin = 11;
+                                       var rights_margin = 10;
+                                       }
+                                       else if (format == "crossing") {
+                                       var labels_row = 1;
+                                       var labels_cols = 1;
+                                       var tops_margin = 5;
+                                       var lefts_margin = 2;
+                                       var bottoms_margin = 0;
+                                       var rights_margin = 0;
+                                       }
+                                       jQuery("#text_margin").empty();
+                                       jQuery("#text_margin").val(text);
+                                       jQuery("#label_rows").empty();
+                                       jQuery("#label_rows").val(labels_row);
+                                       jQuery("#label_cols").empty();
+                                       jQuery("#label_cols").val(labels_cols);
+                                       jQuery("#select_barcode_type").prop('selectedIndex',1);
+                                       jQuery("#page_format").prop('selectedIndex',0);
+                                       jQuery("#tops_margin").empty();
+                                       jQuery("#tops_margin").val(tops_margin);
+                                       jQuery("#left_margin").empty();
+                                       jQuery("#left_margin").val(lefts_margin);
+                                       jQuery("#bottom_margin").empty();
+                                       jQuery("#bottom_margin").val(bottoms_margin);
+                                       jQuery("#right_margin").empty();
+                                       jQuery("#right_margin").val(rights_margin);
+                                   });
+                                });
+                               </script>
+
+                               <div class="form-group form-group-sm">
+                                 <label class="col-sm-4 control-label">Printing Format (Optional): </label>
+                                 <div class="col-sm-8">
+                                     <select class="form-control" id="select_print_format" name="select_print_format">
+                                       <!--<option selected disabled>select printing format</option>-->
+                                       <option value="">select printing format</option>
+                                       <option value="CASS">CASS printing format</option>
+                                       <option value="MUSA">MUSA printing format</option>
+                                       <option value="32A4">32 label Size Sticker Paper</option>
+                                       <option value="32_unique">32 Unique label Size Sticker Paper</option>
+                                       <option value="20A4">20 label Size Sticker Paper</option>
+                                       <option value="NCSU">NCSU printing format</option>
+                                       <option value="IITA-3">IITA-3-barcode</option>
+                                       <option value="IITA-2">IITA-2-barcode</option>
+                                       <option value="crossing">CROSS</option>
+                                     </select>
+                                 </div>
+                               </div>
+
+                                <div class="form-group form-group-sm" style="display: none">
+                                  <label class="col-sm-4 control-label">Print Duplicate Labels Per Row: </label>
+                                  <div class="col-sm-8">
+                                    <input type="checkbox" name="duplicate_labels_per_row" checked="1" disabled="1" />
+                                  </div>
+                                  </div>
+                                 
+                            </div>
+                        </div>
+                        <div class="col-md-1 col-lg-1">
+                        </div>
+                      </div>
+
+                    </p>
+
+                            <& /barcode/printer_settings.mas &>
+                        </center>
+             </div>
+            </div>
+            <div class="modal-footer">
+
+                <button class="btn btn-primary type="submit" type="submit" value="Download Barcodes">Download Barcodes</button>
+                <button id="trial_barcode_dialog_ok_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+            </div>
+        </form>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="genotrial_barcode_dialog" name="genotrial_barcode_dialog" tabindex="-1" role="dialog" aria-labelledby="GenoTrialBarcodeDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="GenoTrialBarcodeDialog">Generate Trial Barcode</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        Generate genotyping plate barcode.
+                    </p>
+                    OR  <button type="button" class="btn btn-primary" name="custom_barcode_geno_link" id="custom_barcode_geno_link">Design Custom Barcode</button>  ON LABEL DESIGNER PAGE!
+                    <center>
+                        <div class="well">
+                            <& /util/barcode.mas, identifier => "$identifier $trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
+                        </div>
+
+                        
+                        <form class="form-horizontal" role="form" enctype="multipart/form-data" method="post" action="/barcode/trial/download/trial_QRcode" >
+                            <label class="col-sm-4 control-label">List of Trial Names: </label>
+                            <div class="col-sm-8" id="geno_trial_name">
+                                <textarea class="form-control" id="trial_names_2" name="trial_names_2" ><%$trial_name%></textarea>
+                            </div>
+                    </center>
+             </div>
+            </div>
+            <div class="modal-footer">
+
+                <button class="btn btn-primary type="submit" type="submit" value="Download Barcodes">Download Barcodes</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+            </div>
+        </form>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#geno_trial_accession_barcode').click(function() {
+
+        jQuery.ajax ( {
+                url : '/ajax/breeders/trial/'+<% $trial_id %>+'/accessions',
+
+                success: function(response){
+
+                var trial_accessions_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
+
+                for (i=0; i<response.accessions[0].length; i++) {
+                    trial_accessions_html = trial_accessions_html + response.accessions[0][i].accession_name + "\n";
+                }
+                trial_accessions_html = trial_accessions_html + "</textarea>";
+                jQuery('#geno_trial_accessions').empty();
+                jQuery('#geno_trial_accessions').html(trial_accessions_html);
+                },
+                error: function(response){
+                      alert("Error retrieving accessions.");
+                }
+        });
+    });
+    
+    jQuery('#trial_tissue_sample_barcode').click(function() {
+
+        jQuery.ajax ( {
+                url : '/ajax/breeders/trial/'+<% $trial_id %>+'/tissue_samples',
+
+                success: function(response){
+                    var trial_accessions_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
+
+                    for (i=0; i<response.trial_tissue_samples.length; i++) {
+                        trial_accessions_html = trial_accessions_html + response.trial_tissue_samples[i][1] + "\n";
+                    }
+                    trial_accessions_html = trial_accessions_html + "</textarea>";
+                    jQuery('#geno_trial_accessions').empty();
+                    jQuery('#geno_trial_accessions').html(trial_accessions_html);
+                },
+                error: function(response){
+                    alert("Error retrieving accessions.");
+                }
+        });
+    });
+    
+});
+</script>

@@ -21,7 +21,6 @@ sub validate {
     my $q = "SELECT stock.uniquename, stockprop.value, stockprop.type_id FROM stock LEFT JOIN stockprop USING(stock_id) WHERE stock.type_id=$accession_type_id AND stock.is_obsolete = 'F';";
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
-    my %result;
     while (my ($uniquename, $synonym, $type_id) = $h->fetchrow_array()) {
         $all_names{$uniquename}++;
         if ($type_id) {

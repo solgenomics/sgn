@@ -40,7 +40,7 @@ $t->while_logged_in_as("submitter", sub {
 
     sleep(2);
     
-    $t->find_element_ok("add_accessions_link", "id", "find element add accessions link as submitter")->click();
+    $t->find_element_ok("add_accessions_link", "name", "find element add accessions link as submitter")->click();
 
     $t->find_element_ok("accessions_list_select", "id", "select new list test")->send_keys("test_list");
 
@@ -87,7 +87,7 @@ $t->while_logged_in_as("submitter", sub {
 
     sleep(1);
 
-    my $add_accessions_link = $t->find_element_ok("add_accessions_link", "id", "find element add accessions link as submitter")->click();
+    my $add_accessions_link = $t->find_element_ok("add_accessions_link", "name", "find element add accessions link as submitter")->click();
 
     #then try without fuzzy search.
     $t->find_element_ok("accessions_list_select", "id", "select new list test")->send_keys("new_test_list_accessions");
@@ -127,7 +127,7 @@ $t->while_logged_in_as("submitter", sub {
 
     sleep(1);
 
-    $t->find_element_ok("add_accessions_link", "id", "find element add accessions link as submitter")->click();
+    $t->find_element_ok("add_accessions_link", "name", "find element add accessions link as submitter")->click();
 
     #then try without fuzzy search.
     $t->find_element_ok("accessions_list_select", "id", "select new list test")->send_keys("new_test_list_accessions");
@@ -155,7 +155,7 @@ $t->while_logged_in_as("submitter", sub {
 
     sleep(1);
 
-    $t->find_element_ok("add_accessions_link", "id", "find element add accessions link as submitter")->click();
+    $t->find_element_ok("add_accessions_link", "name", "find element add accessions link as submitter")->click();
 
     my $fuzzy = $t->find_element_ok("fuzzy_check", "id", "select fuzzy check test")->click();
 

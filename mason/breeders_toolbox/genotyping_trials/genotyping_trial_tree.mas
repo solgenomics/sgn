@@ -1,0 +1,126 @@
+
+<%args>
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jstree.dist.jstree', 'CXGN.TrialTreeFolders'] &>
+
+<& /util/import_css.mas, paths => ['/static/documents/inc/jstree_theme/jstree-bstheme-min.css'] &>
+
+<& /breeders_toolbox/folder/folder_set.mas, project_type=>'Genotyping Plate' &>
+<& /breeders_toolbox/folder/folder_new.mas, project_type=>'Genotyping Plate' &>
+<& /breeders_toolbox/folder/folder_move.mas, project_type=>'Genotyping Plate' &>
+<& /breeders_toolbox/folder/folders_edit.mas, folder_tree_type => 'Genotyping Plate', folder_tree_identifier => 'genotyping_trial_list', folder_tree_refresh_name => 'refresh_genotyping_trial_jstree_html' &>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Information</th>
+            <th>Breeding Programs -- Folders -- Genotyping Plates&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="refresh_genotyping_trial_jstree_html_trialtree_button" name="refresh_genotyping_trial_jstree_html">Refresh</button></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+                <h4>Search</h4>
+                <input type="text" class="form-control input-sm" id="genotyping_trial_tree_search" placeholder="Search" />
+                <hr>
+
+                <h5><i>Double click<br />genotyping plate (&nbsp;<span class="glyphicon glyphicon-th text-success"></span>&nbsp;) or folder (&nbsp;<span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;)<br/>to view detail page.</i></h5>
+                <h5><i>Breeding programs (&nbsp;<span class="glyphicon glyphicon-briefcase text-info"></span>&nbsp;)</i></h5>
+                <hr>
+
+                <h4>Folders</h4>
+                <button class="btn btn-sm btn-default" id="new_folder_dialog_link">Create new folder</button><br/><br/>
+                <button class="btn btn-sm btn-default" id="open_folder_dialog_link">Move genotyping plate(s) to folder</button><br/><br/>
+                <button class="btn btn-sm btn-default" id="move_folder_dialog_link">Move folder</button>
+
+                <div id="folder_edit_options" style="display:none">
+                    <hr>
+                    <h5><i>Select multiple folders by holding 'Ctrl'.</i></h5>
+                    <button class="btn btn-primary" id="edit_folders_button" title="First Select Folder(s) to Edit">Edit Folder(s)</button>
+                    <br/>
+                </div>
+
+                <!--<button id="delete" disabled="disabled" >Delete</button -->
+                <br />
+            </td>
+            <td>
+                <div id="genotyping_trial_list" >[loading...]</div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+
+<script>
+
+jQuery.noConflict();
+
+jQuery(document).ready(function($) {
+
+    jQuery.ajax( {
+      url: '/ajax/breeders/get_trials_with_folders_cached?type=genotyping_trial',
+      success: function(response) {
+        var html = '<ul>'+response.html+'</ul>';
+
+        jQuery('#genotyping_trial_list').html(html);
+        //console.log(html);
+        jQuery('#genotyping_trial_list').jstree( {
+            "core": { 'themes': { 'name': 'proton', 'responsive': true}},
+            "valid_children" : [ "folder", "genotyping_trial", "breeding_program" ],
+            "types" : {
+                "breeding_program" : {
+                    "icon": 'glyphicon glyphicon-briefcase text-info',
+                },
+                "folder" : {
+                    "icon": 'glyphicon glyphicon-folder-open text-danger',
+                },
+                "genotyping_trial" : {
+                    "icon": 'glyphicon glyphicon-th text-success',
+                }
+            },
+            "search" : {
+                 "case_insensitive" : true,
+             },
+          "plugins" : ["html_data","types","search"],
+
+        });
+
+      },
+      error: function(response) {
+        alert("An error occurred while loading the trial data.");
+      }
+  });
+
+    jQuery("#genotyping_trial_tree_search").keyup(function() {
+        var v = jQuery("#genotyping_trial_tree_search").val();
+        jQuery("#genotyping_trial_list").jstree(true).search(v);
+    });
+
+    jQuery('#genotyping_trial_list').on("changed.jstree", function (e, data) {
+        //console.log(data);
+        if ($('#trial_list').jstree('is_leaf', data.node) && data.node.data.jstree.type == 'folder') {
+            jQuery("#folder_edit_options").show();
+        }
+        else {
+            jQuery("#folder_edit_options").hide();
+        }
+    });
+
+    jQuery("#genotyping_trial_list").delegate("li", "dblclick", function(event){
+        var node = $("#genotyping_trial_list").jstree("get_node", this);
+        //console.log(node);
+        if (node.id.substr(0,1) !== 'j') {
+            if (node.type == 'folder') {
+                window.open('/folder/'+node.id);
+                event.stopPropagation();
+            } else if (node.type == 'genotyping_trial') {
+                window.open('/breeders_toolbox/trial/'+node.id);
+                event.stopPropagation();
+            }
+        }
+    });
+
+});
+
+</script>

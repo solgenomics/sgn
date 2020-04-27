@@ -51,6 +51,7 @@ sub generate_plot_phenotypes {
             @value_array = @{$plot_plant_values{$plot_id}};
         }
         push @value_array, $_->[7];
+        @value_array = sort @value_array;
         $plot_plant_values{$plot_id} = \@value_array;
     }
 
@@ -60,7 +61,7 @@ sub generate_plot_phenotypes {
     my @traits;
     push @traits, $trait_name;
 
-    foreach my $plot_id (keys %plot_plant_values) {
+    foreach my $plot_id (sort keys %plot_plant_values) {
         my %info;
         my $plot_name = $schema->resultset("Stock::Stock")->find({stock_id=>$plot_id})->uniquename();
         push @plots, $plot_name;

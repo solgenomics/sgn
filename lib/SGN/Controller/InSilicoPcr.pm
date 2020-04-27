@@ -315,7 +315,7 @@ sub _blast_to_pcr {
   
   ##############################################################################################################################
   
-  my $fs = Bio::BLAST::Database->open(full_file_basename => "$basename",);
+  my $fs = Bio::BLAST2::Database->open(full_file_basename => "$basename",);
   
   my $find_seq;
   my $find_subseq;

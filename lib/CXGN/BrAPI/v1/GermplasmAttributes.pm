@@ -8,29 +8,7 @@ use CXGN::Chado::Stock;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 
-has 'bcs_schema' => (
-	isa => 'Bio::Chado::Schema',
-	is => 'rw',
-	required => 1,
-);
-
-has 'page_size' => (
-	isa => 'Int',
-	is => 'rw',
-	required => 1,
-);
-
-has 'page' => (
-	isa => 'Int',
-	is => 'rw',
-	required => 1,
-);
-
-has 'status' => (
-	isa => 'ArrayRef[Maybe[HashRef]]',
-	is => 'rw',
-	required => 1,
-);
+extends 'CXGN::BrAPI::v1::Common';
 
 sub germplasm_attributes_list {
 	my $self = shift;
@@ -71,14 +49,15 @@ sub germplasm_attributes_list {
 
 	foreach (keys %attribute_hash) {
 		my $prophash = $self->get_cvtermprop_hash($_);
+        my $attributeCategoryDbId = $attribute_hash{$_}->[0];
 		push @data, {
-			attributeDbId => $_,
+			attributeDbId => "$_",
 			code => $prophash->{'code'} ? join ',', @{$prophash->{'code'}} : '',
 			uri => $prophash->{'uri'} ? join ',', @{$prophash->{'uri'}} : '',
 			name => $attribute_hash{$_}->[3],
 			description => $attribute_hash{$_}->[4],
-			attributeCategoryDbId => $attribute_hash{$_}->[0],
-			attributeCategoryName => $attribute_hash{$_}->[1],
+			attributeCategoryDbId => "$attributeCategoryDbId",
+			#attributeCategoryName => $attribute_hash{$_}->[1],
 			datatype => $prophash->{'datatype'} ? join ',', @{$prophash->{'datatype'}} : '',
 			values => $attribute_hash{$_}->[5]
 		};
@@ -111,8 +90,9 @@ sub germplasm_attributes_categories_list {
 	my @data;
 	while (my ($attributeCategoryDbId, $attributeCategoryName, $attributeCategoryDesc) = $h->fetchrow_array()) {
 		push @data, {
-			attributeCategoryDbId => $attributeCategoryDbId,
-			attributeCategoryName => $attributeCategoryName,
+			attributeCategoryDbId => "$attributeCategoryDbId",
+			name => $attributeCategoryName,
+			attributeCategoryName => $attributeCategoryName
 		};
 	}
 	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@data,$page_size,$page);
@@ -166,6 +146,24 @@ sub germplasm_attributes_germplasm_detail {
 			attributeCategoryName => $attributeCategoryName,
 			value => $value,
 			dateDetermined => '',
+			contextOfUse => [],
+	        crop => undef,
+	        defaultValue => undef,
+	        documentationURL => undef,
+	        growthStage => undef,
+	        institution => undef,
+	        language => undef,
+	        method => {},
+	        ontologyDbId =>,
+	        ontologyName =>,
+	        ontologyReference => {},
+	        scale=> {},
+	        scientist=> undef,
+	        status=> undef,
+	        submissionTimestamp=> undef,
+	        synonyms => [],
+	        trait => {},
+	        xref=> undef
 		};
 	}
 	my %result = (

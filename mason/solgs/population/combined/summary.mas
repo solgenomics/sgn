@@ -19,8 +19,9 @@ $project_name
 $project_desc
 $markers_no
 $traits_no
+$stocks_no
 $owner => ''
-$protocol
+$protocol_url
 
 </%args>
 
@@ -47,10 +48,10 @@ $traits_no = 1 if !$traits_no;
     </td>    
     <td>
       <& /page/columnar_table.mas,        
-         data       => [[' ',  ' '],
+         data       => [['No. of lines ',  $stocks_no],
                         ['No. of traits', $traits_no],
                         ['No. of markers', $markers_no],
-			['Genotyping version', $protocol],
+			['Genotyping version', $protocol_url],
                        ],
         __alt_freq  => 1,
         __align     => "l",

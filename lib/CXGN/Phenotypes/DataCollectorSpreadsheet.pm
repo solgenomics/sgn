@@ -65,7 +65,7 @@ sub create {
     my $trial_id = $self->get_trial_id();
     my @trait_list = @{$self->get_trait_list()};
     my $spreadsheet_metadata = $self->get_file_metadata();
-    my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id} );
+    my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout'} );
     my %design = %{$trial_layout->get_design()};
     my @plot_names = @{$trial_layout->get_plot_names};
 

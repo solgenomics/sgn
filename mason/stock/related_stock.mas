@@ -1,0 +1,225 @@
+
+<%args>
+$stock_id
+$stock_uniquename => undef
+$stock_type => undef
+</%args>
+
+% if ($stock_type eq 'accession' || $stock_type eq 'plant' || $stock_type eq 'plot' || $stock_type eq 'subplot' || $stock_type eq 'tissue_sample'){
+
+    <&| /page/info_section.mas, id=>'related_stocks_in_trial', title => 'Related stocks in trials', collapsible=>1, collapsed=>1 &>
+        <div class="well well-sm">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <table id = "trial_related_stock" class="table table-hover table-striped">
+                        <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+
+            <br>
+            <&| /page/info_section.mas, title => 'Copy Stocks to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the stock names showing in table to a new or exisiting list</i>'&>
+                <br>
+                <div style="text-align:right" id="trial_stocks_to_list_menu"></div>
+                <div id="trial_stock_names" style="display: none;"></div>
+            </&>
+        </div>
+    </&>
+
+% }
+
+% if ($stock_type eq 'accession'){
+
+    <& /breeders_toolbox/seedlots_section.mas, stock_id=>$stock_id, stock_type=>$stock_type, stock_uniquename=>$stock_uniquename &>
+
+% }
+
+% if ($stock_type eq 'accession'){
+
+    <&| /page/info_section.mas, id=>'related_stock_progenies', title => 'Progenies of this Accession (as female or male parent)', collapsible=>1, collapsed=>1 &>
+        <div class="well well-sm">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <table id = "progenies" class="table table-hover table-striped">
+                        <thead>
+                        <tr>
+                            <th>As female or male parent</th>
+                            <th>Progeny name</th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+
+            <br>
+            <&| /page/info_section.mas, title => 'Copy Stocks to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the stock names showing in table to a new or exisiting list</i>'&>
+                <br>
+                <div style="text-align:right" id="progenies_to_list_menu"></div>
+                <div id="progeny_names" style="display: none;"></div>
+            </&>
+        </div>
+    </&>
+
+% }
+
+% if ($stock_type eq 'accession' || $stock_type eq 'backcross population' || $stock_type eq 'f2 population' || $stock_type eq 'mutant population' || $stock_type eq 'population' || $stock_type eq 'training population'){
+
+    <&| /page/info_section.mas, id=>'related_stock_groups', title => 'Groups / members', collapsible=>1, collapsed=>1 &>
+        <div class="well well-sm">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <table id = "group" class="table table-hover table-striped">
+                        <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+
+            <br>
+            <&| /page/info_section.mas, title => 'Copy Stocks to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the stock names showing in table to a new or exisiting list</i>'&>
+                <br>
+                <div style="text-align:right" id="groups_and_members_to_list_menu"></div>
+                <div id="group_and_member_names" style="display: none;"></div>
+            </&>
+        </div>
+    </&>
+
+% }
+
+% if ($stock_type eq 'accession' || $stock_type eq 'plant' || $stock_type eq 'plot' || $stock_type eq 'subplot' || $stock_type eq 'tissue_sample'){
+
+    <&| /page/info_section.mas, id=>'related_stock_tissues', title => 'Related stocks for tissue sample', collapsible=>1, collapsed=>1 &>
+        <div class="well well-sm">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <table id = "tissue_sample" class="table table-hover table-striped">
+                        <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                        </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+
+            <br>
+            <&| /page/info_section.mas, title => 'Copy Stocks to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the stock names showing in table to a new or exisiting list</i>'&>
+                <br>
+                <div style="text-align:right" id="tissue_samples_to_list_menu"></div>
+                <div id="tissue_sample_names" style="display: none;"></div>
+            </&>
+        </div>
+    </&>
+
+% }
+
+<script>
+
+jQuery(document).ready(function(){
+
+
+    jQuery('#related_stocks_in_trial_onswitch').one("click", function(){
+        var trial_stock_table = jQuery('#trial_related_stock').DataTable({
+            'ajax':'/stock/'+ <% $stock_id %> + '/datatables/trial_related_stock',
+            "fnInitComplete": function(oSettings, json) {
+                //console.log(json);
+                if (!isLoggedIn()) {
+                    jQuery('#trial_stocks_to_list_menu').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+                } else {
+                    var html = "";
+                    for(var i=0; i<json.data.length; i++){
+                        html += json.data[i][2]+"\n";
+                    }
+                    jQuery("#trial_stock_names").html(html);
+                    addToListMenu("trial_stocks_to_list_menu", "trial_stock_names", {
+                        selectText: true,
+                        listType:'null'
+                    });
+                }
+            }
+        });
+    });
+
+    jQuery('#related_stock_progenies_onswitch').one("click", function(){
+        var progeny_table = jQuery('#progenies').DataTable({
+            'ordering': false,
+            'ajax':'/stock/'+ <% $stock_id %> + '/datatables/progenies',
+            "fnInitComplete": function(oSettings, json) {
+                //console.log(json);
+                if (!isLoggedIn()) {
+                    jQuery('#progenies_to_list_menu').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+                } else {
+                    var html = "";
+                    for(var i=0; i<json.data.length; i++){
+                        html += json.data[i][2]+"\n";
+                    }
+                    jQuery("#progeny_names").html(html);
+                    addToListMenu("progenies_to_list_menu", "progeny_names", {
+                        selectText: true,
+                        listType:'accessions'
+                    });
+                }
+            }
+        });
+    });
+
+    jQuery('#related_stock_groups_onswitch').one("click", function(){
+        var group_and_member_table = jQuery('#group').DataTable({
+            'ajax':'/stock/'+ <% $stock_id %> + '/datatables/group_and_member',
+            "fnInitComplete": function(oSettings, json) {
+                //console.log(json);
+                if (!isLoggedIn()) {
+                    jQuery('#groups_and_members_to_list_menu').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+                } else {
+                    var html = "";
+                    for(var i=0; i<json.data.length; i++){
+                        html += json.data[i][2]+"\n";
+                    }
+                    jQuery("#group_and_member_names").html(html);
+                    addToListMenu("groups_and_members_to_list_menu", "group_and_member_names", {
+                        selectText: true,
+                        listType:'null'
+                    });
+                }
+            }
+        });
+    });
+
+    jQuery('#related_stock_tissues_onswitch').one("click", function(){
+        var tissue_sample_table = jQuery('#tissue_sample').DataTable({
+            'ajax':'/stock/'+ <% $stock_id %> + '/datatables/stock_for_tissue',
+            "fnInitComplete": function(oSettings, json) {
+                //console.log(json);
+                if (!isLoggedIn()) {
+                    jQuery('#tissue_samples_to_list_menu').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+                } else {
+                    var html = "";
+                    for(var i=0; i<json.data.length; i++){
+                        html += json.data[i][2]+"\n";
+                    }
+                    jQuery("#tissue_sample_names").html(html);
+                    addToListMenu("tissue_samples_to_list_menu", "tissue_sample_names", {
+                        selectText: true,
+                        listType:'null'
+                    });
+                }
+            }
+        });
+    });
+
+});
+
+
+
+
+ </script>

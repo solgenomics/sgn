@@ -2,7 +2,7 @@
 package CXGN::Trial::Folder;
 
 use CXGN::Chado::Cvterm;
-
+use CXGN::Location;
 use Moose;
 use SGN::Model::Cvterm;
 use Data::Dumper;
@@ -48,7 +48,16 @@ has 'folder_for_crosses' => (isa => 'Bool',
 	default => 0,
 );
 
+has 'folder_for_genotyping_trials' => (isa => 'Bool',
+	is => 'rw',
+	default => 0,
+);
+
 has 'location_id' => (isa => 'Int',
+	is => 'rw',
+);
+
+has 'location_name' => (isa => 'Str',
 	is => 'rw',
 );
 
@@ -87,6 +96,7 @@ sub BUILD {
 	my $breeding_program_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'breeding_program', 'project_property')->cvterm_id();
 	my $folder_for_trials_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'folder_for_trials', 'project_property')->cvterm_id();
 	my $folder_for_crosses_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'folder_for_crosses', 'project_property')->cvterm_id();
+	my $folder_for_genotyping_trials_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'folder_for_genotyping_trials', 'project_property')->cvterm_id();
 	my $folder_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'trial_folder', 'project_property')->cvterm_id();
 	my $breeding_program_trial_relationship_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'breeding_program_trial_relationship', 'project_relationship')->cvterm_id();
 
@@ -105,21 +115,24 @@ sub BUILD {
 			$self->folder_for_trials(1);
 		} elsif ($folder_type_row->type_id() == $folder_for_crosses_cvterm_id) {
 			$self->folder_for_crosses(1);
+		} elsif ($folder_type_row->type_id() == $folder_for_genotyping_trials_cvterm_id) {
+			$self->folder_for_genotyping_trials(1);
 		}
 	}
 
 	if (!$self->folder_type) {
-		my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'cross',  'stock_type')->cvterm_id;
 		my $location_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project location',  'project_property')->cvterm_id;
 
 		my $trial_type_rs = $self->bcs_schema->resultset("Project::Project")->search({ 'me.project_id' => $self->folder_id })->search_related('projectprops');
 		while (my $tt = $trial_type_rs->next()) {
-			if ($tt->type_id == $cross_cvterm_id) {
+			if ($tt->value eq 'crossing_trial') {
 				$self->folder_type("cross");
 			} elsif ($tt->value eq 'genotyping_plate') {
 				$self->folder_type("genotyping_trial");
 			} elsif ($tt->type_id == $location_cvterm_id) {
 				$self->location_id($tt->value + 0);
+                my $location = CXGN::Location->new( { bcs_schema => $self->bcs_schema, nd_geolocation_id => $self->location_id } );
+                $self->location_name($location->name());
 			}
 		}
 
@@ -155,6 +168,7 @@ sub create {
 	my $parent_folder_id = $args->{parent_folder_id};
 	my $folder_for_trials = $args->{folder_for_trials};
 	my $folder_for_crosses = $args->{folder_for_crosses};
+	my $folder_for_genotyping_trials = $args->{folder_for_genotyping_trials};
 
 	# check if name is already taken
 	my $check_rs = $schema->resultset('Project::Project')->search( { name => $folder_name } );
@@ -178,6 +192,10 @@ sub create {
 		my $folder_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'folder_for_crosses', 'project_property');
 		$project->create_projectprops({ $folder_type_cvterm->name() => '1' });
 	}
+    if ($folder_for_genotyping_trials) {
+        my $folder_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'folder_for_genotyping_trials', 'project_property');
+        $project->create_projectprops({ $folder_type_cvterm->name() => '1' });
+    }
 
 	my $folder = CXGN::Trial::Folder->new({
 		bcs_schema => $schema,
@@ -197,6 +215,7 @@ sub list {
 	my $breeding_program_id = $args->{breeding_program_id};
 	my $folder_for_trials = $args->{folder_for_trials};
 	my $folder_for_crosses = $args->{folder_for_crosses};
+	my $folder_for_genotyping_trials = $args->{folder_for_genotyping_trials};
 
 	my $folder_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,'trial_folder', 'project_property')->cvterm_id();
 	my $breeding_program_trial_relationship_id = SGN::Model::Cvterm->get_cvterm_row($schema,'breeding_program_trial_relationship', 'project_relationship')->cvterm_id();
@@ -208,7 +227,7 @@ sub list {
 	}
 
 	my %projectprop_params;
-	if (!$folder_for_trials && !$folder_for_crosses){
+	if (!$folder_for_trials && !$folder_for_crosses && !$folder_for_genotyping_trials){
 		$projectprop_params{'projectprops.type_id'} = $folder_cvterm_id;
 	} elsif ($folder_for_trials){
 		my $folder_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'folder_for_trials', 'project_property')->cvterm_id();
@@ -216,7 +235,10 @@ sub list {
 	} elsif ($folder_for_crosses){
 		my $folder_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'folder_for_crosses', 'project_property')->cvterm_id();
 		$projectprop_params{'projectprops.type_id'} = $folder_type_cvterm_id;
-	}
+    } elsif ($folder_for_genotyping_trials){
+        my $folder_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'folder_for_genotyping_trials', 'project_property')->cvterm_id();
+        $projectprop_params{'projectprops.type_id'} = $folder_type_cvterm_id;
+    }
 
 	my $breeding_program_rel = $schema->resultset('Project::ProjectRelationship')->search(\%object_project_params)->search_related("subject_project")->search_related("projectprops", \%projectprop_params, {'+select'=>'subject_project.name', '+as'=>'name' } );
 
@@ -239,7 +261,8 @@ sub _get_children {
 
 	my @children;
 
-	my $rs = $self->bcs_schema()->resultset("Project::Project")->search_related( 'project_relationship_subject_projects', { object_project_id => $self->folder_id() }, { order_by => 'me.name' });
+    my $folder_cvterm_id = $self->folder_cvterm_id();
+	my $rs = $self->bcs_schema()->resultset("Project::Project")->search_related( 'project_relationship_subject_projects', { object_project_id => $self->folder_id(), type_id => $folder_cvterm_id }, { order_by => 'me.name' });
 
 	@children = map { $_->subject_project_id() } $rs->all();
 
@@ -302,8 +325,12 @@ sub fast_children {
         my $name = $row->get_column('project_name');
         $children{$name}{'name'} = $name;
         $children{$name}{'id'} = $row->subject_project_id();
-        $children{$name}{$row->get_column('project_value')} = 1;
-        $children{$name}{$row->get_column('project_type')} = 1;
+        if ($row->get_column('project_value')){
+            $children{$name}{$row->get_column('project_value')} = 1;
+        }
+        if ($row->get_column('project_type')){
+            $children{$name}{$row->get_column('project_type')} = 1;
+        }
     }
 
     #print STDERR "Finished running get children for project ".$self->{'name'}." at time ".localtime()."\n";  #Children are: ".Dumper(%children);
@@ -484,10 +511,10 @@ sub remove_child {
 
 sub get_jstree_html {
     shift;
-	my $self = shift;
+    my $self = shift;
     my $schema = shift;
-	my $parent_type = shift;
-	my $project_type_of_interest = shift // 'trial';
+    my $parent_type = shift;
+    my $project_type_of_interest = shift // 'trial';
     #print STDERR "Running get js tree html on project ".$self->{'name'}." at time ".localtime()."\n";
     my ($folder_type_of_interest, $local_type_of_interest, $html);
 
@@ -496,36 +523,40 @@ sub get_jstree_html {
         $folder_type_of_interest = 'folder_for_trials';
     }
     elsif ($project_type_of_interest eq 'cross') {
-        $local_type_of_interest = 'cross';
+        $local_type_of_interest = 'crossing_trial';
         $folder_type_of_interest = 'folder_for_crosses';
     }
     elsif ($project_type_of_interest eq 'genotyping_trial') {
         $local_type_of_interest = 'genotyping_plate'; # in order to match projectprop value
-        $folder_type_of_interest = 'folder_for_trials';
+        $folder_type_of_interest = 'folder_for_genotyping_trials';
     }
 
-	$html .= _jstree_li_html($schema, $parent_type, $self->{'id'}, $self->{'name'});
-	$html .= "<ul>";
+    $html .= _jstree_li_html($schema, $parent_type, $self->{'id'}, $self->{'name'});
+    $html .= "<ul>";
 
-	my %children = fast_children($self, $schema, $parent_type);
-	if (%children) {
+    my %children = fast_children($self, $schema, $parent_type);
+    #print STDERR Dumper \%children;
+    if (%children) {
         foreach my $child (sort keys %children) {
             #print STDERR "Working on child ".$children{$child}->{'name'}."\n";
 
-			if ($children{$child}->{$folder_type_of_interest}) {
+            if ($children{$child}->{$folder_type_of_interest}) {
                 $html .= get_jstree_html('shift', $children{$child}, $schema, 'folder', $project_type_of_interest);
             }
-            elsif (!$children{$child}->{'folder_for_crosses'} && !$children{$child}->{'folder_for_trials'} && $children{$child}->{'trial_folder'}) {
+            elsif (!$children{$child}->{'folder_for_crosses'} && !$children{$child}->{'folder_for_genotyping_trials'} && !$children{$child}->{'folder_for_trials'} && $children{$child}->{'trial_folder'}) {
                 $html .= get_jstree_html('shift', $children{$child}, $schema, 'folder', $project_type_of_interest);
+            }
+            elsif ($local_type_of_interest eq 'design' && $children{$child}->{'genotyping_plate'}){
+                next; #skip genotyping plates in field trial tree
             }
             elsif ($children{$child}->{$local_type_of_interest}) { #Only display $project of interest types.
-				$html .= _jstree_li_html($schema, $project_type_of_interest, $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
-			}
-		}
-	}
-	$html .= '</ul></li>';
+                $html .= _jstree_li_html($schema, $project_type_of_interest, $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
+            }
+        }
+    }
+    $html .= '</ul></li>';
     #print STDERR "Finished, returning with html at time ".localtime()."\n";
-	return $html;
+    return $html;
 }
 
 sub _jstree_li_html {
@@ -535,12 +566,12 @@ sub _jstree_li_html {
     my $name = shift;
 
     my $url = '#';
-    if ($type eq 'trial') {
-    	$url = "/breeders/trial/".$id;
+    if ($type eq 'trial' || $type eq 'genotyping_trial') {
+        $url = "/breeders/trial/".$id;
     } elsif ($type eq 'folder') {
-    	$url = "/folder/".$id;
+        $url = "/folder/".$id;
     } elsif ($type eq 'cross') {
-    	$url = "/cross/".$id;
+        $url = "/cross/".$id;
     }
 
     return "<li data-jstree='{\"type\":\"$type\"}' id=\"$id\"><a href=\"$url\">".$name.'</a>';

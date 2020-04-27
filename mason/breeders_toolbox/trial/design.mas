@@ -21,7 +21,6 @@ jQuery(document).ready(function () {
 		url : '/ajax/breeders/trial/'+<% $trial_id %>+'/design',
 		success: function(response){
 			if (!response.design_type) {
-				//jQuery('#trial_design_section_content').empty();
 				jQuery('#trial_design_html').empty();
 				var html = "<div class='well well-sm'>There is no design data for this trial.</div>";
 					jQuery('#trial_design_html').html(html);

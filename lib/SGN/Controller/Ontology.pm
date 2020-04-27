@@ -39,7 +39,7 @@ sub compose_trait : Path('/tools/compose') :Args(0) {
 
     if (!$c->user()) {
       # redirect to login page
-      $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+      $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
       return;
     }
 
@@ -49,7 +49,7 @@ sub compose_trait : Path('/tools/compose') :Args(0) {
     my %html_hash;
     foreach my $name (@composable_cvs) {
         $name =~ s/^\s+|\s+$//g; # remove whitespace
-        if ($name eq 'time' || $name eq 'tod' || $name eq 'toy' || $name eq 'gen' ) {
+        if ($name eq 'time' || $name eq 'tod' || $name eq 'toy' || $name eq 'gen' || $name eq 'evt' ) {
             print STDERR "Skipping time-related cv\n";
             next;
         }
@@ -105,6 +105,7 @@ sub compose_trait : Path('/tools/compose') :Args(0) {
     $c->stash->{composable_tod_root_cvterm} = $c->config->{composable_tod_root_cvterm};
     $c->stash->{composable_toy_root_cvterm} = $c->config->{composable_toy_root_cvterm};
     $c->stash->{composable_gen_root_cvterm} = $c->config->{composable_gen_root_cvterm};
+    $c->stash->{composable_evt_root_cvterm} = $c->config->{composable_evt_root_cvterm};
 
     $c->stash->{user} = $c->user();
     $c->stash->{template} = '/ontology/compose_trait.mas';

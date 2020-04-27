@@ -50,7 +50,7 @@ my $curator   = $pubref->{curator};
 my $submitter = $pubref->{submitter};
 my $sequencer = $pubref->{sequencer};
 my $doi       = $pubref->{doi};
-
+my $stocks    = $pubref->{stocks};
 my $dbh       = $pubref->{dbh};
 my @xrefs     = $pub->get_dbxrefs;
 my $dbxrefs_html;
@@ -58,18 +58,36 @@ foreach my $d(@xrefs) {
 	my $db = $d->get_db_name();
 	if ($db  ne 'SGN_ref') { 
 	    my $url = $d->get_urlprefix() . $d->get_url() . $d->get_accession();
-	    $dbxrefs_html .=  qq| <a href= "$url" >| . "$db:" . $d->get_accession() . "</a>";
+	    $dbxrefs_html .=  qq| <a href= "$url" >| . "$db:" . $d->get_accession() . "</a><br />";
 	}
     }
 
 my @loci = $pub->get_loci;
 my $loci_link;
+my $loci_count = 0;
 foreach my $locus(@loci)  {
-	my $locus_id = $locus->get_locus_id();
-	my $locus_symbol= $locus->get_locus_symbol();
-	my $cname=$locus->get_common_name();
-	$loci_link .= qq|<a href="/locus/$locus_id/view">$cname '$locus_symbol'</a><br />| if $locus->get_obsolete() eq 'f';
-    }
+  my $locus_id = $locus->get_locus_id();
+  my $locus_symbol= $locus->get_locus_symbol();
+  my $cname=$locus->get_common_name();
+  my $obsolete = $locus->get_obsolete;
+  if ($obsolete ne 't') {
+    $loci_link .= qq|<a href="/locus/$locus_id/view">$cname '$locus_symbol'</a><br />| ;
+    $loci_count++;
+  }
+}
+
+
+my $stocks_link;
+my $stocks_count = 0;
+foreach my $stock(@$stocks)  {
+  my $stock_id = $stock->stock_id();
+  my $stock_name= $stock->uniquename();
+  my $obsolete = $stock->is_obsolete;
+  unless ($obsolete) {
+    $stocks_link .= qq|<a href="/stock/$stock_id/view">$stock_name</a><br /> |;
+    $stocks_count++;
+  }
+}
 
 my $this_page = "/publication/$pub_id/view/";
 if ($doi) { $this_page = "/doi/pub/$doi/"; }
@@ -96,7 +114,7 @@ my $pub_title = $pub->get_title;
     form_div_name        => 'pub_details',
     js_object_name       => 'pubForm',
     page_url             => "$this_page",
-    alternate_new_button => '<a href ="/publication/0/new">[New]</a>'
+    alternate_new_button => '<a class="btn btn-sm btn-default" href ="/publication/0/new">New</a>'
     &>
 
 
@@ -106,18 +124,21 @@ my $pub_title = $pub->get_title;
 % if ($pub_id) {
 
 <&| /page/info_section.mas, title=>"External resources", 
-  collapsible=>1, collapsed=>1 
+  collapsible=>1, collapsed=>0 
   &>
   <% $dbxrefs_html %>
   
 </&>
 
-<&| /page/info_section.mas, title=>"Associated loci (" .  scalar(@loci)  . ")", collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, title=>"Associated loci (" . $loci_count  . ")", collapsible=>1, collapsed=>1 &>
   <% $loci_link %>
 
 </&>
 
+<&| /page/info_section.mas, title=>"Associated stocks (" .  $stocks_count  . ")", collapsible=>1, collapsed=>1 &>
+  <% $stocks_link %>
 
+</&>
 
 
 <& /page/comments.mas, object_type=>'publication', object_id=>$pub_id, referer=>$this_page &>

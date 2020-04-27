@@ -13,7 +13,9 @@ use CXGN::BreedersToolbox::Delete;
 use CXGN::Trial::TrialDesign;
 use CXGN::Trial::TrialCreate;
 use CXGN::Stock::StockLookup;
+use CXGN::Location;
 use Try::Tiny;
+use CXGN::Tools::Run;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -22,138 +24,6 @@ __PACKAGE__->config(
     stash_key => 'rest',
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
    );
-
-sub insert_new_project : Path("/ajax/breeders/project/insert") Args(0) {
-    my $self = shift;
-    my $c = shift;
-
-    if (! $c->user()) {
-	$c->stash->{rest} = { error => "You must be logged in to add projects." } ;
-	return;
-    }
-
-    my $params = $c->req->parameters();
-
-    my $schema = $c->dbic_schema('Bio::Chado::Schema');
-
-    my $exists = $schema->resultset('Project::Project')->search(
-	{ name => $params->{project_name} }
-	);
-
-    if ($exists > 0) {
-	$c->stash->{rest} = { error => "This trial name is already used." };
-	return;
-    }
-
-
-    my $project = $schema->resultset('Project::Project')->find_or_create(
-	{
-	    name => $params->{project_name},
-	    description => $params->{project_description},
-	}
-	);
-
-    my $projectprop_year = $project->create_projectprops( { 'project year' => $params->{year},}, {autocreate=>1}); #cv_name => 'project_property' } );
-
-
-
-    $c->stash->{rest} = { error => '' };
-}
-
-sub get_all_locations :Path("/ajax/breeders/location/all") Args(0) {
-    my $self = shift;
-    my $c = shift;
-
-    my $bp = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
-
-    my $all_locations = $bp->get_all_locations();
-
-    $c->stash->{rest} = { locations => $all_locations };
-
-}
-
-sub insert_new_location :Path("/ajax/breeders/location/insert") Args(0) {
-    my $self = shift;
-    my $c = shift;
-
-    my $params = $c->request->parameters();
-
-    my $description = $params->{description};
-    my $longitude   = $params->{longitude};
-    my $latitude    = $params->{latitude};
-    my $altitude    = $params->{altitude};
-
-    if (! $c->user()) { # redirect
-	$c->stash->{rest} = { error => 'You must be logged in to add a location.' };
-	return;
-    }
-
-    if (! $c->user->check_roles("submitter") && !$c->user->check_roles("curator")) {
-	$c->stash->{rest} = { error => 'You do not have the necessary privileges to add locations.' };
-	return;
-    }
-    my $schema = $c->dbic_schema('Bio::Chado::Schema');
-
-    my $exists = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { description => $description } )->count();
-
-    if ($exists > 0) {
-	$c->stash->{rest} = { error => "The location - $description - already exists. Please choose another name." };
-	return;
-    }
-
-    if ( ($longitude && $longitude !~ /^-?[0-9.]+$/) || ($latitude && $latitude !~ /^-?[0-9.]+$/) || ($altitude && $altitude !~ /^[0-9.]+$/) ) {
-	$c->stash->{rest} = { error => "Longitude, latitude and altitude must be numbers." };
-	return;
-    }
-
-    my $new_row;
-    $new_row = $schema->resultset('NaturalDiversity::NdGeolocation')
-      ->new({
-	     description => $description,
-	    });
-    if ($longitude) {
-      $new_row->longitude($longitude);
-    }
-    if ($latitude) {
-      $new_row->latitude($latitude);
-    }
-    if ($altitude) {
-      $new_row->altitude($altitude);
-    }
-    $new_row->insert();
-    $c->stash->{rest} = { success => 1, error => '' };
-}
-
-sub delete_location :Path('/ajax/breeders/location/delete') Args(1) {
-    my $self = shift;
-    my $c = shift;
-    my $location_id = shift;
-
-    if (!$c->user) {  # require login
-	$c->stash->{rest} = { error => "You need to be logged in to delete a location." };
-	return;
-    }
-    # require curator or submitter roles
-    if (! ($c->user->check_roles('curator') || $c->user->check_roles('submitter'))) {
-	$c->stash->{rest} = { error => "You don't have the privileges to delete a location." };
-	return;
-    }
-    my $del = CXGN::BreedersToolbox::Delete->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema") } );
-    if ($del->can_delete_location($location_id)) {
-	my $success = $del->delete_location($location_id);
-
-	if ($success) {
-	    $c->stash->{rest} = { success => 1 };
-	}
-	else {
-	    $c->stash->{rest} = { error => "Could not delete location $location_id" };
-	}
-    }
-    else {
-	$c->stash->{rest} = { error => "This location cannot be deleted because it has associated data." }
-    }
-
-}
 
 sub get_breeding_programs : Path('/ajax/breeders/all_programs') Args(0) {
     my $self = shift;
@@ -176,18 +46,20 @@ sub new_breeding_program :Path('/breeders/program/new') Args(0) {
 	$c->stash->{rest} = { error => 'You need to be logged in and have sufficient privileges to add a breeding program.' };
     }
 
-
     my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
 
-    my $error = $p->new_breeding_program($name, $desc);
+    my $new_program = $p->new_breeding_program($name, $desc);
 
-    if ($error) {
-	$c->stash->{rest} = { error => $error };
-    }
-    else {
-	$c->stash->{rest} =  {};
-    }
+    print STDERR "New program is ".Dumper($new_program)."\n";
 
+    $c->stash->{rest} = $new_program;
+
+    # if ($new_program->{'error'}) {
+	# $c->stash->{rest} = { error => $error };
+    # }
+    # else {
+	# $c->stash->{rest} =  { success => "The new breeding program $name was created.", id => };
+    # }
 }
 
 sub delete_breeding_program :Path('/breeders/program/delete') Args(1) {
@@ -363,269 +235,84 @@ sub get_all_trial_types : Path('/ajax/breeders/trial/alltypes') Args(0) {
     $c->stash->{rest} = { types => \@types };
 }
 
-sub genotype_trial : Path('/ajax/breeders/genotypetrial') Args(0) {
+
+sub get_accession_plots :Path('/ajax/breeders/get_accession_plots') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $field_trial = $c->req->param("field_trial");
+    my $parent_accession = $c->req->param("parent_accession");
 
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $field_layout_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "field_layout", "experiment_type")->cvterm_id();
+    my $dbh = $schema->storage->dbh();
 
-    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-        $c->stash->{rest} = { error => 'You do not have the required privileges to create a genotyping trial.' };
-        $c->detach();
+    my $trial = $schema->resultset("Project::Project")->find ({name => $field_trial});
+    my $trial_id = $trial->project_id();
+
+    my $cross_accession = $schema->resultset("Stock::Stock")->find ({uniquename => $parent_accession});
+    my $cross_accession_id = $cross_accession->stock_id();
+
+    my $q = "SELECT stock.stock_id, stock.uniquename
+            FROM nd_experiment_project join nd_experiment on (nd_experiment_project.nd_experiment_id=nd_experiment.nd_experiment_id) AND nd_experiment.type_id= ?
+            JOIN nd_experiment_stock ON (nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
+            JOIN stock_relationship on (nd_experiment_stock.stock_id = stock_relationship.subject_id) AND stock_relationship.object_id = ?
+            JOIN stock on (stock_relationship.subject_id = stock.stock_id)
+            WHERE nd_experiment_project.project_id= ? ";
+
+    my $h = $dbh->prepare($q);
+    $h->execute($field_layout_typeid, $cross_accession_id, $trial_id, );
+
+    my @plots=();
+    while(my ($plot_id, $plot_name) = $h->fetchrow_array()){
+
+      push @plots, [$plot_id, $plot_name];
     }
+    #print STDERR Dumper \@plots;
+    $c->stash->{rest} = {data=>\@plots};
 
-    my $list_id = $c->req->param("list_id");
-    my $name = $c->req->param("name");
-    my $breeding_program_id = $c->req->param("breeding_program");
-    my $description = $c->req->param("description");
-    my $location_id = $c->req->param("location");
-    my $year = $c->req->param("year");
-
-    my $list = CXGN::List->new( { dbh => $c->dbc->dbh(), list_id => $list_id });
-    my $elements = $list->elements();
-
-    if (!$name || !$list_id || !$breeding_program_id || !$location_id || !$year) {
-        $c->stash->{rest} = { error => "Please provide all parameters." };
-        $c->detach();
-    }
-
-    my $td = CXGN::Trial::TrialDesign->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
-
-    $td->set_stock_list($elements);
-
-    $td->set_block_size(96);
-
-    $td->set_design_type("genotyping_plate");
-    $td->set_trial_name($name);
-    my $design;
-
-    eval {
-        $td->calculate_design();
-    };
-
-    if ($@) {
-        $c->stash->{rest} = { error => "Design failed. Error: $@" };
-        $c->detach();
-    }
-
-    $design = $td->get_design();
-
-    if (exists($design->{error})) {
-        $c->stash->{rest} = $design;
-        $c->detach();
-    }
-    #print STDERR Dumper($design);
-
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $location = $schema->resultset("NaturalDiversity::NdGeolocation")->find( { nd_geolocation_id => $location_id } );
-    if (!$location) {
-        $c->stash->{rest} = { error => "Unknown location" };
-        $c->detach();
-    }
-
-    my $breeding_program = $schema->resultset("Project::Project")->find( { project_id => $breeding_program_id });
-    if (!$breeding_program) {
-        $c->stash->{rest} = { error => "Unknown breeding program" };
-        $c->detach();
-    }
-
-
-    my $ct = CXGN::Trial::TrialCreate->new( {
-        chado_schema => $c->dbic_schema("Bio::Chado::Schema"),
-        dbh => $c->dbc->dbh(),
-        user_name => $c->user()->get_object()->get_username(), #not implemented
-        trial_year => $year,
-        trial_location => $location->description(),
-        program => $breeding_program->name(),
-        trial_description => $description,
-        design_type => 'genotyping_plate',
-        design => $design,
-        trial_name => $name,
-        is_genotyping => 1,
-    });
-
-    my %message;
-    my $error;
-    try {
-        %message = $ct->save_trial();
-    } catch {
-        $error = $_;
-    };
-
-    if ($message{'error'}) {
-        $error = $message{'error'};
-    }
-    if ($error){
-        $c->stash->{rest} = {error => "Error saving trial in the database: $error"};
-        $c->detach();
-    }
-
-    $c->stash->{rest} = {
-        message => "Successfully stored the trial.",
-        trial_id => $message{trial_id},
-    };
-    #print STDERR Dumper(%message);
 }
 
-
-# this version of the genotype trial requires the upload of a file from the IGD
-#
-sub igd_genotype_trial : Path('/ajax/breeders/igdgenotypetrial') Args(0) {
+sub delete_uploaded_phenotype_files : Path('/ajax/breeders/phenotyping/delete/') Args(1) {
     my $self = shift;
     my $c = shift;
+    my $file_id = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    print STDERR "Deleting phenotypes from File ID: $file_id and making file obsolete\n";
+    my $dbh = $c->dbc->dbh();
+    my $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
 
-    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-        $c->stash->{rest} = { error => 'You do not have the required privileges to create a genotyping trial.' };
-        $c->detach();
-    }
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $list_id = $c->req->param("list_id");
-    #my $name = $c->req->param("name");
-    my $breeding_program_id = $c->req->param("breeding_program");
-    my $description = $c->req->param("description");
-    my $location_id = $c->req->param("location");
-    my $year = $c->req->param("year");
-    my $upload = $c->req->upload('igd_genotyping_trial_upload_file');
-    my $upload_tempfile  = $upload->tempname;
-    my $upload_original_name = $upload->filename();
-    my $upload_contents = read_file($upload_tempfile);
+    my $q_search = "
+        SELECT phenotype_id, nd_experiment_id, file_id
+        FROM phenotype
+        JOIN nd_experiment_phenotype using(phenotype_id)
+        JOIN nd_experiment_stock using(nd_experiment_id)
+        JOIN nd_experiment using(nd_experiment_id)
+        LEFT JOIN phenome.nd_experiment_md_files using(nd_experiment_id)
+        JOIN stock using(stock_id)
+        WHERE file_id = ?
+        AND nd_experiment.type_id = $nd_experiment_type_id";
 
-    print STDERR "Parsing IGD file...\n";
+    my $h = $dbh->prepare($q_search);
+    $h->execute($file_id);
 
-    my $p = CXGN::Trial::ParseUpload->new( { chado_schema => $schema, filename=>$upload_tempfile });
-    $p->load_plugin("ParseIGDFile");
-
-    my $meta = $p->parse();
-
-    my $errors = $p->get_parse_errors();
-    if (@{$errors->{'error_messages'}}) {
-        $c->stash->{rest} = { error => "The file has the following problems: ".join ", ", @{$errors->{'error_messages'}}.". Please fix these problems and try again." };
-        print STDERR "Parsing errors in uploaded file. Aborting. (".join ",", @{$errors->{'error_messages'}}.")\n";
-        $c->detach();
-    }
-    print STDERR "Meta information from genotyping trial file: ".Dumper($meta);
-
-    my $list = CXGN::List->new( { dbh => $c->dbc->dbh(), list_id => $list_id });
-    my $elements = $list->elements();
-
-    print STDERR "PARAMS: $upload_original_name, $list_id, $breeding_program_id, $location_id, $year\n";
-    if (!$upload_original_name || !$list_id || !$breeding_program_id || !$location_id || !$year) {
-        $c->stash->{rest} = { error => "Please provide all parameters, including a file." };
-        $c->detach();
+    my %phenotype_ids_and_nd_experiment_ids_to_delete;
+    while (my ($phenotype_id, $nd_experiment_id, $file_id) = $h->fetchrow_array()) {
+        push @{$phenotype_ids_and_nd_experiment_ids_to_delete{phenotype_ids}}, $phenotype_id;
+        push @{$phenotype_ids_and_nd_experiment_ids_to_delete{nd_experiment_ids}}, $nd_experiment_id;
     }
 
-    print STDERR "Looking up stock names and converting to IGD accepted names...\n";
-
-    my $slu = CXGN::Stock::StockLookup->new({ schema => $schema });
-
-    # remove non-word characters from names as required by
-    # IGD naming conventions. Store new names as synonyms.
-    #
-    foreach my $e (@$elements) {
-	my $submission_name = $e;
-	$submission_name =~ s/\W/\_/g;
-
-	print STDERR "Replacing element $e with $submission_name\n";
-	$slu->set_stock_name($e);
-	my $s = $slu -> get_stock();
-	$slu->set_stock_name($submission_name);
-
-	print STDERR "Storing synonym $submission_name for $e\n";
-	$slu->set_stock_name($e);
-	eval {
-	    #my $rs = $slu->_get_stock_resultset();
-	    $s->create_stockprops(
-		{ igd_synonym => $submission_name },
-		{  autocreate => 1,
-		   'cv.name' => 'local',
-		});
-	};
-	if ($@) {
-	    print STDERR "[warning] An error occurred storing the synonym: $submission_name because of $@\n";
-	}
+    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+    my $delete_phenotype_values_error = CXGN::Project::delete_phenotype_values_and_nd_experiment_md_values($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $temp_file_nd_experiment_id, $c->config->{basepath}, $self->bcs_schema, \%phenotype_ids_and_nd_experiment_ids_to_delete);
+    if ($delete_phenotype_values_error) {
+        die "Error deleting phenotype values ".$delete_phenotype_values_error."\n";
     }
 
-    print STDERR "Creating new trial design...\n";
+    my $h4 = $dbh->prepare("UPDATE metadata.md_metadata SET obsolete = 1 where metadata_id IN (SELECT metadata_id from metadata.md_files where file_id=?);");
+    $h4->execute($file_id);
+    print STDERR "Phenotype file successfully made obsolete (AKA deleted).\n";
 
-    my $td = CXGN::Trial::TrialDesign->new( { schema => $schema });
-
-    $td->set_stock_list($elements);
-    $td->set_block_size(96);
-    $td->set_blank($meta->{blank_well});
-    $td->set_trial_name($meta->{trial_name});
-    $td->set_design_type("genotyping_plate");
-
-    my $design;
-
-    eval {
-        $td->calculate_design();
-    };
-
-    if ($@) {
-        $c->stash->{rest} = { error => "Design failed. Error: $@" };
-        print STDERR "Design failed because of $@\n";
-        $c->detach();
-    }
-
-    $design = $td->get_design();
-
-    if (exists($design->{error})) {
-        $c->stash->{rest} = $design;
-        $c->detach();
-    }
-    #print STDERR Dumper($design);
-
-    my $location = $schema->resultset("NaturalDiversity::NdGeolocation")->find( { nd_geolocation_id => $location_id } );
-    if (!$location) {
-        $c->stash->{rest} = { error => "Unknown location" };
-        $c->detach();
-    }
-
-    my $breeding_program = $schema->resultset("Project::Project")->find( { project_id => $breeding_program_id });
-    if (!$breeding_program) {
-        $c->stash->{rest} = { error => "Unknown breeding program" };
-        $c->detach();
-    }
-
-    print STDERR "Creating the trial...\n";
-
-    my $ct = CXGN::Trial::TrialCreate->new( {
-        chado_schema => $schema,
-        dbh => $c->dbc->dbh(),
-        user_name => $c->user()->get_object()->get_username(), #not implemented
-        trial_year => $year,
-        trial_location => $location->description(),
-        program => $breeding_program->name(),
-        trial_description => $description || "",
-        design_type => 'genotyping_plate',
-        design => $design,
-        trial_name => $meta->{trial_name},
-        is_genotyping => 1,
-        genotyping_user_id => $meta->{user_id} || "unknown",
-        genotyping_project_name => $meta->{project_name} || "unknown",
-    });
-
-    my %message;
-    my $error;
-    try {
-        %message = $ct->save_trial();
-    } catch {
-        $error = $_;
-    };
-
-    if ($message{'error'}) {
-        $error = $message{'error'};
-    }
-    if ($error){
-        $c->stash->{rest} = {error => "Error saving trial in the database: $error"};
-        $c->detach;
-    }
-
-    $c->stash->{rest} = {
-        message => "Successfully stored the trial.",
-        trial_id => $message{trial_id},
-    };
-    #print STDERR Dumper(%message);
+    $c->stash->{rest} = {success => 1};
 }
-
 
 1;

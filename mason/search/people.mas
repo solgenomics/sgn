@@ -81,7 +81,7 @@
 
 </table>
 
-<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 
 
@@ -125,4 +125,3 @@ jQuery(document).ready(function () {
 
   
 </script>
-

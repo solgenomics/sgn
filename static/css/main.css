@@ -1,0 +1,31 @@
+
+
+/* ==========================================================================
+   Author's custom styles
+   ========================================================================== */
+
+#main {
+    position: relative;
+    width: 1024px;
+    height: 300px;
+    margin: 5px auto 0 auto;
+    text-align: center;
+}
+
+.txtContent
+{
+    width: 1000px;
+    font-family:Arial; font-size:18px; color:#000;
+    border:2px solid #3171ad;
+    -moz-border-radius: 10px;
+    border-radius: 10px;
+    padding:10px;
+    color:#3c556c; resize: none;
+    overflow:hidden;
+}
+
+.txtContent:focus{outline-width:0;}
+
+li {
+    list-style: none;
+}

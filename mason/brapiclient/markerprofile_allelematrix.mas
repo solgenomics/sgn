@@ -15,6 +15,7 @@
     <option value="https://yambase.org">yambase.org</option>
     <option value="https://fernbase.org">fernbase.org</option>
     <option value="https://solgenomics.net">solgenomics.net</option>
+    <option value="https://www.crop-diversity.org/mgis">crop-diversity.org</option>
 </select>
 
 <div id="brapi_home_markerprofile_allelematrix_div">
@@ -42,7 +43,7 @@
 jQuery(document).ready(function() {
     jQuery("#brapi_home_allelematrix_submit").click(function() {
 
-        var return_url = jQuery('#brapi_home_genotypes_url_select').val()+'/brapi/v1/allelematrix-search?markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid1').val()+'&markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid2').val()+'&markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid3').val()+'&markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid4').val()+'&format='+jQuery('#brapi_home_allelematrix_format').val();
+        var return_url = jQuery('#brapi_home_genotypes_url_select').val()+'/brapi/v1/allelematrices-search?markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid1').val()+'&markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid2').val()+'&markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid3').val()+'&markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid4').val()+'&format='+jQuery('#brapi_home_allelematrix_format').val();
         jQuery.ajax( {
             'url': return_url,
             'method': 'GET',

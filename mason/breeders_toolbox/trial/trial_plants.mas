@@ -23,14 +23,49 @@ jQuery(document).ready(function () {
             success: function(response){
                 //console.log(response);
                 jQuery("#working_modal").modal("hide");
-                var trial_plants_html = "<table class='table table-hover table-condensed table-bordered' id='trial_plants_table_html'><thead><tr><th>Name</th></tr></thead><tbody>";
-                for (i=0; i<response.plants[0].length; i++) {
-                    trial_plants_html = trial_plants_html + "<tr><td><a href='/stock/" + response.plants[0][i][0] +"/view'>"+ response.plants[0][i][1] + "</a></td></tr>";
+
+                var html = '<table class="table borderless" alt="breeder search" border="0" ><tr><td><select multiple class="form-control" id="plant_data" name="1" size="10" style="min-width: 200px;overflow:auto;"></select></td></tr>'
+
+                html += '<tr><td><button class="btn btn-default btn-sm" id="plant_select_all" name="1">Select All</button><br><br>'
+                html += '<div class="well well-sm"><div id="plant_data_count" name="1">No Selection</div></div>'
+                html += '<div id="plant_to_list_menu"></div><td><tr></table>'
+
+                jQuery('#trial_plants_html').html(html);
+
+                var plant = response.plants[0] || [];
+
+                plant_html = format_options_list(plant);
+                jQuery('#plant_data').html(plant_html);
+
+                var data = jQuery('#plant_data').val() || [];
+                show_list_counts('plant_data_count', response.plants[0].length, data.length);
+
+                if (jQuery('#plant_data').length) {
+                      addToListMenu('plant_to_list_menu', 'plant_data', {
+                      selectText: true,
+                      listType: 'plants'
+                    });
                 }
-                trial_plants_html = trial_plants_html + "</tbody></table>";
-                jQuery('#trial_plants_html').empty();
-                jQuery('#trial_plants_html').html(trial_plants_html);
-                enable_plants_datatable();
+
+                jQuery('#plant_select_all').click( function() { // select all plot
+                    var data_id = "plant_data";
+                    selectAllOptions(document.getElementById(data_id));
+
+                    var data = jQuery("#"+data_id).val() || [];
+                    var count_id = "plant_data_count";
+                    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
+                });
+
+                jQuery('#plant_data').change( function() { // update count when data selections change
+                    var data_id = jQuery(this).attr('id');
+                    var data = jQuery('#'+data_id).val() || [];
+                    var count_id = "plant_data_count";
+                    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
+                });
+
+                jQuery('select').dblclick( function() { // open plot detail page in new window or tab on double-click
+                    window.open("../../stock/"+this.value+"/view");
+                });
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");
@@ -41,9 +76,5 @@ jQuery(document).ready(function () {
     });
 
 });
-
-function enable_plants_datatable() {
-    jQuery('#trial_plants_table_html').DataTable();
-}
 
 </script>

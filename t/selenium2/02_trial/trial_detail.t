@@ -10,9 +10,9 @@ my $f = SGN::Test::Fixture->new();
     $t->login_as("curator");
     #Upload New Trial
     $t->get_ok('/breeders/trials');
-    my $refresh_tree = $t->find_element_ok("refresh_jstree_html_trialtree_button", "id", "refresh tree")->click();
+    my $refresh_tree = $t->find_element_ok("refresh_jstree_html_trialtree_button", "name", "refresh tree")->click();
     sleep(3);
-    $t->find_element_ok("upload_trial_link", "id", "click on upload_trial_link ")->click();
+    $t->find_element_ok("upload_trial_link", "name", "click on upload_trial_link ")->click();
     sleep(2);
     my $program_select = $t->find_element_ok("trial_upload_breeding_program", "id", "find breeding program select");
     $program_select->send_keys('test');
@@ -31,7 +31,7 @@ my $f = SGN::Test::Fixture->new();
     my $remote_filename = $t->driver()->upload_file($filename);
     $upload_input->send_keys($filename);
     sleep(1);
-    $t->find_element_ok("upload_trial_submit", "id", "submit upload trial file ")->click();
+    $t->find_element_ok("upload_trial_submit", "name", "submit upload trial file ")->click();
     sleep(5);
 
     $t->find_element_ok("close_trial_upload_success_dialog", "id", "success msg")->click();
@@ -39,7 +39,7 @@ my $f = SGN::Test::Fixture->new();
     $t->find_element_ok("close_trial_upload_dialog", "id", "close trial upload dialog")->click();
     sleep(1);
 
-    my $refresh_tree = $t->find_element_ok("refresh_jstree_html_trialtree_button", "id", "refresh tree")->click();
+    my $refresh_tree = $t->find_element_ok("refresh_jstree_html_trialtree_button", "name", "refresh tree")->click();
     sleep(3);
     my $open_tree = $t->find_element_ok("jstree-icon", "class", "open up tree")->click();
     sleep(2);

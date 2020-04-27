@@ -24,12 +24,18 @@ use Data::Dumper;
 use Try::Tiny;
 use CXGN::Phenome::Schema;
 use CXGN::Phenome::Allele;
-use CXGN::Chado::Stock;
+use CXGN::Stock;
 use CXGN::Page::FormattingHelpers qw/ columnar_table_html info_table_html html_alternate_show /;
 use CXGN::Phenome::DumpGenotypes;
 use CXGN::BreederSearch;
 use Scalar::Util 'reftype';
-use CXGN::BreedersToolbox::AccessionsFuzzySearch;
+use CXGN::BreedersToolbox::StocksFuzzySearch;
+use CXGN::Stock::RelatedStocks;
+use CXGN::BreederSearch;
+use CXGN::Genotype::Search;
+use JSON;
+
+use Bio::Chado::Schema;
 
 use Scalar::Util qw(looks_like_number);
 use DateTime;
@@ -67,6 +73,7 @@ sub add_stockprop_POST {
         my $req = $c->req;
         my $stock_id = $c->req->param('stock_id');
         my $prop  = $c->req->param('prop');
+        $prop =~ s/^\s+|\s+$//g; #trim whitespace from both ends
         my $prop_type = $c->req->param('prop_type');
 
 	my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
@@ -75,12 +82,16 @@ sub add_stockprop_POST {
 
         my $message = '';
         if ($prop_type eq 'stock_synonym') {
-            my $fuzzy_accession_search = CXGN::BreedersToolbox::AccessionsFuzzySearch->new({schema => $schema});
+            my $fuzzy_accession_search = CXGN::BreedersToolbox::StocksFuzzySearch->new({schema => $schema});
             my $max_distance = 0.2;
-            my $fuzzy_search_result = $fuzzy_accession_search->get_matches([$prop], $max_distance);
+            my $fuzzy_search_result = $fuzzy_accession_search->get_matches([$prop], $max_distance, 'accession');
             #print STDERR Dumper $fuzzy_search_result;
             my $found_accessions = $fuzzy_search_result->{'found'};
             my $fuzzy_accessions = $fuzzy_search_result->{'fuzzy'};
+            if ($fuzzy_search_result->{'error'}){
+                $c->stash->{rest} = { error => "ERROR: ".$fuzzy_search_result->{'error'} };
+                $c->detach();
+            }
             if (scalar(@$found_accessions) > 0){
                 $c->stash->{rest} = { error => "Synonym not added: The synonym you are adding is already stored as its own unique stock or as a synonym." };
                 $c->detach();
@@ -98,7 +109,22 @@ sub add_stockprop_POST {
 
         try {
             $stock->create_stockprops( { $prop_type => $prop }, { autocreate => 1 } );
-            $c->stash->{rest} = { message => "$message Stock_id $stock_id and type_id $prop_type have been associated with value $prop", }
+
+            my $stock = CXGN::Stock->new({
+                schema=>$schema,
+                stock_id=>$stock_id,
+                is_saving=>1,
+                sp_person_id => $c->user()->get_object()->get_sp_person_id(),
+                user_name => $c->user()->get_object()->get_username(),
+                modification_note => "Added property: $prop_type = $prop"
+            });
+            my $added_stock_id = $stock->store();
+
+            my $dbh = $c->dbc->dbh();
+            my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+            my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+
+            $c->stash->{rest} = { message => "$message Stock_id $stock_id and type_id $prop_type have been associated with value $prop. ".$refresh->{'message'} };
         } catch {
             $c->stash->{rest} = { error => "Failed: $_" }
         };
@@ -237,7 +263,7 @@ sub associate_locus_GET :Args(0) {
         # rightly) be counted as a server error
         if ($stock && $allele_id) {
             try {
-                my $cxgn_stock = CXGN::Chado::Stock->new($schema, $stock_id);
+                my $cxgn_stock = CXGN::Stock->new(schema => $schema, stock_id => $stock_id);
                 $cxgn_stock->associate_allele($allele_id, $c->user->get_object->get_sp_person_id);
 
                 $c->stash->{rest} = ['success'];
@@ -712,11 +738,7 @@ sub project_autocomplete_GET :Args(0) {
     $term =~ s/(^\s+|\s+)$//g;
     $term =~ s/\s+/ /g;
     my @response_list;
-    my $q = "SELECT  distinct project.name FROM
-  nd_experiment_stock JOIN
-  nd_experiment_project USING (nd_experiment_id) JOIN
-  project USING (project_id)
-  WHERE project.name ilike ? ORDER BY project.name";
+    my $q = "SELECT  distinct project.name FROM project WHERE project.name ilike ? ORDER BY project.name LIMIT 100";
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute( '%'.$term.'%');
     while  (my ($project_name) = $sth->fetchrow_array ) {
@@ -759,31 +781,65 @@ sub project_year_autocomplete_GET :Args(0) {
     $c->stash->{rest} = \@response_list;
 }
 
-=head2 stock_organization_autocomplete
 
-Public Path: /ajax/stock/stock_organization_autocomplete
+=head2 seedlot_name_autocomplete
 
-Autocomplete a stock organization. Takes a single GET param,
+Public Path: /ajax/stock/seedlot_name_autocomplete
+
+Autocomplete a seedlot name.  Takes a single GET param,
 C<term>, responds with a JSON array of completions for that term.
-Finds only organization stockprops that are linked with a stock
 
 =cut
 
-sub stock_organization_autocomplete : Local : ActionClass('REST') { }
+sub seedlot_name_autocomplete : Local : ActionClass('REST') { }
 
-sub stock_organization_autocomplete_GET :Args(0) {
+sub seedlot_name_autocomplete_GET :Args(0) {
     my ( $self, $c ) = @_;
-
     my $term = $c->req->param('term');
     # trim and regularize whitespace
     $term =~ s/(^\s+|\s+)$//g;
     $term =~ s/\s+/ /g;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
+
     my @response_list;
-    my $q = "SELECT  distinct value FROM stockprop JOIN cvterm on cvterm_id = type_id WHERE cvterm.name = ? AND value ilike ?";
+    my $q = "SELECT uniquename FROM stock where type_id = ? AND uniquename ilike ? LIMIT 1000";
     my $sth = $c->dbc->dbh->prepare($q);
-    $sth->execute( 'organization' , '%'.$term.'%');
-    while  (my ($organization_name) = $sth->fetchrow_array ) {
-        push @response_list, $organization_name;
+    $sth->execute( $seedlot_cvterm_id , '%'.$term.'%');
+    while  (my ($uniquename) = $sth->fetchrow_array ) {
+        push @response_list, $uniquename;
+    }
+    $c->stash->{rest} = \@response_list;
+}
+
+
+=head2 stockproperty_autocomplete
+
+Public Path: /ajax/stock/stockproperty_autocomplete
+
+Autocomplete a stock property. Takes GET param for term and property,
+C<term>, responds with a JSON array of completions for that term.
+Finds stockprop values that are linked with a stock
+
+=cut
+
+sub stockproperty_autocomplete : Local : ActionClass('REST') { }
+
+sub stockproperty_autocomplete_GET :Args(0) {
+    my ( $self, $c ) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $term = $c->req->param('term');
+    my $cvterm_name = $c->req->param('property');
+    # trim and regularize whitespace
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+    my $cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $cvterm_name, 'stock_property')->cvterm_id();
+    my @response_list;
+    my $q = "SELECT distinct value FROM stockprop WHERE type_id=? and value ilike ?";
+    my $sth = $schema->storage->dbh->prepare($q);
+    $sth->execute( $cvterm_id, '%'.$term.'%');
+    while  (my ($val) = $sth->fetchrow_array ) {
+        push @response_list, $val;
     }
     $c->stash->{rest} = \@response_list;
 }
@@ -838,12 +894,18 @@ sub stock_autocomplete_GET :Args(0) {
     my ($self, $c) = @_;
 
     my $term = $c->req->param('term');
+    my $stock_type_id = $c->req->param('stock_type_id');
 
     $term =~ s/(^\s+|\s+)$//g;
     $term =~ s/\s+/ /g;
 
+    my $stock_type_where = '';
+    if ($stock_type_id){
+        $stock_type_where = " AND type_id = $stock_type_id ";
+    }
+
     my @response_list;
-    my $q = "select distinct(uniquename) from stock where uniquename ilike ? ORDER BY stock.uniquename LIMIT 100";
+    my $q = "select distinct(uniquename) from stock where uniquename ilike ? $stock_type_where ORDER BY stock.uniquename LIMIT 100";
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute('%'.$term.'%');
     while (my ($stock_name) = $sth->fetchrow_array) {
@@ -877,9 +939,147 @@ sub accession_autocomplete_GET :Args(0) {
     $term =~ s/\s+/ /g;
 
     my @response_list;
-    my $q = "select distinct(stock.uniquename) from stock join cvterm on(type_id=cvterm_id) where stock.uniquename ilike ? and (cvterm.name='accession' or cvterm.name='vector_construct') ORDER BY stock.uniquename";
+    my $q = "select distinct(stock.uniquename) from stock join cvterm on(type_id=cvterm_id) where stock.uniquename ilike ? and (cvterm.name='accession' or cvterm.name='vector_construct') ORDER BY stock.uniquename LIMIT 20";
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute('%'.$term.'%');
+    while (my ($stock_name) = $sth->fetchrow_array) {
+	push @response_list, $stock_name;
+    }
+
+    #print STDERR Dumper @response_list;
+
+    $c->stash->{rest} = \@response_list;
+}
+
+=head2 accession_or_cross_autocomplete
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub accession_or_cross_autocomplete : Local : ActionClass('REST') { }
+
+sub accession_or_cross_autocomplete_GET :Args(0) {
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+
+    my @response_list;
+    my $q = "select distinct(stock.uniquename) from stock join cvterm on(type_id=cvterm_id) where stock.uniquename ilike ? and (cvterm.name='accession' or cvterm.name='cross') ORDER BY stock.uniquename LIMIT 20";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my ($stock_name) = $sth->fetchrow_array) {
+	push @response_list, $stock_name;
+    }
+
+    #print STDERR Dumper @response_list;
+
+    $c->stash->{rest} = \@response_list;
+}
+
+=head2 cross_autocomplete
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub cross_autocomplete : Local : ActionClass('REST') { }
+
+sub cross_autocomplete_GET :Args(0) {
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+
+    my @response_list;
+    my $q = "select distinct(stock.uniquename) from stock join cvterm on(type_id=cvterm_id) where stock.uniquename ilike ? and cvterm.name='cross' ORDER BY stock.uniquename LIMIT 20";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my ($stock_name) = $sth->fetchrow_array) {
+        push @response_list, $stock_name;
+    }
+
+    #print STDERR Dumper @response_list;
+    $c->stash->{rest} = \@response_list;
+}
+
+=head2 family_name_autocomplete
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub family_name_autocomplete : Local : ActionClass('REST') { }
+
+sub family_name_autocomplete_GET :Args(0) {
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+
+    my @response_list;
+    my $q = "select distinct(stock.uniquename) from stock join cvterm on(type_id=cvterm_id) where stock.uniquename ilike ? and cvterm.name='family_name' ORDER BY stock.uniquename LIMIT 20";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my ($stock_name) = $sth->fetchrow_array) {
+        push @response_list, $stock_name;
+    }
+
+    #print STDERR Dumper @response_list;
+    $c->stash->{rest} = \@response_list;
+}
+
+
+=head2 population_autocomplete
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub population_autocomplete : Local : ActionClass('REST') { }
+
+sub population_autocomplete_GET :Args(0) {
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $population_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'population', 'stock_type')->cvterm_id();
+
+    my @response_list;
+    my $q = "select distinct(uniquename) from stock where uniquename ilike ? and type_id=? ORDER BY stock.uniquename";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%', $population_cvterm_id);
     while (my ($stock_name) = $sth->fetchrow_array) {
 	push @response_list, $stock_name;
     }
@@ -922,6 +1122,83 @@ sub accession_population_autocomplete_GET :Args(0) {
 
     $c->stash->{rest} = \@response_list;
 }
+
+
+=head2 pedigree_female_parent_autocomplete
+
+Public Path: /ajax/stock/pedigree_female_parent_autocomplete
+
+Autocomplete a female parent associated with pedigree.
+
+=cut
+
+sub pedigree_female_parent_autocomplete: Local : ActionClass('REST'){}
+
+sub pedigree_female_parent_autocomplete_GET : Args(0){
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+    my @response_list;
+
+    my $q = "SELECT distinct (pedigree_female_parent.uniquename) FROM stock AS pedigree_female_parent
+    JOIN stock_relationship ON (stock_relationship.subject_id = pedigree_female_parent.stock_id)
+    JOIN cvterm AS cvterm1 ON (stock_relationship.type_id = cvterm1.cvterm_id) AND cvterm1.name = 'female_parent'
+    JOIN stock AS check_type ON (stock_relationship.object_id = check_type.stock_id)
+    JOIN cvterm AS cvterm2 ON (check_type.type_id = cvterm2.cvterm_id) AND cvterm2.name = 'accession'
+    WHERE pedigree_female_parent.uniquename ilike ? ORDER BY pedigree_female_parent.uniquename";
+
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my($pedigree_female_parent) = $sth->fetchrow_array){
+      push @response_list, $pedigree_female_parent;
+    }
+
+  #print STDERR Dumper @response_list ;
+    $c->stash->{rest} = \@response_list;
+
+}
+
+
+=head2 cross_female_parent_autocomplete
+
+Public Path: /ajax/stock/cross_female_parent_autocomplete
+
+Autocomplete a female parent associated with cross.
+
+=cut
+
+sub cross_female_parent_autocomplete: Local : ActionClass('REST'){}
+
+sub cross_female_parent_autocomplete_GET : Args(0){
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+    my @response_list;
+
+    my $q = "SELECT distinct (cross_female_parent.uniquename) FROM stock AS cross_female_parent
+    JOIN stock_relationship ON (stock_relationship.subject_id = cross_female_parent.stock_id)
+    JOIN cvterm AS cvterm1 ON (stock_relationship.type_id = cvterm1.cvterm_id) AND cvterm1.name = 'female_parent'
+    JOIN stock AS check_type ON (stock_relationship.object_id = check_type.stock_id)
+    JOIN cvterm AS cvterm2 ON (check_type.type_id = cvterm2.cvterm_id) AND cvterm2.name = 'cross'
+    WHERE cross_female_parent.uniquename ilike ? ORDER BY cross_female_parent.uniquename";
+
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my($cross_female_parent) = $sth->fetchrow_array){
+      push @response_list, $cross_female_parent;
+    }
+
+  #print STDERR Dumper @response_list ;
+    $c->stash->{rest} = \@response_list;
+
+}
+
 
 
 sub parents : Local : ActionClass('REST') {}
@@ -1027,29 +1304,28 @@ sub add_stock_parent_GET :Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
 
     my $cvterm_name = "";
+    my $cross_type = "";
     if ($parent_type eq "male") {
-	$cvterm_name = "male_parent";
+        $cvterm_name = "male_parent";
     }
     elsif ($parent_type eq "female") {
-	$cvterm_name = "female_parent";
+        $cvterm_name = "female_parent";
+        $cross_type = $c->req->param('cross_type');
     }
 
-    my $type_id_row = $schema->resultset("Cv::Cvterm")->find( { name=> $cvterm_name } );
+    my $type_id_row = SGN::Model::Cvterm->get_cvterm_row($schema, $cvterm_name, "stock_relationship" )->cvterm_id();
 
     # check if a parent of this parent_type is already associated with this stock
     #
-    my $previous_parent = $schema->resultset("Stock::StockRelationship")->find( { type_id => $type_id_row->cvterm_id,
-										  object_id => $stock_id });
+    my $previous_parent = $schema->resultset("Stock::StockRelationship")->find({
+        type_id => $type_id_row,
+        object_id => $stock_id
+    });
 
     if ($previous_parent) {
 	print STDERR "The stock ".$previous_parent->subject_id." is already associated with stock $stock_id - returning.\n";
 	$c->stash->{rest} = { error => "A $parent_type parent with id ".$previous_parent->subject_id." is already associated with this stock. Please specify another parent." };
 	return;
-    }
-
-    my $cvterm_id;
-    if ($type_id_row) {
-	$cvterm_id = $type_id_row->cvterm_id;
     }
 
     print STDERR "PARENT_NAME = $parent_name STOCK_ID $stock_id  $cvterm_name\n";
@@ -1072,7 +1348,8 @@ sub add_stock_parent_GET :Args(0) {
 	{
 	    subject_id => $parent->stock_id,
 	    object_id  => $stock->stock_id,
-	    type_id    => $cvterm_id,
+	    type_id    => $type_id_row,
+        value => $cross_type
 	});
 
     eval {
@@ -1311,8 +1588,8 @@ sub get_shared_trials_GET :Args(1) {
 
     foreach my $stock_id (@stock_ids) {
 	     my $trials_string ='';
-       my $stock = CXGN::Chado::Stock->new($schema, $stock_id);
-       my $uniquename = $stock->get_uniquename;
+       my $stock = CXGN::Stock->new(schema => $schema, stock_id => $stock_id);
+       my $uniquename = $stock->uniquename;
        $dataref = {
              'trials' => {
                          'accessions' => $stock_id
@@ -1432,12 +1709,15 @@ sub get_pedigree_string :Chained('/stock/get_stock') PathPart('pedigree') Args(0
     my $self = shift;
     my $c = shift;
     my $level = $c->req->param("level");
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $s = CXGN::Chado::Stock->new($schema, $c->stash->{stock}->get_stock_id());
-    my $pedigree_root = $s->get_parents($level);
-    my $pedigree_string = $pedigree_root->get_pedigree_string($level);
 
-    $c->stash->{rest} = { pedigree_string => $pedigree_string };
+    my $stock = CXGN::Stock->new(
+        schema => $c->dbic_schema("Bio::Chado::Schema"),
+        stock_id => $c->stash->{stock}->get_stock_id()
+    );
+    my $parents = $stock->get_pedigree_string($level);
+    print STDERR "Parents are: ".Dumper($parents)."\n";
+
+    $c->stash->{rest} = { pedigree_string => $parents };
 }
 
 sub stock_lookup : Path('/stock_lookup/') Args(2) ActionClass('REST') { }
@@ -1461,5 +1741,215 @@ sub stock_lookup_POST {
     }
     $c->stash->{rest} = { $lookup_from_field => $value_to_lookup, $lookup_field => $value };
 }
+
+sub get_trial_related_stock:Chained('/stock/get_stock') PathPart('datatables/trial_related_stock') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = $c->stash->{stock_row}->stock_id();
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+
+    my $trial_related_stock = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
+    my $result = $trial_related_stock->get_trial_related_stock();
+    my @stocks;
+    foreach my $r (@$result){
+      my ($stock_id, $stock_name, $cvterm_name) = @$r;
+      my $url;
+      if ($cvterm_name eq 'seedlot'){
+          $url = qq{<a href = "/breeders/seedlot/$stock_id">$stock_name</a>};
+      } else {
+          $url = qq{<a href = "/stock/$stock_id/view">$stock_name</a>};
+      }
+      push @stocks, [$url, $cvterm_name, $stock_name];
+    }
+
+    $c->stash->{rest}={data=>\@stocks};
+}
+
+sub get_progenies:Chained('/stock/get_stock') PathPart('datatables/progenies') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = $c->stash->{stock_row}->stock_id();
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+    my $progenies = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
+    my $result = $progenies->get_progenies();
+    my @stocks;
+    foreach my $r (@$result){
+      my ($cvterm_name, $stock_id, $stock_name) = @$r;
+      push @stocks, [$cvterm_name, qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $stock_name];
+    }
+
+    $c->stash->{rest}={data=>\@stocks};
+}
+
+sub get_group_and_member:Chained('/stock/get_stock') PathPart('datatables/group_and_member') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = $c->stash->{stock_row}->stock_id();
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+
+    my $related_groups = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
+    my $result = $related_groups->get_group_and_member();
+    my @group;
+
+    foreach my $r (@$result){
+        my ($stock_id, $stock_name, $cvterm_name) = @$r;
+        if ($cvterm_name eq "cross"){
+            push @group, [qq{<a href=\"/cross/$stock_id\">$stock_name</a>}, $cvterm_name, $stock_name];
+        } else {
+            push @group, [qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $cvterm_name, $stock_name];
+        }
+    }
+
+    $c->stash->{rest}={data=>\@group};
+
+}
+
+sub get_stock_for_tissue:Chained('/stock/get_stock') PathPart('datatables/stock_for_tissue') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = $c->stash->{stock_row}->stock_id();
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+
+    my $tissue_stocks = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
+    my $result = $tissue_stocks->get_stock_for_tissue();
+    my @stocks;
+    foreach my $r (@$result){
+
+      my ($stock_id, $stock_name, $cvterm_name) = @$r;
+
+      push @stocks, [qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $cvterm_name, $stock_name];
+    }
+
+    $c->stash->{rest}={data=>\@stocks};
+
+}
+
+sub get_stock_datatables_genotype_data : Chained('/stock/get_stock') :PathPart('datatables/genotype_data') : ActionClass('REST') { }
+
+sub get_stock_datatables_genotype_data_GET  {
+    my $self = shift;
+    my $c = shift;
+    my $limit = $c->req->param('length') || 1000;
+    my $offset = $c->req->param('start') || 0;
+    my $stock_id = $c->stash->{stock_row}->stock_id();
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $stock = CXGN::Stock->new({schema => $schema, stock_id => $stock_id});
+    my $stock_type = $stock->type();
+
+    my %genotype_search_params = (
+        bcs_schema=>$schema,
+        people_schema=>$people_schema,
+        cache_root=>$c->config->{cache_file_path},
+        genotypeprop_hash_select=>[],
+        protocolprop_top_key_select=>[],
+        protocolprop_marker_hash_select=>[]
+    );
+    if ($stock_type eq 'accession') {
+        $genotype_search_params{accession_list} = [$stock_id];
+    } elsif ($stock_type eq 'tissue_sample') {
+        $genotype_search_params{tissue_sample_list} = [$stock_id];
+    }
+    my $genotypes_search = CXGN::Genotype::Search->new(\%genotype_search_params);
+    my $file_handle = $genotypes_search->get_cached_file_search_json($c->config->{cluster_shared_tempdir}, 1); #only gets metadata and not all genotype data!
+
+    my @result;
+    my $counter = 0;
+
+    open my $fh, "<&", $file_handle or die "Can't open output file: $!";
+    my $header_line = <$fh>;
+    if ($header_line) {
+        my $marker_objects = decode_json $header_line;
+
+        my $start_index = $offset;
+        my $end_index = $offset + $limit;
+        # print STDERR Dumper [$start_index, $end_index];
+
+        while (my $gt_line = <$fh>) {
+            if ($counter >= $start_index && $counter < $end_index) {
+                my $g = decode_json $gt_line;
+
+                push @result, [
+                    '<a href = "/breeders_toolbox/trial/'.$g->{genotypingDataProjectDbId}.'">'.$g->{genotypingDataProjectName}.'</a>',
+                    $g->{genotypingDataProjectDescription},
+                    $g->{analysisMethod},
+                    $g->{genotypeDescription},
+                    '<a href="/stock/'.$stock_id.'/genotypes?genotypeprop_id='.$g->{markerProfileDbId}.'">Download</a>'
+                ];
+            }
+            $counter++;
+        }
+    }
+
+    my $draw = $c->req->param('draw');
+    if ($draw){
+        $draw =~ s/\D//g; # cast to int
+    }
+
+    $c->stash->{rest} = { data => \@result, draw => $draw, recordsTotal => $counter,  recordsFiltered => $counter };
+}
+
+=head2 make_stock_obsolete
+
+L<Catalyst::Action::REST> action.
+
+Makes a stock entry obsolete in the database
+
+=cut
+
+sub stock_obsolete : Path('/stock/obsolete') : ActionClass('REST') { }
+
+sub stock_obsolete_GET {
+    my ( $self, $c ) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => "Log in required for making stock obsolete." }; return;
+    }
+
+    if ( !any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
+        $c->stash->{rest} = { error => 'user does not have a curator/sequencer/submitter account' };
+        $c->detach();
+    }
+
+    my $stock_id = $c->req->param('stock_id');
+    my $is_obsolete  = $c->req->param('is_obsolete');
+
+	my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
+
+    if ($stock) {
+
+        try {
+            my $stock = CXGN::Stock->new({
+                schema=>$schema,
+                stock_id=>$stock_id,
+                is_saving=>1,
+                sp_person_id => $c->user()->get_object()->get_sp_person_id(),
+                user_name => $c->user()->get_object()->get_username(),
+                modification_note => "Obsolete at ".localtime,
+                is_obsolete => $is_obsolete
+            });
+            my $saved_stock_id = $stock->store();
+
+            my $dbh = $c->dbc->dbh();
+            my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+            my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+
+            $c->stash->{rest} = { message => "Stock obsoleted" };
+        } catch {
+            $c->stash->{rest} = { error => "Failed: $_" }
+        };
+    } else {
+	    $c->stash->{rest} = { error => "Not a valid stock $stock_id " };
+	}
+
+    #$c->stash->{rest} = { message => 'success' };
+}
+
+
 
 1;

@@ -1,0 +1,36 @@
+<%args>
+$trial_id
+</%args>
+
+<table id="genotyping_data_project_genotype_data" width="100%" class="table table-hover table-striped">
+<thead>
+  <tr>
+      <th>Protocol</th>
+      <th>Sample Name</th>
+      <th>Sample Type</th>
+      <th>Accession Name</th>
+      <th>Synonyms</th>
+      <th>Description</th>
+      <th>Number of Marker Scores</th>
+      <th>IGD Number</th>
+      <th>Download</th>
+</tr>
+</thead>
+</table>
+
+
+<script>
+
+jQuery(document).ready(function () {
+   var genotypes_data_table = jQuery('#genotyping_data_project_genotype_data').DataTable({
+       'destroy' : true,
+       'searching' : false,
+       'ordering'  : false,
+       'processing': true,
+       'serverSide': true,
+       'ajax': '/ajax/genotyping_data/search?genotyping_data_project_id_list=<% $trial_id %>',
+   });
+});
+
+</script>
+

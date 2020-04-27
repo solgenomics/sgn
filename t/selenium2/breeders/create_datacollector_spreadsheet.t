@@ -40,7 +40,7 @@ $type_select->send_keys("traits");
 
 sleep(1);
 
-$d->find_element_ok("dialog_add_list_item", "id", "add test list")->send_keys("dry matter content percentage|CO:0000092\nfresh root weight|CO:0000012\nfresh shoot weight measurement in kg|CO:0000016\nharvest index variable|CO:0000015\n");
+$d->find_element_ok("dialog_add_list_item", "id", "add test list")->send_keys("dry matter content percentage|CO_334:0000092\nfresh root weight|CO_334:0000012\nfresh shoot weight measurement in kg|CO_334:0000016\nharvest index variable|CO_334:0000015\n");
 
 
 sleep(1);

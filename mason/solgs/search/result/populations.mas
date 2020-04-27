@@ -18,7 +18,7 @@ $trait_name
 
 <& /util/import_javascript.mas, classes => ["solGS.solGS"] &>
 
-<link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
+<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 
 <& /page/page_title.mas,
     title => "GS populations evaluated for $query" ,
@@ -71,8 +71,3 @@ $trait_name
 %}
 </&>
 %}
-
-
-
-
-

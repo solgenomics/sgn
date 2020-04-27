@@ -16,6 +16,15 @@ use CXGN::BrAPI::v1::Locations;
 use CXGN::BrAPI::v1::Phenotypes;
 use CXGN::BrAPI::v1::Traits;
 use CXGN::BrAPI::v1::GenomeMaps;
+use CXGN::BrAPI::v1::Samples;
+use CXGN::BrAPI::v1::VendorSamples;
+use CXGN::BrAPI::v1::Observations;
+use CXGN::BrAPI::v1::ObservationUnits;
+use CXGN::BrAPI::v1::ObservationTables;
+use CXGN::BrAPI::v1::Results;
+use CXGN::BrAPI::v1::Images;
+use CXGN::BrAPI::v1::Markers;
+use CXGN::BrAPI::v1::Variables;
 
 has 'version' => (
 	isa => 'Str',

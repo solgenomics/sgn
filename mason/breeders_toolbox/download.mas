@@ -2,6 +2,8 @@
 
 </%args>
 
+<& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.cookie', 'CXGN.BreederSearch', 'CXGN.List', 'CXGN.BreedersToolbox.HTMLSelect', 'spin_min', 'ladda_min' ] &>
+
 <& /page/page_title.mas, title=>"Download Using Lists" &>
 
 <div class="container-fluid">
@@ -11,10 +13,10 @@ Choose a list for each parameter and click "Download".
 </div>
 
 <div class="well well-sm">
+<h4>Download Phenotypes</h4><p>Select Parameters:</p>
 <form id="download_form" action="/breeders/download_action" method="POST" >
-<table class="table" cellpadding="10" border="0" >
+<table class="table table-bordered" >
   <thead>
-  <tr><td colspan="4"><h4>Download Phenotype</h4><p>Select parameter:</p></tr>
   <tr>
     <th>
       Accessions
@@ -26,13 +28,7 @@ Choose a list for each parameter and click "Download".
       Traits
     </th>
     <th>
-      Format
-    </th>
-    <th>
-      Timestamps
-    </th>
-    <th>
-      Data Level
+        Options
     </th>
     <th>
       Action
@@ -53,33 +49,83 @@ Choose a list for each parameter and click "Download".
       <div id="trait_list">
       </div>
    </td>
-   <td>
-<div class="checkbox">
- <label><input type="checkbox" id="format" name="format" value=".csv" checked>.csv</label>
-</div>
-<div class="checkbox">
-  <label><input type="checkbox" id="format" name="format" value=".xls">.xls</label>
-</div>
-<div class="checkbox">
-  <label><input type="checkbox" id="format" name="format" value="html">html</label>
-</div>
-    </td>
     <td>
-    <select class="form-control" id="timestamp" name="timestamp">
-        <option value="0">No</option>
-        <option value="1">Yes</option>
+    <b>Format:</b><br/>
+    <select class="form-control" id="format" name="format">
+        <option value=".csv">CSV</option>
+        <option value=".xls">XLS</option>
+        <option value="html">HTML</option>
     </select>
-    </td>
-    <td>
+    <br/>
+    <b>Data Level:</b><br/>
     <select class="form-control" id="phenotype_datalevel" name="phenotype_datalevel">
         <option value="all">All</option>
         <option value="plot">Plot</option>
         <option value="plant">Plant</option>
     </select>
+    <br/>
+    <b>Timestamp:</b><br/>
+    <select class="form-control" id="timestamp" name="timestamp">
+        <option value="0">No</option>
+        <option value="1">Yes</option>
+    </select>
+    <br/>
+    <b>Exclude Phenotype Outliers:</b><br/>
+    <select class="form-control" id="exclude_phenotype_outlier" name="exclude_phenotype_outlier">
+        <option value="0">No</option>
+        <option value="1">Yes</option>
+    </select>
     </td>
     <td>
-      <input class="btn btn-primary" type="button" id="phenotype" value="Download" />
-      <input type="hidden" id="download_token_value" name="download_token_value"/>
+      <button class="btn btn-primary" type="button" id="phenotype">Download</button>
+      <input type="hidden" id="phenotype_download_token" name="phenotype_download_token"/>
+    </td>
+  </tr>
+  </tbody>
+  </table>
+</form>
+</div>
+
+<div class="well well-sm">
+<h4>Download Metadata</h4><p>Select Parameters:</p>
+<form id="download_metadata_form" action="/breeders/download_action" method="POST" >
+<table class="table table-bordered" >
+  <thead>
+  <tr>
+    <th>
+      Trials
+    </th>
+    <th>
+        Options
+    </th>
+    <th>
+      Action
+    </th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td>
+      <div id="trial_metadata_list">
+      </div>
+    </td>
+    <td>
+    <b>Format:</b><br/>
+    <select class="form-control" id="metadata_format" name="metadata_format">
+        <option value=".xls">XLS</option>
+        <option value=".csv">CSV</option>
+        <option value="html">HTML</option>
+    </select>
+    <br/>
+    <div id="datalevel" style="display:none">
+      <select class="form-control" id="metadata_datalevel" name="metadata_datalevel">
+          <option value="metadata">Metadata</option>
+      </select>
+    </div>
+    </td>
+    <td>
+      <button class="btn btn-primary" type="button" id="metadata">Download</button>
+      <input type="hidden" id="metadata_download_token" name="metadata_download_token"/>
     </td>
   </tr>
   </tbody>
@@ -92,13 +138,36 @@ $(document).ready(function() {
 
     var lo = new CXGN.List();
 
-    $('#accession_list').html(lo.listSelect('accession_list', [ 'accessions' ], 'select'));
-    $('#trial_list').html(lo.listSelect('trial_list', [ 'trials' ], 'select' ));
-    $('#trait_list').html(lo.listSelect('trait_list', [ 'traits' ], 'select'  ));
+    $('#accession_list').html(lo.listSelect('accession_list', [ 'accessions' ], 'select', undefined, undefined));
+    $('#trial_list').html(lo.listSelect('trial_list', [ 'trials' ], 'select', undefined, undefined ));
+    $('#trait_list').html(lo.listSelect('trait_list', [ 'traits' ], 'select', undefined, undefined  ));
+    $('#trial_metadata_list').html(lo.listSelect('trial_metadata_list', ['trials'], 'select', undefined, undefined));
+
+    $('#metadata').click(function() { 
+      var trial_list_id = $('#trial_metadata_list_list_select').val();
+      var trial_validation = 1;
+      if (trial_list_id) { trial_validation = lo.validate(trial_list_id, 'trials', true); }
+
+      var problem_lists = new Array();
+      if (trial_validation != 1) {
+        problem_lists.push('trials');
+      }
+
+      if (problem_lists.length > 0) {
+      	  alert("The following lists did not pass validation: "+problem_lists.join(", ")+". Please correct the list(s) and try again");
+	        return;
+      }
+
+      var ladda = Ladda.create(this);
+      ladda.start();
+      var token = new Date().getTime(); //use the current timestamp as the token name and value
+      manage_dl_with_cookie(token, ladda);
+      jQuery('#metadata_download_token').val(token);
+      jQuery('#download_metadata_form').submit();
+
+    });
 
     $('#phenotype').click(function() {
-
-    disable_ui();
 
       var accession_list_id = $('#accession_list_list_select').val();
       var trial_list_id = $('#trial_list_list_select').val();
@@ -126,34 +195,19 @@ $(document).ready(function() {
       }
 
       if (problem_lists.length > 0) {
-      	 enable_ui();
       	 alert("The following lists did not pass validation: "+problem_lists.join(", ")+". Please correct the list(s) and try again");
 	 return;
       }
 
-      var token = new Date().getTime(); //use the current timestamp as the token value
-      $('#download_token_value').val(token);
+      var ladda = Ladda.create(this);
+      ladda.start();
+      var token = new Date().getTime(); //use the current timestamp as the token name and value
+      manage_dl_with_cookie(token, ladda);
+      jQuery('#phenotype_download_token').val(token);
+      jQuery('#download_form').submit();
 
-      $('#download_form').submit();
-
-      var fileDownloadCheckTimer;
-      fileDownloadCheckTimer = window.setInterval(function () { //checks for response cookie to keep working modal enabled until file is ready for download
-      			     var cookieValue = $.cookie('fileDownloadToken');
-			     if (cookieValue == token) {
-			     	window.clearInterval(fileDownloadCheckTimer);
-				jQuery.removeCookie('fileDownloadToken'); //clears this cookie value
-				enable_ui();
-				}
-			}, 1000);
 	});
 
-	function disable_ui() {
-	$('#working_modal').modal("show");
-	}
-
-	function enable_ui() {
-	$('#working_modal').modal("hide");
-	}
 });
 
 </script>
@@ -171,6 +225,9 @@ $(document).ready(function() {
       Accessions
     </th>
     <th>
+      Format
+    </th>
+    <th>
       Action
     </th>
   </tr>
@@ -182,7 +239,16 @@ $(document).ready(function() {
       </div>
     </td>
     <td>
-      <input class="btn btn-primary" type="button" id="pedigree" value="Download" />
+ <div class="radio">
+  <label><input type="radio" id="ped_format" name="ped_format" value="parents_only" checked>Direct parents only</label>
+ </div>
+ <div class="radio">
+   <label><input type="radio" id="ped_format" name="ped_format" value="full">Full pedigrees</label>
+ </div>
+     </td>
+    <td>
+      <button class="btn btn-primary" type="button" id="pedigree">Download</button>
+      <input type="hidden" id="pedigree_download_token" name="pedigree_download_token"/>
     </td>
   </tr>
   </tbody>
@@ -192,59 +258,40 @@ $(document).ready(function() {
 
 
 <script>
-  $(document).ready(function() {
+$(document).ready(function() {
 
-      var lo = new CXGN.List();
+    var lo = new CXGN.List();
 
-      $('#accession_list4').html(lo.listSelect('pedigree_accession_list', [ 'accessions' ], 'select'));
+    $('#accession_list4').html(lo.listSelect('pedigree_accession_list', [ 'accessions' ], 'select', undefined, undefined));
 
-      $('#pedigree').click(function() {
+    $('#pedigree').click(function() {
 
-      disable_ui();
+        var accession_list_id = $('#pedigree_accession_list_list_select').val();
+        if (!accession_list_id) {
+            alert("You need to select an accession list!");
+            return;
+        }
 
-      var accession_list_id = $('#pedigree_accession_list_list_select').val();
-      var trial_list_id = $('#genotype_trial_list_list_select').val();
+        var accession_validation = 1;
+        if (accession_list_id) {
+            accession_validation = lo.validate(accession_list_id, 'accessions', true);
 
+        }
 
-      var accession_validation = 1;
-      if (accession_list_id) {
-        accession_validation = lo.validate(accession_list_id, 'accessions', true);
+        if (accession_validation != 1) {
+            alert("The accession list did not pass validation. Please correct the list and try again");
+            return;
+        }
 
-      }
-
-   if (! accession_list_id) {
-        alert("You need to select an accession!");
-        return;
-      }
-
-      var problem_lists = new Array();
-
-      if (accession_validation != 1) {
-        problem_lists.push('accessions');
-      }
-
-   console.log(problem_lists);
-
-      if (problem_lists.length > 0) {
-        alert("The following lists did not pass validation: "+problem_lists.join(", ")+". Please correct the list(s) and try again");
-        return;
-      }
-
-     jQuery('#download_pedigree').submit();
-
-      enable_ui()
+        var ladda = Ladda.create(this);
+        ladda.start();
+        var token = new Date().getTime(); //use the current timestamp as the token name and value
+        manage_dl_with_cookie(token, ladda);
+        jQuery('#pedigree_download_token').val(token);
+        jQuery('#download_pedigree').submit();
 
     });
-
-function disable_ui() {
-	$('#working_modal').modal("show");
-	}
-
-	function enable_ui() {
-	$('#working_modal').modal("hide");
-	}
-
-  });
+});
 
 </script>
 
@@ -279,7 +326,8 @@ function disable_ui() {
       </div>
     </td>
     <td>
-      <input class="btn btn-primary" type="button" id="genotype" value="Download" />
+      <button class="btn btn-primary" type="button" id="genotype">Download</button>
+      <input type="hidden" id="gbs_download_token" name="gbs_download_token"/>
     </td>
   </tr>
   </tbody>
@@ -292,12 +340,10 @@ function disable_ui() {
 
       var lo = new CXGN.List();
 
-      $('#accession_list2').html(lo.listSelect('genotype_accession_list', [ 'accessions' ], 'select'));
-      get_select_box("genotyping_protocols", "protocol_list");
+      $('#accession_list2').html(lo.listSelect('genotype_accession_list', [ 'accessions' ], 'select', undefined, undefined));
+      get_select_box("genotyping_protocol", "protocol_list");
 
       $('#genotype').click(function() {
-
-      disable_ui()
 
       var accession_list_id = $('#genotype_accession_list_list_select').val();
       var protocol_list_id = $('#protocol_list').val();
@@ -326,20 +372,14 @@ function disable_ui() {
         return;
       }
 
+      var ladda = Ladda.create(this);
+      ladda.start();
+      var token = new Date().getTime(); //use the current timestamp as the token name and value
+      manage_dl_with_cookie(token, ladda);
+      jQuery('#gbs_download_token').val(token);
       jQuery('#download_gbs').submit();
 
-      enable_ui()
-
-
     });
-
-	function disable_ui() {
-	$('#working_modal').modal("show");
-	}
-
-	function enable_ui() {
-	$('#working_modal').modal("hide");
-	}
 
   });
 </script>
@@ -355,6 +395,9 @@ function disable_ui() {
     </th>
     <th>
       Accessions
+    </th>
+    <th>
+      Genotyping Protocol
     </th>
     <th>
       Action
@@ -376,7 +419,8 @@ function disable_ui() {
       </div>
     </td>
     <td>
-      <input class="btn btn-primary" type="button" id="genotype_qc" value="Quality Control" />
+      <button class="btn btn-primary" type="button" id="genotype_qc">Download</button>
+      <input type="hidden" id="qc_download_token" name="qc_download_token"/>
     </td>
   </tr>
   </tbody>
@@ -391,9 +435,9 @@ function disable_ui() {
 
       var lo = new CXGN.List();
 
-      $('#accession_list3').html(lo.listSelect('genotype_qc_accession_list', [ 'accessions' ], 'select'));
-      $('#trial_list3').html(lo.listSelect('genotype_trial_list', [ 'trials' ], 'select' ));
-      get_select_box("genotyping_protocols", "protocol_list2", {'id':'protocol_list2_select', 'name':'protocol_list2_select'});
+      $('#accession_list3').html(lo.listSelect('genotype_qc_accession_list', [ 'accessions' ], 'select', undefined, undefined));
+      $('#trial_list3').html(lo.listSelect('genotype_trial_list', [ 'trials' ], 'select', undefined, undefined ));
+      get_select_box("genotyping_protocol", "protocol_list2", {'id':'protocol_list2_select', 'name':'protocol_list2_select'});
 
       $('#genotype_qc').click(function() {
 
@@ -408,8 +452,6 @@ function disable_ui() {
 		open: function() { $(this).closest('.ui-dialog').find('.ui-dialog-titlebar-close').hide(); },
 		title: 'Downloading genotype...'
 		});
-
-      disable_ui()
 
       var accession_list_id = $('#genotype_qc_accession_list_list_select').val();
       var trial_list_id = $('#genotype_trial_list_list_select').val();
@@ -442,22 +484,14 @@ function disable_ui() {
         return;
       }
 
+      var ladda = Ladda.create(this);
+      ladda.start();
+      var token = new Date().getTime(); //use the current timestamp as the token name and value
+      manage_dl_with_cookie(token, ladda);
+      jQuery('#qc_download_token').val(token);
       jQuery('#gbs_qc').submit();
 
-      enable_ui()
-
-
-
-
     });
-
-	function disable_ui() {
-	$('#working_modal').modal("show");
-	}
-
-	function enable_ui() {
-	$('#working_modal').modal("hide");
-	}
 
   });
 </script>

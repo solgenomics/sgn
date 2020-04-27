@@ -105,7 +105,8 @@ sub view_by_doi : Path('/doi/pub/') CaptureArgs(3) {
     my $sequencer   = $logged_user->check_roles('sequencer') if $logged_user;
     my $dbh = $c->dbc->dbh;
     my $dbxrefs = $pub->get_dbxrefs;
-  
+    my $stocks = $self->_get_stocks( $c);
+
      $c->stash(
         template => '/publication/index.mas',
         pubref => {
@@ -118,6 +119,7 @@ sub view_by_doi : Path('/doi/pub/') CaptureArgs(3) {
             dbh       => $dbh,
             dbxrefs   => $dbxrefs,
 	    doi       => $doi,
+	    stocks    => $stocks,
 	 },
 	 );
 }
@@ -167,7 +169,7 @@ sub view_pub : Chained('get_pub') PathPart('view') Args(0) {
     ####################
    
     my $dbxrefs = $pub->get_dbxrefs;
-   
+    my $stocks = $self->_get_stocks( $c );
     #########
     ################
     $c->stash(
@@ -183,6 +185,7 @@ sub view_pub : Chained('get_pub') PathPart('view') Args(0) {
             pub       => $pub,
             dbh       => $dbh,
             dbxrefs   => $dbxrefs,
+	    stocks    => $stocks,
         },
         );
 }
@@ -232,6 +235,22 @@ sub get_pub : Chained('/')  PathPart('publication')  CaptureArgs(1) {
 
     return 1;
 }
+
+
+
+sub _get_stocks {
+    my ( $self, $c)  = @_;
+    my $pub = $c->stash->{pub};
+    my $schema = $self->schema;
+    my @stock_ids = $pub->get_stock_ids;
+    my @stocks;
+    foreach my $stock_id (@stock_ids) {
+	my $stock = CXGN::Stock->new( { schema => $schema, stock_id => $stock_id } ) ;
+	push @stocks, $stock;
+    }
+    return \@stocks;
+}
+
 
 
 =head2 doi_banner

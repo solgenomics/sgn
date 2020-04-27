@@ -16,9 +16,9 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 
 $traits_form => ''
-$pop_id
+$training_pop_id
 $all_traits_file
-$no_traits_selected
+$genotyping_protocol_id
 
 </%args>
 
@@ -32,7 +32,7 @@ $no_traits_selected
 {
  my ($id, $trait, $acronym) = split (/\t/);
 
- my $trait_link   = qq | <a href="/solgs/trait/$id/population/$pop_id" onclick="solGS.waitPage(this.href); return false;">$trait</a> |;
+ my $trait_link   = qq | <a href="/solgs/trait/$id/population/$training_pop_id/gp/$genotyping_protocol_id" onclick="solGS.waitPage(this.href); return false;">$trait</a> |;
  my $row          = <<ROW;
  <tr>
    <td>
@@ -48,24 +48,15 @@ ROW
 
 }
 
-my $message;
-if ($no_traits_selected eq 'none')
-{
-   $message = qq | <p style="color:red">Please select one or more traits to analyze.</p> |;
-}
-
-
 </%perl>
 
 
-<link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
-
- <% $message %>
+<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 
 % if ($trait_rows) {
  <div id="traits_selection_div">
 
-  <table id="population_traits_list">
+  <table  class="table-condensed" id="population_traits_list">
    <% $trait_rows %>
      <tr>
        <td>
@@ -88,4 +79,4 @@ if ($no_traits_selected eq 'none')
 
 %}
 
-<input type="hidden" id="population_id" value="<% $pop_id %>" />
+<input type="hidden" id="population_id" value="<% $training_pop_id %>" />

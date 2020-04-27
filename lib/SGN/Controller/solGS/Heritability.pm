@@ -14,14 +14,20 @@ BEGIN { extends 'Catalyst::Controller' }
 
 sub check_regression_data :Path('/heritability/check/data/') Args(0) {
     my ($self, $c) = @_;
-    
-    my $pop_id   = $c->req->param('population_id');
-    $c->stash->{pop_id} = $pop_id;
-
-    my $solgs_controller = $c->controller('solGS::solGS');
 
     my $trait_id = $c->req->param('trait_id');
-    $solgs_controller->get_trait_details($c, $trait_id);
+    my $pop_id   = $c->req->param('training_pop_id');
+    my $combo_pops_id = $c->req->param('combo_pops_id');
+    my $protocol_id = $c->req->param('genotyping_protocol_id');
+
+    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
+    
+    $c->stash->{data_set_type} = 'combined populations' if $combo_pops_id;
+    $c->stash->{combo_pops_id} = $combo_pops_id;
+    $c->stash->{pop_id} = $pop_id;
+    $c->stash->{training_pop_id} = $pop_id;
+
+    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
     
     $self->get_regression_data_files($c);
 
@@ -49,15 +55,13 @@ sub get_regression_data_files {
     my $pop_id     = $c->stash->{pop_id};
     my $trait_abbr = $c->stash->{trait_abbr}; 
     my $cache_dir  = $c->stash->{solgs_cache_dir};
- 
-    my $solgs_controller = $c->controller('solGS::solGS');
-   
-    my $phenotype_file = "phenotype_trait_${trait_abbr}_${pop_id}";
-    $phenotype_file    = $solgs_controller->grep_file($cache_dir, $phenotype_file);
-       
-    my $gebv_file = "gebv_kinship_${trait_abbr}_${pop_id}";
-    $gebv_file    = $solgs_controller->grep_file($cache_dir,  $gebv_file);
-   
+
+    $c->controller('solGS::Files')->trait_phenodata_file($c);
+    my $phenotype_file = $c->stash->{trait_phenodata_file};
+    
+    $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
+    my $gebv_file = $c->stash->{rrblup_training_gebvs_file};
+
     $c->stash->{regression_gebv_file} = $gebv_file;
     $c->stash->{regression_pheno_file} = $phenotype_file;  
 
@@ -69,15 +73,13 @@ sub get_heritability {
     
     my $trait_abbr = $c->stash->{trait_abbr};
     my $pop_id     = $c->stash->{pop_id};
-    
-    my $solgs_controller = $c->controller('solGS::solGS');
-    my $cache_dir = $c->stash->{solgs_cache_dir};
+    my $cache_dir  = $c->stash->{solgs_cache_dir};
 
-    $solgs_controller->variance_components_file($c);
+    $c->controller('solGS::Files')->variance_components_file($c);
     my $var_comp_file = $c->stash->{variance_components_file};
 
     my ($txt, $value) = map { split(/\t/)  } 
-                        grep {/Heritability/}
+                        grep {/SNP heritability/}
                         read_file($var_comp_file);
 
     $c->stash->{heritability} = $value;
@@ -86,13 +88,21 @@ sub get_heritability {
 
 sub heritability_regeression_data :Path('/heritability/regression/data/') Args(0) {
     my ($self, $c) = @_;
-    
-    my $pop_id   = $c->req->param('population_id');
-    $c->stash->{pop_id} = $pop_id;
 
-    my $trait_id = $c->req->param('trait_id');
-    my $solgs_controller = $c->controller('solGS::solGS');
-    $solgs_controller->get_trait_details($c, $trait_id);
+    my $trait_id      = $c->req->param('trait_id');
+    my $pop_id        = $c->req->param('training_pop_id');
+    my $combo_pops_id = $c->req->param('combo_pops_id');
+
+    my $protocol_id = $c->req->param('genotyping_protocol_id');    
+    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
+    
+    $c->stash->{pop_id} = $pop_id;
+    $c->stash->{training_pop_id} = $pop_id;
+    
+    $c->stash->{data_set_type} = 'combined populations' if $combo_pops_id;
+    $c->stash->{combo_pops_id} = $combo_pops_id;
+    
+    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
 
     $self->get_regression_data_files($c);
 
@@ -144,7 +154,7 @@ sub heritability_regeression_data :Path('/heritability/regression/data/') Args(0
 sub begin : Private {
     my ($self, $c) = @_;
 
-    $c->controller("solGS::solGS")->get_solgs_dirs($c);
+    $c->controller('solGS::Files')->get_solgs_dirs($c);
   
 }
 

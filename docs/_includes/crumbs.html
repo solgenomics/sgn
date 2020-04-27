@@ -1,0 +1,18 @@
+{% capture slug %}{{ page.url | split: "/" | last }}{% endcapture %}
+{% capture parentURL %}{{ page.url | remove: slug | replace: "//", "/" }}{% endcapture %}
+{% assign entries = site.pages | sort: "path" %}
+{% if parentURL!=page.url %}
+  <a href="{{ site.baseurl }}/">Home</a>&nbsp;&nbsp;
+  {% capture the_crumbs %}
+  <span>
+    {% for pg in entries %}
+      {% if parentURL contains pg.url and pg.url!="/" %}
+        &larr;<a href="{{ site.baseurl }}{{pg.url}}">{{pg.title}}</a>&nbsp;&nbsp;
+      {% endif %}
+    {% endfor %}
+  </span>
+  {% endcapture %}
+  {{the_crumbs | strip_newlines}}
+{% else %}
+  <br>
+{% endif %}

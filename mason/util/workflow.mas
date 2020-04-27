@@ -1,0 +1,204 @@
+%# Generates a workflow component
+<%args>
+  $id
+</%args>
+
+%# Initializes shared variables.
+<%shared>
+  my $loadstyle = 1;  
+  my @titles = ();
+  my @contents = ();
+  my $pending = "";
+  my $complete = "Complete!";
+</%shared>
+
+%# Clears shared variables from previous uses.
+<%init>
+  @titles = ();
+  @contents = ();
+  $pending = "";
+  $complete = "Complete!";
+</%init>
+
+%# Adds a new step to the workflow
+<%method step>
+  <%args>
+    $title => ""
+  </%args>
+  <%init>
+    push @contents, $m->content;
+    push @titles, $title;
+  </%init>
+</%method>
+
+%# Shown when all steps are completed but one or more is pending.
+<%method pending>
+  <%init>
+    $pending = $m->content;
+  </%init>
+</%method>
+
+%# Shown when all steps are completed and none are pending.
+<%method complete>
+  <%init>
+    $complete = $m->content;
+  </%init>
+</%method>
+
+
+%# loads css, but only once (even if used multiple time in one request)
+% if ($loadstyle) {
+% $loadstyle = 0;
+<style media="screen">
+  ol.workflow-prog{
+    display: table;
+    table-layout: fixed;
+    list-style-type: none;
+    text-align: center;
+    margin: 0 0 1em 0;
+    padding: 0;
+    width: 100%;
+    counter-reset: step;
+    font-size: 16px;
+  }
+  
+  ol.workflow-prog>li{
+    display: table-cell;
+    text-align: center;
+    color: black;
+    position: relative;
+    font-size: 11px;
+  }
+  
+  ol.workflow-prog>li>div.workflow-title{
+    display: inline-block;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  ol.workflow-prog>li::after{
+    font-size: 14px;
+    width: 30px;
+    height: 30px;
+    content: counter(step);
+    counter-increment: step;
+    line-height: 1em;
+    padding-top: 0.3em;
+    border: 4px solid;
+    display: block;
+    text-align: center;
+    position: relative;
+    border-radius: 50%;
+    margin: 0 auto 0 auto;
+    background: white;
+    border-color: #bbb;
+    color: #bbb;
+  }
+  
+  ol.workflow-prog>li.workflow-complete::after{
+    border-color: #5fba7d;
+    color: white;
+    background: #5fba7d;
+  }
+  
+  @keyframes pend_blink {
+    0% {}
+    50% {
+      border-color: white;
+    }
+    100% {}
+  }
+  
+  ol.workflow-prog>li.workflow-pending::after{
+    animation: pend_blink 2s linear infinite;
+  }
+  
+  ol.workflow-prog>li.workflow-skipped::after{
+    border-color: #eeb700;
+    background: #eeb700;
+    color: white;
+  }
+  
+  ol.workflow-prog>li.workflow-focus::after{
+    border-color: #5fba7d;
+    background: white;
+    color: #5fba7d;
+  }
+  
+  
+  ol.workflow-prog>li::before {
+    width: 100%;
+    height: 2px;
+    content: '';
+    display: block;
+    position: relative;
+    top: 34px;
+    margin-left: 50%;
+    background-color: #bbb;
+  }
+  
+  ol.workflow-prog>li:last-of-type::before {
+    width: 0%;
+  }
+  
+  ol.workflow-prog>li.workflow-complete::before{
+    background: #5fba7d;
+  }
+  
+  ol.workflow-content{
+    display: block;
+    table-layout: fixed;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+  }
+  
+  ol.workflow-content>li{
+    width: 100%;
+    position: relative;
+    display: none;
+  }
+  
+  ol.workflow-content>li.workflow-focus{
+    display: block;
+  }  
+  
+  div.workflow-pending-message{
+    display: none;
+  }
+  div.workflow-complete-message{
+    display: none;
+  }
+  div.workflow-message-show{
+    display: block;
+  }
+  
+</style>
+% }
+
+<& '/util/import_javascript.mas', classes => ['workflow'] &>
+<% $m->content %>
+<div id="<% $id %>" class="workflow">
+  <ol class="workflow-prog">
+%   foreach my $title (@titles) {
+      <li><div class="workflow-title"><% $title %></div></li>
+%    }
+  </ol>
+  <div class="panel panel-default">
+    <div class="panel-body">
+      <ol class="workflow-content">
+%       foreach my $content (@contents) {
+          <li><% $content %></li>
+%       }
+      </ol>
+      <div class="workflow-pending-message"><% $pending || $complete %></div>
+      <div class="workflow-complete-message"><% $complete %></div>
+    </div>
+  </div>
+</div>
+<script type="text/javascript">
+  Workflow.init("#<% $id %>");
+</script>

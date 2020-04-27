@@ -1,0 +1,113 @@
+<& /util/import_javascript.mas, classes => ['jquery','d3.d3v4Min'] &>
+<form id="available-seedlots">
+  <table class="table table-hover table-bordered">
+    <thead>
+      <tr>
+        <th rowspan="2" style="text-align: center;">Accessions</th><th colspan="7" style="text-align: center;">Seedlots</th>
+      </tr>
+      <tr>
+        <th></th>
+        <th style="text-align: center;">Breeding Program</th>
+        <th style="text-align: center;">Seedlot Name</th>
+        <th style="text-align: center;">Contents</th>
+        <th style="text-align: center;">Seedlot Location</th>
+        <th style="text-align: center;">Count</th>
+        <th style="text-align: center;">Weight(g)</th>
+      </tr>
+    </thead>
+  </table>
+</form>
+<script type="text/javascript">
+  (function(global){
+    var mainFormSelector = "#available-seedlots";
+    var d3 = global.d3v4;
+    var ex = {};
+    ex.build_table = function(accession_names, list_type){
+      jQuery('#working_modal').modal('show');
+      jQuery.ajax({
+        type: 'POST',
+        url: '/ajax/accessions/possible_seedlots',
+        data: {'names': accession_names, 'type': list_type},
+        dataType: "json",
+        success: function(response) {
+          _build_table(accession_names,response.seedlots,response.synonyms);
+          jQuery('#working_modal').modal('hide');
+        },
+        error: function(response) {
+          jQuery('#working_modal').modal('hide');
+          console.log(response);
+          alert("Something went wrong in the available-seedlots AJAX call. See console for more information.")
+        }
+      });
+    };
+    ex.get_selected = function(){
+      return jQuery(mainFormSelector).serializeArray();
+    };
+    var empty_placeholder = new Object();
+    function _build_table(accession_list,seedlot_obj,synonyms){
+      console.log(seedlot_obj);
+      synonymized = {};
+      for (var acc_uname in seedlot_obj) {
+        if (seedlot_obj.hasOwnProperty(acc_uname)) {
+          var name;
+          if (accession_list.indexOf(acc_uname)>-1){
+            name = acc_uname;
+          } else {
+            for (var i = 0; i < synonyms[acc_uname].length; i++) {
+              if (accession_list.indexOf(synonyms[acc_uname][i])>-1){
+                name = synonyms[acc_uname][i];
+                break;
+              }
+            }
+          }
+          synonymized[name] = seedlot_obj[acc_uname];
+        }
+      }
+      var row_data = accession_list.map(function(acc){
+        return {'name':acc,'seedlots':synonymized[acc]?synonymized[acc]:[]};
+      });
+      var table = d3.select(mainFormSelector).select("table");
+      var groups = table.selectAll("tbody").data(row_data,function(d){return d.name;});
+      groups.exit().remove();
+      var newGroups = groups.enter().append("tbody");
+      var newInitRows = newGroups.append("tr");
+      newInitRows.append("th").classed("as-acc-name",true)
+        .style("text-align","center")
+        .style("vertical-align","middle");
+      var allGroups = newGroups.merge(groups);
+      allGroups.style("border-top","2px solid #999")
+      allGroups.select(".as-acc-name")
+        .attr("rowspan",function(d){return Math.max(1,d.seedlots.length);})
+        .text(function(d){return d.name;});
+      var optionRows = allGroups.selectAll("tr")
+        .data(function(d){
+          return d.seedlots.length>0 ? d.seedlots : [empty_placeholder];
+        });
+      optionRows.exit().remove();
+      newOptionRows = optionRows.enter().append("tr");
+      allOptionRows = newOptionRows.merge(optionRows);
+      var optionRowCells = allOptionRows.selectAll("td").data(function(d){
+          if (d==empty_placeholder){
+            return ['<input disabled type="checkbox">'," ","No Available Seedlots"," "," "," "," "]
+          }
+          var cells = [];
+          cells.push('<input value="'+d.seedlot[0]+'" name="'+d.seedlot[0]+'" type="checkbox">');
+          cells.push(d.program);
+          cells.push('<a href="/breeders/seedlot/'+d.seedlot[1]+'">'+d.seedlot[0]+'</a>');
+          cells.push('<a href="/stock/'+d.contents[1]+'/view">'+d.contents[0]+'</a>');
+          cells.push(d.location);
+          cells.push(d.count);
+          cells.push(d.weight_gram);
+          return cells;
+        });
+      var newOptionRowCells = optionRowCells.enter().append("td");
+      optionRowCells.exit().remove();
+      var allOptionRowCells = newOptionRowCells.merge(optionRowCells);
+      allOptionRowCells.html(function(d){return d;});
+      allOptionRows.select("td") //select the checkbox cells
+        .style("text-align","center")
+        .style("vertical-align","middle");
+    };
+    global.available_seedlots = ex;
+  }(window));
+</script>

@@ -12,7 +12,7 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->get_ok('/breeders/trials');
 
-    $t->find_element_ok("upload_trial_link", "id", "click on upload_trial_link ")->click();
+    $t->find_element_ok("upload_trial_link", "name", "click on upload_trial_link ")->click();
 
     sleep(2);
 
@@ -50,13 +50,13 @@ $t->while_logged_in_as("submitter", sub {
 
     sleep(1);
 
-    $t->find_element_ok("upload_trial_submit", "id", "submit upload trial file ")->click();
+    $t->find_element_ok("upload_trial_submit", "name", "submit upload trial file ")->click();
 
     sleep(5);
 
     $t->get_ok('/breeders/trials');
     
-    my $refresh_tree = $t->find_element_ok("refresh_jstree_html", "id", "refresh tree")->click();
+    my $refresh_tree = $t->find_element_ok("refresh_jstree_html", "name", "refresh tree")->click();
     sleep(3);
 
     $t->find_element_ok("test", "partial_link_text", "check program in tree")->click();

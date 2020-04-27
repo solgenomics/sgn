@@ -74,17 +74,18 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $chado_schema,
     dbh => $dbh,
     user_name => "johndoe", #not implemented
-    design => $design,	
+    design => $design,
     program => "test",
     trial_year => "2016",
     trial_description => "test_trial_derive_trait description",
     trial_location => "test_location_for_trial_derive_trait",
     trial_name => "test_trial_derive_trait",
     design_type => "RCBD",
+    operator => "janedoe"
 }), "create trial object");
 
-ok(my $trial_id = $trial_create->save_trial(), "save trial");
-
+ok(my $save = $trial_create->save_trial(), "save trial");
+my $trial_id = $save->{'trial_id'};
 my $trial = CXGN::Trial->new({ bcs_schema => $fix->bcs_schema(), trial_id => $trial_id });
 
 my $trial_plots = $trial->get_plots();
@@ -107,28 +108,34 @@ print STDERR Dumper \@plots;
 
 my $parsed_data = {
             $plants[0] => {
-                                'dry matter content|CO:0000092' => [
+                                'dry matter content|CO_334:0000092' => [
                                                                      '23',
                                                                      '2017-02-11 11:12:20-0500'
                                                                    ]
                                                    },
             $plants[1] => {
-                               'dry matter content|CO:0000092' => [
+                               'dry matter content|CO_334:0000092' => [
                                                                     '28',
                                                                     '2017-02-11 11:13:20-0500'
                                                                   ]
                                                   },
             $plants[2] => {
-                              'dry matter content|CO:0000092' => [
+                              'dry matter content|CO_334:0000092' => [
                                                                    '30',
                                                                    '2017-02-11 11:15:20-0500'
                                                                  ]
                                                  },
             };
 
-my @traits = ( 'dry matter content|CO:0000092' );
+my @traits = ( 'dry matter content|CO_334:0000092' );
 
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    basepath=>$fix->config->{basepath},
+    dbhost=>$fix->config->{dbhost},
+    dbname=>$fix->config->{dbname},
+    dbuser=>$fix->config->{dbuser},
+    dbpass=>$fix->config->{dbpass},
+    temp_file_nd_experiment_id=>$fix->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete",
     bcs_schema=>$fix->bcs_schema,
     metadata_schema=>$fix->metadata_schema,
     phenome_schema=>$fix->phenome_schema,
@@ -148,18 +155,18 @@ my $tn = CXGN::Trial->new( { bcs_schema => $fix->bcs_schema(),
 				trial_id => $trial_id });
 my $traits_assayed  = $tn->get_traits_assayed();
 my @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
-#print STDERR Dumper \@traits_assayed_sorted;
+print STDERR Dumper \@traits_assayed_sorted;
 is_deeply(\@traits_assayed_sorted, [
           [
             70741,
-            'dry matter content percentage|CO:0000092'
+            'dry matter content percentage|CO_334:0000092', [], 3, undef, undef
           ]
         ], "check upload worked");
 
 
 my $method = 'arithmetic_mean';
 my $rounding = 'round';
-my $trait_name = 'dry matter content|CO:0000092';
+my $trait_name = 'dry matter content|CO_334:0000092';
 my $derive_trait = CXGN::BreedersToolbox::DeriveTrait->new({bcs_schema=>$fix->bcs_schema, trait_name=>$trait_name, trial_id=>$trial_id, method=>$method, rounding=>$rounding});
 my ($info, $plots_ret, $traits, $store_hash) = $derive_trait->generate_plot_phenotypes();
 #print STDERR Dumper $info;
@@ -181,6 +188,12 @@ my %phenotype_metadata;
 $phenotype_metadata{'operator'}='janedoe';
 $phenotype_metadata{'date'}="2017-02-16_03:10:59";
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    basepath=>$fix->config->{basepath},
+    dbhost=>$fix->config->{dbhost},
+    dbname=>$fix->config->{dbname},
+    dbuser=>$fix->config->{dbuser},
+    dbpass=>$fix->config->{dbpass},
+    temp_file_nd_experiment_id=>$fix->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete",
     bcs_schema=>$fix->bcs_schema,
     metadata_schema=>$fix->metadata_schema,
     phenome_schema=>$fix->phenome_schema,
@@ -196,7 +209,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
 my ($store_error, $store_success) = $store_phenotypes->store();
 ok(!$store_error, "check that store pheno spreadsheet works");
 
-my $trait_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($fix->bcs_schema, 'dry matter content|CO:0000092')->cvterm_id();
+my $trait_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($fix->bcs_schema, 'dry matter content|CO_334:0000092')->cvterm_id();
 my $all_stock_phenotypes_for_dry_matter_content = $tn->get_stock_phenotypes_for_traits([$trait_id], 'all', ['plot_of','plant_of'], 'accession', 'subject');
 #print STDERR Dumper $all_stock_phenotypes_for_dry_matter_content;
 ok(scalar(@$all_stock_phenotypes_for_dry_matter_content) == 6, "check if num phenotype saved is correct");

@@ -602,7 +602,7 @@ my $term_help_content = <<HTML;
 <li>Have insertion/deletion of <b>not more than </b> 4 amino acids or 12 nucleotides in their common region.
 </ol>
 </td></tr>
-<tr style='background-color:#ddf'><th valign='top'>Overlap Score</th><td>An indication of how well the sequence overlaps with other members in the alignment.  If a non-gap character of a sequence overlaps with a character in another alignment sequence, it gets a point.<br><br>Sometimes a few sequences share very little overlap with the rest, significantly reducing the overall overlapping sequence of the alignment.  Usually these sequences are short and won't help with the understanding of overall alignment.  We suggest the user leaves out these sequences before further analysis of the aligment sequence. </td></tr></table>
+<tr style='background-color:#ddf'><th valign='top'>Overlap Score</th><td>An indication of how well the sequence overlaps with other members in the alignment.  If a non-gap character of a sequence overlaps with a character in another alignment sequence, it gets a point.<br><br>Sometimes a few sequences share very little overlap with the rest, significantly reducing the overall overlapping sequence of the alignment.  Usually these sequences are short and will not help with the understanding of overall alignment.  We suggest the user leaves out these sequences before further analysis of the aligment sequence. </td></tr></table>
 HTML
 $term_help_content =
   blue_section_html( "<em>Help With Terms</em>", $term_help_content );
@@ -1139,7 +1139,6 @@ sub fasta_check {
 }
 
 sub run_muscle {
-
     my ( $page, $run ) = @_;
     my @local_run_output = "";
     my $command_line     = "";
@@ -1176,13 +1175,13 @@ sub run_muscle {
         );
 
         copy( $temp_file, $filename )
-          || die "Can't copy $temp_file to $filename";
+          || die "Cannot copy $temp_file to $filename";
 
         chdir $CLUSTER_SHARED_TEMPDIR;
 
         print STDERR "Running on cluster: $command_line\n";
 
-        CXGN::Tools::Run->temp_base($CLUSTER_SHARED_TEMPDIR);
+        #CXGN::Tools::Run->temp_base($CLUSTER_SHARED_TEMPDIR);
 
         # generate a .req file that will indicate to the wait.pl script
         # that such a request has been made
@@ -1191,45 +1190,53 @@ sub run_muscle {
 
         my $old_wd = `pwd`;
 
-        my $job = CXGN::Tools::Run->run_cluster(
-            "muscle",
-            -in       => "$filename",
-            -out      => "$filename.aln",
-            -maxiters => $maxiters,
-            { #if the next line is uncommented, we get the weird STDERR problem I was talking about --ccarpita
-                    #out_file => "$filename.aln",
-                err_file    => $filename . ".STDERR",
-                working_dir => $CLUSTER_SHARED_TEMPDIR,
-                temp_base   => $CLUSTER_SHARED_TEMPDIR,
-	        # don't block and wait if the cluster looks full
-	        max_cluster_jobs => 1_000_000_000,
-            }
-        );
+        # my $job = CXGN::Tools::Run->run_cluster(
+        #     "muscle",
+        #     -in       => "$filename",
+        #     -out      => "$filename.aln",
+        #     -maxiters => $maxiters,
+        #     { #if the next line is uncommented, we get the weird STDERR problem I was talking about --ccarpita
+        #             #out_file => "$filename.aln",
+        #         err_file    => $filename . ".STDERR",
+        #         working_dir => $CLUSTER_SHARED_TEMPDIR,
+        #         temp_base   => $CLUSTER_SHARED_TEMPDIR,
+	#         # do not block and wait if the cluster looks full
+	#         max_cluster_jobs => 1_000_000_000,
+        #     }
+        # );
 
-        my ( undef, $job_file ) =
-          tempfile( DIR => $PATH, TEMPLATE => "object_XXXXXX" );
+	print STDERR "Running muscle with $filename as input, $filename.aln as output\n";
+       system("muscle", "-in", $filename, "-out", "$filename.aln", "-maxiters", $maxiters);
 
-        store( $job, $job_file )
-          or $page->message_page(
-            "An error occurred in the serializaton of the job object");
+	print STDERR "TEMPFILE = $temp_file\n";
 
-        my $job_file_base = File::Basename::basename($job_file);
+	print STDERR "Copying $filename.aln TO $CLUSTER_SHARED_TEMPDIR\n";
+	copy("$filename.aln", "$PATH");
 
-        print STDERR "SUBMITTED JOB WITH JOBID: " . $job->job_id() . "\n";
-        my $cds_temp_filename = File::Basename::basename($cds_temp_file);
+#         my ( undef, $job_file ) =
+#           tempfile( DIR => $PATH, TEMPLATE => "object_XXXXXX" );
 
-        # url encode the destination pass_back page.
-        my $pass_back =
-"./align_viewer/show_align.pl?&amp;title=$title&amp;type=$type&amp;force_gap_cds=1&amp;cds_temp_file=$cds_temp_filename&amp;temp_file=";
-        $pass_back =~ s/([^A-Za-z0-9])/sprintf("%%%02X", ord($1))/seg;
-        my $message =
-          "Running Muscle v3.6 ($SEQ_COUNT sequences), please wait ...";
+#         store( $job, $job_file )
+#           or $page->message_page(
+#             "An error occurred in the serializaton of the job object");
+
+         my $job_file_base = File::Basename::basename("$filename.aln");
+
+#         print STDERR "SUBMITTED JOB WITH JOBID: " . $job->job_id() . "\n";
+         my $cds_temp_filename = File::Basename::basename($cds_temp_file);
+
+#         # url encode the destination pass_back page.
+my $pass_back =
+ "show_align.pl?title=$title&type=$type&force_gap_cds=1&cds_temp_file=$cds_temp_filename&temp_file=$job_file_base";
+         #$pass_back =~ s/([^A-Za-z0-9])/sprintf("%%%02X", ord($1))/seg;
+#         my $message =
+#           "Running Muscle v3.6 ($SEQ_COUNT sequences), please wait ...";
 
         chdir $old_wd;
 
-        $page->client_redirect(
-"../wait.pl?tmp_app_dir=/align_viewer&amp;job_file=$job_file_base&amp;out_file_override=$filename.aln&amp;message=$message&amp;redirect=$pass_back"
-        );
+	print STDERR "Now redirecting...\n";
+        $page->client_redirect($pass_back);
+      
 
     }
 }

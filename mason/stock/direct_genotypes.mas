@@ -1,0 +1,38 @@
+<%args>
+$stock_id
+$map_html => undef
+</%args>
+
+% print $map_html;
+
+<table class="table table-hover table-bordered" id="stock_direct_genotypes_datatable">
+    <thead>
+        <tr>
+            <th>Genotyping Data Project Name</th>
+            <th>Genotyping Data Project Description</th>
+            <th>Protocol Name</th>
+            <th>Genotype Description</th>
+            <th>Download</th>
+        </tr>
+    </thead>
+</table>
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#stock_genotypes_section_onswitch').one("click", function() {
+        var stock_genotypes_table = jQuery('#stock_direct_genotypes_datatable').DataTable({
+            'destroy' : true,
+            'searching' : false,
+            'ordering'  : false,
+            'processing': true,
+            'serverSide': true,
+            "scrollX": true,
+            'ajax': '/stock/<% $stock_id %>/datatables/genotype_data'
+        });
+    });
+
+});
+
+</script>

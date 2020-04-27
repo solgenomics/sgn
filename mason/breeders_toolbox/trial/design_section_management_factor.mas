@@ -1,0 +1,38 @@
+<%args>
+$trial_id
+$trial_name
+$has_subplot_entries
+$has_plant_entries
+$has_tissue_sample_entries
+$design_name
+</%args>
+
+<div class="well well-sm">
+
+    <&| /page/info_section.mas, id => "trial_accessions", title=>"Accessions Planted", is_subsection => 1, collapsible=>1, collapsed=>1 &>
+        <& /breeders_toolbox/trial/trial_accessions.mas, trial_id => $trial_id &>
+    </&>
+    <&| /page/info_section.mas, id => "trial_controls", title=>"Controls",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
+        <& /breeders_toolbox/trial/trial_controls.mas, trial_id => $trial_id &>
+    </&>
+
+    <&| /page/info_section.mas, id => "trial_plots", title=>"Plots",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
+        <& /breeders_toolbox/trial/trial_plots.mas, trial_id => $trial_id &>
+    </&>
+
+% if ($has_subplot_entries) {
+    <&| /page/info_section.mas, id => "trial_subplots", title=>"Subplots",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
+        <& /breeders_toolbox/trial/trial_subplots.mas, trial_id => $trial_id &>
+    </&>
+% }
+% if ($has_plant_entries) {
+    <&| /page/info_section.mas, id => "trial_plants", title=>"Plant Entries", is_subsection => 1, collapsible=> 1, collapsed=>1 &>
+        <& /breeders_toolbox/trial/trial_plants.mas, trial_id => $trial_id &>
+    </&>
+% }
+% if ($has_tissue_sample_entries) {
+    <&| /page/info_section.mas, id => "trial_tissue_samples", title=>"Tissue Sample Entries", is_subsection => 1, collapsible=> 1, collapsed=>1 &>
+        <& /breeders_toolbox/trial/trial_tissue_samples.mas, trial_id => $trial_id &>
+    </&>
+% }
+</div><!-- closes well -->

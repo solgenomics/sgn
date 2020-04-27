@@ -1,0 +1,107 @@
+
+<%doc>
+
+
+</%doc>
+
+<%args> 
+$datasets
+</%args>
+
+<& '/page/page_title.mas', title => "Create Boxplots" &>
+
+<& '/util/import_javascript.mas', 
+  classes => ['jquery','d3.d3v4Min'],
+  entries => ['boxplotter']
+&>
+
+
+<style media="screen">
+  .groupBy-div:only-of-type .groupBy-remove{
+    display: none;
+  }
+  .boxplot .infotext{
+    opacity: 0;
+  }
+  .boxplot:hover .infotext{
+    opacity: 1;
+  }
+  #bxplt_result::-webkit-scrollbar {
+    -webkit-appearance: none;
+    width: 7px;
+  }
+  #bxplt_result::-webkit-scrollbar-thumb {
+      border-radius: 4px;
+      background-color: rgba(0,0,0,.5);
+      -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
+  }
+  #mainform>div>*, .groupBy-div:not(:first-of-type){
+    margin-top: 1em;
+    margin-bottom: 0;
+  }
+</style>
+
+<div class="row">
+  <div id="mainform" class="form col-sm-12 form-group">
+    <label for="sort" class="control-label">Dataset</label>
+    <div>
+      <select id="datasetSelect" class="form-control">
+        <option value="" disabled selected>Select a Dataset</option>
+% foreach my $dataset (@{$datasets}) {
+      <option value="<% @{$dataset}[0] %>"><% @{$dataset}[1] %><% (defined @{$dataset}[2])&&@{$dataset}[2]!="undefined"?" - ".@{$dataset}[2]:"" %></option>
+% }
+      </select>
+      <select id="obsunitSelect" class="form-control">
+        <option selected value="plot">Plots</option>
+        <option value="plant">Plants</option>
+      </select>
+      <div class="well well-sm"> Note: Constraints other than accessions, traits, trials, locations, and program will be ignored </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-sm-12">
+    <div class="brapp-wrapper" style="border:solid 1px #ccc;border-radius:4px; overflow:hidden;">
+      <div class="brapp-body" style="background-color:#fff;border-top-left-radius:4px;border-top-right-radius:4px;">
+        <div id="boxplotResults" style="max-width: 100%; overflow-x:scroll; position: relative; margin:0.5em;"></div>
+        <div style="clear:both"></div>
+      </div>
+      <div class="brapp-footer" style="background-color:#ddd;border-top:solid 1px #ccc;font-family:Arial;color:#555;font-size:11px;padding:0.3em;border-bottom-left-radius:4px;border-bottom-right-radius:4px;">
+        <div style="min-height:14px;text-align:right;">
+          <a href="https://github.com/solgenomics/BrAPI-BoxPlotter" style="color:inherit;white-space:nowrap;text-decoration:underline;">Phenotype BoxPlotter</a> developed at the <a href="https://btiscience.org/" style="color:inherit;white-space:nowrap;text-decoration:underline;">Boyce Thompson Institute</a>
+        </div>
+      </div>
+    </div>
+    <br>
+    <div>
+      <a id="downloadBxpltBtn" download="" class="btn btn-default">Download Boxplot SVG</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  var boxplotter = window.jsMod['boxplotter'].init("boxplotResults");
+  
+  $("#datasetSelect, #obsunitSelect").change(function(){
+    var ds = $("#datasetSelect option:selected").val();
+    var ou = $("#obsunitSelect option:selected").val();
+    if(ds=="") return;
+    boxplotter.loadDatasetObsUnits(ds,ou);
+  });
+  
+  $("#downloadBxpltBtn").on("mousedown",function(){
+    var svg = d3.select("#boxplotResults").select("svg.boxplots").node();
+    var serializer = new XMLSerializer();
+    var source = serializer.serializeToString(svg);
+    if(!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)){
+      source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+    }
+    if(!source.match(/^<svg[^>]+"http\:\/\/www\.w3\.org\/1999\/xlink"/)){
+      source = source.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
+    }
+    source = '<?xml version="1.0" standalone="no"?>\r\n' + source;
+    var url = "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(source);
+    this.href = url;
+  });
+</script>

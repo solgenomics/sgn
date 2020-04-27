@@ -28,7 +28,7 @@ Two versions of the <i>Nicotiana tabacum</i> genome (Sierro, N. et al. 2014 and 
 
 <ul>
   <li>
-    Edwards, K. et al. <a href="#">A reference genome for <i>Nicotiana tabacum</i> enables map-based cloning of homeologous loci implicated in nitrogen utilization efficiency</a>. <br>BMC Genomics (2017)
+    Edwards, K. et al. <a href="https://bmcgenomics.biomedcentral.com/articles/10.1186/s12864-017-3791-6">A reference genome for <i>Nicotiana tabacum</i> enables map-based cloning of homeologous loci implicated in nitrogen utilization efficiency</a>. <br>BMC Genomics (2017)
   </li>
   <li>
     Sierro, N. et al. <a href="http://www.nature.com/ncomms/2014/140508/ncomms4833/full/ncomms4833.html">The tobacco genome sequence and its comparison with those of tomato and potato</a>. <br>Nature Communications 5 (2014).
@@ -61,7 +61,7 @@ Two versions of the <i>Nicotiana tabacum</i> genome (Sierro, N. et al. 2014 and 
         <b>Genome browser (JBrowse)</b><br>
         <ul>
           <li>
-            <a href="https://solgenomics.net/jbrowse_solgenomics/?data=data/json/NitabEd17_chr">Nitab v1.0 Chr Edwards 2017</a>
+            <a href="https://solgenomics.net/jbrowse_solgenomics/?data=data/json/NitabEd17chr">Nitab v1.0 Chr Edwards 2017</a>
           </li>
           <li>
             <a href="https://solgenomics.net/jbrowse_solgenomics/?data=data/json/NitabEd17">Nitab v1.0 Scf Edwards 2017</a>

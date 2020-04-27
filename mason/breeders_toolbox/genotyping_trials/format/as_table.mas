@@ -4,14 +4,20 @@ $breeding_program_name
 $breeding_program_id
 $trial_name
 $trial_id
+$genotyping_plate_format => '96'
+$table_only => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui' ] &>
 
-<h1>CASSAVABASE GENOTYPING TRIAL</h1>
+% if (!$table_only){
+
+<h1>GENOTYPING PLATE</h1>
 <h1>Breeding program: <% $breeding_program_name %></h1>
 <h2>Trial name: <a href='/breeders/trial/<% $trial_id %>'><% $trial_name %></a></h2>
 <br/>
+
+% }
 
 <div id="trial_plate_view_html">
 <div class="well">
@@ -19,62 +25,85 @@ $trial_id
 </div>
 </div>
 
+
 <script type="text/javascript">
 
 jQuery(document).ready(function () {
 
-	jQuery.ajax ( {
-            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/design',
-	    beforeSend: function() {
-		jQuery("#working_modal").modal("show");
-	    },
-	    success: function(response){
-	        console.log(response);
-		jQuery("#working_modal").modal("hide");
-		var trial_plate_view_html = "<table class='table table-hover table-condensed table-bordered' id='trial_plate_view_table'><thead><tr><th>&nbsp;</th>";
-		for (col=1; col<13; col++) {
-		    var formatted_col = (col < 10 ? '0' : '') + col;
-		    trial_plate_view_html = trial_plate_view_html + "<th bgcolor='lightblue'>"+formatted_col+"<br/><br/></th>";
-		}
+    jQuery.ajax ( {
+        url : '/ajax/breeders/trial/'+<% $trial_id %>+'/design',
+        beforeSend: function() {
+            jQuery("#working_modal").modal("show");
+        },
+        success: function(response){
+            console.log(response);
+            jQuery("#working_modal").modal("hide");
+            var trial_plate_view_html = "<div style='overflow:scroll'><table class='table table-hover table-condensed table-bordered' id='trial_plate_view_table'><thead><tr><th>&nbsp;</th>";
 
-		trial_plate_view_html = trial_plate_view_html + "</thead><tbody>";
+            var col_max = 1;
+            if (<% $genotyping_plate_format %> == '96'){
+                col_max = 13;
+            }
+            if (<% $genotyping_plate_format %> == '384'){
+                col_max = 25;
+            }
+            for (col=1; col<col_max; col++) {
+                var formatted_col = (col < 10 ? '0' : '') + col;
+                trial_plate_view_html = trial_plate_view_html + "<th bgcolor='lightblue'>"+formatted_col+"<br/><br/></th>";
+            }
 
-		var rows = "ABCDEFGH".split("");
-		jQuery.each(rows, function(row) {
-		    trial_plate_view_html = trial_plate_view_html + "<tr><td bgcolor = 'lightblue'><b>" + rows[row] + "</b></td>"
+            trial_plate_view_html = trial_plate_view_html + "</thead><tbody>";
+            var rows;
+            if (<% $genotyping_plate_format %> == '96'){
+                rows = "ABCDEFGH".split("");
+            }
+            if (<% $genotyping_plate_format %> == '384'){
+                rows = "ABCDEFGHIJKLMNOP".split("");
+            }
+            jQuery.each(rows, function(row) {
+                trial_plate_view_html = trial_plate_view_html + "<tr><td bgcolor = 'lightblue'><b>" + rows[row] + "</b></td>"
 
-		    for (col=1; col<13; col++) {
-		        var formatted_col = (col < 10 ? '0' : '') + col;
-			var well = rows[row] + formatted_col;
+                for (col=1; col<col_max; col++) {
+                    var formatted_col = (col < 10 ? '0' : '') + col;
+                    var well = rows[row] + formatted_col;
 
-			var cell = "&nbsp";
-			var bgcolor = "lightgrey";
+                    var cell = "&nbsp";
+                    var bgcolor = "lightgrey";
 
-			if (response.design[well]) {
-			   if (response.design[well].accession_name) {
-			       if (response.design[well].accession_name == 'BLANK') {
-			           bgcolor = "#FFCCBB";
-			       } else {
-			           bgcolor="#FFFFFF";
-			       }
-			       //cell = "<br/>" + response.design[well].accession_name + "<br/><br/>";
-			       cell = "<br/><a href='/stock/" + response.design[well].accession_id +"/view'>" + response.design[well].accession_name + "</a>  <br/><br/>";
-			   }
-			}
-			trial_plate_view_html = trial_plate_view_html + "<td bgcolor=" + bgcolor + ">" + cell + "</td>";
-		      }
-		      trial_plate_view_html = trial_plate_view_html + "</tr>";
-		});
+                    if (response.design[well]) {
+                        if (response.design[well].accession_name) {
+                            if (response.design[well].accession_name == 'BLANK') {
+                                bgcolor = "#FFCCBB";
+                            } else {
+                                bgcolor="#FFFFFF";
+                            }
+                            cell = "<br/>Sample: <a href='/stock/" + response.design[well].plot_id +"/view'>" + response.design[well].plot_name + "</a> <br/>Accession: <a href='/stock/" + response.design[well].accession_id +"/view'>" + response.design[well].accession_name + "</a>";
+                            if(response.design[well].source_plot_id){
+                                cell = cell + "<br/>Source Plot: <a href='/stock/" + response.design[well].source_plot_id +"/view'>" + response.design[well].source_plot_name + "</a>";
+                            }
+                            if(response.design[well].source_plant_id){
+                                cell = cell + "<br/>Source Plant: <a href='/stock/" + response.design[well].source_plant_id +"/view'>" + response.design[well].source_plant_name + "</a>";
+                            }
+                            if(response.design[well].source_tissue_id){
+                                cell = cell + "<br/>Source Tissue: <a href='/stock/" + response.design[well].source_tissue_id +"/view'>" + response.design[well].source_tissue_name + "</a>";
+                            }
+                            cell = cell + "<br/><br/>";
+                        }
+                    }
+                    trial_plate_view_html = trial_plate_view_html + "<td bgcolor=" + bgcolor + ">" + cell + "</td>";
+                }
+                trial_plate_view_html = trial_plate_view_html + "</tr>";
+            });
 
-		trial_plate_view_html = trial_plate_view_html + "</tbody></table>";
-		jQuery('#trial_plate_view_html').empty();
-		jQuery('#trial_plate_view_html').html(trial_plate_view_html);
-	    },
-	    error: function(response){
-	        jQuery("#working_modal").modal("hide");
-		alert("Error retrieving plate layout.");
-	    }
-	});
+            trial_plate_view_html = trial_plate_view_html + "</tbody></table></div>";
+            jQuery('#trial_plate_view_html').empty();
+            jQuery('#trial_plate_view_html').html(trial_plate_view_html);
+        },
+        error: function(response){
+            jQuery("#working_modal").modal("hide");
+            alert("Error retrieving plate layout.");
+        }
+    });
 
 });
 

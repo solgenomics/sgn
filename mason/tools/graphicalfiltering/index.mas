@@ -1,0 +1,205 @@
+<%doc>
+
+
+</%doc>
+
+<%args>
+
+$ajaxRequestString => ""
+
+</%args>
+
+<& /util/import_css.mas, paths => ['tools/GraphicalFiltering.css'] &>
+
+<& '/page/page_title.mas', title => "Graphical Filtering" &>
+
+<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'CXGN.List', 'd3.d3v4Min', 'brapi.BrAPI', 'brapi.GraphicalFilter' ] &>
+
+<div id="select_div" class="row" hidden="true">
+  <!-- form for selecting a list -->
+  <p>Choose a list of <!--plant, plots, or -->trials to filter.</p>
+  <form class="tc-form">
+    <div class="form-group">
+        <!-- list select -->
+        <div id="filter_list_select_container" class="select_container col-md-6">
+          <select disabled class="form-control input-sm" id="filter_list_select">
+            <option selected="selected">Loading...</option>
+          </select>
+        </div>
+        <div id="type_list_select_container" class="select_container col-md-3">
+          <select disabled class="form-control input-sm" id="type_list_select">
+            <option selected disabled value="">Select Type</option>
+            <option value="plot">Plots</option>
+            <option value="plant">Plants</option>
+          </select>
+        </div>
+        <div class="checkbox col-md-3">
+          <label>
+            <input type="checkbox" id="accession_group"> Group By Accession
+          </label>
+        </div>
+    </div>
+  </form>
+</div>
+<!-- spinner to show during ajax call -->
+<div class="row">
+  <center>
+    <img hidden="true" id="results-loading-spinner" src="/img/wheel.gif" alt="loading">
+  </center>
+</div>
+<br>
+<!-- div in which to draw filters -->
+<div id="filter_div" class="row"></div>
+<!-- div with table of filtered results and an option to save the output as a list -->
+<div id="filtered_results_wrap" hidden="true" class="row dataTables_wrapper">
+  <&| /page/info_section.mas, title => 'Filtered Results', collapsible=>0, collapsed=>0 &>
+    <table id="filtered_results" width="100%" class="table table-hover table-striped dataTable no-footer" role="grid" style="width: 100%;"></table>
+  </&>
+  <&| /page/info_section.mas, title => 'Save Results as List', collapsible=>1, collapsed=>1 &>
+    <form id="new-list-form">
+      <label>List Name: </label> <input name="name" class="form-control" type="text">
+      <button type="submit" class="btn btn-primary">Create</button>
+    </form>
+  </&>
+</div>
+
+<script>
+
+(function() {
+  'use strict';
+  var currentGFilter = null;
+  var list = new CXGN.List();
+  
+  $('#accession_group').change(function(){$('#type_list_select').trigger("change");})
+  
+  $('#type_list_select').change(function(){
+    var list_id = $("#filter_list_select").val(),
+        unit = $("#type_list_select").val(),
+        group = $('#accession_group').is(":checked"),
+        brapi = BrAPI("/brapi/v1");
+    if (!unit) return;
+    var list_contents = list.transform2Ids(list_id),
+        list_type = list.getListType(list_id);
+    switch (list_type) {
+      case 'plots':
+      case 'plants':
+        alert("not yet implimented");
+        break;
+      case 'trials':
+        updateGFilter(group,
+          brapi.phenotypes_search({
+            "studyDbIds": list_contents,
+            "observationLevel": unit,
+            "pageSize": 100000
+          })
+        );
+        break;
+    }
+  });
+
+  function updateGFilter(group,brapi_node){
+    if (currentGFilter!=null){
+      $("#filtered_results").DataTable().destroy();
+      $("#filtered_results").html("");
+    }
+    $('#filtered_results_wrap').hide();
+    $('#filter_div').hide();
+    $('#results-loading-spinner').show();
+    brapi_node.all(function(){
+      $('#filtered_results_wrap').show();
+      $('#filter_div').show();
+      $('#results-loading-spinner').hide();
+    })
+    currentGFilter = GraphicalFilter(
+        brapi_node,
+        obsTraits,
+        group? groupCols : obsCols,
+        group? ["Accession"] : ["Study","Unit","Accession"],
+        group? groupByAccession : undefined
+      );
+    currentGFilter.draw("#filter_div","#filtered_results");
+  }
+
+  $(document).ready(function(){
+    
+    // set up and show the list select div.
+    $('#select_div').show();
+
+    // set up list
+    var filter_list_select_html = list.listSelect('filter', ['trials'/*,'plots','plants'*/], 'Choose a List:', undefined, undefined);
+    $('#filter_list_select_container').html(filter_list_select_html);
+    $('#filter_list_select>option:first-of-type').prop('disabled', true);
+    
+    $('#filter_list_select').change(function(){
+      $(this).prop('disabled', true);
+      var list_id = $(this).val();
+      var list_type = list.getListType(list_id);
+      $(this).prop('disabled', false);
+      $('#type_list_select').prop('disabled', false);
+      switch (list_type) {
+        case 'trials':
+          $('#type_list_select').prop('val', "");
+          break;
+        case 'plots':
+          $('#type_list_select').val("plot").trigger("change");
+          $('#type_list_select').prop('disabled', true);
+          break;
+        case 'plants':
+          $('#type_list_select').val("plant").trigger("change");
+          $('#type_list_select').prop('disabled', true);
+          break;  
+      }
+    });
+  });
+  
+  function obsTraits(d) { // traits/values
+    var traits = {}
+    d.observations.forEach(function(obs){
+      traits[obs.observationVariableName] = obs.value;
+    });
+    return traits;
+  }
+  function obsCols(d){ // header columns accessor
+    return {
+      'Study':d.studyName,
+      'Unit':d.observationUnitName,
+      'Accession':d.germplasmName,
+    }
+  }
+  function groupCols(d) {
+    return {
+      'Accession':d.germplasmName
+    }
+  }
+  function groupByAccession(d) {
+    return d.germplasmDbId
+  }
+  
+  // set up the form for saving results as a list
+  $('#new-list-form').submit(function () {
+    if (!window.gfiltering.data){
+      alert("Can't create a list from nothing.")
+      return false;
+    }
+    try {
+      var form = d3.map($(this).serializeArray(),function(d){return d.name;});
+      var list = new CXGN.List();
+      var newListID = list.newList(form.get("name").value);
+      if (!newListID) throw "List creation failed.";
+      list.setListType(newListID,"plots");
+      var data = currentGFilter.data.filter(currentGFilter.root.getFilter());
+      var count = list.addBulk(newListID,data.map(function(d){return d.observationUnitName}));
+      if (!count) throw "Added nothing to list or addition failed.";
+      alert("List \""+form.get("name").value+"\" created with "+count+" entries.")
+    }
+    catch(err) {
+      setTimeout(function(){throw err;});
+    }
+    finally {
+      return false;
+    }
+  });
+  
+}());
+
+</script>

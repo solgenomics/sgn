@@ -1,0 +1,219 @@
+<%args>
+$breeding_programs
+$locations
+$preferred_species
+$editable_stock_props
+$timestamp
+</%args>
+
+
+<& /util/import_javascript.mas, classes => [ 'CXGN.GuidedHelp','bootstrap_min.js', 'jquery.iframe-post-form', 'CXGN.List', 'CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.GenotypingTrial','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees','CXGN.BreedersToolbox.Crosses','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial','CXGN.TrialTreeFolders' ] &>
+
+<div class="panel panel-default">
+    <div class="panel-body">
+        <& /page/page_title.mas, title=>"New to the database?" &>
+
+        <center>
+        <button class="btn btn-primary btn-block" id="guided_help_begin_button">Let us help!<br/>Click this button to begin our guided help.</button>
+        </center>
+    </div>
+</div>
+
+<div class="modal fade" id="guided_help_begin_dialog" name="guided_help_begin_dialog" tabindex="-1" role="dialog" aria-labelledby="guidedHelpBeginDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="guidedHelpBeginDialog">What are you interested in? <a href="https://solgenomics.github.io/sgn">For General Help</a></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="well">
+                                <div class="row">
+                                    <div class="col-sm-3">
+                                        <span style="font-size:2.5em;" class="glyphicon glyphicon-cloud-upload"></span>
+                                    </div>
+                                    <div class="col-sm-7">
+                                        <h4>Upload an experimental field trial into the database that you have saved on your computer in Excel</h4>
+                                    </div>
+                                    <div class="col-sm-2">
+                                        <button name="upload_trial_link" class="btn btn-primary btn-sm">Go</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="well">
+                                <div class="row">
+                                    <div class="col-sm-3">
+                                        <span style="font-size:2.5em;" class="glyphicon glyphicon glyphicon-flash"></span>
+                                    </div>
+                                    <div class="col-sm-7">
+                                        <h4>Design a completely new experimental field trial in the database</h4>
+                                    </div>
+                                    <div class="col-sm-2">
+                                        <button id="add_project_link" class="btn btn-primary btn-sm">Go</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="well">
+                                <div class="row">
+                                    <div class="col-sm-3">
+                                        <span style="font-size:2.5em;" class="glyphicon glyphicon-list-alt"></span>
+                                    </div>
+                                    <div class="col-sm-7">
+                                        <h4>Catalog your available seed inventory into the database</h4>
+                                    </div>
+                                    <div class="col-sm-2">
+                                        <button id="guided_help_seedlot_inventory_button" class="btn btn-primary btn-sm">Go</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="well">
+                                <div class="row">
+                                    <div class="col-sm-3">
+                                        <span style="font-size:2.5em;" class="glyphicon glyphicon-book"></span>
+                                    </div>
+                                    <div class="col-sm-7">
+                                        <h4>Upload phenotypic data into the database that you have saved on your computer in Excel</h4>
+                                    </div>
+                                    <div class="col-sm-2">
+                                        <button id="guided_help_upload_phenotypes_button" class="btn btn-primary btn-sm">Go</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="well">
+                                <div class="row">
+                                    <div class="col-sm-3">
+                                        <span style="font-size:2.5em;" class="glyphicon glyphicon-flag"></span>
+                                    </div>
+                                    <div class="col-sm-7">
+                                        <h4>Plan tissue sampling</h4>
+                                    </div>
+                                    <div class="col-sm-2">
+                                        <button name="tissue_sample_guided_help" class="btn btn-primary btn-sm">Go</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="well">
+                                <div class="row">
+                                    <div class="col-sm-3">
+                                        <span style="font-size:2.5em;" class="glyphicon glyphicon-random"></span>
+                                    </div>
+                                    <div class="col-sm-7">
+                                        <h4>Upload crosses and crossing information into the database</h4>
+                                    </div>
+                                    <div class="col-sm-2">
+                                        <button name="upload_crosses_link" class="btn btn-primary btn-sm">Go</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="well">
+                                <div class="row">
+                                    <div class="col-sm-3">
+                                        <span style="font-size:2.5em;" class="glyphicon glyphicon-tags"></span>
+                                    </div>
+                                    <div class="col-sm-7">
+                                        <h4>Print barcode labels for my experiment (for your plots or plants or tissue samples in the field, or for your 96 well plate and tissue samples)</h4>
+                                    </div>
+                                    <div class="col-sm-2">
+                                        <button id="guided_help_barcode_trial_button" class="btn btn-primary btn-sm">Go</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="well">
+                                <div class="row">
+                                    <div class="col-sm-3">
+                                        <span style="font-size:2.5em;" class="glyphicon glyphicon-blackboard"></span>
+                                    </div>
+                                    <div class="col-sm-7">
+                                        <h4>Analyze phenotypic performance across trials</h4>
+                                    </div>
+                                    <div class="col-sm-2">
+                                        <button id="guided_help_trial_comparison_button" class="btn btn-primary btn-sm">Go</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="well">
+                                <div class="row">
+                                    <div class="col-sm-3">
+                                        <span style="font-size:2.5em;" class="glyphicon glyphicon-th"></span>
+                                    </div>
+                                    <div class="col-sm-7">
+                                        <h4>Prepare a 96 or 384 well plate for a genotyping experiment</h4>
+                                    </div>
+                                    <div class="col-sm-2">
+                                        <button name="create_genotyping_trial_link" class="btn btn-primary btn-sm">Go</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="well">
+                                <div class="row">
+                                    <div class="col-sm-3">
+                                        <span style="font-size:2.5em;" class="glyphicon glyphicon-map-marker"></span>
+                                    </div>
+                                    <div class="col-sm-7">
+                                        <h4>Upload VCF genotypic data</h4>
+                                    </div>
+                                    <div class="col-sm-2">
+                                        <button name="upload_genotyping_data_link" class="btn btn-primary btn-sm">Go</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_guided_help_begin_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<& /help/workflow_guided/tissue_sample_help.mas &>
+
+<& /help/workflow_guided/seedlot_inventory_modal.mas, timestamp=>$timestamp &>
+<& /help/workflow_guided/phenotype_upload_modal.mas &>
+<& /help/workflow_guided/trial_barcoding_modal.mas &>
+<& /help/workflow_guided/trial_comparison_modal.mas &>
+
+<& /breeders_toolbox/trial/trial_upload_dialogs.mas, breeding_programs=>$breeding_programs, locations=>$locations &>
+<& /breeders_toolbox/trial/trial_create_dialogs.mas, locations => $locations, breeding_programs => $breeding_programs &>
+
+<& /breeders_toolbox/genotyping_trials/upload_genotyping_data_dialogs.mas &>
+<& /breeders_toolbox/genotyping_trials/create_genotyping_trial_dialogs.mas &>
+
+<& /breeders_toolbox/upload_seedlots_inventory_dialogs.mas &>
+<& /breeders_toolbox/upload_seedlots_dialogs.mas &>
+<& /breeders_toolbox/add_seedlot_dialogs.mas, timestamp=>$timestamp &>
+<& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props &>
+<& /breeders_toolbox/upload_crosses_dialogs.mas, programs=>$breeding_programs, locations=>$locations &>
+<& /breeders_toolbox/add_cross_dialogs.mas, programs=>$breeding_programs, locations=>$locations &>
+<& /breeders_toolbox/add_crossing_trial_dialogs.mas, programs=>$breeding_programs, locations=>$locations &>

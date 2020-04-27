@@ -1,0 +1,67 @@
+
+<%args>
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+
+<& /page/page_title.mas, title => "Genotyping Data Project Search" &>
+
+<div class="well well-sm">
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <table id="genotyping_data_project_search_results" width="100%" class="table table-hover table-striped">
+            <thead>
+              <tr>
+                  <th>Genotyping Data Project Name</th>
+                  <th>Description</th>
+                  <th>Breeding program</th>
+                  <th>Folder</th>
+                  <th>Year</th>
+                  <th>Location</th>
+                  <th>Genotyping Facility</th>
+            </tr>
+            </thead>
+            </table>
+        </div>
+    </div>
+
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <br><br>
+            <&| /page/info_section.mas, title => 'Copy Results to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the trial names currently showing in the search results table to a new or exisiting list</i>'&>
+                <br>
+                <div style="text-align:right" id="genotyping_data_project_to_list_menu"></div>
+                <div id="genotyping_data_project_result_names" style="display: none;"></div>
+            </&>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function () {
+
+   var trial_table = jQuery('#genotyping_data_project_search_results').DataTable( {
+       'ajax': '/ajax/genotyping_data_project/search',
+       "scrollX": true
+   });
+
+   jQuery('#genotyping_data_project_search_results').on( 'draw.dt', function () {
+     var name_links = trial_table.column( 0, {page:'current'} ).data();
+     var names = [];
+
+     for (var i = 0; i < name_links.length; i++) { //extract text from anchor tags
+       names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
+     }
+
+     jQuery('#genotyping_data_project_result_names').html(names);
+     addToListMenu('genotyping_data_project_to_list_menu', 'genotyping_data_project_result_names', {
+       listType: 'trials'
+     });
+
+   });
+
+});
+
+</script>

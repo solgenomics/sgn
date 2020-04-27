@@ -7,29 +7,7 @@ use CXGN::Trial;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 
-has 'bcs_schema' => (
-	isa => 'Bio::Chado::Schema',
-	is => 'rw',
-	required => 1,
-);
-
-has 'page_size' => (
-	isa => 'Int',
-	is => 'rw',
-	required => 1,
-);
-
-has 'page' => (
-	isa => 'Int',
-	is => 'rw',
-	required => 1,
-);
-
-has 'status' => (
-	isa => 'ArrayRef[Maybe[HashRef]]',
-	is => 'rw',
-	required => 1,
-);
+extends 'CXGN::BrAPI::v1::Common';
 
 sub locations_list {
 	my $self = shift;
@@ -42,8 +20,9 @@ sub locations_list {
 	my @data;
 	foreach (@$data_window){
 		push @data, {
-			locationDbId => $_->[0],
+			locationDbId => qq|$_->[0]|,
 			locationType=> $_->[8],
+			locationName=> $_->[1],
 			name=> $_->[1],
 			abbreviation=>$_->[9],
 			countryCode=> $_->[6],
@@ -51,7 +30,10 @@ sub locations_list {
 			latitude=>$_->[2],
 			longitude=>$_->[3],
 			altitude=>$_->[4],
-			additionalInfo=> $_->[7]
+            instituteName=>'',
+            instituteAddress=>$_->[10],
+			additionalInfo=> $_->[7],
+			documentationURL=> undef
 		};
 	}
 

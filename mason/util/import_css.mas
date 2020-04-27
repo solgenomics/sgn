@@ -1,0 +1,25 @@
+<%doc>
+
+=head1 DESCRIPTION
+
+Produces a list of <link rel="stylesheet" type="text/css" href=""/> lines for a set of
+CSS paths (relative to /static/css).
+
+=head1 ARGS
+
+=head2 C<paths> - an arrayref of paths to a css file relative to /static/css/, absolute paths, or urls.
+
+=head1 EXAMPLE
+
+  <& /util/import_css.mas, paths => ['bootstrap/v1.css','/css/jquery.css','http://foo.bar/buzz.css'] &>
+
+=cut
+
+</%doc>
+<%args>
+ $paths
+</%args>
+<%perl>
+  $paths = [ $paths ] unless ref $paths; #< coerce to arrayref
+  push @{ $c->stash->{css_paths} }, @$paths;
+</%perl>

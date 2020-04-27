@@ -51,7 +51,7 @@ table.borderless td,table.borderless th{
      border: none !important;
 }
 
-#list_item_dialog_datatable_filter input, #public_list_item_dialog_datatable_filter input, #public_list_data_table_filter input {
+#list_item_dialog_datatable_filter input, #public_list_item_dialog_datatable_filter input, #public_list_data_table_filter input, #private_list_data_table_filter input {
   width: 140px;
   height: 30px;
   padding: 6px 12px;

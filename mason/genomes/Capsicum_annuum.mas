@@ -4,17 +4,16 @@
 <& /page/page_title.mas, title => '<i>'.$organism->species.'</i> Genome Data' &>
 
 <!-- <div class="page_introduction"> -->
-
 <p>
-The hot pepper genome ((Mexican landrace of <i>Capsicum annuum</i> cv. CM334) has been sequenced by an international group of scientists from Korea, Israel and USA.
+Linked-read sequencing technology was used to create a phased assembly that was scaffolded into chromosomes for an F1 of a wide cross (UCD-10X-F1) between a landrace, Criollos de Morelos 334 (CM334) and a nonpungent blocky pepper-breeding line. Please see <a href="https://www.nature.com/articles/s41438-017-0011-0">Hulse-Kemp et al. (2017)</a> for more details. This genome is available in <a href="/tools/blast?db_id=301">blast</a> and on the <a href="ftp://ftp.solgenomics.net/genomes/Capsicum_annuum/C.annuum_UCD10X/">FTP site</a>.  
+</p>
+<p>
+The hot pepper genome (Mexican landrace of <i>Capsicum annuum</i> cv. CM334) has been sequenced by an international group of scientists from Korea, Israel and USA.
 The sequence was published in <a href="http://www.nature.com/ng/journal/v46/n3/full/ng.2877.html" target="_blank">Nature Genetics</a> in January 2014.
 The official page for this genome sequences is <a href="http://peppergenome.snu.ac.kr/" target="_blank">http://peppergenome.snu.ac.kr/</a>.
 </p>
 <p>
-The genome sequence for hot pepper. <i>C. annuum</i> cv. CM334 (Criollo de Morelos 334), a dipoloid and a landrace collected from the Mexican state of Morelos,
-was sequenced to 186.6X coverage using Illumina technology.
-The genome assembly was annotated with the <a href="http://www.nature.com/ng/journal/v46/n3/extref/ng.2877-S1.pdf">PGA annotation pipeline</a>.
-CM334 genome assembly, pseudomolecules, annotations and C. chinense genome assembly are available through the links below.<br>
+The genome sequence for hot pepper. <i>C. annuum</i> cv. CM334 (Criollo de Morelos 334), a diploid and a landrace collected from the Mexican state of Morelos, was sequenced to 186.6X coverage using Illumina technology. The genome assembly was annotated with the <a href="http://www.nature.com/ng/journal/v46/n3/extref/ng.2877-S1.pdf">PGA annotation pipeline</a>. CM334 genome assembly, pseudomolecules, annotations and C. chinense genome assembly are available through the links below.<br>
 </p>
 
 <p>

@@ -2,11 +2,13 @@
 package SGN::Controller::People;
 
 use Moose;
+
+use URI::FromHash 'uri';
 use CXGN::Login;
 use CXGN::People::Person;
 use Data::Dumper;
 use CXGN::Phenome::Population;
-use SGN::Controller::solGS::AnalysisProfile;
+use SGN::Controller::solGS::AnalysisQueue;
 use CXGN::Page::FormattingHelpers qw/info_section_html page_title_html info_table_html simple_selectbox_html html_optional_show columnar_table_html/;
 use CXGN::Phenome::Locus;
 
@@ -30,7 +32,8 @@ sub people_top_level : Path('/solpeople/profile') Args(1) {
     #will redirect user to login page if they are not logged in.
     my $user_id=CXGN::Login->new($dbh)->verify_session();
     if (!$user_id) {
-        $c->res->redirect('/solpeople/login.pl');
+	
+        $c->res->redirect(uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         $c->detach();
     }
     my $users_profile;
@@ -65,7 +68,7 @@ sub people_top_level : Path('/solpeople/profile') Args(1) {
         $c->stash->{populations_list} = $pops_list;
 
         ##SOLGS user's submitted jobs sections
-        my $solgs_jobs = SGN::Controller::solGS::AnalysisProfile->solgs_analysis_status_log($c);
+        my $solgs_jobs = SGN::Controller::solGS::AnalysisQueue->solgs_analysis_status_log($c);
         my $solgs_jobs_table;
         if(@$solgs_jobs) {
             $solgs_jobs_table =  columnar_table_html(

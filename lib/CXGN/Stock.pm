@@ -8,21 +8,31 @@ Version: 2.0
 
 This object was re-factored from CXGN::Chado::Stock and moosified.
 
-Functions such as 'get_obsolete' , 'store' , and 'exists_in_database' are required , and do not use standard DBIC syntax.
+CXGN::Stock should be used for all appropriate stock related queries.
 
-=head1 AUTHOR
+The stock table stores different types of objects, such as accessions,
+plots, populations, tissue_samples, etc.
 
-Naama Menda <nm249@cornell.edu>
-Lukas Mueller <lam87@cornell.edu>
+CXGN::Stock is the parent object for different flavors of objects
+representing these derived types, such as CXGN::Stock::Seedlot, or
+CXGN::Stock::TissueSample. (Currently there is no CXGN::Stock::Plot, but
+that should probably be added in the future, along with a factory
+object that instantiates the correct object given the stock_id).
+
+=head1 AUTHORS
+
+ Naama Menda <nm249@cornell.edu>
+ Lukas Mueller <lam87@cornell.edu>
 
 =cut
 
-package CXGN::Stock ;
+package CXGN::Stock;
 
 use Moose;
 
 use Carp;
 use Data::Dumper;
+use JSON::Any;
 use Bio::Chado::Schema;
 use CXGN::Metadata::Schema;
 use SGN::Model::Cvterm;
@@ -30,6 +40,18 @@ use Bio::GeneticRelationships::Pedigree;
 use Bio::GeneticRelationships::Individual;
 use base qw / CXGN::DB::Object / ;
 use CXGN::Stock::StockLookup;
+use Try::Tiny;
+
+=head2 accessor schema()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects: provides access to Bio::Chado::Schema
+ Example:
+
+=cut
 
 has 'schema' => (
     isa => 'Bio::Chado::Schema',
@@ -37,77 +59,296 @@ has 'schema' => (
     required => 1
 );
 
+=head2 accessor phenome_schema()
+
+ Usage:
+ Desc:         provides access the the CXGN::People::Schema, needed for
+               certain user related functions
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+has 'phenome_schema' => (
+    isa => 'CXGN::Phenome::Schema',
+    is => 'rw',
+);
+
+=head2 accessor check_name_exists()
+
+ Usage:
+ Desc:
+ Ret:          1 if exists, 0 if not
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 has 'check_name_exists' => (
     isa => 'Bool',
     is => 'rw',
     default => 1
 );
 
+=head2 accessor stock()
+
+ Usage:
+ Desc:         DBIx::Class object for this stock row
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 has 'stock' => (
     isa => 'Bio::Chado::Schema::Result::Stock::Stock',
     is => 'rw',
 );
+
+=head2 accessor stock_id()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
 
 has 'stock_id' => (
     isa => 'Maybe[Int]',
     is => 'rw',
 );
 
+=head2 accessor is_saving()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+has 'is_saving' => (
+    isa => 'Bool',
+    is => 'rw',
+    default => 0
+);
+
+
+=head2 accessor owners()
+
+ Usage:
+ Desc:
+ Ret:          the stock_owners as [sp_person_id, sp_person_id2, ..]
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+has 'owners' => (
+    isa => 'Maybe[ArrayRef[Int]]',
+    is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_stock_owner',
+);
+
+=head2 accessor organism()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 has 'organism' => (
     isa => 'Bio::Chado::Schema::Result::Organism::Organism',
     is => 'rw',
 );
+
+=head2 accessor organism_id()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
 
 has 'organism_id' => (
     isa => 'Maybe[Int]',
     is => 'rw',
 );
 
+=head2 accessor species()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 has 'species' => (
     isa => 'Maybe[Str]',
     is => 'rw',
 );
+
+=head2 accessor genus()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
 
 has 'genus' => (
     isa => 'Maybe[Str]',
     is => 'rw',
 );
 
+=head2 accessor organism_common_name()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 has 'organism_common_name' => (
     isa => 'Maybe[Str]',
     is => 'rw',
 );
+
+=head2 accessor organism_abbreviation()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
 
 has 'organism_abbreviation' => (
     isa => 'Maybe[Str]',
     is => 'rw',
 );
 
+=head2 accessor organism_comment()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 has 'organism_comment' => (
     isa => 'Maybe[Str]',
     is => 'rw',
 );
 
+=head2 accessor type()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 has 'type' => (
     isa => 'Str',
-    is => 'rw',
-    default => 'accession',
+    is => 'rw'
 );
+
+=head2 accessor type_id()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
 
 has 'type_id' => (
     isa => 'Int',
     is => 'rw',
 );
 
+=head2 accessor name()
+
+ Usage:        this should be set to the same value as uniquename,
+               which is used as the canonical name in the database.
+               (synonyms are stored as stockprops, see synonyms()).
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 has 'name' => (
     isa => 'Str',
     is => 'rw',
 );
 
+=head2 accessor uniquename()
+
+ Usage:
+ Desc:         the canonical name of the accession.
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 has 'uniquename' => (
     isa => 'Str',
     is => 'rw',
 );
+
+=head2 accessor description()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
 
 has 'description' => (
     isa => 'Maybe[Str]',
@@ -115,34 +356,141 @@ has 'description' => (
     default => '',
 );
 
+=head2 accessor is_obsolete()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 has 'is_obsolete' => (
     isa => 'Bool',
     is => 'rw',
     default => 0,
 );
 
+=head2 accessor organization_name()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 has 'organization_name' => (
     isa => 'Maybe[Str]',
     is => 'rw',
 );
+
+=head2 accessor population_name()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
 
 has 'population_name' => (
     isa => 'Maybe[Str]',
     is => 'rw',
 );
 
+=head2 accessor populations()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+has 'populations' => (
+    isa => 'Maybe[ArrayRef[ArrayRef]]',
+    is => 'rw'
+);
+
+=head2 accessor sp_person_id()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+has 'sp_person_id' => (
+    isa => 'Int',
+    is => 'rw',
+);
+
+=head2 accessor user_name()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+has 'user_name' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
+=head2 accessor modification_note()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+has 'modification_note' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
+has 'objects' => (
+    isa => 'Maybe[Ref]',
+    is => 'rw',
+);
+
+has 'subjects' => (
+    isa => 'Maybe[Ref]',
+    is => 'rw',
+);
 
 sub BUILD {
     my $self = shift;
 
-    print STDERR "RUNNING BUILD FOR STOCK.PM...\n";
+    #print STDERR "RUNNING BUILD FOR STOCK.PM...\n";
     my $stock;
     if ($self->stock_id){
         $stock = $self->schema()->resultset("Stock::Stock")->find({ stock_id => $self->stock_id() });
-    }
-    if (defined $stock) {
         $self->stock($stock);
         $self->stock_id($stock->stock_id);
+    }
+    if (defined $stock && !$self->is_saving) {
+        $self->organism_id($stock->organism_id);
         $self->name($stock->name);
         $self->uniquename($stock->uniquename);
         $self->description($stock->description() || '');
@@ -150,15 +498,44 @@ sub BUILD {
         $self->type($self->schema()->resultset("Cv::Cvterm")->find({ cvterm_id=>$self->type_id() })->name());
         $self->is_obsolete($stock->is_obsolete);
         $self->organization_name($self->_retrieve_stockprop('organization'));
-        $self->_retrieve_population();
+        $self->_retrieve_populations();
     }
 
+
+    if ($self->stock_id()) {
+
+	my @objects;
+	my $object_rs = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $self->stock_id() })->stock_relationship_objects();
+	foreach my $object ($object_rs->all()) {
+	    push @objects, [ $object->object->stock_id, $object->object->uniquename(), $object->type->name() ];
+	}
+	$self->objects(\@objects);
+
+	my @subjects;
+	my $subject_rs = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $self->stock_id() })->stock_relationship_subjects();
+	foreach my $subject ($subject_rs->all()) {
+	    push @subjects, [ $subject->subject->stock_id, $subject->subject->uniquename(), $subject->type->name() ];
+	}
+
+	$self->subjects(\@subjects);
+    }
     return $self;
 }
 
 
+sub _retrieve_stock_owner {
+    my $self = shift;
+    my $owner_rs = $self->phenome_schema->resultset("StockOwner")->search({
+        stock_id => $self->stock_id,
+    });
+    my @owners;
+    while (my $r = $owner_rs->next){
+        push @owners, $r->sp_person_id;
+    }
+    $self->owners(\@owners);
+}
 
-=head2 store
+=head2 store()
 
  Usage: $self->store
  Desc:  store a new stock or update an existing stock
@@ -182,9 +559,12 @@ sub store {
         $exists= $self->exists_in_database();
     }
 
-    if (!$self->type_id) { 
+    # If provided set type_id based on supplied type, otherwise get existing type_id from db
+    if ($self->type()) {
         my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), $self->type(), 'stock_type')->cvterm_id();
         $self->type_id($type_id);
+    } else {
+        $self->type_id($stock->type_id);
     }
 
     if (!$self->organism_id){
@@ -211,6 +591,7 @@ sub store {
     }
 
     if (!$stock) { #Trying to create a new stock
+        print STDERR "Storing Stock ".localtime."\n";
         if (!$exists) {
 
             my $new_row = $self->schema()->resultset("Stock::Stock")->create({
@@ -231,6 +612,8 @@ sub store {
                 $self->_store_stockprop('organization', $self->organization_name());
             }
             if ($self->population_name){
+                print STDERR "**STOCK.PM This stock has population name " . $self->population_name . "\n\n";
+                #DO NOT INSERT POPULATION RELATIONSHIP FROM THE STOCK STORE FUNCTION
                 $self->_store_population_relationship();
             }
 
@@ -239,24 +622,38 @@ sub store {
             die "The entry ".$self->uniquename()." already exists in the database. Error: $exists\n";
         }
     }
-    else {  # entry exists, so update
-        print STDERR "EXISTS: $exists\n";
+    else {
+        print STDERR "Updating Stock ".localtime."\n";
+        if (!$self->name && $self->uniquename){
+            $self->name($self->uniquename);
+        }
         my $row = $self->schema()->resultset("Stock::Stock")->find({ stock_id => $self->stock_id() });
-        $row->name($self->name());
-        $row->uniquename($self->uniquename());
-        $row->description($self->description());
-        $row->type_id($self->type_id());
-        $row->organism_id($self->organism_id());
-        $row->is_obsolete($self->is_obsolete());
+        if ($self->name){ $row->name($self->name()) };
+        if ($self->uniquename){ $row->uniquename($self->uniquename()) };
+        if ($self->description){ $row->description($self->description()) };
+        if ($self->type_id){ $row->type_id($self->type_id()) };
+        if ($self->organism_id){ $row->organism_id($self->organism_id()) };
+        if ($self->is_obsolete){ $row->is_obsolete($self->is_obsolete()) };
         $row->update();
+        if ($self->organization_name){
+            $self->_update_stockprop('organization', $self->organization_name());
+        }
+        if ($self->population_name){
+            print STDERR "**STOCK.PM This stock has population name " . $self->population_name . "\n\n";
+            #DO NOT INSERT POPULATION RELATIONSHIP FROM THE STOCK STORE FUNCTION
+            $self->_update_population_relationship();
+        }
     }
+    $self->associate_owner($self->sp_person_id, $self->sp_person_id, $self->user_name, $self->modification_note);
+
     return $self->stock_id();
 }
 
 ########################
 
+=head2 Class functions
 
-=head2 exists_in_database
+=head2 exists_in_database()
 
  Usage: $self->exists_in_database()
  Desc:  check if the uniquename exists in the stock table
@@ -291,13 +688,13 @@ sub exists_in_database {
 	if ( ($s->stock_id == $stock_id) ) {
 	    return 0;
 	    #trying to update the uniquename
-	} 
+	}
 	elsif ( $s->stock_id != $stock_id ) {
 	    return " Can't update an existing stock $stock_id uniquename:$uniquename.";
-	    # if the new name we're trying to update/insert does not exist 
+	    # if the new name we're trying to update/insert does not exist
 	    # in the stock table..
 	    #
-	} 
+	}
 	elsif ($stock && !$s->stock_id) {
 	    return 0;
 	}
@@ -305,7 +702,10 @@ sub exists_in_database {
     return undef;
 }
 
-=head2 get_organism
+
+
+
+=head2 get_organism()
 
  Usage: $self->get_organism
  Desc:  find the organism object of this stock
@@ -319,14 +719,14 @@ sub exists_in_database {
 sub get_organism {
     my $self = shift;
     my $bcs_stock = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $self->stock_id() });
-    if ($bcs_stock) { 
+    if ($bcs_stock) {
         return $bcs_stock->organism;
     }
     return undef;
 }
 
 
-=head2 get_species
+=head2 get_species()
 
  Usage: $self->get_species
  Desc:  find the species name of this stock , if one exists
@@ -343,12 +743,82 @@ sub get_species {
     if ($organism) {
         return $organism->species;
     }
-    else { 
-	return undef; 
+    else {
+	return undef;
     }
 }
 
-=head2 set_species
+=head2 get_genus()
+
+ Usage: $self->get_genus
+ Desc:  find the genus name of this stock , if one exists
+ Ret:   string
+ Args:  none
+ Side Effects: none
+ Example:
+
+=cut
+
+sub get_genus {
+    my $self = shift;
+    my $organism = $self->get_organism;
+    if ($organism) {
+        return $organism->genus;
+    }
+    else {
+	return undef;
+    }
+}
+
+=head2 get_species_authority()
+
+ Usage: $self->get_species_authority
+ Desc:  find the species_authority of this stock , if one exists
+ Ret:   string
+ Args:  none
+ Side Effects: none
+ Example:
+
+=cut
+
+sub get_species_authority {
+    my $self = shift;
+    return $self->_retrieve_organismprop('species authority');
+}
+
+=head2 get_subtaxa()
+
+ Usage: $self->get_subtaxa
+ Desc:  find the subtaxa of this stock , if one exists
+ Ret:   string
+ Args:  none
+ Side Effects: none
+ Example:
+
+=cut
+
+sub get_subtaxa {
+    my $self = shift;
+    return $self->_retrieve_organismprop('subtaxa');
+}
+
+=head2 get_subtaxa_authority()
+
+ Usage: $self->get_subtaxa_authority
+ Desc:  find the subtaxa_authority of this stock , if one exists
+ Ret:   string
+ Args:  none
+ Side Effects: none
+ Example:
+
+=cut
+
+sub get_subtaxa_authority {
+    my $self = shift;
+    return $self->_retrieve_organismprop('subtaxa authority');
+}
+
+=head2 set_species()
 
 Usage: $self->set_species
  Desc:  set organism_id for the stock using organism.species name
@@ -372,7 +842,7 @@ sub set_species {
     }
 }
 
-=head2 function get_image_ids
+=head2 function get_image_ids()
 
   Synopsis:     my @images = $self->get_image_ids()
   Arguments:    none
@@ -384,12 +854,41 @@ sub set_species {
 
 sub get_image_ids {
     my $self = shift;
-    my $ids = $self->schema()->storage->dbh->selectcol_arrayref
-	( "SELECT image_id FROM phenome.stock_image WHERE stock_id=? ",
-	  undef,
-	  $self->stock_id
-        );
-    return @$ids;
+    my @ids;
+    my $q = "select distinct image_id, cvterm.name, stock_image.display_order FROM phenome.stock_image JOIN stock USING(stock_id) JOIN cvterm ON(type_id=cvterm_id) WHERE stock_id = ? ORDER BY stock_image.display_order ASC";
+    my $h = $self->schema->storage->dbh()->prepare($q);
+    $h->execute($self->stock_id);
+    while (my ($image_id, $stock_type, $display_order) = $h->fetchrow_array()){
+        push @ids, [$image_id, $stock_type];
+    }
+    return @ids;
+}
+
+
+=head2 get_genotypes
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_genotypeprop_ids {
+    my $self = shift;
+
+    my $q = "SELECT genotypeprop_id FROM stock JOIN nd_experiment_stock using(stock_id) JOIN nd_experiment_genotype USING(nd_experiment_id) JOIN genotypeprop USING(genotype_id) WHERE stock.stock_id=?";
+    my $h = $self->schema->storage->dbh()->prepare($q);
+    $h->execute($self->stock_id());
+    my @genotypeprop_ids;
+    while (my ($genotypeprop_id) = $h->fetchrow_array()) {
+	push @genotypeprop_ids, $genotypeprop_id;
+    }
+
+    return \@genotypeprop_ids;
+
 }
 
 =head2 associate_allele
@@ -428,7 +927,7 @@ sub associate_allele {
     return $id;
 }
 
-=head2 associate_owner
+=head2 associate_owner()
 
  Usage: $self->associate_owner($owner_sp_person_id, $sp_person_id)
  Desc:  store a stock-owner link in phenome.stock_owner
@@ -443,28 +942,30 @@ sub associate_owner {
     my $self = shift;
     my $owner_id = shift;
     my $sp_person_id = shift;
+    my $user_name = shift;
+    my $modification_note = shift;
     if (!$owner_id || !$sp_person_id) {
         warn "Need both owner_id and person_id for linking the stock with an owner!";
         return;
     }
-    my $metadata_id = $self->_new_metadata_id($sp_person_id);
+    my $metadata_id = $self->_new_metadata_id($sp_person_id, $user_name, $modification_note);
     #check if the owner is already linked
     my $ids =  $self->schema()->storage()->dbh()->selectcol_arrayref
-        ( "SELECT stock_owner_id FROM phenome.stock_owner WHERE stock_id = ? AND owner_id = ?",
+        ( "SELECT stock_owner_id FROM phenome.stock_owner WHERE stock_id = ? AND sp_person_id = ?",
           undef,
           $self->stock_id,
           $owner_id
         );
     if ($ids) { warn "Owner $owner_id is already linked with stock " . $self->stock_id ; }
 #store the owner_id - stock_id link
-    my $q = "INSERT INTO phenome.stock_owner (stock_id, owner_id, metadata_id) VALUES (?,?,?) RETURNING stock_owner_id";
+    my $q = "INSERT INTO phenome.stock_owner (stock_id, sp_person_id, metadata_id) VALUES (?,?,?) RETURNING stock_owner_id";
     my $sth  = $self->schema()->storage()->dbh()->prepare($q);
     $sth->execute($self->stock_id, $owner_id, $metadata_id);
     my ($id) =  $sth->fetchrow_array;
     return $id;
 }
 
-=head2 get_trait_list
+=head2 get_trait_list()
 
  Usage:
  Desc:         gets the list of traits that have been measured
@@ -503,7 +1004,7 @@ sub get_trait_list {
     return @traits;
 }
 
-=head2 get_trials
+=head2 get_trials()
 
  Usage:
  Desc:          gets the list of trails this stock was used in
@@ -540,112 +1041,320 @@ sub get_trials {
     return @trials;
 }
 
-sub get_direct_parents {
-    my $self = shift;
-    my $stock_id = shift || $self->stock_id();
+=head2 get_ancestor_hash()
 
-    print STDERR "get_direct_parents with $stock_id...\n";
+ Usage:
+ Desc:          gets a multi-dimensional hash of this stock's ancestors
+ Ret:
+ Args:
+ Side Effects:
+ Example:
 
-    my $female_parent_id;
-    my $male_parent_id;
-    eval {
-	$female_parent_id = $self->schema()->resultset("Cv::Cvterm")->find( { name => 'female_parent' })->cvterm_id();
-	$male_parent_id = $self->schema()->resultset("Cv::Cvterm")->find( { name => 'male_parent' }) ->cvterm_id();
-    };
-    if ($@) {
-	die "Cvterm for female_parent and/or male_parent seem to be missing in the database\n";
-    }
+=cut
 
-    my $rs = $self->schema()->resultset("Stock::StockRelationship")->search( { object_id => $stock_id, type_id => { -in => [ $female_parent_id, $male_parent_id ] } });
-    my @parents;
-    while (my $row = $rs->next()) {
-	print STDERR "Found parent...\n";
-	my $prs = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $row->subject_id() });
-	my $parent_type = "";
-	if ($row->type_id() == $female_parent_id) {
-	    $parent_type = "female";
-	}
-	if ($row->type_id() == $male_parent_id) {
-	    $parent_type = "male";
-	}
-	push @parents, [ $prs->stock_id(), $prs->uniquename(), $parent_type ];
-    }
+sub get_ancestor_hash {
+  my ($self, $stock_id, $direct_descendant_ids) = @_;
 
-    return @parents;
+  if (!$stock_id) { $stock_id = $self->stock_id(); }
+  push @$direct_descendant_ids, $stock_id; #excluded in parent retrieval to prevent loops
+
+  my $stock = $self->schema->resultset("Stock::Stock")->find({stock_id => $stock_id});
+  #print STDERR "Stock ".$stock->uniquename()." decendants are: ".Dumper($direct_descendant_ids)."\n";
+  my %pedigree;
+  $pedigree{'id'} = $stock_id;
+  $pedigree{'name'} = $stock->uniquename();
+  $pedigree{'female_parent'} = undef;
+  $pedigree{'male_parent'} = undef;
+  $pedigree{'link'} = "/stock/$stock_id/view";
+
+  #get cvterms for parent relationships
+  my $cvterm_female_parent = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'female_parent', 'stock_relationship');
+  my $cvterm_male_parent = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'male_parent', 'stock_relationship');
+
+  #get the stock relationships for the stock, find stock relationships for types "female_parent" and "male_parent", and get the corresponding subject stock IDs and stocks.
+  my $stock_relationships = $stock->search_related("stock_relationship_objects",undef,{ prefetch => ['type','subject'] });
+  my $female_parent_relationship = $stock_relationships->find({type_id => $cvterm_female_parent->cvterm_id(), subject_id => {'not_in' => $direct_descendant_ids}});
+  if ($female_parent_relationship) {
+    my $female_parent_stock_id = $female_parent_relationship->subject_id();
+    $pedigree{'cross_type'} = $female_parent_relationship->value();
+	$pedigree{'female_parent'} = get_ancestor_hash( $self, $female_parent_stock_id, $direct_descendant_ids );
+  }
+  my $male_parent_relationship = $stock_relationships->find({type_id => $cvterm_male_parent->cvterm_id(), subject_id => {'not_in' => $direct_descendant_ids}});
+  if ($male_parent_relationship) {
+    my $male_parent_stock_id = $male_parent_relationship->subject_id();
+	$pedigree{'male_parent'} = get_ancestor_hash( $self, $male_parent_stock_id, $direct_descendant_ids );
+  }
+  pop @$direct_descendant_ids; # falling back a level while recursing pedigree tree
+  return \%pedigree;
 }
 
-sub get_recursive_parents {
-    my $self = shift;
-    my $individual = shift;
-    my $max_level = shift || 1;
-    my $current_level = shift;
+=head2 get_descendant_hash()
 
-    if (!defined($individual)) { return; }
+ Usage:
+ Desc:          gets a multi-dimensional hash of this stock's descendants
+ Ret:
+ Args:
+ Side Effects:
+ Example:
 
-    if ($current_level > $max_level) {
-	print STDERR "Reached level $current_level of $max_level... we are done!\n";
-	return;
+=cut
+
+sub get_descendant_hash {
+  my ($self, $stock_id, $direct_ancestor_ids) = @_;
+
+  if (!$stock_id) { $stock_id = $self->stock_id(); }
+  push @$direct_ancestor_ids, $stock_id; #excluded in child retrieval to prevent loops
+
+  my $stock = $self->schema->resultset("Stock::Stock")->find({stock_id => $stock_id});
+  #print STDERR "Stock ".$stock->uniquename()." ancestors are: ".Dumper($direct_ancestor_ids)."\n";
+  my %descendants;
+  my %progeny;
+  $descendants{'id'} = $stock_id;
+  $descendants{'name'} = $stock->uniquename();
+  $descendants{'link'} = "/stock/$stock_id/view";
+  #get cvterms for parent relationships
+  my $cvterm_female_parent = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'female_parent','stock_relationship');
+  my $cvterm_male_parent = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'male_parent', 'stock_relationship');
+
+  #get the stock relationships for the stock, find stock relationships for types "female_parent" and "male_parent", and get the corresponding subject stock IDs and stocks.
+  my $descendant_relationships = $stock->search_related("stock_relationship_subjects",{ object_id => {'not_in' => $direct_ancestor_ids}},{ prefetch => ['type','object'] });
+  if ($descendant_relationships) {
+    while (my $descendant_relationship = $descendant_relationships->next) {
+      my $descendant_stock_id = $descendant_relationship->object_id();
+      if (($descendant_relationship->type_id() == $cvterm_female_parent->cvterm_id()) || ($descendant_relationship->type_id() == $cvterm_male_parent->cvterm_id())) {
+          $progeny{$descendant_stock_id} = get_descendant_hash($self, $descendant_stock_id, $direct_ancestor_ids);
+      }
+    }
+    $descendants{'descendants'} = \%progeny;
+    pop @$direct_ancestor_ids; # falling back a level while recursing descendant tree
+    return \%descendants;
+  }
+}
+
+=head2 get_pedigree_rows()
+
+ Usage:
+ Desc:          get an array of pedigree rows from an array of stock ids, conatining female parent, male parent, and cross type if defined
+ Ret:
+ Args: $accession_ids, $format (either 'parents_only' or 'full')
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_pedigree_rows {
+    my ($self, $accession_ids, $format) = @_;
+    #print STDERR "Accession ids are: ".Dumper(@$accession_ids)."\n";
+
+    my $placeholders = join ( ',', ('?') x @$accession_ids );
+    my ($query, $pedigree_rows);
+
+    if ($format eq 'parents_only') {
+        $query = "
+        SELECT child.uniquename AS Accession,
+            mother.uniquename AS Female_Parent,
+            father.uniquename AS Male_Parent,
+            m_rel.value AS cross_type
+        FROM stock child
+        LEFT JOIN stock_relationship m_rel ON(child.stock_id = m_rel.object_id and m_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'female_parent'))
+        LEFT JOIN stock mother ON(m_rel.subject_id = mother.stock_id)
+        LEFT JOIN stock_relationship f_rel ON(child.stock_id = f_rel.object_id and f_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent'))
+        LEFT JOIN stock father ON(f_rel.subject_id = father.stock_id)
+        WHERE child.stock_id IN ($placeholders)
+        GROUP BY 1,2,3,4
+        ORDER BY 1";
+    }
+    elsif ($format eq 'full') {
+        $query = "
+        WITH RECURSIVE included_rows(child, child_id, mother, mother_id, father, father_id, type, depth, path, cycle) AS (
+                SELECT c.uniquename AS child,
+                c.stock_id AS child_id,
+                m.uniquename AS mother,
+                m.stock_id AS mother_id,
+                f.uniquename AS father,
+                f.stock_id AS father_id,
+                m_rel.value AS type,
+                1,
+                ARRAY[c.stock_id],
+                false
+                FROM stock c
+                LEFT JOIN stock_relationship m_rel ON(c.stock_id = m_rel.object_id and m_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'female_parent'))
+                LEFT JOIN stock m ON(m_rel.subject_id = m.stock_id)
+                LEFT JOIN stock_relationship f_rel ON(c.stock_id = f_rel.object_id and f_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent'))
+                LEFT JOIN stock f ON(f_rel.subject_id = f.stock_id)
+                WHERE c.stock_id IN ($placeholders)
+                GROUP BY 1,2,3,4,5,6,7,8,9,10
+            UNION
+                SELECT c.uniquename AS child,
+                c.stock_id AS child_id,
+                m.uniquename AS mother,
+                m.stock_id AS mother_id,
+                f.uniquename AS father,
+                f.stock_id AS father_id,
+                m_rel.value AS type,
+                included_rows.depth + 1,
+                path || c.stock_id,
+                c.stock_id = ANY(path)
+                FROM included_rows, stock c
+                LEFT JOIN stock_relationship m_rel ON(c.stock_id = m_rel.object_id and m_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'female_parent'))
+                LEFT JOIN stock m ON(m_rel.subject_id = m.stock_id)
+                LEFT JOIN stock_relationship f_rel ON(c.stock_id = f_rel.object_id and f_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent'))
+                LEFT JOIN stock f ON(f_rel.subject_id = f.stock_id)
+                WHERE c.stock_id IN (included_rows.mother_id, included_rows.father_id) AND NOT cycle
+                GROUP BY 1,2,3,4,5,6,7,8,9,10
+        )
+        SELECT child, mother, father, type, depth
+        FROM included_rows
+        GROUP BY 1,2,3,4,5
+        ORDER BY 5,1;";
     }
 
-    $current_level++;
-    my @parents = $self->get_direct_parents($individual->get_id());
+    my $sth = $self->schema()->storage()->dbh()->prepare($query);
+    $sth->execute(@$accession_ids);
 
-    my $pedigree = Bio::GeneticRelationships::Pedigree->new( { name => $individual->get_name()."_pedigree", cross_type=>"unknown"} );
-
-    foreach my $p (@parents) {
-	my ($parent_id, $parent_name, $relationship) = @$p;
-
-	my ($female_parent, $male_parent, $attributes);
-	my $parent = Bio::GeneticRelationships::Individual->new( { name => $parent_name, id=> $parent_id });
-	if ($relationship eq "female") {
-	    $pedigree->set_female_parent($parent);
-	}
-
-	if ($relationship eq "male") {
-	    print STDERR "Adding male parent...\n";
-	    $pedigree->set_male_parent($parent);
-	}
-	$self->get_recursive_parents($parent, $max_level, $current_level);
+    no warnings 'uninitialized';
+    while (my ($name, $mother, $father, $cross_type, $depth) = $sth->fetchrow_array()) {
+        #print STDERR "For child $name:\n\tMother:$mother\n\tFather:$father\n\tCross Type:$cross_type\n\tDepth:$depth\n\n";
+	    push @$pedigree_rows, "$name\t$mother\t$father\t$cross_type\n";
     }
-    $individual->set_pedigree($pedigree);
+    return $pedigree_rows;
+}
+
+=head2 get_pedigree_string()
+
+ Usage:
+ Desc:          get the properly formatted pedigree string of the given level (Parents, Grandparents, or Great-Grandparents) for this stock
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_pedigree_string {
+    my ($self, $level) = @_;
+
+    my $pedigree_hashref = $self->get_ancestor_hash();
+
+    #print STDERR "Getting string of level $level from pedigree hashref ".Dumper($pedigree_hashref)."\n";
+    if ($level eq "Parents") {
+        return $self->_get_parent_string($pedigree_hashref);
+    }
+    elsif ($level eq "Grandparents") {
+        my $maternal_parent_string = $self->_get_parent_string($pedigree_hashref->{'female_parent'});
+        my $paternal_parent_string = $self->_get_parent_string($pedigree_hashref->{'male_parent'});
+        return "$maternal_parent_string//$paternal_parent_string";
+    }
+    elsif ($level eq "Great-Grandparents") {
+        my $mm_parent_string = $self->_get_parent_string($pedigree_hashref->{'female_parent'}->{'female_parent'});
+        my $mf_parent_string = $self->_get_parent_string($pedigree_hashref->{'female_parent'}->{'male_parent'});
+        my $pm_parent_string = $self->_get_parent_string($pedigree_hashref->{'male_parent'}->{'female_parent'});
+        my $pf_parent_string = $self->_get_parent_string($pedigree_hashref->{'male_parent'}->{'male_parent'});
+        return "$mm_parent_string//$mf_parent_string///$pm_parent_string//$pf_parent_string";
+    }
+}
+
+sub _get_parent_string {
+    my ($self, $pedigree_hashref) = @_;
+    my $mother = $pedigree_hashref->{'female_parent'}->{'name'} || 'NA';
+    my $father = $pedigree_hashref->{'male_parent'}->{'name'} || 'NA';
+    return "$mother/$father";
 }
 
 sub get_parents {
-    my $self = shift;
-    my $max_level = shift || 1;
-
-    my $root = Bio::GeneticRelationships::Individual->new(
-	{
-	    name => $self->uniquename(),
-	    id => $self->stock_id(),
-	});
-
-    $self->get_recursive_parents($root, $max_level, 0);
-
-    return $root;
+    my $self =  shift;
+    my $pedigree_hashref = $self->get_ancestor_hash();
+    my %parents;
+    $parents{'mother'} = $pedigree_hashref->{'female_parent'}->{'name'};
+    $parents{'mother_id'} = $pedigree_hashref->{'female_parent'}->{'id'};
+    $parents{'father'} = $pedigree_hashref->{'male_parent'}->{'name'};
+    $parents{'father_id'} = $pedigree_hashref->{'male_parent'}->{'id'};
+    return \%parents;
 }
 
-sub _store_stockprop { 
+sub _store_stockprop {
     my $self = shift;
     my $type = shift;
     my $value = shift;
+    # print STDERR Dumper $type;
     my $stockprop = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->name();
-    my $stored_stockprop = $self->stock->create_stockprops({ $stockprop => $value});
+    my @arr = split ',', $value;
+    foreach (@arr){
+        my $stored_stockprop = $self->stock->create_stockprops({ $stockprop => $_});
+    }
 }
+
+sub _update_stockprop {
+    my $self = shift;
+    my $type = shift;
+    my $value = shift;
+    my $stockprop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->cvterm_id();
+    my $rs = $self->stock->search_related('stockprops', {'type_id'=>$stockprop_cvterm_id});
+    while(my $r=$rs->next){
+        $r->delete();
+    }
+    $self->_store_stockprop($type,$value);
+}
+
+=head2 _retrieve_stockprop
+
+ Usage:
+ Desc:         Retrieves stockprops as a comma separated string
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
 
 sub _retrieve_stockprop {
     my $self = shift;
     my $type = shift;
-
-    my $stockprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->cvterm_id();
-    my $rs = $self->schema()->resultset("Stock::Stockprop")->search({ stock_id => $self->stock_id(), type_id => $stockprop_type_id }, { order_by => {-asc => 'stockprop_id'} });
-
     my @results;
-    while (my $r = $rs->next()){
-        push @results, $r->value;
-    }
+
+    try {
+        my $stockprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->cvterm_id();
+        my $rs = $self->schema()->resultset("Stock::Stockprop")->search({ stock_id => $self->stock_id(), type_id => $stockprop_type_id }, { order_by => {-asc => 'stockprop_id'} });
+
+        while (my $r = $rs->next()){
+            push @results, $r->value;
+        }
+    } catch {
+        #print STDERR "Cvterm $type does not exist in this database\n";
+    };
+
     my $res = join ',', @results;
     return $res;
+}
+
+=head2 _retrieve_stockprops
+
+ Usage:
+ Desc:         Retrieves stockprop as a list of [stockprop_id, value]
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub _retrieve_stockprops {
+    my $self = shift;
+    my $type = shift;
+    my @results;
+
+    try {
+        my $stockprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->cvterm_id();
+        my $rs = $self->schema()->resultset("Stock::Stockprop")->search({ stock_id => $self->stock_id(), type_id => $stockprop_type_id }, { order_by => {-asc => 'stockprop_id'} });
+
+        while (my $r = $rs->next()){
+            push @results, [ $r->stockprop_id(), $r->value() ];
+        }
+    } catch {
+        #print STDERR "Cvterm $type does not exist in this database\n";
+    };
+
+    return @results;
 }
 
 sub _remove_stockprop {
@@ -669,26 +1378,62 @@ sub _remove_stockprop {
 
 }
 
+sub _retrieve_organismprop {
+    my $self = shift;
+    my $type = shift;
+    my @results;
+
+    try {
+        my $organismprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'organism_property')->cvterm_id();
+        my $rs = $self->schema()->resultset("Organism::Organismprop")->search({ organism_id => $self->stock->organism_id, type_id => $organismprop_type_id }, { order_by => {-asc => 'organismprop_id'} });
+
+        while (my $r = $rs->next()){
+            push @results, $r->value;
+        }
+    } catch {
+        #print STDERR "Cvterm $type does not exist in this database\n";
+    };
+
+    my $res = join ',', @results;
+    return $res;
+}
+
+##Move to a population child object##
 sub _store_population_relationship {
     my $self = shift;
     my $schema = $self->schema;
     my $population_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'population','stock_type')->cvterm_id();
     my $population_member_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of','stock_relationship')->cvterm_id();
 
+    print STDERR "***STOCK.PM : find_or_create population relationship $population_cvterm_id \n\n";
     my $population = $schema->resultset("Stock::Stock")->find_or_create({
         uniquename => $self->population_name(),
         name => $self->population_name(),
         organism_id => $self->organism_id(),
         type_id => $population_cvterm_id,
     });
-    $self->stock->find_or_create_related('stock_relationship_objects', {
+    $self->stock->find_or_create_related('stock_relationship_subjects', {
         type_id => $population_member_cvterm_id,
         object_id => $population->stock_id(),
         subject_id => $self->stock_id(),
     });
 }
 
-sub _retrieve_population {
+##Move to a population child object##
+sub _update_population_relationship {
+    my $self = shift;
+    print STDERR "***STOCK.PM Updating population relationship\n\n";
+    my $population_member_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($self->schema, 'member_of','stock_relationship')->cvterm_id();
+    my $pop_rs = $self->stock->search_related('stock_relationship_subjects', {'type_id'=>$population_member_cvterm_id});
+    while (my $r=$pop_rs->next){
+        $r->delete();
+    }
+    $self->_store_population_relationship();
+}
+
+
+##
+sub _retrieve_populations {
     my $self = shift;
     my $schema = $self->schema;
     my $population_member_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of','stock_relationship')->cvterm_id();
@@ -697,19 +1442,25 @@ sub _retrieve_population {
         type_id => $population_member_cvterm_id,
         subject_id => $self->stock_id(),
     });
-    if ($rs->count == 1) {
-        my $population = $rs->first->object;
-        $self->population_name($population->uniquename);
+    if ($rs->count == 0) {
+        #print STDERR "No population saved for this stock!\n";
     }
-    elsif ($rs->count > 1) {
-        die "More than one population saved for this stock!\n";
-    }
-    elsif ($rs->count == 0) {
-        print STDERR "No population saved for this stock!\n";
+    else {
+        my @population_names;
+        my @population_name;
+        while (my $row = $rs->next) {
+            my $population = $row->object;
+            push @population_name, $population->uniquename();
+            push @population_names, [$population->stock_id(), $population->uniquename()];
+        }
+        my $pop_string = join ',', @population_name;
+        $self->populations(\@population_names);
+        $self->population_name($pop_string);
     }
 }
+###
 
-=head2 _new_metadata_id
+=head2 _new_metadata_id()
 
 Usage: my $md_id = $self->_new_metatada_id($sp_person_id)
 Desc:  Store a new md_metadata row with a $sp_person_id
@@ -721,16 +1472,25 @@ Args:  sp_person_id
 sub _new_metadata_id {
     my $self = shift;
     my $sp_person_id = shift;
+    my $user_name = shift;
+    my $modification_note = shift;
     my $metadata_schema = CXGN::Metadata::Schema->connect(
         sub { $self->schema()->storage()->dbh() },
         );
+    $metadata_schema->storage->dbh->do('SET search_path TO metadata');
     my $metadata = CXGN::Metadata::Metadbdata->new($metadata_schema);
     $metadata->set_create_person_id($sp_person_id);
     my $metadata_id = $metadata->store()->get_metadata_id();
+    if ($modification_note){
+        my $metadata = CXGN::Metadata::Metadbdata->new($metadata_schema, $user_name, $metadata_id);
+        $metadata->set_modification_note($modification_note);
+        $metadata_id = $metadata->store()->get_metadata_id();
+    }
+    $metadata_schema->storage->dbh->do('SET search_path TO public,sgn');
     return $metadata_id;
 }
 
-=head2 merge
+=head2 merge()
 
  Usage:         $s->merge(221, 1);
  Desc:          merges stock $s with stock_id 221. Optional delete boolean
@@ -765,7 +1525,7 @@ sub merge {
     my $parent_1_count=0;
     my $parent_2_count=0;
     my $other_stock_deleted = 'NO';
-
+    my $pui_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'PUI', 'stock_property')->cvterm_id();
 
     my $schema = $self->schema();
 
@@ -773,7 +1533,10 @@ sub merge {
     #
     my $sprs = $schema->resultset("Stock::Stockprop")->search( { stock_id => $other_stock_id });
     while (my $row = $sprs->next()) {
-
+      if ($delete_other_stock && ($row->type_id() eq $pui_cvterm_id)) {
+          # Do not save PUIs of stocks that will be deleted
+          next;
+        }
 	# check if this stockprop already exists for this stock; save only if not
 	#
 	my $thissprs = $schema->resultset("Stock::Stockprop")->search(
@@ -831,6 +1594,25 @@ sub merge {
 
     # move object relationships
     #
+
+    # TO DO: do not move parents if target already has parents.
+    #
+    # my $female_parent_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'stock_type', 'female_parent')->cvterm_id();
+    # my $male_parent_id   = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'stock_type', 'male_parent')->cvterm_id();
+
+    # my $female_parent_rs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $other_stock_id, type_id => $female_parent_id });
+    # my $male_parent_rs   = $schema->resultset("Stock::StockRelationship")->search( { object_id => $other_stock_id, type_id => $male_parent_id });
+
+    # if ($female_parent_rs->count() > 0) {
+    # 	print STDERR "The target $stock_id already had a female parent... not moving any other objects.\n";
+    # 	return;
+    # }
+    # if ($male_parent_rs ->count() > 0) {
+    # 	print STDERR "The target $stock_id already had a male parent... not moving any other objects.\n";
+    # 	return;
+    # }
+
+
     my $osrs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $other_stock_id });
     while (my $row = $osrs->next()) {
 	my $this_object_rel_rs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $self->stock_id, subject_id => $row->subject_id(), type_id => $row->type_id() });
@@ -895,7 +1677,7 @@ sub merge {
     my $sars = $phenome_schema->resultset("StockAllele")->search( { stock_id => $other_stock_id });
     while (my $row = $sars->next()) {
 	$row->stock_id($self->stock_id());
-	$row->udate();
+	$row->update();
 	print STDERR "Moving stock alleles from stock $other_stock_id to stock ".$self->stock_id()."\n";
 	$stock_allele_count++;
     }
@@ -983,7 +1765,41 @@ COUNTS
 
 }
 
-__PACKAGE__->meta->make_immutable;
+=head2 delete
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub hard_delete {
+    my $self = shift;
+
+    # delete sgn.stock_owner entry
+    #
+    my $q = "DELETE FROM phenome.stock_owner WHERE stock_id=?";
+    my $h = $self->schema()->storage()->dbh()->prepare($q);
+    $h->execute($self->stock_id());
+
+    # delete sgn.stock_image entry
+    #
+    $q = "DELETE FROM phenome.stock_image WHERE stock_id=?";
+    $h = $self->schema()->storage()->dbh()->prepare($q);
+    $h->execute($self->stock_id());
+
+    # delete stock entry
+    #
+    $q = "DELETE FROM stock WHERE stock_id=?";
+    $h = $self->schema()->storage()->dbh()->prepare($q);
+    $h->execute($self->stock_id());
+}
+
+
+###__PACKAGE__->meta->make_immutable;
 
 ##########
 1;########

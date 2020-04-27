@@ -8,20 +8,19 @@ use URI::FromHash 'uri';
 BEGIN { extends 'Catalyst::Controller'; }
 
 
-sub trial_comparison_input :Path('/tools/trial/comparison/list') Args(0) { 
+sub trial_comparison_input :Path('/tools/trial/comparison/list') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    if (! $c->user) { 
-	$c->res->redirect(uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+    if (! $c->user) {
+	$c->res->redirect(uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
-    
     $c->stash->{template} = '/tools/trial_comparison/index.mas';
 
 }
 
-sub trial_comparison_params :Path('/tools/trial/comparison/params') Args(0) { 
+sub trial_comparison_params :Path('/tools/trial/comparison/params') Args(0) {
     my $self = shift;
     my $c = shift;
 

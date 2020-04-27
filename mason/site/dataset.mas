@@ -1,0 +1,97 @@
+
+<!-- Datasets dialog -->
+
+<div class="modal fade" id="dataset_dialog" name="dataset_dialog" tabindex="-1" role="dialog" aria-labelledby="datasetDialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header" style="text-align:center">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h3 class="modal-title" id="datasetDialog">Your Datasets</h3>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	  <div id="dataset_dialog_div">
+	  </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="view_public_datasets_button" type="button" class="btn btn-primary" >View Public Datasets</button>
+        <button id="close_dataset_dialog_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="public_dataset_dialog" name="public_dataset_dialog" tabindex="-1" role="dialog" aria-labelledby="publicListDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header" style="text-align:center">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="publicListDialog">Public Datasets</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	  <div id="public_dataset_dialog_div">
+	  </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="close_public_dataset_item_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="dataset_item_dialog" name="dataset_item_dialog" tabindex="-1" role="dialog" aria-labelledby="datasetItemDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header" style="text-align:center">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="datasetItemDialog">Dataset Contents</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	  <div id="dataset_item_dialog_div">
+	  </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="close_dataset_item_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="validate_accession_error_display" name="validate_accession_error_display" tabindex="-1" role="dialog" aria-labelledby="datasetValidationErrorDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="datasetValidationErrorDialog">Dataset Validation Failed</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="validate_stock_add_missing_accessions_html">
+                    </div>
+
+                    <h3>Elements not found:</h3>
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_missing_accessions_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>  
+
+<script>
+
+jQuery("#dataset_item_dialog").draggable();
+jQuery("#dataset_dialog").draggable();
+jQuery("#public_dataset_dialog").draggable();
+
+</script>

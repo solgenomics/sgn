@@ -1,0 +1,88 @@
+<%args>
+$protocol_id
+$protocol_name
+$protocol_description
+$marker_names => []
+$header_information_lines => []
+$reference_genome_name
+$species_name
+$create_date
+$sample_observation_unit_type_name
+</%args>
+
+<div class="row">
+    <div class="col-sm-12">
+
+        <table class="table table-hover table-bordered" >
+
+            <tr>
+                <td><b>Genotyping Protocol Name</b></td>
+                <td>
+                    <% $protocol_name %>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Protocol Description </b></td>
+                <td>
+                    <% $protocol_description %>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Number of Markers</b></td>
+                <td>
+%                   print scalar(@$marker_names);                        
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Header Information Description</b></td>
+                <td>
+% my @trimmed;
+% my $header_line_count = 0;
+% foreach (@$header_information_lines){
+%    if ($header_line_count < 10) {
+%        $_ =~ tr/<>//d;
+%        push @trimmed, $_;
+%    }
+%    else {
+%        push @trimmed, "### ----- SHOWING FIRST 10 LINES ONLY ----- ###";
+%        last;
+%    }
+%    $header_line_count++;
+% }
+% my $description = join '<br/>', @trimmed;
+% $description = $description ? $description : 'NA';
+% print "$description";
+                </td>
+            </tr>
+
+            <tr><td><b>Reference Genome</b></td>
+                <td>
+                    <% $reference_genome_name %>
+                </td>
+            </tr>
+
+            <tr><td><b>Species Name</b></td>
+                <td>
+                    <% $species_name %>
+                </td>
+            </tr>
+
+            <tr><td><b>Sample Unit</b></td>
+                <td>
+                    <% $sample_observation_unit_type_name %>
+                </td>
+            </tr>
+
+            <tr><td><b>Create Date</b></td>
+                <td>
+                    <% $create_date %>
+                </td>
+            </tr>
+
+        </table>
+
+    </div>
+</div>

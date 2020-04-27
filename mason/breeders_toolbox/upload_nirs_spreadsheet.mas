@@ -1,0 +1,129 @@
+
+<%args>
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form', 'CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial' ] &>
+
+<div class="modal fade" id="upload_phenotype_spreadsheet_dialog" name="upload_phenotype_spreadsheet_dialog" tabindex="-1" role="dialog" aria-labelledby="addSpreadsheetNIRSDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addSpreadsheetNIRSDialog">Upload NIRS Spreadsheet</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <&| /page/explanation.mas, title=>'Template Information' &>
+                <p>
+                <b>File format information</b>
+                <br>
+                <a id="phenotype_upload_spreadsheet_format_info">Spreadsheet Format</a>
+                </p>
+            </&>
+
+            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_spreadsheet_phenotype_file_form" name="upload_spreadsheet_phenotype_file_form">
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Spreadsheet Format: </label>
+                    <div class="col-sm-9" >
+                        <select class="form-control" id="upload_spreadsheet_phenotype_file_format" name="upload_spreadsheet_phenotype_file_format">
+                            <option value="nirs">Simple NIRS</option>
+                            <option value="scio">SCiO NIRS</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Timestamps Included: </label>
+                    <div class="col-sm-9" >
+                        <input type="checkbox" id="upload_spreadsheet_phenotype_timestamp_checkbox" name="upload_spreadsheet_phenotype_timestamp_checkbox" />
+                    </div>
+                </div>
+                <div id="upload_spreadsheet_phenotype_data_level_div">
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Data Level: </label>
+                        <div class="col-sm-9" >
+                            <select class="form-control" id="upload_spreadsheet_phenotype_data_level" name="upload_spreadsheet_phenotype_data_level">
+                                <option value="plots">Plots</option>
+                                <option value="plants">Plants</option>
+                                <option value="subplots">Subplots</option>
+                                <option value="tissue_samples">Tissue Samples</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">NIRS Spreadsheet: </label>
+                    <div class="col-sm-9" >
+                        <input type="file" id="upload_spreadsheet_phenotype_file_input" name="upload_spreadsheet_phenotype_file_input" encoding="multipart/form-data" />
+                    </div>
+                </div>
+
+
+                <div id="upload_phenotype_spreadsheet_verify_status"></div>
+                </div>
+            </form><br/>
+
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-info" name="upload_spreadsheet_phenotype_submit_verify" id="upload_spreadsheet_phenotype_submit_verify">Verify</button>
+            <button disabled type="button" class="btn btn-primary" name="upload_spreadsheet_phenotype_submit_store" id="upload_spreadsheet_phenotype_submit_store" title="First Verify Your File">Store</button>
+        </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="phenotype_upload_spreadsheet_info_dialog" name="phenotype_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="phenotypeUploadInfoDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="phenotypeUploadInfoDialog">Template Information</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <h5>There are two possible formats for uploading NIRS data</h5>
+
+            <h3>Simple NIRS .xls:</h3>
+            <ul>
+                <li>The simple nirs spreadsheet format is built on top of the simple phenotype format.</li>
+                <li>It consists of a column called 'observationunit_name' followed by trait columns derived from the NIR spectra, followed by columns of NIR spectra data themselves.</li>
+                <li>Trait column names must come from the trait ontology, but NIR spectra column names should simply be copied from whateve standard output file the NIR device produces.</li>
+                <li><a href="https://docs.google.com/spreadsheets/d/1bPsM71mrw8I2ffg6xQo8PC5nDgSz_IzTml3JVb5FWwE/edit?usp=sharing">Simple NIRS .xls template</a></li>
+            </ul>
+
+            <h3>SCIO NIRS .csv:</h3>
+            <ul>
+                <li>The SCIO nirs spreadsheet format is generated when doing a direct download from the SCIO server.</li>
+                <li>It consists of a series of metadata fields at the beginning of the file, followed by a header for all of the individual measurements, followed by a row for each of the individual measurements themselves.</li>
+                <li>The User_input_id field must be a valid observation_unit in the database.</li>
+                <li><a href="https://docs.google.com/spreadsheets/d/17_egaPcoTyf6mtZ9xIyNnm4vgdci2TbK5sJ67ySR5Hw/edit?usp=sharing">SCIO NIRS .csv template</a></li>
+            </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script defer="defer">
+
+jQuery(document).ready(function() {
+
+    jQuery('#upload_spreadsheet_phenotypes_link').click( function() {
+        jQuery('#upload_phenotype_spreadsheet_dialog').modal("show");
+    });
+
+    jQuery("#phenotype_upload_spreadsheet_format_info").click( function () {
+        jQuery("#phenotype_upload_spreadsheet_info_dialog" ).modal("show");
+    });
+
+});
+
+</script>

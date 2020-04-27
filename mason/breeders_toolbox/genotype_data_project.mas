@@ -1,0 +1,79 @@
+
+<%doc>
+
+=head1 NAME
+
+/breeders_toolbox/genotype_data_project.mas - a mason component to display a genotyping project detail page
+
+=head1 AUTHOR
+
+
+=cut
+
+</%doc>
+
+<%args>
+$trial_id
+$trial_name
+$breeding_program_id
+$breeding_program_name
+$location_id
+$location_name
+$year => undef
+$trial_type => undef
+$planting_date => undef
+$harvest_date => undef
+$trial_description => undef
+$user_can_modify => undef
+$has_plant_entries => undef
+$has_subplot_entries => undef
+$has_tissue_sample_entries => undef
+$hidap_enabled => undef
+$folder_name => undef
+$folder_id => undef
+$plants_per_plot => undef
+$has_expression_atlas => undef
+$expression_atlas_url => undef
+$site_project_name => undef
+$trial_phenotype_files => undef
+$sgn_session_id => undef
+$user_name => undef
+$design_name => undef
+$phenotypes_fully_uploaded => undef
+$identifier_prefix => 'SGN'
+$genotyping_facility => undef
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>
+
+<br/>
+
+<& /page/page_title.mas, title=>"Genotyping Data Project: ".$trial_name &>
+
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Data Project Details</h4>", info_section_subtitle => 'View basic information about the genotyping data project.', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "genotyping_data_project_details", trial_name => $trial_name, breeding_program_name => $breeding_program_name, breeding_program_id => $breeding_program_id, location_name => $location_name, year => $year, trial_description => $trial_description, identifier_prefix => $identifier_prefix, genotyping_facility => $genotyping_facility &>
+
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Protocols</h4>", info_section_subtitle => 'View basic information about the genotyping protocols used in this genotyping data project.', icon_class => "glyphicon glyphicon-cog", info_section_id => "genotyping_data_project_protocols" &>
+
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Data</h4>", info_section_subtitle => 'View and download genotyping data.', icon_class => "glyphicon glyphicon-map-marker", info_section_id => "genotyping_data_project_data" &>
+
+% my $data_agreement_link = '<button class="btn btn-sm btn-primary" disabled style="margin:3px">Add/edit data agreement</button>';
+% if ($user_can_modify) { $data_agreement_link = '<button class="btn btn-sm btn-primary" style="margin:3px" id="add_data_agreement">Add/edit data agreement</button>'; }
+
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Data Agreement License</h4>", info_section_subtitle => 'View and edit the public data agreement on this experiment.', icon_class => "glyphicon glyphicon-inbox", info_section_id => "trial_data_agreement_section", buttons_html => $data_agreement_link &>
+
+<& /breeders_toolbox/add_data_agreement_dialogs.mas, trial_id => $trial_id &>
+
+
+<div id="trialIDDiv" class="trialIDDivClass" style="display:none;">
+% print $trial_id;
+</div>
+
+<script defer="defer">
+
+jQuery(document).ready(function () {
+
+  trial_detail_page_setup_dialogs();
+
+});
+
+</script>

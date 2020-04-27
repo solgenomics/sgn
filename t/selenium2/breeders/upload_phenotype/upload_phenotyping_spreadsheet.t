@@ -91,9 +91,9 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->find_element_ok("//div[contains(., 'This combination exists in database: ')]", "xpath", "verify the verification")->get_text();
     $t->find_element_ok("//div[contains(., 'Plot Name: test_trial21')]", "xpath", "verify the verification")->get_text();
-    $t->find_element_ok("//div[contains(., 'Trait Name: dry matter content|CO:0000092')]", "xpath", "verify the verification")->get_text();
+    $t->find_element_ok("//div[contains(., 'Trait Name: dry matter content|CO_334:0000092')]", "xpath", "verify the verification")->get_text();
     $t->find_element_ok("//div[contains(., 'Value: 35')]", "xpath", "verify the verification")->get_text();
-    $t->find_element_ok("//div[contains(., 'Trait Name: fresh root weight|CO:0000012')]", "xpath", "verify the verification")->get_text();
+    $t->find_element_ok("//div[contains(., 'Trait Name: fresh root weight|CO_334:0000012')]", "xpath", "verify the verification")->get_text();
     $t->find_element_ok("//div[contains(., 'Value: 15')]", "xpath", "verify the verification")->get_text();
 
     $t->find_element_ok("upload_spreadsheet_phenotype_submit_store", "id", "submit spreadsheet file for storage")->click();
@@ -149,9 +149,9 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->find_element_ok("//div[contains(., 'This combination exists in database: ')]", "xpath", "verify the verification")->get_text();
     $t->find_element_ok("//div[contains(., 'Plot Name: test_trial21')]", "xpath", "verify the verification")->get_text();
-    $t->find_element_ok("//div[contains(., 'Trait Name: dry matter content|CO:0000092')]", "xpath", "verify the verification")->get_text();
+    $t->find_element_ok("//div[contains(., 'Trait Name: dry matter content|CO_334:0000092')]", "xpath", "verify the verification")->get_text();
     $t->find_element_ok("//div[contains(., 'Value: 35')]", "xpath", "verify the verification")->get_text();
-    $t->find_element_ok("//div[contains(., 'Trait Name: fresh root weight|CO:0000012')]", "xpath", "verify the verification")->get_text();
+    $t->find_element_ok("//div[contains(., 'Trait Name: fresh root weight|CO_334:0000012')]", "xpath", "verify the verification")->get_text();
     $t->find_element_ok("//div[contains(., 'Value: 15')]", "xpath", "verify the verification")->get_text();
 
     $t->find_element_ok("upload_spreadsheet_phenotype_submit_store", "id", "submit spreadsheet file for storage")->click();

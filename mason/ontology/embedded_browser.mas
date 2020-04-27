@@ -16,5 +16,5 @@
         'CXGN.Page.FormattingHelpers',
      ]
 &>
-<& /ontology/parentage.mas, accession => $cvterm->get_full_accession , db_name => $cvterm->get_db_name  &>
+<& /ontology/parentage.mas, accession => $cvterm->accession , db_name => $cvterm->db->name  &>
 </&>

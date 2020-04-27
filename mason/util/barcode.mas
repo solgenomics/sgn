@@ -14,7 +14,7 @@ Arguments:
  $identifier (required) - will be converted to barcode
  $text - what's printed alongside barcode (human readable)
 
- 
+
 =head1 AUTHOR
 
 Lukas Mueller <lam87@cornell.edu>
@@ -27,28 +27,45 @@ Lukas Mueller <lam87@cornell.edu>
 $identifier
 $text => ''
 $format => ''
+$trial_id => ''
+$trial_name => ''
 </%args>
 
 <%perl>
 
 our %urlencode;
 use Tie::UrlEncoder;
+use URI::Encode;
+my $uri     = URI::Encode->new( { encode_reserved => 0 } );
+
 
 my $encoded_id = $urlencode{$identifier};
 my $encoded_text = $urlencode{$text};
 my $link;
+my $barcode_name;
 
-if ($format eq "code128") { 
+if ($format eq "code128") {
   $link = "/barcode/code128png/$encoded_id/$encoded_text";
 }
-
-if ($format eq "qrcode") { 
-  my $info = "http://solgenomics.net/stock/$identifier/view";
-  $link = "/barcode/qrcodepng/$info/$encoded_text";
+if ($format eq "trial_qrcode"){
+  $link = "/barcode/trial/$trial_id/$format";
+  $barcode_name = $trial_name." ".$identifier;
+}
+if ($format eq "stock_qrcode") {
+    my $encoded = $uri->encode($encoded_text);
+    $link = "/barcode/trial/$encoded/$format";
+    #$link = "/barcode/trial/$encoded_text/$format";
+    $barcode_name = $text;
+}
+if ($format eq "qrcode") {
+  $link = "/barcode/trial/$trial_id";
+  #my $info = "http://solgenomics.net/stock/$identifier/view";
+  #$link = "/barcode/qrcodepng/$info/$encoded_text";
   #$link = "/barcode/qrcodepng/$identifier/$encoded_text";
 }
 
 
 </%perl>
 
-<center><img src="<% $link %>" /></center>
+
+ <center><img src="<% $link %>" /> </br><% $barcode_name%> </center>
