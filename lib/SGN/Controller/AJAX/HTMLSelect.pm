@@ -403,14 +403,14 @@ sub get_label_data_source_select : Path('/ajax/html/select/label_data_sources') 
     my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } );
     my $projects = $p->get_breeding_programs();
 
-    my (@field_trials, @crossing_trials, @genotyping_trials) = [];
+    my (@field_trials, @crossing_experiments, @genotyping_trials) = [];
     foreach my $project (@$projects) {
-      my ($field_trials, $crossing_trials, $genotyping_trials) = $p->get_trials_by_breeding_program($project->[0]);
+      my ($field_trials, $crossing_experiments, $genotyping_trials) = $p->get_trials_by_breeding_program($project->[0]);
       foreach (@$field_trials) {
           push @field_trials, $_;
       }
-      foreach (@$crossing_trials) {
-          push @crossing_trials, $_;
+      foreach (@$crossing_experiments) {
+          push @crossing_experiments, $_;
       }
       foreach (@$genotyping_trials) {
           push @genotyping_trials, $_;
@@ -428,6 +428,11 @@ sub get_label_data_source_select : Path('/ajax/html/select/label_data_sources') 
     foreach my $trial (@genotyping_trials) {
         push @choices, $trial;
     }
+    push @choices, '__Crossing Experiments';
+    @crossing_experiments = sort { $a->[1] cmp $b->[1] } @crossing_experiments;
+    foreach my $crossing_experiment (@crossing_experiments) {
+         push @choices, $crossing_experiment;
+    }
     push @choices, '__Lists';
     foreach my $item (@$lists) {
         push @choices, [@$item[0], @$item[1]];
@@ -436,12 +441,7 @@ sub get_label_data_source_select : Path('/ajax/html/select/label_data_sources') 
     foreach my $item (@$public_lists) {
         push @choices, [@$item[0], @$item[1]];
     }
-    # push @choices, '__Crossing Trials';
-    # @crossing_trials = sort { $a->[1] cmp $b->[1] } @crossing_trials;
-    # foreach my $trial (@crossing_trials) {
-    #     push @choices, $trial;
-    # }
-    #
+
     print STDERR "Choices are:\n".Dumper(@choices);
 
     if ($default) { unshift @choices, [ '', $default ]; }

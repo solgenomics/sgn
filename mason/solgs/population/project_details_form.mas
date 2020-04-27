@@ -17,7 +17,7 @@ a general format for projects details presentation.
 
 
 
-
+<input type="hidden" id="genotyping_protocol_id" value="" />
 
 
 
