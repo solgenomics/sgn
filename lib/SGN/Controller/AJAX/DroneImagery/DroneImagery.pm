@@ -5183,7 +5183,7 @@ sub _perform_keras_cnn_predict {
     my $model_type_hash = decode_json $model_type;
     my $trait_id = $trained_trait_hash->{variable_id};
     my $trained_trait_name = $trained_trait_hash->{variable_name};
-    my $aux_trait_ids = $trained_trait_hash->{aux_trait_ids};
+    my $aux_trait_ids_previous = $trained_trait_hash->{aux_trait_ids};
     $model_type = $model_type_hash->{value};
     my $trained_image_type = $model_type_hash->{image_type};
     my $model_file = $filename."/".$basename;
@@ -5225,8 +5225,6 @@ sub _perform_keras_cnn_predict {
     my $training_input_aux_data_file = $filename_training_input_aux."/".$basename_training_input_aux;
 
     my @trait_ids = ($trait_id);
-    print STDERR Dumper \@trait_ids;
-    print STDERR Dumper $aux_trait_ids;
     if (scalar(@$aux_trait_ids) > 0) {
         push @trait_ids, @$aux_trait_ids;
     }
