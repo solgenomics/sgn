@@ -4716,37 +4716,37 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
 
         my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_keras_trained', 'project_md_image')->cvterm_id();
 
-        my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
-            JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id)
-            JOIN phenome.stock_image AS stock_image ON(md_image.image_id = stock_image.image_id)
-            WHERE md_image.obsolete = 'f' AND md_image.md5sum = ? AND project_md_image.type_id = ? AND project_md_image.project_id = ? AND stock_image.stock_id = ?;";
-        my $h = $schema->storage->dbh->prepare($q);
+        # my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
+        #     JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id)
+        #     JOIN phenome.stock_image AS stock_image ON(md_image.image_id = stock_image.image_id)
+        #     WHERE md_image.obsolete = 'f' AND md_image.md5sum = ? AND project_md_image.type_id = ? AND project_md_image.project_id = ? AND stock_image.stock_id = ?;";
+        # my $h = $schema->storage->dbh->prepare($q);
 
         foreach my $stock_id (keys %output_images){
             my $image_file = $output_images{$stock_id}->{image_file};
             my $field_trial_id = $output_images{$stock_id}->{field_trial_id};
             my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
-            my $md5checksum = $image->calculate_md5sum($image_file);
-            $h->execute($md5checksum, $linking_table_type_id, $field_trial_id, $stock_id);
-            my ($saved_image_id) = $h->fetchrow_array();
+            # my $md5checksum = $image->calculate_md5sum($image_file);
+            # $h->execute($md5checksum, $linking_table_type_id, $field_trial_id, $stock_id);
+            # my ($saved_image_id) = $h->fetchrow_array();
 
             my $output_image_id;
             my $output_image_url;
             my $output_image_fullpath;
-            if ($saved_image_id) {
-                print STDERR Dumper "Image $image_file has already been added to the database and will not be added again.";
-                $image = SGN::Image->new( $schema->storage->dbh, $saved_image_id, $c );
-                $output_image_fullpath = $image->get_filename('original_converted', 'full');
-                $output_image_url = $image->get_image_url('original');
-                $output_image_id = $image->get_image_id();
-            } else {
+            # if ($saved_image_id) {
+            #     print STDERR Dumper "Image $image_file has already been added to the database and will not be added again.";
+            #     $image = SGN::Image->new( $schema->storage->dbh, $saved_image_id, $c );
+            #     $output_image_fullpath = $image->get_filename('original_converted', 'full');
+            #     $output_image_url = $image->get_image_url('original');
+            #     $output_image_id = $image->get_image_id();
+            # } else {
                 $image->set_sp_person_id($user_id);
                 my $ret = $image->process_image($image_file, 'project', $field_trial_id, $linking_table_type_id);
                 my $stock_associate = $image->associate_stock($stock_id, $user_name);
                 $output_image_fullpath = $image->get_filename('original_converted', 'full');
                 $output_image_url = $image->get_image_url('original');
                 $output_image_id = $image->get_image_id();
-            }
+            # }
             push @saved_trained_image_urls, $output_image_url;
         }
 
@@ -5443,32 +5443,32 @@ sub _perform_keras_cnn_predict {
         my $image_file = $output_images{$stock_id}->{image_file};
         my $field_trial_id = $output_images{$stock_id}->{field_trial_id};
         my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
-        my $md5checksum = $image->calculate_md5sum($image_file);
-        my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
-            JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id)
-            JOIN phenome.stock_image AS stock_image ON(md_image.image_id = stock_image.image_id)
-            WHERE md_image.obsolete = 'f' AND md_image.md5sum = ? AND project_md_image.type_id = ? AND project_md_image.project_id = ? AND stock_image.stock_id = ?;";
-        my $h = $schema->storage->dbh->prepare($q);
-        $h->execute($md5checksum, $linking_table_type_id, $field_trial_id, $stock_id);
-        my ($saved_image_id) = $h->fetchrow_array();
+        # my $md5checksum = $image->calculate_md5sum($image_file);
+        # my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
+        #     JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id)
+        #     JOIN phenome.stock_image AS stock_image ON(md_image.image_id = stock_image.image_id)
+        #     WHERE md_image.obsolete = 'f' AND md_image.md5sum = ? AND project_md_image.type_id = ? AND project_md_image.project_id = ? AND stock_image.stock_id = ?;";
+        # my $h = $schema->storage->dbh->prepare($q);
+        # $h->execute($md5checksum, $linking_table_type_id, $field_trial_id, $stock_id);
+        # my ($saved_image_id) = $h->fetchrow_array();
 
         my $output_image_id;
         my $output_image_url;
         my $output_image_fullpath;
-        if ($saved_image_id) {
-            print STDERR Dumper "Image $image_file has already been added to the database and will not be added again.";
-            $image = SGN::Image->new( $schema->storage->dbh, $saved_image_id, $c );
-            $output_image_fullpath = $image->get_filename('original_converted', 'full');
-            $output_image_url = $image->get_image_url('original');
-            $output_image_id = $image->get_image_id();
-        } else {
+        # if ($saved_image_id) {
+        #     print STDERR Dumper "Image $image_file has already been added to the database and will not be added again.";
+        #     $image = SGN::Image->new( $schema->storage->dbh, $saved_image_id, $c );
+        #     $output_image_fullpath = $image->get_filename('original_converted', 'full');
+        #     $output_image_url = $image->get_image_url('original');
+        #     $output_image_id = $image->get_image_id();
+        # } else {
             $image->set_sp_person_id($user_id);
             my $ret = $image->process_image($image_file, 'project', $field_trial_id, $linking_table_type_id);
             my $stock_associate = $image->associate_stock($stock_id, $user_name);
             $output_image_fullpath = $image->get_filename('original_converted', 'full');
             $output_image_url = $image->get_image_url('original');
             $output_image_id = $image->get_image_id();
-        }
+        # }
         $output_images{$stock_id}->{image_id} = $output_image_id;
         push @saved_trained_image_urls, $output_image_url;
     }
