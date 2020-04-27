@@ -1578,6 +1578,634 @@ relationship: has_role CHEBI:48318
 is_a:CHEBI:00000
 
 
+[Term]
+id: CHEBI:145352
+name: (Z)-2-penten-1-ol
+subset: 3_STAR
+def: "A 2-penten-1-ol in which the double bond has (Z)-configuration. It is a volatile compound found in green tea, virgin olive oil, and broccoli. It is also used as a fragrance ingredient cosmetics, shampoos and soaps as well as in non-cosmetic products such as household cleaners and detergents." []
+synonym: "cis-2-penten-1-ol" RELATED [ChemIDplus]
+synonym: "(Z)-pent-2-en-1-ol" RELATED [NIST_Chemistry_WebBook]
+synonym: "(2Z)-pent-2-en-1-ol" EXACT IUPAC_NAME [IUPAC]
+synonym: "2-(Z)-pentenol" RELATED [NIST_Chemistry_WebBook]
+synonym: "cis-pent-2-en-1-ol" RELATED [NIST_Chemistry_WebBook]
+synonym: "cis-2-pentenol" RELATED [NIST_Chemistry_WebBook]
+synonym: "cis-pent-2-ene-1-ol" RELATED [NIST_Chemistry_WebBook]
+synonym: "(Z)-2-penten-1-ol" EXACT [ChemIDplus]
+synonym: "(Z)-2-pentenol" RELATED [NIST_Chemistry_WebBook]
+synonym: "(2Z)-2-penten-1-ol" RELATED [ChemIDplus]
+synonym: "(2Z)-penten-1-ol" RELATED [LIPID_MAPS]
+property_value: http://purl.obolibrary.org/obo/chebi/mass "86.134" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/formula "C5H10O" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/monoisotopicmass "86.07316" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/charge "0" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchikey "BTSIZIIPFNVMHF-ARJAWSKDSA-N" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/smiles "OC/C=C\\CC" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchi "InChI=1S/C5H10O/c1-2-3-4-5-6/h3-4,6H,2,5H2,1H3/b4-3-" xsd:string
+xref: LIPID_MAPS_instance:LMFA05000110 "LIPID MAPS"
+xref: PMID:20158238 "Europe PMC"
+xref: PMID:22420269 "Europe PMC"
+xref: PMID:23166622 "Europe PMC"
+xref: PMID:25052201 "Europe PMC"
+xref: HMDB:HMDB0031604 
+xref: PMID:11312870 "Europe PMC"
+xref: PMID:17002434 "Europe PMC"
+xref: Reaxys:1719473 "Reaxys"
+xref: PMID:27153095 "Europe PMC"
+xref: PMID:20714602 "Europe PMC"
+xref: PMID:20141884 "Europe PMC"
+xref: PMID:17314143 "Europe PMC"
+xref: CAS:1576-95-0 "ChemIDplus"
+xref: CAS:1576-95-0 "NIST Chemistry WebBook"
+xref: PMID:25842336 "Europe PMC"
+xref: PMID:26140953 "Europe PMC"
+is_a: CHEBI:145349
+is_a: CHEBI:134179
+relationship: has_role CHEBI:77746
+relationship: has_role CHEBI:48318
+relationship: has_role CHEBI:76924
+relationship: has_role CHEBI:24850
+relationship: has_role CHEBI:35617
+relationship: has_role CHEBI:75768
+is_a: CHEBI:00000
+
+[Term]
+id: CHEBI:147326
+name: (E)-hex-3-en-1-ol
+subset: 3_STAR
+def: "A hex-3-en-1-ol in which the double bond adopts an E-configuration." []
+synonym: "trans-hex-3-en-1-ol" RELATED [ChemIDplus]
+synonym: "(3E)-hex-3-en-1-ol" EXACT IUPAC_NAME [IUPAC]
+synonym: "trans-3-hexen-1-ol" RELATED [ChemIDplus]
+synonym: "(3E)-3-hexen-1-ol" RELATED [ChemIDplus]
+synonym: "(E)-3-hexen-1-ol" RELATED [ChemIDplus]
+synonym: "(3E)-hexen-1-ol" RELATED [NIST_Chemistry_WebBook]
+synonym: "trans-3-hexenol" RELATED [ChemIDplus]
+synonym: "(E)-3-hexenol" RELATED [NIST_Chemistry_WebBook]
+synonym: "(3E)-hexenol" RELATED [NIST_Chemistry_WebBook]
+property_value: http://purl.obolibrary.org/obo/chebi/mass "100.161" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/formula "C6H12O" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/monoisotopicmass "100.08882" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/charge "0" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchikey "UFLHIIWVXFIJGU-ONEGZZNKSA-N" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchi "InChI=1S/C6H12O/c1-2-3-4-5-6-7/h3-4,7H,2,5-6H2,1H3/b4-3+" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/smiles "OCC/C=C/CC" xsd:string
+xref: PMID:30999650 "Europe PMC"
+xref: PMID:29361741 "Europe PMC"
+xref: PMID:31343265 "Europe PMC"
+xref: PMID:26010217 "Europe PMC"
+xref: PMID:26274814 "Europe PMC"
+xref: CAS:928-97-2 "ChemIDplus"
+xref: PMID:32202325 "Europe PMC"
+xref: PMID:24227113 "Europe PMC"
+xref: CAS:928-97-2 "NIST Chemistry WebBook"
+xref: AGR:IND605703676 "Europe PMC"
+xref: LIPID_MAPS_instance:LMFA05000113 "LIPID MAPS"
+xref: Reaxys:1719713 "Reaxys"
+xref: PMID:29424428 "Europe PMC"
+is_a: CHEBI:145715
+relationship: has_role CHEBI:76924
+is_a: CHEBI:00000
+
+[Term]
+id: CHEBI:19591
+name: 2-hexenal
+subset: 3_STAR
+def: "A hexenal having the double bond at the 2-position." []
+synonym: "alpha.beta-Hexylenaldehyd" RELATED [ChEBI]
+synonym: "2-hexenal" EXACT [UniProt]
+synonym: "2-hexenaldehyde" RELATED [ChEBI]
+synonym: "alpha,beta-hexylenaldehyde" RELATED [ChemIDplus]
+synonym: "hexen-2-al" RELATED [ChEBI]
+synonym: "3-propyl-acrolein" RELATED [ChEBI]
+synonym: "hexylenic aldehyde" RELATED [ChemIDplus]
+synonym: "beta-propylacrolein" RELATED [ChemIDplus]
+synonym: "hexen-2-en-1-al" RELATED [NIST_Chemistry_WebBook]
+synonym: "hex-2-enal" EXACT IUPAC_NAME [IUPAC]
+synonym: "leaf aldehyde" RELATED [ChemIDplus]
+property_value: http://purl.obolibrary.org/obo/chebi/mass "98.14300" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/monoisotopicmass "98.07316" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/formula "C6H10O" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/charge "0" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/smiles "[H]C(=O)C([H])=C([H])CCC" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchi "InChI=1S/C6H10O/c1-2-3-4-5-6-7/h4-6H,2-3H2,1H3" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchikey "MBDOYVRWFFCFHM-UHFFFAOYSA-N" xsd:string
+xref: PMID:26475511 "Europe PMC"
+xref: CAS:505-57-7 "NIST Chemistry WebBook"
+xref: Reaxys:1740988 "Reaxys"
+xref: PMID:20736172 "Europe PMC"
+xref: CAS:505-57-7 "ChemIDplus"
+xref: PMID:20936263 "Europe PMC"
+xref: LIPID_MAPS_instance:LMFA06000002 "LIPID MAPS"
+is_a: CHEBI:24578
+is_a: CHEBI:13757
+is_a: CHEBI:00000
+
+[Term]
+id: CHEBI:25979
+name: phenylacetonitrile
+subset: 3_STAR
+def: "A nitrile that is acetonitrile where one of the methyl hydrogens is substituted by a phenyl group." []
+synonym: "2-phenylacetonitrile" RELATED [UM-BBD]
+synonym: "Benzyl cyanide" RELATED [KEGG_COMPOUND]
+synonym: "phenylacetonitrile" EXACT [UniProt]
+synonym: "(cyanomethyl)benzene" RELATED [NIST_Chemistry_WebBook]
+synonym: "benzeneacetonitrile" RELATED [NIST_Chemistry_WebBook]
+synonym: "alpha-cyanotoluene" RELATED [NIST_Chemistry_WebBook]
+synonym: "phenylacetonitrile" EXACT IUPAC_NAME [IUPAC]
+synonym: "benzyl nitrile" RELATED [NIST_Chemistry_WebBook]
+synonym: "alpha-tolunitrile" RELATED [NIST_Chemistry_WebBook]
+synonym: "benzyl cyanide" RELATED [ChemIDplus]
+property_value: http://purl.obolibrary.org/obo/chebi/mass "117.14792" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/monoisotopicmass "117.05785" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/formula "C8H7N" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/charge "0" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/smiles "N#CCc1ccccc1" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchi "InChI=1S/C8H7N/c9-7-6-8-4-2-1-3-5-8/h1-5H,6H2" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchikey "SUSQOBVLVYHIEX-UHFFFAOYSA-N" xsd:string
+xref: PMID:21377400 "Europe PMC"
+xref: PMID:21452001 "Europe PMC"
+xref: Gmelin:68893 "Gmelin"
+xref: KEGG:C16074 
+xref: DrugBank:DB04817 
+xref: CAS:140-29-4 "ChemIDplus"
+xref: KNApSAcK:C00007674 
+xref: CAS:140-29-4 "KEGG COMPOUND"
+xref: UM-BBD_compID:c0647 "UM-BBD"
+xref: PMID:20882316 "Europe PMC"
+xref: PMID:19215138 "Europe PMC"
+xref: PMID:12770022 "Europe PMC"
+xref: PMID:20490899 "Europe PMC"
+xref: PMID:20411403 "Europe PMC"
+xref: Beilstein:385941 "Beilstein"
+xref: Reaxys:385941 "Reaxys"
+xref: CAS:140-29-4 "NIST Chemistry WebBook"
+relationship: has_functional_parent CHEBI:38472
+is_a: CHEBI:18379
+relationship: has_role CHEBI:26013
+is_a: CHEBI:22712
+relationship: has_role CHEBI:75767
+is_a: CHEBI:00000
+
+[Term]
+id: CHEBI:28857
+name: (Z)-hex-3-en-1-ol
+alt_id: CHEBI:20029
+alt_id: CHEBI:6398
+subset: 3_STAR
+def: "A hex-3-en-1-ol in which the double bond adopts a Z-configuration. Also known as leaf alcohol, it is emitted by green plants upon mechanical damage. Used as a flavourant in tea." []
+synonym: "(3Z)-hex-3-en-1-ol" EXACT IUPAC_NAME [IUPAC]
+synonym: "cis-3-Hexen-1-ol" RELATED [KEGG_COMPOUND]
+synonym: "Blatteralkohol" RELATED [ChemIDplus]
+synonym: "(Z)-3-hexen-1-ol" RELATED [ChEBI]
+synonym: "(3Z)-3-Hexen-1-ol" RELATED [KEGG_COMPOUND]
+synonym: "(3Z)-hex-3-en-1-ol" RELATED [UniProt]
+synonym: "3-Hexen-1-ol, (Z)-" RELATED [KEGG_COMPOUND]
+synonym: "Leaf alcohol" RELATED [KEGG_COMPOUND]
+property_value: http://purl.obolibrary.org/obo/chebi/mass "100.159" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/formula "C6H12O" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/monoisotopicmass "100.08882" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/charge "0" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchi "InChI=1S/C6H12O/c1-2-3-4-5-6-7/h3-4,7H,2,5-6H2,1H3/b4-3-" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchikey "UFLHIIWVXFIJGU-ARJAWSKDSA-N" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/smiles "CC/C=C\\CCO" xsd:string
+xref: LIPID_MAPS_instance:LMFA05000059 "LIPID MAPS"
+xref: AGR:IND605495882 "Europe PMC"
+xref: PMID:21628908 "Europe PMC"
+xref: AGR:IND82080126 "Europe PMC"
+xref: PMID:23923622 "Europe PMC"
+xref: PMID:23678819 "Europe PMC"
+xref: PMID:27717473 "Europe PMC"
+xref: PMID:5351709 "Europe PMC"
+xref: PMID:24301200 "Europe PMC"
+xref: AGR:IND600863761 "Europe PMC"
+xref: HMDB:HMDB0030003 
+xref: PMID:23749439 "Europe PMC"
+xref: Wikipedia:Cis-3-Hexen-1-ol 
+xref: KNApSAcK:C00000356 
+xref: FooDB:FDB008091 
+xref: AGR:IND44295090 "Europe PMC"
+xref: AGR:IND43625196 "Europe PMC"
+xref: CAS:928-96-1 "ChemIDplus"
+xref: PMID:22714804 "Europe PMC"
+xref: Reaxys:1719712 "Reaxys"
+xref: MetaCyc:CIS-3-HEXENOL 
+xref: PMID:23001219 "Europe PMC"
+xref: CAS:928-96-1 "NIST Chemistry WebBook"
+xref: PMID:16132223 "Europe PMC"
+xref: CAS:928-96-1 "KEGG COMPOUND"
+xref: KEGG:C08492 
+relationship: has_role CHEBI:24850
+relationship: has_role CHEBI:76924
+relationship: has_role CHEBI:48318
+is_a: CHEBI:145715
+is_a: CHEBI:00000
+
+[Term]
+id: CHEBI:31832
+name: methyl salicylate
+subset: 3_STAR
+def: "A benzoate ester that is the methyl ester of salicylic acid." []
+synonym: "2-Carbomethoxyphenol" RELATED [ChemIDplus]
+synonym: "2-Hydroxybenzoic acid methyl ester" RELATED [ChemIDplus]
+synonym: "Natural wintergreen oil" RELATED [ChemIDplus]
+synonym: "methyl salicylate" EXACT [UniProt]
+synonym: "Sweet birch oil" RELATED [ChemIDplus]
+synonym: "Methyl 2-hydroxybenzoate" RELATED [KEGG_COMPOUND]
+synonym: "Methyl o-hydroxybenzoate" RELATED [ChemIDplus]
+synonym: "Gaultheria oil" RELATED [ChemIDplus]
+synonym: "Spicewood Oil" RELATED [ChemIDplus]
+synonym: "Oil of wintergreen" RELATED [ChemIDplus]
+synonym: "2-(Methoxycarbonyl)phenol" RELATED [ChemIDplus]
+synonym: "Betula oil" RELATED [ChemIDplus]
+synonym: "Teaberry oil" RELATED [ChemIDplus]
+property_value: http://purl.obolibrary.org/obo/chebi/formula "C8H8O3" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/monoisotopicmass "152.04734" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/mass "152.14730" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/charge "0" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchi "InChI=1S/C8H8O3/c1-11-8(10)6-4-2-3-5-7(6)9/h2-5,9H,1H3" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/smiles "COC(=O)c1ccccc1O" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchikey "OSWPMRLSEDHDFF-UHFFFAOYSA-N" xsd:string
+xref: CAS:119-36-8 "NIST Chemistry WebBook"
+xref: Drug_Central:4245 "DrugCentral"
+xref: Reaxys:971516 "Reaxys"
+xref: PMID:21936953 "Europe PMC"
+xref: PMID:21790190 "Europe PMC"
+xref: PMID:21609308 "Europe PMC"
+xref: KEGG:C12305 
+xref: CAS:119-36-8 "KEGG COMPOUND"
+xref: CAS:119-36-8 "ChemIDplus"
+xref: PMID:21327960 "Europe PMC"
+xref: PMID:21249432 "Europe PMC"
+xref: KEGG:D01087 
+xref: Wikipedia:Methyl_salicylate 
+xref: PMID:21404848 "Europe PMC"
+xref: PMID:21287406 "Europe PMC"
+xref: KNApSAcK:C00030767 
+is_a: CHEBI:36054
+relationship: has_functional_parent CHEBI:16914
+relationship: has_role CHEBI:35617
+relationship: has_role CHEBI:25212
+relationship: has_role CHEBI:24850
+is_a: CHEBI:26596
+is_a: CHEBI:00000
+
+
+[Term]
+id: CHEBI:44884
+name: pentan-1-ol
+subset: 3_STAR
+def: "An alkyl alcohol that is pentane in which a hydrogen of one of the methyl groups is substituted by a hydroxy group. It has been isolated from Melicope ptelefolia." []
+synonym: "Pentylalkohol" RELATED [ChEBI]
+synonym: "1-pentyl alcohol" RELATED [ChemIDplus]
+synonym: "butylcarbinol" RELATED [ChemIDplus]
+synonym: "Amylalkohol" RELATED [ChEBI]
+synonym: "1-pentol" RELATED [NIST_Chemistry_WebBook]
+synonym: "pentyl alcohol" RELATED [ChemIDplus]
+synonym: "n-amyl alcohol" RELATED [ChemIDplus]
+synonym: "primary amyl alcohol" RELATED [ChemIDplus]
+synonym: "n-pentan-1-ol" RELATED [ChemIDplus]
+synonym: "amyl alcohol, normal" RELATED [ChemIDplus]
+synonym: "pentanol-1" RELATED [ChemIDplus]
+synonym: "amylol" RELATED [ChemIDplus]
+synonym: "alcool amylique" RELATED [ChemIDplus]
+synonym: "pentan-1-ol" EXACT IUPAC_NAME [IUPAC]
+synonym: "n-pentyl alcohol" RELATED [ChemIDplus]
+synonym: "n-butylcarbinol" RELATED [NIST_Chemistry_WebBook]
+synonym: "n-Amylalkohol" RELATED [ChemIDplus]
+synonym: "1-pentanol" RELATED [NIST_Chemistry_WebBook]
+synonym: "n-C5H11OH" RELATED [NIST_Chemistry_WebBook]
+property_value: http://purl.obolibrary.org/obo/chebi/monoisotopicmass "88.08882" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/mass "88.14818" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/formula "C5H12O" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/charge "0" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/smiles "CCCCCO" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchikey "AMQJEAYHLZJPGS-UHFFFAOYSA-N" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchi "InChI=1S/C5H12O/c1-2-3-4-5-6/h6H,2-5H2,1H3" xsd:string
+xref: Beilstein:1730975 "ChemIDplus"
+xref: Wikipedia:1-Pentanol 
+xref: HMDB:HMDB0013036 
+xref: PMID:8033286 "Europe PMC"
+xref: PMID:21485271 "Europe PMC"
+xref: Gmelin:25922 "Gmelin"
+xref: KEGG:C16834 
+xref: PMID:16348804 "Europe PMC"
+xref: CAS:71-41-0 "NIST Chemistry WebBook"
+xref: MetaCyc:PENTANOL 
+xref: Reaxys:1730975 "Reaxys"
+xref: CAS:71-41-0 "ChemIDplus"
+xref: PDBeChem:PE9 
+is_a: CHEBI:50584
+is_a: CHEBI:15734
+relationship: has_role CHEBI:76924
+is_a: CHEBI:143597
+is_a: CHEBI:00000
+
+[Term]
+id: CHEBI:48945
+name: 2-methylbutan-1-ol
+subset: 3_STAR
+def: "A primary alcohol that is  isopentane substituted by a hydroxy group at position 1." []
+synonym: "methyl-2-butan-1-ol" RELATED [NIST_Chemistry_WebBook]
+synonym: "2-methylbutyl alcohol" RELATED [ChemIDplus]
+synonym: "2-methyl-1-butanol" RELATED [ChemIDplus]
+synonym: "2-methyl-n-butanol" RELATED [ChemIDplus]
+synonym: "2-methyl butanol-1" RELATED [ChemIDplus]
+synonym: "CH3CH2CH(CH3)CH2OH" RELATED [NIST_Chemistry_WebBook]
+synonym: "primary active amyl alcohol" RELATED [ChemIDplus]
+synonym: "active amyl alcohol" RELATED [NIST_Chemistry_WebBook]
+synonym: "2-methylbutan-1-ol" EXACT IUPAC_NAME [IUPAC]
+synonym: "sec-butylcarbinol" RELATED [ChemIDplus]
+synonym: "2-methylbutanol" RELATED [NIST_Chemistry_WebBook]
+synonym: "active primary amyl alcohol" RELATED [ChemIDplus]
+property_value: http://purl.obolibrary.org/obo/chebi/monoisotopicmass "88.08882" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/formula "C5H12O" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/mass "88.14818" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/charge "0" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/smiles "CCC(C)CO" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchikey "QPRQEDXDYOZYLA-UHFFFAOYSA-N" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchi "InChI=1S/C5H12O/c1-3-5(2)4-6/h5-6H,3-4H2,1-2H3" xsd:string
+xref: MetaCyc:CPD-7033 
+xref: PMID:22821412 "Europe PMC"
+xref: Reaxys:1718810 "Reaxys"
+xref: PMID:20812374 "Europe PMC"
+xref: CAS:137-32-6 "ChemIDplus"
+xref: Beilstein:1718810 "ChemIDplus"
+xref: Gmelin:600874 "Gmelin"
+xref: HMDB:HMDB0031527 
+xref: CAS:137-32-6 "NIST Chemistry WebBook"
+relationship: has_parent_hydride CHEBI:30362
+is_a: CHEBI:50584
+is_a: CHEBI:15734
+relationship: has_role CHEBI:75772
+is_a: CHEBI:00000
+
+[Term]
+id: CHEBI:49000
+name: 2-phenylethanol
+alt_id: CHEBI:44780
+alt_id: CHEBI:8096
+subset: 3_STAR
+def: "A primary alcohol that is ethanol substituted by a phenyl group at position 2." []
+synonym: "2-Phenylethanol" EXACT [KEGG_COMPOUND]
+synonym: "2-PHENYL-ETHANOL" RELATED [PDBeChem]
+synonym: "Phenylethyl alcohol" RELATED [KEGG_COMPOUND]
+synonym: "beta-Phenylethanol" RELATED [NIST_Chemistry_WebBook]
+synonym: "beta-PEA" RELATED [NIST_Chemistry_WebBook]
+synonym: "2-phenylethanol" EXACT IUPAC_NAME [IUPAC]
+synonym: "Benzylmethanol" RELATED [ChemIDplus]
+synonym: "2-PEA" RELATED [ChEBI]
+synonym: "Benzeneethanol" RELATED [ChemIDplus]
+synonym: "beta-Phenylethyl alcohol" RELATED [NIST_Chemistry_WebBook]
+synonym: "beta-Phenethyl alcohol" RELATED [NIST_Chemistry_WebBook]
+synonym: "Phenethyl alcohol" RELATED [KEGG_COMPOUND]
+synonym: "2-Hydroxyethylbenzene" RELATED [ChemIDplus]
+property_value: http://purl.obolibrary.org/obo/chebi/monoisotopicmass "122.07316" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/mass "122.16440" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/formula "C8H10O" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/charge "0" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchi "InChI=1S/C8H10O/c9-7-6-8-4-2-1-3-5-8/h1-5,9H,6-7H2" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/smiles "OCCc1ccccc1" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchikey "WRMNZCZEMHIOCP-UHFFFAOYSA-N" xsd:string
+xref: KNApSAcK:C00002663 
+xref: Gmelin:240469 "Gmelin"
+xref: PMID:24423498 "Europe PMC"
+xref: KEGG:D00192 
+xref: HMDB:HMDB0033944 
+xref: DrugBank:DB02192 
+xref: Reaxys:1905732 "Reaxys"
+xref: PMID:23836015 "Europe PMC"
+xref: PMID:22690913 "Europe PMC"
+xref: Wikipedia:Phenethyl_alcohol 
+xref: PMID:19517523 "Europe PMC"
+xref: MetaCyc:CPD-7035 
+xref: PMID:23385159 "Europe PMC"
+xref: PDBeChem:PEL 
+xref: CAS:60-12-8 "KEGG COMPOUND"
+xref: KEGG:C05853 
+xref: CAS:60-12-8 "ChemIDplus"
+xref: CAS:60-12-8 "NIST Chemistry WebBook"
+xref: Beilstein:1905732 "Beilstein"
+is_a: CHEBI:15734
+is_a: CHEBI:22712
+relationship: has_role CHEBI:48318
+relationship: has_role CHEBI:75772
+relationship: has_role CHEBI:76924
+relationship: has_role CHEBI:76956
+relationship: has_role CHEBI:35219
+is_a: CHEBI:00000
+
+[Term]
+id: CHEBI:61722
+name: 2-pentenal
+subset: 3_STAR
+def: "An enal consisting of pent-2-ene having an oxo group at the 1-position" []
+synonym: "beta-Aethyl-acrolein" RELATED [ChEBI]
+synonym: "3-ethylacrolein" RELATED [ChemIDplus]
+synonym: "gamma-methylcrotonaldehyde" RELATED [ChemIDplus]
+synonym: "3-ethylprop-2-enal" RELATED [ChEBI]
+synonym: "3-ethyl-2-propenal" RELATED [ChemIDplus]
+synonym: "pent-2-enal" EXACT IUPAC_NAME [IUPAC]
+synonym: "Propylidenacetaldehyd" RELATED [ChEBI]
+property_value: http://purl.obolibrary.org/obo/chebi/mass "84.11640" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/formula "C5H8O" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/monoisotopicmass "84.05751" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/charge "0" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchi "InChI=1S/C5H8O/c1-2-3-4-5-6/h3-5H,2H2,1H3" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/smiles "[H]C(=O)C([H])=C([H])CC" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchikey "DTCCTIQRPGSLPT-UHFFFAOYSA-N" xsd:string
+xref: CAS:764-39-6 "NIST Chemistry WebBook"
+xref: PMID:20736172 "Europe PMC"
+xref: Reaxys:1735648 "Reaxys"
+xref: CAS:764-39-6 "ChemIDplus"
+is_a: CHEBI:51688
+is_a: CHEBI:61870
+is_a: CHEBI:00000
+
+[Term]
+id: CHEBI:61724
+name: hept-2-enal
+subset: 3_STAR
+def: "An enal consisting of hept-2-ene having an oxo group at the 1-position." []
+synonym: "butylacrolein" RELATED [ChemIDplus]
+synonym: "2-heptenal" RELATED [ChemIDplus]
+synonym: "hept-2-enal" EXACT IUPAC_NAME [IUPAC]
+synonym: "3-butylacrolein" RELATED [ChemIDplus]
+property_value: http://purl.obolibrary.org/obo/chebi/monoisotopicmass "112.08882" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/formula "C7H12O" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/mass "112.16960" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/charge "0" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchi "InChI=1S/C7H12O/c1-2-3-4-5-6-7-8/h5-7H,2-4H2,1H3" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchikey "NDFKTBCGKNOHPJ-UHFFFAOYSA-N" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/smiles "[H]C(=O)C([H])=C([H])CCCC" xsd:string
+xref: Reaxys:1745160 "Reaxys"
+xref: LIPID_MAPS_instance:LMFA06000019 "LIPID MAPS"
+xref: CAS:2463-63-0 "ChemIDplus"
+xref: CAS:2463-63-0 "NIST Chemistry WebBook"
+xref: PMID:20736172 "Europe PMC"
+xref: PMID:18875127 "Europe PMC"
+is_a: CHEBI:61870
+is_a: CHEBI:13757
+is_a: CHEBI:00000
+
+[Term]
+id: CHEBI:87393
+name: hexan-1-ol
+alt_id: CHEBI:87439
+alt_id: CHEBI:43057
+subset: 3_STAR
+def: "A primary alcohol that is hexane substituted by a hydroxy group at position 1." []
+synonym: "hexan-1-ol" EXACT [UniProt]
+synonym: "Caproic alcohol" RELATED [ChemIDplus]
+synonym: "hexanol" RELATED [ChEBI]
+synonym: "n-Hexyl alcohol" RELATED [ChemIDplus]
+synonym: "1-Hexyl alcohol" RELATED [ChemIDplus]
+synonym: "1-Hydroxyhexane" RELATED [ChemIDplus]
+synonym: "hexan-1-ol" EXACT IUPAC_NAME [IUPAC]
+property_value: http://purl.obolibrary.org/obo/chebi/monoisotopicmass "102.10447" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/mass "102.17480" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/formula "C6H14O" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/charge "0" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchi "InChI=1S/C6H14O/c1-2-3-4-5-6-7/h7H,2-6H2,1H3" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/smiles "CCCCCCO" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchikey "ZSIAUFGUXNUGDI-UHFFFAOYSA-N" xsd:string
+xref: CAS:111-27-3 "ChemIDplus"
+xref: CAS:111-27-3 "NIST Chemistry WebBook"
+xref: PMID:24634069 "Europe PMC"
+xref: Reaxys:969167 "Reaxys"
+xref: Wikipedia:1-Hexanol 
+xref: HMDB:HMDB0012971 
+xref: PMID:24508043 "Europe PMC"
+xref: PDBeChem:HE2 
+is_a: CHEBI:15734
+relationship: has_role CHEBI:76924
+is_a: CHEBI:143552
+is_a: CHEBI:00000
+
+[Term]
+id: CHEBI:87510
+name: hexyl acetate
+subset: 3_STAR
+def: "The acetate ester of  hexan-1-ol." []
+synonym: "hexyl acetate" EXACT IUPAC_NAME [IUPAC]
+synonym: "n-hexyl ethanoate" RELATED [ChEBI]
+property_value: http://purl.obolibrary.org/obo/chebi/monoisotopicmass "144.11503" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/mass "144.21140" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/formula "C8H16O2" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/charge "0" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchikey "AOGQPLXWSUTHQB-UHFFFAOYSA-N" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/smiles "CCCCCCOC(C)=O" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchi "InChI=1S/C8H16O2/c1-3-4-5-6-7-10-8(2)9/h3-7H2,1-2H3" xsd:string
+xref: HMDB:HMDB0029980 
+xref: CAS:142-92-7 "NIST Chemistry WebBook"
+xref: LIPID_MAPS_instance:LMFA07010184 "LIPID MAPS"
+xref: Reaxys:1747138 "Reaxys"
+xref: CAS:142-92-7 "ChemIDplus"
+xref: Wikipedia:Hexyl_acetate 
+is_a: CHEBI:47622
+relationship: has_functional_parent CHEBI:87393
+relationship: has_role CHEBI:25212
+is_a: CHEBI:00000
+
+[Term]
+id: CHEBI:87755
+name: pentan-3-one
+alt_id: CHEBI:67886
+subset: 3_STAR
+def: "A pentanone that is pentane carrying an oxo group at position 3. It has been isolated from  Triatoma brasiliensis and Triatoma infestans." []
+synonym: "pentan-3-one" EXACT IUPAC_NAME [IUPAC]
+synonym: "Ethyl propionyl" RELATED [ChEBI]
+synonym: "diethyl ketone" RELATED [ChEBI]
+property_value: http://purl.obolibrary.org/obo/chebi/monoisotopicmass "86.07316" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/mass "86.132" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/formula "C5H10O" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/charge "0" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchikey "FDPIMTJIUBPUKL-UHFFFAOYSA-N" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/smiles "C(CC)(CC)=O" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchi "InChI=1S/C5H10O/c1-3-5(6)4-2/h3-4H2,1-2H3" xsd:string
+xref: Wikipedia:3-Pentanone 
+xref: CAS:96-22-0 "NIST Chemistry WebBook"
+xref: Reaxys:635749 "Reaxys"
+xref: CAS:96-22-0 "ChemIDplus"
+xref: PMID:21486009 "Europe PMC"
+is_a: CHEBI:25892
+relationship: has_role CHEBI:75767
+is_a: CHEBI:00000
+
+
+[Term]
+id: CHEBI:88900
+name: 1-Octen-3-one
+subset: 2_STAR
+synonym: "Vinyl amyl ketone" RELATED [HMDB]
+synonym: "Pentyl vinyl ketone" RELATED [HMDB]
+synonym: "1-Octene-3-one" RELATED [HMDB]
+synonym: "Octen-3-one, 1" RELATED [HMDB]
+synonym: "oct-1-en-3-one" RELATED [HMDB]
+synonym: "Amyl vinyl ketone" RELATED [HMDB]
+synonym: "FEMA 3515" RELATED [HMDB]
+synonym: "Oct-1-en-3-one" RELATED [HMDB]
+property_value: http://purl.obolibrary.org/obo/chebi/charge "0" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/formula "C8H14O" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/monoisotopicmass "126.10447" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/mass "126.196" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchi "InChI=1S/C8H14O/c1-3-5-6-7-8(9)4-2/h4H,2-3,5-7H2,1H3" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchikey "KLTVSWGXIAYTHO-UHFFFAOYSA-N" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/smiles "CCCCCC(C=C)=O" xsd:string
+xref: PMID:24421258 "Europe PMC"
+xref: CAS:4312-99-6 "KEGG COMPOUND"
+xref: Wikipedia:1-Octen-3-one 
+xref: HMDB:HMDB0031309 
+xref: PMID:21386183 "Europe PMC"
+is_a: CHEBI:78840
+relationship: has_functional_parent CHEBI:18308
+is_a: CHEBI:00000
+
+[Term]
+id: CHEBI:88900
+name: 1-Octen-3-one
+subset: 2_STAR
+synonym: "Vinyl amyl ketone" RELATED [HMDB]
+synonym: "Pentyl vinyl ketone" RELATED [HMDB]
+synonym: "1-Octene-3-one" RELATED [HMDB]
+synonym: "Octen-3-one, 1" RELATED [HMDB]
+synonym: "oct-1-en-3-one" RELATED [HMDB]
+synonym: "Amyl vinyl ketone" RELATED [HMDB]
+synonym: "FEMA 3515" RELATED [HMDB]
+synonym: "Oct-1-en-3-one" RELATED [HMDB]
+property_value: http://purl.obolibrary.org/obo/chebi/charge "0" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/formula "C8H14O" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/monoisotopicmass "126.10447" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/mass "126.196" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchi "InChI=1S/C8H14O/c1-3-5-6-7-8(9)4-2/h4H,2-3,5-7H2,1H3" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchikey "KLTVSWGXIAYTHO-UHFFFAOYSA-N" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/smiles "CCCCCC(C=C)=O" xsd:string
+xref: PMID:24421258 "Europe PMC"
+xref: CAS:4312-99-6 "KEGG COMPOUND"
+xref: Wikipedia:1-Octen-3-one 
+xref: HMDB:HMDB0031309 
+xref: PMID:21386183 "Europe PMC"
+is_a: CHEBI:78840
+relationship: has_functional_parent CHEBI:18308
+is_a: CHEBI:00000
+
+[Term]
+id: CHEBI:90056
+name: 4-Decenal
+subset: 2_STAR
+synonym: "(4Z)-dec-4-enal" RELATED [HMDB]
+property_value: http://purl.obolibrary.org/obo/chebi/charge "0" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/mass "154.250" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/formula "C10H18O" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/monoisotopicmass "154.13577" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchi "InChI=1S/C10H18O/c1-2-3-4-5-6-7-8-9-10-11/h6-7,10H,2-5,8-9H2,1H3/b7-6-" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/smiles "CCCCC/C=C\\CCC=O" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchikey "CWRKZMLUDFBPAO-SREVYHEPSA-N" xsd:string
+xref: CAS:30390-50-2 "KEGG COMPOUND"
+xref: HMDB:HMDB0041014 
+xref: PMID:22626821 "Europe PMC"
+is_a: CHEBI:61870
+is_a: CHEBI:00000
+
 
 [Typedef]
 id: has_part
