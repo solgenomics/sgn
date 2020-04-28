@@ -22,30 +22,6 @@ id: CHEBI:00000
 name: chebi_compounds
 
 [Term]
-id: CHEBI:24431
-name: chemical entity
-def: "A chemical entity is a physical entity of interest in chemistry including molecular entities, parts thereof, and chemical substances." []
-synonym: "grouped_by_chemistry" RELATED [ChEBI:]
-synonym: "chemical entity" EXACT [UniProt:]
-synonym: "." RELATED FORMULA [ChEBI:]
-is_a: CHEBI:00000
-
-[Term]
-id: CHEBI:23367
-name: molecular entity
-def: "Any constitutionally or isotopically distinct atom, molecule, ion, ion pair, radical, radical ion, complex, conformer etc., identifiable as a separately distinguishable entity." []
-synonym: "entidades moleculares" RELATED [IUPAC:]
-synonym: "molekulare Entitaet" RELATED [ChEBI:]
-synonym: "entite moleculaire" RELATED [IUPAC:]
-synonym: "entidad molecular" RELATED [IUPAC:]
-synonym: "molecular entity" EXACT IUPAC_NAME [IUPAC:]
-synonym: "molecular entities" RELATED [IUPAC:]
-synonym: "." RELATED FORMULA [ChEBI:]
-is_a: CHEBI:24431
-is_a: CHEBI:00000
-
-
-[Term]
 id: CHEBI:30769
 name: citric acid
 alt_id: CHEBI:41523
@@ -191,7 +167,6 @@ xref: CiteXplore:19743855 "PubMed citation"
 xref: NIST Chemistry WebBook:6915-15-7 "CAS Registry Number"
 xref: Reaxys:1723539 "Reaxys Registry Number"
 xref: Wikipedia:Malic_acid "Wikipedia"
-relationship: has_functional_parent CHEBI:15741
 relationship: is_conjugate_acid_of CHEBI:15595
 is_a: CHEBI:50263
 relationship: has_role CHEBI:64049
@@ -2045,40 +2020,6 @@ xref: PMID:20736172 "Europe PMC"
 xref: PMID:18875127 "Europe PMC"
 is_a: CHEBI:61870
 is_a: CHEBI:13757
-is_a: CHEBI:00000
-
-[Term]
-id: CHEBI:87393
-name: hexan-1-ol
-alt_id: CHEBI:87439
-alt_id: CHEBI:43057
-subset: 3_STAR
-def: "A primary alcohol that is hexane substituted by a hydroxy group at position 1." []
-synonym: "hexan-1-ol" EXACT [UniProt]
-synonym: "Caproic alcohol" RELATED [ChemIDplus]
-synonym: "hexanol" RELATED [ChEBI]
-synonym: "n-Hexyl alcohol" RELATED [ChemIDplus]
-synonym: "1-Hexyl alcohol" RELATED [ChemIDplus]
-synonym: "1-Hydroxyhexane" RELATED [ChemIDplus]
-synonym: "hexan-1-ol" EXACT IUPAC_NAME [IUPAC]
-property_value: http://purl.obolibrary.org/obo/chebi/monoisotopicmass "102.10447" xsd:string
-property_value: http://purl.obolibrary.org/obo/chebi/mass "102.17480" xsd:string
-property_value: http://purl.obolibrary.org/obo/chebi/formula "C6H14O" xsd:string
-property_value: http://purl.obolibrary.org/obo/chebi/charge "0" xsd:string
-property_value: http://purl.obolibrary.org/obo/chebi/inchi "InChI=1S/C6H14O/c1-2-3-4-5-6-7/h7H,2-6H2,1H3" xsd:string
-property_value: http://purl.obolibrary.org/obo/chebi/smiles "CCCCCCO" xsd:string
-property_value: http://purl.obolibrary.org/obo/chebi/inchikey "ZSIAUFGUXNUGDI-UHFFFAOYSA-N" xsd:string
-xref: CAS:111-27-3 "ChemIDplus"
-xref: CAS:111-27-3 "NIST Chemistry WebBook"
-xref: PMID:24634069 "Europe PMC"
-xref: Reaxys:969167 "Reaxys"
-xref: Wikipedia:1-Hexanol 
-xref: HMDB:HMDB0012971 
-xref: PMID:24508043 "Europe PMC"
-xref: PDBeChem:HE2 
-is_a: CHEBI:15734
-relationship: has_role CHEBI:76924
-is_a: CHEBI:143552
 is_a: CHEBI:00000
 
 [Term]
