@@ -386,18 +386,15 @@ sub get_grm {
     my $cmd = 'R -e "library(genoDataFilter); library(rrBLUP); library(data.table); library(scales);
     mat <- fread(\''.$grm_tempfile.'\', header=FALSE, sep=\'\t\');
     range_check <- range(as.matrix(mat)[1,]);
-    if (range_check[2] - range_check[1] <= 1) {
-        mat <- as.data.frame(rescale(as.matrix(mat), to = c(-1,1), from = c(0,2) ));
-    } else {
-        mat <- as.data.frame(rescale(as.matrix(mat), to = c(-1,1) ));
-    }
+    if (range_check[2] - range_check[1] <= 1) { mat <- as.data.frame(rescale(as.matrix(mat), to = c(-1,1), from = c(0,2) )); } else { mat <- as.data.frame(rescale(as.matrix(mat), to = c(-1,1) )); }
     mat_clean <- filterGenoData(gData=mat, maf='.$maf.', markerFilter='.$marker_filter.', indFilter='.$individuals_filter.');
     A_matrix <- A.mat(mat_clean, impute.method=\'EM\', n.core='.$number_system_cores.', return.imputed=FALSE);
-    write.table(A_matrix, file=\''.$grm_tempfile_out.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\')"';
+    write.table(A_matrix, file=\''.$grm_tempfile_out.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
     print STDERR Dumper $cmd;
 
     my $tmp_output_dir = $shared_cluster_dir_config."/tmp_genotype_download_grm";
     mkdir $tmp_output_dir if ! -d $tmp_output_dir;
+    my $temp_out_file = $tmp_output_dir."/out_file";
 
     # Do the GRM on the cluster
     my $grm_cmd = CXGN::Tools::Run->new(
@@ -407,7 +404,7 @@ sub get_grm {
             temp_base => $tmp_output_dir,
             queue => $web_cluster_queue_config,
             do_cleanup => 0,
-            out_file => $grm_tempfile_out,
+            out_file => $temp_out_file,
             # don't block and wait if the cluster looks full
             max_cluster_jobs => 1_000_000_000,
         }
@@ -509,8 +506,8 @@ sub download_grm {
             my %result_hash;
             my $row_num = 0;
             my %seen_stock_ids;
+            # print STDERR Dumper \@grm;
             foreach my $s (@$stock_ids) {
-                my @row = ($s);
                 my $col_num = 0;
                 foreach my $c (@$stock_ids) {
                     if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
@@ -529,7 +526,9 @@ sub download_grm {
             foreach my $r (sort keys %result_hash) {
                 foreach my $s (sort keys %{$result_hash{$r}}) {
                     my $val = $result_hash{$r}->{$s};
-                    $data .= "$r\t$s\t$val\n";
+                    if ($val || $val == 0) {
+                        $data .= "$r\t$s\t$val\n";
+                    }
                 }
             }
 
