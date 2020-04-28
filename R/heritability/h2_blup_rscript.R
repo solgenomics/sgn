@@ -134,7 +134,7 @@ if (int<8){
 }
 
 pdf(NULL)
-ggsave(figure3_file_name, ml, width=8, height = int*2, dpi=80, units = "in", pdf(NULL))
+ggsave(figure3_file_name, ml, width=8, height = int*2, dpi=80,limitesize=FALSE, units = "in", pdf(NULL))
 
 #Calculating components of variance and heritability
 her = rep(NA,(ncol(pheno)-39))
