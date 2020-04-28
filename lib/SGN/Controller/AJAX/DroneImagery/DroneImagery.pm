@@ -4362,12 +4362,91 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
     print STDERR Dumper \%seen_day_times;
     undef $result;
 
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+    my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+    my $female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
+    my $male_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
+
+    my @seen_plots = keys %seen_stock_ids;
+    print STDERR Dumper \@seen_plots;
+    my $plot_list_string = join ',', @seen_plots;
+    my $q = "SELECT plot.stock_id, accession.stock_id, female_parent.stock_id, male_parent.stock_id
+        FROM stock AS plot
+        JOIN stock_relationship AS plot_acc_rel ON(plot_acc_rel.subject_id=plot.stock_id AND plot_acc_rel.type_id=$plot_of_cvterm_id)
+        JOIN stock AS accession ON(plot_acc_rel.object_id=accession.stock_id AND accession.type_id=$accession_cvterm_id)
+        JOIN stock_relationship AS female_parent_rel ON(accession.stock_id=female_parent_rel.object_id AND female_parent_rel.type_id=$female_parent_cvterm_id)
+        JOIN stock AS female_parent ON(female_parent_rel.subject_id = female_parent.stock_id AND female_parent.type_id=$accession_cvterm_id)
+        JOIN stock_relationship AS male_parent_rel ON(accession.stock_id=male_parent_rel.object_id AND male_parent_rel.type_id=$male_parent_cvterm_id)
+        JOIN stock AS male_parent ON(male_parent_rel.subject_id = male_parent.stock_id AND male_parent.type_id=$accession_cvterm_id)
+        WHERE plot.type_id=$plot_cvterm_id AND plot.stock_id IN ($plot_list_string);";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute();
+    my %plot_pedigrees_found = ();
+    my %accession_pedigrees_found = ();
+    my %unique_accession_ids_genotypes = ();
+    while (my ($plot_stock_id, $accession_stock_id, $female_parent_stock_id, $male_parent_stock_id) = $h->fetchrow_array()) {
+        $unique_accession_ids_genotypes{$accession_stock_id}++;
+        $plot_pedigrees_found{$plot_stock_id} = {
+            female_stock_id => $female_parent_stock_id,
+            male_stock_id => $male_parent_stock_id
+        };
+        $accession_pedigrees_found{$accession_stock_id} = {
+            female_stock_id => $female_parent_stock_id,
+            male_stock_id => $male_parent_stock_id
+        };
+    }
+
+    my %unique_genotype_accessions;
+    if ($protocol_id) {
+        my @accession_list = keys %unique_accession_ids_genotypes;
+        my $geno = CXGN::Genotype::DownloadFactory->instantiate(
+            'DosageMatrix',    #can be either 'VCF' or 'DosageMatrix'
+            {
+                bcs_schema=>$schema,
+                people_schema=>$people_schema,
+                cache_root_dir=>$c->config->{cache_file_path},
+                accession_list=>\@accession_list,
+                protocol_id_list=>[$protocol_id],
+                compute_from_parents=>$use_parents_grm,
+                return_only_first_genotypeprop_for_stock=>1,
+                prevent_transpose=>1
+            }
+        );
+        my $file_handle = $geno->download(
+            $c->config->{cluster_shared_tempdir},
+            $c->config->{backend},
+            $c->config->{cluster_host},
+            $c->config->{'web_cluster_queue'},
+            $c->config->{basepath}
+        );
+        open my $geno_fh, "<&", $file_handle or die "Can't open output file: $!";
+            my $header = <$geno_fh>;
+            chomp($header);
+            my @header_line = split "\t", $header;
+            shift(@header_line);
+            while (my $row = <$geno_fh>) {
+                chomp($row);
+                my @line = split "\t", $row;
+                my $stock_id = shift @line;
+                my $geno_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/genoinputfileXXXX');
+                open my $geno_out_fh, ">", $geno_temp_input_file or die "Can't open: $!";
+                    my $out_header_line = join "\t", @header_line;
+                    my $out_line = join "\t", @line;
+                    print $geno_out_fh $out_header_line."\n";
+                    print $geno_out_fh $out_line."\n";
+                close($geno_out_fh);
+                $unique_genotype_accessions{$stock_id} = $geno_temp_input_file;
+            }
+        close($geno_fh);
+        @accession_ids = keys %unique_genotype_accessions;
+    }
+
     my @trait_ids = ($trait_id);
     if (scalar(@aux_trait_id) > 0) {
         push @trait_ids, @aux_trait_id;
     }
 
-    my @seen_plots = keys %seen_stock_ids;
     my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         'MaterializedViewTable',
         {
@@ -4382,46 +4461,6 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
         }
     );
     my ($data, $unique_traits) = $phenotypes_search->search();
-
-    my $grm;
-    if ($protocol_id) {
-        my $geno = CXGN::Genotype::GRM->new({
-            bcs_schema=>$schema,
-            people_schema=>$people_schema,
-            cache_root=>$c->config->{cache_file_path},
-            plot_id_list=>\@seen_plots,
-            protocol_id=>$protocol_id,
-            get_grm_for_parental_accessions=>$use_parents_grm
-        });
-        $grm = $geno->download_grm('data');
-    }
-    # print STDERR Dumper $grm;
-
-    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
-    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
-    my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
-    my $female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
-    my $male_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
-
-    my $plot_list_string = join ',', @seen_plots;
-    my $q = "SELECT plot.stock_id, accession.stock_id, female_parent.stock_id, male_parent.stock_id
-        FROM stock AS plot
-        JOIN stock_relationship AS plot_acc_rel ON(plot_acc_rel.subject_id=plot.stock_id AND plot_acc_rel.type_id=$plot_of_cvterm_id)
-        JOIN stock AS accession ON(plot_acc_rel.object_id=accession.stock_id AND accession.type_id=$accession_cvterm_id)
-        JOIN stock_relationship AS female_parent_rel ON(accession.stock_id=female_parent_rel.object_id AND female_parent_rel.type_id=$female_parent_cvterm_id)
-        JOIN stock AS female_parent ON(female_parent_rel.subject_id = female_parent.stock_id AND female_parent.type_id=$accession_cvterm_id)
-        JOIN stock_relationship AS male_parent_rel ON(accession.stock_id=male_parent_rel.object_id AND male_parent_rel.type_id=$male_parent_cvterm_id)
-        JOIN stock AS male_parent ON(male_parent_rel.subject_id = male_parent.stock_id AND male_parent.type_id=$accession_cvterm_id)
-        WHERE plot.type_id=$plot_cvterm_id AND plot.stock_id IN ($plot_list_string);";
-    my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute();
-    my %plot_pedigrees_found = ();
-    while (my ($plot_stock_id, $accession_stock_id, $female_parent_stock_id, $male_parent_stock_id) = $h->fetchrow_array()) {
-        $plot_pedigrees_found{$plot_stock_id} = {
-            female_stock_id => $female_parent_stock_id,
-            male_stock_id => $male_parent_stock_id
-        };
-    }
 
     my %phenotype_data_hash;
     my %aux_data_hash;
@@ -4456,7 +4495,7 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
     my %output_images;
 
     open(my $F_aux, ">", $archive_temp_input_aux_file) || die "Can't open file ".$archive_temp_input_aux_file;
-        print $F_aux 'stock_id,value,trait_name,field_trial_id,accession_id,female_id,male_id,output_image_file';
+        print $F_aux 'stock_id,value,trait_name,field_trial_id,accession_id,female_id,male_id,output_image_file,genotype_file';
         if (scalar(@aux_trait_id)>0) {
             my $aux_trait_counter = 0;
             foreach (@aux_trait_id) {
@@ -4476,6 +4515,7 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
                         my $trait_name = $phenotype_data_hash{$stock_id}->{trait_value}->{trait_name};
                         my $female_parent_stock_id = $plot_pedigrees_found{$stock_id}->{female_stock_id} || 0;
                         my $male_parent_stock_id = $plot_pedigrees_found{$stock_id}->{male_stock_id} || 0;
+                        my $germplasm_id = $d->{germplasm_stock_id};
                         if (defined($value)) {
                             my $archive_temp_output_image_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/outputimagefileXXXX');
                             $archive_temp_output_image_file .= ".png";
@@ -4483,15 +4523,17 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
                                 image_file => $archive_temp_output_image_file,
                                 field_trial_id => $field_trial_id
                             };
+                            my $geno_file = $unique_genotype_accessions{$germplasm_id} || '';
 
                             print $F_aux "$stock_id,";
                             print $F_aux "$value,";
                             print $F_aux "$trait_name,";
                             print $F_aux "$field_trial_id,";
-                            print $F_aux "$d->{germplasm_stock_id},";
+                            print $F_aux "$germplasm_id,";
                             print $F_aux "$female_parent_stock_id,";
                             print $F_aux "$male_parent_stock_id,";
-                            print $F_aux "$archive_temp_output_image_file";
+                            print $F_aux "$archive_temp_output_image_file,";
+                            print $F_aux "$geno_file";
                             if (scalar(@aux_trait_id)>0) {
                                 print $F_aux ',';
                                 my @aux_values;
@@ -4518,6 +4560,7 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
                         my $trait_name = $phenotype_data_hash{$stock_id}->{trait_value}->{trait_name};
                         my $female_parent_stock_id = $plot_pedigrees_found{$stock_id}->{female_stock_id} || 0;
                         my $male_parent_stock_id = $plot_pedigrees_found{$stock_id}->{male_stock_id} || 0;
+                        my $germplasm_id = $d->{germplasm_stock_id};
                         if (defined($value)) {
                             my $archive_temp_output_image_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/outputimagefileXXXX');
                             $archive_temp_output_image_file .= ".png";
@@ -4525,15 +4568,18 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
                                 image_file => $archive_temp_output_image_file,
                                 field_trial_id => $field_trial_id
                             };
+                            my $geno_file = $unique_genotype_accessions{$germplasm_id} || '';
+                            print STDERR Dumper $geno_file;
 
                             print $F_aux "$stock_id,";
                             print $F_aux "$value,";
                             print $F_aux "$trait_name,";
                             print $F_aux "$field_trial_id,";
-                            print $F_aux "$d->{germplasm_stock_id},";
+                            print $F_aux "$germplasm_id,";
                             print $F_aux "$female_parent_stock_id,";
                             print $F_aux "$male_parent_stock_id,";
-                            print $F_aux "$archive_temp_output_image_file";
+                            print $F_aux "$archive_temp_output_image_file,";
+                            print $F_aux "$geno_file";
                             if (scalar(@aux_trait_id)>0) {
                                 print $F_aux ',';
                                 my @aux_values;
@@ -4750,7 +4796,7 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
             push @saved_trained_image_urls, $output_image_url;
         }
 
-        _perform_save_trained_keras_cnn_model($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $archive_temp_output_model_file, $archive_temp_autoencoder_output_model_file, $archive_temp_input_file, $archive_temp_input_aux_file, $model_name, $model_description, $drone_run_ids, $plot_polygon_type_ids, $trait_id, $model_type, \@aux_trait_id, $user_id, $user_name, $user_role);
+        _perform_save_trained_keras_cnn_model($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $archive_temp_output_model_file, $archive_temp_autoencoder_output_model_file, $archive_temp_input_file, $archive_temp_input_aux_file, $model_name, $model_description, $drone_run_ids, $plot_polygon_type_ids, $trait_id, $model_type, \@aux_trait_id, $protocol_id, $use_parents_grm, $user_id, $user_name, $user_role);
     }
 
     $c->stash->{rest} = { success => 1, results => \@result_agg, model_input_file => $archive_temp_input_file, model_input_aux_file => $archive_temp_input_aux_file, model_temp_file => $archive_temp_output_model_file, model_autoencoder_temp_file => $archive_temp_autoencoder_output_model_file, trait_id => $trait_id, loss_history => \@loss_history, loss_history_file => $archive_temp_loss_history_file_string, saved_trained_image_urls => \@saved_trained_image_urls };
@@ -4772,12 +4818,14 @@ sub drone_imagery_save_keras_model_GET : Args(0) {
     my $model_description = $c->req->param('model_description');
     my $trait_id = $c->req->param('trait_id');
     my @aux_trait_id = $c->req->param('aux_trait_id[]') ? $c->req->param('aux_trait_id[]') : ();
+    my $protocol_id = $c->req->param('protocol_id');
+    my $use_parents_grm = $c->req->param('use_parents_grm');
     my $model_type = $c->req->param('model_type');
     my $drone_run_ids = decode_json($c->req->param('drone_run_ids'));
     my $plot_polygon_type_ids = decode_json($c->req->param('plot_polygon_type_ids'));
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    _perform_save_trained_keras_cnn_model($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $model_file, $model_input_file, $archive_temp_autoencoder_output_model_file, $model_input_aux_file, $model_name, $model_description, $drone_run_ids, $plot_polygon_type_ids, $trait_id, $model_type, \@aux_trait_id, $user_id, $user_name, $user_role);
+    _perform_save_trained_keras_cnn_model($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $model_file, $model_input_file, $archive_temp_autoencoder_output_model_file, $model_input_aux_file, $model_name, $model_description, $drone_run_ids, $plot_polygon_type_ids, $trait_id, $model_type, \@aux_trait_id, $protocol_id, $use_parents_grm, $user_id, $user_name, $user_role);
 }
 
 sub _perform_save_trained_keras_cnn_model {
@@ -4797,6 +4845,8 @@ sub _perform_save_trained_keras_cnn_model {
     my $trait_id = shift;
     my $model_type = shift;
     my $aux_trait_ids = shift;
+    my $geno_protocol_id = shift;
+    my $use_parents_grm = shift;
     my $user_id = shift;
     my $user_name = shift;
     my $user_role = shift;
@@ -4823,7 +4873,7 @@ sub _perform_save_trained_keras_cnn_model {
             type_id => $keras_cnn_cvterm_id,
             nd_protocolprops => [
                 {value => encode_json({variable_name => $trait_name, variable_id => $trait_id, aux_trait_ids => $aux_trait_ids}), type_id => $keras_cnn_trait_cvterm_id},
-                {value => encode_json({value=>$model_type, image_type=>'standard_4_montage'}), type_id => $keras_cnn_model_type_cvterm_id}
+                {value => encode_json({value=>$model_type, image_type=>'standard_4_montage', nd_protocol_id => $geno_protocol_id, use_parents_grm => $use_parents_grm}), type_id => $keras_cnn_model_type_cvterm_id}
             ]
         });
         $protocol_id = $protocol_row->nd_protocol_id();
@@ -4998,6 +5048,7 @@ sub drone_imagery_predict_keras_model_POST : Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my @field_trial_ids = split ',', $c->req->param('field_trial_ids');
     my $model_id = $c->req->param('model_id');
     my $model_prediction_type = $c->req->param('model_prediction_type');
@@ -5011,7 +5062,7 @@ sub drone_imagery_predict_keras_model_POST : Args(0) {
     my $composable_cvterm_delimiter = $c->config->{composable_cvterm_delimiter};
     my $composable_cvterm_format = $c->config->{composable_cvterm_format};
 
-    my $return = _perform_keras_cnn_predict($c, $schema, $metadata_schema, $phenome_schema, \@field_trial_ids, $model_id, $drone_run_ids, $plot_polygon_type_ids, $model_prediction_type, $population_id, \@allowed_composed_cvs, $composable_cvterm_format, $composable_cvterm_delimiter, \@aux_trait_ids, $user_id, $user_name, $user_role);
+    my $return = _perform_keras_cnn_predict($c, $schema, $metadata_schema, $people_schema, $phenome_schema, \@field_trial_ids, $model_id, $drone_run_ids, $plot_polygon_type_ids, $model_prediction_type, $population_id, \@allowed_composed_cvs, $composable_cvterm_format, $composable_cvterm_delimiter, \@aux_trait_ids, $user_id, $user_name, $user_role);
 
     $c->stash->{rest} = $return;
 }
@@ -5020,6 +5071,7 @@ sub _perform_keras_cnn_predict {
     my $c = shift;
     my $schema = shift;
     my $metadata_schema = shift;
+    my $people_schema = shift;
     my $phenome_schema = shift;
     my $field_trial_ids = shift;
     my $model_id = shift;
@@ -5160,7 +5212,9 @@ sub _perform_keras_cnn_predict {
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
     my %plot_pedigrees_found = ();
+    my %unique_accession_ids_genotypes;
     while (my ($plot_stock_id, $accession_stock_id, $female_parent_stock_id, $male_parent_stock_id) = $h->fetchrow_array()) {
+        $unique_accession_ids_genotypes{$accession_stock_id}++;
         $plot_pedigrees_found{$plot_stock_id} = {
             female_stock_id => $female_parent_stock_id,
             male_stock_id => $male_parent_stock_id
@@ -5185,8 +5239,57 @@ sub _perform_keras_cnn_predict {
     my $trained_trait_name = $trained_trait_hash->{variable_name};
     my $aux_trait_ids_previous = $trained_trait_hash->{aux_trait_ids};
     $model_type = $model_type_hash->{value};
+    my $nd_protocol_id = $model_type_hash->{nd_protocol_id};
+    my $use_parents_grm = $model_type_hash->{use_parents_grm};
     my $trained_image_type = $model_type_hash->{image_type};
     my $model_file = $filename."/".$basename;
+
+    my $dir = $c->tempfiles_subdir('/drone_imagery_keras_cnn_dir');
+
+    my %unique_genotype_accessions;
+    if ($nd_protocol_id) {
+        my @accession_list = keys %unique_accession_ids_genotypes;
+        my $geno = CXGN::Genotype::DownloadFactory->instantiate(
+            'DosageMatrix',    #can be either 'VCF' or 'DosageMatrix'
+            {
+                bcs_schema=>$schema,
+                people_schema=>$people_schema,
+                cache_root_dir=>$c->config->{cache_file_path},
+                accession_list=>\@accession_list,
+                protocol_id_list=>[$nd_protocol_id],
+                compute_from_parents=>$use_parents_grm,
+                return_only_first_genotypeprop_for_stock=>1,
+                prevent_transpose=>1
+            }
+        );
+        my $file_handle = $geno->download(
+            $c->config->{cluster_shared_tempdir},
+            $c->config->{backend},
+            $c->config->{cluster_host},
+            $c->config->{'web_cluster_queue'},
+            $c->config->{basepath}
+        );
+        open my $geno_fh, "<&", $file_handle or die "Can't open output file: $!";
+            my $header = <$geno_fh>;
+            chomp($header);
+            my @header_line = split "\t", $header;
+            shift(@header_line);
+            while (my $row = <$geno_fh>) {
+                chomp($row);
+                my @line = split "\t", $row;
+                my $stock_id = shift @line;
+                my $geno_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/genoinputfileXXXX');
+                open my $geno_out_fh, ">", $geno_temp_input_file or die "Can't open: $!";
+                    my $out_header_line = join "\t", @header_line;
+                    my $out_line = join "\t", @line;
+                    print $geno_out_fh $out_header_line."\n";
+                    print $geno_out_fh $out_line."\n";
+                close($geno_out_fh);
+                $unique_genotype_accessions{$stock_id} = $geno_temp_input_file;
+            }
+        close($geno_fh);
+        @accession_ids = keys %unique_genotype_accessions;
+    }
 
     my $model_q_autoencoder_model_input = "SELECT basename, dirname
         FROM metadata.md_files
@@ -5276,7 +5379,7 @@ sub _perform_keras_cnn_predict {
     my %output_images;
 
     open(my $F_aux, ">", $archive_temp_input_aux_file) || die "Can't open file ".$archive_temp_input_aux_file;
-        print $F_aux 'stock_id,value,trait_name,field_trial_id,accession_id,female_id,male_id,output_image_file';
+        print $F_aux 'stock_id,value,trait_name,field_trial_id,accession_id,female_id,male_id,output_image_file,genotype_file';
         if (scalar(@$aux_trait_ids)>0) {
             my $aux_trait_counter = 0;
             foreach (@$aux_trait_ids) {
@@ -5296,6 +5399,7 @@ sub _perform_keras_cnn_predict {
                         my $trait_name = $phenotype_data_hash{$stock_id}->{trait_value}->{trait_name};
                         my $female_parent_stock_id = $plot_pedigrees_found{$stock_id}->{female_stock_id} || 0;
                         my $male_parent_stock_id = $plot_pedigrees_found{$stock_id}->{male_stock_id} || 0;
+                        my $germplasm_id = $d->{germplasm_stock_id};
                         if (defined($value)) {
                             my $archive_temp_output_image_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/outputimagefileXXXX');
                             $archive_temp_output_image_file .= ".png";
@@ -5304,14 +5408,17 @@ sub _perform_keras_cnn_predict {
                                 field_trial_id => $field_trial_id
                             };
                             $predicted_stock_ids{$stock_id}++;
+                            my $geno_file = $unique_genotype_accessions{$germplasm_id} || '';
+
                             print $F_aux "$stock_id,";
                             print $F_aux "$value,";
                             print $F_aux "$trait_name,";
                             print $F_aux "$field_trial_id,";
-                            print $F_aux "$d->{germplasm_stock_id},";
+                            print $F_aux "$germplasm_id,";
                             print $F_aux "$female_parent_stock_id,";
                             print $F_aux "$male_parent_stock_id,";
-                            print $F_aux "$archive_temp_output_image_file";
+                            print $F_aux "$archive_temp_output_image_file,";
+                            print $F_aux "$geno_file";
                             if (scalar(@$aux_trait_ids)>0) {
                                 print $F_aux ',';
                                 my @aux_values;
@@ -5338,6 +5445,7 @@ sub _perform_keras_cnn_predict {
                         my $trait_name = $phenotype_data_hash{$stock_id}->{trait_value}->{trait_name};
                         my $female_parent_stock_id = $plot_pedigrees_found{$stock_id}->{female_stock_id} || 0;
                         my $male_parent_stock_id = $plot_pedigrees_found{$stock_id}->{male_stock_id} || 0;
+                        my $germplasm_id = $d->{germplasm_stock_id};
                         if (defined($value)) {
                             my $archive_temp_output_image_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/outputimagefileXXXX');
                             $archive_temp_output_image_file .= ".png";
@@ -5346,6 +5454,8 @@ sub _perform_keras_cnn_predict {
                                 field_trial_id => $field_trial_id
                             };
                             $predicted_stock_ids{$stock_id}++;
+                            my $geno_file = $unique_genotype_accessions{$germplasm_id} || '';
+
                             print $F_aux "$stock_id,";
                             print $F_aux "$value,";
                             print $F_aux "$trait_name,";
@@ -5353,7 +5463,8 @@ sub _perform_keras_cnn_predict {
                             print $F_aux "$d->{germplasm_stock_id},";
                             print $F_aux "$female_parent_stock_id,";
                             print $F_aux "$male_parent_stock_id,";
-                            print $F_aux "$archive_temp_output_image_file";
+                            print $F_aux "$archive_temp_output_image_file,";
+                            print $F_aux "$geno_file";
                             if (scalar(@$aux_trait_ids)>0) {
                                 print $F_aux ',';
                                 my @aux_values;
