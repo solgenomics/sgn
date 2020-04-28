@@ -19,13 +19,13 @@ $goto_url => ''
                     <div class="container-fluid">
 
 % if ($c->config->{default_login_janedoe}) {
-                        <input class="form-control" style="width:240px" id="login_username" name="login_username" placeholder="Username" type="text" value="janedoe"/>
+                        <input class="form-control" style="width:240px" id="username" name="username" placeholder="Username" type="text" value="janedoe"/>
                         <br />
-                        <input class="form-control" style="width:240px" id="login_password" name="login_password" placeholder="Password" type="password" value="secretpw"/>
+                        <input class="form-control" style="width:240px" id="password" name="password" placeholder="Password" type="password" value="secretpw"/>
 % } else {
-                        <input class="form-control" style="width:240px" id="login_username" name="login_username" placeholder="Username" type="text" />
+                        <input class="form-control" style="width:240px" id="username" name="username" placeholder="Username" type="text" />
                         <br />
-                        <input class="form-control" style="width:240px" id="login_password" name="login_password" placeholder="Password" type="password" />
+                        <input class="form-control" style="width:240px" id="password" name="password" placeholder="Password" type="password" />
 % }
                         <br />
                         <div style="margin-bottom:40px">
@@ -224,7 +224,7 @@ jQuery(document).ready( function() {
 
     jQuery('#login_form').submit( function(event) { 
         var form_data = jQuery('#login_form').serialize();
-        if (!jQuery('#login_username').val() || !jQuery('#login_password').val()) { 
+        if (!jQuery('#username').val() || !jQuery('#password').val()) { 
             alert('Please enter a username and password');
             return;
         }
