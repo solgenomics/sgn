@@ -3027,31 +3027,7 @@ sub genotype_trial_query_args {
 	$geno_file = $c->stash->{genotype_file_name};
     }
       
-    # my $referer = $c->req->referer;
-     
-    # my $tr_pop_id;
-    # if ($referer =~ /models\/combined\/trials\/|solgs\/populations\/combined\//) 
-    # {
-    # 	$training_pop_id = $c->stash->{combo_pops_id};
-    # 	$tr_pop_id = "${training_pop_id}_combined";
-    # } 
-    # else
-    # {
-    # 	$tr_pop_id = $training_pop_id ? $training_pop_id : $pop_id;
-    # }
-
-    #$c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
-    #my $training_geno_file = $c->stash->{genotype_file_name};
-#	print STDERR "\n NO  check data exisits genotype_trial_query_args: --training geno file: $training_geno_file\n";
-    # my $args = {
-    # 	'training_pop_id' => $pop_id,
-    # 	'selection_pop_id' => $selection_pop_id,
-    # 	'training_geno_file'  => $training_geno_file,
-    # 	'genotype_file'       => $geno_file,
-    # 	'cache_dir'     => $c->stash->{solgs_cache_dir},
-    # };
-
-     my $args = {
+    my $args = {
 	'trial_id' => $pop_id,
 	'genotype_file'       => $geno_file,
 	'genotyping_protocol_id' => $protocol_id,
