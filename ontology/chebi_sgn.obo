@@ -172,7 +172,7 @@ is_a: CHEBI:50263
 relationship: has_role CHEBI:64049
 is_a: CHEBI:66873
 relationship: has_role CHEBI:78675
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 
 [Term]
@@ -196,7 +196,7 @@ xref: KEGG COMPOUND:C00293 "KEGG COMPOUND"
 xref: KEGG COMPOUND:50-99-7 "CAS Registry Number"
 relationship: has_role CHEBI:78675
 is_a: CHEBI:33917
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 
 [Term]
@@ -220,7 +220,7 @@ xref: KEGG COMPOUND:C01496 "KEGG COMPOUND"
 xref: ChemIDplus:30237-26-4 "CAS Registry Number"
 is_a: CHEBI:24973
 relationship: has_role CHEBI:78675
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 
 [Term]
@@ -265,7 +265,7 @@ relationship: has_role CHEBI:76924
 relationship: has_role CHEBI:27311
 relationship: has_role CHEBI:75772
 is_a: CHEBI:25282
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:16182
@@ -303,7 +303,7 @@ relationship: has_role CHEBI:76924
 relationship: has_role CHEBI:75772
 is_a: CHEBI:49188
 is_a: CHEBI:25282
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:15688
@@ -342,7 +342,7 @@ xref: CAS:513-86-0 "KEGG COMPOUND"
 is_a: CHEBI:51867
 relationship: has_role CHEBI:25212
 is_a: CHEBI:35681
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 
 [Term]
@@ -377,7 +377,7 @@ xref: CAS:1629-58-9 "KEGG COMPOUND"
 xref: PMID:21386183 "Europe PMC"
 is_a: CHEBI:78840
 relationship: has_functional_parent CHEBI:18308
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 
 [Term]
@@ -408,7 +408,7 @@ is_a: CHEBI:47622
 relationship: has_functional_parent CHEBI:28831
 relationship: has_role CHEBI:48318
 relationship: has_role CHEBI:76924
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:93781
@@ -423,7 +423,7 @@ synonym: "PMXCMJLOPOFPBT-UHFFFAOYSA-N" RELATED InChIKey [ChEBI]
 synonym: "CC(C)C(CO)NC1=NC2=C(C(=N1)NC3=CC(=CC=C3)Cl)N=CN2C(C)C" RELATED SMILES [ChEBI]
 xref: LINCS:LSM-4292 
 is_a: CHEBI:20706
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 
 
@@ -464,7 +464,7 @@ relationship: has_parent_hydride CHEBI:30362
 is_a: CHEBI:50584
 is_a: CHEBI:15734
 relationship: has_role CHEBI:75772
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 
 [Term]
@@ -519,7 +519,7 @@ xref: PMID:17314143 "Europe PMC"
 xref: CAS:497-03-0 "KEGG COMPOUND"
 xref: Wikipedia:Tiglic_aldehyde 
 is_a: CHEBI:35188
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:61722
@@ -546,7 +546,7 @@ xref: Reaxys:1735648 "Reaxys"
 xref: CAS:764-39-6 "ChemIDplus"
 is_a: CHEBI:51688
 is_a: CHEBI:61870
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 
 [Term]
@@ -583,7 +583,7 @@ xref: Wikipedia:Isobutyl_acetate
 relationship: has_functional_parent CHEBI:46645
 is_a: CHEBI:47622
 relationship: has_role CHEBI:75772
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:23292
@@ -614,7 +614,7 @@ xref: AGR:IND44685237 "Europe PMC"
 is_a: CHEBI:20030
 relationship: has_role CHEBI:35617
 relationship: has_role CHEBI:76924
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:88528
@@ -662,7 +662,7 @@ xref: CAS:66-25-1 "ChemIDplus"
 relationship: has_parent_hydride CHEBI:29021
 relationship: has_role CHEBI:84087
 is_a: CHEBI:133249
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:28484
@@ -712,7 +712,7 @@ is_a: CHEBI:39417
 relationship: is_conjugate_acid_of CHEBI:48942
 relationship: has_role CHEBI:76924
 relationship: has_role CHEBI:75768
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:19591
@@ -745,7 +745,7 @@ xref: PMID:20936263 "Europe PMC"
 xref: LIPID_MAPS_instance:LMFA06000002 "LIPID MAPS"
 is_a: CHEBI:24578
 is_a: CHEBI:51688
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:28857
@@ -785,7 +785,7 @@ xref: KEGG:C08492
 relationship: has_role CHEBI:24850
 relationship: has_role CHEBI:76924
 is_a: CHEBI:15734
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:87393
@@ -817,7 +817,7 @@ xref: PMID:24508043 "Europe PMC"
 xref: PDBeChem:HE2 
 is_a: CHEBI:15734
 relationship: has_role CHEBI:76924
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:50585
@@ -843,7 +843,7 @@ relationship: has_functional_parent CHEBI:48945
 is_a: CHEBI:47622
 relationship: has_role CHEBI:25212
 relationship: has_role CHEBI:75772
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:49017
@@ -869,7 +869,7 @@ xref: Beilstein:1739289 "Beilstein"
 relationship: has_role CHEBI:49023
 relationship: has_functional_parent CHEBI:17153
 is_a: CHEBI:22327
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:61724
@@ -895,7 +895,7 @@ xref: PMID:20736172 "Europe PMC"
 xref: PMID:18875127 "Europe PMC"
 is_a: CHEBI:61870
 is_a: CHEBI:51688
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 
 [Term]
@@ -968,7 +968,7 @@ relationship: has_role CHEBI:76924
 relationship: has_role CHEBI:77118
 relationship: has_role CHEBI:65001
 is_a: CHEBI:22698
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:16310
@@ -1006,7 +1006,7 @@ relationship: has_role CHEBI:72575
 relationship: has_role CHEBI:27311
 relationship: has_role CHEBI:76924
 is_a: CHEBI:24523
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:17935
@@ -1068,7 +1068,7 @@ xref: KEGG:C01545
 xref: CAS:124-13-0 "KEGG COMPOUND"
 relationship: has_role CHEBI:76924
 is_a: CHEBI:133249
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:133683
@@ -1104,7 +1104,7 @@ is_a: CHEBI:38418
 relationship: has_role CHEBI:35617
 relationship: has_role CHEBI:26013
 relationship: has_role CHEBI:77523
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:16424
@@ -1163,7 +1163,7 @@ relationship: has_role CHEBI:75772
 relationship: has_role CHEBI:76971
 relationship: has_role CHEBI:75771
 is_a: CHEBI:25973
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:16008
@@ -1208,7 +1208,7 @@ xref: PDBeChem:NK
 is_a: CHEBI:24673
 relationship: has_role CHEBI:25491
 relationship: has_role CHEBI:76924
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 
 [Term]
@@ -1258,7 +1258,7 @@ relationship: has_role CHEBI:76924
 relationship: has_role CHEBI:77484
 is_a: CHEBI:134251
 is_a: CHEBI:33853
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:49000
@@ -1313,7 +1313,7 @@ relationship: has_role CHEBI:75772
 relationship: has_role CHEBI:76924
 relationship: has_role CHEBI:76956
 relationship: has_role CHEBI:35219
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:25979
@@ -1359,7 +1359,7 @@ is_a: CHEBI:18379
 relationship: has_role CHEBI:26013
 is_a: CHEBI:22712
 relationship: has_role CHEBI:75767
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:90056
@@ -1377,7 +1377,7 @@ xref: CAS:30390-50-2 "KEGG COMPOUND"
 xref: HMDB:HMDB41014 
 xref: PMID:22626821 "Europe PMC"
 is_a: CHEBI:61870
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:31832
@@ -1425,7 +1425,7 @@ relationship: has_role CHEBI:35617
 relationship: has_role CHEBI:25212
 relationship: has_role CHEBI:24850
 is_a: CHEBI:26596
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:67251
@@ -1467,7 +1467,7 @@ is_a: CHEBI:23446
 relationship: has_role CHEBI:48318
 relationship: has_role CHEBI:27311
 relationship: has_role CHEBI:76924
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:67206
@@ -1509,7 +1509,7 @@ relationship: has_role CHEBI:35617
 relationship: has_role CHEBI:48318
 relationship: has_role CHEBI:27311
 relationship: has_role CHEBI:76924
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 
 [Term]
@@ -1601,7 +1601,7 @@ relationship: has_role CHEBI:76924
 relationship: has_role CHEBI:24850
 relationship: has_role CHEBI:35617
 relationship: has_role CHEBI:75768
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:147326
@@ -1639,7 +1639,7 @@ xref: Reaxys:1719713 "Reaxys"
 xref: PMID:29424428 "Europe PMC"
 is_a: CHEBI:145715
 relationship: has_role CHEBI:76924
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:19591
@@ -1673,7 +1673,7 @@ xref: PMID:20936263 "Europe PMC"
 xref: LIPID_MAPS_instance:LMFA06000002 "LIPID MAPS"
 is_a: CHEBI:24578
 is_a: CHEBI:13757
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:25979
@@ -1719,7 +1719,7 @@ is_a: CHEBI:18379
 relationship: has_role CHEBI:26013
 is_a: CHEBI:22712
 relationship: has_role CHEBI:75767
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:28857
@@ -1773,7 +1773,7 @@ relationship: has_role CHEBI:24850
 relationship: has_role CHEBI:76924
 relationship: has_role CHEBI:48318
 is_a: CHEBI:145715
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:31832
@@ -1822,7 +1822,7 @@ relationship: has_role CHEBI:35617
 relationship: has_role CHEBI:25212
 relationship: has_role CHEBI:24850
 is_a: CHEBI:26596
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 
 [Term]
@@ -1873,7 +1873,7 @@ is_a: CHEBI:50584
 is_a: CHEBI:15734
 relationship: has_role CHEBI:76924
 is_a: CHEBI:143597
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:48945
@@ -1912,7 +1912,7 @@ relationship: has_parent_hydride CHEBI:30362
 is_a: CHEBI:50584
 is_a: CHEBI:15734
 relationship: has_role CHEBI:75772
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:49000
@@ -1967,7 +1967,7 @@ relationship: has_role CHEBI:75772
 relationship: has_role CHEBI:76924
 relationship: has_role CHEBI:76956
 relationship: has_role CHEBI:35219
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:61722
@@ -1994,7 +1994,7 @@ xref: Reaxys:1735648 "Reaxys"
 xref: CAS:764-39-6 "ChemIDplus"
 is_a: CHEBI:51688
 is_a: CHEBI:61870
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:61724
@@ -2020,7 +2020,7 @@ xref: PMID:20736172 "Europe PMC"
 xref: PMID:18875127 "Europe PMC"
 is_a: CHEBI:61870
 is_a: CHEBI:13757
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:87510
@@ -2045,7 +2045,7 @@ xref: Wikipedia:Hexyl_acetate
 is_a: CHEBI:47622
 relationship: has_functional_parent CHEBI:87393
 relationship: has_role CHEBI:25212
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:87755
@@ -2070,7 +2070,7 @@ xref: CAS:96-22-0 "ChemIDplus"
 xref: PMID:21486009 "Europe PMC"
 is_a: CHEBI:25892
 relationship: has_role CHEBI:75767
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 
 [Term]
@@ -2099,7 +2099,7 @@ xref: HMDB:HMDB0031309
 xref: PMID:21386183 "Europe PMC"
 is_a: CHEBI:78840
 relationship: has_functional_parent CHEBI:18308
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:88900
@@ -2127,7 +2127,7 @@ xref: HMDB:HMDB0031309
 xref: PMID:21386183 "Europe PMC"
 is_a: CHEBI:78840
 relationship: has_functional_parent CHEBI:18308
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:90056
@@ -2145,7 +2145,7 @@ xref: CAS:30390-50-2 "KEGG COMPOUND"
 xref: HMDB:HMDB0041014 
 xref: PMID:22626821 "Europe PMC"
 is_a: CHEBI:61870
-is_a: CHEBI:00000
+relationship: variable_of CHEBI:00000
 
 
 [Typedef]
@@ -2205,3 +2205,7 @@ name: has role
 is_cyclic: false
 is_transitive: false
 xref: RO:0000087
+
+[Typedef]
+id: variable_of
+name: variable_of
