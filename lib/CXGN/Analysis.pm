@@ -258,24 +258,25 @@ sub BUILD {
 
 sub retrieve_analyses_by_user {
     my $class = shift;
-    my $schema = shift;
+    my $bcs_schema = shift;
+    my $people_schema = shift;
     my $user_id = shift;
 
-    my $project_sp_person_term = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_sp_person_id', 'project_property');
+    my $project_sp_person_term = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'project_sp_person_id', 'project_property');
     my $user_info_type_id = $project_sp_person_term->cvterm_id();
 
-    my $project_analysis_term = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_metadata_json', 'project_property');
+    my $project_analysis_term = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'analysis_metadata_json', 'project_property');
     my $analysis_info_type_id = $project_analysis_term ->cvterm_id();
     
     my $q = "SELECT userinfo.project_id FROM projectprop AS userinfo JOIN projectprop AS analysisinfo on (userinfo.project_id=analysisinfo.project_id) WHERE userinfo.type_id=? AND analysisinfo.type_id=? AND userinfo.value=?";
 
-    my $h = $schema->storage()->dbh()->prepare($q);
+    my $h = $bcs_schema->storage()->dbh()->prepare($q);
     $h->execute($user_info_type_id, $analysis_info_type_id, $user_id);
 
     my @analyses = ();
     while (my ($project_id) = $h->fetchrow_array()) {
 	print STDERR "Instantiating analysis project for project ID $project_id...\n";
-	push @analyses, CXGN::Analysis->new( { bcs_schema => $schema, trial_id=> $project_id });
+	push @analyses, CXGN::Analysis->new( { bcs_schema => $bcs_schema, people_schema => $people_schema, trial_id=> $project_id });
     }
 
     return @analyses;
