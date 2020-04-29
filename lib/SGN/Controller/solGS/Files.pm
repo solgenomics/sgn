@@ -749,6 +749,8 @@ sub get_solgs_dirs {
     my $corre_temp      = catdir($tmp_dir, 'correlation', 'tempfiles');
     my $h2_cache        = catdir($tmp_dir, 'heritability', 'cache');
     my $h2_temp         = catdir($tmp_dir, 'heritability', 'tempfiles');
+    my $QC_cache        = catdir($tmp_dir, 'qualityControl', 'cache');
+    my $QC_temp         = catdir($tmp_dir, 'qualityControl', 'tempfiles');
     my $pca_cache       = catdir($tmp_dir, 'pca', 'cache');
     my $pca_temp        = catdir($tmp_dir, 'pca', 'tempfiles');
     my $cluster_cache   = catdir($tmp_dir, 'cluster', 'cache');
@@ -760,7 +762,7 @@ sub get_solgs_dirs {
 	[
 	 $solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_lists,  $solgs_datasets, 
 	 $pca_cache, $pca_temp, $histogram_cache, $histogram_temp, $log_dir, $corre_cache, $corre_temp,
-     $h2_temp, $h2_cache,$anova_temp,$anova_cache, $solqtl_cache, $solqtl_tempfiles,
+     $h2_temp, $h2_cache, $QC_cache, $QC_temp, $anova_temp,$anova_cache, $solqtl_cache, $solqtl_tempfiles,
 	 $cluster_cache, $cluster_temp, $sel_index_cache,  $sel_index_temp,
 	], 
 	0, 0755
@@ -779,6 +781,8 @@ sub get_solgs_dirs {
 	      correlation_temp_dir        => $corre_temp,
           heritability_cache_dir      => $h2_cache,
           heritability_temp_dir       => $h2_temp,
+          qualityControl_cache_dir      => $QC_cache,
+          qualityControl_temp_dir       => $QC_temp,
 	      histogram_cache_dir         => $histogram_cache,
 	      histogram_temp_dir          => $histogram_temp,
 	      analysis_log_dir            => $log_dir,

@@ -136,6 +136,11 @@ $drone_run_date => undef
 % } #End trial_upload_files
 % if ($info_section_id eq 'trial_analysis_tools'){
                                 <!-- Phenotypic correlation analysis -->
+                                
+                                <& /tools/qc/index.mas,
+                                    trial_id => $trial_id
+                                &>
+
                                 <& /solgs/population/correlation.mas,
                                     trial_id => $trial_id
                                 &>
@@ -158,7 +163,6 @@ $drone_run_date => undef
                                   <& /tools/heritability/heritability.mas,
                                     trial_id => $trial_id
                                 &>
-
 
 % if ($hidap_enabled) {
                                 <& /hidap/hidap_trial_link.mas, main_production_site_url=>$main_production_site_url, program => $breeding_program_name, folder => $folder_name, trial => $trial_name &>
