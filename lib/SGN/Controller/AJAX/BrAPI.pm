@@ -2185,6 +2185,56 @@ sub phenotypes_search_GET {
     _standard_response_construction($c, $brapi_package_result);
 }
 
+# Observation units
+
+sub studies_observation_v2 :  Chained('brapi') PathPart('observationunits') Args(0) ActionClass('REST') { }
+
+sub studies_observation_v2_GET {
+
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('ObservationUnits');
+	my $brapi_package_result = $brapi_module->search($c->stash->{clean_inputs});
+	_standard_response_construction($c, $brapi_package_result);
+ }
+
+
+sub observation_unit_single :  Chained('brapi') PathPart('observationunits') Args(1) ActionClass('REST') {
+	my $self = shift;
+	my $c = shift;
+	my $observation_unit_db_id = shift;
+
+	$c->stash->{observation_unit_db_id} = $observation_unit_db_id;
+ }
+
+sub observation_unit_single_PUT {
+    my $self = shift;
+    my $c = shift;
+    my $observation_unit_db_id = shift;
+    my $clean_inputs = $c->stash->{clean_inputs};
+    #my $auth = _authenticate_user($c);
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('ObservationUnits');
+    my $brapi_package_result = $brapi_module->observationunits_store($observation_unit_db_id,$clean_inputs);
+
+    _standard_response_construction($c, $brapi_package_result);
+}
+
+sub observation_unit_single_GET {
+	my $self = shift;
+	my $c = shift;
+    my ($auth) = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('ObservationUnits');
+    my $brapi_package_result = $brapi_module->detail(
+    	 $c->stash->{observation_unit_db_id});
+    _standard_response_construction($c, $brapi_package_result);
+}
+
 sub observation_units_search_save : Chained('brapi') PathPart('search/observationunits') Args(0) : ActionClass('REST') { }
 
 sub observation_units_search_save_POST {
@@ -2199,34 +2249,7 @@ sub observation_units_search_retrieve  : Chained('brapi') PathPart('search/obser
     my $search_id = shift;
     retrieve_results($self, $c, $search_id, 'ObservationUnits');
 }
-
-sub studies_observations_v2 :  Chained('brapi') PathPart('observationunits') Args(1) ActionClass('REST') { }
-
-sub studies_observations_v2_PUT {
-    my $self = shift;
-    my $c = shift;
-    my $observation_unit_db_id = shift;
-    my $clean_inputs = $c->stash->{clean_inputs};
-    #my $auth = _authenticate_user($c);
-    my $brapi = $self->brapi_module;
-    my $brapi_module = $brapi->brapi_wrapper('ObservationUnits');
-    my $brapi_package_result = $brapi_module->observationunits_store($observation_unit_db_id,$clean_inputs);
-
-    _standard_response_construction($c, $brapi_package_result);
-}
-
-sub studies_observation_v2 :  Chained('brapi') PathPart('observationunits') Args(0) ActionClass('REST') { }
-
-sub studies_observation_v2_GET {
-	my $self = shift;
-	my $c = shift;
-    my ($auth) = _authenticate_user($c);
-    my $clean_inputs = $c->stash->{clean_inputs};
-    my $brapi = $self->brapi_module;
-    my $brapi_module = $brapi->brapi_wrapper('ObservationUnits');
-    my $brapi_package_result = $brapi_module->search($c->stash->{clean_inputs});
-    _standard_response_construction($c, $brapi_package_result);
-}
+ 
 
 sub phenotypes_search_table : Chained('brapi') PathPart('phenotypes-search/table') Args(0) : ActionClass('REST') { }
 
@@ -3212,10 +3235,47 @@ sub observations_GET {
         programDbId => $clean_inputs->{programDbId},
         observationTimeStampRangeStart => $clean_inputs->{observationTimeStampRangeStart},
         observationTimeStampRangeEnd => $clean_inputs->{observationTimeStampRangeEnd},
-        observationUnitDbId => $clean_inputs->{observationUnitDbId}
+        observationUnitDbId => $clean_inputs->{observationUnitDbId},
+        observationDbId => $clean_inputs->{observationDbId}
 
     });
     _standard_response_construction($c, $brapi_package_result);
+}
+
+sub observations_single :  Chained('brapi') PathPart('observations') CaptureArgs(1) {
+     my $self = shift;
+     my $c = shift;
+     print STDERR " Capturing id\n";
+     $c->stash->{observation_id} = shift;
+}
+
+sub observations_detail :  Chained('observations_single') PathPart('') Args(0) ActionClass('REST') { }
+
+sub observations_detail_GET {
+    my $self = shift;
+    my $c = shift;
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Observations');
+    my $brapi_package_result = $brapi_module->detail({ 
+    	observationDbId => $c->stash->{observation_id}
+    });
+    _standard_response_construction($c, $brapi_package_result);
+}
+
+sub observation_search_save : Chained('brapi') PathPart('search/observations') Args(0) : ActionClass('REST') { }
+
+sub observation_search_save_POST {
+    my $self = shift;
+    my $c = shift;
+    save_results($self,$c,$c->stash->{clean_inputs},'Observations');
+}
+
+sub observation_search_retrieve  : Chained('brapi') PathPart('search/observations') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'Observations');
 }
 
 =head2 brapi/v1/markers
