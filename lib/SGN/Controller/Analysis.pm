@@ -29,13 +29,13 @@ sub analysis_detail :Path('/analyses') Args(1) {
     my $c = shift;
     my $analysis_id = shift;
     
-
+    print STDERR "Viewing analysis with id $analysis_id\n";
 
     my $a = CXGN::Analysis->new( 
 	{ 
 	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
 	    people_schema => $c->dbic_schema("CXGN::People::Schema"),
-	    project_id => $analysis_id,
+	    trial_id => $analysis_id,
 	});
 
     if (! $a) {
