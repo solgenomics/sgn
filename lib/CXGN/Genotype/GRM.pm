@@ -382,7 +382,10 @@ sub get_grm {
     my $marker_filter = $self->marker_filter();
     my $individuals_filter = $self->individuals_filter();
 
-    my $grm_tempfile_out = $grm_tempfile . "_out";
+    my $tmp_output_dir = $shared_cluster_dir_config."/tmp_genotype_download_grm";
+    mkdir $tmp_output_dir if ! -d $tmp_output_dir;
+    my ($grm_tempfile_out_fh, $grm_tempfile_out) = tempfile("download_grm_XXXXX", DIR=> $tmp_output_dir);
+    my ($temp_out_file_fh, $temp_out_file) = tempfile("download_grm_XXXXX", DIR=> $tmp_output_dir);
 
     my $cmd = 'R -e "library(genoDataFilter); library(rrBLUP); library(data.table); library(scales);
     mat <- fread(\''.$grm_tempfile.'\', header=FALSE, sep=\'\t\');
@@ -392,10 +395,6 @@ sub get_grm {
     A_matrix <- A.mat(mat_clean, impute.method=\'EM\', n.core='.$number_system_cores.', return.imputed=FALSE);
     write.table(A_matrix, file=\''.$grm_tempfile_out.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
     print STDERR Dumper $cmd;
-
-    my $tmp_output_dir = $shared_cluster_dir_config."/tmp_genotype_download_grm";
-    mkdir $tmp_output_dir if ! -d $tmp_output_dir;
-    my ($temp_out_file_fh, $temp_out_file) = tempfile("download_grm_XXXXX", DIR=> $tmp_output_dir);
 
     # Do the GRM on the cluster
     my $grm_cmd = CXGN::Tools::Run->new(
