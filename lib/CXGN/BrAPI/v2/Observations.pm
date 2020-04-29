@@ -160,10 +160,115 @@ sub observations_store {
 sub search {
     my $self = shift;
     my $params = shift;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $status = $self->status;
+
+    my $observation_db_id = $params->{observationDbId} || ($params->{observationDbIds} || ()); 
+    my @observation_variable_db_ids = $params->{observationVariableDbIds} ? @{$params->{observationVariableDbIds}} : ();
+    # externalReferenceID
+    # externalReferenceSource
+    my $observation_level = $params->{observationLevel}->[0] || 'all'; # need to be changed in v2
+    my $season_arrayref = $params->{seasonDbId} || ($params->{seasonDbIds} || ());
+    my $location_ids_arrayref = $params->{locationDbId} || ($params->{locationDbIds} || ());
+    my $study_ids_arrayref = $params->{studyDbId} || ($params->{studyDbIds} || ());
+    my $trial_ids_arrayref = $params->{trialDbId} || ($params->{trialDbIds} || ());
+    my $accession_ids_arrayref = $params->{germplasmDbId} || ($params->{germplasmDbIds} || ());
+    my $program_ids_arrayref = $params->{programDbId} || ($params->{programDbIds} || ());
+    my $start_time = $params->{observationTimeStampRangeStart}->[0] || undef;
+    my $end_time = $params->{observationTimeStampRangeEnd}->[0] || undef;
+    my $observation_unit_db_id = $params->{observationUnitDbId} || ($params->{observationUnitDbIds} || ());
+    # observationUnitLevelName
+    # observationUnitLevelOrder
+    # observationUnitLevelCode
+    my $trial_ids;
+    if ($study_ids_arrayref || $trial_ids_arrayref){
+        $trial_ids = ($study_ids_arrayref, $trial_ids_arrayref); 
+    }
+
+    my $limit = $page_size*($page+1)-1;
+    my $offset = $page_size*$page;
+
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        'MaterializedViewTable',
+        {
+            bcs_schema=>$self->bcs_schema,
+            data_level=>$observation_level,
+            trial_list=>$trial_ids,
+            include_timestamp=>1,
+            year_list=>$season_arrayref,
+            location_list=>$location_ids_arrayref,
+            accession_list=>$accession_ids_arrayref,
+            program_list=>$program_ids_arrayref,
+            observation_variable_list=>\@observation_variable_db_ids,
+            plot_list=>$observation_unit_db_id,
+            # limit=>$limit,
+            #offset=>$offset,
+        }
+    );
+
+    my $start_index = $page*$page_size;
+    my $end_index = $page*$page_size + $page_size - 1;
+    my ($data, $unique_traits) = $phenotypes_search->search();
+
+    my @data_window;
+    my $counter = 0;
+
+    foreach my $obs_unit (@$data){
+        my @brapi_observations;
+        my $observations = $obs_unit->{observations};
+        foreach (@$observations){
+            my $observation_id = "$_->{phenotype_id}";
+            if ( ! $observation_db_id || grep{/^$observation_id$/} @{$observation_db_id} ){
+                my @season = {
+                    year => $obs_unit->{year},
+                    season => undef,
+                    seasonDbId => undef
+                };
+
+                my $obs_timestamp = $_->{collect_date} ? $_->{collect_date} : $_->{timestamp};
+                if ( $start_time && $obs_timestamp < $start_time ) { next; } #skip observations before date range
+                if ( $end_time && $obs_timestamp > $end_time ) { next; } #skip observations after date range
+
+                if ($counter >= $start_index && $counter <= $end_index) {
+                    push @data_window, {
+                        additionalInfo=>undef,
+                        externalReferences=>undef,
+                        germplasmDbId => qq|$obs_unit->{germplasm_stock_id}|,
+                        germplasmName => $obs_unit->{germplasm_uniquename},
+                        observationUnitDbId => qq|$obs_unit->{observationunit_stock_id}|,
+                        observationUnitName => $obs_unit->{observationunit_uniquename},
+                        observationDbId => $observation_id,
+                        observationVariableDbId => qq|$_->{trait_id}|,
+                        observationVariableName => $_->{trait_name},
+                        observationTimeStamp => $obs_timestamp,
+                        season => \@season,
+                        collector => $_->{operator},
+                        studyDbId => qq|$obs_unit->{trial_id}|,
+                        uploadedBy=>undef,
+                        value => qq|$_->{value}|,
+                    };
+                }
+                $counter++;
+            }
+        }
+    }
+
+    my %result = (data=>\@data_window);
+    my @data_files;
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observations result constructed');
+}
+
+sub detail {
+    my $self = shift;
+    my $params = shift;
 
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
+
+    my $observation_db_id = $params->{observationDbId};
 
     my @observation_variable_db_ids = $params->{observationVariableDbIds} ? @{$params->{observationVariableDbIds}} : ();
 # externalReferenceID
@@ -200,52 +305,54 @@ sub search {
             program_list=>$program_ids_arrayref,
             observation_variable_list=>\@observation_variable_db_ids,
             # limit=>$limit,
-            offset=>$offset,
+            #offset=>$offset,
         }
     );
-    my ($data, $unique_traits) = $phenotypes_search->search();
 
+    my ($data, $unique_traits) = $phenotypes_search->search();
     my @data_window;
-    my $total_count = 0;
+
     foreach my $obs_unit (@$data){
         my @brapi_observations;
         my $observations = $obs_unit->{observations};
         foreach (@$observations){
-            my @season = (
-                year => $obs_unit->{year},       
-                season => undef,
-                seasonDbId => undef
-            );
+            if ($_->{phenotype_id} eq $observation_db_id ){
+                my @season = {
+                    year => $obs_unit->{year},       
+                    season => undef,
+                    seasonDbId => undef
+                };
 
-            my $obs_timestamp = $_->{collect_date} ? $_->{collect_date} : $_->{timestamp};
-            if ( $start_time && $obs_timestamp < $start_time ) { next; } #skip observations before date range
-            if ( $end_time && $obs_timestamp > $end_time ) { next; } #skip observations after date range
-            push @data_window, {
-                additionalInfo=>undef,
-                externalReferences=>undef,
-                germplasmDbId => qq|$obs_unit->{germplasm_stock_id}|,
-                germplasmName => $obs_unit->{germplasm_uniquename},
-                observationUnitDbId => qq|$obs_unit->{observationunit_stock_id}|,
-                observationUnitName => $obs_unit->{observationunit_uniquename},
-                observationDbId => qq|$_->{phenotype_id}|,
-                observationVariableDbId => qq|$_->{trait_id}|,
-                observationVariableName => $_->{trait_name},
-                observationTimeStamp => $obs_timestamp,
-                season => \@season,
-                collector => $_->{operator},
-                studyDbId => qq|$obs_unit->{trial_id}|,
-                uploadedBy=>undef,
-                value => qq|$_->{value}|,
-            };
-            $total_count = $obs_unit->{full_count};
+                my $obs_timestamp = $_->{collect_date} ? $_->{collect_date} : $_->{timestamp};
+                if ( $start_time && $obs_timestamp < $start_time ) { next; } #skip observations before date range
+                if ( $end_time && $obs_timestamp > $end_time ) { next; } #skip observations after date range
+
+                push @data_window, {
+                    additionalInfo=>undef,
+                    externalReferences=>undef,
+                    germplasmDbId => qq|$obs_unit->{germplasm_stock_id}|,
+                    germplasmName => $obs_unit->{germplasm_uniquename},
+                    observationUnitDbId => qq|$obs_unit->{observationunit_stock_id}|,
+                    observationUnitName => $obs_unit->{observationunit_uniquename},
+                    observationDbId => qq|$_->{phenotype_id}|,
+                    observationVariableDbId => qq|$_->{trait_id}|,
+                    observationVariableName => $_->{trait_name},
+                    observationTimeStamp => $obs_timestamp,
+                    season => \@season,
+                    collector => $_->{operator},
+                    studyDbId => qq|$obs_unit->{trial_id}|,
+                    uploadedBy=>undef,
+                    value => qq|$_->{value}|,
+                };
+                last; 
+            }
         }
-   
     }
 
     my %result = (data=>\@data_window);
     my @data_files;
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observations-search result constructed');
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response(1,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observations result constructed');
 }
 
 1;

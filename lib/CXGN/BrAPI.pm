@@ -35,6 +35,7 @@ use CXGN::BrAPI::v2::Locations;
 use CXGN::BrAPI::v2::MarkerPositions;
 use CXGN::BrAPI::v2::Observations;
 use CXGN::BrAPI::v2::ObservationUnits;
+use CXGN::BrAPI::v2::ObservationVariables;
 use CXGN::BrAPI::v2::Programs;
 use CXGN::BrAPI::v2::Results;
 use CXGN::BrAPI::v2::Samples;
