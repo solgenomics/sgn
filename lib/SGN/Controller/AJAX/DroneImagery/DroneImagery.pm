@@ -551,7 +551,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 $plot_image_url = $image->get_image_url('original');
                 $plot_image_id = $image->get_image_id();
             }
-            
+
             push @results, ["TimeSeries", $result_matrix, $plot_image_url];
         }
     }
@@ -947,6 +947,85 @@ sub _perform_plot_polygon_assign {
     };
 }
 
+sub drone_imagery_manual_assign_plot_polygon_save_partial_template : Path('/api/drone_imagery/manual_assign_plot_polygon_save_partial_template') : ActionClass('REST') { }
+sub drone_imagery_manual_assign_plot_polygon_save_partial_template_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    print STDERR Dumper $c->req->params();
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my @image_ids = $c->req->param('image_ids[]');
+    my $polygon_json = $c->req->param('polygon');
+    my $polygon_plot_numbers_json = $c->req->param('polygon_plot_numbers');
+    my $field_trial_id = $c->req->param('field_trial_id');
+    my $drone_run_project_id = $c->req->param('drone_run_project_id');
+    my $angle_rotated = $c->req->param('angle_rotated');
+    my $partial_template_name = $c->req->param('partial_template_name');
+
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $polygon_hash = decode_json $polygon_json;
+    my $polygon_plot_numbers_hash = decode_json $polygon_plot_numbers_json;
+
+    my $plot_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot number', 'stock_property')->cvterm_id();
+    my $field_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_layout', 'experiment_type')->cvterm_id();
+
+    my $q = "SELECT stock.uniquename FROM stock
+        JOIN stockprop USING(stock_id)
+        JOIN nd_experiment_stock USING(stock_id)
+        JOIN nd_experiment USING(nd_experiment_id)
+        JOIN nd_experiment_project USING(nd_experiment_id)
+        WHERE project_id = $field_trial_id
+        AND nd_experiment.type_id = $field_experiment_cvterm_id
+        AND stockprop.type_id = $plot_number_cvterm_id
+        AND stockprop.value = ?;";
+    my $h = $schema->storage->dbh->prepare($q);
+
+    my %stock_polygon;
+    while (my ($generated_index, $plot_number) = each %$polygon_plot_numbers_hash) {
+        $h->execute($plot_number);
+        my ($uniquename) = $h->fetchrow_array();
+        my $plot_polygon = $polygon_hash->{$generated_index};
+        my $last_point = pop @$plot_polygon;
+        if (scalar(@$plot_polygon) != 4){
+            $c->stash->{rest} = {error=>'Error: Polygon for '.$uniquename.' should be 4 long!'};
+            $c->detach();
+        }
+        $stock_polygon{$uniquename} = $plot_polygon;
+    }
+
+    my $manual_plot_polygon_template_partial = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_plot_polygons_partial', 'project_property')->cvterm_id();
+
+    my $previous_plot_polygons_rs = $schema->resultset('Project::Projectprop')->search({type_id=>$manual_plot_polygon_template_partial, project_id=>$drone_run_project_id});
+    if ($previous_plot_polygons_rs->count > 1) {
+        die "There should not be more than one saved entry for partial plot polygon template for a drone run";
+    }
+
+    my @save_stock_polygons;
+    if ($previous_plot_polygons_rs->count > 0) {
+        @save_stock_polygons = @{decode_json $previous_plot_polygons_rs->first->value};
+    }
+    push @save_stock_polygons, {
+        template_name => $partial_template_name,
+        image_id => $image_ids[3], #NIR image id
+        polygon => $polygon_hash,
+        stock_polygon => \%stock_polygon
+    };
+
+    my $drone_run_band_plot_polygons = $schema->resultset('Project::Projectprop')->update_or_create({
+        type_id=>$manual_plot_polygon_template_partial,
+        project_id=>$drone_run_project_id,
+        rank=>0,
+        value=> encode_json(\@save_stock_polygons)
+    },
+    {
+        key=>'projectprop_c1'
+    });
+
+    $c->stash->{rest} = {success => 1};
+}
+
 sub drone_imagery_manual_assign_plot_polygon : Path('/api/drone_imagery/manual_assign_plot_polygon') : ActionClass('REST') { }
 sub drone_imagery_manual_assign_plot_polygon_POST : Args(0) {
     my $self = shift;
@@ -1042,33 +1121,6 @@ sub drone_imagery_manual_assign_plot_polygon_POST : Args(0) {
 
         my $return = _perform_plot_polygon_assign($c, $schema, $metadata_schema, $rotated_image_id, $drone_run_band_project_id, $stock_polygons, $plot_polygon_type, $user_id, $user_name, $user_role, 0, 1);
     }
-
-    my $manual_plot_polygon_template_partial = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_plot_polygons_partial', 'project_property')->cvterm_id();
-
-    my $previous_plot_polygons_rs = $schema->resultset('Project::Projectprop')->search({type_id=>$manual_plot_polygon_template_partial, project_id=>$drone_run_project_id});
-    if ($previous_plot_polygons_rs->count > 1) {
-        die "There should not be more than one saved entry for partial plot polygon template for a drone run";
-    }
-
-    my @save_stock_polygons;
-    if ($previous_plot_polygons_rs->count > 0) {
-        @save_stock_polygons = @{decode_json $previous_plot_polygons_rs->first->value};
-    }
-    push @save_stock_polygons, {
-        template_name => $partial_template_name,
-        image_id => $image_ids[3],
-        polygon => $polygon_hash
-    };
-
-    my $drone_run_band_plot_polygons = $schema->resultset('Project::Projectprop')->update_or_create({
-        type_id=>$manual_plot_polygon_template_partial,
-        project_id=>$drone_run_project_id,
-        rank=>0,
-        value=> encode_json(\@save_stock_polygons)
-    },
-    {
-        key=>'projectprop_c1'
-    });
 
     $c->stash->{rest} = {success => 1};
 }
@@ -1316,7 +1368,7 @@ sub _perform_image_background_remove_threshold {
     my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $image_type, 'project_md_image')->cvterm_id();
     my $drone_run_band_remove_background_threshold_type_id;
     my $imagery_attribute_map = CXGN::DroneImagery::ImageTypes::get_imagery_attribute_map();
-    
+
     if ($imagery_attribute_map->{$image_type}->{name} eq 'threshold') {
         $drone_run_band_remove_background_threshold_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $imagery_attribute_map->{$image_type}->{key}, 'project_property')->cvterm_id();
     }
@@ -1423,7 +1475,7 @@ sub _perform_image_background_remove_threshold_percentage {
     my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $image_type, 'project_md_image')->cvterm_id();
     my $drone_run_band_remove_background_threshold_type_id;
     my $imagery_attribute_map = CXGN::DroneImagery::ImageTypes::get_imagery_attribute_map();
-    
+
     if ($imagery_attribute_map->{$image_type}->{name} eq 'threshold') {
         $drone_run_band_remove_background_threshold_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $imagery_attribute_map->{$image_type}->{key}, 'project_property')->cvterm_id();
     }
@@ -2522,7 +2574,7 @@ sub _perform_standard_process_extended_vi_calc {
     my $h = $bcs_schema->storage->dbh()->prepare($q);
     $h->execute();
     my ($index_image_id) = $h->fetchrow_array();
-    
+
     #my $fourier_transform_hpf20_return = _perform_fourier_transform_calculation($c, $bcs_schema, $metadata_schema, $index_image_id, $merged_drone_run_band_project_id, (%{$vi_map{$vi}->{ft_hpf20}})[0], '20', 'frequency', $user_id, $user_name, $user_role);
 
     #my $plot_polygon_ft_hpf20_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $fourier_transform_hpf20_return->{ft_image_id}, $merged_drone_run_band_project_id, $plot_polygons_value, $vi_map{$vi}->{ft_hpf20}->{(%{$vi_map{$vi}->{ft_hpf20}})[0]}->[0], $user_id, $user_name, $user_role, 0, 0);
@@ -2615,11 +2667,11 @@ sub _perform_standard_process_extended_vi_calc {
     # my $masked_image_id = $masked_return->{masked_image_id};
 
     # $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, $vi_map{$vi}->{original_index_mask_background}->{(%{$vi_map{$vi}->{original_index_mask_background}})[0]}->[0], $user_id, $user_name, $user_role, 0, 0);
-    # 
+    #
     # $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, $vi_map{$vi}->{original_index_mask_background}->{(%{$vi_map{$vi}->{original_index_mask_background}})[0]}->[1], $user_id, $user_name, $user_role, 0, 0);
-    # 
+    #
     # $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, $vi_map{$vi}->{original_index_mask_background}->{(%{$vi_map{$vi}->{original_index_mask_background}})[0]}->[2], $user_id, $user_name, $user_role, 0, 0);
-    # 
+    #
     # if ($vi_map{$vi}->{original_index_mask_background}->{(%{$vi_map{$vi}->{original_index_mask_background}})[0]}->[3]) {
     #     $plot_polygon_return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $masked_image_id, $merged_drone_run_band_project_id, $plot_polygons_value, $vi_map{$vi}->{original_index_mask_background}->{(%{$vi_map{$vi}->{original_index_mask_background}})[0]}->[3], $user_id, $user_name, $user_role, 0, 0);
     # }
@@ -3636,6 +3688,34 @@ sub drone_imagery_get_drone_run_image_counts_GET : Args(0) {
     $c->stash->{rest} = {data => \@return};
 }
 
+sub drone_imagery_update_details : Path('/api/drone_imagery/update_details') : ActionClass('REST') { }
+sub drone_imagery_update_details_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $drone_run_project_id = $c->req->param('drone_run_project_id');
+    my $drone_run_date = $c->req->param('drone_run_date');
+    my $description = $c->req->param('description');
+    my $drone_run_name = $c->req->param('drone_run_name');
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$drone_run_project_id});
+
+    if ($drone_run_date) {
+        $trial->set_drone_run_date($drone_run_date);
+    }
+    if ($description) {
+        $trial->set_description($description);
+    }
+    if ($drone_run_name) {
+        $trial->set_name($drone_run_name);
+    }
+
+    $c->stash->{rest} = {success => 1};
+}
+
 sub drone_imagery_calculate_phenotypes : Path('/api/drone_imagery/calculate_phenotypes') : ActionClass('REST') { }
 sub drone_imagery_calculate_phenotypes_POST : Args(0) {
     my $self = shift;
@@ -3902,7 +3982,7 @@ sub _perform_phenotype_calculation {
             my $image_url = $image->get_image_url("original");
             my $image_fullpath = $image->get_filename('original_converted', 'full');
             my $image_source_tag_small = $image->get_img_src_tag("tiny");
-            
+
             push @{$stock_images{$stock_id}}, $image_fullpath;
             $stock_info{$stock_id} = {
                 stock_id => $stock_id,
@@ -4592,7 +4672,7 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
             push @loss_history, $columns[0];
         }
     close($fh3);
-    
+
     print STDERR "Train loss PLOT $archive_temp_loss_history_file \n";
     my $rmatrix = R::YapRI::Data::Matrix->new({
         name => 'matrix1',
@@ -5282,7 +5362,7 @@ sub _perform_keras_cnn_predict {
     $r_block->add_command('dataframe.matrix1$prediction <- as.numeric(dataframe.matrix1$prediction)');
     $r_block->add_command('mixed.lmer.matrix <- matrix(NA,nrow = 1, ncol = 1)');
     $r_block->add_command('mixed.lmer.matrix[1,1] <- cor(dataframe.matrix1$previous_value, dataframe.matrix1$prediction)');
-    
+
     $r_block->add_command('png(filename=\''.$archive_temp_output_corr_plot_file.'\')');
     $r_block->add_command('plot(dataframe.matrix1$previous_value, dataframe.matrix1$prediction)');
     $r_block->add_command('dev.off()');
@@ -5312,7 +5392,7 @@ sub _perform_keras_cnn_predict {
             colnames => \@data_matrix_colnames,
             data => \@data_matrix_clean
         });
-        
+
         my $rbase = R::YapRI::Base->new();
         my $r_block = $rbase->create_block('r_block');
         $rmatrix->send_rbase($rbase, 'r_block');
@@ -5324,7 +5404,7 @@ sub _perform_keras_cnn_predict {
         # $r_block->add_command('mixed.lmer.summary <- summary(mixed.lmer)');
         $r_block->add_command('mixed.lmer.matrix <- matrix(NA,nrow = 1, ncol = 2)');
         $r_block->add_command('mixed.lmer.matrix[1,1] <- cor(predict(mixed.lmer), dataframe.matrix1$previous_value)');
-        
+
         $r_block->add_command('mixed.lmer <- lmer(prediction ~ replicate + (1|germplasm_stock_id), data = dataframe.matrix1 )');
         # $r_block->add_command('mixed.lmer.summary <- summary(mixed.lmer)');
         $r_block->add_command('mixed.lmer.matrix[1,2] <- cor(predict(mixed.lmer), dataframe.matrix1$previous_value)');
