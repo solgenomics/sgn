@@ -323,6 +323,7 @@ if (length(relationshipMatrixFile) != 0) {
 relationshipMatrixFiltered <- relationshipMatrix[(rownames(relationshipMatrix) %in% rownames(commonObs)), ]
 relationshipMatrixFiltered <- relationshipMatrixFiltered[, (colnames(relationshipMatrixFiltered) %in% rownames(commonObs))]
 relationshipMatrix         <- data.frame(relationshipMatrix)
+relationshipMatrix         <- round(relationshipMatrix, 3)
 
 nCores <- detectCores()
 
@@ -385,9 +386,9 @@ if (length(selectionData) == 0) {
   heritability  <- round((trModel$Vg/(trModel$Ve + trModel$Vg)), 2)
 
   cat("\n", file = varianceComponentsFile,  append = FALSE)
-  cat('Error variance', trModel$Ve, file = varianceComponentsFile, sep = "\t", append = TRUE)
-  cat("\n", file = varianceComponentsFile,  append = TRUE)
   cat('Additive genetic variance',  trModel$Vg, file = varianceComponentsFile, sep = '\t', append = TRUE)
+  cat("\n", file = varianceComponentsFile,  append = TRUE)
+  cat('Error variance', trModel$Ve, file = varianceComponentsFile, sep = "\t", append = TRUE)
   cat("\n", file = varianceComponentsFile,  append = TRUE)
   cat('SNP heritability (h)', heritability, file = varianceComponentsFile, sep = '\t', append = TRUE)
 
@@ -415,91 +416,81 @@ if (length(selectionData) == 0) {
 #cross-validation
 
   if (is.null(selectionFile)) {
-    genoNum <- nrow(phenoTrait)
-    if (genoNum < 20 ) {
-      warning(genoNum, " is too small number of genotypes.")
+      genoNum <- nrow(phenoTrait)
+
+      if (genoNum < 20 ) {
+          warning(genoNum, " is too small number of genotypes.")
+      }
+
+      set.seed(4567)
+      
+      k <- 10
+      times <- 2
+      cvFolds <- createMultiFolds(phenoTrait[, 2], k=k, times=times)
+
+      for ( r in 1:times) {
+          re <- paste0('Rep', r)
+          
+          for (i in 1:k) {
+              fo <- ifelse(i < 10, 'Fold0', 'Fold')
+              
+              trFoRe <- paste0(fo, i, '.', re)
+              trG <- cvFolds[[trFoRe]]
+              slG <- as.numeric(rownames(phenoTrait[-trG,]))
+              
+              kblup <- paste("rKblup", i, sep = ".")
+
+              result <- kin.blup(data  = phenoTrait[trG,],
+                                 geno  = 'genotypes',
+                                 pheno = trait,
+                                 K     = relationshipMatrixFiltered,
+                                 n.core = nCores,
+                                 PEV    = TRUE
+                                 )
+              
+              assign(kblup, result)
+              
+                                        #calculate cross-validation accuracy
+              valBlups   <- result$g
+              
+              valBlups   <- data.frame(valBlups)
+              
+              slG <- slG[which(slG <= nrow(phenoTrait))]   
+              
+              slGDf <- phenoTrait[(rownames(phenoTrait) %in% slG),]
+              rownames(slGDf) <- slGDf[, 1]     
+              slGDf[, 1] <- NULL
+              
+              valBlups <-  rownames_to_column(valBlups, var="genotypes")
+              slGDf    <-  rownames_to_column(slGDf, var="genotypes")
+              
+              valCorData <- inner_join(slGDf, valBlups, by="genotypes")    
+              valCorData$genotypes <- NULL
+              
+              accuracy   <- try(cor(valCorData))  
+              validation <- paste("validation", trFoRe, sep = ".")
+              cvTest <- paste("CV", trFoRe, sep = " ")
+
+              if ( class(accuracy) != "try-error")
+              {
+                  accuracy <- round(accuracy[1,2], digits = 3)
+                  accuracy <- data.matrix(accuracy)
+                  
+                  colnames(accuracy) <- c("correlation")
+                  rownames(accuracy) <- cvTest
+
+                  assign(validation, accuracy)
+                  
+                  if (!is.na(accuracy[1,1])) {
+                      validationAll <- rbind(validationAll, accuracy)
+                  }    
+              }
+          }
+      }    
+
+      validationAll <- data.frame(validationAll[order(-validationAll[, 1]), ])
+      colnames(validationAll) <- c('Correlation')     
   }
-
-    set.seed(4567)
-   
-    k <- 10
-    times <- 2
-    cvFolds <- createMultiFolds(phenoTrait[, 2], k=k, times=times)
-
-    for ( r in 1:times) {
-      re <- paste0('Rep', r)
-         
-      for (i in 1:k) {
-        fo <- ifelse(i < 10, 'Fold0', 'Fold')
-       
-        trFoRe <- paste0(fo, i, '.', re)
-        trG <- cvFolds[[trFoRe]]
-        slG <- as.numeric(rownames(phenoTrait[-trG,]))
-      
-        kblup <- paste("rKblup", i, sep = ".")
-
-        result <- kin.blup(data  = phenoTrait[trG,],
-                           geno  = 'genotypes',
-                           pheno = trait,
-                           K     = relationshipMatrixFiltered,
-                           n.core = nCores,
-                           PEV    = TRUE
-                           )
-        
-        assign(kblup, result)
- 
-        #calculate cross-validation accuracy
-        valBlups   <- result$g
-      
-        valBlups   <- data.frame(valBlups)
-       
-        slG <- slG[which(slG <= nrow(phenoTrait))]   
-      
-        slGDf <- phenoTrait[(rownames(phenoTrait) %in% slG),]
-        rownames(slGDf) <- slGDf[, 1]     
-        slGDf[, 1] <- NULL
-        
-        valBlups <-  rownames_to_column(valBlups, var="genotypes")
-        slGDf    <-  rownames_to_column(slGDf, var="genotypes")
-                       
-        valCorData <- inner_join(slGDf, valBlups, by="genotypes")    
-        valCorData$genotypes <- NULL
-            
-        accuracy   <- try(cor(valCorData))  
-        validation <- paste("validation", trFoRe, sep = ".")
-        cvTest <- paste("CV", trFoRe, sep = " ")
-
-        if ( class(accuracy) != "try-error")
-          {
-            accuracy <- round(accuracy[1,2], digits = 3)
-            accuracy <- data.matrix(accuracy)
-    
-            colnames(accuracy) <- c("correlation")
-            rownames(accuracy) <- cvTest
-
-            assign(validation, accuracy)
-      
-            if (!is.na(accuracy[1,1])) {
-              validationAll <- rbind(validationAll, accuracy)
-            }    
-        }
-    }
-  }    
-   
-    validationAll <- data.matrix(validationAll[order(-validationAll[, 1]), ])
-    
-    if (!is.null(validationAll)) {
-      validationMean <- data.matrix(round(colMeans(validationAll), digits = 2))
-      
-      rownames(validationMean) <- c("Average")
-     
-      validationAll <- rbind(validationAll, validationMean)
-      colnames(validationAll) <- c("Correlation")
-  }
-
-    validationAll <- data.frame(validationAll)
-    
-}
 }
 
 selectionPopResult <- c()

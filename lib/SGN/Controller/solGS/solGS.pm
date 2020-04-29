@@ -188,23 +188,24 @@ sub projects_links {
 }
 
 
-sub search_trials_trait : Path('/solgs/search/trials/trait') Args(1) {
-    my ($self, $c, $trait_id) = @_;
+sub search_trials_trait : Path('/solgs/search/trials/trait') Args() {
+    my ($self, $c, $trait_id, $gp, $protocol_id) = @_;
     
     $self->get_trait_details($c, $trait_id);
-    
+    $c->stash->{genotyping_protocol_id} = $protocol_id;
+   
     $c->stash->{template} = $c->controller('solGS::Files')->template('/search/trials/trait.mas');
 
 }
 
 
-sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
-    my ($self, $c, $trait_id) = @_;
+sub show_search_result_pops : Path('/solgs/search/result/populations') Args() {
+    my ($self, $c, $trait_id, $gp, $protocol_id) = @_;
     
     my $combine = $c->req->param('combine');
     my $page = $c->req->param('page') || 1;
 
-    my $projects_ids = $c->model('solGS::solGS')->search_trait_trials($trait_id);
+    my $projects_ids = $c->model('solGS::solGS')->search_trait_trials($trait_id, $protocol_id);
         
     my $ret->{status} = 'failed';
     my $formatted_projects = [];
@@ -217,7 +218,7 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
 	$self->get_projects_details($c, $projects_rs);
 	my $projects = $c->stash->{projects_details};
 
-	$self->format_trait_gs_projects($c, $trait_id, $projects);
+	$self->format_trait_gs_projects($c, $trait_id, $projects, $protocol_id);
 	$formatted_projects = $c->stash->{formatted_gs_projects}; 
 	
 	$ret->{status} = 'success';        
@@ -234,11 +235,11 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
 
 
 sub format_trait_gs_projects {
-   my ($self, $c, $trait_id, $projects) = @_; 
+   my ($self, $c, $trait_id, $projects, $protocol_id) = @_; 
 
    my @formatted_projects;
-
-   foreach my $pr_id (keys %$projects) 
+   $c->stash->{genotyping_protocol_id} = $protocol_id;
+    foreach my $pr_id (keys %$projects) 
    { 
        my $pr_name     = $projects->{$pr_id}{project_name};
        my $pr_desc     = $projects->{$pr_id}{project_desc};
@@ -251,15 +252,15 @@ sub format_trait_gs_projects {
 
        if ($has_genotype) 
        {
-	   my $trial_compatibility_file = $self->trial_compatibility_file($c);
+	   #my $trial_compatibility_file = $self->trial_compatibility_file($c);
 	   
-	   $self->trial_compatibility_table($c, $has_genotype);
-	   my $match_code = $c->stash->{trial_compatibility_code};
+	   #$self->trial_compatibility_table($c, $has_genotype);
+	   #my $match_code = $c->stash->{trial_compatibility_code};
 
 	   my $checkbox = qq |<form> <input  type="checkbox" name="project" value="$pr_id" onclick="solGS.combinedTrials.getPopIds()"/> </form> |;
-	   $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
+	   #$match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
 
-	   push @formatted_projects, [ $checkbox, qq|<a href="/solgs/trait/$trait_id/population/$pr_id" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $match_code];
+	   push @formatted_projects, [ $checkbox, qq|<a href="/solgs/trait/$trait_id/population/$pr_id/gp/$protocol_id" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year];
        }
    }     
 
@@ -406,8 +407,8 @@ sub store_project_marker_count {
 } 
 
 
-sub search_traits : Path('/solgs/search/traits/') Args(1) {
-    my ($self, $c, $query) = @_;
+sub search_traits : Path('/solgs/search/traits/') Args() {
+    my ($self, $c, $query, $gp, $protocol_id) = @_;
      
     my $traits = $c->model('solGS::solGS')->search_trait($query); 
     my $result = $c->model('solGS::solGS')->trait_details($traits);
@@ -415,7 +416,8 @@ sub search_traits : Path('/solgs/search/traits/') Args(1) {
     my $ret->{status} = 0;
     if ($result->first)
     {
-	$ret->{status} = 1;      
+	$ret->{status} = 1; 
+	$ret->{genotyping_protocol_id} = $protocol_id;
     }
   
     $ret = to_json($ret);
@@ -426,8 +428,8 @@ sub search_traits : Path('/solgs/search/traits/') Args(1) {
 }
 
 
-sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
-    my ($self, $c, $query) = @_;
+sub show_search_result_traits : Path('/solgs/search/result/traits') Args() {
+    my ($self, $c, $query, $gp, $protocol_id) = @_;
    
     my $traits = $c->model('solGS::solGS')->search_trait($query);
     my $result    = $c->model('solGS::solGS')->trait_details($traits);
@@ -439,7 +441,7 @@ sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
         my $name = $row->name;
         my $def  = $row->definition;
        
-        push @rows, [ qq |<a href="/solgs/search/trials/trait/$id"  onclick="solGS.waitPage()">$name</a>|, $def];      
+        push @rows, [ qq |<a href="/solgs/search/trials/trait/$id/gp/$protocol_id"  onclick="solGS.waitPage()">$name</a>|, $def];      
     }
   
     if (@rows)
@@ -447,6 +449,7 @@ sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
 	$c->stash(template   => $c->controller('solGS::Files')->template('/search/result/traits.mas'),
 		  result     => \@rows,
 		  query      => $query,
+		  genotyping_protocol_id => $protocol_id
 	    );
     }
 
@@ -848,6 +851,7 @@ sub trait :Path('/solgs/trait') Args() {
 	    $self->get_trait_details($c, $trait_id);	    
 	    $self->gs_modeling_files($c);
 
+	    $c->controller('solGS::modelAccuracy')->cross_validation_stat($c, $pop_id, $c->stash->{trait_abbr});
 	    $c->controller('solGS::Files')->traits_acronym_file($c, $pop_id);
 	    my $acronym_file = $c->stash->{traits_acronym_file};
 		    
@@ -869,7 +873,7 @@ sub gs_modeling_files {
   
     $self->output_files($c);
     $self->input_files($c);
-    $self->model_accuracy($c);
+    $c->controller('solGS::modelAccuracy')->model_accuracy_report($c);
     $self->top_blups($c, $c->stash->{rrblup_training_gebvs_file});
     $c->controller('solGS::Download')->training_prediction_download_urls($c);
     $self->top_markers($c, $c->stash->{marker_effects_file});
@@ -1275,29 +1279,6 @@ sub prediction_pop_analyzed_traits {
 }
 
 
-sub model_accuracy {
-    my ($self, $c) = @_;
-    my $file = $c->stash->{validation_file};
-
-    my $accuracy;
-    if (!-e $file) 
-    { 
-	$accuracy = [["Validation file doesn't exist.", "None"]];
-    }
-    elsif (!-s $file) 
-    { 
-	$accuracy = [["There is no cross-validation output report.", "None"]];
-    }
-    else
-    {
-	$accuracy = $c->controller('solGS::Utils')->read_file_data($file);	
-    }
-
-    $c->stash->{accuracy_report} = $accuracy;
- 
-}
-
-
 sub model_parameters {
     my ($self, $c) = @_;
 
@@ -1598,7 +1579,7 @@ sub check_population_has_genotype {
     
     if (!$has_genotype)
     {
-	$has_genotype = $c->model('solGS::solGS')->has_genotype($pop_id);
+	$has_genotype = $c->model('solGS::solGS')->has_genotype($pop_id, $protocol_id);
     }
   
     $c->stash->{population_has_genotype} = $has_genotype;
@@ -1817,13 +1798,6 @@ sub get_trait_details_of_trait_abbr {
     
     my $trait_abbr = $c->stash->{trait_abbr};
    
-    # if (!$c->stash->{pop_id}) 
-    # {	
-    # 	$c->stash->{pop_id} = $c->stash->{training_pop_id} || $c->stash->{combo_pops_id}; 
-    # }
-
-    my $trait_id;
-   
     my $acronym_pairs = $self->get_acronym_pairs($c, $c->stash->{training_pop_id});                   
     
     if ($acronym_pairs)
@@ -1835,7 +1809,7 @@ sub get_trait_details_of_trait_abbr {
 		my $trait_name =  $r->[1];
 		$trait_name    =~ s/^\s+|\s+$//g;                                
 		
-		$trait_id = $c->model('solGS::solGS')->get_trait_id($trait_name);
+		my $trait_id = $c->model('solGS::solGS')->get_trait_id($trait_name);
 		$self->get_trait_details($c, $trait_id);
 	    }
 	}
@@ -1854,7 +1828,7 @@ sub build_multiple_traits_models {
     my $traits;    
     
     for (my $i = 0; $i <= $#selected_traits; $i++)
-    {  
+    {
 	my $tr   = $c->model('solGS::solGS')->trait_name($selected_traits[$i]);
 	my $abbr = $c->controller('solGS::Utils')->abbreviate_term($tr);
 	$traits .= $abbr;
@@ -1873,7 +1847,17 @@ sub build_multiple_traits_models {
     my $file2 = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);
     
     $c->stash->{trait_file} = $file2;  
-   
+
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    my $cached = $c->controller('solGS::CachedResult')->check_single_trial_training_data($c, $pop_id, $protocol_id);
+    
+    if (!$cached)
+    {
+	$self->get_training_pop_data_query_job_args_file($c, [$pop_id], $protocol_id);
+	$c->stash->{prerequisite_jobs} = $c->stash->{training_pop_data_query_job_args_file};
+    }
+
+    
     $self->get_gs_modeling_jobs_args_file($c);	
     $c->stash->{dependent_jobs} =  $c->stash->{gs_modeling_jobs_args_file};
     $self->run_async($c);
@@ -1975,7 +1959,7 @@ sub create_model_summary {
 	$trait_page = qq | <a href="/solgs/model/combined/populations/$model_id/trait/$trait_id/gp/$protocol_id" onclick="solGS.waitPage()">$tr_abbr</a>|;
     }
 	            
-    $c->controller("solGS::solGS")->get_model_accuracy_value($c, $model_id, $tr_abbr);
+    $c->controller("solGS::modelAccuracy")->get_model_accuracy_value($c, $model_id, $tr_abbr);
     my $accuracy_value = $c->stash->{accuracy_value};
      
     $c->controller("solGS::Heritability")->get_heritability($c);
@@ -2002,7 +1986,7 @@ sub traits_with_valid_models {
 
     foreach my $analyzed_trait (@analyzed_traits) 
     {   
-        $self->get_model_accuracy_value($c, $pop_id, $analyzed_trait);        
+        $c->controller('solGS::modelAccuracy')->get_model_accuracy_value($c, $pop_id, $analyzed_trait);        
         my $av = $c->stash->{accuracy_value};            
         if ($av && $av =~ m/\d+/ && $av > 0)
         { 
@@ -2021,26 +2005,6 @@ sub traits_with_valid_models {
     $c->stash->{traits_with_valid_models} = \@filtered_analyzed_traits;
     $c->stash->{traits_ids_with_valid_models} = \@valid_traits_ids;
 
-}
-
-sub get_model_accuracy_value {
-    my ($self, $c, $model_id, $trait_abbr) = @_;
-
-    my $dir = $c->stash->{solgs_cache_dir};
-    opendir my $dh, $dir or die "can't open $dir: $!\n";
-
-    $c->stash->{training_pop_id} = $model_id;
-    $c->stash->{trait_abbr} = $trait_abbr;
-
-    $c->controller('solGS::Files')->validation_file($c);
-    my $validation_file = $c->stash->{validation_file};
-
-    my ($row) = grep {/Average/} read_file($validation_file);
-    my ($text, $accuracy_value) = split(/\t/,  $row);
-
-    $accuracy_value =~ s/\s+//g;
-    $c->stash->{accuracy_value} = $accuracy_value;
-  
 }
 
 
@@ -2531,7 +2495,7 @@ sub analyzed_traits {
 	    $self->get_trait_details($c);
 	    my $trait = $c->stash->{trait_abbr};
   
-            $self->get_model_accuracy_value($c, $training_pop_id, $trait);
+            $c->controller('solGS::modelAccuracy')->get_model_accuracy_value($c, $training_pop_id, $trait);
             my $av = $c->stash->{accuracy_value};
 
 	    my $trait_file;
