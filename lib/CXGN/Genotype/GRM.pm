@@ -56,6 +56,7 @@ use File::Slurp qw | write_file |;
 use POSIX;
 use File::Copy;
 use CXGN::Tools::Run;
+use File::Temp 'tempfile';
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -394,7 +395,7 @@ sub get_grm {
 
     my $tmp_output_dir = $shared_cluster_dir_config."/tmp_genotype_download_grm";
     mkdir $tmp_output_dir if ! -d $tmp_output_dir;
-    my $temp_out_file = $tmp_output_dir."/out_file";
+    my ($temp_out_file_fh, $temp_out_file) = tempfile("download_grm_XXXXX", DIR=> $tmp_output_dir);
 
     # Do the GRM on the cluster
     my $grm_cmd = CXGN::Tools::Run->new(
