@@ -22,6 +22,7 @@ Lukas Mueller <lam87@cornell.edu>
 <%args>
 $analysis_id
 $analysis_name
+$analysis_description
 </%args>
 
 <& /util/import_javascript.mas, entries => ['analyses'], classes => [ 'jquery', 'jquery.dataTables' ],  &>
@@ -29,7 +30,7 @@ $analysis_name
 <& /page/page_title.mas, title => "Analysis <span id=\"analyis_name_title\">$analysis_name</span> ($analysis_id)" &>
 
 <&| /page/info_section.mas, title=>"Analysis description", collapsible=>1, collapsed=>0 &>
-  <div  id="analysis_description"><div id="analysis_description">[analysis_description]</div></div>
+  <div  id="analysis_description"><div id="analysis_description"><blink>*</blink></div></div>
 </&>
 
 <&| /page/info_section.mas, title=>"Input data", collapsible=>1, collapsed=>0 &>
@@ -37,7 +38,7 @@ $analysis_name
 </&>
   
 <&| /page/info_section.mas, title=>"Accession list", collapsible=>1, collapsed=>0 &>
-  <div id="accession_names">...</div>
+  <div id="accession_names">[loading...]</div>
 </&>
 
 <&| /page/info_section.mas, title=>"Analysis Results", collapsible => 1, collapsed => 0 &>
@@ -50,7 +51,7 @@ $analysis_name
    
 
 <script>
-    alert("HEELLOOOOOO");
-   var analyses = window.jsMod['analyses'].retrieve_analysis_data(<% $analysis_id %>);
-    alert("CIAO!");
+  jQuery("#working_modal").modal("show");
+  window.jsMod['analyses'].retrieve_analysis_data(<% $analysis_id %>);
+  jQuery("#working_modal").modal("hide");    
 </script>
