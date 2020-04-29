@@ -26,7 +26,7 @@ sub ajax_analysis : Chained('/') PathPart('ajax/analysis') CaptureArgs(1) {
     $c->stash->{analysis_id} = $analysis_id;
 }
 
-sub store_analysis_json : Path('/ajax/store/analysis/json') ActionClass("REST") Args(0) {}
+sub store_analysis_json : Path('/ajax/analysis/store/json') ActionClass("REST") Args(0) {}
 
 sub store_analysis_json_POST {
     my $self = shift;
@@ -63,7 +63,7 @@ sub store_analysis_json_POST {
     $self->store_data($c, $params, \%values, \@stocks, \@plots, \@traits, $user_id);
 }
 
-sub store_analysis_file : Path('/ajax/store/analysis/file') ActionClass("REST") Args(0) {}
+sub store_analysis_file : Path('/ajax/analysis/store/file') ActionClass("REST") Args(0) {}
 
 sub store_analysis_file_POST {
     my $self = shift;
@@ -76,6 +76,27 @@ sub store_analysis_file_POST {
     my $analysis_type = $c->req->param("analysis_type");
     my $dataset_id = $c->req->param("dataset_id");
     my $description = $c->req->param("description");
+    
+    my $breeding_program = $c->req->param("breeding_program");
+
+    if (! defined($breeding_program)) {  
+	my @roles = $c->user->get_object()->get_roles();
+	print STDERR "ROLES = ".join(", ", @roles)."\n";
+	# get breeding program, which are roles that are not user,submitter, sequencer or curator
+	
+	foreach my $r (@roles) {
+	    if ($r !~ m/curator|user|submitter|sequencer/) {
+		$breeding_program = $r;
+	    }
+	}
+    }
+    print STDERR "Using breeding program $breeding_program\n";
+
+    if (! $breeding_program) {
+	$c->stash->{rest} = { error => "You do not have a breeding program associated with your account, which is required to store an analysis!" };
+	return;
+    }
+    
     my $user_id = $c->user()->get_object()->get_sp_person_id();
 
     print STDERR "Storing analysis file: $dir / $file...\n";
@@ -141,13 +162,14 @@ INFO
     foreach my $line (@lines) {
 	my ($acc, @values) = split /\t/, $line;
 	$acc =~ s/\"//g;
-	print STDERR "Reading data for $acc with value ".join(",", @values)."...\n";
+	#print STDERR "Reading data for $acc with value ".join(",", @values)."...\n";
 	my $plot_name = $analysis_name."_".$acc;
 	push @plots, $plot_name;
 	push @stocks, $acc;
 	for(my $i=0; $i<@traits; $i++) {
 	    if ($good_terms{$traits[$i]}) {  # only save good terms
-		print STDERR "Building hash with trait $traits[$i] and value $values[$i]...\n";
+		#print STDERR "Building hash with trait $traits[$i] and value $values[$i]...\n";
+		if ($values[$i] eq 'NA') { $values[$i] = undef; }
 		push @{$value_hash{$plot_name}->{$traits[$i]}}, $values[$i];
 	    }
 	}
@@ -178,6 +200,8 @@ sub store_data {
 	{
 	    bcs_schema => $bcs_schema,
 	    people_schema => $people_schema,
+	    name => $params->{analysis_name},
+#	    description => $params->{analysis_description}
 	});
 
     if ($params->{dataset_id} !~ /^\d+$/) {
@@ -189,7 +213,8 @@ sub store_data {
     if ($params->{dataset_id}) { 
 	$a->metadata()->dataset_id($params->{dataset_id});
     }
-    $a->name($params->{analysis_name});
+    #    $a->name($params->{analysis_name});
+
     $a->description($params->{description});
     $a->user_id($user_id);
 
@@ -268,6 +293,7 @@ sub list_analyses_by_user_table :Path('/ajax/analyses/by_user') Args(0) {
     my $c = shift;
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $user_id;
     if ($c->user()) {
 	$user_id = $c->user->get_object()->get_sp_person_id();
@@ -275,7 +301,7 @@ sub list_analyses_by_user_table :Path('/ajax/analyses/by_user') Args(0) {
     if (!$user_id) {
 	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
     }
-    my @analyses = CXGN::Analysis->retrieve_analyses_by_user($schema, $user_id);
+    my @analyses = CXGN::Analysis->retrieve_analyses_by_user($schema, $people_schema, $user_id);
 
     my @table;
     foreach my $a (@analyses) {
@@ -288,6 +314,23 @@ sub list_analyses_by_user_table :Path('/ajax/analyses/by_user') Args(0) {
 
 }
 
+
+=head1 retrieve_analysis_data()
+
+Chained from ajax_analysis
+URL = /ajax/analysis/<analysis_id>/retrieve
+returns data for the analysis_id in the following json structure:
+{ 
+    analysis_name
+    analysis_description
+    dataset
+    method
+    accession_names
+    data
+}
+
+=cut
+
 sub retrieve_analysis_data :Chained("ajax_analysis") PathPart('retrieve') :Args(0)  {
     my $self = shift;
     my $c = shift;
@@ -295,7 +338,7 @@ sub retrieve_analysis_data :Chained("ajax_analysis") PathPart('retrieve') :Args(
     my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     
-    my $a = CXGN::Analysis->new( { bcs_schema => $bcs_schema, people_schema => $people_schema, project_id => $c->stash->{analysis_id} } );
+    my $a = CXGN::Analysis->new( { bcs_schema => $bcs_schema, people_schema => $people_schema, trial_id => $c->stash->{analysis_id} } );
 
     my $ds = CXGN::Dataset->new( { schema => $bcs_schema, people_schema => $people_schema, sp_dataset_id => $a->metadata()->dataset_id() });
 
@@ -312,17 +355,21 @@ sub retrieve_analysis_data :Chained("ajax_analysis") PathPart('retrieve') :Args(
     my $dataref = $a->get_phenotype_matrix();
     
     my $resultref = {
-	dataset_id => $dataset_id,
-	dataset_name => $dataset_name,
-	dataset_description => $dataset_description,
+	analysis_name => $a->name(),
+	analysis_description => $a->description(),
+	dataset => { 
+	    dataset_id => $dataset_id,
+	    dataset_name => $dataset_name,
+	    dataset_description => $dataset_description,
+	},
 	#accession_ids => $a ->accession_ids(),
 	accession_names => $a->accession_names(),
 	traits => $a->traits(),
 	data => $dataref,
     };
 
-    $c->stash->{rest} = $resultref;
 
+    $c->stash->{rest} = $resultref;
 	
 }
 
