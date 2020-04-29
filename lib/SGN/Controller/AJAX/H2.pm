@@ -200,7 +200,7 @@ sub pheno_heritability_analysis_output :Path('/phenotypic/heritability/analysis/
     {
         $self->run_pheno_heritability_analysis($c);  
         $h2_json_file = $c->stash->{h2_coefficients_json_file};
-	$h2_table_file = $c->stash->{h2_coefficients_table_file}; 
+        $h2_table_file = $c->stash->{h2_coefficients_table_file}; 
     }
     
     if (-s $h2_json_file)

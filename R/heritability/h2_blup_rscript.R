@@ -140,48 +140,66 @@ ggsave(figure3_file_name, ml, width=8, height = int*2, dpi=80,limitsize=FALSE, u
 her = rep(NA,(ncol(pheno)-39))
 Vg = rep(NA,(ncol(pheno)-39))
 Ve = rep(NA,(ncol(pheno)-39))
+Vres = rep(NA, (ncol(pheno)-39))
 resp_var = rep(NA,(ncol(pheno)-39))
 
 
 #checkning number of locations
 locs <- unique(pheno$locationDbId)
+reps <- unique(pheno$replicate)
 szloc <- length(locs)
+szreps <- length(reps)
 
 numb = 1
 library(lmerTest)
 # Still need check temp data to ensure wright dimension
 
 for (i in 40:(ncol(pheno))) {
-	outcome = colnames(pheno)[i]    
-    print(paste0('outcome ', outcome))
+  outcome = colnames(pheno)[i]    
+  print(paste0('outcome ', outcome))
+  if (szreps > 1){
     if (szloc == 1){
-      model <- lmer(get(outcome)~(1|germplasmName)+replicate+blockNumber,
-        na.action = na.exclude,
-        data=pheno)
+      model <- lmer(get(outcome)~(1|germplasmName)+(1|replicate)+ blockNumber,
+                    na.action = na.exclude,
+                    data=pheno)
     }else{
-        model <- lmer(get(outcome) ~ (1|germplasmName) + studyYear + locationDbId + replicate +
-        blockNumber + germplasmName:locationDbId,
-        na.action = na.exclude,
-        data=pheno)
+      model <- lmer(get(outcome) ~ (1|germplasmName) + (1|studyYear) + (1|locationDbId) + (1|replicate%in%locationDbId:studyYear) +
+                      (1|germplasmName:locationDbId)+(1|germplasmName:studyYear) + blockNumber,
+                    na.action = na.exclude,
+                    data=pheno)
+      }
+    }else if (szreps == 1){
+      model <- lmer(get(outcome)~(1|germplasmName)+ blockNumber,
+                    na.action = na.exclude,
+                    data=pheno)
+    }else{
+      model <- lmer(get(outcome) ~ (1|germplasmName) + (1|studyYear) + (1|locationDbId) +
+                      (1|germplasmName:locationDbId)+(1|germplasmName:studyYear) + blockNumber,
+                    na.action = na.exclude,
+                    data=pheno)
     }
-    
-	  variance = as.data.frame(VarCorr(model))
-	  gvar = variance [1,'vcov']
-	  ervar = variance [2,'vcov']
-	  
-	  H2 = gvar/ (gvar + (ervar))
-	  H2nw = format(round(H2, 4), nsmall = 4)
-	  her[numb] = round(as.numeric(H2nw), digits =3)
-	  Vg[numb] = round(as.numeric(gvar), digits = 2)
-	  Ve[numb] = round(as.numeric(ervar), digits = 2)
-	  resp_var[numb] = colnames(pheno)[i]
-	  
-	  numb = numb + 1
-
+  
+  # variance = as.data.frame(VarCorr(model))
+  variance = VarCorr(model)
+  gvar = variance [[1]][1]
+  envar = variance [[2]][1]
+  resvar = attr(variance,"sc")^2
+  
+  H2 = gvar/ (gvar + (envar) + (resvar))
+  #H2 = gvar/(gvar + (envar))
+  H2nw = format(round(H2, 4), nsmall = 4)
+  her[numb] = round(as.numeric(H2nw), digits =3)
+  Vg[numb] = round(as.numeric(gvar), digits = 3)
+  Ve[numb] = round(as.numeric(envar), digits = 3)
+  Vres[numb] = round(as.numeric(resvar), digits = 3)
+  resp_var[numb] = colnames(pheno)[i]
+  
+  numb = numb + 1
+  
 }
 
 #Prepare information to export data
-Heritability = data.frame(resp_var,Vg, Ve, her)
+Heritability = data.frame(resp_var,Vg, Ve, Vres, her)
 
 library(tidyverse)
 Heritability = Heritability %>% 
@@ -189,7 +207,8 @@ Heritability = Heritability %>%
     trait = resp_var,
     Hert = her,
     Vg = Vg,
-    Ve = Ve
+    Ve = Ve,
+    Vres = Vres
   )
 
 print(Heritability)
