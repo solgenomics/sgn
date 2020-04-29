@@ -232,7 +232,7 @@ export function init(main_div){
 	//alert(final_filename);
 	
 	var selected_datasets = $('#available_datasets').val();
-
+	alert('Calling /ajax/analysis/store/file');
 	jQuery.ajax( {
 	    'method' : 'POST',
 	    'url': '/ajax/analysis/store/file',
@@ -259,7 +259,7 @@ export function init(main_div){
 		}
 	    },
 	    'error' : function(r) {
-		alert("A protocol error occurred. The system may not be available right now");
+		alert("A protocol error occurred. The system may not be available right now ("+r.responseText+")");
 		return;
 	    }
 	});
