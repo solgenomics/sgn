@@ -4399,7 +4399,7 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
 
     my %unique_genotype_accessions;
     if ($protocol_id) {
-        my @accession_list = keys %unique_accession_ids_genotypes;
+        my @accession_list = sort keys %unique_accession_ids_genotypes;
         my $geno = CXGN::Genotype::DownloadFactory->instantiate(
             'DosageMatrix',    #can be either 'VCF' or 'DosageMatrix'
             {
@@ -5248,7 +5248,7 @@ sub _perform_keras_cnn_predict {
 
     my %unique_genotype_accessions;
     if ($nd_protocol_id) {
-        my @accession_list = keys %unique_accession_ids_genotypes;
+        my @accession_list = sort keys %unique_accession_ids_genotypes;
         my $geno = CXGN::Genotype::DownloadFactory->instantiate(
             'DosageMatrix',    #can be either 'VCF' or 'DosageMatrix'
             {
