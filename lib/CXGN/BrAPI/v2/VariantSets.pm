@@ -119,7 +119,7 @@ sub search {
                 analysis =>$variant_sets{$id} {'analysis'},
                 availableFormats => \@availableFormats,
                 callSetCount => scalar @{$variant_sets{$id}{'genotypes'}},
-                referenceSetDbId => undef, #  update with referene set           
+                referenceSetDbId => keys $variant_sets{$id} {'analysisIds'},          
                 studyDbId => qq|$variant_sets{$id}{'dataProject'}|,          
                 variantCount => _sum($variant_sets{$id}{'markerCount'}),
                 variantSetDbId => qq|$id|,
@@ -211,7 +211,7 @@ sub detail {
             analysis =>$variant_sets{$id} {'analysis'},
             availableFormats => \@availableFormats,
             callSetCount => scalar @{$variant_sets{$id}{'genotypes'}},
-            referenceSetDbId => undef, #  update with referene set           
+            referenceSetDbId => keys $variant_sets{$id} {'analysisIds'},          
             studyDbId => qq|$variant_sets{$id}{'dataProject'}|,          
             variantCount => _sum($variant_sets{$id}{'markerCount'}),
             variantSetDbId => qq|$id|,
@@ -570,7 +570,7 @@ sub extract {
                 analysis =>$variant_sets{$id} {'analysis'},
                 availableFormats => \@availableFormats,
                 callSetCount => scalar @{$variant_sets{$id}{'genotypes'}},
-                referenceSetDbId => undef, #  update with referene set           
+                referenceSetDbId => keys $variant_sets{$id} {'analysisIds'},           
                 studyDbId => qq|$variant_sets{$id}{'dataProject'}|,          
                 variantCount => _sum($variant_sets{$id}{'markerCount'}),
                 variantSetDbId => qq|$id|,
