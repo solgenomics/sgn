@@ -113,8 +113,9 @@ solGS.histogram = function (params) {
             .bins(binNum)
         (traitValues);
 
+	
 	var xAxisScale = d3.scale.linear()
-            .domain([0, d3.max(traitValues)])
+            .domain([d3.min(traitValues), d3.max(traitValues)])
             .range([0, width]);
 
 	var yAxisScale = d3.scale.linear()
@@ -143,7 +144,7 @@ solGS.histogram = function (params) {
 				 xMax, 
 				 0.1 * xRange)
                        );
-	
+
 	var yAxisLabel = d3.scale.linear()
             .domain([0, d3.max(histogram, ( function (d) {return d.y;}) )])
             .range([height, 0]);
@@ -167,14 +168,14 @@ solGS.histogram = function (params) {
             .append("g")
             .attr("class", "bar")
             .attr("transform", function(d) {
-		return "translate(" + xAxisScale(d.x)  
+		return "translate(" + xAxisScale(d.x)
                     + "," + height - yAxisScale(d.y) + ")"; 
             });     
 	
 	bar.append("rect")
-            .attr("x", function(d) { return (pad.left + 5) + xAxisScale(d.x); } )
+            .attr("x", function(d) { return 2*pad.left + xAxisScale(d.x); } )
             .attr("y", function(d) {return height - yAxisScale(d.y); }) 
-            .attr("width", function(d) {return xAxisScale(d.dx) - 2  ; })
+            .attr("width", function(d) {return 0.1*width; })
             .attr("height", function(d) { return yAxisScale(d.y); })
             .style("fill", "green")
             .on("mouseover", function(d) {
@@ -187,7 +188,7 @@ solGS.histogram = function (params) {
 	bar.append("text")
             .text(function(d) { return d.y; })
             .attr("y", function(d) {return height - (yAxisScale(d.y) + 10); } )
-            .attr("x",  function(d) { return ((2*pad.left) + xAxisScale(d.x)); } )      
+            .attr("x",  function(d) { return 2*pad.left + xAxisScale(d.x) + 0.05*width; } )      
             .attr("dy", ".6em")
             .attr("text-anchor", "end")  
             .attr("font-family", "sans-serif")
@@ -210,7 +211,7 @@ solGS.histogram = function (params) {
         
 	histogramPlot.append("g")
             .attr("class", "y axis")
-            .attr("transform", "translate(" +(2* pad.left) +  "," + 0 + ")")
+            .attr("transform", "translate(" + 2* pad.left +  "," + 0 + ")")
             .call(yAxis)
             .selectAll("text")
             .attr("y", 0)
