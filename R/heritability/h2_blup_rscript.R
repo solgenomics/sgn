@@ -129,8 +129,10 @@ resp_var = rep(NA,(ncol(pheno)-39))
 #checkning number of locations
 locs <- unique(pheno$locationDbId)
 reps <- unique(pheno$replicate)
+years <- unique(pheno$studyYear)
 szloc <- length(locs)
 szreps <- length(reps)
+szyr <- length(years)
 
 numb = 1
 library(lmerTest)
