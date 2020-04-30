@@ -137,6 +137,8 @@ szyr <- length(years)
 numb = 1
 library(lmerTest)
 # Still need check temp data to ensure wright dimension
+library(lmerTest)
+# Still need check temp data to ensure wright dimension
 for (i in 40:(ncol(pheno))) {
   outcome = colnames(pheno)[i]    
   print(paste0('outcome ', outcome))
@@ -145,39 +147,61 @@ for (i in 40:(ncol(pheno))) {
       model <- lmer(get(outcome)~(1|germplasmName)+(1|replicate)+ blockNumber,
                     na.action = na.exclude,
                     data=pheno)
+      variance = as.data.frame(VarCorr(model))
+      gvar = variance [1,"vcov"]
+      envar = variance [2,"vcov"]
+      resvar = variance [3, "vcov"]
     }else if (szyr ==1) {
       model <- lmer(get(outcome) ~ (1|germplasmName) + (1|replicate) + (1|locationDbId) + (1|germplasmName:locationDbId),
                     na.action = na.exclude,
                     data=pheno)
+      
+      variance = as.data.frame(VarCorr(model))
+      gvar = variance [2,"vcov"]
+      envar = variance [4, "vcov"]
+      resvar = variance [5, "vcov"]
       }else{
         model <- lmer(get(outcome) ~ (1|germplasmName) + (1|replicate) + (1|locationDbId) + (1|germplasmName:locationDbId)+
                         (1|studyYear) + (1|germplasmName%in%locationDbId:studyYear),
                       na.action = na.exclude,
-                      data=pheno) 
+                      data=pheno)
+        
+        variance = as.data.frame(VarCorr(model))
+        gvar = variance [3,"vcov"]
+        envar = variance [5, "vcov"]
+        resvar = variance [7, "vcov"]
         }
     }else if (szreps == 1){
       if (szloc ==1){
-      model <- lmer(get(outcome)~(1|germplasmName)+blockNumber,
+      model <- lmer(get(outcome)~(1|germplasmName)+(1|blockNumber),
                     na.action = na.exclude,
                     data=pheno)
+      
+      variance = as.data.frame(VarCorr(model))
+      gvar = variance [1,"vcov"]
+      envar = variance [2,"vcov"]
+      resvar = variance [2, "vcov"]
       }else if (szyr == 1){
         model <- lmer(get(outcome)~(1|germplasmName)+(1|locationDbId) + (1|germplasmName:locationDbId),
                na.action = na.exclude,
                data=pheno)
+        
+        variance = as.data.frame(VarCorr(model))
+        gvar = variance [2,"vcov"]
+        envar = variance [4, "vcov"]
+        resvar = variance [5, "vcov"]
       }else{
       model <- lmer(get(outcome) ~ (1|germplasmName) + (1|studyYear) + (1|locationDbId) +
                       (1|germplasmName:locationDbId)+(1|germplasmName:studyYear),
                     na.action = na.exclude,
                     data=pheno)
+      
+      variance = as.data.frame(VarCorr(model))
+      gvar = variance [3,"vcov"]
+      envar = variance [5, "vcov"]
+      resvar = variance [7, "vcov"]
       }
     }
-
-  
-  # variance = as.data.frame(VarCorr(model))
-  variance = VarCorr(model)
-  gvar = variance [[1]][1]
-  envar = variance [[2]][1]
-  resvar = attr(variance,"sc")^2
   
   H2 = gvar/ (gvar + (envar) + (resvar))
   #H2 = gvar/(gvar + (envar))
@@ -189,6 +213,7 @@ for (i in 40:(ncol(pheno))) {
   resp_var[numb] = colnames(pheno)[i]
   
   numb = numb + 1
+  
   
 }
 
