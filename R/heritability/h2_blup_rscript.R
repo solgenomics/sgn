@@ -67,24 +67,6 @@ for (i in 40:ncol(pheno)){
 	}
 }
 
-# z=1
-# png(figure3_file_name,height=250*n)
-# par(mar=c(4,4,2,2))
-# par(mfrow=c(n,2))
-# for(i in 40:ncol(pheno)){
-# 	test = is.numeric(pheno[,i])
-# 	if (test == "TRUE") {
-# 		hist(pheno[,i], main = "Data Distribution", xlab = traits[z])
-# 		boxplot(pheno[,i], main = "Boxplot", xlab= traits[z])
-# 		z=z+1
-# 	}
-# 	else {
-# 		z=z+1
-# 	}
-# }
-# dev.off()
-
-
 
 names <- colnames(pheno)
 cbPalette <- c("blue","red","orange","green","yellow")
@@ -153,7 +135,6 @@ szreps <- length(reps)
 numb = 1
 library(lmerTest)
 # Still need check temp data to ensure wright dimension
-
 for (i in 40:(ncol(pheno))) {
   outcome = colnames(pheno)[i]    
   print(paste0('outcome ', outcome))
@@ -162,22 +143,33 @@ for (i in 40:(ncol(pheno))) {
       model <- lmer(get(outcome)~(1|germplasmName)+(1|replicate)+ blockNumber,
                     na.action = na.exclude,
                     data=pheno)
-    }else{
-      model <- lmer(get(outcome) ~ (1|germplasmName) + (1|studyYear) + (1|locationDbId) + (1|replicate%in%locationDbId:studyYear) +
-                      (1|germplasmName:locationDbId)+(1|germplasmName:studyYear) + blockNumber,
+    }else if (szyr ==1) {
+      model <- lmer(get(outcome) ~ (1|germplasmName) + (1|replicate) + (1|locationDbId) + (1|germplasmName:locationDbId),
+                    na.action = na.exclude,
+                    data=pheno)
+      }else{
+        model <- lmer(get(outcome) ~ (1|germplasmName) + (1|replicate) + (1|locationDbId) + (1|germplasmName:locationDbId)+
+                        (1|studyYear) + (1|germplasmName%in%locationDbId:studyYear),
+                      na.action = na.exclude,
+                      data=pheno) 
+        }
+    }else if (szreps == 1){
+      if (szloc ==1){
+      model <- lmer(get(outcome)~(1|germplasmName)+blockNumber,
+                    na.action = na.exclude,
+                    data=pheno)
+      }else if (szyr == 1){
+        model <- lmer(get(outcome)~(1|germplasmName)+(1|locationDbId) + (1|germplasmName:locationDbId),
+               na.action = na.exclude,
+               data=pheno)
+      }else{
+      model <- lmer(get(outcome) ~ (1|germplasmName) + (1|studyYear) + (1|locationDbId) +
+                      (1|germplasmName:locationDbId)+(1|germplasmName:studyYear),
                     na.action = na.exclude,
                     data=pheno)
       }
-    }else if (szreps == 1){
-      model <- lmer(get(outcome)~(1|germplasmName)+ blockNumber,
-                    na.action = na.exclude,
-                    data=pheno)
-    }else{
-      model <- lmer(get(outcome) ~ (1|germplasmName) + (1|studyYear) + (1|locationDbId) +
-                      (1|germplasmName:locationDbId)+(1|germplasmName:studyYear) + blockNumber,
-                    na.action = na.exclude,
-                    data=pheno)
     }
+
   
   # variance = as.data.frame(VarCorr(model))
   variance = VarCorr(model)
