@@ -38,6 +38,7 @@ use CXGN::BrAPI::v2::ObservationUnits;
 use CXGN::BrAPI::v2::ObservationVariables;
 use CXGN::BrAPI::v2::Programs;
 use CXGN::BrAPI::v2::ReferenceSets;
+use CXGN::BrAPI::v2::References;
 use CXGN::BrAPI::v2::Results;
 use CXGN::BrAPI::v2::Samples;
 use CXGN::BrAPI::v2::ServerInfo;

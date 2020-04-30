@@ -4251,7 +4251,7 @@ sub referencesets_GET {
 	_standard_response_construction($c, $brapi_package_result);
 }
 
-sub referencesets_search  : Chained('brapi') PathPart('search/calls') Args(0) : ActionClass('REST') { }
+sub referencesets_search  : Chained('brapi') PathPart('search/referencesets') Args(0) : ActionClass('REST') { }
 
 sub referencesets_search_POST {
     my $self = shift;
@@ -4259,13 +4259,104 @@ sub referencesets_search_POST {
     save_results($self,$c,$c->stash->{clean_inputs},'ReferenceSets');
 }
 
-sub referencesets_search_retrieve : Chained('brapi') PathPart('search/calls') Args(1) {
+sub referencesets_search_retrieve : Chained('brapi') PathPart('search/referencesets') Args(1) {
     my $self = shift;
     my $c = shift;
     my $search_id = shift;
     retrieve_results($self, $c, $search_id, 'ReferenceSets');
 }
 
+=head2 brapi/v2/reference
+
+ Usage: To retrieve data for reference 
+ Desc:
+ Return JSON example:
+        {
+            "metadata" : {
+                "pagination": {
+                    "pageSize": 10,
+                    "currentPage": 1,
+                    "totalCount": 10,
+                    "totalPages": 1
+                },
+                "status": []
+            },
+
+              "result": {
+			    "data": [
+			      {
+			        "additionalInfo": {},
+			        "length": 50000000,
+			        "md5checksum": "c2365e900c81a89cf74d83dab60df146",
+			        "referenceDbId": "fc0a81d0",
+			        "referenceName": "Chromosome 2",
+			        "referenceSetDbId": "c1ecfef1",
+			        "sourceAccessions": [
+			          "GCF_000001405.26"
+			        ],
+			        "sourceDivergence": 0.01,
+			        "sourceURI": "https://wiki.brapi.org/files/demo.fast",
+			        "species": {
+			          "term": "sonic hedgehog",
+			          "termURI": "MGI:MGI:98297"
+			        }
+			      }
+			    ]
+			}
+        }
+ Args:
+ Side Effects:
+
+=cut
+
+sub reference : Chained('brapi') PathPart('references') Args(0) : ActionClass('REST') { }
+
+sub reference_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('References');
+	my $brapi_package_result = $brapi_module->search($clean_inputs);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub reference_single : Chained('brapi') PathPart('references') CaptureArgs(1) {
+	my $self = shift;
+	my $c = shift;
+	my $id = shift;
+	$c->stash->{referenceDbId} = $id; # this is genotypeprop_id
+}
+
+sub reference_fetch : Chained('reference_single') PathPart('') Args(0) : ActionClass('REST') { }
+
+
+sub reference_fetch_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('References');
+	my $brapi_package_result = $brapi_module->detail($c->stash->{referenceDbId});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub reference_search  : Chained('brapi') PathPart('search/references') Args(0) : ActionClass('REST') { }
+
+sub reference_search_POST {
+    my $self = shift;
+    my $c = shift;
+    save_results($self,$c,$c->stash->{clean_inputs},'References');
+}
+
+sub reference_search_retrieve : Chained('brapi') PathPart('search/references') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'Referenced');
+}
 
 #functions
 sub save_results {
