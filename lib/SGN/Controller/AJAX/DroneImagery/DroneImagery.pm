@@ -23,6 +23,7 @@ use SGN::Image;
 use CXGN::DroneImagery::ImagesSearch;
 use URI::Encode qw(uri_encode uri_decode);
 use File::Basename qw | basename dirname|;
+use File::Slurp qw(write_file);
 use CXGN::Calendar;
 use Image::Size;
 use Text::CSV;
@@ -4427,11 +4428,9 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
                 if ($row) {
                     my @line = split "\t", $row;
                     my $stock_id = shift @line;
+                    my $out_line = join "\t", @line;
                     my $geno_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/genoinputfileXXXX');
-                    open my $geno_out_fh, ">", $geno_temp_input_file or die "Can't open: $!";
-                        my $out_line = join "\t", @line;
-                        print $geno_out_fh $out_line."\n";
-                    close($geno_out_fh);
+                    my $status = write_file($geno_temp_input_file, $out_line."\n");
                     $unique_genotype_accessions{$stock_id} = $geno_temp_input_file;
                 }
             }
