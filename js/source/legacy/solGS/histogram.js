@@ -7,23 +7,6 @@
 var solGS = solGS || function solGS () {};
 
 
-jQuery(document).ready(function () {
-  
-    var traitId      = jQuery("#trait_id").val();    
-    var population   = solGS.getPopulationDetails();
-    var populationId = population.training_pop_id;
-    var comboPopsId  = population.combo_pops_id;
-   
-    var params = { 
-	'trait_id'     : traitId,
-	'training_pop_id': populationId,
-	'combo_pops_id'  : comboPopsId
-    };
-
-    solGS.histogram(params);
-
-});
-
 
 solGS.histogram = function (params) {
     
@@ -71,7 +54,13 @@ solGS.histogram = function (params) {
 							 );
 
 		    } else {
-			plotHistogram(traitValues);
+			var args = {
+			    'values' : traitValues,
+			    'canvas' : 'trait_histogram_canvas',
+			    'plot_id': 'trait_histogram_plot'
+			};
+			
+			plotHistogram(args);
 			
 			jQuery("#histogram_message").empty();
 			descriptiveStat(stat);
@@ -91,7 +80,11 @@ solGS.histogram = function (params) {
     }
 
 
-    function plotHistogram (traitValues) {
+    function plotHistogram (histo) {
+
+	var canvas = histo.canvas || 'histogram_canvas';
+	var plotId = histo.plot_id || 'histogram_plot';
+	var values = histo.values;
 	
 	var height = 300;
 	var width  = 500;
@@ -99,7 +92,7 @@ solGS.histogram = function (params) {
 	var totalH = height + pad.top + pad.bottom;
 	var totalW = width + pad.left + pad.right;
 	
-	uniqueValues = getUnique(traitValues);
+	uniqueValues = getUnique(values);
 	
 	var binNum;
 	
@@ -109,33 +102,32 @@ solGS.histogram = function (params) {
 	    binNum = uniqueValues.length;	
 	}
 
+	var xRange;
+	var xMin;
+	var xMax;
+
+	if (binNum == 1) {
+	    xRange = values[0];
+	    xMin   = 0;
+	    xMax   = d3.max(values);
+	} else {
+	    xRange = d3.max(values) -  d3.min(values);
+	    xMin   = d3.min(values);
+	    xMax   = d3.max(values);
+	}
+
 	var histogram = d3.layout.histogram()
             .bins(binNum)
-        (traitValues);
+        (values);
 
 	
 	var xAxisScale = d3.scale.linear()
-            .domain([d3.min(traitValues), d3.max(traitValues)])
+            .domain([xMin, xMax])
             .range([0, width]);
 
 	var yAxisScale = d3.scale.linear()
             .domain([0, d3.max(histogram, ( function (d) {return d.y;}) )])
             .range([0, height]);
-
-	var xRange;
-	var xMin;
-	var xMax;
-
-
-	if (binNum == 1) {
-	    xRange = traitValues[0];
-	    xMin   = 0;
-	    xMax   = d3.max(traitValues);
-	} else {
-	    xRange = d3.max(traitValues) -  d3.min(traitValues);
-	    xMin   = d3.min(traitValues);
-	    xMax   = d3.max(traitValues);
-	}
 	
 	var xAxis = d3.svg.axis()
             .scale(xAxisScale)
@@ -153,13 +145,13 @@ solGS.histogram = function (params) {
             .scale(yAxisLabel)
             .orient("left");
 
-	var svg = d3.select("#trait_histogram_canvas")
+	var svg = d3.select("#" + canvas)
             .append("svg")
             .attr("height", totalH)
             .attr("width", totalW);
         
 	var histogramPlot = svg.append("g")
-            .attr("id", "trait_histogram_plot")
+            .attr("id", plotId)
             .attr("transform", "translate(" +  pad.left + "," + pad.top + ")");
 
 	var bar = histogramPlot.selectAll(".bar")
@@ -206,8 +198,7 @@ solGS.histogram = function (params) {
             .attr("dy", ".1em")         
             .attr("transform", "rotate(90)")
             .attr("fill", "purple")
-            .style({"text-anchor":"start", "fill": "green"});
-	
+            .style({"text-anchor":"start", "fill": "green"});	
         
 	histogramPlot.append("g")
             .attr("class", "y axis")
@@ -232,9 +223,7 @@ solGS.histogram = function (params) {
             .text("Frequency")            
             .attr("fill", "teal")
             .style("fill", "teal")
-            .attr("transform", "rotate(-90)");
-	
-	
+            .attr("transform", "rotate(-90)");	
     }   
 
 
@@ -272,3 +261,21 @@ solGS.histogram = function (params) {
     }
 
 }
+
+
+jQuery(document).ready(function () {
+  
+    var traitId      = jQuery("#trait_id").val();    
+    var population   = solGS.getPopulationDetails();
+    var populationId = population.training_pop_id;
+    var comboPopsId  = population.combo_pops_id;
+   
+    var params = { 
+	'trait_id'     : traitId,
+	'training_pop_id': populationId,
+	'combo_pops_id'  : comboPopsId
+    };
+
+    solGS.histogram(params);
+
+});
