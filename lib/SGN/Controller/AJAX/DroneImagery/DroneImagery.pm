@@ -4422,18 +4422,13 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
         );
         open my $geno_fh, "<&", $file_handle or die "Can't open output file: $!";
             my $header = <$geno_fh>;
-            chomp($header);
-            my @header_line = split "\t", $header;
-            shift(@header_line);
             while (my $row = <$geno_fh>) {
                 chomp($row);
                 my @line = split "\t", $row;
                 my $stock_id = shift @line;
                 my $geno_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/genoinputfileXXXX');
                 open my $geno_out_fh, ">", $geno_temp_input_file or die "Can't open: $!";
-                    my $out_header_line = join "\t", @header_line;
                     my $out_line = join "\t", @line;
-                    print $geno_out_fh $out_header_line."\n";
                     print $geno_out_fh $out_line."\n";
                 close($geno_out_fh);
                 $unique_genotype_accessions{$stock_id} = $geno_temp_input_file;
@@ -4539,6 +4534,9 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
                                 my @aux_values;
                                 foreach my $aux_trait (@aux_trait_id) {
                                     my $aux_value = $phenotype_data_hash{$stock_id} ? $phenotype_data_hash{$stock_id}->{aux_trait_value}->{$aux_trait} : '';
+                                    if (!$aux_value) {
+                                        $aux_value = '';
+                                    }
                                     push @aux_values, $aux_value;
                                 }
                                 my $aux_values_string = scalar(@aux_values)>0 ? join ',', @aux_values : '';
@@ -4585,6 +4583,9 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
                                 my @aux_values;
                                 foreach my $aux_trait (@aux_trait_id) {
                                     my $aux_value = $phenotype_data_hash{$stock_id} ? $phenotype_data_hash{$stock_id}->{aux_trait_value}->{$aux_trait} : '';
+                                    if (!$aux_value) {
+                                        $aux_value = '';
+                                    }
                                     push @aux_values, $aux_value;
                                 }
                                 my $aux_values_string = scalar(@aux_values)>0 ? join ',', @aux_values : '';
@@ -5271,18 +5272,13 @@ sub _perform_keras_cnn_predict {
         );
         open my $geno_fh, "<&", $file_handle or die "Can't open output file: $!";
             my $header = <$geno_fh>;
-            chomp($header);
-            my @header_line = split "\t", $header;
-            shift(@header_line);
             while (my $row = <$geno_fh>) {
                 chomp($row);
                 my @line = split "\t", $row;
                 my $stock_id = shift @line;
                 my $geno_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/genoinputfileXXXX');
                 open my $geno_out_fh, ">", $geno_temp_input_file or die "Can't open: $!";
-                    my $out_header_line = join "\t", @header_line;
                     my $out_line = join "\t", @line;
-                    print $geno_out_fh $out_header_line."\n";
                     print $geno_out_fh $out_line."\n";
                 close($geno_out_fh);
                 $unique_genotype_accessions{$stock_id} = $geno_temp_input_file;
@@ -5424,6 +5420,9 @@ sub _perform_keras_cnn_predict {
                                 my @aux_values;
                                 foreach my $aux_trait (@$aux_trait_ids) {
                                     my $aux_value = $phenotype_data_hash{$stock_id} ? $phenotype_data_hash{$stock_id}->{aux_trait_value}->{$aux_trait} : '';
+                                    if (!$aux_value) {
+                                        $aux_value = '';
+                                    }
                                     push @aux_values, $aux_value;
                                 }
                                 my $aux_values_string = scalar(@aux_values)>0 ? join ',', @aux_values : '';
@@ -5470,6 +5469,9 @@ sub _perform_keras_cnn_predict {
                                 my @aux_values;
                                 foreach my $aux_trait (@$aux_trait_ids) {
                                     my $aux_value = $phenotype_data_hash{$stock_id} ? $phenotype_data_hash{$stock_id}->{aux_trait_value}->{$aux_trait} : '';
+                                    if (!$aux_value) {
+                                        $aux_value = '';
+                                    }
                                     push @aux_values, $aux_value;
                                 }
                                 my $aux_values_string = scalar(@aux_values)>0 ? join ',', @aux_values : '';
