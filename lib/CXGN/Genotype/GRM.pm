@@ -390,7 +390,7 @@ sub get_grm {
     my $cmd = 'R -e "library(genoDataFilter); library(rrBLUP); library(data.table); library(scales);
     mat <- fread(\''.$grm_tempfile.'\', header=FALSE, sep=\'\t\');
     range_check <- range(as.matrix(mat)[1,]);
-    if (range_check[2] - range_check[1] <= 1 || length(table(as.matrix(mat)[1,])) < 2 ) {
+    if (length(table(as.matrix(mat)[1,])) < 2 || (!is.na(range_check[1]) && !is.na(range_check[2]) && range_check[2] - range_check[1] <= 1 )) {
         mat <- as.data.frame(rescale(as.matrix(mat), to = c(-1,1), from = c(0,2) ));
     } else {
         mat <- as.data.frame(rescale(as.matrix(mat), to = c(-1,1) ));
