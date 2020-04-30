@@ -2147,6 +2147,76 @@ xref: PMID:22626821 "Europe PMC"
 is_a: CHEBI:61870
 relationship: variable_of CHEBI:00000
 
+[Term]
+id: CHEBI:87381
+name: 3-methylpentanol
+subset: 3_STAR
+def: "A primary alcohol that is pentanol substituted by a methyl group at position 3." []
+synonym: "3-methylpentan-1-ol" EXACT IUPAC_NAME [IUPAC]
+synonym: "3-ethylbutanol" RELATED [ChEBI]
+property_value: http://purl.obolibrary.org/obo/chebi/mass "102.17480" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/formula "C6H14O" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/monoisotopicmass "102.10447" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/charge "0" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchi "InChI=1S/C6H14O/c1-3-6(2)4-5-7/h6-7H,3-5H2,1-2H3" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchikey "IWTBVKIGCDZRPL-UHFFFAOYSA-N" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/smiles "CCC(C)CCO" xsd:string
+xref: Reaxys:1718979 "Reaxys"
+xref: CAS:589-35-5 "NIST Chemistry WebBook"
+xref: CAS:589-35-5 "ChemIDplus"
+xref: PMID:20860033 "Europe PMC"
+xref: PMID:21341698 "Europe PMC"
+is_a: CHEBI:15734
+relationship: has_role CHEBI:76924
+relationship: variable_of CHEBI:00000
+
+[Term]
+id: CHEBI:89944
+name: 1-Penten-3-ol
+subset: 2_STAR
+synonym: "pent-1-en-3-ol" RELATED [HMDB]
+synonym: "Ethyl vinyl carbinol" RELATED [HMDB]
+synonym: "FEMA 3584" RELATED [HMDB]
+synonym: "Vinyl ethyl carbinol" RELATED [HMDB]
+synonym: "Pent-1-en-3-ol" RELATED [HMDB]
+synonym: "1-Ethylallyl alcohol" RELATED [HMDB]
+synonym: "Penten-3-ol" RELATED [HMDB]
+synonym: "Ethylvinylcarbinol" RELATED [HMDB]
+synonym: "1-Penten-3-ol (E)" RELATED [HMDB]
+synonym: "1-Pentene-3-ol" RELATED [HMDB]
+synonym: "alpha-Ethylallyl alcohol" RELATED [HMDB]
+property_value: http://purl.obolibrary.org/obo/chebi/mass "86.132" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/charge "0" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/monoisotopicmass "86.07316" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/formula "C5H10O" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchikey "VHVMXWZXFBOANQ-UHFFFAOYSA-N" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchi "InChI=1S/C5H10O/c1-3-5(6)4-2/h3,5-6H,1,4H2,2H3" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/smiles "C=CC(CC)O" xsd:string
+xref: CAS:616-25-1 "KEGG COMPOUND"
+xref: HMDB:HMDB0031605 
+xref: PMID:21386183 "Europe PMC"
+is_a: CHEBI:30879
+relationship: variable_of CHEBI:00000
+
+[Term]
+id: CHEBI:136829
+name: 1-aci-nitro-2-(phenyl)ethane
+subset: 3_STAR
+def: "An aci-nitro compound resulting from the formal tautomerisation of the nitro group of (2-nitroethyl)benzene." []
+synonym: "(2-phenylethylidene)azinic acid" EXACT IUPAC_NAME [IUPAC]
+synonym: "1-aci-nitro-2-(phenyl)ethane" EXACT [UniProt]
+property_value: http://purl.obolibrary.org/obo/chebi/formula "C8H9NO2" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/mass "151.163" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/monoisotopicmass "151.06333" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/charge "0" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/smiles "C1(CC=[N+](O)[O-])=CC=CC=C1" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchi "InChI=1S/C8H9NO2/c10-9(11)7-6-8-4-2-1-3-5-8/h1-5,7H,6H2,(H,10,11)" xsd:string
+property_value: http://purl.obolibrary.org/obo/chebi/inchikey "KUPCZGVUUHIRGX-UHFFFAOYSA-N" xsd:string
+xref: MetaCyc:CPD-12383 
+xref: Reaxys:7987841 "Reaxys"
+is_a: CHEBI:136622
+is_a: CHEBI:22712
+relationship: variable_of CHEBI:00000
 
 [Typedef]
 id: has_part
