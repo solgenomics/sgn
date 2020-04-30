@@ -4424,14 +4424,16 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
             my $header = <$geno_fh>;
             while (my $row = <$geno_fh>) {
                 chomp($row);
-                my @line = split "\t", $row;
-                my $stock_id = shift @line;
-                my $geno_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/genoinputfileXXXX');
-                open my $geno_out_fh, ">", $geno_temp_input_file or die "Can't open: $!";
-                    my $out_line = join "\t", @line;
-                    print $geno_out_fh $out_line."\n";
-                close($geno_out_fh);
-                $unique_genotype_accessions{$stock_id} = $geno_temp_input_file;
+                if ($row) {
+                    my @line = split "\t", $row;
+                    my $stock_id = shift @line;
+                    my $geno_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/genoinputfileXXXX');
+                    open my $geno_out_fh, ">", $geno_temp_input_file or die "Can't open: $!";
+                        my $out_line = join "\t", @line;
+                        print $geno_out_fh $out_line."\n";
+                    close($geno_out_fh);
+                    $unique_genotype_accessions{$stock_id} = $geno_temp_input_file;
+                }
             }
         close($geno_fh);
         @accession_ids = keys %unique_genotype_accessions;
@@ -5274,14 +5276,16 @@ sub _perform_keras_cnn_predict {
             my $header = <$geno_fh>;
             while (my $row = <$geno_fh>) {
                 chomp($row);
-                my @line = split "\t", $row;
-                my $stock_id = shift @line;
-                my $geno_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/genoinputfileXXXX');
-                open my $geno_out_fh, ">", $geno_temp_input_file or die "Can't open: $!";
-                    my $out_line = join "\t", @line;
-                    print $geno_out_fh $out_line."\n";
-                close($geno_out_fh);
-                $unique_genotype_accessions{$stock_id} = $geno_temp_input_file;
+                if ($row) {
+                    my @line = split "\t", $row;
+                    my $stock_id = shift @line;
+                    my $geno_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/genoinputfileXXXX');
+                    open my $geno_out_fh, ">", $geno_temp_input_file or die "Can't open: $!";
+                        my $out_line = join "\t", @line;
+                        print $geno_out_fh $out_line."\n";
+                    close($geno_out_fh);
+                    $unique_genotype_accessions{$stock_id} = $geno_temp_input_file;
+                }
             }
         close($geno_fh);
         @accession_ids = keys %unique_genotype_accessions;
