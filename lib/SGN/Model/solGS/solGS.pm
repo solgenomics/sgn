@@ -188,11 +188,12 @@ sub refresh_materialized_view_all_gs_traits {
 
 
 sub search_trait_trials {
-    my ($self, $trait_id) = @_;
+    my ($self, $trait_id, $protocol_id) = @_;
 
     #my $q = "SELECT distinct(trial_id) FROM traitsXtrials ORDER BY trial_id";
-    my $protocol = $self->genotyping_protocol();
-
+    my $protocol_detail = $self->protocol_detail($protocol_id);
+    my $protocol = $protocol_detail->{name};
+    
     my $q = "SELECT distinct(trial_id) 
                  FROM traitsXtrials 
                  JOIN genotyping_protocolsXtrials USING (trial_id)
@@ -373,9 +374,10 @@ sub has_phenotype {
 
 
 sub has_genotype {
-    my ($self, $pr_id) = @_;
+    my ($self, $pr_id, $protocol_id) = @_;
 
-    my $protocol = $self->genotyping_protocol();
+    my $protocol_detail = $self->protocol_detail();
+    my $protocol = $protocol_detail->{name};
    
     my $q = "SELECT genotyping_protocol_name, genotyping_protocol_id 
                  FROM genotyping_protocolsXtrials 
