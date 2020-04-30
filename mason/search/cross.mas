@@ -58,7 +58,7 @@
 <thead>
   <tr>
     <th>Female Parent</th>
-    <th>Male Parent</th>
+    <th>Male Parent/Population</th>
     <th>Progeny</th>
     <th>Cross Type</th>
   </tr>
@@ -132,15 +132,15 @@
 <thead>
   <tr>
     <th>Female Parent</th>
-    <th>Male Parent</th>
-    <th>Cross Name</th>
+    <th>Male Parent/Population</th>
+    <th>Cross Unique ID</th>
     <th>Cross Type</th>
   </tr>
 </thead>
 
 </table>
 <br>
-<&| /page/info_section.mas, title => 'Copy crosses to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the cross names showing in table to a new or exisiting list</i>'&>
+<&| /page/info_section.mas, title => 'Copy crosses to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the cross unique ids showing in table to a new or exisiting list</i>'&>
 <br>
 <div style="text-align:right" id="crosses_to_list_menu"></div>
 <div id="cross_names" style="display: none;"></div>
