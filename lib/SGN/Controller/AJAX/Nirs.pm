@@ -187,6 +187,7 @@ while( <$in> )
     s/,n/,/g;
     s/n}/}/g;
     s/{n/{/g;
+    s/\"{/{/g;
     print $out $_;
     }
 
