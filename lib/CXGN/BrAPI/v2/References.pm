@@ -30,7 +30,7 @@ sub search {
 
 	my @data;
 	my $counter = 0;
-	my $where_clause;
+	my $where_clause = "";
     my %reference_sets;
 
     my $vcf_map_details_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
@@ -44,6 +44,9 @@ sub search {
 
     my $h = $schema->storage->dbh()->prepare($subquery);
     $h->execute();
+
+    my $start_index = $page*$page_size;
+    my $end_index = $page*$page_size + $page_size - 1;
 
     while (my ($referenceset, $species, $protocol, $header ) = $h->fetchrow_array()) {   
     	$referenceset =~ s/"//g;
@@ -67,23 +70,25 @@ sub search {
             if ( $min_length && $length && $min_length->[0] > $length + 0 ) { next; } 
 
             if($referenceName){
-                push @data, {
-                    additionalInfo => {},
-                    isDerived => JSON::false,
-                    length => $length + 0,
-                    md5checksum => $md5,
-                    referenceSetDbId => qq|$protocol|,
-                    referenceSetName => $referenceset,
-                    referenceDbId => qq|$referenceName|,
-                    referenceName => qq|$referenceName|,
-                    sourceAccessions => undef,
-                    sourceDivergence => undef,
-                    sourceURI => undef,
-                    species => { 
-                        term => $species,
-                        termURI => undef
-                    }
-                };
+                if ($counter >= $start_index && $counter <= $end_index) {
+                    push @data, {
+                        additionalInfo => {},
+                        isDerived => JSON::false,
+                        length => $length + 0,
+                        md5checksum => $md5,
+                        referenceSetDbId => qq|$protocol|,
+                        referenceSetName => $referenceset,
+                        referenceDbId => qq|$referenceName|,
+                        referenceName => qq|$referenceName|,
+                        sourceAccessions => undef,
+                        sourceDivergence => undef,
+                        sourceURI => undef,
+                        species => { 
+                            term => $species,
+                            termURI => undef
+                        }
+                    };
+                }
                 $counter++;
             }
         }

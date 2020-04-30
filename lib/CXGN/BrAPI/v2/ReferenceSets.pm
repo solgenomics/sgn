@@ -27,7 +27,7 @@ sub search {
 
 	my @data;
 	my $counter = 0;
-	my $where_clause;
+	my $where_clause ="";
 
     my $vcf_map_details_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
 
@@ -41,6 +41,9 @@ sub search {
     my $h = $schema->storage->dbh()->prepare($subquery);
     $h->execute();
 
+    my $start_index = $page*$page_size;
+    my $end_index = $page*$page_size + $page_size - 1;
+
     while (my ($reference, $species, $protocol, $header ) = $h->fetchrow_array()) {
     	$reference =~ s/"//g;
     	$species =~ s/"//g;
@@ -50,22 +53,23 @@ sub search {
         foreach (@{$head}){
             $assembly = $1 if ($_ =~ /##assembly=(\.+)/);
         }
-
-        push @data, {
-        	additionalInfo => {},
-        	assemblyPUI => $assembly,
-        	description => $reference,
-        	md5checksum => undef,
-        	referenceSetDbId => $protocol,
-            referenceSetName => $reference,
-            sourceAccessions => undef,
-            sourceURI => undef,
-            species => { 
-            	term => $species,
-            	termURI => undef
-            }
-        };
-        $counter++;
+	    if ($counter >= $start_index && $counter <= $end_index) {
+	        push @data, {
+	        	additionalInfo => {},
+	        	assemblyPUI => $assembly,
+	        	description => $reference,
+	        	md5checksum => undef,
+	        	referenceSetDbId => $protocol,
+	            referenceSetName => $reference,
+	            sourceAccessions => undef,
+	            sourceURI => undef,
+	            species => { 
+	            	term => $species,
+	            	termURI => undef
+	            }
+	        };
+	    }
+	    $counter++;
     }
 
     my %result = (data=>\@data);
