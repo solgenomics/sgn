@@ -516,7 +516,7 @@ sub download_grm {
                 foreach my $c (@$stock_ids) {
                     if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
                         my $val = $grm[$row_num]->[$col_num];
-                        if ($val || $val == 0) {
+                        if (defined $val and length $val) {
                             $result_hash{$s}->{$c} = $val;
                             $seen_stock_ids{$s}++;
                             $seen_stock_ids{$c}++;
@@ -530,7 +530,7 @@ sub download_grm {
             foreach my $r (sort keys %result_hash) {
                 foreach my $s (sort keys %{$result_hash{$r}}) {
                     my $val = $result_hash{$r}->{$s};
-                    if ($val || $val == 0) {
+                    if (defined $val and length $val) {
                         $data .= "$r\t$s\t$val\n";
                     }
                 }
