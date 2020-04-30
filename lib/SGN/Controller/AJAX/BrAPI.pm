@@ -394,6 +394,78 @@ sub calls_GET {
 	_standard_response_construction($c, $brapi_package_result);
 }
 
+=head2 /brapi/v2/serverinfo
+
+ Usage: For determining which endpoints have been implemented and with which datafile types and methods
+ Desc:
+
+ GET Request:
+
+ GET Response:
+{
+  "metadata": {
+    "pagination": {
+      "pageSize": 3,
+      "currentPage": 0,
+      "totalCount": 3,
+      "totalPages": 1
+    },
+    "status": {},
+    "datafiles": []
+  },
+  "result": {
+    "data": [
+      {
+        "call": "allelematrix",
+        "datatypes": [
+          "json",
+          "tsv"
+        ],
+        "methods": [
+          "GET",
+          "POST"
+        ]
+      },
+      {
+        "call": "germplasm/id/mcpd",
+        "datatypes": [
+          "json"
+        ],
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "call": "doesntexistyet",
+        "datatypes": [
+          "png",
+          "jpg"
+        ],
+        "methods": [
+          "GET"
+        ]
+      }
+    ]
+  }
+}
+
+=cut
+
+sub serverinfo : Chained('brapi') PathPart('serverinfo') Args(0) : ActionClass('REST') { }
+
+sub serverinfo_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('ServerInfo');
+	my $brapi_package_result = $brapi_module->search( 
+		$clean_inputs
+	);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
 sub crops : Chained('brapi') PathPart('crops') Args(0) : ActionClass('REST') { }
 
 sub crops_GET {
@@ -4121,6 +4193,77 @@ sub calls_search_retrieve : Chained('brapi') PathPart('search/calls') Args(1) {
     my $c = shift;
     my $search_id = shift;
     retrieve_results($self, $c, $search_id, 'Calls');
+}
+
+=head2 brapi/v2/referencesets
+
+ Usage: To retrieve data for reference sets
+ Desc:
+ Return JSON example:
+        {
+            "metadata" : {
+                "pagination": {
+                    "pageSize": 10,
+                    "currentPage": 1,
+                    "totalCount": 10,
+                    "totalPages": 1
+                },
+                "status": []
+            },
+
+              "result": {
+			    "data": [
+			      {
+			        "additionalInfo": {},
+			        "assemblyPUI": "doi://10.12345/fake/9876",
+			        "description": "Description for an assembly",
+			        "md5checksum": "c2365e900c81a89cf74d83dab60df146",
+			        "referenceSetDbId": "7e029a84",
+			        "referenceSetName": "Assembly version",
+			        "sourceAccessions": [
+			          "A0000002",
+			          "A0009393"
+			        ],
+			        "sourceURI": "https://wiki.brapi.org/files/demo.fast",
+			        "species": {
+			          "term": "sonic hedgehog",
+			          "termURI": "MGI:MGI:98297"
+			        }
+			      }
+			    ]
+			}
+        }
+ Args:
+ Side Effects:
+
+=cut
+
+sub referencesets : Chained('brapi') PathPart('referencesets') Args(0) : ActionClass('REST') { }
+
+sub referencesets_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('ReferenceSets');
+	my $brapi_package_result = $brapi_module->search($clean_inputs);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub referencesets_search  : Chained('brapi') PathPart('search/calls') Args(0) : ActionClass('REST') { }
+
+sub referencesets_search_POST {
+    my $self = shift;
+    my $c = shift;
+    save_results($self,$c,$c->stash->{clean_inputs},'ReferenceSets');
+}
+
+sub referencesets_search_retrieve : Chained('brapi') PathPart('search/calls') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'ReferenceSets');
 }
 
 
