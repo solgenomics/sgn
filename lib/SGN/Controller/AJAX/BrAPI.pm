@@ -1620,7 +1620,7 @@ sub markerprofiles_single : Chained('brapi') PathPart('markerprofiles') CaptureA
 	my $self = shift;
 	my $c = shift;
 	my $id = shift;
-	$c->stash->{markerprofile_id} = $id; # this is genotypeprop_id
+	$c->stash->{markerprofile_id} = $id;
 }
 
 sub genotype_fetch : Chained('markerprofiles_single') PathPart('') Args(0) : ActionClass('REST') { }
@@ -3875,7 +3875,7 @@ sub callsets_single : Chained('brapi') PathPart('callsets') CaptureArgs(1) {
 	my $self = shift;
 	my $c = shift;
 	my $id = shift;
-	$c->stash->{callset_id} = $id; # this is genotypeprop_id
+	$c->stash->{callset_id} = $id;
 }
 
 sub callsets_fetch : Chained('callsets_single') PathPart('') Args(0) : ActionClass('REST') { }
@@ -4028,7 +4028,7 @@ sub variantsets_single : Chained('brapi') PathPart('variantsets') CaptureArgs(1)
 	my $self = shift;
 	my $c = shift;
 	my $id = shift;
-	$c->stash->{variantSetDbId} = $id; # this is genotypeprop_id
+	$c->stash->{variantSetDbId} = $id;
 }
 
 sub variantsets_fetch : Chained('variantsets_single') PathPart('') Args(0) : ActionClass('REST') { }
@@ -4251,6 +4251,27 @@ sub referencesets_GET {
 	_standard_response_construction($c, $brapi_package_result);
 }
 
+sub referencesets_single : Chained('brapi') PathPart('referencesets') CaptureArgs(1) {
+	my $self = shift;
+	my $c = shift;
+	my $id = shift;
+	$c->stash->{referenceSetDbId} = $id;
+}
+
+sub referencesets_fetch : Chained('referencesets_single') PathPart('') Args(0) : ActionClass('REST') { }
+
+
+sub referencesets_fetch_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('ReferenceSets');
+	my $brapi_package_result = $brapi_module->detail($c->stash->{referenceSetDbId});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
 sub referencesets_search  : Chained('brapi') PathPart('search/referencesets') Args(0) : ActionClass('REST') { }
 
 sub referencesets_search_POST {
@@ -4326,7 +4347,7 @@ sub reference_single : Chained('brapi') PathPart('references') CaptureArgs(1) {
 	my $self = shift;
 	my $c = shift;
 	my $id = shift;
-	$c->stash->{referenceDbId} = $id; # this is genotypeprop_id
+	$c->stash->{referenceDbId} = $id;
 }
 
 sub reference_fetch : Chained('reference_single') PathPart('') Args(0) : ActionClass('REST') { }

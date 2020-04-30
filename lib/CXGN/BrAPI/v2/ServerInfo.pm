@@ -68,7 +68,7 @@ sub search {
 		[['application/json'],['GET'],'referencesets',['2.0']],
 		[['application/json'],['GET'],'referencesets/{referenceSetDbId}',['2.0']],
 		[['application/json'],['POST'],'search/referencesets',['2.0']],
-		[['application/json'],['GET'],'search/referencesets',['2.0']],
+		[['application/json'],['GET'],'search/referencesets/{searchResultsDbId}',['2.0']],
 		[['application/json'],['GET'],'samples',['2.0']],
 		[['application/json'],['GET'],'samples/{sampleDbId}',['2.0']],
 		[['application/json'],['POST'],'search/samples',['2.0']],
