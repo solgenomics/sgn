@@ -139,11 +139,11 @@ for (i in 40:(ncol(phenoData))) {
 
     print(paste0('outcome ', outcome))
     if (szreps == 1){
-      model <- lmer(get(outcome)~(1|germplasmName)+blockNumber,
+      model <- lmer(get(outcome)~(1|germplasmName)+(1|blockNumber),
         na.action = na.exclude,
         data=phenoData)
     }else{
-        model <- lmer(get(outcome) ~ (1|germplasmName) + (1|replicate) + blockNumber,
+        model <- lmer(get(outcome) ~ (1|germplasmName) + (1|replicate) + (1|blockNumber),
         na.action = na.exclude,
         data=phenoData)
     }
