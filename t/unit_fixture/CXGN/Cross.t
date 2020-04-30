@@ -8,12 +8,14 @@ use Data::Dumper;
 use SGN::Test::Fixture;
 use CXGN::Cross;
 
-my $f = SGN::Test::Fixture->new();
+my $f = SGN::Test::Fixture->new( { AutoCommit => 1 } );
 
 
 #my $cross_id = 38845;
 my $cross_id = 41264;
 #my $cross_id = 9999999;
+
+
 
 my $cross = CXGN::Cross->new( { schema => $f->bcs_schema(),
 				 cross_stock_id => $cross_id });
