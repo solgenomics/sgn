@@ -35,11 +35,13 @@ my $pop_link = qq | <a href="/solgs/population/$pop_id/gp/$genotyping_protocol_i
 
 </%perl>
 
-  <& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.histogram", "solGS.phenotypeDataFlot", "solGS.traitGebvFlot", 
+
+
+    <& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.histogram", "solGS.phenotypeDataFlot", 
                                               "flot.flot", "flot.categories", 
                                               "flot.tooltip", "flot.selection", "flot.navigate", 
-                                              "flot.axisLabels", "statistics/simple_statistics"                                            ] 
-  &>
+                                              "flot.axisLabels", "statistics/simple_statistics"] 
+    &>
 
 
 <& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
@@ -98,7 +100,7 @@ my $pop_link = qq | <a href="/solgs/population/$pop_id/gp/$genotyping_protocol_i
   validation_download_url => $validation_download_url
 &>
 
-<& /solgs/model/top_blups.mas, 
+<& /solgs/model/gebvs.mas, 
    top_blups          => $top_blups,
    blups_download_url => $blups_download_url,
    pop_id             => $pop_id,
