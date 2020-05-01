@@ -33,15 +33,15 @@ jQuery(document).ready(function($) {
         var trait_lists = list.listSelect('select_list', ['traits'], 'Select a list', undefined, undefined);
         jQuery('#select_list_div').html(trait_lists);
         if (document.getElementById("html_select_traits_for_trait_file")) {
-            show_list_counts('trait_select_count', document.getElementById("html_select_traits_for_trait_file").length);
+            show_list_counts_fb('trait_select_count', document.getElementById("html_select_traits_for_trait_file").length);
         }
 
         jQuery('#html_select_traits_for_trait_file').change(
             function() {
                 jQuery('#select_list_list_select').val('');
                 var traits = document.getElementById("html_select_traits_for_trait_file").length;
-                var selected = jQuery('#html_select_traits_for_trait_file').val();
-                show_list_counts('trait_select_count', traits, selected.length);
+                var selected = jQuery('#html_select_traits_for_trait_file option:selected').length;
+                show_list_counts_fb('trait_select_count', traits, selected);
             });
         jQuery('#create_trait_file_dialog').modal('show');
     });
@@ -61,7 +61,7 @@ jQuery(document).ready(function($) {
 
 });
 
-function show_list_counts(count_div, total_count, selected) {
+function show_list_counts_fb(count_div, total_count, selected) {
     var html = 'Traits: ' + total_count + '<br />';
     if (selected) {
         html += 'Selected: ' + selected;
@@ -128,7 +128,7 @@ function generate_trait_file() {
         },
         error: function() {
             jQuery("#working_modal").modal("hide");
-            alert('An error occurred creating the trait file.');
+            alert(' occurred creating the trait file.');
             jQuery('#create_trait_file_dialog').modal("hide");
         },
     });
