@@ -1771,6 +1771,58 @@ sub allelematrix_search_process {
 	_standard_response_construction($c, $brapi_package_result);
 }
 
+=head2 brapi/v2/lists
+
+=cut
+
+sub lists : Chained('brapi') PathPart('lists') Args(0) : ActionClass('REST') { }
+
+sub lists_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Lists');
+	my $brapi_package_result = $brapi_module->search($clean_inputs);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub list_single  : Chained('brapi') PathPart('lists') CaptureArgs(1) {
+	my $self = shift;
+	my $c = shift;
+	my $list_id = shift;
+
+	$c->stash->{list_id} = $list_id;
+}
+
+sub list_detail  : Chained('list_single') PathPart('') Args(0) : ActionClass('REST') { }
+
+sub list_detail_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Lists');
+	my $brapi_package_result = $brapi_module->detail($c->stash->{list_id});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub list_search_save : Chained('brapi') PathPart('search/lists') Args(0) : ActionClass('REST') { }
+
+sub list_search_save_POST {
+    my $self = shift;
+    my $c = shift; #print $self;
+    save_results($self,$c,$c->stash->{clean_inputs},'Lists');
+}
+
+sub list_search_retrieve  : Chained('brapi') PathPart('search/lists') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'Lists');
+}
 
 =head2 brapi/v1/programs
 

@@ -31,6 +31,7 @@ use CXGN::BrAPI::v2::CallSets;
 use CXGN::BrAPI::v2::GenomeMaps;
 use CXGN::BrAPI::v2::Germplasm;
 use CXGN::BrAPI::v2::Images;
+use CXGN::BrAPI::v2::Lists;
 use CXGN::BrAPI::v2::Locations;
 use CXGN::BrAPI::v2::MarkerPositions;
 use CXGN::BrAPI::v2::Observations;
