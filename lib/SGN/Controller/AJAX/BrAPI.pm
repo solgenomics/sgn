@@ -4379,6 +4379,7 @@ sub reference_search_retrieve : Chained('brapi') PathPart('search/references') A
     retrieve_results($self, $c, $search_id, 'Referenced');
 }
 
+
 #functions
 sub save_results {
     my $self = shift;

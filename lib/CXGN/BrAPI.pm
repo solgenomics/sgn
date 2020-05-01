@@ -49,6 +49,7 @@ use CXGN::BrAPI::v2::Variables;
 use CXGN::BrAPI::v2::Variants;
 use CXGN::BrAPI::v2::VariantSets;
 
+
 has 'version' => (
 	isa => 'Str',
 	is => 'rw',

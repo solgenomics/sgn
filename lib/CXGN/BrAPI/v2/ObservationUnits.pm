@@ -268,9 +268,10 @@ sub detail {
     my @data_window;
     my $total_count = 0;
     my $counter =0;
+
     foreach my $obs_unit (@$data){
         my @brapi_observations;
-        # if( lc $include_observations->[0] eq 'true') {
+
         my $observations = $obs_unit->{observations};
         foreach (@$observations){
             my $obs_timestamp = $_->{collect_date} ? $_->{collect_date} : $_->{timestamp};
@@ -297,7 +298,6 @@ sub detail {
                 uploadedBy=>undef,
             };
         }
-        # }
 
         my @brapi_treatments;
         my $treatments = $obs_unit->{treatments};
@@ -394,7 +394,7 @@ sub detail {
     }
 
     my %result = (data=>\@data_window);
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$total_count,$page);
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observation Units search result constructed');
 }
 
