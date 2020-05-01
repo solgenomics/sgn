@@ -4428,7 +4428,7 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
                 if ($row) {
                     my @line = split "\t", $row;
                     my $stock_id = shift @line;
-                    my $out_line = join "\t", @line;
+                    my $out_line = join "\n", @line;
                     if ($out_line) {
                         my $geno_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/genoinputfileXXXX');
                         my $status = write_file($geno_temp_input_file, $out_line."\n");
@@ -5280,7 +5280,7 @@ sub _perform_keras_cnn_predict {
                 if ($row) {
                     my @line = split "\t", $row;
                     my $stock_id = shift @line;
-                    my $out_line = join "\t", @line;
+                    my $out_line = join "\n", @line;
                     if ($out_line) {
                         my $geno_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_dir/genoinputfileXXXX');
                         my $status = write_file($geno_temp_input_file, $out_line."\n");
