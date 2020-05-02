@@ -61,7 +61,6 @@ sub search {
 	    push @{$query{'phone_number'} }, { 'ilike' => '%'. $_  .'%' };
 	}
 
-    print Dumper \%query;
  	my $rs2 = $c->dbic_schema("CXGN::People::Schema")->resultset("SpPerson")->search( { %query, disabled=>undef, censor => 0 }, { page => $page, rows => $page_size, order_by => 'last_name' } );
 	
 
@@ -88,7 +87,7 @@ sub search {
 		}
 		$counter++;
     }
-print Dumper \@data;
+
 	my %result = (data=>\@data);
 	my @data_files;
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
