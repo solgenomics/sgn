@@ -1813,7 +1813,7 @@ sub list_search_save : Chained('brapi') PathPart('search/lists') Args(0) : Actio
 
 sub list_search_save_POST {
     my $self = shift;
-    my $c = shift; #print $self;
+    my $c = shift;
     save_results($self,$c,$c->stash->{clean_inputs},'Lists');
 }
 
@@ -1822,6 +1822,59 @@ sub list_search_retrieve  : Chained('brapi') PathPart('search/lists') Args(1) {
     my $c = shift;
     my $search_id = shift;
     retrieve_results($self, $c, $search_id, 'Lists');
+}
+
+=head2 brapi/v2/people
+
+=cut
+
+sub people : Chained('brapi') PathPart('people') Args(0) : ActionClass('REST') { }
+
+sub people_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('People');
+	my $brapi_package_result = $brapi_module->search($clean_inputs,$c);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub people_single  : Chained('brapi') PathPart('people') CaptureArgs(1) {
+	my $self = shift;
+	my $c = shift;
+	my $people_id = shift;
+
+	$c->stash->{people_id} = $people_id;
+}
+
+sub people_detail  : Chained('people_single') PathPart('') Args(0) : ActionClass('REST') { }
+
+sub people_detail_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('People');
+	my $brapi_package_result = $brapi_module->detail($c->stash->{people_id},$c);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub people_search_save : Chained('brapi') PathPart('search/people') Args(0) : ActionClass('REST') { }
+
+sub people_search_save_POST {
+    my $self = shift;
+    my $c = shift;
+    save_results($self,$c,$c->stash->{clean_inputs},'People');
+}
+
+sub people_search_retrieve  : Chained('brapi') PathPart('search/people') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'People');
 }
 
 =head2 brapi/v1/programs
