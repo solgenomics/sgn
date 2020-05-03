@@ -1351,6 +1351,12 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                                 <div id="drone_imagery_predict_keras_cnn_model_select_div"></div>
                             </div>
                         </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Traits Phenotyped in the Selected Field Trial(s) As Auxiliary Trait(s) (Currently Only For Mixed MLP/CNN Model): </label>
+                            <div class="col-sm-9" >
+                                <div id="drone_imagery_predict_keras_cnn_aux_trait_select_div"></div>
+                            </div>
+                        </div>
                     </form>
                     <br/><br/>
 
@@ -3284,6 +3290,7 @@ jQuery(document).ready(function() {
     var manage_drone_imagery_predict_keras_field_trial_id_string = '';
     var manage_drone_imagery_predict_keras_plot_polygon_type_ids = [];
     var manage_drone_imagery_predict_keras_model_id = '';
+    var manage_drone_imagery_predict_keras_aux_trait_ids;
 
     jQuery('#keras_cnn_drone_imagery_link').click(function(){
         jQuery('#drone_imagery_keras_cnn_dialog').modal('show');
@@ -3514,6 +3521,8 @@ jQuery(document).ready(function() {
                 ajax : '/api/drone_imagery/drone_runs?select_checkbox_name=predict_keras_drone_imagery_drone_run_select&checkbox_select_all=1&field_trial_ids='+manage_drone_imagery_predict_keras_field_trial_id_string
             });
 
+            get_select_box('traits', 'drone_imagery_predict_keras_cnn_aux_trait_select_div', { 'name' : 'drone_imagery_predict_keras_cnn_aux_trait_ids', 'id' : 'drone_imagery_predict_keras_cnn_aux_trait_ids', 'empty':1, 'multiple':1, 'trial_ids':manage_drone_imagery_predict_keras_field_trial_id_string, 'stock_type':'plot' });
+
             Workflow.complete("#drone_imagery_predict_keras_model_field_trial_select_step");
             Workflow.focus('#drone_imagery_predict_keras_model_workflow', 2);
         }
@@ -3528,7 +3537,9 @@ jQuery(document).ready(function() {
 
     jQuery('#drone_imagery_predict_keras_model_select_step').click(function(){
         manage_drone_imagery_predict_keras_model_id = '';
+        manage_drone_imagery_predict_keras_aux_trait_ids = undefined;
         manage_drone_imagery_predict_keras_model_id = jQuery('#drone_imagery_predict_keras_cnn_model_id').val();
+        manage_drone_imagery_predict_keras_aux_trait_ids = jQuery('#drone_imagery_predict_keras_cnn_aux_trait_ids').val();
         if (manage_drone_imagery_predict_keras_model_id == '') {
             alert('Please select a trained Keras CNN model before proceeding!');
         }
@@ -3606,7 +3617,8 @@ jQuery(document).ready(function() {
                 'plot_polygon_type_ids' : JSON.stringify(manage_drone_imagery_predict_keras_plot_polygon_type_ids),
                 'model_id' : manage_drone_imagery_predict_keras_model_id,
                 'model_prediction_type' : jQuery('#drone_imagery_keras_model_prediction_select').val(),
-                'population_id' : jQuery('#drone_imagery_predict_keras_cnn_population_id').val()
+                'population_id' : jQuery('#drone_imagery_predict_keras_cnn_population_id').val(),
+                'aux_trait_ids' : manage_drone_imagery_predict_keras_aux_trait_ids
             },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");

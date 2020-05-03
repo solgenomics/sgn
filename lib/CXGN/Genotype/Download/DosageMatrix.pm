@@ -26,6 +26,7 @@ my $genotypes_search = CXGN::Genotype::Download::DosageMatrix->new({
     offset=>$offset,
     compute_from_parents=>0, #If you want to compute the genotype for accessions given from parents in the pedigree. Useful for hybrids where parents are genotyped.
     forbid_cache=>0 #If you want to get a guaranteed fresh result not from the file cache
+    prevent_transpose=>0 #Prevent transpose of DosageMatrix
 });
 my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
 
@@ -153,6 +154,12 @@ has 'forbid_cache' => (
     default => 0
 );
 
+has 'prevent_transpose' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 0
+);
+
 has 'limit' => (
     isa => 'Int|Undef',
     is => 'rw',
@@ -191,6 +198,7 @@ sub download {
     my $end_position = $self->end_position;
     my $compute_from_parents = $self->compute_from_parents;
     my $forbid_cache = $self->forbid_cache;
+    my $prevent_transpose = $self->prevent_transpose;
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$schema,
@@ -212,7 +220,8 @@ sub download {
         end_position=>$end_position,
         limit=>$limit,
         offset=>$offset,
-        forbid_cache=>$forbid_cache
+        forbid_cache=>$forbid_cache,
+        prevent_transpose=>$prevent_transpose
     });
     my @required_config = (
         $cluster_shared_tempdir_config,

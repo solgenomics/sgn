@@ -12,7 +12,7 @@ my $geno = CXGN::Genotype::GWAS->new({
     gwas_temp_file=>$file_temp_path_gwas,
     pheno_temp_file=>$file_temp_path_pheno,
     people_schema=>$people_schema,
-    download_format=>$download_format, #either results_tsv or manhattan_qq_plots
+    download_format=>$download_format, #either 'results_tsv' or 'manhattan_qq_plots'
     accession_id_list=>\@accession_list,
     trait_id_list=>\@trait_id_list,
     traits_are_repeated_measurements=>$traits_are_repeated_measurements,
@@ -261,7 +261,8 @@ sub get_gwas {
             my $d = $unique_observation_units{$stock_id};
             print $F_pheno $d->{germplasm_stock_id}.','.$d->{trial_id}.','.$d->{obsunit_rep};
             foreach my $t (@unique_trait_ids_sorted) {
-                print $F_pheno ','.$phenotype_data_hash{$stock_id}->{$t};
+                my $pheno_val = $phenotype_data_hash{$stock_id}->{$t} || '';
+                print $F_pheno ','.$pheno_val;
             }
             print $F_pheno "\n";
         }
