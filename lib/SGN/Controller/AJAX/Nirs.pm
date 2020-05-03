@@ -16,6 +16,7 @@ use CXGN::Page::UserPrefs;
 use CXGN::Tools::List qw/distinct evens/;
 use CXGN::Blast::Parse;
 use CXGN::Blast::SeqQuery;
+use Path::Tiny qw(path);
 use Cwd qw(cwd);
 
 
@@ -174,24 +175,15 @@ sub generate_results: Path('/ajax/Nirs/generate_results') : {
         
     }
 
-my $newfile = $filename . ".txt";
-
-open my $in,  '<',  $filename      or die "Can't read old file: $!";
-open my $out, '>', $newfile or die "Can't write new file: $!";
-
-print $out;
-
-while( <$in> )
-    {
-    s/\\//g;
-    s/,n/,/g;
-    s/n}/}/g;
-    s/{n/{/g;
-    s/\"{/{/g;
-    print $out $_;
-    }
-
-close $out;
+my $file = path($filename);
+my $data = $file -> slurp_utf8;
+    $data =~ s/\\n/\n/g;
+    $data =~ s/\\n/\n/g;
+    $data =~ s/\\//g;
+    $data =~ s/\"{/\n{/g;
+    $data =~ s/\"}]\[/\n},\n/g;
+    $data =~ s/}\"}/}}/g;
+    $file->spew_utf8( $data );
 
 
      
