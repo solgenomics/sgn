@@ -90,9 +90,14 @@ sub top_10 {
 
 sub abbreviate_term {
     my ($self, $term) = @_;
- 
+
+    $term =~ s/\// /g;
+    $term =~ s/-/_/g;
+    $term =~ s/\%/percent/g;
+    $term =~ s/\((\w+\s*\w*)\)/_$2 $1/g;
+  
     my @words = split(/\s/, $term);
-    
+   
     my $acronym;
 	
     if (scalar(@words) == 1) 
@@ -102,7 +107,7 @@ sub abbreviate_term {
     else 
     {
 	foreach my $word (@words) 
-        {
+        {	  
 	    if ($word =~ /^[A-Za-z]/)
             {
 		my $l = substr($word,0,1,q{});
@@ -117,10 +122,8 @@ sub abbreviate_term {
 		my @wrd = $word =~ /[A-Za-z]/g;
 		my $wrd = join("", @wrd);
 	
-		my $l = substr($wrd,0,1,q{});
-		
-		$acronym .= $str . uc($l);
-	
+		my $l = substr($wrd,0,1,q{});	
+		$acronym .= $str . uc($l);	
 	    } 
             else 
             {
@@ -144,14 +147,15 @@ sub acronymize_traits {
     my $acronymized_traits;
     
     no warnings 'uninitialized';
+   
     foreach my $trait_name (@$traits)
     {
 	$cnt++;
 
         my $abbr = $self->abbreviate_term($trait_name);
 
-	$abbr = $abbr . '.2' if $cnt > 1 && $acronym_table->{$abbr};  
-
+	$abbr = $abbr . '.2' if $cnt > 1 && $acronym_table->{$abbr};
+	
         $acronymized_traits .= $abbr;
 	$acronymized_traits .= "\t" unless $cnt == scalar(@$traits);
 	
@@ -168,13 +172,24 @@ sub acronymize_traits {
 }
 
 
+sub trial_traits {
+    my ($self, $c, $trial_id) = @_;
+
+    my $trial = CXGN::Trial->new({bcs_schema => $self->schema($c), 
+				  trial_id => $trial_id});
+
+    return $trial->get_traits_assayed();
+
+}
+
+
 sub clean_traits {
     my ($self, $terms) = @_;
 
     $terms =~ s/(\|\w+:\d+)//g;
     $terms =~ s/\|/ /g;
     $terms =~ s/^\s+|\s+$//g;
-
+      
     return $terms;
 }
 

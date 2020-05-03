@@ -110,13 +110,15 @@ for (i in 40:ncol(pheno)){
 }
 int <- length(40:ncol(pheno))
 cat("The int is: ", int,"\n")
-ml<-marrangeGrob(grobs=c(pl,hl), nrow = int, ncol=2, pdf(file=NULL))
+ml<-marrangeGrob(grobs=c(pl,hl), nrow = int, ncol=2, limitsize=FALSE, pdf(file=NULL))
 if (int<8){
 	int=8
 }
 
 pdf(NULL)
+                     
 ggsave(figure3_file_name, ml, width=8, height = int*2, dpi=80,limitsize=FALSE, units = "in", pdf(NULL))
+
 
 #Calculating components of variance and heritability
 her = rep(NA,(ncol(pheno)-39))
@@ -261,7 +263,7 @@ print(Heritability)
 
 pdf(NULL)
 library(gridExtra)
-png(h2File, height=(25*numb), width=800)
+png(h2File, height=(25*numb), width=800, limitsize=FALSE)
 par(mar=c(4,4,2,2))
 p<-tableGrob(Heritability)
 grid.arrange(p)

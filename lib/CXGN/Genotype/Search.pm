@@ -176,6 +176,12 @@ has 'forbid_cache' => (
     default => 0
 );
 
+has 'prevent_transpose' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 0
+);
+
 has '_iterator_query_handle' => (
     isa => 'Ref',
     is => 'rw'
@@ -1110,7 +1116,8 @@ sub key {
     my $chromosomes = $json->encode( $self->chromosome_list() || [] );
     my $start = $self->start_position() || '' ;
     my $end = $self->end_position() || '';
-    my $key = md5_hex($accessions.$tissues.$trials.$protocols.$markerprofiles.$genotypedataprojects.$markernames.$genotypeprophash.$protocolprophash.$protocolpropmarkerhash.$chromosomes.$start.$end.$self->return_only_first_genotypeprop_for_stock().$self->limit().$self->offset()."_$datatype");
+    my $prevent_transpose = $self->prevent_transpose() || '';
+    my $key = md5_hex($accessions.$tissues.$trials.$protocols.$markerprofiles.$genotypedataprojects.$markernames.$genotypeprophash.$protocolprophash.$protocolpropmarkerhash.$chromosomes.$start.$end.$self->return_only_first_genotypeprop_for_stock().$prevent_transpose.$self->limit().$self->offset()."_$datatype");
     return $key;
 }
 
@@ -1325,16 +1332,22 @@ sub get_cached_file_dosage_matrix {
             }
         );
 
-        # Do the transposition job on the cluster
-        $cmd->run_cluster(
-                "perl ",
-                $basepath_config."/bin/transpose_matrix.pl",
-                $tempfile,
-        );
-        $cmd->is_cluster(1);
-        $cmd->wait;
+        my $out_copy;
+        if ($self->prevent_transpose()) {
+            open $out_copy, '<', $tempfile or die "Can't open output file: $!";
+        }
+        else {
+            # Do the transposition job on the cluster
+            $cmd->run_cluster(
+                    "perl ",
+                    $basepath_config."/bin/transpose_matrix.pl",
+                    $tempfile,
+            );
+            $cmd->is_cluster(1);
+            $cmd->wait;
 
-        open my $out_copy, '<', $transpose_tempfile or die "Can't open output file: $!";
+            open $out_copy, '<', $transpose_tempfile or die "Can't open output file: $!";
+        }
 
         if (!$self->forbid_cache()) {
             $self->cache()->set($key, '');
@@ -1511,16 +1524,22 @@ sub get_cached_file_dosage_matrix_compute_from_parents {
             }
         );
 
-        # Do the transposition job on the cluster
-        $cmd->run_cluster(
-                "perl ",
-                $basepath_config."/bin/transpose_matrix.pl",
-                $tempfile,
-        );
-        $cmd->is_cluster(1);
-        $cmd->wait;
+        my $out_copy;
+        if ($self->prevent_transpose()) {
+            open $out_copy, '<', $tempfile or die "Can't open output file: $!";
+        }
+        else {
+            # Do the transposition job on the cluster
+            $cmd->run_cluster(
+                    "perl ",
+                    $basepath_config."/bin/transpose_matrix.pl",
+                    $tempfile,
+            );
+            $cmd->is_cluster(1);
+            $cmd->wait;
 
-        open my $out_copy, '<', $transpose_tempfile or die "Can't open output file: $!";
+            open $out_copy, '<', $transpose_tempfile or die "Can't open output file: $!";
+        }
 
         if (!$self->forbid_cache()) {
             $self->cache()->set($key, '');

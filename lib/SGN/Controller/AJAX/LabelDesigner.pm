@@ -15,6 +15,7 @@ use Tie::UrlEncoder; our(%urlencode);
 use CXGN::Trial::TrialLayout;
 use CXGN::Trial;
 use CXGN::Trial::TrialLayoutDownload;
+use CXGN::Cross;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -359,10 +360,12 @@ sub get_trial_from_stock_list {
 
     my $genotyping_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_layout', 'experiment_type')->cvterm_id();
     my $field_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_layout', 'experiment_type')->cvterm_id();
+    my $cross_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_experiment', 'experiment_type')->cvterm_id();
+
 
     my $trial_rs = $schema->resultset("NaturalDiversity::NdExperimentStock")->search({
         stock_id => { -in => \@ids }
-    })->search_related('nd_experiment', {'nd_experiment.type_id'=>[$field_experiment_cvterm_id, $genotyping_experiment_cvterm_id]
+    })->search_related('nd_experiment', {'nd_experiment.type_id'=>[$field_experiment_cvterm_id, $genotyping_experiment_cvterm_id, $cross_experiment_cvterm_id]
     })->search_related('nd_experiment_projects');
     my %trials = ();
     while (my $row = $trial_rs->next()) {
@@ -550,7 +553,62 @@ sub get_data {
             $design = filter_by_list_items($design, $list_ids, 'tissue_sample_id');
         }
     }
-    #print STDERR "Design is ".Dumper($design)."\n";
+    elsif ($data_level eq "crosses") {
+        my $project;
+        my $cross_list_ids;
+        my %all_design;
+        if ($data_type =~ m/Crossing Experiments/) {
+            $project = CXGN::Cross->new({ schema => $schema, trial_id => $id});
+        } elsif ($data_type =~ m/List/) {
+            $cross_list_ids = convert_stock_list($c, $schema, $id);
+            my ($crossing_experiment_id, $num_trials) = get_trial_from_stock_list($c, $schema, $cross_list_ids);
+            $project = CXGN::Cross->new({ schema => $schema, trial_id => $crossing_experiment_id});
+        }
+
+        my $result = $project->get_crosses_and_details_in_crossingtrial();
+        my @cross_data = @$result;
+        foreach my $cross (@cross_data){
+            my $cross_combination;
+            my $male_parent_name;
+            my $male_parent_id;
+
+            if ($cross->[2] eq ''){
+                $cross_combination = 'No cross combination available';
+            } else {
+                $cross_combination = $cross->[2];
+            }
+
+            if ($cross->[7] eq ''){
+                $male_parent_name = 'No male parent available';
+            } else {
+                $male_parent_name = $cross->[7];
+            }
+
+            if ($cross->[6] eq ''){
+                $male_parent_id = 'No male parent available';
+            } else {
+                $male_parent_id = $cross->[6];
+            }
+
+            $all_design{$cross->[0]} = {'cross_name' => $cross->[1],
+                                      'cross_id' => $cross->[0],
+                                      'cross_combination' => $cross_combination,
+                                      'cross_type' => $cross->[3],
+                                      'female_parent_name' => $cross->[5],
+                                      'female_parent_id' => $cross->[4],
+                                      'male_parent_name' => $male_parent_name,
+                                      'male_parent_id' => $male_parent_id};
+        }
+
+        if ($data_type =~ m/List/) {
+            my %filtered_hash = map { $_ => $all_design{$_} } @$cross_list_ids;
+            $design = \%filtered_hash;
+        } else {
+            $design = \%all_design;
+        }
+    }
+
+#    print STDERR "Design is ".Dumper($design)."\n";
     return $num_trials, $design;
 }
 
