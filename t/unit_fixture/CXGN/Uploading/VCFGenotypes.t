@@ -467,7 +467,9 @@ is($message, $dosage_matrix_string_filtered);
 
 #Testing computing genotypes from parents
 my $test_accession_name_1 = 'test_accession1';
+my $test_accession_name_2 = 'test_accession2';
 my $test_accession1_id = $schema->resultset("Stock::Stock")->find({uniquename=>$test_accession_name_1})->stock_id();
+my $test_accession2_id = $schema->resultset("Stock::Stock")->find({uniquename=>$test_accession_name_2})->stock_id();
 my $p = Bio::GeneticRelationships::Pedigree->new({
     name => $test_accession_name_1,
     cross_type => 'biparental',
@@ -478,8 +480,6 @@ my $add = CXGN::Pedigree::AddPedigrees->new({ schema=>$schema, pedigrees=>[$p] }
 my $overwrite_pedigree = 'true';
 my $return = $add->add_pedigrees($overwrite_pedigree);
 
-my $test_accession_name_1 = 'test_accession1';
-my $test_accession1_id = $schema->resultset("Stock::Stock")->find({uniquename=>$test_accession_name_1})->stock_id();
 my $p = Bio::GeneticRelationships::Pedigree->new({
     name => $accession_name_1,
     cross_type => 'biparental',
@@ -602,6 +602,8 @@ $message = $response->decoded_content;
 print STDERR Dumper $message;
 is($message, $computed_from_parents_dosage_matrix_marker_set_string);
 
+## CHECK WIZARD SEARCH GRM
+
 $ua = LWP::UserAgent->new;
 $response = $ua->get("http://localhost:3010/breeders/download_grm_action/?ids=$accession_id1,$accession_id2&protocol_id=$protocol_id&format=accession_ids&compute_from_parents=false&download_format=matrix&minor_allele_frequency=0.01&marker_filter=1&individuals_filter=1");
 $message = $response->decoded_content;
@@ -639,8 +641,25 @@ foreach (@grm3_split) {
 }
 is_deeply(\@grm3_vals, [0.666666666666667,-0.666666666666667,0.666666666666667]);
 
+$ua = LWP::UserAgent->new;
+$response = $ua->get("http://localhost:3010/breeders/download_grm_action/?ids=$test_accession1_id,$accession_id1&protocol_id=$protocol_id&format=accession_ids&compute_from_parents=true&download_format=heatmap&minor_allele_frequency=0.01&marker_filter=1&individuals_filter=1");
+$message = $response->decoded_content;
+#print STDERR Dumper $message;
+ok($message);
 
+## CHECK WIZARD SEARCH GWAS
 
+$ua = LWP::UserAgent->new;
+$response = $ua->get("http://localhost:3010/breeders/download_gwas_action/?ids=38937,39033&trait_ids=70666,70668&protocol_id=1&format=accession_ids&compute_from_parents=false&download_format=manhattan_qq_plots&minor_allele_frequency=0.01&marker_filter=1&individuals_filter=1");
+$message = $response->decoded_content;
+#print STDERR Dumper $message;
+ok($message);
+
+$ua = LWP::UserAgent->new;
+$response = $ua->get("http://localhost:3010/breeders/download_gwas_action/?ids=38937,39033&trait_ids=70666&trait_ids=70666,70668&protocol_id=1&format=accession_ids&compute_from_parents=false&download_format=results_tsv&minor_allele_frequency=0.01&marker_filter=1&individuals_filter=1");
+$message = $response->decoded_content;
+#print STDERR Dumper $message;
+ok($message);
 
 ## DELETE genotyping protocol and data
 

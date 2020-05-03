@@ -273,6 +273,8 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     my $trait_id = $c->req->param('trait_id');
     my $pc_check = $c->req->param('pc_check');
     my $kinship_check = $c->req->param('kinship_check');
+	my $forbid_cache = defined($c->req->param('forbid_cache')) ? $c->req->param('forbid_cache') : 0;
+
     print STDERR $dataset_id;
     print STDERR $trait_id;
     $c->tempfiles_subdir("solgwas_files");
@@ -311,7 +313,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
 	      $protocol_id = $row->nd_protocol_id();
     }
 
-    my $filehandle = $ds->retrieve_genotypes($c,$protocol_id,$geno_filepath);
+    my $filehandle = $ds->retrieve_genotypes($protocol_id,$geno_filepath, $c->config->{cache_file_path}, $c->config->{cluster_shared_tempdir}, $c->config->{backend}, $c->config->{cluster_host}, $c->config->{'web_cluster_queue'}, $c->config->{basepath}, $forbid_cache);
 #    my $base_filename = $$filehandle;
     print STDERR $filehandle . "\n";
 #    print STDERR $base_filename . "\n";
@@ -357,7 +359,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     close $filehandle;
     close $filehandle_out;
 
-# 
+#
 # # Hardcoded number of markers to be selected - make this selectable by user?
 #     my $markers_selected = 500;
 # #    my @column_selection = (0,2);

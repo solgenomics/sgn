@@ -33,7 +33,6 @@ $combo_pops_id => ''
   <ul>
     <li> <a href="#tabs_scatter">Phenotype scatter plot</a> </li>
     <li> <a href="#tabs_histogram">Frequency distribution</a> </li> 
-    <li> <a href="#tabs_regression">GEBVs vs. phenotypes</a> </li> 
   </ul>
  
   <div id="tabs_scatter">
@@ -54,19 +53,8 @@ $combo_pops_id => ''
     &>
   </div>
 
-   <div id="tabs_regression">
-    <& trait_gebv_pheno_regression.mas,
-       pop_id        => $pop_id,
-       trait_id      => $trait_id,
-       combo_pops_id => $combo_pops_id,
-      &>
-  </div>
-  
-  <br/>
 </div>
 
-<input type="hidden" id="combo_pops_id" value="<% $combo_pops_id %>" /> 
-<input type="hidden" id="trait_id" value="<% $trait_id %>" />  
 
 
 
