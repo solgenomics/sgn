@@ -922,97 +922,6 @@ MCPD CALL NO LONGER IN BRAPI SPEC
 
 sub studies_search  : Chained('brapi') PathPart('studies-search') Args(0) : ActionClass('REST') { }
 
-#sub studies_list_POST {
-#    my $self = shift;
-#    my $c = shift;
-#    my $auth = _authenticate_user($c);
-#    my $status = $c->stash->{status};
-#    my $message = '';
-
-#    my $study_name = $c->req->param('studyName');
-#    my $location_id = $c->req->param('locationDbId');
-#    my $years = $c->req->param('studyYears');
-#    my $program_id = $c->req->param('programDbId');
-#    my $optional_info = $c->req->param('optionalInfo');
-#
-#    my $description;
-#    my $study_type;
-#    if ($optional_info) {
-#        my $opt_info_hash = decode_json($optional_info);
-#        $description = $opt_info_hash->{"studyObjective"};
-#        $study_type = $opt_info_hash->{"studyType"};
-#    }
-
-#    my $program_obj = CXGN::BreedersToolbox::Projects->new({schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') });
-#    my $programs = $program_obj->get_breeding_programs();
-#    my $program_check;
-#    my $program_name;
-#    foreach (@$programs) {
-#        if ($_->[0] == $program_id) {
-#            $program_check = 1;
-#            $program_name = $_->[1];
-#        }
-#    }
-#    if (!$program_check) {
-#        $message .= "Program not found with programDbId = ".$program_id;
-#        $status->{'message'} = $message;
-#        $c->stash->{rest} = {status => $status };
-#        $c->detach();
-#    }
-
-#    my $locations = $program_obj->get_all_locations();
-#    my $location_check;
-#    my $location_name;
-#    foreach (@$locations) {
-#        if ($_->[0] == $location_id) {
-#            $location_check = 1;
-#            $location_name = $_->[1];
-#        }
-#    }
-#    if (!$location_check) {
-#        $message .= "Location not found with locationDbId = ".$location_id;
-#        $status->{'message'} = $message;
-#        $c->stash->{rest} = {status => $status };
-#        $c->detach();
-#    }
-
-#    my $trial_design;
-#    my $trial_create = CXGN::Trial::TrialCreate->new({
-#        dbh => $c->dbc->dbh,
-#        chado_schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'),
-#        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
-#        phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
-#        user_name => $c->user()->get_object()->get_username(), #not implemented
-#        program => $program_name,
-#        trial_year => $years,
-#        trial_description => $description,
-#        design_type => $study_type,
-#        trial_location => $location_name,
-#        trial_name => $study_name,
-#        design => $trial_design,
-#    });
-
-#    if ($trial_create->trial_name_already_exists()) {
-#        $message .= "Trial name \"".$trial_create->get_trial_name()."\" already exists.";
-#        $status->{'message'} = $message;
-#        $c->stash->{rest} = {status => $status };
-#        $c->detach();
-#    }
-
-#    try {
-#        $trial_create->save_trial();
-#    } catch {
-#        $message .= "Error saving trial in the database $_";
-#        $status->{'message'} = $message;
-#        $c->stash->{rest} = {status => $status };
-#        $c->detach();
-#    };
-
-#    $message .= "Study saved successfully.";
-#    $status->{'message'} = $message;
-#    $c->stash->{rest} = {status => $status };
-#}
-
 sub studies_search_POST {
     my $self = shift;
     my $c = shift;
@@ -1997,7 +1906,7 @@ sub studies_info_GET {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Studies');
-	my $brapi_package_result = $brapi_module->studies_detail(
+	my $brapi_package_result = $brapi_module->detail(
 		$c->stash->{study_id},
         $c->config->{main_production_site_url},
 		$c->config->{supportedCrop}
