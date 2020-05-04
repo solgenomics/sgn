@@ -8,20 +8,16 @@ var solGS = solGS || function solGS () {};
 
 
 
-solGS.histogram = function (params) {
-    
-    getHistogramData(params);
+solGS.histogram =  {
 
-    function getHistogramData (params) {
-	
-	var traitId      = params.trait_id;
-	var populationId = params.training_pop_id;
-	var comboPopsId  = params.combo_pops_id;
+    getHistogram: function () {
+
+	var params = this.getHistogramParams();
 
 	jQuery.ajax({
             type: 'POST',
             dataType: 'json',
-            data: {'training_pop_id': populationId, 'combo_pops_id': comboPopsId, 'trait_id' : traitId  },
+            data: params,
             url: '/histogram/phenotype/data/',
             success: function(response) {
 		if (response.status == 'success') {
@@ -44,7 +40,7 @@ solGS.histogram = function (params) {
 		    });
 
 		    var obs = traitValues.length;
-		    var uniqueValues = getUnique(traitValues);
+		    var uniqueValues = solGS.histogram.getUnique(traitValues);
 		    
 		    if (uniqueValues.length === 1) {
 			jQuery("#histogram_message").html('<p> All of the valid observations ' 
@@ -60,11 +56,10 @@ solGS.histogram = function (params) {
 			    'plot_id': 'trait_histogram_plot'
 			};
 			
-			plotHistogram(args);
+			solGS.histogram.plotHistogram(args);
 			
 			jQuery("#histogram_message").empty();
-			descriptiveStat(stat);
-			
+			solGS.histogram.descriptiveStat(stat);	
 		    }
 		} else {                
                     var errorMessage = "<p>This trait has no phenotype data to plot.</p>";
@@ -77,14 +72,67 @@ solGS.histogram = function (params) {
 		jQuery("#histogram_message").html(errorMessage);                  
             }
 	});
-    }
+	
+    },
+
+    
+    getUnique: function (inputArray) {
+	
+	var outputArray = [];
+	for (var i = 0; i < inputArray.length; i++) {
+	    if ((jQuery.inArray(inputArray[i], outputArray)) == -1) {
+		outputArray.push(inputArray[i]);
+	    }
+	}
+	
+	return outputArray;
+    },
+
+    getHistogramParams: function () {
+	
+	var traitId      = jQuery("#trait_id").val();    
+	var population   = solGS.getPopulationDetails();
+	var populationId = population.training_pop_id;
+	var comboPopsId  = population.combo_pops_id;
+	
+	var params = { 
+	    'trait_id'     : traitId,
+	    'training_pop_id': populationId,
+	    'combo_pops_id'  : comboPopsId
+	};
+
+	return params;
+    },
+    
+
+    descriptiveStat: function (stat)  {
+	
+	var table = '<table style="margin-top: 40px;width:100%;text-align:left">';
+
+	for (var i=0; i < stat.length; i++) {
+	    
+            if (stat[i]) {
+		table += '<tr>';
+		table += '<td>' + stat[i][0] + '</td>'  + '<td>' + stat[i][1] + '</td>';
+		table += '</tr>';
+            }
+	}
+	
+	table += '</table>';
+
+	jQuery("#trait_histogram_canvas").append(table);
+	
+
+    },
 
 
-    function plotHistogram (histo) {
+    plotHistogram: function (histo) {
 
 	var canvas = histo.canvas || 'histogram_canvas';
 	var plotId = histo.plot_id || 'histogram_plot';
 	var values = histo.values;
+	var xLabel = histo.x_label || 'Values';
+	var yLabel = histo.y_label || 'Frequency';
 	
 	var height = 300;
 	var width  = 500;
@@ -92,7 +140,7 @@ solGS.histogram = function (params) {
 	var totalH = height + pad.top + pad.bottom;
 	var totalW = width + pad.left + pad.right;
 	
-	uniqueValues = getUnique(values);
+	uniqueValues = this.getUnique(values);
 	
 	var binNum;
 	
@@ -170,6 +218,7 @@ solGS.histogram = function (params) {
             .attr("width", function(d) {return 0.1*width; })
             .attr("height", function(d) { return yAxisScale(d.y); })
             .style("fill", "green")
+	    .style('stroke', 'white')
             .on("mouseover", function(d) {
                 d3.select(this).style("fill", "teal");
             })
@@ -213,69 +262,27 @@ solGS.histogram = function (params) {
 	histogramPlot.append("g")
             .attr("transform", "translate(" + (totalW * 0.5) + "," + (height + pad.bottom) + ")")        
             .append("text")
-            .text("Trait values")            
+            .text(xLabel)            
             .attr("fill", "teal")
             .style("fill", "teal");
 
 	histogramPlot.append("g")
             .attr("transform", "translate(" + 0 + "," + ( totalH*0.5) + ")")        
             .append("text")
-            .text("Frequency")            
+            .text(yLabel)            
             .attr("fill", "teal")
             .style("fill", "teal")
             .attr("transform", "rotate(-90)");	
-    }   
+    },   
 
 
-    function getUnique(inputArray) {
-	
-	var outputArray = [];
-	for (var i = 0; i < inputArray.length; i++) {
-	    if ((jQuery.inArray(inputArray[i], outputArray)) == -1) {
-		outputArray.push(inputArray[i]);
-	    }
-	}
-	
-	return outputArray;
-    }
-
-
-    function descriptiveStat (stat)  {
-	
-	var table = '<table style="margin-top: 40px;width:100%;text-align:left">';
-
-	for (var i=0; i < stat.length; i++) {
-	    
-            if (stat[i]) {
-		table += '<tr>';
-		table += '<td>' + stat[i][0] + '</td>'  + '<td>' + stat[i][1] + '</td>';
-		table += '</tr>';
-            }
-	}
-	
-	table += '</table>';
-
-	jQuery("#trait_histogram_canvas").append(table);
-	
-
-    }
-
+//////    
 }
+//////
 
 
 jQuery(document).ready(function () {
-  
-    var traitId      = jQuery("#trait_id").val();    
-    var population   = solGS.getPopulationDetails();
-    var populationId = population.training_pop_id;
-    var comboPopsId  = population.combo_pops_id;
-   
-    var params = { 
-	'trait_id'     : traitId,
-	'training_pop_id': populationId,
-	'combo_pops_id'  : comboPopsId
-    };
 
-    solGS.histogram(params);
+    solGS.histogram.getHistogram();
 
 });
