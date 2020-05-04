@@ -283,7 +283,7 @@ print(Heritability)
 
 pdf(NULL)
 library(gridExtra)
-png(h2File, height=(25*numb), width=800, limitsize=FALSE)
+png(h2File, height=(25*numb), width=800)
 par(mar=c(4,4,2,2))
 p<-tableGrob(Heritability)
 grid.arrange(p)
