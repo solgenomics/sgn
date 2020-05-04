@@ -528,6 +528,42 @@ sub seasons_process {
     _standard_response_construction($c, $brapi_package_result);
 }
 
+sub season_single : Chained('brapi') PathPart('seasons') CaptureArgs(1) {
+	my $self = shift;
+	my $c = shift;
+	my $id = shift;
+	$c->stash->{seasonDbId} = $id;
+}
+
+sub season_fetch : Chained('season_single') PathPart('') Args(0) : ActionClass('REST') { }
+
+
+sub season_fetch_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Seasons');
+	my $brapi_package_result = $brapi_module->detail($c->stash->{seasonDbId});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub season_search  : Chained('brapi') PathPart('search/seasons') Args(0) : ActionClass('REST') { }
+
+sub season_search_POST {
+    my $self = shift;
+    my $c = shift;
+    save_results($self,$c,$c->stash->{clean_inputs},'Seasons');
+}
+
+sub season_search_retrieve : Chained('brapi') PathPart('search/seasons') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'Seasons');
+}
+
 
 =head2 brapi/v1/studyTypes
 

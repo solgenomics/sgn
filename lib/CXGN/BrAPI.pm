@@ -43,6 +43,7 @@ use CXGN::BrAPI::v2::ReferenceSets;
 use CXGN::BrAPI::v2::References;
 use CXGN::BrAPI::v2::Results;
 use CXGN::BrAPI::v2::Samples;
+use CXGN::BrAPI::v2::Seasons;
 use CXGN::BrAPI::v2::ServerInfo;
 use CXGN::BrAPI::v2::Studies;
 use CXGN::BrAPI::v2::Traits;
