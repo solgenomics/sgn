@@ -138,13 +138,33 @@ szyr <- length(years)
 
 
 #removing categorical
+rmtraits <- c()
 for (i in 40:ncol(pheno)){
   categ <- unique(pheno[,i])
-  if (length(categ)/nrow(pheno) <0.15){
+  if (length(categ)/nrow(pheno) < 0.15){
     cat("removing ",colnames(pheno[i]),"\n")
-    pheno[,i] <- NULL
+    rmtraits[[i]] <- colnames(pheno[i])
   }
 }
+rmtraits<-rmtraits[!is.na(rmtraits)]
+rmtraits
+ncol(pheno)
+for (i in 1:length(rmtraits)){
+  z <- ncol(pheno)
+  j = 40
+  while (j < z){
+    if (rmtraits[i] == colnames(pheno[j])){
+      pheno[[j]] <- NULL
+      z = ncol(pheno)
+    } else{
+      j = j+1
+    }
+  }
+}
+  
+
+ncol(pheno)
+
 
 numb = 1
 library(lmerTest)
