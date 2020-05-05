@@ -27,8 +27,8 @@ $combo_pops_id => ''
 <button class="button" id="phenozoom-reset">Reset zoom</button>
 <br/>
 <br/>
-<h3 style="text-align:center">Overview</h3>
-<div id="phenoPlotOverview"> </div>
+<!-- <h3 style="text-align:center">Overview</h3> -->
+<!-- <div id="phenoPlotOverview"> </div> -->
 
 
 <& /page/columnar_table.mas,
