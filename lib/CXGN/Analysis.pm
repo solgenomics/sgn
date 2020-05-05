@@ -132,7 +132,7 @@ has 'design' => (is => 'rw', isa => 'Ref', lazy => 1, builder => '_load_design')
 
 =cut
 
-has 'traits' => (is => 'rw', isa => 'ArrayRef');
+has 'traits' => (is => 'rw', isa => 'ArrayRef', builder => '_load_traits');
 
 =head2 nd_geolocation_id()
 
@@ -607,6 +607,21 @@ sub _load_accession_names {
     return $self->design()->get_accession_names();
 }
 
+sub _load_traits {
+    my $self = shift;
+
+    my $phenotypes = $self->get_phenotype_matrix();
+
+    my $header = $phenotypes->[0];
+
+    my $traits = [ @$header[30..scalar(@$header)-1] ];
+
+    $self->traits($traits);
+    return $traits;
+}
+	
+
+    
 
 #sub _load_accession_ids {
 #    my $self = shift;

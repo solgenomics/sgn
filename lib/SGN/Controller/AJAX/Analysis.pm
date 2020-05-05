@@ -1,4 +1,3 @@
-
 package SGN::Controller::AJAX::Analysis;
 
 use Moose;
@@ -305,7 +304,7 @@ sub list_analyses_by_user_table :Path('/ajax/analyses/by_user') Args(0) {
 
     my @table;
     foreach my $a (@analyses) {
-	push @table, [ '<a href="/analyses/'.$a->project_id().'">'.$a->name()."</a>", $a->description() ];
+	push @table, [ '<a href="/analyses/'.$a->get_trial_id().'">'.$a->name()."</a>", $a->description() ];
     }
 
     #print STDERR Dumper(\@table);
@@ -352,7 +351,17 @@ sub retrieve_analysis_data :Chained("ajax_analysis") PathPart('retrieve') :Args(
 	$dataset_description = $ds->description();
     }
 
-    my $dataref = $a->get_phenotype_matrix();
+    my $matrix = $a->get_phenotype_matrix();
+    print STDERR "Matrix: ".Dumper($matrix);
+    my $dataref = [];
+    
+    foreach my $row (@$matrix) {
+	my $new_row =  [@$row[17,18,30..scalar(@$row)-1]];
+	print STDERR "NEW ROW: ".Dumper($new_row);
+	push @$dataref, $new_row;
+    }
+
+    print STDERR "TRAITS : ".Dumper($a->traits());
     
     my $resultref = {
 	analysis_name => $a->name(),
