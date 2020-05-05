@@ -121,12 +121,13 @@ while (i > 39){
 her = rep(NA,(ncol(phenoData)-39))
 Vg = rep(NA,(ncol(phenoData)-39))
 Ve = rep(NA,(ncol(phenoData)-39))
+Vres = rep(NA, (ncol(phenoData)-39))
 resp_var = rep(NA,(ncol(phenoData)-39))
 
 
 #Counting number of locations to create model
-locs <- unique(phenoData$locationDbId)
-szloc <- length(locs)
+reps <- unique(phenoData$replicate)
+szreps <- length(reps)
 
 
 numb = 1
@@ -137,13 +138,12 @@ for (i in 40:(ncol(phenoData))) {
     outcome = colnames(phenoData)[i]    
 
     print(paste0('outcome ', outcome))
-    if (szloc == 1){
-      model <- lmer(get(outcome)~(1|germplasmName)+replicate+blockNumber,
+    if (szreps == 1){
+      model <- lmer(get(outcome)~(1|germplasmName)+(1|blockNumber),
         na.action = na.exclude,
         data=phenoData)
     }else{
-        model <- lmer(get(outcome) ~ (1|germplasmName) + studyYear + locationDbId + 
-        replicate + blockNumber + germplasmName:locationDbId,
+        model <- lmer(get(outcome) ~ (1|germplasmName) + (1|replicate) + (1|blockNumber),
         na.action = na.exclude,
         data=phenoData)
     }
@@ -151,18 +151,22 @@ for (i in 40:(ncol(phenoData))) {
     #model <- runAnova(phenoData, outcome, genotypeEffectType = 'random')
     
     
-    variance = as.data.frame(VarCorr(model))
-    gvar = variance [1,'vcov']
-    ervar = variance [2,'vcov']
+    # variance = as.data.frame(VarCorr(model))
+    variance = VarCorr(model)
+    gvar = variance [[1]][1]
+    envar = variance [[2]][1]
+    resvar = attr(variance,"sc")^2
     
-    H2 = gvar/ (gvar + (ervar))
+    H2 = gvar/ (gvar + (envar) + (resvar))
+    #H2 = gvar/(gvar + (envar))
     H2nw = format(round(H2, 4), nsmall = 4)
     her[numb] = round(as.numeric(H2nw), digits =3)
-    Vg[numb] = round(as.numeric(gvar), digits = 2)
-    Ve[numb] = round(as.numeric(ervar), digits = 2)
+    Vg[numb] = round(as.numeric(gvar), digits = 3)
+    Ve[numb] = round(as.numeric(envar), digits = 3)
+    Vres[numb] = round(as.numeric(resvar), digits = 3)
     resp_var[numb] = colnames(phenoData)[i]
-
-    numb = numb+1
+    
+    numb = numb + 1
     
     # }
     # else {
@@ -172,7 +176,7 @@ for (i in 40:(ncol(phenoData))) {
 }
 
 #Prepare information to export data
-Heritability = data.frame(resp_var,Vg, Ve, her)
+Heritability = data.frame(resp_var,Vg, Ve, Vres, her)
 print(Heritability)
 #library(tidyverse)
 Heritability = Heritability %>% 
@@ -180,7 +184,8 @@ Heritability = Heritability %>%
     trait = resp_var,
     Hert = her,
     Vg = Vg,
-    Ve = Ve
+    Ve = Ve,
+    Vres = Vres
   )
 print(Heritability)
 
