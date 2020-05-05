@@ -2927,7 +2927,8 @@ sub observationvariable_ontologies_GET {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
 	my $brapi_package_result = $brapi_module->observation_variable_ontologies({
-		name_spaces => \@namespaces
+		name_spaces => \@namespaces,
+		ontologyDbId => $clean_inputs->{ontologyDbId}
 	});
 	_standard_response_construction($c, $brapi_package_result);
 }
