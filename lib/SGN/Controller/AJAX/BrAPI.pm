@@ -2999,7 +2999,7 @@ sub observationvariable_list_GET {
 		externalReferenceIDs => $clean_inputs->{externalReferenceID},
 		externalReferenceSources => $clean_inputs->{externalReferenceSource},
 		supportedCrop =>$supported_crop,
-	});
+	}, $c);
 	_standard_response_construction($c, $brapi_package_result);
 }
 
