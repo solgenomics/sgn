@@ -12,7 +12,6 @@ use Try::Tiny;
 use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::List::Transform;
 use JSON;
-use JSON::Parse ':all';
 
 
 extends 'CXGN::BrAPI::v2::Common';
@@ -149,7 +148,7 @@ sub search {
             my $geo_coordinates =''; 
 
             if ($geo_coordinates_string){
-                $geo_coordinates = parse_json ($geo_coordinates_string);
+                $geo_coordinates = decode_json $geo_coordinates_string;
             } 
 
             my $entry_type = $obs_unit->{obsunit_is_a_control} ? 'check' : 'test';
@@ -205,7 +204,7 @@ sub search {
                 observationLevelRelationships => $observationLevelRelationships,
             );
 
-            my $brapi_observationUnitPosition = parse_json(encode_json \%observationUnitPosition);
+            my $brapi_observationUnitPosition = decode_json(encode_json \%observationUnitPosition);
 
             push @data_window, {
                 additionalInfo => {},
@@ -322,7 +321,7 @@ sub detail {
         my $geo_coordinates =''; 
 
         if ($geo_coordinates_string){
-            $geo_coordinates = parse_json ($geo_coordinates_string);
+            $geo_coordinates = decode_json $geo_coordinates_string;
         } 
 
         my $entry_type = $obs_unit->{obsunit_is_a_control} ? 'check' : 'test';
@@ -366,7 +365,7 @@ sub detail {
             observationLevelRelationships => $observationLevelRelationships,
         );
 
-        my $brapi_observationUnitPosition = parse_json(encode_json \%observationUnitPosition);
+        my $brapi_observationUnitPosition = decode_json(encode_json \%observationUnitPosition);
 
         push @data_window, {
             additionalInfo => {},
