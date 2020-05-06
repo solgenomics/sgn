@@ -237,7 +237,7 @@ $dataset_id => undef
                 <td colspan="12">
                   <span>Genomic Relationship Matrix (GRM) Download Format</span>
                   <select class="wizard-download-genotypes-grm-format form-control input-sm" >
-                      <option value="heatmap">Heatmap (.pdf)</option>
+                      <!--option value="heatmap">Heatmap (.pdf)</option-->
                       <option value="matrix">Matrix (.tsv)</option>
                       <option value="three_column">3-Column Format (.tsv)</option>
                   </select>
