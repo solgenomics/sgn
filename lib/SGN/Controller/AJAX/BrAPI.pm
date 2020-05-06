@@ -745,12 +745,8 @@ sub germplasm_search_GET {
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Germplasm');
-    my $brapi_package_result = $brapi_module->search({
-        germplasmName => $clean_inputs->{germplasmName},
-        germplasmDbId => $clean_inputs->{germplasmDbId},
-        germplasmPUI => $clean_inputs->{germplasmPUI},
-        commonCropName => $clean_inputs->{commonCropName}
-    });
+    my $brapi_package_result = $brapi_module->search($clean_inputs);
+
     _standard_response_construction($c, $brapi_package_result);
 }
 

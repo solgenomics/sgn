@@ -64,6 +64,7 @@ sub search {
 		[['application/json'],['GET'], 'observationunits/{observationUnitDbId}',['2.0']],
 		[['application/json'],['POST'],'search/observationunits',['2.0']],
 		[['application/json'],['GET'], 'search/observationunits/{searchResultsDbId}',['2.0']],
+		[['application/json'],['GET'], 'ontologies',['2.0']],
 		[['application/json'],['GET'], 'traits',['2.0']],
 		[['application/json'],['GET'], 'traits/{traitDbId}',['2.0']],
 		[['application/json'],['GET'], 'variables',['2.0']],
@@ -110,6 +111,13 @@ sub search {
 		[['application/json'],['GET'], 'variantsets/{variantSetDbId}/variants',['2.0']],
 		[['application/json'],['POST'],'search/variantsets',['2.0']],
 		[['application/json'],['GET'], 'search/variantsets/{searchResultsDbId}',['2.0']],
+		#germplasm
+		[['application/json'],['GET'], 'germplasm',['2.0']],
+		[['application/json'],['GET'], 'germplasm/{germplasmDbId}',['2.0']],
+		[['application/json'],['GET'], 'germplasm/{germplasmDbId}/pedigree',['2.0']],
+		[['application/json'],['GET'], 'germplasm/{germplasmDbId}/progeny',['2.0']],
+		[['application/json'],['POST'],'search/germplasm',['2.0']],
+		[['application/json'],['GET'], 'search/germplasm/{searchResultsDbId}',['2.0']],
 	);
 
 	my @call_search;

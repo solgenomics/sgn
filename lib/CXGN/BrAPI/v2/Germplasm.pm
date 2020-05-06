@@ -31,13 +31,17 @@ sub search {
     my $synonyms_arrayref = $params->{synonym} || ($params->{synonyms} || ());
     my $subtaxa = $params->{germplasmSubTaxa}->[0];
     my $match_method = $params->{matchMethod}->[0] || 'exact';  
-    my $collection = $params->{collection} || '';
-    my $study_db_id = $params->{studyDbId} || '';
-    my $parent_db_id = $params->{parentDbId} || '';
-    my $progeny_db_id = $params->{progenyDbId} || '';
-    my $external_reference_id = $params->{externalReferenceID} || '';
-    my $external_reference_source = $params->{externalReferenceSource} || '';
+    my $collection = $params->{collection} || ($params->{collections} || ());
+    my $study_db_id = $params->{studyDbId} || ($params->{studyDbIds} || ());
+    my $study_names = $params->{studyName} || ($params->{studyNames} || ());
+    my $parent_db_id = $params->{parentDbId} || ($params->{parentDbIds} || ());
+    my $progeny_db_id = $params->{progenyDbId} || ($params->{progenyDbIds} || ());
+    my $external_reference_id = $params->{externalReferenceID} || ($params->{externalReferenceIDs} || ());
+    my $external_reference_source = $params->{externalReferenceSource} || ($params->{externalReferenceSources} || ());
 
+    if ( $collection || $external_reference_id || $external_reference_source || $progeny_db_id || $parent_db_id ){
+        push @$status, { 'error' => 'The following search parameters are not implemented: collection, externalReferenceID, externalReferenceSource,parentDbId,progenyDbId' };
+    }
 
     if ($match_method ne 'exact' && $match_method ne 'wildcard') {
         push @$status, { 'error' => "matchMethod '$match_method' not recognized. Allowed matchMethods: wildcard, exact. Wildcard allows % or * for multiple characters and ? for single characters." };
@@ -94,6 +98,8 @@ sub search {
         stock_type_id=>$accession_type_cvterm_id,
         stockprops_values=>\%stockprops_values,
         stockprop_columns_view=>{'accession number'=>1, 'PUI'=>1, 'seed source'=>1, 'institute code'=>1, 'institute name'=>1, 'biological status of accession code'=>1, 'country of origin'=>1, 'type of germplasm storage code'=>1, 'acquisition date'=>1, 'ncbi_taxonomy_id'=>1},
+        trial_id_list=>$study_db_id,
+        trial_name_list=>$study_names,
         limit=>$limit,
         offset=>$offset,
         display_pedigree=>1
@@ -102,7 +108,31 @@ sub search {
 
     my @data;
     foreach (@$result){
-        my @type_of_germplasm_storage_codes = $_->{'type of germplasm storage code'} ? split ',', $_->{'type of germplasm storage code'} : ();
+        # my @type_of_germplasm_storage_codes = $_->{'type of germplasm storage code'} ? split ',', $_->{'type of germplasm storage code'} : ();
+        my @type_of_germplasm_storage_codes;
+        if($_->{'type of germplasm storage code'}){
+            my @items = split ',', $_->{'type of germplasm storage code'};
+            foreach(@items){
+                push @type_of_germplasm_storage_codes ,{
+                    code=>$_,
+                    description=>undef
+                };
+            }
+        }
+        my @donors = {
+            donorAccessionNumber=>$_->{'accession number'},
+            donorInstituteCode=>$_->{donors},
+            germplasmPUI=>undef
+        };
+        my @synonyms;
+        if($_->{synonyms}){
+            foreach(@{ $_->{synonyms} }){
+                push @synonyms, {
+                    synonym=>$_,
+                    type=>undef
+                };
+            }
+        }
         my @ncbi_taxon_ids = split ',', $_->{'ncbi_taxonomy_id'};
         my @taxons;
         foreach (@ncbi_taxon_ids){
@@ -123,12 +153,12 @@ sub search {
             countryOfOriginCode=>$_->{'country of origin'},
             defaultDisplayName=>$_->{uniquename},
             documentationURL=>undef,
-            donors=>$_->{donors},
+            donors=>\@donors,
             externalReferences=>undef,
             genus=>$_->{genus},
             germplasmName=>$_->{uniquename},
             germplasmOrigin=>undef,
-            germplasmDbId=>$_->{stock_id},
+            germplasmDbId=>qq|$_->{stock_id}|,
             germplasmPUI=>$_->{'PUI'},     
             germplasmPreprocessing=>undef,
             instituteCode=>$_->{'institute code'},
@@ -141,7 +171,7 @@ sub search {
             storageTypes=>\@type_of_germplasm_storage_codes,
             subtaxa=>$_->{subtaxa},
             subtaxaAuthority=>$_->{subtaxaAuthority},
-            synonyms=> $_->{synonyms},
+            synonyms=> \@synonyms,
             taxonIds=>\@taxons,
         };
     }
@@ -178,7 +208,27 @@ sub germplasm_detail {
     if ($total_count != 1){
         return CXGN::BrAPI::JSONResponse->return_error($status, 'GermplasmDbId did not return 1 result');
     }
-    my @type_of_germplasm_storage_codes = $result->[0]->{'type of germplasm storage code'} ? split ',', $result->[0]->{'type of germplasm storage code'} : ();
+    # my @type_of_germplasm_storage_codes = $result->[0]->{'type of germplasm storage code'} ? split ',', $result->[0]->{'type of germplasm storage code'} : ();
+    my @type_of_germplasm_storage_codes;
+    my @items = split ',', $result->[0]->{'type of germplasm storage code'};
+    foreach(@items){
+        push @type_of_germplasm_storage_codes ,{
+            code=>$_,
+            description=>undef
+        };
+    }
+    my @donors = {
+            donorAccessionNumber=>$result->[0]->{'accession number'},
+            donorInstituteCode=>$result->[0]->{donors},
+            germplasmPUI=>undef
+        };
+    my @synonyms;
+    foreach(@{ $result->[0]->{synonyms} }){
+        push @synonyms, {
+            synonym=>$_,
+            type=>undef
+        };
+    }
     my @ncbi_taxon_ids = split ',', $result->[0]->{'ncbi_taxonomy_id'};
     my @taxons;
     foreach (@ncbi_taxon_ids){
@@ -188,28 +238,37 @@ sub germplasm_detail {
         };
     }
     my %result = (
-        germplasmDbId=>$result->[0]->{stock_id},
-        defaultDisplayName=>$result->[0]->{uniquename},
-        germplasmName=>$result->[0]->{uniquename},
+        additionalInfo=>{},
         accessionNumber=>$result->[0]->{'accession number'},
-        germplasmPUI=>$result->[0]->{'PUI'},
-        pedigree=>$result->[0]->{pedigree},
-        germplasmSeedSource=>$result->[0]->{'seed source'},
-        synonyms=> $result->[0]->{synonyms},
+        acquisitionDate=>$result->[0]->{'acquisition date'},
+        biologicalStatusOfAccessionCode=>$result->[0]->{'biological status of accession code'} + 0,
+        biologicalStatusOfAccessionDescription=>undef,
+        breedingMethodDbId=>undef,
+        collection=>undef,
         commonCropName=>$result->[0]->{common_name},
+        countryOfOriginCode=>$result->[0]->{'country of origin'},
+        defaultDisplayName=>$result->[0]->{uniquename},
+        documentationURL=>undef,
+        donors=>\@donors,
+        externalReferences=>undef,
+        genus=>$result->[0]->{genus},
+        germplasmDbId=>qq|$result->[0]->{stock_id}|,     
+        germplasmName=>$result->[0]->{uniquename},
+        germplasmOrigin=>undef,
+        germplasmPUI=>$result->[0]->{'PUI'},
+        germplasmPreprocessing=>undef,
         instituteCode=>$result->[0]->{'institute code'},
         instituteName=>$result->[0]->{'institute name'},
-        biologicalStatusOfAccessionCode=>$result->[0]->{'biological status of accession code'} + 0,
-        countryOfOriginCode=>$result->[0]->{'country of origin'},
-        typeOfGermplasmStorageCode=>\@type_of_germplasm_storage_codes,
-        genus=>$result->[0]->{genus},
+        pedigree=>$result->[0]->{pedigree},
+        seedSource=>$result->[0]->{'seed source'},
+        seedSourceDescription=>$result->[0]->{'seed source'},
         species=>$result->[0]->{species},
-        taxonIds=>\@taxons,
         speciesAuthority=>$result->[0]->{speciesAuthority},
+        storageTypes=>\@type_of_germplasm_storage_codes,
         subtaxa=>$result->[0]->{subtaxa},
         subtaxaAuthority=>$result->[0]->{subtaxaAuthority},
-        donors=>$result->[0]->{donors},
-        acquisitionDate=>$result->[0]->{'acquisition date'},
+        synonyms=>\@synonyms,
+        taxonIds=>\@taxons,  
     );
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,1,0);
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm detail result constructed');
@@ -232,7 +291,7 @@ sub germplasm_pedigree {
     my @data_files;
     my $total_count = 0;
     my $s = CXGN::Stock->new( schema => $self->bcs_schema(), stock_id => $stock_id);
-    if ($s) {
+    if ($s) { print Dumper $s;
         $total_count = 1;
         my $uniquename = $s->uniquename;
         my $parents = $s->get_parents();
@@ -257,27 +316,34 @@ sub germplasm_pedigree {
                     my $germplasm_id = $_->[4];
                     push @siblings, {
                         germplasmDbId => qq|$germplasm_id|,
-                        defaultDisplayName => $_->[5]
+                        germplasmName => $_->[5]
                     };
                 }
             }
         }
+        my $parent = [
+            {
+                germplasmDbId=>qq|$female_id|,
+                germplasmName=>$female_name,
+                parentType=>'FEMALE',
+            },
+            {
+                germplasmDbId=>qq|$male_id|,
+                germplasmName=>$male_name,
+                parentType=>'MALE',
+            },
+            ];
 
         %result = (
-            germplasmDbId=>qq|$stock_id|,
-            defaultDisplayName=>$uniquename,
-            pedigree=>$pedigree_string,
-            crossingPlan=>$cross_type,
+                # defaultDisplayName=>$uniquename,
+            crossingProjectDbId=>undef,
+                # crossingPlan=>$cross_type,
             crossingYear=>$cross_year,
             familyCode=>$cross_name,
-            parent1Id=>$female_id,
-            parent2Id=>$male_id,
-            parent1DbId=>$female_id,
-            parent1Name=>$female_name,
-            parent1Type=>'FEMALE',
-            parent2DbId=>$male_id,
-            parent2Name=>$male_name,
-            parent2Type=>'MALE',
+            germplasmDbId=>qq|$stock_id|,
+            germplasmName=>$uniquename,
+            parents=>$parent,
+            pedigree=>$pedigree_string,
             siblings=>\@siblings
         );
     }
@@ -324,16 +390,14 @@ sub germplasm_progeny {
     while (my $edge = $edges->next) {
         if ($edge->type_id==$mother_cvterm){
             push @{$full_data}, {
-                germplasmDbId => $edge->object_id,
-                progenyGermplasmDbId => $edge->object_id,
-                defaultDisplayName => $edge->get_column('progeny_uniquename'),
+                germplasmDbId => "". $edge->object_id,
+                germplasmName => $edge->get_column('progeny_uniquename'),
                 parentType => "FEMALE"
             };
         } else {
             push @{$full_data}, {
-                germplasmDbId => $edge->object_id,
-                progenyGermplasmDbId => $edge->object_id,
-                defaultDisplayName => $edge->get_column('progeny_uniquename'),
+                germplasmDbId => "". $edge->object_id,
+                germplasmName => $edge->get_column('progeny_uniquename'),
                 parentType => "MALE"
             };
         }
@@ -344,10 +408,9 @@ sub germplasm_progeny {
         $last_item = $total_count-1;
     }
     my $result = {
-        defaultDisplayName=>$stock->uniquename,
+        germplasmName=>$stock->uniquename,
         germplasmDbId=>$stock_id,
         progeny=>[@{$full_data}[$page_size*$page .. $last_item]],
-        data=>[@{$full_data}[$page_size*$page .. $last_item]]
     };
     my @data_files;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
