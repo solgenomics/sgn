@@ -170,11 +170,13 @@ sub trial_details_GET   {
     my $trial = $c->stash->{trial};
     my $planting_date = $trial->get_planting_date();
     my $harvest_date = $trial->get_harvest_date();
+    my $get_location_noaa_station_id = $trial->get_location_noaa_station_id();
 
     $c->stash->{rest} = {
         details => {
             planting_date => $planting_date,
-            harvest_date => $harvest_date
+            harvest_date => $harvest_date,
+            location_noaa_station_id => $get_location_noaa_station_id
         }
     };
 

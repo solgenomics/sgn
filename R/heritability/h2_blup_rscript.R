@@ -67,24 +67,6 @@ for (i in 40:ncol(pheno)){
 	}
 }
 
-# z=1
-# png(figure3_file_name,height=250*n)
-# par(mar=c(4,4,2,2))
-# par(mfrow=c(n,2))
-# for(i in 40:ncol(pheno)){
-# 	test = is.numeric(pheno[,i])
-# 	if (test == "TRUE") {
-# 		hist(pheno[,i], main = "Data Distribution", xlab = traits[z])
-# 		boxplot(pheno[,i], main = "Boxplot", xlab= traits[z])
-# 		z=z+1
-# 	}
-# 	else {
-# 		z=z+1
-# 	}
-# }
-# dev.off()
-
-
 
 names <- colnames(pheno)
 cbPalette <- c("blue","red","orange","green","yellow")
@@ -134,54 +116,188 @@ if (int<8){
 }
 
 pdf(NULL)
-ggsave(figure3_file_name, ml, width=8, height = int*2, dpi=80, units = "in", limitsize=FALSE, pdf(NULL))
+                     
+ggsave(figure3_file_name, ml, width=8, height = int*2, dpi=80,limitsize=FALSE, units = "in", pdf(NULL))
+
 
 #Calculating components of variance and heritability
 her = rep(NA,(ncol(pheno)-39))
 Vg = rep(NA,(ncol(pheno)-39))
 Ve = rep(NA,(ncol(pheno)-39))
+Vres = rep(NA, (ncol(pheno)-39))
 resp_var = rep(NA,(ncol(pheno)-39))
 
 
 #checkning number of locations
 locs <- unique(pheno$locationDbId)
+reps <- unique(pheno$replicate)
+years <- unique(pheno$studyYear)
 szloc <- length(locs)
+szreps <- length(reps)
+szyr <- length(years)
+
+
+#removing categorical
+rmtraits <- c()
+for (i in 40:ncol(pheno)){
+  categ <- unique(pheno[,i])
+  if (length(categ)/nrow(pheno) < 0.15){
+    cat("removing ",colnames(pheno[i]),"\n")
+    rmtraits[[i]] <- colnames(pheno[i])
+  }
+}
+rmtraits<-rmtraits[!is.na(rmtraits)]
+rmtraits
+ncol(pheno)
+if (length(rmtraits)>0){
+	for (i in 1:length(rmtraits)){
+	  z <- ncol(pheno)
+	  j = 40
+	  while (j < z){
+	    if (rmtraits[i] == colnames(pheno[j])){
+	      pheno[[j]] <- NULL
+	      z = ncol(pheno)
+	    } else{
+	      j = j+1
+	    }
+	  }
+	}
+  }
+
+ncol(pheno)
+
 
 numb = 1
 library(lmerTest)
 # Still need check temp data to ensure wright dimension
-
-for (i in 40:(ncol(pheno))) {
-	outcome = colnames(pheno)[i]    
-    print(paste0('outcome ', outcome))
+an.error.occured <- FALSE
+tryCatch({ for (i in 40:(ncol(pheno))) {
+  outcome = colnames(pheno)[i]    
+  print(paste0('outcome ', outcome))
+  if (szreps > 1){
     if (szloc == 1){
-      model <- lmer(get(outcome)~(1|germplasmName)+replicate+blockNumber,
-        na.action = na.exclude,
-        data=pheno)
-    }else{
-        model <- lmer(get(outcome) ~ (1|germplasmName) + studyYear + locationDbId + replicate +
-        blockNumber + germplasmName:locationDbId,
-        na.action = na.exclude,
-        data=pheno)
+      if (szyr == 1){
+        model <- lmer(get(outcome)~(1|germplasmName)+(1|replicate)+ (1|blockNumber),
+                      na.action = na.exclude,
+                      data=pheno)
+        variance = as.data.frame(VarCorr(model))
+        gvar = variance [1,"vcov"]
+        envar = variance [2,"vcov"]
+        resvar = variance [4, "vcov"]
+      }else{
+        model <- lmer(get(outcome) ~ (1|germplasmName) + (1|replicate) + (1|studyYear) + (1|germplasmName:studyYear) + (1|blockNumber),
+                      na.action = na.exclude,
+                      data=pheno)
+        variance = as.data.frame(VarCorr(model))
+        gvar = variance [2,"vcov"]
+        envar = variance [3, "vcov"]
+        resvar = variance [6, "vcov"]
+      }
+    }else if (szloc > 1) {
+      if (szyr == 1){
+        model <- lmer(get(outcome) ~ (1|germplasmName) + (1|replicate) + (1|locationDbId) + (1|germplasmName:locationDbId) + blockNumber,
+                      na.action = na.exclude,
+                      data=pheno)
+        variance = as.data.frame(VarCorr(model))
+        gvar = variance [2,"vcov"]
+        envar = variance [3, "vcov"]
+        resvar = variance [5, "vcov"]
+      }else{
+        model <- lmer(get(outcome) ~ (1|germplasmName) + (1|replicate) + (1|locationDbId) + (1|germplasmName:locationDbId)+
+                        (1|studyYear) + (1|germplasmName:studyYear) + blockNumber,
+                      na.action = na.exclude,
+                      data=pheno)
+        variance = as.data.frame(VarCorr(model))
+        gvar = variance [3,"vcov"]
+        envar = variance [4, "vcov"]
+        resvar = variance [7, "vcov"]
+      }
     }
-    
-	  variance = as.data.frame(VarCorr(model))
-	  gvar = variance [1,'vcov']
-	  ervar = variance [2,'vcov']
-	  
-	  H2 = gvar/ (gvar + (ervar))
-	  H2nw = format(round(H2, 4), nsmall = 4)
-	  her[numb] = round(as.numeric(H2nw), digits =3)
-	  Vg[numb] = round(as.numeric(gvar), digits = 2)
-	  Ve[numb] = round(as.numeric(ervar), digits = 2)
-	  resp_var[numb] = colnames(pheno)[i]
-	  
-	  numb = numb + 1
+  }else if (szreps == 1){
+    if (szloc ==1){
+      if (szyr == 1){
+        model <- lmer(get(outcome)~(1|germplasmName)+(1|blockNumber),
+                      na.action = na.exclude,
+                      data=pheno)
+        variance = as.data.frame(VarCorr(model))
+        gvar = variance [1,"vcov"]
+        envar = variance [2,"vcov"]
+        resvar = variance [3, "vcov"]
+      }else{
+        model <- lmer(get(outcome) ~ (1|germplasmName) + (1|studyYear) + (1|germplasmName:studyYear) + (1|blockNumber),
+                      na.action = na.exclude,
+                      data=pheno)
+        variance = as.data.frame(VarCorr(model))
+        gvar = variance [2,"vcov"]
+        envar = variance [3, "vcov"]
+        resvar = variance [5, "vcov"]
+      }
+    }else if (szloc > 1){
+      if (szyr ==1){
+        model <- lmer(get(outcome)~(1|germplasmName)+(1|locationDbId) + (1|germplasmName:locationDbId) + blockNumber,
+                      na.action = na.exclude,
+                      data=pheno)
+        variance = as.data.frame(VarCorr(model))
+        gvar = variance [2,"vcov"]
+        envar = variance [3, "vcov"]
+        resvar = variance [4, "vcov"]
+      }else{
+        model <- lmer(get(outcome) ~ (1|germplasmName) + (1|studyYear) + (1|locationDbId) +
+                        (1|germplasmName:locationDbId)+(1|germplasmName:studyYear)+ blockNumber,
+                      na.action = na.exclude,
+                      data=pheno)
+        variance = as.data.frame(VarCorr(model))
+        gvar = variance [3,"vcov"]
+        envar = variance [4, "vcov"]
+        resvar = variance [6, "vcov"]
+      }
+    }
+  }
+  
+  H2 = gvar/ (gvar + (envar) + (resvar))
+  #H2 = gvar/(gvar + (envar))
+  H2nw = format(round(H2, 4), nsmall = 4)
+  her[numb] = round(as.numeric(H2nw), digits =3)
+  Vg[numb] = round(as.numeric(gvar), digits = 3)
+  Ve[numb] = round(as.numeric(envar), digits = 3)
+  Vres[numb] = round(as.numeric(resvar), digits = 3)
+  resp_var[numb] = colnames(pheno)[i]
+  
+  numb = numb + 1
+  
+}
+}, error = function(e) {an.error.occured <<- TRUE}
+)
 
+if (numb == 1){
+  for (i in 40:(ncol(pheno))) {
+    outcome = colnames(pheno)[i]    
+    print(paste0('outcome ', outcome))
+    #model <- runAnova(phenoData, outcome, genotypeEffectType = 'random')
+    model <- lmer(get(outcome)~(1|germplasmName) + (1|blockNumber),
+                 na.action = na.exclude,
+                 data=pheno)
+    variance = VarCorr(model)
+    gvar = variance [[1]][1]
+    envar = variance [[2]][1]
+    resvar = attr(variance,"sc")^2
+    H2 = gvar/ (gvar + (envar) + (resvar))
+    #H2 = gvar/(gvar + (envar))
+    H2nw = format(round(H2, 4), nsmall = 4)
+    her[numb] = round(as.numeric(H2nw), digits =3)
+    Vg[numb] = round(as.numeric(gvar), digits = 3)
+    Ve[numb] = round(as.numeric(envar), digits = 3)
+    Vres[numb] = round(as.numeric(resvar), digits = 3)
+    resp_var[numb] = colnames(pheno)[i]
+    
+    numb = numb + 1
+  }  
 }
 
+
+cat("Was there an error? ", an.error.occured,"\n")
 #Prepare information to export data
-Heritability = data.frame(resp_var,Vg, Ve, her)
+Heritability = data.frame(resp_var,Vg, Ve, Vres, her)
 
 library(tidyverse)
 Heritability = Heritability %>% 
@@ -189,14 +305,16 @@ Heritability = Heritability %>%
     trait = resp_var,
     Hert = her,
     Vg = Vg,
-    Ve = Ve
+    Ve = Ve,
+    Vres = Vres
   )
 
+# Heritability <- Heritability[!is.na(Heritability)]
 print(Heritability)
 
 pdf(NULL)
 library(gridExtra)
-png(h2File, height=(25*numb), width=800, limitsize=FALSE)
+png(h2File, height=(25*numb), width=800)
 par(mar=c(4,4,2,2))
 p<-tableGrob(Heritability)
 grid.arrange(p)
