@@ -138,18 +138,40 @@ szyr <- length(years)
 
 
 #removing categorical
+rmtraits <- c()
 for (i in 40:ncol(pheno)){
   categ <- unique(pheno[,i])
-  if (length(categ)/nrow(pheno) <0.15){
+  if (length(categ)/nrow(pheno) < 0.15){
     cat("removing ",colnames(pheno[i]),"\n")
-    pheno[,i] <- NULL
+    rmtraits[[i]] <- colnames(pheno[i])
   }
 }
+rmtraits<-rmtraits[!is.na(rmtraits)]
+rmtraits
+ncol(pheno)
+if (length(rmtraits)>0){
+	for (i in 1:length(rmtraits)){
+	  z <- ncol(pheno)
+	  j = 40
+	  while (j < z){
+	    if (rmtraits[i] == colnames(pheno[j])){
+	      pheno[[j]] <- NULL
+	      z = ncol(pheno)
+	    } else{
+	      j = j+1
+	    }
+	  }
+	}
+  }
+
+ncol(pheno)
+
 
 numb = 1
 library(lmerTest)
 # Still need check temp data to ensure wright dimension
-for (i in 40:(ncol(pheno))) {
+an.error.occured <- FALSE
+tryCatch({ for (i in 40:(ncol(pheno))) {
   outcome = colnames(pheno)[i]    
   print(paste0('outcome ', outcome))
   if (szreps > 1){
@@ -243,9 +265,37 @@ for (i in 40:(ncol(pheno))) {
   
   numb = numb + 1
   
-  
+}
+}, error = function(e) {an.error.occured <<- TRUE}
+)
+
+if (numb == 1){
+  for (i in 40:(ncol(pheno))) {
+    outcome = colnames(pheno)[i]    
+    print(paste0('outcome ', outcome))
+    #model <- runAnova(phenoData, outcome, genotypeEffectType = 'random')
+    model <- lmer(get(outcome)~(1|germplasmName) + (1|blockNumber),
+                 na.action = na.exclude,
+                 data=pheno)
+    variance = VarCorr(model)
+    gvar = variance [[1]][1]
+    envar = variance [[2]][1]
+    resvar = attr(variance,"sc")^2
+    H2 = gvar/ (gvar + (envar) + (resvar))
+    #H2 = gvar/(gvar + (envar))
+    H2nw = format(round(H2, 4), nsmall = 4)
+    her[numb] = round(as.numeric(H2nw), digits =3)
+    Vg[numb] = round(as.numeric(gvar), digits = 3)
+    Ve[numb] = round(as.numeric(envar), digits = 3)
+    Vres[numb] = round(as.numeric(resvar), digits = 3)
+    resp_var[numb] = colnames(pheno)[i]
+    
+    numb = numb + 1
+  }  
 }
 
+
+cat("Was there an error? ", an.error.occured,"\n")
 #Prepare information to export data
 Heritability = data.frame(resp_var,Vg, Ve, Vres, her)
 
@@ -259,11 +309,12 @@ Heritability = Heritability %>%
     Vres = Vres
   )
 
+# Heritability <- Heritability[!is.na(Heritability)]
 print(Heritability)
 
 pdf(NULL)
 library(gridExtra)
-png(h2File, height=(25*numb), width=800, limitsize=FALSE)
+png(h2File, height=(25*numb), width=800)
 par(mar=c(4,4,2,2))
 p<-tableGrob(Heritability)
 grid.arrange(p)
