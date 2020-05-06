@@ -417,38 +417,4 @@ sub germplasm_progeny {
     return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'Germplasm progeny result constructed');
 }
 
-sub germplasm_markerprofiles {
-    my $self = shift;
-    my $stock_id = shift;
-
-    my $page_size = $self->page_size;
-    my $page = $self->page;
-    my $status = $self->status;
-    my @marker_profiles;
-
-    my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_snp_genotyping', 'genotype_property')->cvterm_id();
-
-    my $rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
-        {'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'stock.stock_id'=>$stock_id},
-        {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
-        select=> ['genotypeprops.genotypeprop_id'],
-        as=> ['genotypeprop_id'],
-        order_by=>{ -asc=>'genotypeprops.genotypeprop_id' }
-        }
-    );
-
-    my $rs_slice = $rs->slice($page_size*$page, $page_size*($page+1)-1);
-    while (my $gt = $rs_slice->next()) {
-        push @marker_profiles, $gt->get_column('genotypeprop_id');
-    }
-    my $total_count = scalar(@marker_profiles);
-    my %result = (
-        germplasmDbId=>qq|$stock_id|,
-        markerprofileDbIds=>\@marker_profiles
-    );
-    my @data_files;
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm markerprofiles result constructed');
-}
-
 1;
