@@ -162,14 +162,13 @@ sub _clean_inputs {
 			$params->{$_} = $ret_val;
 		}
 		elsif (ref $values eq 'HASH') {
-			$params->{$_} = [$values];
+			$params->{$_} = _clean_inputs($values);
 		}
 		else {
 			die "Input $_ is not a scalar, arrayref, or a single level hash\n";
 		}
 
 	}
-
 	return $params;
 }
 
