@@ -297,7 +297,9 @@ if (numb == 1){
 
 cat("Was there an error? ", an.error.occured,"\n")
 #Prepare information to export data
+
 Heritability = data.frame(resp_var,Vg, Ve, Vres, her)
+
 
 library(tidyverse)
 Heritability = Heritability %>% 
@@ -308,8 +310,8 @@ Heritability = Heritability %>%
     Ve = Ve,
     Vres = Vres
   )
+Heritability = na.omit(Heritability)
 
-# Heritability <- Heritability[!is.na(Heritability)]
 print(Heritability)
 
 pdf(NULL)
