@@ -1425,3 +1425,62 @@ id: ISOL:0000323
 name: Raster DSM
 def: "A single channel image capturing the elevation map from a digital surface map (DSM) as a raster" []
 relationship: is_a ISOL:0000001
+
+[Term]
+id: ISOL:0000324
+name: Standard 4 Image Montage
+def: "Standard 4 Image Montage of RGB, NRN, NReN, NIR background removed with threshold images" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000325
+name: Keras Tensorflow Models
+relationship: is_a ISOL:0000000
+
+[Term]
+id: ISOL:0000326
+name: Keras Predicted KerasTunerCNNSequentialSoftmaxCategorical
+def: "Keras Predicted using KerasTunerCNNSequentialSoftmaxCategorical model" []
+relationship: is_a ISOL:0000325
+
+[Term]
+id: ISOL:0000327
+name: Keras Predicted SimpleKerasTunerCNNSequentialSoftmaxCategorical
+def: "Keras Predicted using SimpleKerasTunerCNNSequentialSoftmaxCategorical model" []
+relationship: is_a ISOL:0000325
+
+[Term]
+id: ISOL:0000328
+name: Keras Predicted KerasCNNInceptionResNetV2ImageNetWeights
+def: "Keras Predicted using KerasCNNInceptionResNetV2ImageNetWeights model" []
+relationship: is_a ISOL:0000325
+
+[Term]
+id: ISOL:0000329
+name: Keras Predicted KerasCNNInceptionResNetV2
+def: "Keras Predicted using KerasCNNInceptionResNetV2 model" []
+relationship: is_a ISOL:0000325
+
+[Term]
+id: ISOL:0000330
+name: Keras Predicted KerasCNNLSTMDenseNet121ImageNetWeights
+def: "Keras Predicted using KerasCNNLSTMDenseNet121ImageNetWeights model" []
+relationship: is_a ISOL:0000325
+
+[Term]
+id: ISOL:0000331
+name: Keras Predicted KerasCNNDenseNet121ImageNetWeights
+def: "Keras Predicted using KerasCNNDenseNet121ImageNetWeights model" []
+relationship: is_a ISOL:0000325
+
+[Term]
+id: ISOL:0000332
+name: Keras Predicted KerasCNNSequentialSoftmaxCategorical
+def: "Keras Predicted using KerasCNNSequentialSoftmaxCategorical model" []
+relationship: is_a ISOL:0000325
+
+[Term]
+id: ISOL:0000333
+name: Keras Predicted KerasCNNMLPExample
+def: "Keras Predicted using KerasCNNMLPExample model" []
+relationship: is_a ISOL:0000325

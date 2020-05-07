@@ -15,7 +15,7 @@ my $geno = CXGN::Genotype::GRM->new({
     protocol_id=>$protocol_id,
     get_grm_for_parental_accessions=>1,
     cache_root=>$cache_root,
-    download_format=>'matrix',
+    download_format=>'matrix', #either 'matrix', 'three_column', or 'heatmap'
     minor_allele_frequency=>0.01,
     marker_filter=>0.6,
     individuals_filter=>0.8
@@ -56,6 +56,7 @@ use File::Slurp qw | write_file |;
 use POSIX;
 use File::Copy;
 use CXGN::Tools::Run;
+use File::Temp 'tempfile';
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -381,23 +382,23 @@ sub get_grm {
     my $marker_filter = $self->marker_filter();
     my $individuals_filter = $self->individuals_filter();
 
-    my $grm_tempfile_out = $grm_tempfile . "_out";
+    my $tmp_output_dir = $shared_cluster_dir_config."/tmp_genotype_download_grm";
+    mkdir $tmp_output_dir if ! -d $tmp_output_dir;
+    my ($grm_tempfile_out_fh, $grm_tempfile_out) = tempfile("download_grm_XXXXX", DIR=> $tmp_output_dir);
+    my ($temp_out_file_fh, $temp_out_file) = tempfile("download_grm_XXXXX", DIR=> $tmp_output_dir);
 
     my $cmd = 'R -e "library(genoDataFilter); library(rrBLUP); library(data.table); library(scales);
     mat <- fread(\''.$grm_tempfile.'\', header=FALSE, sep=\'\t\');
     range_check <- range(as.matrix(mat)[1,]);
-    if (range_check[2] - range_check[1] <= 1) {
+    if (length(table(as.matrix(mat)[1,])) < 2 || (!is.na(range_check[1]) && !is.na(range_check[2]) && range_check[2] - range_check[1] <= 1 )) {
         mat <- as.data.frame(rescale(as.matrix(mat), to = c(-1,1), from = c(0,2) ));
     } else {
         mat <- as.data.frame(rescale(as.matrix(mat), to = c(-1,1) ));
     }
     mat_clean <- filterGenoData(gData=mat, maf='.$maf.', markerFilter='.$marker_filter.', indFilter='.$individuals_filter.');
     A_matrix <- A.mat(mat_clean, impute.method=\'EM\', n.core='.$number_system_cores.', return.imputed=FALSE);
-    write.table(A_matrix, file=\''.$grm_tempfile_out.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\')"';
+    write.table(A_matrix, file=\''.$grm_tempfile_out.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
     print STDERR Dumper $cmd;
-
-    my $tmp_output_dir = $shared_cluster_dir_config."/tmp_genotype_download_grm";
-    mkdir $tmp_output_dir if ! -d $tmp_output_dir;
 
     # Do the GRM on the cluster
     my $grm_cmd = CXGN::Tools::Run->new(
@@ -407,7 +408,7 @@ sub get_grm {
             temp_base => $tmp_output_dir,
             queue => $web_cluster_queue_config,
             do_cleanup => 0,
-            out_file => $grm_tempfile_out,
+            out_file => $temp_out_file,
             # don't block and wait if the cluster looks full
             max_cluster_jobs => 1_000_000_000,
         }
@@ -509,13 +510,13 @@ sub download_grm {
             my %result_hash;
             my $row_num = 0;
             my %seen_stock_ids;
+            # print STDERR Dumper \@grm;
             foreach my $s (@$stock_ids) {
-                my @row = ($s);
                 my $col_num = 0;
                 foreach my $c (@$stock_ids) {
                     if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
                         my $val = $grm[$row_num]->[$col_num];
-                        if ($val || $val == 0) {
+                        if (defined $val and length $val) {
                             $result_hash{$s}->{$c} = $val;
                             $seen_stock_ids{$s}++;
                             $seen_stock_ids{$c}++;
@@ -529,7 +530,9 @@ sub download_grm {
             foreach my $r (sort keys %result_hash) {
                 foreach my $s (sort keys %{$result_hash{$r}}) {
                     my $val = $result_hash{$r}->{$s};
-                    $data .= "$r\t$s\t$val\n";
+                    if (defined $val and length $val) {
+                        $data .= "$r\t$s\t$val\n";
+                    }
                 }
             }
 
