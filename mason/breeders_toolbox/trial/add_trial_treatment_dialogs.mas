@@ -1,6 +1,7 @@
 <%args>
 </%args>
 
+
 <div class="modal fade" id="trial_design_add_treatments" name="trial_design_add_treatments" tabindex="-1" role="dialog" aria-labelledby="addTrialDesignTreatmentsDialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
