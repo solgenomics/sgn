@@ -229,7 +229,8 @@ sub verify_accessions_file_POST : Args(0) {
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $upload = $c->req->upload('new_accessions_upload_file');
-    my $do_fuzzy_search = $c->req->param('fuzzy_check_upload_accessions') ? 1 : 0;
+    my $do_fuzzy_search = $user_role eq 'curator' && !$c->req->param('fuzzy_check_upload_accessions') ? 0 : 1;
+
     if ($user_role ne 'curator' && !$do_fuzzy_search) {
         $c->stash->{rest} = {error=>'Only a curator can add accessions without using the fuzzy search!'};
         $c->detach();

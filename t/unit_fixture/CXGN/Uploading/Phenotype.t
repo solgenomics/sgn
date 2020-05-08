@@ -141,8 +141,8 @@ my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
 
 my $traits_assayed  = $tn->get_traits_assayed();
 my @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
-#print STDERR Dumper @traits_assayed_sorted;
-my @traits_assayed_check = ([70666,'fresh root weight|CO_334:0000012'], [70668,'harvest index variable|CO_334:0000015'], [70741,'dry matter content percentage|CO_334:0000092'], [70773,'fresh shoot weight measurement in kg|CO_334:0000016']);
+print STDERR Dumper @traits_assayed_sorted;
+my @traits_assayed_check = ([70666,'fresh root weight|CO_334:0000012', [], 15,undef,undef], [70668,'harvest index variable|CO_334:0000015', [], 15,undef,undef], [70741,'dry matter content percentage|CO_334:0000092', [], 15,undef,undef], [70773,'fresh shoot weight measurement in kg|CO_334:0000016', [], 15,undef,undef]);
 is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed from phenotyping spreadsheet upload' );
 
 my @pheno_for_trait = $tn->get_phenotypes_for_trait(70666);
@@ -272,8 +272,8 @@ ok(!$stored_phenotype_error_msg, "check that store pheno spreadsheet works");
 
 my $traits_assayed  = $tn->get_traits_assayed();
 my @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
-#print STDERR Dumper @traits_assayed_sorted;
-my @traits_assayed_check = ([70666,'fresh root weight|CO_334:0000012'], [70668,'harvest index variable|CO_334:0000015'], [70741,'dry matter content percentage|CO_334:0000092'], [70773,'fresh shoot weight measurement in kg|CO_334:0000016']);
+print STDERR Dumper @traits_assayed_sorted;
+my @traits_assayed_check = ([70666,'fresh root weight|CO_334:0000012', [], 30,undef,undef], [70668,'harvest index variable|CO_334:0000015', [], 30,undef,undef], [70741,'dry matter content percentage|CO_334:0000092', [], 30,undef,undef], [70773,'fresh shoot weight measurement in kg|CO_334:0000016', [], 30,undef,undef]);
 is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed from phenotyping spreadsheet upload' );
 
 my @pheno_for_trait = $tn->get_phenotypes_for_trait(70666);
@@ -430,25 +430,25 @@ $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
 
 $traits_assayed  = $tn->get_traits_assayed();
 @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
-#print STDERR Dumper \@traits_assayed_sorted;
+print STDERR Dumper \@traits_assayed_sorted;
 @traits_assayed_check = ([
           70666,
-          'fresh root weight|CO_334:0000012'
+          'fresh root weight|CO_334:0000012', [], 30,undef,undef
         ],[
           70668,
-          'harvest index variable|CO_334:0000015'
+          'harvest index variable|CO_334:0000015', [], 30,undef,undef
         ],[
           70727,
-          'dry yield|CO_334:0000014'
+          'dry yield|CO_334:0000014', [], 15,undef,undef
         ],[
           70741,
-          'dry matter content percentage|CO_334:0000092'
+          'dry matter content percentage|CO_334:0000092', [], 43,undef,undef
         ],[
           70773,
-          'fresh shoot weight measurement in kg|CO_334:0000016'
+          'fresh shoot weight measurement in kg|CO_334:0000016', [], 30,undef,undef
         ],[
           77107,
-          'fieldbook_image|CO_334:0010472'
+          'fieldbook_image|CO_334:0010472', [], 2,undef,undef
         ]);
 is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed from phenotyping spreadsheet upload' );
 
@@ -885,25 +885,25 @@ $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
 
 $traits_assayed  = $tn->get_traits_assayed();
 @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
-#print STDERR Dumper /@traits_assayed_sorted;
+print STDERR Dumper \@traits_assayed_sorted;
 @traits_assayed_check = ([
           70666,
-          'fresh root weight|CO_334:0000012'
+          'fresh root weight|CO_334:0000012', [], 44,undef,undef
         ],[
           70668,
-          'harvest index variable|CO_334:0000015'
+          'harvest index variable|CO_334:0000015', [], 45,undef,undef
         ],[
           70727,
-          'dry yield|CO_334:0000014'
+          'dry yield|CO_334:0000014', [], 15,undef,undef
         ],[
           70741,
-          'dry matter content percentage|CO_334:0000092'
+          'dry matter content percentage|CO_334:0000092', [], 56,undef,undef
         ],[
           70773,
-          'fresh shoot weight measurement in kg|CO_334:0000016'
+          'fresh shoot weight measurement in kg|CO_334:0000016', [], 45,undef,undef
         ],[
           77107,
-          'fieldbook_image|CO_334:0010472'
+          'fieldbook_image|CO_334:0010472', [], 2,undef,undef
         ]);
 is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed from phenotyping spreadsheet upload' );
 
@@ -1580,37 +1580,37 @@ $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
 
 $traits_assayed  = $tn->get_traits_assayed();
 @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
-#print STDERR Dumper \@traits_assayed_sorted;
+print STDERR Dumper \@traits_assayed_sorted;
 @traits_assayed_check = ([
           70666,
-          'fresh root weight|CO_334:0000012'
+          'fresh root weight|CO_334:0000012', [], 59,undef,undef
         ],[
           70668,
-          'harvest index variable|CO_334:0000015'
+          'harvest index variable|CO_334:0000015', [], 59,undef,undef
         ],[
           70681,
-          'top yield|CO_334:0000017'
+          'top yield|CO_334:0000017', [], 15,undef,undef
         ],[
           70700,
-          'sprouting proportion|CO_334:0000008'
+          'sprouting proportion|CO_334:0000008', [], 15,undef,undef
         ],[
           70706,
-          'root number counting|CO_334:0000011'
+          'root number counting|CO_334:0000011', [], 14,undef,undef
         ],[
           70713,
-          'flower|CO_334:0000111'
+          'flower|CO_334:0000111', [], 15,undef,undef
         ],[
           70727,
-          'dry yield|CO_334:0000014'
+          'dry yield|CO_334:0000014', [], 15,undef,undef
         ],[
           70741,
-          'dry matter content percentage|CO_334:0000092'
+          'dry matter content percentage|CO_334:0000092', [], 71,undef,undef
         ],[
           70773,
-          'fresh shoot weight measurement in kg|CO_334:0000016'
+          'fresh shoot weight measurement in kg|CO_334:0000016', [], 60,undef,undef
         ],[
            77107,
-           'fieldbook_image|CO_334:0010472'
+           'fieldbook_image|CO_334:0010472', [], 2,undef,undef
          ]);
 is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed from large phenotyping spreadsheet upload' );
 
@@ -2181,46 +2181,46 @@ $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
 
 $traits_assayed  = $tn->get_traits_assayed();
 @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
-#print STDERR Dumper \@traits_assayed_sorted;
+print STDERR Dumper \@traits_assayed_sorted;
 is_deeply(\@traits_assayed_sorted, [[
             70666,
-            'fresh root weight|CO_334:0000012'
+            'fresh root weight|CO_334:0000012', [], 88,undef,undef
           ],
           [
             70668,
-            'harvest index variable|CO_334:0000015'
+            'harvest index variable|CO_334:0000015', [], 59,undef,undef
           ],
           [
             70681,
-            'top yield|CO_334:0000017'
+            'top yield|CO_334:0000017', [], 15,undef,undef
           ],
           [
             70700,
-            'sprouting proportion|CO_334:0000008'
+            'sprouting proportion|CO_334:0000008', [], 15,undef,undef
           ],
           [
             70706,
-            'root number counting|CO_334:0000011'
+            'root number counting|CO_334:0000011', [], 14,undef,undef
           ],
           [
             70713,
-            'flower|CO_334:0000111'
+            'flower|CO_334:0000111', [], 15,undef,undef
           ],
           [
             70727,
-            'dry yield|CO_334:0000014'
+            'dry yield|CO_334:0000014', [], 15,undef,undef
           ],
           [
             70741,
-            'dry matter content percentage|CO_334:0000092'
+            'dry matter content percentage|CO_334:0000092', [], 100,undef,undef
           ],
           [
             70773,
-            'fresh shoot weight measurement in kg|CO_334:0000016'
+            'fresh shoot weight measurement in kg|CO_334:0000016', [], 60,undef,undef
           ],
           [
             77107,
-            'fieldbook_image|CO_334:0010472'
+            'fieldbook_image|CO_334:0010472', [], 2,undef,undef
           ]], 'check traits assayed after plant upload' );
 
 @pheno_for_trait = $tn->get_phenotypes_for_trait(70666);
@@ -2511,43 +2511,43 @@ print STDERR Dumper \@traits_assayed_sorted;
 is_deeply(\@traits_assayed_sorted, [
           [
             70666,
-            'fresh root weight|CO_334:0000012'
+            'fresh root weight|CO_334:0000012', [], 88,undef,undef
           ],
           [
             70668,
-            'harvest index variable|CO_334:0000015'
+            'harvest index variable|CO_334:0000015', [], 59,undef,undef
           ],
           [
             70681,
-            'top yield|CO_334:0000017'
+            'top yield|CO_334:0000017', [], 15,undef,undef
           ],
           [
             70700,
-            'sprouting proportion|CO_334:0000008'
+            'sprouting proportion|CO_334:0000008', [], 15,undef,undef
           ],
           [
             70706,
-            'root number counting|CO_334:0000011'
+            'root number counting|CO_334:0000011', [], 14,undef,undef
           ],
           [
             70713,
-            'flower|CO_334:0000111'
+            'flower|CO_334:0000111', [], 15,undef,undef
           ],
           [
             70727,
-            'dry yield|CO_334:0000014'
+            'dry yield|CO_334:0000014', [], 19,undef,undef
           ],
           [
             70741,
-            'dry matter content percentage|CO_334:0000092'
+            'dry matter content percentage|CO_334:0000092', [], 106,undef,undef
           ],
           [
             70773,
-            'fresh shoot weight measurement in kg|CO_334:0000016'
+            'fresh shoot weight measurement in kg|CO_334:0000016', [], 60,undef,undef
           ],
           [
             77107,
-            'fieldbook_image|CO_334:0010472'
+            'fieldbook_image|CO_334:0010472', [], 2,undef,undef
           ]
         ], 'check traits assayed after plant upload' );
 
@@ -5827,12 +5827,15 @@ is_deeply($parsed_file, {
 $mech->get_ok('http://localhost:3010/ajax/search/images?image_description_filename_composite=26');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is_deeply($response, {'recordsTotal' => 1,'recordsFiltered' => 1,'draw' => undef,'data' => [['<a href="/data/images/image_files/0c/72/14/48/e3eed5150a345ed87f0f2131/medium.jpg"  title="<a href=/image/view/2425>Go to image page ()</a>" class="image_search_group" rel="gallery-figures"><img src="/data/images/image_files/0c/72/14/48/e3eed5150a345ed87f0f2131/medium.jpg" width="40" height="30" border="0" alt="" /></a>','<a href=\'/image/view/2425\' >test_trial22_2016-09-12-11-15-26</a>',undef,'<a href=\'/solpeople/personal-info.pl?sp_person_id=41\' >janedoe</a>','Stock (plot): <a href=\'/stock/38858/view\' >test_trial22</a>','']]});
+is($response->{recordsTotal}, 1);
+is($response->{data}[0][4], 'Stock (plot): <a href=\'/stock/38858/view\' >test_trial22</a>');
 
 $mech->get_ok('http://localhost:3010/ajax/search/images');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is_deeply($response, {'data' => [['<a href="/data/images/image_files/0c/72/14/48/e3eed5150a345ed87f0f2131/medium.jpg"  title="<a href=/image/view/2425>Go to image page ()</a>" class="image_search_group" rel="gallery-figures"><img src="/data/images/image_files/0c/72/14/48/e3eed5150a345ed87f0f2131/medium.jpg" width="40" height="30" border="0" alt="" /></a>','<a href=\'/image/view/2425\' >test_trial22_2016-09-12-11-15-26</a>',undef,'<a href=\'/solpeople/personal-info.pl?sp_person_id=41\' >janedoe</a>','Stock (plot): <a href=\'/stock/38858/view\' >test_trial22</a>',''],['<a href="/data/images/image_files/08/68/a6/46/7d77c5dc774fc8fe255f9c83/medium.jpg"  title="<a href=/image/view/2426>Go to image page ()</a>" class="image_search_group" rel="gallery-figures"><img src="/data/images/image_files/08/68/a6/46/7d77c5dc774fc8fe255f9c83/medium.jpg" width="40" height="30" border="0" alt="" /></a>','<a href=\'/image/view/2426\' >test_trial21_2016-09-12-11-15-12</a>',undef,'<a href=\'/solpeople/personal-info.pl?sp_person_id=41\' >janedoe</a>','Stock (plot): <a href=\'/stock/38857/view\' >test_trial21</a>','']],'recordsFiltered' => 2,'draw' => undef,'recordsTotal' => 2});
+is($response->{recordsTotal}, 2);
+is($response->{data}[0][4], 'Stock (plot): <a href=\'/stock/38858/view\' >test_trial22</a>');
+is($response->{data}[1][4], 'Stock (plot): <a href=\'/stock/38857/view\' >test_trial21</a>');
 
 $parser = CXGN::Phenotypes::ParseUpload->new();
 $filename = "t/data/phenotypes_associated_images/4picsimagephenotypespreadsheet.xls";
@@ -5882,7 +5885,10 @@ ok(!$stored_phenotype_error_msg, "check that store phenotype spreadsheet associa
 $mech->get_ok('http://localhost:3010/ajax/search/images');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is_deeply($response, {'recordsFiltered' => 6,'recordsTotal' => 6,'data' => [['<a href="/data/images/image_files/0c/72/14/48/e3eed5150a345ed87f0f2131/medium.jpg"  title="<a href=/image/view/2425>Go to image page ()</a>" class="image_search_group" rel="gallery-figures"><img src="/data/images/image_files/0c/72/14/48/e3eed5150a345ed87f0f2131/medium.jpg" width="40" height="30" border="0" alt="" /></a>','<a href=\'/image/view/2425\' >test_trial22_2016-09-12-11-15-26</a>',undef,'<a href=\'/solpeople/personal-info.pl?sp_person_id=41\' >janedoe</a>','Stock (plot): <a href=\'/stock/38858/view\' >test_trial22</a>',''],['<a href="/data/images/image_files/08/68/a6/46/7d77c5dc774fc8fe255f9c83/medium.jpg"  title="<a href=/image/view/2426>Go to image page ()</a>" class="image_search_group" rel="gallery-figures"><img src="/data/images/image_files/08/68/a6/46/7d77c5dc774fc8fe255f9c83/medium.jpg" width="40" height="30" border="0" alt="" /></a>','<a href=\'/image/view/2426\' >test_trial21_2016-09-12-11-15-12</a>',undef,'<a href=\'/solpeople/personal-info.pl?sp_person_id=41\' >janedoe</a>','Stock (plot): <a href=\'/stock/38857/view\' >test_trial21</a>',''],['<a href="/data/images/image_files/63/12/5d/a7/dad19de8898c2e509d7b6bcf/medium.jpg"  title="<a href=/image/view/2427>Go to image page ()</a>" class="image_search_group" rel="gallery-figures"><img src="/data/images/image_files/63/12/5d/a7/dad19de8898c2e509d7b6bcf/medium.jpg" width="40" height="30" border="0" alt="" /></a>','<a href=\'/image/view/2427\' >3</a>',undef,'<a href=\'/solpeople/personal-info.pl?sp_person_id=41\' >janedoe</a>','Stock (plot): <a href=\'/stock/38858/view\' >test_trial22</a><br/>Project (phenotype_spreadsheet_associated_images): test_trial','phenotype_spreadsheet_associated_images'],['<a href="/data/images/image_files/ac/31/ab/7e/9f332950a2f1d824a2100b61/medium.jpg"  title="<a href=/image/view/2428>Go to image page ()</a>" class="image_search_group" rel="gallery-figures"><img src="/data/images/image_files/ac/31/ab/7e/9f332950a2f1d824a2100b61/medium.jpg" width="40" height="30" border="0" alt="" /></a>','<a href=\'/image/view/2428\' >1</a>',undef,'<a href=\'/solpeople/personal-info.pl?sp_person_id=41\' >janedoe</a>','Stock (plot): <a href=\'/stock/38857/view\' >test_trial21</a><br/>Project (phenotype_spreadsheet_associated_images): test_trial','phenotype_spreadsheet_associated_images'],['<a href="/data/images/image_files/1a/be/f4/eb/580da78f17245b318268df0d/medium.jpg"  title="<a href=/image/view/2429>Go to image page ()</a>" class="image_search_group" rel="gallery-figures"><img src="/data/images/image_files/1a/be/f4/eb/580da78f17245b318268df0d/medium.jpg" width="40" height="30" border="0" alt="" /></a>','<a href=\'/image/view/2429\' >4</a>',undef,'<a href=\'/solpeople/personal-info.pl?sp_person_id=41\' >janedoe</a>','Stock (plot): <a href=\'/stock/38858/view\' >test_trial22</a><br/>Project (phenotype_spreadsheet_associated_images): test_trial','phenotype_spreadsheet_associated_images, phenotype_spreadsheet_associated_images'],['<a href="/data/images/image_files/a8/11/e4/76/e7f24fbccc79bed797b73a31/medium.jpg"  title="<a href=/image/view/2430>Go to image page ()</a>" class="image_search_group" rel="gallery-figures"><img src="/data/images/image_files/a8/11/e4/76/e7f24fbccc79bed797b73a31/medium.jpg" width="40" height="30" border="0" alt="" /></a>','<a href=\'/image/view/2430\' >2</a>',undef,'<a href=\'/solpeople/personal-info.pl?sp_person_id=41\' >janedoe</a>','Stock (plot): <a href=\'/stock/38857/view\' >test_trial21</a><br/>Project (phenotype_spreadsheet_associated_images): test_trial','phenotype_spreadsheet_associated_images, phenotype_spreadsheet_associated_images']],'draw' => undef});
+is($response->{recordsTotal}, 6);
+is($response->{data}[0][4], 'Stock (plot): <a href=\'/stock/38858/view\' >test_trial22</a>');
+is($response->{data}[1][4], 'Stock (plot): <a href=\'/stock/38857/view\' >test_trial21</a>');
+is($response->{data}[2][4], 'Stock (plot): <a href=\'/stock/38858/view\' >test_trial22</a><br/>Project (phenotype_spreadsheet_associated_images): test_trial');
 
 $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
 my $response = decode_json $mech->content;

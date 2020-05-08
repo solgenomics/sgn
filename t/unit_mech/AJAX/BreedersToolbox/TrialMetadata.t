@@ -60,7 +60,7 @@ is_deeply($response, {'phenotypes_fully_uploaded'=>1});
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/traits_assayed');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is_deeply($response, {'traits_assayed' => [[[70741,'dry matter content percentage|CO_334:0000092'],[70666,'fresh root weight|CO_334:0000012'],[70773,'fresh shoot weight measurement in kg|CO_334:0000016']]]});
+is_deeply($response, {'traits_assayed' => [[[70741,'dry matter content percentage|CO_334:0000092', [], 464, undef, undef],[70666,'fresh root weight|CO_334:0000012', [], 469, undef, undef],[70773,'fresh shoot weight measurement in kg|CO_334:0000016', [], 494, undef, undef]]]});
 
 my $trait_id = 70741;
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/heatmap?selected='.$trait_id );
@@ -99,7 +99,7 @@ print STDERR Dumper $response;
 my @accessions = @{$response->{accessions}->[0]};
 @last_n = @accessions[-4..-1];
 print STDERR Dumper \@last_n;
-is_deeply($response, {'accessions' => [[{'accession_name' => 'test_accession1','stock_id' => 38840},{'stock_id' => 38841,'accession_name' => 'test_accession2'},{'stock_id' => 38842,'accession_name' => 'test_accession3'},{'stock_id' => 38843,'accession_name' => 'test_accession4'},{'stock_id' => 38844,'accession_name' => 'test_accession5'}]]});
+is_deeply($response, {'accessions' => [[{'accession_name' => 'test_accession1','stock_id' => 38840, 'stock_type' => 'accession'},{'stock_id' => 38841,'accession_name' => 'test_accession2', 'stock_type' => 'accession'},{'stock_id' => 38842,'accession_name' => 'test_accession3', 'stock_type' => 'accession'},{'stock_id' => 38843,'accession_name' => 'test_accession4', 'stock_type' => 'accession'},{'stock_id' => 38844,'accession_name' => 'test_accession5', 'stock_type' => 'accession'}]]});
 
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/controls');
 $response = decode_json $mech->content;

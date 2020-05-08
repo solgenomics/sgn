@@ -168,8 +168,17 @@ sub trial_details_GET   {
     my $c = shift;
 
     my $trial = $c->stash->{trial};
+    my $planting_date = $trial->get_planting_date();
+    my $harvest_date = $trial->get_harvest_date();
+    my $get_location_noaa_station_id = $trial->get_location_noaa_station_id();
 
-    $c->stash->{rest} = { details => $trial->get_details() };
+    $c->stash->{rest} = {
+        details => {
+            planting_date => $planting_date,
+            harvest_date => $harvest_date,
+            location_noaa_station_id => $get_location_noaa_station_id
+        }
+    };
 
 }
 
@@ -302,6 +311,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $dbh = $c->dbc->dbh();
     my $trial_id = $c->stash->{trial_id};
     my $display = $c->req->param('display');
+    my $trial_stock_type = $c->req->param('trial_stock_type');
     my $select_clause_additional = '';
     my $group_by_additional = '';
     my $order_by_additional = '';
@@ -358,6 +368,16 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         $order_by_additional = ' ,accession.uniquename DESC';
     }
     my $accesion_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'family_name', 'stock_type')->cvterm_id();
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+    my $trial_stock_type_id;
+    if ($trial_stock_type eq 'family_name') {
+        $trial_stock_type_id = $family_name_type_id;
+    } elsif ($trial_stock_type eq 'cross') {
+        $trial_stock_type_id = $cross_type_id;
+    } else {
+        $trial_stock_type_id = $accesion_type_id;
+    }
 
     my $h = $dbh->prepare("SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
         cvterm.cvterm_id,
@@ -386,7 +406,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         $order_by_additional;");
 
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
-    $h->execute($c->stash->{trial_id}, $numeric_regex, $rel_type_id, $stock_type_id, $accesion_type_id);
+    $h->execute($c->stash->{trial_id}, $numeric_regex, $rel_type_id, $stock_type_id, $trial_stock_type_id);
 
     my @phenotype_data;
 
@@ -462,6 +482,18 @@ sub trial_accessions : Chained('trial') PathPart('accessions') Args(0) {
     my @data = $trial->get_accessions();
 
     $c->stash->{rest} = { accessions => \@data };
+}
+
+sub trial_stocks : Chained('trial') PathPart('stocks') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+
+    my $stocks = $trial->get_accessions();
+
+    $c->stash->{rest} = { data => $stocks };
 }
 
 sub trial_tissue_sources : Chained('trial') PathPart('tissue_sources') Args(0) {
@@ -1183,6 +1215,7 @@ sub trial_plots : Chained('trial') PathPart('plots') Args(0) {
     my $trial = $c->stash->{trial};
 
     my @data = $trial->get_plots();
+#    print STDERR "PLOTS =".Dumper(\@data)."\n";
 
     $c->stash->{rest} = { plots => \@data };
 }
@@ -1352,6 +1385,7 @@ sub trial_layout_table : Chained('trial') PathPart('layout_table') Args(0) {
         data_level => 'plots',
         #treatment_project_ids => [1,2],
         selected_columns => $selected_cols,
+        include_measured => "false"
     });
     my $output = $trial_layout_download->get_layout_output();
 
@@ -1522,12 +1556,13 @@ sub delete_field_coord : Path('/ajax/phenotype/delete_field_coords') Args(0) {
     $c->stash->{rest} = {success => 1};
 }
 
-sub replace_trial_accession : Chained('trial') PathPart('replace_accession') Args(0) {
+sub replace_trial_stock : Chained('trial') PathPart('replace_stock') Args(0) {
   my $self = shift;
   my $c = shift;
   my $schema = $c->dbic_schema('Bio::Chado::Schema');
-  my $old_accession_id = $c->req->param('old_accession_id');
-  my $new_accession = $c->req->param('new_accession');
+  my $old_stock_id = $c->req->param('old_stock_id');
+  my $new_stock = $c->req->param('new_stock');
+  my $trial_stock_type = $c->req->param('trial_stock_type');
   my $trial_id = $c->stash->{trial_id};
 
   if ($self->privileges_denied($c)) {
@@ -1535,25 +1570,26 @@ sub replace_trial_accession : Chained('trial') PathPart('replace_accession') Arg
     return;
   }
 
-  if (!$new_accession){
-    $c->stash->{rest} = { error => "Provide new accession name." };
+  if (!$new_stock){
+    $c->stash->{rest} = { error => "Provide new stock name." };
     return;
   }
 
-  my $replace_accession_fieldmap = CXGN::Trial::FieldMap->new({
+  my $replace_stock_fieldmap = CXGN::Trial::FieldMap->new({
     bcs_schema => $schema,
     trial_id => $trial_id,
-    old_accession_id => $old_accession_id,
-    new_accession => $new_accession,
+    old_accession_id => $old_stock_id,
+    new_accession => $new_stock,
+    trial_stock_type => $trial_stock_type,
   });
 
-  my $return_error = $replace_accession_fieldmap->update_fieldmap_precheck();
+  my $return_error = $replace_stock_fieldmap->update_fieldmap_precheck();
      if ($return_error) {
        $c->stash->{rest} = { error => $return_error };
        return;
      }
 
-  my $replace_return_error = $replace_accession_fieldmap->replace_trial_accession_fieldMap();
+  my $replace_return_error = $replace_stock_fieldmap->replace_trial_stock_fieldMap();
   if ($replace_return_error) {
     $c->stash->{rest} = { error => $replace_return_error };
     return;
@@ -1609,7 +1645,7 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
   $c->stash->{rest} = { success => 1};
 }
 
-sub substitute_accession : Chained('trial') PathPart('substitute_accession') Args(0) {
+sub substitute_stock : Chained('trial') PathPart('substitute_stock') Args(0) {
   my $self = shift;
 	my $c = shift;
   my $schema = $c->dbic_schema('Bio::Chado::Schema');
@@ -1626,7 +1662,7 @@ sub substitute_accession : Chained('trial') PathPart('substitute_accession') Arg
   }
 
   if ($plot_1_id == $plot_2_id){
-    $c->stash->{rest} = { error => "Choose a different plot/accession in 'select Accession 2' to perform this operation." };
+    $c->stash->{rest} = { error => "Choose a different plot/stock in 'select plot 2' to perform this operation." };
     return;
   }
 
@@ -1879,7 +1915,7 @@ sub crosses_in_crossingtrial : Chained('trial') PathPart('crosses_in_crossingtri
     my $trial_id = $c->stash->{trial_id};
     my $trial = CXGN::Cross->new({schema => $schema, trial_id => $trial_id});
 
-    my $result = $trial->get_crosses_in_crossingtrial();
+    my $result = $trial->get_crosses_in_crossing_experiment();
     my @crosses;
     foreach my $r (@$result){
         my ($cross_id, $cross_name) =@$r;
@@ -1999,6 +2035,114 @@ sub seedlots_from_crossingtrial : Chained('trial') PathPart('seedlots_from_cross
 }
 
 
+sub get_crosses : Chained('trial') PathPart('get_crosses') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
+
+    my $result = $trial->get_crosses_in_crossing_experiment();
+    my @data = @$result;
+#    print STDERR "CROSSES =".Dumper(\@data)."\n";
+
+    $c->stash->{rest} = { crosses => \@data };
+}
+
+
+sub get_female_accessions : Chained('trial') PathPart('get_female_accessions') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
+
+    my $result = $trial->get_female_accessions_in_crossing_experiment();
+    my @data = @$result;
+#    print STDERR "FEMALE ACCESSIONS =".Dumper(\@data)."\n";
+
+    $c->stash->{rest} = { female_accessions => \@data };
+}
+
+
+sub get_male_accessions : Chained('trial') PathPart('get_male_accessions') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
+
+    my $result = $trial->get_male_accessions_in_crossing_experiment();
+    my @data = @$result;
+
+    $c->stash->{rest} = { male_accessions => \@data };
+}
+
+
+sub get_female_plots : Chained('trial') PathPart('get_female_plots') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
+
+    my $result = $trial->get_female_plots_in_crossing_experiment();
+    my @data = @$result;
+
+    $c->stash->{rest} = { female_plots => \@data };
+}
+
+
+sub get_male_plots : Chained('trial') PathPart('get_male_plots') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
+
+    my $result = $trial->get_male_plots_in_crossing_experiment();
+    my @data = @$result;
+
+    $c->stash->{rest} = { male_plots => \@data };
+}
+
+
+sub get_female_plants : Chained('trial') PathPart('get_female_plants') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
+
+    my $result = $trial->get_female_plants_in_crossing_experiment();
+    my @data = @$result;
+#    print STDERR "FEMALE PLANTS =".Dumper(\@data)."\n";
+
+    $c->stash->{rest} = { female_plants => \@data };
+}
+
+
+sub get_male_plants : Chained('trial') PathPart('get_male_plants') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
+
+    my $result = $trial->get_male_plants_in_crossing_experiment();
+    my @data = @$result;
+
+    $c->stash->{rest} = { male_plants => \@data };
+}
+
+
 sub delete_all_crosses_in_crossingtrial : Chained('trial') PathPart('delete_all_crosses_in_crossingtrial') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -2016,7 +2160,7 @@ sub delete_all_crosses_in_crossingtrial : Chained('trial') PathPart('delete_all_
 
     my $trial = CXGN::Cross->new({schema => $schema, trial_id => $trial_id});
 
-    my $result = $trial->get_crosses_in_crossingtrial();
+    my $result = $trial->get_crosses_in_crossing_experiment();
 
     foreach my $r (@$result){
         my ($cross_stock_id, $cross_name) =@$r;

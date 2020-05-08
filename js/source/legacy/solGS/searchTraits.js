@@ -26,7 +26,9 @@ jQuery(document).ready( function () {
 
 
 function searchTraits (name) {
-   
+
+    var protocolId = jQuery('#genotyping_protocol_id').val();
+  
 	jQuery.ajax({
             type: 'POST',
             dataType: 'json',
@@ -35,7 +37,7 @@ function searchTraits (name) {
 	    success: function (res) {	
 		
 		if (res.status) {		
-		    window.location = '/solgs/search/result/traits/' + name;
+		    window.location = '/solgs/search/result/traits/' + name + '/gp/' + protocolId;
 		} else {		    
 		    jQuery("#search_trait_message")
 			.html('There are no entries for trait: ' + name)

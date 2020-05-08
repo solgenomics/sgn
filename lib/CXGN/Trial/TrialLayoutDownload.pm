@@ -115,6 +115,14 @@ has 'selected_trait_ids'=> (
     isa => 'ArrayRef[Int]|Undef',
 );
 
+has 'trial_stock_type'=> (
+    is => 'rw',
+    isa => 'Str',
+    required => 0,
+    default => 'accession',
+);
+
+
 #The attributes below are populated when get_layout_output is run, so should not be instantiatied
 #----------------------
 
@@ -126,7 +134,7 @@ has 'design' => (
 
 subtype 'Trial',
   as 'Ref',
-    where { $_ =~ /CXGN::Trial/ || $_ =~ /CXGN::PhenotypingTrial/ || $_ =~  /CXGN::GenotypingTrial/ || $_ =~ /CXGN::Folder/ || $_ =~ /CXGN::CrossingTrial/ },
+    where { $_ =~ /CXGN::Trial/ || $_ =~ /CXGN::PhenotypingTrial/ || $_ =~  /CXGN::GenotypingTrial/ || $_ =~ /CXGN::Folder/ || $_ =~ /CXGN::CrossingTrial/ || $_ =~ /CXGN::ManagementFactor/},
   message { "The string, $_, was not a valid trial object type"};
 
 
@@ -172,7 +180,7 @@ sub get_layout_output {
     my @selected_traits = $self->selected_trait_ids() ? @{$self->selected_trait_ids} : ();
     my %errors;
     my @error_messages;
-
+    my $trial_stock_type = $self->trial_stock_type();
     print STDERR "TrialLayoutDownload for Trial id: ($trial_id) ".localtime()."\n";
 
     my $trial_layout;
@@ -266,7 +274,7 @@ sub get_layout_output {
                 data_level=>'plot'
             });
             $exact_performance_hash = $exact->search();
-            print STDERR "Exact Performance hash is ".Dumper($exact_performance_hash)."\n";
+            #print STDERR "Exact Performance hash is ".Dumper($exact_performance_hash)."\n";
         }
         foreach (@treatment_trials){
             my $treatment_units = $_ ? $_->get_observation_units_direct('plot', ['treatment_experiment']) : [];
@@ -369,7 +377,8 @@ sub get_layout_output {
         my @missing = @{$synonym_list->{'missing'}};
 
         if (scalar @missing) {
-            print STDERR "Traits @missing don't have synonyms. Sticking with full trait names instead\n";
+            #print STDERR "Traits @missing don't have synonyms. Sticking with full trait names instead\n";
+
             #push @error_messages, "Traits @missing don't have synonyms. Please turn off synonym option before proceeding\n";
             #$errors{'error_messages'} = \@error_messages;
             #return \%errors;
@@ -390,7 +399,8 @@ sub get_layout_output {
         treatment_info_hash => \%treatment_info_hash,
         trait_header => \@traits,
         exact_performance_hash => $exact_performance_hash,
-        overall_performance_hash => \%overall_performance_hash
+        overall_performance_hash => \%overall_performance_hash,
+        trial_stock_type => $trial_stock_type
     };
     my $layout_output;
 

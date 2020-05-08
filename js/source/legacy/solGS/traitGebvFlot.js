@@ -18,17 +18,16 @@ function plotGebvScatter() {
     var comboPopsId    = jQuery('#combo_pops_id').val();
     var popsList       = jQuery('#pops_list').val();         
     var selectionPopId = jQuery('#selection_pop_id').val();
-  
-    var params;
-        
-    if(popId && !selectionPopId) {
-        params = 'pop_id=' + popId + '&trait_id=' + traitId;
-    } else if (comboPopsId)  {
-        params = 'combo_pops_id=' + comboPopsId + '&trait_id='  + traitId + '&selection_pop_id=' + selectionPopId;  
-    } else if (selectionPopId) {
-        params = 'pop_id=' + popId + '&trait_id=' + traitId + '&selection_pop_id=' + selectionPopId;  
-    }
-       
+    var protocolId     = jQuery('#genotyping_protocol_id').val();
+    
+    var params = {
+	'training_pop_id': popId,
+	'combo_pops_id': comboPopsId,
+	'selection_pop_id': selectionPopId,
+	'genotyping_protocol_id': protocolId,
+	'trait_id': traitId
+    };
+    
     var action = '/solgs/trait/gebv/graph';
        
     var graphArray      = [];

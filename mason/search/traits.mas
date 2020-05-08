@@ -1,6 +1,5 @@
 
 <%args>
-$trait_cv_name
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'jquery.dataTables-select-min' ] &>
@@ -53,10 +52,11 @@ $trait_cv_name
                     <table id="trait_search_results" width="100%" class="table table-hover table-striped">
                     <thead>
                       <tr>
-                        <th></th>
+                        <th>Select <a href="#" data-toggle="tooltip" data-placement="top" title="Only observation variables can be used for collecting phenotypes. For this reason, only observation variables can be selected below. More technically, these terms have VARIABLE_OF relationships in the database."><span class="glyphicon glyphicon-info-sign"></span></a></th>
                         <th>Trait ID</th>
                         <th>Trait Name</th>
                         <th>Definition</th>
+                        <th>Type</th>
                     </tr>
                     </thead>
                     </table>
@@ -107,7 +107,9 @@ $trait_cv_name
 
 jQuery(document).ready(function () {
 
-    get_select_box('trait_variable_ontologies', 'trait_search_ontology_select', { 'name' : 'trait_search_ontology_select_id', 'cvprop_type_name':JSON.stringify(['trait_ontology','composed_trait_ontology','attribute_ontology']) });
+    get_select_box('trait_variable_ontologies', 'trait_search_ontology_select', { 'name' : 'trait_search_ontology_select_id', 'cvprop_type_name':JSON.stringify(['trait_ontology','method_ontology','unit_ontology','composed_trait_ontology','object_ontology','attribute_ontology','time_ontology']) });
+
+    jQuery('[data-toggle="tooltip"]').tooltip();
 
     var lo = new CXGN.List();
     jQuery('#trait_search_list_select').html(lo.listSelect('trait_search_list_select', [ 'traits' ], 'Leave blank to see all traits', undefined, undefined));
@@ -152,7 +154,7 @@ jQuery(document).ready(function () {
                 'style':    'multi'
             },
             'ajax': {
-                'url': '/ajax/search/traits?trait_cv_name=<% $trait_cv_name %>',
+                'url': '/ajax/search/traits',
                 'data': function(d) {
                     d.trait_search_list_id  = jQuery('#trait_search_list_select_list_select').val();
                     d.trait_any_name  = jQuery('#trait_search_name').val();
@@ -175,13 +177,21 @@ jQuery(document).ready(function () {
    var selection_changed = function () {
      var selected_rows = trait_table.rows({'selected':true});
      jQuery("#trait_result_count").text(selected_rows.count());
+     //console.log(selected_rows.data());
+
      var name_links = selected_rows.data().map(function(row){
-       return [row[2], row[1]];
+        if (row[4] == 'VARIABLE_OF') {
+            return [row[5], row[6]];
+        }
+        else {
+            alert(row[5]+' is not an observation variable! Do no try to collect phenotypes for terms which are not observation variables! More technically, your term needs to have a VARIABLE_OF relationship!');
+            trait_table.rows().deselect();
+        }
      });
 
      var names = [];
      for (var i = 0; i < name_links.length; i++) { //extract and combine trait name and id from anchor tags
-       names.push(name_links[i][0].match(/<a [^>]+>([^<]+)<\/a>/)[1] + '|' + name_links[i][1].match(/<a [^>]+>([^<]+)<\/a>/)[1] + '\n');
+       names.push(name_links[i][0] + '|' + name_links[i][1] + '\n');
      }
 
      jQuery('#trait_result_names').html(names);

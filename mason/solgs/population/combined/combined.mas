@@ -24,10 +24,10 @@ $project_desc
 $markers_no
 $traits_no
 $stocks_no
-$protocol
-$owner=>''
+$protocol_url => ''
+$owner => ''
 $acronym
-
+$genotyping_protocol_id
 </%args>
 
 <%perl>
@@ -57,7 +57,7 @@ $acronym
     markers_no   => $markers_no,
     traits_no    => $traits_no,
     stocks_no    => $stocks_no,
-    protocol     => $protocol,
+    protocol_url => $protocol_url,
     owner        => $owner,
  &>
 
@@ -76,7 +76,8 @@ $acronym
 <& select_traits.mas, 
      combo_pops_id      => $combo_pops_id,
      traits_form        => $traits_form,
-     all_traits_file    => $all_traits_file,
+  all_traits_file    => $all_traits_file,
+  genotyping_protocol_id => $genotyping_protocol_id,
 &>
 
 </&>
@@ -104,4 +105,4 @@ $acronym
 %}
 
  <input type="hidden" id="population_id" value="<% $combo_pops_id %>" />
- 
+ <input type="hidden" id="genotyping_protocol_id" value="<% $genotyping_protocol_id %>" />

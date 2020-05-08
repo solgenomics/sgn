@@ -521,7 +521,7 @@ sub _validate_with_plugin {
           push @error_messages, "Seedlot(s) <b>".join(',',@seedlots_missing)."</b> are not in the database.";
       }
 
-      my $return = CXGN::Stock::Seedlot->verify_seedlot_accessions($schema, \@pairs);
+      my $return = CXGN::Stock::Seedlot->verify_seedlot_accessions_crosses($schema, \@pairs);
       if (exists($return->{error})){
           push @error_messages, $return->{error};
       }
@@ -584,8 +584,8 @@ sub _parse_with_plugin {
   my %seen_accession_names;
   for my $row ( 1 .. $row_max ) {
       my $accession_name;
-      if ($worksheet->get_cell($row,14)) {
-          $accession_name = $worksheet->get_cell($row,14)->value();
+      if ($worksheet->get_cell($row,13)) {
+          $accession_name = $worksheet->get_cell($row,13)->value();
           $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
           $seen_accession_names{$accession_name}++;
       }

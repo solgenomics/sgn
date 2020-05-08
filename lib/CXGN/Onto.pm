@@ -134,14 +134,14 @@ sub store_composed_term {
 
     #print STDERR "New term cvterm_id = " . $new_term->cvterm_id();
 
-        my $variable_rel = $schema->resultset('Cv::CvtermRelationship')->create({
+        my $variable_rel = $schema->resultset('Cv::CvtermRelationship')->find_or_create({
             subject_id => $new_term->cvterm_id(),
             object_id  => $parent_term->cvterm_id(),
             type_id    => $variable_relationship->cvterm_id()
         });
 
         foreach my $component_id (@component_ids) {
-            my $contains_rel = $schema->resultset('Cv::CvtermRelationship')->create({
+            my $contains_rel = $schema->resultset('Cv::CvtermRelationship')->find_or_create({
                 subject_id => $component_id,
                 object_id  => $new_term->cvterm_id(),
                 type_id    => $contains_relationship->cvterm_id()
@@ -161,6 +161,76 @@ sub store_composed_term {
     #$h->execute();
 
     return \@new_terms;
+}
+
+sub store_ontology_identifier {
+    my $self = shift;
+    my $ontology_name = shift;
+    my $ontology_description = shift;
+    my $ontology_identifier = shift;
+    my $ontology_type = shift;
+    my $schema = $self->schema();
+    my $dbh = $schema->storage->dbh;
+
+    my $cv_check = $schema->resultset("Cv::Cv")->find({name=>$ontology_name});
+    if ($cv_check) {
+        return {
+            error => "The ontology name $ontology_name has already been used!"
+        };
+    }
+
+    my $db_check = $schema->resultset("General::Db")->find({name=>$ontology_name});
+    if ($db_check) {
+        return {
+            error => "The ontology identifier $ontology_identifier has already been used!"
+        };
+    }
+
+    my $cv_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $ontology_type, 'composable_cvtypes')->cvterm_id();
+
+    my $coderef = sub {
+        my $cv_rs = $schema->resultset("Cv::Cv")->create({
+            name => $ontology_name,
+            definition => $ontology_description
+        });
+        my $new_cv_id = $cv_rs->cv_id();
+
+        my $new_ontology_cvprop = $schema->resultset("Cv::Cvprop")->create({
+            cv_id   => $new_cv_id,
+            type_id => $cv_type_id
+        });
+
+        my $db_rs = $schema->resultset("General::Db")->create({
+            name => $ontology_identifier
+        });
+        my $new_db_id = $db_rs->db_id();
+
+        my $dbxref_rs = $schema->resultset("General::Dbxref")->create({
+            db_id => $new_db_id,
+            accession => "0000000"
+        });
+        my $new_dbxref_id = $dbxref_rs->dbxref_id();
+
+        my $cvterm_rs = $schema->resultset("Cv::Cvterm")->create({
+            name => $ontology_name,
+            definition => $ontology_description,
+            dbxref_id => $new_dbxref_id,
+            cv_id => $new_cv_id
+        });
+
+        return {
+            success => 1,
+            new_term => [$cvterm_rs->cvterm_id(), $cvterm_rs->name()]
+        };
+    };
+
+    try {
+        $schema->txn_do($coderef);
+    } catch {
+        return {
+            error => $@
+        };
+    };
 }
 
 sub store_observation_variable_trait_method_scale {
@@ -321,7 +391,7 @@ sub store_observation_variable_trait_method_scale {
                 dbxref_id => $new_term_method_dbxref->dbxref_id()
             });
             $selected_method_cvterm_id = $new_method_cvterm->cvterm_id();
-            
+
             my $method_rel = $schema->resultset('Cv::CvtermRelationship')->create({
                 subject_id => $new_method_cvterm->cvterm_id(),
                 object_id  => $parent_method_cvterm_id,
@@ -402,7 +472,7 @@ sub store_observation_variable_trait_method_scale {
             new_term => [$new_observation_variable_cvterm->cvterm_id(), $new_observation_variable_cvterm->name()]
         };
     };
-    
+
     try {
         $schema->txn_do($coderef);
     } catch {

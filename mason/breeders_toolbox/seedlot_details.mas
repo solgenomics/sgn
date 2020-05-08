@@ -38,7 +38,7 @@ $owners_string => undef
 <!--<tr><td><b>Population</b></td><td><% $population_name %></td></tr>-->
 <tr><td><b>Current count</b></td><td><% $current_count %></td></tr>
 <tr><td><b>Current weight (g)</b></td><td><% $current_weight %></td></tr>
-<tr><td><b>Owners</b></td><td><% $owners_string %></td></tr>
+<tr><td><b>Submitters</b></td><td><% $owners_string %></td></tr>
 </table>
 
 </&>

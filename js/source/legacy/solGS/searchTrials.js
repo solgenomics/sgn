@@ -14,7 +14,12 @@ jQuery(document).ready(function(){
     
     if (url.match(/solgs\/search\/trials\/trait\//) != null) {
 	var traitId = jQuery("input[name='trait_id']").val();
-	url = '/solgs/search/result/populations/' + traitId;
+
+	var urlStr = url.split(/\/+/);
+	var protocolId = urlStr[7];
+	jQuery('#genotyping_protocol_id').val(protocolId);
+
+	url = '/solgs/search/result/populations/' + traitId + '/gp/' + protocolId;
 	searchAllTrials(url);   
     } else {
 	url = '/solgs/search/trials/';
@@ -106,11 +111,13 @@ function listAllTrials (trials)  {
 
 
 function checkTrainingPopulation (popId) {
- 
+
+    var protocolId = jQuery('#genotyping_protocol_id').val();
+    
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
-        url: '/solgs/check/training/population/' + popId,
+        url: '/solgs/check/training/population/' + popId + '/gp/' + protocolId,
         success: function(response) {
             if (response.is_training_population) {
 		jQuery("#searched_trials_message").hide();

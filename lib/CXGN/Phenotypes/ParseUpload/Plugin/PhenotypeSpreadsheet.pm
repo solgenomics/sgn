@@ -76,7 +76,7 @@ sub validate {
         return \%parse_result;
     }
     if ($data_level eq 'plots' && ( $worksheet->get_cell(6,0)->value() ne 'plot_name' ||
-                                    $worksheet->get_cell(6,1)->value() ne 'accession_name' ||
+                                    (($worksheet->get_cell(6,1)->value() ne 'accession_name') && ($worksheet->get_cell(6,1)->value() ne 'family_name') && ($worksheet->get_cell(6,1)->value() ne 'cross_unique_id')) ||
                                     $worksheet->get_cell(6,2)->value() ne 'plot_number' ||
                                     $worksheet->get_cell(6,3)->value() ne 'block_number' ||
                                     $worksheet->get_cell(6,4)->value() ne 'is_a_control' ||
@@ -84,13 +84,13 @@ sub validate {
                                     $worksheet->get_cell(6,6)->value() ne 'planting_date' ||
                                     $worksheet->get_cell(6,7)->value() ne 'harvest_date' ||
                                     $worksheet->get_cell(6,8)->value() ne 'trial_name' ) ) {
-        $parse_result{'error'} = "Data columns must be in this order for uploading Plot phenotypes: 'plot_name', 'accession_name', 'plot_number', 'block_number', 'is_a_control',  'rep_number', 'planting_date', 'harvest_date', 'trial_name'. Make sure to select the correct data level. It may help to recreate your spreadsheet from the website.";
+        $parse_result{'error'} = "Data columns must be in this order for uploading Plot phenotypes: 'plot_name', 'accession_name' or 'family_name' or 'cross_unique_id', 'plot_number', 'block_number', 'is_a_control',  'rep_number', 'planting_date', 'harvest_date', 'trial_name'. Make sure to select the correct data level. It may help to recreate your spreadsheet from the website.";
         print STDERR "Columns not correct and data_level is plots\n";
         return \%parse_result;
     }
     if ($data_level eq 'plants' && ($worksheet->get_cell(6,0)->value() ne 'plant_name' ||
                                     $worksheet->get_cell(6,1)->value() ne 'plot_name' ||
-                                    $worksheet->get_cell(6,2)->value() ne 'accession_name' ||
+                                    (($worksheet->get_cell(6,2)->value() ne 'accession_name') && ($worksheet->get_cell(6,2)->value() ne 'family_name') && ($worksheet->get_cell(6,2)->value() ne 'cross_unique_id')) ||
                                     $worksheet->get_cell(6,3)->value() ne 'plot_number' ||
                                     $worksheet->get_cell(6,4)->value() ne 'block_number' ||
                                     $worksheet->get_cell(6,5)->value() ne 'is_a_control' ||
@@ -98,14 +98,14 @@ sub validate {
                                     $worksheet->get_cell(6,7)->value() ne 'planting_date' ||
                                     $worksheet->get_cell(6,8)->value() ne 'harvest_date' ||
                                     $worksheet->get_cell(6,9)->value() ne 'trial_name') ) {
-        $parse_result{'error'} = "Data columns must be in this order for uploading Plant phenotypes: 'plant_name', 'plot_name', 'accession_name', 'plot_number', 'block_number', 'is_a_control', 'rep_number', 'planting_date', 'harvest_date', 'trial_name'. Make sure to select the correct data level. It may help to recreate your spreadsheet from the website.";
+        $parse_result{'error'} = "Data columns must be in this order for uploading Plant phenotypes: 'plant_name', 'plot_name', 'accession_name' or 'family_name' or 'cross_unique_id', 'plot_number', 'block_number', 'is_a_control', 'rep_number', 'planting_date', 'harvest_date', 'trial_name'. Make sure to select the correct data level. It may help to recreate your spreadsheet from the website.";
         print STDERR "Columns not correct and data_level is plants\n";
         return \%parse_result;
     }
     if ($data_level eq 'tissue_samples' && ($worksheet->get_cell(6,0)->value() ne 'tissue_sample_name' ||
                                     $worksheet->get_cell(6,1)->value() ne 'plant_name' ||
                                     $worksheet->get_cell(6,2)->value() ne 'plot_name' ||
-                                    $worksheet->get_cell(6,3)->value() ne 'accession_name' ||
+                                    (($worksheet->get_cell(6,3)->value() ne 'accession_name') && ($worksheet->get_cell(6,3)->value() ne 'family_name') && ($worksheet->get_cell(6,3)->value() ne 'cross_unique_id')) ||
                                     $worksheet->get_cell(6,4)->value() ne 'plot_number' ||
                                     $worksheet->get_cell(6,5)->value() ne 'block_number' ||
                                     $worksheet->get_cell(6,6)->value() ne 'is_a_control' ||
@@ -113,13 +113,13 @@ sub validate {
                                     $worksheet->get_cell(6,8)->value() ne 'planting_date' ||
                                     $worksheet->get_cell(6,9)->value() ne 'harvest_date' ||
                                     $worksheet->get_cell(6,10)->value() ne 'trial_name') ) {
-        $parse_result{'error'} = "Data columns must be in this order for uploading Tissue Sample phenotypes: 'tissue_sample_name', 'plant_name', 'plot_name', 'accession_name', 'plot_number', 'block_number', 'is_a_control', 'rep_number', 'planting_date', 'harvest_date', 'trial_name'. Make sure to select the correct data level. It may help to recreate your spreadsheet from the website.";
+        $parse_result{'error'} = "Data columns must be in this order for uploading Tissue Sample phenotypes: 'tissue_sample_name', 'plant_name', 'plot_name', 'accession_name' or 'family_name' or 'cross_unique_id', 'plot_number', 'block_number', 'is_a_control', 'rep_number', 'planting_date', 'harvest_date', 'trial_name'. Make sure to select the correct data level. It may help to recreate your spreadsheet from the website.";
         print STDERR "Columns not correct and data_level is tissue_samples\n";
         return \%parse_result;
     }
     if ($data_level eq 'subplots' && ( ($worksheet->get_cell(6,0)->value() ne 'subplot_name' ||
                                     $worksheet->get_cell(6,1)->value() ne 'plot_name' ||
-                                    $worksheet->get_cell(6,2)->value() ne 'accession_name' ||
+                                    (($worksheet->get_cell(6,2)->value() ne 'accession_name') && ($worksheet->get_cell(6,2)->value() ne 'family_name') && ($worksheet->get_cell(6,2)->value() ne 'cross_unique_id')) ||
                                     $worksheet->get_cell(6,3)->value() ne 'plot_number' ||
                                     $worksheet->get_cell(6,4)->value() ne 'block_number' ||
                                     $worksheet->get_cell(6,5)->value() ne 'is_a_control' ||
@@ -129,7 +129,7 @@ sub validate {
                                     $worksheet->get_cell(6,9)->value() ne 'trial_name') && ($worksheet->get_cell(6,0)->value() ne 'plant_name' ||
                                                                     $worksheet->get_cell(6,1)->value() ne 'subplot_name' ||
                                                                     $worksheet->get_cell(6,2)->value() ne 'plot_name' ||
-                                                                    $worksheet->get_cell(6,3)->value() ne 'accession_name' ||
+                                                                    (($worksheet->get_cell(6,3)->value() ne 'accession_name') && ($worksheet->get_cell(6,3)->value() ne 'family_name') && ($worksheet->get_cell(6,3)->value() ne 'cross_unique_id')) ||
                                                                     $worksheet->get_cell(6,4)->value() ne 'plot_number' ||
                                                                     $worksheet->get_cell(6,5)->value() ne 'block_number' ||
                                                                     $worksheet->get_cell(6,6)->value() ne 'is_a_control' ||
@@ -137,7 +137,7 @@ sub validate {
                                                                     $worksheet->get_cell(6,8)->value() ne 'planting_date' ||
                                                                     $worksheet->get_cell(6,9)->value() ne 'harvest_date' ||
                                                                     $worksheet->get_cell(6,10)->value() ne 'trial_name') ) ) {
-        $parse_result{'error'} = "Data columns must be in one of these two orders for uploading Subplot phenotypes: 1) 'subplot_name', 'plot_name', 'accession_name', 'plot_number', 'block_number', 'is_a_control', 'rep_number', 'planting_date', 'harvest_date', 'trial_name' OR 2) 'plant_name', 'subplot_name', 'plot_name', 'accession_name', 'plot_number', 'block_number', 'is_a_control', 'rep_number', 'planting_date', 'harvest_date', 'trial_name'. Make sure to select the correct data level. It may help to recreate your spreadsheet from the website.";
+        $parse_result{'error'} = "Data columns must be in one of these two orders for uploading Subplot phenotypes: 1) 'subplot_name', 'plot_name', 'accession_name' or 'family_name' or 'cross_unique_id', 'plot_number', 'block_number', 'is_a_control', 'rep_number', 'planting_date', 'harvest_date', 'trial_name' OR 2) 'plant_name', 'subplot_name', 'plot_name', 'accession_name' or 'family_name' or 'cross_unique_id', 'plot_number', 'block_number', 'is_a_control', 'rep_number', 'planting_date', 'harvest_date', 'trial_name'. Make sure to select the correct data level. It may help to recreate your spreadsheet from the website.";
         print STDERR "Columns not correct and data_level is subplots\n";
         return \%parse_result;
     }

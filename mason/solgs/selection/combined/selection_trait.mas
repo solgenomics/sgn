@@ -20,6 +20,7 @@ $combo_pops_id
 $trait_abbr
 $trait_name
 $project_name
+$training_pop_name => ''
 $project_desc
 $stocks_no => ''
 $markers_no => ''
@@ -34,16 +35,16 @@ $selection_stocks_cnt => ''
 $selection_markers_cnt => ''
 
 $owner=>''
-$protocol
+$protocol_url =>''
 $top_blups
 $blups_download_url
 $combined_populations => ''
+$genotyping_protocol_id
+$model_link
 
 </%args>
 
 <%perl>
-
-my $model_link = "<a href=\"/solgs/model/combined/populations/$combo_pops_id/trait/$trait_id\">$project_name</a>";
 
 </%perl>
 
@@ -76,15 +77,15 @@ my $model_link = "<a href=\"/solgs/model/combined/populations/$combo_pops_id/tra
     markers_no   => $selection_markers_cnt,
     traits_no    => $traits_no,
     trait_name   => $trait_name,
-    protocol     => $protocol,
+    protocol_url => $protocol_url,
     owner        => $selection_pop_owner,
    combined_populations => $combined_populations,
  &>
 
 </&>
 
-<& /solgs/model/pca.mas &>
-
+<& /solgs/pca/analysis.mas &>
+  
 <& /solgs/model/top_blups.mas, 
    top_blups          => $top_blups,
    blups_download_url => $blups_download_url,
@@ -100,8 +101,12 @@ my $model_link = "<a href=\"/solgs/model/combined/populations/$combo_pops_id/tra
 
 
 
- <input type="hidden"  id="model_id" value="<% $combo_pops_id %>" /> 
- <input type="hidden"  id="combo_pops_id" value="<% $combo_pops_id %>" /> 
- <input type="hidden"  id="trait_id" value="<% $trait_id %>" />
- <input type="hidden"  id="selection_pop_id" value="<% $selection_pop_id %>" />
- <input type="hidden"  id="prediction_pop_id" value="<% $selection_pop_id %>" />
+  <input type="hidden" id="model_id" value="<% $combo_pops_id %>" />
+  <input type="hidden" id="training_pop_id" value="<% $combo_pops_id %>" />
+ <input type="hidden" id="training_pop_name" value="<% $training_pop_name %>" />
+ <input type="hidden" id="combo_pops_id" value="<% $combo_pops_id %>" /> 
+ <input type="hidden" id="trait_id" value="<% $trait_id %>" />
+ <input type="hidden" id="selection_pop_id" value="<% $selection_pop_id %>" />
+ <input type="hidden" id="selection_pop_name" value="<% $selection_pop_name %>" />
+ <input type="hidden" id="prediction_pop_id" value="<% $selection_pop_id %>" />
+ <input type="hidden" id="genotyping_protocol_id" value="<% $genotyping_protocol_id %>" />

@@ -1,6 +1,7 @@
 
 <%args>
 $trial_id
+$trial_stock_type => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'd3.d3v4Min', 'd3.graphers.stackedObservationPhenotypeHistogram'] &>
@@ -38,9 +39,9 @@ $trial_id
                     <option value="plants">Trait Values for Plants in this Trial</option>
                     <option value="subplots">Trait Values for Subplots in this Trial</option>
                     <option value="tissue_samples">Trait Values for Tissue Samples in this Trial</option>
-                    <option value="plots_accession">Trait Values for Plots in this Trial grouped by Accession</option>
-                    <option value="plants_accession">Trait Values for Plants in this Trial grouped by Accession</option>
-                    <option value="tissue_samples_accession">Trait Values for Tissue Samples in this Trial grouped by Accession</option>
+                    <option id = "plots_stock_option" value="plots_accession"></option>
+                    <option id = "plants_stock_option" value="plants_accession"></option>
+                    <option id = "tissue_samples_stock_option" value="tissue_samples_accession"></option>
                 </select>
             </div>
         </div>
@@ -115,12 +116,13 @@ $trial_id
 var d3 = d3v4;
 var draw_histogram = stackedObservationPhenotypeHistogram.draw;
 jQuery(document).ready(function () {
+    var type = "<% $trial_stock_type %>";
     jQuery("#display_trial_phenosummary_hist").change(function(){
       trait_summary_hist_display_change(this.value);
     });
     jQuery('#trial_detail_traits_assayed_onswitch').click( function() {
 
-        datatables_display_phenosummary();
+        datatables_display_phenosummary(type);
 
         jQuery(document).on('change', '#display_trial_phenosummary', function() {
             var html = '';
@@ -129,10 +131,16 @@ jQuery(document).ready(function () {
                 html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
             }
             if (display == 'plots_accession' || display == 'plants_accession' || display == 'tissue_samples_accession') {
-                html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Accession</th><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
+                if (type == 'family_name') {
+                    html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Family Name</th><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
+                } else if (type == 'cross') {
+                    html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Cross Unique ID</th><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
+                } else {
+                    html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Accession</th><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
+                }
             }
             jQuery('#pheno_summary_table_div').empty().html(html);
-            datatables_display_phenosummary();
+            datatables_display_phenosummary(type);
         });
 
         trait_summary_hist_display_change('plot');
@@ -151,12 +159,33 @@ jQuery(document).ready(function () {
         }
     });
 
+    var plots_stock_text = '';
+    var plants_stock_text = '';
+    var tissue_samples_stock_text = '';
+
+    if (type == 'family_name') {
+        plots_stock_text = 'Trait Values for Plots in this Trial grouped by Family Name';
+        plants_stock_text = 'Trait Values for Plants in this Trial grouped by Family Name';
+        tissue_samples_stock_text = 'Trait Values for Tissue Samples in this Trial grouped by Family Name';
+    } else if (type == 'cross') {
+        plots_stock_text = 'Trait Values for Plots in this Trial grouped by Cross Unique ID';
+        plants_stock_text = 'Trait Values for Plants in this Trial grouped by Cross Unique ID';
+        tissue_samples_stock_text = 'Trait Values for Tissue Samples in this Trial grouped by Cross Unique ID';
+    } else {
+        plots_stock_text = 'Trait Values for Plots in this Trial grouped by Accession';
+        plants_stock_text = 'Trait Values for Plants in this Trial grouped by Accession';
+        tissue_samples_stock_text = 'Trait Values for Tissue Samples in this Trial grouped by Accession';
+    }
+    jQuery('#plots_stock_option').text(plots_stock_text);
+    jQuery('#plants_stock_option').text(plants_stock_text);
+    jQuery('#tissue_samples_stock_option').text(tissue_samples_stock_text);
+
 });
 
-function datatables_display_phenosummary() {
+function datatables_display_phenosummary(type) {
     jQuery('#phenotype_summary_data').DataTable( {
         "retrieve": true,
-        "ajax": '/ajax/breeders/trial/'+ <% $trial_id %> + '/phenotypes?display='+jQuery('#display_trial_phenosummary').val(),
+        "ajax": '/ajax/breeders/trial/'+ <% $trial_id %> + '/phenotypes?display='+jQuery('#display_trial_phenosummary').val() + '&trial_stock_type='+type,
     });
 }
 
@@ -188,7 +217,7 @@ function trait_summary_hist_display_change(value) {
                         jQuery("#working_modal").modal("hide");
                         if (response.error) {
                             alert(response.error);
-                        } 
+                        }
                         else if (response.status!="success"){
                             alert("Problem loading plant/plot data: "+response.status);
                         }

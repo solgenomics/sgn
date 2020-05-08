@@ -279,9 +279,28 @@ sub set_location {
 		}
 }
 
-# CLASS METHOD!
+=head2 function get_location_noaa_station_id()
 
+ Usage:        my $noaa_station_id = $trial->get_location_noaa_station_id();
+ Desc:
+ Ret:          
+ Args:
+ Side Effects:
+ Example:
 
+=cut
+
+sub get_location_noaa_station_id {
+    my $self = shift;
+    my $nd_geolocation_id = $self->bcs_schema->resultset('Project::Projectprop')->find( { project_id => $self->get_trial_id() , type_id=> $self->get_location_type_id() })->value();
+    my $noaa_station_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'noaa_station_id', 'geolocation_property')->cvterm_id();
+
+    my $q = "SELECT value FROM nd_geolocationprop WHERE nd_geolocation_id = ? AND type_id = ?;";
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+    $h->execute($nd_geolocation_id, $noaa_station_id_cvterm_id);
+    my ($noaa_station_id) = $h->fetchrow_array();
+    return $noaa_station_id;
+}
 
 =head2 function get_breeding_programs()
 
@@ -810,6 +829,51 @@ sub set_name {
     }
 }
 
+=head2 accessors get_project_start_date(), set_project_start_date()
+
+ Usage:         $t->set_project_start_date("2016/09/17");
+ Desc:          sets the projects project_start_date property.
+                The date format in the setter has to be
+                YYYY/MM/DD
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_project_start_date {
+    my $self = shift;
+
+    my $project_start_date_cvterm_id = $self->get_project_start_date_cvterm_id();
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find({
+        project_id => $self->get_trial_id(),
+        type_id => $project_start_date_cvterm_id,
+    });
+
+    my $calendar_funcs = CXGN::Calendar->new({});
+    return $row ? $calendar_funcs->display_start_date($row->value()) : undef;
+}
+
+sub set_project_start_date {
+    my $self = shift;
+    my $project_start_date = shift;
+
+    my $calendar_funcs = CXGN::Calendar->new({});
+    if (my $project_start_date_event = $calendar_funcs->check_value_format($project_start_date) ) {
+        my $project_start_date_cvterm_id = $self->get_project_start_date_cvterm_id();
+        my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create({
+            project_id => $self->get_trial_id(),
+            type_id => $project_start_date_cvterm_id,
+        });
+
+        $row->value($project_start_date_event);
+        $row->update();
+    } else {
+        print STDERR "date format did not pass check while preparing to set project start date: $project_start_date  \n";
+    }
+}
+
 =head2 accessors get_harvest_date(), set_harvest_date()
 
  Usage:         $t->set_harvest_date("2016/09/17");
@@ -969,6 +1033,129 @@ sub remove_planting_date {
 		} else {
 			print STDERR "date format did not pass check while preparing to delete planting date: $planting_date  \n";
 		}
+}
+
+
+=head2 accessors get_temperature_averaged_gdd(), set_temperature_averaged_gdd()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_temperature_averaged_gdd {
+    my $self = shift;
+
+    my $temperature_averaged_gdd_cvterm_id = $self->get_temperature_averaged_gdd_cvterm_id();
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find({
+        project_id => $self->get_trial_id(),
+        type_id => $temperature_averaged_gdd_cvterm_id,
+    });
+
+    if ($row) {
+        return $row->value;
+    } else {
+        return;
+    }
+}
+
+sub set_temperature_averaged_gdd {
+    my $self = shift;
+    my $temperature_averaged_gdd = shift;
+
+    my $temperature_averaged_gdd_cvterm_id = $self->get_temperature_averaged_gdd_cvterm_id();
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create({
+        project_id => $self->get_trial_id(),
+        type_id => $temperature_averaged_gdd_cvterm_id,
+    });
+    $row->value($temperature_averaged_gdd);
+    $row->update();
+}
+
+sub remove_temperature_averaged_gdd {
+    my $self = shift;
+    my $temperature_averaged_gdd = shift;
+
+    my $temperature_averaged_gdd_cvterm_id = $self->get_temperature_averaged_gdd_cvterm_id();
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create({
+        project_id => $self->get_trial_id(),
+        type_id => $temperature_averaged_gdd_cvterm_id,
+        value => $temperature_averaged_gdd,
+    });
+    if ($row) {
+        print STDERR "Removing $temperature_averaged_gdd from trial ".$self->get_trial_id()."\n";
+        $row->delete();
+    }
+}
+
+sub get_temperature_averaged_gdd_cvterm_id {
+    my $self = shift;
+    return SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'drone_run_averaged_temperature_growing_degree_days', 'project_property')->cvterm_id();
+}
+
+=head2 accessors get_related_time_cvterms_json(), set_related_time_cvterms_json()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_related_time_cvterms_json {
+    my $self = shift;
+
+    my $cvterm_id = $self->get_related_time_cvterms_json_cvterm_id();
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find({
+        project_id => $self->get_trial_id(),
+        type_id => $cvterm_id,
+    });
+
+    if ($row) {
+        return $row->value;
+    } else {
+        return;
+    }
+}
+
+sub set_related_time_cvterms_json {
+    my $self = shift;
+    my $related_time_terms_json = shift;
+
+    my $cvterm_id = $self->get_related_time_cvterms_json_cvterm_id();
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create({
+        project_id => $self->get_trial_id(),
+        type_id => $cvterm_id,
+    });
+    $row->value($related_time_terms_json);
+    $row->update();
+}
+
+sub remove_related_time_cvterms_json {
+    my $self = shift;
+    my $related_time_terms_json = shift;
+
+    my $cvterm_id = $self->get_related_time_cvterms_json_cvterm_id();
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create({
+        project_id => $self->get_trial_id(),
+        type_id => $cvterm_id,
+        value => $related_time_terms_json,
+    });
+    if ($row) {
+        print STDERR "Removing $related_time_terms_json from trial ".$self->get_trial_id()."\n";
+        $row->delete();
+    }
+}
+
+sub get_related_time_cvterms_json_cvterm_id {
+    my $self = shift;
+    return SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'drone_run_related_time_cvterms_json', 'project_property')->cvterm_id();
 }
 
 =head2 function get_management_factor_date()
@@ -2036,6 +2223,8 @@ sub get_traits_assayed {
     my $self = shift;
     my $stock_type = shift;
     my $trait_format = shift;
+    my $contains_composable_cv_type = shift;
+    my $schema = $self->bcs_schema;
     my $dbh = $self->bcs_schema->storage()->dbh();
 
     my @traits_assayed;
@@ -2048,19 +2237,94 @@ sub get_traits_assayed {
         $cvtermprop_where = " AND cvtermprop.type_id = $trait_format_cvterm_id AND cvtermprop.value = '$trait_format' ";
     }
 
+    my $contains_relationship_rs = $schema->resultset("Cv::Cvterm")->search({ name => 'contains' });
+    if ($contains_relationship_rs->count == 0) {
+        die "The cvterm 'contains' was not found! Please add this cvterm! Generally this term is added when loading an ontology into the database.\n";
+    }
+    elsif ($contains_relationship_rs->count > 1) {
+        die "The cvterm 'contains' was found more than once! Please consolidate this cvterm by updating cvterm_relationship entries and then deleting the left over cvterm entry! Generally this term is added when loading an ontology into the database.\n";
+    }
+    my $contains_relationship_cvterm_id = $contains_relationship_rs->first->cvterm_id;
+    my $variable_relationship_rs = $schema->resultset("Cv::Cvterm")->search({ name => 'VARIABLE_OF' });
+    if ($variable_relationship_rs->count == 0) {
+        die "The cvterm 'VARIABLE_OF' was not found! Please add this cvterm! Generally this term is added when loading an ontology into the database.\n";
+    }
+    elsif ($variable_relationship_rs->count > 1) {
+        die "The cvterm 'VARIABLE_OF' was found more than once! Please consolidate this cvterm by updating cvterm_relationship entries and then deleting the left over cvterm entry! Generally this term is added when loading an ontology into the database.\n";
+    }
+
+    my $composable_cv_type_cvterm_id = $contains_composable_cv_type ? SGN::Model::Cvterm->get_cvterm_row($schema, $contains_composable_cv_type, 'composable_cvtypes')->cvterm_id : '';
+
     my $q;
     if ($stock_type) {
         my $stock_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $stock_type, 'stock_type')->cvterm_id();
-        $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, count(phenotype.value) FROM cvterm $cvtermprop_join JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id) JOIN db ON (dbxref.db_id = db.db_id) JOIN phenotype ON (cvterm.cvterm_id=phenotype.cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock on (stock.stock_id = nd_experiment_stock.stock_id) WHERE stock.type_id=$stock_type_cvterm_id and project_id=? $cvtermprop_where GROUP BY trait, cvterm.cvterm_id ORDER BY trait;";
+        $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, imaging_project.project_id, imaging_project.name, count(phenotype.value)
+            FROM cvterm
+            $cvtermprop_join
+            JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id)
+            JOIN db ON (dbxref.db_id = db.db_id)
+            JOIN phenotype ON (cvterm.cvterm_id=phenotype.cvalue_id)
+            JOIN nd_experiment_phenotype USING(phenotype_id)
+            JOIN nd_experiment_project USING(nd_experiment_id)
+            JOIN nd_experiment_stock USING(nd_experiment_id)
+            LEFT JOIN phenome.nd_experiment_md_images AS nd_experiment_md_images USING(nd_experiment_id)
+            LEFT JOIN phenome.project_md_image AS project_md_image ON (nd_experiment_md_images.image_id=project_md_image.image_id)
+            LEFT JOIN project AS imaging_project ON (project_md_image.project_id=imaging_project.project_id)
+            JOIN stock on (stock.stock_id = nd_experiment_stock.stock_id)
+            WHERE stock.type_id=$stock_type_cvterm_id and nd_experiment_project.project_id=? $cvtermprop_where
+            GROUP BY trait, cvterm.cvterm_id, imaging_project.project_id, imaging_project.name
+            ORDER BY trait;";
     } else {
-        $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, count(phenotype.value) FROM cvterm $cvtermprop_join JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id) JOIN db ON (dbxref.db_id = db.db_id) JOIN phenotype ON (cvterm.cvterm_id=phenotype.cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? $cvtermprop_where GROUP BY trait, cvterm.cvterm_id ORDER BY trait;";
+        $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, imaging_project.project_id, imaging_project.name, count(phenotype.value)
+            FROM cvterm
+            $cvtermprop_join
+            JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id)
+            JOIN db ON (dbxref.db_id = db.db_id)
+            JOIN phenotype ON (cvterm.cvterm_id=phenotype.cvalue_id)
+            JOIN nd_experiment_phenotype USING(phenotype_id)
+            JOIN nd_experiment_project USING(nd_experiment_id)
+            LEFT JOIN phenome.nd_experiment_md_images AS nd_experiment_md_images USING(nd_experiment_id)
+            LEFT JOIN phenome.project_md_image AS project_md_image ON (nd_experiment_md_images.image_id=project_md_image.image_id)
+            LEFT JOIN project AS imaging_project ON (project_md_image.project_id=imaging_project.project_id)
+            WHERE nd_experiment_project.project_id=? $cvtermprop_where
+            GROUP BY trait, cvterm.cvterm_id, imaging_project.project_id, imaging_project.name
+            ORDER BY trait;";
     }
 
-    my $traits_assayed_q = $dbh->prepare($q);
+    my $component_q = "SELECT COALESCE(
+            json_agg(json_build_object('cvterm_id', component_cvterm.cvterm_id, 'name', component_cvterm.name, 'definition', component_cvterm.definition, 'cv_name', cv.name, 'cv_type', cv_type.name, 'cv_type_cvterm_id', cv_type.cvterm_id))
+            FILTER (WHERE component_cvterm.cvterm_id IS NOT NULL), '[]'
+        ) AS components
+        FROM cvterm
+        LEFT JOIN cvterm_relationship on (cvterm.cvterm_id = cvterm_relationship.object_id AND cvterm_relationship.type_id = $contains_relationship_cvterm_id)
+        LEFT JOIN cvterm AS component_cvterm on (cvterm_relationship.subject_id = component_cvterm.cvterm_id)
+        LEFT JOIN cv on (component_cvterm.cv_id = cv.cv_id)
+        LEFT JOIN cvprop on (cv.cv_id = cvprop.cv_id)
+        LEFT JOIN cvterm AS cv_type on (cv_type.cvterm_id = cvprop.type_id)
+        WHERE cvterm.cvterm_id=? ;";
 
-    $traits_assayed_q->execute($self->get_trial_id());
-    while (my ($trait_name, $trait_id, $count) = $traits_assayed_q->fetchrow_array()) {
-        push @traits_assayed, [$trait_id, $trait_name];
+    my $traits_assayed_h = $dbh->prepare($q);
+    my $component_h = $dbh->prepare($component_q);
+
+    $traits_assayed_h->execute($self->get_trial_id());
+    while (my ($trait_name, $trait_id, $imaging_project_id, $imaging_project_name, $count) = $traits_assayed_h->fetchrow_array()) {
+        $component_h->execute($trait_id);
+        my ($component_terms) = $component_h->fetchrow_array();
+        $component_terms = decode_json $component_terms;
+        if ($contains_composable_cv_type) {
+            my $has_composable_cv_type = 0;
+            foreach (@$component_terms) {
+                if ($_->{cv_type_cvterm_id} && $_->{cv_type_cvterm_id} == $composable_cv_type_cvterm_id) {
+                    $has_composable_cv_type = 1;
+                }
+            }
+            if ($has_composable_cv_type == 1) {
+                push @traits_assayed, [$trait_id, $trait_name, $component_terms, $count, $imaging_project_id, $imaging_project_name];
+            }
+        }
+        else {
+            push @traits_assayed, [$trait_id, $trait_name, $component_terms, $count, $imaging_project_id, $imaging_project_name];
+        }
     }
     return \@traits_assayed;
 }
@@ -2187,6 +2451,18 @@ sub get_harvest_date_cvterm_id {
 }
 
 
+sub get_project_start_date_cvterm_id {
+    my $self = shift;
+
+    my $start_date_cvterm_id;
+    my $start_date_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project_start_date', 'project_property');
+    if ($start_date_cvterm) {
+        $start_date_cvterm_id = $start_date_cvterm->cvterm_id();
+    }
+
+    return $start_date_cvterm_id;
+}
+
 =head2 function create_plant_entities()
 
  Usage:        $trial->create_plant_entries($plants_per_plot);
@@ -2210,6 +2486,8 @@ sub create_plant_entities {
         my $design = $layout->get_design();
 
         my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type')->cvterm_id();
+        my $cross_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross', 'stock_type')->cvterm_id();
+        my $family_name_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'family_name', 'stock_type')->cvterm_id();
         my $plant_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type')->cvterm_id();
         my $plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id();
         my $plot_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_of', 'stock_relationship')->cvterm_id();
@@ -2272,7 +2550,7 @@ sub create_plant_entities {
                 my $plant_name = $parent_plot_name."_plant_$plant_index_number";
                 #print STDERR "... ... creating plant $plant_name...\n";
 
-                $self->_save_plant_entry($chado_schema, $accession_cvterm, $parent_plot_organism, $parent_plot_name, $parent_plot, $plant_name, $plant_cvterm, $plant_index_number, $plant_index_number_cvterm, $block_cvterm, $plot_number_cvterm, $replicate_cvterm, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, $inherits_plot_treatments, $treatments, $plot_relationship_cvterm, \%treatment_plots, \%treatment_experiments, $treatment_cvterm);
+                $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, $parent_plot_name, $parent_plot, $plant_name, $plant_cvterm, $plant_index_number, $plant_index_number_cvterm, $block_cvterm, $plot_number_cvterm, $replicate_cvterm, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, $inherits_plot_treatments, $treatments, $plot_relationship_cvterm, \%treatment_plots, \%treatment_experiments, $treatment_cvterm);
             }
         }
 
@@ -2317,6 +2595,8 @@ sub save_plant_entries {
         my $design = $layout->get_design();
 
         my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type')->cvterm_id();
+        my $cross_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross', 'stock_type')->cvterm_id();
+        my $family_name_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'family_name', 'stock_type')->cvterm_id();
         my $plant_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type')->cvterm_id();
         my $plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id();
         my $plot_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_of', 'stock_relationship')->cvterm_id();
@@ -2386,7 +2666,7 @@ sub save_plant_entries {
                 my $given_plant_index_number = $plant_index_numbers->[$increment];
                 my $plant_index_number_save = $given_plant_index_number ? $given_plant_index_number : $plant_index_number;
 
-                $self->_save_plant_entry($chado_schema, $accession_cvterm, $parent_plot_organism, $parent_plot_name, $parent_plot, $plant_name, $plant_cvterm, $plant_index_number_save, $plant_index_number_cvterm, $block_cvterm, $plot_number_cvterm, $replicate_cvterm, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, $inherits_plot_treatments, $treatments, $plot_relationship_cvterm, \%treatment_plots, \%treatment_experiments, $treatment_cvterm);
+                $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, $parent_plot_name, $parent_plot, $plant_name, $plant_cvterm, $plant_index_number_save, $plant_index_number_cvterm, $block_cvterm, $plot_number_cvterm, $replicate_cvterm, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, $inherits_plot_treatments, $treatments, $plot_relationship_cvterm, \%treatment_plots, \%treatment_experiments, $treatment_cvterm);
                 $plant_index_number++;
                 $increment++;
             }
@@ -2411,6 +2691,8 @@ sub _save_plant_entry {
     my $self = shift;
     my $chado_schema = shift;
     my $accession_cvterm = shift;
+    my $cross_cvterm = shift;
+    my $family_name_cvterm = shift;
     my $parent_plot_organism = shift;
     my $parent_plot_name = shift;
     my $parent_plot = shift;
@@ -2465,9 +2747,9 @@ sub _save_plant_entry {
     });
 
     #the plant has a relationship to the accession
-    my $plot_accession_rs = $self->bcs_schema()->resultset("Stock::StockRelationship")->search({'me.subject_id'=>$parent_plot, 'me.type_id'=>$plot_relationship_cvterm, 'object.type_id'=>$accession_cvterm }, {'join'=>'object'});
+    my $plot_accession_rs = $self->bcs_schema()->resultset("Stock::StockRelationship")->search({'me.subject_id'=>$parent_plot, 'me.type_id'=>$plot_relationship_cvterm, 'object.type_id'=>[$accession_cvterm, $cross_cvterm, $family_name_cvterm] }, {'join'=>'object'});
     if ($plot_accession_rs->count != 1){
-        die "There is not 1 stock_relationship of type plot_of between the plot $parent_plot and an accession.";
+        die "There is not 1 stock_relationship of type plot_of between the plot $parent_plot and an accession, a cross or a family_name.";
     }
     $stock_relationship = $self->bcs_schema()->resultset("Stock::StockRelationship")->create({
         subject_id => $plant->stock_id(),
@@ -2550,6 +2832,8 @@ sub create_tissue_samples {
         my $design = $layout->get_design();
 
         my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type')->cvterm_id();
+        my $cross_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross', 'stock_type')->cvterm_id();
+        my $family_name_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'family_name', 'stock_type')->cvterm_id();
         my $plant_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type')->cvterm_id();
         my $subplot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot', 'stock_type')->cvterm_id();
         my $plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id();
@@ -2656,9 +2940,9 @@ sub create_tissue_samples {
                     });
 
                     #the tissue has a relationship to the accession
-                    my $plant_accession_rs = $self->bcs_schema()->resultset("Stock::StockRelationship")->search({'me.subject_id'=>$parent_plant, 'me.type_id'=>$plant_relationship_cvterm, 'object.type_id'=>$accession_cvterm }, {'join'=>'object'});
+                    my $plant_accession_rs = $self->bcs_schema()->resultset("Stock::StockRelationship")->search({'me.subject_id'=>$parent_plant, 'me.type_id'=>$plant_relationship_cvterm, 'object.type_id'=>[$accession_cvterm, $cross_cvterm, $family_name_cvterm]}, {'join'=>'object'});
                     if ($plant_accession_rs->count != 1){
-                        die "There is not 1 stock_relationship of type plant_of between the plant $parent_plant and an accession.";
+                        die "There is not 1 stock_relationship of type plant_of between the plant $parent_plant and an accession, a cross or a family_name.";
                     }
                     $stock_relationship = $self->bcs_schema()->resultset("Stock::StockRelationship")->create({
                         object_id => $plant_accession_rs->first->object_id,
@@ -2885,8 +3169,8 @@ sub duplicate {
 =head2 get_accessions
 
  Usage:        my $accessions = $t->get_accessions();
- Desc:         retrieves the accessions used in this trial.
- Ret:          an arrayref of { accession_name => acc_name, stock_id => stock_id }
+ Desc:         retrieves the accessions or family names or cross unique ids used in this trial.
+ Ret:          an arrayref of { accession_name => acc_name, stock_id => stock_id, stock_type => stock_type }
  Args:         none
  Side Effects:
  Example:
@@ -2898,32 +3182,33 @@ sub get_accessions {
 	my @accessions;
 
 	my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type' )->cvterm_id();
+    my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'cross', 'stock_type' )->cvterm_id();
+    my $family_name_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'family_name', 'stock_type' )->cvterm_id();
 	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
 	my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plot_of", "stock_relationship")->cvterm_id();
 	my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plant_of", "stock_relationship")->cvterm_id();
 	my $subplot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "subplot_of", "stock_relationship")->cvterm_id();
 	my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "tissue_sample_of", "stock_relationship")->cvterm_id();
 
-	my $q = "SELECT DISTINCT(accession.stock_id), accession.uniquename
+	my $q = "SELECT DISTINCT(accession.stock_id), accession.uniquename, cvterm.name
 		FROM stock as accession
+        JOIN cvterm on (accession.type_id = cvterm.cvterm_id)
 		JOIN stock_relationship on (accession.stock_id = stock_relationship.object_id)
 		JOIN stock as plot on (plot.stock_id = stock_relationship.subject_id)
 		JOIN nd_experiment_stock on (plot.stock_id=nd_experiment_stock.stock_id)
 		JOIN nd_experiment using(nd_experiment_id)
 		JOIN nd_experiment_project using(nd_experiment_id)
 		JOIN project using(project_id)
-		WHERE accession.type_id = $accession_cvterm_id
-		AND stock_relationship.type_id IN ($plot_of_cvterm_id, $tissue_sample_of_cvterm_id, $plant_of_cvterm_id, $subplot_of_cvterm_id)
+		WHERE accession.type_id IN (?, ?, ?)
+		AND stock_relationship.type_id IN (?, ?, ?, ?)
 		AND project.project_id = ?
-		GROUP BY accession.stock_id
 		ORDER BY accession.stock_id;";
 
 	my $h = $self->bcs_schema->storage->dbh()->prepare($q);
-	$h->execute($self->get_trial_id());
-	while (my ($stock_id, $uniquename) = $h->fetchrow_array()) {
-		push @accessions, {accession_name=>$uniquename, stock_id=>$stock_id };
+	$h->execute($accession_cvterm_id, $cross_cvterm_id, $family_name_cvterm_id,$plot_of_cvterm_id, $tissue_sample_of_cvterm_id, $plant_of_cvterm_id, $subplot_of_cvterm_id,$self->get_trial_id());
+	while (my ($stock_id, $uniquename, $stock_type) = $h->fetchrow_array()) {
+		push @accessions, {accession_name=>$uniquename, stock_id=>$stock_id, stock_type=>$stock_type};
 	}
-
 	return \@accessions;
 }
 
@@ -3015,8 +3300,11 @@ sub get_plants_per_accession {
 
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plant', 'stock_type' )->cvterm_id();
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type' )->cvterm_id();
-
-    my $trial_plant_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=>$plant_cvterm_id, 'object.type_id'=>$accession_cvterm_id}, {join=>{'stock_relationship_subjects'=>'object'}, '+select'=>['stock_relationship_subjects.object_id'], '+as'=>['accession_stock_id']});
+    my $family_name_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'family_name', 'stock_type' )->cvterm_id();
+    my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'cross', 'stock_type' )->cvterm_id();
+    my @trial_stock_type_ids;
+    push @trial_stock_type_ids, $accession_cvterm_id, $family_name_cvterm_id, $cross_cvterm_id;
+    my $trial_plant_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=>$plant_cvterm_id, 'object.type_id'=>{ in => [@trial_stock_type_ids] }}, {join=>{'stock_relationship_subjects'=>'object'}, '+select'=>['stock_relationship_subjects.object_id'], '+as'=>['accession_stock_id']});
 
     my %unique_plants;
     while(my $rs = $trial_plant_rs->next()) {
@@ -3144,6 +3432,8 @@ sub get_plots_per_accession {
     # note: this function also retrieves stocks of type tissue_sample (for genotyping plates).
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plot', 'stock_type' )->cvterm_id();
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type' )->cvterm_id();
+    my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'cross', 'stock_type' )->cvterm_id();
+    my $family_name_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'family_name', 'stock_type' )->cvterm_id();
     my $tissue_sample_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample', 'stock_type');
     my $tissue_sample_cvterm_id = $tissue_sample_cvterm ? $tissue_sample_cvterm->cvterm_id() : '';
 
@@ -3152,7 +3442,11 @@ sub get_plots_per_accession {
     push @type_ids, $tissue_sample_cvterm_id if $tissue_sample_cvterm_id;
 
     print STDERR "TYPE IDS: ".join(", ", @type_ids);
-    my $trial_plot_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=> { in => [@type_ids] }, 'object.type_id'=>$accession_cvterm_id }, {join=>{'stock_relationship_subjects'=>'object'}, '+select'=>['stock_relationship_subjects.object_id'], '+as'=>['accession_stock_id']});
+
+    my @trial_stock_type_ids;
+    push @trial_stock_type_ids, $accession_cvterm_id, $cross_cvterm_id, $family_name_cvterm_id;
+
+    my $trial_plot_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=> { in => [@type_ids] }, 'object.type_id'=> { in => [@trial_stock_type_ids] }}, {join=>{'stock_relationship_subjects'=>'object'}, '+select'=>['stock_relationship_subjects.object_id'], '+as'=>['accession_stock_id']});
 
     my %unique_plots;
     while(my $rs = $trial_plot_rs->next()) {

@@ -14,14 +14,14 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <%args>
 
-$pop_id   => undef
+$training_pop_id   => undef
 $trial_id => undef
 
 </%args>
 
 <%perl>
 
-$pop_id = $trial_id if $trial_id;
+$training_pop_id = $trial_id if $trial_id;
 
 </%perl>
 
@@ -51,7 +51,7 @@ $pop_id = $trial_id if $trial_id;
 
 <div id="correlation_canvas">
   <input id="run_pheno_correlation" class="button" type="button" value="Run correlation" /> 
-  <input type="hidden" id="population_id" value="<% $pop_id %>" />
+  <input type="hidden" id="population_id" value="<% $training_pop_id %>" />
   <div id="correlation_message"  style="font-weight:bold;text-align:center;color:#A7C942"></div>
 </div>
 

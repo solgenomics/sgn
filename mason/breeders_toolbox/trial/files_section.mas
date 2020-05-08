@@ -1,5 +1,6 @@
 <%args>
 $trial_id
+$trial_stock_type => undef
 </%args>
 
 <div class="well well-sm">

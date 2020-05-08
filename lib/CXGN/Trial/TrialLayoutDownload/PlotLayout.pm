@@ -54,13 +54,20 @@ sub retrieve {
     my $exact_performance_hash = $self->exact_performance_hash || {};
     my $overall_performance_hash = $self->overall_performance_hash || {};
     my @output;
+    my $trial_stock_type = $self->trial_stock_type();
 
     my @possible_cols = ('plot_name','plot_id','accession_name','accession_id','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json');
 
     my @header;
     foreach (@possible_cols){
         if ($selected_cols{$_}){
-            push @header, $_;
+            if (($_ eq 'accession_name') && ($trial_stock_type eq 'family_name')) {
+                push @header, 'family_name';
+            } elsif (($_ eq 'accession_name') && ($trial_stock_type eq 'cross')) {
+                push @header, 'cross_unique_id';
+            } else {
+                push @header, $_;
+            }
         }
     }
     foreach (@$treatment_name_list){
@@ -87,7 +94,7 @@ sub retrieve {
         my $line;
         foreach (@possible_cols){
             if ($selected_cols{$_}){
-                print STDERR "Working on column $_\n";
+                #print STDERR "Working on column $_\n";
                 if ($_ eq 'location_name'){
                     push @$line, $location_name;
                 } elsif ($_ eq 'plot_geo_json'){

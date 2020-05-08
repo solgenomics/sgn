@@ -27,10 +27,13 @@ use File::Slurp qw /write_file read_file/;
 use File::Temp qw / tempfile tempdir /;
 use JSON;
 use List::MoreUtils qw /uniq/;
+use CXGN::People::Person;
 use POSIX qw(strftime);
 use Storable qw/ nstore retrieve /;
 use String::CRC;
 use Try::Tiny;
+
+
 
 use solGS::queryJobs;
 
@@ -71,6 +74,7 @@ sub check_predicted_list_selection :Path('/solgs/check/predicted/list/selection'
     my $training_pop_id  = $args->{training_pop_id};
     my $selection_pop_id = $args->{selection_pop_id};
     $c->stash->{training_traits_ids} = $args->{training_traits_ids};
+    $c->stash->{genotyping_protocol_id} = $args->{genotyping_protocol_id};
     
     $c->controller("solGS::solGS")->download_prediction_urls($c, $training_pop_id, $selection_pop_id);
  
@@ -94,7 +98,9 @@ sub load_genotypes_list_selection :Path('/solgs/load/genotypes/list/selection') 
     
     my $training_pop_id  = $args->{training_pop_id}[0];
     my $selection_pop_id = $args->{selection_pop_id}[0];
-    my $trait_id         =  $args->{trait_id}[0];
+    my $trait_id         = $args->{trait_id}[0];
+    my $protocol_id      = $args->{genotyping_protocol_id};
+    
     $c->stash->{list}                = $args->{list};
     $c->stash->{list_name}           = $args->{list_name};
     $c->stash->{list_id}             = $args->{list_id};
@@ -103,9 +109,11 @@ sub load_genotypes_list_selection :Path('/solgs/load/genotypes/list/selection') 
     $c->stash->{model_id}            = $training_pop_id; 
     $c->stash->{pop_id}              = $training_pop_id; 
     $c->stash->{selection_pop_id}    = $selection_pop_id;  
-    $c->stash->{list_prediction} = $args->{population_type};
+    $c->stash->{list_prediction}     = $args->{population_type};
     $c->stash->{trait_id}            = $trait_id;
-
+    
+    $c->stash->{genotyping_protocol_id} = $protocol_id;
+    
     if ($args->{data_set_type} =~ /combined populations/) 
     {
 	 $c->stash->{combo_pops_id}  = $training_pop_id;
@@ -116,7 +124,7 @@ sub load_genotypes_list_selection :Path('/solgs/load/genotypes/list/selection') 
     my $genotypes_list = $c->stash->{genotypes_list};
     my $genotypes_ids = $c->stash->{genotypes_ids};
 
-    $self->genotypes_list_genotype_file($c, $selection_pop_id);
+    $self->genotypes_list_genotype_file($c, $selection_pop_id, $protocol_id);
     my $genotype_file = $c->stash->{genotypes_list_genotype_file};
 
     $self->create_list_population_metadata_file($c, $selection_pop_id);
@@ -260,11 +268,13 @@ sub create_list_pop_data_files {
     {
 	$file_id = $c->controller('solGS::Dataset')->dataset_file_id($c);
     }
-	   
+
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    
     $c->controller('solGS::Files')->phenotype_file_name($c, $file_id);
     my $pheno_file = $c->stash->{phenotype_file_name};
 
-    $c->controller('solGS::Files')->genotype_file_name($c, $file_id);
+    $c->controller('solGS::Files')->genotype_file_name($c, $file_id, $protocol_id);
     my $geno_file = $c->stash->{genotype_file_name};
         
     my $files = { pheno_file => $pheno_file, 
@@ -314,6 +324,7 @@ sub predict_list_selection_pop_single_pop_model {
     my $trait_id         = $c->stash->{trait_id};
     my $training_pop_id  = $c->stash->{training_pop_id};
     my $selection_pop_id = $c->stash->{selection_pop_id};
+    my $protocol_id      = $c->stash->{genotyping_protocol_id};
     
     $c->stash->{list_prediction} = 1;
 
@@ -326,10 +337,10 @@ sub predict_list_selection_pop_single_pop_model {
 	$c->controller('solGS::Files')->phenotype_file_name($c, $training_pop_id);
 	$c->stash->{phenotype_file} =$c->stash->{phenotype_file_name};
 
-	$c->controller('solGS::Files')->genotype_file_name($c, $training_pop_id);
+	$c->controller('solGS::Files')->genotype_file_name($c, $training_pop_id, $protocol_id);
 	$c->stash->{genotype_file} =$c->stash->{genotype_file_name};
 
-	$self->user_selection_population_file($c, $selection_pop_id); 
+	$self->user_selection_population_file($c, $selection_pop_id, $protocol_id); 
 
 	$c->stash->{pop_id} = $c->stash->{training_pop_id};
 	$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
@@ -350,6 +361,7 @@ sub predict_list_selection_pop_multi_traits {
     my $data_set_type    = $c->stash->{data_set_type};
     my $training_pop_id  = $c->stash->{training_pop_id};
     my $selection_pop_id = $c->stash->{selection_pop_id};
+    my $protocol_id      = $c->stash->{genotyping_protocol_id};
   
     $c->stash->{pop_id} = $training_pop_id;    
     $c->controller('solGS::solGS')->traits_with_valid_models($c);
@@ -448,7 +460,7 @@ sub predict_list_selection_gebvs {
 
 
 sub user_selection_population_file {
-    my ($self, $c, $pred_pop_id) = @_;
+    my ($self, $c, $pred_pop_id, $protocol_id) = @_;
  
     my $list_dir = $c->stash->{solgs_lists_dir};
    
@@ -457,7 +469,7 @@ sub user_selection_population_file {
         );
 
     
-    $c->controller('solGS::Files')->genotype_file_name($c, $pred_pop_id);
+    $c->controller('solGS::Files')->genotype_file_name($c, $pred_pop_id, $protocol_id);
     my $pred_pop_file = $c->stash->{genotype_file_name};
 
     $c->stash->{genotypes_list_genotype_file} = $pred_pop_file;
@@ -558,7 +570,8 @@ sub load_plots_list_training :Path('/solgs/load/plots/list/training') Args(0) {
     $c->stash->{model_id}        = $args->{training_pop_id};
     $c->stash->{population_type} = $args->{population_type};
     $c->stash->{list_id}         = $args->{list_id};
-
+    $c->stash->{genotyping_protocol_id} = $args->{genotyping_protocol_id};
+    
     my $model_id = $c->stash->{model_id};
 
     $self->plots_list_phenotype_file($c); 
@@ -615,6 +628,7 @@ sub genotypes_list_genotype_query_job {
     my $list_id = $c->stash->{list_id};
     my $dataset_id = $c->stash->{dataset_id};
     my $selection_pop_id = $c->stash->{selection_pop_id};
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
    
     my $pop_id = $c->stash->{pop_id} || $c->stash->{model_id} || $c->stash->{training_pop_id};
     my $data_dir;
@@ -644,6 +658,7 @@ sub genotypes_list_genotype_query_job {
 	'genotypes_ids'  => $genotypes_ids,
 	'data_dir'  => $data_dir,
 	'genotype_file'  => $geno_file,
+	'genotyping_protocol_id'=> $protocol_id,
 	'r_temp_file'    => "genotypes-list-genotype-data-query-${pop_id}",
     };
 
@@ -686,7 +701,7 @@ sub genotypes_list_genotype_query_job {
     };
     
     $c->stash->{genotypes_list_genotype_query_job} = $job_args;
-    $c->stash->{genotype_file} = $geno_file;
+    $c->stash->{genotype_file_name} = $geno_file;
 }
 
 
@@ -797,6 +812,7 @@ sub create_list_geno_data_query_jobs {
     my ($self, $c) = @_;
 
     my $list_type = $c->stash->{list_type};
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
     
     if ($list_type =~ /accessions/)
     {
@@ -808,9 +824,9 @@ sub create_list_geno_data_query_jobs {
 	$self->get_list_trials_ids($c);
 	my $trials_ids = $c->stash->{trials_ids};
 
-	$c->controller('solGS::combinedTrials')->multi_pops_geno_files($c, $trials_ids);
+	$c->controller('solGS::combinedTrials')->multi_pops_geno_files($c, $trials_ids, $protocol_id);
 	$c->stash->{genotype_files_list} = $c->stash->{multi_pops_geno_files};
-	$c->controller('solGS::solGS')->get_cluster_genotype_query_job_args($c, $trials_ids);
+	$c->controller('solGS::solGS')->get_cluster_genotype_query_job_args($c, $trials_ids, $protocol_id);
 	$c->stash->{list_geno_data_query_jobs} = $c->stash->{cluster_genotype_query_job_args};
     }  
 }
@@ -848,7 +864,7 @@ sub plots_list_phenotype_file {
 
 
 sub get_list_training_data_query_jobs {
-    my ($self, $c) = @_;
+    my ($self, $c, $protocol_id) = @_;
 
     $self->plots_list_phenotype_query_job($c);
     $self->genotypes_list_genotype_query_job($c);
@@ -861,9 +877,9 @@ sub get_list_training_data_query_jobs {
 
 
 sub get_list_training_data_query_jobs_file {
-    my ($self, $c) = @_;
+    my ($self, $c, $protocol_id) = @_;
 
-    $self->get_list_training_data_query_jobs($c);
+    $self->get_list_training_data_query_jobs($c, $protocol_id);
     my $query_jobs = $c->stash->{list_training_data_query_jobs};
 
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
@@ -883,18 +899,20 @@ sub submit_list_training_data_query {
     my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
     my $list_type = $list->type;
 
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    
     my $query_jobs_file;
 
     if ($list_type =~ /plots/) 
     {
-	$self->get_list_training_data_query_jobs_file($c);
+	$self->get_list_training_data_query_jobs_file($c, $protocol_id);
 	$query_jobs_file = $c->stash->{list_training_data_query_jobs_file};
     }
     elsif ($list_type =~ /trials/)	
     {
 	$self->get_list_trials_ids($c);
 	my $trials = $c->stash->{trials_ids};
-	$c->controller('solGS::solGS')->get_training_pop_data_query_job_args_file($c, $trials);
+	$c->controller('solGS::solGS')->get_training_pop_data_query_job_args_file($c, $trials, $protocol_id);
 	$query_jobs_file  = $c->stash->{training_pop_data_query_job_args_file};
     }
     
@@ -909,8 +927,25 @@ sub list_population_summary {
     my $list_id = $c->stash->{list_id};
     my $file_id =  $self->list_file_id($c);	
     my $tmp_dir = $c->stash->{solgs_lists_dir};
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    
+    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
+    my $list_name = $list->name;
+    my $owner_id = $list->owner;
 
-    if (!$c->user)
+    my $person = CXGN::People::Person->new($c->dbc()->dbh(), $owner_id);
+    my $owner = $person->get_first_name() . ' ' . $person->get_last_name();
+
+    my $user_role;
+    my $user_id;
+ 
+    if ($c->user)
+    {
+	$user_role = $c->user->get_object->get_user_type();
+	$user_id = $c->user->get_object->get_sp_person_id();
+    }
+    
+    if (($user_role =~ /submitter|user/  &&  $user_id != $owner_id) || !$c->user)
     {
 	my $page = "/" . $c->req->path;
 	$c->res->redirect("/solgs/login/message?page=$page");
@@ -919,30 +954,25 @@ sub list_population_summary {
     else
     {
 	my $user_name = $c->user->id; 
-        my $protocol = $c->controller('solGS::solGS')->create_protocol_url($c);
+        my $protocol_url = $c->controller('solGS::genotypingProtocol')->create_protocol_url($c, $protocol_id);
 
 	if ($file_id) 
 	{
 	    $c->controller('solGS::Files')->population_metadata_file($c, $tmp_dir, $file_id);   
-	    my $metadata_file = $c->stash->{population_metadata_file}; 
-       
+	    my $metadata_file = $c->stash->{population_metadata_file};     
 	    my @metadata = read_file($metadata_file);
-
 	    
 	    my ($key, $desc);
      
 	    ($desc)        = grep {/description/} @metadata;       
 	    ($key, $desc)  = split(/\t/, $desc);
-	   
-	    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
-	    my $list_name = $list->name;
-	  
+	   	    
 	    $c->stash(project_id          => $file_id,
 		      project_name        => $list_name,
 		      selection_pop_name  => $list_name,
 		      project_desc        => $desc,
-		      owner               => $user_name,
-		      protocol            => $protocol,
+		      owner               => $owner,
+		      protocol            => $protocol_url,
 		);  
 	}
     }
@@ -999,9 +1029,9 @@ sub get_trials_list_geno_data {
     my ($self, $c) = @_;
 
     my $trials_ids = $c->stash->{pops_ids_list};
-
-    #$c->controller('solGS::combinedTrials')->multi_pops_genotype_data($c, $trials_ids);
-    $c->controller('solGS::solGS')->submit_cluster_genotype_query($c, $trials_ids);
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+  
+    $c->controller('solGS::solGS')->submit_cluster_genotype_query($c, $trials_ids, $protocol_id);
     $c->controller('solGS::combinedTrials')->multi_pops_geno_files($c, $trials_ids);
     my @geno_files = split("\t", $c->stash->{multi_pops_geno_files});
     $c->stash->{genotype_files_list} = \@geno_files;
@@ -1009,24 +1039,25 @@ sub get_trials_list_geno_data {
 }
 
 
-sub get_trial_genotype_data {
-    my ($self, $c) = @_;
+# sub get_trial_genotype_data {
+#     my ($self, $c) = @_;
   
-    my $pop_id = $c->stash->{pop_id};
+#     my $pop_id = $c->stash->{pop_id};
+#     my $protocol_id = $c->stash->{genotyping_protocol_id};
+    
+#     $c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
+#     my $geno_file = $c->stash->{genotype_file_name};
 
-    $c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
-    my $geno_file = $c->stash->{genotype_file_name};
-
-    if (-s $geno_file)
-    {  
-	$c->stash->{genotype_file} = $geno_file;
-    }
-    else
-    {
-	$c->controller('solGS::solGS')->genotype_file($c);	
-    }
+#     if (-s $geno_file)
+#     {  
+# 	$c->stash->{genotype_file} = $geno_file;
+#     }
+#     else
+#     {
+# 	$c->controller('solGS::solGS')->genotype_file($c);	
+#     }
    
-}
+# }
 
 
 sub register_trials_list  {

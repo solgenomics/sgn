@@ -74,7 +74,7 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $chado_schema,
     dbh => $dbh,
     user_name => "johndoe", #not implemented
-    design => $design,	
+    design => $design,
     program => "test",
     trial_year => "2016",
     trial_description => "test_trial_derive_trait description",
@@ -155,11 +155,11 @@ my $tn = CXGN::Trial->new( { bcs_schema => $fix->bcs_schema(),
 				trial_id => $trial_id });
 my $traits_assayed  = $tn->get_traits_assayed();
 my @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
-#print STDERR Dumper \@traits_assayed_sorted;
+print STDERR Dumper \@traits_assayed_sorted;
 is_deeply(\@traits_assayed_sorted, [
           [
             70741,
-            'dry matter content percentage|CO_334:0000092'
+            'dry matter content percentage|CO_334:0000092', [], 3, undef, undef
           ]
         ], "check upload worked");
 
