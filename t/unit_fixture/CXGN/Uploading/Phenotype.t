@@ -5911,9 +5911,6 @@ $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is(scalar(@{$response->{results}}), 2);
 is(scalar(@{$response->{results}->[1]->{observations_array}}), 2);
-ok($response->{results}->[0]->{result}->{image_link});
-ok($response->{results}->[1]->{result}->{image_link});
-
 
 my $python_dependencies_installed = `locate keras.py`;
 

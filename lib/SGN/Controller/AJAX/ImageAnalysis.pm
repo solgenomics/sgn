@@ -179,6 +179,9 @@ sub image_analysis_submit_POST : Args(0) {
                     my $added_image_tag_id = $image->add_tag($image_tag);
                 }
             }
+            else {
+                print STDERR Dumper $resp;
+            }
             $it++;
         }
     }
