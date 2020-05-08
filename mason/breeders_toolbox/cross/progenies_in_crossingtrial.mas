@@ -100,12 +100,34 @@ $trial_id
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="upload_progenies_exist_submit" id="upload_progenies_exist_submit">Upload File</button>
+                <button type="button" class="btn btn-primary" name="upload_progenies_exist_submit" id="upload_progenies_exist_submit">Validate</button>
             </div>
         </div>
     </div>
 </div>
 
+<div class="modal fade" id="upload_cross_progenies_validate_display" name="upload_cross_progenies_validate_display" tabindex="-1" role="dialog" aria-labelledby="uploadCrossProgeniesValidateDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadCrossProgeniesValidateDialog">Results From Validation</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div class="well">To Overwrite Parents In the Case That An Accession Already Has Male or Female Parents <input type="checkbox" checked id="cross_upload_overwrite_pedigrees" /></div>
+                        <table class="table table-hover">
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="upload_cross_progenies_store" id="upload_cross_progenies_store" data-dismiss="modal">Store</button>
+            </div>
+        </div>
+     </div>
+</div>
 
 <div class="modal fade" id="upload_progenies_error_display" name="upload_progenies_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadProgeniesErrorDialog">
     <div class="modal-dialog modal-lg" role="document">
