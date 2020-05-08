@@ -445,6 +445,30 @@ sub check_combined_trials_training_data {
 }
 
 
+sub check_multi_trials_training_data {
+    my ($self, $c, $trials_ids, $protocol_id) = @_;
+
+    my $cached;
+    
+    foreach my $trial_id (@$trials_ids) 
+    {	    
+	my $exists = $self->check_single_trial_training_data($c, $trial_id, $protocol_id);
+
+	if (!$exists) 
+	{
+	    last;
+	} 
+	else 
+	{
+	    $cached = $exists;   
+	}	
+    }
+
+    return $cached;
+        
+}
+
+
 sub begin : Private {
     my ($self, $c) = @_;
 

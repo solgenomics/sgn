@@ -132,18 +132,26 @@ sub combined_trials_page :Path('/solgs/populations/combined') Args() {
     $c->stash->{combo_pops_id} = $combo_pops_id;
 
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
-    # my $cached = $c->controller('solGS::CachedResult')->check_single_trial_training_data($c, $pop_id, $protocol_id);
+    $self->get_combined_pops_list($c, $combo_pops_id);
+    my $pops_list =  $c->stash->{combined_pops_list};
+  
+    my $cached;
+
+    if ($pops_list)
+    {
+	$cached = $c->controller('solGS::CachedResult')->check_multi_trials_training_data($c, $pops_list, $protocol_id);
+    }
     
-    # if (!$cached)
-    # {	 
-    # 	$c->stash->{message} = "Cached output for this training population  does not exist anymore.\n" 
-    # 	    . "Please go to <a href=\"/solgs/search/\">the search page</a>"
-    # 	    . " and create the training population data.";
+    if (!$cached)
+    {	 
+    	$c->stash->{message} = "Cached output for this training population  does not exist anymore.\n" 
+    	    . "Please go to <a href=\"/solgs/search/\">the search page</a>"
+    	    . " and create the training population data.";
     
-    # 	$c->stash->{template} = "/generic_message.mas"; 
-    # }
-    # else
-    # {       
+    	$c->stash->{template} = "/generic_message.mas"; 
+    }
+    else
+    {       
 	$self->save_common_traits_acronyms($c);
 
 	$c->controller('solGS::solGS')->get_all_traits($c, $combo_pops_id);
@@ -152,7 +160,7 @@ sub combined_trials_page :Path('/solgs/populations/combined') Args() {
 	$self->combined_trials_desc($c);
 	
 	$c->stash->{template} = $c->controller('solGS::Files')->template('/population/combined/combined.mas');
-    # }
+    }
 }
 
 
