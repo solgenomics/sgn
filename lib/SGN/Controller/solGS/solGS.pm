@@ -2075,7 +2075,7 @@ sub all_traits_output :Path('/solgs/traits/all/population') Args() {
 	     { 
 		 $c->stash->{trait_id} = $trait_id;
 		 $c->stash->{model_id} = $training_pop_id;
-		 $self->create_model_summary($c);
+		 $c->controller('solGS::modelAccuracy')->create_model_summary($c, $training_pop_id, $trait_id);
 		 my $model_summary = $c->stash->{model_summary};
 
 		 push @traits_pages, $model_summary;
@@ -2092,48 +2092,12 @@ sub all_traits_output :Path('/solgs/traits/all/population') Args() {
 	 
 	 $c->stash->{model_data} = \@training_pop_data;
 	 $c->stash->{pop_id} = $training_pop_id;
-	 $c->controller('solGS::solGS')->get_acronym_pairs($c, $training_pop_id);
+	 $self->get_acronym_pairs($c, $training_pop_id);
 
 	 $c->stash->{template} = '/solgs/population/multiple_traits_output.mas';	
      }     
 
 }
-
-
-sub create_model_summary {
-    my ($self, $c) = @_;
-
-    my $trait_id =  $c->stash->{trait_id};
-    my $model_id =  $c->stash->{model_id};
-    my $protocol_id = $c->stash->{genotyping_protocol_id};
-    
-    $c->controller("solGS::solGS")->get_trait_details($c, $trait_id);
-    my $tr_abbr = $c->stash->{trait_abbr};
-
-    my $path = $c->req->path;
-    my $trait_page;
-
-    if ($path =~ /solgs\/traits\/all\/population\//)
-    {
-	$trait_page = qq | <a href="/solgs/trait/$trait_id/population/$model_id/gp/$protocol_id" onclick="solGS.waitPage()">$tr_abbr</a>|;
-    }
-    elsif ($path =~ /solgs\/models\/combined\/trials\//)
-    {
-	$trait_page = qq | <a href="/solgs/model/combined/populations/$model_id/trait/$trait_id/gp/$protocol_id" onclick="solGS.waitPage()">$tr_abbr</a>|;
-    }
-	            
-    $c->controller("solGS::modelAccuracy")->get_model_accuracy_value($c, $model_id, $tr_abbr);
-    my $accuracy_value = $c->stash->{accuracy_value};
-     
-    $c->controller("solGS::Heritability")->get_heritability($c);
-    my $heritability = $c->stash->{heritability};
-   	    	    
-    my $model_summary = [$trait_page, $accuracy_value, $heritability];	        
-
-    $c->stash->{model_summary} = $model_summary;
-    
-}
-
 
 
 sub traits_with_valid_models {

@@ -231,7 +231,7 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args() {
 		#$self->build_model_combined_trials_trait($c);
 		$c->stash->{trait_id} = $trait_id;
   
-		$c->controller('solGS::solGS')->create_model_summary($c);
+		$c->controller('solGS::modelAccuracy')->create_model_summary($c, $combo_pops_id, $trait_id);
 		my $model_summary = $c->stash->{model_summary};
 
 		push @traits_pages, $model_summary;
