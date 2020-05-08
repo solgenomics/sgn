@@ -44,7 +44,7 @@ use CXGN::BreederSearch;
 use CXGN::Phenotypes::SearchFactory;
 use CXGN::BreedersToolbox::Accessions;
 use CXGN::Genotype::GRM;
-use CXGN::AnalysisModel;
+use CXGN::AnalysisModel::SaveModel;
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -4868,7 +4868,7 @@ sub _perform_save_trained_keras_cnn_model {
     });
     my $location_id = $trial->get_location->[0];
 
-    my $m = CXGN::AnalysisModel->new({
+    my $m = CXGN::AnalysisModel::SaveModel->new({
     	bcs_schema=>$schema,
     	metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,

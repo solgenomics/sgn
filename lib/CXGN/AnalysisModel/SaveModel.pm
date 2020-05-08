@@ -1,12 +1,12 @@
-package CXGN::AnalysisModel;
+package CXGN::AnalysisModel::SaveModel;
 
 =head1 NAME
 
-CXGN::AnalysisModel - A Moose object to handle saving and retriving models and their training data files
+CXGN::AnalysisModel::SaveModel - A Moose object to handle saving and retriving models and their training data files
 
 =head1 USAGE
 
-my $m = CXGN::AnalysisModel->new({
+my $m = CXGN::AnalysisModel::SaveModel->new({
 	bcs_schema=>$bcs_schema,
 	metadata_schema=>$metadata_schema,
 	phenome_schema=>$phenome_schema,
@@ -307,12 +307,6 @@ sub save_model {
     }
 
 	return {success => 1, nd_protocol_id => $protocol_id, model_file_md_file_id => $file_row->file_id()};
-}
-
-sub retrieve_model {
-	my $self = shift;
-
-	return;
 }
 
 1;
