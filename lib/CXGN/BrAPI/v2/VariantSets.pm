@@ -54,6 +54,9 @@ sub search {
             push @trial_ids, $_->{trial_id};
         }
     }
+    
+    my $limit = $page_size*($page+1)-1;
+    my $offset = $page_size*$page;
 
     my $genotype_search = CXGN::Genotype::Search->new({
             bcs_schema=>$self->bcs_schema,
@@ -64,6 +67,8 @@ sub search {
             protocolprop_marker_hash_select=>[],
             accession_list=>$callset_id,
             protocol_id_list=>\@protocol_ids,
+            limit=>$limit,
+            offset=>$offset,
     });
 
     my %variant_sets;

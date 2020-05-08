@@ -161,7 +161,8 @@ sub search {
     my $self = shift;
     my $params = shift;
     my $page_size = $self->page_size;
-    my $page = $self->page;
+    my $page1 = shift;
+    my $page = $page1 ? $page1 : $self->page;
     my $status = $self->status;
 
     my $observation_db_id = $params->{observationDbId} || ($params->{observationDbIds} || ()); 
@@ -202,8 +203,8 @@ sub search {
             program_list=>$program_ids_arrayref,
             observation_variable_list=>\@observation_variable_db_ids,
             plot_list=>$observation_unit_db_id,
-            # limit=>$limit,
-            #offset=>$offset,
+            limit=>$limit,
+            offset=>$offset,
         }
     );
 
@@ -215,7 +216,7 @@ sub search {
     my $counter = 0;
 
     foreach my $obs_unit (@$data){
-        my @brapi_observations;
+        my @brapi_observations; #print Dumper $obs_unit;
         my $observations = $obs_unit->{observations};
         foreach (@$observations){
             my $observation_id = "$_->{phenotype_id}";

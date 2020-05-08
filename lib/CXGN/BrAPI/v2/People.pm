@@ -66,6 +66,7 @@ sub search {
 
     while (my $p = $rs2->next()) { 
 		if ($counter >= $start_index && $counter <= $end_index) {     
+			my $id = $p->sp_person_id();
 		    push @data , {
 		        additionalInfo => {
 		        	country => $p->country(),
@@ -80,7 +81,7 @@ sub search {
 		        lastName => $p->last_name(),
 		        mailingAddress => $p->address(),
 		        middleName => undef,
-		        personDbId => $p->sp_person_id(),
+		        personDbId => qq|$id|,
 		        phoneNumber => $p->phone_number(),
 		        userID => $p->username(),
 		    }
@@ -113,6 +114,7 @@ sub detail {
 	
 
     while (my $p = $rs2->next()) { 
+    	my $id = $p->sp_person_id();
 	    %result = (
 	        additionalInfo => {
 	        	country => $p->country(),
@@ -127,7 +129,7 @@ sub detail {
 	        lastName => $p->last_name(),
 	        mailingAddress => $p->address(),
 	        middleName => undef,
-	        personDbId => $p->sp_person_id(),
+	        personDbId => qq|$id|,
 	        phoneNumber => $p->phone_number(),
 	        userID => $p->username(),
 	    );

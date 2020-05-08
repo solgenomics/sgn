@@ -66,6 +66,8 @@ sub search {
             push @trial_ids, $_->{trial_id};
         }
     }
+    my $limit = $page_size*($page+1)-1;
+    my $offset = $page_size*$page;
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         trial_list=>\@trial_ids,
@@ -73,7 +75,9 @@ sub search {
         cache_root=>$c->config->{cache_file_path},
         genotypeprop_hash_select=>['DS', 'GT', 'NT'],
         accession_list=>\@accession_ids,
-        protocol_id_list=>\@protocol_ids, 
+        protocol_id_list=>\@protocol_ids,
+        limit=>$limit,
+        offset=>$offset,
     });
 
     my $file_handle = $genotypes_search->get_cached_file_search_json($c, 1); #Metadata only returned
@@ -119,7 +123,7 @@ sub search {
     }
 
     foreach my $genoid (keys %geno) {
-        if ($counter >= $start_index && $counter <= $end_index) {
+        # if ($counter >= $start_index && $counter <= $end_index) {
             push @data, {
                 additionalInfo=>{germplasmDbId=>qq|$geno{$genoid}{germplasmDbId}|},
                 callSetDbId=>qq|$genoid|,
@@ -130,7 +134,7 @@ sub search {
                 updated=>undef,
                 variantSetDbIds=>$geno{$genoid}{variantSetDbIds},
             };
-        }
+        # }
         $counter++;
     }
 

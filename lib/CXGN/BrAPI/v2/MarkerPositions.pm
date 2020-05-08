@@ -25,6 +25,9 @@ sub search {
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 	my $status = $self->status;
+	my $start_index = $page*$page_size;
+    my $end_index = $page*$page_size + $page_size - 1;
+    my $counter =0;
 	my @maps;
 
 	my $map_factory = CXGN::Cview::MapFactory->new($self->bcs_schema()->storage->dbh(), $c->config ) ; #$inputs->{config});
@@ -56,14 +59,17 @@ sub search {
 				if ( $max && $max->[0] < $position ) { $passes_search = 0;};
 
 				if ($passes_search) {
-				    push @data, {
-					    variantDbId => $m_id,
-					    variantName => $m->get_name(),
-					    position => $position,
-					    linkageGroupName => $lg,
-					    mapDbId => qq|$map_id|,
-					    mapName => $map_name,
-				    }
+					if ($counter >= $start_index && $counter <= $end_index) {
+					    push @data, {
+						    variantDbId => $m_id,
+						    variantName => $m->get_name(),
+						    position => $position,
+						    linkageGroupName => $lg,
+						    mapDbId => qq|$map_id|,
+						    mapName => $map_name,
+					    }
+					}
+					$counter++;
 				}
 		    }
 		}

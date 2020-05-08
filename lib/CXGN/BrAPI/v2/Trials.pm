@@ -102,9 +102,9 @@ sub search {
     }
 
     my $total_count = $data ? scalar @{$data} : 0;
-    my %result = (data => $data);
+    my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array($data, $page_size, $page);
+    my %result = (data => $data_window);
     my @data_files;
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$self->page_size,$self->page);
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $self->status, 'Trials result constructed');
 }
 
