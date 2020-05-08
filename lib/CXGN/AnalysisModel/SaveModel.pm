@@ -7,23 +7,23 @@ CXGN::AnalysisModel::SaveModel - A Moose object to handle saving and retriving m
 =head1 USAGE
 
 my $m = CXGN::AnalysisModel::SaveModel->new({
-	bcs_schema=>$bcs_schema,
-	metadata_schema=>$metadata_schema,
-	phenome_schema=>$phenome_schema,
-	archive_path=>$archive_path,
-	model_name=>'MyModel',
-	model_description=>'Model description',
-	model_type_cvterm_id=>$model_type_cvterm_id,
-	model_experiment_type_cvterm_id=>$model_experiment_type_cvterm_id,
-	model_properties=>[],
-	archived_model_file_type=>$archived_model_file_type,
-	model_file=>$model_file,
-	archived_training_data_file_type=>$archived_training_data_file_type,
-	archived_training_data_file=>$archived_training_data_file,
-	archived_auxiliary_files=>$archived_auxiliary_files,
-	location_id=>$location_id,
-	user_id=>$user_id,
-	user_role=>$user_role
+    bcs_schema=>$bcs_schema,
+    metadata_schema=>$metadata_schema,
+    phenome_schema=>$phenome_schema,
+    archive_path=>$archive_path,
+    model_name=>'MyModel',
+    model_description=>'Model description',
+    model_type_cvterm_id=>$model_type_cvterm_id,
+    model_experiment_type_cvterm_id=>$model_experiment_type_cvterm_id,
+    model_properties=>[],
+    archived_model_file_type=>$archived_model_file_type,
+    model_file=>$model_file,
+    archived_training_data_file_type=>$archived_training_data_file_type,
+    archived_training_data_file=>$archived_training_data_file,
+    archived_auxiliary_files=>$archived_auxiliary_files,
+    location_id=>$location_id,
+    user_id=>$user_id,
+    user_role=>$user_role
 });
 my $saved_model_id = $m->save_model();
 
