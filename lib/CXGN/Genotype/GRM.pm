@@ -47,6 +47,7 @@ use JSON;
 use CXGN::Stock::Accession;
 use CXGN::Genotype::Protocol;
 use CXGN::Genotype::Search;
+use CXGN::Genotype::ComputeHybridGenotype;
 use R::YapRI::Base;
 use R::YapRI::Data::Matrix;
 use CXGN::Dataset::Cache;
@@ -303,7 +304,11 @@ sub get_grm {
                 }
 
                 my $genotype_string = "";
-                my $progeny_genotype = _compute_progeny_genotypes($genotypes, \@all_marker_objects);
+                my $geno = CXGN::Genotype::ComputeHybridGenotype->new({
+                    parental_genotypes=>$genotypes,
+                    marker_objects=>\@all_marker_objects
+                });
+                my $progeny_genotype = $geno->get_hybrid_genotype();
 
                 push @individuals_stock_ids, $plot_stock_id;
                 my $genotype_string_scores = join "\t", @$progeny_genotype;
@@ -363,7 +368,11 @@ sub get_grm {
                 }
 
                 my $genotype_string = "";
-                my $progeny_genotype = _compute_progeny_genotypes($genotypes, \@all_marker_objects);
+                my $geno = CXGN::Genotype::ComputeHybridGenotype->new({
+                    parental_genotypes=>$genotypes,
+                    marker_objects=>\@all_marker_objects
+                });
+                my $progeny_genotype = $geno->get_hybrid_genotype();
 
                 push @individuals_stock_ids, $accession_stock_id;
                 my $genotype_string_scores = join "\t", @$progeny_genotype;
@@ -453,7 +462,7 @@ sub download_grm {
     my $download_format = $self->download_format();
     my $grm_tempfile = $self->grm_temp_file();
 
-    my $key = $self->grm_cache_key("download_grm_fixed0".$download_format);
+    my $key = $self->grm_cache_key("download_grm_v01".$download_format);
     $self->_cache_key($key);
     $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
 
@@ -655,40 +664,6 @@ sub genosort {
     } else {
         return -1;
     }
-}
-
-sub _compute_progeny_genotypes {
-    my $genotypes = shift;
-    my $all_marker_objects = shift;
-
-    my @progeny_genotype;
-    # If both parents are genotyped, calculate progeny genotype as a average of parent dosage
-    if ($genotypes->[0] && $genotypes->[1]) {
-        my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
-        my $parent2_genotype = $genotypes->[1]->{selected_genotype_hash};
-        foreach my $m (@$all_marker_objects) {
-            if ($parent1_genotype->{$m->{name}}->{DS} ne 'NA' || $parent2_genotype->{$m->{name}}->{DS} ne 'NA') {
-                my $p1 = $parent1_genotype->{$m->{name}}->{DS} ne 'NA' ? $parent1_genotype->{$m->{name}}->{DS} : 0;
-                my $p2 = $parent2_genotype->{$m->{name}}->{DS} ne 'NA' ? $parent2_genotype->{$m->{name}}->{DS} : 0;
-                push @progeny_genotype, ceil(($p1 + $p2) / 2);
-            }
-            else {
-                push @progeny_genotype, 'NA';
-            }
-        }
-    }
-    elsif ($genotypes->[0]) {
-        my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
-        foreach my $m (@$all_marker_objects) {
-            if ($parent1_genotype->{$m->{name}}->{DS} ne 'NA') {
-                push @progeny_genotype, ceil($parent1_genotype->{$m->{name}}->{DS} / 2);
-            }
-            else {
-                push @progeny_genotype, 'NA';
-            }
-        }
-    }
-    return \@progeny_genotype;
 }
 
 1;
