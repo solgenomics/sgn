@@ -639,7 +639,7 @@ foreach (@grm3_split) {
     my @row = split "\t", $_;
     push @grm3_vals, $row[2];
 }
-is(scalar(@grm3_vals), 3);
+is_deeply(\@grm3_vals, [0.0512820512820513,-0.0512820512820513,0.0512820512820513]);
 
 $ua = LWP::UserAgent->new;
 $response = $ua->get("http://localhost:3010/breeders/download_grm_action/?ids=$test_accession1_id,$accession_id1&protocol_id=$protocol_id&format=accession_ids&compute_from_parents=true&download_format=heatmap&minor_allele_frequency=0.01&marker_filter=1&individuals_filter=1");

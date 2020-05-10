@@ -393,8 +393,8 @@ sub get_grm {
 
     my $tmp_output_dir = $shared_cluster_dir_config."/tmp_genotype_download_grm";
     mkdir $tmp_output_dir if ! -d $tmp_output_dir;
-    my ($grm_tempfile_out_fh, $grm_tempfile_out) = tempfile("download_grm_XXXXX", DIR=> $tmp_output_dir);
-    my ($temp_out_file_fh, $temp_out_file) = tempfile("download_grm_XXXXX", DIR=> $tmp_output_dir);
+    my ($grm_tempfile_out_fh, $grm_tempfile_out) = tempfile("download_grm_out_XXXXX", DIR=> $tmp_output_dir);
+    my ($temp_out_file_fh, $temp_out_file) = tempfile("download_grm_tmp_XXXXX", DIR=> $tmp_output_dir);
 
     my $cmd = 'R -e "library(genoDataFilter); library(rrBLUP); library(data.table); library(scales);
     mat <- fread(\''.$grm_tempfile.'\', header=FALSE, sep=\'\t\');
@@ -404,9 +404,18 @@ sub get_grm {
     } else {
         mat <- as.data.frame(rescale(as.matrix(mat), to = c(-1,1) ));
     }
-    mat_clean <- filterGenoData(gData=mat, maf='.$maf.', markerFilter='.$marker_filter.', indFilter='.$individuals_filter.');
-    A_matrix <- A.mat(mat_clean, impute.method=\'EM\', n.core='.$number_system_cores.', return.imputed=FALSE);
-    write.table(A_matrix, file=\''.$grm_tempfile_out.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
+    ';
+    if (!$get_grm_for_parental_accessions) {
+        #strange behavior in filterGenoData during testing... will use A.mat filters instead in this case...
+        $cmd .= 'mat_clean <- filterGenoData(gData=mat, maf='.$maf.', markerFilter='.$marker_filter.', indFilter='.$individuals_filter.');
+        A_matrix <- A.mat(mat_clean, impute.method=\'EM\', n.core='.$number_system_cores.', return.imputed=FALSE);
+        ';
+    }
+    else {
+        $cmd .= 'A_matrix <- A.mat(mat, min.MAF='.$maf.', max.missing='.$marker_filter.', impute.method=\'EM\', n.core='.$number_system_cores.', return.imputed=FALSE);
+        ';
+    }
+    $cmd .= 'write.table(A_matrix, file=\''.$grm_tempfile_out.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
     print STDERR Dumper $cmd;
 
     # Do the GRM on the cluster
