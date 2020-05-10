@@ -55,15 +55,17 @@ sub get_hybrid_genotype {
             if ($parent1_genotype->{$m->{name}}->{DS} ne 'NA' || $parent2_genotype->{$m->{name}}->{DS} ne 'NA') {
                 my $p1 = $parent1_genotype->{$m->{name}}->{DS} ne 'NA' ? $parent1_genotype->{$m->{name}}->{DS} : 0;
                 my $p2 = $parent2_genotype->{$m->{name}}->{DS} ne 'NA' ? $parent2_genotype->{$m->{name}}->{DS} : 0;
-                my $val = ($p1 + $p2) / 2;
                 my @alternates = split ',', $m->{alt};
-                if ($val > scalar(@alternates)+1) {
+                if ($p1 > scalar(@alternates)+1) {
                     print STDERR Dumper $m;
                     print STDERR Dumper $parent1_genotype->{$m->{name}};
+                    push @progeny_genotype, 'NA';
+                } elsif ($p2 > scalar(@alternates)+1) {
+                    print STDERR Dumper $m;
                     print STDERR Dumper $parent2_genotype->{$m->{name}};
                     push @progeny_genotype, 'NA';
                 } else {
-                    push @progeny_genotype, $val;
+                    push @progeny_genotype, ($p1 + $p2) / 2;
                 }
             }
             else {
@@ -75,14 +77,14 @@ sub get_hybrid_genotype {
         my $parent1_genotype = $parental_genotypes->[0]->{selected_genotype_hash};
         foreach my $m (@$marker_objects) {
             if ($parent1_genotype->{$m->{name}}->{DS} ne 'NA') {
-                my $val = $parent1_genotype->{$m->{name}}->{DS} / 2;
+                my $val = $parent1_genotype->{$m->{name}}->{DS};
                 my @alternates = split ',', $m->{alt};
                 if ($val > scalar(@alternates)+1) {
                     print STDERR Dumper $m;
                     print STDERR Dumper $parent1_genotype->{$m->{name}};
                     push @progeny_genotype, 'NA';
                 } else {
-                    push @progeny_genotype, $val;
+                    push @progeny_genotype, $val/2;
                 }
             }
             else {
