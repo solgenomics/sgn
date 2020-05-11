@@ -82,18 +82,12 @@ function generate_trait_file() {
         trait_ids = JSON.stringify(list.transform(trait_list_id, 'traits_2_trait_ids'));
         seleted_listed = 0;
     } else {
-        var trait_temp_ids2 = JSON.stringify(jQuery('#html_select_traits_for_trait_file').val());
-        alert("trait_temp_ids2:"+trait_temp_ids2);
         var trait_temp_ids = [];
         jQuery("#html_select_traits_for_trait_file option:selected").each(
             function() {
-//                trait_ids.push(JSON.stringify(Number(jQuery('#html_select_traits_for_trait_file').val())));
                 var temp_id_value = jQuery('#html_select_traits_for_trait_file').val();
-                alert("temp_id_value:"+temp_id_value);
-//                trait_temp_ids.push(jQuery('#html_select_traits_for_trait_file').val());
                 trait_temp_ids = temp_id_value;
             });
-//        trait_ids = JSON.stringify(trait_temp_ids);
         trait_ids = trait_temp_ids;
         var trait_names = [];
         jQuery("#html_select_traits_for_trait_file option:selected").each(
@@ -102,8 +96,6 @@ function generate_trait_file() {
             });
         trait_list = JSON.stringify(trait_names);
     }
-    alert("inside single select, trait ids:"+trait_ids);
-    alert("inside single select, triat list:"+trait_list);
 
     if (trait_ids == '') {
         alert("Traits, from a list or selected individually, are required.");
