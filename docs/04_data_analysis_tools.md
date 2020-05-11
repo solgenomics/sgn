@@ -306,9 +306,23 @@ The procedure is:
 
 <img src='{{"assets/images/selection_proportion_clustering.png" | relative_url }}' width="522" />
 
+4.9 Search Wizard Genomic Relationship Matrix (GRM) Download
+--------------
+
+The genomic relationship matrix (GRM) is useful for understanding underlying structure in your population. Breedbase can compute the GRM using rrBLUP. First, select accessions in the search wizard and optionally select a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol in your system is used (as defined in sgn_local.conf). Specify the minor allele frequency, missing marker data, and missing individuals data filters to apply. The GRM can be returned in a matrix format (.tsv) which shows all pairwise relationships between the selected accessions and is useful for visualization; alternatively, the GRM can be returned in a three-column format (.tsv) which is useful for programs like ASReml outside of Breedbase. The GRM can also be returned as a simple correlation heatmap image (.pdf). The GRM can be computed from parents of the selected accessions granted the parents were genotyped, by clicking the checkbox "compute from parents"; this is useful for programs where parental lines are genotyped and then hybrids are created and evaluated in the field.
+
+<img src='{{"assets/images/search_wizard_genotype_analyses_grm.png" | relative_url }}' width="522" />
 
 
+4.10 Search Wizard Genome Wide Association Study (GWAS)
+--------------
 
-   
+Performing a genome wide association study (GWAS) can determine genotypic markers which are significantly correlated to phenotypic traits. Breedbase can compute GWAS using rrBLUP. First, select accessions and trait(s) in the search wizard, and optionally select a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol in your system is used (as defined in sgn_local.conf). Several traits can be selected in the search wizard; if the traits are not to be treated as repeated measurements then select 'no' in the select box and this will tell Breedbase to return GWAS results independently for the selected traits. If the selected traits are indeed all repeated measurements then select 'yes' in the select box and Breedbase will return as single GWAS analysis across all the phenotypic records. Specify the minor allele frequency, missing marker data, and missing individuals data filters to apply. GWAS results can be returned in a tabular format (.tsv) where the -log10(p-values) for the selected traits are returned; alternatively, the GWAS results can be returned as Manhattan and QQ plots for the selected traits. The GWAS can be computed from parents of the selected accessions granted the parents were genotyped, by clicking the checkbox "compute from parents"; this is useful for programs where parental lines are genotyped and then hybrids are created and evaluated in the field.
 
+The GWAS will filter the data by the input MAF and missing data filters provided. After filtering the data is imputed using an 'EM' method in rrBLUP. The Kinship matrix (GRM) is computed from the imputed genotypic data and used in the GWAS model. The GWAS uses fixed effects for different field trials and replicates in the phenotypic data.
 
+<img src='{{"assets/images/search_wizard_genotype_analyses_gwas.png" | relative_url }}' width="522" />
+
+<img src='{{"assets/images/search_wizard_genotype_analyses_manhattan_plot.png" | relative_url }}' width="522" />
+
+<img src='{{"assets/images/search_wizard_genotype_analyses_qq_plot.png" | relative_url }}' width="522" />

@@ -541,7 +541,7 @@ solGS.correlation = {
 	
 	if (acronyms) {
 	    var tableId = 'traits_acronyms';	
-	    var table = createAcronymsTable(tableId);
+	    var table = this.createAcronymsTable(tableId);
 
 	    jQuery('#correlation_canvas').append(table); 
 	    
