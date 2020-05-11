@@ -9,7 +9,7 @@ use CXGN::BrAPI::JSONResponse;
 
 extends 'CXGN::BrAPI::v1::Common';
 
-sub trials_search {
+sub search {
 	my $self = shift;
 	my $search_params = shift;
 	my $schema = $self->bcs_schema;
@@ -48,7 +48,7 @@ sub trials_search {
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $self->status, 'Trials-search result constructed');
 }
 
-sub trial_details {
+sub details {
 	my $self = shift;
 	my $folder_id = shift;
 

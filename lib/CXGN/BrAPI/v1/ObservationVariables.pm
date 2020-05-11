@@ -285,7 +285,7 @@ sub search {
 	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observationvariable search result constructed');
 }
 
-sub observation_variable_detail {
+sub detail {
 	my $self = shift;
 	my $trait_id = shift;
 	my $page_size = $self->page_size;
@@ -320,8 +320,8 @@ sub observation_variable_detail {
 				decimalPlaces=>undef,
 				xref=>'',
 				validValues=> {
-					min=>$trait->minimum + 0,
-					max=>$trait->maximum + 0,
+					min=>$trait->minimum,
+					max=>$trait->maximum,
 					categories=>\@brapi_categories
 				}
 			},
