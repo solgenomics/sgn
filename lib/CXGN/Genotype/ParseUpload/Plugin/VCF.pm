@@ -344,7 +344,9 @@ sub next_genotype {
                     my @alt_calls;
                     foreach (@alleles) {
                         if (looks_like_number($_)) {
-                            $gt_dosage = $gt_dosage + $_;
+                            if ($_ eq '0' || $_ == 0) {
+                                $gt_dosage++;
+                            }
                             my $index = $_ + 0;
                             if ($index == 0) {
                                 push @nucleotide_genotype, $marker_info[3]; #Using Reference Allele
