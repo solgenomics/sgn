@@ -534,7 +534,6 @@ sub search {
         $search_query->{'me.stock_id'} = {'in'=>\@stockprop_filtered_stock_ids};
     }
 
-    print STDERR "---> START SEARCH QUERY (" . localtime . ")\n";
     my $rs = $schema->resultset("Stock::Stock")->search(
     $search_query,
     {
@@ -544,7 +543,6 @@ sub search {
         order_by  => 'me.name',
         distinct=>1
     });
-    print STDERR "---> STOP SEARCH QUERY (" . localtime . ")\n";
 
     my $records_total = $rs->count();
     if (defined($limit) && defined($offset)){
@@ -557,7 +555,6 @@ sub search {
         $owners_hash = $stock_lookup->get_owner_hash_lookup();
     }
 
-    print STDERR "---> START PROCESSING RESULTS (" . localtime . ")\n";
     my @result;
     my %result_hash;
     my @result_stock_ids;
@@ -603,35 +600,88 @@ sub search {
         }
     }
     #print STDERR Dumper \%result_hash;
-    print STDERR "---> STOP PROCESSING RESULTS (" . localtime . ")\n";
-    print STDERR "     RESULTS TOTAL: " . scalar @result_stock_ids . "\n";
-
-    ## TODO: ##
-    # Get additional properties (pedigree, synonyms, speciesAuthority, subtaxa, subtaxaAuthority, donors)
-    ##
     
-    # Get additional stock properties (pedigree, synonyms)
-    # TODO: add donors (donor, donor institute, donor PUI)
-    my $stock_query = "SELECT stock.stock_id, stock.organism_id, stock.uniquename,
+    # Comma separated list of query placeholders for the result stock ids
+    my $id_ph = scalar(@result_stock_ids) > 0 ? join ",", ("?") x @result_stock_ids : "NULL";
+    
+    # Get additional organism properties (species authority, subtaxa, subtaxa authority)
+    my $organism_query = "SELECT op.organism_id, cvterm.name, op.value, op.rank
+FROM organismprop AS op
+LEFT JOIN cvterm ON (op.type_id = cvterm.cvterm_id)
+WHERE op.organism_id IN (SELECT DISTINCT(organism_id) FROM stock WHERE stock_id IN ($id_ph))
+ORDER BY organism_id ASC;";
+    my $organism_sth = $schema->storage()->dbh()->prepare($organism_query);
+    $organism_sth->execute(@result_stock_ids);
+
+    # Parse organism properties into hash $organism_props->organism_id->prop_type (cvterm name)->prop values (array)
+    my %organism_props;
+    while ( my @r = $organism_sth->fetchrow_array() ) {
+        my $organism_id = $r[0];
+        my $prop_type = $r[1];
+        my $prop_value = $r[2];
+
+        if ( !defined($organism_props{$organism_id}) ) {
+            $organism_props{$organism_id} = {
+                organism_id => $organism_id
+            };
+        }
+        if ( !defined($organism_props{$organism_id}->{$prop_type}) ) {
+            $organism_props{$organism_id}->{$prop_type} = ();
+        }
+
+        push @{$organism_props{$organism_id}->{$prop_type}}, $prop_value;
+    }
+    
+    # Get additional stock properties (pedigree, synonyms, donor info)
+    my $stock_query = "SELECT stock.stock_id, stock.uniquename, stock.organism_id,
                mother.uniquename AS female_parent, father.uniquename AS male_parent, m_rel.value AS cross_type,
-               props.stock_synonym
+               props.stock_synonym, props.donor, props.\"donor institute\", props.\"donor PUI\"
         FROM stock
         LEFT JOIN stock_relationship m_rel ON (stock.stock_id = m_rel.object_id AND m_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'female_parent'))
         LEFT JOIN stock mother ON (m_rel.subject_id = mother.stock_id)
         LEFT JOIN stock_relationship f_rel ON (stock.stock_id = f_rel.object_id AND f_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent'))
         LEFT JOIN stock father ON (f_rel.subject_id = father.stock_id)
         LEFT JOIN materialized_stockprop props ON (stock.stock_id = props.stock_id)
-        WHERE stock.stock_id IN (?);";
+        WHERE stock.stock_id IN ($id_ph);";
     my $sth = $schema->storage()->dbh()->prepare($stock_query);
     $sth->execute(@result_stock_ids);
+    
+    # Add additional organism and stock properties to the result hash for each stock
     while (my @r = $sth->fetchrow_array()) {
-        print STDERR Dumper \@r;
-    }
+        my $stock_id = $r[0];
+        my $organism_id = $r[2];
+        my $mother = $r[3] || 'NA';
+        my $father = $r[4] || 'NA';
+        my $syn_json = $r[6] ? JSON->new->utf8(0)->decode($r[6]) : {};
+        my @synonyms = keys %{$syn_json};
+        my $donor_json = $r[7] ? JSON->new->utf8(0)->decode($r[7]) : {};
+        my $donor_inst_json = $r[8] ? JSON->new->utf8(0)->decode($r[8]) : {};
+        my $donor_pui_json = $r[8] ? JSON->new->utf8(0)->decode($r[8]) : {};
+        my @donor_accessions = keys %{$donor_json};
+        my @donor_institutes = keys %{$donor_inst_json};
+        my @donor_puis = keys %{$donor_pui_json};
 
-    # Get additional organism properties: 
-    #   Get distinct list of orgamism ids
-    #   Get properties for each organism (species authority, subtaxa, subtaxa authority)
-    #   Add organism properties to each stock based on organism id
+        # add stock props to the result hash
+        $result_hash{$stock_id}{pedigree} = $self->display_pedigree ? $mother . '/' . $father : 'DISABLED';
+        $result_hash{$stock_id}{synonyms} = \@synonyms;
+        my @donor_array;
+        if (scalar(@donor_accessions)>0 && scalar(@donor_institutes)>0 && scalar(@donor_puis)>0 && scalar(@donor_accessions) == scalar(@donor_institutes) && scalar(@donor_accessions) == scalar(@donor_puis)){
+            for (0 .. scalar(@donor_accessions)-1){
+                push @donor_array, {
+                    'donorGermplasmName'=>$donor_accessions[$_],
+                    'donorAccessionNumber'=>$donor_accessions[$_],
+                    'donorInstituteCode'=>$donor_institutes[$_],
+                    'germplasmPUI'=>$donor_puis[$_]
+                };
+            }
+        }
+        $result_hash{$stock_id}{donors} = \@donor_array;
+
+        # add organism props for each stock
+        $result_hash{$stock_id}{speciesAuthority} = $organism_props{$organism_id}->{'species authority'};
+        $result_hash{$stock_id}{subtaxa} = $organism_props{$organism_id}->{'subtaxa'};
+        $result_hash{$stock_id}{subtaxaAuthority} = $organism_props{$organism_id}->{'subtaxa authority'};
+    }
 
     if ($self->stockprop_columns_view && scalar(keys %{$self->stockprop_columns_view})>0 && scalar(@result_stock_ids)>0){
         my @stockprop_view = keys %{$self->stockprop_columns_view};
