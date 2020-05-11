@@ -73,22 +73,37 @@ function generate_trait_file() {
     var trait_list_id = jQuery('#select_list_list_select').val();
     var trait_ids = [];
     var trait_list = [];
-
+    var selected_listed = '';
     if (trait_list_id) {
         var list = new CXGN.List();
         trait_list = JSON.stringify(list.getList(trait_list_id));
         var valid_list = JSON.stringify(list.validate(trait_list_id, 'traits', 1));
         if (!valid_list) { return; }
         trait_ids = JSON.stringify(list.transform(trait_list_id, 'traits_2_trait_ids'));
+        seleted_listed = 0;
     } else {
-        trait_ids = JSON.stringify(jQuery('#html_select_traits_for_trait_file').val());
+        var trait_temp_ids2 = JSON.stringify(jQuery('#html_select_traits_for_trait_file').val());
+        alert("trait_temp_ids2:"+trait_temp_ids2);
+        var trait_temp_ids = [];
+        jQuery("#html_select_traits_for_trait_file option:selected").each(
+            function() {
+//                trait_ids.push(JSON.stringify(Number(jQuery('#html_select_traits_for_trait_file').val())));
+                var temp_id_value = jQuery('#html_select_traits_for_trait_file').val();
+                alert("temp_id_value:"+temp_id_value);
+//                trait_temp_ids.push(jQuery('#html_select_traits_for_trait_file').val());
+                trait_temp_ids = temp_id_value;
+            });
+//        trait_ids = JSON.stringify(trait_temp_ids);
+        trait_ids = trait_temp_ids;
         var trait_names = [];
         jQuery("#html_select_traits_for_trait_file option:selected").each(
             function() {
-                trait_names.push(jQuery(this).text());
+                trait_names.push(jQuery("#html_select_traits_for_trait_file option:selected").text());
             });
         trait_list = JSON.stringify(trait_names);
     }
+    alert("inside single select, trait ids:"+trait_ids);
+    alert("inside single select, triat list:"+trait_list);
 
     if (trait_ids == '') {
         alert("Traits, from a list or selected individually, are required.");
@@ -112,6 +127,7 @@ function generate_trait_file() {
             'trait_ids': trait_ids,
             'trait_file_name': trait_file_name,
             'include_notes': include_notes,
+            'selected_listed': selected_listed,
         },
         beforeSend: function() {
             jQuery("#working_modal").modal("show");
@@ -128,7 +144,7 @@ function generate_trait_file() {
         },
         error: function() {
             jQuery("#working_modal").modal("hide");
-            alert(' occurred creating the trait file.');
+            alert('An error occurred creating the trait file.');
             jQuery('#create_trait_file_dialog').modal("hide");
         },
     });
