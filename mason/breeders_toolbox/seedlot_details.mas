@@ -432,7 +432,9 @@ $owners_string => undef
     jQuery('#create_new_seedlot_transaction_button').click( function() {
       var factor = jQuery('#seedlot_transaction_factor').val();
       var to_new = jQuery('#seedlot_transaction_to_seedlot_new').val();
+      var from_existing_seedlot_id_array;
       var from_existing_seedlot_id;
+      var to_existing_seedlot_id_array;
       var to_existing_seedlot_id;
       var to_new_seedlot_name;
       var to_new_seedlot_breeding_program_id;
@@ -446,12 +448,15 @@ $owners_string => undef
       var to_new_seedlot_organization;
       var to_new_seedlot_timestamp;
       var to_new_seedlot_description;
+
       if (factor == 1){
-        from_existing_seedlot_id = jQuery('#seedlot_transaction_seedlot_id').val();
+        from_existing_seedlot_id_array = jQuery('#seedlot_transaction_seedlot_id').val();
+        from_existing_seedlot_id = from_existing_seedlot_id_array[0];
       }
       if (factor == -1){
         if (to_new == 'no'){
-            to_existing_seedlot_id = jQuery('#seedlot_transaction_to_seedlot_existing_id').val();
+            to_existing_seedlot_id_array = jQuery('#seedlot_transaction_to_seedlot_existing_id').val();
+            to_existing_seedlot_id = to_existing_seedlot_id_array[0];
         }
         if (to_new == 'yes'){
             to_new_seedlot_name = jQuery('#transaction_new_seedlot_name').val();
