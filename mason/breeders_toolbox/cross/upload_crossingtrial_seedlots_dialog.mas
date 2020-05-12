@@ -48,6 +48,12 @@
                                     <input class="form-control" name="upload_cross_seedlot_location" id="upload_cross_seedlot_location" placeholder="Required">
                                 </div>
                             </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Organization Name: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" name="upload_cross_seedlot_organization_name" id="upload_cross_seedlot_organization_name" placeholder="Optional">
+                                </div>
+                            </div>
                             <div id="upload_seedlots_harvested_section" style="display:none">
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Upload File (.xls): </label>
@@ -161,10 +167,12 @@ jQuery(document).ready(function(){
     });
 
     jQuery('#upload_cross_seedlot_button').click(function () {
-        var uploadCrossSeedlotsFile = jQuery('#cross_seedlot_uploaded_file').val();
+
+        var breeding_program = jQuery('#upload_cross_seedlot_breeding_program_id').val();
         var location = jQuery('#upload_cross_seedlot_location').val();
-        var breeding_program = jQuery("#upload_cross_seedlot_breeding_program_id").val();
-        jQuery('#upload_cross_seedlot_form').attr("action", "/ajax/breeders/seedlot-upload");
+        var organization_name = jQuery('#upload_cross_seedlot_organization_name').val();
+        var upload_cross_seedlots_file = jQuery('#cross_seedlot_uploaded_file').val();
+
         if (breeding_program === '') {
             alert("Please choose a breeding program");
             return;
@@ -173,15 +181,40 @@ jQuery(document).ready(function(){
             alert("Please give a location");
             return;
         }
-        if (uploadCrossSeedlotsFile == '') {
+        if (upload_cross_seedlots_file == '') {
             alert("Please select a file");
             return;
         }
-        jQuery("#upload_cross_seedlot_form").submit();
+
+        jQuery.ajax({
+            url: '/ajax/breeders/seedlot-upload',
+            data : {
+                'upload_seedlot_breeding_program_id': breeding_program,
+                'upload_seedlot_location': location,
+                'upload_seedlot_organization_name':box_name,
+                'seedlot_harvested_uploaded_file': upload_cross_seedlots_file
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    alert("The seedlots have been added.");
+                    jQuery('#upload_cross_seedlot_dialog').modal('hide');
+                    location.reload();
+                }
+                if (response.error) {
+                    alert(response.error);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred uploading seedlots');
+            }
+        });
     });
-
-
-
-
 });
+
+
 </script>
