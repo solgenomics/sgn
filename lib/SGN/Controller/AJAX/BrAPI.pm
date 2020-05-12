@@ -113,6 +113,7 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	my $brapi = CXGN::BrAPI->new({
 		version => $version,
 		brapi_module_inst => {
+			context => $c,
 			bcs_schema => $bcs_schema,
 			metadata_schema => $metadata_schema,
 			phenome_schema => $phenome_schema,
