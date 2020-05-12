@@ -112,8 +112,8 @@ names(coefficients2json) <- NULL
 traits <- colnames(coefficients)
 
 correlationList <- list(
-    traits = traits,
-    coefficients  = coefficients
+    labels = traits,
+    values  = coefficients
 )
 
 correlationJson <- jsonlite::toJSON(correlationList)

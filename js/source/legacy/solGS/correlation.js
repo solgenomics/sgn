@@ -335,9 +335,11 @@ solGS.correlation = {
 	var height = 400;
 	var width  = 400;
 
-	var nTraits = data.traits.length;
+	var labels = data.labels;
+	var values = data.values;
+	var nLabels = labels.length;
 
-	if (nTraits < 8) {
+	if (nLabels < 8) {
             height = height * 0.5;
             width  = width  * 0.5;
 	}
@@ -346,16 +348,16 @@ solGS.correlation = {
 	var totalH = height + pad.top + pad.bottom;
 	var totalW = width + pad.left + pad.right;
 
-	var corXscale = d3.scale.ordinal().domain(d3.range(nTraits)).rangeBands([0, width]);
-	var corYscale = d3.scale.ordinal().domain(d3.range(nTraits)).rangeBands([height, 0]);
+	var corXscale = d3.scale.ordinal().domain(d3.range(nLabels)).rangeBands([0, width]);
+	var corYscale = d3.scale.ordinal().domain(d3.range(nLabels)).rangeBands([height, 0]);
 	var corZscale = d3.scale.linear().domain([-1, 0, 1]).range(["#6A0888","white", "#86B404"]);
 
 	var xAxisScale = d3.scale.ordinal()
-            .domain(data.traits)
+            .domain(labels)
             .rangeBands([0, width]);
 
 	var yAxisScale = d3.scale.ordinal()
-            .domain(data.traits)
+            .domain(labels)
             .rangeRoundBands([height, 0]);
 	
 	var svg = d3.select(corrCanvas)
@@ -401,12 +403,12 @@ solGS.correlation = {
 	var corr = [];
 	var coefs = [];
 		
-        for (var i=0;  i<data.coefficients.length; i++) {
+        for (var i=0;  i<values.length; i++) {
 
-	    var rw = data.coefficients[i];
+	    var rw = values[i];
 	    
-	    for (var j = 0; j<data.traits.length; j++) {
-		var clNm = data.traits[j];
+	    for (var j = 0; j<nLabels; j++) {
+		var clNm = labels[j];
 		var rwVl = rw[clNm];
 		if (rwVl === undefined) {rwVl = 'NA';}
 		
@@ -422,13 +424,13 @@ solGS.correlation = {
             .data(corr)  
             .enter().append("rect")
             .attr("class", "cell")
-            .attr("x", function (d) {console.log('corXscale(d.col) ' + corXscale(d.col)); return corXscale(d.col)})
-            .attr("y", function (d) { console.log('corYscale(d.row) ' +corYscale(d.row)); return corYscale(d.row)})
+            .attr("x", function (d) {return corXscale(d.col)})
+            .attr("y", function (d) {return corYscale(d.row)})
             .attr("width", corXscale.rangeBand())
             .attr("height", corYscale.rangeBand())      
             .attr("fill", function (d) { 
                 if (d.value == 'NA') {return "white";} 
-                else {console.log('corZscale(d.value) ' + d.value + ' ' + corZscale(d.value)); return corZscale(d.value)}
+                else {return corZscale(d.value)}
             })
             .attr("stroke", "white")
             .attr("stroke-width", 1)
@@ -438,8 +440,8 @@ solGS.correlation = {
                         .attr("stroke", "green")
                     corrplot.append("text")
                         .attr("id", "corrtext")
-                        .text("[" + data.traits[d.row]
-                              + " vs. " + data.traits[d.col] 
+                        .text("[" + labels[d.row]
+                              + " vs. " + labels[d.col] 
                               + ": " + d3.format(".2f")(d.value) 
                               + "]")
                         .style("fill", function () { 
