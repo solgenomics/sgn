@@ -451,12 +451,22 @@ $owners_string => undef
 
         if (factor == 1){
             from_existing_seedlot_id_array = jQuery('#seedlot_transaction_seedlot_id').val();
-            from_existing_seedlot_id = from_existing_seedlot_id_array[0];
+            if (from_existing_seedlot_id_array.length > 1) {
+                alert("Please select only one seedlot.");
+                return;
+            } else {
+                from_existing_seedlot_id = from_existing_seedlot_id_array[0];
+            }
         }
         if (factor == -1){
             if (to_new == 'no'){
                 to_existing_seedlot_id_array = jQuery('#seedlot_transaction_to_seedlot_existing_id').val();
-                to_existing_seedlot_id = to_existing_seedlot_id_array[0];
+                if (to_existing_seedlot_id_array.length > 1) {
+                    alert("Please select only one seedlot.");
+                    return;
+                } else {
+                    to_existing_seedlot_id = to_existing_seedlot_id_array[0];
+                }
             }
             if (to_new == 'yes'){
                 to_new_seedlot_name = jQuery('#transaction_new_seedlot_name').val();
