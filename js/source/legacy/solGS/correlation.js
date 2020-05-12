@@ -272,7 +272,7 @@ solGS.correlation = {
             success: function (response) {
 		if (response.status == 'success') {
                     
-                    divPlace = args.div_place;
+                    var divPlace = args.div_place;
 		    
                     if (divPlace === '#si_correlation_canvas') {
 			jQuery("#si_correlation_message").empty();
@@ -327,14 +327,11 @@ solGS.correlation = {
 
     plotCorrelation: function (data, divPlace) {
 
-	data = data.replace(/\s/g, '');
-	data = data.replace(/\\/g, '');
-	data = data.replace(/^\"/, '');
-	data = data.replace(/\"$/, '');
-	data = data.replace(/\"NA\"/g, 100);
-	
 	data = JSON.parse(data);
-	
+
+        var corrCanvas = divPlace || '#correlation_canvas'; 
+	var corrPlotDiv =  "#correlation_plot";
+
 	var height = 400;
 	var width  = 400;
 
@@ -361,11 +358,7 @@ solGS.correlation = {
             .domain(data.traits)
             .rangeRoundBands([height, 0]);
 	
-	if ( divPlace == null) {
-            divPlace = '#correlation_canvas'; 
-	}
-
-	var svg = d3.select(divPlace)
+	var svg = d3.select(corrCanvas)
             .append("svg")
             .attr("height", totalH)
             .attr("width", totalW);
@@ -379,7 +372,7 @@ solGS.correlation = {
             .orient("left");
 	
 	var corrplot = svg.append("g")
-            .attr("id", "correlation_plot")
+            .attr("id", corrPlotDiv)
             .attr("transform", "translate(" + pad.left + "," + pad.top + ")");
 	
 	corrplot.append("g")
@@ -406,38 +399,46 @@ solGS.correlation = {
             .style("fill", "#523CB5");
         
 	var corr = [];
-	var coefs = [];   
-	for (var i=0; i<data.coefficients.length; i++) {
-            for (var j=0;  j<data.coefficients[i].length; j++) {
-		corr.push({"row":i, "col":j, "value": data.coefficients[i][j]});
+	var coefs = [];
 		
-		if (data.coefficients[i][j] != 100) {
-                    coefs.push(data.coefficients[i][j]);
+        for (var i=0;  i<data.coefficients.length; i++) {
+
+	    var rw = data.coefficients[i];
+	    
+	    for (var j = 0; j<data.traits.length; j++) {
+		var clNm = data.traits[j];
+		var rwVl = rw[clNm];
+		if (rwVl === undefined) {rwVl = 'NA';}
+		
+		corr.push({"row": i, "col": j, "value": rwVl});
+		
+		if (rwVl != 'NA') {
+		    coefs.push(rwVl);
 		}
-            }
+	    }
 	}
-        
+
 	var cell = corrplot.selectAll("rect")
             .data(corr)  
             .enter().append("rect")
             .attr("class", "cell")
-            .attr("x", function (d) { return corXscale(d.col)})
-            .attr("y", function (d) { return corYscale(d.row)})
+            .attr("x", function (d) {console.log('corXscale(d.col) ' + corXscale(d.col)); return corXscale(d.col)})
+            .attr("y", function (d) { console.log('corYscale(d.row) ' +corYscale(d.row)); return corYscale(d.row)})
             .attr("width", corXscale.rangeBand())
             .attr("height", corYscale.rangeBand())      
             .attr("fill", function (d) { 
-                if (d.value === 100) {return "white";} 
-                else {return corZscale(d.value)}
+                if (d.value == 'NA') {return "white";} 
+                else {console.log('corZscale(d.value) ' + d.value + ' ' + corZscale(d.value)); return corZscale(d.value)}
             })
             .attr("stroke", "white")
             .attr("stroke-width", 1)
             .on("mouseover", function (d) {
-                if(d.value != 100) {
+                if(d.value != 'NA') {
                     d3.select(this)
                         .attr("stroke", "green")
                     corrplot.append("text")
                         .attr("id", "corrtext")
-                        .text("[" + data.traits[d.row] 
+                        .text("[" + data.traits[d.row]
                               + " vs. " + data.traits[d.col] 
                               + ": " + d3.format(".2f")(d.value) 
                               + "]")
@@ -497,7 +498,7 @@ solGS.correlation = {
             .attr("height", recLW)
             .style("stroke", "black")
             .attr("fill", function (d) { 
-		if (d === 100) {return "white"} 
+		if (d == 'NA') {return "white"} 
 		else {return corZscale(d[1])}
             });
 	
