@@ -170,13 +170,13 @@ $owners_string => undef
                                             <div class="form-group">
                                                 <label class="col-sm-3 control-label">Starting Amount (number of seeds): </label>
                                                 <div class="col-sm-9" >
-                                                    <input class="form-control" id="transaction_new_seedlot_amount" placeholder="Amount OR Weight Required" value="0">
+                                                    <input class="form-control" id="transaction_new_seedlot_amount" placeholder="Amount OR Weight Required" disabled value="0">
                                                 </div>
                                             </div>
                                             <div class="form-group">
                                                 <label class="col-sm-3 control-label">Starting Weight (g): </label>
                                                 <div class="col-sm-9" >
-                                                    <input class="form-control" id="transaction_new_seedlot_weight" placeholder="Amount OR Weight Required" value="0">
+                                                    <input class="form-control" id="transaction_new_seedlot_weight" placeholder="Amount OR Weight Required" disabled value="0">
                                                 </div>
                                             </div>
                                             <!--
