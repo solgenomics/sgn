@@ -35,8 +35,7 @@ my $stock_search = CXGN::Stock::Search->new({
     limit=>$limit,
     offset=>$offset,
     minimal_info=>o  #for only returning stock_id and uniquenames
-    display_pedigree=>1 #to calculate and display pedigree,
-    selected_loci=>\@selected_loci #to filter accessions by loci allele values
+    display_pedigree=>1 #to calculate and display pedigree
 });
 my ($result, $records_total) = $stock_search->search();
 
@@ -241,11 +240,6 @@ has 'display_pedigree' => (
 	default => 0
 );
 
-has 'selected_loci' => (
-    isa => 'ArrayRef|Undef',
-    is => 'rw'
-);
-
 sub search {
     my $self = shift;
     print STDERR "CXGN::Stock::Search search start\n";
@@ -274,7 +268,6 @@ sub search {
     my @stock_ids_array = $self->stock_id_list ? @{$self->stock_id_list} : ();
     my $limit = $self->limit;
     my $offset = $self->offset;
-    my @selected_loci = $self->selected_loci ? @{$self->selected_loci} : ();
 
     unless ($matchtype eq 'exactly') { #trim whitespace from both ends unless exact search was specified
         $any_name =~ s/^\s+|\s+$//g;
@@ -437,33 +430,6 @@ sub search {
             push @{$and_conditions->{ 'lower(organism.common_name)' }}, { -like  => lc($_) } ;
         }
     }
-
-    # Get Stock IDs of stock with matching loci allele values
-    if ( @selected_loci ) {
-        my @stock_ids;
-        my $init_stock_ids = 0;
-        foreach (@selected_loci) {
-            if ($_) {
-                my $rs = $phenome_schema->resultset("StockAllele")->search({
-                    allele_id => $_->{'allele_id'}
-                });
-                my @s;
-                while ( my $r = $rs->next ) {
-                    my $stock_id = $r->stock_id;
-                    if ( !$init_stock_ids || grep /^$stock_id$/, @stock_ids ) {     # only add stock id if already present ("AND" stocks for multiple loci)
-                        push @s, $stock_id;
-                    }
-                }
-                $init_stock_ids = 1;
-                @stock_ids = ();
-                foreach (@s) {
-                    push @stock_ids, $_;
-                }
-            }
-        }
-        $and_conditions->{'me.stock_id'} = { '-in' => \@stock_ids };
-    }
-    
 
     my @stockprop_filtered_stock_ids;
     my $using_stockprop_filter;
