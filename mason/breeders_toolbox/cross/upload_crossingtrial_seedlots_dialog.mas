@@ -1,4 +1,9 @@
 <%args>
+
+$breeding_program_name
+$breeding_program_id
+$locations_by_program_json
+
 </%args>
 
 <div class="modal fade" id="upload_cross_seedlot_dialog" name="upload_cross_seedlot_dialog" tabindex="-1" role="dialog" aria-labelledby="seedlot_upload_dialog">
@@ -39,13 +44,13 @@
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">Breeding Program: </label>
                                 <div class="col-sm-9" >
-                                    <div id="upload_cross_seedlot_breeding_program_div"></div>
+                                    <input class="form-control" name="upload_seedlot_breeding_program_name" id="upload_seedlot_breeding_program_name" disabled value="<% $breeding_program_name %>">
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">Location of seedlot storage: </label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control" name="upload_seedlot_location" id="upload_seedlot_location" placeholder="Required">
+                                    <select class="form-control" id="upload_seedlot_location"></select>
                                 </div>
                             </div>
                             <div class="form-group">
@@ -61,6 +66,9 @@
                                         <input type="file" name="seedlot_harvested_uploaded_file" id="seedlot_harvested_uploaded_file" encoding="multipart/form-data" />
                                     </div>
                                 </div>
+                            </div>
+                            <div id="upload_seedlot_breeding_program_id" style="visibility:hidden">
+                                <% $breeding_program_id %>
                             </div>
                         </form>
                         <center>
@@ -174,16 +182,22 @@
 <script>
 jQuery(document).ready(function(){
 
+    var locations_by_program_json = <% $locations_by_program_json %>;
+    var locations_string = locations_by_program_json.toString();
+    var locations_array = locations_string.split(",");
+
     jQuery('#upload_seedlots_from_crosses').click( function() {
         jQuery('#upload_cross_seedlot_dialog').modal('show');
-        get_select_box('breeding_programs', 'upload_cross_seedlot_breeding_program_div', { 'name' : 'upload_seedlot_breeding_program_id', 'id' : 'upload_seedlot_breeding_program_id' });
+
+        var html = '<select id = "upload_seedlot_location" >';
+        for (var i=0; i<locations_array.length; i++) {
+            html = html + '<option value='+locations_array[i]+'>'+locations_array[i]+'</option>';
+        }
+        html = html + "</select>";
+
+        jQuery('#upload_seedlot_location').html(html);
 
     });
-
-    jQuery('#upload_seedlot_location').autocomplete({
-       source: '/ajax/stock/geolocation_autocomplete',
-    });
-
 
     jQuery('#upload_crosses_seedlots_template_section').show();
 
@@ -246,9 +260,6 @@ jQuery(document).ready(function(){
             }
         }
     });
-
-
-
 
     jQuery(document).on('click', '[name="upload_seedlot_success_complete_button"]', function(){
         alert('Seedlots were saved in the database');
