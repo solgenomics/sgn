@@ -45,20 +45,20 @@
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">Location of seedlot storage: </label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control" name="upload_cross_seedlot_location" id="upload_cross_seedlot_location" placeholder="Required">
+                                    <input class="form-control" name="upload_seedlot_location" id="upload_seedlot_location" placeholder="Required">
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">Organization Name: </label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control" name="upload_cross_seedlot_organization_name" id="upload_cross_seedlot_organization_name" placeholder="Optional">
+                                    <input class="form-control" name="upload_seedlot_organization_name" id="upload_seedlot_organization_name" placeholder="Optional">
                                 </div>
                             </div>
                             <div id="upload_seedlots_harvested_section" style="display:none">
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Upload File (.xls): </label>
                                     <div class="col-sm-9" >
-                                        <input type="file" name="cross_seedlot_uploaded_file" id="cross_seedlot_uploaded_file" encoding="multipart/form-data" />
+                                        <input type="file" name="seedlot_harvested_uploaded_file" id="seedlot_harvested_uploaded_file" encoding="multipart/form-data" />
                                     </div>
                                 </div>
                             </div>
@@ -149,14 +149,41 @@
     </div>
 </div>
 
+<div class="modal fade" id="upload_cross_seedlot_error_display" name="upload_cross_seedlot_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadCrossSeedlotErrorDialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadCrossSeedlotErrorDialog">Upload Seedlot File Error</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	  <table>
+    	  <tbody></tbody>
+  	  </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <script>
 jQuery(document).ready(function(){
 
     jQuery('#upload_seedlots_from_crosses').click( function() {
         jQuery('#upload_cross_seedlot_dialog').modal('show');
-        get_select_box('breeding_programs', 'upload_cross_seedlot_breeding_program_div', { 'name' : 'upload_cross_seedlot_breeding_program_id', 'id' : 'upload_cross_seedlot_breeding_program_id' });
+        get_select_box('breeding_programs', 'upload_cross_seedlot_breeding_program_div', { 'name' : 'upload_seedlot_breeding_program_id', 'id' : 'upload_seedlot_breeding_program_id' });
 
     });
+
+    jQuery('#upload_seedlot_location').autocomplete({
+       source: '/ajax/stock/geolocation_autocomplete',
+    });
+
 
     jQuery('#upload_crosses_seedlots_template_section').show();
 
@@ -167,12 +194,14 @@ jQuery(document).ready(function(){
     });
 
     jQuery('#upload_cross_seedlot_button').click(function () {
+        upload_crosses_seedlots();
+    });
 
-        var breeding_program = jQuery('#upload_cross_seedlot_breeding_program_id').val();
-        var location = jQuery('#upload_cross_seedlot_location').val();
-        var organization_name = jQuery('#upload_cross_seedlot_organization_name').val();
-        var upload_cross_seedlots_file = jQuery('#cross_seedlot_uploaded_file').val();
-
+    function upload_crosses_seedlots() {
+        var uploadSeedlotsHarvestedFile = jQuery("#seedlot_harvested_uploaded_file").val();
+        var location = jQuery("#upload_seedlot_location").val();
+        var breeding_program = jQuery("#upload_seedlot_breeding_program_id").val();
+        jQuery('#upload_cross_seedlot_form').attr("action", "/ajax/breeders/seedlot-upload");
         if (breeding_program === '') {
             alert("Please choose a breeding program");
             return;
@@ -181,39 +210,49 @@ jQuery(document).ready(function(){
             alert("Please give a location");
             return;
         }
-        if (upload_cross_seedlots_file == '') {
+        if (uploadSeedlotsHarvestedFile == '') {
             alert("Please select a file");
             return;
         }
+        jQuery("#upload_cross_seedlot_form").submit();
+    }
 
-        jQuery.ajax({
-            url: '/ajax/breeders/seedlot-upload',
-            data : {
-                'upload_seedlot_breeding_program_id': breeding_program,
-                'upload_seedlot_location': location,
-                'upload_seedlot_organization_name':box_name,
-                'seedlot_harvested_uploaded_file': upload_cross_seedlots_file
-            },
-            beforeSend: function(response){
-                jQuery('#working_modal').modal('show');
-            },
-            success: function(response) {
-                jQuery('#working_modal').modal('hide');
-                if (response.success == 1) {
-                    alert("The seedlots have been added.");
-                    jQuery('#upload_cross_seedlot_dialog').modal('hide');
-                    location.reload();
-                }
-                if (response.error) {
-                    alert(response.error);
-                }
-            },
-            error: function(response){
-                jQuery('#working_modal').modal('hide');
-                alert('An error occurred uploading seedlots');
+    jQuery('#upload_cross_seedlot_form').iframePostForm({
+        json: true,
+        post: function () {
+        var uploadSeedlotsHarvestedFile = jQuery("#seedlot_harvested_uploaded_file").val();
+            jQuery('#working_modal').modal("show");
+            if (uploadSeedlotsHarvestedFile == '') {
+                jQuery('#working_modal').modal("hide");
+                alert("No file selected");
             }
-        });
+        },
+        complete: function(response) {
+            jQuery("#working_modal").modal("hide");
+            if (response.error_string) {
+                $("#upload_cross_seedlot_error_display tbody").html('');
+                $("#upload_cross_seedlot_error_display tbody").append(response.error_string);
+                $("#upload_cross_seedlot_error_display").modal("show");
+                return;
+            }
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            if (response.success) {
+                Workflow.focus("#upload_seedlot_main_workflow", -1); //Go to success page
+                Workflow.check_complete("#upload_seedlot_main_workflow");
+
+            }
+        }
     });
+
+    jQuery(document).on('click', '[name="upload_seedlot_success_complete_button"]', function(){
+        alert('Seedlots were saved in the database');
+        jQuery('#upload_seedlot_dialog').modal('hide');
+        //location.reload();
+    });
+
 });
 
 
