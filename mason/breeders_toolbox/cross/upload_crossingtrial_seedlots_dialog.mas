@@ -230,9 +230,9 @@ jQuery(document).ready(function(){
         complete: function(response) {
             jQuery("#working_modal").modal("hide");
             if (response.error_string) {
-                $("#upload_cross_seedlot_error_display tbody").html('');
-                $("#upload_cross_seedlot_error_display tbody").append(response.error_string);
-                $("#upload_cross_seedlot_error_display").modal("show");
+                jQuery('#upload_cross_seedlot_error_display').modal("show");
+                jQuery('#upload_cross_seedlot_error_display tbody').html('');
+                jQuery('#upload_cross_seedlot_error_display tbody').append(response.error_string);
                 return;
             }
             if (response.error) {
@@ -246,6 +246,9 @@ jQuery(document).ready(function(){
             }
         }
     });
+
+
+
 
     jQuery(document).on('click', '[name="upload_seedlot_success_complete_button"]', function(){
         alert('Seedlots were saved in the database');
