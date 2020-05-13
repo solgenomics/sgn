@@ -60,6 +60,7 @@ use CXGN::Trial;
 use JSON;
 use CXGN::Stock::Accession;
 use CXGN::Genotype::Protocol;
+use CXGN::Genotype::ComputeHybridGenotype;
 use Cache::File;
 use Digest::MD5 qw | md5_hex |;
 use File::Slurp qw | write_file |;
@@ -1389,7 +1390,7 @@ sub get_cached_file_dosage_matrix_compute_from_parents {
     }
     my $protocol_id = $protocol_ids->[0];
 
-    my $key = $self->key("get_cached_file_dosage_matrix_compute_from_parents");
+    my $key = $self->key("get_cached_file_dosage_matrix_compute_from_parents_v01");
     $self->cache( Cache::File->new( cache_root => $cache_root_dir ));
 
     my $file_handle;
@@ -1483,27 +1484,14 @@ sub get_cached_file_dosage_matrix_compute_from_parents {
                 $genotype_string .= "\n";
             }
 
-            my $genotype_data_string = "";
-            foreach my $m (@all_marker_objects) {
-                my $current_genotype = '';
-                # If both parents are genotyped, calculate progeny genotype as a sum of parent dosage
-                if ($genotypes->[0] && $genotypes->[1]) {
-                    my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
-                    my $parent2_genotype = $genotypes->[1]->{selected_genotype_hash};
-                    my $p1 = $parent1_genotype->{$m->{name}}->{DS} ne 'NA' ? $parent1_genotype->{$m->{name}}->{DS} : 0;
-                    my $p2 = $parent2_genotype->{$m->{name}}->{DS} ne 'NA' ? $parent2_genotype->{$m->{name}}->{DS} : 0;
-                    $current_genotype = ceil(($p1 + $p2)/2);
-                }
-                # If one parent is genotyped, use that
-                elsif ($genotypes->[0]) {
-                    my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
-                    my $p1 = $parent1_genotype->{$m->{name}}->{DS} ne 'NA' ? $parent1_genotype->{$m->{name}}->{DS} : 0;
-                    $current_genotype = ceil($p1/2);
-                }
-                $genotype_data_string .= $current_genotype."\t";
-            }
+            my $geno = CXGN::Genotype::ComputeHybridGenotype->new({
+                parental_genotypes=>$genotypes,
+                marker_objects=>\@all_marker_objects
+            });
+            my $progeny_genotype = $geno->get_hybrid_genotype();
+            my $genotype_string_scores = join "\t", @$progeny_genotype;
 
-            $genotype_string .= $accession_stock_id."\t".$genotype_data_string."\n";
+            $genotype_string .= $accession_stock_id."\t".$genotype_string_scores."\n";
             write_file($tempfile, {append => 1}, $genotype_string);
             $counter++;
         }
@@ -1833,7 +1821,7 @@ sub get_cached_file_VCF_compute_from_parents {
     }
     my $protocol_id = $protocol_ids->[0];
 
-    my $key = $self->key("get_cached_file_VCF_compute_from_parents");
+    my $key = $self->key("get_cached_file_VCF_compute_from_parents_v01");
     $self->cache( Cache::File->new( cache_root => $cache_root_dir ));
 
     my $file_handle;
@@ -1980,26 +1968,15 @@ sub get_cached_file_VCF_compute_from_parents {
                     $genotype_string .= "\n";
                 }
                 my $genotype_id = $geno->{germplasmName};
-                my $genotype_data_string = "";
-                foreach my $m (@all_marker_objects) {
-                    my $current_g = '';
-                    # If both parents are genotyped, calculate progeny genotype as a sum of parent dosage
-                    if ($genotypes->[0] && $genotypes->[1]) {
-                        my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
-                        my $parent2_genotype = $genotypes->[1]->{selected_genotype_hash};
-                        my $p1 = $parent1_genotype->{$m->{name}}->{DS} ne 'NA' ? $parent1_genotype->{$m->{name}}->{DS} : 0;
-                        my $p2 = $parent2_genotype->{$m->{name}}->{DS} ne 'NA' ? $parent2_genotype->{$m->{name}}->{DS} : 0;
-                        $current_g = ceil(($p1 + $p2)/2);
-                    }
-                    # If one parent is genotyped, use that
-                    elsif ($genotypes->[0]) {
-                        my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
-                        my $p1 = $parent1_genotype->{$m->{name}}->{DS} ne 'NA' ? $parent1_genotype->{$m->{name}}->{DS} : 0;
-                        $current_g = ceil($p1/2);
-                    }
-                    $genotype_data_string .= $current_g."\t";
-                }
-                $genotype_string .= $genotype_id."\t".$genotype_data_string."\n";
+
+                my $geno = CXGN::Genotype::ComputeHybridGenotype->new({
+                    parental_genotypes=>$genotypes,
+                    marker_objects=>\@all_marker_objects
+                });
+                my $progeny_genotype = $geno->get_hybrid_genotype();
+                my $genotype_string_scores = join "\t", @$progeny_genotype;
+
+                $genotype_string .= $genotype_id."\t".$genotype_string_scores."\n";
 
                 write_file($tempfile, {append => 1}, $genotype_string);
                 $counter++;
