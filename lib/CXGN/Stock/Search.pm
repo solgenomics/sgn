@@ -575,6 +575,7 @@ sub search {
 FROM organismprop AS op
 LEFT JOIN cvterm ON (op.type_id = cvterm.cvterm_id)
 WHERE op.organism_id IN (SELECT DISTINCT(organism_id) FROM stock WHERE stock_id IN ($id_ph))
+AND cvterm.name IN ('species authority', 'subtaxa', 'subtaxa authority')
 ORDER BY organism_id ASC;";
     my $organism_sth = $schema->storage()->dbh()->prepare($organism_query);
     $organism_sth->execute(@result_stock_ids);
@@ -644,9 +645,9 @@ ORDER BY organism_id ASC;";
         $result_hash{$stock_id}{donors} = \@donor_array;
 
         # add organism props for each stock
-        $result_hash{$stock_id}{speciesAuthority} = $organism_props{$organism_id}->{'species authority'};
-        $result_hash{$stock_id}{subtaxa} = $organism_props{$organism_id}->{'subtaxa'};
-        $result_hash{$stock_id}{subtaxaAuthority} = $organism_props{$organism_id}->{'subtaxa authority'};
+        $result_hash{$stock_id}{speciesAuthority} = defined($organism_props{$organism_id}) ? $organism_props{$organism_id}->{'species authority'} : undef;
+        $result_hash{$stock_id}{subtaxa} = defined($organism_props{$organism_id}) ? $organism_props{$organism_id}->{'subtaxa'} : undef;
+        $result_hash{$stock_id}{subtaxaAuthority} = defined($organism_props{$organism_id}) ? $organism_props{$organism_id}->{'subtaxa authority'} : undef;
     }
 
     if ($self->stockprop_columns_view && scalar(keys %{$self->stockprop_columns_view})>0 && scalar(@result_stock_ids)>0){
