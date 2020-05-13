@@ -52,15 +52,16 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
     $d->find_element_ok('dry matter', 'partial_link_text',  'build model')->click();
     sleep(10);
-    $d->find_element_ok('Download model accuracy', 'partial_link_text',  'build model')->click();
+    $d->find_element_ok('Download model accuracy', 'partial_link_text',  'download accuracy')->click();
     sleep(3);
     $d->driver->go_back();
     sleep(5);
-    $d->find_element_ok('Download all GEBVs', 'partial_link_text',  'build model')->click();
+    $d->find_element_ok('Download all GEBVs', 'partial_link_text',  'download gebvs')->click();
     sleep(3);
     $d->driver->go_back();
     sleep(5);
-    $d->find_element_ok('Download all marker', 'partial_link_text',  'build model')->click();
+    
+    $d->find_element_ok('Download all marker', 'partial_link_text',  'build marker effects')->click();
     sleep(3);
     $d->driver->go_back();
     sleep(5);
