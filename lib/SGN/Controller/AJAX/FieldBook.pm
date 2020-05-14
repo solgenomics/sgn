@@ -194,10 +194,14 @@ sub create_trait_file_for_field_book_POST : Args(0) {
   my $archive_path = $c->config->{archive_path};
   my $file_destination =  catfile($archive_path, $archived_file_name);
   my $dbh = $c->dbc->dbh();
-  my @trait_ids = @{_parse_list_from_json($c->req->param('trait_ids'))};
+  my @trait_ids;
 
-  if ($c->req->param('trait_list')) {
+  if ($c->req->param('selected_listed')) {
     @trait_list = @{_parse_list_from_json($c->req->param('trait_list'))};
+    @trait_ids = @{_parse_list_from_json($c->req->param('trait_ids'))};
+  } else {
+    @trait_list = @{_parse_list_from_json($c->req->param('trait_list'))};
+    @trait_ids = $c->req->param('trait_ids');
   }
 
   if (!-d $archive_path) {
@@ -211,7 +215,7 @@ sub create_trait_file_for_field_book_POST : Args(0) {
   if (! -d catfile($archive_path, $user_id,$subdirectory_name)) {
     mkdir (catfile($archive_path, $user_id, $subdirectory_name));
   }
-
+  print STDERR Dumper($file_destination);
   open FILE, ">$file_destination" or die $!;
   my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   print FILE "trait,format,defaultValue,minimum,maximum,details,categories,isVisible,realPosition\n";

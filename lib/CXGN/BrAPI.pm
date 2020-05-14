@@ -25,6 +25,33 @@ use CXGN::BrAPI::v1::Results;
 use CXGN::BrAPI::v1::Images;
 use CXGN::BrAPI::v1::Markers;
 use CXGN::BrAPI::v1::Variables;
+use CXGN::BrAPI::v2::Authentication;
+use CXGN::BrAPI::v2::Calls;
+use CXGN::BrAPI::v2::CommonCropNames;
+use CXGN::BrAPI::v2::CallSets;
+use CXGN::BrAPI::v2::GenomeMaps;
+use CXGN::BrAPI::v2::Germplasm;
+use CXGN::BrAPI::v2::Images;
+use CXGN::BrAPI::v2::Lists;
+use CXGN::BrAPI::v2::Locations;
+use CXGN::BrAPI::v2::MarkerPositions;
+use CXGN::BrAPI::v2::Observations;
+use CXGN::BrAPI::v2::ObservationUnits;
+use CXGN::BrAPI::v2::ObservationVariables;
+use CXGN::BrAPI::v2::People;
+use CXGN::BrAPI::v2::Programs;
+use CXGN::BrAPI::v2::ReferenceSets;
+use CXGN::BrAPI::v2::References;
+use CXGN::BrAPI::v2::Results;
+use CXGN::BrAPI::v2::Samples;
+use CXGN::BrAPI::v2::Seasons;
+use CXGN::BrAPI::v2::ServerInfo;
+use CXGN::BrAPI::v2::Studies;
+use CXGN::BrAPI::v2::Traits;
+use CXGN::BrAPI::v2::Trials;
+use CXGN::BrAPI::v2::Variants;
+use CXGN::BrAPI::v2::VariantSets;
+
 
 has 'version' => (
 	isa => 'Str',

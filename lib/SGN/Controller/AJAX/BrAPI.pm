@@ -15,6 +15,7 @@ use CXGN::Trial::TrialCreate;
 use CXGN::Trial::Search;
 use CXGN::Location::LocationLookup;
 use JSON;
+use JSON qw( decode_json );
 use Data::Dumper;
 use Digest::MD5;
 use Try::Tiny;
@@ -112,6 +113,7 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	my $brapi = CXGN::BrAPI->new({
 		version => $version,
 		brapi_module_inst => {
+			context => $c,
 			bcs_schema => $bcs_schema,
 			metadata_schema => $metadata_schema,
 			phenome_schema => $phenome_schema,
@@ -167,7 +169,6 @@ sub _clean_inputs {
 		}
 
 	}
-
 	return $params;
 }
 
@@ -366,11 +367,84 @@ sub calls : Chained('brapi') PathPart('calls') Args(0) : ActionClass('REST') { }
 sub calls_GET {
 	my $self = shift;
 	my $c = shift;
+	my ($auth) = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Calls');
-	my $brapi_package_result = $brapi_module->calls(
-		$clean_inputs->{datatype}->[0],
+	my $brapi_package_result = $brapi_module->search( 
+		$clean_inputs
+	);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+=head2 /brapi/v2/serverinfo
+
+ Usage: For determining which endpoints have been implemented and with which datafile types and methods
+ Desc:
+
+ GET Request:
+
+ GET Response:
+{
+  "metadata": {
+    "pagination": {
+      "pageSize": 3,
+      "currentPage": 0,
+      "totalCount": 3,
+      "totalPages": 1
+    },
+    "status": {},
+    "datafiles": []
+  },
+  "result": {
+    "data": [
+      {
+        "call": "allelematrix",
+        "datatypes": [
+          "json",
+          "tsv"
+        ],
+        "methods": [
+          "GET",
+          "POST"
+        ]
+      },
+      {
+        "call": "germplasm/id/mcpd",
+        "datatypes": [
+          "json"
+        ],
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "call": "doesntexistyet",
+        "datatypes": [
+          "png",
+          "jpg"
+        ],
+        "methods": [
+          "GET"
+        ]
+      }
+    ]
+  }
+}
+
+=cut
+
+sub serverinfo : Chained('brapi') PathPart('serverinfo') Args(0) : ActionClass('REST') { }
+
+sub serverinfo_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('ServerInfo');
+	my $brapi_package_result = $brapi_module->search( 
+		$clean_inputs
 	);
 	_standard_response_construction($c, $brapi_package_result);
 }
@@ -383,6 +457,18 @@ sub crops_GET {
 	my $supported_crop = $c->config->{'supportedCrop'};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Crops');
+	my $brapi_package_result = $brapi_module->crops($supported_crop);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub commoncropnames : Chained('brapi') PathPart('commoncropnames') Args(0) : ActionClass('REST') { }
+
+sub commoncropnames_GET {
+	my $self = shift;
+	my $c = shift;
+	my $supported_crop = $c->config->{'supportedCrop'};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('CommonCropNames');
 	my $brapi_package_result = $brapi_module->crops($supported_crop);
 	_standard_response_construction($c, $brapi_package_result);
 }
@@ -423,6 +509,42 @@ sub seasons_process {
         $clean_inputs->{year}->[0],
     );
     _standard_response_construction($c, $brapi_package_result);
+}
+
+sub season_single : Chained('brapi') PathPart('seasons') CaptureArgs(1) {
+	my $self = shift;
+	my $c = shift;
+	my $id = shift;
+	$c->stash->{seasonDbId} = $id;
+}
+
+sub season_fetch : Chained('season_single') PathPart('') Args(0) : ActionClass('REST') { }
+
+
+sub season_fetch_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Seasons');
+	my $brapi_package_result = $brapi_module->detail($c->stash->{seasonDbId});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub season_search  : Chained('brapi') PathPart('search/seasons') Args(0) : ActionClass('REST') { }
+
+sub season_search_POST {
+    my $self = shift;
+    my $c = shift;
+    save_results($self,$c,$c->stash->{clean_inputs},'Seasons');
+}
+
+sub season_search_retrieve : Chained('brapi') PathPart('search/seasons') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'Seasons');
 }
 
 
@@ -606,12 +728,8 @@ sub germplasm_search_GET {
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Germplasm');
-    my $brapi_package_result = $brapi_module->search({
-        germplasmName => $clean_inputs->{germplasmName},
-        germplasmDbId => $clean_inputs->{germplasmDbId},
-        germplasmPUI => $clean_inputs->{germplasmPUI},
-        commonCropName => $clean_inputs->{commonCropName}
-    });
+    my $brapi_package_result = $brapi_module->search($clean_inputs);
+
     _standard_response_construction($c, $brapi_package_result);
 }
 
@@ -819,97 +937,6 @@ MCPD CALL NO LONGER IN BRAPI SPEC
 
 sub studies_search  : Chained('brapi') PathPart('studies-search') Args(0) : ActionClass('REST') { }
 
-#sub studies_list_POST {
-#    my $self = shift;
-#    my $c = shift;
-#    my $auth = _authenticate_user($c);
-#    my $status = $c->stash->{status};
-#    my $message = '';
-
-#    my $study_name = $c->req->param('studyName');
-#    my $location_id = $c->req->param('locationDbId');
-#    my $years = $c->req->param('studyYears');
-#    my $program_id = $c->req->param('programDbId');
-#    my $optional_info = $c->req->param('optionalInfo');
-#
-#    my $description;
-#    my $study_type;
-#    if ($optional_info) {
-#        my $opt_info_hash = decode_json($optional_info);
-#        $description = $opt_info_hash->{"studyObjective"};
-#        $study_type = $opt_info_hash->{"studyType"};
-#    }
-
-#    my $program_obj = CXGN::BreedersToolbox::Projects->new({schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') });
-#    my $programs = $program_obj->get_breeding_programs();
-#    my $program_check;
-#    my $program_name;
-#    foreach (@$programs) {
-#        if ($_->[0] == $program_id) {
-#            $program_check = 1;
-#            $program_name = $_->[1];
-#        }
-#    }
-#    if (!$program_check) {
-#        $message .= "Program not found with programDbId = ".$program_id;
-#        $status->{'message'} = $message;
-#        $c->stash->{rest} = {status => $status };
-#        $c->detach();
-#    }
-
-#    my $locations = $program_obj->get_all_locations();
-#    my $location_check;
-#    my $location_name;
-#    foreach (@$locations) {
-#        if ($_->[0] == $location_id) {
-#            $location_check = 1;
-#            $location_name = $_->[1];
-#        }
-#    }
-#    if (!$location_check) {
-#        $message .= "Location not found with locationDbId = ".$location_id;
-#        $status->{'message'} = $message;
-#        $c->stash->{rest} = {status => $status };
-#        $c->detach();
-#    }
-
-#    my $trial_design;
-#    my $trial_create = CXGN::Trial::TrialCreate->new({
-#        dbh => $c->dbc->dbh,
-#        chado_schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'),
-#        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
-#        phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
-#        user_name => $c->user()->get_object()->get_username(), #not implemented
-#        program => $program_name,
-#        trial_year => $years,
-#        trial_description => $description,
-#        design_type => $study_type,
-#        trial_location => $location_name,
-#        trial_name => $study_name,
-#        design => $trial_design,
-#    });
-
-#    if ($trial_create->trial_name_already_exists()) {
-#        $message .= "Trial name \"".$trial_create->get_trial_name()."\" already exists.";
-#        $status->{'message'} = $message;
-#        $c->stash->{rest} = {status => $status };
-#        $c->detach();
-#    }
-
-#    try {
-#        $trial_create->save_trial();
-#    } catch {
-#        $message .= "Error saving trial in the database $_";
-#        $status->{'message'} = $message;
-#        $c->stash->{rest} = {status => $status };
-#        $c->detach();
-#    };
-
-#    $message .= "Study saved successfully.";
-#    $status->{'message'} = $message;
-#    $c->stash->{rest} = {status => $status };
-#}
-
 sub studies_search_POST {
     my $self = shift;
     my $c = shift;
@@ -1048,9 +1075,22 @@ sub trials_search_process {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Trials');
-	my $brapi_package_result = $brapi_module->trials_search({
-		locationDbIds => $clean_inputs->{locationDbId},
+	my $brapi_package_result = $brapi_module->search({
+		crop => $c->config->{supportedCrop},
+		contactDbIds => $clean_inputs->{contactDbId},
+		searchDateRangeStart  => $clean_inputs->{searchDateRangeStart},
+		searchDateRangeEnd  => $clean_inputs->{searchDateRangeEnd},
+		trialPUIs => $clean_inputs->{trialPUI},
+		externalReferenceIDs => $clean_inputs->{externalReferenceID},
+		externalReferenceSources => $clean_inputs->{externalReferenceSource},
+		active  => $clean_inputs->{active},
+		commonCropNames  => $clean_inputs->{commonCropName},
 		programDbIds => $clean_inputs->{programDbId},
+		locationDbIds => $clean_inputs->{locationDbId},
+		studyDbIds  => $clean_inputs->{studyDbId},
+		trialDbIds  => $clean_inputs->{trialDbId},
+		trialNames  => $clean_inputs->{trialName},
+
 	});
 	_standard_response_construction($c, $brapi_package_result);
 }
@@ -1080,10 +1120,26 @@ sub trials_detail_GET {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Trials');
-	my $brapi_package_result = $brapi_module->trial_details(
-		$c->stash->{trial_id}
+	my $brapi_package_result = $brapi_module->details(
+		$c->stash->{trial_id},
+		$c->config->{supportedCrop}
 	);
 	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub trials_search_save  : Chained('brapi') PathPart('search/trials') Args(0) : ActionClass('REST') { }
+
+sub trials_search_save_POST {
+    my $self = shift;
+    my $c = shift;
+    save_results($self,$c,$c->stash->{clean_inputs},'Trials');
+}
+
+sub trials_search_retrieve : Chained('brapi') PathPart('search/trials') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'Trials');
 }
 
 =head2 brapi/v1/studies/{studyId}/germplasm?pageSize=20&page=1
@@ -1645,6 +1701,111 @@ sub allelematrix_search_process {
     _standard_response_construction($c, $brapi_package_result);
 }
 
+=head2 brapi/v2/lists
+
+=cut
+
+sub lists : Chained('brapi') PathPart('lists') Args(0) : ActionClass('REST') { }
+
+sub lists_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Lists');
+	my $brapi_package_result = $brapi_module->search($clean_inputs);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub list_single  : Chained('brapi') PathPart('lists') CaptureArgs(1) {
+	my $self = shift;
+	my $c = shift;
+	my $list_id = shift;
+
+	$c->stash->{list_id} = $list_id;
+}
+
+sub list_detail  : Chained('list_single') PathPart('') Args(0) : ActionClass('REST') { }
+
+sub list_detail_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Lists');
+	my $brapi_package_result = $brapi_module->detail($c->stash->{list_id});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub list_search_save : Chained('brapi') PathPart('search/lists') Args(0) : ActionClass('REST') { }
+
+sub list_search_save_POST {
+    my $self = shift;
+    my $c = shift;
+    save_results($self,$c,$c->stash->{clean_inputs},'Lists');
+}
+
+sub list_search_retrieve  : Chained('brapi') PathPart('search/lists') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'Lists');
+}
+
+=head2 brapi/v2/people
+
+=cut
+
+sub people : Chained('brapi') PathPart('people') Args(0) : ActionClass('REST') { }
+
+sub people_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('People');
+	my $brapi_package_result = $brapi_module->search($clean_inputs,$c);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub people_single  : Chained('brapi') PathPart('people') CaptureArgs(1) {
+	my $self = shift;
+	my $c = shift;
+	my $people_id = shift;
+
+	$c->stash->{people_id} = $people_id;
+}
+
+sub people_detail  : Chained('people_single') PathPart('') Args(0) : ActionClass('REST') { }
+
+sub people_detail_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('People');
+	my $brapi_package_result = $brapi_module->detail($c->stash->{people_id},$c);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub people_search_save : Chained('brapi') PathPart('search/people') Args(0) : ActionClass('REST') { }
+
+sub people_search_save_POST {
+    my $self = shift;
+    my $c = shift;
+    save_results($self,$c,$c->stash->{clean_inputs},'People');
+}
+
+sub people_search_retrieve  : Chained('brapi') PathPart('search/people') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'People');
+}
 
 =head2 brapi/v1/programs
 
@@ -1700,9 +1861,37 @@ sub programs_list_GET {
 	my $brapi_module = $brapi->brapi_wrapper('Programs');
 	my $brapi_package_result = $brapi_module->search({
 		program_names => $clean_inputs->{programName},
+		programNames => $clean_inputs->{programName},
 		abbreviations => $clean_inputs->{abbreviation},
+		externalReferenceIDs => $clean_inputs->{externalReferenceID},
+		externalReferenceSources => $clean_inputs->{externalReferenceSource},
+		commonCropNames => $clean_inputs->{commonCropName},
         crop => $c->config->{supportedCrop}
 	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub programs_single  : Chained('brapi') PathPart('programs') CaptureArgs(1) {
+	my $self = shift;
+	my $c = shift;
+	my $program_id = shift;
+
+	$c->stash->{program_id} = $program_id;
+}
+
+sub programs_detail  : Chained('programs_single') PathPart('') Args(0) : ActionClass('REST') { }
+
+sub programs_detail_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Programs');
+	my $brapi_package_result = $brapi_module->detail(
+		$c->stash->{program_id},
+		$c->config->{supportedCrop}
+	);
 	_standard_response_construction($c, $brapi_package_result);
 }
 
@@ -1738,7 +1927,7 @@ sub studies_info_GET {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Studies');
-	my $brapi_package_result = $brapi_module->studies_detail(
+	my $brapi_package_result = $brapi_module->detail(
 		$c->stash->{study_id},
         $c->config->{main_production_site_url},
 		$c->config->{supportedCrop}
@@ -1853,7 +2042,7 @@ sub studies_observations_GET {
 	my $self = shift;
 	my $c = shift;
 	my $clean_inputs = $c->stash->{clean_inputs};
-	my ($auth) = _authenticate_user($c);
+	# my ($auth) = _authenticate_user($c);
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Studies');
 	my $brapi_package_result = $brapi_module->observation_units({
@@ -2103,6 +2292,56 @@ sub phenotypes_search_GET {
     _standard_response_construction($c, $brapi_package_result);
 }
 
+# Observation units
+
+sub studies_observation_v2 :  Chained('brapi') PathPart('observationunits') Args(0) ActionClass('REST') { }
+
+sub studies_observation_v2_GET {
+
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('ObservationUnits');
+	my $brapi_package_result = $brapi_module->search($c->stash->{clean_inputs});
+	_standard_response_construction($c, $brapi_package_result);
+ }
+
+
+sub observation_unit_single :  Chained('brapi') PathPart('observationunits') Args(1) ActionClass('REST') {
+	my $self = shift;
+	my $c = shift;
+	my $observation_unit_db_id = shift;
+
+	$c->stash->{observation_unit_db_id} = $observation_unit_db_id;
+ }
+
+sub observation_unit_single_PUT {
+    my $self = shift;
+    my $c = shift;
+    my $observation_unit_db_id = shift;
+    my $clean_inputs = $c->stash->{clean_inputs};
+    #my $auth = _authenticate_user($c);
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('ObservationUnits');
+    my $brapi_package_result = $brapi_module->observationunits_store($observation_unit_db_id,$clean_inputs);
+
+    _standard_response_construction($c, $brapi_package_result);
+}
+
+sub observation_unit_single_GET {
+	my $self = shift;
+	my $c = shift;
+    my ($auth) = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('ObservationUnits');
+    my $brapi_package_result = $brapi_module->detail(
+    	 $c->stash->{observation_unit_db_id});
+    _standard_response_construction($c, $brapi_package_result);
+}
+
 sub observation_units_search_save : Chained('brapi') PathPart('search/observationunits') Args(0) : ActionClass('REST') { }
 
 sub observation_units_search_save_POST {
@@ -2117,6 +2356,7 @@ sub observation_units_search_retrieve  : Chained('brapi') PathPart('search/obser
     my $search_id = shift;
     retrieve_results($self, $c, $search_id, 'ObservationUnits');
 }
+ 
 
 sub phenotypes_search_table : Chained('brapi') PathPart('phenotypes-search/table') Args(0) : ActionClass('REST') { }
 
@@ -2356,7 +2596,11 @@ sub maps_list_GET {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('GenomeMaps');
 	my $brapi_package_result = $brapi_module->list({
-        config => $c->config
+        config => $c->config,
+        mapDbId => $clean_inputs->{mapDbId},
+        commonCropName => $clean_inputs->{commonCropName},
+        scientificName => $clean_inputs->{scientificName},
+        type => $clean_inputs->{type},
     });
 
 	_standard_response_construction($c, $brapi_package_result);
@@ -2508,6 +2752,74 @@ sub maps_marker_linkagegroup_detail_GET {
 	_standard_response_construction($c, $brapi_package_result);
 }
 
+=head2 brapi/v2/maps/map_id/linkagegroups
+=cut
+
+sub maps_marker_detail_lg : Chained('maps_single') PathPart('linkagegroups') Args(0) : ActionClass('REST') { }
+
+sub maps_marker_detail_lg_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('GenomeMaps');
+	my $brapi_package_result = $brapi_module->linkagegroups({
+		map_id => $c->stash->{map_id},
+		linkage_group_ids => $clean_inputs->{linkageGroupId},
+		min => $clean_inputs->{min}->[0],
+		max => $clean_inputs->{max}->[0],
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+=head2 brapi/v2/markerpositions
+=cut
+
+sub maps_markerpositions : Chained('brapi') PathPart('markerpositions') Args(0) : ActionClass('REST') { }
+
+sub maps_markerpositions_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('MarkerPositions');
+	my $brapi_package_result = $brapi_module->search({
+		mapDbId => $clean_inputs->{mapDbId},
+		variantDbId => $clean_inputs->{variantDbId},
+		linkageGroupName => $clean_inputs->{linkageGroupName},
+		maxPosition => $clean_inputs->{maxPosition},
+		minPosition => $clean_inputs->{minPosition},
+	}, $c );
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub maps_markerpositions_save  : Chained('brapi') PathPart('search/markerpositions') Args(0) : ActionClass('REST') { }
+
+sub maps_markerpositions_save_POST {
+    my $self = shift;
+    my $c = shift;
+    save_results($self,$c,$c->stash->{clean_inputs},'MarkerPositions');
+}
+
+sub maps_markerpositions_retrieve : Chained('brapi') PathPart('search/markerpositions') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'MarkerPositions');
+}
+
+=head2 brapi/<version>/locations
+
+ Usage: To retrieve locations.
+ Desc:
+ Return JSON example:
+ Args:
+ Side Effects:
+
+=cut
+
 sub locations_list : Chained('brapi') PathPart('locations') Args(0) : ActionClass('REST') { }
 
 sub locations_list_POST {
@@ -2523,8 +2835,37 @@ sub locations_list_GET {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Locations');
-	my $brapi_package_result = $brapi_module->locations_list();
+	my $brapi_package_result = $brapi_module->search($clean_inputs);
 	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub locations_detail : Chained('brapi') PathPart('locations') Args(1) : ActionClass('REST') { }
+
+sub locations_detail_GET {
+	my $self = shift;
+	my $c = shift;
+	my $location_id = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Locations');
+	my $brapi_package_result = $brapi_module->detail($location_id);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub locations_search_save  : Chained('brapi') PathPart('search/locations') Args(0) : ActionClass('REST') { }
+
+sub locations_search_save_POST {
+    my $self = shift;
+    my $c = shift;
+    save_results($self,$c,$c->stash->{clean_inputs},'Locations');
+}
+
+sub locations_search_retrieve : Chained('brapi') PathPart('search/locations') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'Locations');
 }
 
 sub observationvariable_data_type_list : Chained('brapi') PathPart('variables/datatypes') Args(0) : ActionClass('REST') { }
@@ -2571,7 +2912,8 @@ sub observationvariable_ontologies_GET {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
 	my $brapi_package_result = $brapi_module->observation_variable_ontologies({
-		name_spaces => \@namespaces
+		name_spaces => \@namespaces,
+		ontologyDbId => $clean_inputs->{ontologyDbId}
 	});
 	_standard_response_construction($c, $brapi_package_result);
 }
@@ -2636,7 +2978,14 @@ sub observationvariable_list_GET {
 	my $supported_crop = $c->config->{'supportedCrop'};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
-	my $brapi_package_result = $brapi_module->search(undef, $c);
+	my $brapi_package_result = $brapi_module->search({
+		observationVariableDbIds => $clean_inputs->{observationVariableDbId},
+		traitClasses => $clean_inputs->{traitClass},
+		studyDbId => $clean_inputs->{studyDbId},
+		externalReferenceIDs => $clean_inputs->{externalReferenceID},
+		externalReferenceSources => $clean_inputs->{externalReferenceSource},
+		supportedCrop =>$supported_crop,
+	}, $c);
 	_standard_response_construction($c, $brapi_package_result);
 }
 
@@ -2648,10 +2997,11 @@ sub observationvariable_detail_GET {
 	my $trait_id = shift;
 	my ($auth) = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
+	my $supported_crop = $c->config->{'supportedCrop'};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
-	my $brapi_package_result = $brapi_module->observation_variable_detail(
-		$trait_id
+	my $brapi_package_result = $brapi_module->detail(
+		$trait_id,$c
 	);
 	_standard_response_construction($c, $brapi_package_result);
 }
@@ -2696,26 +3046,11 @@ sub samples_list_new : Chained('brapi') PathPart('samples') Args(0) : ActionClas
 sub samples_list_new_GET {
     my $self = shift;
     my $c = shift;
-    _sample_search_process($self, $c);
-}
-
-sub _sample_search_process_new {
-    my $self = shift;
-    my $c = shift;
     my $auth = _authenticate_user($c);
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Samples');
-    my $brapi_package_result = $brapi_module->search({
-        sampleDbId => $clean_inputs->{sampleDbId},
-        sampleName => $clean_inputs->{sampleName},
-        plateDbId => $clean_inputs->{plateDbId},
-        plateName => $clean_inputs->{plateName},
-        germplasmDbId => $clean_inputs->{germplasmDbId},
-        germplasmName => $clean_inputs->{germplasmName},
-        observationUnitDbId => $clean_inputs->{observationUnitDbId},
-        observationUnitName => $clean_inputs->{observationUnitName},
-    });
+    my $brapi_package_result = $brapi_module->search($clean_inputs);
     _standard_response_construction($c, $brapi_package_result);
 }
 
@@ -2995,6 +3330,82 @@ sub observations_PUT {
 sub observations_GET {
 	my $self = shift;
 	my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Observations');
+    my $brapi_package_result = $brapi_module->search({
+        observationLevel => $clean_inputs->{observationLevel},
+        seasonDbId => $clean_inputs->{seasonDbId},
+        locationDbId => $clean_inputs->{locationDbId},
+        studyDbId => $clean_inputs->{studyDbId},
+        germplasmDbId => $clean_inputs->{germplasmDbId},
+        programDbId => $clean_inputs->{programDbId},
+        observationTimeStampRangeStart => $clean_inputs->{observationTimeStampRangeStart},
+        observationTimeStampRangeEnd => $clean_inputs->{observationTimeStampRangeEnd},
+        observationUnitDbId => $clean_inputs->{observationUnitDbId},
+        observationDbId => $clean_inputs->{observationDbId}
+
+    });
+    _standard_response_construction($c, $brapi_package_result);
+}
+
+sub observations_single :  Chained('brapi') PathPart('observations') CaptureArgs(1) {
+     my $self = shift;
+     my $c = shift;
+     print STDERR " Capturing id\n";
+     $c->stash->{observation_id} = shift;
+}
+
+sub observations_detail :  Chained('observations_single') PathPart('') Args(0) ActionClass('REST') { }
+
+sub observations_detail_GET {
+    my $self = shift;
+    my $c = shift;
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Observations');
+    my $brapi_package_result = $brapi_module->detail({ 
+    	observationDbId => $c->stash->{observation_id}
+    });
+    _standard_response_construction($c, $brapi_package_result);
+}
+
+sub observation_search_save : Chained('brapi') PathPart('search/observations') Args(0) : ActionClass('REST') { }
+
+sub observation_search_save_POST {
+    my $self = shift;
+    my $c = shift;
+    save_results($self,$c,$c->stash->{clean_inputs},'Observations');
+}
+
+sub observation_search_retrieve  : Chained('brapi') PathPart('search/observations') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'Observations');
+}
+
+=head2 brapi/v1/markers
+
+ Usage: To retrieve markers
+ Desc: BrAPI v1.3
+ Args:
+ Side Effects: deprecated on BrAPI v2.0
+
+=cut
+
+sub markers_search  : Chained('brapi') PathPart('markers') Args(0) : ActionClass('REST') { }
+
+sub markers_search_GET {
+    my $self = shift;
+    my $c = shift;
+    my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Markers');
+	my $brapi_package_result = $brapi_module->search();
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 sub markers_search_save  : Chained('brapi') PathPart('search/markers') Args(0) : ActionClass('REST') { }
@@ -3011,6 +3422,92 @@ sub markers_search_retrieve : Chained('brapi') PathPart('search/markers') Args(1
     my $search_id = shift;
     retrieve_results($self, $c, $search_id, 'Markers');
 }
+
+
+=head2 brapi/v2/variants
+
+ Usage: To retrieve variants
+ Desc: BrAPI v2.0
+ Args:
+ Side Effects: 
+
+=cut
+
+sub variants_search  : Chained('brapi') PathPart('variants') Args(0) : ActionClass('REST') { }
+
+sub variants_search_GET {
+    my $self = shift;
+    my $c = shift;
+    my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Variants');
+	my $brapi_package_result = $brapi_module->search($clean_inputs);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub variants_single :  Chained('brapi') PathPart('variants') CaptureArgs(1) {
+     my $self = shift;
+     my $c = shift;
+     print STDERR " Capturing variants id\n";
+     $c->stash->{variants_id} = shift;
+}
+
+sub variants_detail :  Chained('variants_single') PathPart('') Args(0) ActionClass('REST') { }
+
+sub variants_detail_GET {
+    my $self = shift;
+    my $c = shift;
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Variants');
+    my $brapi_package_result = $brapi_module->detail({ 
+    	variantDbId => $c->stash->{variants_id}
+    });
+    _standard_response_construction($c, $brapi_package_result);
+}
+
+sub variants_calls_detail : Chained('variants_single') PathPart('calls') Args(0) : ActionClass('REST') { }
+
+sub variants_calls_detail_POST {
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+}
+
+sub variants_calls_detail_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Variants');
+	my $brapi_package_result = $brapi_module->calls({
+		variantDbId => $c->stash->{variants_id},
+		variantSetDbId => $c->stash->{variantSetDbId},
+		unknown_string => $clean_inputs->{unknownString}->[0],
+		sep_phased => $clean_inputs->{sepPhased}->[0],
+		sep_unphased => $clean_inputs->{sepUnphased}->[0],
+		expand_homozygotes => $clean_inputs->{expandHomozygotes}->[0],
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub variants_search_save  : Chained('brapi') PathPart('search/variants') Args(0) : ActionClass('REST') { }
+
+sub variants_search_save_POST {
+    my $self = shift;
+    my $c = shift;
+    save_results($self,$c,$c->stash->{clean_inputs},'Variants');
+}
+
+sub variants_search_retrieve : Chained('brapi') PathPart('search/variants') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'Variants');
+}
+
 
 =head2 brapi/v1/observations-search
 
@@ -3081,7 +3578,7 @@ sub observations_search_process {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Observations');
-	my $brapi_package_result = $brapi_module->observations_search({
+	my $brapi_package_result = $brapi_module->search({
         collectors => $clean_inputs->{collectors},
         observationDbIds => $clean_inputs->{observationDbIds},
         observationUnitDbIds => $clean_inputs->{observationUnitDbIds},
@@ -3090,6 +3587,80 @@ sub observations_search_process {
 	_standard_response_construction($c, $brapi_package_result);
 }
 
+
+=head2 brapi/<version>/images
+
+ Usage: To retrieve observations
+ Desc:
+ Request body example:
+ {
+}
+ Response JSON example:
+
+{
+  "metadata": {
+    "datafiles": [
+    ],
+    "pagination": {
+      "currentPage": 0,
+      "pageSize": 1000,
+      "totalCount": 10,
+      "totalPages": 1
+    },
+    "status": [
+      {
+        "message": "Request accepted, response successful",
+        "messageType": "INFO"
+      }
+    ]
+  },
+  "result": {
+    "data": [
+      {
+        "additionalInfo": {},
+        "copyright": "Copyright 2018 Bob Robertson",
+        "description": "This is a picture of a tomato",
+        "descriptiveOntologyTerms": [],
+        "externalReferences": [
+          {
+            "referenceID": "doi:10.155454/12349537E12",
+            "referenceSource": "DOI"
+          }
+        ],
+        "imageDbId": "a55efb9c",
+        "imageFileName": "image_0000231.jpg",
+        "imageFileSize": 50000,
+        "imageHeight": 550,
+        "imageLocation": {
+          "geometry": {
+            "coordinates": [
+              -76.506042,
+              42.417373,
+              123
+            ],
+            "type": "Point"
+          },
+          "type": "Feature"
+        },
+        "imageName": "Tomato Image 1",
+        "imageTimeStamp": "2018-01-01T14:47:23-0600",
+        "imageURL": "https://wiki.brapi.org/images/tomato",
+        "imageWidth": 700,
+        "mimeType": "image/jpeg",
+        "observationDbIds": [
+          "d05dd235",
+          "8875177d"
+        ],
+        "observationUnitDbId": "b7e690b6"
+      }
+    ]
+  }
+ }
+
+ Args:
+ Side Effects:
+
+=cut
 
 sub images : Chained('brapi') PathPart('images') Args(0) : ActionClass('REST') { }
 
@@ -3277,6 +3848,575 @@ sub save_observation_results {
 	_standard_response_construction($c, $brapi_package_result, $http_status_code);
  }
 
+=head2 brapi/v2/callsets
+
+ Usage: To retrieve data for callsets
+ Desc:
+ Return JSON example:
+        {
+            "metadata" : {
+                "pagination": {
+                    "pageSize": 10,
+                    "currentPage": 1,
+                    "totalCount": 10,
+                    "totalPages": 1
+                },
+                "status": []
+            },
+
+            "result": {
+                "data": [
+			      {
+			        "additionalInfo": {},
+			        "callSetDbId": "eb2bfd3d",
+			        "callSetName": "Sample_123_DNA_Run_456",
+			        "created": "2018-01-01T14:47:23-0600",
+			        "sampleDbId": "5e50e11d",
+			        "studyDbId": "708149c1",
+			        "updated": "2018-01-01T14:47:23-0600",
+			        "variantSetIds": [
+			          "cfd3d60f",
+			          "a4e8bfe9"
+			        ]
+			      }
+			    ]
+           }
+        }
+ Args:
+ Side Effects:
+
+=cut
+
+sub callsets : Chained('brapi') PathPart('callsets') Args(0) : ActionClass('REST') { }
+
+sub callsets_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('CallSets');
+	my $brapi_package_result = $brapi_module->search({
+		variantSetDbId => $clean_inputs->{variantSetDbId},
+        sampleDbId => $clean_inputs->{sampleDbId},
+        callSetName => $clean_inputs->{callSetName},
+        # studyDbId => $clean_inputs->{studyDbId},
+        germplasmDbId => $clean_inputs->{germplasmDbId},
+        callSetDbId => $clean_inputs->{callSetDbId},
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub callsets_single : Chained('brapi') PathPart('callsets') CaptureArgs(1) {
+	my $self = shift;
+	my $c = shift;
+	my $id = shift;
+	$c->stash->{callset_id} = $id;
+}
+
+sub callsets_fetch : Chained('callsets_single') PathPart('') Args(0) : ActionClass('REST') { }
+
+sub callsets_fetch_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('CallSets');
+	my $brapi_package_result = $brapi_module->detail({
+		callset_id => $c->stash->{callset_id},
+		unknown_string => $clean_inputs->{unknownString}->[0],
+		sep_phased => $clean_inputs->{sepPhased}->[0],
+		sep_unphased => $clean_inputs->{sepUnphased}->[0],
+		expand_homozygotes => $clean_inputs->{expandHomozygotes}->[0],
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub callsets_call_detail : Chained('callsets_single') PathPart('calls') Args(0) : ActionClass('REST') { }
+
+sub callsets_call_detail_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('CallSets');
+	my $brapi_package_result = $brapi_module->calls({
+		callset_id => $c->stash->{callset_id},
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub callsets_call_filter_detail : Chained('callsets_single') PathPart('calls') Args(1) : ActionClass('REST') { }
+
+sub callsets_call_filter_detail_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('CallSets');
+	my $brapi_package_result = $brapi_module->calls({
+		callset_id => $c->stash->{callset_id},
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub callsets_search_save  : Chained('brapi') PathPart('search/callsets') Args(0) : ActionClass('REST') { }
+
+sub callsets_search_save_POST {
+    my $self = shift;
+    my $c = shift;
+    save_results($self,$c,$c->stash->{clean_inputs},'CallSets');
+}
+
+sub callsets_search_retrieve : Chained('brapi') PathPart('search/callsets') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'CallSets');
+}
+
+
+=head2 brapi/v2/variantsets
+
+ Usage: To retrieve data for variantsets
+ Desc:
+ Return JSON example:
+        {
+            "metadata" : {
+                "pagination": {
+                    "pageSize": 10,
+                    "currentPage": 1,
+                    "totalCount": 10,
+                    "totalPages": 1
+                },
+                "status": []
+            },
+
+            "result": {
+			    "data": [
+			      {
+			        "additionalInfo": {},
+			        "analysis": [
+			          {
+			            "analysisDbId": "6191a6bd",
+			            "analysisName": "Standard QC",
+			            "created": "2018-01-01T14:47:23-0600",
+			            "description": "This is a formal description of a QC methodology.",
+			            "software": [
+			              "https://github.com/genotyping/QC"
+			            ],
+			            "type": "QC",
+			            "updated": "2018-01-01T14:47:23-0600"
+			          }
+			        ],
+			        "availableFormats": [
+			          {
+			            "dataFormat": "VCF",
+			            "fileFormat": "application/excel",
+			            "fileURL": "https://brapi.org/example/VCF_1.xlsx"
+			          },
+			          {
+			            "dataFormat": "VCF",
+			            "fileFormat": "text/csv",
+			            "fileURL": "https://brapi.org/example/VCF_2.csv"
+			          }
+			        ],
+			        "callSetCount": 341,
+			        "referenceSetDbId": "57eae639",
+			        "studyDbId": "2fc3b034",
+			        "variantCount": 250,
+			        "variantSetDbId": "87a6ac1e",
+			        "variantSetName": "Maize QC DataSet 002334"
+			      }
+			    ]
+           }
+        }
+ Args:
+ Side Effects:
+
+=cut
+
+sub variantsets : Chained('brapi') PathPart('variantsets') Args(0) : ActionClass('REST') { }
+
+sub variantsets_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('VariantSets');
+	my $brapi_package_result = $brapi_module->search({
+        variantSetDbId => $clean_inputs->{variantSetDbId},
+        variantDbId => $clean_inputs->{variantDbId},
+        callSetDbId => $clean_inputs->{callSetDbId},
+        studyDbId => $clean_inputs->{studyDbId},
+        studyName => $clean_inputs->{studyName}
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+### VariantSet single
+
+sub variantsets_single : Chained('brapi') PathPart('variantsets') CaptureArgs(1) {
+	my $self = shift;
+	my $c = shift;
+	my $id = shift;
+	$c->stash->{variantSetDbId} = $id;
+}
+
+sub variantsets_fetch : Chained('variantsets_single') PathPart('') Args(0) : ActionClass('REST') { }
+
+
+sub variantsets_fetch_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('VariantSets');
+	my $brapi_package_result = $brapi_module->detail({
+		variantSetDbId => $c->stash->{variantSetDbId},
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub variantsets_callset_detail : Chained('variantsets_single') PathPart('callsets') Args(0) : ActionClass('REST') { }
+
+sub variantsets_callset_detail_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('VariantSets');
+	my $brapi_package_result = $brapi_module->callsets({
+		variantSetDbId => $c->stash->{variantSetDbId},
+		callSetDbId => $clean_inputs->{callSetDbId},
+		callSetName => $clean_inputs->{callSetName}
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub variantsets_calls_detail : Chained('variantsets_single') PathPart('calls') Args(0) : ActionClass('REST') { }
+
+sub variantsets_calls_detail_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('VariantSets');
+	my $brapi_package_result = $brapi_module->calls({
+		variantSetDbId => $c->stash->{variantSetDbId},
+		unknown_string => $clean_inputs->{unknownString}->[0],
+		sep_phased => $clean_inputs->{sepPhased}->[0],
+		sep_unphased => $clean_inputs->{sepUnphased}->[0],
+		expand_homozygotes => $clean_inputs->{expandHomozygotes}->[0],
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub variantsets_variants_detail : Chained('variantsets_single') PathPart('variants') Args(0) : ActionClass('REST') { }
+
+sub variantsets_variants_detail_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('VariantSets');
+	my $brapi_package_result = $brapi_module->variants({
+		variantSetDbId => $c->stash->{variantSetDbId},
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub variantsets_extract : Chained('brapi') PathPart('variantsets/extract') Args(0) : ActionClass('REST') { }
+
+sub variantsets_extract_POST {
+    my $self = shift;
+    my $c = shift;
+    # my $force_authenticate = 1;
+	# my ($auth_success, $user_id, $user_type, $user_pref, $expired) = _authenticate_user($c, $force_authenticate);
+
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('VariantSets');
+    my $brapi_package_result = $brapi_module->extract($clean_inputs);
+	my $status = $brapi_package_result->{status};
+	my $http_status_code = _get_http_status_code($status);
+
+	_standard_response_construction($c, $brapi_package_result, $http_status_code);
+}
+
+sub variantsets_search_save  : Chained('brapi') PathPart('search/variantsets') Args(0) : ActionClass('REST') { }
+
+sub variantsets_search_save_POST {
+    my $self = shift;
+    my $c = shift;
+    save_results($self,$c,$c->stash->{clean_inputs},'VariantSets');
+}
+
+sub variantsets_search_retrieve : Chained('brapi') PathPart('search/variantsets') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'VariantSets');
+}
+
+
+=head2 brapi/v2/calls
+
+ Usage: To retrieve data for calls
+ Desc:
+ Return JSON example:
+        {
+            "metadata" : {
+                "pagination": {
+                    "pageSize": 10,
+                    "currentPage": 1,
+                    "totalCount": 10,
+                    "totalPages": 1
+                },
+                "status": []
+            },
+
+              "result": {
+			    "data": [
+			      {
+			        "additionalInfo": {},
+			        "callSetDbId": "16466f55",
+			        "callSetName": "Sample_123_DNA_Run_456",
+			        "genotype": {
+			          "values": [
+			            "AA"
+			          ]
+			        },
+			        "genotype_likelihood": [
+			          1
+			        ],
+			        "phaseSet": "6410afc5",
+			        "variantDbId": "538c8ecf",
+			        "variantName": "Marker A"
+			      }
+			    ],
+			    "expandHomozygotes": true,
+			    "sepPhased": "~",
+			    "sepUnphased": "|",
+			    "unknownString": "-"
+			  }
+			}
+        }
+ Args:
+ Side Effects:
+
+=cut
+
+
+sub calls_search_save  : Chained('brapi') PathPart('search/calls') Args(0) : ActionClass('REST') { }
+
+sub calls_search_save_POST {
+    my $self = shift;
+    my $c = shift;
+    save_results($self,$c,$c->stash->{clean_inputs},'Calls');
+}
+
+sub calls_search_retrieve : Chained('brapi') PathPart('search/calls') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'Calls');
+}
+
+=head2 brapi/v2/referencesets
+
+ Usage: To retrieve data for reference sets
+ Desc:
+ Return JSON example:
+        {
+            "metadata" : {
+                "pagination": {
+                    "pageSize": 10,
+                    "currentPage": 1,
+                    "totalCount": 10,
+                    "totalPages": 1
+                },
+                "status": []
+            },
+
+              "result": {
+			    "data": [
+			      {
+			        "additionalInfo": {},
+			        "assemblyPUI": "doi://10.12345/fake/9876",
+			        "description": "Description for an assembly",
+			        "md5checksum": "c2365e900c81a89cf74d83dab60df146",
+			        "referenceSetDbId": "7e029a84",
+			        "referenceSetName": "Assembly version",
+			        "sourceAccessions": [
+			          "A0000002",
+			          "A0009393"
+			        ],
+			        "sourceURI": "https://wiki.brapi.org/files/demo.fast",
+			        "species": {
+			          "term": "sonic hedgehog",
+			          "termURI": "MGI:MGI:98297"
+			        }
+			      }
+			    ]
+			}
+        }
+ Args:
+ Side Effects:
+
+=cut
+
+sub referencesets : Chained('brapi') PathPart('referencesets') Args(0) : ActionClass('REST') { }
+
+sub referencesets_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('ReferenceSets');
+	my $brapi_package_result = $brapi_module->search($clean_inputs);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub referencesets_single : Chained('brapi') PathPart('referencesets') CaptureArgs(1) {
+	my $self = shift;
+	my $c = shift;
+	my $id = shift;
+	$c->stash->{referenceSetDbId} = $id;
+}
+
+sub referencesets_fetch : Chained('referencesets_single') PathPart('') Args(0) : ActionClass('REST') { }
+
+
+sub referencesets_fetch_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('ReferenceSets');
+	my $brapi_package_result = $brapi_module->detail($c->stash->{referenceSetDbId});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub referencesets_search  : Chained('brapi') PathPart('search/referencesets') Args(0) : ActionClass('REST') { }
+
+sub referencesets_search_POST {
+    my $self = shift;
+    my $c = shift;
+    save_results($self,$c,$c->stash->{clean_inputs},'ReferenceSets');
+}
+
+sub referencesets_search_retrieve : Chained('brapi') PathPart('search/referencesets') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'ReferenceSets');
+}
+
+=head2 brapi/v2/reference
+
+ Usage: To retrieve data for reference 
+ Desc:
+ Return JSON example:
+        {
+            "metadata" : {
+                "pagination": {
+                    "pageSize": 10,
+                    "currentPage": 1,
+                    "totalCount": 10,
+                    "totalPages": 1
+                },
+                "status": []
+            },
+
+              "result": {
+			    "data": [
+			      {
+			        "additionalInfo": {},
+			        "length": 50000000,
+			        "md5checksum": "c2365e900c81a89cf74d83dab60df146",
+			        "referenceDbId": "fc0a81d0",
+			        "referenceName": "Chromosome 2",
+			        "referenceSetDbId": "c1ecfef1",
+			        "sourceAccessions": [
+			          "GCF_000001405.26"
+			        ],
+			        "sourceDivergence": 0.01,
+			        "sourceURI": "https://wiki.brapi.org/files/demo.fast",
+			        "species": {
+			          "term": "sonic hedgehog",
+			          "termURI": "MGI:MGI:98297"
+			        }
+			      }
+			    ]
+			}
+        }
+ Args:
+ Side Effects:
+
+=cut
+
+sub reference : Chained('brapi') PathPart('references') Args(0) : ActionClass('REST') { }
+
+sub reference_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('References');
+	my $brapi_package_result = $brapi_module->search($clean_inputs);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub reference_single : Chained('brapi') PathPart('references') CaptureArgs(1) {
+	my $self = shift;
+	my $c = shift;
+	my $id = shift;
+	$c->stash->{referenceDbId} = $id;
+}
+
+sub reference_fetch : Chained('reference_single') PathPart('') Args(0) : ActionClass('REST') { }
+
+
+sub reference_fetch_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('References');
+	my $brapi_package_result = $brapi_module->detail($c->stash->{referenceDbId});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub reference_search  : Chained('brapi') PathPart('search/references') Args(0) : ActionClass('REST') { }
+
+sub reference_search_POST {
+    my $self = shift;
+    my $c = shift;
+    save_results($self,$c,$c->stash->{clean_inputs},'References');
+}
+
+sub reference_search_retrieve : Chained('brapi') PathPart('search/references') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'Referenced');
+}
+
+
+#functions
 sub save_results {
     my $self = shift;
     my $c = shift;
