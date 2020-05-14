@@ -5,7 +5,7 @@ package SGN::Controller::AJAX::Nirs;
 use Moose;
 use Data::Dumper;
 use File::Temp qw | tempfile |;
-use File::Slurp;
+# use File::Slurp;
 use File::Spec qw | catfile|;
 use File::Basename qw | basename |;
 use File::Copy;
@@ -16,8 +16,9 @@ use CXGN::Page::UserPrefs;
 use CXGN::Tools::List qw/distinct evens/;
 use CXGN::Blast::Parse;
 use CXGN::Blast::SeqQuery;
-use Path::Tiny qw(path);
+# use Path::Tiny qw(path);
 use Cwd qw(cwd);
+use JSON::Parse 'parse_json';
 
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -149,42 +150,65 @@ sub generate_results: Path('/ajax/Nirs/generate_results') : {
     my ($fh, $filename) = tempfile(
       "nirs_XXXXX",
       DIR=> $nirs_tmp_output,
-      SUFFIX => "_spectra.json",
+      SUFFIX => "_spectra",
       EXLOCK => 0
     );
 
     my $dbh = $c->dbc->dbh();
-
+    my @rawjson = ();
+	my @rawplot = ();
     foreach my $name (@plot_name){
-        my $sql = "SELECT json_agg(t)
-				  FROM (
-				  SELECT
-				    stock.uniquename AS observationUnitId,
-				    jsonb_pretty(cast(json->>'spectra' AS jsonb)) AS nirs_spectra
-				                FROM metadata.md_json
-				                JOIN phenome.nd_experiment_md_json USING(json_id)
-				                JOIN nd_experiment_stock USING(nd_experiment_id)
-				                JOIN stock using(stock_id) where stock.uniquename=?) t;";
-    
+        my $sql = "SELECT
+				      jsonb_pretty(cast(json->>'spectra' AS jsonb)) AS nirs_spectra
+					FROM metadata.md_json
+					JOIN phenome.nd_experiment_md_json USING(json_id)
+					JOIN nd_experiment_stock USING(nd_experiment_id)
+					JOIN stock using(stock_id) where stock.uniquename=?;";
+    	
         my $fh_db= $dbh->prepare($sql);    
         $fh_db->execute($name);
         while (my @spt = $fh_db->fetchrow_array()) {
-            print "It is working: $spt[0]\n";
+            push @rawjson, @spt;
             print $fh @spt;
+            # print $fh;
+          }
+
+         my $unitname = "SELECT
+				    		stock.uniquename AS observationUnitId
+				                FROM metadata.md_json
+				                JOIN phenome.nd_experiment_md_json USING(json_id)
+				                JOIN nd_experiment_stock USING(nd_experiment_id)
+				                JOIN stock using(stock_id) where stock.uniquename=?;";
+ 		my $fh_db2= $dbh->prepare($unitname);    
+        $fh_db2->execute($name);
+        while (my @spt2 = $fh_db2->fetchrow_array()) {
+        	push @rawplot, @spt2;
           }
         
     }
+my $j;
+for($j=0; $j < @rawjson; $j++){
+	print "The number is $j \n";
+}
+my $limit = ($j-1);
+my @formated = ();
+my $i;
 
-my $file = path($filename);
-my $data = $file -> slurp_utf8;
-    $data =~ s/\\n/\n/g;
-    $data =~ s/\\n/\n/g;
-    $data =~ s/\\//g;
-    $data =~ s/\"{/\n{/g;
-    $data =~ s/\"}]\[/\n},\n/g;
-    $data =~ s/}\"}/}}/g;
-    $file->spew_utf8( $data );
+for($i = 0; $i < @rawjson; $i++) {
+    if($i==0){
+    	push @formated, "[\n{\"observationUnitId\":\"$rawplot[$i]\",\"nirs_spectra\":$rawjson[$i]\n},";
+    }elsif($i<$limit){
+    	push @formated, "{\"observationUnitId\":\"$rawplot[$i]\",\"nirs_spectra\":$rawjson[$i]\n},";
+    }
+    if($i==$limit){
+    	push @formated, "{\"observationUnitId\":\"$rawplot[$i]\",\"nirs_spectra\":$rawjson[$i]\n}\n\]\n";
+    }
+}
 
+open(my $outfile, '>', $filename.".json");
+foreach my $data (@formated){
+	print $outfile $data;
+}
 
      
     # my $phenotype_data_ref2 = $h->retrieve_phenotypes($pheno_filepath);
