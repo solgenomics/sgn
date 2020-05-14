@@ -7,9 +7,10 @@ use CXGN::BrAPI::JSONResponse;
 
 extends 'CXGN::BrAPI::v1::Common';
 
-sub calls {
+sub search {
 	my $self = shift;
-	my $datatype_param = shift;
+	my $inputs = shift;
+	my $datatype_param = $inputs->{datatype}->[0];
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 

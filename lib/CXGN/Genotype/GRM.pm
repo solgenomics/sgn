@@ -47,6 +47,7 @@ use JSON;
 use CXGN::Stock::Accession;
 use CXGN::Genotype::Protocol;
 use CXGN::Genotype::Search;
+use CXGN::Genotype::ComputeHybridGenotype;
 use R::YapRI::Base;
 use R::YapRI::Data::Matrix;
 use CXGN::Dataset::Cache;
@@ -303,7 +304,11 @@ sub get_grm {
                 }
 
                 my $genotype_string = "";
-                my $progeny_genotype = _compute_progeny_genotypes($genotypes, \@all_marker_objects);
+                my $geno = CXGN::Genotype::ComputeHybridGenotype->new({
+                    parental_genotypes=>$genotypes,
+                    marker_objects=>\@all_marker_objects
+                });
+                my $progeny_genotype = $geno->get_hybrid_genotype();
 
                 push @individuals_stock_ids, $plot_stock_id;
                 my $genotype_string_scores = join "\t", @$progeny_genotype;
@@ -363,7 +368,11 @@ sub get_grm {
                 }
 
                 my $genotype_string = "";
-                my $progeny_genotype = _compute_progeny_genotypes($genotypes, \@all_marker_objects);
+                my $geno = CXGN::Genotype::ComputeHybridGenotype->new({
+                    parental_genotypes=>$genotypes,
+                    marker_objects=>\@all_marker_objects
+                });
+                my $progeny_genotype = $geno->get_hybrid_genotype();
 
                 push @individuals_stock_ids, $accession_stock_id;
                 my $genotype_string_scores = join "\t", @$progeny_genotype;
@@ -384,8 +393,8 @@ sub get_grm {
 
     my $tmp_output_dir = $shared_cluster_dir_config."/tmp_genotype_download_grm";
     mkdir $tmp_output_dir if ! -d $tmp_output_dir;
-    my ($grm_tempfile_out_fh, $grm_tempfile_out) = tempfile("download_grm_XXXXX", DIR=> $tmp_output_dir);
-    my ($temp_out_file_fh, $temp_out_file) = tempfile("download_grm_XXXXX", DIR=> $tmp_output_dir);
+    my ($grm_tempfile_out_fh, $grm_tempfile_out) = tempfile("download_grm_out_XXXXX", DIR=> $tmp_output_dir);
+    my ($temp_out_file_fh, $temp_out_file) = tempfile("download_grm_tmp_XXXXX", DIR=> $tmp_output_dir);
 
     my $cmd = 'R -e "library(genoDataFilter); library(rrBLUP); library(data.table); library(scales);
     mat <- fread(\''.$grm_tempfile.'\', header=FALSE, sep=\'\t\');
@@ -395,9 +404,18 @@ sub get_grm {
     } else {
         mat <- as.data.frame(rescale(as.matrix(mat), to = c(-1,1) ));
     }
-    mat_clean <- filterGenoData(gData=mat, maf='.$maf.', markerFilter='.$marker_filter.', indFilter='.$individuals_filter.');
-    A_matrix <- A.mat(mat_clean, impute.method=\'EM\', n.core='.$number_system_cores.', return.imputed=FALSE);
-    write.table(A_matrix, file=\''.$grm_tempfile_out.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
+    ';
+    if (!$get_grm_for_parental_accessions) {
+        #strange behavior in filterGenoData during testing... will use A.mat filters instead in this case...
+        $cmd .= 'mat_clean <- filterGenoData(gData=mat, maf='.$maf.', markerFilter='.$marker_filter.', indFilter='.$individuals_filter.');
+        A_matrix <- A.mat(mat_clean, impute.method=\'EM\', n.core='.$number_system_cores.', return.imputed=FALSE);
+        ';
+    }
+    else {
+        $cmd .= 'A_matrix <- A.mat(mat, min.MAF='.$maf.', max.missing='.$marker_filter.', impute.method=\'EM\', n.core='.$number_system_cores.', return.imputed=FALSE);
+        ';
+    }
+    $cmd .= 'write.table(A_matrix, file=\''.$grm_tempfile_out.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
     print STDERR Dumper $cmd;
 
     # Do the GRM on the cluster
@@ -453,7 +471,7 @@ sub download_grm {
     my $download_format = $self->download_format();
     my $grm_tempfile = $self->grm_temp_file();
 
-    my $key = $self->grm_cache_key("download_grm_fixed0".$download_format);
+    my $key = $self->grm_cache_key("download_grm_v01".$download_format);
     $self->_cache_key($key);
     $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
 
@@ -655,40 +673,6 @@ sub genosort {
     } else {
         return -1;
     }
-}
-
-sub _compute_progeny_genotypes {
-    my $genotypes = shift;
-    my $all_marker_objects = shift;
-
-    my @progeny_genotype;
-    # If both parents are genotyped, calculate progeny genotype as a average of parent dosage
-    if ($genotypes->[0] && $genotypes->[1]) {
-        my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
-        my $parent2_genotype = $genotypes->[1]->{selected_genotype_hash};
-        foreach my $m (@$all_marker_objects) {
-            if ($parent1_genotype->{$m->{name}}->{DS} ne 'NA' || $parent2_genotype->{$m->{name}}->{DS} ne 'NA') {
-                my $p1 = $parent1_genotype->{$m->{name}}->{DS} ne 'NA' ? $parent1_genotype->{$m->{name}}->{DS} : 0;
-                my $p2 = $parent2_genotype->{$m->{name}}->{DS} ne 'NA' ? $parent2_genotype->{$m->{name}}->{DS} : 0;
-                push @progeny_genotype, ceil(($p1 + $p2) / 2);
-            }
-            else {
-                push @progeny_genotype, 'NA';
-            }
-        }
-    }
-    elsif ($genotypes->[0]) {
-        my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
-        foreach my $m (@$all_marker_objects) {
-            if ($parent1_genotype->{$m->{name}}->{DS} ne 'NA') {
-                push @progeny_genotype, ceil($parent1_genotype->{$m->{name}}->{DS} / 2);
-            }
-            else {
-                push @progeny_genotype, 'NA';
-            }
-        }
-    }
-    return \@progeny_genotype;
 }
 
 1;

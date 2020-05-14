@@ -1,3 +1,4 @@
+
 use strict;
 use warnings;
 
@@ -5,12 +6,10 @@ use lib 't/lib';
 use SGN::Test::Fixture;
 use Test::More;
 use Test::WWW::Mechanize;
+
 use Data::Dumper;
 use JSON;
 use Spreadsheet::Read;
-use CXGN::Dataset;
-use CXGN::Dataset::File;
-use CXGN::Dataset::Cache;
 
 my $f = SGN::Test::Fixture->new();
 my $schema = $f->bcs_schema;
@@ -18,190 +17,261 @@ my $schema = $f->bcs_schema;
 my $mech = Test::WWW::Mechanize->new;
 my $response;
 
-
-
-my $t = SGN::Test::Fixture->new();
-
-my $ds = CXGN::Dataset->new( people_schema => $t->people_schema(), schema => $t->bcs_schema());
-
-$ds->accessions( [ 38913, 38914, 38915 ]);
-$ds->years(['2012', '2013']);
-$ds->traits([ 70666, 70741 ]);
-$ds->trials([ 139, 144 ]);
-$ds->plots( [ 40034, 40035 ]);
-$ds->name("test");
-$ds->description("test description");
-
-$ds->name("test");
-$ds->description("test description");
-$ds->sp_person_id(41);
-
-my $sp_dataset_id = $ds->store();
-
-my $new_ds = CXGN::Dataset->new( people_schema => $t->people_schema(), schema => $t->bcs_schema(), sp_dataset_id => $sp_dataset_id);
-
-is_deeply($new_ds->accessions(), $ds->accessions(), "accession store");
-is_deeply($new_ds->years(), $ds->years(), "years store");
-is_deeply($new_ds->traits(), $ds->traits(), "traits store");
-is_deeply($new_ds->plots(), $ds->plots(), "plots store");
-
-is($new_ds->name(), $ds->name(), "name store");
-is($new_ds->description(), $ds->description(), "desc store");
-is($new_ds->sp_person_id(), 41, "dataset owner");
-
-my @datasets = (
-    CXGN::Dataset->new( people_schema => $t->people_schema(), schema => $t->bcs_schema()),
-    CXGN::Dataset::File->new( people_schema => $t->people_schema(), schema => $t->bcs_schema()),
-    CXGN::Dataset::Cache->new( people_schema => $t->people_schema(), schema => $t->bcs_schema(), cache_root => '/tmp/dataset_cache_root'),
-    );
-
-foreach my $ds (@datasets) {
-    if ($ds->can("cache")) { $ds->cache->clear(); }
-    $ds->name("test");
-    $ds->description("test description");
-
-    $ds->accessions( [ 38913, 38914, 38915 ] );
-
-    my $sp_dataset_id = $ds->store();
-
-    my $trials = $ds->retrieve_trials();
-
-    is_deeply($trials, [
-                         [
-                           139,
-                           'Kasese solgs trial'
-                         ],
-                         [
-                           144,
-                           'test_t'
-                         ],
-                         [
-                           141,
-                           'trial2 NaCRRI'
-                         ]
-                       ]
-	      , "trial retrieve test");
-
-    if ($ds->isa("CXGN::Dataset::File")) {
-	ok(-e $ds->file_name()."_trials.txt", "trial file exists");
-    }
-
-    my $traits = $ds->retrieve_traits();
-
-    is_deeply($traits, [
-		  [
-		   70741,
-		   'dry matter content percentage|CO_334:0000092'
-		  ],
-		  [
-		   70666,
-		   'fresh root weight|CO_334:0000012'
-		  ],
-		  [
-		   70773,
-		   'fresh shoot weight measurement in kg|CO_334:0000016'
-		  ],
-		  [
-		   70668,
-		   'harvest index variable|CO_334:0000015'
-		  ]
-	      ]
-	);
-
-    my $phenotypes = $ds->retrieve_phenotypes();
-
-    my $genotypes = $ds->retrieve_genotypes(1);
-
-    my $years = $ds->retrieve_years();
-
-    is_deeply($years, [], "Year retrieve test");
-
-    my $plots = $ds->retrieve_plots();
-
-    is_deeply($plots, [
-		  [
-		   39299,
-		   'KASESE_TP2013_1029'
-		  ],
-		  [
-		   39895,
-		   'KASESE_TP2013_1590'
-		  ],
-		  [
-		   39424,
-		   'KASESE_TP2013_1717'
-		  ],
-		  [
-		   39607,
-		   'KASESE_TP2013_707'
-		  ],
-		  [
-		   39733,
-		   'KASESE_TP2013_880'
-		  ],
-		  [
-		   40343,
-		   'test_t113'
-		  ],
-		  [
-		   40493,
-		   'test_t249'
-		  ],
-		  [
-		   40669,
-		   'test_t407'
-		  ],
-		  [
-		   40676,
-		   'test_t413'
-		  ],
-		  [
-		   40814,
-		   'test_t538'
-		  ],
-		  [
-		   40819,
-		   'test_t542'
-		  ],
-		  [
-		   40956,
-		   'test_t666'
-		  ],
-		  [
-		   41168,
-		   'test_t857'
-		  ],
-		  [
-		   41237,
-		   'test_t919'
-		  ],
-		  [
-		   40033,
-		   'UG120036_block:2_plot:TP36_2012_NaCRRI'
-		  ],
-		  [
-		   40034,
-		   'UG120037_block:2_plot:TP37_2012_NaCRRI'
-		  ],
-		  [
-		   40035,
-		   'UG120038_block:2_plot:TP38_2012_NaCRRI'
-		  ]
-	      ], "plot retrieve test");
-
-}
-
-
-
-
 $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is($response->{'userDisplayName'}, 'Jane Doe');
 
-my $sp_dataset_id = $ds->store();
+my $trial_id = 137;
+my $data_level = 'plots';
+my $selected_columns = encode_json {'plot_name'=>1,'block_number'=>1,'plot_number'=>1,'rep_number'=>1,'row_number'=>1,'col_number'=>1,'accession_name'=>1,'is_a_control'=>1,'pedigree'=>1,'location_name'=>1,'trial_name'=>1,'year'=>1,'synonyms'=>1,'tier'=>1,'seedlot_name'=>1,'seed_transaction_operator'=>1,'num_seed_per_plot'=>1};
+my $trait_list = 13;
 
-$mech->post_ok('http://localhost:3010/ajax/heritability/shared_phenotypes', ['dataset_id'=>$sp_dataset_id] );
+$mech->post_ok('http://localhost:3010/ajax/fieldbook/create', ['trial_id'=>$trial_id, 'data_level'=>$data_level, 'selected_columns'=>$selected_columns, 'trait_list'=>$trait_list] );
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 my $file_name = $response->{file};
+
+my $contents = ReadData ($file_name);
+#print STDERR Dumper $contents;
+
+my $cells = $contents->[1]->{cell};
+print STDERR Dumper $cells;
+is_deeply($cells, [
+          [],
+          [
+            undef,
+            'plot_name',
+            'test_trial21',
+            'test_trial22',
+            'test_trial23',
+            'test_trial24',
+            'test_trial25',
+            'test_trial26',
+            'test_trial27',
+            'test_trial28',
+            'test_trial29',
+            'test_trial210',
+            'test_trial211',
+            'test_trial212',
+            'test_trial213',
+            'test_trial214',
+            'test_trial215'
+          ],
+          [
+            undef,
+            'accession_name',
+            'test_accession4',
+            'test_accession5',
+            'test_accession3',
+            'test_accession3',
+            'test_accession1',
+            'test_accession4',
+            'test_accession5',
+            'test_accession1',
+            'test_accession2',
+            'test_accession3',
+            'test_accession1',
+            'test_accession5',
+            'test_accession2',
+            'test_accession4',
+            'test_accession2'
+          ],
+          [
+            undef,
+            'plot_number',
+            '1',
+            '2',
+            '3',
+            '4',
+            '5',
+            '6',
+            '7',
+            '8',
+            '9',
+            '10',
+            '11',
+            '12',
+            '13',
+            '14',
+            '15'
+          ],
+          [
+            undef,
+            'block_number',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1'
+          ],
+          [
+            undef,
+            'is_a_control'
+          ],
+          [
+            undef,
+            'rep_number',
+            '1',
+            '1',
+            '1',
+            '2',
+            '1',
+            '2',
+            '2',
+            '2',
+            '1',
+            '3',
+            '3',
+            '3',
+            '2',
+            '3',
+            '3'
+          ],
+          [
+            undef,
+            'row_number'
+          ],
+          [
+            undef,
+            'col_number'
+          ],
+          [
+            undef,
+            'seedlot_name'
+          ],
+          [
+            undef,
+            'seed_transaction_operator'
+          ],
+          [
+            undef,
+            'num_seed_per_plot'
+          ],
+          [
+            undef,
+            'pedigree',
+            'test_accession1/test_accession2',
+            'test_accession3/NA',
+            'NA/NA',
+            'NA/NA',
+            'NA/NA',
+            'test_accession1/test_accession2',
+            'test_accession3/NA',
+            'NA/NA',
+            'NA/NA',
+            'NA/NA',
+            'NA/NA',
+            'test_accession3/NA',
+            'NA/NA',
+            'test_accession1/test_accession2',
+            'NA/NA'
+          ],
+          [
+            undef,
+            'location_name',
+            'test_location',
+            'test_location',
+            'test_location',
+            'test_location',
+            'test_location',
+            'test_location',
+            'test_location',
+            'test_location',
+            'test_location',
+            'test_location',
+            'test_location',
+            'test_location',
+            'test_location',
+            'test_location',
+            'test_location'
+          ],
+          [
+            undef,
+            'trial_name',
+            'test_trial',
+            'test_trial',
+            'test_trial',
+            'test_trial',
+            'test_trial',
+            'test_trial',
+            'test_trial',
+            'test_trial',
+            'test_trial',
+            'test_trial',
+            'test_trial',
+            'test_trial',
+            'test_trial',
+            'test_trial',
+            'test_trial'
+          ],
+          [
+            undef,
+            'year',
+            '2014',
+            '2014',
+            '2014',
+            '2014',
+            '2014',
+            '2014',
+            '2014',
+            '2014',
+            '2014',
+            '2014',
+            '2014',
+            '2014',
+            '2014',
+            '2014',
+            '2014'
+          ],
+          [
+            undef,
+            'synonyms',
+            undef,
+            undef,
+            'test_accession3_synonym1',
+            'test_accession3_synonym1',
+            'test_accession1_synonym1',
+            undef,
+            undef,
+            'test_accession1_synonym1',
+            'test_accession2_synonym1,test_accession2_synonym2',
+            'test_accession3_synonym1',
+            'test_accession1_synonym1',
+            undef,
+            'test_accession2_synonym1,test_accession2_synonym2',
+            undef,
+            'test_accession2_synonym1,test_accession2_synonym2'
+          ],
+          [
+            undef,
+            'tier',
+            '/',
+            '/',
+            '/',
+            '/',
+            '/',
+            '/',
+            '/',
+            '/',
+            '/',
+            '/',
+            '/',
+            '/',
+            '/',
+            '/',
+            '/'
+          ]
+        ], 'test fieldbook ajax file contents');
+
+done_testing;

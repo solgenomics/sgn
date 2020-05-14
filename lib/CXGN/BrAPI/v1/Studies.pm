@@ -284,7 +284,7 @@ sub studies_germplasm {
 	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Studies-germplasm result constructed');
 }
 
-sub studies_detail {
+sub detail {
 	my $self = shift;
 	my $study_id = shift;
     my $main_production_site_url = shift;

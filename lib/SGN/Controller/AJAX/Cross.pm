@@ -286,14 +286,14 @@ sub add_cross_POST :Args(0) {
         print STDERR "Handling a polycross\n";
         my @maternal_parents = split (',', $c->req->param('maternal_parents'));
         print STDERR "Maternal parents array:" . @maternal_parents . "\n Maternal parents with ref:" . \@maternal_parents . "\n Maternal parents with dumper:". Dumper(@maternal_parents) . "\n";
-        my $paternal = $cross_name . '_parents';
+        my $paternal = $cross_name . '_population';
         my $population_add = CXGN::Pedigree::AddPopulations->new({ schema => $chado_schema, name => $paternal, members =>  \@maternal_parents} );
         $population_add->add_population();
         $cross_type = 'polycross';
         print STDERR "Scalar maternatal paretns:" . scalar @maternal_parents;
         for (my $i = 0; $i < scalar @maternal_parents; $i++) {
             my $maternal = $maternal_parents[$i];
-            my $polycross_name = $cross_name . '_' . $maternal . '_polycross';
+            my $polycross_name = $cross_name . '_' . $maternal;
             print STDERR "First polycross to add is $polycross_name with amternal $maternal and paternal $paternal\n";
             my $success = $self->add_individual_cross($c, $chado_schema, $polycross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal);
             if (!$success) {
