@@ -587,7 +587,7 @@ jQuery(document).ready(function($) {
     });
 
     jQuery('#cross_wishlist_select_submits').click(function(){
-        var male_plot_limit = 20;
+        var male_plot_limit = 60;
         female_male_tracker = {};
         selected_plot_ids = [];
 
@@ -618,7 +618,7 @@ jQuery(document).ready(function($) {
         for (f in female_male_tracker){
             var male_array = female_male_tracker[f];
             if (male_array.length > male_plot_limit){
-                alert('A maximum of 20 male plots can be selected for each cross!');
+                alert('A maximum of 60 male plots can be selected for each cross!');
                 return;
             }
         }

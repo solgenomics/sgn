@@ -44,6 +44,8 @@ use CXGN::BreederSearch;
 use CXGN::Phenotypes::SearchFactory;
 use CXGN::BreedersToolbox::Accessions;
 use CXGN::Genotype::GRM;
+use CXGN::AnalysisModel::SaveModel;
+use CXGN::AnalysisModel::GetModel;
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -4862,186 +4864,39 @@ sub _perform_save_trained_keras_cnn_model {
     my $keras_cnn_model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_type', 'protocol_property')->cvterm_id();
     my $keras_cnn_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_experiment', 'experiment_type')->cvterm_id();
 
-    my $protocol_id;
-    my $protocol_row = $schema->resultset("NaturalDiversity::NdProtocol")->find({
-        name => $model_name,
-        type_id => $keras_cnn_cvterm_id
-    });
-    if ($protocol_row) {
-        $c->stash->{rest} = { error => "The model name: $model_name has already been used! Please use a new name." };
-        $c->detach();
-    }
-    else {
-        $protocol_row = $schema->resultset("NaturalDiversity::NdProtocol")->create({
-            name => $model_name,
-            type_id => $keras_cnn_cvterm_id,
-            nd_protocolprops => [
-                {value => encode_json({variable_name => $trait_name, variable_id => $trait_id, aux_trait_ids => $aux_trait_ids}), type_id => $keras_cnn_trait_cvterm_id},
-                {value => encode_json({value=>$model_type, image_type=>'standard_4_montage', nd_protocol_id => $geno_protocol_id, use_parents_grm => $use_parents_grm}), type_id => $keras_cnn_model_type_cvterm_id}
-            ]
-        });
-        $protocol_id = $protocol_row->nd_protocol_id();
-    }
-
-    my $q = "UPDATE nd_protocol SET description = ? WHERE nd_protocol_id = ?;";
-    my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute($model_description, $protocol_id);
-
     my $trial = CXGN::Trial->new({
         bcs_schema => $schema, trial_id => $field_trial_ids[0]
     });
     my $location_id = $trial->get_location->[0];
 
-    my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create({
-        nd_geolocation_id => $location_id,
-        type_id => $keras_cnn_experiment_cvterm_id,
-        nd_experiment_protocols => [{nd_protocol_id => $protocol_id}],
+    my $m = CXGN::AnalysisModel::SaveModel->new({
+        bcs_schema=>$schema,
+        metadata_schema=>$metadata_schema,
+        phenome_schema=>$phenome_schema,
+        archive_path=>$c->config->{archive_path},
+        model_name=>$model_name,
+        model_description=>$model_description,
+        model_type_cvterm_id=>$keras_cnn_cvterm_id,
+        model_experiment_type_cvterm_id=>$keras_cnn_experiment_cvterm_id,
+        model_properties=>[
+            {value => encode_json({variable_name => $trait_name, variable_id => $trait_id, aux_trait_ids => $aux_trait_ids}), type_id => $keras_cnn_trait_cvterm_id},
+            {value => encode_json({value=>$model_type, image_type=>'standard_4_montage', nd_protocol_id => $geno_protocol_id, use_parents_grm => $use_parents_grm}), type_id => $keras_cnn_model_type_cvterm_id}
+        ],
+        archived_model_file_type=>'trained_keras_cnn_model',
+        model_file=>$model_file,
+        archived_training_data_file_type=>'trained_keras_cnn_model_input_data_file',
+        archived_training_data_file=>$model_input_file,
+        archived_auxiliary_files=>[
+            {auxiliary_model_file => $archive_temp_autoencoder_output_model_file, auxiliary_model_file_archive_type => 'trained_keras_cnn_autoencoder_model'},
+            {auxiliary_model_file => $model_input_aux_file, auxiliary_model_file_archive_type => 'trained_keras_cnn_model_input_aux_data_file'}
+        ],
+        location_id=>$location_id,
+        user_id=>$user_id,
+        user_role=>$user_role
     });
-    my $nd_experiment_id = $experiment->nd_experiment_id();
+    my $saved_model = $m->save_model();
 
-    my $model_original_name = basename($model_file);
-    my $time = DateTime->now();
-    my $timestamp = $time->ymd()."_".$time->hms();
-    my $archived_model_file_type = 'trained_keras_cnn_model';
-
-    my $uploader = CXGN::UploadFile->new({
-        tempfile => $model_file,
-        subdirectory => $archived_model_file_type,
-        archive_path => $c->config->{archive_path},
-        archive_filename => $model_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_role
-    });
-    my $archived_filename_with_path = $uploader->archive();
-    my $md5 = $uploader->get_md5($archived_filename_with_path);
-    if (!$archived_filename_with_path) {
-        $c->stash->{rest} = { error => "Could not save file $model_original_name in archive." };
-        $c->detach();
-    }
-    unlink $model_file;
-    print STDERR "Archived Keras CNN Model File: $archived_filename_with_path\n";
-
-    my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
-    my $file_row = $metadata_schema->resultset("MdFiles")->create({
-        basename => basename($archived_filename_with_path),
-        dirname => dirname($archived_filename_with_path),
-        filetype => $archived_model_file_type,
-        md5checksum => $md5->hexdigest(),
-        metadata_id => $md_row->metadata_id()
-    });
-
-    my $experiment_files = $phenome_schema->resultset("NdExperimentMdFiles")->create({
-        nd_experiment_id => $nd_experiment_id,
-        file_id => $file_row->file_id()
-    });
-
-    my $model_autoencoder_original_name = basename($archive_temp_autoencoder_output_model_file);
-    my $archived_model_autoencoder_file_type = 'trained_keras_cnn_autoencoder_model';
-
-    my $uploader_autoencoder = CXGN::UploadFile->new({
-        tempfile => $archive_temp_autoencoder_output_model_file,
-        subdirectory => $archived_model_autoencoder_file_type,
-        archive_path => $c->config->{archive_path},
-        archive_filename => $model_autoencoder_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_role
-    });
-    my $archived_autoencoder_filename_with_path = $uploader_autoencoder->archive();
-    my $md5_autoencoder = $uploader->get_md5($archived_autoencoder_filename_with_path);
-    if (!$archived_autoencoder_filename_with_path) {
-        $c->stash->{rest} = { error => "Could not save file $model_autoencoder_original_name in archive." };
-        $c->detach();
-    }
-    unlink $archive_temp_autoencoder_output_model_file;
-    print STDERR "Archived Keras CNN Autoencoder Model File: $archived_autoencoder_filename_with_path\n";
-
-    my $md_row_autoencoder = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
-    my $file_row_autoencoder = $metadata_schema->resultset("MdFiles")->create({
-        basename => basename($archived_autoencoder_filename_with_path),
-        dirname => dirname($archived_autoencoder_filename_with_path),
-        filetype => $archived_model_autoencoder_file_type,
-        md5checksum => $md5_autoencoder->hexdigest(),
-        metadata_id => $md_row_autoencoder->metadata_id()
-    });
-
-    my $experiment_files_autoencoder = $phenome_schema->resultset("NdExperimentMdFiles")->create({
-        nd_experiment_id => $nd_experiment_id,
-        file_id => $file_row_autoencoder->file_id()
-    });
-
-    my $model_input_original_name = basename($model_input_file);
-    my $archived_model_input_file_type = 'trained_keras_cnn_model_input_data_file';
-    print STDERR Dumper $model_input_original_name;
-
-    my $uploader_model_input = CXGN::UploadFile->new({
-        tempfile => $model_input_file,
-        subdirectory => $archived_model_input_file_type,
-        archive_path => $c->config->{archive_path},
-        archive_filename => $model_input_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_role
-    });
-    my $archived_model_input_filename_with_path = $uploader_model_input->archive();
-    my $md5_model_input = $uploader_model_input->get_md5($archived_model_input_filename_with_path);
-    if (!$archived_model_input_filename_with_path) {
-        $c->stash->{rest} = { error => "Could not save file $archived_model_input_filename_with_path in archive." };
-        $c->detach();
-    }
-    unlink $model_input_file;
-    print STDERR "Archived Keras CNN Model Input Data File: $archived_model_input_filename_with_path\n";
-
-    my $file_model_input_row = $metadata_schema->resultset("MdFiles")->create({
-        basename => basename($archived_model_input_filename_with_path),
-        dirname => dirname($archived_model_input_filename_with_path),
-        filetype => $archived_model_input_file_type,
-        md5checksum => $md5_model_input->hexdigest(),
-        metadata_id => $md_row->metadata_id()
-    });
-
-    my $experiment_files_model_input = $phenome_schema->resultset("NdExperimentMdFiles")->create({
-        nd_experiment_id => $nd_experiment_id,
-        file_id => $file_model_input_row->file_id()
-    });
-
-    my $model_input_aux_original_name = basename($model_input_aux_file);
-    my $archived_model_input_aux_file_type = 'trained_keras_cnn_model_input_aux_data_file';
-    print STDERR Dumper $model_input_original_name;
-
-    my $uploader_model_input_aux = CXGN::UploadFile->new({
-        tempfile => $model_input_aux_file,
-        subdirectory => $archived_model_input_aux_file_type,
-        archive_path => $c->config->{archive_path},
-        archive_filename => $model_input_aux_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_role
-    });
-    my $archived_model_input_aux_filename_with_path = $uploader_model_input_aux->archive();
-    my $md5_model_input_aux = $uploader_model_input_aux->get_md5($archived_model_input_aux_filename_with_path);
-    if (!$archived_model_input_aux_filename_with_path) {
-        $c->stash->{rest} = { error => "Could not save file $archived_model_input_aux_filename_with_path in archive." };
-        $c->detach();
-    }
-    unlink $model_input_aux_file;
-    print STDERR "Archived Keras CNN Model Input Aux Data File: $archived_model_input_aux_filename_with_path\n";
-
-    my $file_model_input_aux_row = $metadata_schema->resultset("MdFiles")->create({
-        basename => basename($archived_model_input_aux_filename_with_path),
-        dirname => dirname($archived_model_input_aux_filename_with_path),
-        filetype => $archived_model_input_aux_file_type,
-        md5checksum => $md5_model_input_aux->hexdigest(),
-        metadata_id => $md_row->metadata_id()
-    });
-
-    my $experiment_files_model_input_aux = $phenome_schema->resultset("NdExperimentMdFiles")->create({
-        nd_experiment_id => $nd_experiment_id,
-        file_id => $file_model_input_aux_row->file_id()
-    });
-
-    $c->stash->{rest} = { success => 1 };
+    $c->stash->{rest} = $saved_model;
 }
 
 sub drone_imagery_predict_keras_model : Path('/api/drone_imagery/predict_keras_model') : ActionClass('REST') { }
@@ -5225,28 +5080,24 @@ sub _perform_keras_cnn_predict {
         };
     }
 
-    my $model_q = "SELECT basename, dirname, trained_trait.value, model_type.value
-        FROM metadata.md_files
-        JOIN phenome.nd_experiment_md_files using(file_id)
-        JOIN nd_experiment using(nd_experiment_id)
-        JOIN nd_experiment_protocol using(nd_experiment_id)
-        JOIN nd_protocol using(nd_protocol_id)
-        JOIN nd_protocolprop AS trained_trait ON(nd_protocol.nd_protocol_id=trained_trait.nd_protocol_id AND trained_trait.type_id=$keras_cnn_trait_cvterm_id)
-        JOIN nd_protocolprop AS model_type ON(nd_protocol.nd_protocol_id=model_type.nd_protocol_id AND model_type.type_id=$keras_cnn_model_type_cvterm_id)
-        WHERE nd_experiment.type_id=$keras_cnn_experiment_cvterm_id AND nd_protocol.nd_protocol_id=? AND nd_protocol.type_id=$keras_cnn_cvterm_id AND metadata.md_files.filetype='trained_keras_cnn_model';";
-    my $model_h = $schema->storage->dbh()->prepare($model_q);
-    $model_h->execute($model_id);
-    my ($basename, $filename, $trained_trait, $model_type) = $model_h->fetchrow_array();
-    my $trained_trait_hash = decode_json $trained_trait;
-    my $model_type_hash = decode_json $model_type;
-    my $trait_id = $trained_trait_hash->{variable_id};
-    my $trained_trait_name = $trained_trait_hash->{variable_name};
-    my $aux_trait_ids_previous = $trained_trait_hash->{aux_trait_ids};
-    $model_type = $model_type_hash->{value};
-    my $nd_protocol_id = $model_type_hash->{nd_protocol_id};
-    my $use_parents_grm = $model_type_hash->{use_parents_grm};
-    my $trained_image_type = $model_type_hash->{image_type};
-    my $model_file = $filename."/".$basename;
+    my $m = CXGN::AnalysisModel::GetModel->new({
+        bcs_schema=>$schema,
+        metadata_schema=>$metadata_schema,
+        phenome_schema=>$phenome_schema,
+        nd_protocol_id=>$model_id
+    });
+    my $saved_model_object = $m->get_model();
+    my $trait_id = $saved_model_object->{model_properties}->{$keras_cnn_trait_cvterm_id}->{variable_id};
+    my $trained_trait_name = $saved_model_object->{model_properties}->{$keras_cnn_trait_cvterm_id}->{variable_name};
+    my $aux_trait_ids_previous = $saved_model_object->{model_properties}->{$keras_cnn_trait_cvterm_id}->{aux_trait_ids};
+    my $model_type = $saved_model_object->{model_properties}->{$keras_cnn_model_type_cvterm_id}->{value};
+    my $nd_protocol_id = $saved_model_object->{model_properties}->{$keras_cnn_model_type_cvterm_id}->{nd_protocol_id};
+    my $use_parents_grm = $saved_model_object->{model_properties}->{$keras_cnn_model_type_cvterm_id}->{use_parents_grm};
+    my $trained_image_type = $saved_model_object->{model_properties}->{$keras_cnn_model_type_cvterm_id}->{image_type};
+    my $model_file = $saved_model_object->{model_files}->{trained_keras_cnn_model};
+    my $training_autoencoder_model_file = $saved_model_object->{model_files}->{trained_keras_cnn_autoencoder_model};
+    my $training_input_data_file = $saved_model_object->{model_files}->{trained_keras_cnn_model_input_data_file};
+    my $training_input_aux_data_file = $saved_model_object->{model_files}->{trained_keras_cnn_model_input_aux_data_file};
 
     my $dir = $c->tempfiles_subdir('/drone_imagery_keras_cnn_dir');
 
@@ -5292,42 +5143,6 @@ sub _perform_keras_cnn_predict {
         @accession_ids = keys %unique_genotype_accessions;
     }
 
-    my $model_q_autoencoder_model_input = "SELECT basename, dirname
-        FROM metadata.md_files
-        JOIN phenome.nd_experiment_md_files using(file_id)
-        JOIN nd_experiment using(nd_experiment_id)
-        JOIN nd_experiment_protocol using(nd_experiment_id)
-        JOIN nd_protocol using(nd_protocol_id)
-        WHERE nd_experiment.type_id=$keras_cnn_experiment_cvterm_id AND nd_protocol.nd_protocol_id=? AND nd_protocol.type_id=$keras_cnn_cvterm_id AND metadata.md_files.filetype='trained_keras_cnn_autoencoder_model';";
-    my $h_autoencoder_model_input = $schema->storage->dbh()->prepare($model_q_autoencoder_model_input);
-    $h_autoencoder_model_input->execute($model_id);
-    my ($basename_autoencoder_input, $filename_autoencoder_input) = $h_autoencoder_model_input->fetchrow_array();
-    my $training_autoencoder_model_file = $filename_autoencoder_input."/".$basename_autoencoder_input;
-
-    my $model_q_training_input = "SELECT basename, dirname
-        FROM metadata.md_files
-        JOIN phenome.nd_experiment_md_files using(file_id)
-        JOIN nd_experiment using(nd_experiment_id)
-        JOIN nd_experiment_protocol using(nd_experiment_id)
-        JOIN nd_protocol using(nd_protocol_id)
-        WHERE nd_experiment.type_id=$keras_cnn_experiment_cvterm_id AND nd_protocol.nd_protocol_id=? AND nd_protocol.type_id=$keras_cnn_cvterm_id AND metadata.md_files.filetype='trained_keras_cnn_model_input_data_file';";
-    my $h_training_input = $schema->storage->dbh()->prepare($model_q_training_input);
-    $h_training_input->execute($model_id);
-    my ($basename_training_input, $filename_training_input) = $h_training_input->fetchrow_array();
-    my $training_input_data_file = $filename_training_input."/".$basename_training_input;
-
-    my $model_q_training_input_aux = "SELECT basename, dirname
-        FROM metadata.md_files
-        JOIN phenome.nd_experiment_md_files using(file_id)
-        JOIN nd_experiment using(nd_experiment_id)
-        JOIN nd_experiment_protocol using(nd_experiment_id)
-        JOIN nd_protocol using(nd_protocol_id)
-        WHERE nd_experiment.type_id=$keras_cnn_experiment_cvterm_id AND nd_protocol.nd_protocol_id=? AND nd_protocol.type_id=$keras_cnn_cvterm_id AND metadata.md_files.filetype='trained_keras_cnn_model_input_aux_data_file';";
-    my $h_training_input_aux = $schema->storage->dbh()->prepare($model_q_training_input_aux);
-    $h_training_input_aux->execute($model_id);
-    my ($basename_training_input_aux, $filename_training_input_aux) = $h_training_input_aux->fetchrow_array();
-    my $training_input_aux_data_file = $filename_training_input_aux."/".$basename_training_input_aux;
-
     my @trait_ids = ($trait_id);
     if (scalar(@$aux_trait_ids) > 0) {
         push @trait_ids, @$aux_trait_ids;
@@ -5365,7 +5180,7 @@ sub _perform_keras_cnn_predict {
     }
     undef $data;
 
-    my $dir = $c->tempfiles_subdir('/drone_imagery_keras_cnn_predict_dir');
+    $dir = $c->tempfiles_subdir('/drone_imagery_keras_cnn_predict_dir');
     my $archive_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/inputfileXXXX');
     my $archive_temp_input_aux_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/inputfileXXXX');
     my $archive_temp_output_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/outputfileXXXX');

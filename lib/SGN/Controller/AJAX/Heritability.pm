@@ -143,6 +143,7 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
 
     my $cmd = CXGN::Tools::Run->new({
             backend => $c->config->{backend},
+            submit_host=>$c->config->{cluster_host},
             temp_base => $c->config->{cluster_shared_tempdir} . "/heritability_files",
             queue => $c->config->{'web_cluster_queue'},
             do_cleanup => 0,
@@ -166,15 +167,22 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
     $cmd->is_cluster(1);
     $cmd->wait;
 
+    # my $newpath = $c -> {basepath} . "/home/production/cxgn/sgn/documents/tempfiles/heritability_files";
+    # copy($h2File,$newpath) or die "Copy failed: $!";
+    # copy($figure3file,$newpath) or die "Copy failed: $!";
+    # copy($figure4file,$newpath) or die "Copy failed: $!";
    
     my $figure_path = $c->{basepath} . "./documents/tempfiles/heritability_files/";
     copy($h2File, $figure_path);
     copy($figure3file, $figure_path);
     copy($figure4file, $figure_path);
 
+    my $figure_path = $c->{basepath} . "./documents/tempfiles/heritability_files/";
+
+    
     my $h2Filebasename = basename($h2File);
     my $h2File_response = "/documents/tempfiles/heritability_files/" . $h2Filebasename;
-    
+
     my $figure3basename = basename($figure3file);
     my $figure3_response = "/documents/tempfiles/heritability_files/" . $figure3basename;
     
