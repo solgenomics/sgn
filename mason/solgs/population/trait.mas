@@ -111,6 +111,11 @@ my $pop_link = qq | <a href="/solgs/population/$pop_id/gp/$genotyping_protocol_i
        combo_pops_id => $combo_pops_id,
 &>
 
+
+<& /solgs/population/kinship.mas, 
+   pop_id  => $pop_id,
+  &>
+  
 <& /solgs/model/marker_effects.mas, 
    top_marker_effects          => $top_marker_effects,
    marker_effects_download_url => $marker_effects_download_url
