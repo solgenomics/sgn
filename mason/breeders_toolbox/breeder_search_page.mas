@@ -159,55 +159,57 @@ $dataset_id => undef
         <div id="wiz-down-1-c" class="panel-collapse collapse" role="tabpanel">
           <table class="table">
             <tr>
-              <td colspan="3">
-                <p>To download related genotype data, select <strong>1 or more Accessions</strong> and <strong>no more than 1 Genotyping Protocol</strong>
-                in the wizard.  Optionally, select a Chromosome and enter a position range below.  If no genotyping protocol is selected, the 
-                database default protocol will be used.</p>
+              <td colspan="8">
+                <span class="glyphicon glyphicon-info-sign" title="To download related genotype data, select 1 or more Accessions and optionally no more than 1 Genotyping Protocol in the wizard. If no genotyping protocol is selected, the database default protocol will be used. Click the checkbox here to compute genotypes for the selected accessions from genotypes of parents; this works for downloading genotypes, downloading the GRM, and performing GWAS."></span>
+                <span>Download Genotype Data</span>
                 <input class="wizard-download-genotypes-info form-control input-sm" type="text" disabled></input>
               </td>
-            </tr>
-            <tr>
-              <td>
-                <span>Chromosome</span>
-                <select class="wizard-download-genotypes-chromosome-number form-control"></select>
-              </td>
-              <td>
-                <span>Start Position</span>
-                <input placeholder="" type="number" class="wizard-download-genotypes-start-position form-control">
-              </td>
-              <td>
-                <span>End Position</span>
-                <input placeholder="" type="number" class="wizard-download-genotypes-end-position form-control">
-              </td>
-              <td>
-                <span>Compute From Parents</span>
-                <input type="checkbox" class="wizard-download-genotypes-parents-compute">
+              <td colspan="4">
+                  <span>Compute From Parents</span><br/>
+                  <input type="checkbox" class="wizard-download-genotypes-parents-compute">
               </td>
             </tr>
           </table>
           <div class="panel-footer" style="border-top: 1px solid #ddd;">
             <table class="table">
                 <tr>
-                  <td colspan="3">
-                    <span>Format</span>
-                    <select class="wizard-download-genotypes-format form-control" >
-                        <option value="DosageMatrix">Dosage Matrix File Format (tsv)</option>
-                        <option value="VCF">VCF File Format</option>
-                    </select>
+                  <td colspan="4">
+                    <span>Chromosome</span>
+                    <select class="wizard-download-genotypes-chromosome-number form-control input-sm"></select>
                   </td>
-                  <td colspan="3">
-                    <span>Marker Set Filter</span>
-                    <select class="wizard-download-genotypes-marker-set-list-id form-control" id="wizard-download-genotypes-marker-set-list-id"></select>
+                  <td colspan="4">
+                    <span>Start Position</span>
+                    <input placeholder="" type="number" class="wizard-download-genotypes-start-position form-control input-sm">
+                  </td>
+                  <td colspan="4">
+                    <span>End Position</span>
+                    <input placeholder="" type="number" class="wizard-download-genotypes-end-position form-control input-sm">
                   </td>
                 </tr>
                 <tr>
-                    <td colspan="3">
+                  <td colspan="6">
+                    <span>Genotypes Download Format</span>
+                    <select class="wizard-download-genotypes-format form-control input-sm" >
+                        <option value="VCF">VCF File Format</option>
+                        <option value="DosageMatrix">Dosage Matrix File Format (.tsv)</option>
+                    </select>
+                  </td>
+                  <td colspan="6">
+                    <span>Marker Set Filter</span>
+                    <select class="wizard-download-genotypes-marker-set-list-id form-control input-sm" id="wizard-download-genotypes-marker-set-list-id"></select>
+                  </td>
+                </tr>
+                <tr>
+                    <td colspan="6">
+                        <span class="glyphicon glyphicon-info-sign" title="Select accessions, and optionally a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol is used in your system. If you want to filter genotypes, use the chromosome, start position, end position, and marker set options. Can compute genotypes from parents if the parents of the accessions you selected have genotypes by checking the checkbox. Genotypes can be downloaded in VCF and Dosage Matrix Formats."></span>
+                        <span>Download Genotypes</span><br/>
                         <button class="wizard-download-genotypes btn btn-sm btn-primary">
                             <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
                             Download Genotypes
                         </button>
                     </td>
-                    <td colspan="3">
+                    <td colspan="6">
+                        <span>Marker Set Filter</span><br/>
                         <button class="btn btn-sm btn-default" onClick="window.open('/breeders/markers', '_blank');">
                             Manage Marker Sets
                         </button>
@@ -218,36 +220,59 @@ $dataset_id => undef
           <div class="panel-footer" style="border-top: 1px solid #ddd;">
             <table class="table">
                 <tr>
-                    <td>
+                    <td colspan="6">
                       <span>Minor Allele Frequency</span>
-                      <input placeholder="0.05" value="0.05" type="number" class="wizard-download-genotypes-grm-maf form-control">
+                      <input placeholder="0.05" value="0.05" type="number" class="wizard-download-genotypes-grm-maf form-control input-sm">
                     </td>
-                    <td>
+                    <td colspan="3">
                       <span>Marker Filter</span>
-                      <input placeholder="0.60" value="0.60" type="number" class="wizard-download-genotypes-grm-marker-filter form-control">
+                      <input placeholder="0.60" value="0.60" type="number" class="wizard-download-genotypes-grm-marker-filter form-control input-sm">
                     </td>
-                    <td>
+                    <td colspan="3">
                       <span>Individuals Filter</span>
-                      <input placeholder="0.80" value="0.80" type="number" class="wizard-download-genotypes-grm-individuals-filter form-control">
+                      <input placeholder="0.80" value="0.80" type="number" class="wizard-download-genotypes-grm-individuals-filter form-control input-sm">
                     </td>
                 </tr>
               <tr>
-                <td colspan="3">
-                  <span>Format</span>
-                  <select class="wizard-download-genotypes-grm-format form-control" >
-                      <option value="matrix">Genomic Relationship Matrix (tsv)</option>
-                      <option value="three_column">3-Column Format (tsv)</option>
+                <td colspan="12">
+                  <span>Genomic Relationship Matrix (GRM) Download Format</span>
+                  <select class="wizard-download-genotypes-grm-format form-control input-sm" >
+                      <!--option value="heatmap">Heatmap (.pdf)</option-->
+                      <option value="matrix">Matrix (.tsv)</option>
+                      <option value="three_column">3-Column Format (.tsv)</option>
                   </select>
+                  <br/>
+                    <span class="glyphicon glyphicon-info-sign" title="Select accessions, and optionally a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol is used in your system. Specify minor allele frequency (MAF), marker filter, and individuals filter. Can compute genotypes from parents if the parents of the accessions you selected have genotypes by checking the checkbox. GRM can be downloaded in a matrix format (.tsv) and a three column format."></span>
+                    <span>Download GRM</span><br/>
+                    <button class="wizard-download-genetic-relationship-matrix btn btn-sm btn-primary">
+                        <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
+                        Download GRM
+                    </button>
                 </td>
               </tr>
+              <tr>
+                  <td colspan="12">
+                    <span>Genome Wide Association Study (GWAS) Download Format</span>
+                    <select class="wizard-download-genotypes-gwas-format form-control input-sm" >
+                        <option value="manhattan_qq_plots">Manhattan + QQ Plots (.pdf)</option>
+                        <option value="results_tsv">GWAS Results (.tsv)</option>
+                    </select>
+                    <br/>
+                    <span>Selected Traits Are All Repeated Measurements</span>
+                    <select class="wizard-download-genotypes-gwas-repeated-measurements form-control input-sm" >
+                        <option value="no">No</option>
+                        <option value="yes">Yes</option>
+                    </select>
+                    <br/>
+                        <span class="glyphicon glyphicon-info-sign" title="Select accessions, traits, and optionally a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol is used in your system. When many traits are selected and these traits are not treated as repeated measurements, the traits are treated separately and distinct results are returned e.g. several Manhattan plots are returned. If the selected traits are in fact repeated measurements, then select 'yes'; a single GWAS will be run against all of the phenotypes e.g. a single Manhattan plot is returned. Specify minor allele frequency (MAF), marker filter, and individuals filter. Can compute genotypes from parents if the parents of the accessions you selected have genotypes by checking the checkbox. GWAS uses a fixed effect for different field trials and a fixed effect for replicate. GWAS uses Kinship matrix calculated from the genotype data. MAF and missing data used to filter prior to GWAS and Kinship matrix calculation. Can select whether to return results in Manhattan and QQ Plot (.pdf) form or as the tabular results (.tsv)."></span>
+                        <span>Run GWAS</span><br/>
+                      <button class="wizard-download-gwas btn btn-sm btn-primary">
+                          <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
+                          Download GWAS
+                      </button>
+                  </td>
+              </tr>
             </table>
-
-            <td colspan="3">
-                <button class="wizard-download-genetic-relationship-matrix btn btn-sm btn-primary">
-                    <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
-                    Download Genomic Relationship Matrix (GRM)
-                </button>
-            </td>
 
           </div>
         </div>
@@ -345,7 +370,7 @@ $dataset_id => undef
           <div class="panel-footer" style="border-top: 1px solid #ddd;">
             <button class="wizard-download-phenotypes btn btn-sm btn-primary">
                 <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
-                Phenotypes
+                Download Phenotypes
             </button>
           </div>
         </div>

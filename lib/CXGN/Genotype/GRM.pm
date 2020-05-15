@@ -15,16 +15,17 @@ my $geno = CXGN::Genotype::GRM->new({
     protocol_id=>$protocol_id,
     get_grm_for_parental_accessions=>1,
     cache_root=>$cache_root,
-    download_format=>'matrix',
+    download_format=>'matrix', #either 'matrix', 'three_column', or 'heatmap'
     minor_allele_frequency=>0.01,
     marker_filter=>0.6,
     individuals_filter=>0.8
 });
-my $grm = $geno->get_grm();
+RECOMMENDED
+$geno->download_grm();
 
 OR
 
-$geno->download_grm($filename);
+my $grm = $geno->get_grm();
 
 =head1 DESCRIPTION
 
@@ -46,6 +47,7 @@ use JSON;
 use CXGN::Stock::Accession;
 use CXGN::Genotype::Protocol;
 use CXGN::Genotype::Search;
+use CXGN::Genotype::ComputeHybridGenotype;
 use R::YapRI::Base;
 use R::YapRI::Data::Matrix;
 use CXGN::Dataset::Cache;
@@ -53,6 +55,9 @@ use Cache::File;
 use Digest::MD5 qw | md5_hex |;
 use File::Slurp qw | write_file |;
 use POSIX;
+use File::Copy;
+use CXGN::Tools::Run;
+use File::Temp 'tempfile';
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -168,6 +173,11 @@ has 'return_only_first_genotypeprop_for_stock' => (
 
 sub get_grm {
     my $self = shift;
+    my $shared_cluster_dir_config = shift;
+    my $backend_config = shift;
+    my $cluster_host_config = shift;
+    my $web_cluster_queue_config = shift;
+    my $basepath_config = shift;
     my $schema = $self->bcs_schema();
     my $people_schema = $self->people_schema();
     my $cache_root_dir = $self->cache_root();
@@ -294,7 +304,11 @@ sub get_grm {
                 }
 
                 my $genotype_string = "";
-                my $progeny_genotype = _compute_progeny_genotypes($genotypes, \@all_marker_objects);
+                my $geno = CXGN::Genotype::ComputeHybridGenotype->new({
+                    parental_genotypes=>$genotypes,
+                    marker_objects=>\@all_marker_objects
+                });
+                my $progeny_genotype = $geno->get_hybrid_genotype();
 
                 push @individuals_stock_ids, $plot_stock_id;
                 my $genotype_string_scores = join "\t", @$progeny_genotype;
@@ -354,7 +368,11 @@ sub get_grm {
                 }
 
                 my $genotype_string = "";
-                my $progeny_genotype = _compute_progeny_genotypes($genotypes, \@all_marker_objects);
+                my $geno = CXGN::Genotype::ComputeHybridGenotype->new({
+                    parental_genotypes=>$genotypes,
+                    marker_objects=>\@all_marker_objects
+                });
+                my $progeny_genotype = $geno->get_hybrid_genotype();
 
                 push @individuals_stock_ids, $accession_stock_id;
                 my $genotype_string_scores = join "\t", @$progeny_genotype;
@@ -369,48 +387,56 @@ sub get_grm {
     # print STDERR Dumper \@individuals_stock_ids;
     # print STDERR Dumper \@dosage_matrix;
 
-    #my $grm_n = scalar(@individuals_stock_ids);
-    #my $rmatrix = R::YapRI::Data::Matrix->new({
-    #    name => 'geno_matrix1',
-    #    coln => scalar(@all_marker_names),
-    #    rown => $grm_n,
-    #    rownames => \@individuals_stock_ids,
-    #    data => \@dosage_matrix
-    #});
-
-    #my $rbase = R::YapRI::Base->new();
-    #my $r_block = $rbase->create_block('r_block');
-    #$rmatrix->send_rbase($rbase, 'r_block');
-    # $r_block->add_command('geno_data = data.frame(geno_matrix1)');
-
-    #$r_block->add_command('geno_matrix1 <- scale(geno_matrix1, scale = FALSE)');
-    #$r_block->add_command('alfreq <- attributes(geno_matrix1)[["scaled:center"]]/2');
-    #$r_block->add_command('grm <- tcrossprod(geno_matrix1)/((2*crossprod(alfreq, 1-alfreq))[[1]])');
-
-    #$r_block->add_command('library(rrBLUP)');
-    #$r_block->add_command('geno_matrix1 <- geno_matrix1-1'); #Code as -1,0,1
-    #$r_block->add_command('A_matrix <- A.mat(geno_matrix1, min.MAF=0.05, max.missing=NULL, impute.method="mean", tol=0.02, n.core='.$number_system_cores.', shrink=FALSE, return.imputed=FALSE)');
-    #$r_block->add_command('grm <- A_matrix');
-
-    #$r_block->run_block();
-    #my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','grm');
-
     my $maf = $self->minor_allele_frequency();
     my $marker_filter = $self->marker_filter();
     my $individuals_filter = $self->individuals_filter();
 
-    my $cmd = 'R -e "library(genoDataFilter); library(rrBLUP); library(data.table); mat <- fread(\''.$grm_tempfile.'\', header=FALSE, sep=\'\t\'); mat_clean <- filterGenoData(gData=mat, maf='.$maf.', markerFilter='.$marker_filter.', indFilter='.$individuals_filter.'); A_matrix <- A.mat(mat_clean-1, min.MAF='.$maf.', max.missing=NULL, impute.method=\'mean\', tol=0.02, n.core='.$number_system_cores.', shrink=FALSE, return.imputed=FALSE); write.table(A_matrix, file=\''.$grm_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\')"';
-    print STDERR Dumper $cmd;
-    my $status = system($cmd);
+    my $tmp_output_dir = $shared_cluster_dir_config."/tmp_genotype_download_grm";
+    mkdir $tmp_output_dir if ! -d $tmp_output_dir;
+    my ($grm_tempfile_out_fh, $grm_tempfile_out) = tempfile("download_grm_out_XXXXX", DIR=> $tmp_output_dir);
+    my ($temp_out_file_fh, $temp_out_file) = tempfile("download_grm_tmp_XXXXX", DIR=> $tmp_output_dir);
 
-    my @grm;
-    open(my $fh, "<", $grm_tempfile) or die "Can't open < $grm_tempfile: $!";
-    while (my $row = <$fh>) {
-        chomp($row);
-        my @vals = split "\t", $row;
-        push @grm, \@vals;
+    my $cmd = 'R -e "library(genoDataFilter); library(rrBLUP); library(data.table); library(scales);
+    mat <- fread(\''.$grm_tempfile.'\', header=FALSE, sep=\'\t\');
+    range_check <- range(as.matrix(mat)[1,]);
+    if (length(table(as.matrix(mat)[1,])) < 2 || (!is.na(range_check[1]) && !is.na(range_check[2]) && range_check[2] - range_check[1] <= 1 )) {
+        mat <- as.data.frame(rescale(as.matrix(mat), to = c(-1,1), from = c(0,2) ));
+    } else {
+        mat <- as.data.frame(rescale(as.matrix(mat), to = c(-1,1) ));
     }
-    return (\@grm, \@individuals_stock_ids, \@all_individual_accessions_stock_ids);
+    ';
+    if (!$get_grm_for_parental_accessions) {
+        #strange behavior in filterGenoData during testing... will use A.mat filters instead in this case...
+        $cmd .= 'mat_clean <- filterGenoData(gData=mat, maf='.$maf.', markerFilter='.$marker_filter.', indFilter='.$individuals_filter.');
+        A_matrix <- A.mat(mat_clean, impute.method=\'EM\', n.core='.$number_system_cores.', return.imputed=FALSE);
+        ';
+    }
+    else {
+        $cmd .= 'A_matrix <- A.mat(mat, min.MAF='.$maf.', max.missing='.$marker_filter.', impute.method=\'EM\', n.core='.$number_system_cores.', return.imputed=FALSE);
+        ';
+    }
+    $cmd .= 'write.table(A_matrix, file=\''.$grm_tempfile_out.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
+    print STDERR Dumper $cmd;
+
+    # Do the GRM on the cluster
+    my $grm_cmd = CXGN::Tools::Run->new(
+        {
+            backend => $backend_config,
+            submit_host => $cluster_host_config,
+            temp_base => $tmp_output_dir,
+            queue => $web_cluster_queue_config,
+            do_cleanup => 0,
+            out_file => $temp_out_file,
+            # don't block and wait if the cluster looks full
+            max_cluster_jobs => 1_000_000_000,
+        }
+    );
+
+    $grm_cmd->run_cluster($cmd);
+    $grm_cmd->is_cluster(1);
+    $grm_cmd->wait;
+
+    return ($grm_tempfile_out, \@individuals_stock_ids, \@all_individual_accessions_stock_ids);
 }
 
 sub grm_cache_key {
@@ -437,9 +463,15 @@ sub grm_cache_key {
 sub download_grm {
     my $self = shift;
     my $return_type = shift || 'filehandle';
+    my $shared_cluster_dir_config = shift;
+    my $backend_config = shift;
+    my $cluster_host_config = shift;
+    my $web_cluster_queue_config = shift;
+    my $basepath_config = shift;
     my $download_format = $self->download_format();
+    my $grm_tempfile = $self->grm_temp_file();
 
-    my $key = $self->grm_cache_key("download_grm_".$download_format);
+    my $key = $self->grm_cache_key("download_grm_v01".$download_format);
     $self->_cache_key($key);
     $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
 
@@ -453,8 +485,16 @@ sub download_grm {
         }
     }
     else {
-        my ($result_matrix, $stock_ids, $all_accession_stock_ids) = $self->get_grm();
+        my ($grm_tempfile_out, $stock_ids, $all_accession_stock_ids) = $self->get_grm($shared_cluster_dir_config, $backend_config, $cluster_host_config, $web_cluster_queue_config, $basepath_config);
 
+        my @grm;
+        open(my $fh, "<", $grm_tempfile_out) or die "Can't open < $grm_tempfile_out: $!";
+        while (my $row = <$fh>) {
+            chomp($row);
+            my @vals = split "\t", $row;
+            push @grm, \@vals;
+        }
+        
         my $data = '';
         if ($download_format eq 'matrix') {
             my @header = ("stock_id");
@@ -468,15 +508,67 @@ sub download_grm {
                 my @row = ($s);
                 my $col_num = 0;
                 foreach my $c (@$stock_ids) {
-                    push @row, $result_matrix->[$row_num]->[$col_num];
+                    push @row, $grm[$row_num]->[$col_num];
                     $col_num++;
                 }
                 my $line = join "\t", @row;
                 $data .= "$line\n";
                 $row_num++;
             }
+
+            $self->cache()->set($key, $data);
+            if ($return_type eq 'filehandle') {
+                $return = $self->cache()->handle($key);
+            }
+            elsif ($return_type eq 'data') {
+                $return = $data;
+            }
         }
         elsif ($download_format eq 'three_column') {
+            my %result_hash;
+            my $row_num = 0;
+            my %seen_stock_ids;
+            # print STDERR Dumper \@grm;
+            foreach my $s (@$stock_ids) {
+                my $col_num = 0;
+                foreach my $c (@$stock_ids) {
+                    if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
+                        my $val = $grm[$row_num]->[$col_num];
+                        if (defined $val and length $val) {
+                            $result_hash{$s}->{$c} = $val;
+                            $seen_stock_ids{$s}++;
+                            $seen_stock_ids{$c}++;
+                        }
+                    }
+                    $col_num++;
+                }
+                $row_num++;
+            }
+
+            foreach my $r (sort keys %result_hash) {
+                foreach my $s (sort keys %{$result_hash{$r}}) {
+                    my $val = $result_hash{$r}->{$s};
+                    if (defined $val and length $val) {
+                        $data .= "$r\t$s\t$val\n";
+                    }
+                }
+            }
+
+            foreach my $a (@$all_accession_stock_ids) {
+                if (!exists($seen_stock_ids{$a})) {
+                    $data .= "$a\t$a\t1\n";
+                }
+            }
+
+            $self->cache()->set($key, $data);
+            if ($return_type eq 'filehandle') {
+                $return = $self->cache()->handle($key);
+            }
+            elsif ($return_type eq 'data') {
+                $return = $data;
+            }
+        }
+        elsif ($download_format eq 'heatmap') {
             my %result_hash;
             my $row_num = 0;
             my %seen_stock_ids;
@@ -485,7 +577,7 @@ sub download_grm {
                 my $col_num = 0;
                 foreach my $c (@$stock_ids) {
                     if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
-                        my $val = $result_matrix->[$row_num]->[$col_num];
+                        my $val = $grm[$row_num]->[$col_num];
                         if ($val || $val == 0) {
                             $result_hash{$s}->{$c} = $val;
                             $seen_stock_ids{$s}++;
@@ -509,13 +601,54 @@ sub download_grm {
                     $data .= "$a\t$a\t1\n";
                 }
             }
-        }
-        $self->cache()->set($key, $data);
-        if ($return_type eq 'filehandle') {
-            $return = $self->cache()->handle($key);
-        }
-        elsif ($return_type eq 'data') {
-            $return = $data;
+
+            open(my $heatmap_fh, '>', $grm_tempfile) or die $!;
+                print $heatmap_fh $data;
+            close($heatmap_fh);
+
+            my $grm_tempfile_out = $grm_tempfile . "_plot_out";
+            my $heatmap_cmd = 'R -e "library(ggplot2); library(data.table);
+            mat <- fread(\''.$grm_tempfile.'\', header=FALSE, sep=\'\t\', stringsAsFactors=FALSE);
+            pdf( \''.$grm_tempfile_out.'\', width = 8.5, height = 11);
+            ggplot(data = mat, aes(x=V1, y=V2, fill=V3)) + geom_tile();
+            dev.off();
+            "';
+            print STDERR Dumper $heatmap_cmd;
+
+            my $tmp_output_dir = $shared_cluster_dir_config."/tmp_genotype_download_grm_heatmap";
+            mkdir $tmp_output_dir if ! -d $tmp_output_dir;
+
+            # Do the GRM on the cluster
+            my $plot_cmd = CXGN::Tools::Run->new(
+                {
+                    backend => $backend_config,
+                    submit_host => $cluster_host_config,
+                    temp_base => $tmp_output_dir,
+                    queue => $web_cluster_queue_config,
+                    do_cleanup => 0,
+                    out_file => $grm_tempfile_out,
+                    # don't block and wait if the cluster looks full
+                    max_cluster_jobs => 1_000_000_000,
+                }
+            );
+
+            $plot_cmd->run_cluster($heatmap_cmd);
+            $plot_cmd->is_cluster(1);
+            $plot_cmd->wait;
+
+            if ($return_type eq 'filehandle') {
+                open my $out_copy, '<', $grm_tempfile_out or die "Can't open output file: $!";
+
+                $self->cache()->set($key, '');
+                my $file_handle = $self->cache()->handle($key);
+                copy($out_copy, $file_handle);
+
+                close $out_copy;
+                $return = $self->cache()->handle($key);
+            }
+            elsif ($return_type eq 'data') {
+                die "Can only return the filehandle for GRM heatmap!\n";
+            }
         }
     }
     return $return;
@@ -540,40 +673,6 @@ sub genosort {
     } else {
         return -1;
     }
-}
-
-sub _compute_progeny_genotypes {
-    my $genotypes = shift;
-    my $all_marker_objects = shift;
-
-    my @progeny_genotype;
-    # If both parents are genotyped, calculate progeny genotype as a average of parent dosage
-    if ($genotypes->[0] && $genotypes->[1]) {
-        my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
-        my $parent2_genotype = $genotypes->[1]->{selected_genotype_hash};
-        foreach my $m (@$all_marker_objects) {
-            if ($parent1_genotype->{$m->{name}}->{DS} ne 'NA' || $parent2_genotype->{$m->{name}}->{DS} ne 'NA') {
-                my $p1 = $parent1_genotype->{$m->{name}}->{DS} ne 'NA' ? $parent1_genotype->{$m->{name}}->{DS} : 0;
-                my $p2 = $parent2_genotype->{$m->{name}}->{DS} ne 'NA' ? $parent2_genotype->{$m->{name}}->{DS} : 0;
-                push @progeny_genotype, ceil(($p1 + $p2) / 2);
-            }
-            else {
-                push @progeny_genotype, 'NA';
-            }
-        }
-    }
-    elsif ($genotypes->[0]) {
-        my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
-        foreach my $m (@$all_marker_objects) {
-            if ($parent1_genotype->{$m->{name}}->{DS} ne 'NA') {
-                push @progeny_genotype, ceil($parent1_genotype->{$m->{name}}->{DS} / 2);
-            }
-            else {
-                push @progeny_genotype, 'NA';
-            }
-        }
-    }
-    return \@progeny_genotype;
 }
 
 1;

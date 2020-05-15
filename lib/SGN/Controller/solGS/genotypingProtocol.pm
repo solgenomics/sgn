@@ -43,9 +43,9 @@ sub genotype_protocols {
 	push @protocols_details, $details if %$details;	
     }
 
-    my $dummy = {'protocol_id'=>2, 'name'=>'dummy protocol'};
-    push @protocols_details, $dummy; 
-   
+    # my $dummy = {'protocol_id'=>2, 'name'=>'dummy protocol'};
+    # push @protocols_details, $dummy;
+    
     return \@protocols_details;
     
 }

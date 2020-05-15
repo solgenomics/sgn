@@ -204,10 +204,26 @@ solGS.cluster = {
 	if (popDetails == undefined) {
 	    popDetails = {};
 	}
-	
-	var popId   = jQuery("#cluster_selected_population_id").val();
-	var popType = jQuery("#cluster_selected_population_type").val();
-	var popName = jQuery("#cluster_selected_population_name").val();
+
+	var popId;
+	var popType;
+	var popName;
+
+	var page = document.URL;
+	if (page.match(/solgs\/trait\/\d+\/population\/|solgs\/model\/combined\/populations\/|breeders\//)) {
+	    popId = popDetails.training_pop_id;
+	    popName = popDetails.training_pop_name;
+	    popType = 'training';
+	} else if (page.match(/solgs\/selection/)){
+	    popId = popDetails.selection_pop_id;
+	    popName = popDetails.selection_pop_name;
+	    popType = 'selection';
+	    
+	} else {	
+	    popId   = jQuery("#cluster_selected_population_id").val();
+	    popType = jQuery("#cluster_selected_population_type").val();
+	    popName = jQuery("#cluster_selected_population_name").val();
+	}
 
 	if(!selectName) {
 	    selectName = popName;
@@ -234,14 +250,6 @@ solGS.cluster = {
 		.show().fadeOut(9400);
 	    
 	} else {
-	 
-	    if (url.match(/solgs\/traits\/all\/population\//)) {
-		if (popType.match(/training/)) {
-		    popDetails['training_pop_id'] = popId;	
-		} else if (popType.match(/selection/)) {
-		    popDetails['selection_pop_id'] = popId;
-		}
-	    }
 
 	    if (url.match(/\solgs\/models\/combined\/trials\//)) {
 		if (popType.match(/training/)) {
@@ -309,7 +317,7 @@ solGS.cluster = {
 				'k_number' : kNumber,
 				'selection_proportion': selectionProp,
 				'sindex_name': sIndexName,
-				'cluster_pop_name': selectName,
+				'cluster_pop_name': selectName || '',
 				'genotyping_protocol_id': protocolId
 			       };
 	    

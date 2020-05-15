@@ -151,7 +151,7 @@ This message is sent to confirm the email address for community user
 Please click (or cut and paste into your browser) the following link to
 confirm your account and email address:
 
-$host/solpeople/account-confirm.pl?username=$username&confirm=$confirm_code
+$host/user/confirm?username=$username&confirm_code=$confirm_code
 
 Thank you,
 $project_name Team
@@ -497,7 +497,7 @@ HTML
 	    print STDERR "ERROR: $@\n";
 	    $c->stash->{rest} = { error => $@ };
 	}
-	return $c->stash->{rest} = { html => $html };
+	return $c->stash->{rest} = { html => $html, logged_in => $c->user_exists };
     }
 }
 
@@ -578,7 +578,7 @@ ername.";}
 	$c->stash->{rest} = { html => "An error occurred. $@" };
     }
     else {
-	$c->stash->{rest} = { html => "<center><h4>Account successfully created for $first_name $last_name</h4><a href=\"/user/quick_create_account\">Create another account" };
+	$c->stash->{rest} = { html => "<center><h4>Account successfully created for $first_name $last_name</h4><a href=\"/user/admin/quick_create_account\">Create another account" };
     }
 }
 

@@ -48,6 +48,7 @@ sub heritability_phenotype_data :Path('/heritability/phenotype/data/') Args(0) {
    
     my $pop_id = $c->req->param('population_id');
     $c->stash->{pop_id} = $pop_id;
+
     my $referer = $c->req->referer;
    
     my $phenotype_file;
@@ -199,7 +200,7 @@ sub pheno_heritability_analysis_output :Path('/phenotypic/heritability/analysis/
     {
         $self->run_pheno_heritability_analysis($c);  
         $h2_json_file = $c->stash->{h2_coefficients_json_file};
-	$h2_table_file = $c->stash->{h2_coefficients_table_file}; 
+        $h2_table_file = $c->stash->{h2_coefficients_table_file}; 
     }
     
     if (-s $h2_json_file)
@@ -210,7 +211,6 @@ sub pheno_heritability_analysis_output :Path('/phenotypic/heritability/analysis/
     # $ret->{acronyms} = $acronyms;
     $ret->{status}   = 'success';
 
-    print STDERR "\nheritability table file: $h2_table_file\n";
     my $data = $c->controller('solGS::Utils')->read_file_data($h2_table_file);
     $ret->{data} = $data;
     #$ret->{data}     = read_file($h2_json_file); 
@@ -398,14 +398,14 @@ sub h2_pheno_r_jobs_file {
 sub h2_pheno_query_jobs {
     my ($self, $c) = @_;
 
-
     my $trial_id = $c->stash->{pop_id} || $c->stash->{trial_id};
+  
     $c->controller('solGS::solGS')->get_cluster_phenotype_query_job_args($c, [$trial_id]);
     my $jobs = $c->stash->{cluster_phenotype_query_job_args};
-
+   
     if (reftype $jobs ne 'ARRAY') 
     {
-    $jobs = [$jobs];
+	$jobs = [$jobs];
     }
     
     $c->stash->{h2_pheno_query_jobs} = $jobs;
@@ -423,11 +423,11 @@ sub h2_pheno_query_jobs_file {
   
     if ($jobs->[0])
     {
-    my $temp_dir = $c->stash->{heritability_temp_dir};
-    my $jobs_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'pheno-h2-query-jobs-file');       
-   
-    nstore $jobs, $jobs_file
-        or croak "heritability pheno query jobs : $! serializing heritability phenoquery jobs to $jobs_file";
+	my $temp_dir = $c->stash->{heritability_temp_dir};
+	$jobs_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'pheno-h2-query-jobs-file');       
+	
+	nstore $jobs, $jobs_file
+	    or croak "heritability pheno query jobs : $! serializing heritability phenoquery jobs to $jobs_file";
     }
 
     $c->stash->{h2_pheno_query_jobs_file} = $jobs_file;

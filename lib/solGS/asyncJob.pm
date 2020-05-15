@@ -56,16 +56,43 @@ sub run_prerequisite_jobs {
     {  	     
 	$jobs = retrieve($jobs);
 
-	if (reftype $jobs ne 'ARRAY') 
+	if (reftype $jobs eq 'HASH') 
 	{
-	    $jobs = [$jobs];
+	    my @priority_jobs;
+	    foreach my $rank (sort keys %$jobs) 
+	    {	
+		my $js = $jobs->{$rank};
+		foreach my $jb (@$js) 
+		{
+		    my $sj = $self->submit_job($jb);
+		    push @priority_jobs, $sj;
+		}	
+	    }
+
+	    foreach my $priority_job (@priority_jobs) 
+	    {	
+		while (1) 
+		{
+		    last if !$priority_job->alive();
+		    sleep 30 if $priority_job->alive();
+		}
+	    }
 	}
-		
-	foreach my $job (@$jobs) 
+	else
 	{
-	    my $job = $self->submit_job($job);
-	    push @jobs, $job;
+	    if (reftype $jobs ne 'ARRAY' && reftype $jobs ne 'HASH') 
+	    {
+		$jobs = [$jobs];
+	    }
+
+	    foreach my $job (@$jobs) 
+	    {
+		my $job = $self->submit_job($job);
+		push @jobs, $job;
+	    }
+	    
 	}
+	
     }
     
     return \@jobs;
