@@ -20,7 +20,9 @@ library(caret)
 library(dplyr)
 library(tibble)
 library(rlang)
+library(jsonlite)
 library(data.table)
+
 
 
 allArgs <- commandArgs()
@@ -302,7 +304,8 @@ relationshipMatrix    <- c()
 #additive relationship model
 #calculate the inner products for
 #genotypes (realized relationship matrix)
-relationshipMatrixFile <- grep("relationship_matrix", outputFiles, value = TRUE)
+relationshipMatrixFile <- grep("relationship_matrix_table", outputFiles, value = TRUE)
+relationshipMatrixJsonFile <- grep("relationship_matrix_json", outputFiles, value = TRUE)
 
 if (length(relationshipMatrixFile) != 0) {
   if (file.info(relationshipMatrixFile)$size > 0 ) {
@@ -324,6 +327,7 @@ relationshipMatrixFiltered <- relationshipMatrix[(rownames(relationshipMatrix) %
 relationshipMatrixFiltered <- relationshipMatrixFiltered[, (colnames(relationshipMatrixFiltered) %in% rownames(commonObs))]
 relationshipMatrix         <- data.frame(relationshipMatrix)
 relationshipMatrix         <- round(relationshipMatrix, 3)
+
 
 nCores <- detectCores()
 
@@ -647,6 +651,20 @@ if (file.info(relationshipMatrixFile)$size == 0) {
          sep   = "\t",
          quote = FALSE,
          )
+}
+
+
+if (file.info(relationshipMatrixJsonFile)$size == 0) {
+
+    relationshipMatrixList <- list(labels = names(relationshipMatrix),
+                                       values = relationshipMatrix)
+
+    relationshipMatrixJson <- jsonlite::toJSON(relationshipMatrixList)
+
+    
+    write(relationshipMatrixJson,
+                    file  = relationshipMatrixJsonFile,
+                    )
 }
 
 
