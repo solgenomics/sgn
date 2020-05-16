@@ -447,7 +447,9 @@ sub grm_cache_key {
     my $json = JSON->new();
     #preserve order of hash keys to get same text
     $json = $json->canonical();
-    my $accessions = $json->encode( $self->accession_id_list() || [] );
+    my $sorted_accession_list = $self->accession_id_list() || [];
+    my @sorted_accession_list = sort @$sorted_accession_list;
+    my $accessions = $json->encode( \@sorted_accession_list );
     my $plots = $json->encode( $self->plot_id_list() || [] );
     my $protocol = $self->protocol_id() || '';
     my $genotypeprophash = $json->encode( $self->genotypeprop_hash_select() || [] );
