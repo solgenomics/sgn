@@ -216,6 +216,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $data_level = $c->req->param("dataLevel") && $c->req->param("dataLevel") ne 'null' ? $c->req->param("dataLevel") : "plot";
     my $timestamp_option = $c->req->param("timestamp") && $c->req->param("timestamp") ne 'null' ? $c->req->param("timestamp") : 0;
     my $exclude_phenotype_outlier = $c->req->param("exclude_phenotype_outlier") && $c->req->param("exclude_phenotype_outlier") ne 'null' && $c->req->param("exclude_phenotype_outlier") ne 'undefined' ? $c->req->param("exclude_phenotype_outlier") : 0;
+    my $include_pedigree_parents = $c->req->param('include_pedigree_parents');
     my $trait_list = $c->req->param("trait_list");
     my $trait_component_list = $c->req->param("trait_component_list");
     my $year_list = $c->req->param("year_list");
@@ -363,6 +364,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         format => $plugin,
         data_level => $data_level,
         include_timestamp => $timestamp_option,
+        include_pedigree_parents=>$include_pedigree_parents,
         exclude_phenotype_outlier => $exclude_phenotype_outlier,
         trait_contains => \@trait_contains_list,
         phenotype_min_value => $phenotype_min_value,
