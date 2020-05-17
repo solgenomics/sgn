@@ -1736,6 +1736,14 @@ sub _get_standard_9_polygon_types {
     );
 }
 
+sub _get_standard_ndvi_ndre_polygon_types {
+    return (
+        'observation_unit_polygon_red_imagery' => 1, #77984, 77697
+        'observation_unit_polygon_red_edge_imagery' => 1, #77985, 77698
+        'observation_unit_polygon_nir_imagery' => 1, #77986, 77699
+    );
+}
+
 sub get_plot_polygon_types : Path('/api/drone_imagery/plot_polygon_types') : ActionClass('REST') { }
 sub get_plot_polygon_types_GET : Args(0) {
     my $self = shift;
@@ -1743,6 +1751,7 @@ sub get_plot_polygon_types_GET : Args(0) {
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $checkbox_select_name = $c->req->param('select_checkbox_name');
     my $checkbox_select_all = $c->req->param('checkbox_select_all');
+    my $checkbox_select_standard_ndvi_ndre = $c->req->param('checkbox_select_standard_ndvi_ndre');
     my $checkbox_select_standard_4 = $c->req->param('checkbox_select_standard_4');
     my $checkbox_select_standard_9 = $c->req->param('checkbox_select_standard_9');
     my $field_trial_ids = $c->req->param('field_trial_ids');
@@ -1776,6 +1785,7 @@ sub get_plot_polygon_types_GET : Args(0) {
         $project_image_type_id_list_sql = join ",", (keys %$project_image_type_id_list);
     }
 
+    my %standard_ndvi_ndre = _get_standard_ndvi_ndre_polygon_types();
     my %standard_4 = _get_standard_4_polygon_types();
     my %standard_9 = _get_standard_9_polygon_types();
 
@@ -1837,6 +1847,14 @@ sub get_plot_polygon_types_GET : Args(0) {
             }
             elsif ($checkbox_select_standard_9) {
                 if (exists($standard_9{$project_md_image_type_name})) {
+                    $input .= "checked disabled";
+                }
+                else {
+                    $input .= "disabled";
+                }
+            }
+            elsif ($checkbox_select_standard_ndvi_ndre) {
+                if (exists($standard_ndvi_ndre{$project_md_image_type_name})) {
                     $input .= "checked disabled";
                 }
                 else {

@@ -3823,7 +3823,7 @@ jQuery(document).ready(function() {
             jQuery('#drone_image_autoencoder_keras_vi_plot_polygon_image_type_table').DataTable({
                 destroy : true,
                 paging : false,
-                ajax : '/api/drone_imagery/plot_polygon_types?checkbox_select_standard_4=1&select_checkbox_name=autoencoder_keras_vi_drone_imagery_plot_polygon_type_select&field_trial_ids='+manage_drone_imagery_autoencoder_keras_vi_field_trial_id_string+'&drone_run_ids='+JSON.stringify(manage_drone_imagery_autoencoder_keras_vi_drone_run_ids)
+                ajax : '/api/drone_imagery/plot_polygon_types?checkbox_select_standard_ndvi_ndre=1&select_checkbox_name=autoencoder_keras_vi_drone_imagery_plot_polygon_type_select&field_trial_ids='+manage_drone_imagery_autoencoder_keras_vi_field_trial_id_string+'&drone_run_ids='+JSON.stringify(manage_drone_imagery_autoencoder_keras_vi_drone_run_ids)
             });
 
             Workflow.complete("#drone_imagery_autoencoder_keras_vi_model_drone_run_select_step");
