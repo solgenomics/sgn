@@ -85,8 +85,8 @@ while (my $line = <$F>) {
         
         my $image_id = $_->{image_id};
         my $stock_image_id = $_->{stock_image_id};
-        #$h->execute($new_plot_id, $stock_image_id);
-        $h2->execute($image_id);
+        $h->execute($new_plot_id, $stock_image_id);
+        #$h2->execute($image_id);
     }
 }
 close($F);
