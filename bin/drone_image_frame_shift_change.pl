@@ -82,7 +82,7 @@ while (my $line = <$F>) {
         print STDERR Dumper $_->{stock_uniquename};
         
         my $stock_image_id = $_->{stock_image_id};
-        #$h->execute($new_plot_id, $stock_image_id);
+        $h->execute($new_plot_id, $stock_image_id);
     }
 }
 close($F);
