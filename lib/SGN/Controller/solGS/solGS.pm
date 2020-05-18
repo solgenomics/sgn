@@ -2173,7 +2173,7 @@ sub phenotype_graph :Path('/solgs/phenotype/graph') Args(0) {
     my $combo_pops_id = $c->req->param('combo_pops_id');
 
     $self->get_trait_details($c, $trait_id);
-
+       
     $c->stash->{pop_id}        = $pop_id;
     $c->stash->{combo_pops_id} = $combo_pops_id;
 
@@ -2183,7 +2183,7 @@ sub phenotype_graph :Path('/solgs/phenotype/graph') Args(0) {
 
     my $trait_pheno_file = $c->{stash}->{trait_phenodata_file};
     my $trait_data = $c->controller("solGS::Utils")->read_file_data($trait_pheno_file);
-
+       
     my $ret->{status} = 'failed';
     
     if (@$trait_data) 
@@ -2200,18 +2200,57 @@ sub phenotype_graph :Path('/solgs/phenotype/graph') Args(0) {
 }
 
 
+sub trait_pheno_data_type {
+    my ($self, $c, $trait_pheno_file) = @_;
+
+    #$c->controller("solGS::Files")->trait_phenodata_file($c);
+    #my $trait_pheno_file = $c->{stash}->{trait_phenodata_file};
+
+    my $mean_type;
+    if (-s $trait_pheno_file)
+    {
+	my @trait_data = read_file($trait_pheno_file);
+	$mean_type = shift(@trait_data);
+	
+	if ($mean_type =~ /fixed_effects/)
+	{
+	    $mean_type = 'Adjusted means, fixed (genotype) effects model';
+	}
+	elsif ($mean_type =~ /random_effects/)
+	{
+	    $mean_type = 'Adjusted means, random (genotype) effects model';
+	} 
+	else	    
+	{
+	    if ($c->req->path =~ /combined\/populations\//) 
+	    {
+		$mean_type = 'Average of adjusted means and/or arithmetic means across trials.';
+	    }
+	    else
+	    {
+		$mean_type = 'Arithmetic means';
+	    }
+	}
+    }
+    
+    return $mean_type;
+    
+}
+
+
 #generates descriptive stat for a trait phenotype data
 sub trait_phenotype_stat {
     my ($self, $c) = @_; 
     
     $c->controller("solGS::Files")->trait_phenodata_file($c);
-
     my $trait_pheno_file = $c->{stash}->{trait_phenodata_file};
 
     my $trait_data = $c->controller("solGS::Utils")->read_file_data($trait_pheno_file);
     
     my @desc_stat;
     my $background_job = $c->stash->{background_job};
+
+    my $pheno_type = $self->trait_pheno_data_type($c, $trait_pheno_file);
    
     if ($trait_data && !$background_job)
     {
@@ -2250,17 +2289,17 @@ sub trait_phenotype_stat {
 	$cv   = $round->round($cv);
 	$cv   = $cv . '%';
 
-	@desc_stat =  ( [ 'Total no. of genotypes', $cnt ],
-			[ 'Genotypes missing data', $na ],
-			[ 'Minimum', $min ], 
-			[ 'Maximum', $max ],
-			[ 'Arithmetic mean', $mean ],
-			[ 'Median', $med ],  
-			[ 'Standard deviation', $std ],
-			[ 'Coefficient of variation', $cv ]
-	    );
-   
-     
+	@desc_stat =  (
+	    [ 'Phenotype data type', $pheno_type],
+	    [ 'Total no. of genotypes', $cnt ],
+	    [ 'Genotypes missing data', $na ],
+	    [ 'Minimum', $min ], 
+	    [ 'Maximum', $max ],
+	    [ 'Arithmetic mean', $mean ],
+	    [ 'Median', $med ],  
+	    [ 'Standard deviation', $std ],
+	    [ 'Coefficient of variation', $cv ]
+	    );  
     }
     else
     {
