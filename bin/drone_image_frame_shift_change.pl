@@ -57,7 +57,9 @@ my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } );
 $dbh->do('SET search_path TO public,sgn');
 
 my $q = "UPDATE phenome.stock_image SET stock_id = ? WHERE stock_image_id = ?;";
+my $q2 = "UPDATE metadata.md_image SET obsolete='t' WHERE image_id = ?;";
 my $h = $schema->storage->dbh()->prepare($q);
+my $h2 = $schema->storage->dbh()->prepare($q2);
 
 open(my $F, "<", $opt_i) || die " Can't open file $opt_i\n";
 while (my $line = <$F>) { 
@@ -67,7 +69,7 @@ while (my $line = <$F>) {
     my $plot_name_new = $row[1];
 
     my $old_plot_id = $schema->resultset("Stock::Stock")->find({uniquename=>$plot_name_old})->stock_id();
-    my $new_plot_id = $schema->resultset("Stock::Stock")->find({uniquename=>$plot_name_new})->stock_id();
+    #my $new_plot_id = $schema->resultset("Stock::Stock")->find({uniquename=>$plot_name_new})->stock_id();
 
     my $images_search = CXGN::DroneImagery::ImagesSearch->new({
         bcs_schema=>$schema,
@@ -81,8 +83,10 @@ while (my $line = <$F>) {
         print STDERR Dumper $_->{project_image_type_name};
         print STDERR Dumper $_->{stock_uniquename};
         
+        my $image_id = $_->{image_id};
         my $stock_image_id = $_->{stock_image_id};
-        $h->execute($new_plot_id, $stock_image_id);
+        #$h->execute($new_plot_id, $stock_image_id);
+        $h2->execute($image_id);
     }
 }
 close($F);
