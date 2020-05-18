@@ -75,8 +75,12 @@ while (my $line = <$F>) {
         stock_id_list=>[$old_plot_id]
     });
     my ($result, $total_count) = $images_search->search();
-    print STDERR Dumper $result;
+
     foreach (@$result) {
+        print STDERR Dumper $_->{drone_run_band_project_name};
+        print STDERR Dumper $_->{stock_type_id};
+        print STDERR Dumper $_->{stock_uniquename};
+        
         my $stock_image_id = $_->{stock_image_id};
         #$h->execute($new_plot_id, $stock_image_id);
     }
