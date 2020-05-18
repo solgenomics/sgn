@@ -78,7 +78,7 @@ while (my $line = <$F>) {
 
     foreach (@$result) {
         print STDERR Dumper $_->{drone_run_band_project_name};
-        print STDERR Dumper $_->{stock_type_id};
+        print STDERR Dumper $_->{project_image_type_name};
         print STDERR Dumper $_->{stock_uniquename};
         
         my $stock_image_id = $_->{stock_image_id};
