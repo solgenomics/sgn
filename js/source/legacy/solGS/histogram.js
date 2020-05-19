@@ -59,7 +59,7 @@ solGS.histogram =  {
 			solGS.histogram.plotHistogram(args);
 			
 			jQuery("#histogram_message").empty();
-			solGS.histogram.descriptiveStat(stat);	
+			//solGS.histogram.descriptiveStat(stat);	
 		    }
 		} else {                
                     var errorMessage = "<p>This trait has no phenotype data to plot.</p>";
