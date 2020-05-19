@@ -118,14 +118,51 @@ sub _validate_with_plugin {
         }
     }
 
+    #check if progeny already has pedigree
+    my %progenies_hash;
+    my @progeny_stock_ids;
+    my %return;
+    foreach my $progeny_name(@all_progenies) {
+        my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
+        $stock_lookup->set_stock_name($progeny_name);
+        my $progeny_stock = $stock_lookup->get_stock_exact();
+        my $progeny_stock_id = $progeny_stock->stock_id();
+        push @progeny_stock_ids, $progeny_stock_id;
+        $progenies_hash{$progeny_stock_id} = $progeny_name;
+    }
+    my $female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id;;
+    my $male_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id;;
+
+    my $progeny_female_parent_search = $schema->resultset('Stock::StockRelationship')->search({
+        type_id => $female_parent_cvterm_id,
+        object_id => { '-in'=>\@progeny_stock_ids },
+    });
+    my %progeny_with_female_parent_already;
+    while (my $r=$progeny_female_parent_search->next){
+        $progeny_with_female_parent_already{$r->object_id} = [$r->subject_id, $r->value];
+    }
+    my $progeny_male_parent_search = $schema->resultset('Stock::StockRelationship')->search({
+        type_id => $male_parent_cvterm_id,
+        object_id => { '-in'=>\@progeny_stock_ids },
+    });
+    my %progeny_with_male_parent_already;
+    while (my $r=$progeny_male_parent_search->next){
+        $progeny_with_male_parent_already{$r->object_id} = $r->subject_id;
+    }
+
+        foreach (@progeny_stock_ids){
+            if (exists($progeny_with_female_parent_already{$_})){
+                push @error_messages, $progenies_hash{$_}." already has female parent stockID ".$progeny_with_female_parent_already{$_}->[0]." saved with cross type ".$progeny_with_female_parent_already{$_}->[1];
+            }
+            if (exists($progeny_with_male_parent_already{$_})){
+                push @error_messages, $progenies_hash{$_}." already has male parent stockID ".$progeny_with_male_parent_already{$_};
+            }
+        }
+
     #store any errors found in the parsed file to parse_errors accessor
-    if (scalar(@error_messages) >= 1) {
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
-    }
-
-    return 1; #returns true if validation is passed
 
 }
 

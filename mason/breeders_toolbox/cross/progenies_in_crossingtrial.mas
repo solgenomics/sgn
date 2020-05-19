@@ -390,6 +390,33 @@ $trial_id
 </div>
 
 
+<div class="modal fade" id="upload_cross_progenies_validate_display" name="upload_cross_progenies_validate_display" tabindex="-1" role="dialog" aria-labelledby="uploadCrossProgeniesValidateDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadCrossProgeniesValidateDialog">Results From Validation</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <div class="well">To Overwrite Parents In the Case That An Accession Already Has Male or Female Parents <input type="checkbox" checked id="progeny_upload_overwrite_pedigrees" /></div>
+ 	  <table class="table table-hover">
+    	    <tbody></tbody>
+  	  </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="upload_progenies_store" id="upload_progenies_store" data-dismiss="modal">Store</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
 <script>
 
 jQuery(document).ready(function(){
@@ -469,22 +496,39 @@ jQuery(document).ready(function(){
         post: function(){
             jQuery("#working_modal").modal("show");
         },
-        complete: function(response) {
-            jQuery("#working_modal").modal("hide");
+//        complete: function(response) {
+//            jQuery("#working_modal").modal("hide");
+//            if (response.error_string) {
+//                jQuery("#upload_progenies_error_display tbody").html('');
+//                jQuery("#upload_progenies_error_display tbody").append(response.error_string);
+//                jQuery("#upload_progenies_error_display").modal("show");
+//                return;
+//            }
+//            if (response.error) {
+//                alert(response.error);
+//                return;
+//            }
+//            if (response.success) {
+//                jQuery('#progenies_saved_dialog_message').modal("show");
+//            }
+//        }
+
+        complete: function (response) {
+            jQuery('#working_modal').modal("hide");
+            console.log(response);
+            var html;
+//            archived_file_name = response.archived_file_name;
             if (response.error_string) {
-                jQuery("#upload_progenies_error_display tbody").html('');
-                jQuery("#upload_progenies_error_display tbody").append(response.error_string);
-                jQuery("#upload_progenies_error_display").modal("show");
-                return;
+                html = '<h3>The Following Issues Were Identified</h3><p class="bg-warning">'+response.error+'</p>';
             }
-            if (response.error) {
-                alert(response.error);
-                return;
+            else {
+                html = '<h3>There Were No Issues Identified</h3>';
             }
-            if (response.success) {
-                jQuery('#progenies_saved_dialog_message').modal("show");
-            }
+            jQuery("#upload_cross_progenies_validate_display tbody").html(html);
+            jQuery("#upload_cross_progenies_validate_display").modal('show');
         }
+
+
     });
 
     jQuery("#dismiss_progenies_saved_dialog").click(function(){

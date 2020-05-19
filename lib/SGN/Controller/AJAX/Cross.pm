@@ -1055,7 +1055,6 @@ sub validate_upload_existing_progenies_POST : Args(0) {
     $parsed_data = $parser->parse();
     #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
 
-    if (!$parsed_data){
         my $return_error = '';
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
@@ -1069,62 +1068,7 @@ sub validate_upload_existing_progenies_POST : Args(0) {
             }
         }
         $c->stash->{rest} = {error_string => $return_error, missing_crosses => $parse_errors->{'missing_crosses'} };
-        $c->detach();
-    }
-
-    my @all_progenies;
-    if ($parsed_data){
-        my %progeny_hash = %{$parsed_data};
-        foreach my $cross_name_key (keys %progeny_hash){
-            push @all_progenies, $progeny_hash{$cross_name_key};
-        }
-    }
-
-    my %progenies_hash;
-    my @progeny_stock_ids;
-    my %return;
-    foreach my $progeny_name(@all_progenies) {
-        my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
-        $stock_lookup->set_stock_name($progeny_name);
-        my $progeny_stock = $stock_lookup->get_stock_exact();
-        my $progeny_stock_id = $progeny_stock->stock_id();
-        push @progeny_stock_ids, $progeny_stock_id;
-        $progenies_hash{$progeny_stock_id} = $progeny_name;
-    }
-
-    my $female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'female_parent', 'stock_relationship')->cvterm_id;;
-    my $male_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'male_parent', 'stock_relationship')->cvterm_id;;
-
-    my $progeny_female_parent_search = $chado_schema->resultset('Stock::StockRelationship')->search({
-        type_id => $female_parent_cvterm_id,
-        object_id => { '-in'=>\@progeny_stock_ids },
-    });
-    my %progeny_with_female_parent_already;
-    while (my $r=$progeny_female_parent_search->next){
-        $progeny_with_female_parent_already{$r->object_id} = [$r->subject_id, $r->value];
-    }
-    my $progeny_male_parent_search = $chado_schema->resultset('Stock::StockRelationship')->search({
-        type_id => $male_parent_cvterm_id,
-        object_id => { '-in'=>\@progeny_stock_ids },
-    });
-    my %progeny_with_male_parent_already;
-    while (my $r=$progeny_male_parent_search->next){
-        $progeny_with_male_parent_already{$r->object_id} = $r->subject_id;
-    }
-
-    foreach (@progeny_stock_ids){
-        if (exists($progeny_with_female_parent_already{$_})){
-            push @{$return{error}}, $progenies_hash{$_}." already has female parent stockID ".$progeny_with_female_parent_already{$_}->[0]." saved with cross type ".$progeny_with_female_parent_already{$_}->[1];
-        }
-        if (exists($progeny_with_male_parent_already{$_})){
-            push @{$return{error}}, $progenies_hash{$_}." already has male parent stockID ".$progeny_with_male_parent_already{$_};
-        }
-    }
-
-    $c->stash->{rest} = {success => "1",};
 }
-
-
 
 
 sub upload_info : Path('/ajax/cross/upload_info') : ActionClass('REST'){ }
