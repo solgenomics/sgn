@@ -1,7 +1,7 @@
 library(dplyr)
 library(magrittr)
 library(devtools)
-library(rjson)
+library(jsonlite)
 
 # install_github("GoreLab/waves", auth_token = github_pat())
 library(waves)
@@ -33,7 +33,7 @@ tune.length <- as.numeric(args[5])
 rf.var.importance <- ifelse(args[6]=="TRUE", TRUE, FALSE)
 
 # args[7] = CV method as string
-cv.scheme.input <- args[7]
+cv.scheme <- args[7]
 ## Set cv.scheme to NULL if != CV1, CV2, CV0, or CV00
 stratified.sampling <- TRUE
 if(cv.scheme == "random"){
@@ -47,7 +47,7 @@ if(cv.scheme == "random"){
 
 if(is.null(cv.scheme)){
   # args[8] = training data.frame: observationUnit level data with phenotypes and spectra in JSON format
-  df.ready <- as.data.frame(fromJSON(args[8])) %>% 
+  df.ready <- as.data.frame(fromJSON(txt = args[8])) %>% 
     dplyr::select(observationUnitName, all_of(pheno), starts_with("X"))
 
   # args[9] = test data.frame: observationUnit level data with phenotypes and spectra in JSON format

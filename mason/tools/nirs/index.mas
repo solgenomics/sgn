@@ -48,10 +48,27 @@
   <div class="form-group form-inline">
     <label for="dataset_select">Available datasets: </label><div id="dataset_select"></div>
     <br>
-    <button class="btn btn-primary" id="selectDataset" type="submit" name="selectDataset" value="selectDataset">Select dataset</button>
+    <button class="btn btn-primary" id="selectDataset" type="submit" name="selectDataset" value="selectDataset">Select training dataset</button>
     <br>
     <br>
     </div>
+
+  <div class="form-group form-inline">
+    <label for="trial_select_train">Available studies for model training: </label><div id="study_select_train"></div>
+    <br>
+    <button class="btn btn-primary" id="selectStudyTrain" type="submit" name="selectStudyTrain" value="selectStudyTrain">Select study (or studies) for model training</button>
+    <br>
+    <br>
+    </div>
+
+  <div class="form-group form-inline">
+    <label for="trial_select_test">Available studies for model testing: </label><div id="study_select_test"></div>
+    <br>
+    <button class="btn btn-primary" id="selectStudyTest" type="submit" name="selectStudyTest" value="selectStudyTest">Select study (or studies) for model testing</button>
+    <br>
+    <br>
+    </div>
+
 
   <div class="form-group form-inline">
     <label class="blast_select_label" for="pheno_select">Available&nbsptraits:&nbsp; </label>
@@ -161,7 +178,7 @@
   </center>
   <br>
   <center>
-    <div id="heritability_output"></div>
+    <div id="nirs_output"></div>
   </center>
   <div id="Overview_output"></div>
   <div id="Coverage_output"></div>
@@ -186,41 +203,95 @@ jQuery(document).ready(function() {
     alert('You must be logged in to perform spectral analysis');
   }
   $('#pheno_select').attr("disabled",true).html('');
+  
   jQuery('#dataset_select').click(function() {
     $('#pheno_select').attr("disabled",true).html('');
     $('#trait_histogram_plot').html('');
-    $('#heritability_output').empty();
+    $('#nirs_output').empty();
   });
+
   jQuery('#selectDataset').click(function() {
     var dataset_id = jQuery('#available_datasets').val();
-//    alert("Dataset ID: "+dataset_id);
     $.ajax({
-      url: '/ajax/heritability/shared_phenotypes',
-      data: {'dataset_id': dataset_id},
-      success: function(response) {
-        if (response.error) {
-          $('#dataset_select').val('ERROR');
+        url: '/ajax/Nirs/shared_phenotypes',
+        data: {
+          'dataset_id': dataset_id
+        },
+        success: function(response) {
+            if (response.error) {
+                $('#dataset_select').val('ERROR');
+            } else {
+                var option_html = '<option selected="selected" value=""> </option>';
+                for (var i = 0; i < response.options.length; i++) {
+                    option_html += '<option value="'+response.options[i][1]+'">'+(response.options[i][1])+'</option>';
+                }
+                $('#pheno_select').attr("disabled",false).html(option_html);
+                jQuery('#tempfile').html(response.tempfile);
+            }
+        },
+        error: function(response) {
+            alert("An error occurred. The service may be temporarily unavailable.");
         }
-        else {
-//	    alert(response.options);
-//	    	    alert(response.options.length);
-	var option_html = '<option selected="selected" value=""> </option>';
-	  for (var i = 0; i < response.options.length; i++) {
-	    option_html += '<option value="'+response.options[i][1]+'">'+(response.options[i][1])+'</option>';
-	  }
-	  $('#pheno_select').attr("disabled",false).html(option_html);
-      jQuery('#tempfile').html(response.tempfile);
-
-
-	}
-
-      },
-      error: function(response) {
-        alert("An error occurred, the service may temporarily be unavailable, ponto 1");
-      }
     });
   });
 
+  jQuery('#selectStudyTrain').click(function() {
+    if (!jQuery('#dataset_select').val()) {
+      alert("Please select a dataset.")
+    } else {
+      alert("Inside study train preview"); // TODO comment this out after debugging
+      var study_train_id = jQuery('#available_studies_train').val();
+    $.ajax({
+        url: '/ajax/Nirs/get_training_study',
+        data: {
+          'study_train_id': study_train_id
+        },
+        success: function(response) {
+            if (response.error) {
+                $('#trial_select_train').val('ERROR');
+            } else {
+                var option_html = '<option selected="selected" value=""> </option>';
+                for (var i = 0; i < response.options.length; i++) {
+                    option_html += '<option value="'+response.options[i][1]+'">'+(response.options[i][1])+'</option>';
+                }
+                jQuery('#tempfile').html(response.tempfile);
+            }
+        },
+        error: function(response) {
+            alert("An error occurred. The service may be temporarily unavailable.");
+        }
+      }); // end .ajax
+    }; // end else statement 
+  });
+
+  jQuery('#selectStudyTest').click(function() {
+    if (!jQuery('#dataset_select').val()) {
+      alert("Please select a dataset.")
+    } else {
+      alert("Inside study test preview"); // TODO comment this out after debugging
+      var study_test_id = jQuery('#available_studies_test').val();
+    $.ajax({
+        url: '/ajax/Nirs/get_testing_study',
+        data: {
+          'study_test_id': study_test_id
+        },
+        success: function(response) {
+            if (response.error) {
+                $('#trial_select_test').val('ERROR');
+            } else {
+                var option_html = '<option selected="selected" value=""> </option>';
+                for (var i = 0; i < response.options.length; i++) {
+                    option_html += '<option value="'+response.options[i][1]+'">'+(response.options[i][1])+'</option>';
+                }
+                jQuery('#tempfile').html(response.tempfile);
+            }
+        },
+        error: function(response) {
+            alert("An error occurred. The service may be temporarily unavailable.");
+        }
+      }); // end .ajax
+    }; // end else statement 
+  });
 
   jQuery('#preview_trait_histogram_btn').on('click', function() {
     if (!jQuery('#pheno_select').val()) {
@@ -234,7 +305,7 @@ jQuery(document).ready(function() {
           url: '/ajax/Nirs/getdata',
           data: { 'file' : tempfile },
           success: function(r)  {
-          //alert("data grabbed "+JSON.stringify(r.data));
+          alert("data grabbed "+JSON.stringify(r.data)); // TODO comment this after debugging
           var v = {
               "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
               "width": 200,
@@ -270,9 +341,9 @@ jQuery(document).ready(function() {
   jQuery('#runTestModelPerformance').click( function () {
     if (!jQuery('#pheno_select').val()) {
       alert("Please select a dataset and trait.")
-      $('#heritability_output').empty();
+      $('#nirs_output').empty();
     } else {
-      $('#heritability_output').empty();
+      $('#nirs_output').empty();
       if ($('#pheno_select').val() != ""){
         var cv_id = $('#cv_select').val();
         var dataset_id = $('#available_datasets').val();
@@ -282,9 +353,10 @@ jQuery(document).ready(function() {
         var model_alg = $('model_algorithm_select').val();
         var tunelen = $('tuneLength_select').val();
         var rf_var_imp = $('rfvarim').val()
+        var save_model = $('save_model').val();
         $.ajax({
           url: '/ajax/Nirs/generate_results',
-          data: {'cv_id' : cv_id,'dataset_id': dataset_id, 'trait_id': trait_id, 'preprocessing_bool': preprocessing_bool, 'niter':niter, 'model_alg': model_alg, 'tunelen':tunelen, 'rf_var_imp':rf_var_imp},
+          data: {'cv_id' : cv_id,'dataset_id': dataset_id, 'trait_id': trait_id, 'preprocessing_bool': preprocessing_bool, 'niter':niter, 'model_alg': model_alg, 'tunelen':tunelen, 'rf_var_imp':rf_var_imp, 'save_model':save_model},
           beforeSend: function() {
             jQuery("#working_modal").modal("show");
           },
@@ -295,13 +367,13 @@ jQuery(document).ready(function() {
               alert(response.error);
             }
             else {
-              var fig1_response = response.h2Table;
-              var fig2_response = response.figure3;
+              var fig1_response = response.modelStatsTable;
+              var fig2_response = response.outFigure;
         //alert("Response ID: "+temp_response);
             //alert("Response ID: "+fig1_response);
 
-              $('#heritability_output').append("<img id='h2_Table' src='"+ fig1_response + "'/>");
-              $('#heritability_output').append("<img id='h2_Figure4' src='"+ fig2_response + "'/>");
+              $('#nirs_output').append("<img id='model_stats_table' src='"+ fig1_response + "'/>");
+              $('#nirs_output').append("<img id='output_figure' src='"+ fig2_response + "'/>");
             }
           },
           error: function(xhr, status, error) {
