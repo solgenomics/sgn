@@ -27,8 +27,6 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
     );
 
-# TODO to JSON?
-
 sub shared_phenotypes: Path('/ajax/Nirs/shared_phenotypes') : {
     my $self = shift;
     my $c = shift;
@@ -60,8 +58,21 @@ sub shared_phenotypes: Path('/ajax/Nirs/shared_phenotypes') : {
     };
 }
 
+sub get_training_study: Path(/ajax/Nirs/get_training_study) : {
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = $c->req->param('dataset_id');
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $ds = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id);
+    my $trials = $ds->retrieve_trials();
+    my @trials_info;
+    foreach my $t (@$trials) {
+          my $tobj = CXGN::Cvterm->new({ schema=>$schema, cvterm_id => $t });
+        push @trials_info, [ $tobj->cvterm_id(), $tobj->name()];
+    }
+}
 
-# TODO change this to JSON
 sub extract_trait_data :Path('/ajax/Nirs/getdata') Args(0) {
     my $self = shift;
     my $c = shift;
