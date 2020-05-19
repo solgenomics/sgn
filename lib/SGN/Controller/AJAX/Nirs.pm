@@ -198,21 +198,26 @@ sub generate_results: Path('/ajax/Nirs/generate_results') : {
         
     }
 my $j;
+my @formated = ();
 for($j=0; $j < @rawjson; $j++){
 	print "The number is $j \n";
 }
-my $limit = ($j-1);
-my @formated = ();
+my $limit;
 my $i;
-
-for($i = 0; $i < @rawjson; $i++) {
-    if($i==0){
-    	push @formated, "[\n{\"observationUnitId\":\"$rawplot[$i]\",\"nirs_spectra\":$rawjson[$i]\n},";
-    }elsif($i<$limit){
-    	push @formated, "{\"observationUnitId\":\"$rawplot[$i]\",\"nirs_spectra\":$rawjson[$i]\n},";
-    }
-    if($i==$limit){
-    	push @formated, "{\"observationUnitId\":\"$rawplot[$i]\",\"nirs_spectra\":$rawjson[$i]\n}\n\]\n";
+if($j==1){
+    $i = 0;
+    push @formated, "[\n{\"observationUnitId\":\"$rawplot[$i]\",\"nirs_spectra\":$rawjson[$i]\n}\n]\n";
+    } elsif($j>1){
+        $limit = ($j-1);
+    for($i = 0; $i < @rawjson; $i++) {
+        if($i==0){
+        	push @formated, "[\n{\"observationUnitId\":\"$rawplot[$i]\",\"nirs_spectra\":$rawjson[$i]\n},";
+        }elsif($i<$limit){
+        	push @formated, "{\"observationUnitId\":\"$rawplot[$i]\",\"nirs_spectra\":$rawjson[$i]\n},";
+        }
+        if($i==$limit){
+        	push @formated, "{\"observationUnitId\":\"$rawplot[$i]\",\"nirs_spectra\":$rawjson[$i]\n}\n\]\n";
+        }
     }
 }
 
