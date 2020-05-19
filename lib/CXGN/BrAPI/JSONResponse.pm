@@ -27,7 +27,7 @@ sub return_success {
     my $data_files = shift;
     my $status = shift;
     my $message = shift;
-    push @$status, { '200' => $message };
+    push @$status, { 'INFO' => $message };
     my $formatted_status = _convert_status_obj($status);
     my $response = { 
         'status' => $formatted_status,
@@ -44,7 +44,7 @@ sub _convert_status_obj {
     foreach (@$status){
         while (my ($code, $message) = each %$_){
             push @formatted_status, {
-                code => $code,
+                messageType => $code,
                 message => $message
             };
         }

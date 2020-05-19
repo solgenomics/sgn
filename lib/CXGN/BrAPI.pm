@@ -70,7 +70,7 @@ sub brapi_wrapper {
 	my $module = shift;
 
 	my $brapi_package = 'CXGN::BrAPI::'.$self->version().'::'.$module;
-	push @{$self->brapi_module_inst->{status}}, { 'info' => "Loading $brapi_package" };
+	push @{$self->brapi_module_inst->{status}}, { 'INFO' => "Loading $brapi_package" };
 	my $brapi_module = $brapi_package->new($self->brapi_module_inst);
 	return $brapi_module;
 }

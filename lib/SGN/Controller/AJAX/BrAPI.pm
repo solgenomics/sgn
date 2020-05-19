@@ -108,7 +108,7 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
 	my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 	my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-	push @status, { 'info' => "BrAPI base call found with page=$page, pageSize=$page_size" };
+	push @status, { 'INFO' => "BrAPI base call found with page=$page, pageSize=$page_size" };
 
 	my $brapi = CXGN::BrAPI->new({
 		version => $version,
