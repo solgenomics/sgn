@@ -29,6 +29,7 @@ use CXGN::BrAPI::v2::Authentication;
 use CXGN::BrAPI::v2::Calls;
 use CXGN::BrAPI::v2::CommonCropNames;
 use CXGN::BrAPI::v2::CallSets;
+use CXGN::BrAPI::v2::Crossing;
 use CXGN::BrAPI::v2::GenomeMaps;
 use CXGN::BrAPI::v2::Germplasm;
 use CXGN::BrAPI::v2::Images;

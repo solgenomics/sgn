@@ -4416,6 +4416,45 @@ sub reference_search_retrieve : Chained('brapi') PathPart('search/references') A
 }
 
 
+=head2 brapi/v2/crossingprojects
+
+=cut
+
+sub crossingprojects : Chained('brapi') PathPart('crossingprojects') Args(0) : ActionClass('REST') { }
+
+sub crossingprojects_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Crossing');
+	my $brapi_package_result = $brapi_module->search($clean_inputs);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub crossingproject_single : Chained('brapi') PathPart('crossingprojects') CaptureArgs(1) {
+	my $self = shift;
+	my $c = shift;
+	my $id = shift;
+	$c->stash->{crossingProjectDbId} = $id;
+}
+
+sub crossingproject_fetch : Chained('crossingproject_single') PathPart('') Args(0) : ActionClass('REST') { }
+
+
+sub crossingproject_fetch_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Crossing');
+	my $brapi_package_result = $brapi_module->detail($c->stash->{crossingProjectDbId});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+
 #functions
 sub save_results {
     my $self = shift;
