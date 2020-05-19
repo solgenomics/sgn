@@ -49,10 +49,12 @@ $combo_pops_id => ''
        pop_id           => $pop_id,
        trait_id         => $trait_id,
        combo_pops_id    => $combo_pops_id,
-       descriptive_stat => $descriptive_stat
     &>
   </div>
 
+  <& trait_pheno_desc_stat.mas,
+   descriptive_stat => $descriptive_stat,   
+ &>
 </div>
 
 
