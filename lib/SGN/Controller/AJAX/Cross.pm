@@ -1056,7 +1056,6 @@ sub validate_upload_existing_progenies_POST : Args(0) {
     #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
 
         my $return_error = '';
-        my $parse_errors;
         if (!$parser->has_parse_errors() ){
             $c->stash->{rest} = {error_string => "Could not get parsing errors"};
         } else {
@@ -1067,8 +1066,45 @@ sub validate_upload_existing_progenies_POST : Args(0) {
                 $return_error .= $error_string."<br>";
             }
         }
-        $c->stash->{rest} = {error_string => $return_error, missing_crosses => $parse_errors->{'missing_crosses'} };
+        $c->stash->{rest} = {error_string => $return_error, archived_file_name => $archived_filename_with_path};
 }
+
+
+sub store_upload_existing_progenies : Path('/ajax/cross/store_upload_existing_progenies') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $archived_filename = $c->req->param('archived_file_name');
+    my $overwrite_pedigrees = $c->req->param('overwrite_pedigrees');
+    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $dbh = $c->dbc->dbh;
+    my $upload_type = 'StoreExistingProgeniesExcel';
+
+    my $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename);
+    $parser->load_plugin($upload_type);
+    my $parsed_data = $parser->parse();
+    if ($parsed_data){
+        my %progeny_hash = %{$parsed_data};
+        foreach my $cross_name_key (keys %progeny_hash){
+            my $progenies_ref = $progeny_hash{$cross_name_key};
+            my @progenies = @{$progenies_ref};
+            my $progeny_exist_add = CXGN::Pedigree::AddProgeniesExistingAccessions->new({
+                chado_schema => $chado_schema,
+                dbh => $dbh,
+                cross_name => $cross_name_key,
+                progeny_names => \@progenies,
+                overwrite_pedigrees => $overwrite_pedigrees
+            });
+            if (!$progeny_exist_add->add_progenies_existing_accessions()){
+                $c->stash->{rest} = {error_string => "Error adding progeny",};
+                return;
+            }
+        }
+    }
+
+
+}
+
+
 
 
 sub upload_info : Path('/ajax/cross/upload_info') : ActionClass('REST'){ }

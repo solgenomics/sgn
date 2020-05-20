@@ -9,6 +9,10 @@ use CXGN::List::Validate;
 use CXGN::Stock::RelatedStocks;
 
 
+sub _validate_with_plugin {
+    return 1; #storing after validation plugin
+}
+
 sub _parse_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
@@ -45,7 +49,6 @@ sub _parse_with_plugin {
 
         push @{$cross_progenies_hash{$cross_name}}, $progeny_name;
     }
-
     $self->_set_parsed_data(\%cross_progenies_hash);
     return 1;
 }

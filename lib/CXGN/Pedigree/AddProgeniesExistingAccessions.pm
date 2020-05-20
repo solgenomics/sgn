@@ -34,11 +34,13 @@ has 'chado_schema' => (
 has 'dbh' => (is  => 'rw',predicate => 'has_dbh', required => 1,);
 has 'cross_name' => (isa =>'Str', is => 'rw', predicate => 'has_cross_name', required => 1,);
 has 'progeny_names' => (isa =>'ArrayRef[Str]', is => 'rw', predicate => 'has_progeny_names', required => 1,);
+has 'overwrite_pedigrees' => (isa =>'Str', is => 'rw', predicate => 'has_overwrite_pedigrees', required => 1,);
 
 sub add_progenies_existing_accessions {
     my $self = shift;
     my $chado_schema = $self->get_chado_schema();
     my @progeny_names = @{$self->get_progeny_names()};
+	my $overwrite_pedigrees = $self->get_overwrite_pedigrees();
     my $cross_stock;
     my $female_parent;
     my $male_parent;
