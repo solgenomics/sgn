@@ -16,7 +16,6 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 $pop_id => ''
 $trait_id
-$descriptive_stat
 $combo_pops_id => ''
 
 </%args>
