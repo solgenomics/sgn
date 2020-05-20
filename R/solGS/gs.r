@@ -593,7 +593,7 @@ if (length(combinedGebvsFile) != 0 ) {
 
 if (!is.null(traitPhenoData) & length(traitPhenoFile) != 0) {
 
-    if (meanType) {
+    if (!is.null(meanType)) {
         colnames(traitPhenoData) <- meanType
     }
  
