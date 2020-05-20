@@ -413,11 +413,11 @@ sub get_gwas {
                     }
                     $genotype_string .= "\n";
                 }
-                my $geno = CXGN::Genotype::ComputeHybridGenotype->new({
+                my $geno_hybrid = CXGN::Genotype::ComputeHybridGenotype->new({
                     parental_genotypes=>$genotypes,
                     marker_objects=>\@all_marker_objects
                 });
-                my $progeny_genotype = $geno->get_hybrid_genotype();
+                my $progeny_genotype = $geno_hybrid->get_hybrid_genotype();
 
                 push @individuals_stock_ids, $accession_stock_id;
                 my $genotype_string_scores = join "\t", @$progeny_genotype;

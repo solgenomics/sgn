@@ -5686,6 +5686,7 @@ sub drone_imagery_autoencoder_keras_vi_model_POST : Args(0) {
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my @field_trial_ids = split ',', $c->req->param('field_trial_ids');
     my $autoencoder_model_type = $c->req->param('autoencoder_model_type');
+    my $time_cvterm_id = $c->req->param('time_cvterm_id');
     my $drone_run_ids = decode_json($c->req->param('drone_run_ids'));
     my $plot_polygon_type_ids = decode_json($c->req->param('plot_polygon_type_ids'));
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
@@ -5694,7 +5695,7 @@ sub drone_imagery_autoencoder_keras_vi_model_POST : Args(0) {
     my $composable_cvterm_delimiter = $c->config->{composable_cvterm_delimiter};
     my $composable_cvterm_format = $c->config->{composable_cvterm_format};
 
-    my $return = _perform_autoencoder_keras_cnn_vi($c, $schema, $metadata_schema, $people_schema, $phenome_schema, \@field_trial_ids, $drone_run_ids, $plot_polygon_type_ids, $autoencoder_model_type, \@allowed_composed_cvs, $composable_cvterm_format, $composable_cvterm_delimiter, $user_id, $user_name, $user_role);
+    my $return = _perform_autoencoder_keras_cnn_vi($c, $schema, $metadata_schema, $people_schema, $phenome_schema, \@field_trial_ids, $drone_run_ids, $plot_polygon_type_ids, $autoencoder_model_type, \@allowed_composed_cvs, $composable_cvterm_format, $composable_cvterm_delimiter, $time_cvterm_id, $user_id, $user_name, $user_role);
 
     $c->stash->{rest} = $return;
 }
@@ -5712,6 +5713,7 @@ sub _perform_autoencoder_keras_cnn_vi {
     my $allowed_composed_cvs = shift;
     my $composable_cvterm_format = shift;
     my $composable_cvterm_delimiter = shift;
+    my $time_cvterm_id = shift;
     my $user_id = shift;
     my $user_name = shift;
     my $user_role = shift;
@@ -5728,6 +5730,10 @@ sub _perform_autoencoder_keras_cnn_vi {
         project_image_type_id_list=>$plot_polygon_type_ids
     });
     my ($result, $total_count) = $images_search->search();
+
+    if ($total_count == 0) {
+        return {error => "No plot-polygon images!"};
+    }
 
     my %data_hash;
     my %seen_day_times;
@@ -5749,7 +5755,7 @@ sub _perform_autoencoder_keras_cnn_vi {
         my $time_days_cvterm = $_->{drone_run_related_time_cvterm_json}->{day};
         my $time_days = (split '\|', $time_days_cvterm)[0];
         my $days = int((split ' ', $time_days)[1]);
-        push @{$data_hash{$field_trial_id}->{$stock_id}->{$project_image_type_id}->{$days}} = {
+        push @{$data_hash{$field_trial_id}->{$stock_id}->{$project_image_type_id}->{$days}}, {
             image => $image_fullpath,
             drone_run_project_id => $drone_run_project_id
         };
@@ -5799,9 +5805,10 @@ sub _perform_autoencoder_keras_cnn_vi {
         };
     }
 
-    $dir = $c->tempfiles_subdir('/drone_imagery_keras_cnn_predict_dir');
-    my $archive_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/inputfileXXXX');
-    my $archive_temp_output_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_predict_dir/outputfileXXXX');
+    my $dir = $c->tempfiles_subdir('/drone_imagery_keras_cnn_autoencoder_dir');
+    my $archive_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_autoencoder_dir/inputfileXXXX');
+    my $archive_temp_output_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_autoencoder_dir/outputfileXXXX');
+    my $archive_temp_output_images_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_autoencoder_dir/outputfileXXXX');
 
     my %predicted_stock_ids;
     my %output_images;
@@ -5813,7 +5820,7 @@ sub _perform_autoencoder_keras_cnn_vi {
     );
 
     open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
-        print $F "stock_id\tred_image_string\tred_edge_image_string\tnir_images_string\n";
+        print $F "stock_id\tred_image_string\tred_edge_image_string\tnir_image_string\n";
 
         foreach my $field_trial_id (sort keys %seen_field_trial_ids) {
             foreach my $stock_id (sort keys %seen_stock_ids) {
@@ -5834,6 +5841,26 @@ sub _perform_autoencoder_keras_cnn_vi {
         }
     close($F);
 
+    open(my $F2, ">", $archive_temp_output_images_file) || die "Can't open file ".$archive_temp_output_images_file;
+        print $F2 "stock_id\tred_image_encoded\tred_edge_image_encoded\tnir_image_encoded\n";
+
+        foreach my $field_trial_id (sort keys %seen_field_trial_ids) {
+            foreach my $stock_id (sort keys %seen_stock_ids) {
+                my $archive_temp_output_red_image_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_autoencoder_dir/outputimagefileXXXX');
+                $archive_temp_output_red_image_file .= ".png";
+                my $archive_temp_output_rededge_image_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_autoencoder_dir/outputimagefileXXXX');
+                $archive_temp_output_rededge_image_file .= ".png";
+                my $archive_temp_output_nir_image_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_autoencoder_dir/outputimagefileXXXX');
+                $archive_temp_output_nir_image_file .= ".png";
+
+                my @autoencoded_image_files = ($archive_temp_output_red_image_file, $archive_temp_output_rededge_image_file, $archive_temp_output_nir_image_file);
+                $output_images{$stock_id} = \@autoencoded_image_files;
+                my $img_string = join "\t", @autoencoded_image_files;
+                print $F2 "$stock_id\t$img_string\n";
+            }
+        }
+    close($F2);
+
     undef %data_hash;
 
     my $log_file_path = '';
@@ -5841,295 +5868,104 @@ sub _perform_autoencoder_keras_cnn_vi {
         $log_file_path = ' --log_file_path \''.$c->config->{error_log}.'\'';
     }
 
-    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/CalculatePhenotypeAutoEncoderVegetationIndices.py --input_image_file \''.$archive_temp_input_file.'\' --outfile_path \''.$archive_temp_output_file.'\' '.$log_file_path;
+    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/CalculatePhenotypeAutoEncoderVegetationIndices.py --input_image_file \''.$archive_temp_input_file.'\' --output_encoded_images_file \''.$archive_temp_output_images_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --autoencoder_model_type \''.$autoencoder_model_type.'\' '.$log_file_path;
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
     my @saved_trained_image_urls;
-    my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_keras_trained', 'project_md_image')->cvterm_id();
+    my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_keras_autoencoder_trained', 'project_md_image')->cvterm_id();
     foreach my $stock_id (keys %output_images){
-        my $image_file = $output_images{$stock_id}->{image_file};
-        my $field_trial_id = $output_images{$stock_id}->{field_trial_id};
-        my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
-        # my $md5checksum = $image->calculate_md5sum($image_file);
-        # my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
-        #     JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id)
-        #     JOIN phenome.stock_image AS stock_image ON(md_image.image_id = stock_image.image_id)
-        #     WHERE md_image.obsolete = 'f' AND md_image.md5sum = ? AND project_md_image.type_id = ? AND project_md_image.project_id = ? AND stock_image.stock_id = ?;";
-        # my $h = $schema->storage->dbh->prepare($q);
-        # $h->execute($md5checksum, $linking_table_type_id, $field_trial_id, $stock_id);
-        # my ($saved_image_id) = $h->fetchrow_array();
-
-        my $output_image_id;
-        my $output_image_url;
-        my $output_image_fullpath;
-        # if ($saved_image_id) {
-        #     print STDERR Dumper "Image $image_file has already been added to the database and will not be added again.";
-        #     $image = SGN::Image->new( $schema->storage->dbh, $saved_image_id, $c );
-        #     $output_image_fullpath = $image->get_filename('original_converted', 'full');
-        #     $output_image_url = $image->get_image_url('original');
-        #     $output_image_id = $image->get_image_id();
-        # } else {
+        my $autoencoded_images = $output_images{$stock_id};
+        foreach my $image_file (@$autoencoded_images) {
+            my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
             $image->set_sp_person_id($user_id);
-            my $ret = $image->process_image($image_file, 'project', $field_trial_id, $linking_table_type_id);
+            my $ret = $image->process_image($image_file, 'project', $drone_run_ids->[0], $linking_table_type_id);
             my $stock_associate = $image->associate_stock($stock_id, $user_name);
-            $output_image_fullpath = $image->get_filename('original_converted', 'full');
-            $output_image_url = $image->get_image_url('original');
-            $output_image_id = $image->get_image_id();
-        # }
-        $output_images{$stock_id}->{image_id} = $output_image_id;
-        push @saved_trained_image_urls, $output_image_url;
-    }
-
-    my @result_agg;
-    my @data_matrix;
-    my $data_matrix_rows = 0;
-    my @data_matrix_colnames = ('stock_id', 'germplasm_stock_id', 'replicate', 'block_number', 'row_number', 'col_number', 'growing_degree_days', 'previous_value', 'prediction');
-    my @simple_data_matrix;
-
-    my @predictions;
-    my $csv = Text::CSV->new({ sep_char => ',' });
-    open(my $fh, '<', $archive_temp_output_file)
-        or die "Could not open file '$archive_temp_output_file' $!";
-
-        print STDERR "Opened $archive_temp_output_file\n";
-        while ( my $row = <$fh> ){
-            my @columns;
-            if ($csv->parse($row)) {
-                @columns = $csv->fields();
-            }
-            my $prediction = shift @columns;
-            push @predictions, $prediction;
+            my $output_image_fullpath = $image->get_filename('original_converted', 'full');
+            my $output_image_url = $image->get_image_url('original');
+            my $output_image_id = $image->get_image_id();
+            push @saved_trained_image_urls, $output_image_url;
         }
-    close($fh);
-    #print STDERR Dumper \@predictions;
-
-    my $time = DateTime->now();
-    my $timestamp = $time->ymd()."_".$time->hms();
-
-    my $keras_predict_image_type_id;
-    my $keras_predict_model_type_id;
-    if ($trained_image_type eq 'standard_4_montage') {
-        $keras_predict_image_type_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Standard 4 Image Montage|ISOL:0000324')->cvterm_id;
-    }
-    if ($model_type eq 'KerasTunerCNNSequentialSoftmaxCategorical') {
-        $keras_predict_model_type_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Keras Predicted KerasTunerCNNSequentialSoftmaxCategorical|ISOL:0000326')->cvterm_id;
-    }
-    if ($model_type eq 'SimpleKerasTunerCNNSequentialSoftmaxCategorical') {
-        $keras_predict_model_type_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Keras Predicted SimpleKerasTunerCNNSequentialSoftmaxCategorical|ISOL:0000327')->cvterm_id;
-    }
-    if ($model_type eq 'KerasCNNInceptionResNetV2ImageNetWeights') {
-        $keras_predict_model_type_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Keras Predicted KerasCNNInceptionResNetV2ImageNetWeights|ISOL:0000328')->cvterm_id;
-    }
-    if ($model_type eq 'KerasCNNInceptionResNetV2') {
-        $keras_predict_model_type_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Keras Predicted KerasCNNInceptionResNetV2|ISOL:0000329')->cvterm_id;
-    }
-    if ($model_type eq 'KerasCNNLSTMDenseNet121ImageNetWeights') {
-        $keras_predict_model_type_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Keras Predicted KerasCNNLSTMDenseNet121ImageNetWeights|ISOL:0000330')->cvterm_id;
-    }
-    if ($model_type eq 'KerasCNNDenseNet121ImageNetWeights') {
-        $keras_predict_model_type_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Keras Predicted KerasCNNDenseNet121ImageNetWeights|ISOL:0000331')->cvterm_id;
-    }
-    if ($model_type eq 'KerasCNNSequentialSoftmaxCategorical') {
-        $keras_predict_model_type_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Keras Predicted KerasCNNSequentialSoftmaxCategorical|ISOL:0000332')->cvterm_id;
-    }
-    if ($model_type eq 'KerasCNNMLPExample') {
-        $keras_predict_model_type_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Keras Predicted KerasCNNMLPExample|ISOL:0000333')->cvterm_id;
     }
 
-    my $trained_trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trained_trait_name)->cvterm_id;
+    my $ndvi_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'NDVI Vegetative Index Image|ISOL:0000131')->cvterm_id;
+    my $ndre_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'NDRE Vegetative Index Image|ISOL:0000132')->cvterm_id;
+
+    my $keras_autoencoder_model_type_id;
+    if ($autoencoder_model_type eq 'keras_autoencoder_64_32_filters_16_latent') {
+        $keras_autoencoder_model_type_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Keras Autoencoder 64_32_Conv_16_Latent|ISOL:0000336')->cvterm_id;
+    }
 
     my $traits = SGN::Model::Cvterm->get_traits_from_component_categories($schema, $allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, {
         object => [],
-        attribute => [$keras_predict_image_type_id],
+        attribute => [],
         method => [],
         unit => [],
-        trait => [$trained_trait_cvterm_id],
-        tod => [$keras_predict_model_type_id],
-        toy => [],
+        trait => [$ndvi_cvterm_id, $ndre_cvterm_id],
+        tod => [$keras_autoencoder_model_type_id],
+        toy => [$time_cvterm_id],
         gen => [],
     });
     my $existing_traits = $traits->{existing_traits};
     my $new_traits = $traits->{new_traits};
-    # print STDERR Dumper $new_traits;
-    # print STDERR Dumper $existing_traits;
+    #print STDERR Dumper $new_traits;
+    #print STDERR Dumper $existing_traits;
     my %new_trait_names;
     foreach (@$new_traits) {
         my $components = $_->[0];
         $new_trait_names{$_->[1]} = join ',', @$components;
     }
 
-    my $onto = CXGN::Onto->new( { schema => $schema } );
+    my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
     my $new_terms = $onto->store_composed_term(\%new_trait_names);
 
-    my $keras_predict_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$trained_trait_cvterm_id, $keras_predict_image_type_id, $keras_predict_model_type_id]);
-    my $keras_predict_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $keras_predict_composed_cvterm_id, 'extended');
+    my $autoencoder_ndvi_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$ndvi_cvterm_id, $keras_autoencoder_model_type_id, $time_cvterm_id]);
+    my $autoencoder_ndre_composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, [$ndre_cvterm_id, $keras_autoencoder_model_type_id, $time_cvterm_id]);
 
-    my %keras_features_phenotype_data;
-    my $iter = 0;
-    my %seen_stock_names;
-    #print STDERR Dumper \%phenotype_data_hash;
-    foreach my $sorted_stock_id (sort keys %predicted_stock_ids) {
-        my $prediction = $predictions[$iter];
-        my $stock_uniquename = $stock_info{$sorted_stock_id}->{uniquename};
-        my $previous_value = $phenotype_data_hash{$sorted_stock_id} ? $phenotype_data_hash{$sorted_stock_id}->{trait_value}->{value} : '';
-        my $image_id = $output_images{$sorted_stock_id}->{image_id};
+    my $autoencoder_ndvi_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $autoencoder_ndvi_composed_cvterm_id, 'extended');
+    my $autoencoder_ndre_composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $autoencoder_ndre_composed_cvterm_id, 'extended');
 
-        $keras_features_phenotype_data{$stock_uniquename}->{$keras_predict_composed_trait_name} = [$prediction, $timestamp, $user_name, '', $image_id];
-        $seen_stock_names{$stock_uniquename}++;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
 
-        if ($previous_value){
-            push @data_matrix, ($sorted_stock_id, $stock_info{$sorted_stock_id}->{germplasm_stock_id}, $stock_info{$sorted_stock_id}->{replicate}, $stock_info{$sorted_stock_id}->{block_number}, $stock_info{$sorted_stock_id}->{row_number}, $stock_info{$sorted_stock_id}->{col_number}, $stock_info{$sorted_stock_id}->{drone_run_related_time_cvterm_json}->{gdd_average_temp}, $previous_value, $prediction);
-            push @simple_data_matrix, ($previous_value, $prediction);
-            $data_matrix_rows++;
-        }
-        push @result_agg, [$stock_uniquename, $sorted_stock_id, $prediction, $previous_value];
-        $iter++;
-    }
+    my $csv = Text::CSV->new({ sep_char => ',' });
+    open(my $fh, '<', $archive_temp_output_file)
+        or die "Could not open file '$archive_temp_output_file' $!";
 
-    my @traits_seen = (
-        $keras_predict_composed_trait_name
-    );
+        print STDERR "Opened $archive_temp_output_file\n";
+        my $line = 0;
+        my %autoencoder_vi_phenotype_data;
+        my %plots_seen;
 
-    print STDERR "Read $iter lines in results file\n";
-
-    if ($iter > 0) {
-        my %phenotype_metadata = (
-            'archived_file' => $archive_temp_output_file,
-            'archived_file_type' => 'image_keras_prediction_output',
-            'operator' => $user_name,
-            'date' => $timestamp
+        my @traits_seen = (
+            $autoencoder_ndvi_composed_trait_name,
+            $autoencoder_ndre_composed_trait_name
         );
-        my @plot_units_seen = keys %seen_stock_names;
-        my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
-        my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
 
-        my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
-            basepath=>$c->config->{basepath},
-            dbhost=>$c->config->{dbhost},
-            dbname=>$c->config->{dbname},
-            dbuser=>$c->config->{dbuser},
-            dbpass=>$c->config->{dbpass},
-            temp_file_nd_experiment_id=>$temp_file_nd_experiment_id,
-            bcs_schema=>$schema,
-            metadata_schema=>$metadata_schema,
-            phenome_schema=>$phenome_schema,
-            user_id=>$user_id,
-            stock_list=>\@plot_units_seen,
-            trait_list=>\@traits_seen,
-            values_hash=>\%keras_features_phenotype_data,
-            has_timestamps=>1,
-            metadata_hash=>\%phenotype_metadata,
-            ignore_new_values=>undef,
-            overwrite_values=>1
-        });
-        my ($verified_warning, $verified_error) = $store_phenotypes->verify();
-        my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
-
-        my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
-        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
-    }
-
-    undef %data_hash;
-    undef %phenotype_data_hash;
-
-    print STDERR "CNN Prediction Correlation\n";
-    my @model_results;
-    my @simple_data_matrix_colnames = ("previous_value", "prediction");
-    print STDERR Dumper \@simple_data_matrix;
-    my $rmatrix = R::YapRI::Data::Matrix->new({
-        name => 'matrix1',
-        coln => scalar(@simple_data_matrix_colnames),
-        rown => $data_matrix_rows,
-        colnames => \@simple_data_matrix_colnames,
-        data => \@simple_data_matrix
-    });
-
-    print STDERR "CORR PLOT $archive_temp_output_corr_plot_file \n";
-    my $rbase = R::YapRI::Base->new();
-    my $r_block = $rbase->create_block('r_block');
-    $rmatrix->send_rbase($rbase, 'r_block');
-    $r_block->add_command('dataframe.matrix1 <- data.frame(matrix1)');
-    $r_block->add_command('dataframe.matrix1$previous_value <- as.numeric(dataframe.matrix1$previous_value)');
-    $r_block->add_command('dataframe.matrix1$prediction <- as.numeric(dataframe.matrix1$prediction)');
-    $r_block->add_command('mixed.lmer.matrix <- matrix(NA,nrow = 1, ncol = 1)');
-    $r_block->add_command('mixed.lmer.matrix[1,1] <- cor(dataframe.matrix1$previous_value, dataframe.matrix1$prediction)');
-
-    $r_block->add_command('png(filename=\''.$archive_temp_output_corr_plot_file.'\')');
-    $r_block->add_command('plot(dataframe.matrix1$previous_value, dataframe.matrix1$prediction)');
-    $r_block->add_command('dev.off()');
-    $r_block->run_block();
-    my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','mixed.lmer.matrix');
-    print STDERR Dumper $result_matrix;
-    push @model_results, $result_matrix->{data}->[0];
-
-    my @data_matrix_clean;
-    foreach (@data_matrix) {
-        if ($_) {
-            push @data_matrix_clean, $_ + 0;
-        }
-        else {
-            push @data_matrix_clean, 'NA';
-        }
-    }
-    #print STDERR Dumper \@data_matrix_clean;
-
-    if ($model_prediction_type eq 'cnn_prediction_mixed_model') {
-        print STDERR "CNN Prediction Mixed Model\n";
-
-        my $rmatrix = R::YapRI::Data::Matrix->new({
-            name => 'matrix1',
-            coln => scalar(@data_matrix_colnames),
-            rown => $data_matrix_rows,
-            colnames => \@data_matrix_colnames,
-            data => \@data_matrix_clean
-        });
-
-        my $rbase = R::YapRI::Base->new();
-        my $r_block = $rbase->create_block('r_block');
-        $rmatrix->send_rbase($rbase, 'r_block');
-        $r_block->add_command('library(lme4)');
-        $r_block->add_command('dataframe.matrix1 <- data.frame(matrix1)');
-        $r_block->add_command('dataframe.matrix1$previous_value <- as.numeric(dataframe.matrix1$previous_value)');
-        $r_block->add_command('dataframe.matrix1$prediction <- as.numeric(dataframe.matrix1$prediction)');
-        $r_block->add_command('mixed.lmer <- lmer(previous_value ~ prediction + replicate + (1|germplasm_stock_id), data = dataframe.matrix1, na.action = na.omit )');
-        # $r_block->add_command('mixed.lmer.summary <- summary(mixed.lmer)');
-        $r_block->add_command('mixed.lmer.matrix <- matrix(NA,nrow = 1, ncol = 2)');
-        $r_block->add_command('mixed.lmer.matrix[1,1] <- cor(predict(mixed.lmer), dataframe.matrix1$previous_value)');
-
-        $r_block->add_command('mixed.lmer <- lmer(prediction ~ replicate + (1|germplasm_stock_id), data = dataframe.matrix1 )');
-        # $r_block->add_command('mixed.lmer.summary <- summary(mixed.lmer)');
-        $r_block->add_command('mixed.lmer.matrix[1,2] <- cor(predict(mixed.lmer), dataframe.matrix1$previous_value)');
-        $r_block->run_block();
-        my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','mixed.lmer.matrix');
-        print STDERR Dumper $result_matrix;
-        push @model_results, $result_matrix->{data}->[0];
-        push @model_results, $result_matrix->{data}->[1];
-    }
-
-    my @evaluation_results;
-    open(my $fh_eval, '<', $archive_temp_output_evaluation_file)
-        or die "Could not open file '$archive_temp_output_evaluation_file' $!";
-
-        while ( my $row = <$fh_eval> ){
+        while ( my $row = <$fh> ){
             my @columns;
             if ($csv->parse($row)) {
                 @columns = $csv->fields();
             }
-            my $line = '';
-            foreach (@columns) {
-                if ($_ eq ' ') {
-                    $line .= '&nbsp;';
-                }
-                else {
-                    $line .= $_;
-                }
-            }
-            push @evaluation_results, $line;
-        }
-    close($fh_eval);
 
-    return { success => 1, results => \@result_agg, evaluation_results => \@evaluation_results, activation_output => $archive_temp_output_activation_file, corr_plot => $archive_temp_output_corr_plot, trained_trait_name => $trained_trait_name, mixed_model_results => \@model_results };
+            my $stock_id = $columns[0];
+            my $stock_uniquename = $stock_info{$stock_id}->{stock_uniquename};
+
+            #print STDERR Dumper \@columns;
+            $stock_info{$stock_id}->{result} = \@columns;
+
+            $plots_seen{$stock_uniquename} = 1;
+            $autoencoder_vi_phenotype_data{$stock_uniquename}->{$autoencoder_ndvi_composed_trait_name} = [$columns[1], $timestamp, $user_name, '', undef];
+            $autoencoder_vi_phenotype_data{$stock_uniquename}->{$autoencoder_ndre_composed_trait_name} = [$columns[2], $timestamp, $user_name, '', undef];
+
+            $line++;
+        }
+        my @stocks = values %stock_info;
+
+    close($fh);
+    print STDERR "Read $line lines in results file\n";
+
+    return { success => 1 };
 }
 
 sub drone_imagery_delete_drone_run : Path('/api/drone_imagery/delete_drone_run') : ActionClass('REST') { }

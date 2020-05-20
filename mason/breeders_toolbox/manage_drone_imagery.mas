@@ -1557,7 +1557,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                             <label class="col-sm-3 control-label">Autoencoder Model: </label>
                             <div class="col-sm-9" >
                                 <select class="form-control" id="drone_imagery_keras_model_autoencoder_vi_select">
-                                    <option value="keras_autoencoder">Keras Autoencoder</option>
+                                    <option value="keras_autoencoder_64_32_filters_16_latent">Keras Autoencoder</option>
                                 </select>
                             </div>
                         </div>
@@ -3412,6 +3412,7 @@ jQuery(document).ready(function() {
     var manage_drone_imagery_autoencoder_keras_vi_field_trial_id_string = '';
     var manage_drone_imagery_autoencoder_keras_vi_drone_run_ids = [];
     var manage_drone_imagery_autoencoder_keras_vi_plot_polygon_type_ids = [];
+    var manage_drone_imagery_autoencoder_keras_vi_time_cvterm_id = '';
 
     jQuery('#keras_cnn_drone_imagery_link').click(function(){
         jQuery('#drone_imagery_keras_cnn_dialog').modal('show');
@@ -3817,8 +3818,32 @@ jQuery(document).ready(function() {
             manage_drone_imagery_autoencoder_keras_vi_drone_run_ids.push(jQuery(this).val());
         });
         if (manage_drone_imagery_autoencoder_keras_vi_drone_run_ids.length < 1){
-            alert('Please select at least one drone run!');
+            alert('Please select one drone run!');
+        } else if (manage_drone_imagery_autoencoder_keras_vi_drone_run_ids.length > 1){
+            alert('Please select only one drone run!');
         } else {
+
+            jQuery.ajax({
+                type: 'GET',
+                url: '/api/drone_imagery/get_weeks_after_planting_date?drone_run_project_id='+manage_drone_imagery_autoencoder_keras_vi_drone_run_ids[0],
+                dataType: "json",
+                beforeSend: function (){
+                    jQuery('#working_modal').modal('show');
+                },
+                success: function(response){
+                    jQuery('#working_modal').modal('hide');
+                    console.log(response);
+                    if (response.error) {
+                        alert(response.error);
+                    }
+
+                    manage_drone_imagery_autoencoder_keras_vi_time_cvterm_id = response.time_ontology_day_cvterm_id;
+                },
+                error: function(response){
+                    alert('Error getting time term!');
+                    jQuery('#working_modal').modal('hide');
+                }
+            });
 
             jQuery('#drone_image_autoencoder_keras_vi_plot_polygon_image_type_table').DataTable({
                 destroy : true,
@@ -3860,7 +3885,8 @@ jQuery(document).ready(function() {
                 'field_trial_ids' : manage_drone_imagery_autoencoder_keras_vi_field_trial_id_string,
                 'drone_run_ids' : JSON.stringify(manage_drone_imagery_autoencoder_keras_vi_drone_run_ids),
                 'plot_polygon_type_ids' : JSON.stringify(manage_drone_imagery_autoencoder_keras_vi_plot_polygon_type_ids),
-                'autoencoder_model_type' : jQuery('#drone_imagery_keras_model_autoencoder_vi_select').val()
+                'autoencoder_model_type' : jQuery('#drone_imagery_keras_model_autoencoder_vi_select').val(),
+                'time_cvterm_id' : manage_drone_imagery_autoencoder_keras_vi_time_cvterm_id
             },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
