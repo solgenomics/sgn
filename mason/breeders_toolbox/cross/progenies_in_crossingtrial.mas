@@ -459,7 +459,7 @@ jQuery(document).ready(function(){
 
     jQuery("#upload_progenies_exist_submit").click(function(){
         var uploadFile = jQuery("#progenies_exist_upload_file").val();
-        jQuery('#upload_progenies_exist_form').attr("action", "/ajax/cross/upload_progenies");
+        jQuery('#upload_progenies_exist_form').attr("action", "/ajax/cross/validate_upload_existing_progenies");
         if (uploadFile === ''){
             alert("Please select a file");
             return;
@@ -499,7 +499,6 @@ jQuery(document).ready(function(){
 //        complete: function(response) {
 //            jQuery("#working_modal").modal("hide");
 //            if (response.error_string) {
-//                jQuery("#upload_progenies_error_display tbody").html('');
 //                jQuery("#upload_progenies_error_display tbody").append(response.error_string);
 //                jQuery("#upload_progenies_error_display").modal("show");
 //                return;
@@ -519,7 +518,7 @@ jQuery(document).ready(function(){
             var html;
 //            archived_file_name = response.archived_file_name;
             if (response.error_string) {
-                html = '<h3>The Following Issues Were Identified</h3><p class="bg-warning">'+response.error+'</p>';
+                html = '<h3>The Following Issues Were Identified</h3><p class="bg-warning">'+response.error_string+'</p>';
             }
             else {
                 html = '<h3>There Were No Issues Identified</h3>';

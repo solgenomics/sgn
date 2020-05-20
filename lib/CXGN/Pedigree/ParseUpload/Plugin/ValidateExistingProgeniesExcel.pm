@@ -122,7 +122,7 @@ sub _validate_with_plugin {
     my %progenies_hash;
     my @progeny_stock_ids;
     my %return;
-    foreach my $progeny_name(@all_progenies) {
+    foreach my $progeny_name(@progenies) {
         my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
         $stock_lookup->set_stock_name($progeny_name);
         my $progeny_stock = $stock_lookup->get_stock_exact();
