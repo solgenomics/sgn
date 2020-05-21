@@ -5794,7 +5794,7 @@ sub _perform_autoencoder_keras_cnn_vi {
     my %stock_info;
     while (my ($stock_id, $stock_uniquename, $germplasm_uniquename, $germplasm_stock_id, $plot_number, $rep, $block, $col, $row) = $stock_metadata_h->fetchrow_array()) {
         $stock_info{$stock_id} = {
-            uniquename => $stock_uniquename,
+            stock_uniquename => $stock_uniquename,
             germplasm_uniquename => $germplasm_uniquename,
             germplasm_stock_id => $germplasm_stock_id,
             plot_number => $plot_number,
@@ -5871,22 +5871,22 @@ sub _perform_autoencoder_keras_cnn_vi {
     my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/CalculatePhenotypeAutoEncoderVegetationIndices.py --input_image_file \''.$archive_temp_input_file.'\' --output_encoded_images_file \''.$archive_temp_output_images_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --autoencoder_model_type \''.$autoencoder_model_type.'\' '.$log_file_path;
     print STDERR Dumper $cmd;
     my $status = system($cmd);
-    die;
-    # my @saved_trained_image_urls;
-    # my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_keras_autoencoder_trained', 'project_md_image')->cvterm_id();
-    # foreach my $stock_id (keys %output_images){
-    #     my $autoencoded_images = $output_images{$stock_id};
-    #     foreach my $image_file (@$autoencoded_images) {
-    #         my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
-    #         $image->set_sp_person_id($user_id);
-    #         my $ret = $image->process_image($image_file, 'project', $drone_run_ids->[0], $linking_table_type_id);
-    #         my $stock_associate = $image->associate_stock($stock_id, $user_name);
-    #         my $output_image_fullpath = $image->get_filename('original_converted', 'full');
-    #         my $output_image_url = $image->get_image_url('original');
-    #         my $output_image_id = $image->get_image_id();
-    #         push @saved_trained_image_urls, $output_image_url;
-    #     }
-    # }
+
+    my @saved_trained_image_urls;
+    my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_keras_autoencoder_decoded', 'project_md_image')->cvterm_id();
+    foreach my $stock_id (keys %output_images){
+        my $autoencoded_images = $output_images{$stock_id};
+        foreach my $image_file (@$autoencoded_images) {
+            my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+            $image->set_sp_person_id($user_id);
+            my $ret = $image->process_image($image_file, 'project', $drone_run_ids->[0], $linking_table_type_id);
+            my $stock_associate = $image->associate_stock($stock_id, $user_name);
+            my $output_image_fullpath = $image->get_filename('original_converted', 'full');
+            my $output_image_url = $image->get_image_url('original');
+            my $output_image_id = $image->get_image_id();
+            push @saved_trained_image_urls, $output_image_url;
+        }
+    }
 
     my $ndvi_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'NDVI Vegetative Index Image|ISOL:0000131')->cvterm_id;
     my $ndre_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'NDRE Vegetative Index Image|ISOL:0000132')->cvterm_id;
@@ -5942,6 +5942,7 @@ sub _perform_autoencoder_keras_cnn_vi {
             $autoencoder_ndre_composed_trait_name
         );
 
+        my $header = <$fh>;
         while ( my $row = <$fh> ){
             my @columns;
             if ($csv->parse($row)) {
