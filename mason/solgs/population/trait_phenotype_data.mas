@@ -37,22 +37,24 @@ $combo_pops_id => ''
  
   <div id="tabs_scatter">
     <& trait_phenotype_scatter.mas,
-       pop_id           => $pop_id,
-       combo_pops_id    => $combo_pops_id,
-       trait_id         => $trait_id,
-       descriptive_stat => $descriptive_stat
+       pop_id        => $pop_id,
+       combo_pops_id => $combo_pops_id,
+       trait_id      => $trait_id,
   &>
   </div>
 
   <div id="tabs_histogram">
     <& trait_phenotype_histogram.mas,
-       pop_id           => $pop_id,
-       trait_id         => $trait_id,
-       combo_pops_id    => $combo_pops_id,
-       descriptive_stat => $descriptive_stat
+       pop_id        => $pop_id,
+       trait_id      => $trait_id,
+       combo_pops_id => $combo_pops_id,
     &>
   </div>
 
+  <& trait_pheno_desc_stat.mas,
+   descriptive_stat => $descriptive_stat,   
+    &>
+    
 </div>
 
 

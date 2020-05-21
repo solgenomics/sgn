@@ -77,21 +77,22 @@ $genotyping_protocol_id
 
 <& /solgs/anova/analysis.mas,
    training_pop_id => $training_pop_id,
-&>
+  &>
 
 % }
      
-<& population/correlation.mas, 
+  <& population/correlation.mas, 
      training_pop_id  => $training_pop_id,
-&>
+  &>
 
-<& population/acronym.mas,
-   acronym => $acronym,
-&>
-
-<& /tools/heritability/heritability.mas, 
+  <& /tools/heritability/heritability.mas, 
      pop_id  => $training_pop_id,
-&>
+    &>
+
+
+  <& population/acronym.mas,
+   acronym => $acronym,
+    &>
 
 %} 
 % else
