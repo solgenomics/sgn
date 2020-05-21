@@ -66,7 +66,8 @@ my $download = CXGN::Trial::Download->new({
     trait_contains => \@trait_contains_list,
     phenotype_min_value => $phenotype_min_value,
     phenotype_max_value => $phenotype_max_value,
-    has_header=>$has_header
+    has_header=>$has_header,
+    include_pedigree_parents=>$include_pedigree_parents
 });
 my $error = $download->download();
 my $file_name = "phenotype.$format";
@@ -210,6 +211,7 @@ has 'plant_list' => (isa => 'ArrayRef[Int]|Undef', is => 'rw' );
 has 'location_list' => (isa => 'ArrayRef[Int]|Undef', is => 'rw' );
 has 'year_list' => (isa => 'ArrayRef[Int]|Undef', is => 'rw' );
 has 'include_timestamp' => (isa => 'Bool', is => 'ro', default => 0);
+has 'include_pedigree_parents' => (isa => 'Bool', is => 'ro', default => 0);
 has 'exclude_phenotype_outlier' => (isa => 'Bool', is => 'ro', default => 0);
 has 'has_header' => (isa => 'Bool', is => 'ro', default => 1);
 has 'trait_contains' => (isa => 'ArrayRef[Str]|Undef', is => 'rw');
