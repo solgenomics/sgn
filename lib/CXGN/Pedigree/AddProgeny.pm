@@ -124,6 +124,7 @@ sub add_progeny {
                     type_id => $female_parent_cvterm->cvterm_id(),
                     object_id => $accession_stock->stock_id(),
                     subject_id => $female_parent->subject_id(),
+                    value => $female_parent->value(),
 				});
             }
 

@@ -87,28 +87,62 @@ sub add_progenies_existing_accessions {
                 return;
             }
 
-            #create relationship to cross
+			#create relationship to cross
             $progeny_rs->find_or_create_related('stock_relationship_objects', {
                 type_id => $offspring_of_cvterm->cvterm_id(),
                 object_id => $cross_stock->stock_id(),
                 subject_id => $progeny_rs->stock_id(),
             });
-            #create relationship to female parent
-            if ($female_parent) {
-                $progeny_rs->find_or_create_related('stock_relationship_objects', {
+
+
+            if ($overwrite_pedigrees eq 'false') {
+			    my $previous_female_parent = $chado_schema->resultset('Stock::StockRelationship')->search({
+				    type_id => $female_parent_cvterm->cvterm_id(),
+				    object_id => $progeny_rs->stock_id(),
+			    });
+
+			    my $previous_male_parent = $chado_schema->resultset('Stock::StockRelationship')->search({
+				    type_id => $male_parent_cvterm->cvterm_id(),
+				    object_id => $progeny_rs->stock_id(),
+			    });
+
+                if ((defined $previous_female_parent) || (defined $previous_male_parent)) {
+				    print STDERR $progeny_name."has previously stored pedigree"."\n";
+                    return;
+                }
+            } elsif ($overwrite_pedigrees eq 'true') {
+				my $previous_female_parent = $chado_schema->resultset('Stock::StockRelationship')->search({
+				    type_id => $female_parent_cvterm->cvterm_id(),
+				    object_id => $progeny_rs->stock_id(),
+			    });
+				while(my $r = $previous_female_parent->next()){
+					print STDERR "Deleted female parent stock_relationship_id: ".$r->stock_relationship_id."\n";
+					$r->delete();
+				}
+
+				$progeny_rs->find_or_create_related('stock_relationship_objects', {
                     type_id => $female_parent_cvterm->cvterm_id(),
                     object_id => $progeny_rs->stock_id(),
                     subject_id => $female_parent->subject_id(),
+                    value => $female_parent->value(),
 				});
-            }
 
-            #create relationship to male parent
-            if ($male_parent) {
-       	        $progeny_rs->find_or_create_related('stock_relationship_objects', {
-                    type_id => $male_parent_cvterm->cvterm_id(),
-                    object_id => $progeny_rs->stock_id(),
-                    subject_id => $male_parent->subject_id(),
-                });
+				my $previous_male_parent = $chado_schema->resultset('Stock::StockRelationship')->search({
+				    type_id => $male_parent_cvterm->cvterm_id(),
+				    object_id => $progeny_rs->stock_id(),
+			    });
+				while(my $r = $previous_male_parent->next()){
+					print STDERR "Deleted male parent stock_relationship_id: ".$r->stock_relationship_id."\n";
+					$r->delete();
+				}
+
+				if (defined $male_parent) {
+	       	        $progeny_rs->find_or_create_related('stock_relationship_objects', {
+	                    type_id => $male_parent_cvterm->cvterm_id(),
+	                    object_id => $progeny_rs->stock_id(),
+	                    subject_id => $male_parent->subject_id(),
+	                });
+	            }
             }
         }
     };
