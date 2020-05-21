@@ -5871,22 +5871,22 @@ sub _perform_autoencoder_keras_cnn_vi {
     my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/CalculatePhenotypeAutoEncoderVegetationIndices.py --input_image_file \''.$archive_temp_input_file.'\' --output_encoded_images_file \''.$archive_temp_output_images_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --autoencoder_model_type \''.$autoencoder_model_type.'\' '.$log_file_path;
     print STDERR Dumper $cmd;
     my $status = system($cmd);
-
-    my @saved_trained_image_urls;
-    my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_keras_autoencoder_trained', 'project_md_image')->cvterm_id();
-    foreach my $stock_id (keys %output_images){
-        my $autoencoded_images = $output_images{$stock_id};
-        foreach my $image_file (@$autoencoded_images) {
-            my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
-            $image->set_sp_person_id($user_id);
-            my $ret = $image->process_image($image_file, 'project', $drone_run_ids->[0], $linking_table_type_id);
-            my $stock_associate = $image->associate_stock($stock_id, $user_name);
-            my $output_image_fullpath = $image->get_filename('original_converted', 'full');
-            my $output_image_url = $image->get_image_url('original');
-            my $output_image_id = $image->get_image_id();
-            push @saved_trained_image_urls, $output_image_url;
-        }
-    }
+    die;
+    # my @saved_trained_image_urls;
+    # my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_keras_autoencoder_trained', 'project_md_image')->cvterm_id();
+    # foreach my $stock_id (keys %output_images){
+    #     my $autoencoded_images = $output_images{$stock_id};
+    #     foreach my $image_file (@$autoencoded_images) {
+    #         my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+    #         $image->set_sp_person_id($user_id);
+    #         my $ret = $image->process_image($image_file, 'project', $drone_run_ids->[0], $linking_table_type_id);
+    #         my $stock_associate = $image->associate_stock($stock_id, $user_name);
+    #         my $output_image_fullpath = $image->get_filename('original_converted', 'full');
+    #         my $output_image_url = $image->get_image_url('original');
+    #         my $output_image_id = $image->get_image_id();
+    #         push @saved_trained_image_urls, $output_image_url;
+    #     }
+    # }
 
     my $ndvi_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'NDVI Vegetative Index Image|ISOL:0000131')->cvterm_id;
     my $ndre_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'NDRE Vegetative Index Image|ISOL:0000132')->cvterm_id;
@@ -5964,6 +5964,47 @@ sub _perform_autoencoder_keras_cnn_vi {
 
     close($fh);
     print STDERR "Read $line lines in results file\n";
+
+    if ($line > 0) {
+        my %phenotype_metadata = (
+            'archived_file' => $archive_temp_output_file,
+            'archived_file_type' => 'keras_autoencoder_vegetation_indices',
+            'operator' => $user_name,
+            'date' => $timestamp
+        );
+        my @plot_units_seen = keys %plots_seen;
+        my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+        my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+
+        my $store_args = {
+            basepath=>$c->config->{basepath},
+            dbhost=>$c->config->{dbhost},
+            dbname=>$c->config->{dbname},
+            dbuser=>$c->config->{dbuser},
+            dbpass=>$c->config->{dbpass},
+            temp_file_nd_experiment_id=>$temp_file_nd_experiment_id,
+            bcs_schema=>$schema,
+            metadata_schema=>$metadata_schema,
+            phenome_schema=>$phenome_schema,
+            user_id=>$user_id,
+            stock_list=>\@plot_units_seen,
+            trait_list=>\@traits_seen,
+            values_hash=>\%autoencoder_vi_phenotype_data,
+            has_timestamps=>1,
+            metadata_hash=>\%phenotype_metadata,
+            overwrite_values=>1,
+            #ignore_new_values=>1
+        };
+
+        my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+            $store_args
+        );
+        my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+        my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
+
+        my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
+    }
 
     return { success => 1 };
 }
