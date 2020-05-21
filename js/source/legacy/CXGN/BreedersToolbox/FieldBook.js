@@ -80,7 +80,7 @@ function generate_trait_file() {
         var valid_list = JSON.stringify(list.validate(trait_list_id, 'traits', 1));
         if (!valid_list) { return; }
         trait_ids = JSON.stringify(list.transform(trait_list_id, 'traits_2_trait_ids'));
-        seleted_listed = 0;
+        selected_listed = 1;
     } else {
         var trait_temp_ids = [];
         jQuery("#html_select_traits_for_trait_file option:selected").each(
