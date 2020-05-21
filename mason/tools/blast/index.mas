@@ -143,6 +143,7 @@
 
 	<& /page/info_table.mas, title=>'', data => [
 	  'Expect (e-value) Threshold' => '<input id="evalue" class="blast_select_box form-control" type="text" size="6" value="1e-10" name="expect" />',
+	  'Word Size (default 11, use lower value for shorter sequences)' => '<input id="word_size" class="blast_select_box form-control" type="text" size="6" value="11" name="word_size" />',
 	  'Substitution Matrix' => $substitution_matrix_select,
 		'Output Options' => $parse_options_select,
 	  'Max. hits to show' => '<input id="maxhits" class="blast_select_box form-control" type="text" name="maxhits" size="6" value="20" />',
