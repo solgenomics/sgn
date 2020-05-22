@@ -172,6 +172,13 @@ sub run : Path('/tools/blast/run') Args(0) {
 	     return -evalue =>  $params->{evalue} ? $params->{evalue} : 1;
 	 },
 
+	 word_size =>
+	 sub {
+	     print STDERR "WORD SIZE = $params->{word_size}\n";
+	     $params->{word_size} =~ s/[^\d]//gi; # filter numbers only
+	     return -word_size => $params->{word_size} ? $params->{word_size} : 11;
+	 },
+
 	 maxhits =>
 	 sub {
 	     my $h = $params->{maxhits} || 20;

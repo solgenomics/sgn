@@ -177,16 +177,15 @@ if (datasetInfo == 'combined populations') {
          phenoTrait <- averageTrait(phenoData, trait)
          
      } else {
-
+        
          phenoTrait <- getAdjMeans(phenoData,
                                    traitName=trait,
                                    calcAverages=TRUE)
-
      }
 }
 
-colnames(phenoTrait)  <- c('genotypes', trait)
-
+meanType <- names(phenoTrait)[2]
+names(phenoTrait)  <- c('genotypes', trait)
 
 selectionTempFile <- grep("selection_population", inputFiles, value = TRUE)
 
@@ -597,6 +596,11 @@ if (length(combinedGebvsFile) != 0 ) {
 
 
 if (!is.null(traitPhenoData) & length(traitPhenoFile) != 0) {
+
+    if (!is.null(meanType)) {
+        colnames(traitPhenoData) <- meanType
+    }
+ 
     fwrite(traitPhenoData,
            file  = traitPhenoFile,
            row.names = TRUE,

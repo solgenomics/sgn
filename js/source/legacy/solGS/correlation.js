@@ -272,7 +272,7 @@ solGS.correlation = {
             success: function (response) {
 		if (response.status == 'success') {
                     
-                    divPlace = args.div_place;
+                    var divPlace = args.div_place;
 		    
                     if (divPlace === '#si_correlation_canvas') {
 			jQuery("#si_correlation_message").empty();
@@ -327,20 +327,19 @@ solGS.correlation = {
 
     plotCorrelation: function (data, divPlace) {
 
-	data = data.replace(/\s/g, '');
-	data = data.replace(/\\/g, '');
-	data = data.replace(/^\"/, '');
-	data = data.replace(/\"$/, '');
-	data = data.replace(/\"NA\"/g, 100);
-	
 	data = JSON.parse(data);
-	
+
+        var corrCanvas = divPlace || '#correlation_canvas'; 
+	var corrPlotDiv =  "#correlation_plot";
+
 	var height = 400;
 	var width  = 400;
 
-	var nTraits = data.traits.length;
+	var labels = data.labels;
+	var values = data.values;
+	var nLabels = labels.length;
 
-	if (nTraits < 8) {
+	if (nLabels < 8) {
             height = height * 0.5;
             width  = width  * 0.5;
 	}
@@ -349,23 +348,19 @@ solGS.correlation = {
 	var totalH = height + pad.top + pad.bottom;
 	var totalW = width + pad.left + pad.right;
 
-	var corXscale = d3.scale.ordinal().domain(d3.range(nTraits)).rangeBands([0, width]);
-	var corYscale = d3.scale.ordinal().domain(d3.range(nTraits)).rangeBands([height, 0]);
+	var corXscale = d3.scale.ordinal().domain(d3.range(nLabels)).rangeBands([0, width]);
+	var corYscale = d3.scale.ordinal().domain(d3.range(nLabels)).rangeBands([height, 0]);
 	var corZscale = d3.scale.linear().domain([-1, 0, 1]).range(["#6A0888","white", "#86B404"]);
 
 	var xAxisScale = d3.scale.ordinal()
-            .domain(data.traits)
+            .domain(labels)
             .rangeBands([0, width]);
 
 	var yAxisScale = d3.scale.ordinal()
-            .domain(data.traits)
+            .domain(labels)
             .rangeRoundBands([height, 0]);
 	
-	if ( divPlace == null) {
-            divPlace = '#correlation_canvas'; 
-	}
-
-	var svg = d3.select(divPlace)
+	var svg = d3.select(corrCanvas)
             .append("svg")
             .attr("height", totalH)
             .attr("width", totalW);
@@ -379,7 +374,7 @@ solGS.correlation = {
             .orient("left");
 	
 	var corrplot = svg.append("g")
-            .attr("id", "correlation_plot")
+            .attr("id", corrPlotDiv)
             .attr("transform", "translate(" + pad.left + "," + pad.top + ")");
 	
 	corrplot.append("g")
@@ -406,39 +401,47 @@ solGS.correlation = {
             .style("fill", "#523CB5");
         
 	var corr = [];
-	var coefs = [];   
-	for (var i=0; i<data.coefficients.length; i++) {
-            for (var j=0;  j<data.coefficients[i].length; j++) {
-		corr.push({"row":i, "col":j, "value": data.coefficients[i][j]});
+	var coefs = [];
 		
-		if (data.coefficients[i][j] != 100) {
-                    coefs.push(data.coefficients[i][j]);
+        for (var i=0;  i<values.length; i++) {
+
+	    var rw = values[i];
+	    
+	    for (var j = 0; j<nLabels; j++) {
+		var clNm = labels[j];
+		var rwVl = rw[clNm];
+		if (rwVl === undefined) {rwVl = 'NA';}
+		
+		corr.push({"row": i, "col": j, "value": rwVl});
+		
+		if (rwVl != 'NA') {
+		    coefs.push(rwVl);
 		}
-            }
+	    }
 	}
-        
+
 	var cell = corrplot.selectAll("rect")
             .data(corr)  
             .enter().append("rect")
             .attr("class", "cell")
-            .attr("x", function (d) { return corXscale(d.col)})
-            .attr("y", function (d) { return corYscale(d.row)})
+            .attr("x", function (d) {return corXscale(d.col)})
+            .attr("y", function (d) {return corYscale(d.row)})
             .attr("width", corXscale.rangeBand())
             .attr("height", corYscale.rangeBand())      
             .attr("fill", function (d) { 
-                if (d.value === 100) {return "white";} 
+                if (d.value == 'NA') {return "white";} 
                 else {return corZscale(d.value)}
             })
             .attr("stroke", "white")
             .attr("stroke-width", 1)
             .on("mouseover", function (d) {
-                if(d.value != 100) {
+                if(d.value != 'NA') {
                     d3.select(this)
                         .attr("stroke", "green")
                     corrplot.append("text")
                         .attr("id", "corrtext")
-                        .text("[" + data.traits[d.row] 
-                              + " vs. " + data.traits[d.col] 
+                        .text("[" + labels[d.row]
+                              + " vs. " + labels[d.col] 
                               + ": " + d3.format(".2f")(d.value) 
                               + "]")
                         .style("fill", function () { 
@@ -497,7 +500,7 @@ solGS.correlation = {
             .attr("height", recLW)
             .style("stroke", "black")
             .attr("fill", function (d) { 
-		if (d === 100) {return "white"} 
+		if (d == 'NA') {return "white"} 
 		else {return corZscale(d[1])}
             });
 	

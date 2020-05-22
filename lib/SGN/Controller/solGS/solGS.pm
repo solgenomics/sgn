@@ -875,7 +875,7 @@ sub gs_modeling_files {
     $self->input_files($c);
     $c->controller('solGS::modelAccuracy')->model_accuracy_report($c);
     $self->top_blups($c, $c->stash->{rrblup_training_gebvs_file});
-    $self->download_urls($c);
+    $c->controller('solGS::Download')->training_prediction_download_urls($c);
     $self->top_markers($c, $c->stash->{marker_effects_file});
     $self->model_parameters($c);
 
@@ -1001,90 +1001,6 @@ sub output_files {
     $c->stash->{output_files} = $tempfile;
 
 }
-
-
-sub download_blups :Path('/solgs/download/blups/pop') Args() {
-    my ($self, $c, $pop_id, $trait, $trait_id, $gp, $protocol_id) = @_;   
-
-    $c->stash->{pop_id} = $pop_id;
-    $c->stash->{genotyping_protocol_id} = $protocol_id;
-    
-    $self->get_trait_details($c, $trait_id);
-    my $trait_abbr = $c->stash->{trait_abbr};
-
-    my $referer = $c->req->referer;
-    if ($referer =~ /combined\/populations\//) 
-    {
-	$c->stash->{data_set_type} = 'combined populations';
-	$c->stash->{combo_pops_id} = $pop_id;      
-    }
-    
-    $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
-    my $blups_file = $c->stash->{rrblup_training_gebvs_file};
-
-    unless (!-e $blups_file || -s $blups_file == 0) 
-    {
-        my @blups =  map { [ split(/\t/) ] }  read_file($blups_file);
-	
-        $c->res->content_type("text/plain");
-        $c->res->body(join "", map { $_->[0] . "\t" . $_->[1] }  @blups);
-    } 
-
-}
-
-
-sub download_marker_effects :Path('/solgs/download/marker/pop') Args() {
-    my ($self, $c, $pop_id, $trait, $trait_id, $gp, $protocol_id) = @_;   
-
-    $c->stash->{pop_id} = $pop_id;
-    $c->stash->{genotyping_protocol_id} = $protocol_id;
-    
-    $self->get_trait_details($c, $trait_id);
-    my $trait_abbr = $c->stash->{trait_abbr};
-        
-    $c->controller('solGS::Files')->marker_effects_file($c);
-    my $markers_file = $c->stash->{marker_effects_file};
-    
-    unless (!-e $markers_file || -s $markers_file == 0) 
-    {
-        my @effects =  map { [ split(/\t/) ] }  read_file($markers_file);
-    
-        $c->res->content_type("text/plain");
-        $c->res->body(join "", map { $_->[0] . "\t" . $_->[1] }  @effects);
-    } 
-
-}
-
-
-sub download_urls {
-    my ($self, $c) = @_;
-    my $data_set_type = $c->stash->{data_set_type};
-    my $pop_id;
-    my $protocol_id = $c->stash->{genotyping_protocol_id};
-    
-    no warnings 'uninitialized';
-
-    if ($data_set_type =~ /combined populations/)
-    {
-        $pop_id         = $c->stash->{combo_pops_id};
-    }
-    else 
-    {
-        $pop_id         = $c->stash->{pop_id} || $c->stash->{training_pop_id}; 
-    }
-    
-    my $trait_id          = $c->stash->{trait_id};
-   
-    my $blups_url      = qq | <a href="/solgs/download/blups/pop/$pop_id/trait/$trait_id/gp/$protocol_id">Download all GEBVs</a> |;
-    my $marker_url     = qq | <a href="/solgs/download/marker/pop/$pop_id/trait/$trait_id/gp/$protocol_id">Download all marker effects</a> |;
-    my $validation_url = qq | <a href="/solgs/download/validation/pop/$pop_id/trait/$trait_id/gp/$protocol_id">Download model accuracy report</a> |;
-   
-    $c->stash(blups_download_url            => $blups_url,
-              marker_effects_download_url   => $marker_url,
-              validation_download_url       => $validation_url);
-    
-}
-
 
 
 sub top_markers {
@@ -1317,28 +1233,6 @@ sub list_predicted_selection_pops {
 }
 
 
-sub download_prediction_GEBVs :Path('/solgs/download/prediction/model') Args() {
-    my ($self, $c, $pop_id, $prediction, $prediction_id, $trait_id, $gp, $protocol_id) = @_;   
- 
-    $self->get_trait_details($c, $trait_id);
-    $c->stash->{pop_id} = $pop_id;
-    $c->stash->{genotyping_protocol_id} = $protocol_id;
-    
-    my $identifier = $pop_id . "_" . $prediction_id;
-    $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
-    my $prediction_gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
-    
-    unless (!-e $prediction_gebvs_file || -s $prediction_gebvs_file == 0) 
-    {
-        my @prediction_gebvs =  map { [ split(/\t/) ] }  read_file($prediction_gebvs_file);
-    
-        $c->res->content_type("text/plain");
-        $c->res->body(join "", map { $_->[0] . "\t" . $_->[1] }  @prediction_gebvs);
-    }
- 
-}
-
-
 sub prediction_pop_analyzed_traits {
     my ($self, $c, $training_pop_id, $selection_pop_id) = @_;           
    
@@ -1386,63 +1280,6 @@ sub prediction_pop_analyzed_traits {
     
 }
 
-
-sub download_prediction_urls {
-    my ($self, $c, $training_pop_id, $selection_pop_id) = @_;
- 
-    my $selection_traits_ids;
-    my $download_url;
-    
-    my $selected_model_traits = $c->stash->{training_traits_ids};
-    my $protocol_id = $c->stash->{genotyping_protocol_id};
-    
-    no warnings 'uninitialized';
-
-    if ($selection_pop_id)
-    {
-        $self->prediction_pop_analyzed_traits($c, $training_pop_id, $selection_pop_id);
-        $selection_traits_ids = $c->stash->{prediction_pop_analyzed_traits_ids};
-    } 
-
-    my @selection_traits_ids = sort(@$selection_traits_ids) if $selection_traits_ids->[0];
-    my @selected_model_traits = sort(@$selected_model_traits) if $selected_model_traits->[0];
-  
-    if (@selected_model_traits ~~ @selection_traits_ids)
-    {
-	foreach my $trait_id (@selection_traits_ids) 
-	{
-	    $self->get_trait_details($c, $trait_id);
-	    my $trait_abbr = $c->stash->{trait_abbr};
-       
-	    my $page = $c->req->referer;
-	    if ($page =~ /solgs\/traits\/all\/|solgs\/models\/combined\//)
-	    {
-		$download_url .= " | " if $download_url;     
-	    }
-	  	    
-	    if ($page =~ /combined/)
-	    {
-		$download_url .= qq |<a href="/solgs/combined/model/$training_pop_id/selection/$selection_pop_id/trait/$trait_id/gp/$protocol_id">$trait_abbr</a> |;
-	    }
-	    else 
-	    {
-		$download_url .= qq |<a href="/solgs/selection/$selection_pop_id/model/$training_pop_id/trait/$trait_id/gp/$protocol_id">$trait_abbr</a> |;
-	    }	              
-	}
-    }
-    
-    if ($download_url) 
-    {    
-        $c->stash->{download_prediction} = $download_url;         
-    }
-    else
-    {        
-        $c->stash->{download_prediction} = qq | <a href ="/solgs/model/$training_pop_id/prediction/$selection_pop_id/gp/$protocol_id"  onclick="solGS.waitPage(this.href); return false;">[ Predict ]</a> |;
-
-    }
-  
-}
-    
 
 sub model_parameters {
     my ($self, $c) = @_;
@@ -1945,8 +1782,8 @@ sub format_selection_pops {
 		  $project_yr = $yr_r->value;
 	      }
 
-	      $self->download_prediction_urls($c, $training_pop_id, $prediction_pop_id);
-	      my $download_prediction = $c->stash->{download_prediction};
+	      $c->controller('solGS::Download')->selection_prediction_download_urls($c, $training_pop_id, $prediction_pop_id);
+	      my $download_prediction = $c->stash->{selection_prediction_download};
 
 	      push @data,  [$pred_pop_link, $desc, $project_yr, $download_prediction];
           }
@@ -2302,7 +2139,7 @@ sub phenotype_graph :Path('/solgs/phenotype/graph') Args(0) {
     my $combo_pops_id = $c->req->param('combo_pops_id');
 
     $self->get_trait_details($c, $trait_id);
-
+       
     $c->stash->{pop_id}        = $pop_id;
     $c->stash->{combo_pops_id} = $combo_pops_id;
 
@@ -2312,7 +2149,7 @@ sub phenotype_graph :Path('/solgs/phenotype/graph') Args(0) {
 
     my $trait_pheno_file = $c->{stash}->{trait_phenodata_file};
     my $trait_data = $c->controller("solGS::Utils")->read_file_data($trait_pheno_file);
-
+       
     my $ret->{status} = 'failed';
     
     if (@$trait_data) 
@@ -2329,18 +2166,57 @@ sub phenotype_graph :Path('/solgs/phenotype/graph') Args(0) {
 }
 
 
+sub trait_pheno_data_type {
+    my ($self, $c, $trait_pheno_file) = @_;
+
+    #$c->controller("solGS::Files")->trait_phenodata_file($c);
+    #my $trait_pheno_file = $c->{stash}->{trait_phenodata_file};
+
+    my $mean_type;
+    if (-s $trait_pheno_file)
+    {
+	my @trait_data = read_file($trait_pheno_file);
+	$mean_type = shift(@trait_data);
+	
+	if ($mean_type =~ /fixed_effects/)
+	{
+	    $mean_type = 'Adjusted means, fixed (genotype) effects model';
+	}
+	elsif ($mean_type =~ /random_effects/)
+	{
+	    $mean_type = 'Adjusted means, random (genotype) effects model';
+	} 
+	else	    
+	{
+	    if ($c->req->path =~ /combined\/populations\//) 
+	    {
+		$mean_type = 'Average of adjusted means and/or arithmetic means across trials.';
+	    }
+	    else
+	    {
+		$mean_type = 'Arithmetic means';
+	    }
+	}
+    }
+    
+    return $mean_type;
+    
+}
+
+
 #generates descriptive stat for a trait phenotype data
 sub trait_phenotype_stat {
     my ($self, $c) = @_; 
     
     $c->controller("solGS::Files")->trait_phenodata_file($c);
-
     my $trait_pheno_file = $c->{stash}->{trait_phenodata_file};
 
     my $trait_data = $c->controller("solGS::Utils")->read_file_data($trait_pheno_file);
     
     my @desc_stat;
     my $background_job = $c->stash->{background_job};
+
+    my $pheno_type = $self->trait_pheno_data_type($c, $trait_pheno_file);
    
     if ($trait_data && !$background_job)
     {
@@ -2379,17 +2255,17 @@ sub trait_phenotype_stat {
 	$cv   = $round->round($cv);
 	$cv   = $cv . '%';
 
-	@desc_stat =  ( [ 'Total no. of genotypes', $cnt ],
-			[ 'Genotypes missing data', $na ],
-			[ 'Minimum', $min ], 
-			[ 'Maximum', $max ],
-			[ 'Arithmetic mean', $mean ],
-			[ 'Median', $med ],  
-			[ 'Standard deviation', $std ],
-			[ 'Coefficient of variation', $cv ]
-	    );
-   
-     
+	@desc_stat =  (
+	    [ 'Phenotype data type', $pheno_type],
+	    [ 'Total no. of genotypes', $cnt ],
+	    [ 'Genotypes missing data', $na ],
+	    [ 'Minimum', $min ], 
+	    [ 'Maximum', $max ],
+	    [ 'Arithmetic mean', $mean ],
+	    [ 'Median', $med ],  
+	    [ 'Standard deviation', $std ],
+	    [ 'Coefficient of variation', $cv ]
+	    );  
     }
     else
     {
@@ -3120,31 +2996,7 @@ sub genotype_trial_query_args {
 	$geno_file = $c->stash->{genotype_file_name};
     }
       
-    # my $referer = $c->req->referer;
-     
-    # my $tr_pop_id;
-    # if ($referer =~ /models\/combined\/trials\/|solgs\/populations\/combined\//) 
-    # {
-    # 	$training_pop_id = $c->stash->{combo_pops_id};
-    # 	$tr_pop_id = "${training_pop_id}_combined";
-    # } 
-    # else
-    # {
-    # 	$tr_pop_id = $training_pop_id ? $training_pop_id : $pop_id;
-    # }
-
-    #$c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
-    #my $training_geno_file = $c->stash->{genotype_file_name};
-#	print STDERR "\n NO  check data exisits genotype_trial_query_args: --training geno file: $training_geno_file\n";
-    # my $args = {
-    # 	'training_pop_id' => $pop_id,
-    # 	'selection_pop_id' => $selection_pop_id,
-    # 	'training_geno_file'  => $training_geno_file,
-    # 	'genotype_file'       => $geno_file,
-    # 	'cache_dir'     => $c->stash->{solgs_cache_dir},
-    # };
-
-     my $args = {
+    my $args = {
 	'trial_id' => $pop_id,
 	'genotype_file'       => $geno_file,
 	'genotyping_protocol_id' => $protocol_id,
