@@ -220,6 +220,9 @@ sub _get_unique_accession_names_from_trial {
     my @acc_names;
     my %unique_acc;
     no warnings 'numeric'; #for genotyping plate so that wells don't give warning
+
+    print STDERR "DESIGN (AbstractTrial): ".Dumper(\%design);
+    
     foreach my $key (sort { $a <=> $b} keys %design) {
         my %design_info = %{$design{$key}};
         $unique_acc{$design_info{"accession_name"}} = $design_info{"accession_id"}
@@ -290,24 +293,27 @@ sub _get_design_from_trial {
     #my $trial_has_plants_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_has_plant_entries', 'project_property')->cvterm_id;
     my $trial_layout_json = $project->projectprops->find({ 'type_id' => $self->cvterm_id('trial_layout_json') });
     my $trial_has_plants = $project->projectprops->find({ 'type_id' => $self->cvterm_id('project_has_plant_entries') });
-    if ($trial_layout_json) {
-	print STDERR "WE HAVE TRIAL LAYOUT JSON!\n";
-        my $design = decode_json $trial_layout_json->value;
-        #Plant index number needs to be in the cached layout of trials that have plants. this serves a check to assure this.
-        if ($trial_has_plants){
-            my @plot_values = values %$design;
-            if (!exists($plot_values[0]->{plant_index_numbers})) {
-		print STDERR "Regenerating cache to include plants...\n";
-                $self->generate_and_cache_layout();
-            } else {
-                print STDERR "TrialLayout from cache ".localtime."\n";
-                return $design;
-            }
-        } else {
+
+    my $design = decode_json $trial_layout_json->value if ($trial_layout_json);
+    if (keys(%$design)) {
+        	    print STDERR "WE HAVE TRIAL LAYOUT JSON!\n";
+	    print STDERR "TRIAL LAYOUT JSON IS: ".$trial_layout_json->value()."\n";
+	    
+	    #Plant index number needs to be in the cached layout of trials that have plants. this serves a check to assure this.
+	    if ($trial_has_plants){
+		my @plot_values = values %$design;
+		if (!exists($plot_values[0]->{plant_index_numbers})) {
+		    print STDERR "Regenerating cache to include plants...\n";
+		    $self->generate_and_cache_layout();
+		} else {
+		    print STDERR "TrialLayout from cache ".localtime."\n";
+		    return $design;
+		}
+	    } else {
             print STDERR "TrialLayout from cache ".localtime."\n";
             return $design;
-        }
-    } else {
+	    }
+	} else {
 	print STDERR "Regenerating cache...\n";
         my $design = $self->generate_and_cache_layout();
 	print STDERR "Generated DESIGN (and cached) : ".Dumper($design);
@@ -326,30 +332,30 @@ sub generate_and_cache_layout {
     my %unique_controls;
     my $project = $self->get_project();
 
-  $plots_ref = $self->_get_plots();
-  if (!$plots_ref) {
+    $plots_ref = $self->_get_plots();
+    if (!$plots_ref) {
       print STDERR "_get_design_from_trial: not plots provided... returning.\n";
       return { error => "Something went wrong retrieving plots for this trial. This should not happen, so please contact us." };
   }
 #print STDERR "Check 2.3.4.2: ".localtime()."\n";
 
-    my $genotyping_user_id;
-    my $genotyping_project_name;
-    if ($self->get_experiment_type eq 'genotyping_trial'){
-        my $genotyping_user_id_row = $project
-            ->search_related("nd_experiment_projects")
-            ->search_related("nd_experiment")
-            ->search_related("nd_experimentprops")
-            ->find({ 'type.name' => 'genotyping_user_id' }, {join => 'type' });
-        $genotyping_user_id = $genotyping_user_id_row->get_column("value") || "unknown";
+    # my $genotyping_user_id;
+    # my $genotyping_project_name;
+    # if ($self->get_experiment_type eq 'genotyping_trial'){
+    #     my $genotyping_user_id_row = $project
+    #         ->search_related("nd_experiment_projects")
+    #         ->search_related("nd_experiment")
+    #         ->search_related("nd_experimentprops")
+    #         ->find({ 'type.name' => 'genotyping_user_id' }, {join => 'type' });
+    #     $genotyping_user_id = $genotyping_user_id_row->get_column("value") || "unknown";
 
-        my $genotyping_project_name_row = $project
-            ->search_related("nd_experiment_projects")
-            ->search_related("nd_experiment")
-            ->search_related("nd_experimentprops")
-            ->find({ 'type.name' => 'genotyping_project_name' }, {join => 'type' });
-        $genotyping_project_name = $genotyping_project_name_row->get_column("value") || "unknown";
-    }
+    #     my $genotyping_project_name_row = $project
+    #         ->search_related("nd_experiment_projects")
+    #         ->search_related("nd_experiment")
+    #         ->search_related("nd_experimentprops")
+    #         ->find({ 'type.name' => 'genotyping_project_name' }, {join => 'type' });
+    #     $genotyping_project_name = $genotyping_project_name_row->get_column("value") || "unknown";
+    # }
     
     @plots = @{$plots_ref};
 
@@ -359,6 +365,8 @@ sub generate_and_cache_layout {
     foreach my $plot (@plots) {
 	$self->retrieve_plot_info($plot, \%design);
     }
+
+    print STDERR "DESIGN IN generate_and_cache_layout: ".Dumper(\%design);
 
     my $trial_layout_json_rs = $project->search_related('projectprops',{ 'type_id' => $self->cvterm_id('trial_layout_json') });
     while (my $t = $trial_layout_json_rs->next) {
@@ -373,7 +381,7 @@ sub generate_and_cache_layout {
         return \%verify_errors;
     }
 
-	print STDERR "DESIGN AS READ : ".Dumper(\%design);
+    print STDERR "DESIGN AS READ : ".Dumper(\%design);
 	
     return \%design;
 }

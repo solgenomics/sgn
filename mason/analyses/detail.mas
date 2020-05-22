@@ -34,11 +34,11 @@ $analysis_description
 </&>
 
 <&| /page/info_section.mas, title=>"Input data", collapsible=>1, collapsed=>0 &>
-  <div id="analysis_input_data">Input data</div>
+  Dataset name: <div id="analysis_input_data">[Not provided]</div>
 </&>
   
-<&| /page/info_section.mas, title=>"Accession list", collapsible=>1, collapsed=>0 &>
-  <div id="accession_names">[loading...]</div>
+<&| /page/info_section.mas, title=>"Analysis protocol", collapsible=>1, collapsed=>0 &>
+  <div id="analysis_protocol">[Not provided]</div>
 </&>
 
 <&| /page/info_section.mas, title=>"Analysis Results", collapsible => 1, collapsed => 0 &>

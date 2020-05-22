@@ -36,6 +36,9 @@ sub store_analysis_json_POST {
     my $dataset_id = $c->req->param("dataset_id");
     my $analysis_name = $c->req->param("analysis_name");
     my $analysis_type = $c->req->param("analysis_type");
+    my $analysis_result_type = $c->req->param("analysis_result_type");
+    my $model = $c->req->param("model");
+    my $analysis_protocol = $c->req->param("analysis_protocol");
     
     if (my $error = $self->check_user($c)) {
 	$c->stash->{rest} = { error =>  $error };
@@ -221,6 +224,7 @@ sub store_data {
     $a->accession_names($stocks);
     $a->metadata()->traits($traits);
     $a->metadata()->analysis_protocol($params->{analysis_protocol});
+    $a->metadata()->model($params->{model});
     
     my ($verified_warning, $verified_error);
 
@@ -322,8 +326,9 @@ returns data for the analysis_id in the following json structure:
 { 
     analysis_name
     analysis_description
+    analysis_result_type
     dataset
-    method
+    analysis_protocol
     accession_names
     data
 }
@@ -354,13 +359,22 @@ sub retrieve_analysis_data :Chained("ajax_analysis") PathPart('retrieve') :Args(
     my $matrix = $a->get_phenotype_matrix();
     print STDERR "Matrix: ".Dumper($matrix);
     my $dataref = [];
+
+    # format table body with links but exclude header
+    my $header = shift @$matrix;
+    my $header = [ @$header[18, 30..scalar(@$header)-1 ]];
     
     foreach my $row (@$matrix) {
-	my $new_row =  [@$row[17,18,30..scalar(@$row)-1]];
-	print STDERR "NEW ROW: ".Dumper($new_row);
-	push @$dataref, $new_row;
+	my ($stock_id, $stock_name, @values) =  @$row[17,18,30..scalar(@$row)-1];
+	print STDERR "NEW ROW: $stock_id, $stock_name, ".join(",", @values)."\n";
+	push @$dataref, [ 
+	    "<a href=\"/stock/$stock_id/view\">$stock_name</a>",
+	    @values 
+	];
     }
 
+    unshift @$dataref, $header;
+    
     print STDERR "TRAITS : ".Dumper($a->traits());
     
     my $resultref = {
@@ -372,6 +386,7 @@ sub retrieve_analysis_data :Chained("ajax_analysis") PathPart('retrieve') :Args(
 	    dataset_description => $dataset_description,
 	},
 	#accession_ids => $a ->accession_ids(),
+	analysis_protocoal => $a->metadata()->analysis_protocol(),
 	accession_names => $a->accession_names(),
 	traits => $a->traits(),
 	data => $dataref,

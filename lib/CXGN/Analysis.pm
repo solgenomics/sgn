@@ -126,13 +126,13 @@ has 'data_hash' => (is => 'rw', isa => 'HashRef');
 
 =cut
 
-has 'design' => (is => 'rw', isa => 'Ref', lazy => 1, builder => '_load_design');
+has 'design' => (is => 'rw', isa => 'Ref', lazy => 1, builder => '_get_layout');
 
 =head2 traits()
 
 =cut
 
-has 'traits' => (is => 'rw', isa => 'ArrayRef', builder => '_load_traits');
+has 'traits' => (is => 'rw', isa => 'ArrayRef', builder => '_load_traits', lazy => 1);
 
 =head2 nd_geolocation_id()
 
@@ -563,14 +563,14 @@ sub store_analysis_values {
     
 }
 
-sub _load_design {
+sub _get_layout {
     my $self = shift;
 
     # Load the design
     #
     my $design = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema(), trial_id => $self->get_trial_id(), experiment_type=> 'analysis_experiment'} );
 
-    print STDERR "_load_design: design = ".Dumper($design->get_design);
+    print STDERR "_get_layout: design = ".Dumper($design->get_design);
 
     #print STDERR "ERROR IN LAYOUT: ".Dumper($error)."\n";
     #print STDERR "READ DESIGN: ".Dumper($design->get_design());
@@ -616,7 +616,8 @@ sub _load_traits {
 
     my $traits = [ @$header[30..scalar(@$header)-1] ];
 
-    $self->traits($traits);
+    print STDERR "_load_traits: TRAITS: ".Dumper($traits);
+    #$self->traits($traits);
     return $traits;
 }
 	
