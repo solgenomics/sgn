@@ -137,6 +137,54 @@ sub detail {
 }
 
 sub all_transactions {
+    my $self = shift;
+    my $params = shift;
+    my $c = shift;
+
+    my $status = $self->status;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $schema = $self->bcs_schema;
+    my @data;
+    my $transactions;
+    my $counter = 0;
+    my %result;
+
+    my $transaction_id = $params->{transactionDbId}->[0];
+    my $seedlot_id = $params->{seedLotDbId};
+    my $germplasm_id = $params->{germplasmDbId};
+
+    my $limit = $page_size;
+    my $offset = $page_size*$page;
+
+    if ($seedlot_id){
+       # $transactions = CXGN::Stock::Seedlot::Transaction->get_transactions_by_seedlot_id($schema,$seedlot_id);
+    } else {
+        $transactions = CXGN::Stock::Seedlot::Transaction->get_transactions($schema, $seedlot_id, $transaction_id, $germplasm_id, $limit, $offset);
+    }
+
+    foreach my $t (@$transactions) {
+        my $from = $t->from_stock->[0];
+        my $to = $t->to_stock->[0];
+        my $id = $t->transaction_id;    
+        my $timestamp = format_date($t->timestamp);
+        push @data , {
+            additionalInfo=>{},
+            amount=>$t->amount,
+            externalReferences=>[],
+            fromSeedLotDbId=>qq|$from|,
+            toSeedLotDbId=>qq|$to|,
+            transactionDbId=>qq|$id|,
+            transactionDescription=>$t->description,
+            transactionTimestamp=>$timestamp,
+            units=>"seeds",
+        };
+    }
+    my @data_files;
+    my %result = (data=>\@data);
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
+
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Crossing projects result constructed');
 
 }
 
@@ -158,8 +206,6 @@ sub transactions {
         schema => $schema,
         phenome_schema => $phenome_schema,
         seedlot_id => $seedlot_id,
-        limit=>$page_size,
-        offset=>$page_size*$page,
     );
 
     my $transactions = $seedlot->transactions();
