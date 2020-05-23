@@ -258,6 +258,13 @@ jQuery(document).ready(function() {
 	  swap_menu(selectedId);
 	});
 
+	jQuery('#program_select').change( function() {
+	  var selected_program = jQuery('#program_select').find(':selected').attr('value');
+	  if (selected_program === 'blastp' or selected_program === 'blastx') {
+	     jQuery('#word_size').html("3");
+	  }
+	});
+
 	var input_examples = eval(<% $input_example_json %>);
 	var database_types = eval (<% $database_type_json %>);
 	var input_option_types = eval(<% $input_option_json %>);
