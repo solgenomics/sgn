@@ -261,9 +261,10 @@ jQuery(document).ready(function() {
 
 	jQuery('#program_select').change( function() {
 	  var selected_program = jQuery('#program_select').find(':selected').attr('value');
-	  if (selected_program === 'blastp' or selected_program === 'blastx') {
-	     jQuery('#word_size').html("3");
+	  if (selected_program === 'blastp' || selected_program === 'blastx' || selected_program === 'tblastn' || selected_program === 'tblastx') {
+	     jQuery('#word_size').val("3");
 	  }
+	  if (selected_program === 'blastn') { jQuery('#word_size').val("11"); }
 	});
 
 	var input_examples = eval(<% $input_example_json %>);
