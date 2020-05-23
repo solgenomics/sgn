@@ -32,7 +32,7 @@ $gs_traits_index => undef
 <div class="container">
 
   <& /page/page_title.mas, 
-   title => "solGS: Prediction Modeling" 
+   title => "solGS: Genomic Prediction Modeling" 
     &>
     
   <& /solgs/genotyping_protocol.mas &>
