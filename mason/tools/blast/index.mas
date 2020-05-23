@@ -99,6 +99,8 @@
 
 <& /page/page_title.mas, title=>"BLAST" &>
 
+<div style="border-style:dotted;border-width:1px;margin-bottom:20px;"><div style="margin-top:10px;margin-right:10px;margin-bottom:10px;margin-left:10px;" >Note: you can now also set the word_size for the blast algorithm. Shorter word sizes are better when analyzing short sequences. The default for blastn is 11 and for protein-based blast programs it is 3. The correct default will be set automatically when changing the program.</div></div>
+
 <&| /page/info_section.mas, id=>"input_parameter_section", title=>"Input parameters", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/tools/blast" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
   <input type="hidden" name="outformat" value="0" />
 
@@ -257,6 +259,14 @@ jQuery(document).ready(function() {
 	jQuery('#dataset_select').change( function() {
 	  var selectedId = jQuery('#dataset_select').find(':selected').attr('value');
 	  swap_menu(selectedId);
+	});
+
+	jQuery('#program_select').change( function() {
+	  var selected_program = jQuery('#program_select').find(':selected').attr('value');
+	  if (selected_program === 'blastp' || selected_program === 'blastx' || selected_program === 'tblastn' || selected_program === 'tblastx') {
+	     jQuery('#word_size').val("3");
+	  }
+	  if (selected_program === 'blastn') { jQuery('#word_size').val("11"); }
 	});
 
 	var input_examples = eval(<% $input_example_json %>);
