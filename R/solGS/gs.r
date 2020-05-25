@@ -648,7 +648,9 @@ if (!is.null(filteredGenoData) && is.null(readFilteredGenoData)) {
 ##               )
 ## }
 
+
 if (file.info(relationshipMatrixFile)$size == 0) {
+  
   fwrite(relationshipMatrix,
          file  = relationshipMatrixFile,
          row.names = TRUE,
@@ -660,8 +662,14 @@ if (file.info(relationshipMatrixFile)$size == 0) {
 
 if (file.info(relationshipMatrixJsonFile)$size == 0) {
 
-    relationshipMatrixList <- list(labels = names(relationshipMatrix),
-                                       values = relationshipMatrix)
+    relationshipMatrixJson <- relationshipMatrix
+    relationshipMatrixJson[upper.tri(relationshipMatrixJson)] <- NA
+ 
+    
+    relationshipMatrixJson <- data.frame(relationshipMatrixJson)
+  
+    relationshipMatrixList <- list(labels = names(relationshipMatrixJson),
+                                       values = relationshipMatrixJson)
 
     relationshipMatrixJson <- jsonlite::toJSON(relationshipMatrixList)
 
