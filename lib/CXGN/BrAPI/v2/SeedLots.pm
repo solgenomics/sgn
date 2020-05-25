@@ -180,6 +180,10 @@ sub all_transactions {
 sub transactions {
     my $self = shift;
     my $seedlot_id = shift;
+    my $params = shift;
+
+    my $transaction_id = $params->{transactionDbId}->[0];
+    my $direction = $params->{transactionDirection}->[0];
 
     my $status = $self->status;
     my $page_size = $self->page_size;
@@ -200,10 +204,10 @@ sub transactions {
     my $transactions = $seedlot->transactions();
 
     foreach my $t (@$transactions) {
-        if ($counter >= $start_index && $counter <= $end_index) {
+        my $id = $t->transaction_id();
+        if ((!$transaction_id && $counter >= $start_index && $counter <= $end_index) || ($transaction_id eq $id) )  {
             my $from = $t->from_stock()->[0];
             my $to = $t->to_stock()->[0];
-            my $id = $t->transaction_id();
             my $timestamp = format_date($t->timestamp());
             push @data , {
                 additionalInfo=>{},
