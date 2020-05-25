@@ -15,22 +15,15 @@ sub search {
     my $phenome_schema = $self->phenome_schema();
     my $people_schema = $self->people_schema();
 
-    my $seedlot_name = $params->{seedlot_name} || '';
+    my $seedlot_name = $params->{seedLotName} || '';
+    my $seedlot_id = $params->{seedLotDbId}->[0] || '';
     my $breeding_program = $params->{breeding_program} || '';
     my $location = $params->{location} || '';
     my $minimum_count = $params->{minimum_count} || '';
     my $minimum_weight = $params->{minimum_weight} || '';
-    my $contents_accession = $params->{contents_accession} || '';
-    my $contents_cross = $params->{contents_cross} || '';
-    my $exact_accession = $params->{exact_accession};
-    my $exact_cross = $params->{exact_cross};
-    my $rows = $params->{length} || 10;
-    my $draw = $params->{draw} || '';
-    $draw =~ s/\D//g; # cast to int
-    my $exact_match_uniquenames = 1;
-    
-    my @accessions = split ',', $contents_accession;
-    my @crosses = split ',', $contents_cross;
+    my $accession_id = $params->{germplasmDbId} || '';
+    my $accession_name = $params->{germplasmName} || '';
+    my $cross = $params->{cross} || '';   
 
     my $reference_ids_arrayref = $params->{externalReferenceID} || ();
     my $reference_sources_arrayref = $params->{externalReferenceSources} || ();
@@ -41,7 +34,7 @@ sub search {
 
 	my $page_size = $self->page_size;
 	my $page = $self->page;
-    my $limit = $page_size;
+    my $limit = $page_size*($page+1)-1;
     my $offset = $page_size*$page;
 	my @data;
 
@@ -55,10 +48,12 @@ sub search {
         $breeding_program,
         $location,
         $minimum_count,
-        \@accessions,
-        \@crosses,
-        $exact_match_uniquenames,
-        $minimum_weight
+        $accession_name,
+        $cross,
+        1,
+        $minimum_weight,
+        $seedlot_id,
+        $accession_id
     );
 
     foreach (@$list){
@@ -68,7 +63,7 @@ sub search {
             createdDate=>undef,
             externalReferences=>[],
             germplasmDbId=>qq|$_->{source_stocks}->[0][0]|,
-            lastUpdated=>undef,
+            lastUpdated=>qq|$_->{source_stocks}->[0][1]|,
             locationDbId=>qq|$_->{location_id}|,
             programDbId=>qq|$_->{breeding_program_id}|,
             seedLotDbId=>qq|$_->{seedlot_stock_id}|,
@@ -81,7 +76,7 @@ sub search {
     }
 	my %result = (data=>\@data);
 	my @data_files;
-	my $pagination = CXGN::BrAPI::Pagination->pagination_response(1,$page_size,$page);
+	my $pagination = CXGN::BrAPI::Pagination->pagination_response($records_total,$page_size,$page);
 
 	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Seed lots result constructed');
 }
@@ -146,22 +141,15 @@ sub all_transactions {
     my $page = $self->page;
     my $schema = $self->bcs_schema;
     my @data;
-    my $transactions;
-    my $counter = 0;
-    my %result;
 
     my $transaction_id = $params->{transactionDbId}->[0];
     my $seedlot_id = $params->{seedLotDbId};
-    my $germplasm_id = $params->{germplasmDbId};
+    my $germplasm_id = $params->{germplasmDbId}->[0];
 
-    my $limit = $page_size;
+    my $limit = $page_size*($page+1)-1;
     my $offset = $page_size*$page;
 
-    if ($seedlot_id){
-       # $transactions = CXGN::Stock::Seedlot::Transaction->get_transactions_by_seedlot_id($schema,$seedlot_id);
-    } else {
-        $transactions = CXGN::Stock::Seedlot::Transaction->get_transactions($schema, $seedlot_id, $transaction_id, $germplasm_id, $limit, $offset);
-    }
+    my ($transactions, $records_total) = CXGN::Stock::Seedlot::Transaction->get_transactions($schema, $seedlot_id->[0], $transaction_id, $germplasm_id, $limit, $offset);
 
     foreach my $t (@$transactions) {
         my $from = $t->from_stock->[0];
@@ -180,11 +168,12 @@ sub all_transactions {
             units=>"seeds",
         };
     }
+
     my @data_files;
     my %result = (data=>\@data);
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($records_total,$page_size,$page);
 
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Crossing projects result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Transactions result constructed');
 
 }
 
@@ -234,7 +223,7 @@ sub transactions {
     my %result = (data=>\@data);
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
 
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Crossing projects result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Transactions result constructed');
 }
 
 sub format_date {

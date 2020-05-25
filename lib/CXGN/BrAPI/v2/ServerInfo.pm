@@ -118,6 +118,13 @@ sub search {
 		[['application/json'],['GET'], 'germplasm/{germplasmDbId}/progeny',['2.0']],
 		[['application/json'],['POST'],'search/germplasm',['2.0']],
 		[['application/json'],['GET'], 'search/germplasm/{searchResultsDbId}',['2.0']],
+		[['application/json'],['GET'], 'crossingprojects',['2.0']],
+		[['application/json'],['GET'], 'crossingprojects/{crossingProjectDbId}',['2.0']],
+		[['application/json'],['GET'], 'crosses',['2.0']],
+		[['application/json'],['GET'], 'seedlots',['2.0']],
+		[['application/json'],['GET'], 'seedlots/transactions',['2.0']],
+		[['application/json'],['GET'], 'seedlots/{seedLotDbId}',['2.0']],
+		[['application/json'],['GET'], 'seedlots/{seedLotDbId}/transactions',['2.0']],
 	);
 
 	my @call_search;

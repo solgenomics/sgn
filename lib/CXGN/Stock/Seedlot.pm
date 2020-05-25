@@ -275,6 +275,8 @@ sub list_seedlots {
     my $contents_cross = shift; #arrayref of uniquenames
     my $exact_match_uniquenames = shift;
     my $minimum_weight = shift;
+    my $seedlot_id = shift; #added for BrAPI
+    my $accession_id = shift; #added for BrAPI
 
     print STDERR "SEARCHING SEEDLOTS\n";
     my %unique_seedlots;
@@ -293,6 +295,9 @@ sub list_seedlots {
     if ($seedlot_name) {
         $search_criteria{'me.uniquename'} = { 'ilike' => '%'.$seedlot_name.'%' };
     }
+    if ($seedlot_id) {
+        $search_criteria{'me.stock_id'} = { -in => $seedlot_id };
+    }
     if ($breeding_program) {
         $search_criteria{'project.name'} = { 'ilike' => '%'.$breeding_program.'%' };
     }
@@ -308,6 +313,11 @@ sub list_seedlots {
                 push @{$search_criteria{'subject.uniquename'}}, { 'ilike' => '%'.$_.'%' };
             }
         }
+    }
+    if ($accession_id && scalar(@$accession_id)>0) {
+        print Dumper $accession_id;
+        $search_criteria{'subject.type_id'} = $accession_type_id;
+        $search_criteria{'subject.stock_id'} = { -in => $accession_id };
     }
     if ($contents_cross && scalar(@$contents_cross)>0) {
         $search_criteria{'subject.type_id'} = $cross_type_id;
