@@ -95,7 +95,6 @@ sub _validate_with_plugin {
 
     if (scalar(@crosses_missing) > 0){
         push @error_messages, "The following cross unique ids are not in the database as uniquenames or synonyms: ".join(',',@crosses_missing);
-        $errors{'missing_crosses'} = \@crosses_missing;
     }
 
     my @progenies = keys %seen_progeny_names;

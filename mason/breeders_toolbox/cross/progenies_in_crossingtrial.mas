@@ -475,7 +475,13 @@ jQuery(document).ready(function(){
             var html;
             archived_file_name = response.archived_file_name;
             if (response.error_string) {
-                html = '<h3>The Following Issues Were Identified</h3><p class="bg-warning">'+response.error_string+'</p>';
+                jQuery("#upload_progenies_error_display tbody").html('');
+                jQuery("#upload_progenies_error_display tbody").append(response.error_string);
+                jQuery("#upload_progenies_error_display").modal("show");
+                return;
+            }
+            if (response.existing_pedigrees) {
+                html = '<h3>The Following Issues Were Identified</h3><p class="bg-warning">'+response.existing_pedigrees+'</p>';
             }
             else {
                 html = '<h3>There Were No Issues Identified</h3>';
@@ -497,8 +503,8 @@ jQuery(document).ready(function(){
             },
             success: function(response) {
                 jQuery('#working_modal').modal('hide');
-                if (response.error) {
-                    alert('An Error Occured: No pedigrees were saved! Try Fixing Your File For The Issues Identified In the Validation. '+response.error);
+                if (response.error_string) {
+                    alert('An Error Occured: . '+response.error_string);
                     return;
                 }
 
@@ -508,7 +514,7 @@ jQuery(document).ready(function(){
             },
             error: function(response) {
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred storing the pedigrees. None were uploaded.');
+                alert('An error occurred storing the progenies. None were uploaded.');
             }
         });
     });

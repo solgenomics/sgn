@@ -13,6 +13,7 @@ sub _validate_with_plugin {
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
     my @error_messages;
+    my @existing_pedigrees;
     my %errors;
     my $parser   = Spreadsheet::ParseExcel->new();
     my $excel_obj;
@@ -96,7 +97,6 @@ sub _validate_with_plugin {
 
     if (scalar(@crosses_missing) > 0){
         push @error_messages, "The following cross unique ids are not in the database as uniquenames or synonyms: ".join(',',@crosses_missing);
-        $errors{'missing_crosses'} = \@crosses_missing;
     }
 
     my @progenies = keys %seen_progeny_names;
@@ -152,15 +152,16 @@ sub _validate_with_plugin {
 
         foreach (@progeny_stock_ids){
             if (exists($progeny_with_female_parent_already{$_})){
-                push @error_messages, $progenies_hash{$_}." already has female parent stockID ".$progeny_with_female_parent_already{$_}->[0]." saved with cross type ".$progeny_with_female_parent_already{$_}->[1];
+                push @existing_pedigrees, $progenies_hash{$_}." already has female parent stockID ".$progeny_with_female_parent_already{$_}->[0]." saved with cross type ".$progeny_with_female_parent_already{$_}->[1];
             }
             if (exists($progeny_with_male_parent_already{$_})){
-                push @error_messages, $progenies_hash{$_}." already has male parent stockID ".$progeny_with_male_parent_already{$_};
+                push @existing_pedigrees, $progenies_hash{$_}." already has male parent stockID ".$progeny_with_male_parent_already{$_};
             }
         }
 
     #store any errors found in the parsed file to parse_errors accessor
         $errors{'error_messages'} = \@error_messages;
+        $errors{'existing_pedigrees'} = \@existing_pedigrees;
         $self->_set_parse_errors(\%errors);
         return;
 

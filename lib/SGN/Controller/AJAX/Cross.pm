@@ -929,7 +929,7 @@ sub upload_progenies_POST : Args(0) {
                 $return_error .= $error_string."<br>";
             }
         }
-        $c->stash->{rest} = {error_string => $return_error, missing_crosses => $parse_errors->{'missing_crosses'} };
+        $c->stash->{rest} = {error_string => $return_error};
         $c->detach();
     }
 
@@ -1056,6 +1056,7 @@ sub validate_upload_existing_progenies_POST : Args(0) {
     #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
 
         my $return_error = '';
+        my $existing_pedigree = '';
         if (!$parser->has_parse_errors() ){
             $c->stash->{rest} = {error_string => "Could not get parsing errors"};
         } else {
@@ -1065,8 +1066,13 @@ sub validate_upload_existing_progenies_POST : Args(0) {
             foreach my $error_string (@{$parse_errors->{'error_messages'}}){
                 $return_error .= $error_string."<br>";
             }
+
+            foreach my $each_pedigree (@{$parse_errors->{'existing_pedigrees'}}){
+                $existing_pedigree .= $each_pedigree."<br>";
+            }
+
         }
-        $c->stash->{rest} = {error_string => $return_error, archived_file_name => $archived_filename_with_path};
+        $c->stash->{rest} = {error_string => $return_error, existing_pedigrees => $existing_pedigree, archived_file_name => $archived_filename_with_path};
 }
 
 
@@ -1100,11 +1106,7 @@ sub store_upload_existing_progenies : Path('/ajax/cross/store_upload_existing_pr
             }
         }
     }
-
-
 }
-
-
 
 
 sub upload_info : Path('/ajax/cross/upload_info') : ActionClass('REST'){ }
