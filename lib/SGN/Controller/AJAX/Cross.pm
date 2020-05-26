@@ -832,18 +832,8 @@ sub upload_progenies_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
-    my $upload_new_accessions = $c->req->upload('progenies_new_upload_file');
-    my $upload_exist_accessions = $c->req->upload('progenies_exist_upload_file');
-    my $upload;
-    my $upload_type;
-    if ($upload_new_accessions) {
-        $upload = $upload_new_accessions;
-        $upload_type = 'ProgeniesExcel';
-    }
-    if ($upload_exist_accessions) {
-        $upload = $upload_exist_accessions;
-        $upload_type = 'ProgeniesExistingAccessionsExcel';
-    }
+    my $upload = $c->req->upload('progenies_new_upload_file');
+    my $upload_type = 'ProgeniesExcel';
     my $parser;
     my $parsed_data;
     my $upload_original_name = $upload->filename();
@@ -934,44 +924,26 @@ sub upload_progenies_POST : Args(0) {
     }
 
     #add the progeny
-    if ($parsed_data && $upload_new_accessions){
-        my %progeny_hash = %{$parsed_data};
-        foreach my $cross_name_key (keys %progeny_hash){
-            my $progenies_ref = $progeny_hash{$cross_name_key};
-            my @progenies = @{$progenies_ref};
-            my $progeny_add = CXGN::Pedigree::AddProgeny->new({
-                chado_schema => $chado_schema,
-                phenome_schema => $phenome_schema,
-                dbh => $dbh,
-                cross_name => $cross_name_key,
-                progeny_names => \@progenies,
-                owner_name => $user_name,
-            });
-            if (!$progeny_add->add_progeny()){
-                $c->stash->{rest} = {error_string => "Error adding progeny",};
-                return;
-            }
+    my %progeny_hash = %{$parsed_data};
+    foreach my $cross_name_key (keys %progeny_hash){
+        my $progenies_ref = $progeny_hash{$cross_name_key};
+        my @progenies = @{$progenies_ref};
+        my $progeny_add = CXGN::Pedigree::AddProgeny->new({
+            chado_schema => $chado_schema,
+            phenome_schema => $phenome_schema,
+            dbh => $dbh,
+            cross_name => $cross_name_key,
+            progeny_names => \@progenies,
+            owner_name => $user_name,
+        });
+        if (!$progeny_add->add_progeny()){
+            $c->stash->{rest} = {error_string => "Error adding progeny",};
+            return;
         }
     }
 
-    if ($parsed_data && $upload_exist_accessions){
-        my %progeny_hash = %{$parsed_data};
-        foreach my $cross_name_key (keys %progeny_hash){
-            my $progenies_ref = $progeny_hash{$cross_name_key};
-            my @progenies = @{$progenies_ref};
-            my $progeny_exist_add = CXGN::Pedigree::AddProgeniesExistingAccessions->new({
-                chado_schema => $chado_schema,
-                dbh => $dbh,
-                cross_name => $cross_name_key,
-                progeny_names => \@progenies,
-            });
-            if (!$progeny_exist_add->add_progenies_existing_accessions()){
-                $c->stash->{rest} = {error_string => "Error adding progeny",};
-                return;
-            }
-        }
-    }
     $c->stash->{rest} = {success => "1",};
+
 }
 
 sub validate_upload_existing_progenies : Path('/ajax/cross/validate_upload_existing_progenies') : ActionClass('REST'){ }
@@ -983,8 +955,7 @@ sub validate_upload_existing_progenies_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
-    my $upload_exist_accessions = $c->req->upload('progenies_exist_upload_file');
-    my $upload = $upload_exist_accessions;
+    my $upload = $c->req->upload('progenies_exist_upload_file');
     my $upload_type = 'ValidateExistingProgeniesExcel';
     my $parser;
     my $parsed_data;
