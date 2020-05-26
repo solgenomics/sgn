@@ -128,24 +128,24 @@ function plotPhenotypeScatter () {
  
         var plotPheno = jQuery.plot('#phenoPlot', plotPhenoData, optionsPheno);
         
-        var overviewPheno = jQuery.plot(jQuery("#phenoPlotOverview"), plotPhenoData, {
-                series: {
-                    lines: { 
-                        show: true, 
-                        lineWidth: 2 
-                    },
-                    shadowSize: 0
-                },
-                xaxis: { 
-                    ticks: [], 
-                    mode: "categories", 
-                    label: 'Genotypes',
-                },                  
-                selection: { 
-                    mode: "xy", 
-                },
-                colors: ["#cc0000", "#0066CC"],
-            });
+        // var overviewPheno = jQuery.plot(jQuery("#phenoPlotOverview"), plotPhenoData, {
+        //         series: {
+        //             lines: { 
+        //                 show: true, 
+        //                 lineWidth: 2 
+        //             },
+        //             shadowSize: 0
+        //         },
+        //         xaxis: { 
+        //             ticks: [], 
+        //             mode: "categories", 
+        //             label: 'Genotypes',
+        //         },                  
+        //         selection: { 
+        //             mode: "xy", 
+        //         },
+        //         colors: ["#cc0000", "#0066CC"],
+        //     });
             
         jQuery("#phenoPlot").bind("plotselected", function (event, ranges) {
                 //zoom in
@@ -156,13 +156,13 @@ function plotPhenotypeScatter () {
                                             }));
         
                 plotPheno.setSelection(ranges, true);
-                overviewPheno.setSelection(ranges, true);
+                //overviewPheno.setSelection(ranges, true);
             });
  
         //highlight selected area on the overview plot
-        jQuery("#phenoPlotOverview").bind("plotselected", function (event, ranges) {
-                plotPheno.setSelection(ranges);
-            }); 
+        //jQuery("#phenoPlotOverview").bind("plotselected", function (event, ranges) {
+         //       plotPheno.setSelection(ranges);
+          //  }); 
         
         //reset zooming. Need to figure out zooming out
         jQuery("#phenozoom-reset").click(function (e) { 

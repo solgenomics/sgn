@@ -286,7 +286,7 @@ sub display_combined_pops_result :Path('/solgs/model/combined/populations/') Arg
     $c->controller('solGS::modelAccuracy')->model_accuracy_report($c);
     $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
     $c->controller('solGS::solGS')->top_blups($c,  $c->stash->{rrblup_training_gebvs_file});
-    $c->controller('solGS::solGS')->download_urls($c);
+    $c->controller('solGS::Download')->training_prediction_download_urls($c);
     $c->controller('solGS::Files')->marker_effects_file($c);
     $c->controller('solGS::solGS')->top_markers($c, $c->stash->{marker_effects_file});
     $c->controller('solGS::solGS')->model_parameters($c);
