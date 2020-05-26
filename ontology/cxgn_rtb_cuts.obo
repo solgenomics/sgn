@@ -57,21 +57,6 @@ name: slice 5
 is_a: TCUT:0000000 ! Tuber cut
 
 [Term]
-id: TCUT:0000011
-name: slice 6
-is_a: TCUT:0000000 ! Tuber cut
-
-[Term]
-id: TCUT:0000012
-name: slice 7
-is_a: TCUT:0000000 ! Tuber cut
-
-[Term]
-id: TCUT:0000013
-name: slice 8
-is_a: TCUT:0000000 ! Tuber cut
-
-[Term]
 id: TCUT:0000014
 name: cube 1 slice 1
 is_a: TCUT:0000000 ! Tuber cut
@@ -96,20 +81,6 @@ id: TCUT:0000018
 name: cube 1 slice 5
 is_a: TCUT:0000000 ! Tuber cut
 
-[Term]
-id: TCUT:0000019
-name: cube 1 slice 6
-is_a: TCUT:0000000 ! Tuber cut
-
-[Term]
-id: TCUT:0000020
-name: cube 1 slice 7
-is_a: TCUT:0000000 ! Tuber cut
-
-[Term]
-id: TCUT:0000021
-name: cube 1 slice 8
-is_a: TCUT:0000000 ! Tuber cut
 
 [Term]
 id: TCUT:0000022
@@ -134,21 +105,6 @@ is_a: TCUT:0000000 ! Tuber cut
 [Term]
 id: TCUT:0000026
 name: cube 2 slice 5
-is_a: TCUT:0000000 ! Tuber cut
-
-[Term]
-id: TCUT:0000027
-name: cube 2 slice 6
-is_a: TCUT:0000000 ! Tuber cut
-
-[Term]
-id: TCUT:0000028
-name: cube 2 slice 7
-is_a: TCUT:0000000 ! Tuber cut
-
-[Term]
-id: TCUT:0000029
-name: cube 2 slice 8
 is_a: TCUT:0000000 ! Tuber cut
 
 [Term]
@@ -177,21 +133,6 @@ name: cube 3 slice 5
 is_a: TCUT:0000000 ! Tuber cut
 
 [Term]
-id: TCUT:0000035
-name: cube 3 slice 6
-is_a: TCUT:0000000 ! Tuber cut
-
-[Term]
-id: TCUT:0000036
-name: cube 3 slice 7
-is_a: TCUT:0000000 ! Tuber cut
-
-[Term]
-id: TCUT:0000037
-name: cube 3 slice 8
-is_a: TCUT:0000000 ! Tuber cut
-
-[Term]
 id: TCUT:0000038
 name: cube 4 slice 1
 is_a: TCUT:0000000 ! Tuber cut
@@ -217,21 +158,6 @@ name: cube 4 slice 5
 is_a: TCUT:0000000 ! Tuber cut
 
 [Term]
-id: TCUT:0000043
-name: cube 4 slice 6
-is_a: TCUT:0000000 ! Tuber cut
-
-[Term]
-id: TCUT:0000044
-name: cube 4 slice 7
-is_a: TCUT:0000000 ! Tuber cut
-
-[Term]
-id: TCUT:0000045
-name: cube 4 slice 8
-is_a: TCUT:0000000 ! Tuber cut
-
-[Term]
 id: TCUT:0000046
 name: cube 5 slice 1
 is_a: TCUT:0000000 ! Tuber cut
@@ -254,19 +180,4 @@ is_a: TCUT:0000000 ! Tuber cut
 [Term]
 id: TCUT:0000049
 name: cube 5 slice 5
-is_a: TCUT:0000000 ! Tuber cut
-
-[Term]
-id: TCUT:0000050
-name: cube 5 slice 6
-is_a: TCUT:0000000 ! Tuber cut
-
-[Term]
-id: TCUT:0000051
-name: cube 5 slice 7
-is_a: TCUT:0000000 ! Tuber cut
-
-[Term]
-id: TCUT:0000052
-name: cube 5 slice 8
 is_a: TCUT:0000000 ! Tuber cut
