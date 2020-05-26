@@ -45,7 +45,8 @@ my $download = CXGN::Trial::Download->new({
     phenotype_max_value => $phenotype_max_value,
     has_header=>$has_header,
     include_row_and_column_numbers=>$include_row_and_column_numbers,
-    exclude_phenotype_outlier=>$exclude_phenotype_outlier
+    exclude_phenotype_outlier=>$exclude_phenotype_outlier,
+    include_pedigree_parents=>$include_pedigree_parents
 });
 my $error = $download->download();
 my $file_name = "phenotype.$format";
@@ -91,6 +92,7 @@ sub download {
     my $phenotype_min_value = $self->phenotype_min_value();
     my $phenotype_max_value = $self->phenotype_max_value();
     my $exclude_phenotype_outlier = $self->exclude_phenotype_outlier;
+    my $include_pedigree_parents = $self->include_pedigree_parents();
 
     $self->trial_download_log($trial_id, "trial phenotypes");
 
@@ -123,6 +125,7 @@ sub download {
     		trait_contains=>$trait_contains,
     		phenotype_min_value=>$phenotype_min_value,
     		phenotype_max_value=>$phenotype_max_value,
+            include_pedigree_parents=>$include_pedigree_parents
     	);
     	@data = $phenotypes_search->get_phenotype_matrix();
     }
