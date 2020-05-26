@@ -399,37 +399,37 @@ jQuery(document).ready(function(){
         });
     });
 
-    jQuery("#upload_progenies_new_accessions_link").click(function(){
+    jQuery('#upload_progenies_new_accessions_link').click(function(){
 
-        jQuery("#upload_progenies_new_spreadsheet_format_info").click(function(){
-            jQuery("#upload_progenies_new_spreadsheet_info_dialog").modal("show");
+        jQuery('#upload_progenies_new_spreadsheet_format_info').click(function(){
+            jQuery('#upload_progenies_new_spreadsheet_info_dialog').modal("show");
         });
 
-        jQuery("#upload_progenies_new_accessions_dialog").modal("show");
+        jQuery('#upload_progenies_new_accessions_dialog').modal("show");
     });
 
-    jQuery("#upload_progenies_new_submit").click(function(){
-        var uploadFile = jQuery("#progenies_new_upload_file").val();
+    jQuery('#upload_progenies_new_submit').click(function(){
+        var uploadFile = jQuery('#progenies_new_upload_file').val();
         jQuery('#upload_progenies_new_form').attr("action", "/ajax/cross/upload_progenies");
         if (uploadFile === ''){
-            alert("Please select a file");
+            alert('Please select a file');
             return;
         }
-        jQuery("#upload_progenies_new_form").submit();
-        jQuery("#upload_progenies_new_accessions_dialog").modal("hide");
+        jQuery('#upload_progenies_new_form').submit();
+        jQuery('#upload_progenies_new_accessions_dialog').modal("hide");
     });
 
     jQuery('#upload_progenies_new_form').iframePostForm({
         json: true,
         post: function(){
-            jQuery("#working_modal").modal("show");
+            jQuery('#working_modal').modal("show");
         },
         complete: function(response) {
-            jQuery("#working_modal").modal("hide");
+            jQuery('#working_modal').modal("hide");
             if (response.error_string) {
-                jQuery("#upload_progenies_error_display tbody").html('');
-                jQuery("#upload_progenies_error_display tbody").append(response.error_string);
-                jQuery("#upload_progenies_error_display").modal("show");
+                jQuery('#upload_progenies_error_display tbody').html('');
+                jQuery('#upload_progenies_error_display tbody').append(response.error_string);
+                jQuery('#upload_progenies_error_display').modal("show");
                 return;
             }
             if (response.error) {
@@ -442,24 +442,24 @@ jQuery(document).ready(function(){
         }
     });
 
-    jQuery("#upload_progenies_existing_accessions_link").click(function(){
+    jQuery('#upload_progenies_existing_accessions_link').click(function(){
 
-        jQuery("#upload_progenies_exist_spreadsheet_format_info").click(function(){
-            jQuery("#upload_progenies_exist_spreadsheet_info_dialog").modal("show");
+        jQuery('#upload_progenies_exist_spreadsheet_format_info').click(function(){
+            jQuery('#upload_progenies_exist_spreadsheet_info_dialog').modal("show");
         });
 
-        jQuery("#upload_progenies_existing_accessions_dialog").modal("show");
+        jQuery('#upload_progenies_existing_accessions_dialog').modal("show");
     });
 
-    jQuery("#upload_progenies_exist_submit").click(function(){
-        var uploadFile = jQuery("#progenies_exist_upload_file").val();
+    jQuery('#upload_progenies_exist_submit').click(function(){
+        var uploadFile = jQuery('#progenies_exist_upload_file').val();
         jQuery('#upload_progenies_exist_form').attr("action", "/ajax/cross/validate_upload_existing_progenies");
         if (uploadFile === ''){
-            alert("Please select a file");
+            alert('Please select a file');
             return;
         }
-        jQuery("#upload_progenies_exist_form").submit();
-        jQuery("#upload_progenies_exist_accessions_dialog").modal("hide");
+        jQuery('#upload_progenies_exist_form').submit();
+        jQuery('#upload_progenies_existing_accessions_dialog').modal("hide");
     });
 
     var archived_file_name;
@@ -467,7 +467,7 @@ jQuery(document).ready(function(){
     jQuery('#upload_progenies_exist_form').iframePostForm({
         json: true,
         post: function(){
-            jQuery("#working_modal").modal("show");
+            jQuery('#working_modal').modal("show");
         },
         complete: function (response) {
             jQuery('#working_modal').modal("hide");
@@ -475,9 +475,9 @@ jQuery(document).ready(function(){
             var html;
             archived_file_name = response.archived_file_name;
             if (response.error_string) {
-                jQuery("#upload_progenies_error_display tbody").html('');
-                jQuery("#upload_progenies_error_display tbody").append(response.error_string);
-                jQuery("#upload_progenies_error_display").modal("show");
+                jQuery('#upload_progenies_error_display tbody').html('');
+                jQuery('#upload_progenies_error_display tbody').append(response.error_string);
+                jQuery('#upload_progenies_error_display').modal("show");
                 return;
             }
             if (response.existing_pedigrees) {
@@ -486,8 +486,8 @@ jQuery(document).ready(function(){
             else {
                 html = '<h3>There Were No Issues Identified</h3>';
             }
-            jQuery("#upload_cross_progenies_validate_display tbody").html(html);
-            jQuery("#upload_cross_progenies_validate_display").modal('show');
+            jQuery('#upload_cross_progenies_validate_display tbody').html(html);
+            jQuery('#upload_cross_progenies_validate_display').modal('show');
         }
     });
 
@@ -519,7 +519,7 @@ jQuery(document).ready(function(){
         });
     });
 
-    jQuery("#dismiss_progenies_saved_dialog").click(function(){
+    jQuery('#dismiss_progenies_saved_dialog').click(function(){
         location.reload();
     });
 
