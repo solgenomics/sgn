@@ -382,7 +382,9 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     </div>
                 </div>
             </form>
+            <button class="btn btn-primary btn-sm" id="drone_imagery_standard_process_raw_images_retrain_mask_rcnn_predict_button" onclick="return false;">Predict Mask</button>
             <button class="btn btn-primary btn-sm" id="drone_imagery_standard_process_raw_images_retrain_mask_rcnn_modal_button" onclick="return false;">Retrain Mask R-CNN</button>
+            <hr>
 
             <hr>
             <button class="btn btn-primary btn-sm" id="drone_imagery_standard_process_raw_images_save_polygon" onclick="return false;">Save Plot-Polygon</button>
@@ -2962,6 +2964,7 @@ jQuery(document).ready(function() {
     var drone_imagery_standard_process_raw_images_retrain_mask_rcnn_model_name = '';
     var drone_imagery_standard_process_raw_images_retrain_mask_rcnn_model_desc = '';
     var drone_imagery_standard_process_raw_images_retrain_mask_rcnn_model_type = '';
+    var drone_imagery_standard_process_raw_images_retrain_mask_rcnn_model_id = '';
 
     jQuery('#drone_imagery_standard_process_raw_images_retrain_mask_rcnn_modal_button').click(function(){
         jQuery('#drone_imagery_standard_process_raw_images_retrain_mask_rcnn_modal').modal('show');
@@ -2998,6 +3001,30 @@ jQuery(document).ready(function() {
                 }
             });
         }
+    });
+
+    jQuery('#drone_imagery_standard_process_raw_images_retrain_mask_rcnn_predict_button').click(function(){
+        drone_imagery_standard_process_raw_images_retrain_mask_rcnn_model_id = jQuery('#drone_imagery_standard_process_raw_images_retrain_mask_rcnn_models_select').val();
+
+        jQuery.ajax({
+            type: 'GET',
+            url: '/api/drone_imagery/predict_mask_rcnn?model_id='+drone_imagery_standard_process_raw_images_retrain_mask_rcnn_model_id+'&image_id='+manage_drone_imagery_standard_process_raw_images_image_id,
+            dataType: "json",
+            beforeSend: function() {
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response){
+                jQuery('#working_modal').modal('hide');
+                console.log(response);
+                if (response.error) {
+                    alert(response.error);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('Error predicting mask rcnn!');
+            }
+        });
     });
 
     jQuery('#drone_imagery_standard_process_raw_images_paste_previous_polygon_in_place').click(function(){

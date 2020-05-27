@@ -6183,6 +6183,9 @@ sub drone_imagery_retrain_mask_rcnn_GET : Args(0) {
     my $model_description = $c->req->param('model_description');
     my $model_type = $c->req->param('model_type');
 
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
     my $manual_plot_polygon_template_partial = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_plot_polygons_partial', 'project_property')->cvterm_id();
     my $q = "SELECT value FROM projectprop WHERE type_id=$manual_plot_polygon_template_partial;";
     my $h = $schema->storage->dbh->prepare($q);
@@ -6341,6 +6344,94 @@ sub drone_imagery_retrain_mask_rcnn_GET : Args(0) {
     my $saved_model = $m->save_model();
 
     $c->stash->{rest} = {success => 1};
+}
+
+sub drone_imagery_predict_mask_rcnn : Path('/api/drone_imagery/predict_mask_rcnn') : ActionClass('REST') { }
+sub drone_imagery_predict_mask_rcnn_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+    my $model_id = $c->req->param('model_id');
+    my $image_id = $c->req->param('image_id');
+
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd();
+
+    my $keras_mask_r_cnn_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_mask_r_cnn_model', 'protocol_type')->cvterm_id();
+    my $keras_mask_r_cnn_model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_mask_r_cnn_model_type', 'protocol_property')->cvterm_id();
+    my $keras_cnn_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_experiment', 'experiment_type')->cvterm_id();
+
+    my $m = CXGN::AnalysisModel::GetModel->new({
+        bcs_schema=>$schema,
+        metadata_schema=>$metadata_schema,
+        phenome_schema=>$phenome_schema,
+        nd_protocol_id=>$model_id
+    });
+    my $saved_model_object = $m->get_model();
+    my $model_type = $saved_model_object->{model_properties}->{$keras_mask_r_cnn_model_type_cvterm_id}->{value};
+    my $trained_image_type = $saved_model_object->{model_properties}->{$keras_mask_r_cnn_model_type_cvterm_id}->{image_type};
+    my $model_file = $saved_model_object->{model_files}->{trained_keras_mask_r_cnn_model};
+    my $training_input_data_file = $saved_model_object->{model_files}->{trained_keras_mask_r_cnn_model_input_data_file};
+
+    my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+    my $image_url = $image->get_image_url("original");
+    my $image_fullpath = $image->get_filename('original_converted', 'full');
+    my @size = imgsize($image_fullpath);
+    my $width = $size[0];
+    my $height = $size[1];
+
+    my $output_dir = $c->tempfiles_subdir('/drone_imagery_keras_cnn_maskrcnn_predict_dir');
+    my $dir = $c->tempfiles_subdir('/drone_imagery_keras_cnn_maskrcnn_predict_input_annotations_dir');
+    my $model_dir = $c->tempfiles_subdir('/drone_imagery_keras_cnn_maskrcnn_predict_input_model_dir');
+    my $temp_input_dir = $c->config->{basepath}."/".$dir;
+    my $temp_model_dir = $c->config->{basepath}."/".$model_dir;
+    print STDERR Dumper $temp_input_dir;
+
+    my $archive_temp_output_results_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_maskrcnn_predict_dir/outputfileXXXX');
+    my $archive_temp_output_activation_file = $c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_maskrcnn_predict_input_model_dir/outputactivationfileXXXX');
+    $archive_temp_output_activation_file .= ".pdf";
+    my $archive_temp_output_activation_file_path = $c->config->{basepath}."/".$archive_temp_output_activation_file;
+
+    my $temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_maskrcnn_predict_input_annotations_dir/inputannotationfileXXXX');
+    # print STDERR Dumper $archive_temp_input_file;
+
+    open(my $F_img, ">", $temp_input_file) || die "Can't open file ".$temp_input_file;
+        print $F_img "<annotation>\n";
+        print $F_img "\t<image_id>$image_id</image_id>\n";
+        print $F_img "\t<image_path>$image_fullpath</image_path>\n";
+        print $F_img "\t<size>\n";
+        print $F_img "\t\t<width>$width</width>\n";
+        print $F_img "\t\t<height>$height</height>\n";
+        print $F_img "\t</size>\n";
+        print $F_img "</annotation>\n";
+    close($F_img);
+
+    my $log_file_path = '';
+    if ($c->config->{error_log}) {
+        $log_file_path = ' --log_file_path \''.$c->config->{error_log}.'\'';
+    }
+    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/MaskRCNNBoundingBoxPredict.py --input_annotations_dir \''.$temp_input_dir.'\' --model_path \''.$model_file.'\' --model_dir \''.$temp_model_dir.'\' --outfile_annotated \''.$archive_temp_output_activation_file_path.'\' --results_outfile \''.$archive_temp_output_results_file.'\' '.$log_file_path;
+    print STDERR Dumper $cmd;
+    my $status = system($cmd);
+
+    my @bounding_boxes;
+    my $csv = Text::CSV->new({ sep_char => ',' });
+    open(my $fh, '<', $archive_temp_output_results_file) or die "Could not open file '$archive_temp_output_results_file' $!";
+        print STDERR "Opened $archive_temp_output_results_file\n";
+        while ( my $row = <$fh> ){
+            my @columns;
+            if ($csv->parse($row)) {
+                @columns = $csv->fields();
+            }
+            print STDERR Dumper \@columns;
+            push @bounding_boxes, \@columns;
+        }
+    close($fh);
+
+    $c->stash->{rest} = {success => 1, activation_output => $archive_temp_output_activation_file, bounding_boxes => \@bounding_boxes};
 }
 
 sub _check_user_login {
