@@ -41,7 +41,7 @@ $pop_id = $trial_id if $trial_id;
 </style>
 
 
-<& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.kinship", "solGS.correlation"] &>
+<& /util/import_javascript.mas, classes => ["d3.d3Min",  "solGS.heatMap", "solGS.kinship"] &>
 <&| /page/info_section.mas, 
       collapsible => 1, 
       collapsed   => 1, 
@@ -51,9 +51,8 @@ $pop_id = $trial_id if $trial_id;
 
 <div id="kinship_canvas">
   <input id="run_kinship" class="button" type="button" value="Run kinship" /> 
- 
+  <input type="hidden" id="kinship_pop_id" value="<% $pop_id %>" />
   <div id="kinship_message"  style="font-weight:bold;text-align:center;color:#A7C942"></div>
-  <input type="hidden" id="kinship_pop_id" value="<% $pop_id %>" /> 
 </div>
 
 </&>
