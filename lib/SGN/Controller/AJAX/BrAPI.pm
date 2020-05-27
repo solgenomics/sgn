@@ -175,19 +175,30 @@ sub _clean_inputs {
 sub _authenticate_user {
     my $c = shift;
 	my $force_authenticate = shift;
+	my $module = shift;
     my $status = $c->stash->{status};
 	my $user_id;
 	my $user_type;
 	my $user_pref;
 	my $expired;
+	my $wildcard = 'any';
+	
+	my @server_permission;
+	if ($module) {
+		my $permissions = $module->brapi_wrapper('ServerInfo')->info();
+		my $server_permission = $permissions->{$c->request->method};
+		@server_permission  = split ',', $server_permission;
+	} else{
+		push @server_permission, $wildcard;
+	}
 
 	# If our brapi config is set to authenticate or the controller calling this asks for forcing of
-	# authentication, we authenticate.
-    if ($c->config->{brapi_require_login} == 1 || $force_authenticate){
+	# authentication or serverinfo call method request auth, we authenticate.
+    if ($c->config->{brapi_require_login} == 1 || $force_authenticate || !grep { $_ eq $wildcard } @server_permission){
         ($user_id, $user_type, $user_pref, $expired) = CXGN::Login->new($c->dbc->dbh)->query_from_cookie($c->stash->{session_token});
         #print STDERR $person_id." : ".$user_type." : ".$expired;
 
-        if (!$user_id || $expired || !$user_type) {
+        if (!$user_id || $expired || !$user_type || grep {$_ ne $user_type} @server_permission) {
             my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error($status, 'You must login and have permission to access this BrAPI call.');
 
             _standard_response_construction($c, $brapi_package_result, 401);
@@ -443,9 +454,7 @@ sub serverinfo_GET {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('ServerInfo');
-	my $brapi_package_result = $brapi_module->search( 
-		$clean_inputs
-	);
+	my $brapi_package_result = $brapi_module->search($c,$clean_inputs);
 	_standard_response_construction($c, $brapi_package_result);
 }
 
@@ -4480,7 +4489,7 @@ sub seedlots : Chained('brapi') PathPart('seedlots') Args(0) : ActionClass('REST
 sub seedlots_GET {
 	my $self = shift;
 	my $c = shift;
-	my ($auth) = _authenticate_user($c);
+	my ($auth) = _authenticate_user($c,0,$self->brapi_module);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('SeedLots');
