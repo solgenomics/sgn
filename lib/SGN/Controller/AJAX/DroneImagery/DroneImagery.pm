@@ -6171,6 +6171,117 @@ sub _perform_gdd_calculation_and_drone_run_time_saving {
     return \%related_cvterms;
 }
 
+sub drone_imagery_retrain_mask_rcnn : Path('/api/drone_imagery/retrain_mask_rcnn') : ActionClass('REST') { }
+sub drone_imagery_retrain_mask_rcnn_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $manual_plot_polygon_template_partial = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_plot_polygons_partial', 'project_property')->cvterm_id();
+    my $q = "SELECT value FROM projectprop WHERE type_id=$manual_plot_polygon_template_partial;";
+    my $h = $schema->storage->dbh->prepare($q);
+    $h->execute();
+
+    my @result;
+    my %unique_image_ids;
+    while (my ($value) = $h->fetchrow_array()) {
+        if ($value) {
+            my $partial_templates = decode_json $value;
+            foreach my $t (@$partial_templates) {
+                my $image_id = $t->{image_id};
+                my $polygon = $t->{polygon};
+                my $stock_polygon = $t->{stock_polygon};
+                my $template_name = $t->{template_name};
+                my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+                my $image_url = $image->get_image_url("original");
+                my $image_fullpath = $image->get_filename('original_converted', 'full');
+                my @size = imgsize($image_fullpath);
+
+                push @{$unique_image_ids{$image_id}->{p}}, {
+                    polygon => $polygon,
+                    template_name => $template_name
+                };
+                $unique_image_ids{$image_id}->{width} = $size[0];
+                $unique_image_ids{$image_id}->{height} = $size[1];
+                $unique_image_ids{$image_id}->{image_fullpath} = $image_fullpath;
+                $unique_image_ids{$image_id}->{image_url} = $image_url;
+            }
+        }
+    }
+    print STDERR Dumper \%unique_image_ids;
+
+    my $dir = $c->tempfiles_subdir('/drone_imagery_keras_cnn_maskrcnn_input_annotations_dir');
+    my $output_dir = $c->tempfiles_subdir('/drone_imagery_keras_cnn_maskrcnn_dir');
+    my $temp_output_model_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_maskrcnn_dir/outputmodelfileXXXX').".h5";
+    my $temp_output_dir = $c->config->{basepath}."/".$output_dir;
+    my $temp_input_dir = $c->config->{basepath}."/".$dir;
+    print STDERR Dumper $temp_input_dir;
+
+    while (my ($image_id, $p) = each %unique_image_ids) {
+        my $file_path = $p->{image_fullpath};
+        my $width = $p->{width};
+        my $height = $p->{height};
+        my $temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_maskrcnn_input_annotations_dir/inputannotationfileXXXX');
+        # print STDERR Dumper $archive_temp_input_file;
+
+        open(my $F_img, ">", $temp_input_file) || die "Can't open file ".$temp_input_file;
+            print $F_img "<annotation>\n";
+            print $F_img "\t<image_id>$image_id</image_id>\n";
+            print $F_img "\t<image_path>$file_path</image_path>\n";
+            print $F_img "\t<size>\n";
+            print $F_img "\t\t<width>$width</width>\n";
+            print $F_img "\t\t<height>$height</height>\n";
+            print $F_img "\t</size>\n";
+
+            foreach my $poly (@{$p->{p}}) {
+                foreach my $po (values %{$poly->{polygon}}) {
+                    my $xmin = 1000000;
+                    my $ymin = 1000000;
+                    my $xmax = 0;
+                    my $ymax = 0;
+                    foreach my $ob (@$po) {
+                        if ($ob->{x} < $xmin) {
+                            $xmin = round($ob->{x});
+                        }
+                        if ($ob->{y} < $ymin) {
+                            $ymin = round($ob->{y});
+                        }
+                        if ($ob->{x} > $xmax) {
+                            $xmax = round($ob->{x});
+                        }
+                        if ($ob->{y} > $ymax) {
+                            $ymax = round($ob->{y});
+                        }
+                    }
+                    print $F_img "\t<object>\n";
+                    print $F_img "\t\t<name>".$poly->{template_name}."</name>\n";
+                    print $F_img "\t\t<bndbox>\n";
+                    print $F_img "\t\t\t<xmin>$xmin</xmin>\n";
+                    print $F_img "\t\t\t<ymin>$ymin</ymin>\n";
+                    print $F_img "\t\t\t<xmax>$xmax</xmax>\n";
+                    print $F_img "\t\t\t<ymax>$ymax</ymax>\n";
+                    print $F_img "\t\t</bndbox>\n";
+                    print $F_img "\t</object>\n";
+                }
+            }
+            print $F_img "</annotation>\n";
+        close($F_img);
+    }
+
+    my $log_file_path = '';
+    if ($c->config->{error_log}) {
+        $log_file_path = ' --log_file_path \''.$c->config->{error_log}.'\'';
+    }
+    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/MaskRCNNBoundingBoxTrain.py --input_annotations_dir \''.$temp_input_dir.'\' --output_model_path \''.$temp_output_model_file.'\' --output_model_dir \''.$temp_output_dir.'\' '.$log_file_path;
+    print STDERR Dumper $cmd;
+    my $status = system($cmd);
+
+    $c->stash->{rest} = {success => 1};
+}
+
 sub _check_user_login {
     my $c = shift;
     my $user_id;

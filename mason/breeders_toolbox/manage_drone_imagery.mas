@@ -390,6 +390,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                 </div>
             </form>
             <button class="btn btn-primary btn-sm" id="drone_imagery_standard_process_raw_images_paste_previous_polygon" onclick="return false;">Paste Previously Used Plot-Polygon To A New Point</button>
+            <button class="btn btn-primary btn-sm" id="drone_imagery_standard_process_raw_images_retrain_mask_rcnn" onclick="return false;">Retrain Mask R-CNN</button>
             <hr>
 
             <div class="form-horizontal">
@@ -2898,6 +2899,23 @@ jQuery(document).ready(function() {
         }
         drone_imagery_standard_process_plot_polygon_click_type = 'standard_process_raw_images_paste_previous_polygon';
         alert('Now click a point on the image where to paste the top-left corner of the saved polygon.');
+    });
+
+    jQuery('#drone_imagery_standard_process_raw_images_retrain_mask_rcnn').click(function(){
+        jQuery.ajax({
+            type: 'GET',
+            url: '/api/drone_imagery/retrain_mask_rcnn',
+            dataType: "json",
+            success: function(response){
+                console.log(response);
+                if (response.error) {
+                    alert(response.error);
+                }
+            },
+            error: function(response){
+                alert('Error getting time terms!');
+            }
+        });
     });
 
     jQuery('#drone_imagery_standard_process_raw_images_paste_previous_polygon_in_place').click(function(){
