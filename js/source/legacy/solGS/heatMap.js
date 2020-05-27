@@ -12,7 +12,8 @@ solGS.heatmap = {
 
 	data = JSON.parse(data);
 
-	var labels = data.labels.splice(0,20);
+	//var labels = data.labels.splice(0,20);
+	var labels = data.labels;
 	var values = data.values;
 	var nLabels = labels.length;
 
