@@ -63,14 +63,14 @@ sub search {
             createdDate=>undef,
             externalReferences=>[],
             germplasmDbId=>qq|$_->{source_stocks}->[0][0]|,
-            lastUpdated=>qq|$_->{source_stocks}->[0][1]|,
+            lastUpdated=>undef,
             locationDbId=>qq|$_->{location_id}|,
             programDbId=>qq|$_->{breeding_program_id}|,
             seedLotDbId=>qq|$_->{seedlot_stock_id}|,
             seedLotDescription=>$_->{seedlot_stock_description},
             seedLotName=>$_->{seedlot_stock_uniquename},
-            sourceCollection=>$_->{box},
-            storageLocation=>undef,
+            sourceCollection=>undef,
+            storageLocation=>$_->{location},
             units=>'seeds',
         };
     }
@@ -118,8 +118,8 @@ sub detail {
                 seedLotDbId=>qq|$seedlot_id|,
                 seedLotDescription=>$seedlot->description(),
                 seedLotName=>$seedlot->uniquename(),
-                sourceCollection=>$seedlot->box_name(),
-                storageLocation=>undef,
+                sourceCollection=>undef,
+                storageLocation=>$seedlot->location_code(),
                 units=>'seeds',
         );
         $count++;
@@ -228,6 +228,152 @@ sub transactions {
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
 
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Transactions result constructed');
+}
+
+sub store_seedlots{
+    my $self = shift;
+    my $params = shift;
+    my $c = shift;
+
+    if (!$c->user){
+        $c->stash->{rest} = {error=>'You must be logged in to add a seedlot!'};
+        $c->detach();
+    }
+    if (!$c->user()->check_roles("curator")) {
+        $c->stash->{rest} = { error => "You do not have the correct role to edit seedlot transactions. Please contact us." };
+        $c->detach();
+    }
+
+    my $page_size = $self->page_size;
+    my $status = $self->status;
+    my $page = $self->page;
+
+    my $schema = $self->bcs_schema;
+    my $phenome_schema = $self->phenome_schema();
+    my $seedlot_uniquename = $params->{seedLotName} ? $params->{seedLotName}[0] : undef;
+    my $location_id = $params->{locationDbId} ? $params->{locationDbId}[0] : undef;
+    my $box_name = $params->{additionalInfo} ? $params->{additionalInfo}[0] : undef;
+    my $source_collection = $params->{sourceCollection} ? $params->{sourceCollection}[0] : undef;
+    my $accession_id = $params->{germplasmDbId} ? $params->{germplasmDbId}[0] : undef;
+    my $cross_uniquename = $params->{crossName} ? $params->{crossName}[0] : undef;
+    my $organization = $params->{organization} ? $params->{organization}[0] : undef;
+    my $amount = $params->{amount} ? $params->{amount}[0] : undef;
+    my $weight = $params->{weight} ? $params->{weight}[0] : undef;
+    my $timestamp = $params->{lastUpdated} ? $params->{lastUpdated}[0] : undef;
+    my $description = $params->{seedLotDescription} ? $params->{seedLotDescription}[0] : undef;
+    my $breeding_program_id = $params->{programDbId} ? $params->{programDbId}[0] : undef;
+
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
+    my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+
+    my $previous_seedlot = $schema->resultset('Stock::Stock')->find({uniquename=>$seedlot_uniquename, type_id=>$seedlot_cvterm_id});
+    if ($previous_seedlot){
+        $c->stash->{rest} = {error=>'The given seedlot uniquename has been taken. Please use another name or use the existing seedlot.'};
+        $c->detach();
+    }
+    my $accession_uniquename;
+
+    if ($accession_id){
+        my $accession = $self->bcs_schema->resultset('Stock::Stock')->find({stock_id=>$accession_id});
+        if (!$accession) {
+            $c->stash->{rest} = {error=>'GermplasmDbId does not exist in the database'};
+            $c->detach();
+        }
+        $accession_uniquename =  $accession->name();
+    }
+    if (!$accession_id || !$accession_uniquename ){
+        $c->stash->{rest} = {error=>'A seedlot must have a valid accession.'};
+        $c->detach();
+    }
+
+    my $from_stock_id = $accession_id;
+    my $from_stock_uniquename = $accession_uniquename;
+    
+    if (!$weight && !$amount){
+        $c->stash->{rest} = {error=>'A seedlot must have either a weight or an amount.'};
+        $c->detach();
+    }
+
+    if (!$timestamp){
+        $c->stash->{rest} = {error=>'A seedlot must have a timestamp for the transaction.'};
+        $c->detach();
+    }
+
+    if (!$breeding_program_id){
+        $c->stash->{rest} = {error=>'A seedlot must have a breeding program.'};
+        $c->detach();
+    }
+    my $location_code;
+    if ($location_id){
+        my $locations = CXGN::Trial::get_all_locations($schema, $location_id);
+        $location_code = $locations->[0]->[1];
+
+        if (!$location_code){
+            $c->stash->{rest} = {error=>'LocationDbId does not exist in the database'};
+            $c->detach();
+        }
+    }
+    my $operator;
+    if ($c->user) {
+        $operator = $c->user->get_object->get_username;
+    }
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+
+    print STDERR "Creating new Seedlot $seedlot_uniquename\n";
+    my $seedlot_id;
+
+    eval {
+        my $sl = CXGN::Stock::Seedlot->new(schema => $schema);
+        $sl->uniquename($seedlot_uniquename);
+        $sl->location_code($location_code);
+        $sl->box_name($box_name);
+        $sl->accession_stock_id($accession_id);
+        $sl->organization_name($organization);
+        $sl->breeding_program_id($breeding_program_id);
+        $sl->description($description);
+        my $return = $sl->store();
+        my $seedlot_id = $return->{seedlot_id};
+
+        my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
+        $transaction->factor(1);
+        $transaction->from_stock([$from_stock_id, $from_stock_uniquename]);
+        $transaction->to_stock([$seedlot_id, $seedlot_uniquename]);
+        if ($amount){
+            $transaction->amount($amount);
+        }
+        if ($weight){
+            $transaction->weight_gram($weight);
+        }
+        $transaction->timestamp($timestamp);
+        $transaction->description($description);
+        $transaction->operator($operator);
+        $transaction->store();
+
+        my $sl_new = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id=>$seedlot_id);
+        $sl_new->set_current_count_property();
+        $sl_new->set_current_weight_property();
+
+        $phenome_schema->resultset("StockOwner")->find_or_create({
+            stock_id     => $seedlot_id,
+            sp_person_id =>  $user_id,
+        });
+    };
+
+    if ($@) {
+    $c->stash->{rest} = { success => 0, seedlot_id => 0, error => $@ };
+    print STDERR "An error condition occurred, was not able to create seedlot. ($@).\n";
+    return;
+    }
+
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+
+    $c->stash->{rest} = { success => 1, seedlot_id => $seedlot_id };
+
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response(1,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success( 1, $pagination, undef, $self->status());
 }
 
 sub format_date {

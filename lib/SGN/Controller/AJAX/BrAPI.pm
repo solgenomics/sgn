@@ -4489,12 +4489,28 @@ sub seedlots : Chained('brapi') PathPart('seedlots') Args(0) : ActionClass('REST
 sub seedlots_GET {
 	my $self = shift;
 	my $c = shift;
-	my ($auth) = _authenticate_user($c,0,$self->brapi_module);
-	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
+	my ($auth) = _authenticate_user($c,0,$brapi);
+	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi_module = $brapi->brapi_wrapper('SeedLots');
 	my $brapi_package_result = $brapi_module->search($clean_inputs);
 	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub seedlots_POST {
+	my $self = shift;
+	my $c = shift;
+	my $brapi = $self->brapi_module;
+	my ($auth) = _authenticate_user($c,0,$brapi);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi_module = $brapi->brapi_wrapper('SeedLots');
+	my $brapi_package_result = $brapi_module->store_seedlots($clean_inputs,$c);
+
+	# my $brapi_package_result = $brapi_module->image_metadata_store($clean_inputs, $image_dir, $user_id, $user_type);
+	my $status = $brapi_package_result->{status};
+	my $http_status_code = _get_http_status_code($status);
+
+	_standard_response_construction($c, $brapi_package_result, $http_status_code);
 }
 
 sub seedlot_transactions : Chained('brapi') PathPart('seedlots/transactions') Args(0) : ActionClass('REST') { }

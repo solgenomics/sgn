@@ -9,6 +9,7 @@ extends 'CXGN::BrAPI::v2::Common';
 
 sub search {
 	my $self = shift;
+	my $c = shift;
 	my $inputs = shift;
 	my $datatype_param = $inputs->{datatype}->[0];
 	my $page_size = $self->page_size;
@@ -122,6 +123,7 @@ sub search {
 		[['application/json'],['GET'], 'crossingprojects/{crossingProjectDbId}',['2.0']],
 		[['application/json'],['GET'], 'crosses',['2.0']],
 		[['application/json'],['GET'], 'seedlots',['2.0']],
+		[['application/json'],['POST'], 'seedlots',['2.0']],
 		[['application/json'],['GET'], 'seedlots/transactions',['2.0']],
 		[['application/json'],['GET'], 'seedlots/{seedLotDbId}',['2.0']],
 		[['application/json'],['GET'], 'seedlots/{seedLotDbId}/transactions',['2.0']],
@@ -149,10 +151,32 @@ sub search {
 			service=>$_->[2],
             versions=>$_->[3]
 		};
+		
 	}
-	my %result = (calls=>\@data);
+	my $permissions = info();
+	my %result = (
+		calls=>\@data,
+		contactEmail=>"lam87\@cornell.edu",
+		documentationURL=>"https://solgenomics.github.io/sgn/",
+		location=>"USA",
+		organizationName=>"Boyce Thompson Institute",
+		organizationURL=>$c->request->{"base"},
+		serverDescription=>"BrAPI v2.0 compliant server",
+		serverName=>$c->config->{project_name},
+		permissions=>$permissions,
+	);
 	my @data_files;
 	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Calls result constructed');
+}
+
+sub info {
+	my $permissions  = {
+				'GET' => 'any',
+				'POST' => 'curator',
+				'PUT' => 'curator'
+			};
+
+	return $permissions;
 }
 
 1;
