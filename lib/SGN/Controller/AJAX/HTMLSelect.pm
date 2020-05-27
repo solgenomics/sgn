@@ -742,6 +742,40 @@ sub get_trained_keras_cnn_models : Path('/ajax/html/select/trained_keras_cnn_mod
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_trained_keras_mask_r_cnn_models : Path('/ajax/html/select/trained_keras_mask_r_cnn_models') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $keras_mask_r_cnn_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_mask_r_cnn_model', 'protocol_type')->cvterm_id();
+    my $keras_mask_r_cnn_model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_mask_r_cnn_model_type', 'protocol_property')->cvterm_id();
+
+    my $model_q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, model_type.value
+        FROM nd_protocol
+        JOIN nd_protocolprop AS model_type ON(nd_protocol.nd_protocol_id=model_type.nd_protocol_id AND model_type.type_id=$keras_mask_r_cnn_model_type_cvterm_id)
+        WHERE nd_protocol.type_id=$keras_mask_r_cnn_cvterm_id;";
+    my $model_h = $schema->storage->dbh()->prepare($model_q);
+    $model_h->execute();
+    my @keras_cnn_models;
+    while (my ($nd_protocol_id, $name, $description, $model_type) = $model_h->fetchrow_array()) {
+        my $model_type_hash = decode_json $model_type;
+
+        push @keras_cnn_models, [$nd_protocol_id, $name];
+    }
+
+    my $id = $c->req->param("id") || "html_keras_mask_r_cnn_select";
+    my $name = $c->req->param("name") || "html_keras_mask_r_cnn_select";
+
+    @keras_cnn_models = sort { $a->[1] cmp $b->[1] } @keras_cnn_models;
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@keras_cnn_models
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
 sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     my $self = shift;
     my $c = shift;

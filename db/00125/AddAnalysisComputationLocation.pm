@@ -3,17 +3,17 @@
 
 =head1 NAME
 
- AddKerasAutoencoderVegetationIndicesCvterms
+ AddAnalysisComputationLocation
 
 =head1 SYNOPSIS
 
-mx-run AddKerasAutoencoderVegetationIndicesCvterms [options] -H hostname -D dbname -u username [-F]
+mx-run AddAnalysisComputationLocation [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
-This patch adds cvterms for storing images from autoencoder vegetation indices
+This patch adds a location called computation 
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
@@ -29,7 +29,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddKerasAutoencoderVegetationIndicesCvterms;
+package AddAnalysisComputationLocation;
 
 use Moose;
 use Bio::Chado::Schema;
@@ -38,7 +38,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch adds cvterms for istoring images from autoencoder vegetation indices
+This patch adds a location called computation
 
 has '+prereq' => (
 	default => sub {
@@ -57,29 +57,7 @@ sub patch {
     print STDOUT "\nExecuting the SQL commands.\n";
     my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
 
-
-    print STDERR "INSERTING CV TERMS...\n";
-
-    my $terms = {
-        'project_md_image' => [
-            'observation_unit_polygon_keras_autoencoder_decoded'
-        ],
-        'protocol_type' => [
-            'trained_keras_mask_r_cnn_model'
-        ],
-        'protocol_property' => [
-            'trained_keras_mask_r_cnn_model_type'
-        ]
-    };
-
-    foreach my $t (keys %$terms){
-        foreach (@{$terms->{$t}}){
-            $schema->resultset("Cv::Cvterm")->create_with({
-                name => $_,
-                cv => $t
-            });
-        }
-    }
+    $self->dbh->do("INSERT INTO nd_geolocation (description) values ('[Computation]')");
 
     print "You're done!\n";
 }

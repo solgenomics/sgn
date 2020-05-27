@@ -374,6 +374,16 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
             <button class="btn btn-primary btn-sm" id="drone_imagery_standard_process_raw_images_rotate_image" onclick="return false;">Rotate Image</button>
             <hr>
 
+            <form class="form-horizontal">
+                <div class="form-group form-group-sm">
+                    <label class="col-sm-6 control-label">Trained Mask R-CNN Models: </label>
+                    <div class="col-sm-6">
+                        <div id="drone_imagery_standard_process_raw_images_retrain_mask_rcnn_models_div"></div>
+                    </div>
+                </div>
+            </form>
+            <button class="btn btn-primary btn-sm" id="drone_imagery_standard_process_raw_images_retrain_mask_rcnn_modal_button" onclick="return false;">Retrain Mask R-CNN</button>
+
             <hr>
             <button class="btn btn-primary btn-sm" id="drone_imagery_standard_process_raw_images_save_polygon" onclick="return false;">Save Plot-Polygon</button>
             <button class="btn btn-primary btn-sm" id="drone_imagery_standard_process_raw_images_paste_polygon" onclick="return false;">Paste Plot-Polygon</button>
@@ -390,7 +400,6 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                 </div>
             </form>
             <button class="btn btn-primary btn-sm" id="drone_imagery_standard_process_raw_images_paste_previous_polygon" onclick="return false;">Paste Previously Used Plot-Polygon To A New Point</button>
-            <button class="btn btn-primary btn-sm" id="drone_imagery_standard_process_raw_images_retrain_mask_rcnn" onclick="return false;">Retrain Mask R-CNN</button>
             <hr>
 
             <div class="form-horizontal">
@@ -1846,6 +1855,49 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
     </div>
 </div>
 
+<div class="modal fade" id="drone_imagery_standard_process_raw_images_retrain_mask_rcnn_modal" name="drone_imagery_standard_process_raw_images_retrain_mask_rcnn_modal" tabindex="-1" role="dialog" aria-labelledby="droneImageryRetrainMaskRCNNDialog" data-backdrop="static">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="droneImageryRetrainMaskRCNNDialog">Retrain Mask R-CNN Model</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <div class="form-horizontal">
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Model Name (Must be unique):</label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" type="text" id="drone_imagery_standard_process_raw_images_retrain_mask_rcnn_model_name" name="drone_imagery_standard_process_raw_images_retrain_mask_rcnn_model_name" >
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Model Description:</label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" type="text" id="drone_imagery_standard_process_raw_images_retrain_mask_rcnn_model_desc" name="drone_imagery_standard_process_raw_images_retrain_mask_rcnn_model_desc" >
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Model Type:</label>
+                    <div class="col-sm-9" >
+                        <select class="form-control" id="drone_imagery_standard_process_raw_images_retrain_mask_rcnn_model_type">
+                            <option value="Mask R-CNN">Mask R-CNN</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="drone_imagery_standard_process_raw_images_retrain_mask_rcnn">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <& /breeders_toolbox/drone_imagery/upload_drone_imagery_dialogs.mas &>
 
 <script>
@@ -2414,6 +2466,8 @@ jQuery(document).ready(function() {
 
         get_select_box('plot_polygon_templates_partial','drone_imagery_standard_process_raw_images_previous_polygons_div', {'name': 'drone_imagery_standard_process_raw_images_plot_sizes_select', 'id':'drone_imagery_standard_process_raw_images_plot_sizes_select', 'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_drone_run_id, 'empty':1});
 
+        get_select_box('trained_keras_mask_r_cnn_models','drone_imagery_standard_process_raw_images_retrain_mask_rcnn_models_div', {'name': 'drone_imagery_standard_process_raw_images_retrain_mask_rcnn_models_select', 'id':'drone_imagery_standard_process_raw_images_retrain_mask_rcnn_models_select' });
+
         jQuery.ajax({
             url : '/api/drone_imagery/get_drone_run_image_counts?drone_run_id='+manage_drone_imagery_standard_process_raw_images_drone_run_id,
             success: function(response){
@@ -2901,21 +2955,49 @@ jQuery(document).ready(function() {
         alert('Now click a point on the image where to paste the top-left corner of the saved polygon.');
     });
 
+    //
+    // Mask RCNN
+    //
+
+    var drone_imagery_standard_process_raw_images_retrain_mask_rcnn_model_name = '';
+    var drone_imagery_standard_process_raw_images_retrain_mask_rcnn_model_desc = '';
+    var drone_imagery_standard_process_raw_images_retrain_mask_rcnn_model_type = '';
+
+    jQuery('#drone_imagery_standard_process_raw_images_retrain_mask_rcnn_modal_button').click(function(){
+        jQuery('#drone_imagery_standard_process_raw_images_retrain_mask_rcnn_modal').modal('show');
+        return false;
+    });
+
     jQuery('#drone_imagery_standard_process_raw_images_retrain_mask_rcnn').click(function(){
-        jQuery.ajax({
-            type: 'GET',
-            url: '/api/drone_imagery/retrain_mask_rcnn',
-            dataType: "json",
-            success: function(response){
-                console.log(response);
-                if (response.error) {
-                    alert(response.error);
+        drone_imagery_standard_process_raw_images_retrain_mask_rcnn_model_name = jQuery('#drone_imagery_standard_process_raw_images_retrain_mask_rcnn_model_name').val();
+        drone_imagery_standard_process_raw_images_retrain_mask_rcnn_model_desc = jQuery('#drone_imagery_standard_process_raw_images_retrain_mask_rcnn_model_desc').val();
+        drone_imagery_standard_process_raw_images_retrain_mask_rcnn_model_type = jQuery('#drone_imagery_standard_process_raw_images_retrain_mask_rcnn_models_select').val();
+
+        if (drone_imagery_standard_process_raw_images_retrain_mask_rcnn_model_name == '' || drone_imagery_standard_process_raw_images_retrain_mask_rcnn_model_desc == '') {
+            alert('Please give a model name and description');
+            return false;
+        }
+        else {
+            jQuery.ajax({
+                type: 'GET',
+                url: '/api/drone_imagery/retrain_mask_rcnn?model_name='+drone_imagery_standard_process_raw_images_retrain_mask_rcnn_model_name+'&model_description='+drone_imagery_standard_process_raw_images_retrain_mask_rcnn_model_desc+'&model_type='+drone_imagery_standard_process_raw_images_retrain_mask_rcnn_model_type,
+                dataType: "json",
+                beforeSend: function() {
+                    jQuery('#working_modal').modal('show');
+                },
+                success: function(response){
+                    jQuery('#working_modal').modal('hide');
+                    console.log(response);
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                },
+                error: function(response){
+                    jQuery('#working_modal').modal('hide');
+                    alert('Error training mask rcnn!');
                 }
-            },
-            error: function(response){
-                alert('Error getting time terms!');
-            }
-        });
+            });
+        }
     });
 
     jQuery('#drone_imagery_standard_process_raw_images_paste_previous_polygon_in_place').click(function(){

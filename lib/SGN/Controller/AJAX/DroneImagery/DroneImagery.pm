@@ -6179,6 +6179,9 @@ sub drone_imagery_retrain_mask_rcnn_GET : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
+    my $model_name = $c->req->param('model_name');
+    my $model_description = $c->req->param('model_description');
+    my $model_type = $c->req->param('model_type');
 
     my $manual_plot_polygon_template_partial = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_plot_polygons_partial', 'project_property')->cvterm_id();
     my $q = "SELECT value FROM projectprop WHERE type_id=$manual_plot_polygon_template_partial;";
@@ -6220,56 +6223,82 @@ sub drone_imagery_retrain_mask_rcnn_GET : Args(0) {
     my $temp_input_dir = $c->config->{basepath}."/".$dir;
     print STDERR Dumper $temp_input_dir;
 
-    while (my ($image_id, $p) = each %unique_image_ids) {
-        my $file_path = $p->{image_fullpath};
-        my $width = $p->{width};
-        my $height = $p->{height};
-        my $temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_maskrcnn_input_annotations_dir/inputannotationfileXXXX');
-        # print STDERR Dumper $archive_temp_input_file;
+    my $temp_model_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_maskrcnn_dir/annotationfileXXXX');
+    open(my $F_model, ">", $temp_model_input_file) || die "Can't open file ".$temp_model_input_file;
+        print $F_model "<annotations>\n";
 
-        open(my $F_img, ">", $temp_input_file) || die "Can't open file ".$temp_input_file;
-            print $F_img "<annotation>\n";
-            print $F_img "\t<image_id>$image_id</image_id>\n";
-            print $F_img "\t<image_path>$file_path</image_path>\n";
-            print $F_img "\t<size>\n";
-            print $F_img "\t\t<width>$width</width>\n";
-            print $F_img "\t\t<height>$height</height>\n";
-            print $F_img "\t</size>\n";
+        while (my ($image_id, $p) = each %unique_image_ids) {
+            my $file_path = $p->{image_fullpath};
+            my $width = $p->{width};
+            my $height = $p->{height};
+            my $temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_maskrcnn_input_annotations_dir/inputannotationfileXXXX');
+            # print STDERR Dumper $archive_temp_input_file;
 
-            foreach my $poly (@{$p->{p}}) {
-                foreach my $po (values %{$poly->{polygon}}) {
-                    my $xmin = 1000000;
-                    my $ymin = 1000000;
-                    my $xmax = 0;
-                    my $ymax = 0;
-                    foreach my $ob (@$po) {
-                        if ($ob->{x} < $xmin) {
-                            $xmin = round($ob->{x});
+            open(my $F_img, ">", $temp_input_file) || die "Can't open file ".$temp_input_file;
+                print $F_img "<annotation>\n";
+                print $F_img "\t<image_id>$image_id</image_id>\n";
+                print $F_img "\t<image_path>$file_path</image_path>\n";
+                print $F_img "\t<size>\n";
+                print $F_img "\t\t<width>$width</width>\n";
+                print $F_img "\t\t<height>$height</height>\n";
+                print $F_img "\t</size>\n";
+
+                print $F_model "<annotation>\n";
+                print $F_model "\t<image_id>$image_id</image_id>\n";
+                print $F_model "\t<image_path>$file_path</image_path>\n";
+                print $F_model "\t<size>\n";
+                print $F_model "\t\t<width>$width</width>\n";
+                print $F_model "\t\t<height>$height</height>\n";
+                print $F_model "\t</size>\n";
+
+                foreach my $poly (@{$p->{p}}) {
+                    foreach my $po (values %{$poly->{polygon}}) {
+                        my $xmin = 1000000;
+                        my $ymin = 1000000;
+                        my $xmax = 0;
+                        my $ymax = 0;
+                        foreach my $ob (@$po) {
+                            if ($ob->{x} < $xmin) {
+                                $xmin = round($ob->{x});
+                            }
+                            if ($ob->{y} < $ymin) {
+                                $ymin = round($ob->{y});
+                            }
+                            if ($ob->{x} > $xmax) {
+                                $xmax = round($ob->{x});
+                            }
+                            if ($ob->{y} > $ymax) {
+                                $ymax = round($ob->{y});
+                            }
                         }
-                        if ($ob->{y} < $ymin) {
-                            $ymin = round($ob->{y});
-                        }
-                        if ($ob->{x} > $xmax) {
-                            $xmax = round($ob->{x});
-                        }
-                        if ($ob->{y} > $ymax) {
-                            $ymax = round($ob->{y});
-                        }
+                        print $F_img "\t<object>\n";
+                        print $F_img "\t\t<name>".$poly->{template_name}."</name>\n";
+                        print $F_img "\t\t<bndbox>\n";
+                        print $F_img "\t\t\t<xmin>$xmin</xmin>\n";
+                        print $F_img "\t\t\t<ymin>$ymin</ymin>\n";
+                        print $F_img "\t\t\t<xmax>$xmax</xmax>\n";
+                        print $F_img "\t\t\t<ymax>$ymax</ymax>\n";
+                        print $F_img "\t\t</bndbox>\n";
+                        print $F_img "\t</object>\n";
+
+                        print $F_model "\t<object>\n";
+                        print $F_model "\t\t<name>".$poly->{template_name}."</name>\n";
+                        print $F_model "\t\t<bndbox>\n";
+                        print $F_model "\t\t\t<xmin>$xmin</xmin>\n";
+                        print $F_model "\t\t\t<ymin>$ymin</ymin>\n";
+                        print $F_model "\t\t\t<xmax>$xmax</xmax>\n";
+                        print $F_model "\t\t\t<ymax>$ymax</ymax>\n";
+                        print $F_model "\t\t</bndbox>\n";
+                        print $F_model "\t</object>\n";
                     }
-                    print $F_img "\t<object>\n";
-                    print $F_img "\t\t<name>".$poly->{template_name}."</name>\n";
-                    print $F_img "\t\t<bndbox>\n";
-                    print $F_img "\t\t\t<xmin>$xmin</xmin>\n";
-                    print $F_img "\t\t\t<ymin>$ymin</ymin>\n";
-                    print $F_img "\t\t\t<xmax>$xmax</xmax>\n";
-                    print $F_img "\t\t\t<ymax>$ymax</ymax>\n";
-                    print $F_img "\t\t</bndbox>\n";
-                    print $F_img "\t</object>\n";
                 }
-            }
-            print $F_img "</annotation>\n";
-        close($F_img);
-    }
+                print $F_img "</annotation>\n";
+
+                print $F_model "</annotation>\n";
+            close($F_img);
+        }
+        print $F_model "</annotations>\n";
+    close($F_model);
 
     my $log_file_path = '';
     if ($c->config->{error_log}) {
@@ -6278,6 +6307,38 @@ sub drone_imagery_retrain_mask_rcnn_GET : Args(0) {
     my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/MaskRCNNBoundingBoxTrain.py --input_annotations_dir \''.$temp_input_dir.'\' --output_model_path \''.$temp_output_model_file.'\' --output_model_dir \''.$temp_output_dir.'\' '.$log_file_path;
     print STDERR Dumper $cmd;
     my $status = system($cmd);
+
+    my $location_id = $schema->resultset("NaturalDiversity::NdGeolocation")->find({description=>'[Computation]'})->nd_geolocation_id();
+
+    my $keras_mask_r_cnn_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_mask_r_cnn_model', 'protocol_type')->cvterm_id();
+    my $keras_mask_r_cnn_model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_mask_r_cnn_model_type', 'protocol_property')->cvterm_id();
+    my $keras_cnn_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_experiment', 'experiment_type')->cvterm_id();
+
+    my $m = CXGN::AnalysisModel::SaveModel->new({
+        bcs_schema=>$schema,
+        metadata_schema=>$metadata_schema,
+        phenome_schema=>$phenome_schema,
+        archive_path=>$c->config->{archive_path},
+        model_name=>$model_name,
+        model_description=>$model_description,
+        model_type_cvterm_id=>$keras_mask_r_cnn_cvterm_id,
+        model_experiment_type_cvterm_id=>$keras_cnn_experiment_cvterm_id,
+        model_properties=>[
+            {value => encode_json({value=>$model_type, image_type=>'all_annotated_plot_images'}), type_id => $keras_mask_r_cnn_model_type_cvterm_id}
+        ],
+        archived_model_file_type=>'trained_keras_mask_r_cnn_model',
+        model_file=>$temp_output_model_file,
+        archived_training_data_file_type=>'trained_keras_mask_r_cnn_model_input_data_file',
+        archived_training_data_file=>$temp_model_input_file,
+        # archived_auxiliary_files=>[
+        #     {auxiliary_model_file => $archive_temp_autoencoder_output_model_file, auxiliary_model_file_archive_type => 'trained_keras_cnn_autoencoder_model'},
+        #     {auxiliary_model_file => $model_input_aux_file, auxiliary_model_file_archive_type => 'trained_keras_cnn_model_input_aux_data_file'}
+        # ],
+        location_id=>$location_id,
+        user_id=>$user_id,
+        user_role=>$user_role
+    });
+    my $saved_model = $m->save_model();
 
     $c->stash->{rest} = {success => 1};
 }
