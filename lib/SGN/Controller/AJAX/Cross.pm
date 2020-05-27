@@ -1051,7 +1051,7 @@ sub store_upload_existing_progenies : Path('/ajax/cross/store_upload_existing_pr
     my $self = shift;
     my $c = shift;
     my $archived_filename = $c->req->param('archived_file_name');
-    my $overwrite_pedigrees = $c->req->param('overwrite_pedigrees');
+    my $overwrite_pedigrees = $c->req->param('overwrite_pedigrees') ne 'false' ? $c->req->param('overwrite_pedigrees') : 0;
     my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh;
     my $upload_type = 'StoreExistingProgeniesExcel';
@@ -1064,21 +1064,31 @@ sub store_upload_existing_progenies : Path('/ajax/cross/store_upload_existing_pr
         foreach my $cross_name_key (keys %progeny_hash){
             my $progenies_ref = $progeny_hash{$cross_name_key};
             my @progenies = @{$progenies_ref};
-            my $progeny_exist_add = CXGN::Pedigree::AddProgeniesExistingAccessions->new({
+            my $adding_progenies = CXGN::Pedigree::AddProgeniesExistingAccessions->new({
                 chado_schema => $chado_schema,
                 dbh => $dbh,
                 cross_name => $cross_name_key,
                 progeny_names => \@progenies,
-                overwrite_pedigrees => $overwrite_pedigrees
             });
-            if (!$progeny_exist_add->add_progenies_existing_accessions()){
-                $c->stash->{rest} = {error_string => "Error adding progeny",};
-                return;
+
+            my $return = $adding_progenies->add_progenies_existing_accessions($overwrite_pedigrees);
+            my $error;
+            if (!$return){
+                $error = "The progenies were not stored";
+            }
+
+            if ($return->{error}){
+                $error = $return->{error};
+            }
+
+            if ($error){
+                $c->stash->{rest} = { error => $error };
+                $c->detach();
             }
         }
     }
+    $c->stash->{rest} = { success => 1 };
 }
-
 
 sub upload_info : Path('/ajax/cross/upload_info') : ActionClass('REST'){ }
 

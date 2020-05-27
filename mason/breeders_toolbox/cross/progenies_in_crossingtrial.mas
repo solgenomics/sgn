@@ -503,12 +503,10 @@ jQuery(document).ready(function(){
             },
             success: function(response) {
                 jQuery('#working_modal').modal('hide');
-                if (response.error_string) {
-                    alert('An Error Occured: . '+response.error_string);
+                if (response.error) {
+                    alert('An Error Occured: No progenies were saved!. '+response.error);
                     return;
-                }
-
-                if (response.success) {
+                } else {
                     jQuery('#progenies_saved_dialog_message').modal("show");
                 }
             },
