@@ -6307,7 +6307,7 @@ sub drone_imagery_retrain_mask_rcnn_GET : Args(0) {
     if ($c->config->{error_log}) {
         $log_file_path = ' --log_file_path \''.$c->config->{error_log}.'\'';
     }
-    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/MaskRCNNBoundingBoxTrain.py --input_annotations_dir \''.$temp_input_dir.'\' --output_model_path \''.$temp_output_model_file.'\' --output_model_dir \''.$temp_output_dir.'\' '.$log_file_path;
+    my $cmd = $c->config->{python_executable_maskrcnn_env}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/MaskRCNNBoundingBoxTrain.py --input_annotations_dir \''.$temp_input_dir.'\' --output_model_path \''.$temp_output_model_file.'\' --output_model_dir \''.$temp_output_dir.'\' '.$log_file_path;
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
@@ -6413,7 +6413,7 @@ sub drone_imagery_predict_mask_rcnn_GET : Args(0) {
     if ($c->config->{error_log}) {
         $log_file_path = ' --log_file_path \''.$c->config->{error_log}.'\'';
     }
-    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/MaskRCNNBoundingBoxPredict.py --input_annotations_dir \''.$temp_input_dir.'\' --model_path \''.$model_file.'\' --model_dir \''.$temp_model_dir.'\' --outfile_annotated \''.$archive_temp_output_activation_file_path.'\' --results_outfile \''.$archive_temp_output_results_file.'\' '.$log_file_path;
+    my $cmd = $c->config->{python_executable_maskrcnn_env}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/MaskRCNNBoundingBoxPredict.py --input_annotations_dir \''.$temp_input_dir.'\' --model_path \''.$model_file.'\' --model_dir \''.$temp_model_dir.'\' --outfile_annotated \''.$archive_temp_output_activation_file_path.'\' --results_outfile \''.$archive_temp_output_results_file.'\' '.$log_file_path;
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
