@@ -4506,7 +4506,6 @@ sub seedlots_POST {
 	my $brapi_module = $brapi->brapi_wrapper('SeedLots');
 	my $brapi_package_result = $brapi_module->store_seedlots($clean_inputs,$c);
 
-	# my $brapi_package_result = $brapi_module->image_metadata_store($clean_inputs, $image_dir, $user_id, $user_type);
 	my $status = $brapi_package_result->{status};
 	my $http_status_code = _get_http_status_code($status);
 
