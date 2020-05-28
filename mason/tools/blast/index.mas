@@ -99,7 +99,14 @@
 
 <& /page/page_title.mas, title=>"BLAST" &>
 
-<div style="border-style:dotted;border-width:1px;margin-bottom:20px;"><div style="margin-top:10px;margin-right:10px;margin-bottom:10px;margin-left:10px;" >Note: you can now also set the word_size for the blast algorithm. Shorter word sizes are better when analyzing short sequences. The default for blastn is 11 and for protein-based blast programs it is 3. The correct default will be set automatically when changing the program.</div></div>
+<div style="border-style:dotted;border-width:1px;margin-bottom:20px;"><div style="margin-top:10px;margin-right:10px;margin-bottom:10px;margin-left:10px;" ><b>Note</b>: To match shorter sequences:
+<div>
+<ul>
+<li>Consider setting the word_size to a lower value.</li>
+<li>You may have to set the evalue to a higher value.</li>
+</ul>
+</div>
+The default word_size for blastn is 11 and for protein-based blast programs it is 3. The correct default will be set automatically when changing the program.</div></div>
 
 <&| /page/info_section.mas, id=>"input_parameter_section", title=>"Input parameters", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/tools/blast" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
   <input type="hidden" name="outformat" value="0" />
