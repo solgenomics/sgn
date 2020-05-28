@@ -1053,7 +1053,6 @@ sub store_upload_existing_progenies : Path('/ajax/cross/store_upload_existing_pr
     my $archived_filename = $c->req->param('archived_file_name');
     my $overwrite_pedigrees = $c->req->param('overwrite_pedigrees') ne 'false' ? $c->req->param('overwrite_pedigrees') : 0;
     my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $dbh = $c->dbc->dbh;
     my $upload_type = 'StoreExistingProgeniesExcel';
 
     my $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename);
@@ -1066,7 +1065,6 @@ sub store_upload_existing_progenies : Path('/ajax/cross/store_upload_existing_pr
             my @progenies = @{$progenies_ref};
             my $adding_progenies = CXGN::Pedigree::AddProgeniesExistingAccessions->new({
                 chado_schema => $chado_schema,
-                dbh => $dbh,
                 cross_name => $cross_name_key,
                 progeny_names => \@progenies,
             });

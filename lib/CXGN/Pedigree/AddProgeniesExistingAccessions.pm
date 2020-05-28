@@ -6,7 +6,7 @@ CXGN::Pedigree::AddProgeniesExistingAccessions - a module to create relationship
 
 =head1 USAGE
 
- my $progeny_add = CXGN::Pedigree::AddProgeniesExistingAccessions->new({ chado_schema => $schema, dbh => $dbh, cross_name => $cross_name, progeny_names => \@progeny_names} );
+ my $progeny_add = CXGN::Pedigree::AddProgeniesExistingAccessions->new({ chado_schema => $schema, cross_name => $cross_name, progeny_names => \@progeny_names} );
  $progeny_add->add_progenies_existing_accessions();
 
 =head1 DESCRIPTION
@@ -30,7 +30,6 @@ has 'chado_schema' => (
 		 predicate => 'has_chado_schema',
 		 required => 1,
 		);
-has 'dbh' => (is  => 'rw',predicate => 'has_dbh', required => 1,);
 has 'cross_name' => (isa =>'Str', is => 'rw', predicate => 'has_cross_name', required => 1,);
 has 'progeny_names' => (isa =>'ArrayRef[Str]', is => 'rw', predicate => 'has_progeny_names', required => 1,);
 
