@@ -146,7 +146,7 @@ sub add_progeny {
     };
 
     if ($transaction_error) {
-        print STDERR "Transaction1 error creating a cross: $transaction_error\n";
+        print STDERR "Transaction1 error adding progenies: $transaction_error\n";
         return;
     }
 

@@ -403,14 +403,14 @@ sub get_label_data_source_select : Path('/ajax/html/select/label_data_sources') 
     my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } );
     my $projects = $p->get_breeding_programs();
 
-    my (@field_trials, @crossing_trials, @genotyping_trials) = [];
+    my (@field_trials, @crossing_experiments, @genotyping_trials) = [];
     foreach my $project (@$projects) {
-      my ($field_trials, $crossing_trials, $genotyping_trials) = $p->get_trials_by_breeding_program($project->[0]);
+      my ($field_trials, $crossing_experiments, $genotyping_trials) = $p->get_trials_by_breeding_program($project->[0]);
       foreach (@$field_trials) {
           push @field_trials, $_;
       }
-      foreach (@$crossing_trials) {
-          push @crossing_trials, $_;
+      foreach (@$crossing_experiments) {
+          push @crossing_experiments, $_;
       }
       foreach (@$genotyping_trials) {
           push @genotyping_trials, $_;
@@ -428,6 +428,11 @@ sub get_label_data_source_select : Path('/ajax/html/select/label_data_sources') 
     foreach my $trial (@genotyping_trials) {
         push @choices, $trial;
     }
+    push @choices, '__Crossing Experiments';
+    @crossing_experiments = sort { $a->[1] cmp $b->[1] } @crossing_experiments;
+    foreach my $crossing_experiment (@crossing_experiments) {
+         push @choices, $crossing_experiment;
+    }
     push @choices, '__Lists';
     foreach my $item (@$lists) {
         push @choices, [@$item[0], @$item[1]];
@@ -436,12 +441,7 @@ sub get_label_data_source_select : Path('/ajax/html/select/label_data_sources') 
     foreach my $item (@$public_lists) {
         push @choices, [@$item[0], @$item[1]];
     }
-    # push @choices, '__Crossing Trials';
-    # @crossing_trials = sort { $a->[1] cmp $b->[1] } @crossing_trials;
-    # foreach my $trial (@crossing_trials) {
-    #     push @choices, $trial;
-    # }
-    #
+
     print STDERR "Choices are:\n".Dumper(@choices);
 
     if ($default) { unshift @choices, [ '', $default ]; }
@@ -589,27 +589,27 @@ sub get_seedlots_select : Path('/ajax/html/select/seedlots') Args(0) {
     my $c = shift;
     my $accessions = $c->req->param('seedlot_content_accession_name') ? [$c->req->param('seedlot_content_accession_name')] : [];
     my $crosses = $c->req->param('seedlot_content_cross_name') ? [$c->req->param('seedlot_content_cross_name')] : [];
-    my $offset = $c->req->param('seedlot_offset') ? $c->req->param('seedlot_offset') : '';
-    my $limit = $c->req->param('seedlot_limit') ? $c->req->param('seedlot_limit') : '';
-    my $search_seedlot_name = $c->req->param('seedlot_name') ? $c->req->param('seedlot_name') : '';
+#    my $offset = $c->req->param('seedlot_offset') ? $c->req->param('seedlot_offset') : '';
+#    my $limit = $c->req->param('seedlot_limit') ? $c->req->param('seedlot_limit') : '';
+#    my $search_seedlot_name = $c->req->param('seedlot_name') ? $c->req->param('seedlot_name') : '';
     my $search_breeding_program_name = $c->req->param('seedlot_breeding_program_name') ? $c->req->param('seedlot_breeding_program_name') : '';
-    my $search_location = $c->req->param('seedlot_location') ? $c->req->param('seedlot_location') : '';
-    my $search_amount = $c->req->param('seedlot_amount') ? $c->req->param('seedlot_amount') : '';
-    my $search_weight = $c->req->param('seedlot_weight') ? $c->req->param('seedlot_weight') : '';
+#    my $search_location = $c->req->param('seedlot_location') ? $c->req->param('seedlot_location') : '';
+#    my $search_amount = $c->req->param('seedlot_amount') ? $c->req->param('seedlot_amount') : '';
+#    my $search_weight = $c->req->param('seedlot_weight') ? $c->req->param('seedlot_weight') : '';
     my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots(
         $c->dbic_schema("Bio::Chado::Schema", "sgn_chado"),
         $c->dbic_schema("CXGN::People::Schema"),
         $c->dbic_schema("CXGN::Phenome::Schema"),
-        $offset,
-        $limit,
-        $search_seedlot_name,
+        undef,
+        undef,
+        undef,
         $search_breeding_program_name,
-        $search_location,
-        $search_amount,
+        undef,
+        undef,
         $accessions,
         $crosses,
         1,
-        $search_weight
+        undef
     );
     my @seedlots;
     foreach my $sl (@$list) {
@@ -697,13 +697,35 @@ sub get_trained_keras_cnn_models : Path('/ajax/html/select/trained_keras_cnn_mod
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $trained_keras_cnn_model_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model', 'protocol_type')->cvterm_id();
+    my $keras_cnn_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model', 'protocol_type')->cvterm_id();
+    my $keras_cnn_trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_trait', 'protocol_property')->cvterm_id();
+    my $keras_cnn_model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_type', 'protocol_property')->cvterm_id();
 
+    my $model_q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, trained_trait.value, model_type.value
+        FROM nd_protocol
+        JOIN nd_protocolprop AS trained_trait ON(nd_protocol.nd_protocol_id=trained_trait.nd_protocol_id AND trained_trait.type_id=$keras_cnn_trait_cvterm_id)
+        JOIN nd_protocolprop AS model_type ON(nd_protocol.nd_protocol_id=model_type.nd_protocol_id AND model_type.type_id=$keras_cnn_model_type_cvterm_id)
+        WHERE nd_protocol.type_id=$keras_cnn_cvterm_id;";
+    my $model_h = $schema->storage->dbh()->prepare($model_q);
+    $model_h->execute();
     my @keras_cnn_models;
-    my $q = "SELECT nd_protocol_id, name, description FROM nd_protocol WHERE type_id=$trained_keras_cnn_model_cvterm_id;";
-    my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute();
-    while (my ($nd_protocol_id, $name, $description) = $h->fetchrow_array()) {
+    while (my ($nd_protocol_id, $name, $description, $trained_trait, $model_type) = $model_h->fetchrow_array()) {
+        my $trained_trait_hash = decode_json $trained_trait;
+        my $model_type_hash = decode_json $model_type;
+        my $trait_id = $trained_trait_hash->{variable_id};
+        my $trained_trait_name = $trained_trait_hash->{variable_name};
+        my $aux_trait_ids = $trained_trait_hash->{aux_trait_ids} ? $trained_trait_hash->{aux_trait_ids} : [];
+        $model_type = $model_type_hash->{value};
+        my $trained_image_type = $model_type_hash->{image_type};
+
+        my @aux_trait_names;
+        if (scalar(@$aux_trait_ids)>0) {
+            foreach (@$aux_trait_ids) {
+                my $aux_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $_, 'extended');
+                push @aux_trait_names, $aux_trait_name;
+            }
+            $name .= " Aux Traits:".join(",", @aux_trait_names);
+        }
         push @keras_cnn_models, [$nd_protocol_id, $name];
     }
 

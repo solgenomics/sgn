@@ -523,8 +523,13 @@ jQuery(document).ready(function() {
                     console.log(response);
 
                     if (response.details.planting_date) {
-                        Workflow.complete('#upload_drone_image_field_trial_select_continue');
-                        Workflow.focus('#drone_imagery_upload_workflow', 2);
+                        if (response.details.location_noaa_station_id) {
+                            Workflow.complete('#upload_drone_image_field_trial_select_continue');
+                            Workflow.focus('#drone_imagery_upload_workflow', 2);
+                        }
+                        else {
+                            jQuery('#upload_drone_image_field_trial_info').html("<div class='well well-sm'>Please set the NOAA location id for this field trial before proceeding. You can do so from the manage locations page.</div>");
+                        }
                     }
                     else {
                         jQuery('#upload_drone_image_field_trial_info').html("<div class='well well-sm'>Please set the planting date for this field trial before proceeding. You can do so from the trial's <a href='/breeders/trial/"+jQuery('#drone_run_field_trial_id').val()+"' target=_blank>Detail Page</a></div>");

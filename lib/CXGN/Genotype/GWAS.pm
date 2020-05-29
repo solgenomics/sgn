@@ -12,7 +12,7 @@ my $geno = CXGN::Genotype::GWAS->new({
     gwas_temp_file=>$file_temp_path_gwas,
     pheno_temp_file=>$file_temp_path_pheno,
     people_schema=>$people_schema,
-    download_format=>$download_format, #either results_tsv or manhattan_qq_plots
+    download_format=>$download_format, #either 'results_tsv' or 'manhattan_qq_plots'
     accession_id_list=>\@accession_list,
     trait_id_list=>\@trait_id_list,
     traits_are_repeated_measurements=>$traits_are_repeated_measurements,
@@ -45,6 +45,7 @@ use JSON;
 use CXGN::Stock::Accession;
 use CXGN::Genotype::Protocol;
 use CXGN::Genotype::Search;
+use CXGN::Genotype::ComputeHybridGenotype;
 use CXGN::Phenotypes::SearchFactory;
 use R::YapRI::Base;
 use R::YapRI::Data::Matrix;
@@ -261,7 +262,8 @@ sub get_gwas {
             my $d = $unique_observation_units{$stock_id};
             print $F_pheno $d->{germplasm_stock_id}.','.$d->{trial_id}.','.$d->{obsunit_rep};
             foreach my $t (@unique_trait_ids_sorted) {
-                print $F_pheno ','.$phenotype_data_hash{$stock_id}->{$t};
+                my $pheno_val = $phenotype_data_hash{$stock_id}->{$t} || '';
+                print $F_pheno ','.$pheno_val;
             }
             print $F_pheno "\n";
         }
@@ -411,7 +413,11 @@ sub get_gwas {
                     }
                     $genotype_string .= "\n";
                 }
-                my $progeny_genotype = _compute_progeny_genotypes($genotypes, \@all_marker_objects);
+                my $geno = CXGN::Genotype::ComputeHybridGenotype->new({
+                    parental_genotypes=>$genotypes,
+                    marker_objects=>\@all_marker_objects
+                });
+                my $progeny_genotype = $geno->get_hybrid_genotype();
 
                 push @individuals_stock_ids, $accession_stock_id;
                 my $genotype_string_scores = join "\t", @$progeny_genotype;
@@ -544,7 +550,7 @@ sub download_gwas {
     my $web_cluster_queue_config = shift;
     my $basepath_config = shift;
 
-    my $key = $self->grm_cache_key("download_gwas");
+    my $key = $self->grm_cache_key("download_gwas_v01");
     $self->_cache_key($key);
     $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
 
@@ -586,40 +592,6 @@ sub genosort {
     } else {
         return -1;
     }
-}
-
-sub _compute_progeny_genotypes {
-    my $genotypes = shift;
-    my $all_marker_objects = shift;
-
-    my @progeny_genotype;
-    # If both parents are genotyped, calculate progeny genotype as a average of parent dosage
-    if ($genotypes->[0] && $genotypes->[1]) {
-        my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
-        my $parent2_genotype = $genotypes->[1]->{selected_genotype_hash};
-        foreach my $m (@$all_marker_objects) {
-            if ($parent1_genotype->{$m->{name}}->{DS} ne 'NA' || $parent2_genotype->{$m->{name}}->{DS} ne 'NA') {
-                my $p1 = $parent1_genotype->{$m->{name}}->{DS} ne 'NA' ? $parent1_genotype->{$m->{name}}->{DS} : 0;
-                my $p2 = $parent2_genotype->{$m->{name}}->{DS} ne 'NA' ? $parent2_genotype->{$m->{name}}->{DS} : 0;
-                push @progeny_genotype, ceil(($p1 + $p2) / 2);
-            }
-            else {
-                push @progeny_genotype, 'NA';
-            }
-        }
-    }
-    elsif ($genotypes->[0]) {
-        my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
-        foreach my $m (@$all_marker_objects) {
-            if ($parent1_genotype->{$m->{name}}->{DS} ne 'NA') {
-                push @progeny_genotype, ceil($parent1_genotype->{$m->{name}}->{DS} / 2);
-            }
-            else {
-                push @progeny_genotype, 'NA';
-            }
-        }
-    }
-    return \@progeny_genotype;
 }
 
 1;

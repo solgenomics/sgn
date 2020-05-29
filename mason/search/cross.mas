@@ -17,23 +17,23 @@
      <div class="col-sm-11">
        <div class="form-horizontal">
         <div class="form-group">
-          <label class="control-label col-sm-4">Female Parent/Population:</label>
+          <label class="control-label col-sm-4">Female Parent:</label>
             <div class="col-sm-8">
              <div class="input-group">
-               <input type="text" class="form-control" id="pedigree_female_parent" placeholder="Enter female parent/population">
+               <input type="text" class="form-control" id="pedigree_female_parent" placeholder="Enter female parent">
                 <div class="input-group-btn">
-                 <button class="btn btn-info" id="search_pedigree_male_parents"><i class="glyphicon glyphicon-search"></i> Male Parent </button>
+                 <button class="btn btn-info" id="search_pedigree_male_parents"><i class="glyphicon glyphicon-search"></i> Male Parent / Population</button>
                  <button class="btn btn-primary" id="search_all_progenies"><i class="glyphicon glyphicon-search"></i> All Progenies of this Female Parent </button>
                 </div>
               </div>
             </div>
           </div>
         <div class="form-group">
-         <label class="control-label col-sm-4">Male Parent/Population:</label>
+         <label class="control-label col-sm-4">Male Parent / Population:</label>
           <div class="col-sm-8" >
            <div class="input-group">
             <select class="form-control" id="pedigree_male_parent">
-            <option value="">Choose female parent/population first</option>
+            <option value="">Choose female parent first</option>
             </select>
            </select>
           <div class="input-group-btn">
@@ -58,7 +58,7 @@
 <thead>
   <tr>
     <th>Female Parent</th>
-    <th>Male Parent</th>
+    <th>Male Parent / Population</th>
     <th>Progeny</th>
     <th>Cross Type</th>
   </tr>
@@ -90,23 +90,23 @@
      <div class="col-sm-11">
        <div class="form-horizontal">
         <div class="form-group">
-          <label class="control-label col-sm-4">Female Parent/Population:</label>
+          <label class="control-label col-sm-4">Female Parent:</label>
             <div class="col-sm-8">
              <div class="input-group">
-               <input type="text" class="form-control" id="female_parent" placeholder="Enter female parent/population">
+               <input type="text" class="form-control" id="female_parent" placeholder="Enter female parent">
                 <div class="input-group-btn">
-                 <button class="btn btn-info" id="search_cross_male_parents"><i class="glyphicon glyphicon-search"></i> Male Parent </button>
+                 <button class="btn btn-info" id="search_cross_male_parents"><i class="glyphicon glyphicon-search"></i> Male Parent / Population</button>
                  <button class="btn btn-primary" id="search_all_crosses"><i class="glyphicon glyphicon-search"></i> All Crosses </button>
                 </div>
               </div>
             </div>
           </div>
         <div class="form-group">
-         <label class="control-label col-sm-4">Male Parent/Population:</label>
+         <label class="control-label col-sm-4">Male Parent / Population:</label>
           <div class="col-sm-8" >
            <div class="input-group">
             <select class="form-control" id="cross_male_parent">
-            <option value="">Choose female parent/population first</option>
+            <option value="">Choose female parent first</option>
             </select>
            </select>
           <div class="input-group-btn">
@@ -132,15 +132,15 @@
 <thead>
   <tr>
     <th>Female Parent</th>
-    <th>Male Parent</th>
-    <th>Cross Name</th>
+    <th>Male Parent / Population</th>
+    <th>Cross Unique ID</th>
     <th>Cross Type</th>
   </tr>
 </thead>
 
 </table>
 <br>
-<&| /page/info_section.mas, title => 'Copy crosses to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the cross names showing in table to a new or exisiting list</i>'&>
+<&| /page/info_section.mas, title => 'Copy crosses to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the cross unique ids showing in table to a new or exisiting list</i>'&>
 <br>
 <div style="text-align:right" id="crosses_to_list_menu"></div>
 <div id="cross_names" style="display: none;"></div>

@@ -60,6 +60,7 @@ use CXGN::Trial;
 use JSON;
 use CXGN::Stock::Accession;
 use CXGN::Genotype::Protocol;
+use CXGN::Genotype::ComputeHybridGenotype;
 use Cache::File;
 use Digest::MD5 qw | md5_hex |;
 use File::Slurp qw | write_file |;
@@ -171,6 +172,12 @@ has 'cache_expiry' => (
 );
 
 has 'forbid_cache' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 0
+);
+
+has 'prevent_transpose' => (
     isa => 'Bool',
     is => 'ro',
     default => 0
@@ -1110,7 +1117,8 @@ sub key {
     my $chromosomes = $json->encode( $self->chromosome_list() || [] );
     my $start = $self->start_position() || '' ;
     my $end = $self->end_position() || '';
-    my $key = md5_hex($accessions.$tissues.$trials.$protocols.$markerprofiles.$genotypedataprojects.$markernames.$genotypeprophash.$protocolprophash.$protocolpropmarkerhash.$chromosomes.$start.$end.$self->return_only_first_genotypeprop_for_stock().$self->limit().$self->offset()."_$datatype");
+    my $prevent_transpose = $self->prevent_transpose() || '';
+    my $key = md5_hex($accessions.$tissues.$trials.$protocols.$markerprofiles.$genotypedataprojects.$markernames.$genotypeprophash.$protocolprophash.$protocolpropmarkerhash.$chromosomes.$start.$end.$self->return_only_first_genotypeprop_for_stock().$prevent_transpose.$self->limit().$self->offset()."_$datatype");
     return $key;
 }
 
@@ -1325,16 +1333,22 @@ sub get_cached_file_dosage_matrix {
             }
         );
 
-        # Do the transposition job on the cluster
-        $cmd->run_cluster(
-                "perl ",
-                $basepath_config."/bin/transpose_matrix.pl",
-                $tempfile,
-        );
-        $cmd->is_cluster(1);
-        $cmd->wait;
+        my $out_copy;
+        if ($self->prevent_transpose()) {
+            open $out_copy, '<', $tempfile or die "Can't open output file: $!";
+        }
+        else {
+            # Do the transposition job on the cluster
+            $cmd->run_cluster(
+                    "perl ",
+                    $basepath_config."/bin/transpose_matrix.pl",
+                    $tempfile,
+            );
+            $cmd->is_cluster(1);
+            $cmd->wait;
 
-        open my $out_copy, '<', $transpose_tempfile or die "Can't open output file: $!";
+            open $out_copy, '<', $transpose_tempfile or die "Can't open output file: $!";
+        }
 
         if (!$self->forbid_cache()) {
             $self->cache()->set($key, '');
@@ -1376,7 +1390,7 @@ sub get_cached_file_dosage_matrix_compute_from_parents {
     }
     my $protocol_id = $protocol_ids->[0];
 
-    my $key = $self->key("get_cached_file_dosage_matrix_compute_from_parents");
+    my $key = $self->key("get_cached_file_dosage_matrix_compute_from_parents_v01");
     $self->cache( Cache::File->new( cache_root => $cache_root_dir ));
 
     my $file_handle;
@@ -1470,27 +1484,14 @@ sub get_cached_file_dosage_matrix_compute_from_parents {
                 $genotype_string .= "\n";
             }
 
-            my $genotype_data_string = "";
-            foreach my $m (@all_marker_objects) {
-                my $current_genotype = '';
-                # If both parents are genotyped, calculate progeny genotype as a sum of parent dosage
-                if ($genotypes->[0] && $genotypes->[1]) {
-                    my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
-                    my $parent2_genotype = $genotypes->[1]->{selected_genotype_hash};
-                    my $p1 = $parent1_genotype->{$m->{name}}->{DS} ne 'NA' ? $parent1_genotype->{$m->{name}}->{DS} : 0;
-                    my $p2 = $parent2_genotype->{$m->{name}}->{DS} ne 'NA' ? $parent2_genotype->{$m->{name}}->{DS} : 0;
-                    $current_genotype = ceil(($p1 + $p2)/2);
-                }
-                # If one parent is genotyped, use that
-                elsif ($genotypes->[0]) {
-                    my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
-                    my $p1 = $parent1_genotype->{$m->{name}}->{DS} ne 'NA' ? $parent1_genotype->{$m->{name}}->{DS} : 0;
-                    $current_genotype = ceil($p1/2);
-                }
-                $genotype_data_string .= $current_genotype."\t";
-            }
+            my $geno = CXGN::Genotype::ComputeHybridGenotype->new({
+                parental_genotypes=>$genotypes,
+                marker_objects=>\@all_marker_objects
+            });
+            my $progeny_genotype = $geno->get_hybrid_genotype();
+            my $genotype_string_scores = join "\t", @$progeny_genotype;
 
-            $genotype_string .= $accession_stock_id."\t".$genotype_data_string."\n";
+            $genotype_string .= $accession_stock_id."\t".$genotype_string_scores."\n";
             write_file($tempfile, {append => 1}, $genotype_string);
             $counter++;
         }
@@ -1511,16 +1512,22 @@ sub get_cached_file_dosage_matrix_compute_from_parents {
             }
         );
 
-        # Do the transposition job on the cluster
-        $cmd->run_cluster(
-                "perl ",
-                $basepath_config."/bin/transpose_matrix.pl",
-                $tempfile,
-        );
-        $cmd->is_cluster(1);
-        $cmd->wait;
+        my $out_copy;
+        if ($self->prevent_transpose()) {
+            open $out_copy, '<', $tempfile or die "Can't open output file: $!";
+        }
+        else {
+            # Do the transposition job on the cluster
+            $cmd->run_cluster(
+                    "perl ",
+                    $basepath_config."/bin/transpose_matrix.pl",
+                    $tempfile,
+            );
+            $cmd->is_cluster(1);
+            $cmd->wait;
 
-        open my $out_copy, '<', $transpose_tempfile or die "Can't open output file: $!";
+            open $out_copy, '<', $transpose_tempfile or die "Can't open output file: $!";
+        }
 
         if (!$self->forbid_cache()) {
             $self->cache()->set($key, '');
@@ -1814,7 +1821,7 @@ sub get_cached_file_VCF_compute_from_parents {
     }
     my $protocol_id = $protocol_ids->[0];
 
-    my $key = $self->key("get_cached_file_VCF_compute_from_parents");
+    my $key = $self->key("get_cached_file_VCF_compute_from_parents_v01");
     $self->cache( Cache::File->new( cache_root => $cache_root_dir ));
 
     my $file_handle;
@@ -1961,26 +1968,15 @@ sub get_cached_file_VCF_compute_from_parents {
                     $genotype_string .= "\n";
                 }
                 my $genotype_id = $geno->{germplasmName};
-                my $genotype_data_string = "";
-                foreach my $m (@all_marker_objects) {
-                    my $current_g = '';
-                    # If both parents are genotyped, calculate progeny genotype as a sum of parent dosage
-                    if ($genotypes->[0] && $genotypes->[1]) {
-                        my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
-                        my $parent2_genotype = $genotypes->[1]->{selected_genotype_hash};
-                        my $p1 = $parent1_genotype->{$m->{name}}->{DS} ne 'NA' ? $parent1_genotype->{$m->{name}}->{DS} : 0;
-                        my $p2 = $parent2_genotype->{$m->{name}}->{DS} ne 'NA' ? $parent2_genotype->{$m->{name}}->{DS} : 0;
-                        $current_g = ceil(($p1 + $p2)/2);
-                    }
-                    # If one parent is genotyped, use that
-                    elsif ($genotypes->[0]) {
-                        my $parent1_genotype = $genotypes->[0]->{selected_genotype_hash};
-                        my $p1 = $parent1_genotype->{$m->{name}}->{DS} ne 'NA' ? $parent1_genotype->{$m->{name}}->{DS} : 0;
-                        $current_g = ceil($p1/2);
-                    }
-                    $genotype_data_string .= $current_g."\t";
-                }
-                $genotype_string .= $genotype_id."\t".$genotype_data_string."\n";
+
+                my $geno = CXGN::Genotype::ComputeHybridGenotype->new({
+                    parental_genotypes=>$genotypes,
+                    marker_objects=>\@all_marker_objects
+                });
+                my $progeny_genotype = $geno->get_hybrid_genotype();
+                my $genotype_string_scores = join "\t", @$progeny_genotype;
+
+                $genotype_string .= $genotype_id."\t".$genotype_string_scores."\n";
 
                 write_file($tempfile, {append => 1}, $genotype_string);
                 $counter++;

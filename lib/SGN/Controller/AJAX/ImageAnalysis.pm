@@ -88,7 +88,7 @@ sub image_analysis_submit_POST : Args(0) {
         my $server_endpoint;
         my $image_type_name;
         if ($service eq 'necrosis') {
-            $server_endpoint = "http://18.219.45.102/necrosis/api2/";
+            $server_endpoint = "http://unet.mcrops.org/api/";
             $image_type_name = "image_analysis_necrosis_solomon_nsumba";
         }
         if ($service eq 'whitefly_count') {
@@ -178,6 +178,9 @@ sub image_analysis_submit_POST : Args(0) {
                     $image_id = $image->get_image_id();
                     my $added_image_tag_id = $image->add_tag($image_tag);
                 }
+            }
+            else {
+                print STDERR Dumper $resp;
             }
             $it++;
         }

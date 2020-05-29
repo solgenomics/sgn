@@ -172,6 +172,17 @@ sub acronymize_traits {
 }
 
 
+sub trial_traits {
+    my ($self, $c, $trial_id) = @_;
+
+    my $trial = CXGN::Trial->new({bcs_schema => $self->schema($c), 
+				  trial_id => $trial_id});
+
+    return $trial->get_traits_assayed();
+
+}
+
+
 sub clean_traits {
     my ($self, $terms) = @_;
 

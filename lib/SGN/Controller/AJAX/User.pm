@@ -19,8 +19,8 @@ sub login : Path('/ajax/user/login') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    my $username = $c->req->param("login_username");
-    my $password = $c->req->param("login_password");
+    my $username = $c->req->param("username");
+    my $password = $c->req->param("password");
     my $goto_url = $c->req->param("goto_url");
 
     print STDERR "Goto URL = $goto_url\n";
@@ -578,7 +578,7 @@ ername.";}
 	$c->stash->{rest} = { html => "An error occurred. $@" };
     }
     else {
-	$c->stash->{rest} = { html => "<center><h4>Account successfully created for $first_name $last_name</h4><a href=\"/user/quick_create_account\">Create another account" };
+	$c->stash->{rest} = { html => "<center><h4>Account successfully created for $first_name $last_name</h4><a href=\"/user/admin/quick_create_account\">Create another account" };
     }
 }
 
