@@ -6217,7 +6217,39 @@ sub drone_imagery_retrain_mask_rcnn_GET : Args(0) {
             }
         }
     }
-    print STDERR Dumper \%unique_image_ids;
+    # print STDERR Dumper \%unique_image_ids;
+
+    my $drone_run_band_plot_polygons_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_plot_polygons', 'project_property')->cvterm_id();
+    my $denoised_stitched_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    my $drone_run_band_polygons_q = "SELECT project.project_id, image_type.image_id, polygons.value
+        FROM project
+        JOIN projectprop AS polygons ON (project.project_id=polygons.project_id AND polygons.type_id=$drone_run_band_plot_polygons_type_id)
+        JOIN phenome.project_md_image AS image_type ON(project.project_id=image_type.project_id AND image_type.type_id=$denoised_stitched_type_id)
+        JOIN metadata.md_image AS image ON(image_type.image_id=image.image_id)
+        WHERE image.obsolete = 'f';";
+    my $drone_run_band_polygons_h = $schema->storage->dbh->prepare($drone_run_band_polygons_q);
+    $drone_run_band_polygons_h->execute();
+    while (my ($project_id, $image_id, $polygon_json) = $drone_run_band_polygons_h->fetchrow_array()) {
+        my $polygons = decode_json $polygon_json;
+        # print STDERR Dumper $polygons;
+        # print STDERR Dumper $image_id;
+
+        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+        my $image_url = $image->get_image_url("original");
+        my $image_fullpath = $image->get_filename('original_converted', 'full');
+        my @size = imgsize($image_fullpath);
+
+        push @{$unique_image_ids{$image_id}->{p}}, {
+            polygon => $polygons,
+            template_name => $project_id
+        };
+
+        $unique_image_ids{$image_id}->{width} = $size[0];
+        $unique_image_ids{$image_id}->{height} = $size[1];
+        $unique_image_ids{$image_id}->{image_fullpath} = $image_fullpath;
+        $unique_image_ids{$image_id}->{image_url} = $image_url;
+    }
+    # print STDERR Dumper \%unique_image_ids;
 
     my $dir = $c->tempfiles_subdir('/drone_imagery_keras_cnn_maskrcnn_input_annotations_dir');
     my $output_dir = $c->tempfiles_subdir('/drone_imagery_keras_cnn_maskrcnn_dir');
