@@ -248,7 +248,7 @@ sub genotype_file_name {
 sub relationship_matrix_file {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{pop_id};
+    my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
     my $data_set_type = $c->stash->{data_set_type};
     my $protocol_id = $c->stash->{genotyping_protocol_id};    
    
@@ -270,7 +270,7 @@ sub relationship_matrix_file {
 sub relationship_matrix_json_file {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{pop_id};
+    my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
     my $data_set_type = $c->stash->{data_set_type};
     my $protocol_id = $c->stash->{genotyping_protocol_id};    
    
