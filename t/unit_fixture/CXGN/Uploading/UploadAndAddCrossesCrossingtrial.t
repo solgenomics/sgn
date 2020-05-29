@@ -350,7 +350,7 @@ ok($message4 ne '');
 
 
 #test storing 2 progenies using existing accessions (accessions have previously stored pedigrees)
-$cross_name = 'TestCross1';
+$cross_name = 'test_add_cross';
 @existing_accessions = qw(TestAccession3 TestAccession4);
 $overwrite_pedigrees = 'true';
 $adding_progenies = CXGN::Pedigree::AddProgeniesExistingAccessions->new({
