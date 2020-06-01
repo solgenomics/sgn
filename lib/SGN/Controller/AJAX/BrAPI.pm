@@ -175,20 +175,24 @@ sub _clean_inputs {
 sub _authenticate_user {
     my $c = shift;
 	my $force_authenticate = shift;
-	my $module = shift;
     my $status = $c->stash->{status};
 	my $user_id;
 	my $user_type;
 	my $user_pref;
 	my $expired;
 	my $wildcard = 'any';
-	
+
 	my @server_permission;
-	if ($module) {
-		my $permissions = $module->brapi_wrapper('ServerInfo')->info();
-		my $server_permission = $permissions->{$c->request->method};
+	my $version = $c->request->captures->[0];
+
+	my $permissions = "CXGN::BrAPI::" . $version  . "::ServerInfo"; 
+	my @server_permission;
+	my $rc = eval{
+		my $server_permission =  $permissions->info()->{$c->request->method};
 		@server_permission  = split ',', $server_permission;
-	} else{
+	1; };
+
+	if(!$rc && !@server_permission){
 		push @server_permission, $wildcard;
 	}
 
@@ -1420,7 +1424,7 @@ sub germplasm_attributes_process {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('GermplasmAttributes');
 	my $brapi_package_result = $brapi_module->germplasm_attributes_list({
-		attribute_category_dbids => $clean_inputs->{attributeCategoryDbId}
+		$clean_inputs
 	});
 	_standard_response_construction($c, $brapi_package_result);
 }
@@ -4489,9 +4493,9 @@ sub seedlots : Chained('brapi') PathPart('seedlots') Args(0) : ActionClass('REST
 sub seedlots_GET {
 	my $self = shift;
 	my $c = shift;
-	my $brapi = $self->brapi_module;
-	my ($auth) = _authenticate_user($c,0,$brapi);
+	my ($auth) = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('SeedLots');
 	my $brapi_package_result = $brapi_module->search($clean_inputs);
 	_standard_response_construction($c, $brapi_package_result);
@@ -4500,9 +4504,9 @@ sub seedlots_GET {
 sub seedlots_POST {
 	my $self = shift;
 	my $c = shift;
-	my $brapi = $self->brapi_module;
-	my ($auth) = _authenticate_user($c,0,$brapi);
+	my ($auth) = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('SeedLots');
 	my $brapi_package_result = $brapi_module->store_seedlots($clean_inputs,$c);
 
