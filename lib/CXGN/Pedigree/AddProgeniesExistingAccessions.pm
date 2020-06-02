@@ -6,13 +6,12 @@ CXGN::Pedigree::AddProgeniesExistingAccessions - a module to create relationship
 
 =head1 USAGE
 
- my $progeny_add = CXGN::Pedigree::AddProgeniesExistingAccessions->new({ schema => $schema, cross_name => $cross_name, progeny_names => \@progeny_names} );
- my $progeny_validated = $progeny_add->validate_progeny(); #is true when the cross name exists and the progeny names to be assigned are valid.
- $progeny_add->add_progeny();
+ my $progeny_add = CXGN::Pedigree::AddProgeniesExistingAccessions->new({ chado_schema => $schema, cross_name => $cross_name, progeny_names => \@progeny_names} );
+ $progeny_add->add_progenies_existing_accessions();
 
 =head1 DESCRIPTION
 
-Adds progenies to a cross and creates corresponding new stocks of type accession. The cross must already exist in the database, and the verify function does this check.   This module is intended to be used in independent loading scripts and interactive dialogs.
+Adds progenies to a cross by using existing accessions in the database. The cross must already exist in the database, and the verify function does this check.   This module is intended to be used in independent loading scripts and interactive dialogs.
 
 =head1 AUTHORS
 
@@ -31,18 +30,19 @@ has 'chado_schema' => (
 		 predicate => 'has_chado_schema',
 		 required => 1,
 		);
-has 'dbh' => (is  => 'rw',predicate => 'has_dbh', required => 1,);
 has 'cross_name' => (isa =>'Str', is => 'rw', predicate => 'has_cross_name', required => 1,);
 has 'progeny_names' => (isa =>'ArrayRef[Str]', is => 'rw', predicate => 'has_progeny_names', required => 1,);
 
 sub add_progenies_existing_accessions {
     my $self = shift;
+	my $overwrite_pedigrees = shift;
     my $chado_schema = $self->get_chado_schema();
     my @progeny_names = @{$self->get_progeny_names()};
     my $cross_stock;
     my $female_parent;
     my $male_parent;
     my $transaction_error;
+	my %return;
 
     #add all progeny in a single transaction
     my $coderef = sub {
@@ -76,8 +76,6 @@ sub add_progenies_existing_accessions {
                 type_id => $male_parent_cvterm->cvterm_id(),
             });
 
-
-
         foreach my $progeny_name (@progeny_names) {
             my $progeny_rs = $self->_get_progeny_name($progeny_name);
             if (!$progeny_rs) {
@@ -85,29 +83,48 @@ sub add_progenies_existing_accessions {
                 return;
             }
 
-            #create relationship to cross
+            if ($female_parent) {
+                if ($overwrite_pedigrees) {
+				    my $previous_female_parent = $chado_schema->resultset('Stock::StockRelationship')->search({
+				        type_id => $female_parent_cvterm->cvterm_id(),
+				        object_id => $progeny_rs->stock_id(),
+			        });
+				    while(my $r = $previous_female_parent->next()){
+					    print STDERR "Deleted female parent stock_relationship_id: ".$r->stock_relationship_id."\n";
+					    $r->delete();
+				    }
+                }
+		        $progeny_rs->find_or_create_related('stock_relationship_objects', {
+                    type_id => $female_parent_cvterm->cvterm_id(),
+                    object_id => $progeny_rs->stock_id(),
+                    subject_id => $female_parent->subject_id(),
+                });
+            }
+
+			if ($male_parent) {
+                if ($overwrite_pedigrees) {
+				    my $previous_male_parent = $chado_schema->resultset('Stock::StockRelationship')->search({
+				        type_id => $male_parent_cvterm->cvterm_id(),
+				        object_id => $progeny_rs->stock_id(),
+			        });
+				    while(my $r = $previous_male_parent->next()){
+					    print STDERR "Deleted male parent stock_relationship_id: ".$r->stock_relationship_id."\n";
+					    $r->delete();
+				    }
+                }
+	       	    $progeny_rs->find_or_create_related('stock_relationship_objects', {
+	                type_id => $male_parent_cvterm->cvterm_id(),
+	                object_id => $progeny_rs->stock_id(),
+	                subject_id => $male_parent->subject_id(),
+	            });
+            }
+
+			#create relationship to cross
             $progeny_rs->find_or_create_related('stock_relationship_objects', {
                 type_id => $offspring_of_cvterm->cvterm_id(),
                 object_id => $cross_stock->stock_id(),
                 subject_id => $progeny_rs->stock_id(),
             });
-            #create relationship to female parent
-            if ($female_parent) {
-                $progeny_rs->find_or_create_related('stock_relationship_objects', {
-                    type_id => $female_parent_cvterm->cvterm_id(),
-                    object_id => $progeny_rs->stock_id(),
-                    subject_id => $female_parent->subject_id(),
-				});
-            }
-
-            #create relationship to male parent
-            if ($male_parent) {
-       	        $progeny_rs->find_or_create_related('stock_relationship_objects', {
-                    type_id => $male_parent_cvterm->cvterm_id(),
-                    object_id => $progeny_rs->stock_id(),
-                    subject_id => $male_parent->subject_id(),
-                });
-            }
         }
     };
 
@@ -119,11 +136,11 @@ sub add_progenies_existing_accessions {
     };
 
     if ($transaction_error) {
-        print STDERR "Transaction1 error creating a cross: $transaction_error\n";
-        return;
+		$return{error} = "Transaction error adding progenies: $transaction_error";
+		return \%return;
     }
 
-    return 1;
+	return \%return;
 }
 
 

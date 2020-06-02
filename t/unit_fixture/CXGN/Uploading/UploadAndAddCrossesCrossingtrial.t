@@ -11,6 +11,10 @@ use CXGN::Trial;
 use CXGN::Pedigree::AddCrossingtrial;
 use CXGN::Pedigree::AddCrosses;
 use CXGN::Pedigree::AddCrossInfo;
+use CXGN::Pedigree::AddProgeniesExistingAccessions;
+use CXGN::Pedigree::AddPedigrees;
+use Bio::GeneticRelationships::Individual;
+use Bio::GeneticRelationships::Pedigree;
 use CXGN::Cross;
 use LWP::UserAgent;
 
@@ -224,7 +228,7 @@ is_deeply($response, {'data'=> [{
         male_plant_name => undef
 }]}, 'crosses in a trial');
 
-# test uploading progenies with new accessions
+# test uploading 6 progenies with new accessions
 my $offspring_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "offspring_of", "stock_relationship")->cvterm_id();
 my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
 
@@ -258,23 +262,42 @@ is($after_add_progenies_accession, $before_add_progenies_accession + 6);
 is($after_add_progenies_relationship_all, $before_add_progenies_relationship_all + 18);
 is($after_add_progenies_offspring, $before_add_progenies_offspring + 6);
 
-# test uploading progenies with existing accessions
+
+#validate uploading 4 progenies using existing accessions (without previously stored pedigrees)
 $file = $f->config->{basepath}."/t/data/cross/update_progenies_existing_accessions.xls";
 $ua = LWP::UserAgent->new;
 $response = $ua->post(
-    'http://localhost:3010/ajax/cross/upload_progenies',
+    'http://localhost:3010/ajax/cross/validate_upload_existing_progenies',
     Content_Type => 'form-data',
     Content => [
         progenies_exist_upload_file => [ $file, 'update_progenies_existing_accessions.xls', Content_Type => 'application/vnd.ms-excel', ],
         "sgn_session_id" => $sgn_session_id
     ]
 );
+
 ok($response->is_success);
 $message = $response->decoded_content;
 $message_hash = decode_json $message;
-is_deeply($message_hash, {'success' => 1});
+my %response_hash = %$message_hash;
+my $message1 = $response_hash{'error_string'};
+my $message2 = $response_hash{'existing_pedigrees'};
+ok($message1 eq '');
+ok($message2 eq '');
 
-#added 4 progenies using existing accessions
+
+#test storing 4 progenies using existing accessions (without previously stored pedigrees)
+my $cross_name = 'test_add_cross';
+my @existing_accessions = qw(XG120015 XG120021 XG120068 XG120073);
+my $overwrite_pedigrees = 'true';
+my $adding_progenies = CXGN::Pedigree::AddProgeniesExistingAccessions->new({
+    chado_schema => $schema,
+    cross_name => $cross_name,
+    progeny_names => \@existing_accessions,
+});
+
+ok(my $return = $adding_progenies->add_progenies_existing_accessions($overwrite_pedigrees));
+ok(!exists($return->{error}));
+
 my $after_add_progenies_exist_stock = $schema->resultset("Stock::Stock")->search({})->count();
 my $after_add_progenies_exist_accession = $schema->resultset("Stock::Stock")->search({type_id => $accession_type_id})->count();
 my $after_add_progenies_exist_relationship_all = $schema->resultset("Stock::StockRelationship")->search({})->count();
@@ -284,6 +307,71 @@ is($after_add_progenies_exist_stock, $after_add_progenies_stock);
 is($after_add_progenies_exist_accession, $after_add_progenies_accession);
 is($after_add_progenies_exist_relationship_all, $after_add_progenies_relationship_all + 12);
 is($after_add_progenies_exist_offspring, $after_add_progenies_offspring + 4);
+
+
+#validate uploading 2 progenies using existing accessions (accessions have previously stored pedigrees)
+#adding pedigrees for testing
+my $female_parent = Bio::GeneticRelationships::Individual->new(name => 'TestAccession1');
+my $male_parent = Bio::GeneticRelationships::Individual->new(name => 'TestAccession2');
+my $pedigree1 = Bio::GeneticRelationships::Pedigree->new(name => 'TestAccession3', cross_type => 'biparental');
+$pedigree1->set_female_parent($female_parent);
+$pedigree1->set_male_parent($male_parent);
+
+my $pedigree2 = Bio::GeneticRelationships::Pedigree->new(name => 'TestAccession4', cross_type => 'biparental');
+$pedigree2->set_female_parent($female_parent);
+$pedigree2->set_male_parent($male_parent);
+
+my @pedigrees = ($pedigree1, $pedigree2);
+my $add_pedigrees = CXGN::Pedigree::AddPedigrees->new(schema => $schema, pedigrees => \@pedigrees);
+my $pedigree_return = $add_pedigrees->add_pedigrees();
+
+my $after_add_pedigrees_relationship_all = $schema->resultset("Stock::StockRelationship")->search({})->count();
+
+
+$file = $f->config->{basepath}."/t/data/cross/update_progenies_overwrite_pedigrees.xls";
+$ua = LWP::UserAgent->new;
+$response = $ua->post(
+    'http://localhost:3010/ajax/cross/validate_upload_existing_progenies',
+    Content_Type => 'form-data',
+    Content => [
+        progenies_exist_upload_file => [ $file, 'update_progenies_overwrite_pedigrees.xls', Content_Type => 'application/vnd.ms-excel', ],
+        "sgn_session_id" => $sgn_session_id
+    ]
+);
+
+ok($response->is_success);
+$message = $response->decoded_content;
+$message_hash = decode_json $message;
+%response_hash = %$message_hash;
+my $message3 = $response_hash{'error_string'};
+my $message4 = $response_hash{'existing_pedigrees'};
+ok($message3 eq '');
+ok($message4 ne '');
+
+
+#test storing 2 progenies using existing accessions (accessions have previously stored pedigrees)
+$cross_name = 'test_add_cross';
+@existing_accessions = qw(TestAccession3 TestAccession4);
+$overwrite_pedigrees = 'true';
+$adding_progenies = CXGN::Pedigree::AddProgeniesExistingAccessions->new({
+    chado_schema => $schema,
+    cross_name => $cross_name,
+    progeny_names => \@existing_accessions,
+});
+
+ok($return = $adding_progenies->add_progenies_existing_accessions($overwrite_pedigrees));
+ok(!exists($return->{error}));
+
+my $after_add_progenies_overwrite_stock = $schema->resultset("Stock::Stock")->search({})->count();
+my $after_add_progenies_overwrite_accession = $schema->resultset("Stock::Stock")->search({type_id => $accession_type_id})->count();
+my $after_add_progenies_overwrite_relationship_all = $schema->resultset("Stock::StockRelationship")->search({})->count();
+my $after_add_progenies_overwrite_offspring = $schema->resultset("Stock::StockRelationship")->search({type_id => $offspring_type_id})->count();
+
+is($after_add_progenies_overwrite_stock, $after_add_progenies_exist_stock);
+is($after_add_progenies_overwrite_accession, $after_add_progenies_exist_accession);
+is($after_add_progenies_overwrite_relationship_all, $after_add_pedigrees_relationship_all + 2);
+is($after_add_progenies_overwrite_offspring, $after_add_progenies_exist_offspring + 2);
+
 
 # test updating cross info by uploading
 my $before_updating_info_stocks = $schema->resultset("Stock::Stock")->search({})->count();
