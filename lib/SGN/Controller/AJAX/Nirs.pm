@@ -19,6 +19,7 @@ use CXGN::Blast::SeqQuery;
 # use Path::Tiny qw(path);
 use Cwd qw(cwd);
 use JSON::Parse 'parse_json';
+use JSON::XS;
 
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -283,24 +284,17 @@ close($outfile);
     my $preprocessing_boolean = $c->req->param('preprocessing_bool'); # args[2]
     my $num_iterations = $c->req->param('niter'); # args[3]
     my $modelmethod = $c->req->param('model_alg'); # args[4]
-    my $tune_length= $c->req->param('tunelen'); # args[5]
+    my $tune_length = $c->req->param('tunelen'); # args[5]
     my $rf_var_imp = $c->req->param('rf_var_imp'); # args[6]
     my $cv_scheme = $c->req->param('cv_id'); # args[7]
     # my $pheno_filepath = $tempfile . "_phenotype.txt"; # args[8]
+    my $trainset_filepath = $filename . "json"; # args[8]
+    # my $trainset_filepath, # args[9]
     my $testset_filepath, # args[9]
     my $trial1_filepath, # args[10]
     my $trial2_filepath, # args[11]
     my $trial3_filepath, # args[12]
-    my $nirs_output_filepath = $tempfile . "_" . "nirsFile.txt"; # args[13]
-
-
-    my $modelmethod,
-    my $tune_length,
-    my $cv_scheme; 
-
-
-    # $trait_id =~ tr/ /./;
-    # $trait_id =~ tr/\//./;
+    my $nirs_output_filepath = $tempfile . "_" . "nirsResults.txt"; # args[13]
 
 
     my $cmd = CXGN::Tools::Run->new({
