@@ -54,16 +54,20 @@
     </div>
 
   <div class="form-group form-inline">
-    <label for="trial_select_train">Available studies for model training: </label><div id="study_select_train"></div>
+    <label class="blast_select_label" for="train_select">Available&nbsptrials:&nbsp;</label>
+    <& /page/html_select.mas, name=>'train_select', id=>'train_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
     <br>
-    <button class="btn btn-primary" id="selectStudyTrain" type="submit" name="selectStudyTrain" value="selectStudyTrain">Select study (or studies) for model training</button>
+    </center>
+  <!--   <br> -->
+    <button class="btn btn-primary" id="selectStudyTrain" type="submit" name="selectStudyTrain" value="selectStudyTrain">Select training trial</button>
+  </div>
     <br>
-    <br>
-    </div>
 
   <div class="form-group form-inline">
-    <label for="trial_select_test">Available studies for model testing: </label><div id="study_select_test"></div>
+  	<label class="blast_select_label" for="test_select">Available&nbsptrials:&nbsp;</label>
+    <& /page/html_select.mas, name=>'test_select', id=>'test_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
     <br>
+    </center>
     <button class="btn btn-primary" id="selectStudyTest" type="submit" name="selectStudyTest" value="selectStudyTest">Select study (or studies) for model testing</button>
     <br>
     <br>
@@ -98,6 +102,7 @@
   <div class="form-group form-inline">
    <label for = niter_select>Number of sampling iterations&nbsp</label>
    <input type="number" id="niter_select" name="niter_select" min="1" max="100" step="1" value="10">
+   <button class="btn btn-primary" id="selectIterations" type="submit" name="selectIterations" value="selectIterations">Select</button>
    <br>
    <br>
   </div> 
@@ -106,7 +111,7 @@
   <div class = "form-group form-inline">
    <label for = model_algorithm_select>Available model algorithms: </label>
    <select class="form-control input-sm" id="model_algorithm_select">
-    <option selected value="pls">PLSR</option>
+    <option value="plsr">PLSR</option>
     <option value="rf">Random Forest</option>
     <option value="svmLinear">SVM with linear kernel</option>
     <option value="svmRadial">SVM with radial kernel</option>
@@ -123,6 +128,7 @@
   <div class="form-group form-inline">
    <label for = tuneLength_select>Tuning length&nbsp</label>
    <input type="number" id="tuneLength_select" name="tuneLength_select" min="1" max="30" step="1" value="10">
+   <button class="btn btn-primary" id="selectTunebtn" type="submit" name="selectTunebtn" value="selectTunebtn">Select</button>
    <br>
    <br>
   </div> 
@@ -206,8 +212,10 @@ jQuery(document).ready(function() {
   
   jQuery('#dataset_select').click(function() {
     $('#pheno_select').attr("disabled",true).html('');
+    $('#train_select').attr("disabled",true).html('');
     $('#trait_histogram_plot').html('');
     $('#nirs_output').empty();
+    $('#preprocessing_select').attr('checked', false);
   });
 
   jQuery('#selectDataset').click(function() {
@@ -227,6 +235,13 @@ jQuery(document).ready(function() {
                 }
                 $('#pheno_select').attr("disabled",false).html(option_html);
                 jQuery('#tempfile').html(response.tempfile);
+
+                var trial_html = '<option selected="selected" value=""> </option>';
+                for (var i = 0; i < response.trialname.length; i++) {
+                    trial_html += '<option value="'+response.trialname[i]+'">'+(response.trialname[i])+'</option>';
+                }
+                $('#train_select').attr("disabled",false).html(trial_html);
+                $('#test_select').attr("disabled",false).html(trial_html);
             }
         },
         error: function(response) {
@@ -235,60 +250,77 @@ jQuery(document).ready(function() {
     });
   });
 
-  jQuery('#selectStudyTrain').click(function() {
-    if (!jQuery('#dataset_select').val()) {
-      alert("Please select a dataset.")
+  jQuery('#selectCV').on('click', function() {
+    if (!jQuery('#cv_select').val()) {
+      alert("Please select a cross-validation method.")
     } else {
-      alert("Inside study train preview"); // TODO comment this out after debugging
-      var study_train_id = jQuery('#available_studies_train').val();
+      var cv_id = jQuery('#cv_select').val();
     $.ajax({
-        url: '/ajax/Nirs/get_training_study',
-        data: {
-          'study_train_id': study_train_id
-        },
-        success: function(response) {
-            if (response.error) {
-                $('#trial_select_train').val('ERROR');
-            } else {
-                var option_html = '<option selected="selected" value=""> </option>';
-                for (var i = 0; i < response.options.length; i++) {
-                    option_html += '<option value="'+response.options[i][1]+'">'+(response.options[i][1])+'</option>';
-                }
-                jQuery('#tempfile').html(response.tempfile);
-            }
-        },
-        error: function(response) {
-            alert("An error occurred. The service may be temporarily unavailable.");
-        }
+        url: '/ajax/Nirs/get_cross_validation',
+        data: {'cv_id': cv_id },
       }); // end .ajax
     }; // end else statement 
   });
 
-  jQuery('#selectStudyTest').click(function() {
-    if (!jQuery('#dataset_select').val()) {
-      alert("Please select a dataset.")
-    } else {
-      alert("Inside study test preview"); // TODO comment this out after debugging
-      var study_test_id = jQuery('#available_studies_test').val();
+
+  jQuery('#selectStudyTrain').on('click', function() {
+    var train_id = jQuery('#train_select').val();
+    // alert(train_id);
     $.ajax({
-        url: '/ajax/Nirs/get_testing_study',
+        url: '/ajax/Nirs/get_training_study',
         data: {
-          'study_test_id': study_test_id
+          'train_id': train_id
         },
-        success: function(response) {
-            if (response.error) {
-                $('#trial_select_test').val('ERROR');
-            } else {
-                var option_html = '<option selected="selected" value=""> </option>';
-                for (var i = 0; i < response.options.length; i++) {
-                    option_html += '<option value="'+response.options[i][1]+'">'+(response.options[i][1])+'</option>';
-                }
-                jQuery('#tempfile').html(response.tempfile);
-            }
-        },
-        error: function(response) {
-            alert("An error occurred. The service may be temporarily unavailable.");
-        }
+      }); // end .ajax    // }; // end else statement 
+  });
+
+  jQuery('#selectStudyTest').click(function() {
+  	var test_id = jQuery('#test_select').val();
+  	// if (train_id = test_id){
+  		// alert(test_id);
+  	// }else{
+  	    $.ajax({
+  	        url: '/ajax/Nirs/get_test_study',
+  	        data: {
+  	          'test_id': test_id
+  	        },
+  	      }); // end .ajax    // }; // end else statement
+  	    // }
+  });
+
+jQuery('#selectIterations').on('click', function() {
+    if (!jQuery('#niter_select').val()) {
+      alert("Please select number of iterations.")
+    } else {
+      var niter_id = jQuery('#niter_select').val();
+    $.ajax({
+        url: '/ajax/Nirs/get_niter',
+        data: {'niter_id': niter_id },
+      }); // end .ajax
+    }; // end else statement 
+  });
+
+jQuery('#selectAlgorithm').on('click', function() {
+    if (!jQuery('#model_algorithm_select').val()) {
+      alert("Please select an algorithm.")
+    } else {
+      var algt_id = jQuery('#model_algorithm_select').val();
+    $.ajax({
+        url: '/ajax/Nirs/get_algorithm',
+        data: {'algorithm_id': algt_id },
+      }); // end .ajax
+    }; // end else statement 
+  });
+   
+jQuery('#selectTunebtn').on('click', function() {
+    if (!jQuery('#tuneLength_select').val()) {
+      alert("Please select number of Tuning.")
+    } else {
+      var tune_id = jQuery('#tuneLength_select').val();
+      // alert(tune_id);
+    $.ajax({
+        url: '/ajax/Nirs/get_tune',
+        data: {'tune_id': tune_id },
       }); // end .ajax
     }; // end else statement 
   });
@@ -297,15 +329,12 @@ jQuery(document).ready(function() {
     if (!jQuery('#pheno_select').val()) {
       alert("Please select a dataset and trait.")
     } else {
-      //alert("Inside trait preview");
       var tempfile = jQuery('#tempfile').html();
       var trait = jQuery('#pheno_select').val();
-      //alert(trait);
       jQuery.ajax( {
           url: '/ajax/Nirs/getdata',
           data: { 'file' : tempfile },
           success: function(r)  {
-          alert("data grabbed "+JSON.stringify(r.data)); // TODO comment this after debugging
           var v = {
               "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
               "width": 200,
@@ -325,10 +354,7 @@ jQuery(document).ready(function() {
               }
              }
             };
-
-   //alert("embedding"+ JSON.stringify(v));
             vegaEmbed("#trait_histogram_plot", v);
-            //alert("done");
           },
 
 
@@ -337,6 +363,17 @@ jQuery(document).ready(function() {
     };
   });
 
+jQuery('#selectAlgorithm').on('click', function() {
+    if (!jQuery('#model_algorithm_select').val()) {
+      alert("Please select an algorithm.")
+    } else {
+      var algt_id = jQuery('#model_algorithm_select').val();
+    $.ajax({
+        url: '/ajax/Nirs/get_algorithm',
+        data: {'algorithm_id': algt_id },
+      }); // end .ajax
+    }; // end else statement 
+  });
 
   jQuery('#runTestModelPerformance').click( function () {
     if (!jQuery('#pheno_select').val()) {
@@ -344,6 +381,9 @@ jQuery(document).ready(function() {
       $('#nirs_output').empty();
     } else {
       $('#nirs_output').empty();
+      if ($('#preprocessing_select').is(':checked')) {
+          var preprocessing_bool = 1;
+        }
       if ($('#pheno_select').val() != ""){
         var cv_id = $('#cv_select').val();
         var dataset_id = $('#available_datasets').val();
