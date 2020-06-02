@@ -55,6 +55,7 @@ use Time::Piece;
 use CXGN::Pedigree::AddCrossingtrial;
 use CXGN::Pedigree::AddCrosses;
 use CXGN::Pedigree::AddCrossInfo;
+use CXGN::Pedigree::AddCrossTissueSamples;
 use Scalar::Util qw(looks_like_number);
 
 has 'bcs_schema' => (
@@ -837,6 +838,21 @@ sub save_ona_cross_info {
                     $cross_add_info->add_info();
                 }
             }
+        }
+
+        foreach my $sample_type(keys %tissue_culture_details){
+                my %sample_info_hash = %{$tissue_culture_details{$sample_type}};
+                foreach my $cross_name (keys %sample_info_hash){
+                    my $value = $sample_info_hash{$cross_name};
+                    my $cross_add_samples = CXGN::Pedigree::AddCrossTissueSamples->new({
+                        chado_schema => $schema,
+                        cross_name => $cross_name,
+                        key => $sample_type,
+                        value => $value,
+                    });
+
+                    $cross_add_samples->add_samples();
+                }
         }
 
         #print STDERR Dumper \%cross_info;
