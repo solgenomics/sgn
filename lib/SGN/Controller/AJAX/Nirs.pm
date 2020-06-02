@@ -53,27 +53,76 @@ sub shared_phenotypes: Path('/ajax/Nirs/shared_phenotypes') : {
     my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath);
     my $phenotype_data_ref = $ds2->retrieve_phenotypes();
 
+    my $trials_ref = $ds2->retrieve_trials();
+    my @trials = @$trials_ref;
+
+    my $dbh = $c->dbc->dbh();
+    my @trial_name= ();
+    foreach my $name (@trials){
+        my $sql = "SELECT trial_name from public.trials where trial_id=?;";
+
+        my $fh_db= $dbh->prepare($sql);    
+        $fh_db->execute($name);
+        while (my @trl = $fh_db->fetchrow_array()) {
+            push @trial_name, @trl;
+        }
+    }
+
     print STDERR Dumper(@trait_info);
+    print STDERR Dumper(@trial_name);
     $c->stash->{rest} = {
         options => \@trait_info,
+        trialname => \@trial_name,
         tempfile => $tempfile."_phenotype.txt",
-#        tempfile => $file_response,
     };
 }
 
-sub get_training_study: Path(/ajax/Nirs/get_training_study) : {
+sub get_training_study: Path('/ajax/Nirs/get_training_study') : {
     my $self = shift;
     my $c = shift;
-    my $dataset_id = $c->req->param('dataset_id');
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-    my $ds = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id);
-    my $trials = $ds->retrieve_trials();
-    my @trials_info;
-    foreach my $t (@$trials) {
-          my $tobj = CXGN::Cvterm->new({ schema=>$schema, cvterm_id => $t });
-        push @trials_info, [ $tobj->cvterm_id(), $tobj->name()];
-    }
+    my $train_id = $c->req->param('train_id');
+    print STDERR Dumper($train_id);
+
+}
+
+sub get_test_study: Path('/ajax/Nirs/get_test_study') : {
+    my $self = shift;
+    my $c = shift;
+    my $test_id = $c->req->param('test_id');
+    print STDERR Dumper($test_id);
+
+}
+
+sub get_cross_validation: Path('/ajax/Nirs/get_cross_validation') : {
+    my $self = shift;
+    my $c = shift;
+    my $crossv_id = $c->req->param('cv_id');
+    print STDERR Dumper($crossv_id);
+    print "The cv_id is $crossv_id \n";
+
+}
+
+sub get_niter: Path('/ajax/Nirs/get_niter') : {
+    my $self = shift;
+    my $c = shift;
+    my $niter_id = $c->req->param('niter_id');
+    print STDERR Dumper($niter_id);
+
+}
+
+sub get_algorithm: Path('/ajax/Nirs/get_algorithm') : {
+    my $self = shift;
+    my $c = shift;
+    my $algo_id = $c->req->param('algorithm_id');
+    print STDERR Dumper($algo_id);
+}
+
+sub get_tune: Path('/ajax/Nirs/get_tune') : {
+    my $self = shift;
+    my $c = shift;
+    my $tune_id = $c->req->param('tune_id');
+    print STDERR Dumper($tune_id);
+
 }
 
 sub extract_trait_data :Path('/ajax/Nirs/getdata') Args(0) {
@@ -145,8 +194,6 @@ sub generate_results: Path('/ajax/Nirs/generate_results') : {
     my $temppath = $nirs_tmp_output . "/" . $tempfile;
     my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath);
     my $phenotype_data_ref = $ds->retrieve_phenotypes($pheno_filepath);
-
-    print "***************************************\n";
 
     my @plot_name;
     open(my $f, '<', $pheno_filepath) or die;
@@ -227,7 +274,8 @@ foreach my $data (@formated){
 	print $outfile $data;
 }
 
-     
+close($outfile);
+
     # my $phenotype_data_ref2 = $h->retrieve_phenotypes($pheno_filepath);
 
     # my $figure3file = $tempfile . "_" . "figure3.png";
