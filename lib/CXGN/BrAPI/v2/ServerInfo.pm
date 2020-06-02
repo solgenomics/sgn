@@ -125,7 +125,9 @@ sub search {
 		[['application/json'],['GET'], 'seedlots',['2.0']],
 		[['application/json'],['POST'], 'seedlots',['2.0']],
 		[['application/json'],['GET'], 'seedlots/transactions',['2.0']],
+		[['application/json'],['POST'], 'seedlots/transactions',['2.0']],
 		[['application/json'],['GET'], 'seedlots/{seedLotDbId}',['2.0']],
+		[['application/json'],['PUT'], 'seedlots/{seedLotDbId}',['2.0']],
 		[['application/json'],['GET'], 'seedlots/{seedLotDbId}/transactions',['2.0']],
 	);
 

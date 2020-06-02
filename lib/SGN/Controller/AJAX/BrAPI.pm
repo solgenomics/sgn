@@ -4504,11 +4504,11 @@ sub seedlots_GET {
 sub seedlots_POST {
 	my $self = shift;
 	my $c = shift;
-	my ($auth) = _authenticate_user($c);
+	my ($auth,$user_id) = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('SeedLots');
-	my $brapi_package_result = $brapi_module->store_seedlots($clean_inputs,$c);
+	my $brapi_package_result = $brapi_module->store_seedlots($clean_inputs,$c,$user_id);
 
 	my $status = $brapi_package_result->{status};
 	my $http_status_code = _get_http_status_code($status);
@@ -4526,6 +4526,20 @@ sub seedlot_transactions_GET {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('SeedLots');
 	my $brapi_package_result = $brapi_module->all_transactions($clean_inputs);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub seedlot_transactions_POST {
+	my $self = shift;
+	my $c = shift;
+	my ($auth,$user_id) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('SeedLots');
+	my $brapi_package_result = $brapi_module->store_seedlot_transaction($clean_inputs,$c,$user_id);
+	my $status = $brapi_package_result->{status};
+	my $http_status_code = _get_http_status_code($status);
+
 	_standard_response_construction($c, $brapi_package_result);
 }
 
@@ -4547,6 +4561,19 @@ sub seedlot_single_fetch_GET {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('SeedLots');
 	my $brapi_package_result = $brapi_module->detail($c->stash->{seedLotDbId});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub seedlot_single_fetch_PUT {
+	my $self = shift;
+	my $c = shift;
+	my ($auth,$user_id) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('SeedLots');
+	my $brapi_package_result = $brapi_module->update_seedlot($c->stash->{seedLotDbId}, $clean_inputs,$c,$user_id);
+	my $status = $brapi_package_result->{status};
+	my $http_status_code = _get_http_status_code($status);
 	_standard_response_construction($c, $brapi_package_result);
 }
 
