@@ -456,6 +456,40 @@ sub get_cross_properties :Path('/ajax/cross/properties') Args(1) {
 }
 
 
+sub get_cross_embryo_ids :Path('/ajax/cross/embryo_ids') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $cross_id = shift;
+
+    print STDERR "CROSS ID =".Dumper($cross_id)."\n";
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $cross_samples_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_culture_data_json', 'stock_property')->cvterm_id();
+    my $cross_samples = $schema->resultset("Stock::Stockprop")->find({stock_id => $cross_id, type_id => $cross_samples_cvterm});
+
+    my $samples_json_string;
+    if($cross_samples){
+        $samples_json_string = $cross_samples->value();
+    }
+
+    my $samples_hash_ref ={};
+    if($samples_json_string){
+        $samples_hash_ref = decode_json $samples_json_string;
+    }
+
+    my $embryo_ids = $samples_hash_ref->{'Embryo IDs'};
+    print STDERR "EMBRYO IDS =".Dumper($embryo_ids)."\n";
+    my @ids;
+    foreach my $id (@$embryo_ids){
+    push @ids, {
+        embryo_ids => $id,
+        }
+    }
+    $c->stash->{rest} = { data => \@ids };
+
+}
+
+
  sub save_property_check :Path('/cross/property/check') Args(1) {
     my $self = shift;
     my $c = shift;

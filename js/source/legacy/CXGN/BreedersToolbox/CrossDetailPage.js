@@ -330,6 +330,18 @@ jQuery(document).ready(function() {
     }
 
 
+    jQuery('#embryo_ids_section_onswitch').click(function(){
+        display_embryo_ids(get_cross_id());
+    });
 
+    function display_embryo_ids(cross_id){
+        var embryo_table = jQuery('#embryo_ids_table').DataTable({
+            'ajax': '/ajax/cross/embryo_ids/'+cross_id,
+            columns: [
+                { title: "Embryo IDs", "data": "embryo_ids" },
+            ],
+        });
+        return;
+    }
 
 });
