@@ -1072,12 +1072,34 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <& /page/page_title.mas, title=>"Select statistics to calculate" &>
 
                     <select class="form-control" id="drone_imagery_calculate_statistics_select_input">
+                        <option value="">Select A Model</option>
                         <option value="sommer_grm_spatial_heatmap">Sommer Spatial GBLUPs y~replicate+GRM+spatial. Heatmap of Spatial Effects</option>
                         <option value="sommer_grm_spatial_genetic_correlations">Sommer Spatial GBLUPs y~replicate+GRM+spatial. Genetic Correlations</option>
                         <option value="lmer_germplasmname">LMER y~replicate+1|Germplasm. Percent Variance Explained by Germplasm</option>
                         <option value="lmer_germplasmname_block">LMER y~blockNumber+1|Germplasm. Percent Variance Explained by Germplasm</option>
                         <option value="marss_germplasmname_block">MARSS prediction for each germplasm</option>
                     </select>
+
+                    <div id="drone_imagery_calculate_statistics_genotyping_protocol_div" style="display:none">
+                        <hr>
+                        <form class="form-horizontal">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Genotyping Protocol To Calculate Genomic Relationship Matrix: </label>
+                                <div class="col-sm-9" >
+                                    <div id="drone_imagery_calculate_statistics_genotyping_protocol_select_div"></div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Compute Genotypes From Parents: </label>
+                                <div class="col-sm-9" >
+                                    <select class="form-control" id="drone_image_calculate_statistics_genotyping_protocol_compute_from_parents_select">
+                                        <option value="no">No</option>
+                                        <option value="yes">Yes</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
 
                     <div id="drone_imagery_calculate_statistics_marss_div" style="display:none">
                         $$x_t = Bx_{t-1} + u + w_t\\ w_t \sim MVN(0,Q)\\ y_t = Zx_t + a + v_t\\ v_t \sim MVN(0,R)\\ x_0 \sim MVN(\pi, \Lambda)$$
@@ -3385,6 +3407,8 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#drone_imagery_calculate_statistics_trait_select_step').click(function(){
+        get_select_box('genotyping_protocol', 'drone_imagery_calculate_statistics_genotyping_protocol_select_div', { 'name' : 'drone_image_calculate_statistics_genotyping_protocol_select', 'id' : 'drone_image_calculate_statistics_genotyping_protocol_select', 'empty':1 });
+
         manage_drone_imagery_calculate_statistics_trait_ids = [];
 
         if (manage_drone_imagery_calculate_statistics_observation_variable_type == 'time_ontology') {
@@ -3419,6 +3443,12 @@ jQuery(document).ready(function() {
         else {
             jQuery('#drone_imagery_calculate_statistics_marss_div').hide();
         }
+        if (manage_drone_imagery_calculate_statistics_select == 'sommer_grm_spatial_heatmap' || manage_drone_imagery_calculate_statistics_select == 'sommer_grm_spatial_genetic_correlations') {
+            jQuery('#drone_imagery_calculate_statistics_genotyping_protocol_div').show();
+        }
+        else {
+            jQuery('#drone_imagery_calculate_statistics_genotyping_protocol_div').hide();
+        }
     });
 
     jQuery('#drone_imagery_calculate_statistics_select_step').click(function(){
@@ -3436,7 +3466,9 @@ jQuery(document).ready(function() {
                 'observation_variable_id_list':JSON.stringify(manage_drone_imagery_calculate_statistics_trait_ids),
                 'field_trial_id_list':JSON.stringify(manage_drone_imagery_calculate_statistics_field_trial_id_array),
                 'statistics_select':manage_drone_imagery_calculate_statistics_select,
-                'statistics_select_marss_options':jQuery('#drone_imagery_calculate_statistics_select_marss').val()
+                'statistics_select_marss_options':jQuery('#drone_imagery_calculate_statistics_select_marss').val(),
+                'protocol_id':jQuery('#drone_image_calculate_statistics_genotyping_protocol_select').val(),
+                'compute_from_parents':jQuery('#drone_image_calculate_statistics_genotyping_protocol_compute_from_parents_select').val()
             },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");

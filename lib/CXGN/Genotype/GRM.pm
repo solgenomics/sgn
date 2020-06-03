@@ -415,7 +415,7 @@ sub get_grm {
     $cmd .= 'A <- A.mat(mat, min.MAF='.$maf.', max.missing='.$marker_filter.', impute.method=\'mean\', n.core='.$number_system_cores.', return.imputed=FALSE);
     ';
     #}
-    # Ensure positive definite matrix
+    # Ensure positive definite matrix. Taken from Schaeffer
     $cmd .= 'E = eigen(A);
     ev = E\$values;
     U = E\$vectors;
@@ -490,7 +490,7 @@ sub download_grm {
     my $download_format = $self->download_format();
     my $grm_tempfile = $self->grm_temp_file();
 
-    my $key = $self->grm_cache_key("download_grm_v01".$download_format);
+    my $key = $self->grm_cache_key("download_grm_v02".$download_format);
     $self->_cache_key($key);
     $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
 
@@ -517,14 +517,16 @@ sub download_grm {
         my $data = '';
         if ($download_format eq 'matrix') {
             my @header = ("stock_id");
-            push @header, @$stock_ids;
+            foreach (@$stock_ids) {
+                push @header, "S".$_;
+            }
 
             my $header_line = join "\t", @header;
             $data = "$header_line\n";
 
             my $row_num = 0;
             foreach my $s (@$stock_ids) {
-                my @row = ($s);
+                my @row = ("S".$s);
                 my $col_num = 0;
                 foreach my $c (@$stock_ids) {
                     push @row, $grm[$row_num]->[$col_num];

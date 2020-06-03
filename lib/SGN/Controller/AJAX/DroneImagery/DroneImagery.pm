@@ -24,6 +24,7 @@ use CXGN::DroneImagery::ImagesSearch;
 use URI::Encode qw(uri_encode uri_decode);
 use File::Basename qw | basename dirname|;
 use File::Slurp qw(write_file);
+use File::Temp 'tempfile';
 use CXGN::Calendar;
 use Image::Size;
 use Text::CSV;
@@ -213,16 +214,19 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $statistics_select = $c->req->param('statistics_select');
     my $field_trial_id_list = $c->req->param('field_trial_id_list') ? decode_json $c->req->param('field_trial_id_list') : [];
     my $field_trial_id_list_string = join ',', @$field_trial_id_list;
     my $trait_id_list = $c->req->param('observation_variable_id_list') ? decode_json $c->req->param('observation_variable_id_list') : [];
+    my $compute_from_parents = $c->req->param('compute_from_parents') eq 'yes' ? 1 : 0;
+    my $protocol_id = $c->req->param('protocol_id');
 
     my @results;
 
-    if ($statistics_select eq 'lmer_germplasmname' || $statistics_select eq 'lmer_germplasmname_block') {
+    if ($statistics_select eq 'lmer_germplasmname' || $statistics_select eq 'lmer_germplasmname_block' || $statistics_select eq 'sommer_grm_spatial_heatmap' || $statistics_select eq 'sommer_grm_spatial_genetic_correlations') {
 
         my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
             'MaterializedViewTable',
@@ -265,7 +269,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         foreach (@$data) {
             my $germplasm_name = $_->{germplasm_uniquename};
             my $germplasm_stock_id = $_->{germplasm_stock_id};
-            my @row = ($_->{obsunit_rep}, $_->{obsunit_block}, $germplasm_stock_id);
+            my @row = ($_->{obsunit_rep}, $_->{obsunit_block}, "S".$germplasm_stock_id, $_->{obsunit_row_number}, $_->{obsunit_col_number});
             foreach my $t (@sorted_trait_names) {
                 if (defined($phenotype_data{$_->{observationunit_uniquename}}->{$t})) {
                     push @row, $phenotype_data{$_->{observationunit_uniquename}}->{$t} + 0;
@@ -274,54 +278,109 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     push @row, 'NA';
                 }
             }
-            push @data_matrix, @row;
+            push @data_matrix, \@row;
         }
 
-        my @phenotype_header = ("replicate", "block", "germplasmDbId");
+        my @phenotype_header = ("replicate", "block", "id", "rowNumber", "colNumber");
         my $num_col_before_traits = scalar(@phenotype_header);
         foreach (@sorted_trait_names) {
             push @phenotype_header, $trait_name_encoder{$_};
         }
-        print STDERR Dumper \@data_matrix;
+        my $header_string = join ',', @phenotype_header;
 
-        my $rmatrix = R::YapRI::Data::Matrix->new({
-            name => 'matrix1',
-            coln => scalar(@phenotype_header),
-            rown => scalar(@$data),
-            colnames => \@phenotype_header,
-            data => \@data_matrix
-        });
+        my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
+        my $tmp_stats_dir = $shared_cluster_dir_config."/tmp_drone_statistics";
+        mkdir $tmp_stats_dir if ! -d $tmp_stats_dir;
+        my ($stats_tempfile_fh, $stats_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+
+        open(my $F, ">", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
+            print $F $header_string."\n";
+            foreach (@data_matrix) {
+                my $line = join ',', @$_;
+                print $F "$line\n";
+            }
+        close($F);
+
+        my $grm_file;
+        if ($statistics_select eq 'sommer_grm_spatial_heatmap' || $statistics_select eq 'sommer_grm_spatial_genetic_correlations') {
+
+            my %seen_accession_stock_ids;
+            foreach my $trial_id (@$field_trial_id_list) {
+                my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
+                my $accessions = $trial->get_accessions();
+                foreach (@$accessions) {
+                    $seen_accession_stock_ids{$_->{stock_id}}++;
+                }
+            }
+            my @accession_ids = keys %seen_accession_stock_ids;
+
+            my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
+            my $tmp_grm_dir = $shared_cluster_dir_config."/tmp_genotype_download_grm";
+            mkdir $tmp_grm_dir if ! -d $tmp_grm_dir;
+            my ($grm_tempfile_fh, $grm_tempfile) = tempfile("wizard_download_grm_XXXXX", DIR=> $tmp_grm_dir);
+            my ($grm_out_tempfile_fh, $grm_out_tempfile) = tempfile("wizard_download_grm_XXXXX", DIR=> $tmp_grm_dir);
+
+            my $geno = CXGN::Genotype::GRM->new({
+                bcs_schema=>$schema,
+                grm_temp_file=>$grm_tempfile,
+                people_schema=>$people_schema,
+                cache_root=>$c->config->{cache_file_path},
+                accession_id_list=>\@accession_ids,
+                protocol_id=>$protocol_id,
+                get_grm_for_parental_accessions=>$compute_from_parents,
+                download_format=>'matrix',
+                # minor_allele_frequency=>$minor_allele_frequency,
+                # marker_filter=>$marker_filter,
+                # individuals_filter=>$individuals_filter
+            });
+            my $grm_data = $geno->download_grm(
+                'data',
+                $shared_cluster_dir_config,
+                $c->config->{backend},
+                $c->config->{cluster_host},
+                $c->config->{'web_cluster_queue'},
+                $c->config->{basepath}
+            );
+
+            open(my $F2, ">", $grm_out_tempfile) || die "Can't open file ".$grm_out_tempfile;
+                print $F2 $grm_data;
+            close($F2);
+            $grm_file = $grm_out_tempfile;
+        }
 
         if ($statistics_select eq 'lmer_germplasmname') {
             foreach my $t (@sorted_trait_names) {
-                my $rbase = R::YapRI::Base->new();
-                my $r_block = $rbase->create_block('r_block');
-                $rmatrix->send_rbase($rbase, 'r_block');
-                $r_block->add_command('library(lme4)');
-                $r_block->add_command('mixed.lmer <- lmer('.$trait_name_encoder{$t}.' ~ replicate + (1|germplasmDbId), data = data.frame(matrix1), na.action = na.omit )');
-                $r_block->add_command('mixed.lmer.summary <- summary(mixed.lmer)');
-                $r_block->add_command('mixed.lmer.matrix <- matrix(NA,nrow = 1, ncol = 1)');
-                $r_block->add_command('mixed.lmer.matrix[1,1] <- mixed.lmer.summary$varcor$germplasmDbId[1,1]/(mixed.lmer.summary$varcor$germplasmDbId[1,1] + (mixed.lmer.summary$sigma)^2)');
-                $r_block->run_block();
-                my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','mixed.lmer.matrix');
-                #print STDERR Dumper $result_matrix;
-                push @results, [$t, ($result_matrix->{data}->[0] * 100)];
+                my $cmd = 'R -e "library(lme4); library(data.table);
+                mat <- fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\');
+                mixed.lmer <- lmer('.$trait_name_encoder{$t}.' ~ replicate + (1|id), data = mat, na.action = na.omit );
+                mixed.lmer.summary <- summary(mixed.lmer);
+                ve <- mixed.lmer.summary\$varcor\$id[1,1]/(mixed.lmer.summary\$varcor\$id[1,1] + (mixed.lmer.summary\$sigma)^2);
+                ve;"';
+                my $status = system($cmd);
             }
         }
         elsif ($statistics_select eq 'lmer_germplasmname_block') {
             foreach my $t (@sorted_trait_names) {
-                my $rbase = R::YapRI::Base->new();
-                my $r_block = $rbase->create_block('r_block');
-                $rmatrix->send_rbase($rbase, 'r_block');
-                $r_block->add_command('library(lme4)');
-                $r_block->add_command('mixed.lmer <- lmer('.$trait_name_encoder{$t}.' ~ block + (1|germplasmDbId), data = data.frame(matrix1), na.action = na.omit )');
-                $r_block->add_command('mixed.lmer.summary <- summary(mixed.lmer)');
-                $r_block->add_command('mixed.lmer.matrix <- matrix(NA,nrow = 1, ncol = 1)');
-                $r_block->add_command('mixed.lmer.matrix[1,1] <- mixed.lmer.summary$varcor$germplasmDbId[1,1]/(mixed.lmer.summary$varcor$germplasmDbId[1,1] + (mixed.lmer.summary$sigma)^2)');
-                $r_block->run_block();
-                my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','mixed.lmer.matrix');
-                #print STDERR Dumper $result_matrix;
-                push @results, [$t, ($result_matrix->{data}->[0] * 100)];
+                my $cmd = 'R -e "library(lme4);
+                mixed.lmer <- lmer('.$trait_name_encoder{$t}.' ~ block + (1|id), data = data.frame(matrix1), na.action = na.omit );
+                mixed.lmer.summary <- summary(mixed.lmer);
+                mixed.lmer.matrix <- matrix(NA,nrow = 1, ncol = 1);
+                mixed.lmer.matrix[1,1] <- mixed.lmer.summary\$varcor\$id[1,1]/(mixed.lmer.summary\$varcor\$id[1,1] + (mixed.lmer.summary\$sigma)^2);"';
+            }
+        }
+        elsif ($statistics_select eq 'sommer_grm_spatial_heatmap') {
+            foreach my $t (@sorted_trait_names) {
+                my $cmd = 'R -e "library(sommer); library(data.table);
+                mat <- data.frame(fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\'));
+                geno_mat <- data.frame(fread(\''.$grm_file.'\', header=TRUE, sep=\'\t\'));
+                row.names(geno_mat) <- geno_mat\$stock_id;
+                geno_mat\$stock_id <- NULL;
+                geno_mat;
+                head(mat);
+                #mix <- mmer('.$trait_name_encoder{$t}.'~replicate, random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber,colNumber)), rcov=~vs(units), data=mat);
+                mix <- mmer('.$trait_name_encoder{$t}.'~1, rcov=~vs(units), data=mat);
+                summary(mix);"';
+                my $status = system($cmd);
             }
         }
     }
