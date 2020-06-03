@@ -130,6 +130,62 @@ $identifier_prefix => ''
 </div>
 
 
+<&|  /page/info_section.mas, title => "Embryo IDs", collapsible => 1, collapsed => 0 &>
+    <div id="embryo_ids_div">
+        [loading...]
+    </div>
+</&>
+
+
+<&|  /page/info_section.mas, title => "Subculture IDs", collapsible => 1, collapsed => 0 &>
+    <div id="subculture_ids_div">
+        [loading...]
+    </div>
+</&>
+
+
+<&|  /page/info_section.mas, title => "Rooting IDs", collapsible => 1, collapsed => 0 &>
+    <div id="rooting_ids_div">
+        [loading...]
+    </div>
+</&>
+
+
+<&|  /page/info_section.mas, title => "Weaning1 IDs", collapsible => 1, collapsed => 0 &>
+    <div id="weaning1_ids_div">
+        [loading...]
+    </div>
+</&>
+
+
+<&|  /page/info_section.mas, title => "Weaning2 IDs", collapsible => 1, collapsed => 0 &>
+    <div id="weaning2_ids_div">
+        [loading...]
+    </div>
+</&>
+
+
+<&|  /page/info_section.mas, title => "Screenhouse IDs", collapsible => 1, collapsed => 0 &>
+    <div id="screenhouse_ids_div">
+        [loading...]
+    </div>
+</&>
+
+
+<&|  /page/info_section.mas, title => "Hardening IDs", collapsible => 1, collapsed => 0 &>
+    <div id="hardening_ids_div">
+        [loading...]
+    </div>
+</&>
+
+
+<&|  /page/info_section.mas, title => "Openfield IDs", collapsible => 1, collapsed => 0 &>
+    <div id="openfield_ids_div">
+        [loading...]
+    </div>
+</&>
+
+
 <& /breeders_toolbox/seedlots_section.mas, stock_id=>$cross_id, stock_type=>'cross', stock_uniquename=>$cross_name &>
 
 % my $add_progeny_link = "[add progeny]";
