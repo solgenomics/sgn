@@ -243,18 +243,13 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             return;
         }
 
-        my %germplasm_name_encoder;
-        my $germplasm_name_encoded = 1;
         my %trait_name_encoder;
         my $trait_name_encoded = 1;
         my %phenotype_data;
         foreach my $obs_unit (@$data){
             my $germplasm_name = $obs_unit->{germplasm_uniquename};
+            my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
             my $observations = $obs_unit->{observations};
-            if (!exists($germplasm_name_encoder{$germplasm_name})) {
-                $germplasm_name_encoder{$germplasm_name} = $germplasm_name_encoded;
-                $germplasm_name_encoded++;
-            }
             foreach (@$observations){
                 $phenotype_data{$obs_unit->{observationunit_uniquename}}->{$_->{trait_name}} = $_->{value};
             }
@@ -269,7 +264,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         my @data_matrix;
         foreach (@$data) {
             my $germplasm_name = $_->{germplasm_uniquename};
-            my @row = ($_->{obsunit_rep}, $_->{obsunit_block}, $germplasm_name_encoder{$germplasm_name});
+            my $germplasm_stock_id = $_->{germplasm_stock_id};
+            my @row = ($_->{obsunit_rep}, $_->{obsunit_block}, $germplasm_stock_id);
             foreach my $t (@sorted_trait_names) {
                 if (defined($phenotype_data{$_->{observationunit_uniquename}}->{$t})) {
                     push @row, $phenotype_data{$_->{observationunit_uniquename}}->{$t} + 0;
@@ -281,7 +277,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             push @data_matrix, @row;
         }
 
-        my @phenotype_header = ("replicate", "block", "germplasmName");
+        my @phenotype_header = ("replicate", "block", "germplasmDbId");
         my $num_col_before_traits = scalar(@phenotype_header);
         foreach (@sorted_trait_names) {
             push @phenotype_header, $trait_name_encoder{$_};
@@ -302,10 +298,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 my $r_block = $rbase->create_block('r_block');
                 $rmatrix->send_rbase($rbase, 'r_block');
                 $r_block->add_command('library(lme4)');
-                $r_block->add_command('mixed.lmer <- lmer('.$trait_name_encoder{$t}.' ~ replicate + (1|germplasmName), data = data.frame(matrix1), na.action = na.omit )');
+                $r_block->add_command('mixed.lmer <- lmer('.$trait_name_encoder{$t}.' ~ replicate + (1|germplasmDbId), data = data.frame(matrix1), na.action = na.omit )');
                 $r_block->add_command('mixed.lmer.summary <- summary(mixed.lmer)');
                 $r_block->add_command('mixed.lmer.matrix <- matrix(NA,nrow = 1, ncol = 1)');
-                $r_block->add_command('mixed.lmer.matrix[1,1] <- mixed.lmer.summary$varcor$germplasmName[1,1]/(mixed.lmer.summary$varcor$germplasmName[1,1] + (mixed.lmer.summary$sigma)^2)');
+                $r_block->add_command('mixed.lmer.matrix[1,1] <- mixed.lmer.summary$varcor$germplasmDbId[1,1]/(mixed.lmer.summary$varcor$germplasmDbId[1,1] + (mixed.lmer.summary$sigma)^2)');
                 $r_block->run_block();
                 my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','mixed.lmer.matrix');
                 #print STDERR Dumper $result_matrix;
@@ -318,10 +314,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 my $r_block = $rbase->create_block('r_block');
                 $rmatrix->send_rbase($rbase, 'r_block');
                 $r_block->add_command('library(lme4)');
-                $r_block->add_command('mixed.lmer <- lmer('.$trait_name_encoder{$t}.' ~ block + (1|germplasmName), data = data.frame(matrix1), na.action = na.omit )');
+                $r_block->add_command('mixed.lmer <- lmer('.$trait_name_encoder{$t}.' ~ block + (1|germplasmDbId), data = data.frame(matrix1), na.action = na.omit )');
                 $r_block->add_command('mixed.lmer.summary <- summary(mixed.lmer)');
                 $r_block->add_command('mixed.lmer.matrix <- matrix(NA,nrow = 1, ncol = 1)');
-                $r_block->add_command('mixed.lmer.matrix[1,1] <- mixed.lmer.summary$varcor$germplasmName[1,1]/(mixed.lmer.summary$varcor$germplasmName[1,1] + (mixed.lmer.summary$sigma)^2)');
+                $r_block->add_command('mixed.lmer.matrix[1,1] <- mixed.lmer.summary$varcor$germplasmDbId[1,1]/(mixed.lmer.summary$varcor$germplasmDbId[1,1] + (mixed.lmer.summary$sigma)^2)');
                 $r_block->run_block();
                 my $result_matrix = R::YapRI::Data::Matrix->read_rbase($rbase,'r_block','mixed.lmer.matrix');
                 #print STDERR Dumper $result_matrix;

@@ -412,10 +412,27 @@ sub get_grm {
     #    ';
     #}
     #else {
-        $cmd .= 'A_matrix <- A.mat(mat, min.MAF='.$maf.', max.missing='.$marker_filter.', impute.method=\'mean\', n.core='.$number_system_cores.', return.imputed=FALSE);
-        ';
+    $cmd .= 'A <- A.mat(mat, min.MAF='.$maf.', max.missing='.$marker_filter.', impute.method=\'mean\', n.core='.$number_system_cores.', return.imputed=FALSE);
+    ';
     #}
-    $cmd .= 'write.table(A_matrix, file=\''.$grm_tempfile_out.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
+    # Ensure positive definite matrix
+    $cmd .= 'E = eigen(A);
+    ev = E\$values;
+    U = E\$vectors;
+    no = dim(A)[1];
+    nev = which(ev < 0);
+    wr = 0;
+    k=length(nev);
+    if(k > 0){
+        p = ev[no - k];
+        B = sum(ev[nev])*2.0;
+        wr = (B*B*100.0)+1;
+        val = ev[nev];
+        ev[nev] = p*(B-val)*(B-val)/wr;
+        A = U%*%diag(ev)%*%t(U);
+    }
+    ';
+    $cmd .= 'write.table(A, file=\''.$grm_tempfile_out.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
     print STDERR Dumper $cmd;
 
     # Do the GRM on the cluster
@@ -496,7 +513,7 @@ sub download_grm {
             my @vals = split "\t", $row;
             push @grm, \@vals;
         }
-        
+
         my $data = '';
         if ($download_format eq 'matrix') {
             my @header = ("stock_id");

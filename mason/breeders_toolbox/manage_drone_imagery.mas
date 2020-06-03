@@ -1072,9 +1072,11 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <& /page/page_title.mas, title=>"Select statistics to calculate" &>
 
                     <select class="form-control" id="drone_imagery_calculate_statistics_select_input">
-                        <option value="lmer_germplasmname">LMER y~replicate+1|GermplasmName. Percent Variance Explained by GermplasmName</option>
-                        <option value="lmer_germplasmname_block">LMER y~blockNumber+1|GermplasmName. Percent Variance Explained by GermplasmName</option>
-                        <option value="marss_germplasmname_block">MARSS prediction for each germplasmName</option>
+                        <option value="sommer_grm_spatial_heatmap">Sommer Spatial GBLUPs y~replicate+GRM+spatial. Heatmap of Spatial Effects</option>
+                        <option value="sommer_grm_spatial_genetic_correlations">Sommer Spatial GBLUPs y~replicate+GRM+spatial. Genetic Correlations</option>
+                        <option value="lmer_germplasmname">LMER y~replicate+1|Germplasm. Percent Variance Explained by Germplasm</option>
+                        <option value="lmer_germplasmname_block">LMER y~blockNumber+1|Germplasm. Percent Variance Explained by Germplasm</option>
+                        <option value="marss_germplasmname_block">MARSS prediction for each germplasm</option>
                     </select>
 
                     <div id="drone_imagery_calculate_statistics_marss_div" style="display:none">
@@ -2697,7 +2699,7 @@ jQuery(document).ready(function() {
     jQuery('#drone_imagery_standard_process_raw_images_draw_polygons').click(function(){
         var manage_drone_imagery_standard_process_raw_images_num_rows = jQuery('#drone_imagery_standard_process_raw_images_number_rows').val();
         var manage_drone_imagery_standard_process_raw_images_num_columns = jQuery('#drone_imagery_standard_process_raw_images_number_columns').val();
-    
+
         if (manage_drone_imagery_standard_process_raw_images_num_rows == '') {
             alert('Please give the number of rows in the area of interest!');
             return false;
@@ -2759,7 +2761,7 @@ jQuery(document).ready(function() {
         plot_polygons_total_height_generated = row_height * plot_polygons_num_rows_generated;
         plot_polygons_number_generated = plot_polygons_generated_polygons.length;
 
-        manage_drone_imagery_standard_process_raw_images_drone_imagery_plot_polygons_new = {}; 
+        manage_drone_imagery_standard_process_raw_images_drone_imagery_plot_polygons_new = {};
         var drone_imagery_plot_polygons_display_new = {};
 
         for (var i=0; i<plot_polygons_generated_polygons.length; i++) {
@@ -3442,7 +3444,7 @@ jQuery(document).ready(function() {
             success: function(response){
                 console.log(response);
                 jQuery("#working_modal").modal("hide");
-                
+
                 if (response.error) {
                     alert(response.error);
                 }
@@ -4339,7 +4341,7 @@ jQuery(document).ready(function() {
             }
 
             crop_points = manage_drone_imagery_standard_process_raw_images_drone_imagery_plot_polygons_new;
-            
+
             var table_html = '<table class="table table-bordered table-hover"><thead><tr><th>Generated Index</th><th>Plot Number</th></tr></thead><tbody>';
             for (var gen_index in manage_drone_imagery_standard_process_raw_images_drone_imagery_plot_polygons_new) {
                 if (manage_drone_imagery_standard_process_raw_images_drone_imagery_plot_polygons_new.hasOwnProperty(gen_index)) {
@@ -4349,7 +4351,7 @@ jQuery(document).ready(function() {
             table_html = table_html + '</tbody></table>';
 
             jQuery('#drone_imagery_standard_process_raw_images_polygon_assign_table').html(table_html);
-            
+
             drone_imagery_standard_process_plot_polygon_click_type = '';
         }
         else {
@@ -6149,7 +6151,7 @@ jQuery(document).ready(function() {
                 jQuery('#working_modal').modal('hide');
             }
         });
-        
+
         jQuery('#drone_imagery_calc_phenotypes_zonal_channel_dialog').modal('show');
     });
 
@@ -6558,7 +6560,7 @@ jQuery(document).ready(function() {
 
     jQuery('#drone_imagery_compare_images_comparison_select_step').click(function(){
         get_select_box('trials', 'drone_imagery_compare_images_trial_select_div', { 'name' : 'drone_imagery_compare_images_field_trial_id', 'id' : 'drone_imagery_compare_images_field_trial_id', 'empty':1, 'multiple':1 });
-    
+
         Workflow.complete("#drone_imagery_compare_images_comparison_select_step");
         Workflow.focus('#drone_imagery_compare_images_workflow', 1);
         return false;
@@ -6576,7 +6578,7 @@ jQuery(document).ready(function() {
                 destroy : true,
                 ajax : '/api/drone_imagery/drone_runs?select_checkbox_name=drone_imagery_compare_images_drone_run_select&field_trial_ids='+drone_imagery_compare_images_field_trial_id_string
             });
-        
+
             Workflow.complete("#drone_imagery_compare_images_field_trial_select_step");
             Workflow.focus('#drone_imagery_compare_images_workflow', 2);
         }
