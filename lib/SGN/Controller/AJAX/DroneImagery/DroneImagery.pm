@@ -223,6 +223,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $trait_id_list = $c->req->param('observation_variable_id_list') ? decode_json $c->req->param('observation_variable_id_list') : [];
     my $compute_from_parents = $c->req->param('compute_from_parents') eq 'yes' ? 1 : 0;
     my $protocol_id = $c->req->param('protocol_id');
+    my $tolparinv = $c->req->param('tolparinv');
 
     my @results;
 
@@ -292,6 +293,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         my $tmp_stats_dir = $shared_cluster_dir_config."/tmp_drone_statistics";
         mkdir $tmp_stats_dir if ! -d $tmp_stats_dir;
         my ($stats_tempfile_fh, $stats_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+        my ($stats_out_tempfile_fh, $stats_out_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
 
         open(my $F, ">", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
             print $F $header_string."\n";
@@ -380,12 +382,59 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 mat\$colNumber <- as.numeric(mat\$colNumber)
                 mat\$rowNumberFactor <- as.factor(mat\$rowNumberFactor)
                 mat\$colNumberFactor <- as.factor(mat\$colNumberFactor)
-                geno_mat;
-                mat;
+                #geno_mat;
+                #mat;
                 mix <- mmer('.$trait_name_encoder{$t}.'~1, random=~vs(id, Gu=geno_mat) +vs(rowNumberFactor) +vs(colNumberFactor) +vs(spl2D(rowNumber,colNumber)), rcov=~vs(units), data=mat);
                 summary(mix);"';
                 my $status = system($cmd);
             }
+        }
+        elsif ($statistics_select eq 'sommer_grm_spatial_genetic_correlations') {
+            my @encoded_traits = values %trait_name_encoder;
+            my $encoded_trait_string = join ',', @encoded_traits;
+            my $number_traits = scalar(@encoded_traits);
+
+            my $cmd = 'R -e "library(sommer); library(data.table);
+            mat <- data.frame(fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\'));
+            geno_mat <- data.frame(fread(\''.$grm_file.'\', header=TRUE, sep=\'\t\'));
+            row.names(geno_mat) <- geno_mat\$stock_id;
+            geno_mat\$stock_id <- NULL;
+            geno_mat <- as.matrix(geno_mat);
+            mat\$rowNumber <- as.numeric(mat\$rowNumber)
+            mat\$colNumber <- as.numeric(mat\$colNumber)
+            mat\$rowNumberFactor <- as.factor(mat\$rowNumberFactor)
+            mat\$colNumberFactor <- as.factor(mat\$colNumberFactor)
+            #geno_mat;
+            #mat;
+            mix <- mmer(cbind('.$encoded_trait_string.')~1, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
+            summary(mix);
+            gen_cor <- cov2cor(mix\$sigma\$\`u:id\`);
+            gen_cor;
+            write.table(gen_cor, file=\''.$stats_out_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');"';
+            my $status = system($cmd);
+
+            my $csv = Text::CSV->new({ sep_char => "\t" });
+            open(my $fh, '<', $stats_out_tempfile)
+                or die "Could not open file '$stats_out_tempfile' $!";
+
+                print STDERR "Opened $stats_out_tempfile\n";
+                my $header = <$fh>;
+                my @header_cols;
+                if ($csv->parse($header)) {
+                    @header_cols = $csv->fields();
+                }
+
+                my @gen_cor;
+                while ( my $row = <$fh> ){
+                    my @columns;
+                    if ($csv->parse($row)) {
+                        @columns = $csv->fields();
+                        push @gen_cor, \@columns;
+                    }
+                }
+            close($fh);
+
+            push @results, \@gen_cor;
         }
     }
     elsif ($statistics_select eq 'marss_germplasmname_block') {

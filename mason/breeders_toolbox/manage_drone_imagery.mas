@@ -1074,7 +1074,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <select class="form-control" id="drone_imagery_calculate_statistics_select_input">
                         <option value="">Select A Model</option>
                         <option value="sommer_grm_spatial_heatmap">Sommer Spatial GBLUPs y~replicate+GRM+spatial. Heatmap of Spatial Effects</option>
-                        <option value="sommer_grm_spatial_genetic_correlations">Sommer Spatial GBLUPs y~replicate+GRM+spatial. Genetic Correlations</option>
+                        <option value="sommer_grm_spatial_genetic_correlations">Sommer Spatial GBLUPs Y~replicate+GRM+spatial. Multivariate genetic correlations</option>
                         <option value="lmer_germplasmname">LMER y~replicate+1|Germplasm. Percent Variance Explained by Germplasm</option>
                         <option value="lmer_germplasmname_block">LMER y~blockNumber+1|Germplasm. Percent Variance Explained by Germplasm</option>
                         <option value="marss_germplasmname_block">MARSS prediction for each germplasm</option>
@@ -1095,6 +1095,18 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                                     <select class="form-control" id="drone_image_calculate_statistics_genotyping_protocol_compute_from_parents_select">
                                         <option value="no">No</option>
                                         <option value="yes">Yes</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Inversion Tolerance: </label>
+                                <div class="col-sm-9" >
+                                    <select class="form-control" id="drone_image_calculate_statistics_tolparinv_select">
+                                        <option value="0.000001">0.000001</option>
+                                        <option value="0.00001">0.00001</option>
+                                        <option value="0.0001">0.0001</option>
+                                        <option value="0.001">0.001</option>
+                                        <option value="0.01">0.01</option>
                                     </select>
                                 </div>
                             </div>
@@ -3468,7 +3480,8 @@ jQuery(document).ready(function() {
                 'statistics_select':manage_drone_imagery_calculate_statistics_select,
                 'statistics_select_marss_options':jQuery('#drone_imagery_calculate_statistics_select_marss').val(),
                 'protocol_id':jQuery('#drone_image_calculate_statistics_genotyping_protocol_select').val(),
-                'compute_from_parents':jQuery('#drone_image_calculate_statistics_genotyping_protocol_compute_from_parents_select').val()
+                'compute_from_parents':jQuery('#drone_image_calculate_statistics_genotyping_protocol_compute_from_parents_select').val(),
+                'tolparinv':jQuery('#drone_image_calculate_statistics_tolparinv_select').val()
             },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
