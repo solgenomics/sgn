@@ -112,22 +112,19 @@ sub search {
 		[['application/json'],['GET'], 'variantsets/{variantSetDbId}/variants',['2.0']],
 		[['application/json'],['POST'],'search/variantsets',['2.0']],
 		[['application/json'],['GET'], 'search/variantsets/{searchResultsDbId}',['2.0']],
-		#germplasm
+		#Germplasm
 		[['application/json'],['GET'], 'germplasm',['2.0']],
 		[['application/json'],['GET'], 'germplasm/{germplasmDbId}',['2.0']],
 		[['application/json'],['GET'], 'germplasm/{germplasmDbId}/pedigree',['2.0']],
 		[['application/json'],['GET'], 'germplasm/{germplasmDbId}/progeny',['2.0']],
 		[['application/json'],['POST'],'search/germplasm',['2.0']],
 		[['application/json'],['GET'], 'search/germplasm/{searchResultsDbId}',['2.0']],
-		[['application/json'],['GET'], 'crossingprojects',['2.0']],
-		[['application/json'],['GET'], 'crossingprojects/{crossingProjectDbId}',['2.0']],
-		[['application/json'],['GET'], 'crosses',['2.0']],
-		[['application/json'],['GET'], 'seedlots',['2.0']],
-		[['application/json'],['POST'], 'seedlots',['2.0']],
-		[['application/json'],['GET'], 'seedlots/transactions',['2.0']],
-		[['application/json'],['POST'], 'seedlots/transactions',['2.0']],
-		[['application/json'],['GET'], 'seedlots/{seedLotDbId}',['2.0']],
-		[['application/json'],['PUT'], 'seedlots/{seedLotDbId}',['2.0']],
+		[['application/json'],['GET','POST'], 'crossingprojects',['2.0']],
+		[['application/json'],['GET','PUT'], 'crossingprojects/{crossingProjectDbId}',['2.0']],
+		[['application/json'],['GET','POST','PUT'], 'crosses',['2.0']],
+		[['application/json'],['GET','POST'], 'seedlots',['2.0']],
+		[['application/json'],['GET','POST'], 'seedlots/transactions',['2.0']],
+		[['application/json'],['GET','PUT'], 'seedlots/{seedLotDbId}',['2.0']],
 		[['application/json'],['GET'], 'seedlots/{seedLotDbId}/transactions',['2.0']],
 	);
 
@@ -175,7 +172,7 @@ sub info {
 	my $permissions  = {
 				'GET' => 'any',
 				'POST' => 'curator',
-				'PUT' => 'curator'
+				'PUT' => 'curator,submitter'
 			};
 
 	return $permissions;

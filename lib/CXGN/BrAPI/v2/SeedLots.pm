@@ -404,7 +404,7 @@ sub store_seedlots {
 
     my @data_files;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Seed lots result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Seed lots stored');
 
 }
 
@@ -538,7 +538,7 @@ sub store_seedlot_transaction {
     my %result = (data=>\@data);
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
 
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Transactions result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Transactions stored');
 }
 
 sub update_seedlot {
@@ -670,7 +670,7 @@ sub update_seedlot {
 
     my @data_files;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Seed lots result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Seed lots updated');
 }
 
 sub format_date {

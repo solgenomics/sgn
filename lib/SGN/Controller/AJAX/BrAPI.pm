@@ -4446,6 +4446,19 @@ sub crossingprojects_GET {
 	_standard_response_construction($c, $brapi_package_result);
 }
 
+sub crossingprojects_POST {
+	my $self = shift;
+	my $c = shift;
+	my ($auth,$user_id) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Crossing');
+	my $brapi_package_result = $brapi_module->store_crossingproject($clean_inputs,$c,$user_id);
+	my $status = $brapi_package_result->{status};
+	my $http_status_code = _get_http_status_code($status);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
 sub crossingproject_single : Chained('brapi') PathPart('crossingprojects') CaptureArgs(1) {
 	my $self = shift;
 	my $c = shift;
@@ -4467,6 +4480,19 @@ sub crossingproject_fetch_GET {
 	_standard_response_construction($c, $brapi_package_result);
 }
 
+sub crossingproject_fetch_PUT {
+	my $self = shift;
+	my $c = shift;
+	my ($auth,$user_id,$user_type) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Crossing');
+	my $brapi_package_result = $brapi_module->update_crossingproject($c->stash->{crossingProjectDbId}, $clean_inputs,$c,$user_id,$user_type);
+	my $status = $brapi_package_result->{status};
+	my $http_status_code = _get_http_status_code($status);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
 =head2 brapi/v2/crosses
 
 =cut
@@ -4481,6 +4507,28 @@ sub crosses_GET {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Crossing');
 	my $brapi_package_result = $brapi_module->crosses($clean_inputs);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub crosses_POST {
+	my $self = shift;
+	my $c = shift;
+	my ($auth,$user_id) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Crossing');
+	my $brapi_package_result = $brapi_module->store_crosses($clean_inputs,$c,$user_id);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub crosses_PUT {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Crossing');
+	my $brapi_package_result = $brapi_module->update_crosses($clean_inputs);
 	_standard_response_construction($c, $brapi_package_result);
 }
 
