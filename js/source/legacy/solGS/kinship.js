@@ -43,12 +43,13 @@ solGS.kinship = {
             success: function (res) {
 		
                 if (res.data_exists) {
-		    console.log('kinship data exists ' + res.data_exists)
-		   // console.log('kinship data ' + res.data)
+			
                     solGS.kinship.plotKinship(res.data);
+		    solGS.kinship.addDowloandLinks(res);
+
 		    jQuery("#kinship_message").empty();
                 } else {
-		      console.log('kinship data does not exist ' + res.data_exists)
+		    
                     jQuery("#kinship_message")
                         .css({"padding-left": '0px'})
                         .html("This population has no kinship data.");
@@ -71,16 +72,34 @@ solGS.kinship = {
 
 	var pop = this.getPopulationDetails();
 	var popId = pop.kinship_pop_id;
+	var protocolId = pop.genotyping_protocol_id;
 
-	console.log('calling plotCorrelation')
         solGS.heatmap.plot(data, '#kinship_canvas');
-	
-	var kinshipDownload = "<a href=\"/download/kinship/population/" 
-	    + popId + "\">Download kinship</a>";
-
-	jQuery("#kinship_canvas").append("<br />[ " + kinshipDownload + " ]").show();
-		  
 		    
+    },
+
+    addDowloandLinks: function(res) {
+	
+	var kinshipFile = res.kinship_table_file;
+	console.log('kinshipFile ' + kinshipFile)
+	var aveFile = res.kinship_averages_file;
+	var inbreedingFile = res.inbreeding_file;
+
+	var fileNameKinship = kinshipFile.split('/').pop();
+	var fileNameAve = aveFile.split('/').pop();
+	var fileNameInbreeding = inbreedingFile.split('/').pop();
+	
+	kinshipFile = "<a href=\"" + kinshipFile +  "\" download=" + fileNameKinship + ">Kinship matrix</a>";
+	aveFile = "<a href=\"" + aveFile +  "\" download=" + fileNameAve + ">Average kinship</a>";
+	inbreedingFile = "<a href=\"" + inbreedingFile +  "\" download=" + fileNameInbreeding + ">Inbreeding Coefficients</a>";
+		
+	jQuery("#kinship_canvas")
+	    .append('<br /> <strong>Download:</strong> '
+		     + kinshipFile + ' | '
+		     + aveFile + ' | '
+		     + inbreedingFile)
+	    .show();
+	
     },
 
 
