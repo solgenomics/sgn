@@ -467,7 +467,7 @@ sub get_cross_embryo_ids :Path('/ajax/cross/embryo_ids') Args(1) {
     my $embryo_ids = $cross_sample_data->{'Embryo IDs'};
     my @ids;
     foreach my $id (@$embryo_ids){
-        push @ids, { embryo_ids => $id };
+        push @ids, { embryo_ids => $id }
     }
     $c->stash->{rest} = { data => \@ids };
 }
@@ -485,7 +485,7 @@ sub get_cross_subculture_ids :Path('/ajax/cross/subculture_ids') Args(1) {
     my $subculture_ids = $cross_sample_data->{'Subculture IDs'};
     my @ids;
     foreach my $id (@$subculture_ids){
-        push @ids, { subculture_ids => $id };
+        push @ids, { subculture_ids => $id }
     }
     $c->stash->{rest} = { data => \@ids };
 }
@@ -503,7 +503,7 @@ sub get_cross_rooting_ids :Path('/ajax/cross/rooting_ids') Args(1) {
     my $rooting_ids = $cross_sample_data->{'Rooting IDs'};
     my @ids;
     foreach my $id (@$rooting_ids){
-        push @ids, { rooting_ids => $id }:
+        push @ids, { rooting_ids => $id }
     }
     $c->stash->{rest} = { data => \@ids };
 }
@@ -521,7 +521,7 @@ sub get_cross_weaning1_ids :Path('/ajax/cross/weaning1_ids') Args(1) {
     my $weaning1_ids = $cross_sample_data->{'Weaning1 IDs'};
     my @ids;
     foreach my $id (@$weaning1_ids){
-        push @ids, { weaning1_ids => $id};
+        push @ids, { weaning1_ids => $id}
     }
     $c->stash->{rest} = { data => \@ids };
 }
@@ -539,43 +539,7 @@ sub get_cross_weaning2_ids :Path('/ajax/cross/weaning2_ids') Args(1) {
     my $weaning2_ids = $cross_sample_data->{'Weaning2 IDs'};
     my @ids;
     foreach my $id (@$weaning2_ids){
-        push @ids, { weaning2_ids => $id};
-    }
-    $c->stash->{rest} = { data => \@ids };
-}
-
-
-sub get_cross_hardening_ids :Path('/ajax/cross/hardening_ids') Args(1) {
-    my $self = shift;
-    my $c = shift;
-    my $cross_id = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-
-    my $cross_samples_obj = CXGN::Cross->new({schema=>$schema, cross_stock_id=>$cross_id});
-    my $cross_sample_data  = $cross_samples_obj->get_cross_tissue_culture_samples();
-
-    my $hardening_ids = $cross_sample_data->{'Hardening IDs'};
-    my @ids;
-    foreach my $id (@$hardening_ids){
-        push @ids, { hardening_ids => $id};
-    }
-    $c->stash->{rest} = { data => \@ids };
-}
-
-
-sub get_cross_openfield_ids :Path('/ajax/cross/openfield_ids') Args(1) {
-    my $self = shift;
-    my $c = shift;
-    my $cross_id = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-
-    my $cross_samples_obj = CXGN::Cross->new({schema=>$schema, cross_stock_id=>$cross_id});
-    my $cross_sample_data  = $cross_samples_obj->get_cross_tissue_culture_samples();
-
-    my $openfield_ids = $cross_sample_data->{'Openfield IDs'};
-    my @ids;
-    foreach my $id (@$openfield_ids){
-        push @ids, { openfield_ids => $id};
+        push @ids, { weaning2_ids => $id}
     }
     $c->stash->{rest} = { data => \@ids };
 }
@@ -593,10 +557,47 @@ sub get_cross_screenhouse_ids :Path('/ajax/cross/screenhouse_ids') Args(1) {
     my $screenhouse_ids = $cross_sample_data->{'Screenhouse IDs'};
     my @ids;
     foreach my $id (@$screenhouse_ids){
-        push @ids, { screenhouse_ids => $id};
+        push @ids, { screenhouse_ids => $id}
     }
     $c->stash->{rest} = { data => \@ids };
 }
+
+sub get_cross_hardening_ids :Path('/ajax/cross/hardening_ids') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $cross_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $cross_samples_obj = CXGN::Cross->new({schema=>$schema, cross_stock_id=>$cross_id});
+    my $cross_sample_data  = $cross_samples_obj->get_cross_tissue_culture_samples();
+
+    my $hardening_ids = $cross_sample_data->{'Hardening IDs'};
+    my @ids;
+    foreach my $id (@$hardening_ids){
+        push @ids, { hardening_ids => $id}
+    }
+    $c->stash->{rest} = { data => \@ids };
+}
+
+
+sub get_cross_openfield_ids :Path('/ajax/cross/openfield_ids') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $cross_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $cross_samples_obj = CXGN::Cross->new({schema=>$schema, cross_stock_id=>$cross_id});
+    my $cross_sample_data  = $cross_samples_obj->get_cross_tissue_culture_samples();
+
+    my $openfield_ids = $cross_sample_data->{'Openfield IDs'};
+    my @ids;
+    foreach my $id (@$openfield_ids){
+        push @ids, { openfield_ids => $id}
+    }
+    $c->stash->{rest} = { data => \@ids };
+}
+
+
 
 
  sub save_property_check :Path('/cross/property/check') Args(1) {
