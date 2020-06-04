@@ -269,7 +269,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         foreach (@$data) {
             my $germplasm_name = $_->{germplasm_uniquename};
             my $germplasm_stock_id = $_->{germplasm_stock_id};
-            my @row = ($_->{obsunit_rep}, $_->{obsunit_block}, "S".$germplasm_stock_id, $_->{obsunit_row_number}, $_->{obsunit_col_number});
+            my @row = ($_->{obsunit_rep}, $_->{obsunit_block}, "S".$germplasm_stock_id, $_->{obsunit_row_number}, $_->{obsunit_col_number}, $_->{obsunit_row_number}, $_->{obsunit_col_number});
             foreach my $t (@sorted_trait_names) {
                 if (defined($phenotype_data{$_->{observationunit_uniquename}}->{$t})) {
                     push @row, $phenotype_data{$_->{observationunit_uniquename}}->{$t} + 0;
@@ -281,7 +281,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             push @data_matrix, \@row;
         }
 
-        my @phenotype_header = ("replicate", "block", "id", "rowNumber", "colNumber");
+        my @phenotype_header = ("replicate", "block", "id", "rowNumber", "colNumber", "rowNumberFactor", "colNumberFactor");
         my $num_col_before_traits = scalar(@phenotype_header);
         foreach (@sorted_trait_names) {
             push @phenotype_header, $trait_name_encoder{$_};
@@ -375,10 +375,14 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 geno_mat <- data.frame(fread(\''.$grm_file.'\', header=TRUE, sep=\'\t\'));
                 row.names(geno_mat) <- geno_mat\$stock_id;
                 geno_mat\$stock_id <- NULL;
+                geno_mat <- as.matrix(geno_mat);
+                mat\$rowNumber <- as.numeric(mat\$rowNumber)
+                mat\$colNumber <- as.numeric(mat\$colNumber)
+                mat\$rowNumberFactor <- as.factor(mat\$rowNumberFactor)
+                mat\$colNumberFactor <- as.factor(mat\$colNumberFactor)
                 geno_mat;
-                head(mat);
-                #mix <- mmer('.$trait_name_encoder{$t}.'~replicate, random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber,colNumber)), rcov=~vs(units), data=mat);
-                mix <- mmer('.$trait_name_encoder{$t}.'~1, rcov=~vs(units), data=mat);
+                mat;
+                mix <- mmer('.$trait_name_encoder{$t}.'~1, random=~vs(id, Gu=geno_mat) +vs(rowNumberFactor) +vs(colNumberFactor) +vs(spl2D(rowNumber,colNumber)), rcov=~vs(units), data=mat);
                 summary(mix);"';
                 my $status = system($cmd);
             }
