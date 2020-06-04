@@ -130,7 +130,7 @@ $identifier_prefix => ''
 </div>
 
 
-<&| /page/info_section.mas, id=>'tissue_culture_samples_section', title => 'Embryo IDs of this Cross', collapsible=>1, collapsed=>1, subtitle=>""&>
+<&| /page/info_section.mas, id=>'tissue_culture_samples_section', title => 'Tissue culture IDs of this Cross', collapsible=>1, collapsed=>1, subtitle => 'View tissue culture ids (e.g., embryo ids, subculture ids, rooting ids, weaning1 ids)'&>
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
