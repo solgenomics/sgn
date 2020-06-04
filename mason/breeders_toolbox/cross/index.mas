@@ -139,6 +139,14 @@ $identifier_prefix => ''
             </div>
         </div>
     </div>
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <table id="subculture_ids_table" class="table table-hover table-striped">
+                </table>
+            </div>
+        </div>
+    </div>
 </&>
 
 

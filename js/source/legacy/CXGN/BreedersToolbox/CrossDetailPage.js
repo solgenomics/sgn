@@ -341,6 +341,13 @@ jQuery(document).ready(function() {
                 { title: "Embryo IDs", "data": "embryo_ids" },
             ],
         });
+        var subculture_table = jQuery('#subculture_ids_table').DataTable({
+            'ajax': '/ajax/cross/subculture_ids/'+cross_id,
+            columns: [
+                { title: "Subculture IDs", "data": "subculture_ids" },
+            ],
+        });
+
         return;
     }
 
