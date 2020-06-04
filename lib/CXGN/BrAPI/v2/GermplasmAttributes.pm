@@ -78,6 +78,111 @@ sub germplasm_attributes_list {
 	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm-attributes list result constructed');
 }
 
+sub germplasm_attributes_categories_list {
+	my $self = shift;
+
+	my $page_size = $self->page_size;
+	my $page = $self->page;
+	my $status = $self->status;
+	my $accession_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
+	my $q = "SELECT distinct(cv.cv_id), cv.name, cv.definition
+		FROM stockprop
+		JOIN stock using(stock_id)
+		JOIN cvterm as b on (stockprop.type_id=b.cvterm_id)
+		JOIN cv on (b.cv_id=cv.cv_id)
+		WHERE stock.type_id=?
+		GROUP BY (cv.cv_id)
+		ORDER BY cv.cv_id;";
+
+	my $h = $self->bcs_schema()->storage->dbh()->prepare($q);
+	$h->execute($accession_type_cvterm_id);
+	my @data;
+	while (my ($attributeCategoryDbId, $attributeCategoryName, $attributeCategoryDesc) = $h->fetchrow_array()) {
+		push @data, {
+			attributeCategoryDbId => "$attributeCategoryDbId",
+			name => $attributeCategoryName,
+			attributeCategoryName => $attributeCategoryName
+		};
+	}
+	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@data,$page_size,$page);
+	my %result = (data => $data_window);
+	my @data_files;
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm-attributes categories list result constructed');
+}
+
+
+sub germplasm_attributes_germplasm_detail {
+	my $self = shift;
+	my $inputs = shift;
+	my $stock_id = $inputs->{stock_id};
+	my @attribute_dbids = $inputs->{attribute_dbids} ? @{$inputs->{attribute_dbids}} : ();
+
+	my $page_size = $self->page_size;
+	my $page = $self->page;
+	my $status = $self->status;
+
+	my $where = '';
+	if (scalar(@attribute_dbids)>0){
+		my $sql = join ',', @attribute_dbids;
+		$where = "and b.cvterm_id IN ($sql)";
+	}
+
+	my $offset = $page_size*$page;
+	my $limit = $page_size;
+	my $accession_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
+	my $q = "SELECT cv.cv_id, cv.name, cv.definition, b.cvterm_id, b.name, b.definition, stockprop.value, stockprop.stockprop_id, count(stockprop.value) OVER() AS full_count
+		FROM stockprop
+		JOIN stock using(stock_id)
+		JOIN cvterm as b on (stockprop.type_id=b.cvterm_id)
+		JOIN cv on (b.cv_id=cv.cv_id)
+		WHERE stock.type_id=? and stock.stock_id=? $where
+		ORDER BY cv.cv_id
+		LIMIT $limit
+		OFFSET $offset;";
+
+	my $h = $self->bcs_schema()->storage->dbh()->prepare($q);
+	$h->execute($accession_type_cvterm_id, $stock_id);
+	my @data;
+	my $total_count = 0;
+	while (my ($attributeCategoryDbId, $attributeCategoryName, $attributeCategoryDesc, $attributeDbId, $name, $description, $value, $stockprop_id, $count) = $h->fetchrow_array()) {
+		$total_count = $count;
+		push @data, {
+			attributeDbId => $attributeDbId,
+			attributeName => $name,
+			attributeCode => $name,
+			description => $description,
+			attributeCategoryDbId => $attributeCategoryDbId,
+			attributeCategoryName => $attributeCategoryName,
+			value => $value,
+			dateDetermined => '',
+			contextOfUse => [],
+	        crop => undef,
+	        defaultValue => undef,
+	        documentationURL => undef,
+	        growthStage => undef,
+	        institution => undef,
+	        language => undef,
+	        method => {},
+	        ontologyDbId =>,
+	        ontologyName =>,
+	        ontologyReference => {},
+	        scale=> {},
+	        scientist=> undef,
+	        status=> undef,
+	        submissionTimestamp=> undef,
+	        synonyms => [],
+	        trait => {},
+	        xref=> undef
+		};
+	}
+	my %result = (
+		germplasmDbId=>$stock_id,
+		data => \@data
+	);
+	my @data_files;
+	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm-attributes detail result constructed');
+}
 
 sub get_cvtermprop_hash {
 	my $self = shift;
