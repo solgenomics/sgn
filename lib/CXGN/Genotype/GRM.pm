@@ -344,7 +344,7 @@ sub get_grm {
         # print STDERR Dumper \@female_stock_ids_found;
         # print STDERR Dumper \@male_stock_ids_found;
 
-        @all_individual_accessions_stock_ids = @accession_stock_ids_found;
+        @all_individual_accessions_stock_ids = @$accession_list;
 
         for my $i (0..scalar(@accession_stock_ids_found)-1) {
             my $female_stock_id = $female_stock_ids_found[$i];
@@ -570,14 +570,62 @@ sub download_grm {
                 foreach my $s (sort keys %{$result_hash{$r}}) {
                     my $val = $result_hash{$r}->{$s};
                     if (defined $val and length $val) {
-                        $data .= "$r\t$s\t$val\n";
+                        $data .= "S$r\tS$s\t$val\n";
                     }
                 }
             }
 
             foreach my $a (@$all_accession_stock_ids) {
                 if (!exists($seen_stock_ids{$a})) {
-                    $data .= "$a\t$a\t1\n";
+                    $data .= "S$a\tS$a\t1\n";
+                }
+            }
+
+            $self->cache()->set($key, $data);
+            if ($return_type eq 'filehandle') {
+                $return = $self->cache()->handle($key);
+            }
+            elsif ($return_type eq 'data') {
+                $return = $data;
+            }
+        }
+        elsif ($download_format eq 'three_column_reciprocal') {
+            print STDERR Dumper $all_accession_stock_ids;
+            my %result_hash;
+            my $row_num = 0;
+            my %seen_stock_ids;
+            # print STDERR Dumper \@grm;
+            foreach my $s (@$stock_ids) {
+                my $col_num = 0;
+                foreach my $c (@$stock_ids) {
+                    if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
+                        my $val = $grm[$row_num]->[$col_num];
+                        if (defined $val and length $val) {
+                            $result_hash{$s}->{$c} = $val;
+                            $seen_stock_ids{$s}++;
+                            $seen_stock_ids{$c}++;
+                        }
+                    }
+                    $col_num++;
+                }
+                $row_num++;
+            }
+
+            foreach my $r (sort keys %result_hash) {
+                foreach my $s (sort keys %{$result_hash{$r}}) {
+                    my $val = $result_hash{$r}->{$s};
+                    if (defined $val and length $val) {
+                        $data .= "S$r\tS$s\t$val\n";
+                        if ($s != $r) {
+                            $data .= "S$s\tS$r\t$val\n";
+                        }
+                    }
+                }
+            }
+
+            foreach my $a (@$all_accession_stock_ids) {
+                if (!exists($seen_stock_ids{$a})) {
+                    $data .= "S$a\tS$a\t1\n";
                 }
             }
 

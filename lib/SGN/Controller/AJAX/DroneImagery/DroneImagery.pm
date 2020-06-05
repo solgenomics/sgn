@@ -330,7 +330,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 accession_id_list=>\@accession_ids,
                 protocol_id=>$protocol_id,
                 get_grm_for_parental_accessions=>$compute_from_parents,
-                download_format=>'matrix',
+                download_format=>'three_column_reciprocal',
                 # minor_allele_frequency=>$minor_allele_frequency,
                 # marker_filter=>$marker_filter,
                 # individuals_filter=>$individuals_filter
@@ -394,12 +394,11 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             my $encoded_trait_string = join ',', @encoded_traits;
             my $number_traits = scalar(@encoded_traits);
 
-            my $cmd = 'R -e "library(sommer); library(data.table);
+            my $cmd = 'R -e "library(sommer); library(data.table); library(reshape2);
             mat <- data.frame(fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\'));
-            geno_mat <- data.frame(fread(\''.$grm_file.'\', header=TRUE, sep=\'\t\'));
-            row.names(geno_mat) <- geno_mat\$stock_id;
-            geno_mat\$stock_id <- NULL;
-            geno_mat <- as.matrix(geno_mat);
+            geno_mat_3col <- data.frame(fread(\''.$grm_file.'\', header=FALSE, sep=\'\t\'));
+            geno_mat <- acast(geno_mat_3col, V1~V2, value.var=\'V3\');
+            geno_mat[is.na(geno_mat)] <- 0;
             mat\$rowNumber <- as.numeric(mat\$rowNumber);
             mat\$colNumber <- as.numeric(mat\$colNumber);
             mat\$rowNumberFactor <- as.factor(mat\$rowNumberFactor);
