@@ -17,10 +17,12 @@ extends 'CXGN::BrAPI::v2::Common';
 sub observations_store {
     my $self = shift;
     my $params = shift;
+    my $c = shift;
 
     my $schema = $self->bcs_schema;
     my $metadata_schema = $self->metadata_schema;
     my $phenome_schema = $self->phenome_schema;
+    my $dbh = $self->bcs_schema()->storage()->dbh();
     my $observations = $params->{observations};
     my $version = $params->{version};
     my $user_id = $params->{user_id};
@@ -141,6 +143,9 @@ sub observations_store {
         return CXGN::BrAPI::JSONResponse->return_error($status, $stored_observation_error);
     }
     if ($stored_observation_success) {
+        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
+
         print STDERR "Success: $stored_observation_success\n";
         if ($version eq 'v1') {
             $result{observations} = $stored_observation_details;
@@ -161,8 +166,7 @@ sub search {
     my $self = shift;
     my $params = shift;
     my $page_size = $self->page_size;
-    my $page1 = shift;
-    my $page = $page1 ? $page1 : $self->page;
+    my $page = $self->page;
     my $status = $self->status;
 
     my $observation_db_id = $params->{observationDbId} || ($params->{observationDbIds} || ()); 

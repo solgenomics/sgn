@@ -3363,6 +3363,18 @@ sub observations_GET {
     _standard_response_construction($c, $brapi_package_result);
 }
 
+sub observations_POST {
+	my $self = shift;
+	my $c = shift;
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $data = $clean_inputs->{data};
+    my @all_observations;
+    foreach my $observation (@{$data}) {
+        push @all_observations, $observation;
+    }
+	save_observation_results($self, $c, \@all_observations, 'v2');
+}
+
 sub observations_single :  Chained('brapi') PathPart('observations') CaptureArgs(1) {
      my $self = shift;
      my $c = shift;
@@ -3398,6 +3410,48 @@ sub observation_search_retrieve  : Chained('brapi') PathPart('search/observation
     my $search_id = shift;
     retrieve_results($self, $c, $search_id, 'Observations');
 }
+
+sub save_observation_results {
+    my $self = shift;
+    my $c = shift;
+    my $observations = shift;
+    my $version = shift;
+
+	# Check that the user is a user. We don't check other permissions for now.
+	my $force_authenticate = 1;
+	my ($auth_success, $user_id, $user_type, $user_pref, $expired) = _authenticate_user($c, $force_authenticate);
+
+	my $dbh = $c->dbc->dbh;
+    my $p = CXGN::People::Person->new($dbh, $user_id);
+    my $username = $p->get_username;
+    my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+
+    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+
+	my $brapi_module = $brapi->brapi_wrapper('Observations');
+	my $brapi_package_result = $brapi_module->observations_store({
+        observations => $observations,
+        user_id => $user_id,
+        username => $username,
+        user_type => $user_type,
+        version => $version,
+        archive_path => $c->config->{archive_path},
+        tempfiles_subdir => $c->config->{basepath}."/".$c->config->{tempfiles_subdir},
+        basepath => $c->config->{basepath},
+        dbhost => $c->config->{dbhost},
+        dbname => $c->config->{dbname},
+        dbuser => $c->config->{dbuser},
+        dbpass => $c->config->{dbpass},
+        temp_file_nd_experiment_id => $temp_file_nd_experiment_id
+    },$c);
+
+	my $status = $brapi_package_result->{status};
+	my $http_status_code = _get_http_status_code($status);
+
+	_standard_response_construction($c, $brapi_package_result, $http_status_code);
+ }
 
 =head2 brapi/v1/markers
 
@@ -3818,48 +3872,6 @@ sub _get_http_status_code {
 
 	return $http_status_code;
 }
-
-sub save_observation_results {
-    my $self = shift;
-    my $c = shift;
-    my $observations = shift;
-    my $version = shift;
-
-	# Check that the user is a user. We don't check other permissions for now.
-	my $force_authenticate = 1;
-	my ($auth_success, $user_id, $user_type, $user_pref, $expired) = _authenticate_user($c, $force_authenticate);
-
-	my $dbh = $c->dbc->dbh;
-    my $p = CXGN::People::Person->new($dbh, $user_id);
-    my $username = $p->get_username;
-    my $clean_inputs = $c->stash->{clean_inputs};
-	my $brapi = $self->brapi_module;
-
-    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
-    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
-
-	my $brapi_module = $brapi->brapi_wrapper('Observations');
-	my $brapi_package_result = $brapi_module->observations_store({
-        observations => $observations,
-        user_id => $user_id,
-        username => $username,
-        user_type => $user_type,
-        version => $version,
-        archive_path => $c->config->{archive_path},
-        tempfiles_subdir => $c->config->{basepath}."/".$c->config->{tempfiles_subdir},
-        basepath => $c->config->{basepath},
-        dbhost => $c->config->{dbhost},
-        dbname => $c->config->{dbname},
-        dbuser => $c->config->{dbuser},
-        dbpass => $c->config->{dbpass},
-        temp_file_nd_experiment_id => $temp_file_nd_experiment_id
-    });
-
-	my $status = $brapi_package_result->{status};
-	my $http_status_code = _get_http_status_code($status);
-
-	_standard_response_construction($c, $brapi_package_result, $http_status_code);
- }
 
 =head2 brapi/v2/callsets
 
