@@ -180,12 +180,19 @@ is_deeply($genotyping_trials, undef, 'test get geno trials');
 
 my $locations = $p->get_location_geojson();
 print STDERR Dumper $locations;
-is($locations,'[{"geometry":{"coordinates":[-115.864,32.6136],"type":"Point"},"properties":{"Abbreviation":null,"Altitude":109,"Code":"USA","Country":"United States","Id":"23","Latitude":32.6136,"Longitude":-115.864,"NOAAStationID":null,"Name":"test_location","Program":"test","Trials":"<a href=\"/search/trials?location_id=23\">5 trials</a>","Type":null},"type":"Feature"},{"geometry":{"coordinates":[-76.4735,42.4534],"type":"Point"},"properties":{"Abbreviation":null,"Altitude":274,"Code":"USA","Country":"United States","Id":"24","Latitude":42.4534,"Longitude":-76.4735,"NOAAStationID":null,"Name":"Cornell Biotech","Program":"test","Trials":"<a href=\"/search/trials?location_id=24\">0 trials</a>","Type":null},"type":"Feature"},{"geometry":{"coordinates":[null,null],"type":"Point"},"properties":{"Abbreviation":null,"Altitude":null,"Code":null,"Country":null,"Id":"25","Latitude":null,"Longitude":null,"NOAAStationID":null,"Name":"NA","Program":null,"Trials":"<a href=\"/search/trials?location_id=25\">0 trials</a>","Type":null},"type":"Feature"}]', 'get locations by bp');
+is($locations, '[{"geometry":{"coordinates":[-115.864,32.6136],"type":"Point"},"properties":{"Abbreviation":null,"Altitude":109,"Code":"USA","Country":"United States","Id":"23","Latitude":32.6136,"Longitude":-115.864,"NOAAStationID":null,"Name":"test_location","Program":"test","Trials":"<a href=\"/search/trials?location_id=23\">5 trials</a>","Type":null},"type":"Feature"},{"geometry":{"coordinates":[-76.4735,42.4534],"type":"Point"},"properties":{"Abbreviation":null,"Altitude":274,"Code":"USA","Country":"United States","Id":"24","Latitude":42.4534,"Longitude":-76.4735,"NOAAStationID":null,"Name":"Cornell Biotech","Program":"test","Trials":"<a href=\"/search/trials?location_id=24\">0 trials</a>","Type":null},"type":"Feature"},{"geometry":{"coordinates":[null,null],"type":"Point"},"properties":{"Abbreviation":null,"Altitude":null,"Code":null,"Country":null,"Id":"25","Latitude":null,"Longitude":null,"NOAAStationID":null,"Name":"NA","Program":null,"Trials":"<a href=\"/search/trials?location_id=25\">0 trials</a>","Type":null},"type":"Feature"},{"geometry":{"coordinates":[null,null],"type":"Point"},"properties":{"Abbreviation":null,"Altitude":null,"Code":null,"Country":null,"Id":"26","Latitude":null,"Longitude":null,"NOAAStationID":null,"Name":"[Computation]","Program":null,"Trials":"<a href=\"/search/trials?location_id=26\">0 trials</a>","Type":null},"type":"Feature"}]');
+
+
+
+#'[{"geometry":{"coordinates":[-115.864,32.6136],"type":"Point"},"properties":{"Abbreviation":null,"Altitude":109,"Code":"USA","Country":"United States","Id":"23","Latitude":32.6136,"Longitude":-115.864,"NOAAStationID":null,"Name":"test_location","Program":"test","Trials":"<a href=\"/search/trials?location_id=23\">5 trials</a>","Type":null},"type":"Feature"},{"geometry":{"coordinates":[-76.4735,42.4534],"type":"Point"},"properties":{"Abbreviation":null,"Altitude":274,"Code":"USA","Country":"United States","Id":"24","Latitude":42.4534,"Longitude":-76.4735,"NOAAStationID":null,"Name":"Cornell Biotech","Program":"test","Trials":"<a href=\"/search/trials?location_id=24\">0 trials</a>","Type":null},"type":"Feature"},{"geometry":{"coordinates":[null,null],"type":"Point"},"properties":{"Abbreviation":null,"Altitude":null,"Code":null,"Country":null,"Id":"25","Latitude":null,"Longitude":null,"NOAAStationID":null,"Name":"NA","Program":null,"Trials":"<a href=\"/search/trials?location_id=25\">0 trials</a>","Type":null},"type":"Feature"}]', 'get locations by bp');
 
 my $all_locations = $p->get_all_locations();
 print STDERR Dumper $all_locations;
-is(scalar(@$all_locations), 3);
+is(scalar(@$all_locations), 4);
 is_deeply($all_locations,[
+	      [ 26,
+		'[Computation]',
+		],
           [
             24,
             'Cornell Biotech'
@@ -203,6 +210,7 @@ is_deeply($all_locations,[
 my $all_locations = $p->get_locations();
 print STDERR Dumper $all_locations;
 is_deeply($all_locations, [
+	      
           [
             24,
             'Cornell Biotech',
@@ -226,7 +234,17 @@ is_deeply($all_locations, [
             undef,
             undef,
             0
+          ],
+	       [
+            26,
+            '[Computation]',
+            undef,
+            undef,
+            undef,
+            0
           ]
+	      ,
+	     
         ], 'get all locations');
 
 my @all_years = $p->get_all_years();

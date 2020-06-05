@@ -128,6 +128,10 @@ subtype 'DesignType',
 
 has 'design_type' => (isa => 'DesignType', is => 'rw', predicate => 'has_design_type', clearer => 'clear_design_type');
 
+has 'replicated_accession_no' => (isa => 'Int', is => 'rw', predicate => 'has_replicated_accession_no' );
+
+has 'unreplicated_accession_no' => (isa => 'Maybe[Int]', is => 'rw', predicate => 'has_unreplicated_accession_no');
+
 
 sub get_design {
     my $self = shift;
@@ -165,13 +169,14 @@ sub isint{
 
 
 sub validate_field_colNumber {
-  my $colNum = shift;
-  if (isint($colNum)){
-    return $colNum;
-  } else {
-      die "Choose a different row number for field map generation. The product of number of stocks and rep when divided by row number should give an integer\n";
-      return;
-  }
+    my $colNum = shift;
+    if (isint($colNum)){
+	
+	return $colNum;
+    } else {
+	die "Choose a different row number for field map generation. The product of number of stocks and rep when divided by row number should give an integer\n";
+	return;
+    }
 
 }
 

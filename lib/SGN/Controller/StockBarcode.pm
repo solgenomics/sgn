@@ -108,7 +108,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my $cross_combination_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_combination', 'stock_property' )->cvterm_id();
     my $xlabel_margin = 8;
     # convert mm into pixels
-    print "MY TOP MARGIN: $top_margin_mm\n";
+    print STDERR "MY TOP MARGIN: $top_margin_mm\n";
     if ($cass_print_format eq 'NCSU') {$left_margin_mm = 10, $top_margin_mm = 12, $bottom_margin_mm =  12, $right_margin_mm = 10, $labels_per_page = 10, $labels_per_row = 3, $barcode_type = "2D", $page_format = "letter"; }
     if ($cass_print_format eq 'CASS') {$left_margin_mm = 112, $top_margin_mm = 10, $bottom_margin_mm =  13, $right_margin_mm = 10, $barcode_type = "2D", $labels_per_row = 2; }
     if ($cass_print_format eq 'IITA-3') {$left_margin_mm = 130, $top_margin_mm = 13, $bottom_margin_mm =  11, $right_margin_mm = 10, $labels_per_row = 3, $barcode_type = "2D"; }
@@ -304,7 +304,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my $label_height;
     if ($cass_print_format eq '32A4'){
         $label_height = 40;
-        print "LABEL HEIGHT: $label_height\n";
+        print STDERR "LABEL HEIGHT: $label_height\n";
     }
     elsif ($cass_print_format eq '32_unique'){
         $label_height = 40;

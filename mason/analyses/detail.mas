@@ -1,0 +1,57 @@
+
+<%doc>
+
+=head1 NAME
+
+/mason/analyses/detail.mas
+
+=head1 DESCRIPTION
+
+Displays a detail page for an analysis.
+
+Requires the parameter analysis_id
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%args>
+$analysis_id
+$analysis_name
+$analysis_description
+</%args>
+
+<& /util/import_javascript.mas, entries => ['analyses'], classes => [ 'jquery', 'jquery.dataTables' ],  &>
+
+<& /page/page_title.mas, title => "Analysis <span id=\"analyis_name_title\">$analysis_name</span> ($analysis_id)" &>
+
+<&| /page/info_section.mas, title=>"Analysis description", collapsible=>1, collapsed=>0 &>
+  <div  id="analysis_description"><div id="analysis_description"><blink>*</blink></div></div>
+</&>
+
+<&| /page/info_section.mas, title=>"Input data", collapsible=>1, collapsed=>0 &>
+  Dataset name: <div id="analysis_input_data">[Not provided]</div>
+</&>
+  
+<&| /page/info_section.mas, title=>"Analysis protocol", collapsible=>1, collapsed=>0 &>
+  <div id="analysis_protocol">[Not provided]</div>
+</&>
+
+<&| /page/info_section.mas, title=>"Analysis Results", collapsible => 1, collapsed => 0 &>
+
+  <table id="analysis_results_table">
+  </table>
+  
+</&>
+
+   
+
+<script>
+  jQuery("#working_modal").modal("show");
+  window.jsMod['analyses'].retrieve_analysis_data(<% $analysis_id %>);
+  jQuery("#working_modal").modal("hide");    
+</script>
