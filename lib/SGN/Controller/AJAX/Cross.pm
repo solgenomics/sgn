@@ -598,6 +598,80 @@ sub get_cross_openfield_ids :Path('/ajax/cross/openfield_ids') Args(1) {
 }
 
 
+sub get_cross_tissue_culture_summary :Path('/ajax/cross/tissue_culture_summary') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $cross_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $cross_samples_obj = CXGN::Cross->new({schema=>$schema, cross_stock_id=>$cross_id});
+    my $cross_sample_data  = $cross_samples_obj->get_cross_tissue_culture_samples();
+
+    my $embryo_ids = $cross_sample_data->{'Embryo IDs'};
+    my $subculture_ids = $cross_sample_data->{'Subculture IDs'};
+    my $rooting_ids = $cross_sample_data->{'Rooting IDs'};
+    my $weaning1_ids = $cross_sample_data->{'Weaning1 IDs'};
+    my $weaning2_ids = $cross_sample_data->{'Weaning2 IDs'};
+    my $screenhouse_ids = $cross_sample_data->{'Screenhouse IDs'};
+#    my $hardening_ids = $cross_sample_data->{'Hardening IDs'};
+#    my $openfield_ids = $cross_sample_data->{'Openfield IDs'};
+
+    my @embryo_ids_array = @$embryo_ids;
+    my @subculture_ids_array = @$subculture_ids;
+    my @rooting_ids_array = @$rooting_ids;
+    my @weaning1_ids_array = @$weaning1_ids;
+    my @weaning2_ids_array = @$weaning2_ids;
+    my @screenhouse_ids_array = @$screenhouse_ids;
+#    my @hardening_ids_array = @$hardening_ids;
+#    my @openfield_ids_array = @$openfield_ids;
+
+    my @all_rows;
+    my @each_row;
+
+    foreach my $embryo_id (@embryo_ids_array) {
+
+        if ($embryo_id) {
+            push @each_row, $embryo_id;
+        }
+
+        if ($embryo_id ~~ @subculture_ids_array) {
+            push @each_row, 'OK';
+        } else {
+            push @each_row, 'X';
+        }
+
+        if ($embryo_id ~~ @rooting_ids_array) {
+            push @each_row, 'OK';
+        } else {
+            push @each_row, 'X';
+        }
+
+        if ($embryo_id ~~ @weaning1_ids_array) {
+            push @each_row, 'OK';
+        } else {
+            push @each_row, 'X';
+        }
+
+        if ($embryo_id ~~ @weaning2_ids_array) {
+            push @each_row, 'OK';
+        } else {
+            push @each_row, 'X';
+        }
+
+        if ($embryo_id ~~ @screenhouse_ids_array) {
+            push @each_row, 'OK';
+        } else {
+            push @each_row, 'X';
+        }
+
+        push @all_rows, [@each_row];
+        @each_row =();
+    }
+
+    print STDERR "ALL ROWS =".Dumper(\@all_rows)."\n";
+
+    $c->stash->{rest} = { data => \@all_rows };
+}
 
 
  sub save_property_check :Path('/cross/property/check') Args(1) {

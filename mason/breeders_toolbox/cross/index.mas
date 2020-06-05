@@ -130,6 +130,30 @@ $identifier_prefix => ''
 </div>
 
 
+<&| /page/info_section.mas, id=>'tissue_culture_summary_section', title => 'Tissue culture Summary of this Cross', collapsible=>1, collapsed=>1, subtitle => 'View tissue culture ids (e.g., embryo ids, subculture ids, rooting ids, weaning1 ids)'&>
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <div style="overflow:scroll">
+                    <table id="tissue_culture_summary_table" class="table table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th>Embryo IDs</th>
+                                <th>Subculture IDs</th>
+                                <th>Rooting IDs</th>
+                                <th>Weaning1 IDs</th>
+                                <th>Weaning2 IDs</th>
+                                <th>Screenhouse IDs</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</&>
+
+
 <&| /page/info_section.mas, id=>'tissue_culture_samples_section', title => 'Tissue culture IDs of this Cross', collapsible=>1, collapsed=>1, subtitle => 'View tissue culture ids (e.g., embryo ids, subculture ids, rooting ids, weaning1 ids)'&>
     <div class="well well-sm">
         <div class="panel panel-default">

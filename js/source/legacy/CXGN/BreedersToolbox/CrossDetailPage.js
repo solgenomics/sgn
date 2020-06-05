@@ -387,4 +387,17 @@ jQuery(document).ready(function() {
         return;
     }
 
+
+    jQuery('#tissue_culture_summary_section_onswitch').click(function(){
+        display_summary_table(get_cross_id());
+    });
+
+    function display_summary_table(cross_id){
+        var summary_table = jQuery('#tissue_culture_summary_table').DataTable({
+            'ajax': '/ajax/cross/tissue_culture_summary/'+cross_id,
+        });
+
+        return;
+    }
+
 });
