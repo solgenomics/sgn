@@ -590,7 +590,6 @@ sub download_grm {
             }
         }
         elsif ($download_format eq 'three_column_reciprocal') {
-            print STDERR Dumper $all_accession_stock_ids;
             my %result_hash;
             my $row_num = 0;
             my %seen_stock_ids;

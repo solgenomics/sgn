@@ -3494,11 +3494,28 @@ jQuery(document).ready(function() {
                     alert(response.error);
                 }
                 else {
-                    var html = '<table class="table table-bordered table-hover"><thead><tr><th>Observation Variable</th><th>Statistics</th><th>Plot</th></tr></thead><tbody>';
-                    for (var i=0; i<response.length; i++) {
-                        html = html + '<tr><td>'+response[i][0]+'</td><td>'+response[i][1]+'</td><td><img src="'+response[i][2]+'"></td></tr>';
+                    var html = '';
+                    if (response.gen_corr.length > 0) {
+                        html = '<table class="table table-bordered table-hover"><thead><tr><th>Observation Variable</th><th>Genetic Correlation</th></tr></thead><tbody>';
+                        for (var k=0; k<response.gen_corr.length; k++) {
+                            for (var i=0; i<response.gen_corr[k].length; i++) {
+                                var gen_corrs = [];
+                                for (var j=1; j<response.gen_corr[k][i].length; j++) {
+                                    gen_corrs.push(response.gen_corr[k][i][j]);
+                                }
+                                html = html + '<tr><td>'+response.gen_corr[k][i][0]+'</td><td>'+gen_corrs+'</td></tr>';
+                            }
+                        }
+                        html = html + '</tbody></table>';
                     }
-                    html = html + '</tbody></table>';
+
+                    if (response.results.length > 0) {
+                        html = '<table class="table table-bordered table-hover"><thead><tr><th>Observation Variable</th><th>Statistics</th><th>Plot</th></tr></thead><tbody>';
+                        for (var i=0; i<response.results.length; i++) {
+                            html = html + '<tr><td>'+response.results[i][0]+'</td><td>'+response.results[i][1]+'</td><td><img src="'+response.results[i][2]+'"></td></tr>';
+                        }
+                        html = html + '</tbody></table>';
+                    }
                     jQuery('#drone_imagery_calculate_statistics_result_div').html(html);
 
                     Workflow.complete("#drone_imagery_calculate_statistics_select_step");

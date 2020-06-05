@@ -226,6 +226,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $tolparinv = $c->req->param('tolparinv');
 
     my @results;
+    my @gen_corr_results;
 
     if ($statistics_select eq 'lmer_germplasmname' || $statistics_select eq 'lmer_germplasmname_block' || $statistics_select eq 'sommer_grm_spatial_heatmap' || $statistics_select eq 'sommer_grm_spatial_genetic_correlations') {
 
@@ -249,6 +250,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         }
 
         my %trait_name_encoder;
+        my %trait_name_encoder_rev;
         my $trait_name_encoded = 1;
         my %phenotype_data;
         foreach my $obs_unit (@$data){
@@ -261,7 +263,9 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         }
         foreach my $trait_name (@sorted_trait_names) {
             if (!exists($trait_name_encoder{$trait_name})) {
-                $trait_name_encoder{$trait_name} = 't'.$trait_name_encoded;
+                my $trait_name_e = 't'.$trait_name_encoded;
+                $trait_name_encoder{$trait_name} = $trait_name_e;
+                $trait_name_encoder_rev{$trait_name_e} = $trait_name;
                 $trait_name_encoded++;
             }
         }
@@ -403,12 +407,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             mat\$colNumber <- as.numeric(mat\$colNumber);
             mat\$rowNumberFactor <- as.factor(mat\$rowNumberFactor);
             mat\$colNumberFactor <- as.factor(mat\$colNumberFactor);
-            #geno_mat;
-            #mat;
             mix <- mmer(cbind('.$encoded_trait_string.')~1, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
-            summary(mix);
             gen_cor <- cov2cor(mix\$sigma\$\`u:id\`);
-            gen_cor;
             write.table(gen_cor, file=\''.$stats_out_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');"';
             print STDERR Dumper $cmd;
             my $status = system($cmd);
@@ -425,16 +425,20 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 }
 
                 my @gen_cor;
+                my $counter = 0;
                 while ( my $row = <$fh> ){
                     my @columns;
                     if ($csv->parse($row)) {
                         @columns = $csv->fields();
+                        my $trait = $trait_name_encoder_rev{$encoded_traits[$counter]};
+                        unshift(@columns, $trait);
                         push @gen_cor, \@columns;
                     }
+                    $counter++;
                 }
             close($fh);
 
-            push @results, \@gen_cor;
+            push @gen_corr_results, \@gen_cor;
         }
     }
     elsif ($statistics_select eq 'marss_germplasmname_block') {
@@ -671,7 +675,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         return;
     }
 
-    $c->stash->{rest} = \@results;
+    $c->stash->{rest} = { results => \@results, gen_corr => \@gen_corr_results };
 }
 
 sub drone_imagery_rotate_image : Path('/api/drone_imagery/rotate_image') : ActionClass('REST') { }
