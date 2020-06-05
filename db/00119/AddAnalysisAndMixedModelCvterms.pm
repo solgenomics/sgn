@@ -87,7 +87,7 @@ sub patch {
     
 
     
-    foreach my $t (keys %$terms){
+    foreach my $t (sort keys %$terms){
 	foreach (@{$terms->{$t}}){
 	    $schema->resultset("Cv::Cvterm")->create_with(
 		{

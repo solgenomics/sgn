@@ -392,7 +392,7 @@ sub retrieve_plot_info {
     my $plot = shift;
     my $design = shift;
 
-    print STDERR "retrieve_plot_info()... Working on plot ".$plot->uniquename()."\n";
+    #print STDERR "retrieve_plot_info()... Working on plot ".$plot->uniquename()."\n";
     my %design_info;
     
     my $json = JSON->new();
