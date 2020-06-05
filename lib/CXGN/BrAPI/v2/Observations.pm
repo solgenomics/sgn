@@ -23,27 +23,21 @@ sub observations_store {
     my $metadata_schema = $self->metadata_schema;
     my $phenome_schema = $self->phenome_schema;
     my $dbh = $self->bcs_schema()->storage()->dbh();
+
     my $observations = $params->{observations};
-    my $version = $params->{version};
     my $user_id = $params->{user_id};
-    my $username = $params->{username};
     my $user_type = $params->{user_type};
-    my $archive_path = $params->{archive_path};
-    my $tempfiles_subdir = $params->{tempfiles_subdir};
+    my $archive_path = $c->config->{archive_path};
+    my $tempfiles_subdir = $c->config->{basepath}."/".$c->config->{tempfiles_subdir};
+    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
 
     my $page_size = $self->page_size;
     my $page = $self->page;
-    my $total_count = scalar @{$observations};
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
     my $status = $self->status;
-    my @data = [];
-    my @data_files = ();
     my %result;
 
-    my @success_status = [];
-
     #print STDERR "OBSERVATIONS_MODULE: User id is $user_id and type is $user_type\n";
-
     if ($user_type ne 'submitter' && $user_type ne 'sequencer' && $user_type ne 'curator') {
         print STDERR 'Must have submitter privileges to upload phenotypes! Please contact us!';
         push @$status, {'403' => 'Permission Denied. Must have correct privilege.'};
@@ -81,7 +75,6 @@ sub observations_store {
         @units = @{$parsed_request->{'units'}};
         @variables = @{$parsed_request->{'variables'}};
         %parsed_data = %{$parsed_request->{'data'}};
-        #print STDERR "Parsed data is: ".Dumper(%parsed_data)."\n";
     }
 
     ## Archive in file
@@ -118,12 +111,12 @@ sub observations_store {
 
     ## Store observations and return details for response
     my $store_observations = CXGN::Phenotypes::StorePhenotypes->new(
-        basepath=>$params->{basepath},
-        dbhost=>$params->{dbhost},
-        dbname=>$params->{dbname},
-        dbuser=>$params->{dbuser},
-        dbpass=>$params->{dbpass},
-        temp_file_nd_experiment_id=>$params->{temp_file_nd_experiment_id},
+        basepath=>$c->config->{basepath},
+        dbhost=>$c->config->{dbhost},
+        dbname=>$c->config->{dbname},
+        dbuser=>$c->config->{dbuser},
+        dbpass=>$c->config->{dbpass},
+        temp_file_nd_experiment_id=>$temp_file_nd_experiment_id,
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
@@ -143,21 +136,19 @@ sub observations_store {
         return CXGN::BrAPI::JSONResponse->return_error($status, $stored_observation_error);
     }
     if ($stored_observation_success) {
+        #if no error refresh matviews 
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
 
         print STDERR "Success: $stored_observation_success\n";
-        if ($version eq 'v1') {
-            $result{observations} = $stored_observation_details;
-        } elsif ($version eq 'v2') {
-            $result{data} = $stored_observation_details;
-        }
+        # result need to be updated with v2 format
+        $result{data} = $stored_observation_details;
+
     }
-
-    ## Will need to initiate refresh matviews in controller instead
-    #my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
-    #my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
-
+    # result need to be updated with v2 format, StorePhenotypes needs to be modified as v2
+    my @data_files = ();
+    my $total_count = scalar @{$observations};
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, $stored_observation_success);
 
 }
@@ -224,7 +215,7 @@ sub search {
         my $observations = $obs_unit->{observations};
         foreach (@$observations){
             my $observation_id = "$_->{phenotype_id}";
-            if ( ! $observation_db_id || grep{/^$observation_id$/} @{$observation_db_id} ){
+            # if ( ! $observation_db_id || grep{/^$observation_id$/} @{$observation_db_id} ){
                 my @season = {
                     year => $obs_unit->{year},
                     season => undef,
@@ -255,7 +246,7 @@ sub search {
                     };
                 }
                 $counter++;
-            }
+            # }
         }
     }
 

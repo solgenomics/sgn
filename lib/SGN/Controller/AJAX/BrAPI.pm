@@ -3366,13 +3366,25 @@ sub observations_GET {
 sub observations_POST {
 	my $self = shift;
 	my $c = shift;
+	my ($auth,$user_id,$user_type) = _authenticate_user($c);
     my $clean_inputs = $c->stash->{clean_inputs};
     my $data = $clean_inputs->{data};
     my @all_observations;
     foreach my $observation (@{$data}) {
         push @all_observations, $observation;
     }
-	save_observation_results($self, $c, \@all_observations, 'v2');
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Observations');
+	my $brapi_package_result = $brapi_module->observations_store({
+		observations => \@all_observations,
+        user_id => $user_id,
+        user_type => $user_type,
+    },$c);
+
+	my $status = $brapi_package_result->{status};
+	my $http_status_code = _get_http_status_code($status);
+
+	_standard_response_construction($c, $brapi_package_result, $http_status_code);
 }
 
 sub observations_single :  Chained('brapi') PathPart('observations') CaptureArgs(1) {
