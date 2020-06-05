@@ -411,6 +411,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             gen_cor <- cov2cor(mix\$sigma\$\`u:id\`);
             gen_cor;
             write.table(gen_cor, file=\''.$stats_out_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');"';
+            print STDERR Dumper $cmd;
             my $status = system($cmd);
 
             my $csv = Text::CSV->new({ sep_char => "\t" });
