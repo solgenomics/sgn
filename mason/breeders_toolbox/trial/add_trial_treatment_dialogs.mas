@@ -23,7 +23,7 @@
                                 <select class="form-control" id="new_treatment_type" name="new_treatment_type">
                                     <option value="fertilizer">Fertilizer</option>
                                     <option value="fungicide">Fungicide</option>
-                                    <option value="irrigation">Irrigation</option>
+                                    <option value="irrigation">Irrigation</option> 
                                     <option value="Drought">Drought</option>
                                     <option value="herbicide">Herbicide</option>
                                     <option value="weeding">Weeding</option>
