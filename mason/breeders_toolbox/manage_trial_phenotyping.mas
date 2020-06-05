@@ -237,7 +237,7 @@ var trial_info_object = [];
         plot_focusin = jQuery("#plot_name").val();
         trait_focusin = jQuery("#select_traits_for_trait_file").val();
         //var trait_list_option = '';
-        if ($('#use_trait_list').is(':checked')) {
+        if (jQuery('#use_trait_list').is(':checked')) {
            //trait_list_option = jQuery('#use_trait_list').val();
            trait_list_option_focusin = jQuery('#use_trait_list').val();
         }

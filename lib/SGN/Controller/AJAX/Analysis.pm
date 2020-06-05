@@ -147,7 +147,7 @@ INFO
     #
     my @good_traits;
     foreach my $t (@traits) {
-	my ($human_readable, $accession) = split /\|/, $t;
+	my ($human_readable, $accession) = split /\|/, $t; #/
 
 	print "Checking term $t ($human_readable, $accession)...\n";
 	my $term = CXGN::Cvterm->new( { schema => $c->dbic_schema("Bio::Chado::Schema"), accession => $accession });

@@ -675,6 +675,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         return;
     }
 
+    print STDERR Dumper \@results;
+    print STDERR Dumper \@gen_corr_results;
     $c->stash->{rest} = { results => \@results, gen_corr => \@gen_corr_results };
 }
 

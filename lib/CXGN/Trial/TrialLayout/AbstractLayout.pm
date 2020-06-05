@@ -221,8 +221,8 @@ sub _get_unique_accession_names_from_trial {
     my %unique_acc;
     no warnings 'numeric'; #for genotyping plate so that wells don't give warning
 
-    print STDERR "DESIGN (AbstractTrial): ".Dumper(\%design);
-    
+    #print STDERR "DESIGN (AbstractTrial): ".Dumper(\%design);
+
     foreach my $key (sort { $a <=> $b} keys %design) {
         my %design_info = %{$design{$key}};
         $unique_acc{$design_info{"accession_name"}} = $design_info{"accession_id"}
@@ -297,7 +297,7 @@ sub _get_design_from_trial {
     my $design = decode_json $trial_layout_json->value if ($trial_layout_json);
     if (keys(%$design)) {
         	    print STDERR "WE HAVE TRIAL LAYOUT JSON!\n";
-	    print STDERR "TRIAL LAYOUT JSON IS: ".$trial_layout_json->value()."\n";
+	    #print STDERR "TRIAL LAYOUT JSON IS: ".$trial_layout_json->value()."\n";
 	    
 	    #Plant index number needs to be in the cached layout of trials that have plants. this serves a check to assure this.
 	    if ($trial_has_plants){
@@ -316,7 +316,7 @@ sub _get_design_from_trial {
 	} else {
 	print STDERR "Regenerating cache...\n";
         my $design = $self->generate_and_cache_layout();
-	print STDERR "Generated DESIGN (and cached) : ".Dumper($design);
+	#print STDERR "Generated DESIGN (and cached) : ".Dumper($design);
 	return $design;
     }
 }
@@ -366,7 +366,7 @@ sub generate_and_cache_layout {
 	$self->retrieve_plot_info($plot, \%design);
     }
 
-    print STDERR "DESIGN IN generate_and_cache_layout: ".Dumper(\%design);
+    #print STDERR "DESIGN IN generate_and_cache_layout: ".Dumper(\%design);
 
     my $trial_layout_json_rs = $project->search_related('projectprops',{ 'type_id' => $self->cvterm_id('trial_layout_json') });
     while (my $t = $trial_layout_json_rs->next) {
@@ -381,7 +381,7 @@ sub generate_and_cache_layout {
         return \%verify_errors;
     }
 
-    print STDERR "DESIGN AS READ : ".Dumper(\%design);
+    #print STDERR "DESIGN AS READ : ".Dumper(\%design);
 	
     return \%design;
 }
