@@ -400,10 +400,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             row.names(geno_mat) <- geno_mat\$stock_id;
             geno_mat\$stock_id <- NULL;
             geno_mat <- as.matrix(geno_mat);
-            mat\$rowNumber <- as.numeric(mat\$rowNumber)
-            mat\$colNumber <- as.numeric(mat\$colNumber)
-            mat\$rowNumberFactor <- as.factor(mat\$rowNumberFactor)
-            mat\$colNumberFactor <- as.factor(mat\$colNumberFactor)
+            mat\$rowNumber <- as.numeric(mat\$rowNumber);
+            mat\$colNumber <- as.numeric(mat\$colNumber);
+            mat\$rowNumberFactor <- as.factor(mat\$rowNumberFactor);
+            mat\$colNumberFactor <- as.factor(mat\$colNumberFactor);
             #geno_mat;
             #mat;
             mix <- mmer(cbind('.$encoded_trait_string.')~1, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
