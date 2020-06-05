@@ -589,27 +589,27 @@ sub get_seedlots_select : Path('/ajax/html/select/seedlots') Args(0) {
     my $c = shift;
     my $accessions = $c->req->param('seedlot_content_accession_name') ? [$c->req->param('seedlot_content_accession_name')] : [];
     my $crosses = $c->req->param('seedlot_content_cross_name') ? [$c->req->param('seedlot_content_cross_name')] : [];
-    my $offset = $c->req->param('seedlot_offset') ? $c->req->param('seedlot_offset') : '';
-    my $limit = $c->req->param('seedlot_limit') ? $c->req->param('seedlot_limit') : '';
-    my $search_seedlot_name = $c->req->param('seedlot_name') ? $c->req->param('seedlot_name') : '';
+#    my $offset = $c->req->param('seedlot_offset') ? $c->req->param('seedlot_offset') : '';
+#    my $limit = $c->req->param('seedlot_limit') ? $c->req->param('seedlot_limit') : '';
+#    my $search_seedlot_name = $c->req->param('seedlot_name') ? $c->req->param('seedlot_name') : '';
     my $search_breeding_program_name = $c->req->param('seedlot_breeding_program_name') ? $c->req->param('seedlot_breeding_program_name') : '';
-    my $search_location = $c->req->param('seedlot_location') ? $c->req->param('seedlot_location') : '';
-    my $search_amount = $c->req->param('seedlot_amount') ? $c->req->param('seedlot_amount') : '';
-    my $search_weight = $c->req->param('seedlot_weight') ? $c->req->param('seedlot_weight') : '';
+#    my $search_location = $c->req->param('seedlot_location') ? $c->req->param('seedlot_location') : '';
+#    my $search_amount = $c->req->param('seedlot_amount') ? $c->req->param('seedlot_amount') : '';
+#    my $search_weight = $c->req->param('seedlot_weight') ? $c->req->param('seedlot_weight') : '';
     my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots(
         $c->dbic_schema("Bio::Chado::Schema", "sgn_chado"),
         $c->dbic_schema("CXGN::People::Schema"),
         $c->dbic_schema("CXGN::Phenome::Schema"),
-        $offset,
-        $limit,
-        $search_seedlot_name,
+        undef,
+        undef,
+        undef,
         $search_breeding_program_name,
-        $search_location,
-        $search_amount,
+        undef,
+        undef,
         $accessions,
         $crosses,
         1,
-        $search_weight
+        undef
     );
     my @seedlots;
     foreach my $sl (@$list) {

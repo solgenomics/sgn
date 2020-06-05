@@ -14,7 +14,7 @@ my $d = SGN::Test::WWW::WebDriver->new();
 $d->while_logged_in_as("submitter", sub {
     $d->get_ok('/solgs', 'solgs home page');
     sleep(2);
-   $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese');
+    $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese');
     sleep(2); 
     $d->find_element_ok('search_training_pop', 'id', 'search for training pop')->click();
     sleep(1);
@@ -106,7 +106,33 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('DMCP', 'partial_link_text', 'go back')->click();
     sleep(5);
- $d->driver->go_back();
+    $d->driver->go_back();
+    sleep(5);
+    
+    my $sel_pred = $d->find_element('Model accuracy statistics', 'partial_link_text', 'scroll to accuracy');
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
+    sleep(2);
+    $d->find_element_ok('Download model accuracy', 'partial_link_text',  'download accuracy')->click();
+    sleep(3);
+    $d->driver->go_back();
+    sleep(5);
+    
+    my $sel_pred = $d->find_element('GEBVs vs observed', 'partial_link_text', 'scroll to GEBvs');
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $sel_pred);
+    sleep(2);
+    $d->find_element_ok('Download all GEBVs', 'partial_link_text',  'download gebvs')->click();
+    sleep(3);
+    $d->driver->go_back();
+    sleep(5);
+    
+    my $sel_pred = $d->find_element('Marker Effects', 'partial_link_text', 'scroll to marker effects');
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $sel_pred);
+    sleep(2);
+    $d->find_element_ok('Marker Effects', 'partial_link_text', 'expand marker effects')->click();
+    sleep(2);
+    $d->find_element_ok('Download all marker', 'partial_link_text',  'build marker effects')->click();
+    sleep(3);
+    $d->driver->go_back();
     sleep(5);
   
     my $sel_pred = $d->find_element('Predict', 'partial_link_text', 'scroll to selection pred');
