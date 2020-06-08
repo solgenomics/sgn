@@ -226,7 +226,9 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $tolparinv = $c->req->param('tolparinv');
 
     my @results;
-    my @gen_corr_results;
+    my %result_blup_data;
+    my @sorted_trait_names;
+    my @unique_accession_names;
 
     if ($statistics_select eq 'lmer_germplasmname' || $statistics_select eq 'lmer_germplasmname_block' || $statistics_select eq 'sommer_grm_spatial_heatmap' || $statistics_select eq 'sommer_grm_spatial_genetic_correlations') {
 
@@ -242,7 +244,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             }
         );
         my ($data, $unique_traits) = $phenotypes_search->search();
-        my @sorted_trait_names = sort keys %$unique_traits;
+        @sorted_trait_names = sort keys %$unique_traits;
 
         if (scalar(@$data) == 0) {
             $c->stash->{rest} = { error => "There are no phenotypes for the trials and traits you have selected!"};
@@ -253,14 +255,22 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         my %trait_name_encoder_rev;
         my $trait_name_encoded = 1;
         my %phenotype_data;
+        my %stock_info;
+        my %unique_accessions;
         foreach my $obs_unit (@$data){
             my $germplasm_name = $obs_unit->{germplasm_uniquename};
             my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
+            $unique_accessions{$germplasm_name}++;
+            $stock_info{"S".$germplasm_stock_id} = {
+                uniquename => $germplasm_name
+            };
             my $observations = $obs_unit->{observations};
             foreach (@$observations){
                 $phenotype_data{$obs_unit->{observationunit_uniquename}}->{$_->{trait_name}} = $_->{value};
             }
         }
+        @unique_accession_names = sort keys %unique_accessions;
+
         foreach my $trait_name (@sorted_trait_names) {
             if (!exists($trait_name_encoder{$trait_name})) {
                 my $trait_name_e = 't'.$trait_name_encoded;
@@ -271,10 +281,19 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         }
 
         my @data_matrix;
+        my %obsunit_row_col;
         foreach (@$data) {
             my $germplasm_name = $_->{germplasm_uniquename};
             my $germplasm_stock_id = $_->{germplasm_stock_id};
-            my @row = ($_->{obsunit_rep}, $_->{obsunit_block}, "S".$germplasm_stock_id, $_->{obsunit_row_number}, $_->{obsunit_col_number}, $_->{obsunit_row_number}, $_->{obsunit_col_number});
+            my $obsunit_stock_id = $_->{observationunit_stock_id};
+            my $obsunit_stock_uniquename = $_->{observationunit_uniquename};
+            my $row_number = $_->{obsunit_row_number};
+            my $col_number = $_->{obsunit_col_number};
+            my @row = ($_->{obsunit_rep}, $_->{obsunit_block}, "S".$germplasm_stock_id, $row_number, $col_number, $row_number, $col_number);
+            $obsunit_row_col{$row_number}->{$col_number} = {
+                stock_id => $obsunit_stock_id,
+                stock_uniquename => $obsunit_stock_uniquename
+            };
             foreach my $t (@sorted_trait_names) {
                 if (defined($phenotype_data{$_->{observationunit_uniquename}}->{$t})) {
                     push @row, $phenotype_data{$_->{observationunit_uniquename}}->{$t} + 0;
@@ -298,6 +317,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         mkdir $tmp_stats_dir if ! -d $tmp_stats_dir;
         my ($stats_tempfile_fh, $stats_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
         my ($stats_out_tempfile_fh, $stats_out_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+        my ($stats_out_tempfile_row_fh, $stats_out_tempfile_row) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+        my ($stats_out_tempfile_col_fh, $stats_out_tempfile_col) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
 
         open(my $F, ">", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
             print $F $header_string."\n";
@@ -408,12 +429,18 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             mat\$rowNumberFactor <- as.factor(mat\$rowNumberFactor);
             mat\$colNumberFactor <- as.factor(mat\$colNumberFactor);
             mix <- mmer(cbind('.$encoded_trait_string.')~1, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
-            gen_cor <- cov2cor(mix\$sigma\$\`u:id\`);
-            write.table(gen_cor, file=\''.$stats_out_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');"';
+            #gen_cor <- cov2cor(mix\$sigma\$\`u:id\`);
+            write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
+            write.table(mix\$U\$\`u:Rowf\`, file=\''.$stats_out_tempfile_row.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
+            write.table(mix\$U\$\`u:Colf\`, file=\''.$stats_out_tempfile_col.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
             print STDERR Dumper $cmd;
             my $status = system($cmd);
 
+            my $time = DateTime->now();
+            my $timestamp = $time->ymd()."_".$time->hms();
+
             my $csv = Text::CSV->new({ sep_char => "\t" });
+
             open(my $fh, '<', $stats_out_tempfile)
                 or die "Could not open file '$stats_out_tempfile' $!";
 
@@ -424,21 +451,94 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     @header_cols = $csv->fields();
                 }
 
-                my @gen_cor;
-                my $counter = 0;
-                while ( my $row = <$fh> ){
+                while (my $row = <$fh>) {
                     my @columns;
                     if ($csv->parse($row)) {
                         @columns = $csv->fields();
-                        my $trait = $trait_name_encoder_rev{$encoded_traits[$counter]};
-                        unshift(@columns, $trait);
-                        push @gen_cor, \@columns;
                     }
-                    $counter++;
+                    my $col_counter = 0;
+                    foreach my $encoded_trait (@header_cols) {
+                        my $trait = $trait_name_encoder_rev{$encoded_trait};
+                        my $stock_id = $columns[0];
+
+                        my $stock_name = $stock_info{$stock_id}->{uniquename};
+                        my $value = $columns[$col_counter+1];
+                        $result_blup_data{$stock_name}->{$trait} = [$value, $timestamp, $user_name, '', ''];
+                        $col_counter++;
+                    }
                 }
             close($fh);
 
-            push @gen_corr_results, \@gen_cor;
+            my %result_blup_row_data;
+            my @row_numbers;
+            open(my $fh_row, '<', $stats_out_tempfile_row)
+                or die "Could not open file '$stats_out_tempfile_row' $!";
+
+                print STDERR "Opened $stats_out_tempfile_row\n";
+                my $header_row = <$fh_row>;
+                my @header_cols_row;
+                if ($csv->parse($header_row)) {
+                    @header_cols_row = $csv->fields();
+                }
+
+                while (my $row_row = <$fh_row>) {
+                    my @columns_row;
+                    if ($csv->parse($row_row)) {
+                        @columns_row = $csv->fields();
+                    }
+                    my $col_counter_row = 0;
+                    foreach my $encoded_trait (@header_cols_row) {
+                        my $trait = $trait_name_encoder_rev{$encoded_trait};
+                        my $row_id = $columns_row[0];
+                        push @row_numbers, $row_id;
+                        my $value = $columns_row[$col_counter_row+1];
+                        $result_blup_row_data{$row_id}->{$trait} = $value;
+                        $col_counter_row++;
+                    }
+                }
+            close($fh_row);
+
+            my %result_blup_col_data;
+            my @col_numbers;
+            open(my $fh_col, '<', $stats_out_tempfile_col)
+                or die "Could not open file '$stats_out_tempfile_col' $!";
+
+                print STDERR "Opened $stats_out_tempfile_col\n";
+                my $header_col = <$fh_col>;
+                my @header_cols_col;
+                if ($csv->parse($header_col)) {
+                    @header_cols_col = $csv->fields();
+                }
+
+                while (my $row_col = <$fh_col>) {
+                    my @columns_col;
+                    if ($csv->parse($row_col)) {
+                        @columns_col = $csv->fields();
+                    }
+                    my $col_counter_col = 0;
+                    foreach my $encoded_trait (@header_cols_col) {
+                        my $trait = $trait_name_encoder_rev{$encoded_trait};
+                        my $col_id = $columns_col[0];
+                        push @col_numbers, $col_id;
+                        my $value = $columns_col[$col_counter_col+1];
+                        $result_blup_col_data{$col_id}->{$trait} = $value;
+                        $col_counter_col++;
+                    }
+                }
+            close($fh_col);
+
+            foreach my $trait (@sorted_trait_names) {
+                foreach my $row (@row_numbers) {
+                    foreach my $col (@col_numbers) {
+                        my $uniquename = $obsunit_row_col{$row}->{$col}->{stock_uniquename};
+                        my $stock_id = $obsunit_row_col{$row}->{$col}->{stock_id};
+
+                        my $row_val = $result_blup_row_data{$row}->{$trait};
+                        my $col_val = $result_blup_col_data{$col}->{$trait};
+                        $result_blup_data{$uniquename}->{"RC".$trait} = [$row_val*$col_val, $timestamp, $user_name, '', ''];
+                    }
+                }
+            }
         }
     }
     elsif ($statistics_select eq 'marss_germplasmname_block') {
@@ -676,8 +776,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     }
 
     print STDERR Dumper \@results;
-    print STDERR Dumper \@gen_corr_results;
-    $c->stash->{rest} = { results => \@results, gen_corr => \@gen_corr_results };
+    print STDERR Dumper \%result_blup_data;
+    $c->stash->{rest} = { results => \@results, result_blup_data => \%result_blup_data, unique_traits => \@sorted_trait_names, unique_accessions => \@unique_accession_names };
 }
 
 sub drone_imagery_rotate_image : Path('/api/drone_imagery/rotate_image') : ActionClass('REST') { }
