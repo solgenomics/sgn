@@ -68,7 +68,8 @@ sub patch {
             'trained_keras_mask_r_cnn_model'
         ],
         'protocol_property' => [
-            'trained_keras_mask_r_cnn_model_type'
+            'trained_keras_mask_r_cnn_model_type',
+			'model_language'
         ]
     };
 

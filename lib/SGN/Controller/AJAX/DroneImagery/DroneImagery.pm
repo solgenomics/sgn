@@ -225,6 +225,15 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $protocol_id = $c->req->param('protocol_id');
     my $tolparinv = $c->req->param('tolparinv');
 
+    my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
+    my $tmp_stats_dir = $shared_cluster_dir_config."/tmp_drone_statistics";
+    mkdir $tmp_stats_dir if ! -d $tmp_stats_dir;
+    my ($stats_tempfile_fh, $stats_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    my ($stats_out_tempfile_fh, $stats_out_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    my ($stats_out_tempfile_row_fh, $stats_out_tempfile_row) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    my ($stats_out_tempfile_col_fh, $stats_out_tempfile_col) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    my $grm_file;
+
     my @results;
     my %result_blup_data;
     my %result_blup_spatial_data;
@@ -317,14 +326,6 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         }
         my $header_string = join ',', @phenotype_header;
 
-        my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
-        my $tmp_stats_dir = $shared_cluster_dir_config."/tmp_drone_statistics";
-        mkdir $tmp_stats_dir if ! -d $tmp_stats_dir;
-        my ($stats_tempfile_fh, $stats_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
-        my ($stats_out_tempfile_fh, $stats_out_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
-        my ($stats_out_tempfile_row_fh, $stats_out_tempfile_row) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
-        my ($stats_out_tempfile_col_fh, $stats_out_tempfile_col) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
-
         open(my $F, ">", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
             print $F $header_string."\n";
             foreach (@data_matrix) {
@@ -333,7 +334,6 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             }
         close($F);
 
-        my $grm_file;
         if ($statistics_select eq 'sommer_grm_spatial_heatmap' || $statistics_select eq 'sommer_grm_spatial_genetic_correlations') {
 
             my %seen_accession_stock_ids;
@@ -782,7 +782,35 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
     #print STDERR Dumper \@results;
     #print STDERR Dumper \%result_blup_data;
-    $c->stash->{rest} = { results => \@results, result_blup_genetic_data => \%result_blup_data, result_blup_spatial_data => \%result_blup_spatial_data, unique_traits => \@sorted_trait_names, unique_accessions => \@unique_accession_names, unique_plots => \@unique_plot_names };
+    $c->stash->{rest} = {
+        results => \@results,
+        result_blup_genetic_data => \%result_blup_data,
+        result_blup_spatial_data => \%result_blup_spatial_data,
+        unique_traits => \@sorted_trait_names,
+        unique_accessions => \@unique_accession_names,
+        unique_plots => \@unique_plot_names,
+        statistics_select => $statistics_select,
+        grm_file => $grm_file,
+        stats_tempfile => $stats_tempfile,
+        stats_out_tempfile => $stats_out_tempfile,
+        stats_out_tempfile_col => $stats_out_tempfile_col,
+        stats_out_tempfile_row => $stats_out_tempfile_row
+    };
+}
+
+sub drone_imagery_calculate_statistics_store_analysis : Path('/api/drone_imagery/calculate_statistics_store_analysis') : ActionClass('REST') { }
+sub drone_imagery_calculate_statistics_store_analysis_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $image_id = $c->req->param('image_id');
+    my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
+    my $angle_rotation = $c->req->param('angle');
+    my $view_only = $c->req->param('view_only');
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
 }
 
 sub drone_imagery_rotate_image : Path('/api/drone_imagery/rotate_image') : ActionClass('REST') { }
@@ -5101,11 +5129,6 @@ sub _perform_save_trained_keras_cnn_model {
     my $keras_cnn_model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_type', 'protocol_property')->cvterm_id();
     my $keras_cnn_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_experiment', 'experiment_type')->cvterm_id();
 
-    my $trial = CXGN::Trial->new({
-        bcs_schema => $schema, trial_id => $field_trial_ids[0]
-    });
-    my $location_id = $trial->get_location->[0];
-
     my $m = CXGN::AnalysisModel::SaveModel->new({
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
@@ -5127,7 +5150,6 @@ sub _perform_save_trained_keras_cnn_model {
             {auxiliary_model_file => $archive_temp_autoencoder_output_model_file, auxiliary_model_file_archive_type => 'trained_keras_cnn_autoencoder_model'},
             {auxiliary_model_file => $model_input_aux_file, auxiliary_model_file_archive_type => 'trained_keras_cnn_model_input_aux_data_file'}
         ],
-        location_id=>$location_id,
         user_id=>$user_id,
         user_role=>$user_role
     });
@@ -6562,8 +6584,6 @@ sub drone_imagery_retrain_mask_rcnn_GET : Args(0) {
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
-    my $location_id = $schema->resultset("NaturalDiversity::NdGeolocation")->find({description=>'[Computation]'})->nd_geolocation_id();
-
     my $keras_mask_r_cnn_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_mask_r_cnn_model', 'protocol_type')->cvterm_id();
     my $keras_mask_r_cnn_model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_mask_r_cnn_model_type', 'protocol_property')->cvterm_id();
     my $keras_cnn_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_experiment', 'experiment_type')->cvterm_id();
@@ -6588,7 +6608,6 @@ sub drone_imagery_retrain_mask_rcnn_GET : Args(0) {
         #     {auxiliary_model_file => $archive_temp_autoencoder_output_model_file, auxiliary_model_file_archive_type => 'trained_keras_cnn_autoencoder_model'},
         #     {auxiliary_model_file => $model_input_aux_file, auxiliary_model_file_archive_type => 'trained_keras_cnn_model_input_aux_data_file'}
         # ],
-        location_id=>$location_id,
         user_id=>$user_id,
         user_role=>$user_role
     });

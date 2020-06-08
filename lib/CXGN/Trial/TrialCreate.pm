@@ -188,7 +188,7 @@ has 'genotyping_plate_sample_type' => (isa => 'Str', is => 'rw');
 # properties for analyses
 #
 has 'is_analysis' => (isa => 'Bool', is => 'rw', required => 0, default => 0, );
-
+has 'analysis_model_protocol_id' => (isa => 'Int', is => 'rw', required => 0 );
 
 
 sub trial_name_already_exists {
@@ -346,8 +346,10 @@ sub save_trial {
 	my $source_field_trial_ids = $t->set_source_field_trials_for_genotyping_trial($self->get_genotyping_trial_from_field_trial);
     }
     elsif ($self->get_is_analysis()) {
-	# do analysis stuff here
-	#
+		if ($self->has_analysis_model_protocol_id && $self->get_analysis_model_protocol_id) {
+			#link to the saved analysis model
+		    $nd_experiment->find_or_create_related('nd_experiment_nd_protocols',{nd_protocol_id => $self->get_analysis_model_protocol_id() });
+		}
     }
     else {
 	my $source_field_trial_ids = $t->set_field_trials_source_field_trials($self->get_field_trial_from_field_trial);

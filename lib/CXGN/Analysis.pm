@@ -70,14 +70,13 @@ use CXGN::Phenotypes::StorePhenotypes;
 use CXGN::Analysis::AnalysisMetadata;
 use CXGN::List::Transform;
 use CXGN::Dataset;
-
-
+use CXGN::AnalysisModel::SaveModel;
 
 =head2 bcs_schema()
 
 =cut
-    
-# has 'bcs_schema' => (is => 'rw', isa => 'Ref', required => 1 );
+
+has 'bcs_schema' => (is => 'rw', isa => 'Bio::Chado::Schema', required => 1 );
 
 =head2 people_schema()
 
@@ -143,6 +142,20 @@ has 'nd_geolocation_id' => (is => 'rw', isa=> 'Maybe[Int]');
 =cut
 
 has 'user_id' => (is => 'rw', isa => 'Int');
+
+=head2 user_role()
+
+=cut
+
+has 'user_role' => (is => 'rw', isa => 'Str');
+
+=head2 analysis_model()
+
+CXGN::AnalysisModel::SaveModel object.
+
+=cut
+
+has 'analysis_model' => (isa => 'Maybe[CXGN::AnalysisModel::SaveModel]', is => 'rw');
 
 =head2 metadata()
 
@@ -439,6 +452,11 @@ sub create_and_store_analysis_design {
     # 	    operator => "janedoe",
     # 	}); 
 
+    my $saved_model_protocol_id;
+    if ($self->has_analysis_model) {
+        $saved_model_protocol_id = $self->get_analysis_model()->save_model();
+    }
+
     my $analysis_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'analysis_experiment', 'experiment_type')->cvterm_id(); 
     
     my $trial_create = CXGN::Trial::TrialCreate->new({
@@ -455,6 +473,7 @@ sub create_and_store_analysis_design {
         trial_name => $self->name(),
 	trial_type => $analysis_experiment_type_id,
 	is_analysis => 1,
+    analysis_model_protocol_id => $saved_model_protocol_id,
 #        field_size => $field_size, #(ha)
 #        plot_width => $plot_width, #(m)
 #        plot_length => $plot_length, #(m)
@@ -465,7 +484,6 @@ sub create_and_store_analysis_design {
 #        crossing_trial_from_field_trial => ['crossing_trial_id1']
     });
 
-    
 #    my $validate_error = $trial_create->validate_design(); 
 #    my $store_error; 
 #    if ($validate_error) {

@@ -13,6 +13,7 @@ my $m = CXGN::AnalysisModel::SaveModel->new({
     archive_path=>$archive_path,
     model_name=>'MyModel',
     model_description=>'Model description',
+    model_language=>'R',
     model_type_cvterm_id=>$model_type_cvterm_id,
     model_experiment_type_cvterm_id=>$model_experiment_type_cvterm_id,
     model_properties=>[],
@@ -21,7 +22,6 @@ my $m = CXGN::AnalysisModel::SaveModel->new({
     archived_training_data_file_type=>$archived_training_data_file_type,
     archived_training_data_file=>$archived_training_data_file,
     archived_auxiliary_files=>$archived_auxiliary_files,
-    location_id=>$location_id,
     user_id=>$user_id,
     user_role=>$user_role
 });
@@ -79,6 +79,12 @@ has 'model_description' => (
     required => 1
 );
 
+has 'model_language' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 1
+);
+
 has 'model_type_cvterm_id' => (
     isa => 'Int',
     is => 'rw',
@@ -126,12 +132,6 @@ has 'archived_auxiliary_files' => (
     is => 'rw'
 );
 
-has 'location_id' => (
-    isa => 'Int',
-    is => 'rw',
-    required => 1
-);
-
 has 'user_id' => (
     isa => 'Int',
     is => 'rw',
@@ -151,10 +151,10 @@ sub save_model {
     my $metadata_schema = $self->metadata_schema();
     my $model_name = $self->model_name();
     my $model_description = $self->model_description();
+    my $model_language = $self->model_language();
     my $model_type_cvterm_id = $self->model_type_cvterm_id();
     my $model_experiment_type_cvterm_id = $self->model_experiment_type_cvterm_id();
     my $model_properties = $self->model_properties();
-    my $location_id = $self->location_id();
     my $model_file = $self->model_file();
     my $archive_path = $self->archive_path();
     my $archived_model_file_type = $self->archived_model_file_type();
@@ -163,6 +163,9 @@ sub save_model {
     my $archived_auxiliary_files = $self->archived_auxiliary_files();
     my $user_id = $self->user_id();
     my $user_role = $self->user_role();
+
+    my $model_language_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'model_language', 'protocol_type')->cvterm_id();
+    push @$model_properties, {value => encode_json({value=>$model_language}), type_id => $model_language_cvterm_id};
 
 	my $protocol_id;
     my $protocol_row = $schema->resultset("NaturalDiversity::NdProtocol")->find({
@@ -184,6 +187,8 @@ sub save_model {
     my $q = "UPDATE nd_protocol SET description = ? WHERE nd_protocol_id = ?;";
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute($model_description, $protocol_id);
+
+    my $location_id = $schema->resultset("NaturalDiversity::NdGeolocation")->find({description=>'[Computation]'})->nd_geolocation_id();
 
 	my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create({
         nd_geolocation_id => $location_id,
