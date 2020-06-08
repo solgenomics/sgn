@@ -227,8 +227,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
     my @results;
     my %result_blup_data;
+    my %result_blup_spatial_data;
     my @sorted_trait_names;
     my @unique_accession_names;
+    my @unique_plot_names;
 
     if ($statistics_select eq 'lmer_germplasmname' || $statistics_select eq 'lmer_germplasmname_block' || $statistics_select eq 'sommer_grm_spatial_heatmap' || $statistics_select eq 'sommer_grm_spatial_genetic_correlations') {
 
@@ -282,6 +284,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
         my @data_matrix;
         my %obsunit_row_col;
+        my %seen_plot_names;
         foreach (@$data) {
             my $germplasm_name = $_->{germplasm_uniquename};
             my $germplasm_stock_id = $_->{germplasm_stock_id};
@@ -294,16 +297,18 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 stock_id => $obsunit_stock_id,
                 stock_uniquename => $obsunit_stock_uniquename
             };
+            $seen_plot_names{$obsunit_stock_uniquename}++;
             foreach my $t (@sorted_trait_names) {
-                if (defined($phenotype_data{$_->{observationunit_uniquename}}->{$t})) {
-                    push @row, $phenotype_data{$_->{observationunit_uniquename}}->{$t} + 0;
+                if (defined($phenotype_data{$obsunit_stock_uniquename}->{$t})) {
+                    push @row, $phenotype_data{$obsunit_stock_uniquename}->{$t} + 0;
                 } else {
-                    print STDERR $_->{observationunit_uniquename}." : $t : $germplasm_name : NA \n";
+                    print STDERR $obsunit_stock_uniquename." : $t : $germplasm_name : NA \n";
                     push @row, 'NA';
                 }
             }
             push @data_matrix, \@row;
         }
+        @unique_plot_names = sort keys %seen_plot_names;
 
         my @phenotype_header = ("replicate", "block", "id", "rowNumber", "colNumber", "rowNumberFactor", "colNumberFactor");
         my $num_col_before_traits = scalar(@phenotype_header);
@@ -431,8 +436,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             mix <- mmer(cbind('.$encoded_trait_string.')~1, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
             #gen_cor <- cov2cor(mix\$sigma\$\`u:id\`);
             write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
-            write.table(mix\$U\$\`u:Rowf\`, file=\''.$stats_out_tempfile_row.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
-            write.table(mix\$U\$\`u:Colf\`, file=\''.$stats_out_tempfile_col.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
+            write.table(mix\$U\$\`u:rowNumberFactor\`, file=\''.$stats_out_tempfile_row.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
+            write.table(mix\$U\$\`u:colNumberFactor\`, file=\''.$stats_out_tempfile_col.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
             print STDERR Dumper $cmd;
             my $status = system($cmd);
 
@@ -535,7 +540,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
                         my $row_val = $result_blup_row_data{$row}->{$trait};
                         my $col_val = $result_blup_col_data{$col}->{$trait};
-                        $result_blup_data{$uniquename}->{"RC".$trait} = [$row_val*$col_val, $timestamp, $user_name, '', ''];
+                        $result_blup_spatial_data{$uniquename}->{$trait} = [$row_val*$col_val, $timestamp, $user_name, '', ''];
                     }
                 }
             }
@@ -777,7 +782,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
     #print STDERR Dumper \@results;
     #print STDERR Dumper \%result_blup_data;
-    $c->stash->{rest} = { results => \@results, result_blup_data => \%result_blup_data, unique_traits => \@sorted_trait_names, unique_accessions => \@unique_accession_names };
+    $c->stash->{rest} = { results => \@results, result_gblup_data => \%result_blup_data, result_blup_spatial_data => \%result_blup_spatial_data, unique_traits => \@sorted_trait_names, unique_accessions => \@unique_accession_names, unique_plots => \@unique_plot_names };
 }
 
 sub drone_imagery_rotate_image : Path('/api/drone_imagery/rotate_image') : ActionClass('REST') { }
