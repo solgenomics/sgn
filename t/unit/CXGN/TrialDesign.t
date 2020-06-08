@@ -73,6 +73,8 @@ is_deeply($trial_design->get_number_of_blocks(),$number_of_blocks, "Get number o
 ok($trial_design->set_design_type("RCBD"), "Set design type to RCBD");
 ok($trial_design->calculate_design(), "Calculate RCBD trial design");
 ok(%design = %{$trial_design->get_design()}, "Get RCBD trial design");
+print Dumper(\%design);
+
 is($design{'101'}->{row_number}, 1, "First plot row_number is 1");
 is($design{'101'}->{col_number}, 1, "First plot col_number is 1");
 is(scalar(keys %design), scalar(@stock_names) * $number_of_blocks,"Result of RCBD design has a number of plots equal to the number of stocks times the number of blocks");

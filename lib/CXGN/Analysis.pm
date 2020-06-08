@@ -27,8 +27,6 @@ The stock.type_id links to 'analysis_instance' (stock_property) (equivalent to '
 
 The stock_relationship.type_id links to 'analysis_of' (equivalent to 'plot_of' in field trials)
 
-=back
-
 This is summarized in the following table:
 
  ┌──────────────────┬───────────────────────┬───────────────────┬────────────────┐
