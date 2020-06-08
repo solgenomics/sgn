@@ -72,6 +72,7 @@ sub search {
     my $genotypes_search = CXGN::Genotype::Search->new({
         trial_list=>\@trial_ids,
         bcs_schema=>$self->bcs_schema,
+        people_schema => $self->people_schema(),
         cache_root=>$c->config->{cache_file_path},
         genotypeprop_hash_select=>['DS', 'GT', 'NT'],
         accession_list=>\@accession_ids,
@@ -164,6 +165,7 @@ sub detail {
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$self->bcs_schema,
+        people_schema => $self->people_schema(),
         cache_root=>$c->config->{cache_file_path},
         accession_list=>[$callset_id],
         genotypeprop_hash_select=>['DS', 'GT', 'NT'],
@@ -250,6 +252,7 @@ sub calls {
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$self->bcs_schema,
+        people_schema => $self->people_schema(),
         cache_root=>$c->config->{cache_file_path},
         accession_list=>[@callset_id],
         genotypeprop_hash_select=>['DS', 'GT', 'NT'],

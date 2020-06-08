@@ -191,6 +191,7 @@ sub calls {
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$self->bcs_schema,
         cache_root=>$c->config->{cache_file_path},
+        people_schema => $self->people_schema(),
         trial_list=>\@trial_ids,
         genotypeprop_hash_select=>['DS', 'GT', 'NT'],
         protocolprop_top_key_select=>[],
