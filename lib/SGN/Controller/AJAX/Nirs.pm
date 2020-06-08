@@ -107,6 +107,7 @@ sub get_niter: Path('/ajax/Nirs/get_niter') : {
     my $c = shift;
     my $niter_id = $c->req->param('niter_id');
     print STDERR Dumper($niter_id);
+    return $niter_id;
 
 }
 
@@ -124,6 +125,7 @@ sub get_tune: Path('/ajax/Nirs/get_tune') : {
     print STDERR Dumper($tune_id);
 
 }
+
 
 sub extract_trait_data :Path('/ajax/Nirs/getdata') Args(0) {
     my $self = shift;
@@ -170,15 +172,42 @@ sub extract_trait_data :Path('/ajax/Nirs/getdata') Args(0) {
     }
 
     $c->stash->{rest} = { data => \@data, trait => $trait};
+
 }
 
 sub generate_results: Path('/ajax/Nirs/generate_results') : {
     my $self = shift;
     my $c = shift;
+    my $cv_scheme = $c->req->param('cv_id');
     my $dataset_id = $c->req->param('dataset_id');
+    my $train_id = $c->req->param('train_id');
+    my $test_id = $c->req->param('test_id');
     my $trait_id = $c->req->param('trait_id');
+    my $niter_id = $c->req->param('niter_id');
+    my $algo_id =$c->req->param('alg_id');
+    my $preprocessing_boolean = $c->req->param('preprocessing_bool');
+    my $rf_var_imp = $c->req->param('rf_var_imp');
+
+    # my $pheno_name; # args[1]
+    # my $modelmethod = $c->req->param('model_alg'); # args[4]
+    # my $tune_length = $c->req->param('tunelen'); # args[5]
+    # my $rf_var_imp = $c->req->param('rf_var_imp'); # args[6]
+
+
     print STDERR $dataset_id;
     print STDERR $trait_id;
+
+    print "**************************************************\n";
+    print "The cross validation method is: $cv_scheme\n";
+    print "The dataset id is: $dataset_id\n";
+    print "The train selected is: $train_id\n";
+    print "The test selected is: $test_id\n";
+    print "The trait selected is: $trait_id\n";
+    print "The preprocessin is: $preprocessing_boolean\n";
+    print "The number  of iteractions is: $niter_id\n";
+    print "The algorithm is: $algo_id\n";
+    print "The RF var is: $rf_var_imp\n";
+    print "**************************************************\n";
 
     $c->tempfiles_subdir("nirs_files");
     my $nirs_tmp_output = $c->config->{cluster_shared_tempdir}."/nirs_files";
@@ -287,9 +316,9 @@ close($outfile);
     my $tune_length = $c->req->param('tunelen'); # args[5]
     my $rf_var_imp = $c->req->param('rf_var_imp'); # args[6]
     my $cv_scheme = $c->req->param('cv_id'); # args[7]
-    # my $pheno_filepath = $tempfile . "_phenotype.txt"; # args[8]
+    my $pheno_filepath = $tempfile . "_phenotype.txt"; # args[8]
     my $trainset_filepath = $filename . "json"; # args[8]
-    # my $trainset_filepath, # args[9]
+    my $trainset_filepath, # args[9]
     my $testset_filepath, # args[9]
     my $trial1_filepath, # args[10]
     my $trial2_filepath, # args[11]

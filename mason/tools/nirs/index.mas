@@ -85,15 +85,15 @@
       </div>
     </center>
     <br>
-    <button class="btn btn-primary" id="selectTrait" type="submit" name="selectTrait" value="selectTrait">Select trait</button>
+    
   </div>
     <br>
   </div>
 
 
   <div class="form-group form-inline">
-    <input type="checkbox" id="preprocessing_select" name="preprocessing_select" value="preprocessing">
-    <label for="preprocessing_select">&nbspInclude preprocessing?</label>
+      <input type="checkbox" id="preprocessing_select" />
+      <label>&nbspInclude preprocessing?</label>
     <br>
     <br>
   </div>
@@ -135,8 +135,8 @@
 
 
   <div class="form-group form-inline">
-    <input type="checkbox" id="rf_var_imp_select" name="rf_var_imp_select" value="rfvarim">
-    <label for="rf_var_imp_select">&nbspShow random forest variable importance? (Note this may take a long time to run)</label>
+    <input type="checkbox" id="rf_var_imp_select" />
+      <label>&nbspShow random forest variable importance? (Note this may take a long time to run) </label>
     <br>
     <br>
   </div>
@@ -212,10 +212,8 @@ jQuery(document).ready(function() {
   
   jQuery('#dataset_select').click(function() {
     $('#pheno_select').attr("disabled",true).html('');
-    $('#train_select').attr("disabled",true).html('');
     $('#trait_histogram_plot').html('');
     $('#nirs_output').empty();
-    $('#preprocessing_select').attr('checked', false);
   });
 
   jQuery('#selectDataset').click(function() {
@@ -262,23 +260,16 @@ jQuery(document).ready(function() {
     }; // end else statement 
   });
 
-
   jQuery('#selectStudyTrain').on('click', function() {
     var train_id = jQuery('#train_select').val();
-    // alert(train_id);
     $.ajax({
         url: '/ajax/Nirs/get_training_study',
-        data: {
-          'train_id': train_id
-        },
+        data: {'train_id': train_id  },
       }); // end .ajax    // }; // end else statement 
   });
 
-  jQuery('#selectStudyTest').click(function() {
+  jQuery('#selectStudyTest').on('click', function() {
   	var test_id = jQuery('#test_select').val();
-  	// if (train_id = test_id){
-  		// alert(test_id);
-  	// }else{
   	    $.ajax({
   	        url: '/ajax/Nirs/get_test_study',
   	        data: {
@@ -288,17 +279,14 @@ jQuery(document).ready(function() {
   	    // }
   });
 
+  
 jQuery('#selectIterations').on('click', function() {
-    if (!jQuery('#niter_select').val()) {
-      alert("Please select number of iterations.")
-    } else {
-      var niter_id = jQuery('#niter_select').val();
-    $.ajax({
-        url: '/ajax/Nirs/get_niter',
-        data: {'niter_id': niter_id },
-      }); // end .ajax
-    }; // end else statement 
-  });
+  var niter_id = jQuery('#niter_select').val();
+  $.ajax({
+    url: '/ajax/Nirs/get_niter',
+    data: {'niter_id': niter_id },
+  }); // end .ajax
+});
 
 jQuery('#selectAlgorithm').on('click', function() {
     if (!jQuery('#model_algorithm_select').val()) {
@@ -381,22 +369,29 @@ jQuery('#selectAlgorithm').on('click', function() {
       $('#nirs_output').empty();
     } else {
       $('#nirs_output').empty();
-      if ($('#preprocessing_select').is(':checked')) {
-          var preprocessing_bool = 1;
-        }
       if ($('#pheno_select').val() != ""){
+        if ($('#preprocessing_select').is(':checked')) {
+          var preprocessing_bool = 1;
+        } else {
+          var preprocessing_bool = 0;
+        }
+        if ($('#rf_var_imp_select').is(':checked')) {
+          var rf_var_imp = 1;
+        } else {
+          var rf_var_imp = 0;
+        }
+        var train_id = $('#train_select').val();
+        var test_id = $('#test_select').val();
         var cv_id = $('#cv_select').val();
         var dataset_id = $('#available_datasets').val();
         var trait_id = $('#pheno_select').val();
-        var preprocessing_bool = $('preprocessing').val();
-        var niter = $('niter_select').val();
-        var model_alg = $('model_algorithm_select').val();
-        var tunelen = $('tuneLength_select').val();
-        var rf_var_imp = $('rfvarim').val()
-        var save_model = $('save_model').val();
+        var niter_id = $('#niter_select').val();
+        var alg_id = $('#model_algorithm_select').val();
+        alert(alg_id);
+        var tunelen = $('#tuneLength_select').val();
         $.ajax({
           url: '/ajax/Nirs/generate_results',
-          data: {'cv_id' : cv_id,'dataset_id': dataset_id, 'trait_id': trait_id, 'preprocessing_bool': preprocessing_bool, 'niter':niter, 'model_alg': model_alg, 'tunelen':tunelen, 'rf_var_imp':rf_var_imp, 'save_model':save_model},
+          data: {'cv_id' : cv_id,'dataset_id': dataset_id, 'train_id' : train_id,'trait_id': trait_id, 'test_id': test_id, 'niter_id':niter_id,'preprocessing_bool': preprocessing_bool, 'alg_id': alg_id, 'tunelen':tunelen, 'rf_var_imp':rf_var_imp},
           beforeSend: function() {
             jQuery("#working_modal").modal("show");
           },
