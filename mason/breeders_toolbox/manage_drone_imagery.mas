@@ -3503,6 +3503,7 @@ jQuery(document).ready(function() {
                         html = html + '</tr></thead><tbody>';
                         for (var k=0; k<response.unique_accessions.length; k++) {
                             var acc = response.unique_accessions[k];
+                            console.log(acc);
                             html = html + '<tr><td>'+acc+'</td>';
                             for (var i=0; i<response.unique_traits.length; i++) {
                                 html = html + '<td>'+response.result_blup_genetic_data[acc][response.unique_traits[i]][0]+'</td>';
