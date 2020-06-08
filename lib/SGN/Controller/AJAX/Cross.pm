@@ -627,6 +627,8 @@ sub get_cross_tissue_culture_summary :Path('/ajax/cross/tissue_culture_summary')
 
     my @all_rows;
     my @each_row;
+    my $checkmark = qq{<img src="/img/checkmark_green.jpg"/>};
+    my $x_mark = qq{<img src="/img/x_mark_red.jpg"/>};
 
     foreach my $embryo_id (@embryo_ids_array) {
 
@@ -635,33 +637,33 @@ sub get_cross_tissue_culture_summary :Path('/ajax/cross/tissue_culture_summary')
         }
 
         if ($embryo_id ~~ @subculture_ids_array) {
-            push @each_row, 'OK';
+            push @each_row, $checkmark;
         } else {
-            push @each_row, 'X';
+            push @each_row, $x_mark;
         }
 
         if ($embryo_id ~~ @rooting_ids_array) {
-            push @each_row, 'OK';
+            push @each_row, $checkmark;
         } else {
-            push @each_row, 'X';
+            push @each_row, $x_mark;
         }
 
         if ($embryo_id ~~ @weaning1_ids_array) {
-            push @each_row, 'OK';
+            push @each_row, $checkmark;
         } else {
-            push @each_row, 'X';
+            push @each_row, $x_mark;
         }
 
         if ($embryo_id ~~ @weaning2_ids_array) {
-            push @each_row, 'OK';
+            push @each_row, $checkmark;
         } else {
-            push @each_row, 'X';
+            push @each_row, $x_mark;
         }
 
         if ($embryo_id ~~ @screenhouse_ids_array) {
-            push @each_row, 'OK';
+            push @each_row, $checkmark;
         } else {
-            push @each_row, 'X';
+            push @each_row, $x_mark;
         }
 
         push @all_rows, [@each_row];
