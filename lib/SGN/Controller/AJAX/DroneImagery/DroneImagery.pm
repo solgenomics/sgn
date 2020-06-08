@@ -782,7 +782,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
     #print STDERR Dumper \@results;
     #print STDERR Dumper \%result_blup_data;
-    $c->stash->{rest} = { results => \@results, result_gblup_data => \%result_blup_data, result_blup_spatial_data => \%result_blup_spatial_data, unique_traits => \@sorted_trait_names, unique_accessions => \@unique_accession_names, unique_plots => \@unique_plot_names };
+    $c->stash->{rest} = { results => \@results, result_blup_genetic_data => \%result_blup_data, result_blup_spatial_data => \%result_blup_spatial_data, unique_traits => \@sorted_trait_names, unique_accessions => \@unique_accession_names, unique_plots => \@unique_plot_names };
 }
 
 sub drone_imagery_rotate_image : Path('/api/drone_imagery/rotate_image') : ActionClass('REST') { }

@@ -3495,16 +3495,36 @@ jQuery(document).ready(function() {
                 }
                 else {
                     var html = '';
-                    if (response.gen_corr.length > 0) {
-                        html = '<table class="table table-bordered table-hover"><thead><tr><th>Observation Variable</th><th>Genetic Correlation</th></tr></thead><tbody>';
-                        for (var k=0; k<response.gen_corr.length; k++) {
-                            for (var i=0; i<response.gen_corr[k].length; i++) {
-                                var gen_corrs = [];
-                                for (var j=1; j<response.gen_corr[k][i].length; j++) {
-                                    gen_corrs.push(response.gen_corr[k][i][j]);
-                                }
-                                html = html + '<tr><td>'+response.gen_corr[k][i][0]+'</td><td>'+gen_corrs+'</td></tr>';
+                    if (response.unique_accessions.length > 0 && response.unique_traits.length > 0) {
+                        html = html + '<table class="table table-bordered table-hover"><thead><tr><th>Accessions</th>';
+                        for (var i=0; i<response.unique_traits.length; i++) {
+                            html = html + '<th>'+response.unique_traits[i]+'</th>';
+                        }
+                        html = html + '</tr></thead><tbody>';
+                        for (var k=0; k<response.unique_accessions.length; k++) {
+                            var acc = response.unique_accessions[k];
+                            html = html + '<tr><td>'+acc+'</td>';
+                            for (var i=0; i<response.unique_traits.length; i++) {
+                                html = html + '<td>'+response.result_blup_genetic_data[acc][response.unique_traits[i]][0]+'</td>';
                             }
+                            html = html + '</tr>';
+                        }
+                        html = html + '</tbody></table>';
+                    }
+
+                    if (response.unique_plots.length > 0 && response.unique_traits.length > 0) {
+                        html = html + '<table class="table table-bordered table-hover"><thead><tr><th>Accessions</th>';
+                        for (var i=0; i<response.unique_traits.length; i++) {
+                            html = html + '<th>'+response.unique_traits[i]+'</th>';
+                        }
+                        html = html + '</tr></thead><tbody>';
+                        for (var k=0; k<response.unique_plots.length; k++) {
+                            var plot = response.unique_plots[k];
+                            html = html + '<tr><td>'+plot+'</td>';
+                            for (var i=0; i<response.unique_traits.length; i++) {
+                                html = html + '<td>'+response.result_blup_spatial_data[plot][response.unique_traits[i]][0]+'</td>';
+                            }
+                            html = html + '</tr>';
                         }
                         html = html + '</tbody></table>';
                     }
