@@ -802,15 +802,96 @@ sub drone_imagery_calculate_statistics_store_analysis : Path('/api/drone_imagery
 sub drone_imagery_calculate_statistics_store_analysis_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    my $image_id = $c->req->param('image_id');
-    my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
-    my $angle_rotation = $c->req->param('angle');
-    my $view_only = $c->req->param('view_only');
+    my $analysis_name = $c->req->param('analysis_name');
+    my $analysis_description = $c->req->param('analysis_description');
+    my $analysis_model_type = $c->req->param('analysis_model_type');
+    my $accession_names = $c->req->param('accession_names');
+    my $trait_names = $c->req->param('trait_names');
+    my $training_data_file = $c->req->param('training_data_file');
+    my $phenotype_data_hash = $c->req->param('phenotype_data_hash');
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $a = CXGN::Analysis->new({
+        bcs_schema => $bcs_schema,
+        people_schema => $people_schema,
+        name => $analysis_name,
+    });
+
+    $a->description($analysis_description);
+    $a->user_id($user_id);
+
+    my $model_string = '';
+
+    #print STDERR Dumper("STOCKS HERE: ".$stocks);
+    $a->accession_names($accession_names);
+    $a->metadata()->traits($trait_names);
+    #$a->metadata()->analysis_protocol($params->{analysis_protocol});
+    $a->metadata()->model($model_string);
+    
+    my ($verified_warning, $verified_error);
+
+    print STDERR "Storing the analysis...\n";
+    eval { 
+        ($verified_warning, $verified_error) = $a->create_and_store_analysis_design();
+    };
+
+    my @errors;
+    my @warnings;
+
+    if ($@) {
+        push @errors, $@;
+    }
+    elsif ($verified_warning) {
+        push @warnings, $verified_warning;
+    }
+    elsif ($verified_error) {
+        push @errors, $verified_error;
+    }
+
+    if (@errors) {
+        print STDERR "SORRY! Errors: ".join("\n", @errors);
+        $c->stash->{rest} = { error => join "; ", @errors };
+        return;
+    }
+
+    print STDERR "Store analysis values...\n";
+    #print STDERR "value hash: ".Dumper($values);
+    print STDERR "traits: ".join(",",@$trait_names);
+
+    my $plots;
+    my $values;
+    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+
+    eval { 
+        $a->store_analysis_values(
+            $c->dbic_schema("CXGN::Metadata::Schema"),
+            $c->dbic_schema("CXGN::Phenome::Schema"),
+            $values, # value_hash
+            $plots, 
+            $trait_names,
+            $user_name,
+            $c->config->{basepath},
+            $c->config->{dbhost},
+            $c->config->{dbname},
+            $c->config->{dbuser},
+            $c->config->{dbpass},
+            $temp_file_nd_experiment_id,
+        );
+    };
+
+    if ($@) {
+        print STDERR "An error occurred storing analysis values ($@).\n";
+        $c->stash->{rest} = { 
+            error => "An error occurred storing the values ($@).\n"
+        };
+        return;
+    }
+
+    $c->stash->{rest} = { success => 1 };
 }
 
 sub drone_imagery_rotate_image : Path('/api/drone_imagery/rotate_image') : ActionClass('REST') { }

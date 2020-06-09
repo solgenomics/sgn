@@ -151,11 +151,11 @@ has 'user_role' => (is => 'rw', isa => 'Str');
 
 =head2 analysis_model()
 
-CXGN::AnalysisModel::SaveModel object.
+nd_protocol_id of save model information
 
 =cut
 
-has 'analysis_model' => (isa => 'Maybe[CXGN::AnalysisModel::SaveModel]', is => 'rw');
+has 'analysis_model_protocol_id' => (isa => 'Int|Undef', is => 'rw');
 
 =head2 metadata()
 
@@ -453,8 +453,8 @@ sub create_and_store_analysis_design {
     # 	}); 
 
     my $saved_model_protocol_id;
-    if ($self->has_analysis_model) {
-        $saved_model_protocol_id = $self->get_analysis_model()->save_model();
+    if ($self->has_analysis_model_protocol_id && $self->get_analysis_model_protocol_id()) {
+        $saved_model_protocol_id = $self->get_analysis_model_protocol_id();
     }
 
     my $analysis_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'analysis_experiment', 'experiment_type')->cvterm_id(); 
