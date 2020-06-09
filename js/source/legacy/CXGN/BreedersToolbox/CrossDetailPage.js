@@ -330,64 +330,6 @@ jQuery(document).ready(function() {
     }
 
 
-    jQuery('#tissue_culture_samples_section_onswitch').click(function(){
-        display_sample_ids(get_cross_id());
-    });
-
-    function display_sample_ids(cross_id){
-        var embryo_table = jQuery('#embryo_ids_table').DataTable({
-            'ajax': '/ajax/cross/embryo_ids/'+cross_id,
-            columns: [
-                { title: "Embryo IDs", "data": "embryo_ids" },
-            ],
-        });
-        var subculture_table = jQuery('#subculture_ids_table').DataTable({
-            'ajax': '/ajax/cross/subculture_ids/'+cross_id,
-            columns: [
-                { title: "Subculture IDs", "data": "subculture_ids" },
-            ],
-        });
-        var rooting_table = jQuery('#rooting_ids_table').DataTable({
-            'ajax': '/ajax/cross/rooting_ids/'+cross_id,
-            columns: [
-                { title: "Rooting IDs", "data": "rooting_ids" },
-            ],
-        });
-        var weaning1_table = jQuery('#weaning1_ids_table').DataTable({
-            'ajax': '/ajax/cross/weaning1_ids/'+cross_id,
-            columns: [
-                { title: "Weaning1 IDs", "data": "weaning1_ids" },
-            ],
-        });
-        var weaning2_table = jQuery('#weaning2_ids_table').DataTable({
-            'ajax': '/ajax/cross/weaning2_ids/'+cross_id,
-            columns: [
-                { title: "Weaning2 IDs", "data": "weaning2_ids" },
-            ],
-        });
-        var screenhouse_table = jQuery('#screenhouse_ids_table').DataTable({
-            'ajax': '/ajax/cross/screenhouse_ids/'+cross_id,
-            columns: [
-                { title: "Screenhouse IDs", "data": "screenhouse_ids" },
-            ],
-        });
-        var hardening_table = jQuery('#hardening_ids_table').DataTable({
-            'ajax': '/ajax/cross/hardening_ids/'+cross_id,
-            columns: [
-                { title: "Hardening IDs", "data": "hardening_ids" },
-            ],
-        });
-        var openfield_table = jQuery('#openfield_ids_table').DataTable({
-            'ajax': '/ajax/cross/openfield_ids/'+cross_id,
-            columns: [
-                { title: "Openfield IDs", "data": "openfield_ids" },
-            ],
-        });
-
-        return;
-    }
-
-
     jQuery('#tissue_culture_summary_section_onswitch').click(function(){
         display_summary_table(get_cross_id());
     });

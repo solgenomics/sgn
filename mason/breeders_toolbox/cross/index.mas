@@ -130,7 +130,7 @@ $identifier_prefix => ''
 </div>
 
 
-<&| /page/info_section.mas, id=>'tissue_culture_summary_section', title => 'Tissue culture Summary of this Cross', collapsible=>1, collapsed=>1, subtitle => 'View tissue culture ids (e.g., embryo ids, subculture ids, rooting ids, weaning1 ids)'&>
+<&| /page/info_section.mas, id=>'tissue_culture_summary_section', title => 'Tissue culture IDs of this Cross', collapsible=>1, collapsed=>1, subtitle => 'View tissue culture IDs in each step (e.g., embryo IDs, subculture IDs, rooting IDs, weaning1 IDs)'&>
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
@@ -148,74 +148,6 @@ $identifier_prefix => ''
                         </thead>
                     </table>
                 </div>
-            </div>
-        </div>
-    </div>
-</&>
-
-
-<&| /page/info_section.mas, id=>'tissue_culture_samples_section', title => 'Tissue culture IDs of this Cross', collapsible=>1, collapsed=>1, subtitle => 'View tissue culture ids (e.g., embryo ids, subculture ids, rooting ids, weaning1 ids)'&>
-    <div class="well well-sm">
-        <div class="panel panel-default">
-            <div class="panel-body">
-                <table id="embryo_ids_table" class="table table-hover table-striped">
-                </table>
-            </div>
-        </div>
-    </div>
-    <div class="well well-sm">
-        <div class="panel panel-default">
-            <div class="panel-body">
-                <table id="subculture_ids_table" class="table table-hover table-striped">
-                </table>
-            </div>
-        </div>
-    </div>
-    <div class="well well-sm">
-        <div class="panel panel-default">
-            <div class="panel-body">
-                <table id="rooting_ids_table" class="table table-hover table-striped">
-                </table>
-            </div>
-        </div>
-    </div>
-    <div class="well well-sm">
-        <div class="panel panel-default">
-            <div class="panel-body">
-                <table id="weaning1_ids_table" class="table table-hover table-striped">
-                </table>
-            </div>
-        </div>
-    </div>
-    <div class="well well-sm">
-        <div class="panel panel-default">
-            <div class="panel-body">
-                <table id="weaning2_ids_table" class="table table-hover table-striped">
-                </table>
-            </div>
-        </div>
-    </div>
-    <div class="well well-sm">
-        <div class="panel panel-default">
-            <div class="panel-body">
-                <table id="screenhouse_ids_table" class="table table-hover table-striped">
-                </table>
-            </div>
-        </div>
-    </div>
-    <div class="well well-sm">
-        <div class="panel panel-default">
-            <div class="panel-body">
-                <table id="hardening_ids_table" class="table table-hover table-striped">
-                </table>
-            </div>
-        </div>
-    </div>
-    <div class="well well-sm">
-        <div class="panel panel-default">
-            <div class="panel-body">
-                <table id="openfield_ids_table" class="table table-hover table-striped">
-                </table>
             </div>
         </div>
     </div>
