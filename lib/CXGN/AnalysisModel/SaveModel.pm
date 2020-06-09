@@ -16,14 +16,18 @@ my $m = CXGN::AnalysisModel::SaveModel->new({
     model_language=>'R',
     model_type_cvterm_id=>$model_type_cvterm_id,
     model_experiment_type_cvterm_id=>$model_experiment_type_cvterm_id,
-    model_properties=>[],
+    model_properties=>[{type_id=>1, tolparinv=>00.01},{},{}],
     archived_model_file_type=>$archived_model_file_type,
     model_file=>$model_file,
     archived_training_data_file_type=>$archived_training_data_file_type,
     archived_training_data_file=>$archived_training_data_file,
     archived_auxiliary_files=>$archived_auxiliary_files,
     user_id=>$user_id,
-    user_role=>$user_role
+    user_role=>$user_role,
+    application_name=>, #TOADD
+    application_version=>, #TOADD
+    dataset_id=>, #TOADD
+    is_public=> #TOADD
 });
 my $saved_model_id = $m->save_model();
 
