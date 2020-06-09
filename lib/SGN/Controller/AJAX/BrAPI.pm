@@ -100,9 +100,13 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	my $session_token = $c->req->headers->header("access_token") || $bearer_token;
 
 	if (defined $c->request->data){
-		$page = $c->request->data->{"page"} || $page || 0;
-		$page_size = $c->request->data->{"pageSize"} || $page_size || $DEFAULT_PAGE_SIZE;
-        $session_token = $c->request->data->{"access_token"} || $session_token;
+		my $data_type = ref $c->request->data;
+		my $current_page = $c->request->data->{"page"} if ($data_type ne 'ARRAY');
+		my $current_page_size = $c->request->data->{"pageSize"} if ($data_type ne 'ARRAY');
+		my $current_sesion_token = $c->request->data->{"access_token"} if ($data_type ne 'ARRAY');
+		$page = $current_page || $page || 0;
+		$page_size = $current_page_size || $page_size || $DEFAULT_PAGE_SIZE;
+        $session_token = $current_sesion_token|| $session_token;
 	}
 	my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 	my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
@@ -132,8 +136,11 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	$c->stash->{session_token} = $session_token;
 
 	if (defined $c->request->data){
-		my %allParams = (%{$c->request->data}, %{$c->req->params});
-		$c->stash->{clean_inputs} = _clean_inputs(\%allParams);
+		if ($c->request->method ne "PUT"){
+			$c->stash->{clean_inputs} = _clean_inputs($c->req->params,$c->request->data);
+		} else {
+			$c->stash->{clean_inputs} = $c->request->data;
+		}
 	}
 	else {
 		$c->stash->{clean_inputs} = _clean_inputs($c->req->params);
@@ -144,6 +151,12 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 sub _clean_inputs {
 	no warnings 'uninitialized';
 	my $params = shift;
+	my $alldata = shift;
+
+	if($alldata){
+		my %data = ref $alldata eq 'ARRAY' ? map { $_ => $_} @{$alldata} : %{$alldata};
+		%$params = $params ? (%data, %$params) : %data;
+	} 
 
 	foreach (keys %$params){
 		my $values = $params->{$_};
@@ -3396,9 +3409,9 @@ sub observations_POST {
 	my $c = shift;
 	my ($auth,$user_id,$user_type) = _authenticate_user($c);
     my $clean_inputs = $c->stash->{clean_inputs};
-    my $data = $clean_inputs->{data};
+    my $data = $clean_inputs;
     my @all_observations;
-    foreach my $observation (@{$data}) {
+    foreach my $observation (values %{$data}) {
         push @all_observations, $observation;
     }
 	my $brapi = $self->brapi_module;
@@ -3434,6 +3447,31 @@ sub observations_detail_GET {
     	observationDbId => $c->stash->{observation_id}
     });
     _standard_response_construction($c, $brapi_package_result);
+}
+
+sub observations_detail_PUT {
+	my $self = shift;
+	my $c = shift;
+	my ($auth,$user_id,$user_type) = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $observations = $clean_inputs;
+    my @all_observations;
+    $observations->{observationDbId} = $c->stash->{observation_id};
+    push @all_observations, $observations;
+
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Observations');
+	my $brapi_package_result = $brapi_module->observations_store({
+		observations => \@all_observations,
+        user_id => $user_id,
+        user_type => $user_type,
+    },$c);
+
+
+	my $status = $brapi_package_result->{status};
+	my $http_status_code = _get_http_status_code($status);
+
+	_standard_response_construction($c, $brapi_package_result, $http_status_code);
 }
 
 sub observation_search_save : Chained('brapi') PathPart('search/observations') Args(0) : ActionClass('REST') { }
