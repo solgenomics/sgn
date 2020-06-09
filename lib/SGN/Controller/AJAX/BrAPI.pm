@@ -162,7 +162,7 @@ sub _clean_inputs {
 			$params->{$_} = $ret_val;
 		}
 		elsif (ref $values eq 'HASH') {
-			$params->{$_} = _clean_inputs($values);
+			$params->{$_} = $values;
 		}
 		else {
 			die "Input $_ is not a scalar, arrayref, or a single level hash\n";
@@ -224,7 +224,7 @@ sub _standard_response_construction {
 	my %metadata = (pagination=>$pagination, status=>$status, datafiles=>$datafiles);
 	my %response = (metadata=>\%metadata, result=>$result);
 	$c->stash->{rest} = \%response;
-	$c->response->status(($return_status == undef) ? 200 : $return_status);
+	$c->response->status((!$return_status) ? 200 : $return_status);
     $c->detach;
 }
 
@@ -3335,9 +3335,37 @@ sub observations : Chained('brapi') PathPart('observations') Args(0) : ActionCla
 sub observations_PUT {
 	my $self = shift;
 	my $c = shift;
-    my $clean_inputs = $c->stash->{clean_inputs};
-    my $observations = $clean_inputs->{observations};
-	save_observation_results($self, $c, $observations, 'v2');
+	my $version = $c->request->captures->[0];
+	my $brapi_package_result;
+	if ($version eq 'v2'){
+		my $force_authenticate = 1;
+		my ($auth,$user_id,$user_type) = _authenticate_user($c,$force_authenticate);
+	    my $clean_inputs = $c->stash->{clean_inputs};
+	    my %observations = %$clean_inputs;
+	    my @all_observations;
+	    foreach my $observation (keys %observations) {
+	        my $observationDbId = $observation;
+	        my $observations = $observations{$observation};
+	        $observations->{observationDbId} = $observationDbId;
+	        push @all_observations, $observations;
+	    }
+		my $brapi = $self->brapi_module;
+		my $brapi_module = $brapi->brapi_wrapper('Observations');
+		$brapi_package_result = $brapi_module->observations_store({
+			observations => \@all_observations,
+	        user_id => $user_id,
+	        user_type => $user_type,
+	    },$c);
+	} elsif ($version eq 'v1'){
+		my $clean_inputs = $c->stash->{clean_inputs};
+	    my $observations = $clean_inputs->{observations};
+		save_observation_results($self, $c, $observations, 'v1');
+	}
+
+	my $status = $brapi_package_result->{status};
+	my $http_status_code = _get_http_status_code($status);
+
+	_standard_response_construction($c, $brapi_package_result, $http_status_code);
 }
 
 sub observations_GET {
@@ -3864,19 +3892,19 @@ sub _get_http_status_code {
 
 	foreach(@$status) {
 
-		if ($_->{code} eq "403") {
+		if ($_->{messageType} eq "403") {
 			$http_status_code = 403;
 			last;
 		}
-		elsif ($_->{code} eq "401") {
+		elsif ($_->{messageType} eq "401") {
 			$http_status_code = 401;
 			last;
 		}
-		elsif ($_->{code} eq "400") {
+		elsif ($_->{messageType} eq "400") {
 			$http_status_code = 400;
 			last;
 		}
-		elsif ($_->{code} eq "200") {
+		elsif ($_->{messageType} eq "200") {
 			$http_status_code = 200;
 			last;
 		}

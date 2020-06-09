@@ -172,7 +172,7 @@ sub info {
 	my $permissions  = {
 				'GET' => 'any',
 				'POST' => 'curator',
-				'PUT' => 'curator,submitter'
+				'PUT' => 'curator'
 			};
 
 	return $permissions;

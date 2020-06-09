@@ -14,145 +14,6 @@ use JSON;
 
 extends 'CXGN::BrAPI::v2::Common';
 
-sub observations_store {
-    my $self = shift;
-    my $params = shift;
-    my $c = shift;
-
-    my $schema = $self->bcs_schema;
-    my $metadata_schema = $self->metadata_schema;
-    my $phenome_schema = $self->phenome_schema;
-    my $dbh = $self->bcs_schema()->storage()->dbh();
-
-    my $observations = $params->{observations};
-    my $user_id = $params->{user_id};
-    my $user_type = $params->{user_type};
-    my $archive_path = $c->config->{archive_path};
-    my $tempfiles_subdir = $c->config->{basepath}."/".$c->config->{tempfiles_subdir};
-    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
-    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
-
-    my $page_size = $self->page_size;
-    my $page = $self->page;
-    my $status = $self->status;
-    my %result;
-
-    #print STDERR "OBSERVATIONS_MODULE: User id is $user_id and type is $user_type\n";
-    if ($user_type ne 'submitter' && $user_type ne 'sequencer' && $user_type ne 'curator') {
-        print STDERR 'Must have submitter privileges to upload phenotypes! Please contact us!';
-        push @$status, {'403' => 'Permission Denied. Must have correct privilege.'};
-        return CXGN::BrAPI::JSONResponse->return_error($status, 'Must have submitter privileges to upload phenotypes! Please contact us!');
-    }
-
-    ## Validate request structure and parse data
-    my $timestamp_included = 1;
-    my $data_level = 'stocks';
-
-    my $parser = CXGN::Phenotypes::ParseUpload->new();
-    my $validated_request = $parser->validate('brapi observations', $observations, $timestamp_included, $data_level, $schema);
-
-    if (!$validated_request || $validated_request->{'error'}) {
-        my $parse_error = $validated_request ? $validated_request->{'error'} : "Error parsing request structure";
-        print STDERR $parse_error;
-        return CXGN::BrAPI::JSONResponse->return_error($status, $parse_error);
-    } elsif ($validated_request->{'success'}) {
-        push @$status, {'info' => $validated_request->{'success'} };
-    }
-
-
-    my $parsed_request = $parser->parse('brapi observations', $observations, $timestamp_included, $data_level, $schema);
-    my %parsed_data;
-    my @units;
-    my @variables;
-
-    if (!$parsed_request || $parsed_request->{'error'}) {
-        my $parse_error = $parsed_request ? $parsed_request->{'error'} : "Error parsing request data";
-        print STDERR $parse_error;
-        return CXGN::BrAPI::JSONResponse->return_error($status, $parse_error);
-    } elsif ($parsed_request->{'success'}) {
-        push @$status, {'info' => $parsed_request->{'success'} };
-        #define units (observationUnits) and variables (observationVariables) from parsed request
-        @units = @{$parsed_request->{'units'}};
-        @variables = @{$parsed_request->{'variables'}};
-        %parsed_data = %{$parsed_request->{'data'}};
-    }
-
-    ## Archive in file
-    my $archived_request = CXGN::BrAPI::FileRequest->new({
-        schema=>$schema,
-        user_id => $user_id,
-        user_type => $user_type,
-        tempfiles_subdir => $tempfiles_subdir,
-        archive_path => $archive_path,
-        format => 'observations',
-        data => $observations
-    });
-
-    my $response = $archived_request->get_path();
-    my $file = $response->{archived_filename_with_path};
-    my $archive_error_message = $response->{error_message};
-    my $archive_success_message = $response->{success_message};
-    if ($archive_error_message){
-        return CXGN::BrAPI::JSONResponse->return_error($status, $archive_error_message);
-    }
-    if ($archive_success_message){
-        push @$status, {'info' => $archive_success_message };
-    }
-
-    print STDERR "Archived Request is in $file\n";
-
-    ## Set metadata
-    my %phenotype_metadata;
-    my $time = DateTime->now();
-    my $timestamp = $time->ymd()."_".$time->hms();
-    $phenotype_metadata{'archived_file'} = $file;
-    $phenotype_metadata{'archived_file_type'} = 'brapi observations';
-    $phenotype_metadata{'date'} = $timestamp;
-
-    ## Store observations and return details for response
-    my $store_observations = CXGN::Phenotypes::StorePhenotypes->new(
-        basepath=>$c->config->{basepath},
-        dbhost=>$c->config->{dbhost},
-        dbname=>$c->config->{dbname},
-        dbuser=>$c->config->{dbuser},
-        dbpass=>$c->config->{dbpass},
-        temp_file_nd_experiment_id=>$temp_file_nd_experiment_id,
-        bcs_schema=>$schema,
-        metadata_schema=>$metadata_schema,
-        phenome_schema=>$phenome_schema,
-        user_id=>$user_id,
-        stock_list=>\@units,
-        trait_list=>\@variables,
-        values_hash=>\%parsed_data,
-        has_timestamps=>1,
-        metadata_hash=>\%phenotype_metadata,
-        #image_zipfile_path=>$image_zip,
-    );
-
-    my ($stored_observation_error, $stored_observation_success, $stored_observation_details) = $store_observations->store();
-
-    if ($stored_observation_error) {
-        print STDERR "Error: $stored_observation_error\n";
-        return CXGN::BrAPI::JSONResponse->return_error($status, $stored_observation_error);
-    }
-    if ($stored_observation_success) {
-        #if no error refresh matviews 
-        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
-
-        print STDERR "Success: $stored_observation_success\n";
-        # result need to be updated with v2 format
-        $result{data} = $stored_observation_details;
-
-    }
-    # result need to be updated with v2 format, StorePhenotypes needs to be modified as v2
-    my @data_files = ();
-    my $total_count = scalar @{$observations};
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, $stored_observation_success);
-
-}
-
 sub search {
     my $self = shift;
     my $params = shift;
@@ -349,6 +210,145 @@ sub detail {
     my @data_files;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response(1,$page_size,$page);
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observations result constructed');
+}
+
+sub observations_store {
+    my $self = shift;
+    my $params = shift;
+    my $c = shift;
+
+    my $schema = $self->bcs_schema;
+    my $metadata_schema = $self->metadata_schema;
+    my $phenome_schema = $self->phenome_schema;
+    my $dbh = $self->bcs_schema()->storage()->dbh();
+
+    my $observations = $params->{observations};
+    my $user_id = $params->{user_id};
+    my $user_type = $params->{user_type};
+    my $archive_path = $c->config->{archive_path};
+    my $tempfiles_subdir = $c->config->{basepath}."/".$c->config->{tempfiles_subdir};
+    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $status = $self->status;
+    my %result;
+
+    #print STDERR "OBSERVATIONS_MODULE: User id is $user_id and type is $user_type\n";
+    if ($user_type ne 'submitter' && $user_type ne 'sequencer' && $user_type ne 'curator') {
+        print STDERR 'Must have submitter privileges to upload phenotypes! Please contact us!';
+        push @$status, {'403' => 'Permission Denied. Must have correct privilege.'};
+        return CXGN::BrAPI::JSONResponse->return_error($status, 'Must have submitter privileges to upload phenotypes! Please contact us!');
+    }
+
+    ## Validate request structure and parse data
+    my $timestamp_included = 1;
+    my $data_level = 'stocks';
+
+    my $parser = CXGN::Phenotypes::ParseUpload->new();
+    my $validated_request = $parser->validate('brapi observations', $observations, $timestamp_included, $data_level, $schema);
+
+    if (!$validated_request || $validated_request->{'error'}) {
+        my $parse_error = $validated_request ? $validated_request->{'error'} : "Error parsing request structure";
+        print STDERR $parse_error;
+        return CXGN::BrAPI::JSONResponse->return_error($status, $parse_error);
+    } elsif ($validated_request->{'success'}) {
+        push @$status, {'info' => $validated_request->{'success'} };
+    }
+
+
+    my $parsed_request = $parser->parse('brapi observations', $observations, $timestamp_included, $data_level, $schema);
+    my %parsed_data;
+    my @units;
+    my @variables;
+
+    if (!$parsed_request || $parsed_request->{'error'}) {
+        my $parse_error = $parsed_request ? $parsed_request->{'error'} : "Error parsing request data";
+        print STDERR $parse_error;
+        return CXGN::BrAPI::JSONResponse->return_error($status, $parse_error);
+    } elsif ($parsed_request->{'success'}) {
+        push @$status, {'info' => $parsed_request->{'success'} };
+        #define units (observationUnits) and variables (observationVariables) from parsed request
+        @units = @{$parsed_request->{'units'}};
+        @variables = @{$parsed_request->{'variables'}};
+        %parsed_data = %{$parsed_request->{'data'}};
+    }
+
+    ## Archive in file
+    my $archived_request = CXGN::BrAPI::FileRequest->new({
+        schema=>$schema,
+        user_id => $user_id,
+        user_type => $user_type,
+        tempfiles_subdir => $tempfiles_subdir,
+        archive_path => $archive_path,
+        format => 'observations',
+        data => $observations
+    });
+
+    my $response = $archived_request->get_path();
+    my $file = $response->{archived_filename_with_path};
+    my $archive_error_message = $response->{error_message};
+    my $archive_success_message = $response->{success_message};
+    if ($archive_error_message){
+        return CXGN::BrAPI::JSONResponse->return_error($status, $archive_error_message);
+    }
+    if ($archive_success_message){
+        push @$status, {'info' => $archive_success_message };
+    }
+
+    print STDERR "Archived Request is in $file\n";
+
+    ## Set metadata
+    my %phenotype_metadata;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    $phenotype_metadata{'archived_file'} = $file;
+    $phenotype_metadata{'archived_file_type'} = 'brapi observations';
+    $phenotype_metadata{'date'} = $timestamp;
+
+    ## Store observations and return details for response
+    my $store_observations = CXGN::Phenotypes::StorePhenotypes->new(
+        basepath=>$c->config->{basepath},
+        dbhost=>$c->config->{dbhost},
+        dbname=>$c->config->{dbname},
+        dbuser=>$c->config->{dbuser},
+        dbpass=>$c->config->{dbpass},
+        temp_file_nd_experiment_id=>$temp_file_nd_experiment_id,
+        bcs_schema=>$schema,
+        metadata_schema=>$metadata_schema,
+        phenome_schema=>$phenome_schema,
+        user_id=>$user_id,
+        stock_list=>\@units,
+        trait_list=>\@variables,
+        values_hash=>\%parsed_data,
+        has_timestamps=>1,
+        metadata_hash=>\%phenotype_metadata,
+        #image_zipfile_path=>$image_zip,
+    );
+
+    my ($stored_observation_error, $stored_observation_success, $stored_observation_details) = $store_observations->store();
+
+    if ($stored_observation_error) {
+        print STDERR "Error: $stored_observation_error\n";
+        return CXGN::BrAPI::JSONResponse->return_error($status, $stored_observation_error);
+    }
+    if ($stored_observation_success) {
+        #if no error refresh matviews 
+        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
+
+        print STDERR "Success: $stored_observation_success\n";
+        # result need to be updated with v2 format
+        $result{data} = $stored_observation_details;
+
+    }
+    # result need to be updated with v2 format, StorePhenotypes needs to be modified as v2
+    my @data_files = ();
+    my $total_count = scalar @{$observations};
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, $stored_observation_success);
+
 }
 
 1;
