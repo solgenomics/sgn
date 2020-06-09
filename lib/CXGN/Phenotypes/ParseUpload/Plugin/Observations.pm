@@ -127,7 +127,6 @@ sub parse {
         my $variable_db_id = $obs->{'observationVariableDbId'};
         my $timestamp = $obs->{'observationTimeStamp'} ? $obs->{'observationTimeStamp'} : undef;
         my $collector = $obs->{'collector'} ? $obs->{'collector'} : '';
-        $collector = $obs->{'uploadedBy'} ? $obs->{'uploadedBy'} : '' if (!$collector);
         my $obs_db_id = $obs->{'observationDbId'} ? $obs->{'observationDbId'} : '';
         my $value = $obs->{'value'};
         my $trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $variable_db_id,"extended");
