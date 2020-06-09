@@ -337,6 +337,7 @@ jQuery(document).ready(function() {
     function display_summary_table(cross_id){
         var summary_table = jQuery('#tissue_culture_summary_table').DataTable({
             'ajax': '/ajax/cross/tissue_culture_summary/'+cross_id,
+            'order': false,
         });
 
         return;

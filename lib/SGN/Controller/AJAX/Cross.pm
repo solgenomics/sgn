@@ -52,6 +52,7 @@ use Tie::UrlEncoder; our(%urlencode);
 use LWP::UserAgent;
 use HTML::Entities;
 use URI::Encode qw(uri_encode uri_decode);
+use Sort::Key::Natural qw(natsort);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -474,6 +475,7 @@ sub get_cross_tissue_culture_summary :Path('/ajax/cross/tissue_culture_summary')
 #    my $openfield_ids = $cross_sample_data->{'Openfield IDs'};
 
     my @embryo_ids_array = @$embryo_ids;
+    my @sorted_embryo_ids = natsort @embryo_ids_array;
     my @subculture_ids_array = @$subculture_ids;
     my @rooting_ids_array = @$rooting_ids;
     my @weaning1_ids_array = @$weaning1_ids;
@@ -487,7 +489,7 @@ sub get_cross_tissue_culture_summary :Path('/ajax/cross/tissue_culture_summary')
     my $checkmark = qq{<img src="/img/checkmark_green.jpg"/>};
     my $x_mark = qq{<img src="/img/x_mark_red.jpg"/>};
 
-    foreach my $embryo_id (@embryo_ids_array) {
+    foreach my $embryo_id (@sorted_embryo_ids) {
 
         if ($embryo_id) {
             push @each_row, $embryo_id;
@@ -526,9 +528,7 @@ sub get_cross_tissue_culture_summary :Path('/ajax/cross/tissue_culture_summary')
         push @all_rows, [@each_row];
         @each_row =();
     }
-
-    print STDERR "ALL ROWS =".Dumper(\@all_rows)."\n";
-
+#    print STDERR "SORTED EMBRYO IDS =".Dumper(\@sorted_embryo_ids)."\n";
     $c->stash->{rest} = { data => \@all_rows };
 }
 
