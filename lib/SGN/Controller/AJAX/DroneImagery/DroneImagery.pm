@@ -802,13 +802,14 @@ sub drone_imagery_calculate_statistics_store_analysis : Path('/api/drone_imagery
 sub drone_imagery_calculate_statistics_store_analysis_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    print STDERR Dumper $c->req->params();
     my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $analysis_name = $c->req->param('analysis_name');
     my $analysis_description = $c->req->param('analysis_description');
-    my $analysis_model_type = $c->req->param('analysis_model_type');
+    my $analysis_model_type = $c->req->param('statistics_select');
     my $accession_names = $c->req->param('accession_names');
     my $trait_names = $c->req->param('trait_names');
     my $training_data_file = $c->req->param('training_data_file');
@@ -835,7 +836,7 @@ sub drone_imagery_calculate_statistics_store_analysis_POST : Args(0) {
     my ($verified_warning, $verified_error);
 
     print STDERR "Storing the analysis...\n";
-    eval { 
+    eval {
         ($verified_warning, $verified_error) = $a->create_and_store_analysis_design();
     };
 
@@ -866,12 +867,12 @@ sub drone_imagery_calculate_statistics_store_analysis_POST : Args(0) {
     my $values;
     my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
 
-    eval { 
+    eval {
         $a->store_analysis_values(
             $c->dbic_schema("CXGN::Metadata::Schema"),
             $c->dbic_schema("CXGN::Phenome::Schema"),
             $values, # value_hash
-            $plots, 
+            $plots,
             $trait_names,
             $user_name,
             $c->config->{basepath},
@@ -885,7 +886,7 @@ sub drone_imagery_calculate_statistics_store_analysis_POST : Args(0) {
 
     if ($@) {
         print STDERR "An error occurred storing analysis values ($@).\n";
-        $c->stash->{rest} = { 
+        $c->stash->{rest} = {
             error => "An error occurred storing the values ($@).\n"
         };
         return;
