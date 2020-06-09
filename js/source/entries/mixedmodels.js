@@ -214,6 +214,7 @@ export function init(main_div){
 
     get_select_box("datasets", "mixed_model_dataset_select", {"checkbox_name":"mixed_model_dataset_select_checkbox"});
 
+    jQuery('#mixed_model_analysis_prepare_button').removeClass('active').addClass('inactive');
     var analysis_type;
     $('#save_analysis_dialog').on('show.bs.modal', function(e) {
 	analysis_type = e.relatedTarget.dataset.analysis_type;
@@ -272,7 +273,7 @@ export function init(main_div){
     });
 
     $('#mixed_model_analysis_prepare_button').click( function() {
-
+	
 	dataset_id=get_dataset_id();
 	if (dataset_id != false) { 
             $.ajax({
@@ -296,6 +297,8 @@ export function init(main_div){
                         }
 			
                         $('#tempfile').html(r.tempfile);
+			$('#workflow').
+
                     }
                     $('#fixed_factors').droppable( {drop: function( event, ui ) {
                         $( this )

@@ -59,7 +59,7 @@
 
 	<div class="container">
 	<div class="row">
-	<div class="col-md-6">
+	<div class="col-md-12">
 
 
 	<div class="container-fluid">
@@ -69,34 +69,32 @@
                     <& /page/page_title.mas, title=>"Choose the dataset for your analysis" &>
 
 
-        1. Choose a dataset
+		            1. Choose a dataset
 
-	<span style="width:240px" id="mixed_model_dataset_select">
-	</span>
-	<button class="btn btn-main" id="mixed_model_analysis_prepare_button">Go!</button>
-	<br />
-	<br />
+			    <span style="width:240px" id="mixed_model_dataset_select">
+			    </span>
+			    <button class="btn btn-main" id="mixed_model_analysis_prepare_button" 	onclick="Workflow.complete(this);">Choose Dataset</button>
 
+			    <br />
+			    <br />
+			    
+            </&>
 
-	</&>
-
-
-
-
-                <&| /util/workflow.mas:step, title=> "Choose Dependent Variable" &>
-                    <& /page/page_title.mas, title=>"Choose the dependent variable for your analysis" &>
+	    <&| /util/workflow.mas:step, title=> "Choose Dependent Variable" &>
+            	<& /page/page_title.mas, title=>"Choose the dependent variable for your analysis" &>
 
 	    
-	<div id="dependent_variable" style="margin-bottom:50px">
-        [ select dataset first ]
-	</div>
+		<div id="dependent_variable" style="margin-bottom:50px">
+		</div>
 
-	<div id="trait_histogram">
-	  [Histogram]
-       </div>
+		<div id="trait_histogram">
+	  	[Histogram]
+        	</div>
+
+                <button class="btn btn-main" id="mixed_model_analysis_fishished_choose_variable" 	onclick="Workflow.complete(this);">Next step</button>	
 
 
-	</&>
+	   </&>
 
 
            <&| /util/workflow.mas:step, title=> "Build Model" &>
@@ -168,7 +166,7 @@
         <div id="tempfile" style="display:none" >
         </div>
 
-        <button style="position:relative;" id="run_mixed_model_button" class="btn btn-main">Go!</button>
+        <button style="position:relative;" id="run_mixed_model_button" class="btn btn-main" 	onclick="Workflow.complete(this)" >Run analysis and go to next step</button>
 	<hr />
 
         </&>
@@ -180,11 +178,11 @@
 
 	<table>
 	<tr><td>
-	<div id="mixed_models_anova_results_div">&nbsp;</div>
+	<!-- div id="mixed_models_anova_results_div">&nbsp;</div>
 	</td></tr>
 	<tr><td>
 	<div id="mixed_models_varcomp_results_div">&nbsp;</div>
-	</td></tr>
+	</td></tr -->
 	<tr><td>
         Adjusted means 	     <button id="open_store_adjusted_means_dialog_button" class="btn btn-primary" data-toggle="modal" data-analysis_type="adjusted_means" data-target="#save_analysis_dialog">Save adjusted means</button>
         <div id="mixed_models_adjusted_means_results_div">[loading...]</div>
