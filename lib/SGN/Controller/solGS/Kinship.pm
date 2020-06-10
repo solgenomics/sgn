@@ -50,66 +50,6 @@ sub kinship_data :Path('/solgs/kinship/data/') Args() {
 }
 
 
-sub download_kinship :Path('/solgs/download/kinship/population') Args() {
-    my ($self, $c, $pop_id, $gp, $protocol_id) = @_;   
-   
-    $c->stash->{pop_id} = $pop_id;
-    $c->stash->{genotyping_protocol_id} = $protocol_id;
-     print STDERR "\nkinship pop id: $pop_id -- gp: $protocol_id \n";
-    $c->controller('solGS::Files')->relationship_matrix_file($c);
-    my $kinship_file = $c->stash->{relationship_matrix_file};
-    print STDERR "\nkinship pop id: $pop_id -- gp: $protocol_id -- file: $kinship_file\n";
-    unless (!-s $kinship_file) 
-    {
-        my @kinship =  map { [ split(/\t/) ] }  read_file($kinship_file);
-    
-        $c->res->content_type("text/plain");
-        $c->res->body(join "", map { $_->[0] . "\t" . $_->[1] }  @kinship);
-    }
- 
-}
-
-
-sub download_ave_kinship :Path('/solgs/download/ave/kinship/population') Args() {
-    my ($self, $c, $pop_id, $gp, $protocol_id) = @_;   
-   
-    $c->stash->{pop_id} = $pop_id;
-    $c->stash->{genotyping_protocol_id} = $protocol_id;
-    
-    $c->controller('solGS::Files')->average_kinship_file($c);
-    my $ave_kinship_file = $c->stash->{average_kinship_file};
-  
-    unless (!-s $ave_kinship_file) 
-    {
-        my @ave_kinships =  map { [ split(/\t/) ] }  read_file($ave_kinship_file);
-    
-        $c->res->content_type("text/plain");
-        $c->res->body(join "", map { $_->[0] . "\t" . $_->[1] }  @ave_kinships);
-    }
- 
-}
-
-
-sub download_inbreeding :Path('/solgs/download/inbreeding/population') Args() {
-    my ($self, $c, $pop_id, $gp, $protocol_id) = @_;   
-   
-    $c->stash->{pop_id} = $pop_id;
-    $c->stash->{genotyping_protocol_id} = $protocol_id;
-    
-    $c->controller('solGS::Files')->inbreeding_coefficients_file($c);
-    my $inbreeding_file = $c->stash->{inbreeding_coefficients_file};
-  
-    unless (!-s $inbreeding_file) 
-    {
-        my @inbreeding =  map { [ split(/\t/) ] }  read_file($inbreeding_file);
-    
-        $c->res->content_type("text/plain");
-        $c->res->body(join "", map { $_->[0] . "\t" . $_->[1] }  @inbreeding);
-    }
- 
-}
-
-
 sub stash_kinship_output {
     my ($self, $c) = @_;
     
