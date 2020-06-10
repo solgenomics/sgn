@@ -1,0 +1,392 @@
+<!--
+This Mason can be imported on any page for saving analyses, the results of analyses, and the model used in an analysis.
+
+Requires user input for: analysis_name, analysis_description, year, breeding_program
+Optional user input for: model_name, model_description, model_is_public
+
+Requires developer input for: protocol, dataset_id, user_id, accession_names, trait_names, analysis_design (if design computed already, otherwise the design will be computed using the accession_names provided)
+Optional developer input for: model_language, model_type, model_experiment_type, model_properties, application_name, application_version, model_file_to_archive, model_file_type, training_data_file_to_archive, training_data_file_type, auxiliary_files, analysis_result_values, analysis_result_values_type
+-->
+
+<%args>
+
+</%args>
+
+<& /util/import_javascript.mas, classes => ['jquery', 'CXGN.BreedersToolbox.HTMLSelect'], entries => [ ] &>
+
+<div class="modal fade" id="generic_save_analysis_dialog" name="generic_save_analysis_dialog" tabindex="-1" role="dialog" aria-labelledby="genericStoreAnalysisDialog" data-backdrop="static">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="genericStoreAnalysisDialog">Save Analysis Results</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <&| /util/workflow.mas, id=> "generic_save_analysis_workflow" &>
+                        <&| /util/workflow.mas:step, title=> "Intro" &>
+                            <& /page/page_title.mas, title=>"This workflow will guide you through storing a new analysis and the results" &>
+                            <p>An analysis is stored independently; however, it maintains associations to the results for the accessions and traits involved. In the case where a model is being trained for predictions e.g. genomic selection or CNN image predictions, those trained model weights can be saved.</p>
+                            <br/><br/>
+                            <center>
+                            <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                            </center>
+                        </&>
+                        <&| /util/workflow.mas:step, title=> "Analysis Info" &>
+                            <form class="form-horizontal">
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-6 control-label">Analysis Name (must be unique): </label>
+                                    <div class="col-sm-6">
+                                        <input class="form-control" id="generic_save_analysis_analysis_name" name="generic_save_analysis_analysis_name" type="text" />
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-6 control-label">Analysis Description: </label>
+                                    <div class="col-sm-6">
+                                        <input class="form-control" id="generic_save_analysis_analysis_description" name="generic_save_analysis_analysis_description" type="text" />
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-6 control-label">Year: </label>
+                                    <div class="col-sm-6">
+                                        <div id="generic_save_analysis_analysis_year_div">
+                                    </div>
+                                </div>
+                                <br/>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-6 control-label">Protocol: </label>
+                                    <div class="col-sm-6">
+                                        <input class="form-control" id="generic_save_analysis_protocol" name="generic_save_analysis_protocol" type="text" placeholder="e.g. lmer(grain_yield ~ replicate + 1|germplasmName)" disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-6 control-label">Dataset ID: </label>
+                                    <div class="col-sm-6">
+                                        <input class="form-control" id="generic_save_analysis_dataset_id" name="generic_save_analysis_dataset_id" type="number" disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-6 control-label">Accession Names: </label>
+                                    <div class="col-sm-6">
+                                        <input class="form-control" id="generic_save_analysis_accession_names" name="generic_save_analysis_accession_names" type="text" disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-6 control-label">Trait Names: </label>
+                                    <div class="col-sm-6">
+                                        <input class="form-control" id="generic_save_analysis_trait_names" name="generic_save_analysis_trait_names" type="text" disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-6 control-label">Analysis Design (If left blank, design will be created using above accession names): </label>
+                                    <div class="col-sm-6">
+                                        <input class="form-control" id="generic_save_analysis_design" name="generic_save_analysis_design" type="text" disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-6 control-label">Analysis Result Values: </label>
+                                    <div class="col-sm-6">
+                                        <input class="form-control" id="generic_save_analysis_result_values" name="generic_save_analysis_result_values" type="text" disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-6 control-label">Analysis Result Values Type: </label>
+                                    <div class="col-sm-6">
+                                        <input class="form-control" id="generic_save_analysis_result_values_type" name="generic_save_analysis_result_values_type" type="text" disabled/>
+                                    </div>
+                                </div>
+                            </form>
+
+                            <br/><br/>
+                            <center>
+                            <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                            </center>
+                        </&>
+                        <&| /util/workflow.mas:step, title=> "Model Info" &>
+
+                            <form class="form-horizontal">
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-6 control-label">Do you want to save the trained model for later predictions?: </label>
+                                    <div class="col-sm-6">
+                                        <select class="form-control" id="generic_save_analysis_model_to_save" name="generic_save_analysis_model_to_save" >
+                                            <option value="no">No</option>
+                                            <option value="yes">Yes</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </form>
+
+                            <form class="form-horizontal" id="generic_save_analysis_model_form" style="display:none">
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-6 control-label">Model Name (must be unique): </label>
+                                    <div class="col-sm-6">
+                                        <input class="form-control" id="generic_save_analysis_model_name" name="generic_save_analysis_model_name" type="text" />
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-6 control-label">Model Description: </label>
+                                    <div class="col-sm-6">
+                                        <input class="form-control" id="generic_save_analysis_model_description" name="generic_save_analysis_model_description" type="text" />
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-6 control-label">Model Is Public: </label>
+                                    <div class="col-sm-6">
+                                        <select class="form-control" id="generic_save_analysis_model_is_public" name="generic_save_analysis_model_is_public" >
+                                            <option value="yes">Yes</option>
+                                            <option value="no">No</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-6 control-label">Model Language: </label>
+                                    <div class="col-sm-6">
+                                        <input class="form-control" id="generic_save_analysis_model_language" name="generic_save_analysis_model_language" type="text" disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-6 control-label">Model Type: </label>
+                                    <div class="col-sm-6">
+                                        <input class="form-control" id="generic_save_analysis_model_type" name="generic_save_analysis_model_type" type="text" disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-6 control-label">Model Experiment Type: </label>
+                                    <div class="col-sm-6">
+                                        <input class="form-control" id="generic_save_analysis_model_experiment_type" name="generic_save_analysis_model_experiment_type" type="text" disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-6 control-label">Model Properties: </label>
+                                    <div class="col-sm-6">
+                                        <input class="form-control" id="generic_save_analysis_model_properties" name="generic_save_analysis_model_properties" type="text" disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-6 control-label">Application Name: </label>
+                                    <div class="col-sm-6">
+                                        <input class="form-control" id="generic_save_analysis_model_application_name" name="generic_save_analysis_model_application_name" type="text" disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-6 control-label">Application Version: </label>
+                                    <div class="col-sm-6">
+                                        <input class="form-control" id="generic_save_analysis_model_application_version" name="generic_save_analysis_model_application_version" type="text" disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-6 control-label">Model File To Archive: </label>
+                                    <div class="col-sm-6">
+                                        <input class="form-control" id="generic_save_analysis_model_file" name="generic_save_analysis_model_file" type="text" disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-6 control-label">Archive Model File Type: </label>
+                                    <div class="col-sm-6">
+                                        <input class="form-control" id="generic_save_analysis_model_archived_model_file_type" name="generic_save_analysis_model_archive_model_file_type" type="text" disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-6 control-label">Training Data File To Archive: </label>
+                                    <div class="col-sm-6">
+                                        <input class="form-control" id="generic_save_analysis_model_training_data_file" name="generic_save_analysis_model_training_data_file" type="text" disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-6 control-label">Archive Training Data File Type: </label>
+                                    <div class="col-sm-6">
+                                        <input class="form-control" id="generic_save_analysis_model_archived_training_data_file_type" name="generic_save_analysis_model_archived_training_data_file_type" type="text" disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-6 control-label">Auxiliary Files to Archive: </label>
+                                    <div class="col-sm-6">
+                                        <input class="form-control" id="generic_save_analysis_model_auxiliary_files" name="generic_save_analysis_model_auxiliary_files" type="text" disabled/>
+                                    </div>
+                                </div>
+                            </form>
+
+                            <br/><br/>
+                            <center>
+                            <button class="btn btn-primary" id="generic_save_analysis_submit_button" onclick="return false;">Save Analysis</button>
+                            </center>
+                        </&>
+                    </&>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function() {
+
+    get_select_box('years', 'generic_save_analysis_analysis_year_div', {'auto_generate': 1, 'id':'generic_save_analysis_analysis_year', 'name':'generic_save_analysis_analysis_year'});
+
+    jQuery('#generic_save_analysis_model_to_save').change(function(){
+        if (jQuery(this).val() == 'yes') {
+            jQuery('#generic_save_analysis_model_form').show();
+        }
+        if (jQuery(this).val() == 'no') {
+            jQuery('#generic_save_analysis_model_form').hide();
+            jQuery('#generic_save_analysis_model_name').val('');
+        }
+    });
+
+    jQuery('#generic_save_analysis_submit_button').click(function(){
+        var generic_save_analysis_analysis_name = jQuery('#generic_save_analysis_analysis_name').val();
+        var generic_save_analysis_analysis_description = jQuery('#generic_save_analysis_analysis_description').val();
+        var generic_save_analysis_analysis_year = jQuery('#generic_save_analysis_analysis_year').val();
+        var generic_save_analysis_protocol = jQuery('#generic_save_analysis_protocol').val();
+        var generic_save_analysis_dataset_id = jQuery('#generic_save_analysis_dataset_id').val();
+        var generic_save_analysis_accession_names = jQuery('#generic_save_analysis_accession_names').val();
+        var generic_save_analysis_trait_names = jQuery('#generic_save_analysis_trait_names').val();
+        var generic_save_analysis_precomputed_design_optional = jQuery('#generic_save_analysis_design').val();
+        var generic_save_analysis_result_values = jQuery('#generic_save_analysis_result_values').val();
+        var generic_save_analysis_result_values_type = jQuery('#generic_save_analysis_result_values_type').val();
+        
+        var generic_save_analysis_model_to_save = jQuery('#generic_save_analysis_model_to_save').val();
+        var generic_save_analysis_model_name = jQuery('#generic_save_analysis_model_name').val();
+        var generic_save_analysis_model_description = jQuery('#generic_save_analysis_model_description').val();
+        var generic_save_analysis_model_is_public = jQuery('#generic_save_analysis_model_is_public').val();
+        var generic_save_analysis_model_language = jQuery('#generic_save_analysis_model_language').val();
+        var generic_save_analysis_model_type = jQuery('#generic_save_analysis_model_type').val();
+        var generic_save_analysis_model_experiment_type = jQuery('#generic_save_analysis_model_experiment_type').val();
+        var generic_save_analysis_model_properties = jQuery('#generic_save_analysis_model_properties').val();
+        var generic_save_analysis_model_application_name = jQuery('#generic_save_analysis_model_application_name').val();
+        var generic_save_analysis_model_application_version = jQuery('#generic_save_analysis_model_application_version').val();
+        var generic_save_analysis_model_file = jQuery('#generic_save_analysis_model_file').val();
+        var generic_save_analysis_model_archived_model_file_type = jQuery('#generic_save_analysis_model_archived_model_file_type').val();
+        var generic_save_analysis_model_training_data_file = jQuery('#generic_save_analysis_model_training_data_file').val();
+        var generic_save_analysis_model_archived_training_data_file_type = jQuery('#generic_save_analysis_model_archived_training_data_file_type').val();
+        var generic_save_analysis_model_auxiliary_files = jQuery('#generic_save_analysis_model_auxiliary_files').val();
+
+        if (generic_save_analysis_analysis_name == '') {
+            alert('Please give an analysis name');
+            return false;
+        }
+        if (generic_save_analysis_analysis_description == '') {
+            alert('Please give an analysis description');
+            return false;
+        }
+        if (generic_save_analysis_analysis_year == '') {
+            alert('Please give an analysis year');
+            return false;
+        }
+        if (generic_save_analysis_protocol == '') {
+            alert('Please give an analysis protocol e.g. lmer(grain_yield ~ replicate + 1|germplasmName)');
+            return false;
+        }
+        if (generic_save_analysis_accession_names == '') {
+            alert('Please give analysis accession names');
+            return false;
+        }
+        if (generic_save_analysis_trait_names == '') {
+            alert('Please give analysis trait names');
+            return false;
+        }
+        if (generic_save_analysis_result_values == '') {
+            alert('Please give analysis result values');
+            return false;
+        }
+        if (generic_save_analysis_result_values_type == '') {
+            alert('Please give analysis result values type');
+            return false;
+        }
+        if (generic_save_analysis_model_to_save == 'yes') {
+            if (generic_save_analysis_model_name == '') {
+                alert('Please give a model name');
+                return false;
+            }
+            if (generic_save_analysis_model_description == '') {
+                alert('Please give a model description');
+                return false;
+            }
+            if (generic_save_analysis_model_is_public == '') {
+                alert('Please tell if a model is public');
+                return false;
+            }
+            if (generic_save_analysis_model_language == '') {
+                alert('Please give a model language');
+                return false;
+            }
+            if (generic_save_analysis_model_type == '') {
+                alert('Please give a model type');
+                return false;
+            }
+            if (generic_save_analysis_model_experiment_type == '') {
+                alert('Please give a model experiment type');
+                return false;
+            }
+            if (generic_save_analysis_model_properties == '') {
+                alert('Please give a model properties JSON object');
+                return false;
+            }
+            if (generic_save_analysis_model_application_name == '') {
+                alert('Please give a model application name');
+                return false;
+            }
+            if (generic_save_analysis_model_application_version == '') {
+                alert('Please give a model application version');
+                return false;
+            }
+            if (generic_save_analysis_model_file == '') {
+                alert('Please give a model file');
+                return false;
+            }
+            if (generic_save_analysis_model_archived_model_file_type == '') {
+                alert('Please give a model file type');
+                return false;
+            }
+        }
+
+        jQuery.ajax({
+            type: 'POST',
+            url : '/ajax/analysis/store/json',
+            data : {
+                'analysis_name':generic_save_analysis_analysis_name,
+                'analysis_description':generic_save_analysis_analysis_description,
+                'analysis_year':generic_save_analysis_analysis_year,
+                'analysis_protocol':generic_save_analysis_protocol,
+                'analysis_dataset_id':generic_save_analysis_dataset_id,
+                'analysis_accession_names':generic_save_analysis_accession_names,
+                'analysis_trait_names':generic_save_analysis_trait_names,
+                'analysis_precomputed_design_optional':generic_save_analysis_precomputed_design_optional,
+                'analysis_result_values':generic_save_analysis_result_values,
+                'analysis_result_values_type':generic_save_analysis_result_values_type,
+                'analysis_model_name':generic_save_analysis_model_name,
+                'analysis_model_description':generic_save_analysis_model_description,
+                'analysis_model_is_public':generic_save_analysis_model_is_public,
+                'analysis_model_language':generic_save_analysis_model_language,
+                'analysis_model_type':generic_save_analysis_model_type,
+                'analysis_model_experiment_type':generic_save_analysis_model_experiment_type,
+                'analysis_model_properties':generic_save_analysis_model_properties,
+                'analysis_model_application_name':generic_save_analysis_model_application_name,
+                'analysis_model_application_version':generic_save_analysis_model_application_version,
+                'analysis_model_file':generic_save_analysis_model_file,
+                'analysis_model_file_type':generic_save_analysis_model_archived_model_file_type,
+                'analysis_model_training_data_file':generic_save_analysis_model_training_data_file,
+                'analysis_model_training_data_file_type':generic_save_analysis_model_archived_training_data_file_type,
+                'analysis_model_auxiliary_files':generic_save_analysis_model_auxiliary_files
+            },
+            beforeSend: function() {
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response){
+                jQuery('#working_modal').modal('hide');
+                console.log(response);
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('Error saving analysis!');
+            }
+        });
+    });
+
+});
+
+</script>
