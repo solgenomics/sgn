@@ -69,7 +69,10 @@ sub patch {
         ],
         'protocol_property' => [
             'trained_keras_mask_r_cnn_model_type',
-			'model_language'
+			'model_language',
+			'model_application_details',
+			'model_is_public',
+			'model_dataset_id'
         ]
     };
 

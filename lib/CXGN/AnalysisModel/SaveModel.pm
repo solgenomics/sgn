@@ -16,18 +16,19 @@ my $m = CXGN::AnalysisModel::SaveModel->new({
     model_language=>'R',
     model_type_cvterm_id=>$model_type_cvterm_id,
     model_experiment_type_cvterm_id=>$model_experiment_type_cvterm_id,
-    model_properties=>[{type_id=>1, tolparinv=>00.01},{},{}],
+    model_properties=>[{type_id=>$model_property_1_cvterm_id, value=>{tolparinv=>00.01, attribute=>'myattribute'} },{type_id=>$model_property_2_cvterm_id, value=>{prop=>$props, attribute=>'myattribute'}} ,{...}],
+    application_name=>$application_name, #e.g. 'SolGS', 'MixedModelTool', 'DroneImageryCNN'
+    application_version=>1,
+    dataset_id=>12,
+    is_public=>1,
     archived_model_file_type=>$archived_model_file_type,
     model_file=>$model_file,
     archived_training_data_file_type=>$archived_training_data_file_type,
     archived_training_data_file=>$archived_training_data_file,
-    archived_auxiliary_files=>$archived_auxiliary_files,
+    archived_auxiliary_files=>[{auxiliary_model_file => $archive_temp_autoencoder_output_model_file, auxiliary_model_file_archive_type => 'trained_keras_cnn_autoencoder_model'},
+    {auxiliary_model_file => $model_input_aux_file, auxiliary_model_file_archive_type => 'trained_keras_cnn_model_input_aux_data_file'}],
     user_id=>$user_id,
-    user_role=>$user_role,
-    application_name=>, #TOADD
-    application_version=>, #TOADD
-    dataset_id=>, #TOADD
-    is_public=> #TOADD
+    user_role=>$user_role
 });
 my $saved_model_id = $m->save_model();
 
@@ -107,6 +108,28 @@ has 'model_properties' => (
     required => 1
 );
 
+has 'application_name' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 1
+);
+
+has 'application_version' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 1
+);
+
+has 'dataset_id' => (
+    isa => 'Int',
+    is => 'rw'
+);
+
+has 'is_public' => (
+    isa => 'Bool',
+    is => 'rw',
+);
+
 has 'archived_model_file_type' => (
     isa => 'Str',
     is => 'rw',
@@ -160,6 +183,10 @@ sub save_model {
     my $model_experiment_type_cvterm_id = $self->model_experiment_type_cvterm_id();
     my $model_properties = $self->model_properties();
     my $model_file = $self->model_file();
+    my $application_name = $self->application_name();
+    my $application_version = $self->application_version();
+    my $dataset_id = $self->dataset_id();
+    my $is_public = $self->is_public();
     my $archive_path = $self->archive_path();
     my $archived_model_file_type = $self->archived_model_file_type();
     my $archived_training_data_file_type = $self->archived_training_data_file_type();
@@ -168,6 +195,19 @@ sub save_model {
     my $user_id = $self->user_id();
     my $user_role = $self->user_role();
 
+    #Save application_name
+    my $application_details_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'model_application_details', 'protocol_type')->cvterm_id();
+    push @$model_properties, {value => encode_json({application_name=>$application_name, application_version=>$application_version}), type_id => $application_details_cvterm_id};
+
+    #Save dataset_id
+    my $model_dataset_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'model_is_public', 'protocol_type')->cvterm_id();
+    push @$model_properties, {value => encode_json({value=>$is_public}), type_id => $model_dataset_id_cvterm_id};
+
+    #Save is_public
+    my $model_is_public_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'model_dataset_id', 'protocol_type')->cvterm_id();
+    push @$model_properties, {value => encode_json({value=>$dataset_id}), type_id => $model_is_public_cvterm_id};
+
+    #Save model language
     my $model_language_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'model_language', 'protocol_type')->cvterm_id();
     push @$model_properties, {value => encode_json({value=>$model_language}), type_id => $model_language_cvterm_id};
 

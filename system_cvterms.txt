@@ -284,6 +284,9 @@ protocol_property	trained_keras_cnn_model_trait	The trait for which the Keras CN
 protocol_property	trained_keras_cnn_model_type	The type of Keras CNN model trained e.g. InceptionResNetV2	9/30/2019	nm529	00116
 protocol_property	trained_keras_mask_r_cnn_model_type	The type of Keras Mask R CNN trained	5/27/2020	nm529	00125
 protocol_property	model_language	The language which a model is computed e.g. R, Python	6/8/2020	nm529	00125
+protocol_property	model_application_details	Details of the model application and version in json	6/8/2020	nm529	00125
+protocol_property	model_is_public	Whether the model is public	6/8/2020	nm529	00125
+protocol_property	model_dataset_id	The dataset_id used to train a model. optional	6/8/2020	nm529	00125
 protocol_type	trained_keras_cnn_model	An nd_protocol for a saved trained keras cnn model	9/30/2019	nm529	00116
 protocol_type	trained_keras_mask_r_cnn_model	An nd_protocol for a saved trained keras mask r cnn model	5/27/2020	nm529	00125
 composable_cvtypes	trait_ontology		05/01/2017		00073
