@@ -17,7 +17,7 @@ Jeremy Edwards <jde22@cornell.edu>
 package SGN::Controller::AJAX::Accessions;
 
 use Moose;
-use JSON -support_by_pp;
+use JSON;
 use List::MoreUtils qw /any /;
 use CXGN::Stock::StockLookup;
 use CXGN::BreedersToolbox::Accessions;
@@ -30,7 +30,7 @@ use Data::Dumper;
 use Try::Tiny;
 use CXGN::Stock::ParseUpload;
 use CXGN::BreederSearch;
-#use JSON;
+#use Encode::Detect::Detector;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -78,7 +78,11 @@ sub verify_accession_list_POST : Args(0) {
 
     my $accession_list_json = $c->req->param('accession_list');
     my $organism_list_json = $c->req->param('organism_list');
+
+    #my $encoding = Encode::Detect::Detector::detect($accession_list_json);
+
     my @accession_list = @{_parse_list_from_json($accession_list_json)};
+    
     my @organism_list = $organism_list_json ? @{_parse_list_from_json($organism_list_json)} : [];
 
     my $do_fuzzy_search = $c->req->param('do_fuzzy_search');
@@ -128,7 +132,6 @@ sub do_fuzzy_search {
     s/^\s+|\s+$//g for @organism_list;
 
     my $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance, 'accession');
-    #print STDERR "\n\nAccessionFuzzyResult:\n".Data::Dumper::Dumper($fuzzy_search_result)."\n\n";
     print STDERR "DoFuzzySearch 2".localtime()."\n";
 
     $found_accessions = $fuzzy_search_result->{'found'};
@@ -270,7 +273,6 @@ sub verify_accessions_file_POST : Args(0) {
     my $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@editable_stock_props, do_fuzzy_search=>$do_fuzzy_search);
     $parser->load_plugin('AccessionsXLS');
     my $parsed_data = $parser->parse();
-    #print STDERR Dumper $parsed_data;
 
     if (!$parsed_data) {
         my $return_error = '';
@@ -280,7 +282,6 @@ sub verify_accessions_file_POST : Args(0) {
             $c->detach();
         } else {
             $parse_errors = $parser->get_parse_errors();
-            #print STDERR Dumper $parse_errors;
 
             foreach my $error_string (@{$parse_errors->{'error_messages'}}){
                 $return_error .= $error_string."<br>";
@@ -328,8 +329,8 @@ sub verify_fuzzy_options_POST : Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $accession_list_id = $c->req->param('accession_list_id');
     my $fuzzy_option_hash = decode_json($c->req->param('fuzzy_option_data'));
-    my $names_to_add = decode_json($c->req->param('names_to_add'));
-    #print STDERR Dumper $fuzzy_option_hash;
+    my $names_to_add = JSON->new->utf8->decode($c->req->param('names_to_add'));
+
     my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $accession_list_id } );
 
     my %names_to_add = map {$_ => 1} @$names_to_add;
@@ -359,18 +360,22 @@ sub verify_fuzzy_options_POST : Args(0) {
         success => "1",
         names_to_add => \@names_to_add
     };
-    #print STDERR Dumper($rest);
     $c->stash->{rest} = $rest;
 }
 
 
 sub add_accession_list : Path('/ajax/accession_list/add') : ActionClass('REST') { }
 
+sub add_accession_list_GET :Args(0) {
+    my ($self, $c) = @_;
+    $self->add_accession_list_POST($c);
+}
+
 sub add_accession_list_POST : Args(0) {
     my ($self, $c) = @_;
+    
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    #print STDERR Dumper $c->req->param('full_info');
-    my $full_info = $c->req->param('full_info') ? decode_json $c->req->param('full_info') : '';
+    my $full_info = $c->req->param('full_info') ? JSON->new()->decode( $c->req->param('full_info') ) : '';
     my $allowed_organisms = $c->req->param('allowed_organisms') ? decode_json $c->req->param('allowed_organisms') : [];
     my %allowed_organisms = map {$_=>1} @$allowed_organisms;
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
@@ -391,6 +396,7 @@ sub add_accession_list_POST : Args(0) {
     my $main_production_site_url = $c->config->{main_production_site_url};
     my @added_fullinfo_stocks;
     my @added_stocks;
+
     my $coderef_bcs = sub {
         foreach (@$full_info){
             if (exists($allowed_organisms{$_->{species}})){
@@ -465,7 +471,6 @@ sub add_accession_list_POST : Args(0) {
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
-    #print STDERR Dumper \@added_fullinfo_stocks;
     $c->stash->{rest} = {
         success => "1",
         added => \@added_fullinfo_stocks
@@ -512,7 +517,6 @@ sub fuzzy_response_download_POST : Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $fuzzy_json = $c->req->param('fuzzy_response');
     my $fuzzy_response = decode_json $fuzzy_json;
-    #print STDERR Dumper $fuzzy_response;
 
     my $synonym_hash_lookup = CXGN::Stock::StockLookup->new({schema => $schema})->get_synonym_hash_lookup();
     my @data_out;
@@ -570,17 +574,17 @@ sub population_members_GET : Args(1) {
 }
 
 sub _parse_list_from_json {
-  my $list_json = shift;
-  my $json = new JSON;
-  if ($list_json) {
-    my $decoded_list = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
-    #my $decoded_list = decode_json($list_json);
-    my @array_of_list_items = @{$decoded_list};
-    return \@array_of_list_items;
-  }
-  else {
-    return;
-  }
+    my $list_json = shift;
+    my $json = new JSON;
+    if ($list_json) {
+	my $decoded_list = $json->allow_nonref->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
+	#my $decoded_list = decode_json($list_json);
+	my @array_of_list_items = @{$decoded_list};
+	return \@array_of_list_items;
+    }
+    else {
+	return;
+    }
 }
 
 
