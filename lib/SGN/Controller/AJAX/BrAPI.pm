@@ -4644,9 +4644,14 @@ sub seedlots_POST {
 	my $c = shift;
 	my ($auth,$user_id) = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
+	my $data = $clean_inputs;
+	my @all_data;
+	foreach my $seedlot (values %{$data}) {
+	    push @all_data, $seedlot;
+	}
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('SeedLots');
-	my $brapi_package_result = $brapi_module->store_seedlots($clean_inputs,$c,$user_id);
+	my $brapi_package_result = $brapi_module->store_seedlots(\@all_data,$c,$user_id);
 
 	my $status = $brapi_package_result->{status};
 	my $http_status_code = _get_http_status_code($status);
