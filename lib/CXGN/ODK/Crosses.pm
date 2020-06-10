@@ -720,12 +720,11 @@ sub save_ona_cross_info {
             my $embryo_ids = $embryoID_hash{$embryo_cross};
             my %embryo_hash = %{$embryo_ids};
             my @all_embryo_ids = keys %embryo_hash;
-            my @sorted_embryo_ids = sort @all_embryo_ids;
             my $embryo_ids_count = keys %embryo_hash;
             my $germinating_number_property = 'Number of Germinating Embryos';
             my $embryo_ids_property = 'Embryo IDs';
             $musa_cross_info{$germinating_number_property}{$embryo_cross} = $embryo_ids_count;
-            $tissue_culture_details{$embryo_ids_property}{$embryo_cross} = \@sorted_embryo_ids;
+            $tissue_culture_details{$embryo_ids_property}{$embryo_cross} = \@all_embryo_ids;
         }
 #        foreach my $name_hash (keys %number_germinating) {
 #            my $germination_date_ref = $number_germinating{$name_hash};
@@ -741,11 +740,10 @@ sub save_ona_cross_info {
             my %subculture_info = %$subculture_ref;
             my $subculture_id_count = keys %subculture_info;
             my @all_subculture_ids = keys %subculture_info;
-            my @sorted_subculture_ids = sort @all_subculture_ids;
             my $subculture_property = 'Subculture ID Count';
             my $subculture_ids_property = 'Subculture IDs';
             $musa_cross_info{$subculture_property}{$subculture_cross} = $subculture_id_count;
-            $tissue_culture_details{$subculture_ids_property}{$subculture_cross} = \@sorted_subculture_ids;
+            $tissue_culture_details{$subculture_ids_property}{$subculture_cross} = \@all_subculture_ids;
         }
 
         foreach my $rooting_cross (keys %rooting_hash) {
@@ -753,11 +751,10 @@ sub save_ona_cross_info {
             my %rooting_info = %$rooting_ref;
             my $rooting_id_count = keys %rooting_info;
             my @all_rooting_ids = keys %rooting_info;
-            my @sorted_rooting_ids = sort @all_rooting_ids;
             my $rooting_property = 'Rooting ID Count';
             my $rooting_ids_property = 'Rooting IDs';
             $musa_cross_info{$rooting_property}{$rooting_cross} = $rooting_id_count;
-            $tissue_culture_details{$rooting_ids_property}{$rooting_cross} = \@sorted_rooting_ids;
+            $tissue_culture_details{$rooting_ids_property}{$rooting_cross} = \@all_rooting_ids;
 
         }
 
@@ -766,11 +763,10 @@ sub save_ona_cross_info {
             my %weaning1_info = %$weaning1_ref;
             my $weaning1_id_count = keys %weaning1_info;
             my @all_weaning1_ids = keys %weaning1_info;
-            my @sorted_weaning1_ids = sort @all_weaning1_ids;
             my $weaning1_property = 'Weaning1 ID Count';
             my $weaning1_ids_property = 'Weaning1 IDs';
             $musa_cross_info{$weaning1_property}{$weaning1_cross} = $weaning1_id_count;
-            $tissue_culture_details{$weaning1_ids_property}{$weaning1_cross} = \@sorted_weaning1_ids;
+            $tissue_culture_details{$weaning1_ids_property}{$weaning1_cross} = \@all_weaning1_ids;
         }
 
         foreach my $weaning2_cross (keys %weaning2_hash) {
@@ -778,11 +774,10 @@ sub save_ona_cross_info {
             my %weaning2_info = %$weaning2_ref;
             my $weaning2_id_count = keys %weaning2_info;
             my @all_weaning2_ids = keys %weaning2_info;
-            my @sorted_weaning2_ids = sort @all_weaning2_ids;
             my $weaning2_property = 'Weaning2 ID Count';
             my $weaning2_ids_property = 'Weaning2 IDs';
             $musa_cross_info{$weaning2_property}{$weaning2_cross} = $weaning2_id_count;
-            $tissue_culture_details{$weaning2_ids_property}{$weaning2_cross} = \@sorted_weaning2_ids;
+            $tissue_culture_details{$weaning2_ids_property}{$weaning2_cross} = \@all_weaning2_ids;
         }
 
         foreach my $screenhouse_cross (keys %screenhouse_hash) {
@@ -790,11 +785,10 @@ sub save_ona_cross_info {
             my %screenhouse_info = %$screenhouse_ref;
             my $screenhouse_id_count = keys %screenhouse_info;
             my @all_screenhouse_ids = keys %screenhouse_info;
-            my @sorted_screenhouse_ids = sort @all_screenhouse_ids;
             my $screenhouse_property = 'Screenhouse ID Count';
             my $screenhouse_ids_property = 'Screenhouse IDs';
             $musa_cross_info{$screenhouse_property}{$screenhouse_cross} = $screenhouse_id_count;
-            $tissue_culture_details{$screenhouse_ids_property}{$screenhouse_cross} = \@sorted_screenhouse_ids;
+            $tissue_culture_details{$screenhouse_ids_property}{$screenhouse_cross} = \@all_screenhouse_ids;
         }
 #        print STDERR "CHECKING CROSS INFO =".Dumper(\%musa_cross_info)."\n";
 #        print STDERR "CHECKING TISSUE CULTURE INFO =".Dumper(\%tissue_culture_details)."\n";
