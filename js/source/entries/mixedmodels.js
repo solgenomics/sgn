@@ -243,7 +243,7 @@ export function init(main_div){
 		       'analysis_name': name,
 		       'dataset_id' : get_dataset_id(),
 		       'analysis_protocol' : $('#model_string').val(),
-		       'description' : description
+		       'analysis_description' : description
 		     },
 	    'success' :	function(r) {
 		if (r.error) {

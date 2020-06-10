@@ -71,6 +71,7 @@ use CXGN::Analysis::AnalysisMetadata;
 use CXGN::List::Transform;
 use CXGN::Dataset;
 use CXGN::AnalysisModel::SaveModel;
+use CXGN::People::Person;
 
 =head2 bcs_schema()
 
@@ -102,22 +103,17 @@ has 'people_schema' => (is => 'rw', isa => 'CXGN::People::Schema', required=>1);
 
 ##has 'description' => (is => 'rw', isa => 'Str', default => "No description");
 
-#=head2 accession_ids()
-#
-#=cut
-#has 'accession_ids' => (is => 'rw', isa => 'Maybe[ArrayRef]', lazy => 1, builder => '_load_accession_ids');
+=head2 breeding_program_id()
+
+=cut
+
+has 'breeding_program_id' => (is => 'rw', isa => 'Int');
 
 =head2 accession_names()
 
 =cut
 
-has 'accession_names' => (is => 'rw', isa => 'Maybe[ArrayRef]', lazy => 1, builder => '_load_accession_names'); #maybe for debugging only
-
-=head2 data_hash()
-
-=cut
-
-has 'data_hash' => (is => 'rw', isa => 'HashRef');
+has 'accession_names' => (is => 'rw', isa => 'Maybe[ArrayRef]', lazy => 1, builder => '_load_accession_names');
 
 =head2 design()
 
@@ -149,7 +145,7 @@ has 'user_id' => (is => 'rw', isa => 'Int');
 
 has 'user_role' => (is => 'rw', isa => 'Str');
 
-=head2 analysis_model()
+=head2 analysis_model_protocol_id()
 
 nd_protocol_id of save model information
 
@@ -192,66 +188,36 @@ sub BUILD {
     my $metadata;
 
     if ($self->get_trial_id()) {
-	
-	# with a project ID, we load all associated metadata
-	# first, get project row and retrieve name
-	#
+        print STDERR "Location id retrieved : = ".$self->get_location()->[0]."\n";
+        $self->nd_geolocation_id($self->get_location()->[0]);
 
-#	my $project = CXGN::Project->new( { bcs_schema => $args->{bcs_schema}, trial_id => $args->{project_id}});
-	
-#	if (! $project) { die "No analysis with this project_id ($args->{project_id}) exists"; }
+        my $metadata_json_id = SGN::Model::Cvterm->get_cvterm_row($args->{bcs_schema}, 'analysis_metadata_json', 'project_property')->cvterm_id();
+        my $rs = $self->bcs_schema()->resultset("Project::Projectprop")->search( { project_id => $self->get_trial_id(), type_id => $metadata_json_id });
 
-#	$self->project($project);
-	
-#	$self->name($project->get_name());
-#	$self->description($project->get_description());
+        my $stockprop_id;
+        if ($rs->count() > 0) { 
+            $stockprop_id = $rs->first()->projectprop_id();
+        }
 
-	print STDERR "LOcation id retrieved : = ".$self->get_location()->[0]."\n";
-	$self->nd_geolocation_id($self->get_location()->[0]);
+        print STDERR "Create AnalysisMetadata object...\n";
+        $metadata = CXGN::Analysis::AnalysisMetadata->new( { bcs_schema => $args->{bcs_schema}, prop_id => $stockprop_id });
+        $self->metadata($metadata);
 
-#	$self->year($project->get_year());
-	
-	# retrieve associated metadata from projectprop
-	#
-	my $metadata_json_id = SGN::Model::Cvterm->get_cvterm_row($args->{bcs_schema}, 'analysis_metadata_json', 'project_property')->cvterm_id();
-	
-	my $rs = $self->bcs_schema()->resultset("Project::Projectprop")->search( { project_id => $self->get_trial_id(), type_id => $metadata_json_id });
+        $stockprop_id = $metadata->prop_id();
 
-	#  create the  metadata object
-	#
-	my $stockprop_id;
-	if ($rs->count() > 0) { 
-	    $stockprop_id = $rs->first()->projectprop_id();
-	}
-
-	print STDERR "Create AnalysisMetadata object...\n";
-	$metadata = CXGN::Analysis::AnalysisMetadata->new( { bcs_schema => $args->{bcs_schema}, prop_id => $stockprop_id });
-
-	$self->metadata($metadata);
-
-	$stockprop_id = $metadata->prop_id();
-
-	# Note: lazy load the design (too slow)...
-	
-	print STDERR "prop_id is $stockprop_id...\n";
-	
-	# if object doesn't have metadata in the database, create an 
-	# empty object
-	#
-	if (! defined($stockprop_id)) {
-	    print STDERR "project_id = ".$self->get_trial_id()." with stockprop_id = undefined...storing metadata...\n";
-	    $metadata->parent_id($self->get_trial_id());
-	    $metadata->store();
-	}
+        my $time = DateTime->now();
+        print STDERR "prop_id is $stockprop_id...\n";
+        if (! defined($stockprop_id)) {
+            print STDERR "project_id = ".$self->get_trial_id()." with stockprop_id = undefined...storing metadata...\n";
+            $metadata->parent_id($self->get_trial_id());
+            $metadata->create_timestamp($time->ymd()." ".$time->hms());
+            $metadata->store();
+        }
     }
     else {
-
-	# otherwise create an empty project object with an empty metadata object...
-	#
-	# print STDERR "Create an empty metadata object with parent_id ".$self->project_id()."...\n";
-	# $metadata = CXGN::Analysis::AnalysisMetadata->new ( { bcs_schema => $args->{bcs_schema} });
-	# $metadata->parent_id($self->project_id());
-	die "need a project id...";
+        # otherwise create an empty project object with an empty metadata object...
+        #
+        die "need a project id...";
     }
     $self->metadata($metadata);
 }
@@ -273,12 +239,9 @@ sub retrieve_analyses_by_user {
     my $people_schema = shift;
     my $user_id = shift;
 
-    my $project_sp_person_term = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'project_sp_person_id', 'project_property');
-    my $user_info_type_id = $project_sp_person_term->cvterm_id();
+    my $user_info_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'project_sp_person_id', 'project_property')->cvterm_id();
+    my $analysis_info_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'analysis_metadata_json', 'project_property')->cvterm_id();
 
-    my $project_analysis_term = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'analysis_metadata_json', 'project_property');
-    my $analysis_info_type_id = $project_analysis_term ->cvterm_id();
-    
     my $q = "SELECT userinfo.project_id FROM projectprop AS userinfo JOIN projectprop AS analysisinfo on (userinfo.project_id=analysisinfo.project_id) WHERE userinfo.type_id=? AND analysisinfo.type_id=? AND userinfo.value=?";
 
     my $h = $bcs_schema->storage()->dbh()->prepare($q);
@@ -295,92 +258,70 @@ sub retrieve_analyses_by_user {
 
 sub create_and_store_analysis_design {
     my $self = shift;
+    my $design_to_save = shift; #DESIGN HASHREF
+
+    my $schema = $self->bcs_schema();
+    my $dbh = $schema->storage->dbh();
 
     print STDERR "CREATE AND STORE ANALYSIS DESIGN...\n";
-    
+
+    my $check_name = $schema->resultset("Project::Project")->find({ name => $self->name() });
+    if ($check_name) {
+        die "An analysis with name ".$self->name()." already exists in the database. Please choose another name.";
+    }
+
     if (!$self->user_id()) {
-	die "Need an sp_person_id to store an analysis.";
+        die "Need an sp_person_id to store an analysis.";
     }
     if (!$self->get_description()) {
-	die "Need a description to store an analysis.";
+        die "Need a description to store an analysis.";
     }
-
     if (!$self->get_name()) {
-	die "Need a name to store an analysis.";
+        die "Need a name to store an analysis.";
+    }
+    if (!$self->breeding_program_id()) {
+        die "Need a breeding program to store an analysis.";
     }
 
-    print STDERR "Year is : ".$self->year()."\n";
+    my $p = CXGN::People::Person->new($dbh, $self->user_id);
+    my $user_name = $p->get_username;
+
     if (!$self->year()) {
-	my $dt = DateTime->now();
-	my $year = $dt->year();
-	print STDERR "Year: $year\n";
-	print STDERR "No year provided. Using current year ($year).\n";
-	$self->year($year);
+        my $dt = DateTime->now();
+        my $year = $dt->year();
+        print STDERR "Year: $year\n";
+        print STDERR "No year provided. Using current year ($year).\n";
+        $self->year($year);
     }
 
-    print STDERR "Retrieving geolocation entry...\n";
-    my $calculation_location_id = $self->bcs_schema()->resultset("NaturalDiversity::NdGeolocation")->find( { description => "[Computation]" } )->nd_geolocation_id();
-
+    my $computation_location_name = "[Computation]";
+    my $calculation_location_id = $schema->resultset("NaturalDiversity::NdGeolocation")->find({ description => $computation_location_name })->nd_geolocation_id();
     $self->nd_geolocation_id($calculation_location_id);
-    print STDERR "Using nd_geolocation with id $calculation_location_id...\n";
-    print STDERR "Create analysis entry in project table...\n";
-
-    my $check_name = $self->bcs_schema()
-	->resultset("Project::Project")
-	->find( { name => $self->name() });
-
-#    if ($check_name) {
-#	die "An analysis with name ".$self->name()." already exists in the database. Please choose another name.";
-#	return;
-#    }
-
-    # create project row
-    #
-    #  my $analysis = $self->bcs_schema()
-    # 	->resultset("Project::Project")
-    # 	->create(
-    # 	{
-    # 	    name => $self->name(),
-    # 	    description => $self->description(),
-    # 	});
-
-    # my $analysis_id = $analysis->project_id();
-
-#    print STDERR "Created analysis id $analysis_id.\n";
-
-    # store nd_location_id
-    #
     $self->set_location($calculation_location_id);
-    
+
+    my $breeding_program_name = $schema->resultset("Project::Project")->find({project_id=>$self->breeding_program_id()})->name();
+    $self->set_breeding_program($self->breeding_program_id());
+
     # store user info
     #
     print STDERR "Storing user info...\n";
-    my $project_sp_person_term = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'project_sp_person_id', 'project_property');
-    my $row = $self->bcs_schema()->resultset("Project::Projectprop")->create( 
-	{
-	    project_id => $self->get_trial_id(), 
-	    type_id=>$project_sp_person_term->cvterm_id(), 
-	    value=>$self->user_id(), 
-	});
-
-    print STDERR "Created projectprop ".$row->projectprop_id()." for user info.\n";
-    
-    # store project type info as projectprop, store metadata in value
-    #
-    print STDERR "Store analysis type...\n";
-    my $analysis_project_term = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'analysis_project', 'project_property');
-
+    my $project_sp_person_term_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_sp_person_id', 'project_property')->cvterm_id();
+    my $row = $schema->resultset("Project::Projectprop")->create({
+        project_id => $self->get_trial_id(), 
+        type_id=>$project_sp_person_term_cvterm_id, 
+        value=>$self->user_id(), 
+    });
 
     # Store metadata
     #
     my $time = DateTime->now();
     if (!$self->metadata()) {
-	print STDERR "Storing metadata...\n";
-	my $metadata = CXGN::Analysis::AnalysisMetadata->new({ bcs_schema => $self->bcs_schema() });
-	print STDERR "Analysis ID = ".$self->get_trial_id()."\n";
-	$metadata->parent_id($self->get_trial_id());
-	$self->metadata( $metadata );
-	$self->metadata()->create_timestamp($time->ymd()." ".$time->hms());
+        print STDERR "Storing metadata...\n";
+        my $metadata = CXGN::Analysis::AnalysisMetadata->new({ bcs_schema => $schema });
+        print STDERR "Analysis ID = ".$self->get_trial_id()."\n";
+        $metadata->parent_id($self->get_trial_id());
+        $self->metadata( $metadata );
+        $self->metadata()->create_timestamp($time->ymd()." ".$time->hms());
     }
 
     # store dataset info, if available. Copy the actual dataset json, 
@@ -388,100 +329,64 @@ sub create_and_store_analysis_design {
     # changes.
     #
     if ($self->metadata()->dataset_id()) {
-	print STDERR "Retrieving data for dataset_id ".$self->metadata->dataset_id()."\n";
-	my $ds = CXGN::Dataset->new( { schema => $self->bcs_schema(), people_schema => $self->people_schema(), sp_dataset_id => $self->metadata()->dataset_id() });
-	my $data = $ds->to_hashref();
-	#print STDERR "DATA: $data\n";
-	$self->metadata()->dataset_data(JSON::Any->encode($data));
-	
+        print STDERR "Retrieving data for dataset_id ".$self->metadata->dataset_id()."\n";
+        my $ds = CXGN::Dataset->new( { schema => $schema, people_schema => $self->people_schema(), sp_dataset_id => $self->metadata()->dataset_id() });
+        my $data = $ds->to_hashref();
+        #print STDERR "DATA: $data\n";
+        $self->metadata()->dataset_data(JSON::Any->encode($data));
     }
     else {
-	print STDERR "No dataset_id provided...\n";
+        print STDERR "No dataset_id provided...\n";
     }
 
     $self->metadata()->parent_id($self->get_trial_id());
     $self->metadata()->modified_timestamp($time->ymd()." ".$time->hms());
     $self->metadata()->store();
-    
-    # Create `trial design` for analysis...
-    #
-    print STDERR "Create a new analysis design...\n";
-    my $td = CXGN::Trial::TrialDesign->new();
 
-#    my $accession_names;
-    # print STDERR "Retrieving accession names...\n";
-    # print STDERR "Using ids ".join(", ",@{$self->accession_ids()})."\n";
-    # my $tf = CXGN::List::Transform->new();
-    # my $transform_name = $tf->can_transform("accession_ids, "accessions");
-    # print STDERR "Transform name = $transform_name\n";
-    # if ($transform_name) {
-    # 	$accession_names = $tf->transform($self->bcs_schema(), $transform_name, $self->accession_ids());
-    # 	print STDERR "Accession names now: ".join(", ", $accession_names)."\n";
-    # 	if ($accession_names->{missing}) {
-    # 	    die "There are accessions in the analysis that cannot be found in the database.";
-    # 	}
-    # 	$self->accession_names($accession_names->{transform});
-    # }
-    
-    
-    $td->set_trial_name($self->name());
-    $td->set_stock_list($self->accession_names());
-    $td->set_design_type("Analysis");
-    
     my $design;
-    if ($td->calculate_design()) {
-  	print STDERR "Design calculated :-) ...\n";
-	$design = $td->get_design();
-	$self->design($design);
-    }
-    else {
-	die "An error occurred creating the analysis design.";
+    if (!$design_to_save) {
+        print STDERR "Create a new analysis design...\n";
+        my $td = CXGN::Trial::TrialDesign->new();
+
+        $td->set_trial_name($self->name());
+        $td->set_stock_list($self->accession_names());
+        $td->set_design_type("Analysis");
+
+        if ($td->calculate_design()) {
+            print STDERR "Design calculated :-) ...\n";
+            $design = $td->get_design();
+            $self->design($design);
+        }
+        else {
+            die "An error occurred creating the analysis design.";
+        }
+    } else {
+        $design = $design_to_save;
     }
 
     print STDERR "Store design...\n";
-    # my $design_store = CXGN::Trial::TrialDesignStore->new(
-    # 	{ 
-    # 	    bcs_schema => $self->bcs_schema(),
-    # 	    trial_id => $analysis_id,
-    # 	    trial_name => $self->name(),
-    # 	    nd_geolocation_id => $self->nd_geolocation_id(),
-    # 	    design_type => 'Analysis', 
-    # 	    design => $design,
-    # 	    is_genotyping => 0,
-    # 	    is_analysis => 1,
-    # 	    operator => "janedoe",
-    # 	}); 
 
     my $saved_model_protocol_id;
     if ($self->has_analysis_model_protocol_id && $self->get_analysis_model_protocol_id()) {
         $saved_model_protocol_id = $self->get_analysis_model_protocol_id();
     }
 
-    my $analysis_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'analysis_experiment', 'experiment_type')->cvterm_id(); 
-    
+    my $analysis_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_experiment', 'experiment_type')->cvterm_id(); 
     my $trial_create = CXGN::Trial::TrialCreate->new({
-	trial_id => $self->get_trial_id(),
-        chado_schema => $self->bcs_schema(),
-        dbh => $self->bcs_schema()->storage->dbh(),
-        operator => "computer",
+        trial_id => $self->get_trial_id(),
+        chado_schema => $schema,
+        dbh => $dbh,
+        operator => $user_name,
         design => $design,
-	design_type => $analysis_experiment_type_id,
-	program => 'test',
-	trial_year => $self->year(),
-	trial_description => $self->description(),
-	trial_location => '[Computation]',
+        design_type => $analysis_experiment_type_id,
+        program => $breeding_program_name,
+        trial_year => $self->year(),
+        trial_description => $self->description(),
+        trial_location => $computation_location_name,
         trial_name => $self->name(),
-	trial_type => $analysis_experiment_type_id,
-	is_analysis => 1,
-    analysis_model_protocol_id => $saved_model_protocol_id,
-#        field_size => $field_size, #(ha)
-#        plot_width => $plot_width, #(m)
-#        plot_length => $plot_length, #(m)
-#        field_trial_is_planned_to_cross => 'yes', #yes or no
-#        field_trial_is_planned_to_be_genotyped => 'no', #yes or no
-#        field_trial_from_field_trial => ['source_trial_id1', 'source_trial_id2'],
-#        genotyping_trial_from_field_trial => ['genotyping_trial_id1'],
-#        crossing_trial_from_field_trial => ['crossing_trial_id1']
+        trial_type => $analysis_experiment_type_id,
+        is_analysis => 1,
+        analysis_model_protocol_id => $saved_model_protocol_id,
     });
 
 #    my $validate_error = $trial_create->validate_design(); 
@@ -499,15 +404,13 @@ sub create_and_store_analysis_design {
 #    }
 
     try { 
-	$trial_create->save_trial();
+        $trial_create->save_trial();
     }
     catch {
-	die "Error saving trial: $_";
+        die "Error saving trial: $_";
     };
-    
-    
-    print STDERR "Done with design create & store.\n";
 
+    print STDERR "Done with design create & store.\n";
     return $self->get_trial_id();
 }
 
@@ -519,9 +422,7 @@ sub store_analysis_values {
     my $self = shift;
     my $metadata_schema = shift;
     my $phenome_schema = shift;
-
-
-             my $values = shift;
+    my $values = shift;
     my $plots = shift;
     my $traits = shift;
     my $operator = shift;
@@ -542,35 +443,34 @@ sub store_analysis_values {
     $phenotype_metadata{'operator'} = $operator;
     $phenotype_metadata{'date'} = $timestamp;
     
-    my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
-	{
-	    bcs_schema => $self->bcs_schema(),
-	    basepath => $tempfile_path,
-	    dbhost => $dbhost,
-	    dbname => $dbname,
-	    dbuser => $dbuser,
-	    dbpass => $dbpass,
-	    temp_file_nd_experiment_id => '/tmp/temp_file_nd_experiment_id',
-	    metadata_schema => $metadata_schema,
-	    phenome_schema => $phenome_schema,
-	    user_id => $self->user_id(),
-	    stock_list => $plots,
-	    trait_list => $traits, 
-	    values_hash => $values,
-	    has_timestamps => 0,
-	    overwrite_values => 0,
-	    metadata_hash => \%phenotype_metadata,
-	});
-    
+    my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
+        bcs_schema => $self->bcs_schema(),
+        basepath => $basepath,
+        dbhost => $dbhost,
+        dbname => $dbname,
+        dbuser => $dbuser,
+        dbpass => $dbpass,
+        temp_file_nd_experiment_id => $tempfile_path,
+        metadata_schema => $metadata_schema,
+        phenome_schema => $phenome_schema,
+        user_id => $self->user_id(),
+        stock_list => $plots,
+        trait_list => $traits, 
+        values_hash => $values,
+        has_timestamps => 0,
+        overwrite_values => 0,
+        metadata_hash => \%phenotype_metadata,
+    });
+
     my ($verified_warning, $verified_error) = $store_phenotypes->verify();
-    
+
     if ($verified_warning) {
 	warn $verified_warning;
     }
     if ($verified_error) {
 	die $verified_error;
     }
-    
+
     my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
 
     if ($stored_phenotype_error) {
@@ -584,28 +484,24 @@ sub _get_layout {
 
     # Load the design
     #
-    my $design = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema(), trial_id => $self->get_trial_id(), experiment_type=> 'analysis_experiment'} );
+    my $design = CXGN::Trial::TrialLayout->new({ schema => $self->bcs_schema(), trial_id => $self->get_trial_id(), experiment_type=> 'analysis_experiment'});
 
     print STDERR "_get_layout: design = ".Dumper($design->get_design);
 
     #print STDERR "ERROR IN LAYOUT: ".Dumper($error)."\n";
     #print STDERR "READ DESIGN: ".Dumper($design->get_design());
     return $design;
-    
- 
 }
 
 sub get_phenotype_matrix {
     my $self = shift;
-    
     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
-	bcs_schema=>$self->bcs_schema(),
-	search_type => "Native",
-	data_level => "analysis_instance",
-	experiment_type => "analysis_experiment",
-	trial_list=> [ $self->get_trial_id() ],
-	); 
-    
+        bcs_schema=>$self->bcs_schema(),
+        search_type => "MaterializedViewTable",
+        data_level => "analysis_instance",
+        experiment_type => "analysis_experiment",
+        trial_list=> [ $self->get_trial_id() ],
+    );
     my @data = $phenotypes_search->get_phenotype_matrix();
     return \@data;
 }
@@ -637,17 +533,6 @@ sub _load_traits {
     return $traits;
 }
 	
-
-    
-
-#sub _load_accession_ids {
-#    my $self = shift;
-#    my $design = $self->design();
-
-#    return $self->design()->get_accession_ids();
-
-#}
-
 1;
 
 #__PACKAGE__->meta->make_immutable;

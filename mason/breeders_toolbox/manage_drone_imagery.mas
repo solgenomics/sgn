@@ -1130,22 +1130,9 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                 <&| /util/workflow.mas:step, title=> "Results" &>
                     <& /page/page_title.mas, title=>"Statistics results" &>
 
-                    <form class="form-horizontal">
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Analysis Name: </label>
-                            <div class="col-sm-9" >
-                                <input type="text" class="form-control" id="drone_imagery_calculate_statistics_analysis_name" >
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Analysis Description: </label>
-                            <div class="col-sm-9" >
-                                <input type="text" class="form-control" id="drone_imagery_calculate_statistics_analysis_description" >
-                            </div>
-                        </div>
-                    </form>
-                    <br/>
-                    <button class="btn btn-primary" id="drone_imagery_calculate_statistics_analysis_save">Save Analysis Results</button>
+                    <hr>
+                    <button class="btn btn-primary" id="drone_imagery_calculate_statistics_analysis_save">Go To Save Analysis Results</button>
+                    <hr>
 
                     <div id ="drone_imagery_calculate_statistics_result_div">
                     </div>
@@ -1161,6 +1148,8 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
     </div>
   </div>
 </div>
+
+<& /analyses/store_new_analysis_values_and_model.mas &>
 
 <div class="modal fade" id="drone_imagery_keras_cnn_dialog" name="drone_imagery_keras_cnn_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryKerasCNNDialog" data-backdrop="static">
   <div class="modal-dialog" role="document">
@@ -3584,53 +3573,47 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#drone_imagery_calculate_statistics_analysis_save').click(function(){
-        var drone_imagery_calculate_statistics_analysis_name = jQuery('#drone_imagery_calculate_statistics_analysis_name').val();
-        var drone_imagery_calculate_statistics_analysis_description = jQuery('#drone_imagery_calculate_statistics_analysis_description').val();
+        jQuery('#generic_save_analysis_dialog').modal('show');
 
-        if (drone_imagery_calculate_statistics_analysis_name == '') {
-            alert('Please give an anlysis name first!');
-            return false;
-        }
+        //jQuery.ajax({
+        //    url : '/api/drone_imagery/calculate_statistics_store_analysis',
+        //    type : 'POST',
+        //    data : {
+        //        'observation_variable_id_list':JSON.stringify(manage_drone_imagery_calculate_statistics_trait_ids),
+        //        'field_trial_id_list':JSON.stringify(manage_drone_imagery_calculate_statistics_field_trial_id_array),
+        //        'statistics_select':manage_drone_imagery_calculate_statistics_select,
+        //        'statistics_select_marss_options':jQuery('#drone_imagery_calculate_statistics_select_marss').val(),
+        //        'protocol_id':jQuery('#drone_image_calculate_statistics_genotyping_protocol_select').val(),
+        //        'compute_from_parents':jQuery('#drone_image_calculate_statistics_genotyping_protocol_compute_from_parents_select').val(),
+        //        'tolparinv':jQuery('#drone_image_calculate_statistics_tolparinv_select').val(),
+        //        'analysis_name':drone_imagery_calculate_statistics_analysis_name,
+        //        'analysis_description':drone_imagery_calculate_statistics_analysis_description,
+        //        'plot_names':manage_drone_imagery_calculate_statistics_plot_names,
+        //        'accession_names':manage_drone_imagery_calculate_statistics_accession_names,
+        //        'trait_names':manage_drone_imagery_calculate_statistics_trait_names,
+        //        'result_blup_genetic_data':manage_drone_imagery_calculate_statistics_result_blup_genetic_data,
+        //        'result_blup_spatial_data':manage_drone_imagery_calculate_statistics_result_blup_spatial_data,
+        //        'phenotype_training_file':manage_drone_imagery_calculate_statistics_phenotype_training_file,
+        //        'grm_training_file':manage_drone_imagery_calculate_statistics_grm_training_file
+        //    },
+        //    beforeSend: function() {
+        //        jQuery("#working_modal").modal("show");
+        //    },
+        //    success: function(response){
+        //        console.log(response);
+        //        jQuery("#working_modal").modal("hide");
+        //        if (response.error) {
+        //            alert(response.error);
+        //        }
+        //        else {
+        //        }
+        //    },
+        //    error: function(response){
+        //        jQuery("#working_modal").modal("hide");
+        //        alert('Error storing analysis statistics!')
+        //    }
+        //});
 
-        jQuery.ajax({
-            url : '/api/drone_imagery/calculate_statistics_store_analysis',
-            type : 'POST',
-            data : {
-                'observation_variable_id_list':JSON.stringify(manage_drone_imagery_calculate_statistics_trait_ids),
-                'field_trial_id_list':JSON.stringify(manage_drone_imagery_calculate_statistics_field_trial_id_array),
-                'statistics_select':manage_drone_imagery_calculate_statistics_select,
-                'statistics_select_marss_options':jQuery('#drone_imagery_calculate_statistics_select_marss').val(),
-                'protocol_id':jQuery('#drone_image_calculate_statistics_genotyping_protocol_select').val(),
-                'compute_from_parents':jQuery('#drone_image_calculate_statistics_genotyping_protocol_compute_from_parents_select').val(),
-                'tolparinv':jQuery('#drone_image_calculate_statistics_tolparinv_select').val(),
-                'analysis_name':drone_imagery_calculate_statistics_analysis_name,
-                'analysis_description':drone_imagery_calculate_statistics_analysis_description,
-                'plot_names':manage_drone_imagery_calculate_statistics_plot_names,
-                'accession_names':manage_drone_imagery_calculate_statistics_accession_names,
-                'trait_names':manage_drone_imagery_calculate_statistics_trait_names,
-                'result_blup_genetic_data':manage_drone_imagery_calculate_statistics_result_blup_genetic_data,
-                'result_blup_spatial_data':manage_drone_imagery_calculate_statistics_result_blup_spatial_data,
-                'phenotype_training_file':manage_drone_imagery_calculate_statistics_phenotype_training_file,
-                'grm_training_file':manage_drone_imagery_calculate_statistics_grm_training_file
-            },
-            beforeSend: function() {
-                jQuery("#working_modal").modal("show");
-            },
-            success: function(response){
-                console.log(response);
-                jQuery("#working_modal").modal("hide");
-
-                if (response.error) {
-                    alert(response.error);
-                }
-                else {
-                }
-            },
-            error: function(response){
-                jQuery("#working_modal").modal("hide");
-                alert('Error storing analysis statistics!')
-            }
-        });
         return false;
     });
 

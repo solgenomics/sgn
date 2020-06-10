@@ -26,7 +26,7 @@ my $m = CXGN::AnalysisModel::SaveModel->new({
     archived_training_data_file_type=>$archived_training_data_file_type,
     archived_training_data_file=>$archived_training_data_file,
     archived_auxiliary_files=>[{auxiliary_model_file => $archive_temp_autoencoder_output_model_file, auxiliary_model_file_archive_type => 'trained_keras_cnn_autoencoder_model'},
-    {auxiliary_model_file => $model_input_aux_file, auxiliary_model_file_archive_type => 'trained_keras_cnn_model_input_aux_data_file'}],
+    {auxiliary_model_file => $model_input_aux_file, auxiliary_model_file_archive_type => 'trained_keras_cnn_model_input_aux_data_file'},{...}],
     user_id=>$user_id,
     user_role=>$user_role
 });

@@ -5,6 +5,8 @@ use Moose;
 use File::Slurp;
 use Data::Dumper;
 use CXGN::Phenotypes::StorePhenotypes;
+use CXGN::Trial::TrialDesign;
+use CXGN::AnalysisModel::SaveModel;
 use URI::FromHash 'uri';
 
 BEGIN { extends 'Catalyst::Controller::REST' };
@@ -30,39 +32,45 @@ sub store_analysis_json : Path('/ajax/analysis/store/json') ActionClass("REST") 
 sub store_analysis_json_POST {
     my $self = shift;
     my $c = shift;
-
-    my $params = $c->req->params();
-    my $data = $c->req->param("data");
-    my $dataset_id = $c->req->param("dataset_id");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    print STDERR Dumper $c->req->params();
     my $analysis_name = $c->req->param("analysis_name");
-    my $analysis_type = $c->req->param("analysis_type");
-    my $analysis_result_type = $c->req->param("analysis_result_type");
-    my $model = $c->req->param("model");
+    my $analysis_description = $c->req->param("analysis_description");
+    my $analysis_year = $c->req->param("analysis_year");
     my $analysis_protocol = $c->req->param("analysis_protocol");
-    
-    if (my $error = $self->check_user($c)) {
-	$c->stash->{rest} = { error =>  $error };
-	return;
+    my $analysis_dataset_id = $c->req->param("analysis_dataset_id");
+    my $analysis_accession_names = $c->req->param("analysis_accession_names");
+    my $analysis_trait_names = $c->req->param("analysis_trait_names");
+    my $analysis_precomputed_design_optional = $c->req->param("analysis_precomputed_design_optional");
+    my $analysis_result_values = $c->req->param("analysis_result_values");
+    my $analysis_result_values_type = $c->req->param("analysis_result_values_type");
+    my $analysis_model_name = $c->req->param("analysis_model_name");
+    my $analysis_model_description = $c->req->param("analysis_model_description");
+    my $analysis_model_is_public = $c->req->param("analysis_model_is_public");
+    my $analysis_model_language = $c->req->param("analysis_model_language");
+    my $analysis_model_type = $c->req->param("analysis_model_type");
+    my $analysis_model_experiment_type = $c->req->param("analysis_model_experiment_type");
+    my $analysis_model_properties = $c->req->param("analysis_model_properties");
+    my $analysis_model_application_name = $c->req->param("analysis_model_application_name");
+    my $analysis_model_application_version = $c->req->param("analysis_model_application_version");
+    my $analysis_model_file = $c->req->param("analysis_model_file");
+    my $analysis_model_file_type = $c->req->param("analysis_model_file_type");
+    my $analysis_model_training_data_file = $c->req->param("analysis_model_training_data_file");
+    my $analysis_model_training_data_file_type = $c->req->param("analysis_model_training_data_file_type");
+    my $analysis_model_auxiliary_files = $c->req->param("analysis_model_auxiliary_files");
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $check_name = $schema->resultset("Project::Project")->find({ name => $analysis_name });
+    if ($check_name) {
+        $c->stash->{rest} = {error => "An analysis with name $analysis_name already exists in the database. Please choose another name."};
+        return;
     }
 
-    my $user_id = $c->user()->get_object()->get_sp_person_id();
-    
-    my $analysis_type_row = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema"), $params->{analysis_type}, 'analysis_type');
-    if (! $analysis_type_row) { 
-	$c->stash->{rest} = { error => "The provided analysis type does not exist in the database. Please try this with different settings." };
-	return;
-    }
-    
-    my @plots;
-    my @stocks;
-    my @traits;
-    my %values;
-    
-    my $analysis_type_id = $analysis_type_row->cvterm_id();
-    
-    my %values = JSON::Any->decode($params, $data); 
-    
-    $self->store_data($c, $params, \%values, \@stocks, \@plots, \@traits, $user_id);
+    $self->store_data($c,
+        $analysis_name, $analysis_description, $analysis_year, $analysis_protocol, $analysis_dataset_id, $analysis_accession_names, $analysis_trait_names, $analysis_precomputed_design_optional, $analysis_result_values, $analysis_result_values_type,
+        $analysis_model_name, $analysis_model_description, $analysis_model_is_public, $analysis_model_language, $analysis_model_type, $analysis_model_experiment_type, $analysis_model_properties, $analysis_model_application_name, $analysis_model_application_version, $analysis_model_file, $analysis_model_file_type, $analysis_model_training_data_file, $analysis_model_training_data_file_type, $analysis_model_auxiliary_files,
+        $user_id, $user_name, $user_role
+    );
 }
 
 sub store_analysis_file : Path('/ajax/analysis/store/file') ActionClass("REST") Args(0) {}
@@ -70,6 +78,8 @@ sub store_analysis_file : Path('/ajax/analysis/store/file') ActionClass("REST") 
 sub store_analysis_file_POST {
     my $self = shift;
     my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
     my $file = $c->req->param("file");
     my $dir = $c->req->param("dir"); # the dir under tempfiles/
 
@@ -78,8 +88,14 @@ sub store_analysis_file_POST {
     my $analysis_type = $c->req->param("analysis_type");
     my $dataset_id = $c->req->param("dataset_id");
     my $description = $c->req->param("description");
-    
     my $breeding_program = $c->req->param("breeding_program");
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $check_name = $schema->resultset("Project::Project")->find({ name => $analysis_name });
+    if ($check_name) {
+        $c->stash->{rest} = {error => "An analysis with name $analysis_name already exists in the database. Please choose another name."};
+        return;
+    }
 
     if (! defined($breeding_program)) {  
 	my @roles = $c->user->get_object()->get_roles();
@@ -98,8 +114,6 @@ sub store_analysis_file_POST {
 	$c->stash->{rest} = { error => "You do not have a breeding program associated with your account, which is required to store an analysis!" };
 	return;
     }
-    
-    my $user_id = $c->user()->get_object()->get_sp_person_id();
 
     print STDERR "Storing analysis file: $dir / $file...\n";
     print STDERR <<INFO;
@@ -107,15 +121,9 @@ sub store_analysis_file_POST {
     Analysis type: $analysis_type
     Description:   $description
 INFO
-    
-    if (my $error = $self->check_user($c)) {
-	print STDERR "Sorry you are not logged in... not storing.\n";
-	$c->stash->{rest} = { error => $error };
-	return;
-    }
 
     print STDERR "Retrieving cvterms...\n";
-    my $analysis_type_row = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema"), $params->{analysis_type}, 'experiment_type');
+    my $analysis_type_row = SGN::Model::Cvterm->get_cvterm_row($schema, $params->{analysis_type}, 'experiment_type');
     if (! $analysis_type_row) {
 	my $error = "Provided analysis type ($params->{analysis_type}) does not exist in the database. Exiting.";
 	print STDERR $error."\n";
@@ -125,7 +133,6 @@ INFO
     
     my @plots;
     my @stocks;
-    my @traits;
     my %value_hash;
     
     my $analysis_type_id = $analysis_type_row->cvterm_id();    
@@ -150,7 +157,7 @@ INFO
 	my ($human_readable, $accession) = split /\|/, $t; #/
 
 	print "Checking term $t ($human_readable, $accession)...\n";
-	my $term = CXGN::Cvterm->new( { schema => $c->dbic_schema("Bio::Chado::Schema"), accession => $accession });
+	my $term = CXGN::Cvterm->new( { schema => $schema, accession => $accession });
 
 	if ($term->cvterm_id()) {
 	    $good_terms{$t} = 1;
@@ -178,117 +185,142 @@ INFO
     }
 
     print STDERR "Storing data...\n";
-    return $self->store_data($c, $params, \%value_hash, \@stocks, \@plots, \@good_traits, $user_id);
+    return $self->store_data($c, $params->{analysis_name}, $params->{analysis_description}, $params->{dataset_id}, $params->{analysis_protocol}, \%value_hash, \@stocks, \@plots, \@good_traits, $user_id, $user_name, $user_role);
 }
 
 
 sub store_data {
     my $self = shift;
-    my $c = shift;
-    my $params = shift;
-    my $values = shift;
-    my $stocks = shift;
-    my $plots = shift;
-    my $traits = shift;
-    my $user_id = shift;
-
-
-    my $user = $c->user()->get_object();
-
+    my ($c, $analysis_name, $analysis_description, $analysis_year, $analysis_protocol, $analysis_dataset_id, $analysis_accession_names, $analysis_trait_names, $analysis_precomputed_design_optional, $analysis_result_values, $analysis_result_values_type, $analysis_model_name, $analysis_model_description, $analysis_model_is_public, $analysis_model_language, $analysis_model_type, $analysis_model_experiment_type, $analysis_model_properties, $analysis_model_application_name, $analysis_model_application_version, $analysis_model_file, $analysis_model_file_type, $analysis_model_training_data_file, $analysis_model_training_data_file_type, $analysis_model_auxiliary_files, $user_id, $user_name, $user_role) = @$_;
+    
     my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
-    my $a = CXGN::Analysis->new( 
-	{
-	    bcs_schema => $bcs_schema,
-	    people_schema => $people_schema,
-	    name => $params->{analysis_name},
-#	    description => $params->{analysis_description}
-	});
+    #Project BUILD inserts project entry
+    my $a = CXGN::Analysis->new({
+        bcs_schema => $bcs_schema,
+        people_schema => $people_schema,
+        name => $analysis_name,
+    });
 
-    if ($params->{dataset_id} !~ /^\d+$/) {
-	print STDERR "Dataset ID $params->{dataset_id} not accetable.\n";
-	$params->{dataset_id} = undef;
+    if ($analysis_dataset_id !~ /^\d+$/) {
+        print STDERR "Dataset ID $analysis_dataset_id not accetable.\n";
+        $analysis_dataset_id = undef;
     }
 
-
-    if ($params->{dataset_id}) { 
-	$a->metadata()->dataset_id($params->{dataset_id});
+    if ($analysis_dataset_id) { 
+        $a->metadata()->dataset_id($analysis_dataset_id);
     }
-    #    $a->name($params->{analysis_name});
 
-    $a->description($params->{description});
+    $a->accession_names($analysis_accession_names);
+    $a->description($analysis_description);
     $a->user_id($user_id);
 
-    #print STDERR Dumper("STOCKS HERE: ".$stocks);
-    $a->accession_names($stocks);
-    $a->metadata()->traits($traits);
-    $a->metadata()->analysis_protocol($params->{analysis_protocol});
-    $a->metadata()->model($params->{model});
-    
-    my ($verified_warning, $verified_error);
+    $a->metadata()->traits($analysis_trait_names);
+    $a->metadata()->analysis_protocol($analysis_protocol);
 
+    my $model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, $analysis_model_type, 'protocol_type')->cvterm_id();
+    my $model_experiment_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, $analysis_model_experiment_type, 'experiment_type')->cvterm_id();
+
+    my $analysis_model_protocol_id;
+    if ($analysis_model_name) {
+        my $mo = CXGN::AnalysisModel::SaveModel->new({
+            bcs_schema=>$bcs_schema,
+            metadata_schema=>$metadata_schema,
+            phenome_schema=>$phenome_schema,
+            archive_path=>$c->config->{archive_path},
+            model_name=>$analysis_model_name,
+            model_description=>$analysis_model_description,
+            model_language=>$analysis_model_language,
+            model_type_cvterm_id=>$model_type_cvterm_id,
+            model_experiment_type_cvterm_id=>$model_experiment_type_cvterm_id,
+            model_properties=>$analysis_model_properties,
+            application_name=>$analysis_model_application_name,
+            application_version=>$analysis_model_application_version,
+            dataset_id=>$analysis_dataset_id,
+            is_public=>$analysis_model_is_public,
+            archived_model_file_type=>$analysis_model_file_type,
+            model_file=>$analysis_model_file,
+            archived_training_data_file_type=>$analysis_model_training_data_file_type,
+            archived_training_data_file=>$analysis_model_training_data_file,
+            archived_auxiliary_files=>$analysis_model_auxiliary_files,
+            user_id=>$user_id,
+            user_role=>$user_role
+        });
+        $analysis_model_protocol_id = $mo->save_model();
+        $a->analysis_model_protocol_id($analysis_model_protocol_id);
+    }
+
+    my ($verified_warning, $verified_error);
     print STDERR "Storing the analysis...\n";
     eval { 
-	($verified_warning, $verified_error) = $a->create_and_store_analysis_design();
+        ($verified_warning, $verified_error) = $a->create_and_store_analysis_design($analysis_precomputed_design_optional);
     };
 
-        
     my @errors;
     my @warnings;
-    
     if ($@) {
-	push @errors, $@;
+        push @errors, $@;
     }
     elsif ($verified_warning) {
-	push @warnings, $verified_warning;
+        push @warnings, $verified_warning;
     }
     elsif ($verified_error) {
-	push @errors, $verified_error;
+        push @errors, $verified_error;
     }
 
     if (@errors) {
-	print STDERR "SORRY! Errors: ".join("\n", @errors);
-	$c->stash->{rest} = { error => join "; ", @errors };
-	return;
+        print STDERR "SORRY! Errors: ".join("\n", @errors);
+        $c->stash->{rest} = { error => join "; ", @errors };
+        return;
     }
-    
-    my $operator = $user->get_first_name()." ".$user->get_last_name();
+
     print STDERR "Store analysis values...\n";
     #print STDERR "value hash: ".Dumper($values);
-    print STDERR "traits: ".join(",",@$traits);
+    print STDERR "traits: ".join(",",@$analysis_trait_names);
 
-    
-    eval { 
-	$a->store_analysis_values(
-	    $c->dbic_schema("CXGN::Metadata::Schema"),
-	    $c->dbic_schema("CXGN::Phenome::Schema"),
-	    $values, # value_hash
-	    $plots, 
-	    $traits,
-	    $operator,
-	    $c->config->{basepath},
-	    $c->config->{dbhost},
-	    $c->config->{dbname},
-	    $c->config->{dbuser},
-	    $c->config->{dbpass},
-	    "/tmp/temppath-$$",
-	    );
+    my $analysis_result_values_save;
+    my @analysis_instance_names;
+    if ($analysis_result_values_type eq 'analysis_result_values_match_precomputed_design') {
+        $analysis_result_values_save = $analysis_result_values;
+        @analysis_instance_names = keys %$analysis_result_values;
+    }
+    elsif ($analysis_result_values_type eq 'analysis_result_values_match_accession_names') {
+        my $analysis_result_values_fix_plot_names;
+        $analysis_result_values_save = $analysis_result_values_fix_plot_names;
+    }
+
+    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+    eval {
+        $a->store_analysis_values(
+            $metadata_schema,
+            $phenome_schema,
+            $analysis_result_values_save,
+            \@analysis_instance_names, 
+            $analysis_trait_names,
+            $user_name,
+            $c->config->{basepath},
+            $c->config->{dbhost},
+            $c->config->{dbname},
+            $c->config->{dbuser},
+            $c->config->{dbpass},
+            $temp_file_nd_experiment_id,
+        );
     };
 
     if ($@) {
-	print STDERR "An error occurred storing analysis values ($@).\n";
-	$c->stash->{rest} = { 
-	    error => "An error occurred storing the values ($@).\n"
-	};
-	return;
+        print STDERR "An error occurred storing analysis values ($@).\n";
+        $c->stash->{rest} = { error => "An error occurred storing the values ($@).\n" };
+        return;
     }
-    
-    $c->stash->{rest} = { 
-	success => 1,
-	traits_stored => $traits,
-    };
 
+    $c->stash->{rest} = { 
+        success => 1,
+        traits_stored => $analysis_trait_names,
+    };
 }
 
 sub list_analyses_by_user_table :Path('/ajax/analyses/by_user') Args(0) {
@@ -362,8 +394,8 @@ sub retrieve_analysis_data :Chained("ajax_analysis") PathPart('retrieve') :Args(
 
     # format table body with links but exclude header
     my $header = shift @$matrix;
-    my $header = [ @$header[18, 30..scalar(@$header)-1 ]];
-    
+    $header = [ @$header[18, 30..scalar(@$header)-1 ]];
+
     foreach my $row (@$matrix) {
 	my ($stock_id, $stock_name, @values) =  @$row[17,18,30..scalar(@$row)-1];
 	print STDERR "NEW ROW: $stock_id, $stock_name, ".join(",", @values)."\n";
@@ -397,22 +429,34 @@ sub retrieve_analysis_data :Chained("ajax_analysis") PathPart('retrieve') :Args(
 	
 }
 
-
-sub check_user {
-    my $self = shift;
+sub _check_user_login {
     my $c = shift;
-    
-    my $error;
-    
-    if (! $c->user()) {
-	$error = "You need to be logged in to store data";
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to do this!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to do this!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
     }
-    
-    if (! $c->user()->check_roles("submitter") && ! $c->user()->check_roles("curator")) {
-	$error = "You have insufficient privileges to store the data in the database";
-    }
-    
-    return $error;
+    return ($user_id, $user_name, $user_role);
 }
 
 1;
