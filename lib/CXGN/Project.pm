@@ -2201,7 +2201,7 @@ sub get_phenotypes_for_trait {
 	my $q = "SELECT phenotype.value::real FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) $join_string WHERE $where_string project_id=? and cvterm.cvterm_id = ? and phenotype.value~? ORDER BY phenotype_id ASC;";
 	$h = $dbh->prepare($q);
 
-    my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
+    my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
     $h->execute($self->get_trial_id(), $trait_id, $numeric_regex );
     while (my ($value) = $h->fetchrow_array()) {
 	   push @data, $value + 0;
@@ -2282,7 +2282,7 @@ sub get_stock_phenotypes_for_traits {
     print STDERR "QUERY = $q\n";
     my $h = $dbh->prepare($q);
 
-    my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
+    my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
     $h->execute($self->get_trial_id(), $phenotyping_experiment_cvterm, $numeric_regex );
     while (my ($stock_id, $stock_name, $trait_id, $trait_name, $phenotype_id, $pheno_uniquename, $uploader_id, $value, $rel_stock_id, $rel_stock_name, $stock_type) = $h->fetchrow_array()) {
         push @data, [$stock_id, $stock_name, $trait_id, $trait_name, $phenotype_id, $pheno_uniquename, $uploader_id, $value + 0, $rel_stock_id, $rel_stock_name, $stock_type];
@@ -2384,6 +2384,8 @@ sub get_traits_assayed {
         LEFT JOIN cvprop on (cv.cv_id = cvprop.cv_id)
         LEFT JOIN cvterm AS cv_type on (cv_type.cvterm_id = cvprop.type_id)
         WHERE cvterm.cvterm_id=? ;";
+
+    print STDERR Dumper $q;
 
     my $traits_assayed_h = $dbh->prepare($q);
     my $component_h = $dbh->prepare($component_q);

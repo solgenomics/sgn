@@ -418,7 +418,7 @@ sub retrieve_analysis_data :Chained("ajax_analysis") PathPart('retrieve') :Args(
     }
 
     my $matrix = $a->get_phenotype_matrix();
-    print STDERR "Matrix: ".Dumper($matrix);
+    # print STDERR "Matrix: ".Dumper($matrix);
     my $dataref = [];
 
     # format table body with links but exclude header
@@ -436,7 +436,7 @@ sub retrieve_analysis_data :Chained("ajax_analysis") PathPart('retrieve') :Args(
 
     unshift @$dataref, $header;
 
-    print STDERR "TRAITS : ".Dumper($a->traits());
+    # print STDERR "TRAITS : ".Dumper($a->traits());
 
     my $resultref = {
         analysis_name => $a->name(),
@@ -447,7 +447,12 @@ sub retrieve_analysis_data :Chained("ajax_analysis") PathPart('retrieve') :Args(
             dataset_description => $dataset_description,
         },
         #accession_ids => $a ->accession_ids(),
-        analysis_protocoal => $a->metadata()->analysis_protocol(),
+        analysis_protocol => $a->metadata()->analysis_protocol(),
+        create_timestamp => $a->metadata()->create_timestamp(),
+        model_language => $a->metadata()->model_language(),
+        model_type => $a->metadata()->model_type(),
+        application_name => $a->metadata()->application_name(),
+        application_version => $a->metadata()->application_version(),
         accession_names => $a->accession_names(),
         traits => $a->traits(),
         data => $dataref,
