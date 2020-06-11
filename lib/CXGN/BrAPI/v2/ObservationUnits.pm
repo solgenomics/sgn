@@ -417,13 +417,13 @@ sub observationunits_store {
     my $folder_ids_arrayref = $params->{trialDbId} || ($params->{trialDbIds} || ());
     my $observationUnit_name = $params->{observationUnitName}->[0] || "";
     my $observationUnit_position_arrayref = $params->{observationUnitPosition} || ($params->{observationUnitPosition} || ());
-    my $observationUnit_x_ref = $params->{observationUnitXref} || "";
+    my $observationUnit_x_ref = $params->{externalReferences} || ""; #not implemented
+    my $seedlot_id = $params->{seedLotDbId} || ""; #not implemented yet
+    my $treatments = $params->{treatments} || ""; #not implemented yet
 
     my $geo_coordinates = "";
-
-    foreach my $observationUnit_position (@$observationUnit_position_arrayref) {        
-        $geo_coordinates = $observationUnit_position->{geoCoordinates} || "";
-    }
+     
+    $geo_coordinates = $observationUnit_position_arrayref->{geoCoordinates} || "";
 
     my $geno_json_string = encode_json $geo_coordinates;
 

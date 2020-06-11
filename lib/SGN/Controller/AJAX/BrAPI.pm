@@ -2334,7 +2334,6 @@ sub studies_observation_v2_GET {
 	_standard_response_construction($c, $brapi_package_result);
  }
 
-
 sub observation_unit_single :  Chained('brapi') PathPart('observationunits') Args(1) ActionClass('REST') {
 	my $self = shift;
 	my $c = shift;
@@ -2348,7 +2347,7 @@ sub observation_unit_single_PUT {
     my $c = shift;
     my $observation_unit_db_id = shift;
     my $clean_inputs = $c->stash->{clean_inputs};
-    #my $auth = _authenticate_user($c);
+    my ($auth) = _authenticate_user($c);
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('ObservationUnits');
     my $brapi_package_result = $brapi_module->observationunits_store($observation_unit_db_id,$clean_inputs);
