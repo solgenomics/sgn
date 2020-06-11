@@ -522,7 +522,7 @@ sub _load_traits {
 
     my $header = $phenotypes->[0];
 
-    my $traits = [ @$header[30..scalar(@$header)-1] ];
+    my $traits = [ @$header[39..scalar(@$header)-1] ];
 
     print STDERR "_load_traits: TRAITS: ".Dumper($traits);
     #$self->traits($traits);

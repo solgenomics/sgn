@@ -9,6 +9,7 @@ use CXGN::Trial::TrialDesign;
 use CXGN::AnalysisModel::SaveModel;
 use URI::FromHash 'uri';
 use JSON;
+use CXGN::BreederSearch;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -340,6 +341,9 @@ sub store_data {
             $c->stash->{rest} = { error => "An error occurred storing the values ($@).\n" };
             return;
         }
+
+        my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
     }
     $c->stash->{rest} = { success => 1, analysis_id => $saved_analysis_id, model_id => $analysis_model_protocol_id };
 }
@@ -352,22 +356,27 @@ sub list_analyses_by_user_table :Path('/ajax/analyses/by_user') Args(0) {
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $user_id;
     if ($c->user()) {
-	$user_id = $c->user->get_object()->get_sp_person_id();
+        $user_id = $c->user->get_object()->get_sp_person_id();
     }
     if (!$user_id) {
-	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
     }
     my @analyses = CXGN::Analysis->retrieve_analyses_by_user($schema, $people_schema, $user_id);
 
     my @table;
     foreach my $a (@analyses) {
-	push @table, [ '<a href="/analyses/'.$a->get_trial_id().'">'.$a->name()."</a>", $a->description() ];
+        push @table, [
+            '<a href="/analyses/'.$a->get_trial_id().'">'.$a->name()."</a>",
+            $a->description(),
+            $a->metadata->model_type(),
+            $a->metadata->analysis_protocol(),
+            $a->metadata->application_name().":".$a->metadata->application_version(),
+            $a->metadata->model_language()
+        ];
     }
 
     #print STDERR Dumper(\@table);
-    
     $c->stash->{rest} = { data => \@table };
-
 }
 
 
@@ -400,7 +409,7 @@ sub retrieve_analysis_data :Chained("ajax_analysis") PathPart('retrieve') :Args(
     my $dataset_id = "";
     my $dataset_name = "";
     my $dataset_description = "";
-    
+
     if ($a->metadata()->dataset_id()) {
         my $ds = CXGN::Dataset->new({ schema => $bcs_schema, people_schema => $people_schema, sp_dataset_id => $a->metadata()->dataset_id() });
         $dataset_id = $ds->sp_dataset_id();
@@ -414,39 +423,37 @@ sub retrieve_analysis_data :Chained("ajax_analysis") PathPart('retrieve') :Args(
 
     # format table body with links but exclude header
     my $header = shift @$matrix;
-    $header = [ @$header[18, 30..scalar(@$header)-1 ]];
+    $header = [ @$header[18, 39..scalar(@$header)-1 ]];
 
     foreach my $row (@$matrix) {
-	my ($stock_id, $stock_name, @values) =  @$row[17,18,30..scalar(@$row)-1];
-	print STDERR "NEW ROW: $stock_id, $stock_name, ".join(",", @values)."\n";
-	push @$dataref, [ 
-	    "<a href=\"/stock/$stock_id/view\">$stock_name</a>",
-	    @values 
-	];
+        my ($stock_id, $stock_name, @values) =  @$row[17,18,39..scalar(@$row)-1];
+        print STDERR "NEW ROW: $stock_id, $stock_name, ".join(",", @values)."\n";
+        push @$dataref, [
+            "<a href=\"/stock/$stock_id/view\">$stock_name</a>",
+            @values
+        ];
     }
 
     unshift @$dataref, $header;
-    
+
     print STDERR "TRAITS : ".Dumper($a->traits());
-    
+
     my $resultref = {
-	analysis_name => $a->name(),
-	analysis_description => $a->description(),
-	dataset => { 
-	    dataset_id => $dataset_id,
-	    dataset_name => $dataset_name,
-	    dataset_description => $dataset_description,
-	},
-	#accession_ids => $a ->accession_ids(),
-	analysis_protocoal => $a->metadata()->analysis_protocol(),
-	accession_names => $a->accession_names(),
-	traits => $a->traits(),
-	data => $dataref,
+        analysis_name => $a->name(),
+        analysis_description => $a->description(),
+        dataset => {
+            dataset_id => $dataset_id,
+            dataset_name => $dataset_name,
+            dataset_description => $dataset_description,
+        },
+        #accession_ids => $a ->accession_ids(),
+        analysis_protocoal => $a->metadata()->analysis_protocol(),
+        accession_names => $a->accession_names(),
+        traits => $a->traits(),
+        data => $dataref,
     };
 
-
     $c->stash->{rest} = $resultref;
-	
 }
 
 sub _check_user_login {
