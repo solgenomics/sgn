@@ -15,8 +15,7 @@ my $m = CXGN::AnalysisModel::SaveModel->new({
     model_description=>'Model description',
     model_language=>'R',
     model_type_cvterm_id=>$model_type_cvterm_id,
-    model_experiment_type_cvterm_id=>$model_experiment_type_cvterm_id,
-    model_properties=>[{type_id=>$model_property_1_cvterm_id, value=>{tolparinv=>00.01, attribute=>'myattribute'} },{type_id=>$model_property_2_cvterm_id, value=>{prop=>$props, attribute=>'myattribute'}} ,{...}],
+    model_properties=>{tolparinv=>00.01, attribute=>'myattribute', prop=>$prop, attribute=>'myattribute',...},
     application_name=>$application_name, #e.g. 'SolGS', 'MixedModelTool', 'DroneImageryCNN'
     application_version=>1,
     dataset_id=>12,
@@ -97,13 +96,12 @@ has 'model_type_cvterm_id' => (
 );
 
 has 'model_experiment_type_cvterm_id' => (
-    isa => 'Int',
+    isa => 'Int|Undef',
     is => 'rw',
-    required => 1
 );
 
 has 'model_properties' => (
-    isa => 'ArrayRef',
+    isa => 'HashRef',
     is => 'rw',
     required => 1
 );
@@ -121,12 +119,12 @@ has 'application_version' => (
 );
 
 has 'dataset_id' => (
-    isa => 'Int',
+    isa => 'Str|Undef',
     is => 'rw'
 );
 
 has 'is_public' => (
-    isa => 'Bool',
+    isa => 'Str',
     is => 'rw',
 );
 
@@ -180,7 +178,7 @@ sub save_model {
     my $model_description = $self->model_description();
     my $model_language = $self->model_language();
     my $model_type_cvterm_id = $self->model_type_cvterm_id();
-    my $model_experiment_type_cvterm_id = $self->model_experiment_type_cvterm_id();
+    my $model_experiment_type_cvterm_id = $self->model_experiment_type_cvterm_id() || SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_experiment', 'experiment_type')->cvterm_id();
     my $model_properties = $self->model_properties();
     my $model_file = $self->model_file();
     my $application_name = $self->application_name();
@@ -195,21 +193,13 @@ sub save_model {
     my $user_id = $self->user_id();
     my $user_role = $self->user_role();
 
-    #Save application_name
-    my $application_details_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'model_application_details', 'protocol_type')->cvterm_id();
-    push @$model_properties, {value => encode_json({application_name=>$application_name, application_version=>$application_version}), type_id => $application_details_cvterm_id};
-
-    #Save dataset_id
-    my $model_dataset_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'model_is_public', 'protocol_type')->cvterm_id();
-    push @$model_properties, {value => encode_json({value=>$is_public}), type_id => $model_dataset_id_cvterm_id};
-
-    #Save is_public
-    my $model_is_public_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'model_dataset_id', 'protocol_type')->cvterm_id();
-    push @$model_properties, {value => encode_json({value=>$dataset_id}), type_id => $model_is_public_cvterm_id};
-
-    #Save model language
-    my $model_language_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'model_language', 'protocol_type')->cvterm_id();
-    push @$model_properties, {value => encode_json({value=>$model_language}), type_id => $model_language_cvterm_id};
+    my $model_properties_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_properties', 'protocol_property')->cvterm_id();
+    $model_properties->{application_name} = $application_name;
+    $model_properties->{application_version} = $application_version;
+    $model_properties->{model_is_public} = $is_public;
+    $model_properties->{dataset_id} = $dataset_id;
+    $model_properties->{model_language} = $model_language;
+    my $model_properties_save = [{value => encode_json $model_properties, type_id=>$model_properties_cvterm_id}];
 
 	my $protocol_id;
     my $protocol_row = $schema->resultset("NaturalDiversity::NdProtocol")->find({
@@ -223,7 +213,7 @@ sub save_model {
         $protocol_row = $schema->resultset("NaturalDiversity::NdProtocol")->create({
             name => $model_name,
             type_id => $model_type_cvterm_id,
-            nd_protocolprops => $model_properties
+            nd_protocolprops => $model_properties_save
         });
         $protocol_id = $protocol_row->nd_protocol_id();
     }
@@ -232,7 +222,7 @@ sub save_model {
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute($model_description, $protocol_id);
 
-    my $location_id = $schema->resultset("NaturalDiversity::NdGeolocation")->find({description=>'[Computation]'})->nd_geolocation_id();
+    my $location_id = $schema->resultset("NaturalDiversity::NdGeolocation")->search({description=>'[Computation]'})->first->nd_geolocation_id();
 
 	my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create({
         nd_geolocation_id => $location_id,
@@ -241,42 +231,47 @@ sub save_model {
     });
     my $nd_experiment_id = $experiment->nd_experiment_id();
 
-    ##SAVING MODEL FILE
-
-    my $model_original_name = basename($model_file);
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
 
-    my $uploader = CXGN::UploadFile->new({
-        tempfile => $model_file,
-        subdirectory => $archived_model_file_type,
-        archive_path => $archive_path,
-        archive_filename => $model_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_role
-    });
-    my $archived_filename_with_path = $uploader->archive();
-    my $md5 = $uploader->get_md5($archived_filename_with_path);
-    if (!$archived_filename_with_path) {
-        return { error => "Could not save file $model_original_name in archive." };
+    ##SAVING MODEL FILE
+    my $model_file_md_file_id;
+    if ($model_file) {
+        my $model_original_name = basename($model_file);
+
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $model_file,
+            subdirectory => $archived_model_file_type,
+            archive_path => $archive_path,
+            archive_filename => $model_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_role
+        });
+        my $archived_filename_with_path = $uploader->archive();
+        my $md5 = $uploader->get_md5($archived_filename_with_path);
+        if (!$archived_filename_with_path) {
+            return { error => "Could not save file $model_original_name in archive." };
+        }
+        unlink $model_file;
+        print STDERR "Archived Model File: $archived_filename_with_path\n";
+
+        my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
+        my $file_row = $metadata_schema->resultset("MdFiles")->create({
+            basename => basename($archived_filename_with_path),
+            dirname => dirname($archived_filename_with_path),
+            filetype => $archived_model_file_type,
+            md5checksum => $md5->hexdigest(),
+            metadata_id => $md_row->metadata_id()
+        });
+
+        my $experiment_files = $phenome_schema->resultset("NdExperimentMdFiles")->create({
+            nd_experiment_id => $nd_experiment_id,
+            file_id => $file_row->file_id()
+        });
+
+        $model_file_md_file_id = $file_row->file_id();
     }
-    unlink $model_file;
-    print STDERR "Archived Model File: $archived_filename_with_path\n";
-
-    my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
-    my $file_row = $metadata_schema->resultset("MdFiles")->create({
-        basename => basename($archived_filename_with_path),
-        dirname => dirname($archived_filename_with_path),
-        filetype => $archived_model_file_type,
-        md5checksum => $md5->hexdigest(),
-        metadata_id => $md_row->metadata_id()
-    });
-
-    my $experiment_files = $phenome_schema->resultset("NdExperimentMdFiles")->create({
-        nd_experiment_id => $nd_experiment_id,
-        file_id => $file_row->file_id()
-    });
 
     #SAVING TRAINING DATA FILE
 
@@ -292,7 +287,7 @@ sub save_model {
         user_role => $user_role
     });
     my $archived_aux_filename_with_path = $uploader_autoencoder->archive();
-    my $md5_aux = $uploader->get_md5($archived_aux_filename_with_path);
+    my $md5_aux = $uploader_autoencoder->get_md5($archived_aux_filename_with_path);
     if (!$archived_aux_filename_with_path) {
         return { error => "Could not save file $model_aux_original_name in archive." };
     }
@@ -332,7 +327,7 @@ sub save_model {
                 user_role => $user_role
             });
             my $archived_aux_filename_with_path = $uploader_autoencoder->archive();
-            my $md5_aux = $uploader->get_md5($archived_aux_filename_with_path);
+            my $md5_aux = $uploader_autoencoder->get_md5($archived_aux_filename_with_path);
             if (!$archived_aux_filename_with_path) {
                 return { error => "Could not save file $model_aux_original_name in archive." };
             }
@@ -355,7 +350,7 @@ sub save_model {
         }
     }
 
-	return {success => 1, nd_protocol_id => $protocol_id, model_file_md_file_id => $file_row->file_id()};
+	return {success => 1, nd_protocol_id => $protocol_id, model_file_md_file_id => $model_file_md_file_id};
 }
 
 1;

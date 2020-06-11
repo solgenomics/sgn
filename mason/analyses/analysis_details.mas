@@ -88,48 +88,6 @@ $analysis_metadata
                 </td>
             </tr>
 
-            <tr><td><b>Model Parameters</b></td>
-                <td>
-                    <div id="analysis_model_parameters">
-%  while (my ($k, $v) = each %{$analysis_metadata->model_parameters}) {
-%     print "$k = $v <br/>";
-%  }
-                    </div>
-                </td>
-            </tr>
-
-            <tr><td><b>Model Language</b></td>
-                <td>
-                    <div id="analysis_model_language">
-%  print $analysis_metadata->model_language;
-                    </div>
-                </td>
-            </tr>
-
-            <tr><td><b>Model Language</b></td>
-                <td>
-                    <div id="analysis_model_language">
-%  print $analysis_metadata->model_type;
-                    </div>
-                </td>
-            </tr>
-
-            <tr><td><b>Application Name</b></td>
-                <td>
-                    <div id="analysis_application_name">
-%  print $analysis_metadata->application_name;
-                    </div>
-                </td>
-            </tr>
-
-            <tr><td><b>Application Version</b></td>
-                <td>
-                    <div id="analysis_application_version">
-%  print $analysis_metadata->application_version;
-                    </div>
-                </td>
-            </tr>
-
         </table>
 
     </div>

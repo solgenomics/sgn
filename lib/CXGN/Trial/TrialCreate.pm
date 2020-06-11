@@ -348,7 +348,7 @@ sub save_trial {
     elsif ($self->get_is_analysis()) {
 		if ($self->get_analysis_model_protocol_id) {
 			#link to the saved analysis model
-		    $nd_experiment->find_or_create_related('nd_experiment_nd_protocols', {nd_protocol_id => $self->get_analysis_model_protocol_id() });
+		    $nd_experiment->find_or_create_related('nd_experiment_protocols', {nd_protocol_id => $self->get_analysis_model_protocol_id() });
 		}
     }
     else {

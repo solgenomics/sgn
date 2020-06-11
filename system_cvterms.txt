@@ -16,8 +16,8 @@ experiment_type	genotyping_layout				00052
 experiment_type	phenotyping_experiment				00052
 experiment_type	seedlot_experiment				00077
 experiment_type	grafting_experiment				00079
-experiment_type	trained_keras_cnn_model_experiment	For linking a trained keras cnn model in nd_protocol to its model files in md_files	10/01/2019	nm529	00116
 experiment_type	analysis_experiment	For saving results in analysis trials	06/04/2020	lam87nm529	00119
+experiment_type	analysis_model_experiment	For saving results in analysis models	06/04/2020	lam87nm529	00125
 genotype_property	igd number
 genotype_property	infinium array					sgn database
 genotype_property	snp genotyping
@@ -279,15 +279,10 @@ protocol_property	protocol comment	From BrAPI	03/27/2017	nm529	00076
 protocol_property	vcf_map_details	Information about protocol, such as marker names, header info lines, and reference_genome_name	6/20/2018	nm529	00098
 protocol_property	vcf_map_details_markers	Genotyping protocol marker info in an object format	9/17/2019	nm529	00115
 protocol_property	vcf_map_details_markers_array	Genotyping protocol marker info in an array format	9/17/2019	nm529	00115
-protocol_property	trained_keras_cnn_model_trait	The trait for which the Keras CNN model was trained	9/30/2019	nm529	00116
-protocol_property	trained_keras_cnn_model_type	The type of Keras CNN model trained e.g. InceptionResNetV2	9/30/2019	nm529	00116
-protocol_property	trained_keras_mask_r_cnn_model_type	The type of Keras Mask R CNN trained	5/27/2020	nm529	00125
-protocol_property	model_language	The language which a model is computed e.g. R, Python	6/8/2020	nm529	00125
-protocol_property	model_application_details	Details of the model application and version in json	6/8/2020	nm529	00125
-protocol_property	model_is_public	Whether the model is public	6/8/2020	nm529	00125
-protocol_property	model_dataset_id	The dataset_id used to train a model. optional	6/8/2020	nm529	00125
+protocol_property	analysis_model_properties	Properties of analysis model in json	6/8/2020	nm529	00125
 protocol_type	trained_keras_cnn_model	An nd_protocol for a saved trained keras cnn model	9/30/2019	nm529	00116
 protocol_type	trained_keras_mask_r_cnn_model	An nd_protocol for a saved trained keras mask r cnn model	5/27/2020	nm529	00125
+protocol_type	sommer_grm_spatial_genetic_correlations	An nd_protocol for analysis using R Sommer for multivariate genetic and spatial blups	6/11/2020	nm529	00125
 composable_cvtypes	trait_ontology		05/01/2017		00073
 composable_cvtypes	composed_trait_ontology		05/01/2017		00073
 composable_cvtypes	object_ontology		05/01/2017		00073

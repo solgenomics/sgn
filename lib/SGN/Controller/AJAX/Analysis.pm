@@ -37,7 +37,6 @@ sub store_analysis_json_POST {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     print STDERR Dumper $c->req->params();
     my $analysis_to_save_boolean = $c->req->param("analysis_to_save_boolean");
-    my $analysis_model_to_save_boolean = $c->req->param("model_to_save_boolean");
     my $analysis_name = $c->req->param("analysis_name");
     my $analysis_description = $c->req->param("analysis_description");
     my $analysis_year = $c->req->param("analysis_year");
@@ -49,13 +48,11 @@ sub store_analysis_json_POST {
     my $analysis_precomputed_design_optional = $c->req->param("analysis_precomputed_design_optional") ? decode_json $c->req->param("analysis_precomputed_design_optional") : undef;
     my $analysis_result_values = $c->req->param("analysis_result_values") ? decode_json $c->req->param("analysis_result_values") : {};
     my $analysis_result_values_type = $c->req->param("analysis_result_values_type");
-    my $analysis_model_parameters = $c->req->param("analysis_model_parameters") ? decode_json $c->req->param("analysis_model_parameters") : {};
     my $analysis_model_name = $c->req->param("analysis_model_name");
     my $analysis_model_description = $c->req->param("analysis_model_description");
     my $analysis_model_is_public = $c->req->param("analysis_model_is_public");
     my $analysis_model_language = $c->req->param("analysis_model_language");
     my $analysis_model_type = $c->req->param("analysis_model_type");
-    my $analysis_model_experiment_type = $c->req->param("analysis_model_experiment_type");
     my $analysis_model_properties = $c->req->param("analysis_model_properties") ? decode_json $c->req->param("analysis_model_properties") : {};
     my $analysis_model_application_name = $c->req->param("analysis_model_application_name");
     my $analysis_model_application_version = $c->req->param("analysis_model_application_version");
@@ -73,9 +70,9 @@ sub store_analysis_json_POST {
     }
 
     $self->store_data($c,
-        $analysis_to_save_boolean, $analysis_model_to_save_boolean,
-        $analysis_name, $analysis_description, $analysis_year, $analysis_breeding_program_id, $analysis_protocol, $analysis_dataset_id, $analysis_accession_names, $analysis_trait_names, $analysis_precomputed_design_optional, $analysis_model_parameters, $analysis_result_values, $analysis_result_values_type,
-        $analysis_model_name, $analysis_model_description, $analysis_model_is_public, $analysis_model_language, $analysis_model_type, $analysis_model_experiment_type, $analysis_model_properties, $analysis_model_application_name, $analysis_model_application_version, $analysis_model_file, $analysis_model_file_type, $analysis_model_training_data_file, $analysis_model_training_data_file_type, $analysis_model_auxiliary_files,
+        $analysis_to_save_boolean,
+        $analysis_name, $analysis_description, $analysis_year, $analysis_breeding_program_id, $analysis_protocol, $analysis_dataset_id, $analysis_accession_names, $analysis_trait_names, $analysis_precomputed_design_optional, $analysis_result_values, $analysis_result_values_type,
+        $analysis_model_name, $analysis_model_description, $analysis_model_is_public, $analysis_model_language, $analysis_model_type, $analysis_model_properties, $analysis_model_application_name, $analysis_model_application_version, $analysis_model_file, $analysis_model_file_type, $analysis_model_training_data_file, $analysis_model_training_data_file_type, $analysis_model_auxiliary_files,
         $user_id, $user_name, $user_role
     );
 }
@@ -200,43 +197,38 @@ sub store_analysis_json_POST {
 
 sub store_data {
     my $self = shift;
-    my ($c, $analysis_to_save_boolean, $analysis_model_to_save_boolean, $analysis_name, $analysis_description, $analysis_year, $analysis_breeding_program_id, $analysis_protocol, $analysis_dataset_id, $analysis_accession_names, $analysis_trait_names, $analysis_precomputed_design_optional, $analysis_model_parameters, $analysis_result_values, $analysis_result_values_type, $analysis_model_name, $analysis_model_description, $analysis_model_is_public, $analysis_model_language, $analysis_model_type, $analysis_model_experiment_type, $analysis_model_properties, $analysis_model_application_name, $analysis_model_application_version, $analysis_model_file, $analysis_model_file_type, $analysis_model_training_data_file, $analysis_model_training_data_file_type, $analysis_model_auxiliary_files, $user_id, $user_name, $user_role) = @_;
+    my ($c, $analysis_to_save_boolean, $analysis_name, $analysis_description, $analysis_year, $analysis_breeding_program_id, $analysis_protocol, $analysis_dataset_id, $analysis_accession_names, $analysis_trait_names, $analysis_precomputed_design_optional, $analysis_result_values, $analysis_result_values_type, $analysis_model_name, $analysis_model_description, $analysis_model_is_public, $analysis_model_language, $analysis_model_type, $analysis_model_properties, $analysis_model_application_name, $analysis_model_application_version, $analysis_model_file, $analysis_model_file_type, $analysis_model_training_data_file, $analysis_model_training_data_file_type, $analysis_model_auxiliary_files, $user_id, $user_name, $user_role) = @_;
     
     my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
-    my $analysis_model_protocol_id;
-    if ($analysis_model_to_save_boolean eq 'yes') {
-        my $model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, $analysis_model_type, 'protocol_type')->cvterm_id();
-        my $model_experiment_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, $analysis_model_experiment_type, 'experiment_type')->cvterm_id();
+    my $model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, $analysis_model_type, 'protocol_type')->cvterm_id();
 
-        my $mo = CXGN::AnalysisModel::SaveModel->new({
-            bcs_schema=>$bcs_schema,
-            metadata_schema=>$metadata_schema,
-            phenome_schema=>$phenome_schema,
-            archive_path=>$c->config->{archive_path},
-            model_name=>$analysis_model_name,
-            model_description=>$analysis_model_description,
-            model_language=>$analysis_model_language,
-            model_type_cvterm_id=>$model_type_cvterm_id,
-            model_experiment_type_cvterm_id=>$model_experiment_type_cvterm_id,
-            model_properties=>$analysis_model_properties,
-            application_name=>$analysis_model_application_name,
-            application_version=>$analysis_model_application_version,
-            dataset_id=>$analysis_dataset_id,
-            is_public=>$analysis_model_is_public,
-            archived_model_file_type=>$analysis_model_file_type,
-            model_file=>$analysis_model_file,
-            archived_training_data_file_type=>$analysis_model_training_data_file_type,
-            archived_training_data_file=>$analysis_model_training_data_file,
-            archived_auxiliary_files=>$analysis_model_auxiliary_files,
-            user_id=>$user_id,
-            user_role=>$user_role
-        });
-        $analysis_model_protocol_id = $mo->save_model();
-    }
+    my $mo = CXGN::AnalysisModel::SaveModel->new({
+        bcs_schema=>$bcs_schema,
+        metadata_schema=>$metadata_schema,
+        phenome_schema=>$phenome_schema,
+        archive_path=>$c->config->{archive_path},
+        model_name=>$analysis_model_name,
+        model_description=>$analysis_model_description,
+        model_language=>$analysis_model_language,
+        model_type_cvterm_id=>$model_type_cvterm_id,
+        model_properties=>$analysis_model_properties,
+        application_name=>$analysis_model_application_name,
+        application_version=>$analysis_model_application_version,
+        dataset_id=>$analysis_dataset_id,
+        is_public=>$analysis_model_is_public,
+        archived_model_file_type=>$analysis_model_file_type,
+        model_file=>$analysis_model_file,
+        archived_training_data_file_type=>$analysis_model_training_data_file_type,
+        archived_training_data_file=>$analysis_model_training_data_file,
+        archived_auxiliary_files=>$analysis_model_auxiliary_files,
+        user_id=>$user_id,
+        user_role=>$user_role
+    });
+    my $analysis_model_protocol_id = $mo->save_model()->{nd_protocol_id};
 
     my $saved_analysis_id;
     if ($analysis_to_save_boolean eq 'yes') {
@@ -272,12 +264,6 @@ sub store_data {
 
         $a->metadata()->traits($analysis_trait_names);
         $a->metadata()->analysis_protocol($analysis_protocol);
-        $a->metadata()->model_type($analysis_model_type);
-        $a->metadata()->model_language($analysis_model_language);
-        $a->metadata()->application_version($analysis_model_application_version);
-        $a->metadata()->application_name($analysis_model_application_name);
-        $a->metadata()->model_parameters($analysis_model_parameters);
-
         $a->analysis_model_protocol_id($analysis_model_protocol_id);
 
         my ($verified_warning, $verified_error);

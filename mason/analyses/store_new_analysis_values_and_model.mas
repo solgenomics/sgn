@@ -149,12 +149,6 @@ The trait names can be either post-composed terms (preferred by Nick M) or regul
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Analysis Parameters: </label>
-                                    <div class="col-sm-9">
-                                        <input class="form-control" id="generic_save_analysis_parameters" name="generic_save_analysis_parameters" type="text" disabled/>
-                                    </div>
-                                </div>
-                                <div class="form-group form-group-sm">
                                     <label class="col-sm-3 control-label">Dataset ID: </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_dataset_id" name="generic_save_analysis_dataset_id" type="number" disabled/>
@@ -198,22 +192,9 @@ The trait names can be either post-composed terms (preferred by Nick M) or regul
                             </center>
                         </&>
                         <&| /util/workflow.mas:step, title=> "Model Info" &>
-                            <& /page/page_title.mas, title=>"Save model results for later predictions" &>
+                            <& /page/page_title.mas, title=>"Save model information" &>
 
-                            <form class="form-horizontal">
-                                <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Do you want to save the trained model for later predictions?: </label>
-                                    <div class="col-sm-9">
-                                        <select class="form-control" id="generic_save_analysis_model_to_save" name="generic_save_analysis_model_to_save" >
-                                            <option value="no">No</option>
-                                            <option value="yes">Yes</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </form>
-                            <hr>
-
-                            <form class="form-horizontal" id="generic_save_analysis_model_form" style="display:none">
+                            <form class="form-horizontal" id="generic_save_analysis_model_form">
                                 <div class="form-group form-group-sm">
                                     <label class="col-sm-3 control-label">Model Name (must be unique): </label>
                                     <div class="col-sm-9">
@@ -247,12 +228,6 @@ The trait names can be either post-composed terms (preferred by Nick M) or regul
                                     <label class="col-sm-3 control-label">Model Type: </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_model_type" name="generic_save_analysis_model_type" type="text" disabled/>
-                                    </div>
-                                </div>
-                                <div class="form-group form-group-sm">
-                                    <label class="col-sm-3 control-label">Model Experiment Type: </label>
-                                    <div class="col-sm-9">
-                                        <input class="form-control" id="generic_save_analysis_model_experiment_type" name="generic_save_analysis_model_experiment_type" type="text" disabled/>
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
@@ -332,16 +307,6 @@ jQuery(document).ready(function() {
     get_select_box('years', 'generic_save_analysis_analysis_year_div', {'auto_generate': 1, 'id':'generic_save_analysis_analysis_year', 'name':'generic_save_analysis_analysis_year'});
     get_select_box('breeding_programs', 'generic_save_analysis_breeding_program_div', { 'name' : 'generic_save_analysis_breeding_program_id', 'id' : 'generic_save_analysis_breeding_program_id' });
 
-    jQuery('#generic_save_analysis_model_to_save').change(function(){
-        if (jQuery(this).val() == 'yes') {
-            jQuery('#generic_save_analysis_model_form').show();
-        }
-        if (jQuery(this).val() == 'no') {
-            jQuery('#generic_save_analysis_model_form').hide();
-            jQuery('#generic_save_analysis_model_name').val('');
-        }
-    });
-
     jQuery('#generic_save_analysis_analysis_to_save').change(function(){
         if (jQuery(this).val() == 'yes') {
             jQuery('#generic_save_analysis_analysis_form').show();
@@ -359,7 +324,6 @@ jQuery(document).ready(function() {
         var generic_save_analysis_analysis_year = jQuery('#generic_save_analysis_analysis_year').val();
         var generic_save_analysis_breeding_program_id = jQuery('#generic_save_analysis_breeding_program_id').val();
         var generic_save_analysis_protocol = jQuery('#generic_save_analysis_protocol').val();
-        var generic_save_analysis_parameters = jQuery('#generic_save_analysis_parameters').val();
         var generic_save_analysis_dataset_id = jQuery('#generic_save_analysis_dataset_id').val();
         var generic_save_analysis_accession_names = jQuery('#generic_save_analysis_accession_names').val();
         var generic_save_analysis_trait_names = jQuery('#generic_save_analysis_trait_names').val();
@@ -367,13 +331,11 @@ jQuery(document).ready(function() {
         var generic_save_analysis_result_values = jQuery('#generic_save_analysis_result_values').val();
         var generic_save_analysis_result_values_type = jQuery('#generic_save_analysis_result_values_type').val();
         
-        var generic_save_analysis_model_to_save_boolean = jQuery('#generic_save_analysis_model_to_save').val();
         var generic_save_analysis_model_name = jQuery('#generic_save_analysis_model_name').val();
         var generic_save_analysis_model_description = jQuery('#generic_save_analysis_model_description').val();
         var generic_save_analysis_model_is_public = jQuery('#generic_save_analysis_model_is_public').val();
         var generic_save_analysis_model_language = jQuery('#generic_save_analysis_model_language').val();
         var generic_save_analysis_model_type = jQuery('#generic_save_analysis_model_type').val();
-        var generic_save_analysis_model_experiment_type = jQuery('#generic_save_analysis_model_experiment_type').val();
         var generic_save_analysis_model_properties = jQuery('#generic_save_analysis_model_properties').val();
         var generic_save_analysis_model_application_name = jQuery('#generic_save_analysis_model_application_name').val();
         var generic_save_analysis_model_application_version = jQuery('#generic_save_analysis_model_application_version').val();
@@ -404,10 +366,6 @@ jQuery(document).ready(function() {
                 alert('Please give an analysis protocol e.g. lmer(grain_yield ~ replicate + 1|germplasmName)');
                 return false;
             }
-            if (generic_save_analysis_parameters == '') {
-                alert('Please give analysis parameters');
-                return false;
-            }
             if (generic_save_analysis_accession_names == '') {
                 alert('Please give analysis accession names');
                 return false;
@@ -424,70 +382,62 @@ jQuery(document).ready(function() {
                 alert('Please give analysis result values type');
                 return false;
             }
-
-            //Analysis also stores model specifics
-            if (generic_save_analysis_model_language == '') {
-                alert('Please give a model language');
-                return false;
-            }
-            if (generic_save_analysis_model_type == '') {
-                alert('Please give a model type');
-                return false;
-            }
-            if (generic_save_analysis_model_application_name == '') {
-                alert('Please give a model application name');
-                return false;
-            }
-            if (generic_save_analysis_model_application_version == '') {
-                alert('Please give a model application version');
-                return false;
-            }
         }
-        if (generic_save_analysis_model_to_save_boolean == 'yes') {
-            if (generic_save_analysis_model_name == '') {
-                alert('Please give a model name');
-                return false;
-            }
-            if (generic_save_analysis_model_description == '') {
-                alert('Please give a model description');
-                return false;
-            }
-            if (generic_save_analysis_model_is_public == '') {
-                alert('Please tell if a model is public');
-                return false;
-            }
-            if (generic_save_analysis_model_language == '') {
-                alert('Please give a model language');
-                return false;
-            }
-            if (generic_save_analysis_model_type == '') {
-                alert('Please give a model type');
-                return false;
-            }
-            if (generic_save_analysis_model_experiment_type == '') {
-                alert('Please give a model experiment type');
-                return false;
-            }
-            if (generic_save_analysis_model_properties == '') {
-                alert('Please give a model properties JSON object');
-                return false;
-            }
-            if (generic_save_analysis_model_application_name == '') {
-                alert('Please give a model application name');
-                return false;
-            }
-            if (generic_save_analysis_model_application_version == '') {
-                alert('Please give a model application version');
-                return false;
-            }
-            if (generic_save_analysis_model_file == '') {
-                alert('Please give a model file');
-                return false;
-            }
-            if (generic_save_analysis_model_archived_model_file_type == '') {
-                alert('Please give a model file type');
-                return false;
-            }
+        if (generic_save_analysis_model_name == '') {
+            alert('Please give a model name');
+            return false;
+        }
+        if (generic_save_analysis_model_description == '') {
+            alert('Please give a model description');
+            return false;
+        }
+        if (generic_save_analysis_model_is_public == '') {
+            alert('Please tell if a model is public');
+            return false;
+        }
+        if (generic_save_analysis_model_language == '') {
+            alert('Please give a model language');
+            return false;
+        }
+        if (generic_save_analysis_model_type == '') {
+            alert('Please give a model type');
+            return false;
+        }
+        if (generic_save_analysis_model_properties == '') {
+            alert('Please give a model properties JSON object');
+            return false;
+        }
+        if (generic_save_analysis_model_application_name == '') {
+            alert('Please give a model application name');
+            return false;
+        }
+        if (generic_save_analysis_model_application_version == '') {
+            alert('Please give a model application version');
+            return false;
+        }
+        //if (generic_save_analysis_model_file == '') {
+        //    alert('Please give a model file');
+        //    return false;
+        //}
+        //if (generic_save_analysis_model_archived_model_file_type == '') {
+        //    alert('Please give a model file type');
+        //    return false;
+        //}
+        if (generic_save_analysis_model_language == '') {
+            alert('Please give a model language');
+            return false;
+        }
+        if (generic_save_analysis_model_type == '') {
+            alert('Please give a model type');
+            return false;
+        }
+        if (generic_save_analysis_model_application_name == '') {
+            alert('Please give a model application name');
+            return false;
+        }
+        if (generic_save_analysis_model_application_version == '') {
+            alert('Please give a model application version');
+            return false;
         }
 
         jQuery.ajax({
@@ -495,13 +445,11 @@ jQuery(document).ready(function() {
             url : '/ajax/analysis/store/json',
             data : {
                 'analysis_to_save_boolean':generic_save_analysis_analysis_to_save_boolean,
-                'model_to_save_boolean':generic_save_analysis_model_to_save_boolean,
                 'analysis_name':generic_save_analysis_analysis_name,
                 'analysis_description':generic_save_analysis_analysis_description,
                 'analysis_year':generic_save_analysis_analysis_year,
                 'analysis_breeding_program_id':generic_save_analysis_breeding_program_id,
                 'analysis_protocol':generic_save_analysis_protocol,
-                'analysis_model_parameters':generic_save_analysis_parameters,
                 'analysis_dataset_id':generic_save_analysis_dataset_id,
                 'analysis_accession_names':generic_save_analysis_accession_names,
                 'analysis_trait_names':generic_save_analysis_trait_names,
@@ -513,7 +461,6 @@ jQuery(document).ready(function() {
                 'analysis_model_is_public':generic_save_analysis_model_is_public,
                 'analysis_model_language':generic_save_analysis_model_language,
                 'analysis_model_type':generic_save_analysis_model_type,
-                'analysis_model_experiment_type':generic_save_analysis_model_experiment_type,
                 'analysis_model_properties':generic_save_analysis_model_properties,
                 'analysis_model_application_name':generic_save_analysis_model_application_name,
                 'analysis_model_application_version':generic_save_analysis_model_application_version,

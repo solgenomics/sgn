@@ -3581,16 +3581,12 @@ jQuery(document).ready(function() {
 
         var drone_imagery_stats_parameters = {};
         var drone_imagery_stats_protocol = '';
+        var drone_imagery_stats_training_file_type = '';
+        var drone_imagery_stats_auxiliary_files = [];
 
         if (manage_drone_imagery_calculate_statistics_select == 'sommer_grm_spatial_genetic_correlations') {
             var drone_imagery_stats_tolparinv_param = jQuery('#drone_image_calculate_statistics_tolparinv_select').val();
             var drone_imagery_stats_numbers_traits = manage_drone_imagery_calculate_statistics_response.unique_traits.length;
-
-            drone_imagery_stats_parameters = {
-                'tolparinv':drone_imagery_stats_tolparinv_param,
-                'genotyping_protocol_id':jQuery('#drone_image_calculate_statistics_genotyping_protocol_select').val(),
-                'compute_genotypes_from_parents':jQuery('#drone_image_calculate_statistics_genotyping_protocol_compute_from_parents_select').val(),
-            };
 
             var drone_imagery_stats_mv_traits = [];
             for (var i=1; i<drone_imagery_stats_numbers_traits+1; i++) {
@@ -3599,10 +3595,20 @@ jQuery(document).ready(function() {
             drone_imagery_stats_mv_traits_string = drone_imagery_stats_mv_traits.join();
 
             drone_imagery_stats_protocol = 'mmer('+drone_imagery_stats_mv_traits_string+'~1, random=~vs(id, Gu=geno_mat, Gtc=unsm('+drone_imagery_stats_numbers_traits+')) +vs(rowNumberFactor, Gtc=diag('+drone_imagery_stats_numbers_traits+')) +vs(colNumberFactor, Gtc=diag('+drone_imagery_stats_numbers_traits+')), rcov=~vs(units, Gtc=unsm('+drone_imagery_stats_numbers_traits+')), data=mat, tolparinv='+drone_imagery_stats_tolparinv_param+');';
+
+            drone_imagery_stats_parameters = {
+                'tolparinv':drone_imagery_stats_tolparinv_param,
+                'genotyping_protocol_id':jQuery('#drone_image_calculate_statistics_genotyping_protocol_select').val(),
+                'compute_genotypes_from_parents':jQuery('#drone_image_calculate_statistics_genotyping_protocol_compute_from_parents_select').val(),
+                'protocol':drone_imagery_stats_protocol
+            };
+
+            drone_imagery_stats_training_file_type = 'nicksmixedmodels_v1.01_sommer_grm_spatial_genetic_correlations_phenotype_file';
+            drone_imagery_stats_auxiliary_files = [{'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.grm_file, auxiliary_model_file_archive_type:'nicksmixedmodels_v1.01_sommer_grm_spatial_genetic_correlations_grm_file'}];
         }
 
         jQuery('#generic_save_analysis_protocol').val(drone_imagery_stats_protocol);
-        jQuery('#generic_save_analysis_parameters').val(JSON.stringify(drone_imagery_stats_parameters));
+        jQuery('#generic_save_analysis_model_properties').val(JSON.stringify(drone_imagery_stats_parameters));
         //jQuery('#generic_save_analysis_dataset_id').val();
         jQuery('#generic_save_analysis_accession_names').val(JSON.stringify(manage_drone_imagery_calculate_statistics_response.unique_accessions));
         jQuery('#generic_save_analysis_trait_names').val(JSON.stringify(manage_drone_imagery_calculate_statistics_response.unique_traits));
@@ -3613,6 +3619,11 @@ jQuery(document).ready(function() {
         jQuery('#generic_save_analysis_model_type').val(manage_drone_imagery_calculate_statistics_select);
         jQuery('#generic_save_analysis_model_application_name').val('NickMorales Mixed Models');
         jQuery('#generic_save_analysis_model_application_version').val('V1.01');
+        //jQuery('#generic_save_analysis_model_file').val();
+        //jQuery('#generic_save_analysis_model_archived_model_file_type').val();
+        jQuery('#generic_save_analysis_model_training_data_file').val(manage_drone_imagery_calculate_statistics_response.stats_tempfile);
+        jQuery('#generic_save_analysis_model_archived_training_data_file_type').val(drone_imagery_stats_training_file_type);
+        jQuery('#generic_save_analysis_model_auxiliary_files').val(JSON.stringify(drone_imagery_stats_auxiliary_files));
 
         //These model weights don't need to be saved
         jQuery('#generic_save_analysis_model_to_save').prop('disabled','disabled');

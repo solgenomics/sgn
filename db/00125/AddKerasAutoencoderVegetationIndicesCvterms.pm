@@ -65,14 +65,14 @@ sub patch {
             'observation_unit_polygon_keras_autoencoder_decoded'
         ],
         'protocol_type' => [
-            'trained_keras_mask_r_cnn_model'
+            'trained_keras_mask_r_cnn_model',
+			'sommer_grm_spatial_genetic_correlations'
         ],
+		'experiment_type' => [
+			'analysis_model_experiment'
+		],
         'protocol_property' => [
-            'trained_keras_mask_r_cnn_model_type',
-			'model_language',
-			'model_application_details',
-			'model_is_public',
-			'model_dataset_id'
+			'analysis_model_properties'
         ]
     };
 

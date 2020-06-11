@@ -5207,9 +5207,7 @@ sub _perform_save_trained_keras_cnn_model {
     my $trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $trait_id, 'extended');
 
     my $keras_cnn_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model', 'protocol_type')->cvterm_id();
-    my $keras_cnn_trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_trait', 'protocol_property')->cvterm_id();
-    my $keras_cnn_model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_type', 'protocol_property')->cvterm_id();
-    my $keras_cnn_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_experiment', 'experiment_type')->cvterm_id();
+    my $keras_cnn_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_experiment', 'experiment_type')->cvterm_id();
 
     my $m = CXGN::AnalysisModel::SaveModel->new({
         bcs_schema=>$schema,
@@ -5220,10 +5218,7 @@ sub _perform_save_trained_keras_cnn_model {
         model_description=>$model_description,
         model_type_cvterm_id=>$keras_cnn_cvterm_id,
         model_experiment_type_cvterm_id=>$keras_cnn_experiment_cvterm_id,
-        model_properties=>[
-            {value => encode_json({variable_name => $trait_name, variable_id => $trait_id, aux_trait_ids => $aux_trait_ids}), type_id => $keras_cnn_trait_cvterm_id},
-            {value => encode_json({value=>$model_type, image_type=>'standard_4_montage', nd_protocol_id => $geno_protocol_id, use_parents_grm => $use_parents_grm}), type_id => $keras_cnn_model_type_cvterm_id}
-        ],
+        model_properties=>{variable_name => $trait_name, variable_id => $trait_id, aux_trait_ids => $aux_trait_ids, model_type=>$model_type, image_type=>'standard_4_montage', nd_protocol_id => $geno_protocol_id, use_parents_grm => $use_parents_grm},
         archived_model_file_type=>'trained_keras_cnn_model',
         model_file=>$model_file,
         archived_training_data_file_type=>'trained_keras_cnn_model_input_data_file',
@@ -5289,9 +5284,8 @@ sub _perform_keras_cnn_predict {
     my @field_trial_ids = @$field_trial_ids;
 
     my $keras_cnn_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model', 'protocol_type')->cvterm_id();
-    my $keras_cnn_trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_trait', 'protocol_property')->cvterm_id();
-    my $keras_cnn_model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_type', 'protocol_property')->cvterm_id();
-    my $keras_cnn_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_experiment', 'experiment_type')->cvterm_id();
+    my $model_properties_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_properties', 'protocol_property')->cvterm_id();
+    my $keras_cnn_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_experiment', 'experiment_type')->cvterm_id();
 
     my $plot_polygon_rgb_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_imagery', 'project_md_image')->cvterm_id();
     my $plot_polygon_green_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_rgb_imagery_channel_2', 'project_md_image')->cvterm_id();
@@ -5428,13 +5422,13 @@ sub _perform_keras_cnn_predict {
         nd_protocol_id=>$model_id
     });
     my $saved_model_object = $m->get_model();
-    my $trait_id = $saved_model_object->{model_properties}->{$keras_cnn_trait_cvterm_id}->{variable_id};
-    my $trained_trait_name = $saved_model_object->{model_properties}->{$keras_cnn_trait_cvterm_id}->{variable_name};
-    my $aux_trait_ids_previous = $saved_model_object->{model_properties}->{$keras_cnn_trait_cvterm_id}->{aux_trait_ids};
-    my $model_type = $saved_model_object->{model_properties}->{$keras_cnn_model_type_cvterm_id}->{value};
-    my $nd_protocol_id = $saved_model_object->{model_properties}->{$keras_cnn_model_type_cvterm_id}->{nd_protocol_id};
-    my $use_parents_grm = $saved_model_object->{model_properties}->{$keras_cnn_model_type_cvterm_id}->{use_parents_grm};
-    my $trained_image_type = $saved_model_object->{model_properties}->{$keras_cnn_model_type_cvterm_id}->{image_type};
+    my $trait_id = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{variable_id};
+    my $trained_trait_name = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{variable_name};
+    my $aux_trait_ids_previous = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{aux_trait_ids};
+    my $model_type = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{model_type};
+    my $nd_protocol_id = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{nd_protocol_id};
+    my $use_parents_grm = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{use_parents_grm};
+    my $trained_image_type = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{image_type};
     my $model_file = $saved_model_object->{model_files}->{trained_keras_cnn_model};
     my $training_autoencoder_model_file = $saved_model_object->{model_files}->{trained_keras_cnn_autoencoder_model};
     my $training_input_data_file = $saved_model_object->{model_files}->{trained_keras_cnn_model_input_data_file};
@@ -6043,9 +6037,7 @@ sub _perform_autoencoder_keras_cnn_vi {
     my @field_trial_ids = @$field_trial_ids;
 
     my $keras_cnn_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model', 'protocol_type')->cvterm_id();
-    my $keras_cnn_trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_trait', 'protocol_property')->cvterm_id();
-    my $keras_cnn_model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_type', 'protocol_property')->cvterm_id();
-    my $keras_cnn_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_experiment', 'experiment_type')->cvterm_id();
+    my $keras_cnn_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_experiment', 'experiment_type')->cvterm_id();
 
     my $images_search = CXGN::DroneImagery::ImagesSearch->new({
         bcs_schema=>$schema,
@@ -6667,8 +6659,7 @@ sub drone_imagery_retrain_mask_rcnn_GET : Args(0) {
     my $status = system($cmd);
 
     my $keras_mask_r_cnn_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_mask_r_cnn_model', 'protocol_type')->cvterm_id();
-    my $keras_mask_r_cnn_model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_mask_r_cnn_model_type', 'protocol_property')->cvterm_id();
-    my $keras_cnn_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_experiment', 'experiment_type')->cvterm_id();
+    my $keras_cnn_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_experiment', 'experiment_type')->cvterm_id();
 
     my $m = CXGN::AnalysisModel::SaveModel->new({
         bcs_schema=>$schema,
@@ -6679,9 +6670,7 @@ sub drone_imagery_retrain_mask_rcnn_GET : Args(0) {
         model_description=>$model_description,
         model_type_cvterm_id=>$keras_mask_r_cnn_cvterm_id,
         model_experiment_type_cvterm_id=>$keras_cnn_experiment_cvterm_id,
-        model_properties=>[
-            {value => encode_json({value=>$model_type, image_type=>'all_annotated_plot_images'}), type_id => $keras_mask_r_cnn_model_type_cvterm_id}
-        ],
+        model_properties=>{model_type=>$model_type, image_type=>'all_annotated_plot_images'},
         archived_model_file_type=>'trained_keras_mask_r_cnn_model',
         model_file=>$temp_output_model_file,
         archived_training_data_file_type=>'trained_keras_mask_r_cnn_model_input_data_file',
@@ -6713,8 +6702,8 @@ sub drone_imagery_predict_mask_rcnn_GET : Args(0) {
     my $timestamp = $time->ymd();
 
     my $keras_mask_r_cnn_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_mask_r_cnn_model', 'protocol_type')->cvterm_id();
-    my $keras_mask_r_cnn_model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_mask_r_cnn_model_type', 'protocol_property')->cvterm_id();
-    my $keras_cnn_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_experiment', 'experiment_type')->cvterm_id();
+    my $model_properties_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_properties', 'protocol_property')->cvterm_id();
+    my $keras_cnn_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_experiment', 'experiment_type')->cvterm_id();
 
     my $m = CXGN::AnalysisModel::GetModel->new({
         bcs_schema=>$schema,
@@ -6723,8 +6712,8 @@ sub drone_imagery_predict_mask_rcnn_GET : Args(0) {
         nd_protocol_id=>$model_id
     });
     my $saved_model_object = $m->get_model();
-    my $model_type = $saved_model_object->{model_properties}->{$keras_mask_r_cnn_model_type_cvterm_id}->{value};
-    my $trained_image_type = $saved_model_object->{model_properties}->{$keras_mask_r_cnn_model_type_cvterm_id}->{image_type};
+    my $model_type = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{model_type};
+    my $trained_image_type = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{image_type};
     my $model_file = $saved_model_object->{model_files}->{trained_keras_mask_r_cnn_model};
     my $training_input_data_file = $saved_model_object->{model_files}->{trained_keras_mask_r_cnn_model_input_data_file};
 
