@@ -41,7 +41,9 @@ $analysis_description
   <div id="analysis_protocol">[Not provided]</div>
 </&>
 
-<& /page/detail_page_2_col_section.mas, trial_id => $analysis_id, info_section_title => "<h4 style='display:inline'>Phenotype Summary Statistics</h4>", info_section_subtitle => 'View and download phenotype data.', buttons_html => "<button class='btn btn-sm btn-primary' style='margin:3px' id='trial_download_phenotypes_button'>Download Trial Data</button>", icon_class => "glyphicon glyphicon-equalizer", info_section_id => "trial_detail_traits_assayed", trial_name => $analysis_name, trial_stock_type => 'analysis_instance' &>
+<& /page/detail_page_2_col_section.mas, trial_id => $analysis_id, info_section_title => "<h4 style='display:inline'>Phenotype Summary Statistics</h4>", info_section_subtitle => 'View and download phenotype data.', buttons_html => "<button class='btn btn-sm btn-primary' style='margin:3px' id='trial_download_phenotypes_button'>Download Analysis Data</button>", icon_class => "glyphicon glyphicon-equalizer", info_section_id => "trial_detail_traits_assayed", trial_name => $analysis_name, trial_stock_type => 'analysis_instance' &>
+
+<& /breeders_toolbox/trial/download_phenotypes_dialog.mas, trial_ids => $analysis_id, dialog_name => $analysis_name, dialog_type => 'Analysis' &>
 
 <&| /page/info_section.mas, title=>"Analysis Results", collapsible => 1, collapsed => 0 &>
 
