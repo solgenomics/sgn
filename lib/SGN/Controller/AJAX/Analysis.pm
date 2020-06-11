@@ -257,6 +257,14 @@ sub store_data {
             $a->metadata()->dataset_id($analysis_dataset_id);
         }
 
+        my $year_type_id = $bcs_schema->resultset('Cv::Cvterm')->find({ name => 'project year' })->cvterm_id;
+        my $year_rs = $bcs_schema->resultset('Project::Projectprop')->create({
+            type_id => $year_type_id,
+            value => $analysis_year,
+            project_id => $saved_analysis_id
+        });
+
+        $a->year($analysis_year);
         $a->breeding_program_id($analysis_breeding_program_id);
         $a->accession_names($analysis_accession_names);
         $a->description($analysis_description);
@@ -315,7 +323,7 @@ sub store_data {
             }
         }
         my @analysis_instance_names = keys %$analysis_result_values_save;
-        print STDERR Dumper $analysis_result_values_save;
+        # print STDERR Dumper $analysis_result_values_save;
 
         my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
         my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');

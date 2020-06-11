@@ -290,7 +290,7 @@ sub create_and_store_analysis_design {
     }
 
     my $computation_location_name = "[Computation]";
-    my $calculation_location_id = $schema->resultset("NaturalDiversity::NdGeolocation")->find({ description => $computation_location_name })->nd_geolocation_id();
+    my $calculation_location_id = $schema->resultset("NaturalDiversity::NdGeolocation")->search({ description => $computation_location_name })->first->nd_geolocation_id();
     $self->nd_geolocation_id($calculation_location_id);
     $self->set_location($calculation_location_id);
 
@@ -482,7 +482,7 @@ sub _get_layout {
     #
     my $design = CXGN::Trial::TrialLayout->new({ schema => $self->bcs_schema(), trial_id => $self->get_trial_id(), experiment_type=> 'analysis_experiment'});
 
-    print STDERR "_get_layout: design = ".Dumper($design->get_design);
+    # print STDERR "_get_layout: design = ".Dumper($design->get_design);
 
     #print STDERR "ERROR IN LAYOUT: ".Dumper($error)."\n";
     #print STDERR "READ DESIGN: ".Dumper($design->get_design());

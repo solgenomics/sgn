@@ -9,8 +9,114 @@ Developer input for saving model trained weights: model_language, model_type, mo
 
 Developer inputs can be set using javascript when the model is opened and then nothing else needs to be changed!
 
-The analysis design can be precomputed and set using analysis_design as a nested object of objects analysis_instance->{accession, plot_number}, or analysis_design can be left blank and the design will be computed using accession_names once this workflow is submitted.
+The analysis design can be precomputed and set using analysis_design as a nested object of objects analysis_instance->{accession, plot_number}, like:
+{
+               '5' => {
+                        'stock_name' => 'test_accession5',
+                        'plot_name' => 'analysisblup06112020_34_test_accession5'
+                      },
+               '1' => {
+                        'stock_name' => 'test_accession1',
+                        'plot_name' => 'analysisblup06112020_34_test_accession1'
+                      },
+               '4' => {
+                        'plot_name' => 'analysisblup06112020_34_test_accession4',
+                        'stock_name' => 'test_accession4'
+                      },
+               '2' => {
+                        'stock_name' => 'test_accession2',
+                        'plot_name' => 'analysisblup06112020_34_test_accession2'
+                      },
+               '3' => {
+                        'plot_name' => 'analysisblup06112020_34_test_accession3',
+                        'stock_name' => 'test_accession3'
+                      }
+             }
+or analysis_design can be left blank and the design will be computed using accession_names once this workflow is submitted.
 The analysis_result_values can take a nested object of stock_name->trait_name->value, where stock_name is either the precomputed analysis_design "plots" or is accession names. The analysis_result_values_type is either analysis_result_values_match_precomputed_design or analysis_result_values_match_accession_names for these scenarios.
+For example:
+{
+               'analysisblup06112020_35_test_accession4' => {
+                                                            'Mean Pixel Value|NIR (780-3000nm)|NIR Denoised Original Image|day 10|COMP:0000108' => [
+                                                                                                                                                     '0.0128311926784451',
+                                                                                                                                                     '2020-06-11_17:39:21',
+                                                                                                                                                     'janedoe',
+                                                                                                                                                     '',
+                                                                                                                                                     ''
+                                                                                                                                                   ],
+                                                            'Mean Pixel Value|Red (600-690nm)|Red Denoised Original Image|day 10|COMP:0000078' => [
+                                                                                                                                                    '-0.00288303972761372',
+                                                                                                                                                    '2020-06-11_17:39:21',
+                                                                                                                                                    'janedoe',
+                                                                                                                                                    '',
+                                                                                                                                                    ''
+                                                                                                                                                  ]
+                                                          },
+               'analysisblup06112020_35_test_accession2' => {
+                                                            'Mean Pixel Value|Red (600-690nm)|Red Denoised Original Image|day 10|COMP:0000078' => [
+                                                                                                                                                    '0.000961013242537908',
+                                                                                                                                                    '2020-06-11_17:39:21',
+                                                                                                                                                    'janedoe',
+                                                                                                                                                    '',
+                                                                                                                                                    ''
+                                                                                                                                                  ],
+                                                            'Mean Pixel Value|NIR (780-3000nm)|NIR Denoised Original Image|day 10|COMP:0000108' => [
+                                                                                                                                                     '-0.00427706422614838',
+                                                                                                                                                     '2020-06-11_17:39:21',
+                                                                                                                                                     'janedoe',
+                                                                                                                                                     '',
+                                                                                                                                                     ''
+                                                                                                                                                   ]
+                                                          },
+               'analysisblup06112020_35_test_accession1' => {
+                                                            'Mean Pixel Value|NIR (780-3000nm)|NIR Denoised Original Image|day 10|COMP:0000108' => [
+                                                                                                                                                     '-0.00427706422614838',
+                                                                                                                                                     '2020-06-11_17:39:21',
+                                                                                                                                                     'janedoe',
+                                                                                                                                                     '',
+                                                                                                                                                     ''
+                                                                                                                                                   ],
+                                                            'Mean Pixel Value|Red (600-690nm)|Red Denoised Original Image|day 10|COMP:0000078' => [
+                                                                                                                                                    '0.000961013242537907',
+                                                                                                                                                    '2020-06-11_17:39:21',
+                                                                                                                                                    'janedoe',
+                                                                                                                                                    '',
+                                                                                                                                                    ''
+                                                                                                                                                  ]
+                                                          },
+               'analysisblup06112020_35_test_accession5' => {
+                                                            'Mean Pixel Value|NIR (780-3000nm)|NIR Denoised Original Image|day 10|COMP:0000108' => [
+                                                                                                                                                     '-0.00116233418884805',
+                                                                                                                                                     '2020-06-11_17:39:21',
+                                                                                                                                                     'janedoe',
+                                                                                                                                                     '',
+                                                                                                                                                     ''
+                                                                                                                                                   ],
+                                                            'Mean Pixel Value|Red (600-690nm)|Red Denoised Original Image|day 10|COMP:0000078' => [
+                                                                                                                                                    '0.000142948778076044',
+                                                                                                                                                    '2020-06-11_17:39:21',
+                                                                                                                                                    'janedoe',
+                                                                                                                                                    '',
+                                                                                                                                                    ''
+                                                                                                                                                  ]
+                                                          },
+               'analysisblup06112020_35_test_accession3' => {
+                                                            'Mean Pixel Value|NIR (780-3000nm)|NIR Denoised Original Image|day 10|COMP:0000108' => [
+                                                                                                                                                     '-0.00427706422614838',
+                                                                                                                                                     '2020-06-11_17:39:21',
+                                                                                                                                                     'janedoe',
+                                                                                                                                                     '',
+                                                                                                                                                     ''
+                                                                                                                                                   ],
+                                                            'Mean Pixel Value|Red (600-690nm)|Red Denoised Original Image|day 10|COMP:0000078' => [
+                                                                                                                                                    '0.000961013242537908',
+                                                                                                                                                    '2020-06-11_17:39:21',
+                                                                                                                                                    'janedoe',
+                                                                                                                                                    '',
+                                                                                                                                                    ''
+                                                                                                                                                  ]
+                                                          }
+             }
 
 The trait names can be either post-composed terms (preferred by Nick M) or regular traits.
 -->

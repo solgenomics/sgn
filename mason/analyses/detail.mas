@@ -23,49 +23,50 @@ Lukas Mueller <lam87@cornell.edu>
 $analysis_id
 $analysis_name
 $analysis_description
+$breeding_program_name
+$breeding_program_id
+$year
+$trial_stock_type
+$trial_phenotype_stock_type
+$identifier_prefix
+$analysis_metadata
 </%args>
 
 <& /util/import_javascript.mas, entries => ['analyses'], classes => [ 'jquery', 'jquery.dataTables' ],  &>
 
-<& /page/page_title.mas, title => "Analysis <span id=\"analyis_name_title\">$analysis_name</span> ($analysis_id)" &>
+<& /page/page_title.mas, title => "Analysis <span id=\"analyis_name_title\">$analysis_name</span>" &>
 
-<&| /page/info_section.mas, title=>"Analysis description", collapsible=>1, collapsed=>0 &>
-  <div  id="analysis_description"><div id="analysis_description"><blink>*</blink></div></div>
-</&>
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, trial_id => $analysis_id, info_section_title => "<h4 style='display:inline'>Analysis Details</h4>", info_section_subtitle => 'View basic information about the analysis.', buttons_html => '', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "analysis_details", trial_name => $analysis_name, trial_description => $analysis_description, breeding_program_name => $breeding_program_name, breeding_program_id => $breeding_program_id, year => $year, identifier_prefix => $identifier_prefix, trial_stock_type => $trial_stock_type, analysis_metadata => $analysis_metadata &>
 
 <&| /page/info_section.mas, title=>"Input data", collapsible=>1, collapsed=>0 &>
   Dataset name: <div id="analysis_input_data">[Not provided]</div>
 </&>
-  
-<&| /page/info_section.mas, title=>"Analysis protocol", collapsible=>1, collapsed=>0 &>
-  <div id="analysis_protocol">[Not provided]</div>
-</&>
 
-<& /page/detail_page_2_col_section.mas, trial_id => $analysis_id, info_section_title => "<h4 style='display:inline'>Analysis Summary Statistics</h4>", info_section_subtitle => 'View and download phenotype data.', buttons_html => "<button class='btn btn-sm btn-primary' style='margin:3px' id='trial_download_phenotypes_button'>Download Analysis Data</button>", icon_class => "glyphicon glyphicon-equalizer", info_section_id => "trial_detail_traits_assayed", trial_name => $analysis_name, trial_stock_type => 'analysis_instance' &>
+<& /page/detail_page_2_col_section.mas, trial_id => $analysis_id, info_section_title => "<h4 style='display:inline'>Analysis Results</h4>", info_section_subtitle => 'View and download phenotype data.', buttons_html => "<button class='btn btn-sm btn-primary' style='margin:3px' id='trial_download_phenotypes_button'>Download Analysis Data</button>", icon_class => "glyphicon glyphicon-equalizer", info_section_id => "trial_detail_traits_assayed", trial_name => $analysis_name, trial_stock_type => $trial_phenotype_stock_type &>
 
 <& /breeders_toolbox/trial/download_phenotypes_dialog.mas, trial_ids => $analysis_id, dialog_name => $analysis_name, dialog_type => 'Analysis' &>
 
 <script>
 jQuery(document).ready(function(){
 
-    jQuery.ajax({
-        type: 'GET',
-        url : '/ajax/analysis/<% $analysis_id %>/retrieve',
-        beforeSend: function() {
-            jQuery('#working_modal').modal('show');
-        },
-        success: function(response){
-            jQuery('#working_modal').modal('hide');
-            console.log(response);
-            if (response.error) {
-                alert(response.error);
-            }
-        },
-        error: function(response){
-            jQuery('#working_modal').modal('hide');
-            alert('Error getting analysis details!');
-        }
-    });
+    //jQuery.ajax({
+    //    type: 'GET',
+    //    url : '/ajax/analysis/<% $analysis_id %>/retrieve',
+    //    beforeSend: function() {
+    //        jQuery('#working_modal').modal('show');
+    //    },
+    //    success: function(response){
+    //        jQuery('#working_modal').modal('hide');
+    //        console.log(response);
+    //        if (response.error) {
+    //            alert(response.error);
+    //        }
+    //    },
+    //    error: function(response){
+    //        jQuery('#working_modal').modal('hide');
+    //        alert('Error getting analysis details!');
+    //    }
+    //});
 
 });
 </script>

@@ -84,6 +84,9 @@ $sample_observation_unit_type_name => undef
 #Specific to drone run detail page
 $drone_run_date => undef
 
+#Specific to analysis detail page
+$analysis_metadata => undef
+
 </%args>
 
 <& /util/import_javascript.mas,
@@ -345,6 +348,9 @@ $drone_run_date => undef
 % if ($info_section_id eq 'drone_run_project_details'){
                                 <& /breeders_toolbox/drone_imagery/drone_run_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, trial_description=>$trial_description, identifier_prefix=>$identifier_prefix, drone_run_date=>$drone_run_date &>
 % } #End trial_details
+% if ($info_section_id eq 'analysis_details'){
+                                <& /analyses/analysis_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, trial_description=>$trial_description, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, year=>$year, identifier_prefix=>$identifier_prefix, trial_stock_type => $trial_stock_type, analysis_metadata=>$analysis_metadata &>
+% } #End analysis_details
 % if (!$info_section_id){
                                 <p>No section specified! Main content goes here!</p>
 % }
