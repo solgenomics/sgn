@@ -258,17 +258,12 @@ sub retrieve_analyses_by_user {
 
 sub create_and_store_analysis_design {
     my $self = shift;
-    my $design_to_save = shift; #DESIGN HASHREF
+    my $precomputed_design_to_save = shift; #DESIGN HASHREF
 
     my $schema = $self->bcs_schema();
     my $dbh = $schema->storage->dbh();
 
     print STDERR "CREATE AND STORE ANALYSIS DESIGN...\n";
-
-    my $check_name = $schema->resultset("Project::Project")->find({ name => $self->name() });
-    if ($check_name) {
-        die "An analysis with name ".$self->name()." already exists in the database. Please choose another name.";
-    }
 
     if (!$self->user_id()) {
         die "Need an sp_person_id to store an analysis.";
@@ -344,7 +339,7 @@ sub create_and_store_analysis_design {
     $self->metadata()->store();
 
     my $design;
-    if (!$design_to_save) {
+    if (!$precomputed_design_to_save) {
         print STDERR "Create a new analysis design...\n";
         my $td = CXGN::Trial::TrialDesign->new();
 
@@ -361,14 +356,15 @@ sub create_and_store_analysis_design {
             die "An error occurred creating the analysis design.";
         }
     } else {
-        $design = $design_to_save;
+        $design = $precomputed_design_to_save;
     }
+    print STDERR Dumper $design;
 
     print STDERR "Store design...\n";
 
     my $saved_model_protocol_id;
-    if ($self->has_analysis_model_protocol_id && $self->get_analysis_model_protocol_id()) {
-        $saved_model_protocol_id = $self->get_analysis_model_protocol_id();
+    if ($self->analysis_model_protocol_id) {
+        $saved_model_protocol_id = $self->analysis_model_protocol_id();
     }
 
     my $analysis_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_experiment', 'experiment_type')->cvterm_id(); 

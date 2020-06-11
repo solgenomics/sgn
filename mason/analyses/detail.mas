@@ -48,10 +48,27 @@ $analysis_description
   
 </&>
 
-   
-
 <script>
-  jQuery("#working_modal").modal("show");
-  window.jsMod['analyses'].retrieve_analysis_data(<% $analysis_id %>);
-  jQuery("#working_modal").modal("hide");    
+jQuery(document).ready(function(){
+
+    jQuery.ajax({
+        type: 'GET',
+        url : '/ajax/analysis/<% $analysis_id %>/retrieve',
+        beforeSend: function() {
+            jQuery('#working_modal').modal('show');
+        },
+        success: function(response){
+            jQuery('#working_modal').modal('hide');
+            console.log(response);
+            if (response.error) {
+                alert(response.error);
+            }
+        },
+        error: function(response){
+            jQuery('#working_modal').modal('hide');
+            alert('Error getting analysis details!');
+        }
+    });
+
+});
 </script>
