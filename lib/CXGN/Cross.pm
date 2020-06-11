@@ -883,4 +883,24 @@ sub progeny_properties {
     return $data;
 }
 
+
+sub get_cross_tissue_culture_samples {
+    my $self = shift;
+    my $cross_samples_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'tissue_culture_data_json', 'stock_property')->cvterm_id();
+    my $cross_samples = $self->schema->resultset("Stock::Stockprop")->find({stock_id => $self->cross_stock_id, type_id => $cross_samples_cvterm});
+
+    my $samples_json_string;
+    if($cross_samples){
+        $samples_json_string = $cross_samples->value();
+    }
+
+    my $samples_hash_ref ={};
+    if($samples_json_string){
+        $samples_hash_ref = decode_json $samples_json_string;
+    }
+
+    return $samples_hash_ref;
+}
+
+
 1;

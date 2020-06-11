@@ -52,6 +52,7 @@ use Tie::UrlEncoder; our(%urlencode);
 use LWP::UserAgent;
 use HTML::Entities;
 use URI::Encode qw(uri_encode uri_decode);
+use Sort::Key::Natural qw(natsort);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -422,7 +423,6 @@ sub get_cross_parents :Path('/ajax/cross/accession_plot_plant_parents') Args(1) 
 }
 
 
-
 sub get_cross_properties :Path('/ajax/cross/properties') Args(1) {
     my $self = shift;
     my $c = shift;
@@ -453,6 +453,107 @@ sub get_cross_properties :Path('/ajax/cross/properties') Args(1) {
     push @props,\@row;
     $c->stash->{rest} = {data => \@props};
 
+}
+
+
+sub get_cross_tissue_culture_summary :Path('/ajax/cross/tissue_culture_summary') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $cross_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $cross_samples_obj = CXGN::Cross->new({schema=>$schema, cross_stock_id=>$cross_id});
+    my $cross_sample_data  = $cross_samples_obj->get_cross_tissue_culture_samples();
+
+    my $embryo_ids = $cross_sample_data->{'Embryo IDs'};
+    my $subculture_ids = $cross_sample_data->{'Subculture IDs'};
+    my $rooting_ids = $cross_sample_data->{'Rooting IDs'};
+    my $weaning1_ids = $cross_sample_data->{'Weaning1 IDs'};
+    my $weaning2_ids = $cross_sample_data->{'Weaning2 IDs'};
+    my $screenhouse_ids = $cross_sample_data->{'Screenhouse IDs'};
+#    my $hardening_ids = $cross_sample_data->{'Hardening IDs'};
+#    my $openfield_ids = $cross_sample_data->{'Openfield IDs'};
+
+    my @embryo_ids_array;
+    my @subculture_ids_array;
+    my @rooting_ids_array;
+    my @weaning1_ids_array;
+    my @weaning2_ids_array;
+    my @screenhouse_ids_array;
+
+    if (defined $embryo_ids) {
+        @embryo_ids_array = @$embryo_ids;
+    }
+
+    if (defined $subculture_ids) {
+        @subculture_ids_array = @$subculture_ids;
+    }
+
+    if (defined $rooting_ids) {
+        @rooting_ids_array = @$rooting_ids;
+    }
+
+    if (defined $weaning1_ids) {
+        @weaning1_ids_array = @$weaning1_ids;
+    }
+
+    if (defined $weaning2_ids) {
+        @weaning2_ids_array = @$weaning2_ids;
+    }
+
+    if (defined $screenhouse_ids) {
+        @screenhouse_ids_array = @$screenhouse_ids;
+    }
+#    my @hardening_ids_array = @$hardening_ids;
+#    my @openfield_ids_array = @$openfield_ids;
+
+    my @all_rows;
+    my @each_row;
+    my $checkmark = qq{<img src="/img/checkmark_green.jpg"/>};
+    my $x_mark = qq{<img src="/img/x_mark_red.jpg"/>};
+    my @sorted_embryo_ids = natsort @embryo_ids_array;
+
+    foreach my $embryo_id (@sorted_embryo_ids) {
+
+        if ($embryo_id) {
+            push @each_row, $embryo_id;
+        }
+
+        if ($embryo_id ~~ @subculture_ids_array) {
+            push @each_row, $checkmark;
+        } else {
+            push @each_row, $x_mark;
+        }
+
+        if ($embryo_id ~~ @rooting_ids_array) {
+            push @each_row, $checkmark;
+        } else {
+            push @each_row, $x_mark;
+        }
+
+        if ($embryo_id ~~ @weaning1_ids_array) {
+            push @each_row, $checkmark;
+        } else {
+            push @each_row, $x_mark;
+        }
+
+        if ($embryo_id ~~ @weaning2_ids_array) {
+            push @each_row, $checkmark;
+        } else {
+            push @each_row, $x_mark;
+        }
+
+        if ($embryo_id ~~ @screenhouse_ids_array) {
+            push @each_row, $checkmark;
+        } else {
+            push @each_row, $x_mark;
+        }
+
+        push @all_rows, [@each_row];
+        @each_row =();
+    }
+#    print STDERR "SORTED EMBRYO IDS =".Dumper(\@sorted_embryo_ids)."\n";
+    $c->stash->{rest} = { data => \@all_rows };
 }
 
 
