@@ -151,7 +151,11 @@ jQuery(document).ready(function () {
             datatables_display_phenosummary(type);
         });
 
+%  if ($trial_stock_type eq 'analysis_instance') {
+        trait_summary_hist_display_change('analysis_instance');
+%  } else {
         trait_summary_hist_display_change('plot');
+%  }
 
     });
 
