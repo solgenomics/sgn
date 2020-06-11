@@ -4605,9 +4605,14 @@ sub crosses_POST {
 	my $c = shift;
 	my ($auth,$user_id) = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
+	my $data = $clean_inputs;
+	my @all_crosses;
+	foreach my $cross (values %{$data}) {
+	    push @all_crosses, $cross;
+	}
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Crossing');
-	my $brapi_package_result = $brapi_module->store_crosses($clean_inputs,$c,$user_id);
+	my $brapi_package_result = $brapi_module->store_crosses(\@all_crosses,$c,$user_id);
 	_standard_response_construction($c, $brapi_package_result);
 }
 
@@ -4677,9 +4682,14 @@ sub seedlot_transactions_POST {
 	my $c = shift;
 	my ($auth,$user_id) = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
+	my $data = $clean_inputs;
+	my @all_data;
+	foreach my $transaction (values %{$data}) {
+	    push @all_data, $transaction;
+	}
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('SeedLots');
-	my $brapi_package_result = $brapi_module->store_seedlot_transaction($clean_inputs,$c,$user_id);
+	my $brapi_package_result = $brapi_module->store_seedlot_transaction(\@all_data,$c,$user_id);
 	my $status = $brapi_package_result->{status};
 	my $http_status_code = _get_http_status_code($status);
 

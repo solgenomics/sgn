@@ -424,7 +424,7 @@ sub store_seedlots {
 
 sub store_seedlot_transaction {
     my $self = shift;
-    my $params = shift;
+    my $data = shift;
     my $c = shift;
     my $user_id = shift;
 
@@ -448,75 +448,78 @@ sub store_seedlot_transaction {
     my $to_stock_uniquename;
     my $to_existing_sl;
     my $from_existing_sl;
+    my $to_stock_id;
+    my $transaction_id;
 
-    my $amount = $params->{amount}->[0] || undef;
-    my $weight = $params->{weight}->[0] || undef;
-    my $timestamp = $params->{transactionTimestamp}->[0] || undef;
-    my $description = $params->{transactionDescription}[0] || undef;
-    my $from_stock_id = $params->{fromSeedLotDbId}->[0] || undef;
-    my $to_stock_id = $params->{toSeedLotDbId}->[0] || undef;
-    my $additionalInfo = $params->{additionalInfo} || undef; #not implemented
-    my $externalReferences = $params->{externalReferences} || undef; #not implemented
-    my $units = $params->{units} || undef; #not implemented
-    my $factor = '-1';
+    foreach my $params (@$data){
+        my $amount = $params->{amount} || undef;
+        my $weight = $params->{weight} || undef;
+        my $timestamp = $params->{transactionTimestamp} || undef;
+        my $description = $params->{transactionDescription} || undef;
+        my $from_stock_id = $params->{fromSeedLotDbId} || undef;
+        $to_stock_id = $params->{toSeedLotDbId} || undef;
+        my $additionalInfo = $params->{additionalInfo} || undef; #not implemented
+        my $externalReferences = $params->{externalReferences} || undef; #not implemented
+        my $units = $params->{units} || undef; #not implemented
+        my $factor = '-1';
 
-    if ($from_stock_id){
-        $from_stock_uniquename = $schema->resultset('Stock::Stock')->find({stock_id=>$from_stock_id})->uniquename();
-        if (!$from_stock_uniquename){
-            $c->stash->{rest} = {error=>'The given seedlot uniquename has been taken. Please use another name or use the existing seedlot.'};
+        if ($from_stock_id){
+            $from_stock_uniquename = $schema->resultset('Stock::Stock')->find({stock_id=>$from_stock_id})->uniquename();
+            if (!$from_stock_uniquename){
+                $c->stash->{rest} = {error=>'The given seedlot uniquename has been taken. Please use another name or use the existing seedlot.'};
+                $c->detach();
+            }
+            $from_existing_sl = CXGN::Stock::Seedlot->new(
+                schema => $schema,
+                seedlot_id => $from_stock_id,
+            );
+        }
+        
+        if ($to_stock_id){
+            $to_stock_uniquename = $schema->resultset('Stock::Stock')->find({stock_id=>$to_stock_id})->uniquename();
+            if (!$to_stock_uniquename){
+                $c->stash->{rest} = {error=>'The given seedlot uniquename has been taken. Please use another name or use the existing seedlot.'};
+                $c->detach();
+            }
+            $to_existing_sl = CXGN::Stock::Seedlot->new(
+                schema => $schema,
+                seedlot_id => $to_stock_id,
+            );
+        }
+        if (!$weight && !$amount){
+            $c->stash->{rest} = {error=>'A seedlot must have either a weight or an amount.'};
             $c->detach();
         }
-        $from_existing_sl = CXGN::Stock::Seedlot->new(
-            schema => $schema,
-            seedlot_id => $from_stock_id,
-        );
-    }
-    
-    if ($to_stock_id){
-        $to_stock_uniquename = $schema->resultset('Stock::Stock')->find({stock_id=>$to_stock_id})->uniquename();
-        if (!$to_stock_uniquename){
-            $c->stash->{rest} = {error=>'The given seedlot uniquename has been taken. Please use another name or use the existing seedlot.'};
+        my $timestamp_format = check_timestamp($timestamp);
+        if (!$timestamp_format){
+            $c->stash->{rest} = {error=>'A seedlot must have a proper timestamp for the transaction.'};
             $c->detach();
         }
-        $to_existing_sl = CXGN::Stock::Seedlot->new(
-            schema => $schema,
-            seedlot_id => $to_stock_id,
-        );
-    }
-    if (!$weight && !$amount){
-        $c->stash->{rest} = {error=>'A seedlot must have either a weight or an amount.'};
-        $c->detach();
-    }
-    my $timestamp_format = check_timestamp($timestamp);
-    if (!$timestamp_format){
-        $c->stash->{rest} = {error=>'A seedlot must have a proper timestamp for the transaction.'};
-        $c->detach();
-    }
 
-    my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
-    $transaction->factor($factor);
-    $transaction->to_stock([$to_stock_id, $to_stock_uniquename]);
-    $transaction->from_stock([$from_stock_id, $from_stock_uniquename]);
-    $transaction->amount($amount);
-    $transaction->weight_gram($weight) if ($weight);
-    $transaction->timestamp($timestamp);
-    $transaction->description($description);
-    $transaction->operator($operator);
-    my $transaction_id = $transaction->store();
+        my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
+        $transaction->factor($factor);
+        $transaction->to_stock([$to_stock_id, $to_stock_uniquename]);
+        $transaction->from_stock([$from_stock_id, $from_stock_uniquename]);
+        $transaction->amount($amount);
+        $transaction->weight_gram($weight) if ($weight);
+        $transaction->timestamp($timestamp);
+        $transaction->description($description);
+        $transaction->operator($operator);
+        $transaction_id = $transaction->store();
 
-    if ($from_existing_sl){
-        $from_existing_sl->set_current_count_property();
-        $from_existing_sl->set_current_weight_property() if ($weight);
-    }
-    if ($to_existing_sl){
-        $to_existing_sl->set_current_count_property();
-        $to_existing_sl->set_current_weight_property() if ($weight);
+        if ($from_existing_sl){
+            $from_existing_sl->set_current_count_property();
+            $from_existing_sl->set_current_weight_property() if ($weight);
+        }
+        if ($to_existing_sl){
+            $to_existing_sl->set_current_count_property();
+            $to_existing_sl->set_current_weight_property() if ($weight);
+        }
+        $c->stash->{rest} = { success => 1, transaction_id => $transaction_id };
     }
 
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
-
-    $c->stash->{rest} = { success => 1, transaction_id => $transaction_id };
 
     my $seedlot = CXGN::Stock::Seedlot->new(
         schema => $schema,

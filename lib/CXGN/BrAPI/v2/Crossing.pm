@@ -339,7 +339,7 @@ sub crosses {
 
 sub store_crosses {
     my $self = shift;
-    my $params = shift;
+    my $data = shift;
     my $c = shift;
     my $user_id = shift;
 
@@ -357,86 +357,102 @@ sub store_crosses {
     }
     my $person = CXGN::People::Person->new($dbh, $user_id);
     my $user_name = $person->get_username;
+    my $crossing_trial_id;
+    my $crossing_trial_name;
 
-    my $cross_name = $params->{crossName} ? $params->{crossName}[0] : undef;
-    my $cross_type = $params->{crossType} ? $params->{crossType}[0] : undef;
-    my $crossing_trial_id = $params->{crossingProjectDbId} ? $params->{crossingProjectDbId}[0] : undef;
-    my $maternal_name = $params->{germplasmName} ? $params->{germplasmName}[0] : undef;
-    my $paternal_name = $params->{germplasmName1} ? $params->{germplasmName1}[0] : undef;
-    my $female_plot_id = $params->{observationUnitDbId} ? $params->{observationUnitDbId}[0] : undef;
-    my $male_plot_id = $params->{observationUnitDbId1} ? $params->{observationUnitDbId1}[0] : undef;
-    my $cross_combination = $params->{crossName} ? $params->{crossName}[0] : undef;
-    my $crossing_trial_name = $params->{crossingProjectName} ? $params->{crossingProjectName}[0] : undef;
-    my $crossing_attributes = $params->{crossAttributes} ? $params->{crossAttributes}[0] : undef; #not supported
-    my $crossing_timeStamp = $params->{pollinationTimeStamp} ? $params->{pollinationTimeStamp}[0] : undef; #not supported
-    $cross_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end.
-
-    if ($cross_type eq "polycross") {
-        print STDERR "Handling a polycross\n";
-        my @maternal_parents = split (',', $maternal_name);
-        print STDERR "Maternal parents array:" . @maternal_parents . "\n Maternal parents with ref:" . \@maternal_parents . "\n Maternal parents with dumper:". Dumper(@maternal_parents) . "\n";
-        my $paternal = $cross_name . '_population';
-        my $population_add = CXGN::Pedigree::AddPopulations->new({ schema => $chado_schema, name => $paternal, members =>  \@maternal_parents} );
-        $population_add->add_population();
-        $cross_type = 'polycross';
-        print STDERR "Scalar maternatal paretns:" . scalar @maternal_parents;
-        for (my $i = 0; $i < scalar @maternal_parents; $i++) {
-            my $maternal = $maternal_parents[$i];
-            my $polycross_name = $cross_name . '_' . $maternal;
-            print STDERR "First polycross to add is $polycross_name with amternal $maternal and paternal $paternal\n";
-            my $success = $self->add_individual_cross($c, $chado_schema, $polycross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal, $user_name);
-            if (!$success) {
-                return CXGN::BrAPI::JSONResponse->return_error($self->status, "Cross: $polycross_name could not be stored");
-            }
-            print STDERR "polycross addition  $polycross_name worked successfully\n";
+    foreach my $params (@$data){
+        my $cross_name = $params->{crossName} ? $params->{crossName}  : undef;
+        my $cross_type = $params->{crossType} ? $params->{crossType}  : undef;
+        $crossing_trial_id = $params->{crossingProjectDbId} ? $params->{crossingProjectDbId}  : undef;
+        my $parent =  $params->{parent1}->{parentType}; #First female is maternal name, second parent is paternal_name
+        my $maternal_name;
+        my $paternal_name;
+        my $female_plot_id;
+        my $male_plot_id;
+        if($parent eq 'FEMALE'){
+            $maternal_name = $params->{parent1}->{germplasmName} ? $params->{parent1}->{germplasmName}  : undef;
+            $paternal_name = $params->{parent2}->{germplasmName} ? $params->{parent2}->{germplasmName}  : undef;
+            $female_plot_id = $params->{parent1}->{observationUnitDbId} ? $params->{parent1}->{observationUnitDbId}  : undef;
+            $male_plot_id = $params->{parent2}->{observationUnitDbId} ? $params->{parent2}->{observationUnitDbId}  : undef;
+        } else {
+            $maternal_name = $params->{parent2}->{germplasmName} ? $params->{parent2}->{germplasmName}  : undef;
+            $paternal_name = $params->{parent1}->{germplasmName} ? $params->{parent1}->{germplasmName}  : undef;
+            $female_plot_id = $params->{parent2}->{observationUnitDbId} ? $params->{parent2}->{observationUnitDbId}  : undef;
+            $male_plot_id = $params->{parent1}->{observationUnitDbId} ? $params->{parent1}->{observationUnitDbId}  : undef;
         }
-    }
-    elsif ($cross_type eq "reciprocal") {
-        $cross_type = 'biparental';
-        my @maternal_parents = split (',', $maternal_name);
-        for (my $i = 0; $i < scalar @maternal_parents; $i++) {
-            my $maternal = $maternal_parents[$i];
-            for (my $j = 0; $j < scalar @maternal_parents; $j++) {
-                my $paternal = $maternal_parents[$j];
-                if ($maternal eq $paternal) {
-                    next;
-                }
-                my $reciprocal_cross_name = $cross_name . '_' . $maternal . 'x' . $paternal . '_reciprocalcross';
-                my $success = $self->add_individual_cross($c, $chado_schema, $reciprocal_cross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal, $user_name);
+        my $cross_combination = $params->{crossName} ? $params->{crossName}  : undef;
+        $crossing_trial_name = $params->{crossingProjectName} ? $params->{crossingProjectName}  : undef;
+        my $crossing_attributes = $params->{crossAttributes} ? $params->{crossAttributes}  : undef; #not supported
+        my $crossing_timeStamp = $params->{pollinationTimeStamp} ? $params->{pollinationTimeStamp}  : undef; #not supported
+        $cross_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end.
+
+        if ($cross_type eq "polycross") {
+            print STDERR "Handling a polycross\n";
+            my @maternal_parents = split (',', $maternal_name);
+            print STDERR "Maternal parents array:" . @maternal_parents . "\n Maternal parents with ref:" . \@maternal_parents . "\n Maternal parents with dumper:". Dumper(@maternal_parents) . "\n";
+            my $paternal = $cross_name . '_population';
+            my $population_add = CXGN::Pedigree::AddPopulations->new({ schema => $chado_schema, name => $paternal, members =>  \@maternal_parents} );
+            $population_add->add_population();
+            $cross_type = 'polycross';
+            print STDERR "Scalar maternatal paretns:" . scalar @maternal_parents;
+            for (my $i = 0; $i < scalar @maternal_parents; $i++) {
+                my $maternal = $maternal_parents[$i];
+                my $polycross_name = $cross_name . '_' . $maternal;
+                print STDERR "First polycross to add is $polycross_name with amternal $maternal and paternal $paternal\n";
+                my $success = $self->add_individual_cross($c, $chado_schema, $polycross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal, $user_name);
                 if (!$success) {
-                    return CXGN::BrAPI::JSONResponse->return_error($self->status, "Cross: $reciprocal_cross_name could not be stored");
+                    return CXGN::BrAPI::JSONResponse->return_error($self->status, "Cross: $polycross_name could not be stored");
+                }
+                print STDERR "polycross addition  $polycross_name worked successfully\n";
+            }
+        }
+        elsif ($cross_type eq "reciprocal") {
+            $cross_type = 'biparental';
+            my @maternal_parents = split (',', $maternal_name);
+            for (my $i = 0; $i < scalar @maternal_parents; $i++) {
+                my $maternal = $maternal_parents[$i];
+                for (my $j = 0; $j < scalar @maternal_parents; $j++) {
+                    my $paternal = $maternal_parents[$j];
+                    if ($maternal eq $paternal) {
+                        next;
+                    }
+                    my $reciprocal_cross_name = $cross_name . '_' . $maternal . 'x' . $paternal . '_reciprocalcross';
+                    my $success = $self->add_individual_cross($c, $chado_schema, $reciprocal_cross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal, $user_name);
+                    if (!$success) {
+                        return CXGN::BrAPI::JSONResponse->return_error($self->status, "Cross: $reciprocal_cross_name could not be stored");
+                    }
                 }
             }
         }
-    }
-    elsif ($cross_type eq "multicross") {
-        $cross_type = 'biparental';
-        my @maternal_parents = split (',', $maternal_name);
-        my @paternal_parents = split (',', $paternal_name);
-        for (my $i = 0; $i < scalar @maternal_parents; $i++) {
-            my $maternal = $maternal_parents[$i];
-            my $paternal = $paternal_parents[$i];
-            my $multicross_name = $cross_name . '_' . $maternal . 'x' . $paternal . '_multicross';
-            my $success = $self->add_individual_cross($c, $chado_schema, $multicross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal, $user_name);
-            if (!$success) {
-                return CXGN::BrAPI::JSONResponse->return_error($self->status, "Cross: $multicross_name could not be stored");
+        elsif ($cross_type eq "multicross") {
+            $cross_type = 'biparental';
+            my @maternal_parents = split (',', $maternal_name);
+            my @paternal_parents = split (',', $paternal_name);
+            for (my $i = 0; $i < scalar @maternal_parents; $i++) {
+                my $maternal = $maternal_parents[$i];
+                my $paternal = $paternal_parents[$i];
+                my $multicross_name = $cross_name . '_' . $maternal . 'x' . $paternal . '_multicross';
+                my $success = $self->add_individual_cross($c, $chado_schema, $multicross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal, $user_name);
+                if (!$success) {
+                    return CXGN::BrAPI::JSONResponse->return_error($self->status, "Cross: $multicross_name could not be stored");
+                }
             }
         }
-    }
-    else {
-        my $maternal = $maternal_name;
-        my $paternal = $paternal_name;
-        my $success = $self->add_individual_cross($c, $chado_schema, $cross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal, $user_name, $cross_combination);
+        else {
+            my $maternal = $maternal_name;
+            my $paternal = $paternal_name;
+            my $success = $self->add_individual_cross($c, $chado_schema, $cross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal, $user_name, $cross_combination);
 
-        if (!$success) {
-            return CXGN::BrAPI::JSONResponse->return_error($self->status, "Cross: $cross_name could not be stored");
+            if (!$success) {
+                return CXGN::BrAPI::JSONResponse->return_error($self->status, "Cross: $cross_name could not be stored");
+            }
         }
-    }
-    $c->stash->{rest} = {success => "1",};
+        $c->stash->{rest} = {success => "1",};
 
-    if ($@) {
-        return CXGN::BrAPI::JSONResponse->return_error($self->status, $@);
-    };
+        if ($@) {
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, $@);
+        };
+    }
 
     my $trial = CXGN::Cross->new({ schema => $self->bcs_schema, trial_id => $crossing_trial_id});
     my $result = $trial->get_crosses_and_details_in_crossingtrial();
@@ -484,7 +500,7 @@ sub store_crosses {
     my @data_files;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
 
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Crosses stored');
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Crosses result constructed');
 }
 
 sub update_crosses {
