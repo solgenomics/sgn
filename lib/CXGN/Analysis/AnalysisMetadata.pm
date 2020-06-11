@@ -63,6 +63,29 @@ has 'modified_timestamp' => (isa => 'Maybe[Str]', is => 'rw');
 
 has 'model_parameters' => (isa => "HashRef", is => 'rw');
 
+=head2 model_language();
+
+=cut
+
+has 'model_language' => (isa => "Str", is => 'rw');
+
+=head2 model_type();
+
+=cut
+
+has 'model_type' => (isa => "Str", is => 'rw');
+
+=head2 application_name();
+
+=cut
+
+has 'application_name' => (isa => "Str", is => 'rw');
+
+=head2 application_version();
+
+=cut
+
+has 'application_version' => (isa => "Str", is => 'rw');
 
 =head1 INHERITED METHODS
 
@@ -82,7 +105,7 @@ sub BUILD {
     $self->prop_type('analysis_metadata_json');
     $self->prop_id($args->{prop_id});
     $self->cv_name('project_property');
-    $self->allowed_fields([ qw | dataset_id dataset_data analysis_protocol create_timestamp modified_timestamp model_parameters | ]);
+    $self->allowed_fields([ qw | dataset_id dataset_data analysis_protocol create_timestamp modified_timestamp model_parameters model_language model_type application_name application_version| ]);
     $self->parent_table('project');
     $self->parent_primary_key('project_id');
 

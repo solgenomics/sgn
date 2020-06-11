@@ -237,6 +237,7 @@ sub store_data {
         $analysis_model_protocol_id = $mo->save_model();
     }
 
+    my $saved_analysis_id;
     if ($analysis_to_save_boolean eq 'yes') {
         #Project BUILD inserts project entry
         my $a = CXGN::Analysis->new({
@@ -244,6 +245,7 @@ sub store_data {
             people_schema => $people_schema,
             name => $analysis_name,
         });
+        $saved_analysis_id = $a->get_trial_id();
 
         if ($analysis_dataset_id !~ /^\d+$/) {
             print STDERR "Dataset ID $analysis_dataset_id not accetable.\n";
@@ -261,7 +263,12 @@ sub store_data {
 
         $a->metadata()->traits($analysis_trait_names);
         $a->metadata()->analysis_protocol($analysis_protocol);
+        $a->metadata()->model_type($analysis_model_type);
+        $a->metadata()->model_language($analysis_model_language);
+        $a->metadata()->application_version($analysis_model_application_version);
+        $a->metadata()->application_name($analysis_model_application_name);
         $a->metadata()->model_parameters($analysis_model_parameters);
+
         $a->analysis_model_protocol_id($analysis_model_protocol_id);
 
         my ($verified_warning, $verified_error);
@@ -333,13 +340,8 @@ sub store_data {
             $c->stash->{rest} = { error => "An error occurred storing the values ($@).\n" };
             return;
         }
-
-        $c->stash->{rest} = {
-            success => 1,
-            traits_stored => $analysis_trait_names,
-        };
     }
-    $c->stash->{rest} = { success => 1 };
+    $c->stash->{rest} = { success => 1, analysis_id => $saved_analysis_id, model_id => $analysis_model_protocol_id };
 }
 
 sub list_analyses_by_user_table :Path('/ajax/analyses/by_user') Args(0) {

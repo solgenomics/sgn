@@ -3609,6 +3609,10 @@ jQuery(document).ready(function() {
         //jQuery('#generic_save_analysis_design').val();
         jQuery('#generic_save_analysis_result_values').val(JSON.stringify(manage_drone_imagery_calculate_statistics_response.result_blup_genetic_data));
         jQuery('#generic_save_analysis_result_values_type').val('analysis_result_values_match_accession_names');
+        jQuery('#generic_save_analysis_model_language').val('R');
+        jQuery('#generic_save_analysis_model_type').val(manage_drone_imagery_calculate_statistics_select);
+        jQuery('#generic_save_analysis_model_application_name').val('NickMorales Mixed Models');
+        jQuery('#generic_save_analysis_model_application_version').val('V1.01');
 
         //These model weights don't need to be saved
         jQuery('#generic_save_analysis_model_to_save').prop('disabled','disabled');
