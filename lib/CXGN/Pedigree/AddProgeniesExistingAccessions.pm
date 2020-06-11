@@ -98,6 +98,7 @@ sub add_progenies_existing_accessions {
                     type_id => $female_parent_cvterm->cvterm_id(),
                     object_id => $progeny_rs->stock_id(),
                     subject_id => $female_parent->subject_id(),
+                    value => $female_parent->value(),
                 });
             }
 
