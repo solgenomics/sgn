@@ -135,6 +135,8 @@
     <th>Male Parent / Population</th>
     <th>Cross Unique ID</th>
     <th>Cross Type</th>
+    <th>Family Name</th>
+    <th>Crossing Experiment</th>
   </tr>
 </thead>
 
@@ -278,7 +280,7 @@ jQuery(document).ready(function () {
            });
 
 
-    $('#search_crosses').click(function(){
+    jQuery('#search_crosses').click(function(){
 
       var table = jQuery('#cross_search_results').DataTable({
 
@@ -286,12 +288,11 @@ jQuery(document).ready(function () {
         'paging'     : true,
         'ordering'   : false,
         'destroy'    : true,
-        'ajax':{'url':'/ajax/search/cross_info',
-          data:{'female_parent':$('#female_parent').val(),
+        'ajax':{'url':'/ajax/search/cross_details',
+        data:{'female_parent':$('#female_parent').val(),
                'male_parent':$('#cross_male_parent').val()},
-               }
+                }
             });
-
 
       jQuery('#cross_search_results').on( 'draw.dt', function (){
               var name_links = table.column(2).data();

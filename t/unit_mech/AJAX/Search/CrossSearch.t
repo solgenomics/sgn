@@ -52,7 +52,7 @@ is_deeply($response, {'data' => [
 ['TestPopulation2']
 ]},'male parent search');
 
-$mech->post_ok('http://localhost:3010/ajax/search/cross_info',["female_parent" => "TestAccession1","male_parent" => "TestAccession2"] );
+$mech->post_ok('http://localhost:3010/ajax/search/cross_details',["female_parent" => "TestAccession1","male_parent" => "TestAccession2"] );
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 
