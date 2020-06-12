@@ -6,7 +6,7 @@ use File::Slurp;
 use Data::Dumper;
 use CXGN::Phenotypes::StorePhenotypes;
 use CXGN::Trial::TrialDesign;
-use CXGN::AnalysisModel::SaveModel;
+use CXGN::Analysis::AnalysisCreate;
 use URI::FromHash 'uri';
 use JSON;
 use CXGN::BreederSearch;
@@ -209,191 +209,57 @@ sub store_data {
     my $composable_cvterm_delimiter = $c->config->{composable_cvterm_delimiter};
     my $composable_cvterm_format = $c->config->{composable_cvterm_format};
 
-    my $model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, $analysis_model_type, 'protocol_type')->cvterm_id();
+    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
 
-    my $mo = CXGN::AnalysisModel::SaveModel->new({
+    my $m = CXGN::Analysis::AnalysisCreate->new({
         bcs_schema=>$bcs_schema,
+        people_schema=>$people_schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
         archive_path=>$c->config->{archive_path},
-        model_name=>$analysis_model_name,
-        model_description=>$analysis_model_description,
-        model_language=>$analysis_model_language,
-        model_type_cvterm_id=>$model_type_cvterm_id,
-        model_properties=>$analysis_model_properties,
-        application_name=>$analysis_model_application_name,
-        application_version=>$analysis_model_application_version,
-        dataset_id=>$analysis_dataset_id,
-        is_public=>$analysis_model_is_public,
-        archived_model_file_type=>$analysis_model_file_type,
-        model_file=>$analysis_model_file,
-        archived_training_data_file_type=>$analysis_model_training_data_file_type,
-        archived_training_data_file=>$analysis_model_training_data_file,
-        archived_auxiliary_files=>$analysis_model_auxiliary_files,
+        tempfile_for_deleting_nd_experiment_ids=>$temp_file_nd_experiment_id,
+        base_path=>$c->config->{basepath},
+        dbhost=>$c->config->{dbhost},
+        dbname=>$c->config->{dbname},
+        dbuser=>$c->config->{dbuser},
+        dbpass=>$c->config->{dbpass},
+        analysis_to_save_boolean=>$analysis_to_save_boolean,
+        analysis_name=>$analysis_name,
+        analysis_description=>$analysis_description,
+        analysis_year=>$analysis_year,
+        analysis_breeding_program_id=>$analysis_breeding_program_id,
+        analysis_protocol=>$analysis_protocol,
+        analysis_dataset_id=>$analysis_dataset_id,
+        analysis_accession_names=>$analysis_accession_names,
+        analysis_trait_names=>$analysis_trait_names,
+        analysis_statistical_ontology_term=>$analysis_statistical_ontology_term,
+        analysis_precomputed_design_optional=>$analysis_precomputed_design_optional,
+        analysis_result_values=>$analysis_result_values,
+        analysis_result_values_type=>$analysis_result_values_type,
+        analysis_model_name=>$analysis_model_name,
+        analysis_model_description=>$analysis_model_description,
+        analysis_model_is_public=>$analysis_model_is_public,
+        analysis_model_language=>$analysis_model_language,
+        analysis_model_type=>$analysis_model_type,
+        analysis_model_properties=>$analysis_model_properties,
+        analysis_model_application_name=>$analysis_model_application_name,
+        analysis_model_application_version=>$analysis_model_application_version,
+        analysis_model_file=>$analysis_model_file,
+        analysis_model_file_type=>$analysis_model_file_type,
+        analysis_model_training_data_file=>$analysis_model_training_data_file,
+        analysis_model_training_data_file_type=>$analysis_model_training_data_file_type,
+        analysis_model_auxiliary_files=>$analysis_model_auxiliary_files,
+        allowed_composed_cvs=>\@allowed_composed_cvs,
+        composable_cvterm_delimiter=>$composable_cvterm_delimiter,
+        composable_cvterm_format=>$composable_cvterm_format,
         user_id=>$user_id,
+        user_name=>$user_name,
         user_role=>$user_role
     });
-    my $analysis_model_protocol_id = $mo->save_model()->{nd_protocol_id};
+    my $saved_analysis_object = $m->store();
 
-    my $saved_analysis_id;
-    if ($analysis_to_save_boolean eq 'yes') {
-
-        my %trait_id_map;
-        foreach my $trait_name (@$analysis_trait_names) {
-            my $trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($bcs_schema, $trait_name)->cvterm_id();
-            $trait_id_map{$trait_name} = $trait_cvterm_id;
-        }
-        my @trait_ids = values %trait_id_map;
-
-        my $stat_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($bcs_schema, $analysis_statistical_ontology_term)->cvterm_id();
-
-        my $traits = SGN::Model::Cvterm->get_traits_from_component_categories($bcs_schema, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, {
-            object => [],
-            attribute => [$stat_cvterm_id],
-            method => [],
-            unit => [],
-            trait => \@trait_ids,
-            tod => [],
-            toy => [],
-            gen => [],
-        });
-        my $existing_traits = $traits->{existing_traits};
-        my $new_traits = $traits->{new_traits};
-        # print STDERR Dumper $new_traits;
-        # print STDERR Dumper $existing_traits;
-        my %new_trait_names;
-        foreach (@$new_traits) {
-            my $components = $_->[0];
-            $new_trait_names{$_->[1]} = join ',', @$components;
-        }
-
-        my $onto = CXGN::Onto->new( { schema => $bcs_schema } );
-        my $new_terms = $onto->store_composed_term(\%new_trait_names);
-
-        my %composed_trait_map;
-        while (my($trait_name, $trait_id) = each %trait_id_map) {
-            my $composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($bcs_schema, [$trait_id, $stat_cvterm_id]);
-            my $composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($bcs_schema, $composed_cvterm_id, 'extended');
-            $composed_trait_map{$trait_name} = $composed_trait_name;
-        }
-        my @composed_trait_names = values %composed_trait_map;
-
-        #Project BUILD inserts project entry
-        my $a = CXGN::Analysis->new({
-            bcs_schema => $bcs_schema,
-            people_schema => $people_schema,
-            metadata_schema => $metadata_schema,
-            phenome_schema => $phenome_schema,
-            name => $analysis_name,
-        });
-        $saved_analysis_id = $a->get_trial_id();
-
-        if ($analysis_dataset_id !~ /^\d+$/) {
-            print STDERR "Dataset ID $analysis_dataset_id not accetable.\n";
-            $analysis_dataset_id = undef;
-        }
-
-        if ($analysis_dataset_id) {
-            $a->metadata()->dataset_id($analysis_dataset_id);
-        }
-
-        my $year_type_id = $bcs_schema->resultset('Cv::Cvterm')->find({ name => 'project year' })->cvterm_id;
-        my $year_rs = $bcs_schema->resultset('Project::Projectprop')->create({
-            type_id => $year_type_id,
-            value => $analysis_year,
-            project_id => $saved_analysis_id
-        });
-
-        $a->year($analysis_year);
-        $a->breeding_program_id($analysis_breeding_program_id);
-        $a->accession_names($analysis_accession_names);
-        $a->description($analysis_description);
-        $a->user_id($user_id);
-
-        $a->metadata()->traits(\@composed_trait_names);
-        $a->metadata()->analysis_protocol($analysis_protocol);
-        $a->analysis_model_protocol_id($analysis_model_protocol_id);
-
-        my ($verified_warning, $verified_error);
-        print STDERR "Storing the analysis...\n";
-        eval {
-            ($verified_warning, $verified_error) = $a->create_and_store_analysis_design($analysis_precomputed_design_optional);
-        };
-
-        my @errors;
-        my @warnings;
-        if ($@) {
-            push @errors, $@;
-        }
-        elsif ($verified_warning) {
-            push @warnings, $verified_warning;
-        }
-        elsif ($verified_error) {
-            push @errors, $verified_error;
-        }
-
-        if (@errors) {
-            print STDERR "SORRY! Errors: ".join("\n", @errors);
-            $c->stash->{rest} = { error => join "; ", @errors };
-            return;
-        }
-
-        print STDERR "Store analysis values...\n";
-        #print STDERR "value hash: ".Dumper($values);
-        print STDERR "traits: ".join(",",@composed_trait_names);
-
-        my $analysis_result_values_save;
-        if ($analysis_result_values_type eq 'analysis_result_values_match_precomputed_design') {
-            while (my($analysis_instance_name, $trait_obj) = each %$analysis_result_values) {
-                while (my($trait_name, $val) = each %$trait_obj) {
-                    $analysis_result_values_save->{$analysis_instance_name}->{$composed_trait_map{$trait_name}} = $val;
-                }
-            }
-        }
-        elsif ($analysis_result_values_type eq 'analysis_result_values_match_accession_names') {
-            my %analysis_result_values_fix_plot_names;
-            my $design = $a->design();
-            foreach (values %$design) {
-                $analysis_result_values_fix_plot_names{$_->{stock_name}} = $_->{plot_name};
-            }
-            while (my ($accession_name, $trait_pheno) = each %$analysis_result_values) {
-                while (my($trait_name, $val) = each %$trait_pheno) {
-                    $analysis_result_values_save->{$analysis_result_values_fix_plot_names{$accession_name}}->{$composed_trait_map{$trait_name}} = $val;
-                }
-            }
-        }
-        my @analysis_instance_names = keys %$analysis_result_values_save;
-        # print STDERR Dumper $analysis_result_values_save;
-
-        my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
-        my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
-        eval {
-            $a->store_analysis_values(
-                $metadata_schema,
-                $phenome_schema,
-                $analysis_result_values_save,
-                \@analysis_instance_names,
-                \@composed_trait_names,
-                $user_name,
-                $c->config->{basepath},
-                $c->config->{dbhost},
-                $c->config->{dbname},
-                $c->config->{dbuser},
-                $c->config->{dbpass},
-                $temp_file_nd_experiment_id,
-            );
-        };
-
-        if ($@) {
-            print STDERR "An error occurred storing analysis values ($@).\n";
-            $c->stash->{rest} = { error => "An error occurred storing the values ($@).\n" };
-            return;
-        }
-
-        my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
-        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
-    }
-    $c->stash->{rest} = { success => 1, analysis_id => $saved_analysis_id, model_id => $analysis_model_protocol_id };
+    $c->stash->{rest} = $saved_analysis_object;
 }
 
 sub list_analyses_by_user_table :Path('/ajax/analyses/by_user') Args(0) {
