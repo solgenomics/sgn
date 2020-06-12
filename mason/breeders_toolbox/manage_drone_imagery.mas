@@ -3607,7 +3607,7 @@ jQuery(document).ready(function() {
             jQuery('#generic_save_analysis_statistical_ontology_term').val('Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and row and column spatial effects computed using Sommer R|SGNSTAT:0000001');
         }
         if (manage_drone_imagery_calculate_statistics_select == 'lmer_germplasmname_replicate') {
-            drone_imagery_stats_protocol = 'lmer(t1~replicate + 1|germplasmName, data=mat)';
+            drone_imagery_stats_protocol = 'lmer(t1~replicate + 1|germplasmName, data=mat, na.action = na.omit)';
             drone_imagery_stats_parameters = {
                 'protocol':drone_imagery_stats_protocol
             };

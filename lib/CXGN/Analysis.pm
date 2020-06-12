@@ -396,7 +396,7 @@ sub create_and_store_analysis_design {
     } else {
         $design = $precomputed_design_to_save;
     }
-    print STDERR Dumper $design;
+    # print STDERR Dumper $design;
 
     print STDERR "Store design...\n";
 

@@ -95,11 +95,6 @@ has 'model_type_cvterm_id' => (
     required => 1
 );
 
-has 'model_experiment_type_cvterm_id' => (
-    isa => 'Int|Undef',
-    is => 'rw',
-);
-
 has 'model_properties' => (
     isa => 'HashRef',
     is => 'rw',
@@ -129,13 +124,13 @@ has 'is_public' => (
 );
 
 has 'archived_model_file_type' => (
-    isa => 'Str',
+    isa => 'Str|Undef',
     is => 'rw',
     required => 1
 );
 
 has 'model_file' => (
-    isa => 'Str',
+    isa => 'Str|Undef',
     is => 'rw',
     required => 1
 );
@@ -178,7 +173,7 @@ sub save_model {
     my $model_description = $self->model_description();
     my $model_language = $self->model_language();
     my $model_type_cvterm_id = $self->model_type_cvterm_id();
-    my $model_experiment_type_cvterm_id = $self->model_experiment_type_cvterm_id() || SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_experiment', 'experiment_type')->cvterm_id();
+    my $model_experiment_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_experiment', 'experiment_type')->cvterm_id();
     my $model_properties = $self->model_properties();
     my $model_file = $self->model_file();
     my $application_name = $self->application_name();

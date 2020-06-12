@@ -61,6 +61,7 @@ use CXGN::Metadata::Schema;
 use CXGN::People::Schema;
 use JSON;
 use CXGN::AnalysisModel::SaveModel;
+use CXGN::Onto;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -501,7 +502,7 @@ sub store {
             }
         }
         my @analysis_instance_names = keys %$analysis_result_values_save;
-        print STDERR Dumper $analysis_result_values_save;
+        # print STDERR Dumper $analysis_result_values_save;
 
         eval {
             $a->store_analysis_values(
