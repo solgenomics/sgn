@@ -228,9 +228,7 @@ sub genotype_file_name {
     else
     {
 	$dir = $c->stash->{solgs_cache_dir};
-    }
-    
-   
+    }   
   
     my $file_id = $pop_id . '-GP-' . $protocol_id;
     
@@ -239,9 +237,9 @@ sub genotype_file_name {
 		       stash_key => 'genotype_file_name',
 		       cache_dir => $dir
     };
- 
     
     $self->cache_file($c, $cache_data);
+    
 }
 
 
@@ -267,6 +265,37 @@ sub relationship_matrix_file {
     my $cache_data = {key    => 'relationship_matrix_json_' . $file_id ,
 		      file      => 'relationship_matrix_json_' . $file_id . '.txt',
 		      stash_key => 'relationship_matrix_json_file',
+		      cache_dir => $c->stash->{solgs_cache_dir}
+    };
+  
+    $self->cache_file($c, $cache_data);
+  
+}
+
+
+sub relationship_matrix_adjusted_file {
+    my ($self, $c) = @_;
+
+    my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
+    my $data_set_type = $c->stash->{data_set_type};
+    my $protocol_id = $c->stash->{genotyping_protocol_id}; 
+    my $trait_id = $c->stash->{trait_id};
+   
+    my $file_id = $pop_id ."-${trait_id}-" . "GP-${protocol_id}";
+
+    no warnings 'uninitialized';
+        
+    my $cache_data = {key    => 'relationship_matrix_table_' . $file_id ,
+		      file      => 'relationship_matrix_adjusted_table_' . $file_id . '.txt',
+		      stash_key => 'relationship_matrix_adjusted_file',
+		      cache_dir => $c->stash->{solgs_cache_dir}
+    };
+ 
+    $self->cache_file($c, $cache_data);
+
+    my $cache_data = {key    => 'relationship_matrix_json_' . $file_id ,
+		      file      => 'relationship_matrix_adjusted_json_' . $file_id . '.txt',
+		      stash_key => 'relationship_matrix_adjusted_json_file',
 		      cache_dir => $c->stash->{solgs_cache_dir}
     };
   
@@ -810,7 +839,7 @@ sub get_solgs_dirs {
 	[
 	 $solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_lists,  $solgs_datasets, 
 	 $pca_cache, $pca_temp, $histogram_cache, $histogram_temp, $log_dir, $corre_cache, $corre_temp,
-     $h2_temp, $h2_cache,$anova_temp,$anova_cache, $solqtl_cache, $solqtl_tempfiles,
+	 $h2_temp, $h2_cache,$anova_temp,$anova_cache, $solqtl_cache, $solqtl_tempfiles,
 	 $cluster_cache, $cluster_temp, $sel_index_cache,  $sel_index_temp,
 	], 
 	0, 0755
