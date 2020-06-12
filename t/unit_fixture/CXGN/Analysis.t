@@ -5,6 +5,7 @@ use Data::Dumper;
 use lib 't/lib';
 use SGN::Test::Fixture;
 use CXGN::Analysis;
+use CXGN::Analysis::AnalysisCreate;
 
 print STDERR "Starting test...\n";
 my $t = SGN::Test::Fixture->new();

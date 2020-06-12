@@ -34,7 +34,7 @@ or analysis_design can be left blank and the design will be computed using acces
 
 'model_language' is a string like 'R' or 'Python'
 
-'model_type' is a string describing the model type like 'sommer_grm_spatial_genetic_correlations'. This is the only term which must be a cvterm under 'protocol_type' (added by db patch).
+'model_type' is a string describing the model type like 'sommer_grm_spatial_genetic_blups'. This is the only term which must be a cvterm under 'protocol_type' (added by db patch).
 
 'model_properties' is a JSON encoded object with any key/value pairs like:
 {
@@ -51,11 +51,11 @@ or analysis_design can be left blank and the design will be computed using acces
 
 'training_data_file_to_archive' is the file path of the temporary file where the input training data (e.g. phenotype file) is stored. On submission this file will be archived using training_data_file_type.
 
-'training_data_file_type' is a string describing the type of the training data file like: 'nicksmixedmodels_v1.01_sommer_grm_spatial_genetic_correlations_phenotype_file'
+'training_data_file_type' is a string describing the type of the training data file like: 'nicksmixedmodels_v1.01_sommer_grm_spatial_genetic_blups_phenotype_file'
 
 'auxiliary_files' is a JSON encoded array of objects containing any additional temporary files used by the model analysis. The objects should have the keys 'auxiliary_model_file' and 'auxiliary_model_file_archive_type' e.g.:
 [
-{'auxiliary_model_file':'/tmp/grm.tsv', 'auxiliary_model_file_archive_type':'nicksmixedmodels_v1.01_sommer_grm_spatial_genetic_correlations_grm_file'}
+{'auxiliary_model_file':'/tmp/grm.tsv', 'auxiliary_model_file_archive_type':'nicksmixedmodels_v1.01_sommer_grm_spatial_genetic_blups_grm_file'}
 ]
 
 The 'analysis_result_values' can take a nested object of stock_name->trait_name->value, where stock_name is either the precomputed analysis_design "plots" or is accession names.

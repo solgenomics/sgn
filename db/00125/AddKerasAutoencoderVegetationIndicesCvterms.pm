@@ -66,7 +66,8 @@ sub patch {
         ],
         'protocol_type' => [
             'trained_keras_mask_r_cnn_model',
-			'sommer_grm_spatial_genetic_correlations'
+			'sommer_grm_spatial_genetic_blups',
+            'lmer_germplasmname_replicate'
         ],
 		'experiment_type' => [
 			'analysis_model_experiment'

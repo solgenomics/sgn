@@ -241,7 +241,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my @unique_accession_names;
     my @unique_plot_names;
 
-    if ($statistics_select eq 'lmer_germplasmname' || $statistics_select eq 'lmer_germplasmname_block' || $statistics_select eq 'sommer_grm_spatial_heatmap' || $statistics_select eq 'sommer_grm_spatial_genetic_correlations') {
+    if ($statistics_select eq 'lmer_germplasmname_replicate' || $statistics_select eq 'sommer_grm_spatial_genetic_blups') {
 
         my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
             'MaterializedViewTable',
@@ -317,7 +317,6 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             }
             push @data_matrix, \@row;
         }
-        @unique_plot_names = sort keys %seen_plot_names;
 
         my @phenotype_header = ("replicate", "block", "id", "rowNumber", "colNumber", "rowNumberFactor", "colNumberFactor");
         my $num_col_before_traits = scalar(@phenotype_header);
@@ -334,7 +333,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             }
         close($F);
 
-        if ($statistics_select eq 'sommer_grm_spatial_heatmap' || $statistics_select eq 'sommer_grm_spatial_genetic_correlations') {
+        if ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
 
             my %seen_accession_stock_ids;
             foreach my $trial_id (@$field_trial_id_list) {
@@ -380,46 +379,47 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             $grm_file = $grm_out_tempfile;
         }
 
-        if ($statistics_select eq 'lmer_germplasmname') {
+        my $time = DateTime->now();
+        my $timestamp = $time->ymd()."_".$time->hms();
+
+        if ($statistics_select eq 'lmer_germplasmname_replicate') {
             foreach my $t (@sorted_trait_names) {
                 my $cmd = 'R -e "library(lme4); library(data.table);
                 mat <- fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\');
-                mixed.lmer <- lmer('.$trait_name_encoder{$t}.' ~ replicate + (1|id), data = mat, na.action = na.omit );
-                mixed.lmer.summary <- summary(mixed.lmer);
-                ve <- mixed.lmer.summary\$varcor\$id[1,1]/(mixed.lmer.summary\$varcor\$id[1,1] + (mixed.lmer.summary\$sigma)^2);
-                ve;"';
+                mix <- lmer('.$trait_name_encoder{$t}.' ~ replicate + (1|id), data = mat, na.action = na.omit );
+                #mix.summary <- summary(mix);
+                #ve <- mix.summary\$varcor\$id[1,1]/(mix.summary\$varcor\$id[1,1] + (mix.summary\$sigma)^2);
+                write.table(ranef(mix)\$id, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
                 my $status = system($cmd);
+
+                my $csv = Text::CSV->new({ sep_char => "\t" });
+
+                open(my $fh, '<', $stats_out_tempfile)
+                    or die "Could not open file '$stats_out_tempfile' $!";
+
+                    print STDERR "Opened $stats_out_tempfile\n";
+                    my $header = <$fh>;
+                    my @header_cols;
+                    if ($csv->parse($header)) {
+                        @header_cols = $csv->fields();
+                    }
+
+                    while (my $row = <$fh>) {
+                        my @columns;
+                        if ($csv->parse($row)) {
+                            @columns = $csv->fields();
+                        }
+                        my $stock_id = $columns[0];
+                        my $stock_name = $stock_info{$stock_id}->{uniquename};
+                        my $value = $columns[1];
+                        $result_blup_data{$stock_name}->{$t} = [$value, $timestamp, $user_name, '', ''];
+                    }
+                close($fh);
             }
         }
-        elsif ($statistics_select eq 'lmer_germplasmname_block') {
-            foreach my $t (@sorted_trait_names) {
-                my $cmd = 'R -e "library(lme4);
-                mixed.lmer <- lmer('.$trait_name_encoder{$t}.' ~ block + (1|id), data = data.frame(matrix1), na.action = na.omit );
-                mixed.lmer.summary <- summary(mixed.lmer);
-                mixed.lmer.matrix <- matrix(NA,nrow = 1, ncol = 1);
-                mixed.lmer.matrix[1,1] <- mixed.lmer.summary\$varcor\$id[1,1]/(mixed.lmer.summary\$varcor\$id[1,1] + (mixed.lmer.summary\$sigma)^2);"';
-            }
-        }
-        elsif ($statistics_select eq 'sommer_grm_spatial_heatmap') {
-            foreach my $t (@sorted_trait_names) {
-                my $cmd = 'R -e "library(sommer); library(data.table);
-                mat <- data.frame(fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\'));
-                geno_mat <- data.frame(fread(\''.$grm_file.'\', header=TRUE, sep=\'\t\'));
-                row.names(geno_mat) <- geno_mat\$stock_id;
-                geno_mat\$stock_id <- NULL;
-                geno_mat <- as.matrix(geno_mat);
-                mat\$rowNumber <- as.numeric(mat\$rowNumber)
-                mat\$colNumber <- as.numeric(mat\$colNumber)
-                mat\$rowNumberFactor <- as.factor(mat\$rowNumberFactor)
-                mat\$colNumberFactor <- as.factor(mat\$colNumberFactor)
-                #geno_mat;
-                #mat;
-                mix <- mmer('.$trait_name_encoder{$t}.'~1, random=~vs(id, Gu=geno_mat) +vs(rowNumberFactor) +vs(colNumberFactor) +vs(spl2D(rowNumber,colNumber)), rcov=~vs(units), data=mat);
-                summary(mix);"';
-                my $status = system($cmd);
-            }
-        }
-        elsif ($statistics_select eq 'sommer_grm_spatial_genetic_correlations') {
+        elsif ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
+            @unique_plot_names = sort keys %seen_plot_names;
+
             my @encoded_traits = values %trait_name_encoder;
             my $encoded_trait_string = join ',', @encoded_traits;
             my $number_traits = scalar(@encoded_traits);
@@ -440,9 +440,6 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             write.table(mix\$U\$\`u:colNumberFactor\`, file=\''.$stats_out_tempfile_col.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
             print STDERR Dumper $cmd;
             my $status = system($cmd);
-
-            my $time = DateTime->now();
-            my $timestamp = $time->ymd()."_".$time->hms();
 
             my $csv = Text::CSV->new({ sep_char => "\t" });
 
