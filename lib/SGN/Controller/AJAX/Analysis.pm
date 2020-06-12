@@ -45,6 +45,7 @@ sub store_analysis_json_POST {
     my $analysis_dataset_id = $c->req->param("analysis_dataset_id");
     my $analysis_accession_names = $c->req->param("analysis_accession_names") ? decode_json $c->req->param("analysis_accession_names") : [];
     my $analysis_trait_names = $c->req->param("analysis_trait_names") ? decode_json $c->req->param("analysis_trait_names") : [];
+    my $analysis_statistical_ontology_term = $c->req->param('analysis_statistical_ontology_term');
     my $analysis_precomputed_design_optional = $c->req->param("analysis_precomputed_design_optional") ? decode_json $c->req->param("analysis_precomputed_design_optional") : undef;
     my $analysis_result_values = $c->req->param("analysis_result_values") ? decode_json $c->req->param("analysis_result_values") : {};
     my $analysis_result_values_type = $c->req->param("analysis_result_values_type");
@@ -71,7 +72,7 @@ sub store_analysis_json_POST {
 
     $self->store_data($c,
         $analysis_to_save_boolean,
-        $analysis_name, $analysis_description, $analysis_year, $analysis_breeding_program_id, $analysis_protocol, $analysis_dataset_id, $analysis_accession_names, $analysis_trait_names, $analysis_precomputed_design_optional, $analysis_result_values, $analysis_result_values_type,
+        $analysis_name, $analysis_description, $analysis_year, $analysis_breeding_program_id, $analysis_protocol, $analysis_dataset_id, $analysis_accession_names, $analysis_trait_names, $analysis_statistical_ontology_term, $analysis_precomputed_design_optional, $analysis_result_values, $analysis_result_values_type,
         $analysis_model_name, $analysis_model_description, $analysis_model_is_public, $analysis_model_language, $analysis_model_type, $analysis_model_properties, $analysis_model_application_name, $analysis_model_application_version, $analysis_model_file, $analysis_model_file_type, $analysis_model_training_data_file, $analysis_model_training_data_file_type, $analysis_model_auxiliary_files,
         $user_id, $user_name, $user_role
     );
@@ -197,12 +198,16 @@ sub store_analysis_json_POST {
 
 sub store_data {
     my $self = shift;
-    my ($c, $analysis_to_save_boolean, $analysis_name, $analysis_description, $analysis_year, $analysis_breeding_program_id, $analysis_protocol, $analysis_dataset_id, $analysis_accession_names, $analysis_trait_names, $analysis_precomputed_design_optional, $analysis_result_values, $analysis_result_values_type, $analysis_model_name, $analysis_model_description, $analysis_model_is_public, $analysis_model_language, $analysis_model_type, $analysis_model_properties, $analysis_model_application_name, $analysis_model_application_version, $analysis_model_file, $analysis_model_file_type, $analysis_model_training_data_file, $analysis_model_training_data_file_type, $analysis_model_auxiliary_files, $user_id, $user_name, $user_role) = @_;
+    my ($c, $analysis_to_save_boolean, $analysis_name, $analysis_description, $analysis_year, $analysis_breeding_program_id, $analysis_protocol, $analysis_dataset_id, $analysis_accession_names, $analysis_trait_names, $analysis_statistical_ontology_term, $analysis_precomputed_design_optional, $analysis_result_values, $analysis_result_values_type, $analysis_model_name, $analysis_model_description, $analysis_model_is_public, $analysis_model_language, $analysis_model_type, $analysis_model_properties, $analysis_model_application_name, $analysis_model_application_version, $analysis_model_file, $analysis_model_file_type, $analysis_model_training_data_file, $analysis_model_training_data_file_type, $analysis_model_auxiliary_files, $user_id, $user_name, $user_role) = @_;
     
-    my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');;
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+
+    my @allowed_composed_cvs = split ',', $c->config->{composable_cvs};
+    my $composable_cvterm_delimiter = $c->config->{composable_cvterm_delimiter};
+    my $composable_cvterm_format = $c->config->{composable_cvterm_format};
 
     my $model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, $analysis_model_type, 'protocol_type')->cvterm_id();
 
@@ -232,6 +237,47 @@ sub store_data {
 
     my $saved_analysis_id;
     if ($analysis_to_save_boolean eq 'yes') {
+
+        my %trait_id_map;
+        foreach my $trait_name (@$analysis_trait_names) {
+            my $trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($bcs_schema, $trait_name)->cvterm_id();
+            $trait_id_map{$trait_name} = $trait_cvterm_id;
+        }
+        my @trait_ids = values %trait_id_map;
+
+        my $stat_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($bcs_schema, $analysis_statistical_ontology_term)->cvterm_id();
+
+        my $traits = SGN::Model::Cvterm->get_traits_from_component_categories($bcs_schema, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, {
+            object => [],
+            attribute => [$stat_cvterm_id],
+            method => [],
+            unit => [],
+            trait => \@trait_ids,
+            tod => [],
+            toy => [],
+            gen => [],
+        });
+        my $existing_traits = $traits->{existing_traits};
+        my $new_traits = $traits->{new_traits};
+        # print STDERR Dumper $new_traits;
+        # print STDERR Dumper $existing_traits;
+        my %new_trait_names;
+        foreach (@$new_traits) {
+            my $components = $_->[0];
+            $new_trait_names{$_->[1]} = join ',', @$components;
+        }
+
+        my $onto = CXGN::Onto->new( { schema => $bcs_schema } );
+        my $new_terms = $onto->store_composed_term(\%new_trait_names);
+
+        my %composed_trait_map;
+        while (my($trait_name, $trait_id) = each %trait_id_map) {
+            my $composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($bcs_schema, [$trait_id, $stat_cvterm_id]);
+            my $composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($bcs_schema, $composed_cvterm_id, 'extended');
+            $composed_trait_map{$trait_name} = $composed_trait_name;
+        }
+        my @composed_trait_names = values %composed_trait_map;
+
         #Project BUILD inserts project entry
         my $a = CXGN::Analysis->new({
             bcs_schema => $bcs_schema,
@@ -262,7 +308,7 @@ sub store_data {
         $a->description($analysis_description);
         $a->user_id($user_id);
 
-        $a->metadata()->traits($analysis_trait_names);
+        $a->metadata()->traits(\@composed_trait_names);
         $a->metadata()->analysis_protocol($analysis_protocol);
         $a->analysis_model_protocol_id($analysis_model_protocol_id);
 
@@ -292,11 +338,15 @@ sub store_data {
 
         print STDERR "Store analysis values...\n";
         #print STDERR "value hash: ".Dumper($values);
-        print STDERR "traits: ".join(",",@$analysis_trait_names);
+        print STDERR "traits: ".join(",",@composed_trait_names);
 
         my $analysis_result_values_save;
         if ($analysis_result_values_type eq 'analysis_result_values_match_precomputed_design') {
-            $analysis_result_values_save = $analysis_result_values;
+            while (my($analysis_instance_name, $trait_obj) = each %$analysis_result_values) {
+                while (my($trait_name, $val) = each %$trait_obj) {
+                    $analysis_result_values_save->{$analysis_instance_name}->{$composed_trait_map{$trait_name}} = $val;
+                }
+            }
         }
         elsif ($analysis_result_values_type eq 'analysis_result_values_match_accession_names') {
             my %analysis_result_values_fix_plot_names;
@@ -305,7 +355,9 @@ sub store_data {
                 $analysis_result_values_fix_plot_names{$_->{stock_name}} = $_->{plot_name};
             }
             while (my ($accession_name, $trait_pheno) = each %$analysis_result_values) {
-                $analysis_result_values_save->{$analysis_result_values_fix_plot_names{$accession_name}} = $trait_pheno;
+                while (my($trait_name, $val) = each %$trait_pheno) {
+                    $analysis_result_values_save->{$analysis_result_values_fix_plot_names{$accession_name}}->{$composed_trait_map{$trait_name}} = $val;
+                }
             }
         }
         my @analysis_instance_names = keys %$analysis_result_values_save;
@@ -319,7 +371,7 @@ sub store_data {
                 $phenome_schema,
                 $analysis_result_values_save,
                 \@analysis_instance_names,
-                $analysis_trait_names,
+                \@composed_trait_names,
                 $user_name,
                 $c->config->{basepath},
                 $c->config->{dbhost},

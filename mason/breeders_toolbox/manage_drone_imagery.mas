@@ -3612,6 +3612,7 @@ jQuery(document).ready(function() {
         //jQuery('#generic_save_analysis_dataset_id').val();
         jQuery('#generic_save_analysis_accession_names').val(JSON.stringify(manage_drone_imagery_calculate_statistics_response.unique_accessions));
         jQuery('#generic_save_analysis_trait_names').val(JSON.stringify(manage_drone_imagery_calculate_statistics_response.unique_traits));
+        jQuery('#generic_save_analysis_statistical_ontology_term').val('Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and row and column spatial effects computed using Sommer R|SGNSTAT:0000001');
         //jQuery('#generic_save_analysis_design').val();
         jQuery('#generic_save_analysis_result_values').val(JSON.stringify(manage_drone_imagery_calculate_statistics_response.result_blup_genetic_data));
         jQuery('#generic_save_analysis_result_values_type').val('analysis_result_values_match_accession_names');
