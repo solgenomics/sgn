@@ -13,6 +13,7 @@ solGS.kinship = {
 
 	var page = document.URL;
 	var popId;
+	
 	if (page.match(/solgs\/trait\//)) {	    
 	    popId = jQuery("#training_pop_id").val();
 	} else {
@@ -20,10 +21,12 @@ solGS.kinship = {
 	}
 
 	var protocolId = jQuery("#genotyping_protocol_id").val();
+	var traitId = jQuery("#trait_id").val();
 	
 	return {
 	    'kinship_pop_id' : popId,
-	    'genotyping_protocol_id': protocolId
+	    'genotyping_protocol_id': protocolId,
+	    'trait_id': traitId,
 	};        
     },
 
