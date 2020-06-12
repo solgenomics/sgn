@@ -416,7 +416,7 @@ sub list_analyses_by_user_table :Path('/ajax/analyses/by_user') Args(0) {
     my @table;
     foreach my $a (@analyses) {
         my $saved_model = $a->saved_model();
-        my $model_type = $saved_model->{model_type_id} ? $schema->resultset("Cv::Cvterm")->find({cvterm_id => $saved_model->{model_type_id} })->name() : '';
+        my $model_type = $saved_model->{model_type_name} ? $saved_model->{model_type_name} : '';
         my $protocol = $saved_model->{model_properties}->{protocol} ? $saved_model->{model_properties}->{protocol} : '';
         my $application_name = $saved_model->{model_properties}->{application_name} ? $saved_model->{model_properties}->{application_name} : '';
         my $application_version = $saved_model->{model_properties}->{application_version} ? $saved_model->{model_properties}->{application_version} : '';
@@ -485,7 +485,7 @@ sub retrieve_analysis_data :Chained("ajax_analysis") PathPart('retrieve') :Args(
 
     foreach my $row (@$matrix) {
         my ($stock_id, $stock_name, @values) =  @$row[17,18,39..scalar(@$row)-1];
-        print STDERR "NEW ROW: $stock_id, $stock_name, ".join(",", @values)."\n";
+        # print STDERR "NEW ROW: $stock_id, $stock_name, ".join(",", @values)."\n";
         push @$dataref, [
             "<a href=\"/stock/$stock_id/view\">$stock_name</a>",
             @values
@@ -507,13 +507,10 @@ sub retrieve_analysis_data :Chained("ajax_analysis") PathPart('retrieve') :Args(
         #accession_ids => $a ->accession_ids(),
         analysis_protocol => $a->metadata()->analysis_protocol(),
         create_timestamp => $a->metadata()->create_timestamp(),
-        model_language => $a->metadata()->model_language(),
-        model_type => $a->metadata()->model_type(),
-        application_name => $a->metadata()->application_name(),
-        application_version => $a->metadata()->application_version(),
         accession_names => $a->accession_names(),
         traits => $a->traits(),
         data => $dataref,
+        model_info => $a->saved_model()
     };
 
     $c->stash->{rest} = $resultref;

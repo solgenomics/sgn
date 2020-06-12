@@ -88,6 +88,22 @@ $analysis_metadata
                 </td>
             </tr>
 
+            <tr><td><b>Dataset ID</b></td>
+                <td>
+                    <div id="analysis_dataset_id">
+%  print $analysis_metadata->dataset_id;
+                    </div>
+                </td>
+            </tr>
+
+            <tr><td><b>Created</b></td>
+                <td>
+                    <div id="analysis_create_timestamp">
+%  print $analysis_metadata->create_timestamp;
+                    </div>
+                </td>
+            </tr>
+
         </table>
 
     </div>

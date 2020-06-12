@@ -351,6 +351,9 @@ $analysis_metadata => undef
 % if ($info_section_id eq 'analysis_details'){
                                 <& /analyses/analysis_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, trial_description=>$trial_description, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, year=>$year, identifier_prefix=>$identifier_prefix, trial_stock_type => $trial_stock_type, analysis_metadata=>$analysis_metadata &>
 % } #End analysis_details
+% if ($info_section_id eq 'model_details'){
+                                <& /analyses/model_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, analysis_metadata=>$analysis_metadata &>
+% } #End analysis_details
 % if (!$info_section_id){
                                 <p>No section specified! Main content goes here!</p>
 % }
