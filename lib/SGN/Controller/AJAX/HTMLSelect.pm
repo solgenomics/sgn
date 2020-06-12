@@ -229,6 +229,7 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
     my $get_field_trials = $c->req->param("get_field_trials");
     my $get_crossing_trials = $c->req->param("get_crossing_trials");
     my $get_genotyping_trials = $c->req->param("get_genotyping_trials");
+    my $include_analyses = $c->req->param("include_analyses");
 
     my $projects;
     if (!$breeding_program_id && !$breeding_program_name) {
@@ -248,7 +249,7 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
 
     my @projects;
     foreach my $project (@$projects) {
-        my ($field_trials, $cross_trials, $genotyping_trials) = $p->get_trials_by_breeding_program($project->[0]);
+        my ($field_trials, $cross_trials, $genotyping_trials, $genotyping_data_projects, $field_management_factor_projects, $drone_run_projects, $drone_run_band_projects, $analyses_projects) = $p->get_trials_by_breeding_program($project->[0]);
         if ($get_field_trials){
             if ($field_trials && scalar(@$field_trials)>0){
                 my @trials = sort { $a->[1] cmp $b->[1] } @$field_trials;
@@ -265,6 +266,12 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
             if ($genotyping_trials && scalar(@$genotyping_trials)>0){
                 my @trials = sort { $a->[1] cmp $b->[1] } @$genotyping_trials;
                 push @projects, @trials;
+            }
+        }
+        if ($include_analyses) {
+            if ($analyses_projects && scalar(@$analyses_projects)>0){
+                my @analyses = sort { $a->[1] cmp $b->[1] } @$analyses_projects;
+                push @projects, @analyses;
             }
         }
     }
