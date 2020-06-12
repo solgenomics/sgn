@@ -282,6 +282,8 @@ sub store_data {
         my $a = CXGN::Analysis->new({
             bcs_schema => $bcs_schema,
             people_schema => $people_schema,
+            metadata_schema => $metadata_schema,
+            phenome_schema => $phenome_schema,
             name => $analysis_name,
         });
         $saved_analysis_id = $a->get_trial_id();
@@ -400,6 +402,8 @@ sub list_analyses_by_user_table :Path('/ajax/analyses/by_user') Args(0) {
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $user_id;
     if ($c->user()) {
         $user_id = $c->user->get_object()->get_sp_person_id();
@@ -407,17 +411,23 @@ sub list_analyses_by_user_table :Path('/ajax/analyses/by_user') Args(0) {
     if (!$user_id) {
         $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
     }
-    my @analyses = CXGN::Analysis->retrieve_analyses_by_user($schema, $people_schema, $user_id);
+    my @analyses = CXGN::Analysis->retrieve_analyses_by_user($schema, $people_schema, $metadata_schema, $phenome_schema, $user_id);
 
     my @table;
     foreach my $a (@analyses) {
+        my $saved_model = $a->saved_model();
+        my $model_type = $saved_model->{model_type_id} ? $schema->resultset("Cv::Cvterm")->find({cvterm_id => $saved_model->{model_type_id} })->name() : '';
+        my $protocol = $saved_model->{model_properties}->{protocol} ? $saved_model->{model_properties}->{protocol} : '';
+        my $application_name = $saved_model->{model_properties}->{application_name} ? $saved_model->{model_properties}->{application_name} : '';
+        my $application_version = $saved_model->{model_properties}->{application_version} ? $saved_model->{model_properties}->{application_version} : '';
+        my $model_language = $saved_model->{model_properties}->{model_language} ? $saved_model->{model_properties}->{model_language} : '';
         push @table, [
             '<a href="/analyses/'.$a->get_trial_id().'">'.$a->name()."</a>",
             $a->description(),
-            $a->metadata->model_type(),
-            $a->metadata->analysis_protocol(),
-            $a->metadata->application_name().":".$a->metadata->application_version(),
-            $a->metadata->model_language()
+            $model_type,
+            $protocol,
+            $application_name.":".$application_version,
+            $model_language,
         ];
     }
 
@@ -449,8 +459,10 @@ sub retrieve_analysis_data :Chained("ajax_analysis") PathPart('retrieve') :Args(
 
     my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    
-    my $a = CXGN::Analysis->new( { bcs_schema => $bcs_schema, people_schema => $people_schema, trial_id => $c->stash->{analysis_id} } );
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+
+    my $a = CXGN::Analysis->new( { bcs_schema => $bcs_schema, people_schema => $people_schema, metadata_schema => $metadata_schema, phenome_schema => $phenome_schema, trial_id => $c->stash->{analysis_id} } );
 
     my $dataset_id = "";
     my $dataset_name = "";

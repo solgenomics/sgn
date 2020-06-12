@@ -20,7 +20,7 @@ $ds->accessions( [ 'test_accession1', 'test_accession2', 'test_accession4' ] );
 $ds->store();
 
 print STDERR "Creating new Analysis object...\n";
-my $a = CXGN::Analysis->new({ bcs_schema => $schema,  people_schema => $people_schema, name => "test_analysis2" });
+my $a = CXGN::Analysis->new({ bcs_schema => $schema,  people_schema => $people_schema, metadata_schema => $t->metadata_schema(), phenome_schema => $t->phenome_schema(), name => "test_analysis2" });
 
 print STDERR "Accession test...\n";
 
@@ -48,7 +48,7 @@ my $rows = $h->fetchall_arrayref();
 print STDERR "STORED: ".Dumper($rows);
 
 print STDERR "RETRIEVING Analysis... with trial_id = $project_id\n";
-my $a2 = CXGN::Analysis->new( { bcs_schema => $t->bcs_schema, people_schema => $t->people_schema(), trial_id => $project_id });
+my $a2 = CXGN::Analysis->new( { bcs_schema => $t->bcs_schema, people_schema => $t->people_schema(), metadata_schema => $t->metadata_schema(), phenome_schema => $t->phenome_schema(), trial_id => $project_id });
 
 is($a2->name(), "test_analysis2", "analysis name test");
 is($a2->metadata()->dataset_id(), 1);

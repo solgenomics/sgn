@@ -35,6 +35,8 @@ sub analysis_detail :Path('/analyses') Args(1) {
     my $a = CXGN::Analysis->new({
         bcs_schema => $bcs_schema,
         people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+        phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
         trial_id => $analysis_id,
     });
 

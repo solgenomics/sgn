@@ -819,6 +819,8 @@ sub drone_imagery_calculate_statistics_store_analysis_POST : Args(0) {
     my $a = CXGN::Analysis->new({
         bcs_schema => $bcs_schema,
         people_schema => $people_schema,
+        metadata_schema => $metadata_schema,
+        phenome_schema => $phenome_schema,
         name => $analysis_name,
     });
 

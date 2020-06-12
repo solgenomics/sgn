@@ -72,6 +72,7 @@ use CXGN::List::Transform;
 use CXGN::Dataset;
 use CXGN::AnalysisModel::SaveModel;
 use CXGN::People::Person;
+use CXGN::AnalysisModel::GetModel;
 
 =head2 bcs_schema()
 
@@ -84,6 +85,18 @@ has 'bcs_schema' => (is => 'rw', isa => 'Bio::Chado::Schema', required => 1 );
 =cut
     
 has 'people_schema' => (is => 'rw', isa => 'CXGN::People::Schema', required=>1);
+
+=head2 metadata_schema()
+
+=cut
+    
+has 'metadata_schema' => (is => 'rw', isa => 'CXGN::Metadata::Schema', required=>1);
+
+=head2 phenome_schema()
+
+=cut
+    
+has 'phenome_schema' => (is => 'rw', isa => 'CXGN::Phenome::Schema', required=>1);
 
 =head2 project_id()
 
@@ -177,7 +190,13 @@ year the analysis was done.
 
 #has 'year' => (isa => 'Str', is => 'rw');
 
+=head2 saved_model()
 
+information about the saved model.
+
+=cut
+
+has 'saved_model' => (isa => 'HashRef', is => 'rw');
 
 
 sub BUILD {
@@ -188,10 +207,11 @@ sub BUILD {
     my $metadata;
 
     if ($self->get_trial_id()) {
+        my $schema = $args->{bcs_schema};
         print STDERR "Location id retrieved : = ".$self->get_location()->[0]."\n";
         $self->nd_geolocation_id($self->get_location()->[0]);
 
-        my $metadata_json_id = SGN::Model::Cvterm->get_cvterm_row($args->{bcs_schema}, 'analysis_metadata_json', 'project_property')->cvterm_id();
+        my $metadata_json_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_metadata_json', 'project_property')->cvterm_id();
         my $rs = $self->bcs_schema()->resultset("Project::Projectprop")->search( { project_id => $self->get_trial_id(), type_id => $metadata_json_id });
 
         my $stockprop_id;
@@ -200,7 +220,7 @@ sub BUILD {
         }
 
         print STDERR "Create AnalysisMetadata object...\n";
-        $metadata = CXGN::Analysis::AnalysisMetadata->new( { bcs_schema => $args->{bcs_schema}, prop_id => $stockprop_id });
+        $metadata = CXGN::Analysis::AnalysisMetadata->new( { bcs_schema => $schema, prop_id => $stockprop_id });
         $self->metadata($metadata);
 
         $stockprop_id = $metadata->prop_id();
@@ -212,6 +232,22 @@ sub BUILD {
             $metadata->parent_id($self->get_trial_id());
             $metadata->create_timestamp($time->ymd()." ".$time->hms());
             $metadata->store();
+        }
+
+        my $analysis_nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_experiment', 'experiment_type')->cvterm_id();
+        my $nd_protocol_q = "SELECT nd_protocol_id FROM nd_experiment_protocol JOIN nd_experiment ON (nd_experiment_protocol.nd_experiment_id = nd_experiment.nd_experiment_id) JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id = nd_experiment.nd_experiment_id) WHERE nd_experiment.type_id=$analysis_nd_experiment_type_id AND project_id=?;";
+        my $nd_protocol_h = $schema->storage->dbh()->prepare($nd_protocol_q);
+        $nd_protocol_h->execute($self->get_trial_id());
+        my ($nd_protocol_id) = $nd_protocol_h->fetchrow_array();
+        if ($nd_protocol_id) {
+            my $m = CXGN::AnalysisModel::GetModel->new({
+                bcs_schema=>$schema,
+                metadata_schema=>$self->metadata_schema(),
+                phenome_schema=>$self->phenome_schema(),
+                nd_protocol_id=>$nd_protocol_id
+            });
+            my $saved_model_object = $m->get_model();
+            $self->saved_model($saved_model_object);
         }
     }
     else {
@@ -237,6 +273,8 @@ sub retrieve_analyses_by_user {
     my $class = shift;
     my $bcs_schema = shift;
     my $people_schema = shift;
+    my $metadata_schema = shift;
+    my $phenome_schema = shift;
     my $user_id = shift;
 
     my $user_info_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'project_sp_person_id', 'project_property')->cvterm_id();
@@ -249,8 +287,8 @@ sub retrieve_analyses_by_user {
 
     my @analyses = ();
     while (my ($project_id) = $h->fetchrow_array()) {
-	print STDERR "Instantiating analysis project for project ID $project_id...\n";
-	push @analyses, CXGN::Analysis->new( { bcs_schema => $bcs_schema, people_schema => $people_schema, trial_id=> $project_id });
+        print STDERR "Instantiating analysis project for project ID $project_id...\n";
+        push @analyses, CXGN::Analysis->new( { bcs_schema => $bcs_schema, people_schema => $people_schema, metadata_schema => $metadata_schema, phenome_schema => $phenome_schema, trial_id=> $project_id });
     }
 
     return @analyses;

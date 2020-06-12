@@ -78,7 +78,7 @@ sub get_model {
         $result{model_description} = $model_description;
         $result{model_type_id} = $model_type_id;
         $result{model_experiment_type_id} = $experiment_type_id;
-        $result{model_properties}->{$property_type_id} = decode_json $property_value;
+        $result{model_properties} = decode_json $property_value;
         $result{model_files}->{$filetype} = $filename."/".$basename;
     }
     return \%result;
