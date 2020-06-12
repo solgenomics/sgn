@@ -966,6 +966,7 @@ sub output_files {
     $c->controller("solGS::Files")->trait_phenodata_file($c);
     $c->controller("solGS::Files")->variance_components_file($c);
     $c->controller('solGS::Files')->relationship_matrix_file($c);
+     $c->controller('solGS::Files')->relationship_matrix_adjusted_file($c);
     $c->controller('solGS::Files')->inbreeding_coefficients_file($c);
     $c->controller('solGS::Files')->average_kinship_file($c);
     $c->controller('solGS::Files')->filtered_training_genotype_file($c);
@@ -989,9 +990,11 @@ sub output_files {
                           $c->stash->{selected_traits_gebv_file},
                           $c->stash->{variance_components_file},
 			  $c->stash->{relationship_matrix_file},
+			  $c->stash->{relationship_matrix_adjusted_file},
 			  $c->stash->{inbreeding_coefficients_file},
 			  $c->stash->{average_kinship_file},
 			  $c->stash->{relationship_matrix_json_file},
+			  $c->stash->{relationship_matrix_adjusted_json_file},
 			  $c->stash->{filtered_training_genotype_file},
                           $c->stash->{rrblup_selection_gebvs_file}
         );
