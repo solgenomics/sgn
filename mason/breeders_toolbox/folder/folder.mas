@@ -207,7 +207,7 @@ $has_child_folders => undef
     <div class="col-sm-6">
         <div class="well">
             <center>
-            <button class="btn btn-sm btn-primary" id="open_folder_dialog_link">Add Trial to Folder</button>
+            <button class="btn btn-sm btn-primary" id="open_folder_dialog_link">Add Trial and Analyses to Folder</button>
             <br/><br/>
             <button class="btn btn-sm btn-default" id="edit_trial_name">Rename Folder</button>&nbsp;&nbsp;&nbsp;&nbsp;
             <button class="btn btn-sm btn-default" id="delete_folder_button">Delete Folder</button>
