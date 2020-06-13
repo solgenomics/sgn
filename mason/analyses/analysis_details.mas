@@ -104,6 +104,18 @@ $analysis_metadata
                 </td>
             </tr>
 
+            <tr><td><b>Result Summary</b></td>
+                <td>
+                    <div id="analysis_result_summary">
+%  if ($analysis_metadata->result_summary) {
+%    while (my($k,$v) = each %{$analysis_metadata->result_summary}) {
+%       print $k." = ".$v;
+%    }
+%  }
+                    </div>
+                </td>
+            </tr>
+
         </table>
 
     </div>

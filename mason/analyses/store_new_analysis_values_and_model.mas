@@ -4,7 +4,7 @@ This Mason can be imported on any page for saving analyses, the results of analy
 1) User input for saving analysis: analysis_name, analysis_description, year, breeding_program
 2) User input for saving model trained weights: model_name, model_description, model_is_public
 
-3) Developer input for saving analysis: protocol, dataset_id, accession_names, trait_names, analysis_statistical_ontology_term, analysis_design (if design computed already, otherwise the design will be computed using the accession_names provided)
+3) Developer input for saving analysis: protocol, dataset_id, accession_names, trait_names, analysis_statistical_ontology_term, analysis_design (if design computed already, otherwise the design will be computed using the accession_names provided), result_summary
 4) Developer input for saving model trained weights: model_language, model_type, model_properties, application_name, application_version, model_file_to_archive, model_file_type, training_data_file_to_archive, training_data_file_type, auxiliary_files, analysis_result_values, analysis_result_values_type
 
 Developer inputs can be set using javascript when the model is opened and then nothing else needs to be changed!
@@ -31,6 +31,15 @@ The 'analysis_design' is optional and is a precomputed JSON encoded object of ob
                       }
              }
 or analysis_design can be left blank and the design will be computed using accession_names once this workflow is submitted.
+
+The 'result_summary' should be a JSON encoded object of arbitrary results like:
+{
+    'genetic_correlation' => {
+        'grain yield to NDVI' => 0.8
+    },
+    'important_stat' => 100,
+    'genetic_variance' => 9
+}
 
 'model_language' is a string like 'R' or 'Python'
 
@@ -253,6 +262,12 @@ The trait names will be post-composed with the analysis_statistical_ontology_ter
                                         <input class="form-control" id="generic_save_analysis_result_values_type" name="generic_save_analysis_result_values_type" type="text" disabled/>
                                     </div>
                                 </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-3 control-label">Analysis Result Summary Values: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="generic_save_analysis_result_summary_values" name="generic_save_analysis_result_summary_values" type="text" disabled/>
+                                    </div>
+                                </div>
                             </form>
 
                             <br/><br/>
@@ -407,6 +422,7 @@ jQuery(document).ready(function() {
         var generic_save_analysis_precomputed_design_optional = jQuery('#generic_save_analysis_design').val();
         var generic_save_analysis_result_values = jQuery('#generic_save_analysis_result_values').val();
         var generic_save_analysis_result_values_type = jQuery('#generic_save_analysis_result_values_type').val();
+        var generic_save_analysis_result_summary_values = jQuery('#generic_save_analysis_result_summary_values').val();
         
         var generic_save_analysis_model_name = jQuery('#generic_save_analysis_model_name').val();
         var generic_save_analysis_model_description = jQuery('#generic_save_analysis_model_description').val();
@@ -461,6 +477,10 @@ jQuery(document).ready(function() {
             }
             if (generic_save_analysis_result_values_type == '') {
                 alert('Please give analysis result values type');
+                return false;
+            }
+            if (generic_save_analysis_result_summary_values == '') {
+                alert('Please give analysis result summary info');
                 return false;
             }
         }
@@ -538,6 +558,7 @@ jQuery(document).ready(function() {
                 'analysis_precomputed_design_optional':generic_save_analysis_precomputed_design_optional,
                 'analysis_result_values':generic_save_analysis_result_values,
                 'analysis_result_values_type':generic_save_analysis_result_values_type,
+                'analysis_result_summary':generic_save_analysis_result_summary_values,
                 'analysis_model_name':generic_save_analysis_model_name,
                 'analysis_model_description':generic_save_analysis_model_description,
                 'analysis_model_is_public':generic_save_analysis_model_is_public,

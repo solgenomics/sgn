@@ -57,6 +57,12 @@ has 'create_timestamp' => (isa => 'Maybe[Str]', is =>'rw');
 
 has 'modified_timestamp' => (isa => 'Maybe[Str]', is => 'rw');
 
+=head2 result_summary()
+
+=cut
+
+has 'result_summary' => (isa => 'Maybe[HashRef]', is => 'rw');
+
 =head1 INHERITED METHODS
 
 =head2 store()
@@ -75,7 +81,7 @@ sub BUILD {
     $self->prop_type('analysis_metadata_json');
     $self->prop_id($args->{prop_id});
     $self->cv_name('project_property');
-    $self->allowed_fields([ qw | dataset_id dataset_data analysis_protocol create_timestamp modified_timestamp| ]);
+    $self->allowed_fields([ qw | dataset_id dataset_data analysis_protocol create_timestamp modified_timestamp result_summary| ]);
     $self->parent_table('project');
     $self->parent_primary_key('project_id');
 

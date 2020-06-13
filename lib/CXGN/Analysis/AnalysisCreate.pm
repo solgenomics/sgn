@@ -24,6 +24,7 @@ my $m = CXGN::Analysis::AnalysisCreate->new({
     analysis_precomputed_design_optional=>$analysis_precomputed_design_optional,
     analysis_result_values=>$analysis_result_values,
     analysis_result_values_type=>$analysis_result_values_type,
+    analysis_result_summary=>$analysis_result_summary,
     analysis_model_name=>$analysis_model_name,
     analysis_model_description=>$analysis_model_description,
     analysis_model_is_public=>$analysis_model_is_public,
@@ -195,6 +196,11 @@ has 'analysis_result_values_type' => (
     is => 'rw',
 );
 
+has 'analysis_result_summary' => (
+    isa => 'HashRef[HashRef]|Undef',
+    is => 'rw',
+);
+
 has 'analysis_model_name' => (
     isa => 'Str',
     is => 'rw',
@@ -329,6 +335,7 @@ sub store {
     my $analysis_precomputed_design_optional = $self->analysis_precomputed_design_optional();
     my $analysis_result_values = $self->analysis_result_values();
     my $analysis_result_values_type = $self->analysis_result_values_type();
+    my $analysis_result_summary = $self->analysis_result_summary();
     my $analysis_model_name = $self->analysis_model_name();
     my $analysis_model_description = $self->analysis_model_description();
     my $analysis_model_is_public = $self->analysis_model_is_public;
@@ -452,6 +459,7 @@ sub store {
 
         $a->metadata()->traits(\@composed_trait_names);
         $a->metadata()->analysis_protocol($analysis_protocol);
+        $a->metadata()->result_summary($analysis_result_summary);
         $a->analysis_model_protocol_id($analysis_model_protocol_id);
 
         my ($verified_warning, $verified_error);

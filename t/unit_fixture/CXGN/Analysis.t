@@ -67,6 +67,7 @@ my $m = CXGN::Analysis::AnalysisCreate->new({
     analysis_precomputed_design_optional=>undef,
     analysis_result_values=>$response->{result_blup_genetic_data},
     analysis_result_values_type=>'analysis_result_values_match_accession_names',
+    analysis_result_summary=>{'genetic_variance'=>0.1, 'res1'=>1},
     analysis_model_name=>'analysismodel1',
     analysis_model_description=>'analysis model description',
     analysis_model_is_public=>'yes',
