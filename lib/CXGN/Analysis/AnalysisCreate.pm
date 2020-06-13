@@ -197,7 +197,7 @@ has 'analysis_result_values_type' => (
 );
 
 has 'analysis_result_summary' => (
-    isa => 'HashRef[HashRef]|Undef',
+    isa => 'HashRef|Undef',
     is => 'rw',
 );
 

@@ -106,32 +106,6 @@ is_deeply($result, [
             'design' => undef
           },
           {
-            'breeding_program_name' => 'test',
-            'location_name' => '[Computation]',
-            'breeding_program_description' => 'test',
-            'location_id' => '26',
-            'project_harvest_date' => '',
-            'trial_type_name' => undef,
-            'trial_type' => undef,
-            'trial_name' => 'test_analysis2',
-            'description' => '(No description provided)',
-            'genotyping_plate_format' => undef,
-            'year' => '2020',
-            'genotyping_facility' => undef,
-            'folder_name' => undef,
-            'project_planting_date' => '',
-            'folder_id' => undef,
-            'trial_id' => 166,
-            'genotyping_facility_plate_id' => undef,
-            'folder_description' => undef,
-            'trial_type_id' => undef,
-            'breeding_program_id' => 134,
-            'design' => '78141',
-            'genotyping_facility_status' => undef,
-            'genotyping_plate_sample_type' => undef,
-            'genotyping_facility_submitted' => undef
-          },
-          {
             'genotyping_facility_plate_id' => undef,
             'genotyping_facility' => undef,
             'folder_name' => undef,
@@ -296,32 +270,6 @@ is_deeply($result, [
             'genotyping_facility_status' => undef,
             'breeding_program_id' => 134,
             'design' => undef
-          },
-          {
-            'breeding_program_name' => 'test',
-            'location_id' => '26',
-            'project_harvest_date' => '',
-            'location_name' => '[Computation]',
-            'breeding_program_description' => 'test',
-            'genotyping_facility_plate_id' => undef,
-            'genotyping_facility' => undef,
-            'folder_id' => undef,
-            'project_planting_date' => '',
-            'folder_name' => undef,
-            'trial_id' => 166,
-            'trial_type_id' => undef,
-            'folder_description' => undef,
-            'trial_type' => undef,
-            'trial_name' => 'test_analysis2',
-            'trial_type_name' => undef,
-            'year' => '2020',
-            'genotyping_plate_format' => undef,
-            'description' => '(No description provided)',
-            'design' => '78141',
-            'breeding_program_id' => 134,
-            'genotyping_facility_submitted' => undef,
-            'genotyping_facility_status' => undef,
-            'genotyping_plate_sample_type' => undef
           },
           {
             'design' => 'CRD',
@@ -577,7 +525,7 @@ my $trial_phenotype_count = $trial->phenotype_count();
 
 #print STDERR "Total phentoypes: $total_phenotypes\n";
 #print STDERR "Trial phentoypes: $trial_phenotype_count\n";
-is($total_phenotypes, 3508, "total phenotype data");
+is($total_phenotypes, 3520, "total phenotype data");
 is($trial_phenotype_count, 6, "trial has phenotype data");
 
 my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -743,7 +691,7 @@ my $trial_phenotype_count = $trial->phenotype_count();
 
 print STDERR "Total phentoypes: $total_phenotypes\n";
 print STDERR "Trial phentoypes: $trial_phenotype_count\n";
-is($total_phenotypes, 3517, "total phenotype data");
+is($total_phenotypes, 3529, "total phenotype data");
 is($trial_phenotype_count, 15, "trial has phenotype data");
 
 my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),

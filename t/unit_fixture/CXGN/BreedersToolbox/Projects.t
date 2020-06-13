@@ -58,11 +58,6 @@ is_deeply(\@sorted_field_trials, [
             '165',
             'CASS_6Genotypes_Sampling_2015',
             'Copy of trial with postcomposed phenotypes from cassbase.'
-          ],
-          [
-            '166',
-            'test_analysis2',
-            '(No description provided)'
           ]
         ], 'test get trials');
 #print STDERR Dumper $cross_trials;
