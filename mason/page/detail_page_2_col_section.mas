@@ -86,6 +86,7 @@ $drone_run_date => undef
 
 #Specific to analysis detail page
 $analysis_metadata => undef
+$for_analysis_page => undef
 
 </%args>
 
@@ -135,7 +136,7 @@ $analysis_metadata => undef
                                 <& /breeders_toolbox/trial/derived_trait.mas, trial_id => $trial_id &>
 % } #End compute_derived_traits
 % if ($info_section_id eq 'trial_upload_files'){
-                                <& /breeders_toolbox/trial/files_section.mas, trial_id => $trial_id, trial_phenotype_files => $trial_phenotype_files, trial_stock_type => $trial_stock_type &>
+                                <& /breeders_toolbox/trial/files_section.mas, trial_id => $trial_id, trial_phenotype_files => $trial_phenotype_files, trial_stock_type => $trial_stock_type, for_analysis_page => $for_analysis_page &>
 % } #End trial_upload_files
 % if ($info_section_id eq 'trial_analysis_tools'){
                                 <!-- Phenotypic correlation analysis -->

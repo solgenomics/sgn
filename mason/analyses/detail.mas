@@ -42,7 +42,14 @@ $analysis_metadata
 
 <& /page/detail_page_2_col_section.mas, trial_id => $analysis_id, info_section_title => "<h4 style='display:inline'>Analysis Results</h4>", info_section_subtitle => 'View and download phenotype data.', buttons_html => "<button class='btn btn-sm btn-primary' style='margin:3px' id='trial_download_phenotypes_button'>Download Analysis Data</button>", icon_class => "glyphicon glyphicon-equalizer", info_section_id => "trial_detail_traits_assayed", trial_name => $analysis_name, trial_stock_type => $trial_phenotype_stock_type &>
 
+<& /page/detail_page_2_col_section.mas, trial_id => $analysis_id, info_section_title => "<h4 style='display:inline'>Upload Data Files</h4>", info_section_subtitle => 'Also upload any additional files for this analysis.', icon_class => "glyphicon glyphicon-cloud-upload", info_section_id => "trial_upload_files", trial_stock_type => $trial_stock_type, for_analysis_page => 1 &>
+
 <& /breeders_toolbox/trial/download_phenotypes_dialog.mas, trial_ids => $analysis_id, dialog_name => $analysis_name, dialog_type => 'Analysis' &>
+
+<& /breeders_toolbox/upload_phenotype_spreadsheet.mas &>
+
+<& /breeders_toolbox/trial/create_spreadsheet_dialog.mas, trial_id => $analysis_id, trial_name => $analysis_name, trial_stock_type => $trial_stock_type &>
+<& /breeders_toolbox/trial/set_phenotypes_fully_uploaded.mas, trial_id => $analysis_id &>
 
 <script>
 jQuery(document).ready(function(){
