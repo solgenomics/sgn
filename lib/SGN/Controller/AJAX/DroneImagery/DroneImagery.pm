@@ -240,6 +240,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my @sorted_trait_names;
     my @unique_accession_names;
     my @unique_plot_names;
+    my $statistical_ontology_term;
+    my $analysis_result_values_type;
+    my $analysis_model_language = "R";
+    my $analysis_model_training_data_file_type;
 
     if ($statistics_select eq 'lmer_germplasmname_replicate' || $statistics_select eq 'sommer_grm_spatial_genetic_blups') {
 
@@ -383,6 +387,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         my $timestamp = $time->ymd()."_".$time->hms();
 
         if ($statistics_select eq 'lmer_germplasmname_replicate') {
+            $statistical_ontology_term = "Univariate linear mixed model genetic BLUPs using germplasmName computed using LMER R|SGNSTAT:0000002";
+            $analysis_result_values_type = "analysis_result_values_match_accession_names";
+            $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_lmer_germplasmname_replicate_phenotype_file";
+
             foreach my $t (@sorted_trait_names) {
                 my $cmd = 'R -e "library(lme4); library(data.table);
                 mat <- fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\');
@@ -418,6 +426,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             }
         }
         elsif ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
+            $statistical_ontology_term = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and row and column spatial effects computed using Sommer R|SGNSTAT:0000001";
+            $analysis_result_values_type = "analysis_result_values_match_accession_names";
+            $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_sommer_grm_spatial_genetic_blups_phenotype_file";
+
             @unique_plot_names = sort keys %seen_plot_names;
 
             my @encoded_traits = values %trait_name_encoder;
@@ -791,7 +803,14 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         stats_tempfile => $stats_tempfile,
         stats_out_tempfile => $stats_out_tempfile,
         stats_out_tempfile_col => $stats_out_tempfile_col,
-        stats_out_tempfile_row => $stats_out_tempfile_row
+        stats_out_tempfile_row => $stats_out_tempfile_row,
+        statistical_ontology_term => $statistical_ontology_term,
+        analysis_result_values_type => $analysis_result_values_type,
+        analysis_model_type => $statistics_select,
+        analysis_model_language => $analysis_model_language,
+        application_name => "NickMorales Mixed Models",
+        application_version => "V1.01",
+        analysis_model_training_data_file_type => $analysis_model_training_data_file_type
     };
 }
 

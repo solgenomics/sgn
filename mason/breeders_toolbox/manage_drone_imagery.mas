@@ -3579,8 +3579,6 @@ jQuery(document).ready(function() {
 
         var drone_imagery_stats_parameters = {};
         var drone_imagery_stats_protocol = '';
-        var drone_imagery_stats_training_file_type = '';
-        var drone_imagery_stats_statistical_ontology_term = '';
         var drone_imagery_stats_auxiliary_files = [];
         var drone_imagery_stats_result_summary = {};
 
@@ -3603,19 +3601,13 @@ jQuery(document).ready(function() {
                 'protocol':drone_imagery_stats_protocol
             };
 
-            drone_imagery_stats_training_file_type = 'nicksmixedmodels_v1.01_sommer_grm_spatial_genetic_blups_phenotype_file';
             drone_imagery_stats_auxiliary_files = [{'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.grm_file, auxiliary_model_file_archive_type:'nicksmixedmodels_v1.01_sommer_grm_spatial_genetic_blups_grm_file'}];
-
-            drone_imagery_stats_statistical_ontology_term = 'Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and row and column spatial effects computed using Sommer R|SGNSTAT:0000001';
         }
         if (manage_drone_imagery_calculate_statistics_select == 'lmer_germplasmname_replicate') {
             drone_imagery_stats_protocol = 'lmer(t1~replicate + 1|germplasmName, data=mat, na.action = na.omit)';
             drone_imagery_stats_parameters = {
                 'protocol':drone_imagery_stats_protocol
             };
-            drone_imagery_stats_training_file_type = 'nicksmixedmodels_v1.01_lmer_germplasmname_replicate_phenotype_file';
-            drone_imagery_stats_result_summary = {};
-            drone_imagery_stats_statistical_ontology_term = 'Univariate linear mixed model genetic BLUPs using germplasmName computed using LMER R|SGNSTAT:0000002';
         }
 
         jQuery('#generic_save_analysis_protocol').val(drone_imagery_stats_protocol);
@@ -3623,19 +3615,19 @@ jQuery(document).ready(function() {
         //jQuery('#generic_save_analysis_dataset_id').val();
         jQuery('#generic_save_analysis_accession_names').val(JSON.stringify(manage_drone_imagery_calculate_statistics_response.unique_accessions));
         jQuery('#generic_save_analysis_trait_names').val(JSON.stringify(manage_drone_imagery_calculate_statistics_response.unique_traits));
-        jQuery('#generic_save_analysis_statistical_ontology_term').val(drone_imagery_stats_statistical_ontology_term);
+        jQuery('#generic_save_analysis_statistical_ontology_term').val(manage_drone_imagery_calculate_statistics_response.statistical_ontology_term);
         //jQuery('#generic_save_analysis_design').val();
         jQuery('#generic_save_analysis_result_values').val(JSON.stringify(manage_drone_imagery_calculate_statistics_response.result_blup_genetic_data));
-        jQuery('#generic_save_analysis_result_values_type').val('analysis_result_values_match_accession_names');
+        jQuery('#generic_save_analysis_result_values_type').val(manage_drone_imagery_calculate_statistics_response.analysis_result_values_type);
         jQuery('#generic_save_analysis_result_summary_values').val(JSON.stringify(drone_imagery_stats_result_summary));
-        jQuery('#generic_save_analysis_model_language').val('R');
-        jQuery('#generic_save_analysis_model_type').val(manage_drone_imagery_calculate_statistics_select);
-        jQuery('#generic_save_analysis_model_application_name').val('NickMorales Mixed Models');
-        jQuery('#generic_save_analysis_model_application_version').val('V1.01');
+        jQuery('#generic_save_analysis_model_language').val(manage_drone_imagery_calculate_statistics_response.analysis_model_language);
+        jQuery('#generic_save_analysis_model_type').val(manage_drone_imagery_calculate_statistics_response.analysis_model_type);
+        jQuery('#generic_save_analysis_model_application_name').val(manage_drone_imagery_calculate_statistics_response.application_name);
+        jQuery('#generic_save_analysis_model_application_version').val(manage_drone_imagery_calculate_statistics_response.application_version);
         //jQuery('#generic_save_analysis_model_file').val();
         //jQuery('#generic_save_analysis_model_archived_model_file_type').val();
         jQuery('#generic_save_analysis_model_training_data_file').val(manage_drone_imagery_calculate_statistics_response.stats_tempfile);
-        jQuery('#generic_save_analysis_model_archived_training_data_file_type').val(drone_imagery_stats_training_file_type);
+        jQuery('#generic_save_analysis_model_archived_training_data_file_type').val(manage_drone_imagery_calculate_statistics_response.analysis_model_training_data_file_type);
         jQuery('#generic_save_analysis_model_auxiliary_files').val(JSON.stringify(drone_imagery_stats_auxiliary_files));
 
         //These model weights don't need to be saved

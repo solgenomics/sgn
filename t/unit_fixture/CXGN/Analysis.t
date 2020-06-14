@@ -6,6 +6,7 @@ use lib 't/lib';
 use SGN::Test::Fixture;
 use CXGN::Analysis;
 use CXGN::Analysis::AnalysisCreate;
+use CXGN::AnalysisModel::GetModel;
 use JSON;
 use Test::WWW::Mechanize;
 
@@ -33,6 +34,60 @@ my $analysis_breeding_program_id = $schema->resultset("Project::Project")->find(
 $mech->post_ok('http://localhost:3010/api/drone_imagery/calculate_statistics', [ "statistics_select"=> "lmer_germplasmname_replicate", "field_trial_id_list"=> encode_json [$field_trial_id], "observation_variable_id_list"=> encode_json $trait_ids ]);
 my $response = decode_json $mech->content;
 print STDERR Dumper $response;
+ok($response->{stats_out_tempfile});
+is($response->{analysis_model_type}, 'lmer_germplasmname_replicate');
+is_deeply($response->{unique_accessions}, [
+                                   'IITA-TMS-IBA011412',
+                                   'IITA-TMS-IBA30572',
+                                   'IITA-TMS-IBA980002',
+                                   'IITA-TMS-IBA980581',
+                                   'TMEB419',
+                                   'TMEB693'
+                                 ]);
+is_deeply($response->{unique_traits}, [
+                               'cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013',
+                               'cass sink leaf|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000011'
+                             ]);
+ok($response->{analysis_model_training_data_file_type});
+is($response->{statistical_ontology_term}, 'Univariate linear mixed model genetic BLUPs using germplasmName computed using LMER R|SGNSTAT:0000002');
+is($response->{application_name}, 'NickMorales Mixed Models');
+ok($response->{application_version});
+is($response->{analysis_model_language}, 'R');
+is($response->{analysis_result_values_type}, 'analysis_result_values_match_accession_names');
+ok($response->{stats_tempfile});
+my %result_blup_genetic_data_no_timestamps;
+while(my($k,$v) = each %{$response->{result_blup_genetic_data}}) {
+    while(my($k1,$v1) = each %$v) {
+        ok(defined($v1->[0]));
+        $result_blup_genetic_data_no_timestamps{$k}->{$k1} = $v1->[0];
+    }
+}
+is_deeply(\%result_blup_genetic_data_no_timestamps, {
+                                          'IITA-TMS-IBA980002' => {
+                                                                    'cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013' => '-66.8437119136587',
+                                                                    'cass sink leaf|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000011' => '0'
+                                                                  },
+                                          'TMEB419' => {
+                                                         'cass sink leaf|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000011' => '0',
+                                                         'cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013' => '-63.0930280648434'
+                                                       },
+                                          'IITA-TMS-IBA30572' => {
+                                                                   'cass sink leaf|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000011' => '0',
+                                                                   'cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013' => '73.0440483006472'
+                                                                 },
+                                          'IITA-TMS-IBA980581' => {
+                                                                    'cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013' => '0.533200041783611',
+                                                                    'cass sink leaf|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000011' => '0'
+                                                                  },
+                                          'IITA-TMS-IBA011412' => {
+                                                                    'cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013' => '77.8812579916274',
+                                                                    'cass sink leaf|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000011' => '0'
+                                                                  },
+                                          'TMEB693' => {
+                                                         'cass sink leaf|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000011' => '0',
+                                                         'cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013' => '-21.5217663555557'
+                                                       }
+                                        });
 
 my $protocol = 'lme(t1~replicate + 1|germplasmName, data=mat, na.action = na.omit)';
 
@@ -63,10 +118,10 @@ my $m = CXGN::Analysis::AnalysisCreate->new({
     analysis_dataset_id=>undef,
     analysis_accession_names=>$response->{unique_accessions},
     analysis_trait_names=>$response->{unique_traits},
-    analysis_statistical_ontology_term=>"Univariate linear mixed model genetic BLUPs using germplasmName computed using LMER R|SGNSTAT:0000002",
+    analysis_statistical_ontology_term=>$response->{statistical_ontology_term},
     analysis_precomputed_design_optional=>undef,
     analysis_result_values=>$response->{result_blup_genetic_data},
-    analysis_result_values_type=>'analysis_result_values_match_accession_names',
+    analysis_result_values_type=>$response->{analysis_result_values_type},
     analysis_result_summary=>{
         'genetic_variance'=>0.1,
         'res1'=>1
@@ -74,18 +129,18 @@ my $m = CXGN::Analysis::AnalysisCreate->new({
     analysis_model_name=>'analysismodel1',
     analysis_model_description=>'analysis model description',
     analysis_model_is_public=>'yes',
-    analysis_model_language=>'R',
-    analysis_model_type=>'lmer_germplasmname_replicate',
+    analysis_model_language=>$response->{analysis_model_language},
+    analysis_model_type=>$response->{analysis_model_type},
     analysis_model_properties=>{
         'protocol'=>$protocol,
         'arbitrary_property'=>0.001
     },
-    analysis_model_application_name=>'NickMorales Mixed Models',
-    analysis_model_application_version=>'V1.01',
+    analysis_model_application_name=>$response->{application_name},
+    analysis_model_application_version=>$response->{application_version},
     analysis_model_file=>undef,
     analysis_model_file_type=>undef,
     analysis_model_training_data_file=>$response->{stats_tempfile},
-    analysis_model_training_data_file_type=>'nicksmixedmodels_v1.01_lmer_germplasmname_replicate_phenotype_file',
+    analysis_model_training_data_file_type=>$response->{analysis_model_training_data_file_type},
     analysis_model_auxiliary_files=>[],
     allowed_composed_cvs=>\@allowed_composed_cvs,
     composable_cvterm_delimiter=>$composable_cvterm_delimiter,
@@ -96,8 +151,44 @@ my $m = CXGN::Analysis::AnalysisCreate->new({
 });
 my $saved_analysis_object = $m->store();
 print STDERR Dumper $saved_analysis_object;
-is($saved_analysis_object->{success}, 1);
+is_deeply($saved_analysis_object, {
+          'model_id' => 2,
+          'success' => 1,
+          'analysis_id' => 166
+        });
 print STDERR "End add analysis...\n";
+
+my $m = CXGN::AnalysisModel::GetModel->new({
+    bcs_schema=>$schema,
+    metadata_schema=>$metadata_schema,
+    phenome_schema=>$phenome_schema,
+    nd_protocol_id=>$saved_analysis_object->{model_id}
+});
+my $saved_model_object = $m->get_model();
+print STDERR Dumper $saved_model_object;
+is($saved_model_object->{model_name}, 'analysismodel1');
+is($saved_model_object->{model_description}, 'analysis model description');
+is_deeply($saved_model_object->{model_properties}, {
+                                  'model_is_public' => 'yes',
+                                  'dataset_id' => undef,
+                                  'protocol' => 'lme(t1~replicate + 1|germplasmName, data=mat, na.action = na.omit)',
+                                  'application_version' => 'V1.01',
+                                  'application_name' => 'NickMorales Mixed Models',
+                                  'model_language' => 'R',
+                                  'arbitrary_property' => '0.001'
+                                });
+
+sleep(5);
+my $a = CXGN::Analysis->new({
+    bcs_schema => $schema,
+    people_schema => $people_schema,
+    metadata_schema => $metadata_schema,
+    phenome_schema => $phenome_schema,
+    trial_id => $saved_analysis_object->{analysis_id}
+});
+my $stored_analysis_phenotypes = $a->get_phenotype_matrix();
+print STDERR Dumper $stored_analysis_phenotypes;
+is(scalar(@$stored_analysis_phenotypes), 7);
 
 print STDERR "Rolling back...\n";
 $dbh->rollback();
