@@ -306,6 +306,15 @@ relationshipMatrix    <- c()
 relationshipMatrixFile <- grep("relationship_matrix_table", outputFiles, value = TRUE)
 relationshipMatrixJsonFile <- grep("relationship_matrix_json", outputFiles, value = TRUE)
 
+traitRelationshipMatrixFile <- grep("relationship_matrix_adjusted_table", outputFiles, value = TRUE)
+traitRelationshipMatrixJsonFile <- grep("relationship_matrix_adjusted_json", outputFiles, value = TRUE)
+
+inbreedingFile <- grep('inbreeding_coefficients', outputFiles, value=TRUE)
+aveKinshipFile <- grep('average_kinship', outputFiles, value=TRUE)
+
+inbreeding <- c()
+aveKinship <- c()
+
 if (length(relationshipMatrixFile) != 0) {
   if (file.info(relationshipMatrixFile)$size > 0 ) {
       relationshipMatrix <- data.frame(fread(relationshipMatrixFile,
@@ -314,27 +323,28 @@ if (length(relationshipMatrixFile) != 0) {
     rownames(relationshipMatrix) <- relationshipMatrix[, 1]
     relationshipMatrix[, 1]      <- NULL
     colnames(relationshipMatrix) <- rownames(relationshipMatrix)
-    relationshipMatrix           <- data.matrix(relationshipMatrix)
+      relationshipMatrix           <- data.matrix(relationshipMatrix)
+      
   } else {
     relationshipMatrix           <- A.mat(genoData)
     diag(relationshipMatrix)     <- diag(relationshipMatrix) + 1e-6
     colnames(relationshipMatrix) <- rownames(relationshipMatrix)
+
+    relationshipMatrix <- round(data.frame(relationshipMatrix), 3)
+
+    inbreeding <- diag(data.matrix(relationshipMatrix))
+    inbreeding <- inbreeding - 1
+   
+    inbreeding  <- inbreeding %>% replace(., . < 0, 0)
+    inbreeding <- round(data.frame(inbreeding), 3)
   }
 }
 
-relationshipMatrixFiltered <- relationshipMatrix[(rownames(relationshipMatrix) %in% rownames(commonObs)), ]
-relationshipMatrixFiltered <- relationshipMatrixFiltered[, (colnames(relationshipMatrixFiltered) %in% rownames(commonObs))]
+traitRelationshipMatrix <- relationshipMatrix[(rownames(relationshipMatrix) %in% rownames(commonObs)), ]
+traitRelationshipMatrix <- traitRelationshipMatrix[, (colnames(traitRelationshipMatrix) %in% rownames(commonObs))]
 
-fcoefs <- diag(relationshipMatrix)
-fcoefs <- fcoefs - 1
-diag(relationshipMatrix) <- fcoefs
-relationshipMatrix       <- relationshipMatrix %>% replace(., . < 0, 0)
-
-relationshipMatrix <- data.frame(relationshipMatrix)
-relationshipMatrix <- round(relationshipMatrix, 3)
-
-
-
+traitRelationshipMatrix <- data.matrix(traitRelationshipMatrix)
+#relationshipMatrixFiltered <- relationshipMatrixFiltered + 1e-3
 
 nCores <- detectCores()
 
@@ -349,7 +359,7 @@ if (length(selectionData) == 0) {
   trModel  <- kin.blup(data   = phenoTrait,
                       geno   = 'genotypes',
                       pheno  = trait,
-                      K      = relationshipMatrixFiltered,
+                      K      = traitRelationshipMatrix,
                       n.core = nCores,
                       PEV    = TRUE
                      )
@@ -454,7 +464,7 @@ if (length(selectionData) == 0) {
               result <- kin.blup(data  = phenoTrait[trG,],
                                  geno  = 'genotypes',
                                  pheno = trait,
-                                 K     = relationshipMatrixFiltered,
+                                 K     = traitRelationshipMatrix,
                                  n.core = nCores,
                                  PEV    = TRUE
                                  )
@@ -664,9 +674,8 @@ if (file.info(relationshipMatrixFile)$size == 0) {
          row.names = TRUE,
          sep   = "\t",
          quote = FALSE,
-         )
+         )   
 }
-
 
 if (file.info(relationshipMatrixJsonFile)$size == 0) {
 
@@ -685,6 +694,63 @@ if (file.info(relationshipMatrixJsonFile)$size == 0) {
     write(relationshipMatrixJson,
                     file  = relationshipMatrixJsonFile,
                     )
+}
+
+
+if (file.info(traitRelationshipMatrixFile)$size == 0) {
+
+    inbre <- diag(traitRelationshipMatrix)
+    inbre <- inbre - 1
+
+    diag(traitRelationshipMatrix) <- inbre
+
+    traitRelationshipMatrix <- data.frame(traitRelationshipMatrix) %>% replace(., . < 0, 0)
+    
+    fwrite(traitRelationshipMatrix,
+           file  = traitRelationshipMatrixFile,
+           row.names = TRUE,
+           sep   = "\t",
+           quote = FALSE,
+           )
+
+    if (file.info(traitRelationshipMatrixJsonFile)$size == 0) {
+
+        traitRelationshipMatrixJson <- traitRelationshipMatrix
+        traitRelationshipMatrixJson[upper.tri(traitRelationshipMatrixJson)] <- NA
+        
+        traitRelationshipMatrixJson <- data.frame(traitRelationshipMatrixJson)
+        
+        traitRelationshipMatrixList <- list(labels = names(traitRelationshipMatrixJson),
+                                            values = traitRelationshipMatrixJson)
+
+        traitRelationshipMatrixJson <- jsonlite::toJSON(traitRelationshipMatrixList)
+        
+        write(traitRelationshipMatrixJson,
+              file  = traitRelationshipMatrixJsonFile,
+              )
+    }
+}
+
+
+if (file.info(inbreedingFile)$size == 0) {
+  
+  fwrite(inbreeding,
+         file  = inbreedingFile,
+         row.names = TRUE,
+         sep   = "\t",
+         quote = FALSE,
+         )
+}
+
+
+if (file.info(aveKinshipFile)$size == 0 && !is.null(aveKinship)) {
+  
+  fwrite(aveKinship,
+         file  = aveKinshipFile,
+         row.names = TRUE,
+         sep   = "\t",
+         quote = FALSE,
+         )
 }
 
 
