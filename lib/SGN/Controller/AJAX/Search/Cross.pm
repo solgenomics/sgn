@@ -52,12 +52,8 @@ sub search_cross_male_parents :Path('/ajax/search/cross_male_parents') :Args(0){
 sub search_cross_details : Path('/ajax/search/cross_details') Args(0) {
     my $self = shift;
     my $c = shift;
-
     my $female_parent = $c->req->param("female_parent");
     my $male_parent = $c->req->param("male_parent");
-
-    #print STDERR "Female parent =" . Dumper($female_parent) . "\n";
-    #print STDERR "Male parent =" . Dumper($male_parent) . "\n";
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $result = CXGN::Cross->get_cross_details($schema, $female_parent, $male_parent);
@@ -84,24 +80,24 @@ sub search_all_crosses : Path('/ajax/search/all_crosses') Args(0) {
     my $c = shift;
 
     my $female_parent = $c->req->param("female_parent");
-
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $result = CXGN::Cross->get_cross_details($schema, $female_parent);
-    my @cross_info;
+    my @cross_details;
     foreach my $r (@$result){
-      #print STDERR Dumper $r;
+        my ($female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_entry_id, $cross_name, $cross_type, $family_id, $family_name, $project_id, $project_name) = @$r;
+        push @cross_details, [ qq{<a href="/stock/$female_parent_id/view">$female_parent_name</a>},
+            qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a>},
+            qq{<a href="/cross/$cross_entry_id">$cross_name</a>},
+            $cross_type,
+            qq{<a href="/stock/$family_id/view">$family_name</a>},
+            qq{<a href="/breeders/trial/$project_id">$project_name</a>},
+        ];
+    }
 
-    my ($female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_entry_id, $cross_name, $cross_type) = @$r;
-    push @cross_info, [ qq{<a href="/stock/$female_parent_id/view">$female_parent_name</a>},
-    qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a>},
-    qq{<a href="/cross/$cross_entry_id">$cross_name</a>}, $cross_type];
-    #print STDERR "Cross info =" . Dumper(@cross_info) . "\n";
-  }
+    $c->stash->{rest}={ data=> \@cross_details};
 
-  $c->stash->{rest}={ data=> \@cross_info};
-
-  }
+}
 
 
 sub search_pedigree_male_parents :Path('/ajax/search/pedigree_male_parents') :Args(0){
