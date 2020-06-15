@@ -8,9 +8,9 @@ use CXGN::BrAPI::JSONResponse;
 extends 'CXGN::BrAPI::v2::Common';
 
 sub search {
-	my $self = shift;
-	my $params = shift;
-	my $c = shift;
+    my $self = shift;
+    my $params = shift;
+    my $c = shift;
     my $status = $self->status;
 
     my $crossing_ids = $params->{crossingProjectDbId} || undef;
@@ -20,17 +20,17 @@ sub search {
     if (($reference_ids_arrayref && scalar(@$reference_ids_arrayref)>0) || ($reference_sources_arrayref && scalar(@$reference_sources_arrayref)>0) ){
         push @$status, { 'error' => 'The following search parameters are not implemented: externalReferenceID, externalReferenceSources' };
     }
-	my $page_size = $self->page_size;
-	my $page = $self->page;
-	my @data;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my @data;
 
-	if (! $crossing_ids){
-	    my $crossingtrial = CXGN::BreedersToolbox::Projects->new( { schema=>$self->bcs_schema });
-	    my $crossing_trials = $crossingtrial->get_crossing_trials();
-	    foreach (@$crossing_trials){
-	    	push(@$crossing_ids, $_->[0]);
-	    }
-	}
+    if (! $crossing_ids){
+        my $crossingtrial = CXGN::BreedersToolbox::Projects->new( { schema=>$self->bcs_schema });
+        my $crossing_trials = $crossingtrial->get_crossing_trials();
+        foreach (@$crossing_trials){
+            push(@$crossing_ids, $_->[0]);
+        }
+    }
 
     my $trial_search = CXGN::Trial::Search->new({
         bcs_schema=>$self->bcs_schema ,
@@ -42,7 +42,7 @@ sub search {
     my ($data, $total_count) = $trial_search->search();
 
     foreach my $experiment (@$data){
-    	push @data, {
+        push @data, {
                 additionalInfo=>{},
                 commonCropName=>undef,
                 crossingProjectDbId=>qq|$experiment->{trial_id}|,
@@ -54,31 +54,31 @@ sub search {
             };
     }
 
-	my %result = (data=>\@data);
-	my @data_files;
-	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    my %result = (data=>\@data);
+    my @data_files;
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
 
-	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Crossing projects result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Crossing projects result constructed');
 }
 
 sub detail {
-	my $self = shift;
-	my $crossingproj_id = shift;
+    my $self = shift;
+    my $crossingproj_id = shift;
     my $status = $self->status;
-	my $page_size = $self->page_size;
-	my $page = $self->page;
-	my $counter = 0;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $counter = 0;
 
-    my %result = get_detail($self,$crossingproj_id);
+    my %result = _get_detail($self,$crossingproj_id);
     $counter = 1 if (%result);
 
-	my @data_files;
-	my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
+    my @data_files;
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
 
-	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Crossing projects result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Crossing projects result constructed');
 }
 
-sub get_detail {
+sub _get_detail {
     my $self = shift;
     my $crossingproj_id = shift;
     my $status = $self->status;
@@ -169,7 +169,7 @@ sub store_crossingproject {
     } 
 
     my $counter = 0;
-    my %result = get_detail($self,$crossingproj_id);
+    my %result = _get_detail($self,$crossingproj_id);
     $counter = 1 if (%result);
 
     my @data_files;
@@ -247,7 +247,7 @@ sub update_crossingproject {
     };
 
     my $counter = 0;
-    my %result = get_detail($self,$crossingproj_id);
+    my %result = _get_detail($self,$crossingproj_id);
     $counter = 1 if (%result);
 
     my @data_files;
@@ -337,7 +337,7 @@ sub crosses {
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Crossing projects result constructed');
 }
 
-sub store_crosses {
+sub store_crosses { #crosses must belong to same experiment
     my $self = shift;
     my $data = shift;
     my $c = shift;
@@ -359,6 +359,7 @@ sub store_crosses {
     my $user_name = $person->get_username;
     my $crossing_trial_id;
     my $crossing_trial_name;
+    my @array_of_pedigree_objects;
 
     foreach my $params (@$data){
         my $cross_name = $params->{crossName} ? $params->{crossName}  : undef;
@@ -386,72 +387,28 @@ sub store_crosses {
         my $crossing_timeStamp = $params->{pollinationTimeStamp} ? $params->{pollinationTimeStamp}  : undef; #not supported
         $cross_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end.
 
-        if ($cross_type eq "polycross") {
-            print STDERR "Handling a polycross\n";
-            my @maternal_parents = split (',', $maternal_name);
-            print STDERR "Maternal parents array:" . @maternal_parents . "\n Maternal parents with ref:" . \@maternal_parents . "\n Maternal parents with dumper:". Dumper(@maternal_parents) . "\n";
-            my $paternal = $cross_name . '_population';
-            my $population_add = CXGN::Pedigree::AddPopulations->new({ schema => $chado_schema, name => $paternal, members =>  \@maternal_parents} );
-            $population_add->add_population();
-            $cross_type = 'polycross';
-            print STDERR "Scalar maternatal paretns:" . scalar @maternal_parents;
-            for (my $i = 0; $i < scalar @maternal_parents; $i++) {
-                my $maternal = $maternal_parents[$i];
-                my $polycross_name = $cross_name . '_' . $maternal;
-                print STDERR "First polycross to add is $polycross_name with amternal $maternal and paternal $paternal\n";
-                my $success = $self->add_individual_cross($c, $chado_schema, $polycross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal, $user_name);
-                if (!$success) {
-                    return CXGN::BrAPI::JSONResponse->return_error($self->status, "Cross: $polycross_name could not be stored");
-                }
-                print STDERR "polycross addition  $polycross_name worked successfully\n";
-            }
-        }
-        elsif ($cross_type eq "reciprocal") {
-            $cross_type = 'biparental';
-            my @maternal_parents = split (',', $maternal_name);
-            for (my $i = 0; $i < scalar @maternal_parents; $i++) {
-                my $maternal = $maternal_parents[$i];
-                for (my $j = 0; $j < scalar @maternal_parents; $j++) {
-                    my $paternal = $maternal_parents[$j];
-                    if ($maternal eq $paternal) {
-                        next;
-                    }
-                    my $reciprocal_cross_name = $cross_name . '_' . $maternal . 'x' . $paternal . '_reciprocalcross';
-                    my $success = $self->add_individual_cross($c, $chado_schema, $reciprocal_cross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal, $user_name);
-                    if (!$success) {
-                        return CXGN::BrAPI::JSONResponse->return_error($self->status, "Cross: $reciprocal_cross_name could not be stored");
-                    }
-                }
-            }
-        }
-        elsif ($cross_type eq "multicross") {
-            $cross_type = 'biparental';
-            my @maternal_parents = split (',', $maternal_name);
-            my @paternal_parents = split (',', $paternal_name);
-            for (my $i = 0; $i < scalar @maternal_parents; $i++) {
-                my $maternal = $maternal_parents[$i];
-                my $paternal = $paternal_parents[$i];
-                my $multicross_name = $cross_name . '_' . $maternal . 'x' . $paternal . '_multicross';
-                my $success = $self->add_individual_cross($c, $chado_schema, $multicross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal, $user_name);
-                if (!$success) {
-                    return CXGN::BrAPI::JSONResponse->return_error($self->status, "Cross: $multicross_name could not be stored");
-                }
-            }
-        }
-        else {
-            my $maternal = $maternal_name;
-            my $paternal = $paternal_name;
-            my $success = $self->add_individual_cross($c, $chado_schema, $cross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal, $user_name, $cross_combination);
+        my $cross = $self->_format_cross($c, $chado_schema, $cross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal_name, $paternal_name, $user_name, $cross_combination);
 
-            if (!$success) {
-                return CXGN::BrAPI::JSONResponse->return_error($self->status, "Cross: $cross_name could not be stored");
-            }
-        }
-        $c->stash->{rest} = {success => "1",};
+        push(@array_of_pedigree_objects, $cross);
+    }
 
-        if ($@) {
-            return CXGN::BrAPI::JSONResponse->return_error($self->status, $@);
-        };
+    eval {
+        #create array of pedigree objects to add, in this case just one pedigree
+        my $cross_add = CXGN::Pedigree::AddCrosses->new({
+            chado_schema => $chado_schema,
+            phenome_schema => $phenome_schema,
+            dbh => $dbh,
+            crossing_trial_id => $crossing_trial_id,
+            crosses =>  \@array_of_pedigree_objects,
+            owner_name => $user_name,
+        });
+
+        #add the crosses
+        $cross_add->add_crosses();
+    };
+
+    if ($@) {
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, "Error!");
     }
 
     my $trial = CXGN::Cross->new({ schema => $self->bcs_schema, trial_id => $crossing_trial_id});
@@ -517,73 +474,11 @@ sub update_crosses {
     if (($reference_ids_arrayref && scalar(@$reference_ids_arrayref)>0) || ($reference_sources_arrayref && scalar(@$reference_sources_arrayref)>0) ){
         push @$status, { 'error' => 'The following search parameters are not implemented: externalReferenceID, externalReferenceSources' };
     }
-    my $page_size = $self->page_size;
-    my $page = $self->page;
-    my @data;
-    my %crossing_proj;
-    my $counter=0;
 
-    if (!$crossingproj_id){
-        my $crossingtrial = CXGN::BreedersToolbox::Projects->new( { schema=>$self->bcs_schema });
-        my $crossing_trials = $crossingtrial->get_crossing_trials();
-        foreach (@$crossing_trials){
-            $crossing_proj{$_->[0]} = $_->[1];
-        }
-    } else{
-        $crossing_proj{$crossingproj_id->[0]} = $crossingproj_id;
-    }
-
-    foreach my $trial_id (keys %crossing_proj){
-        my $trial = CXGN::Cross->new({ schema => $self->bcs_schema, trial_id => $trial_id});
-        my $result = $trial->get_crosses_and_details_in_crossingtrial();
-        my @crosses;
-        foreach my $r (@$result){
-
-            my ($cross_id, $cross_name, $cross_combination, $cross_type, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name) =@$r;
-           
-            push @data, {
-                additionalInfo=>{},
-                crossAttributes=>[
-                  {
-                    crossAttributeName=>undef,
-                    crossAttributeValue=>undef,
-                  }
-                ],
-                crossDbId=>qq|$cross_id|,
-                crossName=>$cross_name,
-                crossType=>$cross_type,
-                crossingProjectDbId=>qq|$trial_id|,
-                crossingProjectName=>$crossing_proj{$trial_id},
-                externalReferences=> [],
-                parent1=> {
-                  germplasmDbId=>qq|$female_parent_id|,
-                  germplasmName=>$female_parent_name,
-                  observationUnitDbId=>$female_plot_id,
-                  observationUnitName=>$female_plot_name,
-                  parentType=>"FEMALE",
-                },      
-                parent2=>{
-                  germplasmDbId=>qq|$male_parent_id|,
-                  germplasmName=>$male_parent_name,
-                  observationUnitDbId=>$male_plot_id,
-                  observationUnitName=>$male_plot_name,
-                  parentType=>"MALE",
-                },
-                pollinationTimeStamp=>undef,
-            };
-            $counter++;
-        }
-
-    }
-
-    my %result = (data=>\@data);
-    my @data_files;
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
-
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Crossing projects result constructed');
+    #will be implemented in the future when cross properties from conf file are stadarized
 }
 
-sub add_individual_cross {
+sub _format_cross {
     my $self = shift;
     my $c = shift;
     my $chado_schema = shift;
@@ -599,15 +494,9 @@ sub add_individual_cross {
     my $owner_name = shift;
     my $cross_combination = shift;
 
-    my @progeny_names;
-    my $progeny_increment = 1;
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
-    my $prefix = $c->req->param('prefix');
-    my $suffix = $c->req->param('suffix');
-    my $progeny_number = $c->req->param('progeny_number');
-    my $visible_to_role = $c->req->param('visible_to_role');
 
     if ($female_plot_id){
         my $female_plot_rs = $chado_schema->resultset("Stock::Stock")->find({stock_id => $female_plot_id});
@@ -617,16 +506,6 @@ sub add_individual_cross {
     if ($male_plot_id){
         my $male_plot_rs = $chado_schema->resultset("Stock::Stock")->find({stock_id => $male_plot_id});
         $male_plot = $male_plot_rs->name();
-    }
-
-
-    #check that progeny number is an integer less than maximum allowed
-    my $maximum_progeny_number = 999; #higher numbers break cross name convention
-    if ($progeny_number) {
-        if ((! $progeny_number =~ m/^\d+$/) or ($progeny_number > $maximum_progeny_number) or ($progeny_number < 1)) {
-            $c->stash->{rest} = {error =>  "progeny number exceeds the maximum of $maximum_progeny_number or is invalid." };
-            return 0;
-        }
     }
 
     #check that maternal name is not blank
@@ -643,27 +522,18 @@ sub add_individual_cross {
 
     #check that parents exist in the database
     if (! $chado_schema->resultset("Stock::Stock")->find({uniquename=>$maternal,})){
-        $c->stash->{rest} = {error =>  "Female parent does not exist." };
-        return 0;
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, "Female parent does not exist");
     }
 
     if ($paternal) {
         if (! $chado_schema->resultset("Stock::Stock")->find({uniquename=>$paternal,})){
-            $c->stash->{rest} = {error =>  "Male parent does not exist." };
-            return 0;
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, "Male parent does not exist.");
         }
     }
 
     #check that cross name does not already exist
     if ($chado_schema->resultset("Stock::Stock")->find({uniquename=>$cross_name})){
-        $c->stash->{rest} = {error =>  "Cross Unique ID already exists." };
-        return 0;
-    }
-
-    #check that progeny do not already exist
-    if ($chado_schema->resultset("Stock::Stock")->find({uniquename=>$cross_name.$prefix.'001'.$suffix,})){
-        $c->stash->{rest} = {error =>  "progeny already exist." };
-        return 0;
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, "Cross Unique ID already exists");
     }
 
     #objects to store cross information
@@ -690,59 +560,7 @@ sub add_individual_cross {
     $cross_to_add->set_name($cross_name);
     $cross_to_add->set_cross_combination($cross_combination);
 
-    eval {
-        #create array of pedigree objects to add, in this case just one pedigree
-        my @array_of_pedigree_objects = ($cross_to_add);
-        my $cross_add = CXGN::Pedigree::AddCrosses
-        ->new({
-            chado_schema => $chado_schema,
-            phenome_schema => $phenome_schema,
-            dbh => $dbh,
-            crossing_trial_id => $crossing_trial_id,
-            crosses =>  \@array_of_pedigree_objects,
-            owner_name => $owner_name,
-        });
-
-        #add the crosses
-        $cross_add->add_crosses();
-    };
-
-    if ($@) {
-        $c->stash->{rest} = { error => "Error creating the cross: $@" };
-        return 0;
-    }
-
-    eval {
-        #create progeny if specified
-        if ($progeny_number) {
-            #create array of progeny names to add for this cross
-            while ($progeny_increment < $progeny_number + 1) {
-                $progeny_increment = sprintf "%03d", $progeny_increment;
-                my $stock_name = $cross_name.$prefix.$progeny_increment.$suffix;
-                push @progeny_names, $stock_name;
-                $progeny_increment++;
-            }
-
-            #add array of progeny to the cross
-            my $progeny_add = CXGN::Pedigree::AddProgeny
-            ->new({
-                chado_schema => $chado_schema,
-                phenome_schema => $phenome_schema,
-                dbh => $dbh,
-                cross_name => $cross_name,
-                progeny_names => \@progeny_names,
-                owner_name => $owner_name,
-            });
-            $progeny_add->add_progeny();
-        }
-    };
-
-    if ($@) {
-        $c->stash->{rest} = { error => "An error occurred: $@"};
-        return 0;
-    }
-    return 1;
-
+    return $cross_to_add;
 }
 
 1;
