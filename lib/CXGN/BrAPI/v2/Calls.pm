@@ -61,6 +61,7 @@ sub search {
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$self->bcs_schema,
+        people_schema => $self->people_schema(),
         cache_root=>$c->config->{cache_file_path},
         trial_list=>\@trial_ids,
         genotypeprop_hash_select=>['DS', 'GT', 'NT'],
