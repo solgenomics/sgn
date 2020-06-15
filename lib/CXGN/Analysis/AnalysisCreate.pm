@@ -462,6 +462,12 @@ sub store {
         $a->metadata()->result_summary($analysis_result_summary);
         $a->analysis_model_protocol_id($analysis_model_protocol_id);
 
+        while (my($plot_number, $plot_obj) = each %$analysis_precomputed_design_optional) {
+            $plot_obj->{plot_name} = $analysis_name."_".$plot_obj->{plot_name};
+            $analysis_precomputed_design_optional->{$plot_number} = $plot_obj;
+        }
+        # print STDERR Dumper $analysis_precomputed_design_optional;
+
         my ($verified_warning, $verified_error);
         print STDERR "Storing the analysis...\n";
         eval {
@@ -491,9 +497,9 @@ sub store {
 
         my $analysis_result_values_save;
         if ($analysis_result_values_type eq 'analysis_result_values_match_precomputed_design') {
-            while (my($analysis_instance_name, $trait_obj) = each %$analysis_result_values) {
+            while (my($field_plot_name, $trait_obj) = each %$analysis_result_values) {
                 while (my($trait_name, $val) = each %$trait_obj) {
-                    $analysis_result_values_save->{$analysis_instance_name}->{$composed_trait_map{$trait_name}} = $val;
+                    $analysis_result_values_save->{$analysis_name."_".$field_plot_name}->{$composed_trait_map{$trait_name}} = $val;
                 }
             }
         }

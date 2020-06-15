@@ -244,6 +244,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $analysis_result_values_type;
     my $analysis_model_language = "R";
     my $analysis_model_training_data_file_type;
+    my $field_trial_design;
 
     if ($statistics_select eq 'lmer_germplasmname_replicate' || $statistics_select eq 'sommer_grm_spatial_genetic_blups') {
 
@@ -554,6 +555,21 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 }
             }
         }
+
+        my $field_trial_design_full = CXGN::Trial->new({bcs_schema => $schema, trial_id=>$field_trial_id_list->[0]})->get_layout()->get_design();
+        # print STDERR Dumper $field_trial_design_full;
+        while (my($plot_number, $plot_obj) = each %$field_trial_design_full) {
+            $field_trial_design->{$plot_number} = {
+                stock_name => $plot_obj->{accession_name},
+                block_number => $plot_obj->{block_number},
+                col_number => $plot_obj->{col_number},
+                row_number => $plot_obj->{row_number},
+                plot_name => $plot_obj->{plot_name},
+                plot_number => $plot_obj->{plot_number},
+                rep_number => $plot_obj->{rep_number},
+                is_a_control => $plot_obj->{is_a_control}
+            };
+        }
     }
     elsif ($statistics_select eq 'marss_germplasmname_block') {
 
@@ -810,7 +826,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         analysis_model_language => $analysis_model_language,
         application_name => "NickMorales Mixed Models",
         application_version => "V1.01",
-        analysis_model_training_data_file_type => $analysis_model_training_data_file_type
+        analysis_model_training_data_file_type => $analysis_model_training_data_file_type,
+        field_trial_design => $field_trial_design
     };
 }
 

@@ -468,7 +468,7 @@ sub store_analysis_values {
     my $tempfile_path = shift;
 
     print STDERR "Storing analysis values...\n";
-    
+
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my %phenotype_metadata;
@@ -476,7 +476,7 @@ sub store_analysis_values {
     $phenotype_metadata{'archived_file_type'} = 'analysis_values';
     $phenotype_metadata{'operator'} = $operator;
     $phenotype_metadata{'date'} = $timestamp;
-    
+
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
         bcs_schema => $self->bcs_schema(),
         basepath => $basepath,
@@ -499,10 +499,10 @@ sub store_analysis_values {
     my ($verified_warning, $verified_error) = $store_phenotypes->verify();
 
     if ($verified_warning) {
-	warn $verified_warning;
+        warn $verified_warning;
     }
     if ($verified_error) {
-	die $verified_error;
+        die $verified_error;
     }
 
     my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();

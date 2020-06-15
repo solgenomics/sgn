@@ -1129,8 +1129,8 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <& /page/page_title.mas, title=>"Statistics results" &>
 
                     <hr>
-                    <button class="btn btn-primary" id="drone_imagery_calculate_statistics_analysis_save_blups_genetic">Go To Save Analysis Results For Genetic BLUPS</button>
-                    <button class="btn btn-primary" id="drone_imagery_calculate_statistics_analysis_save_blups_spatial">Go To Save Analysis Results For Spatial BLUPS</button>
+                    <button class="btn btn-primary" id="drone_imagery_calculate_statistics_analysis_save_blups_genetic" style="display:none">Go To Save Analysis Results For Genetic BLUPS</button>
+                    <button class="btn btn-primary" id="drone_imagery_calculate_statistics_analysis_save_blups_spatial" style="display:none">Go To Save Analysis Results For Spatial BLUPS</button>
                     <hr>
 
                     <div id ="drone_imagery_calculate_statistics_result_div">
@@ -3464,15 +3464,27 @@ jQuery(document).ready(function() {
         manage_drone_imagery_calculate_statistics_select = jQuery('#drone_imagery_calculate_statistics_select_input').val();
         if (manage_drone_imagery_calculate_statistics_select == 'marss_germplasmname_block') {
             jQuery('#drone_imagery_calculate_statistics_marss_div').show();
+            jQuery('#drone_imagery_calculate_statistics_genotyping_protocol_div').hide();
+            jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_genetic').hide();
+            jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_spatial').hide();
+        }
+        else if (manage_drone_imagery_calculate_statistics_select == 'lmer_germplasmname_replicate') {
+            jQuery('#drone_imagery_calculate_statistics_marss_div').hide();
+            jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_genetic').show();
+            jQuery('#drone_imagery_calculate_statistics_genotyping_protocol_div').hide();
+            jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_spatial').hide();
+        }
+        else if (manage_drone_imagery_calculate_statistics_select == 'sommer_grm_spatial_genetic_blups') {
+            jQuery('#drone_imagery_calculate_statistics_marss_div').hide();
+            jQuery('#drone_imagery_calculate_statistics_genotyping_protocol_div').show();
+            jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_genetic').show();
+            jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_spatial').show();
         }
         else {
             jQuery('#drone_imagery_calculate_statistics_marss_div').hide();
-        }
-        if (manage_drone_imagery_calculate_statistics_select == 'sommer_grm_spatial_genetic_blups') {
-            jQuery('#drone_imagery_calculate_statistics_genotyping_protocol_div').show();
-        }
-        else {
             jQuery('#drone_imagery_calculate_statistics_genotyping_protocol_div').hide();
+            jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_genetic').hide();
+            jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_spatial').hide();
         }
     });
 
@@ -3590,7 +3602,7 @@ jQuery(document).ready(function() {
             for (var i=1; i<drone_imagery_stats_numbers_traits+1; i++) {
                 drone_imagery_stats_mv_traits.push('t'+i);
             }
-            drone_imagery_stats_mv_traits_string = drone_imagery_stats_mv_traits.join();
+            var drone_imagery_stats_mv_traits_string = drone_imagery_stats_mv_traits.join();
 
             drone_imagery_stats_protocol = 'mmer('+drone_imagery_stats_mv_traits_string+'~1, random=~vs(id, Gu=geno_mat, Gtc=unsm('+drone_imagery_stats_numbers_traits+')) +vs(rowNumberFactor, Gtc=diag('+drone_imagery_stats_numbers_traits+')) +vs(colNumberFactor, Gtc=diag('+drone_imagery_stats_numbers_traits+')), rcov=~vs(units, Gtc=unsm('+drone_imagery_stats_numbers_traits+')), data=mat, tolparinv='+drone_imagery_stats_tolparinv_param+');';
 
@@ -3630,47 +3642,58 @@ jQuery(document).ready(function() {
         jQuery('#generic_save_analysis_model_archived_training_data_file_type').val(manage_drone_imagery_calculate_statistics_response.analysis_model_training_data_file_type);
         jQuery('#generic_save_analysis_model_auxiliary_files').val(JSON.stringify(drone_imagery_stats_auxiliary_files));
 
-        //These model weights don't need to be saved
-        jQuery('#generic_save_analysis_model_to_save').prop('disabled','disabled');
+        return false;
+    });
 
-        //jQuery.ajax({
-        //    url : '/api/drone_imagery/calculate_statistics_store_analysis',
-        //    type : 'POST',
-        //    data : {
-        //        'observation_variable_id_list':JSON.stringify(manage_drone_imagery_calculate_statistics_trait_ids),
-        //        'field_trial_id_list':JSON.stringify(manage_drone_imagery_calculate_statistics_field_trial_id_array),
-        //        'statistics_select':manage_drone_imagery_calculate_statistics_select,
-        //        'statistics_select_marss_options':jQuery('#drone_imagery_calculate_statistics_select_marss').val(),
-        //        'protocol_id':jQuery('#drone_image_calculate_statistics_genotyping_protocol_select').val(),
-        //        'compute_from_parents':jQuery('#drone_image_calculate_statistics_genotyping_protocol_compute_from_parents_select').val(),
-        //        'tolparinv':jQuery('#drone_image_calculate_statistics_tolparinv_select').val(),
-        //        'analysis_name':drone_imagery_calculate_statistics_analysis_name,
-        //        'analysis_description':drone_imagery_calculate_statistics_analysis_description,
-        //        'plot_names':manage_drone_imagery_calculate_statistics_plot_names,
-        //        'accession_names':manage_drone_imagery_calculate_statistics_accession_names,
-        //        'trait_names':manage_drone_imagery_calculate_statistics_trait_names,
-        //        'result_blup_genetic_data':manage_drone_imagery_calculate_statistics_result_blup_genetic_data,
-        //        'result_blup_spatial_data':manage_drone_imagery_calculate_statistics_result_blup_spatial_data,
-        //        'phenotype_training_file':manage_drone_imagery_calculate_statistics_phenotype_training_file,
-        //        'grm_training_file':manage_drone_imagery_calculate_statistics_grm_training_file
-        //    },
-        //    beforeSend: function() {
-        //        jQuery("#working_modal").modal("show");
-        //    },
-        //    success: function(response){
-        //        console.log(response);
-        //        jQuery("#working_modal").modal("hide");
-        //        if (response.error) {
-        //            alert(response.error);
-        //        }
-        //        else {
-        //        }
-        //    },
-        //    error: function(response){
-        //        jQuery("#working_modal").modal("hide");
-        //        alert('Error storing analysis statistics!')
-        //    }
-        //});
+    jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_spatial').click(function(){
+        if (manage_drone_imagery_calculate_statistics_field_trial_id_array.length>1) {
+            alert('Saving spatial BLUPs currently only implemented for a single trial, so only select one field trial in your analysis');
+            return false;
+        }
+
+        jQuery('#generic_save_analysis_dialog').modal('show');
+
+        var drone_imagery_stats_result_summary = {};
+
+        var drone_imagery_stats_tolparinv_param = jQuery('#drone_image_calculate_statistics_tolparinv_select').val();
+        var drone_imagery_stats_numbers_traits = manage_drone_imagery_calculate_statistics_response.unique_traits.length;
+
+        var drone_imagery_stats_mv_traits = [];
+        for (var i=1; i<drone_imagery_stats_numbers_traits+1; i++) {
+            drone_imagery_stats_mv_traits.push('t'+i);
+        }
+        var drone_imagery_stats_mv_traits_string = drone_imagery_stats_mv_traits.join();
+
+        var drone_imagery_stats_protocol = 'mmer('+drone_imagery_stats_mv_traits_string+'~1, random=~vs(id, Gu=geno_mat, Gtc=unsm('+drone_imagery_stats_numbers_traits+')) +vs(rowNumberFactor, Gtc=diag('+drone_imagery_stats_numbers_traits+')) +vs(colNumberFactor, Gtc=diag('+drone_imagery_stats_numbers_traits+')), rcov=~vs(units, Gtc=unsm('+drone_imagery_stats_numbers_traits+')), data=mat, tolparinv='+drone_imagery_stats_tolparinv_param+');';
+
+        var drone_imagery_stats_parameters = {
+            'tolparinv':drone_imagery_stats_tolparinv_param,
+            'genotyping_protocol_id':jQuery('#drone_image_calculate_statistics_genotyping_protocol_select').val(),
+            'compute_genotypes_from_parents':jQuery('#drone_image_calculate_statistics_genotyping_protocol_compute_from_parents_select').val(),
+            'protocol':drone_imagery_stats_protocol
+        };
+
+        var drone_imagery_stats_auxiliary_files = [{'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.grm_file, auxiliary_model_file_archive_type:'nicksmixedmodels_v1.01_sommer_grm_spatial_genetic_blups_grm_file'}];
+
+        jQuery('#generic_save_analysis_protocol').val(drone_imagery_stats_protocol);
+        jQuery('#generic_save_analysis_model_properties').val(JSON.stringify(drone_imagery_stats_parameters));
+        //jQuery('#generic_save_analysis_dataset_id').val();
+        jQuery('#generic_save_analysis_accession_names').val(JSON.stringify(manage_drone_imagery_calculate_statistics_response.unique_accessions));
+        jQuery('#generic_save_analysis_trait_names').val(JSON.stringify(manage_drone_imagery_calculate_statistics_response.unique_traits));
+        jQuery('#generic_save_analysis_statistical_ontology_term').val(manage_drone_imagery_calculate_statistics_response.statistical_ontology_term);
+        jQuery('#generic_save_analysis_design').val(JSON.stringify(manage_drone_imagery_calculate_statistics_response.field_trial_design));
+        jQuery('#generic_save_analysis_result_values').val(JSON.stringify(manage_drone_imagery_calculate_statistics_response.result_blup_spatial_data));
+        jQuery('#generic_save_analysis_result_values_type').val('analysis_result_values_match_precomputed_design');
+        jQuery('#generic_save_analysis_result_summary_values').val(JSON.stringify(drone_imagery_stats_result_summary));
+        jQuery('#generic_save_analysis_model_language').val(manage_drone_imagery_calculate_statistics_response.analysis_model_language);
+        jQuery('#generic_save_analysis_model_type').val(manage_drone_imagery_calculate_statistics_response.analysis_model_type);
+        jQuery('#generic_save_analysis_model_application_name').val(manage_drone_imagery_calculate_statistics_response.application_name);
+        jQuery('#generic_save_analysis_model_application_version').val(manage_drone_imagery_calculate_statistics_response.application_version);
+        //jQuery('#generic_save_analysis_model_file').val();
+        //jQuery('#generic_save_analysis_model_archived_model_file_type').val();
+        jQuery('#generic_save_analysis_model_training_data_file').val(manage_drone_imagery_calculate_statistics_response.stats_tempfile);
+        jQuery('#generic_save_analysis_model_archived_training_data_file_type').val(manage_drone_imagery_calculate_statistics_response.analysis_model_training_data_file_type);
+        jQuery('#generic_save_analysis_model_auxiliary_files').val(JSON.stringify(drone_imagery_stats_auxiliary_files));
 
         return false;
     });
