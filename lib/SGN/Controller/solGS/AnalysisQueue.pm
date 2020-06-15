@@ -215,7 +215,8 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
     $self->run_analysis($c);
      
     my $ret->{result} = $c->stash->{status}; 	
-
+    $ret->{analysis_profile} = $analysis_profile;
+    
     $ret = to_json($ret);
        
     $c->res->content_type('application/json');
@@ -982,17 +983,43 @@ sub analysis_log_file {
 
 sub confirm_request :Path('/solgs/confirm/request/') Args(0) {
     my ($self, $c) = @_;
+
+    # my $analysis_profile = $c->req->params;
+    # $c->stash->{analysis_profile} = $analysis_profile;
+   
+    # my $analysis_page = $analysis_profile->{analysis_page};
+    # $c->stash->{analysis_page} = $analysis_page;
     
     my $referer = $c->req->referer;
     my $user_id = $c->user()->get_object()->get_sp_person_id();
 
-    $c->stash->{message} = "<p>Your analysis is running.<br />
-                            You will receive an email when it is completed.<br /></p>
-                            <p>You can also check the status of the analysis in 
-                            <a href=\"/solpeople/profile/$user_id\">your profile page</a>.</p>
+    my $referer = $c->req->referer;
+    my $job_type;
+
+    if ($referer =~ /solgs\/search/) 
+    {
+	$job_type = 'Your query for a training dataset is running.';
+    } 
+    elsif ($referer =~ /solgs\/population\//) 
+    {
+	$job_type = 'Your model(s) training is running. ';
+    } 
+    elsif ($referer =~ /solgs\/trait\/|solgs\/traits\/all\//) 
+    {
+	$job_type = 'Your GEBVs prediction is running.';
+    }
+    else
+    {
+	$job_type = 'Your job submission is being processed.';	
+    }
+  
+   $c->stash->{message} = "<p>$job_type</p>
+                            <p>You will receive an email when it is completed. " . 
+			    "You can also check the status of the job in " . 
+			    "<a href=\"/solpeople/profile/$user_id\">your profile page</a>.</p>
                             <p><a href=\"$referer\">[ Go back ]</a></p>";
 
-    $c->stash->{template} = "/generic_message.mas"; 
+    $c->stash->{template} = "/generic_message.mas";
 
 }
 
