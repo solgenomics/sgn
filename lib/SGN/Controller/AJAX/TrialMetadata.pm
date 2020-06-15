@@ -1450,9 +1450,12 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
+    my $cxgn_project_type = $c->stash->{trial}->get_cxgn_project_type();
+
     my $fieldmap = CXGN::Trial::FieldMap->new({
       bcs_schema => $schema,
       trial_id => $c->stash->{trial_id},
+      experiment_type => $cxgn_project_type->{experiment_type}
     });
     my $return = $fieldmap->display_fieldmap();
 

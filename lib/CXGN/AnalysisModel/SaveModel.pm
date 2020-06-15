@@ -248,7 +248,6 @@ sub save_model {
         if (!$archived_filename_with_path) {
             return { error => "Could not save file $model_original_name in archive." };
         }
-        unlink $model_file;
         print STDERR "Archived Model File: $archived_filename_with_path\n";
 
         my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
@@ -286,7 +285,6 @@ sub save_model {
     if (!$archived_aux_filename_with_path) {
         return { error => "Could not save file $model_aux_original_name in archive." };
     }
-    unlink $archived_training_data_file;
     print STDERR "Archived Auxiliary Model File: $archived_aux_filename_with_path\n";
 
     my $md_row_aux = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
@@ -326,7 +324,6 @@ sub save_model {
             if (!$archived_aux_filename_with_path) {
                 return { error => "Could not save file $model_aux_original_name in archive." };
             }
-            unlink $auxiliary_model_file;
             print STDERR "Archived Auxiliary Model File: $archived_aux_filename_with_path\n";
 
             my $md_row_aux = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});

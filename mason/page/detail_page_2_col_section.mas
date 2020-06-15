@@ -87,6 +87,7 @@ $drone_run_date => undef
 #Specific to analysis detail page
 $analysis_metadata => undef
 $for_analysis_page => undef
+$data_level => undef
 
 </%args>
 
@@ -118,7 +119,7 @@ $for_analysis_page => undef
                             <div class="panel-body">
 
 % if ($info_section_id eq 'pheno_heatmap'){
-                                <& /breeders_toolbox/trial/phenotype_heatmap.mas, trial_id => $trial_id &>
+                                <& /breeders_toolbox/trial/phenotype_heatmap.mas, trial_id => $trial_id, data_level => $data_level &>
 % } #End pheno_heatmap
 % if ($info_section_id eq 'trial_design_section'){
                                 <& /breeders_toolbox/trial/design_section.mas, trial_id => $trial_id, trial_name => $trial_name, has_subplot_entries => $has_subplot_entries, has_plant_entries => $has_plant_entries, has_tissue_sample_entries => $has_tissue_sample_entries, design_name => $design_name, trial_stock_type => $trial_stock_type &>

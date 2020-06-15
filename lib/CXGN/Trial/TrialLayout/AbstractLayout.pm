@@ -31,7 +31,7 @@ has 'trial_id' => (
 
 has 'experiment_type' => (
     is       => 'rw',
-    isa     => 'Str', #field_layout or genotyping_layout
+    isa     => 'Str', #field_layout or genotyping_layout or analysis_experiment
     required => 1,
 );
 

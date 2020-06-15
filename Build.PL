@@ -147,6 +147,7 @@ my $build = SGN::Build->new(
         'Scalar::Util'                             => 0,
         #'SOAP::Transport::HTTP'                    => 0,
 	'Sort::Maker'                              => 0,
+	'Sort::Key::Natural'                              => 0,
 	'Spreadsheet::WriteExcel'                  => 0,
         'Spreadsheet::ParseExcel'                  => 0,
         'Spreadsheet::Read'                        => 0,
