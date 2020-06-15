@@ -159,8 +159,7 @@ sub get_cross_details {
     my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
     my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_name", "stock_type")->cvterm_id();
     my $member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "member_of", "stock_relationship")->cvterm_id();
-    my $cross_experiment_type_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_experiment', 'experiment_type');
-    my $project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "crossing_trial", "project_type")->cvterm_id();
+    my $cross_experiment_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_experiment', 'experiment_type')->cvterm_id();
 
     my $where_female = "";
     if ($female_parent){
@@ -179,32 +178,32 @@ sub get_cross_details {
         LEFT JOIN stock AS male_parent ON (male_parent.stock_id = stock_relationship2.subject_id)
         LEFT JOIN stock_relationship AS stock_relationship3 ON (stock_relationship3.subject_id = cross_entry.stock_id) AND stock_relationship3.type_id = ?
         LEFT JOIN stock AS family ON (stock_relationship3.object_id = family.stock_id) AND family.type_id = ?
-        LEFT JOIN nd_experiment_stock ON (nd_experiment_stock.stock_id = cross_entry.stock_id) AND nd_experiment_stock.type_id = ?
-        LEFT JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
-        LEFT JOIN project ON (project.project_id = nd_experiment_project.project_id) AND project.type_id = ?
+        LEFT JOIN nd_experiment_stock ON (nd_experiment_stock.stock_id = cross_entry.stock_id)
+        LEFT JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id) AND nd_experiment_stock.type_id = ?
+        LEFT JOIN project ON (nd_experiment_project.project_id = project.project_id)
         $where_female $where_male ORDER BY stock_relationship1.value, male_parent.uniquename";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
     if ($female_parent && $male_parent) {
-        $h->execute($female_parent_type_id, $cross_type_id, $male_parent_type_id, $member_of_type_id, $family_name_type_id, $cross_experiment_type_cvterm, $project_type_cvterm_id, $female_parent, $male_parent);
+        $h->execute($female_parent_type_id, $cross_type_id, $male_parent_type_id, $member_of_type_id, $family_name_type_id, $cross_experiment_cvterm, $female_parent, $male_parent);
     }
     elsif ($female_parent) {
-        $h->execute($female_parent_type_id, $cross_type_id, $male_parent_type_id, $member_of_type_id, $family_name_type_id, $cross_experiment_type_cvterm, $project_type_cvterm_id, $female_parent);
+        $h->execute($female_parent_type_id, $cross_type_id, $male_parent_type_id, $member_of_type_id, $family_name_type_id, $cross_experiment_cvterm, $female_parent);
     }
     elsif ($male_parent) {
-        $h->execute($female_parent_type_id, $cross_type_id, $male_parent_type_id, $member_of_type_id, $family_name_type_id, $cross_experiment_type_cvterm, $project_type_cvterm_id, $male_parent);
+        $h->execute($female_parent_type_id, $cross_type_id, $male_parent_type_id, $member_of_type_id, $family_name_type_id, $cross_experiment_cvterm, $male_parent);
     }
     else {
-        $h->execute($female_parent_type_id, $cross_type_id, $male_parent_type_id, $member_of_type_id, $family_name_type_id, $cross_experiment_type_cvterm, $project_type_cvterm_id);
+        $h->execute($female_parent_type_id, $cross_type_id, $male_parent_type_id, $member_of_type_id, $family_name_type_id, $cross_experiment_cvterm);
     }
 
-    my @cross_info = ();
+    my @cross_details = ();
     while (my ($female_parent_id, $male_parent_id, $cross_entry_id, $female_parent_name, $male_parent_name, $cross_name, $cross_type, $family_id, $family_name, $project_id, $project_name) = $h->fetchrow_array()){
-        push @cross_info, [$female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_entry_id, $cross_name, $cross_type, $family_id, $family_name, $project_id, $project_name]
+        push @cross_details, [$female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_entry_id, $cross_name, $cross_type, $family_id, $family_name, $project_id, $project_name]
     }
-    print STDERR Dumper(\@cross_info);
-    return \@cross_info;
+#    print STDERR Dumper(\@cross_details);
+    return \@cross_details;
 }
 
 

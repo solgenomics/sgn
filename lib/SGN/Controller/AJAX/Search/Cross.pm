@@ -61,22 +61,20 @@ sub search_cross_details : Path('/ajax/search/cross_details') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $result = CXGN::Cross->get_cross_details($schema, $female_parent, $male_parent);
-    my @cross_info;
-    print STDERR "RESULTS =".Dumper($result)."\n";
+    my @cross_details;
+#    print STDERR "RESULTS =".Dumper($result)."\n";
     foreach my $r (@$result){
-      #print STDERR Dumper $r;
+        my ($female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_entry_id, $cross_name, $cross_type, $family_id, $family_name, $project_id, $project_name) = @$r;
+        push @cross_details, [ qq{<a href="/stock/$female_parent_id/view">$female_parent_name</a>},
+            qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a>},
+            qq{<a href="/cross/$cross_entry_id">$cross_name</a>},
+            $cross_type,
+            qq{<a href="/stock/$family_id/view">$family_name</a>},
+            qq{<a href="/breeders/trial/$project_id">$project_name</a>},
+        ];
+    }
 
-    my ($female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_entry_id, $cross_name, $cross_type, $family_id, $family_name, $project_id, $project_name) = @$r;
-	  push @cross_info, [ qq{<a href="/stock/$female_parent_id/view">$female_parent_name</a>},
-    qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a>},
-    qq{<a href="/cross/$cross_entry_id">$cross_name</a>},
-    $cross_type,
-    $family_name,
-    $project_name];
-    #print STDERR "Cross info =" . Dumper(\@cross_info) . "\n";
-  }
-
-  $c->stash->{rest}={ data=> \@cross_info};
+    $c->stash->{rest}={ data=> \@cross_details};
 
 }
 
