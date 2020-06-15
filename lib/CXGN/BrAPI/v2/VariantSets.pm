@@ -60,6 +60,7 @@ sub search {
 
     my $genotype_search = CXGN::Genotype::Search->new({
             bcs_schema=>$self->bcs_schema,
+            people_schema => $self->people_schema(),
             cache_root=>$c->config->{cache_file_path},
             trial_list=>\@trial_ids,
             genotypeprop_hash_select=>['DS'],
@@ -160,6 +161,7 @@ sub detail {
 
     my $genotype_search = CXGN::Genotype::Search->new({
         bcs_schema=>$self->bcs_schema,
+        people_schema => $self->people_schema(),
         cache_root=>$c->config->{cache_file_path},
         trial_list=>\@trial_ids,
         protocol_id_list=>\@protocol_ids,
@@ -250,6 +252,7 @@ sub callsets {
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$self->bcs_schema,
+        people_schema => $self->people_schema(),
         cache_root=>$c->config->{cache_file_path},
         trial_list=>\@trial_ids,
         protocol_id_list=>\@protocol_ids,
@@ -329,6 +332,7 @@ sub calls {
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$self->bcs_schema,
+        people_schema => $self->people_schema(),
         cache_root=>$c->config->{cache_file_path},
         trial_list=>\@trial_ids,
         protocol_id_list=>\@protocol_ids,
@@ -513,6 +517,7 @@ sub extract {
 
     my $genotype_search = CXGN::Genotype::Search->new({
             bcs_schema=>$self->bcs_schema,
+            people_schema => $self->people_schema(),
             cache_root=>$c->config->{cache_file_path},
             trial_list=>\@trial_ids,
             genotypeprop_hash_select=>['DS'],

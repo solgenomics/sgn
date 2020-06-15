@@ -100,10 +100,10 @@ sub search {
 				programDbId=>qq|$_->[0]|,
 				programName=>$_->[1],
 				abbreviation=>$prop_hash->{breeding_program_abbreviation} ? join ',', @{$prop_hash->{breeding_program_abbreviation}} : '',,
-				additionalInfo => undef,
+				additionalInfo => {},
 	            commonCropName => $inputs->{crop},
 	            documentationURL => undef,
-	            externalReferences  => undef,
+	            externalReferences  => [],
 	            leadPersonDbId => $person_id,
 	            leadPersonName=> $names,
 	            objective=>$_->[2],
@@ -139,6 +139,7 @@ sub detail {
 	my @data;
 	my @data_files;
 	my $total_count = 1;
+	my %result;
 
 	foreach (@available){
 		my $prop_hash = $self->get_projectprop_hash($_->[0]);
@@ -155,21 +156,20 @@ sub detail {
         my $names = join ',', @sp_person_names;
         my $person_id = join ',',  @sp_persons;
         
-		push @data, {
+		%result = (
 			programDbId=>qq|$_->[0]|,
 			programName=>$_->[1],
-			abbreviation=>$prop_hash->{breeding_program_abbreviation} ? join ',', @{$prop_hash->{breeding_program_abbreviation}} : '',,
-			additionalInfo => undef,
+			abbreviation=>$prop_hash->{breeding_program_abbreviation} ? join ',', @{$prop_hash->{breeding_program_abbreviation}} : undef,
+			additionalInfo => {},
             commonCropName => $crop,
             documentationURL => undef,
-            externalReferences  => undef,
-            leadPersonDbId => $person_id,
-            leadPersonName=> $names,
+            externalReferences  => [],
+            leadPersonDbId => $person_id ? $person_id : undef,
+            leadPersonName=> $names ? $names : undef,
             objective=>$_->[2],
-		};
+		);
 	}
 
-	my %result = (data=>\@data);
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
 	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Program list result constructed');
 }

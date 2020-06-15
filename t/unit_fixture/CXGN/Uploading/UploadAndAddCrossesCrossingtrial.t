@@ -16,6 +16,7 @@ use CXGN::Pedigree::AddPedigrees;
 use Bio::GeneticRelationships::Individual;
 use Bio::GeneticRelationships::Pedigree;
 use CXGN::Cross;
+use CXGN::Pedigree::AddCrossTissueSamples;
 use LWP::UserAgent;
 
 #Needed to update IO::Socket::SSL
@@ -436,6 +437,33 @@ my $after_add_family_name = $schema->resultset("Stock::Stock")->search({type_id 
 
 is($after_family_name_stocks, $before_family_name_stocks +4);
 is($after_add_family_name, $before_add_family_name + 4);
+
+
+#test adding tissue culture samples
+my $before_adding_samples_stockprop = $schema->resultset("Stock::Stockprop")->search({})->count();
+
+my $cross_unique_id = 'test_add_cross';
+my $sample_type = 'Embryo IDs';
+my @ids = qw(test_embryo_1 test_embryo_2 test_embryo_3 test_embryo_4);
+my $cross_add_samples = CXGN::Pedigree::AddCrossTissueSamples->new({
+    chado_schema => $schema,
+    cross_name => $cross_unique_id,
+    key => $sample_type,
+    value => \@ids,
+});
+
+ok(my $return = $cross_add_samples->add_samples());
+
+my $after_adding_samples_stockprop = $schema->resultset("Stock::Stockprop")->search({})->count();
+is($after_adding_samples_stockprop, $before_adding_samples_stockprop +1);
+
+#test retrieving tissue culture samples
+my $cross_id = $schema->resultset('Stock::Stock')->find({name =>'test_add_cross'})->stock_id();
+my $cross_samples_obj = CXGN::Cross->new({schema=>$schema, cross_stock_id=>$cross_id});
+my $cross_sample_data  = $cross_samples_obj->get_cross_tissue_culture_samples();
+my $embryo_ids_ref = $cross_sample_data->{'Embryo IDs'};
+my $number_of_embryo_samples = @$embryo_ids_ref;
+is($number_of_embryo_samples, 4);
 
 #test deleting crossing
 my $before_deleting_crosses = $schema->resultset("Stock::Stock")->search({ type_id => $cross_type_id})->count();

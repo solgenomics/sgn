@@ -129,8 +129,8 @@ sub parse {
         my $collector = $obs->{'collector'} ? $obs->{'collector'} : '';
         my $obs_db_id = $obs->{'observationDbId'} ? $obs->{'observationDbId'} : '';
         my $value = $obs->{'value'};
-        my $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, "|".$variable_db_id);
-        my $trait_name = $variable_db_id; #$trait_cvterm->name."|".$variable_db_id;
+        my $trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $variable_db_id,"extended");
+        my $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
 
         my $unique_combo = $obsunit_db_id.$variable_db_id.$timestamp;
         if ($seen{$unique_combo}) {
