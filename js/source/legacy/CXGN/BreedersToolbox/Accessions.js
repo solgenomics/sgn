@@ -352,7 +352,7 @@ jQuery(document).ready(function ($) {
     });
 
     jQuery('#upload_new_accessions_form').iframePostForm({
-        json: true,
+	json: false,
         post: function () {
             var uploadedSeedlotFile = jQuery("#new_accessions_upload_file").val();
             jQuery('#working_modal').modal("show");
@@ -361,10 +361,17 @@ jQuery(document).ready(function ($) {
                 alert("No file selected");
             }
         },
-        complete: function (response) {
-            console.log(response);
+        complete: function (r) {
+            console.log(r);
             jQuery('#working_modal').modal("hide");
+	    
+	    try { r = decodeURIComponent(escape(r)); }
+	    catch {
+		//alert("The response was already encoded correctly????");
+	    }
 
+	    var response = JSON.parse(r);
+	    
             if (response.error || response.error_string) {
                 fullParsedData = undefined;
                 alert(response.error || response.error_string);
@@ -437,8 +444,6 @@ function openWindowWithPost(fuzzyResponse) {
 function verify_accession_list(accession_list_id) {
     accession_list = JSON.stringify(list.getList(accession_list_id));
     doFuzzySearch = jQuery('#fuzzy_check').attr('checked');
-    //alert("should be disabled");
-    //alert(accession_list);
 
     jQuery.ajax({
         type: 'POST',
@@ -478,6 +483,7 @@ function review_verification_results(doFuzzySearch, verifyResponse, accession_li
     //console.log(accession_list_id);
 
     if (verifyResponse.found) {
+
         jQuery('#count_of_found_accessions').html("Total number already in the database("+verifyResponse.found.length+")");
         var found_html = '<table class="table table-bordered" id="found_accessions_table"><thead><tr><th>Search Name</th><th>Found in Database</th></tr></thead><tbody>';
         for( i=0; i < verifyResponse.found.length; i++){
@@ -497,7 +503,6 @@ function review_verification_results(doFuzzySearch, verifyResponse, accession_li
         jQuery('#found_accessions_table').DataTable({});
 
         accessionList = verifyResponse.absent;
-
     }
 
     if (verifyResponse.fuzzy.length > 0 && doFuzzySearch) {
@@ -516,6 +521,7 @@ function review_verification_results(doFuzzySearch, verifyResponse, accession_li
             fuzzy_html = fuzzy_html + '</select></td><td><select class="form-control" name="fuzzy_option"><option value="keep">Continue saving name in your list</option><option value="replace">Replace name in your list with selected existing name</option><option value="remove">Remove name in your list and ignore</option><option value="synonymize">Add name in your list as a synonym to selected existing name</option></select></td></tr>';
         }
         fuzzy_html = fuzzy_html + '</tbody></table>';
+	
         jQuery('#view_fuzzy_matches').html(fuzzy_html);
 
         //Add to absent
@@ -566,6 +572,7 @@ function populate_review_absent_dialog(absent, infoToAdd){
         +'<div class="left">'+absent[i]
         +'</div>';
     }
+    
     jQuery('#view_absent').html(absent_html);
     jQuery('#view_infoToAdd').html('');
 
@@ -598,6 +605,7 @@ function populate_review_absent_dialog(absent, infoToAdd){
             }
         }
         infoToAdd_html = infoToAdd_html + "</tbody></table></div>";
+
         jQuery('#view_infoToAdd').html(infoToAdd_html);
         jQuery('#add_accessions_using_list_inputs').hide();
     } else {

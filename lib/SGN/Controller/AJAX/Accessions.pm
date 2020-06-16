@@ -17,8 +17,9 @@ Jeremy Edwards <jde22@cornell.edu>
 package SGN::Controller::AJAX::Accessions;
 
 use Moose;
-use JSON;
+use JSON::PP;
 use List::MoreUtils qw /any /;
+
 use CXGN::Stock::StockLookup;
 use CXGN::BreedersToolbox::Accessions;
 use CXGN::BreedersToolbox::StocksFuzzySearch;
@@ -26,11 +27,16 @@ use CXGN::BreedersToolbox::OrganismFuzzySearch;
 use CXGN::Stock::Accession;
 use CXGN::Chado::Stock;
 use CXGN::List;
-use Data::Dumper;
+use YAML;
+
+#use Data::Dumper;
+
 use Try::Tiny;
 use CXGN::Stock::ParseUpload;
 use CXGN::BreederSearch;
-#use Encode::Detect::Detector;
+use utf8;
+use Encode;
+use Test::utf8;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -78,8 +84,6 @@ sub verify_accession_list_POST : Args(0) {
 
     my $accession_list_json = $c->req->param('accession_list');
     my $organism_list_json = $c->req->param('organism_list');
-
-    #my $encoding = Encode::Detect::Detector::detect($accession_list_json);
 
     my @accession_list = @{_parse_list_from_json($accession_list_json)};
     
@@ -147,7 +151,7 @@ sub do_fuzzy_search {
     }
 
     print STDERR "DoFuzzySearch 3".localtime()."\n";
-    #print STDERR Dumper $fuzzy_accessions;
+    print STDERR "FUZZY ACCESSIONS: ".YAML::Dump($fuzzy_accessions);
 
     my %return = (
         success => "1",
@@ -179,8 +183,9 @@ sub do_exact_search {
 
     my $validator = CXGN::List::Validate->new();
     my @absent_accessions = @{$validator->validate($schema, 'accessions', $accession_list)->{'missing'}};
-    my %accessions_missing_hash = map { $_ => 1 } @absent_accessions;
 
+    my %accessions_missing_hash = map { $_ => 1 } @absent_accessions;
+    
     foreach (@$accession_list){
         if (!exists($accessions_missing_hash{$_})){
             push @found_accessions, { unique_name => $_,  matched_string => $_};
@@ -197,7 +202,11 @@ sub do_exact_search {
         fuzzy_organisms => [],
         found_organisms => []
     };
-    #print STDERR Dumper($rest);
+
+    print STDERR "REST = ".YAML::Dump($rest);
+
+    print STDERR "DONE with exact_search \n\n\n\n\n\n\n\n\n\n\n\n";
+    
     $c->stash->{rest} = $rest;
 }
 
@@ -296,10 +305,14 @@ sub verify_accessions_file_POST : Args(0) {
     my %full_accessions;
     while (my ($k,$val) = each %$full_data){
         push @accession_names, $val->{germplasmName};
+	print STDERR "germplasmName = ".YAML::Dump($val->{germplasmName});
         $full_accessions{$val->{germplasmName}} = $val;
     }
     my $new_list_id = CXGN::List::create_list($c->dbc->dbh, "AccessionsIn".$upload_original_name.$timestamp, 'Autocreated when upload accessions from file '.$upload_original_name.$timestamp, $user_id);
     my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id => $new_list_id } );
+
+    print STDERR "NOW: ".YAML::Dump($parsed_data)."\n";
+
     $list->add_bulk(\@accession_names);
     $list->type('accessions');
 
@@ -319,6 +332,8 @@ sub verify_accessions_file_POST : Args(0) {
         $return{error_string} = $parsed_data->{error_string};
     }
 
+    print STDERR "RETURN DATA = ".YAML::Dump(\%return);
+    
     $c->stash->{rest} = \%return;
 }
 
@@ -328,8 +343,8 @@ sub verify_fuzzy_options_POST : Args(0) {
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $accession_list_id = $c->req->param('accession_list_id');
-    my $fuzzy_option_hash = decode_json($c->req->param('fuzzy_option_data'));
-    my $names_to_add = JSON->new->utf8->decode($c->req->param('names_to_add'));
+    my $fuzzy_option_hash = JSON::PP->new->utf8(1)->decode($c->req->param('fuzzy_option_data'));
+    my $names_to_add = JSON::PP->new->utf8(1)->decode($c->req->param('names_to_add'));
 
     my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $accession_list_id } );
 
@@ -375,8 +390,11 @@ sub add_accession_list_POST : Args(0) {
     my ($self, $c) = @_;
     
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $full_info = $c->req->param('full_info') ? JSON->new()->decode( $c->req->param('full_info') ) : '';
-    my $allowed_organisms = $c->req->param('allowed_organisms') ? decode_json $c->req->param('allowed_organisms') : [];
+    my $full_info = $c->req->param('full_info') ? JSON::PP->new()->utf8(1)->decode( $c->req->param('full_info') ) : '';
+
+    print STDERR "FULL INFO: ". YAML::Dump($full_info)."\n\n";
+    
+    my $allowed_organisms = $c->req->param('allowed_organisms') ? JSON::PP->new()->utf8(1)->decode($c->req->param('allowed_organisms')) : [];
     my %allowed_organisms = map {$_=>1} @$allowed_organisms;
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
@@ -516,8 +534,12 @@ sub fuzzy_response_download_POST : Args(0) {
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $fuzzy_json = $c->req->param('fuzzy_response');
-    my $fuzzy_response = decode_json $fuzzy_json;
 
+    print STDERR "FUZZY RESPONSE: $fuzzy_json\n";
+
+    my $fuzzy_response = JSON::PP->new->utf8(1)->decode($fuzzy_json);
+    print STDERR "FUZZY DECODED: ".YAML::Dump($fuzzy_response);
+    
     my $synonym_hash_lookup = CXGN::Stock::StockLookup->new({schema => $schema})->get_synonym_hash_lookup();
     my @data_out;
     push @data_out, ['In Your List', 'Database Accession Match', 'Database Synonym Match', 'Database Saved Synonyms', 'Distance'];
@@ -575,15 +597,17 @@ sub population_members_GET : Args(1) {
 
 sub _parse_list_from_json {
     my $list_json = shift;
-    my $json = new JSON;
-    if ($list_json) {
-	my $decoded_list = $json->allow_nonref->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
-	#my $decoded_list = decode_json($list_json);
-	my @array_of_list_items = @{$decoded_list};
-	return \@array_of_list_items;
+    my $json = new JSON::PP;
+
+    if (is_sane_utf8($list_json) && is_flagged_utf8($list_json)) { 
+	print STDERR "string is both sane and flagged: $list_json\n";
+	#my $decoded_list = $json->utf8(0)->allow_nonref->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
+	my $decoded_list = $json->utf8(0)->decode($list_json);
+	return $decoded_list;
     }
     else {
-	return;
+	print STDERR "Decoding a non sane, non-flagged string...\n";
+	return 	$json->utf8(1)->decode($list_json);
     }
 }
 
