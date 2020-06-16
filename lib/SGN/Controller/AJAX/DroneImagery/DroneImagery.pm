@@ -6129,6 +6129,7 @@ sub _perform_autoencoder_keras_cnn_vi {
     my $col_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'col_number', 'stock_property')->cvterm_id();
 
     my $stock_ids_sql = join ',', @seen_plots;
+    my %seen_accession_names;
     my $stock_metadata_q = "SELECT stock.stock_id, stock.uniquename, germplasm.uniquename, germplasm.stock_id, plot_number.value, rep.value, block_number.value, col_number.value, row_number.value
         FROM stock
         JOIN stock_relationship ON(stock.stock_id=stock_relationship.subject_id AND stock_relationship.type_id=$plot_of_cvterm_id)
@@ -6153,7 +6154,9 @@ sub _perform_autoencoder_keras_cnn_vi {
             row_number => $row,
             col_number => $col
         };
+        $seen_accession_names{$germplasm_uniquename}++;
     }
+    my @unique_accession_names = keys %seen_accession_names;
 
     my $dir = $c->tempfiles_subdir('/drone_imagery_keras_cnn_autoencoder_dir');
     my $archive_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_autoencoder_dir/inputfileXXXX');
@@ -6315,6 +6318,7 @@ sub _perform_autoencoder_keras_cnn_vi {
 
     close($fh);
     print STDERR "Read $line lines in results file\n";
+    # print STDERR Dumper \%autoencoder_vi_phenotype_data;
 
     if ($line > 0) {
         my %phenotype_metadata = (
