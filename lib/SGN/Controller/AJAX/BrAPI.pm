@@ -213,7 +213,7 @@ sub _authenticate_user {
 	# authentication or serverinfo call method request auth, we authenticate.
     if ($c->config->{brapi_require_login} == 1 || $force_authenticate || !grep { $_ eq $wildcard } @server_permission){
         ($user_id, $user_type, $user_pref, $expired) = CXGN::Login->new($c->dbc->dbh)->query_from_cookie($c->stash->{session_token});
-        #print STDERR $person_id." : ".$user_type." : ".$expired;
+        #print STDERR $user_id." : ".$user_type." : ".$expired;
 
         if (!$user_id || $expired || !$user_type || grep {$_ ne $user_type} @server_permission) {
             my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error($status, 'You must login and have permission to access this BrAPI call.');

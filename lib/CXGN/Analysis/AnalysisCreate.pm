@@ -462,11 +462,12 @@ sub store {
         $a->metadata()->result_summary($analysis_result_summary);
         $a->analysis_model_protocol_id($analysis_model_protocol_id);
 
-        while (my($plot_number, $plot_obj) = each %$analysis_precomputed_design_optional) {
-            $plot_obj->{plot_name} = $analysis_name."_".$plot_obj->{plot_name};
-            $analysis_precomputed_design_optional->{$plot_number} = $plot_obj;
+        if ($analysis_precomputed_design_optional) {
+            while (my($plot_number, $plot_obj) = each %$analysis_precomputed_design_optional) {
+                $plot_obj->{plot_name} = $analysis_name."_".$plot_obj->{plot_name};
+                $analysis_precomputed_design_optional->{$plot_number} = $plot_obj;
+            }
         }
-        # print STDERR Dumper $analysis_precomputed_design_optional;
 
         my ($verified_warning, $verified_error);
         print STDERR "Storing the analysis...\n";
