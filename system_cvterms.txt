@@ -190,19 +190,19 @@ stock_property	transgenic				00052
 stock_property	variety	Found in editable_stock_props
 stock_property	notes	Found in editable_stock_props
 stock_property	state	Found in editable_stock_props
-stock_property	accession number	From BrAPI	03/27/2017	nm529	00076
+stock_property	accession_number	From BrAPI	03/27/2017	nm529	00076	updated in 00125
 stock_property	PUI	From BrAPI	03/27/2017	nm529	00076
 stock_property	donor	From BrAPI	03/27/2017	nm529	00076
-stock_property	donor institute	From BrAPI	03/27/2017	nm529	00076
-stock_property	donor PUI	From BrAPI	03/27/2017	nm529	00076
-stock_property	seed source	From BrAPI	03/27/2017	nm529	00076
-stock_property	institute code	From BrAPI	03/27/2017	nm529	00076
-stock_property	institute name	From BrAPI	03/27/2017	nm529	00076
-stock_property	biological status of accession code	From BrAPI	03/27/2017	nm529	00076
-stock_property	country of origin	From BrAPI	03/27/2017	nm529	00076
-stock_property	type of germplasm storage code	From BrAPI	03/27/2017	nm529	00076
-stock_property	entry number	From BrAPI	03/27/2017	nm529	00076
-stock_property	acquisition date	From BrAPI	03/27/2017	nm529	00076
+stock_property	donor_institute	From BrAPI	03/27/2017	nm529	00076	updated in 00125
+stock_property	donor_PUI	From BrAPI	03/27/2017	nm529	00076	updated in 00125
+stock_property	seed_source	From BrAPI	03/27/2017	nm529	00076	updated in 00125
+stock_property	institute_code	From BrAPI	03/27/2017	nm529	00076	updated in 00125
+stock_property	institute_name	From BrAPI	03/27/2017	nm529	00076	updated in 00125
+stock_property	biological_status_of_accession_code	From BrAPI	03/27/2017	nm529	00076	updated in 00125
+stock_property	country_of_origin	From BrAPI	03/27/2017	nm529	00076	updated in 00125
+stock_property	type_of_germplasm_storage_code	From BrAPI	03/27/2017	nm529	00076	updated in 00125
+stock_property	entry_number	From BrAPI	03/27/2017	nm529	00076	updated in 00125
+stock_property	acquisition_date	From BrAPI	03/27/2017	nm529	00076	updated in 00125
 stock_property	current_count	For keeping current count of seedlot	09/06/2017	nm529	00086
 stock_property	current_weight_gram	For keeping current count of seedlot	09/06/2017	nm529	00092
 stock_property  crossing_metadata_json    00086
