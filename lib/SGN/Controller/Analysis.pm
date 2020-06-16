@@ -54,6 +54,7 @@ sub analysis_detail :Path('/analyses') Args(1) {
     $c->stash->{year} = $a->get_year();
     $c->stash->{trial_stock_type} = 'accession';
     $c->stash->{trial_phenotype_stock_type} = 'analysis_instance';
+    $c->stash->{has_col_and_row_numbers} = $a->has_col_and_row_numbers();
     $c->stash->{identifier_prefix} = $c->config->{identifier_prefix};
     $c->stash->{analysis_metadata} = $a->metadata();
     $c->stash->{template} = '/analyses/detail.mas';

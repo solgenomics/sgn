@@ -30,7 +30,7 @@ $trial_stock_type
 $trial_phenotype_stock_type
 $identifier_prefix
 $analysis_metadata
-$has_col_and_row_numbers => 1
+$has_col_and_row_numbers
 </%args>
 
 <& /util/import_javascript.mas, entries => ['analyses'], classes => [ 'jquery', 'jquery.dataTables' ],  &>
