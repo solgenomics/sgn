@@ -476,7 +476,7 @@ sub store {
         $data{$s->get_column('uniquename')} = [$s->get_column('stock_id'), $s->get_column('nd_geolocation_id'), $s->get_column('project_id') ];
     }
 
-    print STDERR "DATA: ".Dumper(\%data);
+    # print STDERR "DATA: ".Dumper(\%data);
     ## Use txn_do with the following coderef so that if any part fails, the entire transaction fails.
     my $coderef = sub {
         my %trait_and_stock_to_overwrite;
