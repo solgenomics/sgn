@@ -456,6 +456,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
             my $csv = Text::CSV->new({ sep_char => "\t" });
 
+            my %unique_accessions_seen;
             open(my $fh, '<', $stats_out_tempfile)
                 or die "Could not open file '$stats_out_tempfile' $!";
 
@@ -480,9 +481,11 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                         my $value = $columns[$col_counter+1];
                         $result_blup_data{$stock_name}->{$trait} = [$value, $timestamp, $user_name, '', ''];
                         $col_counter++;
+                        $unique_accessions_seen{$stock_name}++;
                     }
                 }
             close($fh);
+            @unique_accession_names = keys %unique_accessions_seen;
 
             my %result_blup_row_data;
             my @row_numbers;
