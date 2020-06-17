@@ -1492,6 +1492,182 @@ sub get_micasense_aligned_raw_images_grid : Path('/ajax/html/select/micasense_al
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_micasense_aligned_raw_images_grid_interactive : Path('/ajax/html/select/micasense_aligned_raw_images_grid_interactive') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $drone_run_project_id = $c->req->param("drone_run_project_id");
+
+    my $id = $c->req->param("id") || "drone_imagery_micasense_stacks_grid_select_interactive";
+    my $name = $c->req->param("name") || "drone_imagery_micasense_stacks_grid_select_interactive";
+
+    my $saved_image_stacks_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_micasense_stacks', 'project_property')->cvterm_id();
+    my $saved_micasense_stacks_json = $schema->resultset("Project::Projectprop")->find({
+        project_id => $drone_run_project_id,
+        type_id => $saved_image_stacks_type_id
+    });
+    my $saved_micasense_stacks;
+    if ($saved_micasense_stacks_json) {
+        $saved_micasense_stacks = decode_json $saved_micasense_stacks_json->value();
+    }
+    print STDERR Dumper $saved_micasense_stacks;
+    my @saved_micasense_stacks_values = values %$saved_micasense_stacks;
+
+    my $first_image = SGN::Image->new( $schema->storage->dbh, $saved_micasense_stacks_values[0]->[3]->{image_id}, $c );
+    my $first_image_url = $first_image->get_image_url('original_converted');
+    my $first_image_fullpath = $first_image->get_filename('original_converted', 'full');
+    my @size = imgsize($first_image_fullpath);
+    my $width = $size[0];
+    my $length = $size[1];
+    my $first_image_fullsize_url = $first_image->get_image_url('original_converted');
+    my $first_image_fullpath = $first_image->get_filename('original_converted', 'full');
+    my @full_size = imgsize($first_image_fullpath);
+
+    my $proportion = $size[0]/$full_size[0];
+
+    my %gps_images;
+    my %longitudes;
+    my %latitudes;
+    my $max_longitude = -1000000;
+    my $min_longitude = 1000000;
+    my $max_latitude = -1000000;
+    my $min_latitude = 1000000;
+    foreach (sort {$a <=> $b} keys %$saved_micasense_stacks) {
+        my $image_ids_array = $saved_micasense_stacks->{$_};
+        my $nir_image = $image_ids_array->[3];
+        my $latitude_raw = $nir_image->{latitude};
+        my $longitude_raw = $nir_image->{longitude};
+
+        if ($latitude_raw > $max_latitude) {
+            $max_latitude = $latitude_raw;
+        }
+        if ($longitude_raw > $max_longitude) {
+            $max_longitude = $longitude_raw;
+        }
+        if ($latitude_raw < $min_latitude) {
+            $min_latitude = $latitude_raw;
+        }
+        if ($longitude_raw < $min_longitude) {
+            $min_longitude = $longitude_raw;
+        }
+
+        # my $latitude = nearest(0.00001,$latitude_raw);
+        # my $longitude = nearest(0.00001,$longitude_raw);
+
+        $longitudes{$longitude_raw}++;
+        $latitudes{$latitude_raw}++;
+        my @stack_image_ids;
+        foreach (@$image_ids_array) {
+            push @stack_image_ids, $_->{image_id};
+        }
+
+        my $nir_image_id = $nir_image->{image_id};
+
+        my $image = SGN::Image->new( $schema->storage->dbh, $nir_image_id, $c );
+        my $image_url = $image->get_image_url('original_converted');
+        my $image_fullpath = $image->get_filename('original_converted', 'full');
+
+        $gps_images{$latitude_raw}->{$longitude_raw} = {
+            nir_image_id => $nir_image_id,
+            image_ids => \@stack_image_ids,
+            image_url => $image_url
+        };
+    }
+    # print STDERR Dumper \%longitudes;
+    # print STDERR Dumper \%latitudes;
+    my $total_width = $width * scalar(keys %longitudes);
+    my $total_length = $length * scalar(keys %latitudes);
+
+    my $lat_range = $max_latitude - $min_latitude;
+    my $lon_range = $max_longitude - $min_longitude;
+    my $factor = 10000000;
+
+    my $html = '<script>
+        var rotate_angle = jQuery("#drone_imagery_standard_process_raw_images_interactive_rotate_degrees_input").val();
+
+        var svg = d3.select("#drone_imagery_standard_process_raw_images_image_id_interactive_select_div").append("svg")
+            .attr("width", '.$lon_range*$factor.')
+            .attr("height", '.$lat_range*3*$factor.')
+
+        var image = {
+          width: '.$width.',
+          length: '.$length.'
+        }
+
+        d3.selection.prototype.moveToFront = function() {
+            return this.each(function(){
+                this.parentNode.appendChild(this);
+            });
+        };
+        ';
+
+    foreach my $lat (sort {$a <=> $b} keys %latitudes) {
+        foreach my $lon (sort {$a <=> $b} keys %longitudes) {
+            my $nir_image_id = $gps_images{$lat}->{$lon}->{nir_image_id};
+            my $stack_image_ids = $gps_images{$lat}->{$lon}->{image_ids};
+            my $image_url = $gps_images{$lat}->{$lon}->{image_url};
+            if ($image_url) {
+                my $x_pos = round(($lon - $min_longitude)*$factor);
+                my $y_pos = round(($lat - $min_latitude)*$factor*2);
+                $html .= 'appendDraggableImage("'.$image_url.'", ['.$x_pos.','.$y_pos.'], '.$nir_image_id.', '.encode_json($stack_image_ids).', rotate_angle);
+                ';
+            }
+        }
+    }
+
+    $html .= '
+
+        function appendDraggableImage(url, position, nir_image_id, stack_image_ids, rotate_angle) {
+            var imageGroup = svg.append("g")
+                .datum({position: position})
+                .attr("pos", position)
+                .attr("rotate_angle", rotate_angle)
+                .attr("transform", d => "translate(" + d.position + ") rotate("+rotate_angle+")");
+
+            var squareFill = imageGroup.append("square")
+                .attr("class", "square-fill")
+                .attr("cx", image.width / 2)
+                .attr("cy", image.length / 2)
+                .attr("nir_image_id", nir_image_id )
+                .attr("stack_image_ids", stack_image_ids );
+
+            var imageElem = imageGroup.append("image")
+                .attr("xlink:href", url)
+                .attr("height", image.length)
+                .attr("width", image.width);
+
+            imageGroup.call(d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended));
+        }
+
+        function dragstarted(d) {
+            d3.select(this).style("opacity", 0.6);
+            d3.select(this).moveToFront();
+        }
+
+        function dragged(d) {
+            var newX = d3.event.x - image.width / 2,
+            newY = d3.event.y - image.length / 2; 
+            d.position = [newX, newY];
+            var rotate_angle = d3.select(this).attr("rotate_angle");
+
+            d3.select(this)
+                .attr("transform", "translate("+newX+","+newY+") rotate("+rotate_angle+")");
+        }
+
+        function dragended(d) {
+            d3.select(this).lower();
+            d3.select(this).style("opacity", 1.0);
+            d3.select(this).moveToFront();
+        }
+  </script>';
+
+    $c->stash->{rest} = { select => $html };
+}
+
 sub get_plot_polygon_templates_partial : Path('/ajax/html/select/plot_polygon_templates_partial') Args(0) {
     my $self = shift;
     my $c = shift;

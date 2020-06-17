@@ -314,6 +314,8 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
 
 </div>
 
+<& /breeders_toolbox/drone_imagery/standard_process_raw_images.mas &>
+
 <div id="manage_drone_imagery_standard_process_raw_images_div" style="display:none">
 
     <& /page/page_title.mas, title=>"Manage Drone Imagery: Run A Standard Process On Raw Images" &>
@@ -6941,6 +6943,7 @@ jQuery(document).ready(function() {
             jQuery('#manage_drone_imagery_vegetative_index_div').hide();
             jQuery('#manage_drone_imagery_standard_process_div').hide();
             jQuery('#manage_drone_imagery_standard_process_raw_images_div').hide();
+            jQuery('#manage_drone_imagery_standard_process_raw_images_interactive_div').hide();
             jQuery('#manage_drone_imagery_loading_div').hide();
         } else if (section_div_id == 'manage_drone_imagery_top_div'){
             jQuery('#manage_drone_imagery_crop_div').hide();
@@ -6952,6 +6955,7 @@ jQuery(document).ready(function() {
             jQuery('#manage_drone_imagery_vegetative_index_div').hide();
             jQuery('#manage_drone_imagery_standard_process_div').hide();
             jQuery('#manage_drone_imagery_standard_process_raw_images_div').hide();
+            jQuery('#manage_drone_imagery_standard_process_raw_images_interactive_div').hide();
             jQuery('#manage_drone_imagery_loading_div').hide();
         } else if (section_div_id == 'manage_drone_imagery_plot_polygons_div'){
             jQuery('#manage_drone_imagery_crop_div').hide();
@@ -6963,6 +6967,7 @@ jQuery(document).ready(function() {
             jQuery('#manage_drone_imagery_vegetative_index_div').hide();
             jQuery('#manage_drone_imagery_standard_process_div').hide();
             jQuery('#manage_drone_imagery_standard_process_raw_images_div').hide();
+            jQuery('#manage_drone_imagery_standard_process_raw_images_interactive_div').hide();
             jQuery('#manage_drone_imagery_loading_div').hide();
         } else if (section_div_id == 'manage_drone_imagery_calculate_phenotypes_div'){
             jQuery('#manage_drone_imagery_crop_div').hide();
@@ -6974,6 +6979,7 @@ jQuery(document).ready(function() {
             jQuery('#manage_drone_imagery_vegetative_index_div').hide();
             jQuery('#manage_drone_imagery_standard_process_div').hide();
             jQuery('#manage_drone_imagery_standard_process_raw_images_div').hide();
+            jQuery('#manage_drone_imagery_standard_process_raw_images_interactive_div').hide();
             jQuery('#manage_drone_imagery_loading_div').hide();
         } else if (section_div_id == 'manage_drone_imagery_remove_background_div'){
             jQuery('#manage_drone_imagery_crop_div').hide();
@@ -6985,6 +6991,7 @@ jQuery(document).ready(function() {
             jQuery('#manage_drone_imagery_vegetative_index_div').hide();
             jQuery('#manage_drone_imagery_standard_process_div').hide();
             jQuery('#manage_drone_imagery_standard_process_raw_images_div').hide();
+            jQuery('#manage_drone_imagery_standard_process_raw_images_interactive_div').hide();
             jQuery('#manage_drone_imagery_loading_div').hide();
         } else if (section_div_id == 'manage_drone_imagery_rotate_div'){
             jQuery('#manage_drone_imagery_crop_div').hide();
@@ -6996,6 +7003,7 @@ jQuery(document).ready(function() {
             jQuery('#manage_drone_imagery_vegetative_index_div').hide();
             jQuery('#manage_drone_imagery_standard_process_div').hide();
             jQuery('#manage_drone_imagery_standard_process_raw_images_div').hide();
+            jQuery('#manage_drone_imagery_standard_process_raw_images_interactive_div').hide();
             jQuery('#manage_drone_imagery_loading_div').hide();
         } else if (section_div_id == 'manage_drone_imagery_vegetative_index_div'){
             jQuery('#manage_drone_imagery_crop_div').hide();
@@ -7007,6 +7015,7 @@ jQuery(document).ready(function() {
             jQuery('#manage_drone_imagery_vegetative_index_div').show();
             jQuery('#manage_drone_imagery_standard_process_div').hide();
             jQuery('#manage_drone_imagery_standard_process_raw_images_div').hide();
+            jQuery('#manage_drone_imagery_standard_process_raw_images_interactive_div').hide();
             jQuery('#manage_drone_imagery_loading_div').hide();
         } else if (section_div_id == 'manage_drone_imagery_standard_process_div'){
             jQuery('#manage_drone_imagery_crop_div').hide();
@@ -7018,6 +7027,7 @@ jQuery(document).ready(function() {
             jQuery('#manage_drone_imagery_vegetative_index_div').hide();
             jQuery('#manage_drone_imagery_standard_process_div').show();
             jQuery('#manage_drone_imagery_standard_process_raw_images_div').hide();
+            jQuery('#manage_drone_imagery_standard_process_raw_images_interactive_div').hide();
             jQuery('#manage_drone_imagery_loading_div').hide();
         } else if (section_div_id == 'manage_drone_imagery_standard_process_raw_images_div'){
             jQuery('#manage_drone_imagery_crop_div').hide();
@@ -7029,6 +7039,19 @@ jQuery(document).ready(function() {
             jQuery('#manage_drone_imagery_vegetative_index_div').hide();
             jQuery('#manage_drone_imagery_standard_process_div').hide();
             jQuery('#manage_drone_imagery_standard_process_raw_images_div').show();
+            jQuery('#manage_drone_imagery_standard_process_raw_images_interactive_div').hide();
+            jQuery('#manage_drone_imagery_loading_div').hide();
+        } else if (section_div_id == 'manage_drone_imagery_standard_process_raw_images_interactive_div'){
+            jQuery('#manage_drone_imagery_crop_div').hide();
+            jQuery('#manage_drone_imagery_top_div').hide();
+            jQuery('#manage_drone_imagery_plot_polygons_div').hide();
+            jQuery('#manage_drone_imagery_calculate_phenotypes_div').hide();
+            jQuery('#manage_drone_imagery_remove_background_div').hide();
+            jQuery('#manage_drone_imagery_rotate_div').hide();
+            jQuery('#manage_drone_imagery_vegetative_index_div').hide();
+            jQuery('#manage_drone_imagery_standard_process_div').hide();
+            jQuery('#manage_drone_imagery_standard_process_raw_images_div').hide();
+            jQuery('#manage_drone_imagery_standard_process_raw_images_interactive_div').show();
             jQuery('#manage_drone_imagery_loading_div').hide();
         } else if (section_div_id == 'manage_drone_imagery_loading_div'){
             jQuery('#manage_drone_imagery_crop_div').hide();
@@ -7040,6 +7063,7 @@ jQuery(document).ready(function() {
             jQuery('#manage_drone_imagery_vegetative_index_div').hide();
             jQuery('#manage_drone_imagery_standard_process_div').hide();
             jQuery('#manage_drone_imagery_standard_process_raw_images_div').hide();
+            jQuery('#manage_drone_imagery_standard_process_raw_images_interactive_div').hide();
             jQuery('#manage_drone_imagery_loading_div').show();
         }
         window.scrollTo(0,0);
