@@ -7,42 +7,63 @@
 
 <& /page/page_title.mas, title=>'Search Progenies and Crosses' &>
 
-
-<&| /page/info_section.mas, title => 'Search Progenies', collapsible=>1, collapsed=>1 &>
-
-<&| /page/info_section.mas, title => 'Search Progenies Based on Female parent', collapsible=>1, collapsed=>1 &>
-
-<br/>
+<&| /page/info_section.mas, title=>"About Search Features",  collapsible => 1, collapsed=>1 &>
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
-                <div class="row" id="progeny_search_form" >
-                    <div class="col-sm-12 well">
-                        <div class="row">
-                            <div class="col-sm-11">
-                                <div class="form-horizontal">
-                                    <div class="form-group form-group-sm">
-                                        <label class="control-label col-sm-4">Female Parent:</label>
-                                        <div class="col-sm-8">
-                                            <div class="input-group">
-                                                <input type="text" class="form-control" id="pedigree_female_parent" placeholder="Enter female parent">
-                                                <div class="input-group-btn">
-                                                    <button class="btn btn-info" id="search_pedigree_male_parents"><i class="glyphicon glyphicon-search"></i> Male Parent / Population</button>
-                                                    <button class="btn btn-primary" id="search_all_progenies"><i class="glyphicon glyphicon-search"></i> All Progenies of this Female Parent </button>
+                <b><p>Search Progenies</p></b>
+                <ul>
+                    <li>You can search progenies derived from a particular female or male parent by using <b>"Search Progenies Derived from a Female Parent"</b> or <b>"Search Progenies Derived from a Male Parent"</b> search section.</li>
+                    <li>If you would like to retrieve all of the progenies derived from the specified female or male accession regardless of the other parent, after providing your female or male parent, clicking on <b>"All Progenies"</b>.</li>
+                    <li>If you would like to retrieve only progenies derived from a specific pair of parents. You can retrieve all of the accessions that were used for crossing with the specified accession by clicking on <b>"Male Parent"</b> or <b>"Female Parent"</b>. After selecting an accession of your choice, clicking on <b>"Progenies of these Parents"</b>.</li>
+                </ul>
+                <b><p>Search Crosses</p></b>
+                <ul>
+                    <li>You can search crosses that used a particular female parent or male parent by using <b>"Search Crosses of a Female Parent"</b> or <b>"Search Crosses of a Male Parent"</b> search section.</li>
+                    <li>If you would like to retrieve all of the crosses that used the specified female or male accession regardless of the other parent, after providing your female or male parent, clicking on <b>"All Crosses"</b>.</li>
+                    <li>If you would like to retrieve only crosses derived from a specific pair of parents. You can retrieve all of the accessions that were used for crossing with the specified accession by clicking on <b>"Male Parent"</b> or <b>"Female Parent"</b>. After selecting an accession of your choice, clicking on <b>"Crosses of these Parents"</b>.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</&>
+
+<br/>
+
+<&| /page/info_section.mas, title => 'Search Progenies', collapsible=>1, collapsed=>1 &>
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <&| /page/info_section.mas, title => 'Search Progenies Derived from a Female Parent', collapsible=>1, collapsed=>1 &>
+                    <br/>
+                    <div class="row" id="progeny_search_form" >
+                        <div class="col-sm-12 well">
+                            <div class="row">
+                                <div class="col-sm-11">
+                                    <div class="form-horizontal">
+                                        <div class="form-group form-group-sm">
+                                            <label class="control-label col-sm-4">Female Parent:</label>
+                                            <div class="col-sm-8">
+                                                <div class="input-group">
+                                                    <input type="text" class="form-control" id="pedigree_female_parent" placeholder="Enter female parent">
+                                                    <div class="input-group-btn">
+                                                        <button class="btn btn-info" id="search_pedigree_male_parents"><i class="glyphicon glyphicon-search"></i> Male Parent / Population</button>
+                                                        <button class="btn btn-primary" id="search_all_progenies"><i class="glyphicon glyphicon-search"></i> All Progenies of this Female Parent </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="form-group form-group-sm">
-                                        <label class="control-label col-sm-4">Male Parent / Population:</label>
-                                        <div class="col-sm-8" >
-                                            <div class="input-group">
-                                                <select class="form-control" id="pedigree_male_parent">
-                                                    <option value="">Choose female parent first</option>
-                                                </select>
-                                                </select>
-                                                <div class="input-group-btn">
-                                                    <button class="btn btn-info" id="search_pedigree"><i class="glyphicon glyphicon-search"></i> Progenies of these Parents </button>
+                                        <div class="form-group form-group-sm">
+                                            <label class="control-label col-sm-4">Male Parent / Population:</label>
+                                            <div class="col-sm-8" >
+                                                <div class="input-group">
+                                                    <select class="form-control" id="pedigree_male_parent">
+                                                        <option value="">Choose female parent first</option>
+                                                    </select>
+                                                    </select>
+                                                    <div class="input-group-btn">
+                                                        <button class="btn btn-info" id="search_pedigree"><i class="glyphicon glyphicon-search"></i> Progenies of these Parents </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -51,106 +72,99 @@
                             </div>
                         </div>
                     </div>
-                </div>
-                <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
-                    <table id="pedigree_search_results" width="100%" class="table table-hover table-striped">
-                        <thead>
-                            <tr>
-                                <th>Female Parent</th>
-                                <th>Male Parent / Population</th>
-                                <th>Progeny</th>
-                                <th>Cross Type</th>
-                            </tr>
-                        </thead>
-                    </table>
-                </&>
-                <br>
-                <&| /page/info_section.mas, title => 'Copy Progenies to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the progeny names showing in table to a new or exisiting list</i>'&>
-                <br>
-                    <div style="text-align:right" id="progenies_to_list_menu"></div>
-                    <div id="progeny_names" style="display: none;"></div>
+                    <&| /page/info_section.mas, title => 'Search Results'&>
+                    <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+                        <table id="pedigree_search_results" width="100%" class="table table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Female Parent</th>
+                                    <th>Male Parent / Population</th>
+                                    <th>Progeny</th>
+                                    <th>Cross Type</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </&>
+                    <br>
+                    <&| /page/info_section.mas, title => 'Copy Progenies to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the progeny names showing in table to a new or exisiting list</i>'&>
+                        <br>
+                        <div style="text-align:right" id="progenies_to_list_menu"></div>
+                        <div id="progeny_names" style="display: none;"></div>
+                    </&>
                 </&>
             </div>
         </div>
     </div>
 </&>
 
-<br/>
 <br/>
 
 <&| /page/info_section.mas, title => 'Search Crosses', collapsible=>1, collapsed=>1 &>
-
-<&| /page/info_section.mas, title => 'Search Crosses Based on Female Parent', collapsible=>1, collapsed=>1&>
-
-    <div class="row" id="cross_search_form" >
-        <div class="col-sm-1">
-        </div>
-        <div class="col-sm-12 well">
-            <div class="row">
-                <div class="col-sm-11">
-                    <div class="form-horizontal">
-                        <div class="form-group">
-                            <label class="control-label col-sm-4">Female Parent:</label>
-                                <div class="col-sm-8">
-                                    <div class="input-group">
-                                        <input type="text" class="form-control" id="female_parent" placeholder="Enter female parent">
-                                        <div class="input-group-btn">
-                                            <button class="btn btn-info" id="search_cross_male_parents"><i class="glyphicon glyphicon-search"></i> Male Parent / Population</button>
-                                            <button class="btn btn-primary" id="search_all_crosses"><i class="glyphicon glyphicon-search"></i> All Crosses </button>
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <&| /page/info_section.mas, title => 'Search Crosses Based on Female Parent', collapsible=>1, collapsed=>1&>
+                    <br/>
+                    <div class="row" id="progeny_search_form" >
+                        <div class="col-sm-12 well">
+                            <div class="row">
+                                <div class="col-sm-11">
+                                    <div class="form-horizontal">
+                                        <div class="form-group form-group-sm">
+                                            <label class="control-label col-sm-4">Female Parent:</label>
+                                            <div class="col-sm-8">
+                                                <div class="input-group">
+                                                    <input type="text" class="form-control" id="female_parent" placeholder="Enter female parent">
+                                                    <div class="input-group-btn">
+                                                        <button class="btn btn-info" id="search_cross_male_parents"><i class="glyphicon glyphicon-search"></i> Male Parent / Population</button>
+                                                        <button class="btn btn-primary" id="search_all_crosses"><i class="glyphicon glyphicon-search"></i> All Crosses </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group form-group-sm">
+                                            <label class="control-label col-sm-4">Male Parent / Population:</label>
+                                            <div class="col-sm-8" >
+                                                <div class="input-group">
+                                                    <select class="form-control" id="cross_male_parent">
+                                                        <option value="">Choose female parent first</option>
+                                                    </select>
+                                                    </select>
+                                                    <div class="input-group-btn">
+                                                        <button class="btn btn-info" id="search_crosses"><i class="glyphicon glyphicon-search"></i> Cross Info </button>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="control-label col-sm-4">Male Parent / Population:</label>
-                                <div class="col-sm-8" >
-                                    <div class="input-group">
-                                        <select class="form-control" id="cross_male_parent">
-                                            <option value="">Choose female parent first</option>
-                                        </select>
-                                        </select>
-                                        <div class="input-group-btn">
-                                            <button class="btn btn-info" id="search_crosses"><i class="glyphicon glyphicon-search"></i> Cross Info </button>
-                                        </div>
-                                    </div>
-                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
+                    <&| /page/info_section.mas, title => 'Search Results'&>
+                        <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+                        <table id="cross_search_results" width="100%" class="table table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Female Parent</th>
+                                    <th>Male Parent / Population</th>
+                                    <th>Cross Unique ID</th>
+                                    <th>Cross Type</th>
+                                    <th>Family Name</th>
+                                    <th>Crossing Experiment</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </&>
+                    <br>
+                    <&| /page/info_section.mas, title => 'Copy crosses to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the cross unique ids showing in table to a new or exisiting list</i>'&>
+                        <div style="text-align:right" id="crosses_to_list_menu"></div>
+                        <div id="cross_names" style="display: none;"></div>
+                    </&>
+                </&>
             </div>
         </div>
-        <div class="col-sm-1">
-        </div>
     </div>
-</&>
-
-
-<&| /page/info_section.mas, title => 'Search Results' , collapsible=>1, collapsed=>0 &>
-
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
-
-    <table id="cross_search_results" width="100%" class="table table-hover table-striped">
-        <thead>
-            <tr>
-                <th>Female Parent</th>
-                <th>Male Parent / Population</th>
-                <th>Cross Unique ID</th>
-                <th>Cross Type</th>
-                <th>Family Name</th>
-                <th>Crossing Experiment</th>
-            </tr>
-        </thead>
-    </table>
-
-</&>
-
-<br>
-<&| /page/info_section.mas, title => 'Copy crosses to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the cross unique ids showing in table to a new or exisiting list</i>'&>
-<br>
-    <div style="text-align:right" id="crosses_to_list_menu"></div>
-    <div id="cross_names" style="display: none;"></div>
-</&>
-
 </&>
 
 
