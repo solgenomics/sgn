@@ -1582,13 +1582,18 @@ sub get_micasense_aligned_raw_images_grid_interactive : Path('/ajax/html/select/
     my $lat_range = $max_latitude - $min_latitude;
     my $lon_range = $max_longitude - $min_longitude;
     my $factor = 10000000;
+    my $total_width = $lon_range*$factor;
+    my $total_height = $lat_range*3*$factor;
 
     my $html = '<script>
         var rotate_angle = jQuery("#drone_imagery_standard_process_raw_images_interactive_rotate_degrees_input").val();
 
+        jQuery("#drone_imagery_interactive_total_width").val('.$total_width.');
+        jQuery("#drone_imagery_interactive_total_height").val('.$total_height.');
+
         var svg = d3.select("#drone_imagery_standard_process_raw_images_image_id_interactive_select_div").append("svg")
-            .attr("width", '.$lon_range*$factor.')
-            .attr("height", '.$lat_range*3*$factor.')
+            .attr("width", '.$total_width.')
+            .attr("height", '.$total_height.')
             .attr("id", "drone_imagery_standard_process_raw_images_image_id_interactive_select_div_area")
             .on("click", function(){
                 console.log(d3.mouse(this));
@@ -1666,6 +1671,10 @@ sub get_micasense_aligned_raw_images_grid_interactive : Path('/ajax/html/select/
             d3.select(this).lower();
             d3.select(this).style("opacity", 1.0);
             d3.select(this).moveToFront();
+
+            d3.selectAll("text").moveToFront();
+            d3.selectAll("line").moveToFront();
+            d3.selectAll("circle").moveToFront();
         }
   </script>';
 

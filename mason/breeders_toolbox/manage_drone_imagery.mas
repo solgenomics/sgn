@@ -5063,7 +5063,7 @@ jQuery(document).ready(function() {
             'plot_polygons_display':drone_imagery_plot_polygons_display_new
         });
 
-        droneImageryDrawPlotPolygonActiveTemplatesTable(drone_imagery_plot_polygons_active_templates, plot_polygons_template_dimensions, drone_imagery_plot_generated_polygons, drone_imagery_plot_polygons_display);
+        droneImageryDrawPlotPolygonActiveTemplatesTable(drone_imagery_plot_polygons_active_templates, plot_polygons_template_dimensions);
 
         droneImageryRectangleLayoutTable(drone_imagery_plot_generated_polygons, plot_polygons_assignment_info, plot_polygons_assignment_table, plot_polygons_generate_assignment_button, plot_polygon_assignment_submit_button);
     }

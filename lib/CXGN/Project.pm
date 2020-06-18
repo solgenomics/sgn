@@ -97,7 +97,7 @@ sub BUILD {
     my $self = shift;
     my $args = shift;
     
-    print STDERR "BUILD CXGN::Project... with ".$args->{trial_id}."\n";
+    # print STDERR "BUILD CXGN::Project... with ".$args->{trial_id}."\n";
 
     if (! $args->{description}) { 
 	$args->{description} = "(No description provided)"; 
@@ -105,7 +105,7 @@ sub BUILD {
     
     my $row = $self->bcs_schema()->resultset("Project::Project")->find( { project_id => $args->{trial_id} });
 
-    print STDERR "PROJECT ID = $args->{trial_id}\n";
+    # print STDERR "PROJECT ID = $args->{trial_id}\n";
     if ($row){
 	$self->name( $row->name() );
     }
@@ -132,7 +132,7 @@ sub BUILD {
     }
 
     if ($args->{trial_id} && $row) {
-	print STDERR "Existing project... populating object.\n";
+	# print STDERR "Existing project... populating object.\n";
 	$self->set_trial_id($args->{trial_id});
 	$self->name($args->{name});
 	$self->description($args->{description});
@@ -299,7 +299,7 @@ getter/setter for the description
 sub get_description {
     my $self = shift;
 
-    print STDERR "Get description for trial id ".$self->get_trial_id()."\n";
+    # print STDERR "Get description for trial id ".$self->get_trial_id()."\n";
     my $rs = $self->bcs_schema->resultset('Project::Project')->search( { project_id => $self->get_trial_id() });
 
     return $rs->first()->description();
