@@ -1000,11 +1000,11 @@ sub confirm_request :Path('/solgs/confirm/request/') Args(0) {
     {
 	$job_type = 'Your query for a training dataset is running.';
     } 
-    elsif ($referer =~ /solgs\/population\//) 
+    elsif ($referer =~ /solgs\/population\/|solgs\/populations\/combined\//) 
     {
 	$job_type = 'Your model(s) training is running. ';
     } 
-    elsif ($referer =~ /solgs\/trait\/|solgs\/traits\/all\//) 
+    elsif ($referer =~ /solgs\/trait\/|solgs\/traits\/all\/|solgs\/model\/combined\/populations\//) 
     {
 	$job_type = 'Your GEBVs prediction is running.';
     }
