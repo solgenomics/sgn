@@ -331,6 +331,35 @@ jQuery(document).ready(function (){
     });
 
 
+    jQuery('#search_all_progenies_male_parent').click(function(){
+
+        var table = jQuery('#male_parent_pedigree_search_results').DataTable({
+            'searching': true,
+            'paging': true,
+            'ordering': false,
+            'destroy': true,
+            'ajax': {'url':'/ajax/search/all_progenies',
+                data:{'pedigree_male_parent':$('#male_parent').val()},
+            }
+        });
+        jQuery('#male_parent_pedigree_search_results').on( 'draw.dt', function (){
+            var name_links = table.column(2).data();
+            var names = [];
+            //console.log("name links are: "+JSON.stringify(name_links));
+            for (var i = 0; i < name_links.length; i++) {
+                names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
+            }
+            jQuery('#progeny_names').html(names);
+
+            addToListMenu('progenies_to_list_menu', 'progeny_names',{
+                listType:'accessions'
+            });
+        });
+    });
+
+
+
+
     jQuery("#female_parent").autocomplete({
         source:'/ajax/stock/cross_female_parent_autocomplete',
     });

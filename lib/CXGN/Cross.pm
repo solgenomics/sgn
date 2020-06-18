@@ -288,15 +288,26 @@ sub get_progeny_info {
     my $female_parent_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
     my $accession_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
 
-    my $where_female = "";
-    if ($female_parent){
-        $where_female = " WHERE female_parent.uniquename = ?";
-    };
-
-    my $where_male ="";
-    if ($male_parent){
-        $where_male = " AND male_parent.uniquename = ?";
+    my $where_clause = "";
+    if ($female_parent && $male_parent) {
+        $where_clause = "WHERE female_parent.uniquename = ? AND male_parent.uniquename = ?";
     }
+    elsif ($female_parent) {
+        $where_clause = "WHERE female_parent.uniquename = ? ORDER BY male_parent.uniquename";
+    }
+    elsif ($male_parent) {
+        $where_clause = "WHERE male_parent.uniquename = ? ORDER BY female_parent.uniquename";
+    }
+
+#    my $where_female = "";
+#    if ($female_parent){
+#        $where_female = " WHERE female_parent.uniquename = ?";
+#    };
+
+#    my $where_male ="";
+#    if ($male_parent){
+#        $where_male = " AND male_parent.uniquename = ?";
+#    }
 
     my $q = "SELECT DISTINCT female_parent.stock_id, female_parent.uniquename, male_parent.stock_id, male_parent.uniquename, progeny.stock_id, progeny.uniquename, stock_relationship1.value
         FROM stock_relationship as stock_relationship1
@@ -304,7 +315,7 @@ sub get_progeny_info {
         INNER JOIN stock AS progeny ON (stock_relationship1.object_id = progeny.stock_id) AND progeny.type_id = ?
         LEFT JOIN stock_relationship AS stock_relationship2 ON (progeny.stock_id = stock_relationship2.object_id) AND stock_relationship2.type_id = ?
         LEFT JOIN stock AS male_parent ON (stock_relationship2.subject_id = male_parent.stock_id)
-        $where_female $where_male ORDER BY male_parent.uniquename";
+        $where_clause ";
 
     my $h = $schema->storage->dbh()->prepare($q);
 

@@ -139,9 +139,10 @@ sub search_all_progenies : Path('/ajax/search/all_progenies') Args(0) {
     my $c = shift;
 
     my $pedigree_female_parent = $c->req->param("pedigree_female_parent");
+    my $pedigree_male_parent = $c->req->param("pedigree_male_parent");
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $result = CXGN::Cross->get_progeny_info($schema, $pedigree_female_parent);
+    my $result = CXGN::Cross->get_progeny_info($schema, $pedigree_female_parent, $pedigree_male_parent);
     my @all_progenies;
     foreach my $r(@$result){
       #print STDERR Dumper $r;
