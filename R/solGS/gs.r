@@ -320,9 +320,9 @@ if (length(relationshipMatrixFile) != 0) {
       relationshipMatrix <- data.frame(fread(relationshipMatrixFile,
                                              header = TRUE))
 
-    rownames(relationshipMatrix) <- relationshipMatrix[, 1]
-    relationshipMatrix[, 1]      <- NULL
-    colnames(relationshipMatrix) <- rownames(relationshipMatrix)
+      rownames(relationshipMatrix) <- relationshipMatrix[, 1]
+      relationshipMatrix[, 1]      <- NULL
+      colnames(relationshipMatrix) <- rownames(relationshipMatrix)
       relationshipMatrix           <- data.matrix(relationshipMatrix)
       
   } else {
@@ -335,8 +335,15 @@ if (length(relationshipMatrixFile) != 0) {
     inbreeding <- diag(data.matrix(relationshipMatrix))
     inbreeding <- inbreeding - 1
    
-    inbreeding  <- inbreeding %>% replace(., . < 0, 0)
-    inbreeding <- round(data.frame(inbreeding), 3)
+    inbreeding <- inbreeding %>% replace(., . < 0, 0)
+    inbreeding <- data.frame(inbreeding)
+
+    inbreeding <- inbreeding %>%
+        rownames_to_column('genotypes') %>%
+        rename(Inbreeding = inbreeding) %>%
+        arrange(Inbreeding) %>%
+        mutate_at('Inbreeding', round, 3) %>%
+        column_to_rownames('genotypes')
   }
 }
 
@@ -344,6 +351,9 @@ traitRelationshipMatrix <- relationshipMatrix[(rownames(relationshipMatrix) %in%
 traitRelationshipMatrix <- traitRelationshipMatrix[, (colnames(traitRelationshipMatrix) %in% rownames(commonObs))]
 
 traitRelationshipMatrix <- data.matrix(traitRelationshipMatrix)
+
+
+
 #relationshipMatrixFiltered <- relationshipMatrixFiltered + 1e-3
 
 nCores <- detectCores()
@@ -743,14 +753,23 @@ if (file.info(inbreedingFile)$size == 0) {
 }
 
 
-if (file.info(aveKinshipFile)$size == 0 && !is.null(aveKinship)) {
+if (file.info(aveKinshipFile)$size == 0) {
+
+    aveKinship <- data.frame(apply(traitRelationshipMatrix, 1, mean))
   
-  fwrite(aveKinship,
-         file  = aveKinshipFile,
-         row.names = TRUE,
-         sep   = "\t",
-         quote = FALSE,
-         )
+    aveKinship<- aveKinship %>%
+        rownames_to_column('genotypes') %>%     
+        rename(Mean_kinship = contains('traitRe')) %>%
+        arrange(Mean_kinship) %>%
+        mutate_at('Mean_kinship', round, 3) %>%
+        column_to_rownames('genotypes')  
+    
+    fwrite(aveKinship,
+           file  = aveKinshipFile,
+           row.names = TRUE,
+           sep   = "\t",
+           quote = FALSE,
+           )
 }
 
 
