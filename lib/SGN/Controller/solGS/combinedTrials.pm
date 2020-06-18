@@ -172,8 +172,6 @@ sub model_combined_trials_trait :Path('/solgs/model/combined/trials') Args() {
 
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id); 
     
-    
-    
     $c->controller('solGS::Files')->rrblup_training_gebvs_file($c, $combo_pops_id, $trait_id);    
     my $gebv_file = $c->stash->{rrblup_training_gebvs_file};
    
@@ -775,7 +773,7 @@ sub combined_pops_summary {
 	$markers_no = scalar(split ('\t', $unfiltered_geno_rows[0]));	
     }
 
-    my $stocks_no    =  $self->count_combined_trials_members($c, $combo_pops_id);
+    my $stocks_no    =  $self->count_combined_trials_lines_count($c, $combo_pops_id, $trait_id);
     my $training_pop = "Training population $combo_pops_id";
     my $model_link   = qq | <a href="/solgs/populations/combined/$combo_pops_id/gp/$protocol_id">$training_pop </a>|;
     my $protocol = $c->controller('solGS::genotypingProtocol')->create_protocol_url($c); 
@@ -1195,13 +1193,9 @@ sub combined_trials_desc {
 
     my @traits_list = read_file($traits_list_file);
     my $traits_no   = scalar(@traits_list) - 1;
-
-    #my $stock_no  = scalar(@geno_lines) - 1;
-
     my $training_pop = "Training population $combo_pops_id";
-    
     my $protocol  = $c->controller('solGS::genotypingProtocol')->create_protocol_url($c); 
-    my $stocks_no = $self->count_combined_trials_members($c, $combo_pops_id);
+    my $stocks_no = $self->count_combined_trials_lines_count($c, $combo_pops_id);
    
     $c->stash(stocks_no    => $stocks_no,
 	      markers_no   => $markers_no,
@@ -1214,22 +1208,23 @@ sub combined_trials_desc {
 }
 
 
-sub count_combined_trials_members {
-    my ($self, $c, $combo_pops_id) = @_;
+sub count_combined_trials_lines_count {
+    my ($self, $c, $combo_pops_id, $trait_id) = @_;
 
     $combo_pops_id = $c->stash->{combo_pops_id} if !$combo_pops_id;
-    $c->stash->{combo_pops_id} = $combo_pops_id if $combo_pops_id;        
+    $trait_id  = $c->stash->{trait_id} if !$trait_id;      
     
     my $genos_cnt;
+    my @geno_lines;
     
-    $self->cache_combined_pops_data($c);   
-    my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
-    my $size = -s $combined_pops_geno_file;
-
-    if (-s $combined_pops_geno_file > 1)
+    if ($c->req->path =~ /solgs\/model\/combined\/populations\//)
     {
-	my @geno_data = read_file($combined_pops_geno_file);
-	$genos_cnt = scalar(@geno_data);	
+	my $args = {
+	    'training_pop_id' => $combo_pops_id,
+	    'trait_id' => $trait_id
+	};
+	
+	$genos_cnt = $c->controller('solGS::solGS')->predicted_lines_count($c, $args);
     }
     else
     {
