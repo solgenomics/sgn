@@ -1589,6 +1589,10 @@ sub get_micasense_aligned_raw_images_grid_interactive : Path('/ajax/html/select/
         var svg = d3.select("#drone_imagery_standard_process_raw_images_image_id_interactive_select_div").append("svg")
             .attr("width", '.$lon_range*$factor.')
             .attr("height", '.$lat_range*3*$factor.')
+            .attr("id", "drone_imagery_standard_process_raw_images_image_id_interactive_select_div_area")
+            .on("click", function(){
+                console.log(d3.mouse(this));
+            })
 
         var image = {
           width: '.$width.',
