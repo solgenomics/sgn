@@ -229,6 +229,7 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
     my $get_field_trials = $c->req->param("get_field_trials");
     my $get_crossing_trials = $c->req->param("get_crossing_trials");
     my $get_genotyping_trials = $c->req->param("get_genotyping_trials");
+    my $include_analyses = $c->req->param("include_analyses");
 
     my $projects;
     if (!$breeding_program_id && !$breeding_program_name) {
@@ -248,7 +249,7 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
 
     my @projects;
     foreach my $project (@$projects) {
-        my ($field_trials, $cross_trials, $genotyping_trials) = $p->get_trials_by_breeding_program($project->[0]);
+        my ($field_trials, $cross_trials, $genotyping_trials, $genotyping_data_projects, $field_management_factor_projects, $drone_run_projects, $drone_run_band_projects, $analyses_projects) = $p->get_trials_by_breeding_program($project->[0]);
         if ($get_field_trials){
             if ($field_trials && scalar(@$field_trials)>0){
                 my @trials = sort { $a->[1] cmp $b->[1] } @$field_trials;
@@ -265,6 +266,12 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
             if ($genotyping_trials && scalar(@$genotyping_trials)>0){
                 my @trials = sort { $a->[1] cmp $b->[1] } @$genotyping_trials;
                 push @projects, @trials;
+            }
+        }
+        if ($include_analyses) {
+            if ($analyses_projects && scalar(@$analyses_projects)>0){
+                my @analyses = sort { $a->[1] cmp $b->[1] } @$analyses_projects;
+                push @projects, @analyses;
             }
         }
     }
@@ -698,24 +705,21 @@ sub get_trained_keras_cnn_models : Path('/ajax/html/select/trained_keras_cnn_mod
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $keras_cnn_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model', 'protocol_type')->cvterm_id();
-    my $keras_cnn_trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_trait', 'protocol_property')->cvterm_id();
-    my $keras_cnn_model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_type', 'protocol_property')->cvterm_id();
+    my $model_properties_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_properties', 'protocol_property')->cvterm_id();
 
-    my $model_q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, trained_trait.value, model_type.value
+    my $model_q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, model_type.value
         FROM nd_protocol
-        JOIN nd_protocolprop AS trained_trait ON(nd_protocol.nd_protocol_id=trained_trait.nd_protocol_id AND trained_trait.type_id=$keras_cnn_trait_cvterm_id)
-        JOIN nd_protocolprop AS model_type ON(nd_protocol.nd_protocol_id=model_type.nd_protocol_id AND model_type.type_id=$keras_cnn_model_type_cvterm_id)
+        JOIN nd_protocolprop AS model_type ON(nd_protocol.nd_protocol_id=model_type.nd_protocol_id AND model_type.type_id=$model_properties_cvterm_id)
         WHERE nd_protocol.type_id=$keras_cnn_cvterm_id;";
     my $model_h = $schema->storage->dbh()->prepare($model_q);
     $model_h->execute();
     my @keras_cnn_models;
-    while (my ($nd_protocol_id, $name, $description, $trained_trait, $model_type) = $model_h->fetchrow_array()) {
-        my $trained_trait_hash = decode_json $trained_trait;
+    while (my ($nd_protocol_id, $name, $description, $model_type) = $model_h->fetchrow_array()) {
         my $model_type_hash = decode_json $model_type;
-        my $trait_id = $trained_trait_hash->{variable_id};
-        my $trained_trait_name = $trained_trait_hash->{variable_name};
-        my $aux_trait_ids = $trained_trait_hash->{aux_trait_ids} ? $trained_trait_hash->{aux_trait_ids} : [];
-        $model_type = $model_type_hash->{value};
+        my $trait_id = $model_type_hash->{variable_id};
+        my $trained_trait_name = $model_type_hash->{variable_name};
+        my $aux_trait_ids = $model_type_hash->{aux_trait_ids} ? $model_type_hash->{aux_trait_ids} : [];
+        $model_type = $model_type_hash->{model_type};
         my $trained_image_type = $model_type_hash->{image_type};
 
         my @aux_trait_names;
@@ -731,6 +735,40 @@ sub get_trained_keras_cnn_models : Path('/ajax/html/select/trained_keras_cnn_mod
 
     my $id = $c->req->param("id") || "html_keras_cnn_select";
     my $name = $c->req->param("name") || "html_keras_cnn_select";
+
+    @keras_cnn_models = sort { $a->[1] cmp $b->[1] } @keras_cnn_models;
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@keras_cnn_models
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+sub get_trained_keras_mask_r_cnn_models : Path('/ajax/html/select/trained_keras_mask_r_cnn_models') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $keras_mask_r_cnn_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_mask_r_cnn_model', 'protocol_type')->cvterm_id();
+    my $model_properties_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_properties', 'protocol_property')->cvterm_id();
+
+    my $model_q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, model_type.value
+        FROM nd_protocol
+        JOIN nd_protocolprop AS model_type ON(nd_protocol.nd_protocol_id=model_type.nd_protocol_id AND model_type.type_id=$model_properties_cvterm_id)
+        WHERE nd_protocol.type_id=$keras_mask_r_cnn_cvterm_id;";
+    my $model_h = $schema->storage->dbh()->prepare($model_q);
+    $model_h->execute();
+    my @keras_cnn_models;
+    while (my ($nd_protocol_id, $name, $description, $model_type) = $model_h->fetchrow_array()) {
+        my $model_type_hash = decode_json $model_type;
+
+        push @keras_cnn_models, [$nd_protocol_id, $name];
+    }
+
+    my $id = $c->req->param("id") || "html_keras_mask_r_cnn_select";
+    my $name = $c->req->param("name") || "html_keras_mask_r_cnn_select";
 
     @keras_cnn_models = sort { $a->[1] cmp $b->[1] } @keras_cnn_models;
 
@@ -1123,26 +1161,98 @@ sub all_ontology_terms_select : Path('/ajax/html/select/all_ontology_terms') Arg
 sub get_datasets_select :Path('/ajax/html/select/datasets') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $checkbox_name = $c->request->param("checkbox_name") || 'dataset_select_checkbox';
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
 
-    my $html = '<select><option disabled="1">None</option></select>';
     my $user_id;
+    my @datasets;
     if ($c->user()) {
-	if ($user_id = $c->user->get_object()->get_sp_person_id()) {
+        if ($user_id = $c->user->get_object()->get_sp_person_id()) {
 
-	    my $datasets = CXGN::Dataset->get_datasets_by_user(
-		$c->dbic_schema("CXGN::People::Schema"),
-		$user_id);
+            my $user_datasets = CXGN::Dataset->get_datasets_by_user(
+                $c->dbic_schema("CXGN::People::Schema"),
+                $user_id
+            );
+            #print STDERR "Retrieved datasets: ".Dumper($user_datasets);
 
-#	    print STDERR "Retrieved datasets: ".Dumper($datasets);
+            foreach (@$user_datasets) {
+                my $dataset_id = $_->[0];
+                my $dataset_name = $_->[1];
+                my $dataset_description = $_->[2];
 
-	    $html = simple_selectbox_html(
-		name => 'available_datasets',
-		id => 'available_datasets',
-		choices => $datasets,
-		);
+                my $ds = CXGN::Dataset->new({
+                    schema => $schema,
+                    people_schema => $people_schema,
+                    sp_dataset_id => $dataset_id
+                });
+                my $info = $ds->get_dataset_data();
 
-	}
+                my $dataset_info = {
+                    id => $dataset_id,
+                    name => $dataset_name,
+                    description => $dataset_description,
+                    info => $info
+                };
+
+                push @datasets, $dataset_info;
+            }
+        }
     }
+    #print STDERR Dumper \@datasets;
+
+    my $lt = CXGN::List::Transform->new();
+    my %transform_dict = (
+        'plots' => 'stock_ids_2_stocks',
+        'accessions' => 'stock_ids_2_stocks',
+        'traits' => 'trait_ids_2_trait_names',
+        'locations' => 'locations_ids_2_location',
+        'plants' => 'stock_ids_2_stocks',
+        'trials' => 'project_ids_2_projects',
+        'trial_types' => 'cvterm_ids_2_cvterms',
+        'breeding_programs' => 'project_ids_2_projects',
+        'genotyping_protocols' => 'nd_protocol_ids_2_protocols'
+    );
+
+    my $html = '<table class="table table-bordered table-hover" id="html-select-dataset-table"><thead><tr><th>Select</th><th>Dataset Name</th><th>Contents</th></tr></thead><tbody>';
+    foreach my $ds (@datasets) {
+        $html .= '<tr><td><input type="checkbox" name="'.$checkbox_name.'" value="'.$ds->{id}.'"></td><td>'.$ds->{name}.'</td><td>';
+
+        $html .= '<table class="table-bordered"><thead><tr>';
+        foreach my $cat (@{$ds->{info}->{category_order}}) {
+            $html .= '<th>'.ucfirst($cat).'</th>';
+        }
+        $html .= '</tr></thead><tbody><tr>';
+        foreach my $cat (@{$ds->{info}->{category_order}}) {
+            my $ids = $ds->{info}->{categories}->{$cat};
+
+            my @items;
+            if (exists($transform_dict{$cat})) {
+                my $transform = $lt->transform($schema, $transform_dict{$cat}, $ids);
+                @items = @{$transform->{transform}};
+            }
+            else {
+		if (defined($ids)) { 
+		    @items = @$ids;
+		}
+            }
+
+            $html .= "<td><div class='well well-sm'>";
+            $html .= "<select class='form-control' multiple>";
+            foreach (@items) {
+                $html .= "<option value='$_' disabled>$_</option>";
+            }
+            $html .= "</select>";
+            $html .= "</td></div>";
+        }
+        $html .= "</tr></tbody></table>";
+        $html .= '</td></tr>';
+    }
+
+    $html .= "</tbody></table>";
+
+    $html .= "<script>jQuery(document).ready(function() { jQuery('#html-select-dataset-table').DataTable({ 'lengthMenu': [[2, 4, 6, 8, 10, 25, 50, -1], [2, 4, 6, 8, 10, 25, 50, 'All']] }); } );</script>";
+
     $c->stash->{rest} = { select => $html };
 }
 

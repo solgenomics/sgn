@@ -61,23 +61,26 @@ my $res = $ua->request($req);
 $response = decode_json $res->content;
 print STDERR Dumper $response;
 is_deeply($response, {
+          'result' => undef,
           'metadata' => {
-                          'datafiles' => [],
-                          'pagination' => {
-                                            'totalCount' => 0,
-                                            'totalPages' => 0,
-                                            'currentPage' => 0,
-                                            'pageSize' => 1
-                                          },
                           'status' => [
                                         {
-                                          'message' => 'You must login and have permission to access this BrAPI call.',
-                                          'code' => '400'
+                                          'messageType' => '400',
+                                          'message' => 'You must login and have permission to access this BrAPI call.'
                                         }
-                                      ]
-                        },
-          'result' => undef
+                                      ],
+                          'datafiles' => [],
+                          'pagination' => {
+                                            'pageSize' => 1,
+                                            'totalCount' => 0,
+                                            'totalPages' => 0,
+                                            'currentPage' => 0
+                                          }
+                        }
         });
+
+my $trait_id1 = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'CO_334:0000092')->cvterm_id();
+my $trait_id2 = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'CO_334:0000016')->cvterm_id();
 
 my $data = {
     access_token => $sgn_session_id,
@@ -85,7 +88,7 @@ my $data = {
         {
             observationDbId => '',
             observationUnitDbId => $plot_id1,
-            observationVariableDbId => 'CO_334:0000092',
+            observationVariableDbId => $trait_id1,
             collector => 'collector1',
             observationTimeStamp => '2015-06-16T00:53:26Z',
             value => '11'
@@ -93,7 +96,7 @@ my $data = {
         {
             observationDbId => '',
             observationUnitDbId => $plot_id2,
-            observationVariableDbId => 'CO_334:0000016',
+            observationVariableDbId => $trait_id2,
             collector => 'collector1',
             observationTimeStamp => '2015-06-16T00:53:26Z',
             value => '110'
@@ -114,75 +117,74 @@ $response = decode_json $res->content;
 print STDERR Dumper $response;
 
 #Remove observationdbid from result because it is variable
-foreach (@{$response->{result}->{data}}){
+foreach (@{$response->{result}->{observations}}){
     delete $_->{observationDbId};
 }
 
 is_deeply($response, {
           'result' => {
-                        'data' => [
-                                    {
-                                      'observationLevel' => 'plot',
-                                      'uploadedBy' => 41,
-                                      'observationTimeStamp' => '2015-06-16T00:53:26Z',
-                                      'studyDbId' => 137,
-                                      'observationUnitName' => 'test_trial210',
-                                      'observationVariableName' => 'dry matter content percentage',
-                                      'observationUnitDbId' => 38866,
-                                      'collector' => 'collector1',
-                                      'value' => '11',
-                                      'observationVariableDbId' => 'CO_334:0000092',
-                                      'germplasmName' => 'test_accession3',
-                                      'germplasmDbId' => 38842
-                                    },
-                                    {
-                                      'germplasmName' => 'test_accession4',
-                                      'germplasmDbId' => 38843,
-                                      'observationUnitName' => 'test_trial214',
-                                      'observationVariableName' => 'fresh shoot weight measurement in kg',
-                                      'observationUnitDbId' => 38870,
-                                      'collector' => 'collector1',
-                                      'value' => '110',
-                                      'observationVariableDbId' => 'CO_334:0000016',
-                                      'uploadedBy' => 41,
-                                      'observationTimeStamp' => '2015-06-16T00:53:26Z',
-                                      'studyDbId' => 137,
-                                      'observationLevel' => 'plot'
-                                    }
-                                  ]
+                        'observations' => [
+                                            {
+                                              'observationLevel' => 'plot',
+                                              'observationTimeStamp' => '2015-06-16T00:53:26Z',
+                                              'germplasmName' => 'test_accession3',
+                                              'observationUnitName' => 'test_trial210',
+                                              'uploadedBy' => 41,
+                                              'collector' => 'collector1',
+                                              'germplasmDbId' => 38842,
+                                              'observationUnitDbId' => 38866,
+                                              'value' => '11',
+                                              'observationVariableName' => 'dry matter content percentage',
+                                              'observationVariableDbId' => 'dry matter content percentage|CO_334:0000092',
+                                              'studyDbId' => 137
+                                            },
+                                            {
+                                              'observationLevel' => 'plot',
+                                              'observationTimeStamp' => '2015-06-16T00:53:26Z',
+                                              'germplasmName' => 'test_accession4',
+                                              'observationUnitName' => 'test_trial214',
+                                              'uploadedBy' => 41,
+                                              'collector' => 'collector1',
+                                              'germplasmDbId' => 38843,
+                                              'observationUnitDbId' => 38870,
+                                              'value' => '110',
+                                              'observationVariableDbId' => 'fresh shoot weight measurement in kg|CO_334:0000016',
+                                              'observationVariableName' => 'fresh shoot weight measurement in kg',
+                                              'studyDbId' => 137
+                                            }
+                                          ]
                       },
           'metadata' => {
+                          'datafiles' => [],
                           'status' => [
                                         {
-                                          'code' => 'info',
-                                          'message' => 'BrAPI base call found with page=0, pageSize=10'
+                                          'message' => 'BrAPI base call found with page=0, pageSize=10',
+                                          'messageType' => 'INFO'
                                         },
                                         {
-                                          'code' => 'info',
+                                          'messageType' => 'INFO',
                                           'message' => 'Loading CXGN::BrAPI::v1::Observations'
                                         },
                                         {
                                           'message' => 'Request structure is valid',
-                                          'code' => 'info'
+                                          'messageType' => 'info'
                                         },
                                         {
-                                          'message' => 'Request data is valid',
-                                          'code' => 'info'
+                                          'messageType' => 'info',
+                                          'message' => 'Request data is valid'
                                         },
                                         {
                                           'message' => 'File for incoming brapi obserations saved in archive.',
-                                          'code' => 'info'
+                                          'messageType' => 'info'
                                         },
                                         {
-                                          'code' => '200',
+                                          'messageType' => 'INFO',
                                           'message' => 'All values in your file are now saved in the database!'
                                         }
                                       ],
-                          'datafiles' => [
-                                         ],
                           'pagination' => {
-                                            'totalCount' => 2,
                                             'totalPages' => 1,
+                                            'totalCount' => 2,
                                             'pageSize' => 10,
                                             'currentPage' => 0
                                           }

@@ -26,6 +26,7 @@ Lukas Mueller <lam87@cornell.edu>
 package CXGN::Project;
 
 use Moose;
+
 use Data::Dumper;
 use Try::Tiny;
 use Data::Dumper;
@@ -61,19 +62,80 @@ has 'phenome_schema' => (
     is => 'rw',
 );
 
+has 'project_id' => (
+    isa => 'Maybe[Int]',
+    is => 'rw',
+    trigger => \&set_trial_id,
+    builder => 'get_trial_id',
+    );
 
+has 'name' => (
+    isa => 'Str',
+    is => 'rw',
+    trigger => \&set_name,
+    builder => 'get_name',
+    lazy => 1,
+    );
+
+has 'description' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    trigger => \&set_description,
+    builder => 'get_description',
+    lazy => 1,
+    );
+
+has 'year' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    trigger => \&get_year,
+    builder => 'set_year',
+    lazy => 1,
+    );
 
 sub BUILD {
     my $self = shift;
+    my $args = shift;
+    
+    print STDERR "BUILD CXGN::Project... with ".$args->{trial_id}."\n";
 
-    my $row = $self->bcs_schema->resultset("Project::Project")->find( { project_id => $self->get_trial_id() });
+    if (! $args->{description}) { 
+	$args->{description} = "(No description provided)"; 
+    }
+    
+    my $row = $self->bcs_schema()->resultset("Project::Project")->find( { project_id => $args->{trial_id} });
 
+    print STDERR "PROJECT ID = $args->{trial_id}\n";
     if ($row){
-	#print STDERR "Found row for ".$self->get_trial_id()." ".$row->name()."\n";
+	$self->name( $row->name() );
+    }
+    
+    if ($args->{trial_id} && ! $row) { 
+	die "The trial ".$args->{trial_id}." does not exist - aborting.";
     }
 
-    if (!$row) {
-        die "The trial ".$self->get_trial_id()." does not exist";
+    $row = $self->bcs_schema()->resultset("Project::Project")->find( { name => $args->{name } } );
+
+    
+    if (! $args->{trial_id} && $row) {
+	die "A trial with the name $args->{name} already exists. Please choose another name.";
+    }
+
+    if (! $args->{trial_id} && ! $row) { 
+	print STDERR "INSERTING A NEW ROW...\n";
+	
+        my $new_row = $args->{bcs_schema}->resultset("Project::Project")->create( { name => $args->{name}, description => $args->{description} });
+	my $project_id = $new_row->project_id();
+	print STDERR "new project object has project id $project_id\n";
+	
+	$self->set_trial_id($project_id);
+    }
+
+    if ($args->{trial_id} && $row) {
+	print STDERR "Existing project... populating object.\n";
+	$self->set_trial_id($args->{trial_id});
+	$self->name($args->{name});
+	$self->description($args->{description});
     }
 }
 
@@ -96,7 +158,9 @@ has 'trial_id' => (isa => 'Int',
 
 =cut
 
-has 'layout' => (isa => 'CXGN::Trial::TrialLayout',
+has 'layout' => (isa => 'CXGN::Trial::TrialLayout::Phenotyping | 
+                         CXGN::Trial::TrialLayout::Genotyping | 
+                         CXGN::Trial::TrialLayout::Analysis',
 		 is => 'rw',
 		 reader => 'get_layout',
 		 writer => 'set_layout',
@@ -108,10 +172,65 @@ has 'layout' => (isa => 'CXGN::Trial::TrialLayout',
 sub _get_layout {
     my $self = shift;
     print STDERR "RETRIEVING LAYOUT...\n";
-    my $layout = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema, trial_id => $self->get_trial_id(), experiment_type=>'field_layout' });
+    my $layout = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema, trial_id => $self->get_trial_id(), experiment_type=>$self->get_cxgn_project_type()->{experiment_type} });
     $self->set_layout($layout);
 }
 
+=head2 accessors get_cxgn_project_type()
+
+get the CXGN::Project type e.g. field trial, analysis, genotyping trial, etc
+
+=cut
+
+sub get_cxgn_project_type {
+    my $self = shift;
+
+    my $analysis_metadata_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'analysis_metadata_json', 'project_property')->cvterm_id();
+    my $crossing_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'crossing_trial',  'project_type')->cvterm_id();
+
+    my $q = "SELECT projectprop.type_id, projectprop.value FROM project JOIN projectprop USING(project_id)";
+	my $h = $self->bcs_schema->storage->dbh->prepare($q);
+	$h->execute();
+
+    my $cxgn_project_type = 'field_trial_project';
+    my $plot_data_level = 'plot';
+    my $experiment_type = 'field_layout';
+    while (my ($prop, $propvalue) = $h->fetchrow_array()) {
+        if ($prop) {
+            if ($prop == $crossing_trial_cvterm_id) {
+                $cxgn_project_type = 'crossing_project';
+            }
+            if ($prop == $analysis_metadata_cvterm_id) {
+                $cxgn_project_type = 'analysis_project';
+                $plot_data_level = 'analysis_instance';
+                $experiment_type = 'analysis_experiment';
+            }
+            if ($propvalue) {
+                if ($propvalue eq "genotyping_plate") {
+                    $cxgn_project_type = 'genotyping_plate_project';
+                    $experiment_type = 'genotyping_layout';
+                }
+                if ($propvalue eq "treatment") {
+                    $cxgn_project_type = 'management_factor_project';
+                }
+                if ($propvalue eq "genotype_data_project") {
+                    $cxgn_project_type = 'genotyping_data_project';
+                }
+                if ($propvalue eq "drone_run") {
+                    $cxgn_project_type = 'drone_run_project';
+                }
+                if ($propvalue eq "drone_run_band") {
+                    $cxgn_project_type = 'drone_run_band_project';
+                }
+            }
+        }
+    }
+    return {
+        cxgn_project_type => $cxgn_project_type,
+        data_level => $plot_data_level,
+        experiment_type => $experiment_type
+    }
+}
 
 =head2 accessors get_year(), set_year()
 
@@ -121,6 +240,10 @@ getter/setter for the year property. The setter modifies the database.
 
 sub get_year {
     my $self = shift;
+
+    print STDERR "get_year()...\n";
+    
+    if ($self->year()) { return $self->year(); }
 
     my $type_id = $self->get_year_type_id();
 
@@ -132,28 +255,39 @@ sub get_year {
     else {
 	return $rs->first()->value();
     }
+   
 }
 
 sub set_year {
     my $self = shift;
     my $year = shift;
 
+    if (!$year) {
+	print STDERR "set_year(): No year provided, not setting.\n";
+	return;
+    }
+
+    print STDERR "set_year()... (with parameter $year)\n";
     my $type_id = $self->get_year_type_id();
 
     my $row = $self->bcs_schema->resultset('Project::Projectprop')->find( { project_id => $self->get_trial_id(), type_id => $type_id  });
 
     if ($row) {
+	print STDERR "Updating year to $year...\n";
 	$row->value($year);
 	$row->update();
     }
     else {
+	print STDERR "inserting new year ($year)...\n";
 	$row = $self->bcs_schema->resultset('Project::Projectprop')->create(
 	    {
 		type_id => $type_id,
 		value => $year,
 		project_id =>  $self->get_trial_id()
 	    } );
+	$year =  $row->value();
     }
+    return $year;
 }
 
 =head2 accessors get_description(), set_description()
@@ -165,6 +299,7 @@ getter/setter for the description
 sub get_description {
     my $self = shift;
 
+    print STDERR "Get description for trial id ".$self->get_trial_id()."\n";
     my $rs = $self->bcs_schema->resultset('Project::Project')->search( { project_id => $self->get_trial_id() });
 
     return $rs->first()->description();
@@ -2121,7 +2256,7 @@ sub get_phenotypes_for_trait {
 	my $q = "SELECT phenotype.value::real FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) $join_string WHERE $where_string project_id=? and cvterm.cvterm_id = ? and phenotype.value~? ORDER BY phenotype_id ASC;";
 	$h = $dbh->prepare($q);
 
-    my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
+    my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
     $h->execute($self->get_trial_id(), $trait_id, $numeric_regex );
     while (my ($value) = $h->fetchrow_array()) {
 	   push @data, $value + 0;
@@ -2198,9 +2333,11 @@ sub get_stock_phenotypes_for_traits {
 		$relationship_join
 		$where_clause
 		ORDER BY stock.stock_id;";
+
+    print STDERR "QUERY = $q\n";
     my $h = $dbh->prepare($q);
 
-    my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
+    my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
     $h->execute($self->get_trial_id(), $phenotyping_experiment_cvterm, $numeric_regex );
     while (my ($stock_id, $stock_name, $trait_id, $trait_name, $phenotype_id, $pheno_uniquename, $uploader_id, $value, $rel_stock_id, $rel_stock_name, $stock_type) = $h->fetchrow_array()) {
         push @data, [$stock_id, $stock_name, $trait_id, $trait_name, $phenotype_id, $pheno_uniquename, $uploader_id, $value + 0, $rel_stock_id, $rel_stock_name, $stock_type];
@@ -2302,6 +2439,8 @@ sub get_traits_assayed {
         LEFT JOIN cvprop on (cv.cv_id = cvprop.cv_id)
         LEFT JOIN cvterm AS cv_type on (cv_type.cvterm_id = cvprop.type_id)
         WHERE cvterm.cvterm_id=? ;";
+
+    print STDERR Dumper $q;
 
     my $traits_assayed_h = $dbh->prepare($q);
     my $component_h = $dbh->prepare($component_q);
@@ -3872,3 +4011,5 @@ sub cross_count {
 }
 
 1;
+
+##__PACKAGE__->meta->make_immutable;

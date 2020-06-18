@@ -14,8 +14,231 @@
 
 
 <div id="mixedmodel_tool">
-loading...
 </div>
+
+
+<style>
+	.factor {
+	    z-index:4;
+	    border-style:solid;
+	    border-radius:8px;
+	    width:200px;
+	    height:100;
+	    border-color:#337ab7;
+	    background-color:#337ab7;
+	    color:white;
+	    margin:4px
+	}
+        .factor_panel {
+	    min-height:100px;
+	    height:auto;
+	    margin-top:0px;
+	    border-style:dotted;
+	    border-width:5px;
+	    color:grey;
+	    background-color:lightyellow;
+	}
+        .factor_interaction_panel {
+	    border-style:dotted;
+	    border-width:0px;
+	    margin-top:20px;
+	    height:auto;
+	    z-index:1;
+	}
+        .model_bg {
+	    margin-left:30px;
+	    margin-right:30px;
+	    background-color:#DDEEEE;
+	    min-height:80px;
+	    padding-top:10px;
+	    padding-left:10px;
+	    padding-bottom:10px;
+	    border-radius:8px;
+	}
+</style>
+
+	<div class="container">
+	<div class="row">
+	<div class="col-md-6">
+
+
+	<div class="container-fluid">
+
+            <&| /util/workflow.mas, id=> "mixed_model_analysis_workflow" &>
+                <&| /util/workflow.mas:step, title=> "Choose Dataset" &>
+                    <& /page/page_title.mas, title=>"Choose the dataset for your analysis" &>
+
+
+        1. Choose a dataset
+
+	<span style="width:240px" id="mixed_model_dataset_select">
+	</span>
+	<button class="btn btn-main" id="mixed_model_analysis_prepare_button">Go!</button>
+	<br />
+	<br />
+
+
+	</&>
+
+
+
+
+                <&| /util/workflow.mas:step, title=> "Choose Dependent Variable" &>
+                    <& /page/page_title.mas, title=>"Choose the dependent variable for your analysis" &>
+
+	    
+	<div id="dependent_variable" style="margin-bottom:50px">
+        [ select dataset first ]
+	</div>
+
+	<div id="trait_histogram">
+	  [Histogram]
+       </div>
+
+
+	</&>
+
+
+           <&| /util/workflow.mas:step, title=> "Build Model" &>
+              <& /page/page_title.mas, title=>"Build mixed model" &>
+
+	      	<div class="model_bg" >
+			<div id="model_string" style="margin-top:10px;margin-bottom:10px;text-align:center;font-weight:bold">[model will appear here in lme4 format]</div>
+			<button id="store_model_formula" class="btn btn-default btn-sm">Save model</button>
+		</div>
+
+
+
+    <hr />
+	<div class="container">
+	  <div class="row">
+        <div id="left-margin" class="col-md-2"></div>
+	<div class="col-md-4">
+	<div class="panel panel-default" style="border-width:0px">
+	<div class="panel panel-header" style="border-width:0px">Available Factors</div>
+	     <hr />
+             <div id="factors" class="panel panel-body" style="border-style:dotted;border-width:0px;">
+	       [ Choose dataset and dependent variable first ]
+             </div>
+        </div>
+	</div>
+              <div class="col-md-4">
+                <div  id="fixed_factors_panel" style="border-width:0;" class="panel panel-default">
+	           <div class="panel-header">Fixed factors</div>
+	<div id="fixed_factors" class="panel-body factor_panel">
+
+    <!-- style="background-color:lightyellow;min-height:100px;height:auto;border-style:dotted;border-width:5px;color:grey" --></div>
+
+                </div>
+	<div id="interaction_factor_collection_panel" class="panel panel-default factor_interaction_panel">
+    <!-- style="border-style:dotted;border-width:0px;margin-top:20px;height:auto;z-index:1" -->
+                   <div class="panel-header">
+	               Fixed factors with interaction<br />
+                       <button  id="add_interaction_factor_button">add new interaction</button>
+	           </div>
+	           <div id="interaction_factors_collection" name="interaction_factors_collection" class="panel-body">
+	           </div>
+                </div>
+	<div id="variable_slope_intersect_collection_panel" class="panel panel-default factor_interaction_panel">
+
+<!--    style="border-style:dotted;border-width:0px;margin-top:20px;height:auto;z-index:1" -->
+
+        <div class="panel-header">
+              Fixed factors with variable slope/intersects<br />
+              <button  id="add_variable_slope_intersect_button">add new variable slope/intersect</button>
+	            </div>
+	            <div id="variable_slope_intersect_collection" class="panel-body">
+
+	            </div>
+	         </div>
+
+	         <div style="height:30">&nbsp;</div>
+                  <div id="random_factors_panel" class="panel panel-default" style="border-width:0px">
+          	     <div class="panel-header">Random factors</div>
+	<div id="random_factors" class="panel-body factor_panel">
+
+    <!-- style="background-color:lightyellow;min-height:100px;height:auto;border-style:dotted;border-width:5px;color:grey" -->
+                     </div>
+                   </div>
+	       </div>
+            </div>
+	</div>
+
+        <br />
+        <div id="tempfile" style="display:none" >
+        </div>
+
+        <button style="position:relative;" id="run_mixed_model_button" class="btn btn-main">Go!</button>
+	<hr />
+
+        </&>
+
+ <&| /util/workflow.mas:step, title=> "Results" &>
+                    <& /page/page_title.mas, title=>"Analysis Results" &>
+
+
+
+	<table>
+	<tr><td>
+	<div id="mixed_models_anova_results_div">&nbsp;</div>
+	</td></tr>
+	<tr><td>
+	<div id="mixed_models_varcomp_results_div">&nbsp;</div>
+	</td></tr>
+	<tr><td>
+        Adjusted means 	     <button id="open_store_adjusted_means_dialog_button" class="btn btn-primary" data-toggle="modal" data-analysis_type="adjusted_means" data-target="#save_analysis_dialog">Save adjusted means</button>
+        <div id="mixed_models_adjusted_means_results_div">[loading...]</div>
+	</td></tr>
+	<tr>
+	<td>
+            BLUPs 	     <button id="open_store_blups_dialog_button" class="btn btn-primary" data-toggle="modal" data-analysis_type="blup" data-target="#save_analysis_dialog">Save BLUPs</button>
+        <div id="mixed_models_blup_results_div">[not available]</div>
+        </td>
+	</tr>
+	<tr><td>
+	    BLUEs
+	<div id="mixed_models_blues_results_div">[not available]</div>
+	</td>
+	</tr>
+	</table>
+
+	[ go throught steps 1-3 first ]
+</div>
+
+    </div>
+
+<div id="save_analysis_dialog" class="modal fade">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true"></button>
+        <h4 class="modal-title">Save analysis results</h4>
+	</div>
+	<div class="modal-body">
+	  <div class="form_group">
+   	    <label class="control-label" for="analysis_name">Analysis name</label> <input name="analysis_name" id="analysis_name" class="form-control" ></input><br />
+	    <label class="control-label" for="analysis_description">Analysis description</label>
+        <textarea name="description" rows="4" cols="30" class="form-control" id="description"></textarea>
+	<input type="hidden" name="analysis_file" id="analysis_file" />
+	<input type="hidden" name="analysis_dir" id="analysis_dir" value="mixedmodels" />
+	<input type="hidden" name="analysis_protocol" id="analysis_protocol" value="[not set]" />
+	<div name="analysis_type" id="analysis_type" value="?" style="display:none;"></div>
+	</div> <!-- form-group -->
+      </div> <!-- modal-body -->
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" id="save_blups_button" class="btn btn-primary">Save changes</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+</&>
+</&>
+
+
+</div>
+
 
 
 <script>

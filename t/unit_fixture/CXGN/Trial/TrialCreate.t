@@ -218,7 +218,7 @@ $gd->set_design_type("genotyping_plate");
 $gd->calculate_design();
 my $geno_design = $gd->get_design();
 
-print STDERR Dumper $geno_design;
+#print STDERR Dumper $geno_design;
 is_deeply($geno_design, {
           'A09' => {
                      'row_number' => 'A',
@@ -451,7 +451,7 @@ ok($trial_design->set_num_plants_per_plot(4), "set num plants per plot");
 ok($trial_design->calculate_design(), "calculate design");
 ok(my $design = $trial_design->get_design(), "retrieve design");
 
-print STDERR Dumper $design;
+#print STDERR Dumper $design;
 
 $ayt_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'Advanced Yield Trial', 'project_type')->cvterm_id();
 
@@ -473,6 +473,7 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
 						    }), "create trial object");
 
 $save = $trial_create->save_trial();
+print STDERR "TRIAL ID = ".$save->{trial_id}."\n";
 ok($save->{'trial_id'}, "save trial");
 
 ok(my $trial_lookup = CXGN::Trial::TrialLookup->new({
@@ -484,7 +485,7 @@ ok(my $trial_id = $trial->project_id());
 
 my $trial_obj = CXGN::Trial->new({bcs_schema=>$chado_schema, trial_id=>$trial_id});
 ok(my $trial_management_factors = $trial_obj->get_treatments());
-print STDERR Dumper $trial_management_factors;
+#print STDERR Dumper $trial_management_factors;
 is(scalar(@$trial_management_factors), 2);
 ok(my $trial_layout = CXGN::Trial::TrialLayout->new({
     schema => $chado_schema,

@@ -328,8 +328,8 @@ $dataset_id => undef
               <td>
                 <select class="wizard-download-phenotypes-level form-control input-sm">
                   <option value="" disabled>Data Level</option>
-                  <option value="all">All</option>
-                  <option selected value="plot">Plots</option>
+                  <option selected value="all">All</option>
+                  <option value="plot">Plots</option>
                   <option value="plant">Plants</option>
                 </select>
               </td>

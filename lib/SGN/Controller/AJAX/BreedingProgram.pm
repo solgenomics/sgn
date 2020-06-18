@@ -124,7 +124,7 @@ sub phenotype_summary : Chained('ajax_breeding_program') PathPart('phenotypes') 
         ORDER BY cvterm.name ASC
        ;");
 	
-	my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
+	my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
 	$h->execute( @trial_ids , $numeric_regex);
 	
         while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev) = $h->fetchrow_array()) {

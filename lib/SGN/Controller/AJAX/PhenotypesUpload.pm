@@ -353,6 +353,7 @@ sub update_plot_phenotype :  Path('/ajax/phenotype/plot_phenotype_upload') : Act
 sub update_plot_phenotype_POST : Args(0) {
   my $self = shift;
   my $c = shift;
+  print STDERR Dumper $c->req->params();
   my $plot_name = $c->req->param("plot_name");
   my $trait_id = $c->req->param("trait");
   my $trait_value = $c->req->param("trait_value");
@@ -386,14 +387,10 @@ sub update_plot_phenotype_POST : Args(0) {
   }
 
   if (!$trait_list_option){
-      my $h = $dbh->prepare("SELECT cvterm.cvterm_id AS trait_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_name FROM cvterm JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id WHERE db.db_id = (( SELECT dbxref_1.db_id FROM stock JOIN nd_experiment_stock USING (stock_id) JOIN nd_experiment_phenotype USING (nd_experiment_id) JOIN phenotype USING (phenotype_id) JOIN cvterm cvterm_1 ON phenotype.cvalue_id = cvterm_1.cvterm_id JOIN dbxref dbxref_1 ON cvterm_1.dbxref_id = dbxref_1.dbxref_id LIMIT 1)) AND cvterm_id =? GROUP BY cvterm.cvterm_id, ((((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text);");
-      $h->execute($trait_id);
-      while (my ($id, $trait_name) = $h->fetchrow_array()) {
-        $trait = $trait_name;
-      }
+      $trait = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $trait_id, 'extended');
   }
   else {
-      $trait = $trait_id;
+      $trait = $trait_list_option;
   }
   push @plots, $plot_name;
   push @traits, $trait;

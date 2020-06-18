@@ -98,6 +98,7 @@ sub BUILD {
 	my $folder_for_crosses_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'folder_for_crosses', 'project_property')->cvterm_id();
 	my $folder_for_genotyping_trials_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'folder_for_genotyping_trials', 'project_property')->cvterm_id();
 	my $folder_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'trial_folder', 'project_property')->cvterm_id();
+	my $analyses_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'analysis_metadata_json', 'project_property')->cvterm_id();
 	my $breeding_program_trial_relationship_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'breeding_program_trial_relationship', 'project_relationship')->cvterm_id();
 
 	$self->breeding_program_cvterm_id($breeding_program_type_id);
@@ -129,6 +130,8 @@ sub BUILD {
 				$self->folder_type("cross");
 			} elsif ($tt->value eq 'genotyping_plate') {
 				$self->folder_type("genotyping_trial");
+            } elsif ($tt->type_id == $analyses_cvterm_id) {
+				$self->folder_type("analyses");
 			} elsif ($tt->type_id == $location_cvterm_id) {
 				$self->location_id($tt->value + 0);
                 my $location = CXGN::Location->new( { bcs_schema => $self->bcs_schema, nd_geolocation_id => $self->location_id } );
@@ -535,12 +538,18 @@ sub get_jstree_html {
     $html .= "<ul>";
 
     my %children = fast_children($self, $schema, $parent_type);
-    #print STDERR Dumper \%children;
+    # print STDERR Dumper \%children;
     if (%children) {
         foreach my $child (sort keys %children) {
             #print STDERR "Working on child ".$children{$child}->{'name'}."\n";
 
-            if ($children{$child}->{$folder_type_of_interest}) {
+            if ($project_type_of_interest eq 'trial' && $children{$child}->{'analysis_experiment'}) {
+                $html .= _jstree_li_html($schema, 'analyses', $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
+            }
+            elsif ($project_type_of_interest eq 'trial' && $children{$child}->{'genotype_data_project'}) {
+                $html .= _jstree_li_html($schema, 'genotyping_data_project', $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
+            }
+            elsif ($children{$child}->{$folder_type_of_interest}) {
                 $html .= get_jstree_html('shift', $children{$child}, $schema, 'folder', $project_type_of_interest);
             }
             elsif (!$children{$child}->{'folder_for_crosses'} && !$children{$child}->{'folder_for_genotyping_trials'} && !$children{$child}->{'folder_for_trials'} && $children{$child}->{'trial_folder'}) {
@@ -572,6 +581,10 @@ sub _jstree_li_html {
         $url = "/folder/".$id;
     } elsif ($type eq 'cross') {
         $url = "/cross/".$id;
+    } elsif ($type eq 'analyses') {
+        $url = "/analyses/".$id;
+    } elsif ($type eq 'breeding_program') {
+        $url = "/breeders/program/".$id;
     }
 
     return "<li data-jstree='{\"type\":\"$type\"}' id=\"$id\"><a href=\"$url\">".$name.'</a>';

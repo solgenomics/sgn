@@ -2,9 +2,10 @@
 <%args>
 $trial_id
 $stockref => undef
+$data_level => 'plot'
 </%args>
 
- <& /util/import_javascript.mas, classes => [ 'jqueryui.js', 'jquery.js', 'jstree.dist.jstree', 'd3.d3v4Min.js', "thickbox", "CXGN.Page.FormattingHelpers" ] &>
+ <& /util/import_javascript.mas, classes => [ 'jqueryui.js', 'jquery.js', 'jstree.dist.jstree', 'd3.d3Min.js', "thickbox", "CXGN.Page.FormattingHelpers" ] &>
 
 <style>
     #trait_heatmap {display: inline; }
@@ -397,7 +398,7 @@ jQuery(document).ready( function() {
             type: 'POST',
             url: '/brapi/v1/phenotypes-search',
             data: {
-                'observationLevel':'plot',
+                'observationLevel':'<% $data_level %>',
                 'studyDbId':trial_id,
                 'observationVariableDbId':selectedTrait,
                 'pageSize':1000,
@@ -407,6 +408,7 @@ jQuery(document).ready( function() {
                 jQuery("#working_modal").modal("show");
             },
             success: function(response) {
+                console.log(response);
                 var data = response.result.data; 
                 var datasort = data.sort(function(obj1, obj2) {
 	                  // Ascending: first plotNumber less than the previous

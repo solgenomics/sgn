@@ -61,7 +61,7 @@ sub get_model {
     my $metadata_schema = $self->metadata_schema();
     my $nd_protocol_id = $self->nd_protocol_id();
 
-    my $model_q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, basename, dirname, metadata.md_files.filetype, nd_protocol.type_id, nd_experiment.type_id, property.type_id, property.value
+    my $model_q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, basename, dirname, metadata.md_files.file_id, metadata.md_files.filetype, nd_protocol.type_id, nd_experiment.type_id, property.type_id, property.value
         FROM metadata.md_files
         JOIN phenome.nd_experiment_md_files using(file_id)
         JOIN nd_experiment using(nd_experiment_id)
@@ -72,14 +72,16 @@ sub get_model {
     my $model_h = $schema->storage->dbh()->prepare($model_q);
     $model_h->execute($nd_protocol_id);
     my %result;
-    while (my ($model_id, $model_name, $model_description, $basename, $filename, $filetype, $model_type_id, $experiment_type_id, $property_type_id, $property_value) = $model_h->fetchrow_array()) {
+    while (my ($model_id, $model_name, $model_description, $basename, $filename, $file_id, $filetype, $model_type_id, $experiment_type_id, $property_type_id, $property_value) = $model_h->fetchrow_array()) {
         $result{model_id} = $model_id;
         $result{model_name} = $model_name;
         $result{model_description} = $model_description;
         $result{model_type_id} = $model_type_id;
+        $result{model_type_name} = $schema->resultset("Cv::Cvterm")->find({cvterm_id => $model_type_id })->name();
         $result{model_experiment_type_id} = $experiment_type_id;
-        $result{model_properties}->{$property_type_id} = decode_json $property_value;
+        $result{model_properties} = decode_json $property_value;
         $result{model_files}->{$filetype} = $filename."/".$basename;
+        $result{model_file_ids}->{$file_id} = $basename;
     }
     return \%result;
 }

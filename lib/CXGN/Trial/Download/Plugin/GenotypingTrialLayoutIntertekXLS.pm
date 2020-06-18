@@ -71,7 +71,7 @@ sub download {
         my $trial_name = $trial->get_name();
         my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $self->bcs_schema, trial_id => $_, experiment_type => 'genotyping_layout'});
         my $design = $trial_layout->get_design();
-        #print STDERR Dumper $design;
+        print STDERR "DESIGN FOR INTERTEK XLS DOWNLOAD: ".Dumper $design;
         no warnings 'uninitialized';
         foreach my $key (sort keys %$design){
             my $val = $design->{$key};
