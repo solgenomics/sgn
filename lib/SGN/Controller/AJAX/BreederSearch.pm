@@ -14,7 +14,7 @@ BEGIN { extends 'Catalyst::Controller::REST'; };
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON' },
     );
 
 sub get_data : Path('/ajax/breeder/search') Args(0) {
