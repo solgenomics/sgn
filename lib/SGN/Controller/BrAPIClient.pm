@@ -11,7 +11,8 @@ sub authorize_client :Path('/brapi/authorize') QueryParam('return_url') { #breed
     my $c = shift;
     my %authorized_clients = (
         'fieldbook://' => 'FieldBook App',
-        'https://apps.cipotato.org/hidap_sbase/' => 'HIDAP'
+        'https://apps.cipotato.org/hidap_sbase/' => 'HIDAP',
+        'http://localhost:3000' => 'Image Analysis Pipeline'
     );
 
     my $return_url = $c->request->param( 'return_url' );
@@ -32,7 +33,7 @@ sub authorize_client :Path('/brapi/authorize') QueryParam('return_url') { #breed
         } else {
             my $user_name = $c->user()->get_object()->get_username();
             my $token = CXGN::Login->new($c->dbc->dbh)->get_login_cookie();
-            my $authorize_url = $return_url . "?status=200&token=" . $token;
+            my $authorize_url = $return_url . ( (index($return_url, '?') != -1)?"&status=200&token=":"?status=200&token=") . $token;
             my $deny_url = $return_url . "?status=401";
             $c->stash->{authorize_url} = $authorize_url;
             $c->stash->{deny_url} = $deny_url;
