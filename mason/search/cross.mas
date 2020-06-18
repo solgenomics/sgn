@@ -241,6 +241,10 @@ jQuery(document).ready(function (){
         source:'/ajax/stock/pedigree_female_parent_autocomplete',
     });
 
+    jQuery("#male_parent").autocomplete({
+        source:'/ajax/stock/pedigree_male_parent_autocomplete',
+    });
+
     jQuery("#search_pedigree_male_parents").click(function(){
 
         jQuery.ajax({
