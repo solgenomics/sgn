@@ -48,7 +48,7 @@ $model_link
 
 </%perl>
 
-  <& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.traitGebvFlot", 
+  <& /util/import_javascript.mas, classes => ["solGS.solGS",
                                               "flot.flot", "flot.categories", 
                                               "flot.tooltip", "flot.selection", "flot.navigate", 
                                               "flot.axisLabels", "d3.d3Min",
@@ -85,14 +85,14 @@ $model_link
 </&>
 
 <& /solgs/pca/analysis.mas &>
-  
-<& /solgs/model/top_blups.mas, 
-   top_blups          => $top_blups,
-   blups_download_url => $blups_download_url,
-   pop_id             => $combo_pops_id,
-   trait_id           => $trait_id
-&>
+ 
 
+<& /solgs/model/gebvs.mas, 
+   top_blups         => $top_blups,
+  blups_download_url => $blups_download_url,
+  
+&>
+  
 <& /solgs/genetic_gain/genetic_gain.mas,
    trait_id         => $trait_id,
    training_pop_id  => $combo_pops_id,
