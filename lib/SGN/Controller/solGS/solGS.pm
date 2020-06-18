@@ -537,14 +537,14 @@ sub get_markers_count {
 
 	if (-s $filtered_geno_file) {
 	    my @geno_lines = read_file($filtered_geno_file);
-	    $markers_cnt = scalar(split('\t', $geno_lines[0]));
+	    $markers_cnt = scalar(split('\t', $geno_lines[0])) - 1;
 	} 
 	else 
 	{
 	    $c->controller('solGS::Files')->genotype_file_name($c, $training_pop_id, $protocol_id);
 	    my $geno_file  = $c->stash->{genotype_file_name};
 	    my  @geno_lines = read_file($geno_file);
-	    $markers_cnt= scalar(split ('\t', $geno_lines[0]));	
+	    $markers_cnt= scalar(split ('\t', $geno_lines[0])) - 1;	
 	}
 
     } 
@@ -557,14 +557,14 @@ sub get_markers_count {
 
 	if (-s $filtered_geno_file) {
 	    my @geno_lines = read_file($filtered_geno_file);
-	    $markers_cnt = scalar(split('\t', $geno_lines[0]));
+	    $markers_cnt = scalar(split('\t', $geno_lines[0])) - 1;
 	} 
 	else 
 	{
 	    $c->controller('solGS::Files')->genotype_file_name($c, $selection_pop_id, $protocol_id);
 	    my $geno_file  = $c->stash->{genotype_file_name};
 	    my @geno_lines = read_file($geno_file);
-	    $markers_cnt= scalar(split ('\t', $geno_lines[0]));	
+	    $markers_cnt= scalar(split ('\t', $geno_lines[0])) - 1;	
 	}
     }
 
@@ -612,17 +612,17 @@ sub project_description {
 
     if (-s $filtered_geno_file) {
 	@geno_lines = read_file($filtered_geno_file);
-	$markers_no = scalar(split('\t', $geno_lines[0])) - 1;
+	$markers_no = scalar(split('\t', $geno_lines[0]));
     } 
     else 
     {
 	$c->controller('solGS::Files')->genotype_file_name($c, $pr_id, $protocol_id);
 	my $geno_file  = $c->stash->{genotype_file_name};
 	@geno_lines = read_file($geno_file);
-	$markers_no = scalar(split ('\t', $geno_lines[0])) - 1;	
+	$markers_no = scalar(split ('\t', $geno_lines[0]));	
     }
    
-    my $stocks_no = $self->training_pop_member_count($c, $pr_id);
+    my $stocks_no = $self->training_pop_lines_count($c, $pr_id);
 
     $c->controller('solGS::Files')->traits_acronym_file($c, $pr_id);
     my $traits_file = $c->stash->{traits_acronym_file};
@@ -640,26 +640,54 @@ sub project_description {
 }
 
 
-sub training_pop_member_count {
-    my ($self, $c, $pop_id) = @_;
+sub predicted_lines_count {
+    my ($self, $c, $args) = @_;
 
-    $c->stash->{pop_id} = $pop_id if $pop_id;
+    my $training_pop_id = $args->{training_pop_id};
+    my $selection_pop_id = $args->{selection_pop_id};
+    my $trait_id = $args->{trait_id};
+   
+    my $gebvs_file;
+    if (!$selection_pop_id)
+    {
+	$c->controller('solGS::Files')->rrblup_training_gebvs_file($c, $training_pop_id, $trait_id);
+	$gebvs_file = $c->stash->{rrblup_training_gebvs_file};
+    }
+    elsif ($selection_pop_id && $training_pop_id)
+    { 
+	my $identifier = $training_pop_id . '_' . $selection_pop_id;
+	$c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
+	$gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
+    }
     
-    $c->controller("solGS::Files")->trait_phenodata_file($c);
-    my $trait_pheno_file  = $c->stash->{trait_phenodata_file};
-    my @trait_pheno_lines = read_file($trait_pheno_file) if $trait_pheno_file;
+    my @geno_lines = read_file($gebvs_file) if -s $gebvs_file;
+    my $count =  scalar(@geno_lines) - 1;
+   
+    return $count;
+}
 
-    my @geno_lines;
-    if (!@trait_pheno_lines) 
+
+sub training_pop_lines_count {
+    my ($self, $c, $pop_id, $trait_id) = @_;
+
+    $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id}  if !$pop_id;
+    my $trait_id = $c->stash->{trait_id} if !$trait_id;
+    
+    my $count;
+    if ($c->req->path =~ /solgs\/trait\//)
+    {
+	$count = $self->predicted_lines_count($c, {'training_pop_id' => $pop_id, 'trait_id'=> $trait_id});
+    }
+    
+    if (!$count) 
     {
 	my $protocol_id = $c->stash->{genotyping_protocol_id};
 	$c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
 	my $geno_file  = $c->stash->{genotype_file_name};
-	@geno_lines = read_file($geno_file);
+	my @geno_lines = read_file($geno_file) if -s $geno_file;
+	$count =  scalar(@geno_lines) - 1;
     }
   
-    my $count = @trait_pheno_lines ? scalar(@trait_pheno_lines) - 1 : scalar(@geno_lines) - 1;
-
     return $count;
 }
 
@@ -676,12 +704,12 @@ sub check_training_pop_size : Path('/solgs/check/training/pop/size') Args(0) {
     my $count;
     if ($type =~ /single/)
     {
-	$count = $self->training_pop_member_count($c, $pop_id, $protocol_id);
+	$count = $self->training_pop_lines_count($c, $pop_id, $protocol_id);
     }
     elsif ($type =~ /combined/)
     {
 	$c->stash->{combo_pops_id} = $pop_id;
-	$count = $c->controller('solGS::combinedTrials')->count_combined_trials_members($c, $pop_id, $protocol_id);	
+	$count = $c->controller('solGS::combinedTrials')->count_combined_trials_lines_count($c, $pop_id, $protocol_id);	
     }
     
     my $ret->{status} = 'failed';
@@ -781,14 +809,18 @@ sub selection_trait :Path('/solgs/selection/') Args() {
     my $protocol_url = $c->controller('solGS::genotypingProtocol')->create_protocol_url($c, $protocol_id);
     $c->stash->{protocol_url} = $protocol_url;
     
-    my $identifier    = $training_pop_id . '_' . $selection_pop_id;
-   
+    my $args = {
+	'training_pop_id' => $training_pop_id, 
+	'selection_pop_id'=> $selection_pop_id, 
+	'trait_id' => $trait_id
+    };
+    
+    $c->stash->{selection_stocks_cnt} = $self->predicted_lines_count($c, $args);
+
+    my $identifier = $training_pop_id . '_' . $selection_pop_id; 
     $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
     my $gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
-   
-    my @stock_rows = read_file($gebvs_file);
-    $c->stash->{selection_stocks_cnt} = scalar(@stock_rows) - 1;
-
+    
     $self->top_blups($c, $gebvs_file);
  
     $c->stash->{blups_download_url} = qq | <a href="/solgs/download/prediction/model/$training_pop_id/prediction/$selection_pop_id/$trait_id/gp/$protocol_id">Download all GEBVs</a>|; 
