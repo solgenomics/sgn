@@ -44,7 +44,7 @@ solGS.waitPage = function (page, args) {
 	}
     }
     else {
-    	blockPage(page, args);
+    	goTPage(page, args);
     }
 
     function checkCachedResult(page, args) {
@@ -72,7 +72,7 @@ solGS.waitPage = function (page, args) {
 	    success : function(response) {
 		if (response.cached) {		     
 		    args = JSON.parse(args);
-		    displayAnalysisNow(page, args);
+		    goToPage(page, args);
 		   
 		} else {
 		    if (document.URL.match(/solgs\/search\//)) {
@@ -244,22 +244,6 @@ solGS.waitPage = function (page, args) {
     }
 
 
-    function displayAnalysisNow (page, args) {
-
-	blockPage(page, args);
-
-    }
-
-
-    function blockPage (page, args) {
-
-	goToPage(page, args);
-		
-	jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
-	jQuery.blockUI({message: 'Please wait..'});
-
-    }
-
     function getTraitsSelectionId (page, args) {
 
 	var traitIds = args.training_traits_ids;
@@ -290,6 +274,9 @@ solGS.waitPage = function (page, args) {
 
     function goToPage (page, args) { 
 
+	jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
+	jQuery.blockUI({message: 'Please wait..'});
+	
 	var matchItems = 'solgs/confirm/request'
 	    + '|solgs/trait/'
 	    + '|solgs/traits/all/population/'
@@ -659,7 +646,7 @@ solGS.waitPage = function (page, args) {
 
     function confirmRequest () {
 	
-	blockPage('/solgs/confirm/request');
+	goToPage('/solgs/confirm/request');
 	
     }
 
