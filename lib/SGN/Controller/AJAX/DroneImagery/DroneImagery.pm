@@ -232,6 +232,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my ($stats_out_tempfile_fh, $stats_out_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_tempfile_row_fh, $stats_out_tempfile_row) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_tempfile_col_fh, $stats_out_tempfile_col) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    my ($stats_out_tempfile_2dspl_fh, $stats_out_tempfile_2dspl) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my $grm_file;
 
     my @results;
@@ -299,6 +300,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         my @data_matrix;
         my %obsunit_row_col;
         my %seen_plot_names;
+        my %plot_id_map;
         foreach (@$data) {
             my $germplasm_name = $_->{germplasm_uniquename};
             my $germplasm_stock_id = $_->{germplasm_stock_id};
@@ -306,11 +308,12 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             my $obsunit_stock_uniquename = $_->{observationunit_uniquename};
             my $row_number = $_->{obsunit_row_number};
             my $col_number = $_->{obsunit_col_number};
-            my @row = ($_->{obsunit_rep}, $_->{obsunit_block}, "S".$germplasm_stock_id, $row_number, $col_number, $row_number, $col_number);
+            my @row = ($_->{obsunit_rep}, $_->{obsunit_block}, "S".$germplasm_stock_id, $obsunit_stock_id, $row_number, $col_number, $row_number, $col_number);
             $obsunit_row_col{$row_number}->{$col_number} = {
                 stock_id => $obsunit_stock_id,
                 stock_uniquename => $obsunit_stock_uniquename
             };
+            $plot_id_map{$obsunit_stock_id} = $obsunit_stock_uniquename;
             $seen_plot_names{$obsunit_stock_uniquename}++;
             foreach my $t (@sorted_trait_names) {
                 if (defined($phenotype_data{$obsunit_stock_uniquename}->{$t})) {
@@ -323,7 +326,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             push @data_matrix, \@row;
         }
 
-        my @phenotype_header = ("replicate", "block", "id", "rowNumber", "colNumber", "rowNumberFactor", "colNumberFactor");
+        my @phenotype_header = ("replicate", "block", "id", "plot_id", "rowNumber", "colNumber", "rowNumberFactor", "colNumberFactor");
         my $num_col_before_traits = scalar(@phenotype_header);
         foreach (@sorted_trait_names) {
             push @phenotype_header, $trait_name_encoder{$_};
@@ -446,11 +449,24 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             mat\$colNumber <- as.numeric(mat\$colNumber);
             mat\$rowNumberFactor <- as.factor(mat\$rowNumberFactor);
             mat\$colNumberFactor <- as.factor(mat\$colNumberFactor);
-            mix <- mmer(cbind('.$encoded_trait_string.')~1, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
+            mix <- mmer(cbind('.$encoded_trait_string.')~1, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
             #gen_cor <- cov2cor(mix\$sigma\$\`u:id\`);
             write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             write.table(mix\$U\$\`u:rowNumberFactor\`, file=\''.$stats_out_tempfile_row.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
-            write.table(mix\$U\$\`u:colNumberFactor\`, file=\''.$stats_out_tempfile_col.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
+            write.table(mix\$U\$\`u:colNumberFactor\`, file=\''.$stats_out_tempfile_col.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
+            X <- with(mat, spl2D(rowNumber, colNumber));
+            spatial_blup_results <- data.frame(plot_id = mat\$plot_id);
+            ';
+            my $trait_index = 1;
+            foreach my $enc_trait_name (@encoded_traits) {
+                $cmd .= '
+                    blups'.$trait_index.' <- mix\$U\$\`u:rowNumber\`\$'.$enc_trait_name.';
+                    spatial_blup_results\$'.$enc_trait_name.' <- X %*% blups'.$trait_index.';
+                ';
+                $trait_index++;
+            }
+            $cmd .= 'write.table(spatial_blup_results, file=\''.$stats_out_tempfile_2dspl.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+            "';
             print STDERR Dumper $cmd;
             my $status = system($cmd);
 
@@ -542,18 +558,46 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 }
             close($fh_col);
 
-            foreach my $trait (@sorted_trait_names) {
-                foreach my $row (@row_numbers) {
-                    foreach my $col (@col_numbers) {
-                        my $uniquename = $obsunit_row_col{$row}->{$col}->{stock_uniquename};
-                        my $stock_id = $obsunit_row_col{$row}->{$col}->{stock_id};
+            open(my $fh_2dspl, '<', $stats_out_tempfile_2dspl)
+                or die "Could not open file '$stats_out_tempfile_2dspl' $!";
 
-                        my $row_val = $result_blup_row_data{$row}->{$trait};
-                        my $col_val = $result_blup_col_data{$col}->{$trait};
-                        $result_blup_spatial_data{$uniquename}->{$trait} = [$row_val*$col_val, $timestamp, $user_name, '', ''];
+                print STDERR "Opened $stats_out_tempfile_2dspl\n";
+                my $header_2dspl = <$fh_2dspl>;
+                my @header_cols_2dspl;
+                if ($csv->parse($header_2dspl)) {
+                    @header_cols_2dspl = $csv->fields();
+                }
+                shift @header_cols_2dspl;
+                while (my $row_2dspl = <$fh_2dspl>) {
+                    my @columns;
+                    if ($csv->parse($row_2dspl)) {
+                        @columns = $csv->fields();
+                    }
+                    my $col_counter = 0;
+                    foreach my $encoded_trait (@header_cols_2dspl) {
+                        my $trait = $trait_name_encoder_rev{$encoded_trait};
+                        my $plot_id = $columns[0];
+
+                        my $plot_name = $plot_id_map{$plot_id};
+                        my $value = $columns[$col_counter+1];
+                        $result_blup_spatial_data{$plot_name}->{$trait} = [$value, $timestamp, $user_name, '', ''];
+                        $col_counter++;
                     }
                 }
-            }
+            close($fh_2dspl);
+
+            # foreach my $trait (@sorted_trait_names) {
+            #     foreach my $row (@row_numbers) {
+            #         foreach my $col (@col_numbers) {
+            #             my $uniquename = $obsunit_row_col{$row}->{$col}->{stock_uniquename};
+            #             my $stock_id = $obsunit_row_col{$row}->{$col}->{stock_id};
+            #
+            #             my $row_val = $result_blup_row_data{$row}->{$trait};
+            #             my $col_val = $result_blup_col_data{$col}->{$trait};
+            #             $result_blup_spatial_data{$uniquename}->{$trait} = [$row_val*$col_val, $timestamp, $user_name, '', ''];
+            #         }
+            #     }
+            # }
 
             my $field_trial_design_full = CXGN::Trial->new({bcs_schema => $schema, trial_id=>$field_trial_id_list->[0]})->get_layout()->get_design();
             # print STDERR Dumper $field_trial_design_full;
