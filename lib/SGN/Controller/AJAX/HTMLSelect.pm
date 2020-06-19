@@ -1501,6 +1501,9 @@ sub get_micasense_aligned_raw_images_grid_interactive : Path('/ajax/html/select/
 
     my $id = $c->req->param("id") || "drone_imagery_micasense_stacks_grid_select_interactive";
     my $name = $c->req->param("name") || "drone_imagery_micasense_stacks_grid_select_interactive";
+    my $x_factor = $c->req->param("x_factor") || 10000000;
+    my $y_factor = $c->req->param("y_factor") || 10000000;
+    my $rotate_angle = $c->req->param("rotate_angle") || 0;
 
     my $saved_image_stacks_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_micasense_stacks', 'project_property')->cvterm_id();
     my $saved_micasense_stacks_json = $schema->resultset("Project::Projectprop")->find({
@@ -1521,8 +1524,8 @@ sub get_micasense_aligned_raw_images_grid_interactive : Path('/ajax/html/select/
     my $width = $size[0];
     my $length = $size[1];
     my $first_image_fullsize_url = $first_image->get_image_url('original_converted');
-    my $first_image_fullpath = $first_image->get_filename('original_converted', 'full');
-    my @full_size = imgsize($first_image_fullpath);
+    my $first_image_fullsize_fullpath = $first_image->get_filename('original_converted', 'full');
+    my @full_size = imgsize($first_image_fullsize_fullpath);
 
     my $proportion = $size[0]/$full_size[0];
 
@@ -1576,17 +1579,13 @@ sub get_micasense_aligned_raw_images_grid_interactive : Path('/ajax/html/select/
     }
     # print STDERR Dumper \%longitudes;
     # print STDERR Dumper \%latitudes;
-    my $total_width = $width * scalar(keys %longitudes);
-    my $total_length = $length * scalar(keys %latitudes);
 
     my $lat_range = $max_latitude - $min_latitude;
     my $lon_range = $max_longitude - $min_longitude;
-    my $factor = 10000000;
-    my $total_width = $lon_range*$factor;
-    my $total_height = $lat_range*3*$factor;
+    my $total_width = $lon_range*100*$x_factor;
+    my $total_height = $lat_range*3*$y_factor;
 
     my $html = '<script>
-        var rotate_angle = jQuery("#drone_imagery_standard_process_raw_images_interactive_rotate_degrees_input").val();
 
         jQuery("#drone_imagery_interactive_total_width").val('.$total_width.');
         jQuery("#drone_imagery_interactive_total_height").val('.$total_height.');
@@ -1611,15 +1610,15 @@ sub get_micasense_aligned_raw_images_grid_interactive : Path('/ajax/html/select/
         };
         ';
 
-    foreach my $lat (sort {$a <=> $b} keys %latitudes) {
-        foreach my $lon (sort {$a <=> $b} keys %longitudes) {
+    foreach my $lat (sort {$b <=> $a} keys %latitudes) {
+        foreach my $lon (sort {$b <=> $a} keys %longitudes) {
             my $nir_image_id = $gps_images{$lat}->{$lon}->{nir_image_id};
             my $stack_image_ids = $gps_images{$lat}->{$lon}->{image_ids};
             my $image_url = $gps_images{$lat}->{$lon}->{image_url};
             if ($image_url) {
-                my $x_pos = round(($lon - $min_longitude)*$factor);
-                my $y_pos = round(($lat - $min_latitude)*$factor*2);
-                $html .= 'appendDraggableImage("'.$image_url.'", ['.$x_pos.','.$y_pos.'], '.$nir_image_id.', '.encode_json($stack_image_ids).', rotate_angle);
+                my $x_pos = $lon - $min_longitude;
+                my $y_pos = $lat - $min_latitude;
+                $html .= 'appendDraggableImage("'.$image_url.'",'.$x_pos.','.$y_pos.','.$nir_image_id.', '.encode_json($stack_image_ids).', '.$rotate_angle.', '.$x_factor.', '.$y_factor.');
                 ';
             }
         }
@@ -1627,12 +1626,17 @@ sub get_micasense_aligned_raw_images_grid_interactive : Path('/ajax/html/select/
 
     $html .= '
 
-        function appendDraggableImage(url, position, nir_image_id, stack_image_ids, rotate_angle) {
+        function appendDraggableImage(url, x_position, y_position, nir_image_id, stack_image_ids, rotate_angle, x_factor, y_factor) {
+            var x_pos = Math.round(x_position*x_factor);
+            var y_pos = Math.round(y_position*y_factor);
+
             var imageGroup = svg.append("g")
-                .datum({position: position})
-                .attr("pos", position)
+                .datum({position: x_pos,y_pos})
+                .attr("x_pos", x_pos)
+                .attr("y_pos", y_pos)
+                .attr("pos", x_pos,y_pos)
                 .attr("rotate_angle", rotate_angle)
-                .attr("transform", d => "translate(" + d.position + ") rotate("+rotate_angle+")");
+                .attr("transform", d => "translate("+x_pos+","+y_pos+") rotate("+rotate_angle+")");
 
             var squareFill = imageGroup.append("square")
                 .attr("class", "square-fill")
@@ -1658,9 +1662,10 @@ sub get_micasense_aligned_raw_images_grid_interactive : Path('/ajax/html/select/
         }
 
         function dragged(d) {
-            var newX = d3.event.x - image.width / 2,
-            newY = d3.event.y - image.length / 2; 
-            d.position = [newX, newY];
+            var newX = d3.event.x - image.width / 2;
+            var newY = d3.event.y - image.length / 2; 
+            d.x_pos = newX;
+            d.y_pos = newY;
             var rotate_angle = d3.select(this).attr("rotate_angle");
 
             d3.select(this)

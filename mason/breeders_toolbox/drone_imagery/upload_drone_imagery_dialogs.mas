@@ -170,7 +170,7 @@
                             <div class="col-sm-9" >
                                 <select class="form-control" id="drone_image_upload_drone_run_band_stitching" name="drone_image_upload_drone_run_band_stitching">
                                     <option value="">Select One</option>
-                                    <!-- option value="yes">Yes, I am uploading a zipfile of raw images to stitch</option -->
+                                    <option value="yes">Yes, I am uploading a zipfile of raw images to stitch</option>
                                     <option value="yes_raw">Yes, I am uploading a zipfile of raw images</option>
                                     <!-- option value="yes_automated">Yes, I am uploading a zipfile of raw images to automatically get plot images from</option -->
                                     <option value="no">No, I am uploading a stitched orthomosaic</option>
