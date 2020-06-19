@@ -121,6 +121,7 @@ jQuery(document).ready(function(){
     var plot_polygons_interactive_number_generated;
     var plot_polygons_interactive_ind_4_points = [];
     var plot_polygons_interactive_display_points = [];
+    var drone_imagery_interactive_plot_polygons_available_stock_names = [];
 
     jQuery(document).on('click', 'button[name="project_drone_imagery_standard_process_raw_images_interactive"]', function() {
         showManageDroneImagerySection('manage_drone_imagery_standard_process_raw_images_interactive_div');
@@ -129,6 +130,8 @@ jQuery(document).ready(function(){
         manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id = jQuery(this).data('drone_run_project_id');
 
         get_select_box('micasense_aligned_raw_images_grid_interactive','drone_imagery_standard_process_raw_images_image_id_interactive_select_div', {'name': 'drone_imagery_standard_process_raw_images_interactive_image_id_select', 'id': 'drone_imagery_standard_process_raw_images_interactive_image_id_select', 'empty':1, 'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id });
+
+        showPlotPolygonTableStartInteractive(manage_drone_imagery_standard_process_raw_images_interactive_field_trial_id);
     });
 
     d3.select("#drone_imagery_standard_process_raw_images_interactive_rotate_degrees_input").on("input", function() {
@@ -409,7 +412,75 @@ jQuery(document).ready(function(){
 
         droneImageryDrawPlotPolygonActiveTemplatesTableInteractive('drone_imagery_plot_polygons_active_templates_raw_images_interactive', drone_imagery_standard_process_raw_images_interactive_plot_polygons_template_dimensions);
 
-        //droneImageryRectangleLayoutTable(drone_imagery_interactive_plot_generated_polygons, plot_polygons_assignment_info, plot_polygons_assignment_table, plot_polygons_generate_assignment_button, plot_polygon_assignment_submit_button);
+        droneImageryDrawRectangleTableInteractive('drone_imagery_interactive_generated_polygons_div', 'drone_imagery_standard_process_interactive_generated_polygons_table', 'drone_imagery_standard_process_interactive_plot_polygons_generated_assign', 'drone_imagery_standard_process_interactive_plot_polygons_submit_bottom');
+    }
+
+    function showPlotPolygonTableStartInteractive(trial_id){
+        jQuery.ajax({
+            url : '/ajax/breeders/trial/'+trial_id+'/layout_table',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                field_trial_layout_response = response;
+                var layout = field_trial_layout_response.output;
+                for (var i=1; i<layout.length; i++) {
+                    drone_imagery_interactive_plot_polygons_available_stock_names.push(layout[i][0]);
+                }
+
+                droneImageryDrawRectangleTableInteractive('drone_imagery_interactive_generated_polygons_div', 'drone_imagery_standard_process_interactive_generated_polygons_table', 'drone_imagery_standard_process_interactive_plot_polygons_generated_assign', 'drone_imagery_standard_process_interactive_plot_polygons_submit_bottom');
+                jQuery("#working_modal").modal("hide");
+
+                droneImageryDrawLayoutTableInteractive(response, {}, 'drone_imagery_interactive_trial_layout_div', 'drone_imagery_interactive_trial_layout_table');
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert('Error retrieving trial layout and design!')
+            }
+        });
+    }
+
+    function droneImageryDrawLayoutTableInteractive(response, plot_polygons, layout_div_id, layout_table_div_id) {
+        var output = response.output;
+        var header = output[0];
+        var html = '<table class="table table-borders table-hover" id="'+layout_table_div_id+'"><thead><tr>';
+        for (var i=0; i<header.length; i++){
+            html = html + '<td>'+header[i]+'</td>';
+        }
+        html = html + '<td>Polygon Assigned</td>';
+        html = html + '</tr></thead><tbody>';
+        for (var i=1; i<output.length; i++){
+            html = html + '<tr>';
+            for (var j=0; j<output[i].length; j++){
+                html = html + '<td>'+output[i][j]+'</td>';
+            }
+            if (output[i][0] in plot_polygons && plot_polygons[output[i][0]] != undefined){
+                html = html + '<td>Yes</td>';
+            } else {
+                html = html + '<td></td>';
+            }
+            html = html + '</tr>';
+        }
+        html = html + '</tbody></table>';
+        jQuery('#'+layout_div_id).html(html);
+        jQuery('#'+layout_table_div_id).DataTable();
+    }
+
+    function droneImageryDrawRectangleTableInteractive(plot_polygons_layout_assignment_info, plot_polygons_layout_assignment_table, plot_polygons_generate_assignment_button, plot_polygon_assignment_submit_button) {
+        var html = '<hr><div class="well well-sm"><h2>Assign Plot Polygons to Field Trial Entities</h2>';
+        html = html + '<div class="panel panel-default"><div class="panel-body"><div class="form form-horizontal">';
+        html = html + '<div class="row"><div class="col-sm-6"><div class="form-group form-group-sm"><label class="col-sm-6 control-label">Location of First Plot (e.g. plot number 1): </label><div class="col-sm-6"><select class="form-control" id="drone_imagery_plot_polygons_first_plot_start" name="drone_imagery_plot_polygons_first_plot_start"><option value="top_left">Top Left</option><option value="top_right">Top Right</option><option value="bottom_left" disabled>Bottom Left</option><option value="bottom_right" disabled>Bottom Right</option></select></div></div></div><div class="col-sm-6"><div class="form-group form-group-sm"><label class="col-sm-6 control-label">Second Plot Follows First Plot Going: </label><div class="col-sm-6"><select class="form-control" id="drone_imagery_plot_polygons_second_plot_follows" name="drone_imagery_plot_polygons_second_plot_follows"><option value="right">Right</option><option value="up">Up</option><option value="down">Down</option><option value="left">Left</option></select></div></div></div></div>';
+        html = html + '<div class="row"><div class="col-sm-6"><div class="form-group form-group-sm"><label class="col-sm-6 control-label">Plot Number Orientation: </label><div class="col-sm-6"><select class="form-control" id="drone_imagery_plot_polygons_plot_orientation" name="drone_imagery_plot_polygons_plot_orientation"><option value="serpentine">Serpentine</option><option value="zigzag">Zigzag (Not Serpentine)</option></select></div></div></div></div>';
+        html = html + '</div></div></div></div>';
+
+        html = html + '<button class="btn btn-primary" id="'+plot_polygons_generate_assignment_button+'">Generate Assignments (Does Not Save)</button>&nbsp;&nbsp;&nbsp;<button class="btn btn-primary" name="'+plot_polygon_assignment_submit_button+'">Finish and Save Polygons To Plots</button></div>';
+        jQuery('#'+plot_polygons_layout_assignment_info).html(html);
+        jQuery('#'+plot_polygons_layout_assignment_table).DataTable({'paging':false});
+
+        jQuery('input[name=drone_imagery_plot_polygons_autocomplete]').autocomplete({
+            source: drone_imagery_interactive_plot_polygons_available_stock_names
+        });
     }
 
     var drone_imagery_interactive_current_plot_polygon_index_options_id = '';
@@ -489,7 +560,7 @@ jQuery(document).ready(function(){
 
         droneImageryDrawPlotPolygonActiveTemplatesTableInteractive('drone_imagery_plot_polygons_active_templates_raw_images_interactive', drone_imagery_standard_process_raw_images_interactive_plot_polygons_template_dimensions);
 
-        //droneImageryRectangleLayoutTable(drone_imagery_interactive_plot_generated_polygons, plot_polygons_assignment_info, plot_polygons_assignment_table, plot_polygons_generate_assignment_button, plot_polygon_assignment_submit_button);
+        droneImageryDrawRectangleTableInteractive('drone_imagery_interactive_generated_polygons_div', 'drone_imagery_standard_process_interactive_generated_polygons_table', 'drone_imagery_standard_process_interactive_plot_polygons_generated_assign', 'drone_imagery_standard_process_interactive_plot_polygons_submit_bottom');
     }
 
     function showManageDroneImagerySection(section_div_id) {
