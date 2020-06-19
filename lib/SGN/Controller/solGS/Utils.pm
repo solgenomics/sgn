@@ -13,7 +13,6 @@ sub convert_arrayref_to_hashref {
 
     foreach my $dt (@$array_ref)
     {
-	print STDERR "\ndt: @$dt\n";
         $hash_var{$dt->[0]} = $dt->[1];
     }
     return \%hash_var;
