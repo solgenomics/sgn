@@ -573,7 +573,7 @@ sub _parse_list_from_json {
   my $list_json = shift;
   my $json = new JSON;
   if ($list_json) {
-    my $decoded_list = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
+    my $decoded_list = $json->allow_nonref->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
     #my $decoded_list = decode_json($list_json);
     my @array_of_list_items = @{$decoded_list};
     return \@array_of_list_items;
