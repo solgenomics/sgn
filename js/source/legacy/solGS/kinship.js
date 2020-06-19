@@ -14,7 +14,7 @@ solGS.kinship = {
 	var page = document.URL;
 	var popId;
 	
-	if (page.match(/solgs\/trait\//)) {	    
+	if (page.match(/solgs\/trait\/|solgs\/model\/combined\/populations\//)) {	    
 	    popId = jQuery("#training_pop_id").val();
 	} else {
 	    popId = jQuery("#selection_pop_id").val();
