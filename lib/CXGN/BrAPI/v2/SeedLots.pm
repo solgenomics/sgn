@@ -23,7 +23,7 @@ sub search {
     my $minimum_weight = $params->{minimum_weight} || '';
     my $accession_id = $params->{germplasmDbId} || '';
     my $accession_name = $params->{germplasmName} || '';
-    my $cross = $params->{cross} || '';   
+    my $cross_id = $params->{crossDbId} || '';
 
     my $reference_ids_arrayref = $params->{externalReferenceID} || ();
     my $reference_sources_arrayref = $params->{externalReferenceSource} || ();
@@ -49,20 +49,29 @@ sub search {
         $location,
         $minimum_count,
         $accession_name,
-        $cross,
+        $cross_id,
         1,
         $minimum_weight,
         $seedlot_id,
         $accession_id
     );
 
-    foreach (@$list){
+    foreach (@$list){ print Dumper $_;
+        my $accession_id;
+        my $cross_id;
+        if ($_->{source_stocks}->[0][2] eq 'accession'){
+            $accession_id = $_->{source_stocks}->[0][0];
+        } else {
+            $cross_id = $_->{source_stocks}->[0][0];
+        }
+
         push @data, {
             additionalInfo=>{},
             amount=>$_->{current_count},
             createdDate=>undef,
             externalReferences=>[],
-            germplasmDbId=>qq|$_->{source_stocks}->[0][0]|,
+            germplasmDbId=>qq|$accession_id|,
+            crossDbId=>qq|$cross_id|,
             lastUpdated=>undef,
             locationDbId=>qq|$_->{location_id}|,
             programDbId=>qq|$_->{breeding_program_id}|,
@@ -104,7 +113,7 @@ sub detail {
         my $accession = $seedlot->accession()->[0];
         my $location = $seedlot->nd_geolocation_id();
         my $program = $seedlot->breeding_program_id();
-
+        my $cross = $seedlot->cross()->[0];
 
         %result = (
                 additionalInfo=>{},
@@ -112,6 +121,7 @@ sub detail {
                 createdDate=>undef,
                 externalReferences=>[],
                 germplasmDbId=>qq|$accession|,
+                crossDbId=>qq|$cross|,
                 lastUpdated=>undef,
                 locationDbId=>qq|$location|,
                 programDbId=>qq|$program|,
@@ -237,8 +247,7 @@ sub store_seedlots {
     my $user_id = shift;
 
     if (!$user_id){
-        $c->stash->{rest} = {error=>'You must be logged in to add a seedlot!'};
-        $c->detach();
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must be logged in to add a seedlot!'));
     }
 
     my $page_size = $self->page_size;
@@ -257,7 +266,7 @@ sub store_seedlots {
         my $box_name = $params->{additionalInfo} ? $params->{additionalInfo} : undef;
         my $source_collection = $params->{sourceCollection} ? $params->{sourceCollection} : undef;
         my $accession_id = $params->{germplasmDbId} ? $params->{germplasmDbId} : undef;
-        my $cross_uniquename = $params->{crossName} ? $params->{crossName} : undef;
+        my $cross_id = $params->{crossDbId} ? $params->{crossDbId} : undef;
         my $organization = $params->{organization} ? $params->{organization} : undef;
         my $amount = $params->{amount} ? $params->{amount} : undef;
         my $weight = $params->{weight} ? $params->{weight} : undef;
@@ -266,56 +275,65 @@ sub store_seedlots {
         my $breeding_program_id = $params->{programDbId} ? $params->{programDbId} : undef;
 
         my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
+        my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
 
         my $previous_seedlot = $schema->resultset('Stock::Stock')->find({uniquename=>$seedlot_uniquename, type_id=>$seedlot_cvterm_id});
         if ($previous_seedlot){
-            $c->stash->{rest} = {error=>'The given seedlot uniquename has been taken. Please use another name or use the existing seedlot.'};
-            $c->detach();
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('The given seedlot uniquename has been taken. Please use another name or use the existing seedlot.'));
         }
         my $accession_uniquename;
 
         if ($accession_id){
             my $accession = $self->bcs_schema->resultset('Stock::Stock')->find({stock_id=>$accession_id});
             if (!$accession) {
-                $c->stash->{rest} = {error=>'GermplasmDbId does not exist in the database'};
-                $c->detach();
+                return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('GermplasmDbId does not exist in the database'));
             }
             $accession_uniquename =  $accession->name();
         }
-        if (!$accession_id || !$accession_uniquename ){
-            $c->stash->{rest} = {error=>'A seedlot must have a valid accession.'};
-            $c->detach();
+        if ($accession_id && !$accession_uniquename ){
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('A seedlot must have a valid accession.'));
+        }
+        my $cross_uniquename;
+        if ($cross_id){
+            $cross_uniquename = $schema->resultset('Stock::Stock')->find({stock_id=>$cross_id, type_id=>$cross_cvterm_id})->stock_id();
+        }
+        if ($cross_id && !$cross_uniquename ){
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('A seedlot must have a valid cross id.'));
         }
 
-        my $from_stock_id = $accession_id;
-        my $from_stock_uniquename = $accession_uniquename;
-        
+        if ($accession_id && $cross_id){
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('A seedlot must have either an accession OR a cross as contents. Not both.'));
+        }
+        if (!$accession_id && !$cross_id){
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('A seedlot must have either an accession or a cross as contents.'));
+        }
+
+        my $from_stock_id = $accession_id ? $accession_id : $cross_id;
+        my $from_stock_uniquename = $accession_uniquename ? $accession_uniquename : $cross_uniquename;
+
         if (!$weight && !$amount){
-            $c->stash->{rest} = {error=>'A seedlot must have either a weight or an amount.'};
-            $c->detach();
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('A seedlot must have either a weight or an amount.'));
         }
 
         if (!$timestamp){
-            $c->stash->{rest} = {error=>'A seedlot must have a timestamp for the transaction.'};
-            $c->detach();
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('A seedlot must have a timestamp for the transaction.'));
         } 
         my $timestamp_format = check_timestamp($timestamp);
         if (!$timestamp_format){
-            $c->stash->{rest} = {error=>'A seedlot must have a proper timestamp for the transaction.'};
-            $c->detach();
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('A seedlot must have a formatted timestamp for the transaction.'));
         }
+
         if (!$breeding_program_id){
-            $c->stash->{rest} = {error=>'A seedlot must have a breeding program.'};
-            $c->detach();
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('A seedlot must have a breeding program.'));
         }
+
         my $location_code;
         if ($location_id){
             my $locations = CXGN::Trial::get_all_locations($schema, $location_id);
             $location_code = $locations->[0]->[1];
 
             if (!$location_code){
-                $c->stash->{rest} = {error=>'LocationDbId does not exist in the database'};
-                $c->detach();
+                return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Provided locationDbId does not exist in the database.'));
             }
         }
         my $person = CXGN::People::Person->new($dbh, $user_id);
@@ -363,8 +381,7 @@ sub store_seedlots {
 
         if ($@) {
             $c->stash->{rest} = { success => 0, seedlot_id => 0, error => $@ };
-            print STDERR "An error condition occurred, was not able to create seedlot. ($@).\n";
-            return;
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('An error condition occurred, was not able to create seedlot.'));
         }
         $c->stash->{rest} = { success => 1, seedlot_id => $seedlot_id };
         push @$seedlot_ids, $seedlot_id;
@@ -437,8 +454,7 @@ sub store_seedlot_transaction {
     my $dbh = $self->bcs_schema()->storage()->dbh();
 
     if (!$user_id){
-        $c->stash->{rest} = {error=>'You must be logged in to add a seedlot transaction!'};
-        $c->detach();
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must be logged in to add a seedlot!'));
     }
 
     my $person = CXGN::People::Person->new($dbh, $user_id);
@@ -466,8 +482,7 @@ sub store_seedlot_transaction {
         if ($from_stock_id){
             $from_stock_uniquename = $schema->resultset('Stock::Stock')->find({stock_id=>$from_stock_id})->uniquename();
             if (!$from_stock_uniquename){
-                $c->stash->{rest} = {error=>'The given seedlot uniquename has been taken. Please use another name or use the existing seedlot.'};
-                $c->detach();
+                return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('The given seedlot uniquename has been taken. Please use another name or use the existing seedlot.'));
             }
             $from_existing_sl = CXGN::Stock::Seedlot->new(
                 schema => $schema,
@@ -478,8 +493,7 @@ sub store_seedlot_transaction {
         if ($to_stock_id){
             $to_stock_uniquename = $schema->resultset('Stock::Stock')->find({stock_id=>$to_stock_id})->uniquename();
             if (!$to_stock_uniquename){
-                $c->stash->{rest} = {error=>'The given seedlot uniquename has been taken. Please use another name or use the existing seedlot.'};
-                $c->detach();
+                return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('The given seedlot uniquename has been taken. Please use another name or use the existing seedlot.'));
             }
             $to_existing_sl = CXGN::Stock::Seedlot->new(
                 schema => $schema,
@@ -487,13 +501,11 @@ sub store_seedlot_transaction {
             );
         }
         if (!$weight && !$amount){
-            $c->stash->{rest} = {error=>'A seedlot must have either a weight or an amount.'};
-            $c->detach();
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('A seedlot must have either a weight or an amount.'));
         }
         my $timestamp_format = check_timestamp($timestamp);
         if (!$timestamp_format){
-            $c->stash->{rest} = {error=>'A seedlot must have a proper timestamp for the transaction.'};
-            $c->detach();
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('A seedlot must have a formatted timestamp for the transaction.'));
         }
 
         my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
@@ -566,8 +578,7 @@ sub update_seedlot {
     my $user_id = shift;
 
     if (!$user_id){
-        $c->stash->{rest} = {error=>'You must be logged in to add a seedlot!'};
-        $c->detach();
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must be logged in to add a seedlot!'));
     }
 
     my $schema = $self->bcs_schema;
@@ -588,6 +599,7 @@ sub update_seedlot {
     my $box_name = $params->{additionalInfo} ? $params->{additionalInfo}[0] : undef;
     my $source_collection = $params->{sourceCollection} ? $params->{sourceCollection}[0] : undef; # not implemented
     my $accession_id = $params->{germplasmDbId} ? $params->{germplasmDbId}[0] : undef;
+    my $cross_id = $params->{crossDbId} ? $params->{crossDbId}[0] : undef;
     my $organization = $params->{organization} ? $params->{organization}[0] : undef;
     my $amount = $params->{amount} ? $params->{amount}[0] : undef; # not implemented
     my $weight = $params->{weight} ? $params->{weight}[0] : undef; # not implemented
@@ -601,25 +613,30 @@ sub update_seedlot {
     if ($saved_seedlot_name ne $seedlot_name){
         my $previous_seedlot = $schema->resultset('Stock::Stock')->find({uniquename=>$seedlot_name, type_id=>$seedlot_cvterm_id});
         if ($previous_seedlot){
-            $c->stash->{rest} = {error=>'The given seedlot uniquename has been taken. Please use another name or use the existing seedlot.'};
-            $c->detach();
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('The given seedlot uniquename has been taken. Please use another name or use the existing seedlot.'));
         }
     }
     if ($accession_id){
         my $accession = $self->bcs_schema->resultset('Stock::Stock')->find({stock_id=>$accession_id});
         if (!$accession) {
-            $c->stash->{rest} = {error=>'GermplasmDbId does not exist in the database'};
-            $c->detach();
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('GermplasmDbId does not exist in the database.'));
         }
         $accession_uniquename =  $accession->name();
     }
-    if (!$accession_id || !$accession_uniquename ){
-        $c->stash->{rest} = {error=>'A seedlot must have a valid accession.'};
-        $c->detach();
+    if ($cross_id){
+        my $cross = $self->bcs_schema->resultset('Stock::Stock')->find({stock_id=>$cross_id});
+        if (!$cross) {
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('crossDbId does not exist in the database.'));
+        }
+    }
+    if ($accession_id && $cross_id){
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('A seedlot must have either an accession OR a cross as contents. Not both.'));
+    }
+    if (!$accession_id && !$cross_id ){
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('A seedlot must have a valid accession or cross.'));
     }
     if (!$breeding_program_id){
-        $c->stash->{rest} = {error=>'A seedlot must have a breeding program.'};
-        $c->detach();
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('A seedlot must have a breeding program.'));
     }
     my $location_code;
     if ($location_id){
@@ -627,8 +644,7 @@ sub update_seedlot {
         $location_code = $locations->[0]->[1];
 
         if (!$location_code){
-            $c->stash->{rest} = {error=>'LocationDbId does not exist in the database'};
-            $c->detach();
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('LocationDbId does not exist in the database.'));
         }
     }
 
@@ -639,11 +655,13 @@ sub update_seedlot {
     $seedlot->location_code($location_code);
     $seedlot->box_name($box_name);
     $seedlot->accession_stock_id($accession_id);
+    $seedlot->cross_stock_id($cross_id);
     $seedlot->description($description);
 
     my $return = $seedlot->store();
     if (exists($return->{error})){
         $c->stash->{rest} = { error => $return->{error} };
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('An error occurred, seed lot can not be stored.'));
     } else {
         $c->stash->{rest} = { success => 1 };
     }
@@ -664,7 +682,7 @@ sub update_seedlot {
         my $accession = $seedlot_r->accession()->[0];
         my $location = $seedlot_r->nd_geolocation_id();
         my $program = $seedlot_r->breeding_program_id();
-
+        my $cross = $seedlot_r->cross()->[0];
 
         %result = (
                 additionalInfo=>{},
@@ -672,6 +690,7 @@ sub update_seedlot {
                 createdDate=>undef,
                 externalReferences=>[],
                 germplasmDbId=>qq|$accession|,
+                crossDbId=>qq|$cross|,
                 lastUpdated=>undef,
                 locationDbId=>qq|$location|,
                 programDbId=>qq|$program|,
