@@ -878,6 +878,109 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     };
 }
 
+sub drone_imagery_get_gps : Path('/api/drone_imagery/get_drone_imagery_gps') : ActionClass('REST') { }
+sub drone_imagery_get_gps_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    print STDERR Dumper $c->req->params();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $drone_run_project_id = $c->req->param("drone_run_project_id");
+
+    my $saved_image_stacks_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_micasense_stacks', 'project_property')->cvterm_id();
+    my $saved_micasense_stacks_json = $schema->resultset("Project::Projectprop")->find({
+        project_id => $drone_run_project_id,
+        type_id => $saved_image_stacks_type_id
+    });
+    my $saved_micasense_stacks;
+    if ($saved_micasense_stacks_json) {
+        $saved_micasense_stacks = decode_json $saved_micasense_stacks_json->value();
+    }
+    print STDERR Dumper $saved_micasense_stacks;
+    my @saved_micasense_stacks_values = values %$saved_micasense_stacks;
+
+    my $first_image = SGN::Image->new( $schema->storage->dbh, $saved_micasense_stacks_values[0]->[3]->{image_id}, $c );
+    my $first_image_url = $first_image->get_image_url('original_converted');
+    my $first_image_fullpath = $first_image->get_filename('original_converted', 'full');
+    my @size = imgsize($first_image_fullpath);
+    my $width = $size[0];
+    my $length = $size[1];
+    my $first_image_fullsize_url = $first_image->get_image_url('original_converted');
+    my $first_image_fullsize_fullpath = $first_image->get_filename('original_converted', 'full');
+    my @full_size = imgsize($first_image_fullsize_fullpath);
+
+    my $proportion = $size[0]/$full_size[0];
+
+    my %gps_images;
+    my %longitudes;
+    my %latitudes;
+    my $max_longitude = -1000000;
+    my $min_longitude = 1000000;
+    my $max_latitude = -1000000;
+    my $min_latitude = 1000000;
+    foreach (sort {$a <=> $b} keys %$saved_micasense_stacks) {
+        my $image_ids_array = $saved_micasense_stacks->{$_};
+        my $nir_image = $image_ids_array->[3];
+        my $latitude_raw = $nir_image->{latitude};
+        my $longitude_raw = $nir_image->{longitude};
+
+        if ($latitude_raw > $max_latitude) {
+            $max_latitude = $latitude_raw;
+        }
+        if ($longitude_raw > $max_longitude) {
+            $max_longitude = $longitude_raw;
+        }
+        if ($latitude_raw < $min_latitude) {
+            $min_latitude = $latitude_raw;
+        }
+        if ($longitude_raw < $min_longitude) {
+            $min_longitude = $longitude_raw;
+        }
+
+        # my $latitude = nearest(0.00001,$latitude_raw);
+        # my $longitude = nearest(0.00001,$longitude_raw);
+
+        $longitudes{$longitude_raw}++;
+        $latitudes{$latitude_raw}++;
+        my @stack_image_ids;
+        foreach (@$image_ids_array) {
+            push @stack_image_ids, $_->{image_id};
+        }
+
+        my $nir_image_id = $nir_image->{image_id};
+
+        my $image = SGN::Image->new( $schema->storage->dbh, $nir_image_id, $c );
+        my $image_url = $image->get_image_url('original_converted');
+        my $image_fullpath = $image->get_filename('original_converted', 'full');
+
+        $gps_images{$latitude_raw}->{$longitude_raw} = {
+            nir_image_id => $nir_image_id,
+            image_ids => \@stack_image_ids,
+            image_url => $image_url
+        };
+    }
+    # print STDERR Dumper \%longitudes;
+    # print STDERR Dumper \%latitudes;
+
+    my @latitudes_sorted = sort {$b <=> $a} keys %latitudes;
+    my @longitudes_sorted = sort {$b <=> $a} keys %longitudes;
+
+    $c->stash->{rest} = {
+        success => 1,
+        longitudes => \@longitudes_sorted,
+        latitudes => \@latitudes_sorted,
+        gps_images => \%gps_images,
+        image_width => $width,
+        image_length => $length,
+        min_latitude => $min_latitude,
+        min_longitude => $min_longitude,
+        max_latitude => $max_latitude,
+        max_longitude => $max_longitude
+    };
+}
+
 sub drone_imagery_calculate_statistics_store_analysis : Path('/api/drone_imagery/calculate_statistics_store_analysis') : ActionClass('REST') { }
 sub drone_imagery_calculate_statistics_store_analysis_POST : Args(0) {
     my $self = shift;
