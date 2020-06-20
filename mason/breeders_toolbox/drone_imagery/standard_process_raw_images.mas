@@ -48,18 +48,6 @@
                         <input type="range" min="0" max="360" id="drone_imagery_standard_process_raw_images_interactive_rotate_degrees_input" name="drone_imagery_standard_process_raw_images_interactive_rotate_degrees_input" value="0.00">
                     </div>
                 </div>
-                <div class="form-group form-group-sm">
-                    <label class="col-sm-6 control-label">X Factor: </label>
-                    <div class="col-sm-6">
-                        <input type="range" min="0" max="20000000" id="drone_imagery_standard_process_raw_images_interactive_x_factor_input" name="drone_imagery_standard_process_raw_images_interactive_x_factor_input" value="10000000">
-                    </div>
-                </div>
-                <div class="form-group form-group-sm">
-                    <label class="col-sm-6 control-label">Y Factor: </label>
-                    <div class="col-sm-6">
-                        <input type="range" min="0" max="40000000" id="drone_imagery_standard_process_raw_images_interactive_y_factor_input" name="drone_imagery_standard_process_raw_images_interactive_y_factor_input" value="20000000">
-                    </div>
-                </div>
             </form>
             <hr>
 
@@ -118,7 +106,7 @@ jQuery(document).ready(function(){
     var manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id;
     var manage_drone_imagery_standard_process_raw_images_interactive_rotate_angle = 0;
     var manage_drone_imagery_standard_process_raw_images_interactive_x_factor = 10000000;
-    var manage_drone_imagery_standard_process_raw_images_interactive_y_factor = 20000000;
+    var manage_drone_imagery_standard_process_raw_images_interactive_y_factor = 16000000;
     var manage_drone_imagery_standard_process_raw_images_interactive_svg;
     var manage_drone_imagery_standard_process_raw_images_interactive_image;
     var drone_imagery_interactive_total_width;
@@ -287,45 +275,17 @@ jQuery(document).ready(function(){
         droneImageryInteractiveRotateImages();
     });
 
-    d3.select("#drone_imagery_standard_process_raw_images_interactive_x_factor_input").on("input", function() {
-        manage_drone_imagery_standard_process_raw_images_interactive_x_factor = this.value;
-        
-        get_select_box('micasense_aligned_raw_images_grid_interactive','drone_imagery_standard_process_raw_images_image_id_interactive_select_div', {'name': 'drone_imagery_standard_process_raw_images_interactive_image_id_select', 'id': 'drone_imagery_standard_process_raw_images_interactive_image_id_select', 'empty':1, 'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id, 'rotate_angle':manage_drone_imagery_standard_process_raw_images_interactive_rotate_angle, 'x_factor':manage_drone_imagery_standard_process_raw_images_interactive_x_factor, 'y_factor':manage_drone_imagery_standard_process_raw_images_interactive_y_factor });
-    });
-
-    d3.select("#drone_imagery_standard_process_raw_images_interactive_y_factor_input").on("input", function() {
-        manage_drone_imagery_standard_process_raw_images_interactive_y_factor = this.value;
-        
-        get_select_box('micasense_aligned_raw_images_grid_interactive','drone_imagery_standard_process_raw_images_image_id_interactive_select_div', {'name': 'drone_imagery_standard_process_raw_images_interactive_image_id_select', 'id': 'drone_imagery_standard_process_raw_images_interactive_image_id_select', 'empty':1, 'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id, 'rotate_angle':manage_drone_imagery_standard_process_raw_images_interactive_rotate_angle, 'x_factor':manage_drone_imagery_standard_process_raw_images_interactive_x_factor, 'y_factor':manage_drone_imagery_standard_process_raw_images_interactive_y_factor });
-    });
-
-    function update_angle(nAngle) {
-        d3.select("#drone_imagery_standard_process_raw_images_interactive_rotate_degrees_input").property("value", nAngle);
-        d3.selectAll('g').each(function(d) {
-            var pos = d3.select(this).attr('pos');
-            d3.select(this).attr("transform", "translate("+pos+") rotate("+nAngle+")");
-            d3.select(this).attr("rotate_angle", nAngle);
-        });
-    }
-
-    jQuery(document).on('click', 'drone_imagery_standard_process_interactive_get_image_positions', function(){
-        d3.selectAll('square').each(function(d) {
-            var x_pos = d3.select(this).attr('cx');
-            var y_pos = d3.select(this).attr('cy');
-            var nir_image_id = d3.select(this).attr('nir_image_id');
-            var stack_image_ids = d3.select(this).attr('stack_image_ids');
-        });
-    });
 
     jQuery('#drone_imagery_plot_polygons_top_left_click_raw_images_interactive').click(function(){
         alert('Now click the top left corner of your field on the image below.');
 
         d3.selectAll("g").on('mousedown.drag', null);
 
-        d3.select("#drone_imagery_standard_process_raw_images_image_id_interactive_select_div_area").on("click", function(){
+        manage_drone_imagery_standard_process_raw_images_interactive_svg.on("click", function(){
             var current_pos = d3.mouse(this);
             jQuery('#drone_imagery_plot_polygons_left_column_top_offset_raw_images_interactive').val(current_pos[1]);
             jQuery('#drone_imagery_plot_polygons_top_row_left_offset_raw_images_interactive').val(current_pos[0]);
+            console.log(current_pos);
 
             d3.selectAll("g").call(d3.drag()
                 .on("start", dragstarted)
@@ -336,14 +296,12 @@ jQuery(document).ready(function(){
     jQuery('#drone_imagery_plot_polygons_top_right_click_raw_images_interactive').click(function(){
         alert('Now click the top right corner of your field on the image below.');
 
-        var drone_imagery_interactive_total_width = jQuery('#drone_imagery_interactive_total_width').val();
-        var drone_imagery_interactive_total_height = jQuery('#drone_imagery_interactive_total_height').val();
-
         d3.selectAll("g").on('mousedown.drag', null);
 
-        d3.select("#drone_imagery_standard_process_raw_images_image_id_interactive_select_div_area").on("click", function(){
+        manage_drone_imagery_standard_process_raw_images_interactive_svg.on("click", function(){
             var current_pos = d3.mouse(this);
             jQuery('#drone_imagery_plot_polygons_top_row_right_offset_raw_images_interactive').val(drone_imagery_interactive_total_width-current_pos[0]);
+            console.log(current_pos);
 
             d3.selectAll("g").call(d3.drag()
                 .on("start", dragstarted)
@@ -354,16 +312,13 @@ jQuery(document).ready(function(){
     jQuery('#drone_imagery_plot_polygons_bottom_left_click_raw_images_interactive').click(function(){
         alert('Now click the bottom left corner of your field on the image below.');
 
-        var drone_imagery_interactive_total_width = jQuery('#drone_imagery_interactive_total_width').val();
-        var drone_imagery_interactive_total_height = jQuery('#drone_imagery_interactive_total_height').val();
-
         d3.selectAll("g").on('mousedown.drag', null);
 
-        d3.select("#drone_imagery_standard_process_raw_images_image_id_interactive_select_div_area").on("click", function(){
+        manage_drone_imagery_standard_process_raw_images_interactive_svg.on("click", function(){
             var current_pos = d3.mouse(this);
-
             jQuery('#drone_imagery_plot_polygons_bottom_row_left_offset_raw_images_interactive').val(current_pos[0]);
-            jQuery('#drone_imagery_plot_polygons_left_column_bottom_offset_raw_images_interactive').val(drone_imagery_interactive_total_height-current_pos[1]);
+            jQuery('#drone_imagery_plot_polygons_left_column_bottom_offset_raw_images_interactive').val(drone_imagery_interactive_total_length-current_pos[1]);
+            console.log(current_pos);
 
             d3.selectAll("g").call(d3.drag()
                 .on("start", dragstarted)
@@ -374,15 +329,12 @@ jQuery(document).ready(function(){
     jQuery('#drone_imagery_plot_polygons_bottom_right_click_raw_images_interactive').click(function(){
         alert('Now click the bottom right corner of your field on the image below.');
 
-        var drone_imagery_interactive_total_width = jQuery('#drone_imagery_interactive_total_width').val();
-        var drone_imagery_interactive_total_height = jQuery('#drone_imagery_interactive_total_height').val();
-
         d3.selectAll("g").on('mousedown.drag', null);
 
-        d3.select("#drone_imagery_standard_process_raw_images_image_id_interactive_select_div_area").on("click", function(){
+        manage_drone_imagery_standard_process_raw_images_interactive_svg.on("click", function(){
             var current_pos = d3.mouse(this);
-
-            jQuery('#drone_imagery_plot_polygons_right_col_bottom_offset_raw_images_interactive').val(drone_imagery_interactive_total_height-current_pos[1]);
+            jQuery('#drone_imagery_plot_polygons_right_col_bottom_offset_raw_images_interactive').val(drone_imagery_interactive_total_length-current_pos[1]);
+            console.log(current_pos);
 
             d3.selectAll("g").call(d3.drag()
                 .on("start", dragstarted)
@@ -395,9 +347,6 @@ jQuery(document).ready(function(){
         plot_polygons_interactive_display_points = [];
         plot_polygons_interactive_ind_4_points = [];
 
-        var drone_imagery_interactive_total_width = jQuery('#drone_imagery_interactive_total_width').val();
-        var drone_imagery_interactive_total_height = jQuery('#drone_imagery_interactive_total_height').val();
-
         var num_rows_val = jQuery('#drone_imagery_plot_polygons_num_rows_raw_images_interactive').val();
         var num_cols_val = jQuery('#drone_imagery_plot_polygons_num_cols_raw_images_interactive').val();
         var section_top_row_left_offset_val = jQuery('#drone_imagery_plot_polygons_top_row_left_offset_raw_images_interactive').val();
@@ -407,7 +356,7 @@ jQuery(document).ready(function(){
         var section_top_row_right_offset_val = jQuery('#drone_imagery_plot_polygons_top_row_right_offset_raw_images_interactive').val();
         var section_right_column_bottom_offset_val = jQuery('#drone_imagery_plot_polygons_right_col_bottom_offset_raw_images_interactive').val();
 
-        plotPolygonsRectanglesApplyInteractive(num_rows_val, num_cols_val, section_top_row_left_offset_val, section_bottom_row_left_offset_val, section_left_column_top_offset_val, section_left_column_bottom_offset_val, section_top_row_right_offset_val, section_right_column_bottom_offset_val, drone_imagery_interactive_total_width, drone_imagery_interactive_total_height, 'drone_imagery_interactive_generated_polygons_div');
+        plotPolygonsRectanglesApplyInteractive(num_rows_val, num_cols_val, section_top_row_left_offset_val, section_bottom_row_left_offset_val, section_left_column_top_offset_val, section_left_column_bottom_offset_val, section_top_row_right_offset_val, section_right_column_bottom_offset_val, drone_imagery_interactive_total_width, drone_imagery_interactive_total_length, 'drone_imagery_interactive_generated_polygons_div');
     });
 
     function drawPolylineInteractive(points){
@@ -415,7 +364,7 @@ jQuery(document).ready(function(){
             points.push(points[0]);
         }
         for(var i=0;i<points.length-1;i++){
-            svg.append('line')
+            manage_drone_imagery_standard_process_raw_images_interactive_svg.append('line')
                 .style("stroke", "blue")
                 .style("stroke-width", 5)
                 .attr("x1", points[i].x)
@@ -429,7 +378,7 @@ jQuery(document).ready(function(){
         var plot_polygon_random_number = Math.random() * random_factor;
         if (points.length > 0 && label != undefined) {
             if (drone_imagery_interactive_plot_polygons_removed_numbers.includes(label)) {
-                svg.append("text")
+                manage_drone_imagery_standard_process_raw_images_interactive_svg.append("text")
                     .attr("x", points[0].x + 3)
                     .attr("y", points[0].y + 14 + plot_polygon_random_number)
                     .text('NA')
@@ -437,7 +386,7 @@ jQuery(document).ready(function(){
                     .attr("font-size", "18px")
                     .attr("fill", "blue");
             } else {
-                svg.append("text")
+                manage_drone_imagery_standard_process_raw_images_interactive_svg.append("text")
                     .attr("x", points[0].x + 3)
                     .attr("y", points[0].y + 14 + plot_polygon_random_number)
                     .text(label)
@@ -447,7 +396,7 @@ jQuery(document).ready(function(){
             }
         }
         for(var i=0;i<points.length;i++){
-            svg.append("circle")
+            manage_drone_imagery_standard_process_raw_images_interactive_svg.append("circle")
                 .attr("cx", points[i].x)
                 .attr("cy", points[i].y)
                 .attr("r", 4);
@@ -652,9 +601,6 @@ jQuery(document).ready(function(){
         jQuery('#drone_imagery_interactive_plot_polygon_template_options_dialog').modal('hide');
         alert('Click on where the top left corner of the template will be pasted.');
 
-        var drone_imagery_interactive_total_width = jQuery('#drone_imagery_interactive_total_width').val();
-        var drone_imagery_interactive_total_height = jQuery('#drone_imagery_interactive_total_height').val();
-
         d3.selectAll("g").on('mousedown.drag', null);
 
         d3.select("#drone_imagery_standard_process_raw_images_image_id_interactive_select_div_area").on("click", function(){
@@ -665,7 +611,7 @@ jQuery(document).ready(function(){
                 .on("drag", dragged)
                 .on("end", dragended));
 
-            plotPolygonsTemplatePasteInteractive(current_pos[0], current_pos[1], drone_imagery_interactive_total_width, drone_imagery_interactive_total_height, parseInt(drone_imagery_interactive_current_plot_polygon_index_options_id), 'drone_imagery_interactive_generated_polygons_div');
+            plotPolygonsTemplatePasteInteractive(current_pos[0], current_pos[1], drone_imagery_interactive_total_width, drone_imagery_interactive_total_length, parseInt(drone_imagery_interactive_current_plot_polygon_index_options_id), 'drone_imagery_interactive_generated_polygons_div');
         });
     });
 
