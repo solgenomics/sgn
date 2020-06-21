@@ -981,6 +981,61 @@ sub drone_imagery_get_gps_GET : Args(0) {
     };
 }
 
+sub drone_imagery_match_and_align_two_images : Path('/api/drone_imagery/match_and_align_two_images') : ActionClass('REST') { }
+sub drone_imagery_match_and_align_two_images_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    print STDERR Dumper $c->req->params();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
+    my $image_id1 = $c->req->param('image_id1');
+    my $image_id2 = $c->req->param('image_id2');
+
+    my $image1 = SGN::Image->new( $schema->storage->dbh, $image_id1, $c );
+    my $image1_url = $image1->get_image_url("original");
+    my $image1_fullpath = $image1->get_filename('original_converted', 'full');
+    my $image2 = SGN::Image->new( $schema->storage->dbh, $image_id2, $c );
+    my $image2_url = $image2->get_image_url("original");
+    my $image2_fullpath = $image2->get_filename('original_converted', 'full');
+
+    my $dir = $c->tempfiles_subdir('/drone_imagery_align');
+    my $match_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_align/imageXXXX').'.png';
+    my $align_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_align/imageXXXX').'.png';
+
+    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/MatchAndAlignImages.py --image_path1 \''.$image1_fullpath.'\' --image_path2 \''.$image2_fullpath.'\' --outfile_match_path \''.$match_temp_image.'\' --outfile_path \''.$align_temp_image.'\' ';
+    print STDERR Dumper $cmd;
+    my $status = system($cmd);
+
+    my $match_linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'standard_process_interactive_match_temporary_drone_imagery', 'project_md_image')->cvterm_id();
+    my $align_linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'standard_process_interactive_align_temporary_drone_imagery', 'project_md_image')->cvterm_id();
+
+
+    my $match_image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+    $match_image->set_sp_person_id($user_id);
+    my $ret = $match_image->process_image($match_temp_image, 'project', $drone_run_band_project_id, $match_linking_table_type_id);
+    my $match_image_fullpath = $match_image->get_filename('original_converted', 'full');
+    my $match_image_url = $match_image->get_image_url('original');
+    my $match_image_id = $match_image->get_image_id();
+
+    my $align_image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+    $align_image->set_sp_person_id($user_id);
+    my $ret_align = $align_image->process_image($align_temp_image, 'project', $drone_run_band_project_id, $align_linking_table_type_id);
+    my $align_image_fullpath = $align_image->get_filename('original_converted', 'full');
+    my $align_image_url = $align_image->get_image_url('original');
+    my $align_image_id = $align_image->get_image_id();
+
+    $c->stash->{rest} = {
+        success => 1,
+        match_image_url => $match_image_url,
+        align_image_url => $align_image_url
+    };
+}
+
 sub drone_imagery_calculate_statistics_store_analysis : Path('/api/drone_imagery/calculate_statistics_store_analysis') : ActionClass('REST') { }
 sub drone_imagery_calculate_statistics_store_analysis_POST : Args(0) {
     my $self = shift;

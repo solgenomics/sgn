@@ -39,6 +39,8 @@
                     <li>(2) Click the four corners encompassing the entire field.</li>
                     <li>(3) Give the number of rows and columns.</li>
                 </ul>
+                <hr>
+                <button class="btn btn-primary" id="drone_imagery_standard_process_raw_images_interactive_match"></button>
             </div>
 
             <form class="form-horizontal">
@@ -109,6 +111,8 @@ jQuery(document).ready(function(){
     var manage_drone_imagery_standard_process_raw_images_interactive_y_factor = 16000000;
     var manage_drone_imagery_standard_process_raw_images_interactive_svg;
     var manage_drone_imagery_standard_process_raw_images_interactive_image;
+    var manage_drone_imagery_standard_process_raw_images_nir_image_counter = 0;
+    var manage_drone_imagery_standard_process_raw_images_nir_images = [];
     var drone_imagery_interactive_total_width;
     var drone_imagery_interactive_total_length;
     var manage_drone_imagery_standard_process_interactive_gps_images;
@@ -221,6 +225,7 @@ jQuery(document).ready(function(){
                     var y_pos = Math.round((latitude - manage_drone_imagery_standard_process_interactive_min_latitude)*manage_drone_imagery_standard_process_raw_images_interactive_y_factor);
                     manage_drone_imagery_standard_process_interactive_gps_images[latitude][longitude]['x_pos'] = x_pos;
                     manage_drone_imagery_standard_process_interactive_gps_images[latitude][longitude]['y_pos'] = y_pos;
+                    manage_drone_imagery_standard_process_raw_images_nir_images.push(nir_image_id);
                     appendDraggableImage(image_url, x_pos, y_pos, latitude, longitude, nir_image_id, JSON.stringify(image_ids), manage_drone_imagery_standard_process_raw_images_interactive_rotate_angle);
                 }
             }
@@ -235,6 +240,18 @@ jQuery(document).ready(function(){
             d3.select(this).attr("rotate_angle", manage_drone_imagery_standard_process_raw_images_interactive_rotate_angle);
         });
     }
+
+    jQuery('#drone_imagery_standard_process_raw_images_interactive_match').click(function(){
+        jQuery.ajax({
+            url : '/api/drone_imagery/match_and_align_two_images?image_id1='+manage_drone_imagery_standard_process_raw_images_nir_images[manage_drone_imagery_standard_process_raw_images_nir_image_counter]+'&image_id2='+manage_drone_imagery_standard_process_raw_images_nir_images[manage_drone_imagery_standard_process_raw_images_nir_image_counter+1]+'&drone_run_band_project_id='+manage_drone_imagery_standard_process_raw_images_interactive_field_trial_id,
+            success: function(response){
+                console.log(response);
+            },
+            error: function(response){
+                alert('Error matching and aligning two images!')
+            }
+        });
+    });
 
     jQuery(document).on('click', 'button[name="project_drone_imagery_standard_process_raw_images_interactive"]', function() {
         showManageDroneImagerySection('manage_drone_imagery_standard_process_raw_images_interactive_div');
