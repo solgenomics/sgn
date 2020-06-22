@@ -25,6 +25,64 @@
 <&| /page/info_section.mas, id=>"input_dataset_section", title=>"Select Input Data", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/spectra" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
   <input type="hidden" name="outformat" value="0" />
 
+<div class="form-group form-inline">
+    <label for="dataset_select">Available datasets: </label><div id="dataset_select"></div>
+    <br>
+    <button class="btn btn-primary" id="selectDataset" type="submit" name="selectDataset" value="selectDataset">Select training dataset</button>
+    <br>
+    <br>
+    </div>
+
+  <div class="form-group form-inline">
+    <label class="blast_select_label" for="train_select">Select&nbspthe&nbsptraining&nbsptrail:&nbsp;</label>
+    <& /page/html_select.mas, name=>'train_select', id=>'train_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
+    <br>
+    </center>
+  <!--   <br> -->
+    <button class="btn btn-primary" id="selectStudyTrain" type="submit" name="selectStudyTrain" value="selectStudyTrain">Select training trial</button>
+  </div>
+    <br>
+
+  <div class="form-group form-inline">
+    <label class="blast_select_label" for="test_select">Select&nbsptest&nbsptrial:&nbsp;</label>
+    <& /page/html_select.mas, name=>'test_select', id=>'test_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
+    <br>
+    </center>
+    <button class="btn btn-primary" id="selectStudyTest" type="submit" name="selectStudyTest" value="selectStudyTest">Select study (or studies) for model testing</button>
+    <br>
+    <br>
+    </div>
+
+<div class="form-group form-inline">
+    <label class="blast_select_label" for="pheno_select">Available&nbsptraits:&nbsp; </label>
+    <& /page/html_select.mas, name=>'pheno_select', id=>'pheno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
+    <br>
+    <button class="btn btn-primary" id="preview_trait_histogram_btn" type="submit" name="preview_trait_histogram_btn" value="preview_trait_histogram_btn">View Trait Histogram</button>
+    <br>
+    <center>
+      <div id="trait_histogram_plot">
+      </div>
+    </center>
+    <br>
+    
+  </div>
+    <br>
+  </div>
+
+  <div class = "form-group form-inline">
+   <label for = format_select>Available NIRs format: </label>
+   <select class="form-control input-sm" id="cv_select">
+    <option selected value="scio">SCIO</option>
+    <option value="simple">Simple</option>
+   </select>
+   <div id = "format_select">
+  </div>
+  <br>
+    <button class="btn btn-primary" id="selectFormat" type="submit" name="selectFormat" value="selectFormat">Select NIRs format</button>
+    <br>
+    <br>
+    </div>
+
 
   <div class = "form-group form-inline">
    <label for = cv_select>Available cross-validation methods: </label>
@@ -43,52 +101,6 @@
     <br>
     <br>
     </div>
-
-
-  <div class="form-group form-inline">
-    <label for="dataset_select">Available datasets: </label><div id="dataset_select"></div>
-    <br>
-    <button class="btn btn-primary" id="selectDataset" type="submit" name="selectDataset" value="selectDataset">Select training dataset</button>
-    <br>
-    <br>
-    </div>
-
-  <div class="form-group form-inline">
-    <label class="blast_select_label" for="train_select">Available&nbsptrials:&nbsp;</label>
-    <& /page/html_select.mas, name=>'train_select', id=>'train_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
-    <br>
-    </center>
-  <!--   <br> -->
-    <button class="btn btn-primary" id="selectStudyTrain" type="submit" name="selectStudyTrain" value="selectStudyTrain">Select training trial</button>
-  </div>
-    <br>
-
-  <div class="form-group form-inline">
-  	<label class="blast_select_label" for="test_select">Available&nbsptrials:&nbsp;</label>
-    <& /page/html_select.mas, name=>'test_select', id=>'test_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
-    <br>
-    </center>
-    <button class="btn btn-primary" id="selectStudyTest" type="submit" name="selectStudyTest" value="selectStudyTest">Select study (or studies) for model testing</button>
-    <br>
-    <br>
-    </div>
-
-
-  <div class="form-group form-inline">
-    <label class="blast_select_label" for="pheno_select">Available&nbsptraits:&nbsp; </label>
-    <& /page/html_select.mas, name=>'pheno_select', id=>'pheno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
-    <br>
-    <button class="btn btn-primary" id="preview_trait_histogram_btn" type="submit" name="preview_trait_histogram_btn" value="preview_trait_histogram_btn">View Trait Histogram</button>
-    <br>
-    <center>
-      <div id="trait_histogram_plot">
-      </div>
-    </center>
-    <br>
-    
-  </div>
-    <br>
-  </div>
 
 
   <div class="form-group form-inline">
@@ -141,6 +153,7 @@
     <br>
   </div>
 
+<&| /page/info_section.mas, title=>"Output", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
 
 <!-- 
   <div class="form-group form-inline">
@@ -171,7 +184,7 @@
 
 
 
-<&| /page/info_section.mas, title=>"Output", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
+
 
 
 
@@ -246,6 +259,18 @@ jQuery(document).ready(function() {
             alert("An error occurred. The service may be temporarily unavailable.");
         }
     });
+  });
+
+  jQuery('#selectFormat').on('click', function() {
+    if (!jQuery('#format_select').val()) {
+      alert("Please select a cross-validation method.")
+    } else {
+      var format_id = jQuery('#format_select').val();
+    $.ajax({
+        url: '/ajax/Nirs/get_nirs_format',
+        data: {'format_id': format_id },
+      }); // end .ajax
+    }; // end else statement 
   });
 
   jQuery('#selectCV').on('click', function() {
@@ -387,11 +412,10 @@ jQuery('#selectAlgorithm').on('click', function() {
         var trait_id = $('#pheno_select').val();
         var niter_id = $('#niter_select').val();
         var alg_id = $('#model_algorithm_select').val();
-        alert(alg_id);
-        var tunelen = $('#tuneLength_select').val();
+        var tune_id = $('#tuneLength_select').val();
         $.ajax({
           url: '/ajax/Nirs/generate_results',
-          data: {'cv_id' : cv_id,'dataset_id': dataset_id, 'train_id' : train_id,'trait_id': trait_id, 'test_id': test_id, 'niter_id':niter_id,'preprocessing_bool': preprocessing_bool, 'alg_id': alg_id, 'tunelen':tunelen, 'rf_var_imp':rf_var_imp},
+          data: {'cv_id' : cv_id,'dataset_id': dataset_id, 'train_id' : train_id,'trait_id': trait_id, 'test_id': test_id, 'niter_id':niter_id,'preprocessing_bool': preprocessing_bool, 'alg_id': alg_id, 'tune_id':tune_id, 'rf_var_imp':rf_var_imp},
           beforeSend: function() {
             jQuery("#working_modal").modal("show");
           },
