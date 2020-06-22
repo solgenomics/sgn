@@ -101,6 +101,33 @@
   </div>
 </div>
 
+<div class="modal fade" id="drone_imagery_interactive_plot_polygon_remove_polygon" name="drone_imagery_interactive_plot_polygon_remove_polygon" tabindex="-1" role="dialog" aria-labelledby="droneImageryInteractiveRemovePlotPolygonDialog" data-backdrop="static">
+  <div class="modal-dialog modal-sm" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="droneImageryInteractiveRemovePlotPolygonDialog">Remove Plot Polygon</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <form class="form-horizontal">
+                <div class="form-group">
+                    <label class="col-sm-5 control-label">Polygon Identifier:</label>
+                    <div class="col-sm-7">
+                        <input class="form-control" id="drone_imagery_interactive_plot_polygon_remove_polygon_number" name="drone_imagery_interactive_plot_polygon_remove_polygon_number" type="number" placeholder="e.g. 3" />
+                    </div>
+                </div>
+            </form>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="drone_imagery_interactive_plot_polygon_remove_polygon_submit">Remove Plot Polygon</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 jQuery(document).ready(function(){
 
@@ -137,6 +164,9 @@ jQuery(document).ready(function(){
     var plot_polygons_interactive_ind_4_points = [];
     var plot_polygons_interactive_display_points = [];
     var drone_imagery_interactive_plot_polygons_available_stock_names = [];
+    var drone_imagery_interactive_field_trial_layout_response;
+    var drone_imagery_interactive_plot_polygons_removed_numbers = [];
+    var plot_polygons_interactive_total_height_generated;
 
     d3.selection.prototype.moveToFront = function() {
         return this.each(function(){
@@ -620,7 +650,7 @@ jQuery(document).ready(function(){
         }
         console.log(plot_polygons_interactive_generated_polygons);
 
-        plot_polygons_total_height_generated = row_height * plot_polygons_interactive_num_rows_generated;
+        plot_polygons_interactive_total_height_generated = row_height * plot_polygons_interactive_num_rows_generated;
         plot_polygons_interactive_number_generated = plot_polygons_interactive_generated_polygons.length;
 
         var drone_imagery_plot_polygons_new = [];
@@ -661,8 +691,8 @@ jQuery(document).ready(function(){
             },
             success: function(response){
                 console.log(response);
-                field_trial_layout_response = response;
-                var layout = field_trial_layout_response.output;
+                drone_imagery_interactive_field_trial_layout_response = response;
+                var layout = drone_imagery_interactive_field_trial_layout_response.output;
                 for (var i=1; i<layout.length; i++) {
                     drone_imagery_interactive_plot_polygons_available_stock_names.push(layout[i][0]);
                 }
@@ -708,17 +738,13 @@ jQuery(document).ready(function(){
     function droneImageryDrawRectangleTableInteractive(plot_polygons_layout_assignment_info, plot_polygons_layout_assignment_table, plot_polygons_generate_assignment_button, plot_polygon_assignment_submit_button) {
         var html = '<hr><div class="well well-sm"><h2>Assign Plot Polygons to Field Trial Entities</h2>';
         html = html + '<div class="panel panel-default"><div class="panel-body"><div class="form form-horizontal">';
-        html = html + '<div class="row"><div class="col-sm-6"><div class="form-group form-group-sm"><label class="col-sm-6 control-label">Location of First Plot (e.g. plot number 1): </label><div class="col-sm-6"><select class="form-control" id="drone_imagery_plot_polygons_first_plot_start" name="drone_imagery_plot_polygons_first_plot_start"><option value="top_left">Top Left</option><option value="top_right">Top Right</option><option value="bottom_left" disabled>Bottom Left</option><option value="bottom_right" disabled>Bottom Right</option></select></div></div></div><div class="col-sm-6"><div class="form-group form-group-sm"><label class="col-sm-6 control-label">Second Plot Follows First Plot Going: </label><div class="col-sm-6"><select class="form-control" id="drone_imagery_plot_polygons_second_plot_follows" name="drone_imagery_plot_polygons_second_plot_follows"><option value="right">Right</option><option value="up">Up</option><option value="down">Down</option><option value="left">Left</option></select></div></div></div></div>';
-        html = html + '<div class="row"><div class="col-sm-6"><div class="form-group form-group-sm"><label class="col-sm-6 control-label">Plot Number Orientation: </label><div class="col-sm-6"><select class="form-control" id="drone_imagery_plot_polygons_plot_orientation" name="drone_imagery_plot_polygons_plot_orientation"><option value="serpentine">Serpentine</option><option value="zigzag">Zigzag (Not Serpentine)</option></select></div></div></div></div>';
+        html = html + '<div class="row"><div class="col-sm-6"><div class="form-group form-group-sm"><label class="col-sm-6 control-label">Location of First Plot (e.g. plot number 1): </label><div class="col-sm-6"><select class="form-control" id="drone_imagery_interactive_plot_polygons_first_plot_start" name="drone_imagery_interactive_plot_polygons_first_plot_start"><option value="top_left">Top Left</option><option value="top_right">Top Right</option><option value="bottom_left" disabled>Bottom Left</option><option value="bottom_right" disabled>Bottom Right</option></select></div></div></div><div class="col-sm-6"><div class="form-group form-group-sm"><label class="col-sm-6 control-label">Second Plot Follows First Plot Going: </label><div class="col-sm-6"><select class="form-control" id="drone_imagery_interactive_plot_polygons_second_plot_follows" name="drone_imagery_interactive_plot_polygons_second_plot_follows"><option value="right">Right</option><option value="up">Up</option><option value="down">Down</option><option value="left">Left</option></select></div></div></div></div>';
+        html = html + '<div class="row"><div class="col-sm-6"><div class="form-group form-group-sm"><label class="col-sm-6 control-label">Plot Number Orientation: </label><div class="col-sm-6"><select class="form-control" id="drone_imagery_interactive_plot_polygons_plot_orientation" name="drone_imagery_interactive_plot_polygons_plot_orientation"><option value="serpentine">Serpentine</option><option value="zigzag">Zigzag (Not Serpentine)</option></select></div></div></div></div>';
         html = html + '</div></div></div></div>';
 
         html = html + '<button class="btn btn-primary" id="'+plot_polygons_generate_assignment_button+'">Generate Assignments (Does Not Save)</button>&nbsp;&nbsp;&nbsp;<button class="btn btn-primary" name="'+plot_polygon_assignment_submit_button+'">Finish and Save Polygons To Plots</button></div>';
         jQuery('#'+plot_polygons_layout_assignment_info).html(html);
         jQuery('#'+plot_polygons_layout_assignment_table).DataTable({'paging':false});
-
-        jQuery('input[name=drone_imagery_plot_polygons_autocomplete]').autocomplete({
-            source: drone_imagery_interactive_plot_polygons_available_stock_names
-        });
     }
 
     var drone_imagery_interactive_current_plot_polygon_index_options_id = '';
@@ -796,6 +822,49 @@ jQuery(document).ready(function(){
         droneImageryDrawPlotPolygonActiveTemplatesTableInteractive('drone_imagery_plot_polygons_active_templates_raw_images_interactive', drone_imagery_standard_process_raw_images_interactive_plot_polygons_template_dimensions);
 
         droneImageryDrawRectangleTableInteractive('drone_imagery_interactive_generated_polygons_div', 'drone_imagery_standard_process_interactive_generated_polygons_table', 'drone_imagery_standard_process_interactive_plot_polygons_generated_assign', 'drone_imagery_standard_process_interactive_plot_polygons_submit_bottom');
+    }
+
+    jQuery(document).on('click', '#drone_imagery_interactive_plot_polygons_clear', function(){
+        plot_polygons_interactive_display_points = [];
+        plot_polygons_interactive_ind_4_points = [];
+        plot_polygons_interactive_generated_polygons = {};
+        drone_imagery_interactive_plot_polygons_display = {};
+        plot_polygons_interactive_generated_polygons = [];
+        drone_imagery_standard_process_raw_images_interactive_plot_polygons_template_dimensions = [];
+        drone_imagery_interactive_plot_polygons_removed_numbers = [];
+
+        d3.selectAll("text").remove();
+        d3.selectAll("line").remove();
+        d3.selectAll("circle").remove();
+        jQuery('#drone_imagery_interactive_generated_polygons_div').html('');
+
+        droneImageryDrawLayoutTableInteractive(drone_imagery_interactive_field_trial_layout_response, {}, 'drone_imagery_interactive_trial_layout_div', 'drone_imagery_interactive_trial_layout_table');
+        droneImageryDrawPlotPolygonActiveTemplatesTableInteractive('drone_imagery_plot_polygons_active_templates_raw_images_interactive', drone_imagery_standard_process_raw_images_interactive_plot_polygons_template_dimensions);
+    });
+
+    jQuery(document).on('click', '#drone_imagery_interactive_plot_polygons_clear_one', function(){
+        jQuery('#drone_imagery_interactive_plot_polygon_remove_polygon').modal('show');
+        return false;
+    });
+
+    jQuery('#drone_imagery_interactive_plot_polygon_remove_polygon_submit').click(function(){
+        var polygon_number = jQuery('#drone_imagery_interactive_plot_polygon_remove_polygon_number').val();
+        drone_imagery_interactive_plot_polygons_removed_numbers.push(polygon_number);
+        draw_canvas_image_interactive(plot_polygons_interactive_total_height_generated/plot_polygons_interactive_num_rows_generated)
+        return false;
+    });
+
+    function draw_canvas_image_interactive(random_scaling) {
+        d3.selectAll("text").remove();
+        d3.selectAll("line").remove();
+        d3.selectAll("circle").remove();
+
+        for (key in drone_imagery_interactive_plot_polygons_display) {
+            var plot_polygons_display_points_again = drone_imagery_interactive_plot_polygons_display[key];
+            drawPolylineInteractive(plot_polygons_display_points_again);
+            drawWaypointsInteractive(plot_polygons_display_points_again, key, random_scaling);
+        }
+        return false;
     }
 
     function showManageDroneImagerySection(section_div_id) {
