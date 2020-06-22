@@ -4,7 +4,7 @@ package SGN::Controller::AJAX::BreederSearch;
 use Moose;
 
 use List::MoreUtils qw | any all |;
-use JSON::Any;
+use JSON;
 use Data::Dumper;
 use Try::Tiny;
 use CXGN::BreederSearch;
@@ -20,7 +20,7 @@ __PACKAGE__->config(
 sub get_data : Path('/ajax/breeder/search') Args(0) {
   my $self = shift;
   my $c = shift;
-  my $j = JSON::Any->new;
+  my $j = JSON->new;
 
   my @criteria_list = $c->req->param('categories[]');
   my @querytypes = $c->req->param('querytypes[]');
