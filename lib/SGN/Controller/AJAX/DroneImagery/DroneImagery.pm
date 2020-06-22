@@ -2612,6 +2612,7 @@ sub get_drone_run_band_projects_GET : Args(0) {
     my $exclude_drone_run_band_project_id = $c->req->param('exclude_drone_run_band_project_id') || 0;
     my $select_all = $c->req->param('select_all') || 0;
     my $disable = $c->req->param('disable') || 0;
+    # print STDERR Dumper $c->req->params();
 
     my $project_start_date_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'project_start_date', 'project_property')->cvterm_id();
     my $design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'design', 'project_property')->cvterm_id();

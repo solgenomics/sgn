@@ -30,6 +30,40 @@
             <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
             </center>
         </&>
+        <&| /util/workflow.mas:step, title=> "Imaging Band Select" &>
+            <& /page/page_title.mas, title=>"Select a drone run band" &>
+
+            <div class="well well-sm">
+                <p>Please select one drone run band to take through the process. The NIR band is currently implemented and provides best contrast.</p>
+            </div>
+
+            <div class="well well-sm">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <table class="table table-bordered table-hover" id="manage_drone_imagery_standard_process_interactive_drone_run_bands_table">
+                            <thead>
+                                <tr>
+                                    <th>Select</th>
+                                    <th>Drone Run Band Name</th>
+                                    <th>Drone Run Band Description</th>
+                                    <th>Drone Run Band Type</th>
+                                    <th>Drone Run Name</th>
+                                    <th>Drone Run Description</th>
+                                    <th>Drone Run Date</th>
+                                    <th>Field Trial Name</th>
+                                    <th>Field Trial Description</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <br/><br/>
+            <center>
+            <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+            </center>
+        </&>
         <&| /util/workflow.mas:step, title=> "Plot Polygons" &>
             <& /page/page_title.mas, title=>"Assign plot-polygons to raw images" &>
 
@@ -140,6 +174,7 @@ jQuery(document).ready(function(){
 
     var manage_drone_imagery_standard_process_raw_images_interactive_field_trial_id;
     var manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id;
+    var manage_drone_imagery_standard_process_interactive_drone_run_band_project_id;
     var manage_drone_imagery_standard_process_raw_images_interactive_rotate_angle = 0;
     var manage_drone_imagery_standard_process_raw_images_interactive_rotate_frame_angle = 0;
     var manage_drone_imagery_standard_process_raw_images_interactive_x_factor = 10000000;
@@ -469,6 +504,13 @@ jQuery(document).ready(function(){
 
         manage_drone_imagery_standard_process_raw_images_interactive_field_trial_id = jQuery(this).data('field_trial_id');
         manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id = jQuery(this).data('drone_run_project_id');
+
+        get_select_box('drone_imagery_parameter_select','plot_polygons_previously_saved_plot_polygon_templates_raw_images_interactive', {'empty':1, 'field_trial_id':manage_drone_imagery_standard_process_raw_images_interactive_field_trial_id, 'parameter':'plot_polygons', 'id':'manage_drone_imagery_standard_process_interactive_previous_templates', 'name':'manage_drone_imagery_standard_process_interactive_previous_templates' });
+
+        jQuery('#manage_drone_imagery_standard_process_interactive_drone_run_bands_table').DataTable({
+            destroy : true,
+            ajax : '/api/drone_imagery/drone_run_bands?select_checkbox_name=drone_run_standard_process_interactive_band_select&disable=1&select_all=1&drone_run_project_id='+manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id
+        });
 
         initializeImagesNorthOrSouth();
     });
@@ -1150,6 +1192,60 @@ jQuery(document).ready(function(){
         }
         return false;
     }
+
+    jQuery(document).on('click', 'button[name="drone_imagery_standard_process_interactive_plot_polygons_submit_bottom"]', function(){
+        var selected = [];
+        jQuery('input[name="drone_run_standard_process_interactive_band_select"]:checked').each(function() {
+            selected.push(jQuery(this).val());
+        });
+        manage_drone_imagery_standard_process_interactive_drone_run_band_project_id = selected[3];
+        console.log(manage_drone_imagery_standard_process_interactive_saved_gps_positions);
+        jQuery.ajax({
+            type: 'POST',
+            url: '/api/drone_imagery/save_plot_polygons_template',
+            dataType: "json",
+            data: {
+                'drone_run_band_project_id': manage_drone_imagery_standard_process_interactive_drone_run_band_project_id,
+                'stock_polygons': JSON.stringify(drone_imagery_interactive_plot_polygons)
+            },
+            success: function(response){
+                console.log(response);
+                if(response.error) {
+                    alert(response.error);
+                } else {
+                }
+            },
+            error: function(response){
+                //alert('Error saving standard process assigned plot polygons!')
+            }
+        });
+    });
+
+    jQuery('#plot_polygons_use_previously_saved_template_raw_images_interactive').click(function(){
+        var plot_polygons_use_previously_saved_template = jQuery('#manage_drone_imagery_standard_process_interactive_previous_templates').val();
+        if (plot_polygons_use_previously_saved_template == '') {
+            alert('Please select a previously saved template before trying to apply it. If there is not a template listed, then you can create one using the templating tool above.');
+            return;
+        }
+
+        jQuery.ajax({
+            url : '/api/drone_imagery/retrieve_parameter_template?plot_polygons_template_projectprop_id='+plot_polygons_use_previously_saved_template,
+            success: function(response){
+                console.log(response);
+
+                drone_imagery_interactive_plot_polygons_display = response.parameter;
+                drone_imagery_interactive_plot_polygons = response.parameter;
+
+                droneImageryDrawLayoutTableInteractive(drone_imagery_interactive_field_trial_layout_response, drone_imagery_interactive_plot_polygons, 'drone_imagery_interactive_trial_layout_div', 'drone_imagery_interactive_trial_layout_table');
+                droneImageryDrawRectangleTableInteractive('drone_imagery_interactive_generated_polygons_div', 'drone_imagery_standard_process_interactive_generated_polygons_table', 'drone_imagery_standard_process_interactive_plot_polygons_generated_assign', 'drone_imagery_standard_process_interactive_plot_polygons_submit_bottom');
+                draw_canvas_image_interactive(0);
+            },
+            error: function(response){
+                alert('Error retrieving plot polygons template!');
+            }
+        });
+        return;
+    });
 
     function showManageDroneImagerySection(section_div_id) {
         console.log(section_div_id);
