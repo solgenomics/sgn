@@ -989,6 +989,35 @@ sub drone_imagery_get_gps_GET : Args(0) {
     my @longitudes_sorted = sort {$b <=> $a} keys %longitudes;
     my @longitudes_rounded_sorted = sort {$b <=> $a} keys %longitudes_rounded;
 
+    my $min_x_val = 100000000;
+    my $min_y_val = 100000000;
+    my $max_x_val = 0;
+    my $max_y_val = 0;
+    my $x_range = 0;
+    my $y_range = 0;
+    if ($saved_gps_positions) {
+        while (my ($l, $lo) = each %$saved_gps_positions) {
+            foreach my $v (values %$lo) {
+                my $x_val = $v->{x_pos};
+                my $y_val = $v->{y_pos};
+                if ($x_val < $min_x_val) {
+                    $min_x_val = $x_val;
+                }
+                if ($y_val < $min_y_val) {
+                    $min_y_val = $y_val;
+                }
+                if ($x_val > $max_x_val) {
+                    $max_x_val = $x_val;
+                }
+                if ($y_val > $max_y_val) {
+                    $max_y_val = $y_val;
+                }
+            }
+        }
+        $x_range = $max_x_val - $min_x_val;
+        $y_range = $max_y_val - $min_y_val;
+    }
+
     $c->stash->{rest} = {
         success => 1,
         longitudes => \@longitudes_sorted,
@@ -1003,7 +1032,9 @@ sub drone_imagery_get_gps_GET : Args(0) {
         min_latitude => $min_latitude,
         min_longitude => $min_longitude,
         max_latitude => $max_latitude,
-        max_longitude => $max_longitude
+        max_longitude => $max_longitude,
+        x_range => $x_range,
+        y_range => $y_range
     };
 }
 
@@ -1092,6 +1123,29 @@ sub drone_imagery_match_and_align_two_images_POST : Args(0) {
         match_points_dst => \@match_points_dst,
         image_id_src => $image_id1,
         image_id_dst => $image_id2,
+    };
+}
+
+sub drone_imagery_delete_gps_images : Path('/api/drone_imagery/delete_gps_images') : ActionClass('REST') { }
+sub drone_imagery_delete_gps_images_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    print STDERR Dumper $c->req->params();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $drone_run_project_id = $c->req->param("drone_run_project_id");
+    my $saved_gps_positions_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_gps_pixel_positions', 'project_property')->cvterm_id();
+    my $saved_gps_positions_json = $schema->resultset("Project::Projectprop")->find({
+        project_id => $drone_run_project_id,
+        type_id => $saved_gps_positions_type_id
+    });
+    if ($saved_gps_positions_json) {
+        $saved_gps_positions_json->delete();
+    }
+
+    $c->stash->{rest} = {
+        success => 1
     };
 }
 
