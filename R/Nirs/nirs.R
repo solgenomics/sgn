@@ -51,14 +51,18 @@ if(cv.scheme == "random"){
 if(is.null(cv.scheme)){
   # args[8] = training data.frame: observationUnit level data with phenotypes and spectra in JSON format
   # TODO do we need to read in a separate pheno file or will it be included in the json with spectra?
-  df.ready <- jsonlite::fromJSON(txt = args[8]) %>% rename(reference = pheno, uniqueid = observationunitid) %>%
-    %>% rename_at(vars(starts_with("nirs_spectra")), funs(str_replace(., "nirs_spectra.", "X")))
+  df.ready <- jsonlite::fromJSON(txt = args[8], flatten = T) %>% 
+  rename(uniqueid = observationUnitId) %>% 
+  rename_at(vars(starts_with("trait.")), ~paste0("reference")) %>% 
+  rename_at(vars(starts_with("nirs_spectra")), ~str_replace(., "nirs_spectra.", "X"))
   
 
   # args[9] = test data.frame: observationUnit level data with phenotypes and spectra in JSON format
   if(args[9] != "NULL"){
-    test.ready <- jsonlite::fromJSON(args[9]) %>% rename(reference = pheno, uniqueid = observationunitid) %>%
-    %>% rename_at(vars(starts_with("nirs_spectra")), funs(str_replace(., "nirs_spectra.", "X")))
+    test.ready <- jsonlite::fromJSON(txt = args[9], flatten = T) %>% 
+    rename(uniqueid = observationUnitId) %>% 
+    rename_at(vars(starts_with("trait.")), ~paste0("reference")) %>% 
+    rename_at(vars(starts_with("nirs_spectra")), ~str_replace(., "nirs_spectra.", "X"))
   } else{
     test.input <- NULL
   }
