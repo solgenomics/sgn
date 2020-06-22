@@ -126,7 +126,7 @@
                                                     </select>
                                                     </select>
                                                     <div class="input-group-btn">
-                                                        <button class="btn btn-info" id="search_pedigree_male_first"><i class="glyphicon glyphicon-search"></i> Progenies of these Parents </button>
+                                                        <button class="btn btn-info" id="search_using_male_first"><i class="glyphicon glyphicon-search"></i> Progenies of these Parents </button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -249,7 +249,7 @@ jQuery(document).ready(function (){
 
         jQuery.ajax({
             url:'/ajax/search/pedigree_male_parents',
-            data:{'pedigree_female_parent':$('#pedigree_female_parent').val()},
+            data:{'pedigree_female_parent':jQuery('#pedigree_female_parent').val()},
             success: function(response){
                 console.log(response);
                 var html = '<select id = "pedigree_male_parent" >';
@@ -272,6 +272,33 @@ jQuery(document).ready(function (){
     });
 
 
+    jQuery("#search_pedigree_female_parents").click(function(){
+
+        jQuery.ajax({
+            url:'/ajax/search/pedigree_female_parents',
+            data:{'pedigree_male_parent':jQuery('#male_parent').val()},
+            success: function(response){
+                console.log(response);
+                var html = '<select id = "female_parent" >';
+                for (var i=0; i<response.data.length; i++) {
+                    html = html + "<option value='"+response.data[i][0]+ "'>" + response.data[i][0] + "</option>";
+                }
+                html = html + "</select>";
+                console.log(html);
+                if(i ==''){
+                    alert("No female parent");
+                    return;
+                }
+
+                jQuery('#female_parent').html(html);
+            },
+            error:function(response){
+                alert("An error occurred");
+            }
+        });
+    });
+
+
     jQuery('#search_pedigree').click(function(){
 
         var table = jQuery('#pedigree_search_results').DataTable({
@@ -280,13 +307,44 @@ jQuery(document).ready(function (){
             'ordering': false,
             'destroy': true,
             'ajax': {'url':'/ajax/search/progenies',
-                data:{'pedigree_female_parent':$('#pedigree_female_parent').val(),
-                    'pedigree_male_parent':$('#pedigree_male_parent').val(),
+                data:{'pedigree_female_parent':jQuery('#pedigree_female_parent').val(),
+                    'pedigree_male_parent':jQuery('#pedigree_male_parent').val(),
                     }
             }
         });
 
         jQuery('#pedigree_search_results').on( 'draw.dt', function (){
+            var name_links = table.column(2).data();
+            var names = [];
+            //console.log("name links are: "+JSON.stringify(name_links));
+            for (var i = 0; i < name_links.length; i++) {
+                names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
+            }
+
+            jQuery('#progeny_names').html(names);
+
+            addToListMenu('progenies_to_list_menu', 'progeny_names',{
+                listType:'accessions'
+            });
+        });
+    });
+
+
+    jQuery('#search_using_male_first').click(function(){
+
+        var table = jQuery('#male_parent_pedigree_search_results').DataTable({
+            'searching': true,
+            'paging': true,
+            'ordering': false,
+            'destroy': true,
+            'ajax': {'url':'/ajax/search/progenies',
+                data:{'pedigree_female_parent':jQuery('#female_parent').val(),
+                    'pedigree_male_parent':jQuery('#male_parent').val(),
+                    }
+            }
+        });
+
+        jQuery('#male_parent_pedigree_search_results').on( 'draw.dt', function (){
             var name_links = table.column(2).data();
             var names = [];
             //console.log("name links are: "+JSON.stringify(name_links));
@@ -311,7 +369,7 @@ jQuery(document).ready(function (){
             'ordering': false,
             'destroy': true,
             'ajax': {'url':'/ajax/search/all_progenies',
-                data:{'pedigree_female_parent':$('#pedigree_female_parent').val()},
+                data:{'pedigree_female_parent':jQuery('#pedigree_female_parent').val()},
             }
         });
 
@@ -339,7 +397,7 @@ jQuery(document).ready(function (){
             'ordering': false,
             'destroy': true,
             'ajax': {'url':'/ajax/search/all_progenies',
-                data:{'pedigree_male_parent':$('#male_parent').val()},
+                data:{'pedigree_male_parent':jQuery('#male_parent').val()},
             }
         });
         jQuery('#male_parent_pedigree_search_results').on( 'draw.dt', function (){
@@ -358,8 +416,6 @@ jQuery(document).ready(function (){
     });
 
 
-
-
     jQuery("#female_parent").autocomplete({
         source:'/ajax/stock/cross_female_parent_autocomplete',
     });
@@ -368,7 +424,7 @@ jQuery(document).ready(function (){
 
         jQuery.ajax({
             url:'/ajax/search/cross_male_parents',
-            data:{'female_parent':$('#female_parent').val()},
+            data:{'female_parent':jQuery('#female_parent').val()},
             success: function(response){
                 console.log(response);
                 var html = '<select id = "cross_male_parent" >';
@@ -400,8 +456,8 @@ jQuery(document).ready(function (){
             'ordering': false,
             'destroy'    : true,
             'ajax':{'url':'/ajax/search/cross_details',
-                data:{'female_parent':$('#female_parent').val(),
-                    'male_parent':$('#cross_male_parent').val()},
+                data:{'female_parent':jQuery('#female_parent').val(),
+                    'male_parent':jQuery('#cross_male_parent').val()},
             }
         });
 
@@ -430,7 +486,7 @@ jQuery(document).ready(function (){
             'ordering': false,
             'destroy': true,
             'ajax':{'url':'/ajax/search/all_crosses',
-                data:{'female_parent':$('#female_parent').val()},
+                data:{'female_parent':jQuery('#female_parent').val()},
             }
         });
 
