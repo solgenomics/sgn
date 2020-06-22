@@ -2446,7 +2446,7 @@ jQuery(document).ready(function() {
 
     jQuery('#drone_imagery_standard_process_complete_dialog').on('hidden.bs.modal', function () {
         location.reload();
-    })
+    });
 
     //
     // Standard process on raw images
