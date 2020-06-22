@@ -171,7 +171,7 @@ sub get_cross_details {
         $where_male = " AND male_parent.uniquename = ?";
     }
 
-   my $q = "SELECT female_parent.stock_id, male_parent.stock_id, cross_entry.stock_id, female_parent.uniquename, male_parent.uniquename, cross_entry.uniquename, stock_relationship1.value, family.stock_id, family.uniquename, project.project_id, project.name
+    my $q = "SELECT female_parent.stock_id, male_parent.stock_id, cross_entry.stock_id, female_parent.uniquename, male_parent.uniquename, cross_entry.uniquename, stock_relationship1.value, family.stock_id, family.uniquename, project.project_id, project.name
         FROM stock as female_parent INNER JOIN stock_relationship AS stock_relationship1 ON (female_parent.stock_id = stock_relationship1.subject_id) AND stock_relationship1.type_id = ?
         INNER JOIN stock AS cross_entry ON (cross_entry.stock_id = stock_relationship1.object_id) AND cross_entry.type_id= ?
         LEFT JOIN stock_relationship AS stock_relationship2 ON (cross_entry.stock_id = stock_relationship2.object_id) AND stock_relationship2.type_id = ?
@@ -298,16 +298,6 @@ sub get_progeny_info {
     elsif ($male_parent) {
         $where_clause = "WHERE male_parent.uniquename = ? ORDER BY female_parent.uniquename";
     }
-
-#    my $where_female = "";
-#    if ($female_parent){
-#        $where_female = " WHERE female_parent.uniquename = ?";
-#    };
-
-#    my $where_male ="";
-#    if ($male_parent){
-#        $where_male = " AND male_parent.uniquename = ?";
-#    }
 
     my $q = "SELECT DISTINCT female_parent.stock_id, female_parent.uniquename, male_parent.stock_id, male_parent.uniquename, progeny.stock_id, progeny.uniquename, stock_relationship1.value
         FROM stock_relationship as stock_relationship1
@@ -916,6 +906,86 @@ sub get_cross_tissue_culture_samples {
 
     return $samples_hash_ref;
 }
+
+
+=head2 get_pedigree_male_parents
+
+    Class method.
+    Returns all male parents which were crossed with a spefified female parent.
+    Example: my @male_parents = CXGN::Cross->get_pedigree_male_parents($schema, $pedigree_female_parent)
+
+=cut
+
+sub get_pedigree_male_parents {
+    my $class = shift;
+    my $schema = shift;
+    my $pedigree_female_parent = shift;
+
+    my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
+    my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+
+    my $dbh = $schema->storage->dbh();
+
+    my $q = "SELECT DISTINCT male_parent.stock_id, male_parent.uniquename FROM stock as female_parent
+    INNER JOIN stock_relationship AS stock_relationship1 ON (female_parent.stock_id=stock_relationship1.subject_id) AND stock_relationship1.type_id= ?
+    INNER JOIN stock AS check_type ON (stock_relationship1.object_id=check_type.stock_id) AND check_type.type_id = ?
+    INNER JOIN stock_relationship AS stock_relationship2 ON (stock_relationship1.object_id=stock_relationship2.object_id) AND stock_relationship2.type_id = ?
+    INNER JOIN stock AS male_parent ON (male_parent.stock_id=stock_relationship2.subject_id)
+    WHERE female_parent.uniquename= ? ORDER BY male_parent.uniquename ASC";
+
+    my $h = $dbh->prepare($q);
+    $h->execute($female_parent_type_id, $accession_type_id, $male_parent_type_id, $pedigree_female_parent);
+
+    my @male_parents=();
+    while(my ($male_parent_id, $male_parent_name) = $h->fetchrow_array()){
+      push @male_parents, [$male_parent_name];
+    }
+
+    return \@male_parents;
+
+}
+
+
+=head2 get_pedigree_female_parents
+
+    Class method.
+    Returns all female parents which were crossed with a spefified male parent.
+    Example: my @female_parents = CXGN::Cross->get_pedigree_female_parents($schema, $pedigree_male_parent)
+
+=cut
+
+sub get_pedigree_female_parents {
+    my $class = shift;
+    my $schema = shift;
+    my $pedigree_male_parent = shift;
+
+    my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
+    my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+
+    my $dbh = $schema->storage->dbh();
+
+    my $q = "SELECT DISTINCT female_parent.stock_id, female_parent.uniquename FROM stock as male_parent
+    INNER JOIN stock_relationship AS stock_relationship1 ON (male_parent.stock_id=stock_relationship1.subject_id) AND stock_relationship1.type_id= ?
+    INNER JOIN stock AS check_type ON (stock_relationship1.object_id=check_type.stock_id) AND check_type.type_id = ?
+    INNER JOIN stock_relationship AS stock_relationship2 ON (stock_relationship1.object_id=stock_relationship2.object_id) AND stock_relationship2.type_id = ?
+    INNER JOIN stock AS female_parent ON (female_parent.stock_id=stock_relationship2.subject_id)
+    WHERE male_parent.uniquename= ? ORDER BY female_parent.uniquename ASC";
+
+
+    my $h = $dbh->prepare($q);
+    $h->execute($male_parent_type_id, $accession_type_id, $female_parent_type_id, $pedigree_male_parent);
+
+    my @female_parents=();
+    while(my ($female_parent_id, $female_parent_name) = $h->fetchrow_array()){
+      push @female_parents, [$female_parent_name];
+    }
+
+    return \@female_parents;
+
+}
+
 
 
 1;

@@ -104,32 +104,11 @@ sub search_pedigree_male_parents :Path('/ajax/search/pedigree_male_parents') :Ar
     my $self = shift;
     my $c = shift;
     my $pedigree_female_parent= $c->req->param("pedigree_female_parent");
-
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $male_parent_typeid = $c->model("Cvterm")->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
-    my $female_parent_typeid = $c->model("Cvterm")->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
-    my $accession_typeid = $c->model("Cvterm")->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 
-    my $dbh = $schema->storage->dbh();
+    my $pedigree_male_parents = CXGN::Cross->get_pedigree_male_parents($schema, $pedigree_female_parent);
 
-    my $q = "SELECT DISTINCT female_parent.stock_id, male_parent.stock_id, male_parent.uniquename FROM stock as female_parent
-    INNER JOIN stock_relationship AS stock_relationship1 ON (female_parent.stock_id=stock_relationship1.subject_id) AND stock_relationship1.type_id= ?
-    INNER JOIN stock AS check_type ON (stock_relationship1.object_id=check_type.stock_id) AND check_type.type_id = ?
-    INNER JOIN stock_relationship AS stock_relationship2 ON (stock_relationship1.object_id=stock_relationship2.object_id) AND stock_relationship2.type_id = ?
-    INNER JOIN stock AS male_parent ON (male_parent.stock_id=stock_relationship2.subject_id)
-    WHERE female_parent.uniquename= ? ORDER BY male_parent.uniquename ASC";
-
-
-    my $h = $dbh->prepare($q);
-    $h->execute($female_parent_typeid, $accession_typeid, $male_parent_typeid, $pedigree_female_parent);
-
-    my @male_parents=();
-    while(my ($female_parent_id, $male_parent_id, $male_parent_name) = $h->fetchrow_array()){
-
-      push @male_parents, [$male_parent_name];
-    }
-
-    $c->stash->{rest} = {data=>\@male_parents};
+    $c->stash->{rest}={ data=> $pedigree_male_parents};
 
 }
 
@@ -138,33 +117,11 @@ sub search_pedigree_female_parents :Path('/ajax/search/pedigree_female_parents')
     my $self = shift;
     my $c = shift;
     my $pedigree_male_parent= $c->req->param("pedigree_male_parent");
-
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $male_parent_typeid = $c->model("Cvterm")->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
-    my $female_parent_typeid = $c->model("Cvterm")->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
-    my $accession_typeid = $c->model("Cvterm")->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 
-    my $dbh = $schema->storage->dbh();
+    my $pedigree_female_parents = CXGN::Cross->get_pedigree_female_parents($schema, $pedigree_male_parent);
 
-    my $q = "SELECT DISTINCT female_parent.stock_id, female_parent.uniquename FROM stock as male_parent
-    INNER JOIN stock_relationship AS stock_relationship1 ON (male_parent.stock_id=stock_relationship1.subject_id) AND stock_relationship1.type_id= ?
-    INNER JOIN stock AS check_type ON (stock_relationship1.object_id=check_type.stock_id) AND check_type.type_id = ?
-    INNER JOIN stock_relationship AS stock_relationship2 ON (stock_relationship1.object_id=stock_relationship2.object_id) AND stock_relationship2.type_id = ?
-    INNER JOIN stock AS female_parent ON (female_parent.stock_id=stock_relationship2.subject_id)
-    WHERE male_parent.uniquename= ? ORDER BY female_parent.uniquename ASC";
-
-
-    my $h = $dbh->prepare($q);
-    $h->execute($male_parent_typeid, $accession_typeid, $female_parent_typeid, $pedigree_male_parent);
-
-    my @female_parents=();
-    while(my ($female_parent_id, $female_parent_name) = $h->fetchrow_array()){
-
-      push @female_parents, [$female_parent_name];
-
-    }
-
-    $c->stash->{rest} = {data=>\@female_parents};
+    $c->stash->{rest} = {data=> $pedigree_female_parents};
 
 }
 
