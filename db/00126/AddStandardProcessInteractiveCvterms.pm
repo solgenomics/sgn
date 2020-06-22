@@ -65,6 +65,9 @@ sub patch {
             'standard_process_interactive_match_temporary_drone_imagery',
             'standard_process_interactive_align_temporary_drone_imagery'
         ],
+        'project_property' => [
+            'drone_run_raw_images_saved_gps_pixel_positions'
+        ]
     };
 
     foreach my $t (keys %$terms){

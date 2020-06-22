@@ -898,8 +898,18 @@ sub drone_imagery_get_gps_GET : Args(0) {
     if ($saved_micasense_stacks_json) {
         $saved_micasense_stacks = decode_json $saved_micasense_stacks_json->value();
     }
-    print STDERR Dumper $saved_micasense_stacks;
+    # print STDERR Dumper $saved_micasense_stacks;
     my @saved_micasense_stacks_values = values %$saved_micasense_stacks;
+
+    my $saved_gps_positions_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_gps_pixel_positions', 'project_property')->cvterm_id();
+    my $saved_gps_positions_json = $schema->resultset("Project::Projectprop")->find({
+        project_id => $drone_run_project_id,
+        type_id => $saved_gps_positions_type_id
+    });
+    my $saved_gps_positions;
+    if ($saved_gps_positions_json) {
+        $saved_gps_positions = decode_json $saved_gps_positions_json->value();
+    }
 
     my $first_image = SGN::Image->new( $schema->storage->dbh, $saved_micasense_stacks_values[0]->[3]->{image_id}, $c );
     my $first_image_url = $first_image->get_image_url('original_converted');
@@ -914,8 +924,11 @@ sub drone_imagery_get_gps_GET : Args(0) {
     my $proportion = $size[0]/$full_size[0];
 
     my %gps_images;
+    my %gps_images_rounded;
     my %longitudes;
+    my %longitudes_rounded;
     my %latitudes;
+    my %latitudes_rounded;
     my $max_longitude = -1000000;
     my $min_longitude = 1000000;
     my $max_latitude = -1000000;
@@ -939,11 +952,13 @@ sub drone_imagery_get_gps_GET : Args(0) {
             $min_longitude = $longitude_raw;
         }
 
-        # my $latitude = nearest(0.00001,$latitude_raw);
-        # my $longitude = nearest(0.00001,$longitude_raw);
+        my $latitude_rounded = nearest(0.00001,$latitude_raw);
+        my $longitude_rounded = nearest(0.00001,$longitude_raw);
 
         $longitudes{$longitude_raw}++;
+        $longitudes_rounded{$longitude_rounded}++;
         $latitudes{$latitude_raw}++;
+        $latitudes_rounded{$latitude_rounded}++;
         my @stack_image_ids;
         foreach (@$image_ids_array) {
             push @stack_image_ids, $_->{image_id};
@@ -960,18 +975,29 @@ sub drone_imagery_get_gps_GET : Args(0) {
             image_ids => \@stack_image_ids,
             image_url => $image_url
         };
+        $gps_images_rounded{$latitude_rounded}->{$longitude_rounded} = {
+            nir_image_id => $nir_image_id,
+            image_ids => \@stack_image_ids,
+            image_url => $image_url
+        };
     }
     # print STDERR Dumper \%longitudes;
     # print STDERR Dumper \%latitudes;
 
     my @latitudes_sorted = sort {$b <=> $a} keys %latitudes;
+    my @latitudes_rounded_sorted = sort {$b <=> $a} keys %latitudes_rounded;
     my @longitudes_sorted = sort {$b <=> $a} keys %longitudes;
+    my @longitudes_rounded_sorted = sort {$b <=> $a} keys %longitudes_rounded;
 
     $c->stash->{rest} = {
         success => 1,
         longitudes => \@longitudes_sorted,
+        longitudes_rounded => \@longitudes_rounded_sorted,
         latitudes => \@latitudes_sorted,
+        latitudes_rounded => \@latitudes_rounded_sorted,
         gps_images => \%gps_images,
+        saved_gps_positions => $saved_gps_positions,
+        gps_images_rounded => \%gps_images_rounded,
         image_width => $width,
         image_length => $length,
         min_latitude => $min_latitude,
@@ -982,7 +1008,7 @@ sub drone_imagery_get_gps_GET : Args(0) {
 }
 
 sub drone_imagery_match_and_align_two_images : Path('/api/drone_imagery/match_and_align_two_images') : ActionClass('REST') { }
-sub drone_imagery_match_and_align_two_images_GET : Args(0) {
+sub drone_imagery_match_and_align_two_images_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     print STDERR Dumper $c->req->params();
@@ -992,7 +1018,7 @@ sub drone_imagery_match_and_align_two_images_GET : Args(0) {
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
+    my $drone_run_project_id = $c->req->param('drone_run_project_id');
     my $image_id1 = $c->req->param('image_id1');
     my $image_id2 = $c->req->param('image_id2');
 
@@ -1006,33 +1032,101 @@ sub drone_imagery_match_and_align_two_images_GET : Args(0) {
     my $dir = $c->tempfiles_subdir('/drone_imagery_align');
     my $match_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_align/imageXXXX').'.png';
     my $align_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_align/imageXXXX').'.png';
+    my $align_match_temp_results = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_align/imageXXXX');
+    my $align_match_temp_results_2 = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_align/imageXXXX');
 
-    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/MatchAndAlignImages.py --image_path1 \''.$image1_fullpath.'\' --image_path2 \''.$image2_fullpath.'\' --outfile_match_path \''.$match_temp_image.'\' --outfile_path \''.$align_temp_image.'\' ';
+    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/MatchAndAlignImages.py --image_path1 \''.$image1_fullpath.'\' --image_path2 \''.$image2_fullpath.'\' --outfile_match_path \''.$match_temp_image.'\' --outfile_path \''.$align_temp_image.'\' --results_outfile_path_src \''.$align_match_temp_results.'\' --results_outfile_path_dst \''.$align_match_temp_results_2.'\' ';
     print STDERR Dumper $cmd;
     my $status = system($cmd);
+
+    my @match_points_src;
+    my $csv = Text::CSV->new({ sep_char => ',' });
+    open(my $fh, '<', $align_match_temp_results)
+        or die "Could not open file '$align_match_temp_results' $!";
+
+        while ( my $row = <$fh> ){
+            my @columns;
+            if ($csv->parse($row)) {
+                @columns = $csv->fields();
+            }
+            push @match_points_src, \@columns;
+        }
+    close($fh);
+
+    my @match_points_dst;
+    open(my $fh2, '<', $align_match_temp_results_2)
+        or die "Could not open file '$align_match_temp_results_2' $!";
+
+        while ( my $row = <$fh2> ){
+            my @columns;
+            if ($csv->parse($row)) {
+                @columns = $csv->fields();
+            }
+            push @match_points_dst, \@columns;
+        }
+    close($fh2);
 
     my $match_linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'standard_process_interactive_match_temporary_drone_imagery', 'project_md_image')->cvterm_id();
     my $align_linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'standard_process_interactive_align_temporary_drone_imagery', 'project_md_image')->cvterm_id();
 
-
     my $match_image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     $match_image->set_sp_person_id($user_id);
-    my $ret = $match_image->process_image($match_temp_image, 'project', $drone_run_band_project_id, $match_linking_table_type_id);
+    my $ret = $match_image->process_image($match_temp_image, 'project', $drone_run_project_id, $match_linking_table_type_id);
     my $match_image_fullpath = $match_image->get_filename('original_converted', 'full');
     my $match_image_url = $match_image->get_image_url('original');
     my $match_image_id = $match_image->get_image_id();
 
-    my $align_image = SGN::Image->new( $schema->storage->dbh, undef, $c );
-    $align_image->set_sp_person_id($user_id);
-    my $ret_align = $align_image->process_image($align_temp_image, 'project', $drone_run_band_project_id, $align_linking_table_type_id);
-    my $align_image_fullpath = $align_image->get_filename('original_converted', 'full');
-    my $align_image_url = $align_image->get_image_url('original');
-    my $align_image_id = $align_image->get_image_id();
+    # my $align_image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+    # $align_image->set_sp_person_id($user_id);
+    # my $ret_align = $align_image->process_image($align_temp_image, 'project', $drone_run_project_id, $align_linking_table_type_id);
+    # my $align_image_fullpath = $align_image->get_filename('original_converted', 'full');
+    # my $align_image_url = $align_image->get_image_url('original');
+    # my $align_image_id = $align_image->get_image_id();
 
     $c->stash->{rest} = {
         success => 1,
         match_image_url => $match_image_url,
-        align_image_url => $align_image_url
+        # align_image_url => $align_image_url,
+        # align_image_id => $align_image_id,
+        match_points_src => \@match_points_src,
+        match_points_dst => \@match_points_dst,
+        image_id_src => $image_id1,
+        image_id_dst => $image_id2,
+    };
+}
+
+sub drone_imagery_save_gps_images : Path('/api/drone_imagery/save_gps_images') : ActionClass('REST') { }
+sub drone_imagery_save_gps_images_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    print STDERR Dumper $c->req->params();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $drone_run_project_id = $c->req->param('drone_run_project_id');
+    my $gps_images = decode_json $c->req->param('gps_images');
+    my $gps_images_json = encode_json $gps_images;
+
+    my $saved_gps_positions_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_gps_pixel_positions', 'project_property')->cvterm_id();
+    my $saved_gps_positions_json = $schema->resultset("Project::Projectprop")->find({
+        project_id => $drone_run_project_id,
+        type_id => $saved_gps_positions_type_id
+    });
+    if ($saved_gps_positions_json) {
+        my $saved_gps_positions_json_projectprop_id = $saved_gps_positions_json->projectprop_id();
+        print STDERR Dumper $saved_gps_positions_json_projectprop_id;
+        my $q = "UPDATE projectprop SET value = ? WHERE projectprop_id = ?;";
+        my $h = $schema->storage->dbh->prepare($q);
+        $h->execute($gps_images_json, $saved_gps_positions_json_projectprop_id);
+    } else {
+        my $saved_gps_positions_json = $schema->resultset("Project::Projectprop")->create({
+            project_id => $drone_run_project_id,
+            type_id => $saved_gps_positions_type_id,
+            value => $gps_images_json
+        });
+    }
+
+    $c->stash->{rest} = {
+        success => 1
     };
 }
 
