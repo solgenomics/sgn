@@ -1751,11 +1751,27 @@ sub lists : Chained('brapi') PathPart('lists') Args(0) : ActionClass('REST') { }
 sub lists_GET {
 	my $self = shift;
 	my $c = shift;
-	my ($auth) = _authenticate_user($c);
+	my ($auth,$user_id) = _authenticate_user($c,1);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Lists');
-	my $brapi_package_result = $brapi_module->search($clean_inputs);
+	my $brapi_package_result = $brapi_module->search($clean_inputs,$user_id);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub lists_POST {
+	my $self = shift;
+	my $c = shift;
+	my ($auth,$user_id) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $data = $clean_inputs;
+	my @all_lists;
+	foreach my $list (values %{$data}) {
+		push @all_lists, $list;
+	}
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Lists');
+	my $brapi_package_result = $brapi_module->store(\@all_lists,$user_id);
 	_standard_response_construction($c, $brapi_package_result);
 }
 
@@ -1772,11 +1788,37 @@ sub list_detail  : Chained('list_single') PathPart('') Args(0) : ActionClass('RE
 sub list_detail_GET {
 	my $self = shift;
 	my $c = shift;
-	my ($auth) = _authenticate_user($c);
+	my ($auth,$user_id) = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Lists');
-	my $brapi_package_result = $brapi_module->detail($c->stash->{list_id});
+	my $brapi_package_result = $brapi_module->detail($c->stash->{list_id},$user_id);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub list_detail_PUT {
+	my $self = shift;
+	my $c = shift;
+	my ($auth,$user_id) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $data = $clean_inputs;
+	$data->{listDbId} = $c->stash->{list_id};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Lists');
+	my $brapi_package_result = $brapi_module->update($data,$user_id);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub list_items  : Chained('list_single') PathPart('items') Args(0) : ActionClass('REST') { }
+
+sub list_items_PUT {
+	my $self = shift;
+	my $c = shift;
+	my ($auth,$user_id) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Lists');
+	my $brapi_package_result = $brapi_module->store_items($c->stash->{list_id},$clean_inputs,$user_id);
 	_standard_response_construction($c, $brapi_package_result);
 }
 
@@ -1890,7 +1932,17 @@ sub programs_list : Chained('brapi') PathPart('programs') Args(0) : ActionClass(
 sub programs_list_POST {
 	my $self = shift;
 	my $c = shift;
-	#my $auth = _authenticate_user($c);
+	my ($auth,$user_id) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $data = $clean_inputs;
+	my @all_programs;
+	foreach my $program (values %{$data}) {
+		push @all_programs, $program;
+	}
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Programs');
+	my $brapi_package_result = $brapi_module->store(\@all_programs,$user_id);
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 sub programs_list_GET {
@@ -1933,6 +1985,19 @@ sub programs_detail_GET {
 		$c->stash->{program_id},
 		$c->config->{supportedCrop}
 	);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub programs_detail_PUT {
+	my $self = shift;
+	my $c = shift;
+	my ($auth,$user_id) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $data = $clean_inputs;
+	$data->{programDbId} = $c->stash->{program_id};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Programs');
+	my $brapi_package_result = $brapi_module->update($data,$user_id);
 	_standard_response_construction($c, $brapi_package_result);
 }
 
@@ -2906,7 +2971,17 @@ sub locations_list : Chained('brapi') PathPart('locations') Args(0) : ActionClas
 sub locations_list_POST {
 	my $self = shift;
 	my $c = shift;
-	#my $auth = _authenticate_user($c);
+	my ($auth,$user_id) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $data = $clean_inputs;
+	my @all_locations;
+	foreach my $location (values %{$data}) {
+		push @all_locations, $location;
+	}
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Locations');
+	my $brapi_package_result = $brapi_module->store(\@all_locations,$user_id);
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 sub locations_list_GET {
@@ -2931,6 +3006,22 @@ sub locations_detail_GET {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Locations');
 	my $brapi_package_result = $brapi_module->detail($location_id);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub locations_detail_PUT {
+	my $self = shift;
+	my $c = shift;
+	my $location_id = shift;
+	my ($auth,$user_id) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $data = $clean_inputs;
+	my @all_locations;
+	$data->{locationDbId} = $location_id;
+	push @all_locations, $data;
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Locations');
+	my $brapi_package_result = $brapi_module->store(\@all_locations,$user_id);
 	_standard_response_construction($c, $brapi_package_result);
 }
 
