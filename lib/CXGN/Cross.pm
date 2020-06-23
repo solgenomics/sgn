@@ -161,27 +161,28 @@ sub get_cross_details {
     my $member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "member_of", "stock_relationship")->cvterm_id();
     my $cross_experiment_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_experiment', 'experiment_type')->cvterm_id();
 
-    my $where_female = "";
-    if ($female_parent){
-        $where_female = " WHERE female_parent.uniquename = ?";
-    };
-
-    my $where_male ="";
-    if ($male_parent){
-        $where_male = " AND male_parent.uniquename = ?";
+    my $where_clause = "";
+    if ($female_parent && $male_parent) {
+        $where_clause = "WHERE female_parent.uniquename = ? AND male_parent.uniquename = ? ORDER BY stock_relationship1.value";
+    }
+    elsif ($female_parent) {
+        $where_clause = "WHERE female_parent.uniquename = ? ORDER BY male_parent.uniquename, stock_relationship1.value";
+    }
+    elsif ($male_parent) {
+        $where_clause = "WHERE male_parent.uniquename = ? ORDER BY female_parent.uniquename, stock_relationship1.value";
     }
 
     my $q = "SELECT female_parent.stock_id, male_parent.stock_id, cross_entry.stock_id, female_parent.uniquename, male_parent.uniquename, cross_entry.uniquename, stock_relationship1.value, family.stock_id, family.uniquename, project.project_id, project.name
-        FROM stock as female_parent INNER JOIN stock_relationship AS stock_relationship1 ON (female_parent.stock_id = stock_relationship1.subject_id) AND stock_relationship1.type_id = ?
-        INNER JOIN stock AS cross_entry ON (cross_entry.stock_id = stock_relationship1.object_id) AND cross_entry.type_id= ?
-        LEFT JOIN stock_relationship AS stock_relationship2 ON (cross_entry.stock_id = stock_relationship2.object_id) AND stock_relationship2.type_id = ?
-        LEFT JOIN stock AS male_parent ON (male_parent.stock_id = stock_relationship2.subject_id)
-        LEFT JOIN stock_relationship AS stock_relationship3 ON (stock_relationship3.subject_id = cross_entry.stock_id) AND stock_relationship3.type_id = ?
-        LEFT JOIN stock AS family ON (stock_relationship3.object_id = family.stock_id) AND family.type_id = ?
-        LEFT JOIN nd_experiment_stock ON (nd_experiment_stock.stock_id = cross_entry.stock_id)
-        LEFT JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id) AND nd_experiment_stock.type_id = ?
-        LEFT JOIN project ON (nd_experiment_project.project_id = project.project_id)
-        $where_female $where_male ORDER BY stock_relationship1.value, male_parent.uniquename";
+    FROM stock as female_parent INNER JOIN stock_relationship AS stock_relationship1 ON (female_parent.stock_id = stock_relationship1.subject_id) AND stock_relationship1.type_id = ?
+    INNER JOIN stock AS cross_entry ON (cross_entry.stock_id = stock_relationship1.object_id) AND cross_entry.type_id= ?
+    LEFT JOIN stock_relationship AS stock_relationship2 ON (cross_entry.stock_id = stock_relationship2.object_id) AND stock_relationship2.type_id = ?
+    LEFT JOIN stock AS male_parent ON (male_parent.stock_id = stock_relationship2.subject_id)
+    LEFT JOIN stock_relationship AS stock_relationship3 ON (stock_relationship3.subject_id = cross_entry.stock_id) AND stock_relationship3.type_id = ?
+    LEFT JOIN stock AS family ON (stock_relationship3.object_id = family.stock_id) AND family.type_id = ?
+    LEFT JOIN nd_experiment_stock ON (nd_experiment_stock.stock_id = cross_entry.stock_id)
+    LEFT JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id) AND nd_experiment_stock.type_id = ?
+    LEFT JOIN project ON (nd_experiment_project.project_id = project.project_id)
+    $where_clause";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
