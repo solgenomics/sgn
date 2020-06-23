@@ -428,8 +428,9 @@ jQuery(document).ready(function(){
             },
             success: function(response){
                 console.log(response);
-                manage_drone_imagery_standard_process_raw_images_nir_image_counter = 0;
-                droneImageryInteractiveDrawImages();
+                //manage_drone_imagery_standard_process_raw_images_nir_image_counter = 0;
+                //droneImageryInteractiveDrawImages();
+                location.reload();
             },
             error: function(response){
                 alert('Error deleting GPS images template!')
