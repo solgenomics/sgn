@@ -75,6 +75,7 @@
                 </ul>
                 <hr>
                 <button class="btn btn-primary" id="drone_imagery_standard_process_raw_images_interactive_match">Match and Align Next Image Pair</button>
+                <button class="btn btn-default" id="drone_imagery_standard_process_raw_images_interactive_match_view">View Match</button>
                 <button class="btn btn-default" id="drone_imagery_standard_process_raw_images_interactive_match_restart">Start Over Alignment</button>
             </div>
 
@@ -237,6 +238,24 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
         <button type="button" class="btn btn-primary" id="drone_imagery_interactive_plot_polygon_remove_polygon_submit">Remove Plot Polygon</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="drone_imagery_standard_process_raw_images_interactive_match_modal" name="drone_imagery_standard_process_raw_images_interactive_match_modal" tabindex="-1" role="dialog" aria-labelledby="droneImageryInteractiveMatchViewDialog" data-backdrop="static">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="droneImageryInteractiveMatchViewDialog">View Match From Alignment</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid" id="drone_imagery_standard_process_raw_images_interactive_match_modal_div">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -419,6 +438,10 @@ jQuery(document).ready(function(){
         });
     });
 
+    jQuery('#drone_imagery_standard_process_raw_images_interactive_match_view').click(function(){
+        jQuery('#drone_imagery_standard_process_raw_images_interactive_match_modal').modal('show');
+    });
+
     function droneImageryInteractiveDrawImages(){
         jQuery('#drone_imagery_standard_process_raw_images_image_id_interactive_select_div').empty();
 
@@ -542,6 +565,8 @@ jQuery(document).ready(function(){
                         //    .attr("width", manage_drone_imagery_standard_process_raw_images_interactive_image.width);
                     }
                 });
+
+                jQuery('#drone_imagery_standard_process_raw_images_interactive_match_modal_div').html("<img src='"+response.match_image_url+"' >");
 
                 manage_drone_imagery_standard_process_raw_images_nir_image_counter = manage_drone_imagery_standard_process_raw_images_nir_image_counter + 1;
                 
