@@ -924,7 +924,6 @@ sub drone_imagery_get_gps_GET : Args(0) {
     my $proportion = $size[0]/$full_size[0];
 
     my %gps_images;
-    my %gps_images_rounded;
     my %longitudes;
     my %longitudes_rounded;
     my %latitudes;
@@ -933,6 +932,8 @@ sub drone_imagery_get_gps_GET : Args(0) {
     my $min_longitude = 1000000;
     my $max_latitude = -1000000;
     my $min_latitude = 1000000;
+    my %latitude_rounded_map;
+    my %longitude_rounded_map;
     foreach (sort {$a <=> $b} keys %$saved_micasense_stacks) {
         my $image_ids_array = $saved_micasense_stacks->{$_};
         my $nir_image = $image_ids_array->[3];
@@ -952,13 +953,17 @@ sub drone_imagery_get_gps_GET : Args(0) {
             $min_longitude = $longitude_raw;
         }
 
-        my $latitude_rounded = nearest(0.00001,$latitude_raw);
-        my $longitude_rounded = nearest(0.00001,$longitude_raw);
+        my $latitude_rounded = nearest(0.0001,$latitude_raw);
+        my $longitude_rounded = nearest(0.0001,$longitude_raw);
 
         $longitudes{$longitude_raw}++;
         $longitudes_rounded{$longitude_rounded}++;
         $latitudes{$latitude_raw}++;
         $latitudes_rounded{$latitude_rounded}++;
+
+        $latitude_rounded_map{$latitude_raw} = $latitude_rounded;
+        $longitude_rounded_map{$longitude_raw} = $longitude_rounded;
+
         my @stack_image_ids;
         foreach (@$image_ids_array) {
             push @stack_image_ids, $_->{image_id};
@@ -976,20 +981,34 @@ sub drone_imagery_get_gps_GET : Args(0) {
             image_url => $image_url,
             image_size => [$width, $length]
         };
-        $gps_images_rounded{$latitude_rounded}->{$longitude_rounded} = {
-            nir_image_id => $nir_image_id,
-            image_ids => \@stack_image_ids,
-            image_url => $image_url,
-            image_size => [$width, $length]
-        };
     }
     # print STDERR Dumper \%longitudes;
     # print STDERR Dumper \%latitudes;
 
+    my %latitude_rounded_map_ordinal;
+    my %longitude_rounded_map_ordinal;
     my @latitudes_sorted = sort {$b <=> $a} keys %latitudes;
     my @latitudes_rounded_sorted = sort {$b <=> $a} keys %latitudes_rounded;
-    my @longitudes_sorted = sort {$b <=> $a} keys %longitudes;
-    my @longitudes_rounded_sorted = sort {$b <=> $a} keys %longitudes_rounded;
+    my @longitudes_sorted = sort {$a <=> $b} keys %longitudes;
+    my @longitudes_rounded_sorted = sort {$a <=> $b} keys %longitudes_rounded;
+
+    my $lat_index = 1;
+    foreach (@latitudes_rounded_sorted) {
+        $latitude_rounded_map_ordinal{$_} = $lat_index;
+        $lat_index++;
+    }
+    my $long_index = 1;
+    foreach (@longitudes_rounded_sorted) {
+        $longitude_rounded_map_ordinal{$_} = $long_index;
+        $long_index++;
+    }
+
+    while (my($latitude_raw, $latitude_rounded) = each %latitude_rounded_map) {
+        $latitude_rounded_map{$latitude_raw} = $latitude_rounded_map_ordinal{$latitude_rounded};
+    }
+    while (my($longitude_raw, $longitude_rounded) = each %longitude_rounded_map) {
+        $longitude_rounded_map{$longitude_raw} = $longitude_rounded_map_ordinal{$longitude_rounded};
+    }
 
     my $min_x_val = 100000000;
     my $min_y_val = 100000000;
@@ -1016,19 +1035,20 @@ sub drone_imagery_get_gps_GET : Args(0) {
                 }
             }
         }
-        $x_range = $max_x_val - $min_x_val;
-        $y_range = $max_y_val - $min_y_val;
+        $x_range = $max_x_val - $min_x_val + $width;
+        $y_range = $max_y_val - $min_y_val + $length;
     }
 
     $c->stash->{rest} = {
         success => 1,
         longitudes => \@longitudes_sorted,
         longitudes_rounded => \@longitudes_rounded_sorted,
+        longitude_rounded_map => \%longitude_rounded_map,
         latitudes => \@latitudes_sorted,
         latitudes_rounded => \@latitudes_rounded_sorted,
+        latitude_rounded_map => %latitude_rounded_map,
         gps_images => \%gps_images,
         saved_gps_positions => $saved_gps_positions,
-        gps_images_rounded => \%gps_images_rounded,
         image_width => $width,
         image_length => $length,
         min_latitude => $min_latitude,
