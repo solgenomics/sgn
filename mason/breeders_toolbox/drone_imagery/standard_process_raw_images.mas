@@ -87,11 +87,20 @@
                     </div>
                 </div>
                 <div class="form-group form-group-sm">
+                    <label class="col-sm-6 control-label">Flip North and South: </label>
+                    <div class="col-sm-6">
+                        <select class="form-control" id="drone_imagery_standard_process_raw_images_interactive_north_south_input" name="drone_imagery_standard_process_raw_images_interactive_north_south_input" >
+                            <option value="North">North</option>
+                            <option value="South">South</option>
+                        </select>
+                    </div>
+                </div>
+                <!--div class="form-group form-group-sm">
                     <label class="col-sm-6 control-label">Rotate Frame: </label>
                     <div class="col-sm-6">
                         <input type="range" min="0" max="360" id="drone_imagery_standard_process_raw_images_interactive_rotate_frame_degrees_input" name="drone_imagery_standard_process_raw_images_interactive_rotate_frame_degrees_input" value="0.00">
                     </div>
-                </div>
+                </div-->
             </form>
             <hr>
 
@@ -288,6 +297,7 @@ jQuery(document).ready(function(){
 
     var manage_drone_imagery_standard_process_raw_images_interactive_field_trial_id;
     var manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id;
+    var manage_drone_imagery_standard_process_raw_images_interactive_north_or_south = 'North';
     var manage_drone_imagery_standard_process_interactive_drone_run_band_project_id;
     var manage_drone_imagery_standard_process_raw_images_interactive_rotate_angle = 0;
     var manage_drone_imagery_standard_process_raw_images_interactive_rotate_frame_angle = 0;
@@ -331,6 +341,10 @@ jQuery(document).ready(function(){
     var manage_drone_imagery_standard_process_interactive_longitude_rounded_map = {};
     var manage_drone_imagery_standard_process_interactive_latitude_ordinal_max;
     var manage_drone_imagery_standard_process_interactive_longitude_ordinal_max;
+    var manage_drone_imagery_standard_process_interactive_ordinal_matches = {};
+    var manage_drone_imagery_standard_process_interactive_current_ordinal_latitude_count = 1;
+    var manage_drone_imagery_standard_process_interactive_current_ordinal_longitude_count = 1;
+    var manage_drone_imagery_standard_process_raw_images_is_first_match = 1;
 
     d3.selection.prototype.moveToFront = function() {
         return this.each(function(){
@@ -511,12 +525,27 @@ jQuery(document).ready(function(){
 
     jQuery('#drone_imagery_standard_process_raw_images_interactive_match').click(function(){
 
-        var image_id1 = manage_drone_imagery_standard_process_raw_images_nir_images[manage_drone_imagery_standard_process_raw_images_nir_images.length-manage_drone_imagery_standard_process_raw_images_nir_image_counter-1];
-        var image_id2 = manage_drone_imagery_standard_process_raw_images_nir_images[manage_drone_imagery_standard_process_raw_images_nir_images.length-manage_drone_imagery_standard_process_raw_images_nir_image_counter-2];
+
+        var current_image_id1;
+        var current_image_id2;
+        if (manage_drone_imagery_standard_process_raw_images_is_first_match == 1) {
+            console.log(manage_drone_imagery_standard_process_raw_images_interactive_north_or_south);
+            console.log(manage_drone_imagery_standard_process_raw_images_nir_images);
+            if (manage_drone_imagery_standard_process_raw_images_interactive_north_or_south == 'South') {
+                manage_drone_imagery_standard_process_raw_images_nir_images = manage_drone_imagery_standard_process_raw_images_nir_images.reverse();
+            }
+            console.log(manage_drone_imagery_standard_process_raw_images_nir_images);
+            image_id1 = manage_drone_imagery_standard_process_raw_images_nir_images[manage_drone_imagery_standard_process_raw_images_nir_images.length-manage_drone_imagery_standard_process_raw_images_nir_image_counter-1];
+            image_id2 = manage_drone_imagery_standard_process_raw_images_nir_images[manage_drone_imagery_standard_process_raw_images_nir_images.length-manage_drone_imagery_standard_process_raw_images_nir_image_counter-2];
+        }
+
         if (image_id1 == undefined || image_id2 == undefined) {
             alert('No more images to match!');
             return false;
         }
+
+        manage_drone_imagery_standard_process_interactive_current_ordinal_latitude_count = manage_drone_imagery_standard_process_interactive_current_ordinal_latitude_count + 1;
+        
 
         jQuery.ajax({
             url : '/api/drone_imagery/match_and_align_two_images',
@@ -534,6 +563,8 @@ jQuery(document).ready(function(){
                 var x_pos_src;
                 var y_pos_dst;
                 var y_pos_src;
+                var src_latitude;
+                var src_longitude;
                 d3.selectAll('g').each(function(d) {
                     var nir_image_id = d3.select(this).attr('nir_image_id');
                     if (nir_image_id == response.image_id_dst) {
@@ -543,6 +574,8 @@ jQuery(document).ready(function(){
                     if (nir_image_id == response.image_id_src) {
                         x_pos_src = d3.select(this).attr('x_pos');
                         y_pos_src = d3.select(this).attr('y_pos');
+                        src_latitude = d3.select(this).attr('latitude');
+                        src_longitude = d3.select(this).attr('longitude');
                     }
                 });
 
@@ -561,6 +594,28 @@ jQuery(document).ready(function(){
                 var dst_match_y_rotated = dst_match_x*Math.sin(angle_radians) + dst_match_y*Math.cos(angle_radians);
                 var x_pos_match_dst = x_pos_match_src - dst_match_x_rotated;
                 var y_pos_match_dst = y_pos_match_src - dst_match_y_rotated;
+
+                var ordinal_latitude = manage_drone_imagery_standard_process_interactive_latitude_rounded_map[src_latitude];
+                var ordinal_longitude = manage_drone_imagery_standard_process_interactive_longitude_rounded_map[src_longitude];
+                if (ordinal_latitude in manage_drone_imagery_standard_process_interactive_ordinal_matches) {
+                    manage_drone_imagery_standard_process_interactive_ordinal_matches[ordinal_latitude][ordinal_longitude] = {
+                        'x_pos_match_src' : x_pos_match_src,
+                        'y_pos_match_src' : y_pos_match_src,
+                        'x_pos_match_dst' : x_pos_match_dst,
+                        'y_pos_match_dst' : y_pos_match_dst,
+                        'src_image_id' : response.image_id_src,
+                        'dst_image_id' : response.image_id_dst,
+                    };
+                } else {
+                    manage_drone_imagery_standard_process_interactive_ordinal_matches[ordinal_latitude] = {ordinal_longitude: {
+                        'x_pos_match_src' : x_pos_match_src,
+                        'y_pos_match_src' : y_pos_match_src,
+                        'x_pos_match_dst' : x_pos_match_dst,
+                        'y_pos_match_dst' : y_pos_match_dst,
+                        'src_image_id' : response.image_id_src,
+                        'dst_image_id' : response.image_id_dst,
+                    }};
+                }
 
                 d3.selectAll('g').each(function(d) {
                     var nir_image_id = d3.select(this).attr('nir_image_id');
@@ -601,7 +656,7 @@ jQuery(document).ready(function(){
 
     function initializeImagesInteractive(){
         jQuery.ajax({
-            url : '/api/drone_imagery/get_drone_imagery_gps?drone_run_project_id='+manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id,
+            url : '/api/drone_imagery/get_drone_imagery_gps?drone_run_project_id='+manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id+'&north_or_south='+manage_drone_imagery_standard_process_raw_images_interactive_north_or_south,
             success: function(response){
                 console.log(response);
 
@@ -665,6 +720,11 @@ jQuery(document).ready(function(){
     d3.select("#drone_imagery_standard_process_raw_images_interactive_rotate_degrees_input").on("input", function() {
         manage_drone_imagery_standard_process_raw_images_interactive_rotate_angle = this.value * -1;
         droneImageryInteractiveRotateImages();
+    });
+
+    jQuery('#drone_imagery_standard_process_raw_images_interactive_north_south_input').change(function(){
+        manage_drone_imagery_standard_process_raw_images_interactive_north_or_south = jQuery(this).val();
+        initializeImagesInteractive();
     });
 
     d3.select("#drone_imagery_standard_process_raw_images_interactive_rotate_frame_degrees_input").on("input", function() {

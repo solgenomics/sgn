@@ -888,6 +888,7 @@ sub drone_imagery_get_gps_GET : Args(0) {
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $drone_run_project_id = $c->req->param("drone_run_project_id");
+    my $north_or_south = $c->req->param("north_or_south");
 
     my $saved_image_stacks_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_micasense_stacks', 'project_property')->cvterm_id();
     my $saved_micasense_stacks_json = $schema->resultset("Project::Projectprop")->find({
@@ -987,8 +988,15 @@ sub drone_imagery_get_gps_GET : Args(0) {
 
     my %latitude_rounded_map_ordinal;
     my %longitude_rounded_map_ordinal;
-    my @latitudes_sorted = sort {$b <=> $a} keys %latitudes;
-    my @latitudes_rounded_sorted = sort {$b <=> $a} keys %latitudes_rounded;
+    my @latitudes_sorted;
+    my @latitudes_rounded_sorted;
+    if ($north_or_south eq 'North') {
+        @latitudes_sorted = sort {$b <=> $a} keys %latitudes;
+        @latitudes_rounded_sorted = sort {$b <=> $a} keys %latitudes_rounded;
+    } elsif ($north_or_south  eq 'South') {
+        @latitudes_sorted = sort {$a <=> $b} keys %latitudes;
+        @latitudes_rounded_sorted = sort {$a <=> $b} keys %latitudes_rounded;
+    }
     my @longitudes_sorted = sort {$a <=> $b} keys %longitudes;
     my @longitudes_rounded_sorted = sort {$a <=> $b} keys %longitudes_rounded;
 
