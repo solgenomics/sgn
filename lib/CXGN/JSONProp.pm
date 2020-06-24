@@ -84,16 +84,16 @@ has 'parent_id' => (isa => 'Maybe[Int]', is => 'rw');
 
 sub load {  # must be called from BUILD in subclass
     my $self = shift;
-    print STDERR "prop_type ".$self->prop_type()." cv_name ".$self->cv_name()."\n";
+    #print STDERR "prop_type ".$self->prop_type()." cv_name ".$self->cv_name()."\n";
     $self->_prop_type_id(SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $self->prop_type(), $self->cv_name())->cvterm_id());
 
-    print STDERR "LOAD PROP ID = ".$self->prop_id()."\n";
+    #print STDERR "LOAD PROP ID = ".$self->prop_id()."\n";
     
     if ($self->prop_id()) {
 	my $rs = $self->bcs_schema()->resultset($self->prop_namespace())->search( { $self->prop_primary_key() => $self->prop_id() });
 	while (my $row = $rs->next()) {
 	    if ($row->type_id() == $self->_prop_type_id()) { 
-		print STDERR "ROW VALUE = ".$row->value().", TYPEID=".$row->type_id()." TYPE = ".$self->prop_type()."\n";
+		#print STDERR "ROW VALUE = ".$row->value().", TYPEID=".$row->type_id()." TYPE = ".$self->prop_type()."\n";
 		 my $parent_primary_key = $self->parent_primary_key();
 		my $parent_id = $row->$parent_primary_key;
 		$self->parent_id($parent_id);
@@ -131,11 +131,11 @@ sub from_hash {
 
     my $allowed_fields = $self->allowed_fields();
 
-    print STDERR Dumper($hash);
+    #print STDERR Dumper($hash);
     
     foreach my $f (@$allowed_fields) {
 	if (exists($hash->{$f})) {
-	    print STDERR "Processing $f ($hash->{$f})...\n";
+	    #print STDERR "Processing $f ($hash->{$f})...\n";
 	    $self->$f($hash->{$f});
 	}
     }
@@ -146,7 +146,7 @@ sub to_json {
  
     my $allowed_fields = $self->allowed_fields();
 
-    print STDERR Dumper($allowed_fields);
+    #print STDERR Dumper($allowed_fields);
     my $data;
     
     foreach my $f (@$allowed_fields) {
@@ -195,7 +195,7 @@ sub get_props {
     my $prop_type = shift;
     
     my @props = _retrieve_stockprops($schema, $parent_object_id, $prop_type);
-    print STDERR "Props = ".Dumper(\@props);
+    #print STDERR "Props = ".Dumper(\@props);
     my @hashes = ();
     foreach my $sp (@props) { 
 	my $json = $sp->[1];

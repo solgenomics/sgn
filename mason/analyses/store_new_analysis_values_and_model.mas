@@ -1,0 +1,603 @@
+<!--
+This Mason can be imported on any page for saving analyses, the results of analyses, and the model used in an analysis.
+
+1) User input for saving analysis: analysis_name, analysis_description, year, breeding_program
+2) User input for saving model trained weights: model_name, model_description, model_is_public
+
+3) Developer input for saving analysis: protocol, dataset_id, accession_names, trait_names, analysis_statistical_ontology_term, analysis_design (if design computed already, otherwise the design will be computed using the accession_names provided), result_summary
+4) Developer input for saving model trained weights: model_language, model_type, model_properties, application_name, application_version, model_file_to_archive, model_file_type, training_data_file_to_archive, training_data_file_type, auxiliary_files, analysis_result_values, analysis_result_values_type
+
+Developer inputs can be set using javascript when the model is opened and then nothing else needs to be changed!
+
+'protocol' is a string of the model formula like: 'lme(t1~rep + 1|germplasmName)'
+
+'dataset_id' is optional and is used if a dataset was selected as data input.
+
+'accession_names' is a JSON encoded array of the accession names involved like: ['accession1', 'accession2']
+
+'trait_names' is a JSON encoded array of the trait names analyzed like: ['trait1', 'trait2']
+
+'analysis_statistical_ontology_term' is the statistical term of the analysis results like: 'Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and row and column spatial effects computed using Sommer R|SGNSTAT:0000001'. On submission, the trait_names will be post-composed with this term to save the analysis results.
+
+The 'analysis_design' is optional and is a precomputed JSON encoded object of objects like:
+{
+               '1' => {
+                        'stock_name' => 'test_accession1',
+                        'plot_name' => 'analysisblup06112020_34_test_accession1'
+                      },
+               '2' => {
+                        'stock_name' => 'test_accession2',
+                        'plot_name' => 'analysisblup06112020_34_test_accession2'
+                      }
+             }
+or analysis_design can be left blank and the design will be computed using accession_names once this workflow is submitted.
+
+The 'result_summary' should be a JSON encoded object of arbitrary results like:
+{
+    'genetic_correlation' => {
+        'grain yield to NDVI' => 0.8
+    },
+    'important_stat' => 100,
+    'genetic_variance' => 9
+}
+
+'model_language' is a string like 'R' or 'Python'
+
+'model_type' is a string describing the model type like 'sommer_grm_spatial_genetic_blups'. This is the only term which must be a cvterm under 'protocol_type' (added by db patch).
+
+'model_properties' is a JSON encoded object with any key/value pairs like:
+{
+'param1':'val1',
+'param2':'val2',
+}
+
+'application_name' is a string describing the web application producing the analysis e.g. 'solGS', 'NickMorales Mixed Models'
+'application_version' is a string describing the version of the web application e.g. 'V1.01'
+
+'model_file_to_archive' is optional. This is the file path of the temporary file where the trained model weights were stored. On submission this file will be archived using model_file_type.
+
+'model_file_type' is optional and is a string describing the type of the model_file_to_archive like: 'trained_keras_cnn_model'
+
+'training_data_file_to_archive' is the file path of the temporary file where the input training data (e.g. phenotype file) is stored. On submission this file will be archived using training_data_file_type.
+
+'training_data_file_type' is a string describing the type of the training data file like: 'nicksmixedmodels_v1.01_sommer_grm_spatial_genetic_blups_phenotype_file'
+
+'auxiliary_files' is a JSON encoded array of objects containing any additional temporary files used by the model analysis. The objects should have the keys 'auxiliary_model_file' and 'auxiliary_model_file_archive_type' e.g.:
+[
+{'auxiliary_model_file':'/tmp/grm.tsv', 'auxiliary_model_file_archive_type':'nicksmixedmodels_v1.01_sommer_grm_spatial_genetic_blups_grm_file'}
+]
+
+The 'analysis_result_values' can take a nested object of stock_name->trait_name->value, where stock_name is either the precomputed analysis_design "plots" or is accession names.
+The 'analysis_result_values_type' is either analysis_result_values_match_precomputed_design or analysis_result_values_match_accession_names for these scenarios.
+
+For example in the case of a precomputed analysis design and 'analysis_result_values_type'='analysis_result_values_match_precomputed_design':
+{
+               'analysisblup06112020_35_test_accession4' => {
+                                                            'Mean Pixel Value|NIR (780-3000nm)|NIR Denoised Original Image|day 10|COMP:0000108' => [
+                                                                                                                                                     '0.0128311926784451',
+                                                                                                                                                     '2020-06-11_17:39:21',
+                                                                                                                                                     'janedoe',
+                                                                                                                                                     '',
+                                                                                                                                                     ''
+                                                                                                                                                   ],
+                                                            'Mean Pixel Value|Red (600-690nm)|Red Denoised Original Image|day 10|COMP:0000078' => [
+                                                                                                                                                    '-0.00288303972761372',
+                                                                                                                                                    '2020-06-11_17:39:21',
+                                                                                                                                                    'janedoe',
+                                                                                                                                                    '',
+                                                                                                                                                    ''
+                                                                                                                                                  ]
+                                                          },
+               'analysisblup06112020_35_test_accession2' => {
+                                                            'Mean Pixel Value|Red (600-690nm)|Red Denoised Original Image|day 10|COMP:0000078' => [
+                                                                                                                                                    '0.000961013242537908',
+                                                                                                                                                    '2020-06-11_17:39:21',
+                                                                                                                                                    'janedoe',
+                                                                                                                                                    '',
+                                                                                                                                                    ''
+                                                                                                                                                  ],
+                                                            'Mean Pixel Value|NIR (780-3000nm)|NIR Denoised Original Image|day 10|COMP:0000108' => [
+                                                                                                                                                     '-0.00427706422614838',
+                                                                                                                                                     '2020-06-11_17:39:21',
+                                                                                                                                                     'janedoe',
+                                                                                                                                                     '',
+                                                                                                                                                     ''
+                                                                                                                                                   ]
+                                                          },
+             }
+
+For example in the case of a design not computed, but which will be computed using accession names, and 'analysis_result_values_type'='analysis_result_values_match_accession_names':
+{
+               'test_accession4' => {
+                                                            'Mean Pixel Value|NIR (780-3000nm)|NIR Denoised Original Image|day 10|COMP:0000108' => [
+                                                                                                                                                     '0.0128311926784451',
+                                                                                                                                                     '2020-06-11_17:39:21',
+                                                                                                                                                     'janedoe',
+                                                                                                                                                     '',
+                                                                                                                                                     ''
+                                                                                                                                                   ],
+                                                            'Mean Pixel Value|Red (600-690nm)|Red Denoised Original Image|day 10|COMP:0000078' => [
+                                                                                                                                                    '-0.00288303972761372',
+                                                                                                                                                    '2020-06-11_17:39:21',
+                                                                                                                                                    'janedoe',
+                                                                                                                                                    '',
+                                                                                                                                                    ''
+                                                                                                                                                  ]
+                                                          },
+               'test_accession2' => {
+                                                            'Mean Pixel Value|Red (600-690nm)|Red Denoised Original Image|day 10|COMP:0000078' => [
+                                                                                                                                                    '0.000961013242537908',
+                                                                                                                                                    '2020-06-11_17:39:21',
+                                                                                                                                                    'janedoe',
+                                                                                                                                                    '',
+                                                                                                                                                    ''
+                                                                                                                                                  ],
+                                                            'Mean Pixel Value|NIR (780-3000nm)|NIR Denoised Original Image|day 10|COMP:0000108' => [
+                                                                                                                                                     '-0.00427706422614838',
+                                                                                                                                                     '2020-06-11_17:39:21',
+                                                                                                                                                     'janedoe',
+                                                                                                                                                     '',
+                                                                                                                                                     ''
+                                                                                                                                                   ]
+                                                          },
+             }
+
+The trait names will be post-composed with the analysis_statistical_ontology_term on submission.
+-->
+
+<%args>
+
+</%args>
+
+<& /util/import_javascript.mas, classes => ['jquery', 'CXGN.BreedersToolbox.HTMLSelect'], entries => [ ] &>
+
+<div class="modal fade" id="generic_save_analysis_dialog" name="generic_save_analysis_dialog" tabindex="-1" role="dialog" aria-labelledby="genericStoreAnalysisDialog" data-backdrop="static">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="genericStoreAnalysisDialog">Save Analysis Results</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <&| /util/workflow.mas, id=> "generic_save_analysis_workflow" &>
+                        <&| /util/workflow.mas:step, title=> "Intro" &>
+                            <& /page/page_title.mas, title=>"This workflow will guide you through storing a new analysis and the results, and saving model weights" &>
+                            <p>An analysis is stored independently; however, it maintains associations to the results for the accessions and traits involved. In the case where a model is being trained for predictions e.g. genomic selection or CNN image predictions, those trained model weights can be saved.</p>
+                            <br/><br/>
+                            <center>
+                            <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                            </center>
+                        </&>
+                        <&| /util/workflow.mas:step, title=> "Analysis Info" &>
+                            <& /page/page_title.mas, title=>"Save analysis results" &>
+
+                            <form class="form-horizontal">
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-3 control-label">Do you want to save the analysis results?: </label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="generic_save_analysis_analysis_to_save" name="generic_save_analysis_analysis_to_save" >
+                                            <option value="no">No</option>
+                                            <option value="yes">Yes</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </form>
+                            <hr>
+
+                            <form class="form-horizontal" id="generic_save_analysis_analysis_form" style="display:none">
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-3 control-label">Analysis Name (must be unique): </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="generic_save_analysis_analysis_name" name="generic_save_analysis_analysis_name" type="text" />
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-3 control-label">Analysis Description: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="generic_save_analysis_analysis_description" name="generic_save_analysis_analysis_description" type="text" />
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-3 control-label">Breeding Program: </label>
+                                    <div class="col-sm-9">
+                                        <div id="generic_save_analysis_breeding_program_div">
+                                    </div>
+                                </div>
+                                <br/><br/>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-3 control-label">Year: </label>
+                                    <div class="col-sm-9">
+                                        <div id="generic_save_analysis_analysis_year_div">
+                                    </div>
+                                </div>
+                                <br/><br/>
+                                <hr>
+
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-3 control-label">Protocol: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="generic_save_analysis_protocol" name="generic_save_analysis_protocol" type="text" placeholder="e.g. lmer(grain_yield ~ replicate + 1|germplasmName)" disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-3 control-label">Dataset ID: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="generic_save_analysis_dataset_id" name="generic_save_analysis_dataset_id" type="number" disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-3 control-label">Accession Names: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="generic_save_analysis_accession_names" name="generic_save_analysis_accession_names" type="text" disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-3 control-label">Trait Names: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="generic_save_analysis_trait_names" name="generic_save_analysis_trait_names" type="text" disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-3 control-label">Statistical Ontology Term: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="generic_save_analysis_statistical_ontology_term" name="generic_save_analysis_statistical_ontology_term" type="text" disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-3 control-label">Analysis Design (If left blank, design will be created using above accession names): </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="generic_save_analysis_design" name="generic_save_analysis_design" type="text" disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-3 control-label">Analysis Result Values: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="generic_save_analysis_result_values" name="generic_save_analysis_result_values" type="text" disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-3 control-label">Analysis Result Values Type: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="generic_save_analysis_result_values_type" name="generic_save_analysis_result_values_type" type="text" disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-3 control-label">Analysis Result Summary Values: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="generic_save_analysis_result_summary_values" name="generic_save_analysis_result_summary_values" type="text" disabled/>
+                                    </div>
+                                </div>
+                            </form>
+
+                            <br/><br/>
+                            <center>
+                            <button class="btn btn-primary" id="generic_save_analysis_next">Go to Next Step</button>
+                            </center>
+                        </&>
+                        <&| /util/workflow.mas:step, title=> "Model Info" &>
+                            <& /page/page_title.mas, title=>"Save model information" &>
+
+                            <form class="form-horizontal" id="generic_save_analysis_model_form">
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-3 control-label">Model Name (must be unique): </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="generic_save_analysis_model_name" name="generic_save_analysis_model_name" type="text" />
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-3 control-label">Model Description: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="generic_save_analysis_model_description" name="generic_save_analysis_model_description" type="text" />
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-3 control-label">Model Is Public: </label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="generic_save_analysis_model_is_public" name="generic_save_analysis_model_is_public" >
+                                            <option value="yes">Yes</option>
+                                            <option value="no">No</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <hr>
+
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-3 control-label">Model Language: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="generic_save_analysis_model_language" name="generic_save_analysis_model_language" type="text" disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-3 control-label">Model Type: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="generic_save_analysis_model_type" name="generic_save_analysis_model_type" type="text" disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-3 control-label">Model Properties: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="generic_save_analysis_model_properties" name="generic_save_analysis_model_properties" type="text" disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-3 control-label">Application Name: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="generic_save_analysis_model_application_name" name="generic_save_analysis_model_application_name" type="text" disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-3 control-label">Application Version: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="generic_save_analysis_model_application_version" name="generic_save_analysis_model_application_version" type="text" disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-3 control-label">Model File To Archive: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="generic_save_analysis_model_file" name="generic_save_analysis_model_file" type="text" disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-3 control-label">Archive Model File Type: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="generic_save_analysis_model_archived_model_file_type" name="generic_save_analysis_model_archive_model_file_type" type="text" disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-3 control-label">Training Data File To Archive: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="generic_save_analysis_model_training_data_file" name="generic_save_analysis_model_training_data_file" type="text" disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-3 control-label">Archive Training Data File Type: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="generic_save_analysis_model_archived_training_data_file_type" name="generic_save_analysis_model_archived_training_data_file_type" type="text" disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-3 control-label">Auxiliary Files to Archive: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="generic_save_analysis_model_auxiliary_files" name="generic_save_analysis_model_auxiliary_files" type="text" disabled/>
+                                    </div>
+                                </div>
+                            </form>
+
+                            <br/><br/>
+                            <center>
+                            <button class="btn btn-primary" id="generic_save_analysis_submit_button" onclick="return false;">Save Analysis</button>
+                            </center>
+                        </&>
+                        <&| /util/workflow.mas:step, title=> "Saved" &>
+                            <& /page/page_title.mas, title=>"Saved successfully" &>
+
+                            <div id="generic_save_analysis_response_div"></div>
+                        </&>
+                    </&>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function() {
+
+    get_select_box('years', 'generic_save_analysis_analysis_year_div', {'auto_generate': 1, 'id':'generic_save_analysis_analysis_year', 'name':'generic_save_analysis_analysis_year'});
+    get_select_box('breeding_programs', 'generic_save_analysis_breeding_program_div', { 'name' : 'generic_save_analysis_breeding_program_id', 'id' : 'generic_save_analysis_breeding_program_id' });
+
+    jQuery('#generic_save_analysis_next').click(function(){
+        Workflow.complete("#generic_save_analysis_next");
+        Workflow.focus('#generic_save_analysis_workflow', 2);
+        jQuery('#generic_save_analysis_dialog').scrollTop(0);
+        return false;
+    });
+
+    jQuery('#generic_save_analysis_analysis_to_save').change(function(){
+        if (jQuery(this).val() == 'yes') {
+            jQuery('#generic_save_analysis_analysis_form').show();
+        }
+        if (jQuery(this).val() == 'no') {
+            jQuery('#generic_save_analysis_analysis_form').hide();
+            jQuery('#generic_save_analysis_analysis_name').val('');
+        }
+    });
+
+    jQuery('#generic_save_analysis_submit_button').click(function(){
+        var generic_save_analysis_analysis_to_save_boolean = jQuery('#generic_save_analysis_analysis_to_save').val();
+        var generic_save_analysis_analysis_name = jQuery('#generic_save_analysis_analysis_name').val();
+        var generic_save_analysis_analysis_description = jQuery('#generic_save_analysis_analysis_description').val();
+        var generic_save_analysis_analysis_year = jQuery('#generic_save_analysis_analysis_year').val();
+        var generic_save_analysis_breeding_program_id = jQuery('#generic_save_analysis_breeding_program_id').val();
+        var generic_save_analysis_protocol = jQuery('#generic_save_analysis_protocol').val();
+        var generic_save_analysis_dataset_id = jQuery('#generic_save_analysis_dataset_id').val();
+        var generic_save_analysis_accession_names = jQuery('#generic_save_analysis_accession_names').val();
+        var generic_save_analysis_trait_names = jQuery('#generic_save_analysis_trait_names').val();
+        var generic_save_analysis_statistical_ontology_term = jQuery('#generic_save_analysis_statistical_ontology_term').val();
+        var generic_save_analysis_precomputed_design_optional = jQuery('#generic_save_analysis_design').val();
+        var generic_save_analysis_result_values = jQuery('#generic_save_analysis_result_values').val();
+        var generic_save_analysis_result_values_type = jQuery('#generic_save_analysis_result_values_type').val();
+        var generic_save_analysis_result_summary_values = jQuery('#generic_save_analysis_result_summary_values').val();
+        
+        var generic_save_analysis_model_name = jQuery('#generic_save_analysis_model_name').val();
+        var generic_save_analysis_model_description = jQuery('#generic_save_analysis_model_description').val();
+        var generic_save_analysis_model_is_public = jQuery('#generic_save_analysis_model_is_public').val();
+        var generic_save_analysis_model_language = jQuery('#generic_save_analysis_model_language').val();
+        var generic_save_analysis_model_type = jQuery('#generic_save_analysis_model_type').val();
+        var generic_save_analysis_model_properties = jQuery('#generic_save_analysis_model_properties').val();
+        var generic_save_analysis_model_application_name = jQuery('#generic_save_analysis_model_application_name').val();
+        var generic_save_analysis_model_application_version = jQuery('#generic_save_analysis_model_application_version').val();
+        var generic_save_analysis_model_file = jQuery('#generic_save_analysis_model_file').val();
+        var generic_save_analysis_model_archived_model_file_type = jQuery('#generic_save_analysis_model_archived_model_file_type').val();
+        var generic_save_analysis_model_training_data_file = jQuery('#generic_save_analysis_model_training_data_file').val();
+        var generic_save_analysis_model_archived_training_data_file_type = jQuery('#generic_save_analysis_model_archived_training_data_file_type').val();
+        var generic_save_analysis_model_auxiliary_files = jQuery('#generic_save_analysis_model_auxiliary_files').val();
+
+        if (generic_save_analysis_analysis_to_save_boolean == 'yes') {
+            if (generic_save_analysis_analysis_name == '') {
+                alert('Please give an analysis name');
+                return false;
+            }
+            if (generic_save_analysis_analysis_description == '') {
+                alert('Please give an analysis description');
+                return false;
+            }
+            if (generic_save_analysis_analysis_year == '') {
+                alert('Please give an analysis year');
+                return false;
+            }
+            if (generic_save_analysis_breeding_program_id == '') {
+                alert('Please give a breeding program');
+                return false;
+            }
+            if (generic_save_analysis_protocol == '') {
+                alert('Please give an analysis protocol e.g. lmer(grain_yield ~ replicate + 1|germplasmName)');
+                return false;
+            }
+            if (generic_save_analysis_accession_names == '') {
+                alert('Please give analysis accession names');
+                return false;
+            }
+            if (generic_save_analysis_trait_names == '') {
+                alert('Please give analysis trait names');
+                return false;
+            }
+            if (generic_save_analysis_statistical_ontology_term == '') {
+                alert('Please give a statistical ontology term');
+                return false;
+            }
+            if (generic_save_analysis_result_values == '') {
+                alert('Please give analysis result values');
+                return false;
+            }
+            if (generic_save_analysis_result_values_type == '') {
+                alert('Please give analysis result values type');
+                return false;
+            }
+            if (generic_save_analysis_result_summary_values == '') {
+                alert('Please give analysis result summary info');
+                return false;
+            }
+        }
+        if (generic_save_analysis_model_name == '') {
+            alert('Please give a model name');
+            return false;
+        }
+        if (generic_save_analysis_model_description == '') {
+            alert('Please give a model description');
+            return false;
+        }
+        if (generic_save_analysis_model_is_public == '') {
+            alert('Please tell if a model is public');
+            return false;
+        }
+        if (generic_save_analysis_model_language == '') {
+            alert('Please give a model language');
+            return false;
+        }
+        if (generic_save_analysis_model_type == '') {
+            alert('Please give a model type');
+            return false;
+        }
+        if (generic_save_analysis_model_properties == '') {
+            alert('Please give a model properties JSON object');
+            return false;
+        }
+        if (generic_save_analysis_model_application_name == '') {
+            alert('Please give a model application name');
+            return false;
+        }
+        if (generic_save_analysis_model_application_version == '') {
+            alert('Please give a model application version');
+            return false;
+        }
+        //if (generic_save_analysis_model_file == '') {
+        //    alert('Please give a model file');
+        //    return false;
+        //}
+        //if (generic_save_analysis_model_archived_model_file_type == '') {
+        //    alert('Please give a model file type');
+        //    return false;
+        //}
+        if (generic_save_analysis_model_language == '') {
+            alert('Please give a model language');
+            return false;
+        }
+        if (generic_save_analysis_model_type == '') {
+            alert('Please give a model type');
+            return false;
+        }
+        if (generic_save_analysis_model_application_name == '') {
+            alert('Please give a model application name');
+            return false;
+        }
+        if (generic_save_analysis_model_application_version == '') {
+            alert('Please give a model application version');
+            return false;
+        }
+
+        jQuery.ajax({
+            type: 'POST',
+            url : '/ajax/analysis/store/json',
+            data : {
+                'analysis_to_save_boolean':generic_save_analysis_analysis_to_save_boolean,
+                'analysis_name':generic_save_analysis_analysis_name,
+                'analysis_description':generic_save_analysis_analysis_description,
+                'analysis_year':generic_save_analysis_analysis_year,
+                'analysis_breeding_program_id':generic_save_analysis_breeding_program_id,
+                'analysis_protocol':generic_save_analysis_protocol,
+                'analysis_dataset_id':generic_save_analysis_dataset_id,
+                'analysis_accession_names':generic_save_analysis_accession_names,
+                'analysis_trait_names':generic_save_analysis_trait_names,
+                'analysis_statistical_ontology_term':generic_save_analysis_statistical_ontology_term,
+                'analysis_precomputed_design_optional':generic_save_analysis_precomputed_design_optional,
+                'analysis_result_values':generic_save_analysis_result_values,
+                'analysis_result_values_type':generic_save_analysis_result_values_type,
+                'analysis_result_summary':generic_save_analysis_result_summary_values,
+                'analysis_model_name':generic_save_analysis_model_name,
+                'analysis_model_description':generic_save_analysis_model_description,
+                'analysis_model_is_public':generic_save_analysis_model_is_public,
+                'analysis_model_language':generic_save_analysis_model_language,
+                'analysis_model_type':generic_save_analysis_model_type,
+                'analysis_model_properties':generic_save_analysis_model_properties,
+                'analysis_model_application_name':generic_save_analysis_model_application_name,
+                'analysis_model_application_version':generic_save_analysis_model_application_version,
+                'analysis_model_file':generic_save_analysis_model_file,
+                'analysis_model_file_type':generic_save_analysis_model_archived_model_file_type,
+                'analysis_model_training_data_file':generic_save_analysis_model_training_data_file,
+                'analysis_model_training_data_file_type':generic_save_analysis_model_archived_training_data_file_type,
+                'analysis_model_auxiliary_files':generic_save_analysis_model_auxiliary_files
+            },
+            beforeSend: function() {
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response){
+                jQuery('#working_modal').modal('hide');
+                console.log(response);
+                if (response.error) {
+                    alert(response.error);
+                }
+                if (response.success) {
+                    alert('Analysis and/or model saved!');
+                    if (response.analysis_id) {
+                        jQuery('#generic_save_analysis_response_div').html('Go to saved <a href="/analyses/'+response.analysis_id+'" target=_blank >analysis</a>');
+                    }
+                    Workflow.complete("#generic_save_analysis_submit_button");
+                    Workflow.focus('#generic_save_analysis_workflow', 3);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('Error saving analysis!');
+            }
+        });
+    });
+
+});
+
+</script>

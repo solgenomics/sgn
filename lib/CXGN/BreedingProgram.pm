@@ -200,7 +200,7 @@ sub get_traits_assayed {
 
 	my $traits_assayed_q = $dbh->prepare($q);
 
-	my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
+	my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
 	$traits_assayed_q->execute(@trial_ids, $numeric_regex );
 	while (my ($trait_name, $trait_id, $count) = $traits_assayed_q->fetchrow_array()) {
 	    push @traits_assayed, [$trait_id, $trait_name];

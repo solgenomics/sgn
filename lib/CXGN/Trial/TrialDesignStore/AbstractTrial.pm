@@ -754,7 +754,7 @@ sub store {
                     { nd_experiment_id => $nd_experiment_id, type_id => $self->get_nd_experiment_type_id }
                 );
 
-		print STDERR "STOCK TYPE ID NOW: $stock_type_id\n";
+		#print STDERR "STOCK TYPE ID NOW: $stock_type_id\n";
                 my $plot = $stock_rs->create({
                     organism_id => $organism_id_checked,
                     name       => $plot_name,

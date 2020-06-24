@@ -18,7 +18,7 @@ sub BUILD {
 
     $self->set_target_stock_types( [ 'plot','cross', 'family_name' ] );
     
-    print STDERR "Set source stock types to ".join(", ", @{$self->get_source_stock_types()});
+    #print STDERR "Set source stock types to ".join(", ", @{$self->get_source_stock_types()});
         # probably better to lazy load the action design...
     #
     $self->convert_source_stock_types_to_ids();

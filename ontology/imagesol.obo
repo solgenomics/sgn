@@ -1484,3 +1484,9 @@ id: ISOL:0000333
 name: Keras Predicted KerasCNNMLPExample
 def: "Keras Predicted using KerasCNNMLPExample model" []
 relationship: is_a ISOL:0000325
+
+[Term]
+id: ISOL:0000336
+name: Keras Autoencoder 64_32_Conv_16_Latent
+def: "Keras Autoencoder 64_32_Conv_16_Latent model" []
+relationship: is_a ISOL:0000325

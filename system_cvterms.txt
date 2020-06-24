@@ -16,7 +16,8 @@ experiment_type	genotyping_layout				00052
 experiment_type	phenotyping_experiment				00052
 experiment_type	seedlot_experiment				00077
 experiment_type	grafting_experiment				00079
-experiment_type	trained_keras_cnn_model_experiment	For linking a trained keras cnn model in nd_protocol to its model files in md_files	10/01/2019	nm529	00116
+experiment_type	analysis_experiment	For saving results in analysis trials	06/04/2020	lam87nm529	00119
+experiment_type	analysis_model_experiment	For saving results in analysis models	06/04/2020	lam87nm529	00125
 genotype_property	igd number
 genotype_property	infinium array					sgn database
 genotype_property	snp genotyping
@@ -143,6 +144,8 @@ project_property	drone_run_standard_process_completed	If the drone run had the s
 project_property	drone_run_standard_process_extended_completed	If the drone run had the extended standard process run	10/5/2018	nm529	00103
 project_property	drone_run_standard_process_vi_completed	If the drone run had the vegetative index standard process run	10/5/2018	nm529	00103
 project_property	drone_run_raw_images_saved_micasense_stacks	When uploading raw Micasense images, the captures are aligned and this records which image is in which capture	02/17/2020	nm529	00117
+project_property	project_sp_person_id	For saving results in analysis trials	06/04/2020	lam87nm529	00119
+project_property	analysis_metadata_json	For saving results in analysis trials	06/04/2020	lam87nm529	00119
 project_relationship	breeding_program_trial_relationship				00051
 project_relationship	trial_treatment_relationship				00081
 project_relationship	field_trial_from_field_trial	For linking field trials preceding other field trials	4/6/18	nm529	00093
@@ -240,6 +243,7 @@ stock_relationship  female_plot_of    00086
 stock_relationship  male_plot_of    00086
 stock_relationship  female_plant_of    00094
 stock_relationship  male_plant_of    00094
+stock_relationship	analysis_of	For saving results in analysis trials	06/04/2020	lam87nm529	00119
 stock_type	accession				00052
 stock_type	backcross population				00052
 stock_type	cross				00052
@@ -247,6 +251,7 @@ stock_type	f2 population				00052
 stock_type	mutant population				00052
 stock_type	plant				00052
 stock_type	plot				00052
+stock_type	analysis_instance	For saving results in analysis trials	06/04/2020	lam87nm529	00119
 stock_type	population				00052
 stock_type	tissue_sample				00052
 stock_type	training population				00052
@@ -274,9 +279,11 @@ protocol_property	protocol comment	From BrAPI	03/27/2017	nm529	00076
 protocol_property	vcf_map_details	Information about protocol, such as marker names, header info lines, and reference_genome_name	6/20/2018	nm529	00098
 protocol_property	vcf_map_details_markers	Genotyping protocol marker info in an object format	9/17/2019	nm529	00115
 protocol_property	vcf_map_details_markers_array	Genotyping protocol marker info in an array format	9/17/2019	nm529	00115
-protocol_property	trained_keras_cnn_model_trait	The trait for which the Keras CNN model was trained	9/30/2019	nm529	00116
-protocol_property	trained_keras_cnn_model_type	The type of Keras CNN model trained e.g. InceptionResNetV2	9/30/2019	nm529	00116
+protocol_property	analysis_model_properties	Properties of analysis model in json	6/8/2020	nm529	00125
 protocol_type	trained_keras_cnn_model	An nd_protocol for a saved trained keras cnn model	9/30/2019	nm529	00116
+protocol_type	trained_keras_mask_r_cnn_model	An nd_protocol for a saved trained keras mask r cnn model	5/27/2020	nm529	00125
+protocol_type	sommer_grm_spatial_genetic_blups	An nd_protocol for analysis using R Sommer for multivariate genetic and spatial blups using replicate, genetic relationship matrix, and row and column positions	6/11/2020	nm529	00125
+protocol_type	lmer_germplasmname_replicate	An nd_protocol for analysis using R LMER for univariate genetic blups using replicate and germplasm name	6/11/2020	nm529	00125
 composable_cvtypes	trait_ontology		05/01/2017		00073
 composable_cvtypes	composed_trait_ontology		05/01/2017		00073
 composable_cvtypes	object_ontology		05/01/2017		00073
@@ -546,6 +553,7 @@ project_md_image	observation_unit_polygon_fourier_transform_hpf20_nren_denoised_
 project_md_image	observation_unit_polygon_fourier_transform_hpf30_nren_denoised_background_removed_thresholded_ndre_mask_channel_2	Cropped image for an observation unit polygon from fourier transform hpf30 on denoised image with background removed via thresholded ndre mask channel 2	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_fourier_transform_hpf40_nren_denoised_background_removed_thresholded_ndre_mask_channel_2	Cropped image for an observation unit polygon from fourier transform hpf40 on denoised image with background removed via thresholded ndre mask channel 2	10/5/2018	nm529	00103
 project_md_image	observation_unit_polygon_keras_trained	Plot polygon images that were trained on by Keras CNN e.g. a single image montage of red, green, and nir images of a single plot	04/23/2020	nm529	00103
+project_md_image	observation_unit_polygon_keras_autoencoder_decoded	Plot polygon images that were decoded using autoencoder vegetation indices	05/20/2020	nm529	00125
 project_md_image	calculate_phenotypes_surf_drone_imagery	Calculate surf phenotypes on observation unit	10/5/2018	nm529	00103
 project_md_image	calculate_phenotypes_surf_drone_imagery_tgi	Calculate surf phenotypes on observation unit from TGI vegetative index	10/5/2018	nm529	00103
 project_md_image	calculate_phenotypes_surf_drone_imagery_vari	Calculate surf phenotypes on observation unit from VARI vegetative index	10/5/2018	nm529	00103

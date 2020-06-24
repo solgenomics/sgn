@@ -38,6 +38,18 @@ Lukas Mueller <lam87@cornell.edu>
     <th>
       Description
     </th>
+    <th>
+      Model Type
+    </th>
+    <th>
+      Protocol
+    </th>
+    <th>
+      Application
+    </th>
+    <th>
+      Language
+    </th>
   </tr>
   </thead>
   <tbody>
@@ -46,6 +58,9 @@ Lukas Mueller <lam87@cornell.edu>
      
 
 <script>
-  alert("hello");
-  window.jsMod['analyses'].retrieve_analysis_overview_table();
+jQuery(document).ready(function(){
+    jQuery('#analyses_by_user_table').DataTable({
+        'ajax': { 'url': '/ajax/analyses/by_user' }
+    });
+});
 </script>

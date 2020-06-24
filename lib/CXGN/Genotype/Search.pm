@@ -1969,11 +1969,11 @@ sub get_cached_file_VCF_compute_from_parents {
                 }
                 my $genotype_id = $geno->{germplasmName};
 
-                my $geno = CXGN::Genotype::ComputeHybridGenotype->new({
+                my $geno_h = CXGN::Genotype::ComputeHybridGenotype->new({
                     parental_genotypes=>$genotypes,
                     marker_objects=>\@all_marker_objects
                 });
-                my $progeny_genotype = $geno->get_hybrid_genotype();
+                my $progeny_genotype = $geno_h->get_hybrid_genotype();
                 my $genotype_string_scores = join "\t", @$progeny_genotype;
 
                 $genotype_string .= $genotype_id."\t".$genotype_string_scores."\n";

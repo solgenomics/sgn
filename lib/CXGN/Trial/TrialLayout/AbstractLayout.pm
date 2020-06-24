@@ -31,7 +31,7 @@ has 'trial_id' => (
 
 has 'experiment_type' => (
     is       => 'rw',
-    isa     => 'Str', #field_layout or genotyping_layout
+    isa     => 'Str', #field_layout or genotyping_layout or analysis_experiment
     required => 1,
 );
 
@@ -221,8 +221,8 @@ sub _get_unique_accession_names_from_trial {
     my %unique_acc;
     no warnings 'numeric'; #for genotyping plate so that wells don't give warning
 
-    print STDERR "DESIGN (AbstractTrial): ".Dumper(\%design);
-    
+    #print STDERR "DESIGN (AbstractTrial): ".Dumper(\%design);
+
     foreach my $key (sort { $a <=> $b} keys %design) {
         my %design_info = %{$design{$key}};
         $unique_acc{$design_info{"accession_name"}} = $design_info{"accession_id"}
@@ -297,7 +297,7 @@ sub _get_design_from_trial {
     my $design = decode_json $trial_layout_json->value if ($trial_layout_json);
     if (keys(%$design)) {
         	    print STDERR "WE HAVE TRIAL LAYOUT JSON!\n";
-	    print STDERR "TRIAL LAYOUT JSON IS: ".$trial_layout_json->value()."\n";
+	    #print STDERR "TRIAL LAYOUT JSON IS: ".$trial_layout_json->value()."\n";
 	    
 	    #Plant index number needs to be in the cached layout of trials that have plants. this serves a check to assure this.
 	    if ($trial_has_plants){
@@ -316,7 +316,7 @@ sub _get_design_from_trial {
 	} else {
 	print STDERR "Regenerating cache...\n";
         my $design = $self->generate_and_cache_layout();
-	print STDERR "Generated DESIGN (and cached) : ".Dumper($design);
+	#print STDERR "Generated DESIGN (and cached) : ".Dumper($design);
 	return $design;
     }
 }
@@ -366,7 +366,7 @@ sub generate_and_cache_layout {
 	$self->retrieve_plot_info($plot, \%design);
     }
 
-    print STDERR "DESIGN IN generate_and_cache_layout: ".Dumper(\%design);
+    #print STDERR "DESIGN IN generate_and_cache_layout: ".Dumper(\%design);
 
     my $trial_layout_json_rs = $project->search_related('projectprops',{ 'type_id' => $self->cvterm_id('trial_layout_json') });
     while (my $t = $trial_layout_json_rs->next) {
@@ -381,7 +381,7 @@ sub generate_and_cache_layout {
         return \%verify_errors;
     }
 
-    print STDERR "DESIGN AS READ : ".Dumper(\%design);
+    #print STDERR "DESIGN AS READ : ".Dumper(\%design);
 	
     return \%design;
 }
@@ -392,7 +392,7 @@ sub retrieve_plot_info {
     my $plot = shift;
     my $design = shift;
 
-    print STDERR "retrieve_plot_info()... Working on plot ".$plot->uniquename()."\n";
+    #print STDERR "retrieve_plot_info()... Working on plot ".$plot->uniquename()."\n";
     my %design_info;
     
     my $json = JSON->new();
@@ -428,8 +428,8 @@ sub retrieve_plot_info {
     my $well_ncbi_taxonomy_id_prop = $stockprop_hash{$self->cvterm_id('ncbi_taxonomy_id')} ? join ',', @{$stockprop_hash{$self->cvterm_id('ncbi_taxonomy_id')}} : undef;
     my $plot_geo_json_prop = $stockprop_hash{$self->cvterm_id('plot_geo_json')} ? $stockprop_hash{$self->cvterm_id('plot_geo_json')}->[0] : undef;
     
-    print  STDERR "SORUCE STOCK TYPES: ".Dumper($self->get_source_stock_type_ids())."\n".Dumper($self->get_source_stock_types());
-    print STDERR "REL TYEPS = ".Dumper($self->get_relationship_types());
+    #print  STDERR "SORUCE STOCK TYPES: ".Dumper($self->get_source_stock_type_ids())."\n".Dumper($self->get_source_stock_types());
+    #print STDERR "REL TYEPS = ".Dumper($self->get_relationship_types());
     
     my $accession_rs = $plot->search_related('stock_relationship_subjects')->search(
 	{ 'me.type_id' => { -in => $self->get_relationship_type_ids() }, 'object.type_id' => { -in => $self->get_source_stock_type_ids() } },

@@ -229,6 +229,7 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
     my $get_field_trials = $c->req->param("get_field_trials");
     my $get_crossing_trials = $c->req->param("get_crossing_trials");
     my $get_genotyping_trials = $c->req->param("get_genotyping_trials");
+    my $include_analyses = $c->req->param("include_analyses");
 
     my $projects;
     if (!$breeding_program_id && !$breeding_program_name) {
@@ -248,7 +249,7 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
 
     my @projects;
     foreach my $project (@$projects) {
-        my ($field_trials, $cross_trials, $genotyping_trials) = $p->get_trials_by_breeding_program($project->[0]);
+        my ($field_trials, $cross_trials, $genotyping_trials, $genotyping_data_projects, $field_management_factor_projects, $drone_run_projects, $drone_run_band_projects, $analyses_projects) = $p->get_trials_by_breeding_program($project->[0]);
         if ($get_field_trials){
             if ($field_trials && scalar(@$field_trials)>0){
                 my @trials = sort { $a->[1] cmp $b->[1] } @$field_trials;
@@ -265,6 +266,12 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
             if ($genotyping_trials && scalar(@$genotyping_trials)>0){
                 my @trials = sort { $a->[1] cmp $b->[1] } @$genotyping_trials;
                 push @projects, @trials;
+            }
+        }
+        if ($include_analyses) {
+            if ($analyses_projects && scalar(@$analyses_projects)>0){
+                my @analyses = sort { $a->[1] cmp $b->[1] } @$analyses_projects;
+                push @projects, @analyses;
             }
         }
     }
@@ -698,24 +705,21 @@ sub get_trained_keras_cnn_models : Path('/ajax/html/select/trained_keras_cnn_mod
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $keras_cnn_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model', 'protocol_type')->cvterm_id();
-    my $keras_cnn_trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_trait', 'protocol_property')->cvterm_id();
-    my $keras_cnn_model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model_type', 'protocol_property')->cvterm_id();
+    my $model_properties_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_properties', 'protocol_property')->cvterm_id();
 
-    my $model_q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, trained_trait.value, model_type.value
+    my $model_q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, model_type.value
         FROM nd_protocol
-        JOIN nd_protocolprop AS trained_trait ON(nd_protocol.nd_protocol_id=trained_trait.nd_protocol_id AND trained_trait.type_id=$keras_cnn_trait_cvterm_id)
-        JOIN nd_protocolprop AS model_type ON(nd_protocol.nd_protocol_id=model_type.nd_protocol_id AND model_type.type_id=$keras_cnn_model_type_cvterm_id)
+        JOIN nd_protocolprop AS model_type ON(nd_protocol.nd_protocol_id=model_type.nd_protocol_id AND model_type.type_id=$model_properties_cvterm_id)
         WHERE nd_protocol.type_id=$keras_cnn_cvterm_id;";
     my $model_h = $schema->storage->dbh()->prepare($model_q);
     $model_h->execute();
     my @keras_cnn_models;
-    while (my ($nd_protocol_id, $name, $description, $trained_trait, $model_type) = $model_h->fetchrow_array()) {
-        my $trained_trait_hash = decode_json $trained_trait;
+    while (my ($nd_protocol_id, $name, $description, $model_type) = $model_h->fetchrow_array()) {
         my $model_type_hash = decode_json $model_type;
-        my $trait_id = $trained_trait_hash->{variable_id};
-        my $trained_trait_name = $trained_trait_hash->{variable_name};
-        my $aux_trait_ids = $trained_trait_hash->{aux_trait_ids} ? $trained_trait_hash->{aux_trait_ids} : [];
-        $model_type = $model_type_hash->{value};
+        my $trait_id = $model_type_hash->{variable_id};
+        my $trained_trait_name = $model_type_hash->{variable_name};
+        my $aux_trait_ids = $model_type_hash->{aux_trait_ids} ? $model_type_hash->{aux_trait_ids} : [];
+        $model_type = $model_type_hash->{model_type};
         my $trained_image_type = $model_type_hash->{image_type};
 
         my @aux_trait_names;
@@ -731,6 +735,40 @@ sub get_trained_keras_cnn_models : Path('/ajax/html/select/trained_keras_cnn_mod
 
     my $id = $c->req->param("id") || "html_keras_cnn_select";
     my $name = $c->req->param("name") || "html_keras_cnn_select";
+
+    @keras_cnn_models = sort { $a->[1] cmp $b->[1] } @keras_cnn_models;
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@keras_cnn_models
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+sub get_trained_keras_mask_r_cnn_models : Path('/ajax/html/select/trained_keras_mask_r_cnn_models') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $keras_mask_r_cnn_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_mask_r_cnn_model', 'protocol_type')->cvterm_id();
+    my $model_properties_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_properties', 'protocol_property')->cvterm_id();
+
+    my $model_q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, model_type.value
+        FROM nd_protocol
+        JOIN nd_protocolprop AS model_type ON(nd_protocol.nd_protocol_id=model_type.nd_protocol_id AND model_type.type_id=$model_properties_cvterm_id)
+        WHERE nd_protocol.type_id=$keras_mask_r_cnn_cvterm_id;";
+    my $model_h = $schema->storage->dbh()->prepare($model_q);
+    $model_h->execute();
+    my @keras_cnn_models;
+    while (my ($nd_protocol_id, $name, $description, $model_type) = $model_h->fetchrow_array()) {
+        my $model_type_hash = decode_json $model_type;
+
+        push @keras_cnn_models, [$nd_protocol_id, $name];
+    }
+
+    my $id = $c->req->param("id") || "html_keras_mask_r_cnn_select";
+    my $name = $c->req->param("name") || "html_keras_mask_r_cnn_select";
 
     @keras_cnn_models = sort { $a->[1] cmp $b->[1] } @keras_cnn_models;
 

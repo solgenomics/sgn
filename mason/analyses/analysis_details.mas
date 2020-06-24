@@ -1,0 +1,127 @@
+<%args>
+$trial_id
+$trial_name
+$trial_description
+$breeding_program_name
+$breeding_program_id
+$year
+$identifier_prefix
+$trial_stock_type
+$analysis_metadata
+</%args>
+
+<div class="row">
+    <div class="col-sm-8">
+
+        <table class="table table-hover table-bordered" >
+
+            <tr>
+                <td><b>Analysis Name</b></td>
+                <td>
+                    <div id="trial_name">
+% if ($trial_name) {
+%   print "$trial_name";
+% } else {
+%   print "<span class='text-danger'>[No Trial Name]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Breeding Program </b></td>
+                <td>
+                    <span id="breeding_program">
+% if ($breeding_program_name) {
+                    <a href="/breeders/program/<% $breeding_program_id %>"><% $breeding_program_name %></a>
+% }
+% else {
+%  print "<span class='text-danger'>[No Breeding Program]</span>";
+% }
+                    </span>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Year</b></td>
+                <td>
+                    <div id="trial_year">
+% if ($year) {
+%  print "$year";
+% } else {
+%  print "<span class='text-danger'>[No Year]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Stock Type Being Evaluated</b></td>
+                <td>
+                    <div id="stock_type_in_trial">
+% if ($trial_stock_type) {
+%     print "$trial_stock_type";
+% } else {
+%     print "accession";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr><td><b>Description</b></td>
+                <td>
+                    <div id="trial_description">
+% if ($trial_description) {
+%  print "$trial_description";
+% } else {
+%  print "<span class='text-danger'>[No Description]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr><td><b>Protocol</b></td>
+                <td>
+                    <div id="analysis_protocol">
+%  print $analysis_metadata->analysis_protocol;
+                    </div>
+                </td>
+            </tr>
+
+            <tr><td><b>Dataset ID</b></td>
+                <td>
+                    <div id="analysis_dataset_id">
+%  print $analysis_metadata->dataset_id;
+                    </div>
+                </td>
+            </tr>
+
+            <tr><td><b>Created</b></td>
+                <td>
+                    <div id="analysis_create_timestamp">
+%  print $analysis_metadata->create_timestamp;
+                    </div>
+                </td>
+            </tr>
+
+            <tr><td><b>Result Summary</b></td>
+                <td>
+                    <div id="analysis_result_summary">
+%  if ($analysis_metadata->result_summary) {
+%    while (my($k,$v) = each %{$analysis_metadata->result_summary}) {
+%       print $k." = ".$v;
+%    }
+%  }
+                    </div>
+                </td>
+            </tr>
+
+        </table>
+
+    </div>
+    <div class="col-sm-4">
+        <div class="well well-sm">
+            <& /util/barcode.mas, identifier => "$identifier_prefix"."$trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
+        </div>
+    </div>
+</div>

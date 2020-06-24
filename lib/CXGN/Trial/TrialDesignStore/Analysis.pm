@@ -24,6 +24,13 @@ sub BUILD {   # adjust the cvterm ids for phenotyping trials
     $self->set_valid_properties( 
 	[
 	 'stock_name',
+	 'plot_name',
+	 'plot_number',
+	 'block_number',
+	 'rep_number',
+	 'is_a_control',
+	 'row_number',
+	 'col_number',
 	]);    
 }
 

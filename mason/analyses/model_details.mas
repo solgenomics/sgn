@@ -1,0 +1,102 @@
+<%args>
+$trial_id
+$trial_name
+$analysis_metadata
+</%args>
+
+<div class="row">
+    <div class="col-sm-12">
+
+        <table class="table table-hover table-bordered" >
+
+        <tr>
+            <td><b>Model Name</b></td>
+            <td>
+                <div id="model_name">
+                </div>
+            </td>
+        </tr>
+
+        <tr>
+            <td><b>Model Description</b></td>
+            <td>
+                <div id="model_description">
+                </div>
+            </td>
+        </tr>
+
+        <tr>
+            <td><b>Model Type</b></td>
+            <td>
+                <div id="model_type">
+                </div>
+            </td>
+        </tr>
+
+        <tr>
+            <td><b>Model Properties</b></td>
+            <td>
+                <div id="model_properties">
+                </div>
+            </td>
+        </tr>
+
+        <tr>
+            <td><b>Model Files</b></td>
+            <td>
+                <div id="model_files">
+                </div>
+            </td>
+        </tr>
+
+        </table>
+
+    </div>
+</div>
+
+<script>
+jQuery(document).ready(function(){
+
+    jQuery.ajax({
+        type: 'GET',
+        url : '/ajax/analysis/<% $trial_id %>/retrieve',
+        beforeSend: function() {
+            jQuery('#working_modal').modal('show');
+        },
+        success: function(response){
+            jQuery('#working_modal').modal('hide');
+            console.log(response);
+            if (response.error) {
+                alert(response.error);
+            }
+            else {
+                jQuery('#model_name').html(response.model_info.model_name);
+                jQuery('#model_description').html(response.model_info.model_description);
+                jQuery('#model_type').html(response.model_info.model_type_name);
+
+                var model_properties_string = '';
+                for (var key in response.model_info.model_properties) {
+                    if (response.model_info.model_properties.hasOwnProperty(key)) {
+                        model_properties_string = model_properties_string + key + " : " + response.model_info.model_properties[key] + "<br/>";
+                    }
+                }
+                jQuery('#model_properties').html(model_properties_string);
+
+                var model_files_string = '';
+                for (var key in response.model_info.model_file_ids) {
+                    if (response.model_info.model_file_ids.hasOwnProperty(key)) {
+                        model_files_string = model_files_string + response.model_info.model_file_ids[key] + " : <a href='/breeders/phenotyping/download/" + key + "'>Download</a><br/>";
+                    }
+                }
+                jQuery('#model_files').html(model_files_string);
+            }
+        },
+        error: function(response){
+            jQuery('#working_modal').modal('hide');
+            alert('Error getting analysis details!');
+        }
+    });
+
+});
+</script>
+
