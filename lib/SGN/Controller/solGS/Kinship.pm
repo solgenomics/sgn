@@ -19,31 +19,75 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 
-		   'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON'},
     );
 
 
 
-sub kinship_data :Path('/solgs/kinship/data/') Args() {
+
+sub kinship_analysis :Path('/kinship/analysis/') Args() {
+    my ($self, $c) = @_;
+
+    $c->stash->{template} = '/solgs/kinship/analysis.mas';
+
+}
+
+sub run_kinship :Path('kinship/run/analysis') Args() {
+    my ($self, $c, $pop_id) = @_;
+    
+}
+
+sub kinship_result :Path('/solgs/kinship/result/') Args() {
     my ($self, $c) = @_;   
 
-    $c->stash->{training_pop_id} = $c->req->param('kinship_pop_id');
-    $c->stash->{genotyping_protocol_id} = $c->req->param('genotyping_protocol_id'); ;
-    $c->stash->{trait_id} = $c->req->param('trait_id');
+    my $pop_id = $c->req->param('kinship_pop_id');
+    my $protocol_id = $c->req->param('genotyping_protocol_id'); ;
+    my $trait_id = $c->req->param('trait_id');
     
-    $c->controller('solGS::Files')->relationship_matrix_adjusted_file($c);
-    my $kinship_file = $c->stash->{relationship_matrix_adjusted_json_file};
-    
-    if (-s $kinship_file)
+    my $kinship_files $self->get_kinship_coef_files($c, $pop_id, $protocol_id, $trait_id);
+    my $json_file = $kinship_files->{json_file};
+
+    print STDERR "\njson_file: $json_file\n";
+      
+    if (-s $json_file)
     {
         $c->stash->{rest}{data_exists} = 1; 
-	$c->stash->{rest}{data} = read_file($kinship_file);
+	$c->stash->{rest}{data} = read_file($json_file);
 
 	$self->stash_kinship_output($c);
 	
     } 
 
+}
+
+
+sub get_kinship_coef_files {
+    my ($self, $c, $pop_id, $protocol_id, $trait_id) = @_;
+
+    $c->stash->{pop_id} = $pop_id;
+    $c->stash->{genotyping_protocol_id} = $protocol_id;
+    
+    my $matrix_file;
+    my $json_file;
+    
+    if ($trait_id)
+    {
+	$c->controller('solGS::solGS')->get_trait_details($$trait_id);
+	$c->controller('solGS::Files')->relationship_matrix_adjusted_file($c);
+	
+	$json_file = $c->stash->{relationship_matrix_adjusted_json_file};
+	$matrix_file = $c->stash->{relationship_matrix_adjusted_table_file};
+    }
+    else
+    {
+	$c->controller('solGS::Files')->relationship_matrix_file($c);
+	$matrix_file = $c->stash->{relationship_matrix_table_file};
+	$json_file = $c->stash->{relationship_matrix_json_file};
+    }
+
+    return {'json_file' => $json_file, 
+	    'matrix_file' => $matrix_file
+    };
 }
 
 
