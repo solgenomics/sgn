@@ -25,8 +25,8 @@ Isaak Y Tecle (iyt2@cornell.edu)
   <div  class="list_upload" id="list_label">
     <label for="kinship_pops_list">Select</label>
   </div> 
-  <div 	 class="list_upload" id="kinship_pops_list"> </div>
-  <div  class="list_upload" id="kinship_go_btn">
+  <div class="list_upload" id="kinship_pops_list"> </div>
+  <div class="list_upload" id="kinship_go_btn">
     <input type="button" value="Go" />
   </div>
     
