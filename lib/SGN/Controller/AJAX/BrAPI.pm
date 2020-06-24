@@ -1811,7 +1811,7 @@ sub list_detail_PUT {
 
 sub list_items  : Chained('list_single') PathPart('items') Args(0) : ActionClass('REST') { }
 
-sub list_items_PUT {
+sub list_items_POST {
 	my $self = shift;
 	my $c = shift;
 	my ($auth,$user_id) = _authenticate_user($c);
