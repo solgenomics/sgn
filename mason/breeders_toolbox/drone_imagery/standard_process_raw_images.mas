@@ -525,11 +525,11 @@ jQuery(document).ready(function(){
                 'image_id1':image_id1,
                 'image_id2':image_id2,
                 'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id,
-                'rotate_angle':manage_drone_imagery_standard_process_raw_images_interactive_rotate_angle
             },
             success: function(response){
                 console.log(response);
 
+                var angle_radians = parseInt(manage_drone_imagery_standard_process_raw_images_interactive_rotate_angle) * 0.0174533;
                 var x_pos_dst;
                 var x_pos_src;
                 var y_pos_dst;
@@ -547,12 +547,20 @@ jQuery(document).ready(function(){
                 });
 
                 var src_match = response.match_points_src[0];
-                var x_pos_match_src = parseInt(x_pos_src) + parseInt(src_match[0]);
-                var y_pos_match_src = parseInt(y_pos_src) + parseInt(src_match[1]);
+                var src_match_x = src_match[0];
+                var src_match_y = src_match[1];
+                var src_match_x_rotated = src_match_x*Math.cos(angle_radians) - src_match_y*Math.sin(angle_radians);
+                var src_match_y_rotated = src_match_x*Math.sin(angle_radians) + src_match_y*Math.cos(angle_radians);
+                var x_pos_match_src = parseInt(x_pos_src) + parseInt(src_match_x_rotated);
+                var y_pos_match_src = parseInt(y_pos_src) + parseInt(src_match_y_rotated);
 
                 var dst_match = response.match_points_dst[0];
-                var x_pos_match_dst = x_pos_match_src - dst_match[0];
-                var y_pos_match_dst = y_pos_match_src - dst_match[1];
+                var dst_match_x = dst_match[0];
+                var dst_match_y = dst_match[1];
+                var dst_match_x_rotated = dst_match_x*Math.cos(angle_radians) - dst_match_y*Math.sin(angle_radians);
+                var dst_match_y_rotated = dst_match_x*Math.sin(angle_radians) + dst_match_y*Math.cos(angle_radians);
+                var x_pos_match_dst = x_pos_match_src - dst_match_x_rotated;
+                var y_pos_match_dst = y_pos_match_src - dst_match_y_rotated;
 
                 d3.selectAll('g').each(function(d) {
                     var nir_image_id = d3.select(this).attr('nir_image_id');

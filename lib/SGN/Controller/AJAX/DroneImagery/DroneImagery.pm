@@ -1074,14 +1074,13 @@ sub drone_imagery_match_and_align_two_images_POST : Args(0) {
     my $drone_run_project_id = $c->req->param('drone_run_project_id');
     my $image_id1 = $c->req->param('image_id1');
     my $image_id2 = $c->req->param('image_id2');
-    my $rotate_angle = $c->req->param('rotate_angle');
 
-    # my $image1 = SGN::Image->new( $schema->storage->dbh, $image_id1, $c );
-    # my $image1_url = $image1->get_image_url("original");
-    # my $image1_fullpath = $image1->get_filename('original_converted', 'full');
-    # my $image2 = SGN::Image->new( $schema->storage->dbh, $image_id2, $c );
-    # my $image2_url = $image2->get_image_url("original");
-    # my $image2_fullpath = $image2->get_filename('original_converted', 'full');
+    my $image1 = SGN::Image->new( $schema->storage->dbh, $image_id1, $c );
+    my $image1_url = $image1->get_image_url("original");
+    my $image1_fullpath = $image1->get_filename('original_converted', 'full');
+    my $image2 = SGN::Image->new( $schema->storage->dbh, $image_id2, $c );
+    my $image2_url = $image2->get_image_url("original");
+    my $image2_fullpath = $image2->get_filename('original_converted', 'full');
 
     my $dir = $c->tempfiles_subdir('/drone_imagery_align');
     my $rotated_temp_image1 = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_align/imageXXXX').'.png';
@@ -1090,18 +1089,6 @@ sub drone_imagery_match_and_align_two_images_POST : Args(0) {
     my $align_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_align/imageXXXX').'.png';
     my $align_match_temp_results = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_align/imageXXXX');
     my $align_match_temp_results_2 = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_align/imageXXXX');
-
-    my $rotate_return1 = _perform_image_rotate($c, $schema, $metadata_schema, $drone_run_project_id, $image_id1, $rotate_angle, 1, $user_id, $user_name, $user_role, $rotated_temp_image1);
-    my $rotated_image_id1 = $rotate_return1->{rotated_image_id};
-    my $rotate_return2 = _perform_image_rotate($c, $schema, $metadata_schema, $drone_run_project_id, $image_id2, $rotate_angle, 1, $user_id, $user_name, $user_role, $rotated_temp_image2);
-    my $rotated_image_id2 = $rotate_return2->{rotated_image_id};
-
-    my $image1 = SGN::Image->new( $schema->storage->dbh, $rotated_image_id1, $c );
-    my $image1_url = $image1->get_image_url("original");
-    my $image1_fullpath = $image1->get_filename('original_converted', 'full');
-    my $image2 = SGN::Image->new( $schema->storage->dbh, $rotated_image_id2, $c );
-    my $image2_url = $image2->get_image_url("original");
-    my $image2_fullpath = $image2->get_filename('original_converted', 'full');
 
     my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/MatchAndAlignImages.py --image_path1 \''.$image1_fullpath.'\' --image_path2 \''.$image2_fullpath.'\' --outfile_match_path \''.$match_temp_image.'\' --outfile_path \''.$align_temp_image.'\' --results_outfile_path_src \''.$align_match_temp_results.'\' --results_outfile_path_dst \''.$align_match_temp_results_2.'\' ';
     print STDERR Dumper $cmd;
@@ -1190,7 +1177,7 @@ sub drone_imagery_save_gps_images : Path('/api/drone_imagery/save_gps_images') :
 sub drone_imagery_save_gps_images_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    print STDERR Dumper $c->req->params();
+    # print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $drone_run_project_id = $c->req->param('drone_run_project_id');
@@ -1204,7 +1191,7 @@ sub drone_imagery_save_gps_images_POST : Args(0) {
     });
     if ($saved_gps_positions_json) {
         my $saved_gps_positions_json_projectprop_id = $saved_gps_positions_json->projectprop_id();
-        print STDERR Dumper $saved_gps_positions_json_projectprop_id;
+        # print STDERR Dumper $saved_gps_positions_json_projectprop_id;
         my $q = "UPDATE projectprop SET value = ? WHERE projectprop_id = ?;";
         my $h = $schema->storage->dbh->prepare($q);
         $h->execute($gps_images_json, $saved_gps_positions_json_projectprop_id);
