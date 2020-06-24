@@ -329,6 +329,8 @@ jQuery(document).ready(function(){
     var manage_drone_imagery_standard_process_interactive_apply_drone_run_band_vegetative_indices = [];
     var manage_drone_imagery_standard_process_interactive_latitude_rounded_map = {};
     var manage_drone_imagery_standard_process_interactive_longitude_rounded_map = {};
+    var manage_drone_imagery_standard_process_interactive_latitude_ordinal_max;
+    var manage_drone_imagery_standard_process_interactive_longitude_ordinal_max;
 
     d3.selection.prototype.moveToFront = function() {
         return this.each(function(){
@@ -601,6 +603,8 @@ jQuery(document).ready(function(){
                 manage_drone_imagery_standard_process_interactive_min_latitude = response.min_latitude;
                 manage_drone_imagery_standard_process_interactive_latitude_rounded_map = response.latitude_rounded_map;
                 manage_drone_imagery_standard_process_interactive_longitude_rounded_map = response.longitude_rounded_map;
+                manage_drone_imagery_standard_process_interactive_latitude_ordinal_max = manage_drone_imagery_standard_process_interactive_latitudes_rounded.length;
+                manage_drone_imagery_standard_process_interactive_longitude_ordinal_max = manage_drone_imagery_standard_process_interactive_longitudes_rounded.length;
 
                 if (response.x_range != 0) {
                     drone_imagery_interactive_total_width = response.x_range + response.image_width;

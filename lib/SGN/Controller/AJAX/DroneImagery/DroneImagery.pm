@@ -1046,7 +1046,7 @@ sub drone_imagery_get_gps_GET : Args(0) {
         longitude_rounded_map => \%longitude_rounded_map,
         latitudes => \@latitudes_sorted,
         latitudes_rounded => \@latitudes_rounded_sorted,
-        latitude_rounded_map => %latitude_rounded_map,
+        latitude_rounded_map => \%latitude_rounded_map,
         gps_images => \%gps_images,
         saved_gps_positions => $saved_gps_positions,
         image_width => $width,
