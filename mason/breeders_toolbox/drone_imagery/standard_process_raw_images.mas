@@ -518,7 +518,8 @@ jQuery(document).ready(function(){
             data : {
                 'image_id1':image_id1,
                 'image_id2':image_id2,
-                'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id
+                'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id,
+                'rotate_angle':manage_drone_imagery_standard_process_raw_images_interactive_rotate_angle
             },
             success: function(response){
                 console.log(response);
