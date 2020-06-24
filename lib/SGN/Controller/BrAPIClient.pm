@@ -10,8 +10,6 @@ BEGIN { extends 'Catalyst::Controller' };
 sub authorize_client :Path('/brapi/authorize') QueryParam('return_url') { #breedbase.org/brapi/authorize?success_url=fieldbook://&display_name=Field%20Book
     my $self = shift;
     my $c = shift;
-    
-    print STDERR "Final test";
         
     my $authorized_clients = decode_json $c->get_conf('authorized_clients_JSON');;
     
