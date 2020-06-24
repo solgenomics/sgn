@@ -31,8 +31,79 @@ solGS.kinship = {
     },
 
     
+   loadKinshipPops: function(selectId, selectName, dataStructure) {
+       console.log('loading kiship data') 
+	if ( selectId.length === 0) {       
+            alert('The list is empty. Please select a list with content.' );
+	} else {
+	              
+            var kinshipTable = jQuery("#kinship_pops_table").doesExist();
+            console.log('kinshiptable ' + kinshipTable)
+	    
+            if (!kinshipTable) {
+                kinshipTable = this.createTable();
+		jQuery("#kinship_pops_section").append(kinshipTable).show();                           
+            }
+	    var onClickVal =  '<button type="button" class="btn btn-success" onclick="solGS.kinship.runKinship('
+		+ selectId + ",'" + selectName + "'" +  ",'" + dataStructure
+		+ "'" + ');return false;">Run Kinship</button>';
 
-    getKinshipData: function() {
+	    var dataType = ['Genotype'];
+	    var dataTypeOpts = this.createDataTypeSelect(dataType);
+	    
+	    var addRow = '<tr  name="' + dataStructure + '"' + ' id="' + selectId +  '">'
+                + '<td>' + selectName + '</td>'
+		+ '<td>' + dataStructure + '</td>'
+		+ '<td>' + dataTypeOpts + '</td>'
+                + '<td id="list_kinship_page_' + selectId +  '">' + onClickVal + '</td>'          
+                + '<tr>';
+
+	    var tdId = '#list_kinship_page_' + selectId;
+	    var addedRow = jQuery(tdId).doesExist();
+
+	    if (!addedRow) {
+                jQuery("#kinship_pops_table tr:last").after(addRow);
+	    }
+	}
+
+    },
+ 
+    createTable: function () {
+	var kinshipTable ='<table id="kinship_pops_table" class="table table-striped"><tr>'
+            + '<th>Population</th>'
+            + '<th>Data structure type</th>'
+	    + '<th>Data type</th>'
+            + '<th>Run Kinship</th>'
+            +'</tr>'
+            + '</td></tr></table>';
+	
+	return kinshipTable;
+    },
+    
+
+    createDataTypeSelect: function(opts) {
+	var dataTypeGroup = '<select class="form-control" id="kinship_data_type_select">';
+
+	for (var i=0; i < opts.length; i++) {
+	    
+	    dataTypeGroup += '<option value="'
+		+ opts[i] + '">'
+		+ opts[i]
+		+ '</option>';
+	}
+	dataTypeGroup +=  '</select>';
+	
+	return dataTypeGroup;
+    },
+
+    runKinship: function (selectId, selectName, dataStructure) {
+
+	console.log('sel id:' + selectId + ' sel name ' + selectName + ' dt str ' + dataStructure)
+   
+    },
+
+    
+    getKinshipResult: function() {
  
 	var popData = this.getPopulationDetails();
 		
@@ -42,7 +113,7 @@ solGS.kinship = {
             type: 'POST',
             dataType: 'json',
             data: popData,
-            url: '/solgs/kinship/data/',
+            url: '/solgs/kinship/result/',
             success: function (res) {
 		
                 if (res.data_exists) {
@@ -114,10 +185,75 @@ solGS.kinship = {
 jQuery(document).ready( function () { 
 
     jQuery("#run_kinship").click(function () {
-        solGS.kinship.getKinshipData();
+        solGS.kinship.getKinshipResult();
     	jQuery("#run_kinship").hide();
     }); 
   
 });
 
+jQuery(document).ready( function() {
+    
+    var url = document.URL;
+    
+    if (url.match(/kinship\/analysis/)) {
+    
+        var list = new CXGN.List();
+        var listMenu = list.listSelect("kinship_pops", ['accessions', 'trials'], undefined, undefined, undefined);
 
+	var dType = ['accessions', 'trials'];	
+	var dMenu = solGS.dataset.getDatasetsMenu(dType);
+	
+	if (listMenu.match(/option/) != null) {
+            
+            jQuery("#kinship_pops_list").html(listMenu);
+	    jQuery("#kinship_pops_list_select").append(dMenu);
+
+        } else {            
+            jQuery("#kinship_pops_list").html("<select><option>no lists found - Log in</option></select>");
+        }
+    }
+               
+});
+
+
+jQuery(document).ready( function() { 
+
+    jQuery("#run_kinship").click(function() {
+	solGS.kinship.runKinship();
+    }); 
+  
+});
+
+
+jQuery(document).ready( function() { 
+     
+    var url = document.URL;
+    
+    if (url.match(/kinship\/analysis/)) {
+
+	
+        var selectId;
+	var selectName;
+        var dataStructure;
+	
+        jQuery("<option>", {value: '', selected: true}).prependTo("#kinship_pops_list_select");
+        
+        jQuery("#kinship_pops_list_select").change(function() {        
+            selectId = jQuery(this).find("option:selected").val();
+            selectName = jQuery(this).find("option:selected").text();    
+            dataStructure  = jQuery(this).find("option:selected").attr('name');
+	    
+	    if (dataStructure == undefined) {
+		dataStructure = 'list';
+	    }
+	   
+            if (selectId) {                
+                jQuery("#kinship_go_btn").click(function() {
+                    solGS.kinship.loadKinshipPops(selectId, selectName, dataStructure);
+                });
+            }
+        });
+    } 
+
+    
+});
