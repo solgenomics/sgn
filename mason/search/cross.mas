@@ -434,7 +434,7 @@ jQuery(document).ready(function (){
             'paging': true,
             'ordering': false,
             'destroy': true,
-            'ajax': {'url':'/ajax/search/all_progenies',
+            'ajax': {'url':'/ajax/search/progenies',
                 data:{'pedigree_female_parent':jQuery('#pedigree_female_parent').val()},
             }
         });
@@ -462,7 +462,7 @@ jQuery(document).ready(function (){
             'paging': true,
             'ordering': false,
             'destroy': true,
-            'ajax': {'url':'/ajax/search/all_progenies',
+            'ajax': {'url':'/ajax/search/progenies',
                 data:{'pedigree_male_parent':jQuery('#male_parent').val()},
             }
         });
@@ -555,7 +555,7 @@ jQuery(document).ready(function (){
             'paging': true,
             'ordering': false,
             'destroy'    : true,
-            'ajax':{'url':'/ajax/search/all_crosses',
+            'ajax':{'url':'/ajax/search/crosses',
             'data':{'female_parent':jQuery('#cross_female_parent').val(),
                     'male_parent':jQuery('#cross_male_parent').val()},
             }
@@ -585,7 +585,7 @@ jQuery(document).ready(function (){
             'paging': true,
             'ordering': false,
             'destroy'    : true,
-            'ajax':{'url':'/ajax/search/all_crosses',
+            'ajax':{'url':'/ajax/search/crosses',
             'data':{'female_parent':jQuery('#cross_female').val(),
                     'male_parent':jQuery('#cross_male').val()},
             }
@@ -618,7 +618,7 @@ jQuery(document).ready(function (){
             'paging': true,
             'ordering': false,
             'destroy': true,
-            'ajax':{'url':'/ajax/search/all_crosses',
+            'ajax':{'url':'/ajax/search/crosses',
                 data:{'female_parent':jQuery('#cross_female_parent').val()},
             }
         });
@@ -648,7 +648,7 @@ jQuery(document).ready(function (){
             'paging': true,
             'ordering': false,
             'destroy': true,
-            'ajax':{'url':'/ajax/search/all_crosses',
+            'ajax':{'url':'/ajax/search/crosses',
                 data:{'male_parent':jQuery('#cross_male').val()},
             }
         });
