@@ -26,9 +26,11 @@
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Spreadsheet Format: </label>
                     <div class="col-sm-9" >
-                        <select class="form-control" id="upload_spreadsheet_phenotype_file_format" name="upload_spreadsheet_phenotype_file_format">
-                            <option value="nirs">Simple NIRS</option>
-                            <option value="scio">SCiO NIRS</option>
+                        <br>
+                        <b>General NIRS upload format.</b>
+                        <!-- <select class="form-control" id="upload_spreadsheet_phenotype_file_format" name="upload_spreadsheet_phenotype_file_format"> -->
+                            <!-- <option value="nirs">General NIRS upload</option> -->
+                            <!-- <option value="scio">NIRS</option> -->
                         </select>
                     </div>
                 </div>
@@ -85,22 +87,43 @@
       <div class="modal-body">
         <div class="container-fluid">
 
-            <h5>There are two possible formats for uploading NIRS data</h5>
+            <h5>With this model is possible to upload NIRS data just need to follow these columns</h5>
 
-            <h3>Simple NIRS .xls:</h3>
+            <h3>Upload NIRS .csv:</h3>
+
             <ul>
-                <li>The simple nirs spreadsheet format is built on top of the simple phenotype format.</li>
-                <li>It consists of a column called 'observationunit_name' followed by trait columns derived from the NIR spectra, followed by columns of NIR spectra data themselves.</li>
-                <li>Trait column names must come from the trait ontology, but NIR spectra column names should simply be copied from whateve standard output file the NIR device produces.</li>
-                <li><a href="https://docs.google.com/spreadsheets/d/1bPsM71mrw8I2ffg6xQo8PC5nDgSz_IzTml3JVb5FWwE/edit?usp=sharing">Simple NIRS .xls template</a></li>
+                <li><mark>id</mark>: It is an optional identification for each NIRS read. The id must be an integer.</li>
+                <li><mark>sampling_id</mark>: It is an optional identification for each sample. Strings are allowed.</li>
+                <li><mark>sampling_date</mark>: It is an optional field. The format allwed is: YYYY-MM-DD.</li>
+                <li><mark>observationUnit_id</mark>: It is a requiered field which matches with the databank. It can be the plot name, subplots, plant name, or tissue sample, depending how your trial is designed.</li>
+                <li><mark>device_id</mark>: It is an optional field to identify your device. Strings are allowed.</li>
+                <li><mark>device_type</mark>: It is a required field. It is possible upload data for a single device type. They can be: SCIO, ASC, FOSS, or LINKSQUARE.</li>
+                <li><mark>temperature</mark>: Optional field to store temperature.</li>
+                <li><mark>location</mark>: Optional field to idenfy where the NIRS data was collected.</li>
+                <li><mark>outlier</mark>: Optional field, occasionally outilers can be identified by the number 1.</li>
+                <li>All other columns are wavelengths. You can add how many columns you want upload, there isn't a limit. 
             </ul>
+            <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>id</td>
+                                <td>sample_id</td>
+                                <td>sampling_date</td>
+                                <td>obserbationUnit_id</td>
+                                <td>device_id</td>
+                                <td>device_type</td>
+                                <td>temperature</td>
+                                <td>location</td>
+                                <td>outlier</td>
+                            </tr>
+                        </tbody>
+                    </table>
 
-            <h3>SCIO NIRS .csv:</h3>
+            <h3>Template for Upload NIRS .csv:</h3>
             <ul>
-                <li>The SCIO nirs spreadsheet format is generated when doing a direct download from the SCIO server.</li>
-                <li>It consists of a series of metadata fields at the beginning of the file, followed by a header for all of the individual measurements, followed by a row for each of the individual measurements themselves.</li>
-                <li>The User_input_id field must be a valid observation_unit in the database.</li>
-                <li><a href="https://docs.google.com/spreadsheets/d/17_egaPcoTyf6mtZ9xIyNnm4vgdci2TbK5sJ67ySR5Hw/edit?usp=sharing">SCIO NIRS .csv template</a></li>
+                <li>The observationUnit_id and device_type must be valid for BreedBase.</li>
+                <li><a href="https://docs.google.com/spreadsheets/d/1Zxxwhq6Dz1PvvUEMz3Xj3gBYTkchp4tGDfgsIHDNJB8/edit?usp=sharing">Upload NIRS .csv template</a></li>
             </ul>
         </div>
       </div>
