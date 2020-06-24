@@ -17,35 +17,12 @@ __PACKAGE__->config(
 sub search_cross_male_parents :Path('/ajax/search/cross_male_parents') :Args(0){
     my $self = shift;
     my $c = shift;
-    my $female_parent= $c->req->param("female_parent");
-     #print STDERR "Female parent =" . Dumper($female_parent) . "\n";
-
-
+    my $cross_female_parent= $c->req->param("female_parent");
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $male_parent_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
-    my $female_parent_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
-    my $cross_typeid = $c->model("Cvterm")->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
-    my $dbh = $schema->storage->dbh();
 
-    my $q = "SELECT DISTINCT female_parent.stock_id, male_parent.stock_id, male_parent.uniquename FROM stock as female_parent
-    INNER JOIN stock_relationship AS stock_relationship1 ON (female_parent.stock_id=stock_relationship1.subject_id)
-    INNER JOIN stock AS check_type ON (stock_relationship1.object_id=check_type.stock_id)
-    LEFT JOIN stock_relationship AS stock_relationship2 ON (stock_relationship1.object_id = stock_relationship2.object_id)
-    LEFT JOIN stock AS male_parent ON (male_parent.stock_id=stock_relationship2.subject_id)
-    WHERE female_parent.uniquename = ? AND stock_relationship1.type_id = ? AND check_type.type_id = ? AND stock_relationship2.type_id = ?
-    ORDER BY male_parent.uniquename ASC";
+    my $cross_male_parents = CXGN::Cross->get_cross_male_parents($schema, $cross_female_parent);
 
-
-    my $h = $dbh->prepare($q);
-    $h->execute($female_parent, $female_parent_typeid, $cross_typeid, $male_parent_typeid );
-
-    my @male_parents=();
-    while(my ($female_parent_id, $male_parent_id, $male_parent_name) = $h->fetchrow_array()){
-
-      push @male_parents, [$male_parent_name];
-    }
-
-    $c->stash->{rest} = {data=>\@male_parents};
+    $c->stash->{rest}={ data => $cross_male_parents};
 
 }
 
@@ -53,31 +30,12 @@ sub search_cross_male_parents :Path('/ajax/search/cross_male_parents') :Args(0){
 sub search_cross_female_parents :Path('/ajax/search/cross_female_parents') :Args(0){
     my $self = shift;
     my $c = shift;
-    my $male_parent= $c->req->param("male_parent");
-
+    my $cross_male_parent= $c->req->param("male_parent");
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $male_parent_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
-    my $female_parent_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
-    my $cross_typeid = $c->model("Cvterm")->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
-    my $dbh = $schema->storage->dbh();
 
-    my $q = "SELECT DISTINCT female_parent.stock_id, female_parent.uniquename FROM stock as male_parent
-    INNER JOIN stock_relationship AS stock_relationship1 ON (male_parent.stock_id=stock_relationship1.subject_id)
-    INNER JOIN stock AS check_type ON (stock_relationship1.object_id=check_type.stock_id)
-    LEFT JOIN stock_relationship AS stock_relationship2 ON (stock_relationship1.object_id = stock_relationship2.object_id)
-    LEFT JOIN stock AS female_parent ON (female_parent.stock_id=stock_relationship2.subject_id)
-    WHERE male_parent.uniquename = ? AND stock_relationship1.type_id = ? AND check_type.type_id = ? AND stock_relationship2.type_id = ?
-    ORDER BY female_parent.uniquename ASC";
-    my $h = $dbh->prepare($q);
-    $h->execute($male_parent, $male_parent_typeid, $cross_typeid, $female_parent_typeid );
+    my $cross_female_parents = CXGN::Cross->get_cross_female_parents($schema, $cross_male_parent);
 
-    my @female_parents=();
-    while(my ($female_parent_id, $female_parent_name) = $h->fetchrow_array()){
-
-      push @female_parents, [$female_parent_name];
-    }
-
-    $c->stash->{rest} = {data=>\@female_parents};
+    $c->stash->{rest} = {data => $cross_female_parents};
 
 }
 
