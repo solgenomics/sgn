@@ -298,12 +298,15 @@ sub update {
 sub store_items {
 	my $self = shift;
 	my $list_id = shift;
-    my $data = shift;
+    my $params = shift;
     my $user_id =shift;
 
     if (!$user_id){
         return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must be logged in to add a seedlot!'));
     }
+
+	my $data;
+	@$data = keys %$params;
 
 	my $schema = $self->bcs_schema;
     my $dbh = $self->bcs_schema()->storage()->dbh();
