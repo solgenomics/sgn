@@ -47,6 +47,7 @@ use CXGN::BreedersToolbox::Accessions;
 use CXGN::Genotype::GRM;
 use CXGN::AnalysisModel::SaveModel;
 use CXGN::AnalysisModel::GetModel;
+use Math::Polygon;
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -3059,39 +3060,59 @@ sub standard_process_apply_raw_images_interactive_POST : Args(0) {
         $save_stock_polygons = decode_json $previous_plot_polygons_rs->first->value;
     }
     # print STDERR Dumper $save_stock_polygons;
+    # print STDERR Dumper $saved_gps_positions;
 
     my %polygons_images_positions;
     while (my ($lat, $lo) = each %$saved_gps_positions) {
         while (my ($long, $pos) = each %$lo) {
-            my $x_pos_min = $pos->{x_pos};
-            my $y_pos_min = $pos->{y_pos};
             my $size = $pos->{image_size};
-            my $x_pos_max = $x_pos_min + $size->[0];
-            my $y_pos_max = $y_pos_min + $size->[1];
+            my $rotate_angle = $pos->{rotate_angle} + 0;
+            my $angle_radians = $rotate_angle * 0.0174533;
+            my $x1_pos = $pos->{x_pos} + 0;
+            my $y1_pos = $pos->{y_pos} + 0;
+            my $x2_pos = $x1_pos + $size->[0]*cos($angle_radians) - 0*sin($angle_radians);
+            my $y2_pos = $y1_pos + $size->[0]*sin($angle_radians) + 0*cos($angle_radians);
+            my $x3_pos = $x1_pos + $size->[0]*cos($angle_radians) - $size->[1]*sin($angle_radians);
+            my $y3_pos = $y1_pos + $size->[0]*sin($angle_radians) + $size->[1]*cos($angle_radians);
+            my $x4_pos = $x1_pos + 0*cos($angle_radians) - $size->[1]*sin($angle_radians);
+            my $y4_pos = $y1_pos + 0*sin($angle_radians) + $size->[1]*cos($angle_radians);
+
+            my $new_tl_x = $x2_pos - $x1_pos;
+            my $new_tl_y = $x2_pos - $x1_pos;
+
+            my $image_bound = [ [$x1_pos, $y1_pos], [$x2_pos, $y2_pos], [$x3_pos, $y3_pos], [$x4_pos, $y4_pos], [$x1_pos, $y1_pos] ];
+            my $bound = Math::Polygon->new(points => $image_bound);
 
             while (my ($plot_name, $points) = each %$save_stock_polygons) {
-                my $polygon_x_min = $points->[0]->{x};
-                my $polygon_y_min = $points->[0]->{y};
-                my $polygon_x_max = $points->[2]->{x};
-                my $polygon_y_max = $points->[2]->{y};
+                my $polygon_x1 = $points->[0]->{x} + 0;
+                my $polygon_y1 = $points->[0]->{y} + 0;
+                my $polygon_x2 = $points->[1]->{x} + 0;
+                my $polygon_y2 = $points->[1]->{y} + 0;
+                my $polygon_x3 = $points->[2]->{x} + 0;
+                my $polygon_y3 = $points->[2]->{y} + 0;
+                my $polygon_x4 = $points->[3]->{x} + 0;
+                my $polygon_y4 = $points->[3]->{y} + 0;
 
-                if ($polygon_x_min >= $x_pos_min && $polygon_y_min >= $y_pos_min && $polygon_x_max <= $x_pos_max && $polygon_y_max <= $polygon_y_max) {
+                if ($bound->contains([$polygon_x1,$polygon_y1]) && $bound->contains([$polygon_x2,$polygon_y2]) && $bound->contains([$polygon_x3,$polygon_y3]) && $bound->contains([$polygon_x4,$polygon_y4])) {
                     my $points_shifted = [
-                        {'x' => $points->[0]->{x} - $x_pos_min, 'y' => $points->[0]->{y} - $y_pos_min},
-                        {'x' => $points->[1]->{x} - $x_pos_min, 'y' => $points->[1]->{y} - $y_pos_min},
-                        {'x' => $points->[2]->{x} - $x_pos_min, 'y' => $points->[2]->{y} - $y_pos_min},
-                        {'x' => $points->[3]->{x} - $x_pos_min, 'y' => $points->[3]->{y} - $y_pos_min},
+                        {'x' => $polygon_x1 - $x1_pos, 'y' => $polygon_y1 - $y1_pos},
+                        {'x' => $polygon_x2 - $x1_pos, 'y' => $polygon_y2 - $y1_pos},
+                        {'x' => $polygon_x3 - $x1_pos, 'y' => $polygon_y3 - $y1_pos},
+                        {'x' => $polygon_x4 - $x1_pos, 'y' => $polygon_y4 - $y1_pos},
                     ];
-                    push @{$polygons_images_positions{$plot_name}}, {
+                    my $obj = {
                         images => $pos,
-                        points => $points_shifted
+                        points => $points_shifted,
+                        image_bound => $image_bound
                     };
+                    push @{$polygons_images_positions{$plot_name}}, $obj;
+                } else {
+                    print STDERR "Polygon outside image!\n";
                 }
             }
         }
     }
-    print STDERR Dumper \%polygons_images_positions;
-    # die;
+    # print STDERR Dumper \%polygons_images_positions;
 
     my $term_map = CXGN::DroneImagery::ImageTypes::get_base_imagery_observation_unit_plot_polygon_term_map();
     my $drone_image_types = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_observation_unit_plot_polygon_types($bcs_schema);
@@ -3132,6 +3153,7 @@ sub standard_process_apply_raw_images_interactive_POST : Args(0) {
                 my $rotate_return = _perform_image_rotate($c, $bcs_schema, $metadata_schema, $apply_drone_run_band_project_id, $current_image_id, $rotate_value, 0, $user_id, $user_name, $user_role, $archive_rotate_temp_image, 1);
                 my $rotated_image_id = $rotate_return->{rotated_image_id};
                 my $rotated_image_url = $rotate_return->{rotated_image_url};
+                print STDERR Dumper $rotated_image_url;
 
                 my $return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $rotated_image_id, $apply_drone_run_band_project_id, encode_json $plot_polygon, $plot_polygon_type, $user_id, $user_name, $user_role, 0, 1);
             }
