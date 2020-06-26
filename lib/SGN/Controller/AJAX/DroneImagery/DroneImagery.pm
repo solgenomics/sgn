@@ -48,6 +48,7 @@ use CXGN::Genotype::GRM;
 use CXGN::AnalysisModel::SaveModel;
 use CXGN::AnalysisModel::GetModel;
 use Math::Polygon;
+use Math::Trig;
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -990,6 +991,7 @@ sub drone_imagery_get_gps_GET : Args(0) {
             nir_image_id => $nir_image_id,
             d3_rotate_angle => $nir_image->{d3_rotate_angle},
             rotated_bound => $nir_image->{rotated_bound},
+            rotated_extent => $nir_image->{rotated_extent},
             rotated_image_ids => \@rotated_stack_image_ids,
             image_url => $image_url,
             image_size => [$width, $length],
@@ -1091,6 +1093,7 @@ sub drone_imagery_update_gps_images_rotation_POST : Args(0) {
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $drone_run_project_id = $c->req->param("drone_run_project_id");
     my $rotate_angle = $c->req->param("rotate_angle");
+    my $rotate_radians = $rotate_angle * 0.0174533;
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $saved_image_stacks_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_micasense_stacks', 'project_property')->cvterm_id();
@@ -1111,6 +1114,8 @@ sub drone_imagery_update_gps_images_rotation_POST : Args(0) {
     my @size = imgsize($first_image_fullpath);
     my $width = $size[0];
     my $length = $size[1];
+    my $cx = $width/2;
+    my $cy = $length/2;
 
     my %gps_images;
     my $dir = $c->tempfiles_subdir('/drone_imagery_rotate');
@@ -1131,13 +1136,49 @@ sub drone_imagery_update_gps_images_rotation_POST : Args(0) {
             my $rotated_image_url = $rotate_return->{rotated_image_url};
             print STDERR Dumper $rotated_image_url;
 
+            my $temp_x1 = 0 - $cx;
+            my $temp_y1 = $length - $cy;
+            my $temp_x2 = $width - $cx;
+            my $temp_y2 = $length - $cy;
+            my $temp_x3 = $width - $cx;
+            my $temp_y3 = 0 - $cy;
+            my $temp_x4 = 0 - $cx;
+            my $temp_y4 = 0 - $cy;
+
+            my $rotated_x1 = $temp_x1*cos($rotate_radians) - $temp_y1*sin($rotate_radians);
+            my $rotated_y1 = $temp_x1*sin($rotate_radians) + $temp_y1*cos($rotate_radians);
+            my $rotated_x2 = $temp_x2*cos($rotate_radians) - $temp_y2*sin($rotate_radians);
+            my $rotated_y2 = $temp_x2*sin($rotate_radians) + $temp_y2*cos($rotate_radians);
+            my $rotated_x3 = $temp_x3*cos($rotate_radians) - $temp_y3*sin($rotate_radians);
+            my $rotated_y3 = $temp_x3*sin($rotate_radians) + $temp_y3*cos($rotate_radians);
+            my $rotated_x4 = $temp_x4*cos($rotate_radians) - $temp_y4*sin($rotate_radians);
+            my $rotated_y4 = $temp_x4*sin($rotate_radians) + $temp_y4*cos($rotate_radians);
+
+            $rotated_x1 = $rotated_x1 + $cx;
+            $rotated_y1 = $rotated_y1 + $cy;
+            $rotated_x2 = $rotated_x2 + $cx;
+            $rotated_y2 = $rotated_y2 + $cy;
+            $rotated_x3 = $rotated_x3 + $cx;
+            $rotated_y3 = $rotated_y3 + $cy;
+            $rotated_x4 = $rotated_x4 + $cx;
+            $rotated_y4 = $rotated_y4 + $cy;
+            my $rotated_bound = [[$rotated_x1, $rotated_y1], [$rotated_x2, $rotated_y2], [$rotated_x3, $rotated_y3], [$rotated_x4, $rotated_y4]];
+
+            my $corner_1_diff = [$temp_x1-$rotated_x1, $temp_y1-$rotated_y1];
+            my $corner_2_diff = [$temp_x2-$rotated_x2, $temp_y2-$rotated_y2];
+            my $corner_3_diff = [$temp_x3-$rotated_x3, $temp_y3-$rotated_y3];
+            my $corner_4_diff = [$temp_x4-$rotated_x4, $temp_y4-$rotated_y4];
+            my $rotated_extent = [$corner_1_diff, $corner_2_diff, $corner_3_diff, $corner_4_diff];
+
             push @{$rotated_saved_micasense_stacks{$stack_key}}, {
                 rotated_image_id => $rotated_image_id,
                 d3_rotate_angle => $rotate_angle,
                 image_id => $image_id,
                 longitude => $longitude_raw,
                 latitude => $latitude_raw,
-                altitude => $altitude_raw
+                altitude => $altitude_raw,
+                rotated_bound => $rotated_bound,
+                rotated_extent => $rotated_extent
             };
         }
     }

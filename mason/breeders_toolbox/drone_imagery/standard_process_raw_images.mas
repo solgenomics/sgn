@@ -396,8 +396,7 @@ jQuery(document).ready(function(){
         });
     }
 
-    function appendDraggableImage(url, x_pos, y_pos, latitude, longitude, nir_image_id, stack_image_ids, rotate_angle, enable_drag) {
-        console.log(rotate_angle);
+    function appendDraggableImage(url, x_pos, y_pos, latitude, longitude, nir_image_id, stack_image_ids, rotate_angle, enable_drag, rotated_bound) {
 
         var imageGroup = manage_drone_imagery_standard_process_raw_images_interactive_svg.append("g")
             .datum({position: x_pos,y_pos})
@@ -414,7 +413,7 @@ jQuery(document).ready(function(){
         var squareFill = imageGroup.append("square")
             .attr("class", "square-fill")
             .attr("cx", manage_drone_imagery_standard_process_raw_images_interactive_image.width / 2)
-            .attr("cy", manage_drone_imagery_standard_process_raw_images_interactive_image.length / 2)
+            .attr("cy", manage_drone_imagery_standard_process_raw_images_interactive_image.length / 2);
 
         var imageElem = imageGroup.append("image")
             .attr("xlink:href", url)
@@ -426,6 +425,41 @@ jQuery(document).ready(function(){
                 .on("start", dragstarted)
                 .on("drag", dragged)
                 .on("end", dragended));
+        }
+
+        if (rotated_bound && rotated_bound.length>0) {
+            var rotatedBoundGroup = manage_drone_imagery_standard_process_raw_images_interactive_svg.append("g")
+                .datum({position: x_pos,y_pos})
+                .attr("x_pos", x_pos)
+                .attr("y_pos", y_pos);
+            rotatedBoundGroup.append('line')
+                .style("stroke", "blue")
+                .style("stroke-width", 5)
+                .attr("x1", parseFloat(rotated_bound[0][0]) + parseFloat(x_pos))
+                .attr("y1", parseFloat(rotated_bound[0][1]) + parseFloat(y_pos))
+                .attr("x2", parseFloat(rotated_bound[1][0]) + parseFloat(x_pos))
+                .attr("y2", parseFloat(rotated_bound[1][1]) + parseFloat(y_pos));
+            rotatedBoundGroup.append('line')
+                .style("stroke", "blue")
+                .style("stroke-width", 5)
+                .attr("x1", parseFloat(rotated_bound[1][0]) + parseFloat(x_pos))
+                .attr("y1", parseFloat(rotated_bound[1][1]) + parseFloat(y_pos))
+                .attr("x2", parseFloat(rotated_bound[2][0]) + parseFloat(x_pos))
+                .attr("y2", parseFloat(rotated_bound[2][1]) + parseFloat(y_pos));
+            rotatedBoundGroup.append('line')
+                .style("stroke", "blue")
+                .style("stroke-width", 5)
+                .attr("x1", parseFloat(rotated_bound[2][0]) + parseFloat(x_pos))
+                .attr("y1", parseFloat(rotated_bound[2][1]) + parseFloat(y_pos))
+                .attr("x2", parseFloat(rotated_bound[3][0]) + parseFloat(x_pos))
+                .attr("y2", parseFloat(rotated_bound[3][1]) + parseFloat(y_pos));
+            rotatedBoundGroup.append('line')
+                .style("stroke", "blue")
+                .style("stroke-width", 5)
+                .attr("x1", parseFloat(rotated_bound[3][0]) + parseFloat(x_pos))
+                .attr("y1", parseFloat(rotated_bound[3][1]) + parseFloat(y_pos))
+                .attr("x2", parseFloat(rotated_bound[0][0]) + parseFloat(x_pos))
+                .attr("y2", parseFloat(rotated_bound[0][1]) + parseFloat(y_pos));
         }
     }
 
@@ -588,7 +622,7 @@ jQuery(document).ready(function(){
                     var rotate_angle = manage_drone_imagery_standard_process_interactive_saved_gps_positions[latitude][longitude]['d3_rotate_angle'] ? manage_drone_imagery_standard_process_interactive_saved_gps_positions[latitude][longitude]['d3_rotate_angle'] : manage_drone_imagery_standard_process_raw_images_interactive_rotate_angle;
                     manage_drone_imagery_standard_process_interactive_saved_gps_positions[latitude][longitude]['d3_rotate_angle'] = rotate_angle;
                     manage_drone_imagery_standard_process_raw_images_interactive_rotate_angle = rotate_angle;
-                    appendDraggableImage(image_url, x_pos, y_pos, latitude, longitude, nir_image_id, JSON.stringify(rotated_image_ids), rotate_angle, enable_drag);
+                    appendDraggableImage(image_url, x_pos, y_pos, latitude, longitude, nir_image_id, JSON.stringify(rotated_image_ids), rotate_angle, enable_drag, []);
                 }
                 else if (manage_drone_imagery_standard_process_interactive_gps_images[latitude][longitude]) {
                     var image_url = manage_drone_imagery_standard_process_interactive_gps_images[latitude][longitude]['image_url'];
@@ -611,8 +645,9 @@ jQuery(document).ready(function(){
                     manage_drone_imagery_standard_process_interactive_gps_images[latitude][longitude]['d3_rotate_angle'] = rotate_angle;
                     manage_drone_imagery_standard_process_raw_images_interactive_rotate_angle = rotate_angle;
                     manage_drone_imagery_standard_process_raw_images_nir_images.push(nir_image_id);
-
-                    appendDraggableImage(image_url, x_pos, y_pos, latitude, longitude, nir_image_id, JSON.stringify(rotated_image_ids), rotate_angle, enable_drag);
+                    var rotated_bound = manage_drone_imagery_standard_process_interactive_gps_images[latitude][longitude]['rotated_bound'];
+                    var rotated_extent = manage_drone_imagery_standard_process_interactive_gps_images[latitude][longitude]['rotated_extent'];
+                    appendDraggableImage(image_url, x_pos, y_pos, latitude, longitude, nir_image_id, JSON.stringify(rotated_image_ids), rotate_angle, enable_drag, rotated_bound);
                 }
             }
         }
