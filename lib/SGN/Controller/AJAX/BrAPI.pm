@@ -1106,7 +1106,17 @@ sub trials_list_GET {
 sub trials_list_POST {
 	my $self = shift;
 	my $c = shift;
-	trials_search_process($self, $c);
+	my ($auth,$user_id) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $data = $clean_inputs;
+	my @all_trials;
+	foreach my $trials (values %{$data}) {
+		push @all_trials, $trials;
+	}
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Trials');
+	my $brapi_package_result = $brapi_module->store(\@all_trials,$user_id);
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 sub trials_search_process {
@@ -1148,10 +1158,17 @@ sub trials_single  : Chained('brapi') PathPart('trials') CaptureArgs(1) {
 
 sub trials_detail  : Chained('trials_single') PathPart('') Args(0) : ActionClass('REST') { }
 
-sub trials_detail_POST {
+sub trials_detail_PUT {
 	my $self = shift;
 	my $c = shift;
-	#my $auth = _authenticate_user($c);
+	my ($auth,$user_id) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $data = $clean_inputs;
+	$data->{trialDbId} = $c->stash->{trial_id};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Trials');
+	my $brapi_package_result = $brapi_module->update($data,$user_id,$c->config->{supportedCrop});
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 sub trials_detail_GET {

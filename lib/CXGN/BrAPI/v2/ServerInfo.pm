@@ -47,8 +47,8 @@ sub search {
 		[['application/json'],['POST'],'search/studies',['2.0']],
 		[['application/json'],['GET'],'search/studies/{searchResultsDbId}',['2.0']],
 		[['application/json'],['GET'],'studytypes',['2.0']],
-		[['application/json'],['GET'],'trials',['2.0']],
-		[['application/json'],['GET'],'trials/{trialDbId}',['2.0']],
+		[['application/json'],['GET','POST'],'trials',['2.0']],
+		[['application/json'],['GET','PUT'],'trials/{trialDbId}',['2.0']],
 		[['application/json'],['POST'],'search/trials',['2.0']],
 		[['application/json'],['GET'],'search/trials/{searchResultsDbId}',['2.0']],
 		#phenotyping
