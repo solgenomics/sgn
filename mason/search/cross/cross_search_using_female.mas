@@ -67,3 +67,106 @@
         </div>
     </div>
 </&>
+
+
+<script>
+
+
+jQuery(document).ready(function (){
+
+    jQuery("#cross_female_parent").autocomplete({
+        source:'/ajax/stock/cross_female_parent_autocomplete',
+    });
+
+
+    jQuery("#search_cross_male_parents").click(function(){
+
+        jQuery.ajax({
+            url:'/ajax/search/cross_male_parents',
+            data:{'female_parent':jQuery('#cross_female_parent').val()},
+            success: function(response){
+                console.log(response);
+                var html = '<select id = "cross_male_parent" >';
+                for (var i=0; i<response.data.length; i++) {
+                    html = html + "<option value='"+response.data[i][0]+ "'>" + response.data[i][0] + "</option>";
+                }
+                html = html + "</select>";
+                console.log(html);
+
+                if(i ==''){
+                    alert("No male parent");
+                    return;
+                }
+
+                jQuery('#cross_male_parent').html(html);
+            },
+            error:function(response){
+                alert("An error occurred");
+            }
+        });
+    });
+
+
+    jQuery('#search_crosses_female_male').click(function(){
+
+        var table = jQuery('#cross_female_male_search_results').DataTable({
+            'searching': true,
+            'paging': true,
+            'ordering': false,
+            'destroy'    : true,
+            'ajax':{'url':'/ajax/search/crosses',
+                'data':{'female_parent':jQuery('#cross_female_parent').val(),
+                    'male_parent':jQuery('#cross_male_parent').val()},
+            }
+        });
+
+        jQuery('#cross_female_male_search_results').on( 'draw.dt', function (){
+            var name_links = table.column(2).data();
+            var names = [];
+            //console.log("name links are: "+JSON.stringify(name_links));
+            for (var i = 0; i < name_links.length; i++) { //extract text from anchor tags
+                names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
+            }
+
+            jQuery('#cross_names').html(names);
+
+            addToListMenu('crosses_to_list_menu', 'cross_names',{
+                listType:'crosses'
+            });
+        });
+    });
+
+
+    jQuery('#search_all_crosses_using_female').click(function(){
+
+        var table = jQuery('#cross_female_male_search_results').DataTable({
+            'searching': true,
+            'paging': true,
+            'ordering': false,
+            'destroy': true,
+            'ajax':{'url':'/ajax/search/crosses',
+                data:{'female_parent':jQuery('#cross_female_parent').val()},
+            }
+        });
+
+        jQuery('#cross_female_male_search_results').on( 'draw.dt', function (){
+            var name_links = table.column(2).data();
+            var names = [];
+            //console.log("name links are: "+JSON.stringify(name_links));
+            for (var i = 0; i < name_links.length; i++) { //extract text from anchor tags
+                names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
+            }
+
+            jQuery('#cross_names').html(names);
+
+            addToListMenu('crosses_to_list_menu', 'cross_names',{
+                listType:'crosses'
+            });
+        });
+
+    });
+
+});
+
+
+</script>

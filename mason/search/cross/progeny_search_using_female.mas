@@ -68,3 +68,104 @@
         </div>
     </div>
 </&>
+
+
+<script>
+
+jQuery(document).ready(function (){
+
+    jQuery("#pedigree_female_parent").autocomplete({
+        source:'/ajax/stock/pedigree_female_parent_autocomplete',
+    });
+
+
+    jQuery("#search_pedigree_male_parents").click(function(){
+
+        jQuery.ajax({
+            url:'/ajax/search/pedigree_male_parents',
+            data:{'pedigree_female_parent':jQuery('#pedigree_female_parent').val()},
+            success: function(response){
+                console.log(response);
+                var html = '<select id = "pedigree_male_parent" >';
+                for (var i=0; i<response.data.length; i++) {
+                    html = html + "<option value='"+response.data[i][0]+ "'>" + response.data[i][0] + "</option>";
+                }
+                html = html + "</select>";
+                console.log(html);
+                if(i ==''){
+                    alert("No male parent");
+                    return;
+                }
+
+                jQuery('#pedigree_male_parent').html(html);
+            },
+            error:function(response){
+                alert("An error occurred");
+            }
+        });
+    });
+
+
+    jQuery('#search_pedigree_female_male').click(function(){
+
+        var table = jQuery('#pedigree_female_male_search_results').DataTable({
+            'searching': true,
+            'paging': true,
+            'ordering': false,
+            'destroy': true,
+            'ajax': {'url':'/ajax/search/progenies',
+                data:{'pedigree_female_parent':jQuery('#pedigree_female_parent').val(),
+                    'pedigree_male_parent':jQuery('#pedigree_male_parent').val(),
+                    }
+            }
+        });
+
+        jQuery('#pedigree_female_male_search_results').on( 'draw.dt', function (){
+            var name_links = table.column(2).data();
+            var names = [];
+            //console.log("name links are: "+JSON.stringify(name_links));
+            for (var i = 0; i < name_links.length; i++) {
+                names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
+            }
+
+            jQuery('#progeny_names').html(names);
+
+            addToListMenu('progenies_to_list_menu', 'progeny_names',{
+                listType:'accessions'
+            });
+        });
+    });
+
+
+    jQuery('#search_all_progenies_using_female').click(function(){
+
+        var table = jQuery('#pedigree_female_male_search_results').DataTable({
+            'searching': true,
+            'paging': true,
+            'ordering': false,
+            'destroy': true,
+            'ajax': {'url':'/ajax/search/progenies',
+                'data':{'pedigree_female_parent':jQuery('#pedigree_female_parent').val()},
+            }
+        });
+
+        jQuery('#pedigree_female_male_search_results').on( 'draw.dt', function (){
+            var name_links = table.column(2).data();
+            var names = [];
+            //console.log("name links are: "+JSON.stringify(name_links));
+            for (var i = 0; i < name_links.length; i++) {
+                names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
+            }
+            jQuery('#progeny_names').html(names);
+
+            addToListMenu('progenies_to_list_menu', 'progeny_names',{
+                listType:'accessions'
+            });
+        });
+    });
+
+
+});
+
+
+</script>
