@@ -933,11 +933,6 @@ sub drone_imagery_get_gps_GET : Args(0) {
     my @size = imgsize($first_image_fullpath);
     my $width = $size[0];
     my $length = $size[1];
-    my $first_image_fullsize_url = $first_image->get_image_url('original_converted');
-    my $first_image_fullsize_fullpath = $first_image->get_filename('original_converted', 'full');
-    my @full_size = imgsize($first_image_fullsize_fullpath);
-
-    my $proportion = $size[0]/$full_size[0];
 
     my %gps_images;
     my %longitudes;
@@ -980,9 +975,9 @@ sub drone_imagery_get_gps_GET : Args(0) {
         $latitude_rounded_map{$latitude_raw} = $latitude_rounded;
         $longitude_rounded_map{$longitude_raw} = $longitude_rounded;
 
-        my @stack_image_ids;
+        my @rotated_stack_image_ids;
         foreach (@$image_ids_array) {
-            push @stack_image_ids, $_->{image_id};
+            push @rotated_stack_image_ids, $_->{rotated_image_id};
         }
 
         my $nir_image_id = $nir_image->{image_id};
@@ -993,9 +988,12 @@ sub drone_imagery_get_gps_GET : Args(0) {
 
         $gps_images{$latitude_raw}->{$longitude_raw} = {
             nir_image_id => $nir_image_id,
-            image_ids => \@stack_image_ids,
+            d3_rotate_angle => $nir_image->{d3_rotate_angle},
+            rotated_bound => $nir_image->{rotated_bound},
+            rotated_image_ids => \@rotated_stack_image_ids,
             image_url => $image_url,
-            image_size => [$width, $length]
+            image_size => [$width, $length],
+            altitude => $nir_image->{altitude}
         };
     }
     # print STDERR Dumper \%longitudes;
@@ -1134,7 +1132,9 @@ sub drone_imagery_update_gps_images_rotation_POST : Args(0) {
             print STDERR Dumper $rotated_image_url;
 
             push @{$rotated_saved_micasense_stacks{$stack_key}}, {
-                image_id => $rotated_image_id,
+                rotated_image_id => $rotated_image_id,
+                d3_rotate_angle => $rotate_angle,
+                image_id => $image_id,
                 longitude => $longitude_raw,
                 latitude => $latitude_raw,
                 altitude => $altitude_raw
@@ -3246,7 +3246,7 @@ sub standard_process_apply_raw_images_interactive_POST : Args(0) {
             foreach my $pi (@$pi_array) {
                 my $points = $pi->{points};
                 my $images = $pi->{images};
-                my $image_ids = $images->{image_ids};
+                my $image_ids = $images->{rotated_image_ids};
 
                 my $plot_polygon = {$plot_name => $points};
 
@@ -3254,17 +3254,8 @@ sub standard_process_apply_raw_images_interactive_POST : Args(0) {
                 my $plot_polygon_type = $plot_polygon_type_objects[$band_counter]->{name};
 
                 my $current_image_id = $image_ids->[$band_counter];
-                my $rotate_value = $images->{rotate_angle} * -1;
 
-                my $archive_rotate_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_rotate/imageXXXX');
-                $archive_rotate_temp_image .= '.png';
-
-                my $rotate_return = _perform_image_rotate($c, $bcs_schema, $metadata_schema, $apply_drone_run_band_project_id, $current_image_id, $rotate_value, 0, $user_id, $user_name, $user_role, $archive_rotate_temp_image, 1);
-                my $rotated_image_id = $rotate_return->{rotated_image_id};
-                my $rotated_image_url = $rotate_return->{rotated_image_url};
-                print STDERR Dumper $rotated_image_url;
-
-                my $return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $rotated_image_id, $apply_drone_run_band_project_id, encode_json $plot_polygon, $plot_polygon_type, $user_id, $user_name, $user_role, 0, 1);
+                my $return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $current_image_id, $apply_drone_run_band_project_id, encode_json $plot_polygon, $plot_polygon_type, $user_id, $user_name, $user_role, 0, 1);
             }
         }
         $band_counter++;
