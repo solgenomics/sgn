@@ -124,47 +124,71 @@ sub parse {
         elsif ( $row_number >= 12 )   {# get data
           my @columns = @{$row};
           my $num_cols = scalar(@columns);
-
           my $observationunit_name = $columns[$observation_column_index];
             if (defined($observationunit_name)){
                 if ($observationunit_name ne ''){
                     $observation_units_seen{$observationunit_name} = 1;
-
                           #store metadata at protocol level instead
                           #$data{$observationunit_name}->{'nirs'} = %metadata_hash;
 
-                          for my $col (0 .. $num_cols-1) {
+                          foreach my $col (0..$num_cols-1){
                               my $column_name = $header[$col];
-                              if (defined($column_name)) {
-                                  if ($column_name ne '' && $column_name !~ /spectrum/){ #check if not spectra, if not spectra add to {'nirs'} not nested. if have already seen spectra, last
-                                      if ($seen_spectra) {
-                                          last;
-                                      }
-
-                                      my $metadata_value = '';
-                                      if ($columns[$col]){
-                                          $metadata_value = $columns[$col];
-                                      }
-                                      $data{$observationunit_name}->{'nirs'}->{$column_name} = $metadata_value;
-                                  }
-                                  elsif ($column_name ne '' && $column_name =~ /spectrum/){
-                                      #if spectra, strip tex, do sum, and add to {'nirs'} nested, and set flag that have seen spectra
-                                      $seen_spectra = 1;
-                                      my @parts = split /[_+]+/, $column_name;
-                                      my $wavelength = $parts[2] + $parts[1];
-                                      my $nir_value = '';
-
-                                      if ($columns[$col]){
-                                          $nir_value = $columns[$col]
-                                      }
-
-                                      if ( defined($nir_value) && $nir_value ne '.') {
-                                          $data{$observationunit_name}->{'nirs'}->{'spectra'}->{$wavelength} = $nir_value;
-                                      }
-
-                                  }
+                              if ($column_name ne '' && $column_name !~ /spectrum/){
+                                if ($seen_spectra) {
+                                   last;
+                                }
+                                my $metadata_value = '';
+                                $metadata_value = $columns[$col];
+                                $data{$observationunit_name}->{'nirs'}->{$column_name} = $metadata_value;
+                                # print "The pot is $observationunit_name and data is $metadata_value\n";
                               }
+
+                              if ($column_name ne '' && $column_name =~ /spectrum/){
+
+                                # $seen_spectra = 1;
+                                my @parts = split /[_+]+/, $column_name;
+                                my $wavelength = $parts[2] + $parts[1];
+                                my $nir_value = '';
+                                $nir_value = $columns[$col];
+                                print "The plot is $observationunit_name and the wave is $wavelength\n";
+                                $data{$observationunit_name}->{'nirs'}->{'spectra'}->{$wavelength} = $nir_value;
+                              }
+
                           }
+
+                          # foreach my $col (0 .. $num_cols-1) {
+                          #     my $column_name = $header[$col];
+                          #     if (defined($column_name)) {
+                          #         if ($column_name ne '' && $column_name !~ /spectrum/){ #check if not spectra, if not spectra add to {'nirs'} not nested. if have already seen spectra, last
+                          #             if ($seen_spectra) {
+                          #                 last;
+                          #             }
+                          #             my $metadata_value = '';
+                          #             if ($columns[$col]){
+                          #                 $metadata_value = $columns[$col];
+                          #             }
+                          #             print "***************$observationunit_name $num_cols\n";
+                          #             $data{$observationunit_name}->{'nirs'}->{$column_name} = $metadata_value;
+                          #         }
+                          #         if ($column_name ne '' && $column_name =~ /spectrum/){
+
+                          #             #if spectra, strip tex, do sum, and add to {'nirs'} nested, and set flag that have seen spectra
+                          #             $seen_spectra = 1;
+                          #             my @parts = split /[_+]+/, $column_name;
+                          #             my $wavelength = $parts[2] + $parts[1];
+                          #             my $nir_value = '';
+
+                          #             if ($columns[$col]){
+                          #                 $nir_value = $columns[$col]
+                          #             }
+
+                          #             if ( defined($nir_value) && $nir_value ne '.') {
+                          #                 $data{$observationunit_name}->{'nirs'}->{'spectra'}->{$wavelength} = $nir_value;
+                          #             }
+
+                          #         }
+                          #     }
+                          # }
                       }
                   }
               }
@@ -182,9 +206,11 @@ sub parse {
     $parse_result{'data'} = \%data;
     $parse_result{'units'} = \@observation_units;
     $parse_result{'variables'} = \@traits;
-    #print STDERR Dumper \%parse_result;
-
     return \%parse_result;
+    # print STDERR Dumper \%parse_result;
+    
+
 }
+
 
 1;
