@@ -1,0 +1,66 @@
+
+<%args>
+</%args>
+
+<%doc>
+
+=head1 NAME
+
+/mason/analyses/index.mas - show user-specific analyses in the system
+
+=head1 DESCRIPTION
+
+Displays a page with a table of all the analyses run by the currently logged in user.
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+  
+</%doc>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ], entries => ['analyses' ] &>
+
+<& /page/page_title.mas, title => "Your analyses" &>
+
+  <button class="btn btn-light" style="float:right">Upload analysis</button><br />
+  <hr>
+
+<!-- data table -->
+
+<table id="analyses_by_user_table">
+  <thead>
+  <tr>
+    <th>
+      Name
+    </th>
+    <th>
+      Description
+    </th>
+    <th>
+      Model Type
+    </th>
+    <th>
+      Protocol
+    </th>
+    <th>
+      Application
+    </th>
+    <th>
+      Language
+    </th>
+  </tr>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
+     
+
+<script>
+jQuery(document).ready(function(){
+    jQuery('#analyses_by_user_table').DataTable({
+        'ajax': { 'url': '/ajax/analyses/by_user' }
+    });
+});
+</script>

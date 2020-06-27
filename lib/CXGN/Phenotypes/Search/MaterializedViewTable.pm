@@ -155,7 +155,7 @@ sub search {
     print STDERR "Search Start:".localtime."\n";
 
     my $include_timestamp = $self->include_timestamp;
-    my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
+    my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
 
     my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
     my %synonym_hash_lookup = %{$stock_lookup->get_synonym_hash_lookup()};
@@ -221,7 +221,7 @@ sub search {
     if ($self->data_level ne 'all') {
         push @where_clause, "observationunit_type_name = '".$self->data_level."'"; #ONLY plot or plant or subplot or tissue_sample
     } else {
-        push @where_clause, "(observationunit_type_name = 'plot' OR observationunit_type_name = 'plant' OR observationunit_type_name = 'subplot' OR observationunit_type_name = 'tissue_sample')"; #plots AND plants AND subplots AND tissue_samples
+        push @where_clause, "(observationunit_type_name = 'plot' OR observationunit_type_name = 'plant' OR observationunit_type_name = 'subplot' OR observationunit_type_name = 'tissue_sample' OR observationunit_type_name = 'analysis_instance')"; #plots AND plants AND subplots AND tissue_samples AND analysis_instance
     }
 
     my %trait_list_check;

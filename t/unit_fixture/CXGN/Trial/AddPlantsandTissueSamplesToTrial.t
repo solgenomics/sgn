@@ -20,7 +20,7 @@ my $trial_id = 137;
 my $tl = CXGN::Trial::TrialLayout->new({ schema => $f->bcs_schema(), trial_id => $trial_id, experiment_type => 'field_layout' });
 
 my $d = $tl->get_design();
-#print STDERR Dumper($d);
+print STDERR Dumper($d);
 
 my @plot_nums;
 my @accessions;

@@ -216,15 +216,15 @@ sub search {
             observations => \@brapi_observations,
             observationUnitName => $obs_unit->{observationunit_uniquename},
             observationUnitPosition => $brapi_observationUnitPosition,
-            observationUnitPUI => '',
+            observationUnitPUI => qq|$obs_unit->{obsunit_plot_number}|,
             programName => $obs_unit->{breeding_program_name},
-            programDbId => $obs_unit->{breeding_program_id},
+            programDbId => qq|$obs_unit->{breeding_program_id}|,
                 #seedLotDbId
             studyDbId => qq|$obs_unit->{trial_id}|,
             studyName => $obs_unit->{trial_name},
             treatments => \@brapi_treatments,
-            trialDbId => qq|$obs_unit->{trial_id}|,
-            trialName => $obs_unit->{trial_name},
+            trialDbId => qq|$obs_unit->{folder_id}|,
+            trialName => $obs_unit->{folder_name},
         };
         $total_count = $obs_unit->{full_count};       
         
@@ -376,15 +376,15 @@ sub detail {
             observations => \@brapi_observations,
             observationUnitName => $obs_unit->{observationunit_uniquename},
             observationUnitPosition => $brapi_observationUnitPosition,
-            observationUnitPUI => '',
+            observationUnitPUI => qq|$obs_unit->{obsunit_plot_number}|,
             programName => $obs_unit->{breeding_program_name},
-            programDbId => $obs_unit->{breeding_program_id},
+            programDbId => qq|$obs_unit->{breeding_program_id}|,
                 #seedLotDbId
             studyDbId => qq|$obs_unit->{trial_id}|,
             studyName => $obs_unit->{trial_name},
             treatments => \@brapi_treatments,
-            trialDbId => qq|$obs_unit->{trial_id}|,
-            trialName => $obs_unit->{trial_name},
+            trialDbId => qq|$obs_unit->{folder_id}|,
+            trialName => $obs_unit->{folder_name},
         };
         $total_count = $obs_unit->{full_count};
         $counter++;
@@ -395,78 +395,181 @@ sub detail {
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observation Units search result constructed');
 }
 
-sub observationunits_store {
+sub observationunits_update {
     my $self = shift;
-    my $observation_unit_db_id = shift;
-    my $params = shift;
+    my $data = shift;
     my $user_id = shift;
-    my $user_type = shift;
+
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
+
     my $dbh = $self->bcs_schema()->storage()->dbh();
-
     my $schema = $self->bcs_schema;
-    my $data_level = $params->{observationLevel}->[0] || 'all';
-    my $years_arrayref = $params->{seasonDbId} || ($params->{seasonDbIds} || ());
-    my $location_ids_arrayref = $params->{locationDbId} || ($params->{locationDbIds} || ());
-    my $study_ids_arrayref = $params->{studyDbId} || ($params->{studyDbIds} || ());
-    my $accession_ids_arrayref = $params->{germplasmDbId} || ($params->{germplasmDbIds} || ());
-    my $trait_list_arrayref = $params->{observationVariableDbId} || ($params->{observationVariableDbIds} || ());
-    my $program_ids_arrayref = $params->{programDbId} || ($params->{programDbIds} || ());
-    my $folder_ids_arrayref = $params->{trialDbId} || ($params->{trialDbIds} || ());
-    my $observationUnit_name = $params->{observationUnitName}->[0] || "";
-    my $observationUnit_position_arrayref = $params->{observationUnitPosition} || ($params->{observationUnitPosition} || ());
-    my $observationUnit_x_ref = $params->{observationUnitXref} || "";
-
-    my $geo_coordinates = "";
-
-    foreach my $observationUnit_position (@$observationUnit_position_arrayref) {        
-        $geo_coordinates = $observationUnit_position->{geoCoordinates} || "";
-    }
-
-    my $geno_json_string = encode_json $geo_coordinates;
-
-    #update cvterm
     my $stock_geo_json_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_geo_json', 'stock_property');
 
-    my @parsed_data;
-    push @parsed_data, {
-        plot_stock_id => $observation_unit_db_id,
-    };
+    foreach my $params (@{$data}) {
+        my $observation_unit_db_id = $params->{observationUnitDbId} ? $params->{observationUnitDbId} : undef;
+        my $data_level = $params->{observationLevel}->[0] || 'all';
+        my $years_arrayref = $params->{seasonDbId} || ($params->{seasonDbIds} || ());
+        my $location_ids_arrayref = $params->{locationDbId} || ($params->{locationDbIds} || ());
+        my $study_ids_arrayref = $params->{studyDbId} || ($params->{studyDbIds} || ());
+        my $accession_ids_arrayref = $params->{germplasmDbId} || ($params->{germplasmDbIds} || ());
+        my $trait_list_arrayref = $params->{observationVariableDbId} || ($params->{observationVariableDbIds} || ());
+        my $program_ids_arrayref = $params->{programDbId} || ($params->{programDbIds} || ());
+        my $folder_ids_arrayref = $params->{trialDbId} || ($params->{trialDbIds} || ());
+        my $observationUnit_name = $params->{observationUnitName}->[0] || "";
+        my $observationUnit_position_arrayref = $params->{observationUnitPosition} || ($params->{observationUnitPosition} || ());
+        my $observationUnit_x_ref = $params->{externalReferences} || ""; #not implemented
+        my $seedlot_id = $params->{seedLotDbId} || ""; #not implemented yet
+        my $treatments = $params->{treatments} || ""; #not implemented yet
 
-    #sub upload coordinates
-    my $upload_plot_gps_txn = sub {
-
-        my %plot_stock_ids_hash;
-        while (my ($key, $val) = each(@parsed_data)){
-            $plot_stock_ids_hash{$val->{plot_stock_id}} = $val;
+        if(!$observation_unit_db_id){
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Check ObservationUnits Ids'));
         }
 
-        my @plot_stock_ids = keys %plot_stock_ids_hash;
+        my $geo_coordinates = $observationUnit_position_arrayref->{geoCoordinates} || "";
+        my $geno_json_string = encode_json $geo_coordinates;
 
-        my $plots_rs = $schema->resultset("Stock::Stock")->search({stock_id => {-in=>\@plot_stock_ids}});
+        #sub upload coordinates
+        my $upload_plot_gps_txn = sub {
 
-        while (my $plot=$plots_rs->next){
+            my $plots_rs = $schema->resultset("Stock::Stock")->search({stock_id => {-in=>$observation_unit_db_id}});
 
-            my $previous_plot_gps_rs = $schema->resultset("Stock::Stockprop")->search({stock_id=>$plot->stock_id, type_id=>$stock_geo_json_cvterm->cvterm_id});
-            $previous_plot_gps_rs->delete_all();
-            $plot->create_stockprops({$stock_geo_json_cvterm->name() => $geno_json_string});
+            while (my $plot=$plots_rs->next){
+                my $previous_plot_gps_rs = $schema->resultset("Stock::Stockprop")->search({stock_id=>$plot->stock_id, type_id=>$stock_geo_json_cvterm->cvterm_id});
+                $previous_plot_gps_rs->delete_all();
+                $plot->create_stockprops({$stock_geo_json_cvterm->name() => $geno_json_string});
+            }
+        };
+
+        eval {
+            $schema->txn_do($upload_plot_gps_txn);
+        };
+        if ($@) {
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('An error condition occurred, was not able to upload trial plot GPS coordinates. ($@)'));
         }
-    };
-
-    eval {
-        $schema->txn_do($upload_plot_gps_txn);
-    };
-    if ($@) {
-        print STDERR "An error condition occurred, was not able to upload trial plot GPS coordinates. ($@).\n";
-        # $c->detach();
     }
 
     my $result = '';
     my $total_count = 1;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, undef, $status, 'Observation Units result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, undef, $status, 'Observation Units updated');
+}
+
+sub observationunits_store {
+    my $self = shift;
+    my $data = shift;
+    my $c = shift;
+    my $user_id = shift;
+
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $status = $self->status;
+
+    my $schema = $self->bcs_schema;
+    my $dbh = $self->bcs_schema()->storage()->dbh();
+    my $person = CXGN::People::Person->new($dbh, $user_id);
+    my $user_name = $person->get_username;
+    my %design;
+    
+    my %studies = map { $_->{studyDbId} => 1 } @$data; 
+    if(keys %studies ne 1){
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Provide just one study at the time.'));
+    }
+    my $trial_id = join ',', keys %studies;
+
+    my $project = $self->bcs_schema->resultset("Project::Project")->find( { project_id => $trial_id });
+    my $design_prop =  $project->projectprops->find( { 'type.name' => 'design' },{ join => 'type'}); #there should be only one design prop.
+    if (!$design_prop) {
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Study doe not have a proper Study type.'));
+    }
+    my $design_type = $design_prop->value;
+
+    my %locations = map { $_->{locationDbId} => 1 } @$data; 
+    if(keys %locations ne 1){
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Provide just one location at the time.'));
+    }
+    my $location_id = join ',', keys %locations;
+
+    foreach my $params (@{$data}) {
+        my $plot_number = $params->{observationUnitPosition}->{observationLevel}->{levelCode} ? $params->{observationUnitPosition}->{observationLevel}->{levelCode} : undef;
+        my $plot_name = $params->{observationUnitName} ? $params->{observationUnitName} : undef;
+        my $accession_name = $params->{germplasmName} ? $params->{germplasmName} : undef;
+        my $is_a_control = $params->{additionalInfo}->{control} ? $params->{additionalInfo}->{control} : undef;
+        my $range_number = $params->{observationUnitName} ? $params->{observationUnitName} : undef;
+        my $row_number = $params->{observationUnitPosition}->{positionCoordinateY} ? $params->{observationUnitPosition}->{positionCoordinateY} : undef;
+        my $col_number = $params->{observationUnitPosition}->{positionCoordinateX} ? $params->{observationUnitPosition}->{positionCoordinateX} : undef;
+        my $seedlot_name = $params->{seedLotDbId} ? $params->{seedLotDbId} : undef;
+        my $plot_geo_json = $params->{observationUnitPosition}->{geoCoordinates} ? $params->{observationUnitPosition}->{geoCoordinates} : undef;
+        my $levels = $params->{observationUnitPosition}->{observationLevelRelationships} ? $params->{observationUnitPosition}->{observationLevelRelationships} : undef;
+        my $block_number;
+        my $rep_number;
+   
+        if (!$plot_number){
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Provide a sequential plot number unique for the study.'));
+        }
+
+        foreach (@$levels){
+            if($_->{levelName} eq 'block'){
+                $block_number = $_->{levelCode} ? $_->{levelCode} : undef;
+            }
+            if($_->{levelName} eq 'replicate'){
+                $rep_number = $_->{levelCode} ? $_->{levelCode} : undef;
+            }
+        }
+
+        $design{$plot_number} = {
+            plot_name => $plot_name,
+            # accession_name => $accession_name,
+            stock_name => $accession_name,
+            plot_number => $plot_number,
+            block_number => $block_number,
+            is_a_control => $is_a_control,
+            rep_number => $rep_number,
+            range_number => $range_number,
+            row_number => $row_number,
+            col_number => $col_number,
+            # plot_geo_json => $plot_geo_json,
+            
+        };
+    }
+
+    my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
+        bcs_schema => $schema,
+        trial_id => $trial_id,
+        nd_geolocation_id => $location_id,
+        # nd_experiment_id => $nd_experiment->nd_experiment_id(), #optional
+        is_genotyping => 0,
+        new_treatment_has_plant_entries => 0,
+        new_treatment_has_subplot_entries => 0,
+        operator => $user_name,
+        trial_stock_type => 'accessions',
+        design_type => $design_type,
+        design => \%design,
+    });
+
+    my $error;
+    my $validate_design_error = $trial_design_store->validate_design();
+    if ($validate_design_error) {
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Error validating study design: ' . $validate_design_error));
+    } else {
+        try {
+            $error = $trial_design_store->store();
+        } catch {
+            $error = $_;
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('ERROR store: ' . $error));
+        };
+    }
+    if(!$error){
+        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
+    }
+    my $result = '';
+    my $total_count = 1;
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, undef, $status, 'Observation Units have been added');
+
 }
 
 sub _order {

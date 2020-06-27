@@ -9,6 +9,7 @@ extends 'CXGN::BrAPI::v2::Common';
 
 sub search {
 	my $self = shift;
+	my $c = shift;
 	my $inputs = shift;
 	my $datatype_param = $inputs->{datatype}->[0];
 	my $page_size = $self->page_size;
@@ -51,17 +52,18 @@ sub search {
 		[['application/json'],['POST'],'search/trials',['2.0']],
 		[['application/json'],['GET'],'search/trials/{searchResultsDbId}',['2.0']],
 		#phenotyping
-		[['application/json'],['GET'], 'images',['2.0']],
-		[['application/json'],['GET'], 'images/{imageDbId}',['2.0']],
+		[['application/json'],['GET','POST'], 'images',['2.0']],
+		[['application/json'],['GET','PUT'], 'images/{imageDbId}',['2.0']],
+		[['application/json'],['PUT'], 'images/{imageDbId}/imagecontent',['2.0']],
 		[['application/json'],['POST'],'search/images',['2.0']],
 		[['application/json'],['GET'], 'search/images/{searchResultsDbId}',['2.0']],
-		[['application/json'],['GET'], 'observations',['2.0']],
-		[['application/json'],['GET'], 'observations/{observationDbId}',['2.0']],
+		[['application/json'],['GET','POST','PUT'], 'observations',['2.0']],
+		[['application/json'],['GET','PUT'], 'observations/{observationDbId}',['2.0']],
 		[['application/json'],['POST'],'search/observations',['2.0']],
 		[['application/json'],['GET'], 'search/observations/{searchResultsDbId}',['2.0']],
 		[['application/json'],['GET'], 'observationlevels',['2.0']],
-		[['application/json'],['GET'], 'observationunits',['2.0']],
-		[['application/json'],['GET'], 'observationunits/{observationUnitDbId}',['2.0']],
+		[['application/json'],['GET','POST','PUT'], 'observationunits',['2.0']],
+		[['application/json'],['GET','PUT'], 'observationunits/{observationUnitDbId}',['2.0']],
 		[['application/json'],['POST'],'search/observationunits',['2.0']],
 		[['application/json'],['GET'], 'search/observationunits/{searchResultsDbId}',['2.0']],
 		[['application/json'],['GET'], 'ontologies',['2.0']],
@@ -111,13 +113,20 @@ sub search {
 		[['application/json'],['GET'], 'variantsets/{variantSetDbId}/variants',['2.0']],
 		[['application/json'],['POST'],'search/variantsets',['2.0']],
 		[['application/json'],['GET'], 'search/variantsets/{searchResultsDbId}',['2.0']],
-		#germplasm
+		#Germplasm
 		[['application/json'],['GET'], 'germplasm',['2.0']],
 		[['application/json'],['GET'], 'germplasm/{germplasmDbId}',['2.0']],
 		[['application/json'],['GET'], 'germplasm/{germplasmDbId}/pedigree',['2.0']],
 		[['application/json'],['GET'], 'germplasm/{germplasmDbId}/progeny',['2.0']],
 		[['application/json'],['POST'],'search/germplasm',['2.0']],
 		[['application/json'],['GET'], 'search/germplasm/{searchResultsDbId}',['2.0']],
+		[['application/json'],['GET','POST'], 'crossingprojects',['2.0']],
+		[['application/json'],['GET','PUT'], 'crossingprojects/{crossingProjectDbId}',['2.0']],
+		[['application/json'],['GET','POST'], 'crosses',['2.0']],
+		[['application/json'],['GET','POST'], 'seedlots',['2.0']],
+		[['application/json'],['GET','POST'], 'seedlots/transactions',['2.0']],
+		[['application/json'],['GET','PUT'], 'seedlots/{seedLotDbId}',['2.0']],
+		[['application/json'],['GET'], 'seedlots/{seedLotDbId}/transactions',['2.0']],
 	);
 
 	my @call_search;
@@ -142,10 +151,32 @@ sub search {
 			service=>$_->[2],
             versions=>$_->[3]
 		};
+		
 	}
-	my %result = (calls=>\@data);
+	my $permissions = info();
+	my %result = (
+		calls=>\@data,
+		contactEmail=>"lam87\@cornell.edu",
+		documentationURL=>"https://solgenomics.github.io/sgn/",
+		location=>"USA",
+		organizationName=>"Boyce Thompson Institute",
+		organizationURL=>$c->request->{"base"},
+		serverDescription=>"BrAPI v2.0 compliant server",
+		serverName=>$c->config->{project_name},
+		permissions=>$permissions,
+	);
 	my @data_files;
 	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Calls result constructed');
+}
+
+sub info {
+	my $permissions  = {
+				'GET' => 'any',
+				'POST' => 'curator',
+				'PUT' => 'curator'
+			};
+
+	return $permissions;
 }
 
 1;

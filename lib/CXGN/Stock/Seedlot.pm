@@ -151,6 +151,8 @@ has 'location_code' => (
 has 'nd_geolocation_id' => (
     isa => 'Int',
     is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_location_id',
 );
 
 =head2 Accessor box_name()
@@ -235,6 +237,8 @@ has 'breeding_program_name' => (
 has 'breeding_program_id' => (
     isa => 'Int',
     is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_breeding_program_id',
 );
 
 
@@ -271,6 +275,8 @@ sub list_seedlots {
     my $contents_cross = shift; #arrayref of uniquenames
     my $exact_match_uniquenames = shift;
     my $minimum_weight = shift;
+    my $seedlot_id = shift; #added for BrAPI
+    my $accession_id = shift; #added for BrAPI
 
     print STDERR "SEARCHING SEEDLOTS\n";
     my %unique_seedlots;
@@ -289,6 +295,9 @@ sub list_seedlots {
     if ($seedlot_name) {
         $search_criteria{'me.uniquename'} = { 'ilike' => '%'.$seedlot_name.'%' };
     }
+    if ($seedlot_id) {
+        $search_criteria{'me.stock_id'} = { -in => $seedlot_id };
+    }
     if ($breeding_program) {
         $search_criteria{'project.name'} = { 'ilike' => '%'.$breeding_program.'%' };
     }
@@ -304,6 +313,11 @@ sub list_seedlots {
                 push @{$search_criteria{'subject.uniquename'}}, { 'ilike' => '%'.$_.'%' };
             }
         }
+    }
+    if ($accession_id && scalar(@$accession_id)>0) {
+        print Dumper $accession_id;
+        $search_criteria{'subject.type_id'} = $accession_type_id;
+        $search_criteria{'subject.stock_id'} = { -in => $accession_id };
     }
     if ($contents_cross && scalar(@$contents_cross)>0) {
         $search_criteria{'subject.type_id'} = $cross_type_id;
@@ -675,6 +689,18 @@ sub _retrieve_location {
     $self->location_code($location_code);
 }
 
+sub _retrieve_location_id {
+    my $self = shift;
+    my $experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seedlot_experiment", "experiment_type")->cvterm_id();
+    my $nd_geolocation_rs = $self->schema()->resultset('Stock::Stock')->search({'me.stock_id'=>$self->seedlot_id})->search_related('nd_experiment_stocks')->search_related('nd_experiment', {'nd_experiment.type_id'=>$experiment_type_id})->search_related('nd_geolocation');
+    if ($nd_geolocation_rs->count != 1){
+        die "Seedlot does not have 1 nd_geolocation associated!\n";
+    }
+    my $nd_geolocation_id = $nd_geolocation_rs->first()->nd_geolocation_id();
+    my $location_code = $nd_geolocation_rs->first()->description();
+    $self->nd_geolocation_id($nd_geolocation_id);
+}
+
 sub _retrieve_box_name {
     my $self = shift;
     $self->box_name($self->_retrieve_stockprop('location_code'));
@@ -691,6 +717,18 @@ sub _retrieve_breeding_program {
     my $breeding_program_name = $project_rs->first()->name();
     $self->breeding_program_id($breeding_program_id);
     $self->breeding_program_name($breeding_program_name);
+}
+
+sub _retrieve_breeding_program_id {
+    my $self = shift;
+    my $experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seedlot_experiment", "experiment_type")->cvterm_id();
+    my $project_rs = $self->schema()->resultset('Stock::Stock')->search({'me.stock_id'=>$self->seedlot_id})->search_related('nd_experiment_stocks')->search_related('nd_experiment', {'nd_experiment.type_id'=>$experiment_type_id})->search_related('nd_experiment_projects')->search_related('project');
+    if ($project_rs->count != 1){
+        die "Seedlot does not have 1 breeding program project (".$project_rs->count.") associated!\n";
+    }
+    my $breeding_program_id = $project_rs->first()->project_id();
+    my $breeding_program_name = $project_rs->first()->name();
+    $self->breeding_program_id($breeding_program_id);
 }
 
 sub _store_seedlot_relationships {

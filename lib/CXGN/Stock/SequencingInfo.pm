@@ -20,13 +20,14 @@ The stockprop of type "sequencing_project_info" is stored as JSON. This class ma
 package CXGN::Stock::SequencingInfo;
 
 use Moose;
+
+extends 'CXGN::JSONProp';
+
 use JSON::Any;
 use Data::Dumper;
 use SGN::Model::Cvterm;
 
 =head1 ACCESSORS
-
-=head2 schema
 
 =head2 stock_id
 
@@ -108,16 +109,16 @@ sub BUILD {
     my $self = shift;
     my $args = shift;
 
-    if ($args->{stockprop_id} eq "undefined") { $args->{stockprop_id} = undef; }
 
-    print STDERR "STOCKPROPID: ".$self->stockprop_id.", TYPE: ".$self->type()."\n";
-    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), $self->type(), 'stock_property')->cvterm_id();
+    $self->prop_table('stockprop');
+    $self->prop_namespace('Stock::Stockprop');
+    $self->prop_primary_key('stockprop_id');
+    $self->prop_type('sequencing_project_info');
+    $self->cv_name('stock_property');
+    $self->parent_table('stock');
+    $self->parent_primary_key('stock_id');
 
-    $self->type_id($type_id);
-
-    $self->_load_object();
-
-    $self->stockprop_id($args->{stockprop_id});
+    $self->load();
 }
 
 
@@ -322,8 +323,6 @@ sub _load_object {
 	$self->from_json($row->value());
     }
 }
-
-
 
 
 =head2 _retrieve_stockprops
