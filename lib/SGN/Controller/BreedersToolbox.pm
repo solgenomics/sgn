@@ -337,7 +337,7 @@ sub manage_file_share_dump :Path("/breeders/file_share_dump") Args(0) {
         return;
     }
 
-    $c->stash->{template} = '/breeders_toolbox/manage_file_share_dump.mas';
+    $c->stash->{template} = '/breeders_toolbox/file_share/manage_file_share_dump.mas';
 }
 
 sub manage_plot_phenotyping :Path("/breeders/plot_phenotyping") Args(0) {
