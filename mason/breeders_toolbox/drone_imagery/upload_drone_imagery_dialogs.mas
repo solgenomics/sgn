@@ -836,7 +836,7 @@ jQuery(document).ready(function() {
                 alert(response.error);
                 return;
             }
-            if (drone_run_band_unstitched == 'yes' || drone_run_band_unstitched == 'yes_raw') {
+            if (drone_run_band_unstitched == 'yes' || drone_run_band_unstitched == 'yes_raw' || drone_run_band_unstitched == 'no') {
                 location.reload();
             }
             else if (drone_run_band_unstitched == 'yes_automated') {
