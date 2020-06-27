@@ -327,6 +327,19 @@ sub manage_upload :Path("/breeders/upload") Args(0) {
     $c->stash->{template} = '/breeders_toolbox/manage_upload.mas';
 }
 
+sub manage_file_share_dump :Path("/breeders/file_share_dump") Args(0) {
+    my $self =shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
+    $c->stash->{template} = '/breeders_toolbox/file_share/manage_file_share_dump.mas';
+}
+
 sub manage_plot_phenotyping :Path("/breeders/plot_phenotyping") Args(0) {
     my $self =shift;
     my $c = shift;
