@@ -26,11 +26,11 @@
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Spreadsheet Format: </label>
                     <div class="col-sm-9" >
-                        <br>
-                        <b>General NIRS upload format.</b>
-                        <!-- <select class="form-control" id="upload_spreadsheet_phenotype_file_format" name="upload_spreadsheet_phenotype_file_format"> -->
+                        <b>General upload format.</b>
+                        <select class="form-control" id="upload_spreadsheet_phenotype_file_format" name="upload_spreadsheet_phenotype_file_format">
+                            <option value="scio">NIRS all formats</option>
                             <!-- <option value="nirs">General NIRS upload</option> -->
-                            <!-- <option value="scio">NIRS</option> -->
+                            
                         </select>
                     </div>
                 </div>
@@ -92,15 +92,15 @@
             <h3>Upload NIRS .csv:</h3>
 
             <ul>
-                <li><mark>id</mark>: It is an optional identification for each NIRS read. The id must be an integer.</li>
-                <li><mark>sampling_id</mark>: It is an optional identification for each sample. Strings are allowed.</li>
-                <li><mark>sampling_date</mark>: It is an optional field. The format allwed is: YYYY-MM-DD.</li>
-                <li><mark>observationUnit_id</mark>: It is a requiered field which matches with the databank. It can be the plot name, subplots, plant name, or tissue sample, depending how your trial is designed.</li>
-                <li><mark>device_id</mark>: It is an optional field to identify your device. Strings are allowed.</li>
-                <li><mark>device_type</mark>: It is a required field. It is possible upload data for a single device type. They can be: SCIO, ASC, FOSS, or LINKSQUARE.</li>
-                <li><mark>temperature</mark>: Optional field to store temperature.</li>
-                <li><mark>location</mark>: Optional field to idenfy where the NIRS data was collected.</li>
-                <li><mark>outlier</mark>: Optional field, occasionally outilers can be identified by the number 1.</li>
+                <li><strong>id</strong>: It is an optional identification for each NIRS read. The id must be an integer.</li>
+                <li><strong>sampling_id</strong>: It is an optional identification for each sample. Strings are allowed.</li>
+                <li><strong>sampling_date</strong>: It is an optional field. The format allwed is: YYYY-MM-DD.</li>
+                <li><strong>observationunit_name</strong>: It is a requiered field which matches with the databank. It can be the plot name, subplots, plant name, or tissue sample, depending how your trial is designed.</li>
+                <li><strong>device_id</strong>: It is an optional field to identify your device. Strings are allowed.</li>
+                <li><strong>device_type</strong>: It is a required field. It is possible upload data for a single device type. They can be:<strong>SCIO, ASC, FOSS, or LINKSQUARE</strong>.</li>
+                <li><strong>temperature</strong>: Optional field to store temperature.</li>
+                <li><strong>location</strong>: Optional field to idenfy where the NIRS data was collected.</li>
+                <li><strong>outlier</strong>: Optional field, occasionally outilers can be identified by the number 1.</li>
                 <li>All other columns are wavelengths. You can add how many columns you want upload, there isn't a limit. 
             </ul>
             <table class="table table-hover table-bordered table-condensed" >
@@ -110,7 +110,7 @@
                                 <td>id</td>
                                 <td>sample_id</td>
                                 <td>sampling_date</td>
-                                <td>obserbationUnit_id</td>
+                                <td>obserbationunit_name</td>
                                 <td>device_id</td>
                                 <td>device_type</td>
                                 <td>temperature</td>
@@ -122,7 +122,7 @@
 
             <h3>Template for Upload NIRS .csv:</h3>
             <ul>
-                <li>The observationUnit_id and device_type must be valid for BreedBase.</li>
+                <li>The observationunit_name and device_type must be valid for BreedBase.</li>
                 <li><a href="https://docs.google.com/spreadsheets/d/1Zxxwhq6Dz1PvvUEMz3Xj3gBYTkchp4tGDfgsIHDNJB8/edit?usp=sharing">Upload NIRS .csv template</a></li>
             </ul>
         </div>
