@@ -20,6 +20,7 @@ use Try::Tiny;
 use DateTime;
 use Data::Dumper;
 use CXGN::UploadFile;
+use File::Basename qw | basename dirname|;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -39,7 +40,7 @@ sub filesharedump_upload_POST : Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-    my $upload = $c->req->upload('upload_file');
+    my $upload = $c->req->upload('manage_file_dump_upload_file_dialog_file');
 
     my $upload_original_name = $upload->filename();
     my $upload_tempfile = $upload->tempname;
@@ -93,7 +94,8 @@ sub filesharedump_list_GET : Args(0) {
 
     my @files;
     while (my ($file_id, $basename, $dirname, $sp_person_id, $create_date, $username) = $h->fetchrow_array()) {
-        my $options = '<a href="/breeders/phenotyping/view/'.$file_id.'">View</a> | <a href="/breeders/phenotyping/download/'.$file_id.'">Download</a>';
+        #my $options = '<a href="/breeders/phenotyping/view/'.$file_id.'">View</a> | <a href="/breeders/phenotyping/download/'.$file_id.'">Download</a>';
+        my $options = '<a href="/breeders/phenotyping/download/'.$file_id.'">Download</a>';
         push @files, [$basename, $username, $create_date, $options];
     }
 
