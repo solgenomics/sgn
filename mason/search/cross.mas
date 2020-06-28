@@ -10,29 +10,3 @@
 
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, info_section_title => "<h4 style='display:inline'>Search Progenies</h4>", info_section_subtitle => 'Search progenies of female parents, male parents, or cross combinations.', icon_class => "glyphicon glyphicon-random", info_section_id => "progeny_search_section" &>
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, info_section_title => "<h4 style='display:inline'>Search Crosses</h4>", info_section_subtitle => 'Search cross details of female parents, male parents, or cross combinations.', icon_class => "glyphicon glyphicon-move", info_section_id => "cross_search_section" &>
-
-
-
-
-<!--
-<&| /page/info_section.mas, title=>"About Search Features",  collapsible => 1, collapsed=>1 &>
-    <div class="well well-sm">
-        <div class="panel panel-default">
-            <div class="panel-body">
-                <b><p>Search Progenies</p></b>
-                <ul>
-                    <li>You can search progenies derived from a particular female or male parent by using <b>"Search Progenies Derived from a Female Parent"</b> or <b>"Search Progenies Derived from a Male Parent"</b> search section.</li>
-                    <li>If you would like to retrieve all of the progenies derived from the specified female or male accession regardless of the other parent, after providing your female or male parent, clicking on <b>"All Progenies"</b>.</li>
-                    <li>If you would like to retrieve only progenies derived from a specific pair of parents. You can retrieve all of the accessions that were used for crossing with the specified accession by clicking on <b>"Male Parent"</b> or <b>"Female Parent"</b>. After selecting an accession of your choice, clicking on <b>"Progenies of these Parents"</b>.</li>
-                </ul>
-                <b><p>Search Crosses</p></b>
-                <ul>
-                    <li>You can search crosses that used a particular female parent or male parent by using <b>"Search Crosses of a Female Parent"</b> or <b>"Search Crosses of a Male Parent"</b> search section.</li>
-                    <li>If you would like to retrieve all of the crosses that used the specified female or male accession regardless of the other parent, after providing your female or male parent, clicking on <b>"All Crosses"</b>.</li>
-                    <li>If you would like to retrieve only crosses derived from a specific pair of parents. You can retrieve all of the accessions that were used for crossing with the specified accession by clicking on <b>"Male Parent"</b> or <b>"Female Parent"</b>. After selecting an accession of your choice, clicking on <b>"Crosses of these Parents"</b>.</li>
-                </ul>
-            </div>
-        </div>
-    </div>
-</&>
--->

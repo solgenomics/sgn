@@ -465,6 +465,30 @@ my $embryo_ids_ref = $cross_sample_data->{'Embryo IDs'};
 my $number_of_embryo_samples = @$embryo_ids_ref;
 is($number_of_embryo_samples, 4);
 
+
+#test search crosses using female parent
+$mech->post_ok('http://localhost:3010/ajax/search/crosses',['female_parent' => 'TMEB419'] );
+$response = decode_json $mech->content;
+is_deeply($response, {'data' => [
+['<a href="/stock/41278/view">TMEB419</a>','<a href="/stock/41278/view">TMEB419</a>','<a href="/cross/41826">test_cross_upload6</a>','self','<a href="/stock//view"></a>','<a href="/breeders/trial/167">test_crossingtrial2</a>'],
+['<a href="/stock/41278/view">TMEB419</a>','<a href="/stock/41280/view">TMEB693</a>','<a href="/cross/41825">test_cross_upload5</a>','biparental','<a href="/stock//view"></a>','<a href="/breeders/trial/167">test_crossingtrial2</a>']
+]}, 'search crosses using female');
+
+#test search crosses using both female and male parents
+$mech->post_ok('http://localhost:3010/ajax/search/crosses',['female_parent' => 'TMEB419', 'male_parent' => 'TMEB693'] );
+$response = decode_json $mech->content;
+is_deeply($response, {'data' => [
+['<a href="/stock/41278/view">TMEB419</a>','<a href="/stock/41280/view">TMEB693</a>','<a href="/cross/41825">test_cross_upload5</a>','biparental','<a href="/stock//view"></a>','<a href="/breeders/trial/167">test_crossingtrial2</a>']
+]}, 'search crosses using female and male parents');
+
+#test search crosses using male parent
+$mech->post_ok('http://localhost:3010/ajax/search/crosses',['male_parent' => 'TMEB693'] );
+$response = decode_json $mech->content;
+is_deeply($response, {'data' => [
+['<a href="/stock/41278/view">TMEB419</a>','<a href="/stock/41280/view">TMEB693</a>','<a href="/cross/41825">test_cross_upload5</a>','biparental','<a href="/stock//view"></a>','<a href="/breeders/trial/167">test_crossingtrial2</a>']
+]}, 'search crosses using male parent');
+
+
 #test deleting crossing
 my $before_deleting_crosses = $schema->resultset("Stock::Stock")->search({ type_id => $cross_type_id})->count();
 my $before_deleting_accessions = $schema->resultset("Stock::Stock")->search({ type_id => $accession_type_id})->count();
