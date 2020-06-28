@@ -434,34 +434,58 @@ jQuery(document).ready(function(){
                 .attr("y_pos", y_pos)
                 .attr("nir_image_id", nir_image_id )
                 .attr("is_rotated_bound", 1);
-            rotatedBoundGroup.append('line')
+            var line1 = rotatedBoundGroup.append('line')
                 .style("stroke", "blue")
                 .style("stroke-width", 5)
                 .attr("x1", parseFloat(rotated_bound[0][0]) + parseFloat(x_pos))
                 .attr("y1", parseFloat(rotated_bound[0][1]) + parseFloat(y_pos))
                 .attr("x2", parseFloat(rotated_bound[1][0]) + parseFloat(x_pos))
-                .attr("y2", parseFloat(rotated_bound[1][1]) + parseFloat(y_pos));
-            rotatedBoundGroup.append('line')
+                .attr("y2", parseFloat(rotated_bound[1][1]) + parseFloat(y_pos))
+                .attr("latitude", latitude)
+                .attr("longitude", longitude)
+                .attr("bnum", 0)
+                .attr("rotated_bound", JSON.stringify(rotated_bound))
+                .attr("nir_image_id", nir_image_id )
+                .attr("is_rotated_bound", 1);
+            var line2 = rotatedBoundGroup.append('line')
                 .style("stroke", "blue")
                 .style("stroke-width", 5)
                 .attr("x1", parseFloat(rotated_bound[1][0]) + parseFloat(x_pos))
                 .attr("y1", parseFloat(rotated_bound[1][1]) + parseFloat(y_pos))
                 .attr("x2", parseFloat(rotated_bound[2][0]) + parseFloat(x_pos))
-                .attr("y2", parseFloat(rotated_bound[2][1]) + parseFloat(y_pos));
-            rotatedBoundGroup.append('line')
+                .attr("y2", parseFloat(rotated_bound[2][1]) + parseFloat(y_pos))
+                .attr("latitude", latitude)
+                .attr("longitude", longitude)
+                .attr("bnum", 1)
+                .attr("rotated_bound", JSON.stringify(rotated_bound))
+                .attr("nir_image_id", nir_image_id )
+                .attr("is_rotated_bound", 1);
+            var line3 = rotatedBoundGroup.append('line')
                 .style("stroke", "blue")
                 .style("stroke-width", 5)
                 .attr("x1", parseFloat(rotated_bound[2][0]) + parseFloat(x_pos))
                 .attr("y1", parseFloat(rotated_bound[2][1]) + parseFloat(y_pos))
                 .attr("x2", parseFloat(rotated_bound[3][0]) + parseFloat(x_pos))
-                .attr("y2", parseFloat(rotated_bound[3][1]) + parseFloat(y_pos));
-            rotatedBoundGroup.append('line')
+                .attr("y2", parseFloat(rotated_bound[3][1]) + parseFloat(y_pos))
+                .attr("latitude", latitude)
+                .attr("longitude", longitude)
+                .attr("bnum", 2)
+                .attr("rotated_bound", JSON.stringify(rotated_bound))
+                .attr("nir_image_id", nir_image_id )
+                .attr("is_rotated_bound", 1);
+            var line4 = rotatedBoundGroup.append('line')
                 .style("stroke", "blue")
                 .style("stroke-width", 5)
                 .attr("x1", parseFloat(rotated_bound[3][0]) + parseFloat(x_pos))
                 .attr("y1", parseFloat(rotated_bound[3][1]) + parseFloat(y_pos))
                 .attr("x2", parseFloat(rotated_bound[0][0]) + parseFloat(x_pos))
-                .attr("y2", parseFloat(rotated_bound[0][1]) + parseFloat(y_pos));
+                .attr("y2", parseFloat(rotated_bound[0][1]) + parseFloat(y_pos))
+                .attr("latitude", latitude)
+                .attr("longitude", longitude)
+                .attr("bnum", 3)
+                .attr("rotated_bound", JSON.stringify(rotated_bound))
+                .attr("nir_image_id", nir_image_id )
+                .attr("is_rotated_bound", 1);
         }
     }
 
@@ -758,20 +782,19 @@ jQuery(document).ready(function(){
                 var x_pos_match_dst = x_pos_match_src - dst_match_x_rotated;
                 var y_pos_match_dst = y_pos_match_src - dst_match_y_rotated;
 
-                var x_pos_match_dst_no_rotate = parseFloat(src_match_x) - parseFloat(dst_match_x);
-                var y_pos_match_dst_no_rotate = parseFloat(src_match_y) - parseFloat(dst_match_y);
+                var x_pos_translation = parseFloat(x_pos_dst) - parseFloat(x_pos_match_dst);
+                var y_pos_translation = parseFloat(y_pos_dst) - parseFloat(y_pos_match_dst);
 
                 d3.selectAll('g').each(function(d) {
                     var nir_image_id = d3.select(this).attr('nir_image_id');
                     if (nir_image_id == response.image_id_dst) {
-                        d3.select(this).attr('x_pos', x_pos_match_dst);
-                        d3.select(this).attr('y_pos', y_pos_match_dst);
-                        //d3.select(this).attr('aligned_image_id', response.align_image_id);
 
                         var is_rotated_bound = d3.select(this).attr('is_rotated_bound');
                         if (is_rotated_bound == 1) {
-                            d3.select(this).attr("transform", "translate("+x_pos_match_dst_no_rotate+","+y_pos_match_dst_no_rotate+")");
                         } else {
+                            d3.select(this).attr('x_pos', x_pos_match_dst);
+                            d3.select(this).attr('y_pos', y_pos_match_dst);
+
                             var rotate_angle = d3.select(this).attr('rotate_angle');
                             d3.select(this).attr("transform", "translate("+x_pos_match_dst+","+y_pos_match_dst+") rotate("+rotate_angle+","+manage_drone_imagery_standard_process_raw_images_interactive_image.width/2+","+manage_drone_imagery_standard_process_raw_images_interactive_image.length/2+")");
 
@@ -780,6 +803,34 @@ jQuery(document).ready(function(){
                             manage_drone_imagery_standard_process_interactive_gps_images[latitude][longitude]['x_pos'] = x_pos_match_dst;
                             manage_drone_imagery_standard_process_interactive_gps_images[latitude][longitude]['y_pos'] = y_pos_match_dst;
                             manage_drone_imagery_standard_process_interactive_gps_images[latitude][longitude]['rotate_angle'] = rotate_angle;
+                        }
+                        d3.select(this).moveToFront();
+                    }
+                });
+
+                d3.selectAll('line').each(function(d) {
+                    var nir_image_id = d3.select(this).attr('nir_image_id');
+                    if (nir_image_id == response.image_id_dst) {
+
+                        var is_rotated_bound = d3.select(this).attr('is_rotated_bound');
+                        if (is_rotated_bound == 1) {
+                            console.log('he');
+                            var x_pos_1 = parseInt(d3.select(this).attr('x1')) - x_pos_translation;
+                            var y_pos_1 = parseInt(d3.select(this).attr('y1')) - y_pos_translation;
+                            var x_pos_2 = parseInt(d3.select(this).attr('x2')) - x_pos_translation;
+                            var y_pos_2 = parseInt(d3.select(this).attr('y2')) - y_pos_translation;
+                            d3.select(this).attr('x1', parseInt(x_pos_1));
+                            d3.select(this).attr('y1', parseInt(y_pos_1));
+                            d3.select(this).attr('x2', parseInt(x_pos_2));
+                            d3.select(this).attr('y2', parseInt(y_pos_2));
+                            var bnum = parseInt(d3.select(this).attr('bnum'));
+                            var rotated_bound = JSON.parse(d3.select(this).attr('rotated_bound'));
+                            console.log(rotated_bound);
+                            rotated_bound[bnum] = [x_pos_1, y_pos_1];
+                            console.log(rotated_bound);
+                            var latitude = d3.select(this).attr('latitude');
+                            var longitude = d3.select(this).attr('longitude');
+                            manage_drone_imagery_standard_process_interactive_gps_images[latitude][longitude]['rotated_bound'] = rotated_bound;
                         }
                         d3.select(this).moveToFront();
                     }
