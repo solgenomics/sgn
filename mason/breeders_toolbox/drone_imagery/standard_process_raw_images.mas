@@ -391,21 +391,29 @@ jQuery(document).ready(function(){
         });
     };
 
+    var droneImageryInteractiveSaveGPStimeout = null;
     function saveGPSPixelPositions() {
-        jQuery.ajax({
-            url : '/api/drone_imagery/save_gps_images',
-            type: 'POST',
-            data : {
-                'gps_images': JSON.stringify(manage_drone_imagery_standard_process_interactive_gps_images),
-                'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id
-            },
-            success: function(response){
-                console.log(response);
-            },
-            error: function(response){
-                alert('Error saving GPS images positions!');
-            }
-        });
+        if (droneImageryInteractiveSaveGPStimeout !== null) {
+            clearTimeout(droneImageryInteractiveSaveGPStimeout);
+        }
+        droneImageryInteractiveSaveGPStimeout = setTimeout(function () {
+
+            jQuery.ajax({
+                url : '/api/drone_imagery/save_gps_images',
+                type: 'POST',
+                data : {
+                    'gps_images': JSON.stringify(manage_drone_imagery_standard_process_interactive_gps_images),
+                    'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id
+                },
+                success: function(response){
+                    console.log(response);
+                },
+                error: function(response){
+                    alert('Error saving GPS images positions!');
+                }
+            });
+
+        }, 100);
     }
 
     function appendDraggableImage(url, x_pos, y_pos, latitude, longitude, nir_image_id, stack_image_ids, rotate_angle, enable_drag, rotated_bound) {
