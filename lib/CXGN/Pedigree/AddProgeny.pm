@@ -112,7 +112,7 @@ sub add_progeny {
             #add stock_id of cross to an array so that the owner can be associated in the phenome schema after the transaction on the chado schema completes
             push (@added_stock_ids,  $accession_stock->stock_id());
 
-            #create relationship to cross population
+            #create relationship to cross
             $accession_stock->find_or_create_related('stock_relationship_objects', {
                 type_id => $offspring_of_cvterm->cvterm_id(),
                 object_id => $cross_stock->stock_id(),
@@ -124,6 +124,7 @@ sub add_progeny {
                     type_id => $female_parent_cvterm->cvterm_id(),
                     object_id => $accession_stock->stock_id(),
                     subject_id => $female_parent->subject_id(),
+                    value => $female_parent->value(),
 				});
             }
 
