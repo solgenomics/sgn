@@ -470,22 +470,22 @@ is($number_of_embryo_samples, 4);
 $mech->post_ok('http://localhost:3010/ajax/search/crosses',['female_parent' => 'TMEB419'] );
 $response = decode_json $mech->content;
 is_deeply($response, {'data' => [
-['<a href="/stock/41278/view">TMEB419</a>','<a href="/stock/41278/view">TMEB419</a>','<a href="/cross/41826">test_cross_upload6</a>','self','<a href="/stock//view"></a>','<a href="/breeders/trial/167">test_crossingtrial2</a>'],
-['<a href="/stock/41278/view">TMEB419</a>','<a href="/stock/41280/view">TMEB693</a>','<a href="/cross/41825">test_cross_upload5</a>','biparental','<a href="/stock//view"></a>','<a href="/breeders/trial/167">test_crossingtrial2</a>']
+['<a href="/stock/41278/view">TMEB419</a>','<a href="/stock/41278/view">TMEB419</a>','<a href="/cross/44235">test_cross_upload6</a>','self','<a href="/stock//view"></a>','<a href="/breeders/trial/195">test_crossingtrial2</a>'],
+['<a href="/stock/41278/view">TMEB419</a>','<a href="/stock/41280/view">TMEB693</a>','<a href="/cross/44234">test_cross_upload5</a>','biparental','<a href="/stock//view"></a>','<a href="/breeders/trial/195">test_crossingtrial2</a>']
 ]}, 'search crosses using female');
 
 #test search crosses using both female and male parents
 $mech->post_ok('http://localhost:3010/ajax/search/crosses',['female_parent' => 'TMEB419', 'male_parent' => 'TMEB693'] );
 $response = decode_json $mech->content;
 is_deeply($response, {'data' => [
-['<a href="/stock/41278/view">TMEB419</a>','<a href="/stock/41280/view">TMEB693</a>','<a href="/cross/41825">test_cross_upload5</a>','biparental','<a href="/stock//view"></a>','<a href="/breeders/trial/167">test_crossingtrial2</a>']
+['<a href="/stock/41278/view">TMEB419</a>','<a href="/stock/41280/view">TMEB693</a>','<a href="/cross/44234">test_cross_upload5</a>','biparental','<a href="/stock//view"></a>','<a href="/breeders/trial/195">test_crossingtrial2</a>']
 ]}, 'search crosses using female and male parents');
 
 #test search crosses using male parent
 $mech->post_ok('http://localhost:3010/ajax/search/crosses',['male_parent' => 'TMEB693'] );
 $response = decode_json $mech->content;
 is_deeply($response, {'data' => [
-['<a href="/stock/41278/view">TMEB419</a>','<a href="/stock/41280/view">TMEB693</a>','<a href="/cross/41825">test_cross_upload5</a>','biparental','<a href="/stock//view"></a>','<a href="/breeders/trial/167">test_crossingtrial2</a>']
+['<a href="/stock/41278/view">TMEB419</a>','<a href="/stock/41280/view">TMEB693</a>','<a href="/cross/44234">test_cross_upload5</a>','biparental','<a href="/stock//view"></a>','<a href="/breeders/trial/195">test_crossingtrial2</a>']
 ]}, 'search crosses using male parent');
 
 
