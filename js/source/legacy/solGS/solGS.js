@@ -881,3 +881,8 @@ jQuery.fn.alternateFunctions = function(a, b) {
     });
 };
 
+jQuery.fn.doesExist = function(){
+
+        return jQuery(this).length > 0;
+
+ };
