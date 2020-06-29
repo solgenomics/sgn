@@ -361,7 +361,7 @@ sub download_phenotypic_correlation : Path('/download/phenotypic/correlation/pop
 	my @corr_data;
 	my $count=1;
 
-	foreach my $row ( read_file($corr_file) )
+	foreach my $row ( read_file($corr_file, {binmode=>':utf8'}) )
 	{
 	    if ($count==1) {  $row = 'Traits,' . $row;}             
 	    $row =~ s/NA//g; 
