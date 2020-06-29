@@ -1810,8 +1810,7 @@ jQuery(document).ready(function(){
                     'vegetative_indices': JSON.stringify(manage_drone_imagery_standard_process_interactive_apply_drone_run_band_vegetative_indices),
                     'phenotype_types': JSON.stringify(selected),
                     'time_cvterm_id': manage_drone_imagery_standard_process_interactive_phenotype_time,
-                    'standard_process_type': 'minimal',
-                    'saved_gps_positions':JSON.stringify(manage_drone_imagery_standard_process_interactive_saved_gps_positions)
+                    'standard_process_type': 'minimal'
                 },
                 success: function(response){
                     console.log(response);

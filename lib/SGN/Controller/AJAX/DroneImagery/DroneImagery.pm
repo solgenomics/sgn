@@ -3178,7 +3178,6 @@ sub standard_process_apply_raw_images_interactive_POST : Args(0) {
     my $phenotype_methods = $c->req->param('phenotype_types') ? decode_json $c->req->param('phenotype_types') : ['zonal'];
     my $time_cvterm_id = $c->req->param('time_cvterm_id');
     my $standard_process_type = $c->req->param('standard_process_type');
-    my $saved_gps_positions = decode_json $c->req->param('saved_gps_positions');
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $process_indicator_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_standard_process_in_progress', 'project_property')->cvterm_id();
@@ -3220,6 +3219,13 @@ sub standard_process_apply_raw_images_interactive_POST : Args(0) {
         $vegetative_indices_hash{$_}++;
     }
 
+    my $saved_gps_positions_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_raw_images_saved_gps_pixel_positions', 'project_property')->cvterm_id();
+    my $drone_run_band_saved_gps = $bcs_schema->resultset('Project::Projectprop')->find({
+        type_id=>$saved_gps_positions_type_id,
+        project_id=>$drone_run_project_id_input,
+    });
+    my $saved_gps_positions = decode_json $drone_run_band_saved_gps->value();
+
     my $drone_run_band_plot_polygons_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_band_plot_polygons', 'project_property')->cvterm_id();
     my $previous_plot_polygons_rs = $bcs_schema->resultset('Project::Projectprop')->search({type_id=>$drone_run_band_plot_polygons_type_id, project_id=>$drone_run_band_project_id});
     if ($previous_plot_polygons_rs->count > 1) {
@@ -3237,22 +3243,22 @@ sub standard_process_apply_raw_images_interactive_POST : Args(0) {
     while (my ($lat, $lo) = each %$saved_gps_positions) {
         while (my ($long, $pos) = each %$lo) {
             my $size = $pos->{image_size};
-            my $rotate_angle = $pos->{rotate_angle} + 0;
-            my $angle_radians = $rotate_angle * 0.0174533;
+            my $rotated_bound = $pos->{rotated_bound};
             my $x1_pos = $pos->{x_pos} + 0;
             my $y1_pos = $pos->{y_pos} + 0;
-            my $x2_pos = $x1_pos + $size->[0]*cos($angle_radians) - 0*sin($angle_radians);
-            my $y2_pos = $y1_pos + $size->[0]*sin($angle_radians) + 0*cos($angle_radians);
-            my $x3_pos = $x1_pos + $size->[0]*cos($angle_radians) - $size->[1]*sin($angle_radians);
-            my $y3_pos = $y1_pos + $size->[0]*sin($angle_radians) + $size->[1]*cos($angle_radians);
-            my $x4_pos = $x1_pos + 0*cos($angle_radians) - $size->[1]*sin($angle_radians);
-            my $y4_pos = $y1_pos + 0*sin($angle_radians) + $size->[1]*cos($angle_radians);
+            my $x1_min = 10000000000;
+            my $y1_min = 10000000000;
+            foreach (@$rotated_bound) {
+                if ($_->[0] < $x1_min) {
+                    $x1_min = $_->[0];
+                }
+                if ($_->[1] < $y1_min) {
+                    $y1_min = $_->[1];
+                }
+            }
 
-            my $new_tl_x = $x2_pos - $x1_pos;
-            my $new_tl_y = $x2_pos - $x1_pos;
-
-            my $image_bound = [ [$x1_pos, $y1_pos], [$x2_pos, $y2_pos], [$x3_pos, $y3_pos], [$x4_pos, $y4_pos], [$x1_pos, $y1_pos] ];
-            my $bound = Math::Polygon->new(points => $image_bound);
+            my @image_bound = (@$rotated_bound, $rotated_bound->[0]);
+            my $bound = Math::Polygon->new(points => \@image_bound);
 
             while (my ($plot_name, $points) = each %$save_stock_polygons) {
                 my $polygon_x1 = $points->[0]->{x} + 0;
@@ -3266,15 +3272,15 @@ sub standard_process_apply_raw_images_interactive_POST : Args(0) {
 
                 if ($bound->contains([$polygon_x1,$polygon_y1]) && $bound->contains([$polygon_x2,$polygon_y2]) && $bound->contains([$polygon_x3,$polygon_y3]) && $bound->contains([$polygon_x4,$polygon_y4])) {
                     my $points_shifted = [
-                        {'x' => $polygon_x1 - $x1_pos, 'y' => $polygon_y1 - $y1_pos},
-                        {'x' => $polygon_x2 - $x1_pos, 'y' => $polygon_y2 - $y1_pos},
-                        {'x' => $polygon_x3 - $x1_pos, 'y' => $polygon_y3 - $y1_pos},
-                        {'x' => $polygon_x4 - $x1_pos, 'y' => $polygon_y4 - $y1_pos},
+                        {'x' => $polygon_x1 - $x1_min, 'y' => $polygon_y1 - $y1_min},
+                        {'x' => $polygon_x2 - $x1_min, 'y' => $polygon_y2 - $y1_min},
+                        {'x' => $polygon_x3 - $x1_min, 'y' => $polygon_y3 - $y1_min},
+                        {'x' => $polygon_x4 - $x1_min, 'y' => $polygon_y4 - $y1_min},
                     ];
                     my $obj = {
                         images => $pos,
                         points => $points_shifted,
-                        image_bound => $image_bound
+                        image_bound => \@image_bound
                     };
                     push @{$polygons_images_positions{$plot_name}}, $obj;
                 } else {
