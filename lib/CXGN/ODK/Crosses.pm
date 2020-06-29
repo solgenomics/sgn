@@ -285,6 +285,8 @@ sub save_ona_cross_info {
         my %screenhouse_hash;
         my %tissue_culture_details;
         my %embryoID_hash;
+        my %hardening_hash;
+        my %openfield_hash;
 
         foreach my $activity_hash (@$message_hash){
             #print STDERR Dumper $activity_hash;
@@ -640,6 +642,16 @@ sub save_ona_cross_info {
                             my $screenhouse_id = $a->{'Nursery/Screenhouse/screenhouseID'};
                             my $number_of_screenhouse_plantlets = $a->{'Nursery/Screenhouse/number_of_screenhouse_plantlets'};
                             $screenhouse_hash{$screenhouse_cross_id}{$screenhouse_id}++;
+                        } elsif ($a->{'Nursery/nurseryActivity'} eq 'hardening'){
+                            my $hardening_cross_id = $a->{'Nursery/Hardening/hardeningID_crossid'};
+                            my $hardening_id = $a->{'Nursery/Hardening/hardeningID'};
+                            my $number_of_hardening_plantlets = $a->{'Nursery/Hardening/number_of_hardening_plantlets'};
+                            $hardening_hash{$hardening_cross_id}{$hardening_id}++;
+                        } elsif ($a->{'Nursery/nurseryActivity'} eq 'openfield'){
+                            my $openfield_cross_id = $a->{'Nursery/Openfield/openfieldID_crossid'};
+                            my $openfield_id = $a->{'Nursery/Openfield/openfieldID'};
+                            my $number_of_openfield_plantlets = $a->{'Nursery/Openfield/number_openfield_transferred_plantlets'};
+                            $openfield_hash{$openfield_cross_id}{$openfield_id}++;
                         } elsif ($a->{'Nursery/nurseryActivity'} eq 'status'){
 
                         }
@@ -790,6 +802,29 @@ sub save_ona_cross_info {
             $musa_cross_info{$screenhouse_property}{$screenhouse_cross} = $screenhouse_id_count;
             $tissue_culture_details{$screenhouse_ids_property}{$screenhouse_cross} = \@all_screenhouse_ids;
         }
+
+        foreach my $hardening_cross (keys %hardening_hash) {
+            my $hardening_ref = $hardening_hash{$hardening_cross};
+            my %hardening_info = %$hardening_ref;
+            my $hardening_id_count = keys %hardening_info;
+            my @all_hardening_ids = keys %hardening_info;
+            my $hardening_property = 'Hardening ID Count';
+            my $hardening_ids_property = 'Hardening IDs';
+            $musa_cross_info{$hardening_property}{$hardening_cross} = $hardening_id_count;
+            $tissue_culture_details{$hardening_ids_property}{$hardening_cross} = \@all_hardening_ids;
+        }
+
+        foreach my $openfield_cross (keys %openfield_hash) {
+            my $openfield_ref = $openfield_hash{$openfield_cross};
+            my %openfield_info = %$openfield_ref;
+            my $openfield_id_count = keys %openfield_info;
+            my @all_openfield_ids = keys %openfield_info;
+            my $openfield_property = 'Openfield ID Count';
+            my $openfield_ids_property = 'Openfield IDs';
+            $musa_cross_info{$openfield_property}{$openfield_cross} = $openfield_id_count;
+            $tissue_culture_details{$openfield_ids_property}{$openfield_cross} = \@all_openfield_ids;
+        }
+
 #        print STDERR "CHECKING CROSS INFO =".Dumper(\%musa_cross_info)."\n";
 #        print STDERR "CHECKING TISSUE CULTURE INFO =".Dumper(\%tissue_culture_details)."\n";
 
