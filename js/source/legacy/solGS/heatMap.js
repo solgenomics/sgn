@@ -12,8 +12,8 @@ solGS.heatmap = {
 
 	data = JSON.parse(data);
 
-	//var labels = data.labels.splice(0,20);
-	var labels = data.labels;
+	var labels = data.labels.splice(0,20);
+	//var labels = data.labels;
 	var values = data.values;
 	var nLabels = labels.length;
 
@@ -22,7 +22,7 @@ solGS.heatmap = {
 	
         for (var i=0;  i<values.length; i++) {
 
-	    //if (i < 20) {
+	    if (i < 20) {
 	    var rw = values[i];
 	    
 	    for (var j = 0; j<nLabels; j++) {
@@ -32,15 +32,15 @@ solGS.heatmap = {
 		
 		if (rwVl === undefined) {rwVl = 'NA';}
 
-		//if (j < 20) {
+		if (j < 20) {
 		
 		corr.push({"row": i, "col": j, "value": rwVl});
 
 		if (rwVl != 'NA') {
 		    coefs.push(rwVl);
 		}			
-		//}		
-		//}
+		}		
+	}
 	    }
 	}
 
@@ -118,11 +118,11 @@ solGS.heatmap = {
             .data(corr)  
             .enter().append("rect")
             .attr("class", "cell")
-            .attr("x", function (d) {console.log('d.col ' + d.col);return corXscale(d.col)})
-            .attr("y", function (d) {console.log('d.row ' + d.row);return corYscale(d.row)})
+            .attr("x", function (d) {return corXscale(d.col)})
+            .attr("y", function (d) {return corYscale(d.row)})
             .attr("width", corXscale.rangeBand())
             .attr("height", corYscale.rangeBand())      
-            .attr("fill", function (d) { console.log('d.value ' + d.value);
+            .attr("fill", function (d) {
                 if (d.value == 'NA') {return "white";} 
                 else { return corZscale(d.value)}
             })
@@ -199,7 +199,8 @@ solGS.heatmap = {
             });
 	
 	var legendTxt = corrplot.append("g")
-            .attr("transform", "translate(" + (width + 40) + "," + ((height * 0.25) + (0.5 * recLW)) + ")")
+            .attr("transform", "translate(" + (width + 40) + ","
+		  + ((height * 0.25) + (0.5 * recLW)) + ")")
             .attr("id", "legendtext");
 
 	legendTxt.selectAll("text")
