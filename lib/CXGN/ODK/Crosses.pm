@@ -56,7 +56,10 @@ use CXGN::Pedigree::AddCrossingtrial;
 use CXGN::Pedigree::AddCrosses;
 use CXGN::Pedigree::AddCrossInfo;
 use CXGN::Pedigree::AddCrossTissueSamples;
+use CXGN::Pedigree::AddProgeny;
 use Scalar::Util qw(looks_like_number);
+use Sort::Key::Natural qw(natsort);
+
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -738,14 +741,6 @@ sub save_ona_cross_info {
             $musa_cross_info{$germinating_number_property}{$embryo_cross} = $embryo_ids_count;
             $tissue_culture_details{$embryo_ids_property}{$embryo_cross} = \@all_embryo_ids;
         }
-#        foreach my $name_hash (keys %number_germinating) {
-#            my $germination_date_ref = $number_germinating{$name_hash};
-#            my %germination_info = %$germination_date_ref;
-#            my $latest_total_number = max values %germination_info;
-#            my $germinating_number_property = 'Number of Germinating Embryos';
-#            $musa_cross_info{$germinating_number_property}{$name_hash} = $latest_total_number;
-#            print STDERR "LATEST NUMBER =".Dumper($latest_number)."\n";
-#        }
 
         foreach my $subculture_cross (keys %subcultures_hash) {
             my $subculture_ref = $subcultures_hash{$subculture_cross};
@@ -814,11 +809,18 @@ sub save_ona_cross_info {
             $tissue_culture_details{$hardening_ids_property}{$hardening_cross} = \@all_hardening_ids;
         }
 
+        my %new_progeny_hash;
         foreach my $openfield_cross (keys %openfield_hash) {
             my $openfield_ref = $openfield_hash{$openfield_cross};
             my %openfield_info = %$openfield_ref;
             my $openfield_id_count = keys %openfield_info;
             my @all_openfield_ids = keys %openfield_info;
+            foreach my $id (@all_openfield_ids) {
+                my $id_rs = $schema->resultset("Stock::Stock")->find({uniquename => $id});
+                if (!defined $id_rs) {
+                    $new_progeny_hash{$openfield_cross}{$id}++;
+                }
+            }
             my $openfield_property = 'Openfield ID Count';
             my $openfield_ids_property = 'Openfield IDs';
             $musa_cross_info{$openfield_property}{$openfield_cross} = $openfield_id_count;
@@ -884,9 +886,24 @@ sub save_ona_cross_info {
                 }
         }
 
-        #print STDERR Dumper \%cross_info;
-        #print STDERR Dumper \%plant_status_info;
-        #print STDERR Dumper \%cross_parents;
+        foreach my $cross_name_key (keys %new_progeny_hash){
+            my $progenies_ref = $new_progeny_hash{$cross_name_key};
+            my %progenies = %$progenies_ref;
+            my @new_progenies = keys %progenies;
+            my @sorted_progenies = natsort @new_progenies;
+
+            my $progeny_add = CXGN::Pedigree::AddProgeny->new({
+                chado_schema => $schema,
+                phenome_schema => $phenome_schema,
+                dbh => $schema->storage->dbh,
+                cross_name => $cross_name_key,
+                progeny_names => \@sorted_progenies,
+                owner_name => $self->sp_person_username,
+            });
+            if (!$progeny_add->add_progeny()){
+                return {error => 'Error saving progenies'};
+            }
+        }
 
         my %odk_cross_hash = (
             cross_info => \%cross_info,
