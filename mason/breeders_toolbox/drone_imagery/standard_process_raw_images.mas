@@ -428,6 +428,15 @@ jQuery(document).ready(function(){
         }
 
         if (rotated_bound && rotated_bound.length>0) {
+            var bound_x1 = parseFloat(rotated_bound[0][0]) + parseFloat(x_pos);
+            var bound_y1 = parseFloat(rotated_bound[0][1]) + parseFloat(y_pos);
+            var bound_x2 = parseFloat(rotated_bound[1][0]) + parseFloat(x_pos);
+            var bound_y2 = parseFloat(rotated_bound[1][1]) + parseFloat(y_pos);
+            var bound_x3 = parseFloat(rotated_bound[2][0]) + parseFloat(x_pos);
+            var bound_y3 = parseFloat(rotated_bound[2][1]) + parseFloat(y_pos);
+            var bound_x4 = parseFloat(rotated_bound[3][0]) + parseFloat(x_pos);
+            var bound_y4 = parseFloat(rotated_bound[3][1]) + parseFloat(y_pos);
+
             var rotatedBoundGroup = manage_drone_imagery_standard_process_raw_images_interactive_svg.append("g")
                 .datum({position: x_pos,y_pos})
                 .attr("x_pos", x_pos)
@@ -437,55 +446,54 @@ jQuery(document).ready(function(){
             var line1 = rotatedBoundGroup.append('line')
                 .style("stroke", "blue")
                 .style("stroke-width", 5)
-                .attr("x1", parseFloat(rotated_bound[0][0]) + parseFloat(x_pos))
-                .attr("y1", parseFloat(rotated_bound[0][1]) + parseFloat(y_pos))
-                .attr("x2", parseFloat(rotated_bound[1][0]) + parseFloat(x_pos))
-                .attr("y2", parseFloat(rotated_bound[1][1]) + parseFloat(y_pos))
+                .attr("x1", bound_x1)
+                .attr("y1", bound_y1)
+                .attr("x2", bound_x2)
+                .attr("y2", bound_y2)
                 .attr("latitude", latitude)
                 .attr("longitude", longitude)
                 .attr("bnum", 0)
-                .attr("rotated_bound", JSON.stringify(rotated_bound))
                 .attr("nir_image_id", nir_image_id )
                 .attr("is_rotated_bound", 1);
             var line2 = rotatedBoundGroup.append('line')
                 .style("stroke", "blue")
                 .style("stroke-width", 5)
-                .attr("x1", parseFloat(rotated_bound[1][0]) + parseFloat(x_pos))
-                .attr("y1", parseFloat(rotated_bound[1][1]) + parseFloat(y_pos))
-                .attr("x2", parseFloat(rotated_bound[2][0]) + parseFloat(x_pos))
-                .attr("y2", parseFloat(rotated_bound[2][1]) + parseFloat(y_pos))
+                .attr("x1", bound_x2)
+                .attr("y1", bound_y2)
+                .attr("x2", bound_x3)
+                .attr("y2", bound_y3)
                 .attr("latitude", latitude)
                 .attr("longitude", longitude)
                 .attr("bnum", 1)
-                .attr("rotated_bound", JSON.stringify(rotated_bound))
                 .attr("nir_image_id", nir_image_id )
                 .attr("is_rotated_bound", 1);
             var line3 = rotatedBoundGroup.append('line')
                 .style("stroke", "blue")
                 .style("stroke-width", 5)
-                .attr("x1", parseFloat(rotated_bound[2][0]) + parseFloat(x_pos))
-                .attr("y1", parseFloat(rotated_bound[2][1]) + parseFloat(y_pos))
-                .attr("x2", parseFloat(rotated_bound[3][0]) + parseFloat(x_pos))
-                .attr("y2", parseFloat(rotated_bound[3][1]) + parseFloat(y_pos))
+                .attr("x1", bound_x3)
+                .attr("y1", bound_y3)
+                .attr("x2", bound_x4)
+                .attr("y2", bound_y4)
                 .attr("latitude", latitude)
                 .attr("longitude", longitude)
                 .attr("bnum", 2)
-                .attr("rotated_bound", JSON.stringify(rotated_bound))
                 .attr("nir_image_id", nir_image_id )
                 .attr("is_rotated_bound", 1);
             var line4 = rotatedBoundGroup.append('line')
                 .style("stroke", "blue")
                 .style("stroke-width", 5)
-                .attr("x1", parseFloat(rotated_bound[3][0]) + parseFloat(x_pos))
-                .attr("y1", parseFloat(rotated_bound[3][1]) + parseFloat(y_pos))
-                .attr("x2", parseFloat(rotated_bound[0][0]) + parseFloat(x_pos))
-                .attr("y2", parseFloat(rotated_bound[0][1]) + parseFloat(y_pos))
+                .attr("x1", bound_x4)
+                .attr("y1", bound_y4)
+                .attr("x2", bound_x1)
+                .attr("y2", bound_y1)
                 .attr("latitude", latitude)
                 .attr("longitude", longitude)
                 .attr("bnum", 3)
-                .attr("rotated_bound", JSON.stringify(rotated_bound))
                 .attr("nir_image_id", nir_image_id )
                 .attr("is_rotated_bound", 1);
+
+            manage_drone_imagery_standard_process_interactive_gps_images[latitude][longitude]['rotated_bound'] = [[bound_x1, bound_y1], [bound_x2, bound_y2], [bound_x3, bound_y3], [bound_x4, bound_y4]];
+            saveGPSPixelPositions();
         }
     }
 
@@ -814,7 +822,6 @@ jQuery(document).ready(function(){
 
                         var is_rotated_bound = d3.select(this).attr('is_rotated_bound');
                         if (is_rotated_bound == 1) {
-                            console.log('he');
                             var x_pos_1 = parseInt(d3.select(this).attr('x1')) - x_pos_translation;
                             var y_pos_1 = parseInt(d3.select(this).attr('y1')) - y_pos_translation;
                             var x_pos_2 = parseInt(d3.select(this).attr('x2')) - x_pos_translation;
@@ -823,13 +830,11 @@ jQuery(document).ready(function(){
                             d3.select(this).attr('y1', parseInt(y_pos_1));
                             d3.select(this).attr('x2', parseInt(x_pos_2));
                             d3.select(this).attr('y2', parseInt(y_pos_2));
-                            var bnum = parseInt(d3.select(this).attr('bnum'));
-                            var rotated_bound = JSON.parse(d3.select(this).attr('rotated_bound'));
-                            console.log(rotated_bound);
-                            rotated_bound[bnum] = [x_pos_1, y_pos_1];
-                            console.log(rotated_bound);
                             var latitude = d3.select(this).attr('latitude');
                             var longitude = d3.select(this).attr('longitude');
+                            var rotated_bound = manage_drone_imagery_standard_process_interactive_gps_images[latitude][longitude]['rotated_bound'];
+                            var bnum = parseInt(d3.select(this).attr('bnum'));
+                            rotated_bound[bnum] = [x_pos_1, y_pos_1];
                             manage_drone_imagery_standard_process_interactive_gps_images[latitude][longitude]['rotated_bound'] = rotated_bound;
                         }
                         d3.select(this).moveToFront();
