@@ -106,13 +106,13 @@ sub write_geno_data {
 	    my $geno_hash = $geno->{selected_genotype_hash};
 	    $marker_headers = $model->get_dataset_markers($geno_hash);
 	    $geno_data  = $model->structure_genotype_data($geno, $marker_headers, $count);   
-	    write_file($file, $$geno_data);
+	    write_file($file, {binmode => ':utf8'}, $$geno_data);
 	}
 	else
 	{
 
 	    $geno_data  = $model->structure_genotype_data($geno, $marker_headers, $count);   
-	    write_file($file, {append => 1}, $$geno_data);
+	    write_file($file, {append => 1, binmode => ':utf8'}, $$geno_data);
 	}
 
 	if ($self->check_data_exists) 
@@ -141,10 +141,10 @@ sub trial_phenotype_data {
     if ($pheno_data)
     {
 	my $pheno_data = SGN::Controller::solGS::solGS->format_phenotype_dataset($pheno_data, $metadata, $traits_file);
-	write_file($pheno_file, $pheno_data);
+	write_file($pheno_file, {binmode => ':utf8'}, $pheno_data);
     }
 
-    write_file($metadata_file, join("\t", @$metadata));
+    write_file($metadata_file, {binmode => ':utf8'}, join("\t", @$metadata));
 }
 
 
@@ -183,8 +183,8 @@ sub plots_list_phenotype_data {
   
     $pheno_data = SGN::Controller::solGS::solGS->format_phenotype_dataset($pheno_data, $metadata, $traits_file);
         
-    write_file($pheno_file, $pheno_data);
-    write_file($metadata_file, join("\t", @$metadata));
+    write_file($pheno_file, {binmode => ':utf8'}, $pheno_data);
+    write_file($metadata_file, {binmode => ':utf8'}, join("\t", @$metadata));
       
 }
 
