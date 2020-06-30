@@ -498,7 +498,7 @@ sub selection_population_file {
     $self->genotype_file_name($c, $pred_pop_id);
     $geno_files .= "\t" . $c->stash->{genotype_file_name};  
 
-    write_file($tempfile, $geno_files); 
+    write_file($tempfile, {binmode => ':utf8'}, $geno_files); 
 
     $c->stash->{selection_population_file} = $tempfile;
   
@@ -549,7 +549,7 @@ sub cache_file {
     {      
         $file = catfile($cache_dir, $cache_data->{file});
 
-        write_file($file);
+        write_file($file, {binmode => ':utf8'});
         $file_cache->set($cache_data->{key}, $file, '30 days');
     }
 

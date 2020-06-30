@@ -306,7 +306,7 @@ sub dataset_population_summary {
 	    $c->controller('solGS::Files')->population_metadata_file($c, $tmp_dir, $file_id);   
 	    my $metadata_file = $c->stash->{population_metadata_file};
        
-	    my @metadata = read_file($metadata_file);
+	    my @metadata = read_file($metadata_file, {binmode => ':utf8'});
        
 	    my ($key, $dataset_name, $desc);
      
@@ -358,7 +358,7 @@ sub create_dataset_population_metadata_file {
     $self->create_dataset_population_metadata($c);
     my $metadata = $c->stash->{dataset_metadata};
     
-    write_file($file, $metadata);
+    write_file($file, {binmode => ':utf8'}, $metadata);
  
     $c->stash->{dataset_metadata_file} = $file; 
   

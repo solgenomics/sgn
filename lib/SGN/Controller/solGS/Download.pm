@@ -34,7 +34,7 @@ sub download_validation :Path('/solgs/download/validation/pop') Args() {
   
     unless (!-s $validation_file) 
     {
-        my @validation = read_file($validation_file, {binmode=>':utf8'});
+        my @validation = read_file($validation_file, {binmode => ':utf8'});
     
         $c->res->content_type("text/plain");
         $c->res->body(join("", @validation));  
@@ -56,7 +56,7 @@ sub download_prediction_GEBVs :Path('/solgs/download/prediction/model') Args() {
     
     unless (!-s $selection_gebvs_file) 
     {
-	my @selection_gebvs =  read_file($selection_gebvs_file, {binmode=>':utf8'});
+	my @selection_gebvs =  read_file($selection_gebvs_file, {binmode => ':utf8'});
 	$c->res->content_type("text/plain");
 	$c->res->body(join("", @selection_gebvs));	
     }
@@ -86,7 +86,7 @@ sub download_blups :Path('/solgs/download/blups/pop') Args() {
 
     unless (!-s $training_gebvs_file) 
     {
-        my @training_gebvs = read_file($training_gebvs_file);
+        my @training_gebvs = read_file($training_gebvs_file, {binmode => ':utf8'});
 	
         $c->res->content_type("text/plain");
         $c->res->body(join("", @training_gebvs));
@@ -110,7 +110,7 @@ sub download_marker_effects :Path('/solgs/download/marker/pop') Args() {
     
     unless (!-s $markers_file) 
     {
-        my @effects = read_file($markers_file, {binmode=>':utf8'});
+        my @effects = read_file($markers_file, {binmode => ':utf8'});
     
         $c->res->content_type("text/plain");
         $c->res->body(join("", @effects));

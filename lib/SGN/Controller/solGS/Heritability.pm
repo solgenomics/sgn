@@ -80,7 +80,7 @@ sub get_heritability {
 
     my ($txt, $value) = map { split(/\t/)  } 
                         grep {/SNP heritability/}
-                        read_file($var_comp_file);
+                        read_file($var_comp_file, {binmode => ':utf8'});
 
     $c->stash->{heritability} = $value;
 }
@@ -109,8 +109,8 @@ sub heritability_regeression_data :Path('/heritability/regression/data/') Args(0
     my $gebv_file  = $c->stash->{regression_gebv_file};
     my $pheno_file = $c->stash->{regression_pheno_file};
 
-    my @gebv_data  = map { $_ =~ s/\n//; $_ }  read_file($gebv_file);
-    my @pheno_data = map { $_ =~ s/\n//; $_ }  read_file($pheno_file);
+    my @gebv_data  = map { $_ =~ s/\n//; $_ }  read_file($gebv_file, {binmode => ':utf8'});
+    my @pheno_data = map { $_ =~ s/\n//; $_ }  read_file($pheno_file, {binmode => ':utf8'});
     
     @gebv_data  = map { [ split(/\t/) ] } @gebv_data;
     @pheno_data = map { [ split(/\t/) ] } @pheno_data;

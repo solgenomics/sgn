@@ -655,7 +655,7 @@ sub cluster_output_files {
     my $tmp_dir = $c->stash->{cluster_temp_dir};
     my $name = "cluster_output_files_${file_id}"; 
     my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
-    write_file($tempfile, $file_list);
+    write_file($tempfile, {binmode => ':utf8'}, $file_list);
     
     $c->stash->{cluster_output_files} = $tempfile;
 
@@ -772,7 +772,7 @@ sub cluster_input_files {
 
     $files .= "\t" . $cluster_opts_file;
     
-    write_file($tempfile, $files);
+    write_file($tempfile, {binmode => ':utf8'}, $files);
     
     $c->stash->{cluster_input_files} = $tempfile;
 
@@ -797,7 +797,7 @@ sub save_cluster_opts {
     $opts_data   .= 'selection proportion' . "\t" . $selection_prop  . "\n" if $selection_prop;
 
     
-    write_file($opts_file, $opts_data);
+    write_file($opts_file, {binmode => ':utf8'}, $opts_data);
     
 }
 
