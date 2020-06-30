@@ -98,10 +98,8 @@
                 <li><strong>observationunit_name</strong>: It is a requiered field which matches with the databank. It can be the plot name, subplots, plant name, or tissue sample, depending how your trial is designed.</li>
                 <li><strong>device_id</strong>: It is an optional field to identify your device. Strings are allowed.</li>
                 <li><strong>device_type</strong>: It is a required field. It is possible upload data for a single device type. They can be:<strong>SCIO, ASC, FOSS, or LINKSQUARE</strong>.</li>
-                <li><strong>temperature</strong>: Optional field to store temperature.</li>
-                <li><strong>location</strong>: Optional field to idenfy where the NIRS data was collected.</li>
-                <li><strong>outlier</strong>: Optional field, occasionally outilers can be identified by the number 1.</li>
-                <li>All other columns are wavelengths. You can add how many columns you want upload, there isn't a limit. 
+                <li><strong>comments</strong>: Optional field for general comments.</li>
+                <li>All other columns are required wavelengths. You can add how many columns you want upload, there isn't a limit.</li>
             </ul>
             <table class="table table-hover table-bordered table-condensed" >
                         <thead></thead>
@@ -113,9 +111,7 @@
                                 <td>obserbationunit_name</td>
                                 <td>device_id</td>
                                 <td>device_type</td>
-                                <td>temperature</td>
-                                <td>location</td>
-                                <td>outlier</td>
+                                <td>comments</td>
                             </tr>
                         </tbody>
                     </table>

@@ -66,6 +66,80 @@ sub validate {
       return \%parse_result;
     }
 
+    close $fh;
+
+    my %headers = ( 
+                    id                  =>1,
+                    sample_id           =>2,
+                    sampling_date       =>3,
+                    observationunit_name=>4,
+                    device_id           =>5,
+                    device_type         =>6,
+                    comments            =>7
+                    );
+
+    my %types = (
+                  SCIO      =>1,
+                  ASC       =>2,
+                  FOSS      =>3,
+                  LINKSQUARE=>4
+                  );
+
+    open(my $fh, '<', $filename)
+        or die "Could not open file '$filename' $!";
+    
+    my $size = 0;
+    my $number = 0;
+    my $count = 1;
+    my @fields;
+    while (my $line = <$fh>) {
+      if ($csv->parse($line)) {
+        @fields = $csv->fields();
+        if ($count == 1) {
+          $size = scalar @fields;
+          while ($number < 7) {
+              if (not exists $headers{$fields[$number]}){
+                $parse_result{'error'} = "Wrong headers at '$fields[$number]'! Is this file matching with Spredsheet Format?";
+                return \%parse_result;
+              }else{
+                $number++;
+              }
+            }
+          while ($number < $size){
+            if (not $fields[$number]=~/^[+]?\d+\.?\d*$/){
+              $parse_result{'error'}= "It is not a valid wavelength: '$fields[$number]'. Could you check the data format?";
+              return \%parse_result;
+            }else{
+              $number++;
+            }
+          }
+        }elsif($count>1){
+          my $number2 = 9;
+          while ($number2 < $size){
+            if (not exists $types{$fields[5]}){
+                $parse_result{'error'}= "Wrong device type '$fields[5]'. Please, check names allowed in File Format Information.";
+                return \%parse_result;
+            }
+            if (not $fields[$number2]=~/^[+]?\d+\.?\d*$/){
+                $parse_result{'error'}= "It is not a real value for wavelength: '$fields[$number2]'";
+                return \%parse_result;
+            }
+            if (not $fields[2] eq ''){
+              if (not $fields[2] =~/(\d{4})-(\d{2})-(\d{2})/) {
+                  $parse_result{'error'} = "Sampling date needs to be of form YYYY-MM-DD";
+                  print STDERR "value: $fields[2]\n";
+                  return \%parse_result;
+              }
+            }
+            $number2++;
+          }
+        }
+        $count++;
+      }
+        
+    }
+    close $fh;
+
     return 1;
 }
 
@@ -142,7 +216,7 @@ sub parse {
                               }
 
                               if ($column_name ne '' && $column_name =~ /^[+]?\d+\.?\d*$/){
-                                my $wavelength = $column_name;
+                                my $wavelength = "X".$column_name;
                                 my $nir_value = '';
                                 $nir_value = $columns[$col];
                                 $data{$observationunit_name}->{'nirs'}->{'spectra'}->{$wavelength} = $nir_value;
