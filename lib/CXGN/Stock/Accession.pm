@@ -423,7 +423,8 @@ sub store {
     }
     if ($self->donors){
         foreach (@{$self->donors}){
-            $self->_store_stockprop('donor', $_->{donorGermplasmName});
+            my $accession = $_->{donorAccessionNumber} || $_->{donorGermplasmName};
+            $self->_store_stockprop('donor', $accession);
             $self->_store_stockprop('donor institute', $_->{donorInstituteCode});
             $self->_store_stockprop('donor PUI', $_->{germplasmPUI});
         }

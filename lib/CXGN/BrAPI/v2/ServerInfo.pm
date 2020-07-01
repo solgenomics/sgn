@@ -22,8 +22,9 @@ sub search {
 		#core
 		[['application/json'],['GET'],'serverinfo',['2.0']],
 		[['application/json'],['GET'],'commoncropnames',['2.0']],
-		[['application/json'],['GET'],'lists',['2.0']],
-		[['application/json'],['GET'],'lists/{listDbId}',['2.0']],
+		[['application/json'],['GET','POST'],'lists',['2.0']],
+		[['application/json'],['GET','PUT'],'lists/{listDbId}',['2.0']],
+		[['application/json'],['POST'],'lists/{listDbId}/items',['2.0']],
 		[['application/json'],['POST'],'search/lists',['2.0']],
 		[['application/json'],['GET'],'search/lists/{searchResultsDbId}',['2.0']],
 		[['application/json'],['GET'],'locations',['2.0']],
@@ -114,8 +115,8 @@ sub search {
 		[['application/json'],['POST'],'search/variantsets',['2.0']],
 		[['application/json'],['GET'], 'search/variantsets/{searchResultsDbId}',['2.0']],
 		#Germplasm
-		[['application/json'],['GET'], 'germplasm',['2.0']],
-		[['application/json'],['GET'], 'germplasm/{germplasmDbId}',['2.0']],
+		[['application/json'],['GET','POST'], 'germplasm',['2.0']],
+		[['application/json'],['GET','PUT'], 'germplasm/{germplasmDbId}',['2.0']],
 		[['application/json'],['GET'], 'germplasm/{germplasmDbId}/pedigree',['2.0']],
 		[['application/json'],['GET'], 'germplasm/{germplasmDbId}/progeny',['2.0']],
 		[['application/json'],['POST'],'search/germplasm',['2.0']],

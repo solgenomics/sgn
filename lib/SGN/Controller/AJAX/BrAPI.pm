@@ -759,6 +759,23 @@ sub germplasm_search_GET {
     _standard_response_construction($c, $brapi_package_result);
 }
 
+sub germplasm_search_POST {
+    my $self = shift;
+    my $c = shift;
+    my ($auth,$user_id) = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $data = $clean_inputs;
+	my @all_germplasm;
+	foreach my $germplasm (values %{$data}) {
+		push @all_germplasm, $germplasm;
+	}
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Germplasm');
+    my $brapi_package_result = $brapi_module->store(\@all_germplasm,$user_id,$c);
+
+    _standard_response_construction($c, $brapi_package_result);
+}
+
 sub germplasm_search_save  : Chained('brapi') PathPart('search/germplasm') Args(0) : ActionClass('REST') { }
 
 sub germplasm_search_save_POST {
@@ -828,6 +845,21 @@ sub germplasm_detail_GET {
 		$c->stash->{stock_id}
 	);
 	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub germplasm_detail_PUT {
+    my $self = shift;
+    my $c = shift;
+    my ($auth,$user_id) = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $data = $clean_inputs;
+	my @all_germplasm;
+	push @all_germplasm, $data;
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Germplasm');
+    my $brapi_package_result = $brapi_module->update($c->stash->{stock_id},\@all_germplasm,$user_id,$c);
+
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 =head2 brapi/v1/germplasm/{id}/MCPD
