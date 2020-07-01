@@ -382,7 +382,6 @@ jQuery(document).ready(function(){
     var manage_drone_imagery_standard_process_interactive_current_ordinal_latitude_current;
     var manage_drone_imagery_standard_process_interactive_current_ordinal_longitude_raw;
     var manage_drone_imagery_standard_process_interactive_current_ordinal_longitude_current;
-    var manage_drone_imagery_standard_process_raw_images_is_first_match = 1;
 
     d3.selection.prototype.moveToFront = function() {
         return this.each(function(){
@@ -703,7 +702,6 @@ jQuery(document).ready(function(){
                     manage_drone_imagery_standard_process_raw_images_interactive_rotate_angle = rotate_angle;
                     manage_drone_imagery_standard_process_raw_images_nir_images.push(nir_image_id);
                     var rotated_bound = manage_drone_imagery_standard_process_interactive_gps_images[latitude][longitude]['rotated_bound'];
-                    var rotated_extent = manage_drone_imagery_standard_process_interactive_gps_images[latitude][longitude]['rotated_extent'];
                     appendDraggableImage(image_url, x_pos, y_pos, latitude, longitude, nir_image_id, JSON.stringify(rotated_image_ids), rotate_angle, enable_drag, rotated_bound);
                 }
             }
@@ -882,12 +880,28 @@ jQuery(document).ready(function(){
 
     jQuery('#drone_imagery_standard_process_raw_images_interactive_match').click(function(){
 
-        var image_id1 = manage_drone_imagery_standard_process_raw_images_nir_images[manage_drone_imagery_standard_process_raw_images_nir_image_counter];
-        var image_id2 = manage_drone_imagery_standard_process_raw_images_nir_images[manage_drone_imagery_standard_process_raw_images_nir_image_counter+1];
-        
-        //if (manage_drone_imagery_standard_process_raw_images_is_first_match == 1) {
-        //}
-        manage_drone_imagery_interactive_match_two_images(image_id1, image_id2);
+        //var image_id1 = manage_drone_imagery_standard_process_raw_images_nir_images[manage_drone_imagery_standard_process_raw_images_nir_image_counter];
+        //var image_id2 = manage_drone_imagery_standard_process_raw_images_nir_images[manage_drone_imagery_standard_process_raw_images_nir_image_counter+1];
+        //manage_drone_imagery_interactive_match_two_images(image_id1, image_id2);
+
+        jQuery.ajax({
+            url : '/api/drone_imagery/match_and_align_images_sequential',
+            type: 'POST',
+            data : {
+                'nir_image_ids':JSON.stringify(manage_drone_imagery_standard_process_raw_images_nir_images),
+                'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id,
+                'rotate_angle':manage_drone_imagery_standard_process_raw_images_interactive_rotate_angle
+            },
+            success: function(response){
+                console.log(response);
+
+                initializeInteractiveSvg('#drone_imagery_standard_process_raw_images_image_id_interactive_select_div', 'drone_imagery_standard_process_raw_images_image_id_interactive_select_div_area', 1, 1);
+            },
+            error: function(response){
+                alert('Error matching and aligning images sequential!')
+            }
+        });
+
     });
 
     function initializeInteractiveSvg(svg_div, svg_div_id, init, enable_drag){
@@ -899,16 +913,8 @@ jQuery(document).ready(function(){
                 manage_drone_imagery_standard_process_interactive_image_width = response.image_width;
                 manage_drone_imagery_standard_process_interactive_image_length = response.image_length;
 
-                if (response.x_range != 0) {
-                    drone_imagery_interactive_total_width = response.x_range + 1.2*response.image_width;
-                } else {
-                    drone_imagery_interactive_total_width = (response.max_longitude - response.min_longitude)*100*manage_drone_imagery_standard_process_raw_images_interactive_x_factor + 1.2*response.image_width;
-                }
-                if (response.y_range != 0) {
-                    drone_imagery_interactive_total_length = response.y_range + 1.2*response.image_length;
-                } else {
-                    drone_imagery_interactive_total_length = (response.max_latitude - response.min_latitude)*3*manage_drone_imagery_standard_process_raw_images_interactive_y_factor + 1.2*response.image_length;
-                }
+                drone_imagery_interactive_total_width = response.x_range;
+                drone_imagery_interactive_total_length = response.y_range;
 
                 manage_drone_imagery_standard_process_raw_images_interactive_image = {
                   width: manage_drone_imagery_standard_process_interactive_image_width,
@@ -961,16 +967,8 @@ jQuery(document).ready(function(){
                 manage_drone_imagery_standard_process_interactive_image_width = response.image_width;
                 manage_drone_imagery_standard_process_interactive_image_length = response.image_length;
 
-                if (response.x_range != 0) {
-                    drone_imagery_interactive_total_width = response.x_range + 1.2*response.image_width;
-                } else {
-                    drone_imagery_interactive_total_width = (response.max_longitude - response.min_longitude)*100*manage_drone_imagery_standard_process_raw_images_interactive_x_factor + 1.2*response.image_width;
-                }
-                if (response.y_range != 0) {
-                    drone_imagery_interactive_total_length = response.y_range + 1.2*response.image_length;
-                } else {
-                    drone_imagery_interactive_total_length = (response.max_latitude - response.min_latitude)*3*manage_drone_imagery_standard_process_raw_images_interactive_y_factor + 1.2*response.image_length;
-                }
+                drone_imagery_interactive_total_width = response.x_range;
+                drone_imagery_interactive_total_length = response.y_range;
 
                 manage_drone_imagery_standard_process_raw_images_interactive_image = {
                   width: manage_drone_imagery_standard_process_interactive_image_width,
