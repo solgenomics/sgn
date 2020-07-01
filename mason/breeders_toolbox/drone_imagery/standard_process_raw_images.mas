@@ -378,7 +378,6 @@ jQuery(document).ready(function(){
     var manage_drone_imagery_standard_process_interactive_longitude_rounded_map = {};
     var manage_drone_imagery_standard_process_interactive_latitude_ordinal_max;
     var manage_drone_imagery_standard_process_interactive_longitude_ordinal_max;
-    var manage_drone_imagery_standard_process_interactive_ordinal_matches = {};
     var manage_drone_imagery_standard_process_interactive_current_ordinal_latitude_raw;
     var manage_drone_imagery_standard_process_interactive_current_ordinal_latitude_current;
     var manage_drone_imagery_standard_process_interactive_current_ordinal_longitude_raw;
@@ -857,35 +856,6 @@ jQuery(document).ready(function(){
 
                 var ordinal_latitude = manage_drone_imagery_standard_process_interactive_latitude_rounded_map[src_latitude];
                 var ordinal_longitude = manage_drone_imagery_standard_process_interactive_longitude_rounded_map[src_longitude];
-                if (ordinal_longitude in manage_drone_imagery_standard_process_interactive_ordinal_matches) {
-                    manage_drone_imagery_standard_process_interactive_ordinal_matches[ordinal_latitude][ordinal_longitude] = {
-                        'x_pos_match_src' : x_pos_match_src,
-                        'y_pos_match_src' : y_pos_match_src,
-                        'x_pos_match_dst' : x_pos_match_dst,
-                        'y_pos_match_dst' : y_pos_match_dst,
-                        'src_image_id' : response.image_id_src,
-                        'dst_image_id' : response.image_id_dst,
-                        'x_pos_dst' : x_pos_dst,
-                        'x_pos_src' : x_pos_src,
-                        'y_pos_dst' : y_pos_dst,
-                        'y_pos_src' : y_pos_src,
-                    };
-                } else {
-                    manage_drone_imagery_standard_process_interactive_ordinal_matches[ordinal_latitude] = {};
-                    manage_drone_imagery_standard_process_interactive_ordinal_matches[ordinal_latitude][ordinal_longitude] = {
-                        'x_pos_match_src' : x_pos_match_src,
-                        'y_pos_match_src' : y_pos_match_src,
-                        'x_pos_match_dst' : x_pos_match_dst,
-                        'y_pos_match_dst' : y_pos_match_dst,
-                        'src_image_id' : response.image_id_src,
-                        'dst_image_id' : response.image_id_dst,
-                        'x_pos_dst' : x_pos_dst,
-                        'x_pos_src' : x_pos_src,
-                        'y_pos_dst' : y_pos_dst,
-                        'y_pos_src' : y_pos_src,
-                    };
-                }
-                console.log(manage_drone_imagery_standard_process_interactive_ordinal_matches);
 
                 jQuery('#drone_imagery_standard_process_raw_images_interactive_match_modal_div').html("<img src='"+response.match_image_url+"' >");
 
