@@ -1413,7 +1413,7 @@ sub trial_design : Chained('trial') PathPart('design') Args(0) {
     my $plot_width = '';
     my $plants_per_plot = '';
     my $number_of_blocks = '';
-    if ($design_type eq 'field_layout') {
+    if ($design_type ne 'genotyping_plate') {
         my $plot_dimensions = $layout->get_plot_dimensions();
         $plot_length = $plot_dimensions->[0] ? $plot_dimensions->[0] : '';
         $plot_width = $plot_dimensions->[1] ? $plot_dimensions->[1] : '';
