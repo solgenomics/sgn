@@ -71,6 +71,7 @@ sub _validate_with_plugin {
         if (!$cross_name || $cross_name eq '') {
             push @error_messages, "Cell A$row_name: cross unique id missing";
         } else {
+            $cross_name =~ s/^\s+|\s+$//g;
             $seen_cross_names{$cross_name}++;
         }
 
@@ -126,10 +127,12 @@ sub _parse_with_plugin {
 
         if ($worksheet->get_cell($row,0)){
             $cross_name = $worksheet->get_cell($row,0)->value();
+            $cross_name =~ s/^\s+|\s+$//g;
         }
 
         if ($worksheet->get_cell($row,1)){
             $family_name = $worksheet->get_cell($row,1)->value();
+            $family_name =~ s/^\s+|\s+$//g;
         }
 
         #skip blank lines or lines with no cross name

@@ -84,6 +84,7 @@ sub _validate_with_plugin {
         } elsif ($seen_cross_names{$cross_name}) {
             push @error_messages, "Duplicate cross unique id at cell A$row_name".": $cross_name";
         } else {
+            $cross_name =~ s/^\s+|\s+$//g;
             $seen_cross_names{$cross_name}++;
         }
 
@@ -153,6 +154,7 @@ sub _parse_with_plugin {
 
         if ($worksheet->get_cell($row,0)){
             $cross_name = $worksheet->get_cell($row,0)->value();
+            $cross_name =~ s/^\s+|\s+$//g;
         }
 
         #skip blank lines or lines with no name, type and parent

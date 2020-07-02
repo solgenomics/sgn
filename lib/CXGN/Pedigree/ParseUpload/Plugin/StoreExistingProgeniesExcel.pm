@@ -38,9 +38,11 @@ sub _parse_with_plugin {
 
         if ($worksheet->get_cell($row,0)){
             $cross_name = $worksheet->get_cell($row,0)->value();
+            $cross_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,1)){
             $progeny_name = $worksheet->get_cell($row,1)->value();
+            $progeny_name =~ s/^\s+|\s+$//g;
         }
         #skip blank lines or lines with no name, type and parent
         if (!$cross_name && !$progeny_name) {
