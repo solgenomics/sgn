@@ -325,9 +325,12 @@ The GWAS will filter the data by the input MAF and missing data filters provided
 
 <img src='{{"assets/images/search_wizard_genotype_analyses_manhattan_plot.png" | relative_url }}' width="522" />
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 <img src='{{"assets/images/search_wizard_genotype_analyses_qq_plot.png" | relative_url }}' width="522" />
 =======
+=======
+>>>>>>> 12c5dfca8d616be6ff85873ce7c981d17553c23e
 
 <img src='{{"assets/images/search_wizard_genotype_analyses_qq_plot.png" | relative_url }}' width="522" />
 
@@ -406,5 +409,9 @@ De Maesschalck, R., D. Jouan-Rimbaud, and D.L. Massart. 2000. The Mahalanobis di
 * Shrestha, R., L. Matteis, M. Skofic, A. Portugal, G. McLaren, et al. 2012. Bridging the phenotypic and genetic data useful for integrated breeding through a data annotation using the Crop Ontology developed by the crop communities of practice. Front. Physiol. 3 AUG(August): 1-10. doi: 10.3389/fphys.2012.00326.
 * Vapnik, V.N. 2000. The Nature of Statistical Learning Theory. Springer New York, New York, NY.
 * Wold, S., A. Ruhe, H. Wold, and W.J. Dunn, III. 1984. The Collinearity Problem in Linear Regression. The Partial Least Squares (PLS) Approach to Generalized Inverses. SIAM J. Sci. Stat. Comput. 5(3): 735-743. doi: 10.1137/0905052.
+<<<<<<< HEAD
 * Wold, S., M. Sjöström, and L. Eriksson. 2001. PLS-regression: a basic tool of chemometrics. Chemom. Intell. Lab. Syst. 58(2): 109-130. doi: 10.1016/S0169-7439(01)00155-1.
 >>>>>>> Add NIRS tool documentation
+=======
+* Wold, S., M. Sjöström, and L. Eriksson. 2001. PLS-regression: a basic tool of chemometrics. Chemom. Intell. Lab. Syst. 58(2): 109-130. doi: 10.1016/S0169-7439(01)00155-1.
+>>>>>>> 12c5dfca8d616be6ff85873ce7c981d17553c23e
