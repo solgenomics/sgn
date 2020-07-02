@@ -92,13 +92,12 @@ sub get_test_study: Path('/ajax/Nirs/get_test_study') : {
     print STDERR Dumper($test_id);
 
 }
-
-sub get_cross_validation: Path('/ajax/Nirs/get_nirs_format') : {
+my $format_id;
+sub get_nirs_format: Path('/ajax/Nirs/get_nirs_format') : {
     my $self = shift;
     my $c = shift;
-    my $crossv_id = $c->req->param('format_id');
-    print STDERR Dumper($crossv_id);
-    print "The format_id is $crossv_id \n";
+    $format_id = $c->req->param('format_id');
+    print STDERR Dumper($format_id);
 
 }
 
@@ -187,7 +186,8 @@ sub extract_trait_data :Path('/ajax/Nirs/getdata') Args(0) {
 sub generate_results: Path('/ajax/Nirs/generate_results') : {
     my $self = shift;
     my $c = shift;
-    my $format_id = $c ->req->param('format_id');
+    # my $format2 = $c->req->param('format_id');
+    my $device_id = $format_id;
     my $cv_scheme = $c->req->param('cv_id');
     my $dataset_id = $c->req->param('dataset_id');
     my $train_id = $c->req->param('train_id');
@@ -199,6 +199,8 @@ sub generate_results: Path('/ajax/Nirs/generate_results') : {
     my $tune_id = $c->req->param('tune_id');
     my $rf_var_imp = $c->req->param('rf_var_imp');
 
+    # print STDERR $format2;
+    print STDERR $device_id;
     print STDERR $dataset_id;
     print STDERR $trait_id;
 
@@ -280,12 +282,14 @@ sub generate_results: Path('/ajax/Nirs/generate_results') : {
 					FROM metadata.md_json
 					JOIN phenome.nd_experiment_md_json USING(json_id)
 					JOIN nd_experiment_stock USING(nd_experiment_id)
-					JOIN stock using(stock_id) where stock.uniquename=?;";
+					JOIN stock using(stock_id) where stock.uniquename=?
+					AND jsonb_pretty(json - 'spectra'->'device_type')='\"$device_id\"';";
 
         my $sql1 = "SELECT json AS nirs_spectra 
                     FROM metadata.md_json JOIN phenome.nd_experiment_md_json USING(json_id)  
                     JOIN nd_experiment_stock USING(nd_experiment_id)              
-                    JOIN stock using(stock_id) where stock.uniquename= ?;";
+                    JOIN stock using(stock_id) where stock.uniquename=?
+                    AND jsonb_pretty(json - 'spectra'->'device_type')='\"$device_id\"';";
      
     	
         my $fh_db= $dbh->prepare($sql);    
@@ -310,7 +314,9 @@ sub generate_results: Path('/ajax/Nirs/generate_results') : {
 				                FROM metadata.md_json
 				                JOIN phenome.nd_experiment_md_json USING(json_id)
 				                JOIN nd_experiment_stock USING(nd_experiment_id)
-				                JOIN stock using(stock_id) where stock.uniquename=?;";
+				                JOIN stock using(stock_id) where stock.uniquename=?
+				                AND jsonb_pretty(json - 'spectra'->'device_type')='\"$device_id\"';";
+
  		my $fh_db2= $dbh->prepare($unitname);    
         $fh_db2->execute($name);
         while (my @spt2 = $fh_db2->fetchrow_array()) {
@@ -382,12 +388,14 @@ sub generate_results: Path('/ajax/Nirs/generate_results') : {
                     FROM metadata.md_json
                     JOIN phenome.nd_experiment_md_json USING(json_id)
                     JOIN nd_experiment_stock USING(nd_experiment_id)
-                    JOIN stock using(stock_id) where stock.uniquename=?;";
+                    JOIN stock using(stock_id) where stock.uniquename=?
+                    AND jsonb_pretty(json - 'spectra'->'device_type')='\"$device_id\"';";
         
         my $sql_test1 = "SELECT json AS nirs_spectra 
                     FROM metadata.md_json JOIN phenome.nd_experiment_md_json USING(json_id)  
                     JOIN nd_experiment_stock USING(nd_experiment_id)              
-                    JOIN stock using(stock_id) where stock.uniquename= ?;";
+                    JOIN stock using(stock_id) where stock.uniquename= ?
+                    AND jsonb_pretty(json - 'spectra'->'device_type')='\"$device_id\"';";
      
         
         my $fh_db_test= $dbh_test->prepare($sql_test);    
@@ -414,7 +422,8 @@ sub generate_results: Path('/ajax/Nirs/generate_results') : {
                                 FROM metadata.md_json
                                 JOIN phenome.nd_experiment_md_json USING(json_id)
                                 JOIN nd_experiment_stock USING(nd_experiment_id)
-                                JOIN stock using(stock_id) where stock.uniquename=?;";
+                                JOIN stock using(stock_id) where stock.uniquename=?
+                                AND jsonb_pretty(json - 'spectra'->'device_type')='\"$device_id\"';";
         
         my $fh_db2= $dbh->prepare($unitname);    
         $fh_db2->execute($name_test);

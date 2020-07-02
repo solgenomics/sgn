@@ -71,9 +71,12 @@
 
   <div class = "form-group form-inline">
    <label for = format_select>Available NIRs format: </label>
-   <select class="form-control input-sm" id="cv_select">
-    <option selected value="scio">SCIO</option>
-    <option value="simple">Simple</option>
+   <select class="form-control input-sm" id="format_select">
+    <option selected value="SCIO">SCIO</option>
+    <option value="QST">QST</option>
+    <option value="FOSS6500">FOS6500</option>
+    <option value="BUCHIN500">BuchiN500</option>
+    <option value="LinkSquare">LinkSquare</option>
    </select>
    <div id = "format_select">
   </div>
@@ -263,7 +266,7 @@ jQuery(document).ready(function() {
 
   jQuery('#selectFormat').on('click', function() {
     if (!jQuery('#format_select').val()) {
-      alert("Please select a cross-validation method.")
+      alert("Please select your device type.")
     } else {
       var format_id = jQuery('#format_select').val();
     $.ajax({
