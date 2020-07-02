@@ -119,6 +119,7 @@ sub search {
 		[['application/json'],['GET','PUT'], 'germplasm/{germplasmDbId}',['2.0']],
 		[['application/json'],['GET'], 'germplasm/{germplasmDbId}/pedigree',['2.0']],
 		[['application/json'],['GET'], 'germplasm/{germplasmDbId}/progeny',['2.0']],
+		[['application/json'],['GET'], 'germplasm/{germplasmDbId}/mcpd',['2.0']],
 		[['application/json'],['POST'],'search/germplasm',['2.0']],
 		[['application/json'],['GET'], 'search/germplasm/{searchResultsDbId}',['2.0']],
 		[['application/json'],['GET','POST'], 'crossingprojects',['2.0']],

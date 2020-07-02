@@ -909,7 +909,7 @@ MCPD CALL NO LONGER IN BRAPI SPEC
 
 =cut
 
-#sub germplasm_mcpd  : Chained('germplasm_single') PathPart('MCPD') Args(0) : ActionClass('REST') { }
+sub germplasm_mcpd  : Chained('germplasm_single') PathPart('mcpd') Args(0) : ActionClass('REST') { }
 
 #sub germplasm_mcpd_POST {
 #    my $self = shift;
@@ -920,24 +920,18 @@ MCPD CALL NO LONGER IN BRAPI SPEC
 #    $c->stash->{rest} = {status=>$status};
 #}
 
-#sub germplasm_mcpd_GET {
-#    my $self = shift;
-#    my $c = shift;
-#    #my $auth = _authenticate_user($c);
-#    my $schema = $self->bcs_schema();
-#    my %result;
-#    my $status = $c->stash->{status};
-
-#    my $synonym_id = $schema->resultset("Cv::Cvterm")->find( { name => "synonym" })->cvterm_id();
-#    my $organism = CXGN::Chado::Organism->new( $schema, $c->stash->{stock}->get_organism_id() );
-
-#    %result = (germplasmDbId=>$c->stash->{stock_id}, defaultDisplayName=>$c->stash->{stock}->get_uniquename(), accessionNumber=>$c->stash->{stock}->get_uniquename(), germplasmName=>$c->stash->{stock}->get_name(), germplasmPUI=>$c->stash->{stock}->get_uniquename(), pedigree=>germplasm_pedigree_string($schema, $c->stash->{stock_id}), germplasmSeedSource=>'', synonyms=>germplasm_synonyms($schema, $c->stash->{stock_id}, $synonym_id), commonCropName=>$organism->get_common_name(), instituteCode=>'', instituteName=>'', biologicalStatusOfAccessionCode=>'', countryOfOriginCode=>'', typeOfGermplasmStorageCode=>'', genus=>$organism->get_genus(), species=>$organism->get_species(), speciesAuthority=>'', subtaxa=>$organism->get_taxon(), subtaxaAuthority=>'', donors=>'', acquisitionDate=>'');
-
-#    my %pagination;
-#    my %metadata = (pagination=>\%pagination, status=>$status);
-#    my %response = (metadata=>\%metadata, result=>\%result);
-#    $c->stash->{rest} = \%response;
-#}
+sub germplasm_mcpd_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Germplasm');
+	my $brapi_package_result = $brapi_module->germplasm_mcpd(
+		$c->stash->{stock_id}
+	);
+	_standard_response_construction($c, $brapi_package_result);
+}
 
 
 =head2 brapi/v1/studies?programId=programId

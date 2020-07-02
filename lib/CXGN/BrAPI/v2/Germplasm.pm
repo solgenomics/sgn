@@ -346,6 +346,114 @@ sub germplasm_progeny {
     return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'Germplasm progeny result constructed');
 }
 
+sub germplasm_mcpd {
+    my $self = shift;
+    my $stock_id = shift;
+
+    my $status = $self->status;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+
+    my $schema = $self->bcs_schema();
+        my $accession_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
+
+    my $stock_search = CXGN::Stock::Search->new({
+        bcs_schema=>$self->bcs_schema,
+        people_schema=>$self->people_schema,
+        phenome_schema=>$self->phenome_schema,
+        match_type=>'exactly',
+        stock_id_list=>[$stock_id],
+        stock_type_id=>$accession_type_cvterm_id,
+        stockprop_columns_view=>{'accession number'=>1, 'PUI'=>1, 'seed source'=>1, 'institute code'=>1, 'institute name'=>1, 'biological status of accession code'=>1, 'country of origin'=>1, 'type of germplasm storage code'=>1, 'acquisition date'=>1, 'ncbi_taxonomy_id'=>1},
+        display_pedigree=>1
+    });
+    
+    my ($result, $total_count) = $stock_search->search();
+
+    my %result;
+
+    foreach (@$result){
+        my $donors = $_->{donors};
+        my @donors;
+        foreach(@$donors){
+            push @donors, {
+                donorAccessionNumber=>$_->{donorAccessionNumber},
+                donorInstitute=>{
+                    instituteCode=>$_->{donorInstituteCode},
+                    instituteName=>undef,
+                },
+                donorAccessionPui=>$_->{germplasmPUI}
+            };
+        }
+
+        my @type_of_germplasm_storage_codes;
+        if($_->{'type of germplasm storage code'}){
+            my @items = split ',', $_->{'type of germplasm storage code'};
+            foreach(@items){
+                push @type_of_germplasm_storage_codes, $_;
+            }
+        }
+        my @names;
+        if($_->{uniquename}){
+            push @names, $_->{uniquename};
+        }
+        if($_->{synonyms}){
+            foreach(@{ $_->{synonyms} }){
+                push @names, $_;
+            }
+        }
+        if($_->{stock_name}){
+            push @names, $_->{stock_name};
+        }
+
+        my @ids;
+        if($_->{stock_id}){
+            push @ids, $_->{stock_id};
+        }
+        if($_->{'PUI'}){
+            push @ids, $_->{'PUI'};
+        }
+        if($_->{ncbi_taxonomy_id}){
+            push @ids, $_->{ncbi_taxonomy_id};
+        }
+
+        %result = (
+            accessionNames=>\@names,
+            alternateIDs=>\@ids,
+            breedingInstitutes=>{
+                instituteCode=>$_->{'institute code'},
+                instituteName=>$_->{'institute name'},
+            },
+            collectingInfo=>{},
+            mlsStatus=> undef,
+            remarks=>undef,
+            safetyDuplicateInstitutes=>undef,
+            germplasmDbId=>qq|$_->{stock_id}|,
+            accessionNumber=>$_->{'accession number'},
+            germplasmPUI=>$_->{'PUI'},
+            ancestralData=>$_->{pedigree},
+            commonCropName=>$_->{common_name},
+            instituteCode=>$_->{'institute code'}, 
+            biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} || 0,
+            countryOfOrigin=>$_->{'country of origin'},
+            storageTypeCodes=>\@type_of_germplasm_storage_codes, 
+            genus=>$_->{genus},
+            species=>$_->{species},
+            speciesAuthority=>$_->{speciesAuthority},
+            subtaxon=>$_->{subtaxa},
+            subtaxonAuthority=>$_->{subtaxaAuthority},
+            donorInfo=>\@donors, 
+            acquisitionDate=>$_->{'acquisition date'}
+        );
+    }
+    my $total_count = (%result) ? 1 : 0;
+    my @data_files;
+
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm detail result constructed');
+
+}
+
 sub store {
     my $self = shift;
     my $data = shift;
