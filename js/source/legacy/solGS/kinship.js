@@ -8,7 +8,6 @@ var solGS = solGS || function solGS() {};
 
 solGS.kinship = {
 
-
     getPopulationDetails: function () {
 
 	var page = document.URL;
@@ -34,7 +33,7 @@ solGS.kinship = {
    loadKinshipPops: function(selectId, selectName, dataStructure) {
        console.log('loading kiship data') 
 	if ( selectId.length === 0) {       
-            alert('The list is empty. Please select a list with content.' );
+            alert('The list is empty. Please select a list with content.');
 	} else {
 	              
             var kinshipTable = jQuery("#kinship_pops_table").doesExist();
@@ -44,9 +43,12 @@ solGS.kinship = {
                 kinshipTable = this.createTable();
 		jQuery("#kinship_pops_section").append(kinshipTable).show();                           
             }
+
+	    
 	    var onClickVal =  '<button type="button" class="btn btn-success" onclick="solGS.kinship.runKinship('
-		+ selectId + ",'" + selectName + "'" +  ",'" + dataStructure
-		+ "'" + ');return false;">Run Kinship</button>';
+                + selectId + ",'" + selectName + "'" +  ",'" + dataStructure
+	    	+ "'" + ')">Run Kinship</button>';
+
 
 	    var dataType = ['Genotype'];
 	    var dataTypeOpts = this.createDataTypeSelect(dataType);
@@ -96,9 +98,56 @@ solGS.kinship = {
 	return dataTypeGroup;
     },
 
+   
     runKinship: function (selectId, selectName, dataStructure) {
 
-	console.log('sel id:' + selectId + ' sel name ' + selectName + ' dt str ' + dataStructure)
+	var protocolId = jQuery('#genotyping_protocol #genotyping_protocol_id').val();
+	console.log('protocol id: ' + protocolId)
+	
+	var traitId = jQuery('#trait_id').val();
+
+	var kinshipArgs = {
+	    'kinship_pop_id' : selectId,
+	    'kinship_pop_name' : selectName,
+	    'data_structure' : dataStructure,
+	    'genotyping_protocol_id' : protocolId,
+	    'trait_id' : traitId
+	};
+	
+	jQuery("#kinship_canvas .multi-spinner-container").show();
+	jQuery("#kinship_message")
+	    .html("Running kinship... please wait...it may take minutes")
+	    .show();
+		
+	jQuery.ajax({
+	    type: 'POST',
+	    dataType: 'json',
+	    data: kinshipArgs,
+	    url: '/kinship/run/analysis',
+	    success: function(res) {
+		if (res.result == 'success') {
+		    jQuery("#kinship_canvas .multi-spinner-container").hide();
+		    		    
+		    solGS.kinship.plotKinship(res.data);
+		    solGS.kinship.addDowloandLinks(res);
+
+		    jQuery("#kinship_message").empty();
+
+		} else {                
+		    jQuery("#kinship_message").html(res.result);
+		    jQuery("#kinship_canvas .multi-spinner-container").hide();
+		    jQuery("#run_kinship").show();		    
+		}
+	    },
+	    error: function(res) {
+		jQuery("#kinship_message")
+		    .html('Error occured running the clustering.')
+		    .show()
+		    .fadeOut(8400);
+		
+		jQuery("#kinship_canvas .multi-spinner-container").hide();
+	    }  
+	});
    
     },
 
@@ -144,9 +193,9 @@ solGS.kinship = {
 
     plotKinship: function (data) {
 
-	var pop = this.getPopulationDetails();
-	var popId = pop.kinship_pop_id;
-	var protocolId = pop.genotyping_protocol_id;
+	// var pop = this.getPopulationDetails();
+	// var popId = pop.kinship_pop_id;
+	// var protocolId = pop.genotyping_protocol_id;
 
         solGS.heatmap.plot(data, '#kinship_canvas');
 		    
@@ -163,9 +212,14 @@ solGS.kinship = {
 	var fileNameAve = aveFile.split('/').pop();
 	var fileNameInbreeding = inbreedingFile.split('/').pop();
 	
-	kinshipFile = "<a href=\"" + kinshipFile +  "\" download=" + fileNameKinship + ">Kinship matrix</a>";
-	aveFile = "<a href=\"" + aveFile +  "\" download=" + fileNameAve + ">Average kinship</a>";
-	inbreedingFile = "<a href=\"" + inbreedingFile +  "\" download=" + fileNameInbreeding + ">Inbreeding Coefficients</a>";
+	kinshipFile = "<a href=\"" + kinshipFile
+	    +  "\" download=" + fileNameKinship + ">Kinship matrix</a>";
+	
+	aveFile = "<a href=\"" + aveFile
+	    +  "\" download=" + fileNameAve + ">Average kinship</a>";
+	
+	inbreedingFile = "<a href=\"" + inbreedingFile
+	    +  "\" download=" + fileNameInbreeding + ">Inbreeding Coefficients</a>";
 		
 	jQuery("#kinship_canvas")
 	    .append('<br /> <strong>Download:</strong> '
@@ -175,7 +229,6 @@ solGS.kinship = {
 	    .show();
 	
     },
-
 
 ///////
 }
