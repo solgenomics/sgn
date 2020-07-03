@@ -835,41 +835,44 @@ sub get_solgs_dirs {
     my $cluster_temp    = catdir($tmp_dir, 'cluster', 'tempfiles');
     my $sel_index_cache = catdir($tmp_dir, 'selectionIndex', 'cache');
     my $sel_index_temp  = catdir($tmp_dir, 'selectionIndex', 'tempfiles');
+    my $kinship_cache   = catdir($tmp_dir, 'kinship', 'cache');
+    my $kinship_temp    = catdir($tmp_dir, 'kinship', 'tempfiles');
 
     mkpath (
 	[
 	 $solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_lists,  $solgs_datasets, 
 	 $pca_cache, $pca_temp, $histogram_cache, $histogram_temp, $log_dir, $corre_cache, $corre_temp,
 	 $h2_temp, $h2_cache,$anova_temp,$anova_cache, $solqtl_cache, $solqtl_tempfiles,
-	 $cluster_cache, $cluster_temp, $sel_index_cache,  $sel_index_temp,
+	 $cluster_cache, $cluster_temp, $sel_index_cache,  $sel_index_temp, $kinship_cache, $kinship_temp
 	], 
 	0, 0755
 	);
    
-    $c->stash(solgs_dir                   => $solgs_dir, 
-              solgs_cache_dir             => $solgs_cache, 
-              solgs_tempfiles_dir         => $solgs_tempfiles,
-              solgs_lists_dir             => $solgs_lists,
-	      solgs_datasets_dir          => $solgs_datasets,
-	      pca_cache_dir               => $pca_cache,
-	      pca_temp_dir                => $pca_temp,
-	      cluster_cache_dir           => $cluster_cache,
-	      cluster_temp_dir            => $cluster_temp,
-              correlation_cache_dir       => $corre_cache,
-	      correlation_temp_dir        => $corre_temp,
-	      heritability_cache_dir      => $h2_cache,
-	      heritability_temp_dir       => $h2_temp,
-	      histogram_cache_dir         => $histogram_cache,
-	      histogram_temp_dir          => $histogram_temp,
-	      analysis_log_dir            => $log_dir,
-              anova_cache_dir             => $anova_cache,
-	      anova_temp_dir              => $anova_temp,
-	      solqtl_cache_dir            => $solqtl_cache,
-              solqtl_tempfiles_dir        => $solqtl_tempfiles,
-	      cache_dir                   => $solgs_cache,
-	      selection_index_cache_dir   => $sel_index_cache,
-	      selection_index_temp_dir    => $sel_index_temp,
-
+    $c->stash(solgs_dir                 => $solgs_dir, 
+              solgs_cache_dir           => $solgs_cache, 
+              solgs_tempfiles_dir       => $solgs_tempfiles,
+              solgs_lists_dir           => $solgs_lists,
+	      solgs_datasets_dir        => $solgs_datasets,
+	      pca_cache_dir             => $pca_cache,
+	      pca_temp_dir              => $pca_temp,
+	      cluster_cache_dir         => $cluster_cache,
+	      cluster_temp_dir          => $cluster_temp,
+              correlation_cache_dir     => $corre_cache,
+	      correlation_temp_dir      => $corre_temp,
+	      heritability_cache_dir    => $h2_cache,
+	      heritability_temp_dir     => $h2_temp,
+	      histogram_cache_dir       => $histogram_cache,
+	      histogram_temp_dir        => $histogram_temp,
+	      analysis_log_dir          => $log_dir,
+              anova_cache_dir           => $anova_cache,
+	      anova_temp_dir            => $anova_temp,
+	      solqtl_cache_dir          => $solqtl_cache,
+              solqtl_tempfiles_dir      => $solqtl_tempfiles,
+	      cache_dir                 => $solgs_cache,
+	      selection_index_cache_dir => $sel_index_cache,
+	      selection_index_temp_dir  => $sel_index_temp,
+	      kinship_cache_dir         => $kinship_cache,
+	      kinship_temp_dir          => $kinship_temp
         );
 
 }
