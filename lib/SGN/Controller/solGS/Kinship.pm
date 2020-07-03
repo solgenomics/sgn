@@ -12,8 +12,7 @@ use File::Spec::Functions;
 use File::Path qw / mkpath  /;
 
 
-BEGIN { extends 'Catalyst::Controller::REST' }
-
+BEGIN { extends 'Catalyst::Controller' }
 
 
 __PACKAGE__->config(
@@ -23,14 +22,13 @@ __PACKAGE__->config(
     );
 
 
-
-
 sub kinship_analysis :Path('/kinship/analysis/') Args() {
     my ($self, $c) = @_;
 
     $c->stash->{template} = '/solgs/kinship/analysis.mas';
-
+ 
 }
+
 
 sub run_kinship :Path('kinship/run/analysis') Args() {
     my ($self, $c) = @_;
@@ -39,9 +37,9 @@ sub run_kinship :Path('kinship/run/analysis') Args() {
     my $protocol_id   = $c->req->param('genotyping_protocol_id'); ;
     my $trait_id      = $c->req->param('trait_id');
     my $combo_pops_id = $c->req->param('combo_pops_id');
-    my $protocol_id   = $c->req->param('genotyping_protocol_id');
     my $list_id       = $c->req->param('list_id');   
     my $dataset_id    = $c->req->param('dataset_id');
+    my $data_structure = $c->req->param('data_structure');
 
     if ($list_id)
     {
@@ -77,7 +75,7 @@ sub kinship_result :Path('/solgs/kinship/result/') Args() {
     my $protocol_id = $c->req->param('genotyping_protocol_id'); ;
     my $trait_id = $c->req->param('trait_id');
     
-    my $kinship_files $self->get_kinship_coef_files($c, $pop_id, $protocol_id, $trait_id);
+    my $kinship_files = $self->get_kinship_coef_files($c, $pop_id, $protocol_id, $trait_id);
     my $json_file = $kinship_files->{json_file};
 
     print STDERR "\njson_file: $json_file\n";
@@ -206,12 +204,9 @@ sub kinship_query_jobs_file {
 sub kinship_query_jobs {
     my ($self, $c) = @_;
 
-    my $jobs = [];
-    
-   
     $self->create_kinship_genotype_data_query_jobs($c);
     my $jobs = $c->stash->{kinship_geno_query_jobs};
-    }
+    
 
     if (reftype $jobs ne 'ARRAY') 
     {
