@@ -239,7 +239,7 @@ jQuery(document).ready(function ($) {
     });
 
     function add_accessions(full_info, species_names) {
-        //console.log(full_info);
+        console.log(full_info);
         $.ajax({
             type: 'POST',
             url: '/ajax/accession_list/add',
@@ -352,16 +352,19 @@ jQuery(document).ready(function ($) {
     });
 
     jQuery('#upload_new_accessions_form').iframePostForm({
-        json: true,
+        json: false,
         post: function () {
             var uploadedSeedlotFile = jQuery("#new_accessions_upload_file").val();
             jQuery('#working_modal').modal("show");
             if (uploadedSeedlotFile === '') {
                 jQuery('#working_modal').modal("hide");
-                alert("No file selected");
             }
         },
-        complete: function (response) {
+        complete: function (r) {
+	    alert("DONE WITH UPLOAD "+r);
+	    var clean_r = r.replace('<pre>', '');
+	    clean_r = clean_r.replace('</pre>', '');
+	    response = JSON.parse(clean_r); //decodeURIComponent(clean_r));
             console.log(response);
             jQuery('#working_modal').modal("hide");
 
@@ -415,7 +418,7 @@ jQuery(document).ready(function ($) {
 	});
 
     $('#review_fuzzy_matches_download').click(function(){
-        //console.log(fuzzyResponse);
+        console.log(fuzzyResponse);
         openWindowWithPost(JSON.stringify(fuzzyResponse));
         //window.open('/ajax/accession_list/fuzzy_download?fuzzy_response='+JSON.stringify(fuzzyResponse));
     });
@@ -437,9 +440,7 @@ function openWindowWithPost(fuzzyResponse) {
 function verify_accession_list(accession_list_id) {
     accession_list = JSON.stringify(list.getList(accession_list_id));
     doFuzzySearch = jQuery('#fuzzy_check').attr('checked');
-    //alert("should be disabled");
-    //alert(accession_list);
-
+    
     jQuery.ajax({
         type: 'POST',
         url: '/ajax/accession_list/verify',
@@ -533,6 +534,7 @@ function review_verification_results(doFuzzySearch, verifyResponse, accession_li
     }
 
     jQuery('#review_found_matches_hide').click(function(){
+	
         if (verifyResponse.fuzzy.length > 0 && doFuzzySearch){
             jQuery('#review_fuzzy_matches_dialog').modal('show');
         } else {
