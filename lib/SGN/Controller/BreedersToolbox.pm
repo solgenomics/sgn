@@ -322,6 +322,11 @@ sub manage_upload :Path("/breeders/upload") Args(0) {
 
     my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
     my $breeding_programs = $projects->get_breeding_programs();
+
+    my $genotyping_facilities = $c->config->{genotyping_facilities};
+    my @facilities = split ',',$genotyping_facilities;
+
+    $c->stash->{facilities} = \@facilities;
     $c->stash->{geojson_locations} = decode_json($projects->get_all_locations_by_breeding_program());
     $c->stash->{locations} = $projects->get_all_locations();
     $c->stash->{breeding_programs} = $breeding_programs;
