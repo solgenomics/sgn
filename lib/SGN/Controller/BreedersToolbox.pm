@@ -159,7 +159,10 @@ sub manage_tissue_samples : Path("/breeders/samples") Args(0) {
         $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         return;
     }
+    my $genotyping_facilities = $c->config->{genotyping_facilities};
+    my @facilities = split ',',$genotyping_facilities;
 
+    $c->stash->{facilities} = \@facilities;
     $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
     $c->stash->{template} = '/breeders_toolbox/manage_samples.mas';
 }
@@ -752,11 +755,16 @@ sub manage_genotyping : Path("/breeders/genotyping") Args(0) {
 
     $genotyping_trials_by_breeding_project{'Other'} = $projects->get_genotyping_trials_by_breeding_program();
 
+    my $genotyping_facilities = $c->config->{genotyping_facilities};
+    my @facilities = split ',',$genotyping_facilities;
+
     $c->stash->{locations} = $projects->get_all_locations($c);
 
     $c->stash->{genotyping_trials_by_breeding_project} = \%genotyping_trials_by_breeding_project;
 
     $c->stash->{breeding_programs} = $breeding_programs;
+
+    $c->stash->{facilities} = \@facilities;
 
     $c->stash->{template} = '/breeders_toolbox/manage_genotyping.mas';
 }

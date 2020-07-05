@@ -4,6 +4,7 @@ $trials_by_breeding_project => ()
 @locations => ()
 @roles => ()
 @breeding_programs
+$facilities => ()
 </%args>
 
 % print STDERR "Rendering trials page...\n";
@@ -12,5 +13,5 @@ $trials_by_breeding_project => ()
 
 
 <& /breeders_toolbox/genotyping_trials/upload_genotyping_data_dialogs.mas &>
-<& /breeders_toolbox/genotyping_trials/create_genotyping_trial_dialogs.mas &>
+<& /breeders_toolbox/genotyping_trials/create_genotyping_trial_dialogs.mas, facilities => $facilities &>
 <& /breeders_toolbox/genotyping_trials/genotyping_trial_tree.mas &>
