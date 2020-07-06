@@ -1,4 +1,5 @@
 <%args>
+$management_factor_types => ()
 </%args>
 
 <div class="modal fade" id="trial_design_add_treatments" name="trial_design_add_treatments" tabindex="-1" role="dialog" aria-labelledby="addTrialDesignTreatmentsDialog">
@@ -21,15 +22,9 @@
                             <label class="col-sm-4 control-label">Field Management Factor Type: </label>
                             <div class="col-sm-8">
                                 <select class="form-control" id="new_treatment_type" name="new_treatment_type">
-                                    <option value="fertilizer">Fertilizer</option>
-                                    <option value="fungicide">Fungicide</option>
-                                    <option value="irrigation">Irrigation</option>
-                                    <option value="drought">Drought</option>
-                                    <option value="herbicide">Herbicide</option>
-                                    <option value="weeding">Weeding</option>
-                                    <option value="pruning">Pruning</option>
-                                    <option value="hormone treatment">Hormone treatment</option>
-                                    <option value="light treatment">Light treatment</option>
+% foreach my $management_factor_type(@$management_factor_types){
+    <option value="<%$management_factor_type%>"><%$management_factor_type%></option>
+%}
                                 </select>
                             </div>
                         </div>

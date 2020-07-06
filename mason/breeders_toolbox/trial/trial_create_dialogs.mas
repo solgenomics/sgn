@@ -839,7 +839,7 @@ rect.bordered {
     </div>
 </div>
 
-<& /breeders_toolbox/trial/add_trial_treatment_dialogs.mas &>
+<& /breeders_toolbox/trial/add_trial_treatment_dialogs.mas, management_factor_types => $management_factor_types &>
 
 <div class="modal fade" id="partial_rep_help_dialog" name="partial_rep_help_dialog" tabindex="-1" role="dialog" aria-labelledby="partialRepHelpDialog">
     <div class="modal-dialog modal-lg" role="document">
