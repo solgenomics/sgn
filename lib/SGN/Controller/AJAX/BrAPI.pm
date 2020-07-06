@@ -925,194 +925,6 @@ sub germplasm_mcpd_GET {
 }
 
 
-=head2 brapi/v1/studies?programId=programId
-
- Usage: To retrieve studies
- Desc:
- Return JSON example:
-        {
-            "metadata": {
-                "pagination": {
-                    "pageSize": 2,
-                    "currentPage": 1,
-                    "totalCount": 100,
-                    "totalPages": 50
-                },
-            "status" : []
-            },
-            "result": {
-                "data": [
-                    {
-                        "studyDbId": 35,
-                        "name": "Earlygenerationtesting",
-                        "studyType": "Trial",
-                        "years": ["2005", "2008"],
-                        "locationDbId": 23,
-                        "programDbId": 27,
-                        "optionalInfo" : {
-                            "studyPUI" : "PUI string",
-                            "studyType": "Trial",
-                            "startDate": "2015-06-01",
-                            "endDate"  : "2015-12-31",
-                        }
-                    }
-                    ,
-                    {
-                        "studyDbId": 345,
-                        "name": "Earlygenerationtesting",
-                        "seasons": ["2005", "2008"],
-                        "locationDbId": 33,
-                        "programDbId": 58,
-                        "optionalInfo" : {
-                            "studyPUI" : "PUI string",
-                            "studyType": "Trial",
-                            "startDate": "2015-06-01",
-                            "endDate"  : "2015-12-31",
-                        }
-                    }
-                ]
-            }
-        }
- Args:
- Side Effects:
-
-=cut
-
-sub studies_search  : Chained('brapi') PathPart('studies-search') Args(0) : ActionClass('REST') { }
-
-sub studies_search_POST {
-    my $self = shift;
-    my $c = shift;
-    my ($auth) = _authenticate_user($c);
-    my $clean_inputs = $c->stash->{clean_inputs};
-    my $brapi = $self->brapi_module;
-    my $brapi_module = $brapi->brapi_wrapper('Studies');
-    my $brapi_package_result = $brapi_module->search({
-        programDbIds => $clean_inputs->{programDbIds},
-        programNames => $clean_inputs->{programNames},
-        studyDbIds => $clean_inputs->{studyDbIds},
-        studyNames => $clean_inputs->{studyNames},
-        trialDbIds => $clean_inputs->{trialDbIds},
-        trialNames => $clean_inputs->{trialNames},
-        studyLocationDbIds => $clean_inputs->{locationDbIds},
-        studyLocationNames => $clean_inputs->{studyLocations},
-        studyTypeName => $clean_inputs->{studyType},
-        germplasmDbIds => $clean_inputs->{germplasmDbIds},
-        germplasmNames => $clean_inputs->{germplasmNames},
-        seasons => $clean_inputs->{seasonDbIds},
-        observationVariableDbIds => $clean_inputs->{observationVariableDbIds},
-        observationVariableNames => $clean_inputs->{observationVariableNames},
-        active => $clean_inputs->{active}->[0],
-        sortBy => $clean_inputs->{sortBy}->[0],
-        sortOrder => $clean_inputs->{sortOrder}->[0],
-    }, $c);
-    _standard_response_construction($c, $brapi_package_result);
-}
-
-sub studies_search_GET {
-    my $self = shift;
-    my $c = shift;
-    my ($auth) = _authenticate_user($c);
-    my $clean_inputs = $c->stash->{clean_inputs};
-    my $brapi = $self->brapi_module;
-    my $brapi_module = $brapi->brapi_wrapper('Studies');
-    my $brapi_package_result = $brapi_module->search({
-        programDbIds => $clean_inputs->{programDbId},
-        programNames => $clean_inputs->{programName},
-        studyDbIds => $clean_inputs->{studyDbId},
-        studyNames => $clean_inputs->{studyName},
-        trialDbIds => $clean_inputs->{trialDbId},
-        trialNames => $clean_inputs->{trialName},
-        studyLocationDbIds => $clean_inputs->{locationDbId},
-        studyLocationNames => $clean_inputs->{locationName},
-        seasons => $clean_inputs->{seasonDbId},
-        studyTypeName => $clean_inputs->{studyType},
-        germplasmDbIds => $clean_inputs->{germplasmDbId},
-        germplasmNames => $clean_inputs->{germplasmName},
-        observationVariableDbIds => $clean_inputs->{observationVariableDbId},
-        observationVariableNames => $clean_inputs->{observationVariableName},
-        active => $clean_inputs->{active}->[0],
-        sortBy => $clean_inputs->{sortBy}->[0],
-        sortOrder => $clean_inputs->{sortOrder}->[0],
-    }, $c);
-    _standard_response_construction($c, $brapi_package_result);
-}
-
-sub studies_search_new  : Chained('brapi') PathPart('studies') Args(0) : ActionClass('REST') { }
-
-sub studies_search_new_GET {
-    my $self = shift;
-    my $c = shift;
-    my $auth = _authenticate_user($c);
-    my $clean_inputs = $c->stash->{clean_inputs};
-    my $brapi = $self->brapi_module;
-    my $brapi_module = $brapi->brapi_wrapper('Studies');
-    my $brapi_package_result = $brapi_module->search({
-        programDbIds => $clean_inputs->{programDbId},
-        programNames => $clean_inputs->{programName},
-        studyDbIds => $clean_inputs->{studyDbId},
-        studyNames => $clean_inputs->{studyName},
-        trialDbIds => $clean_inputs->{trialDbId},
-        trialNames => $clean_inputs->{trialName},
-        studyLocationDbIds => $clean_inputs->{locationDbId},
-        studyLocationNames => $clean_inputs->{locationName},
-        seasons => $clean_inputs->{seasonDbId},
-        seasonDbIds => $clean_inputs->{seasonDbId},
-        studyTypeName => $clean_inputs->{studyType},
-        germplasmDbIds => $clean_inputs->{germplasmDbId},
-        germplasmNames => $clean_inputs->{germplasmName},
-        observationVariableDbIds => $clean_inputs->{observationVariableDbId},
-        observationVariableNames => $clean_inputs->{observationVariableName},
-        crop => $c->config->{supportedCrop},
-        active => $clean_inputs->{active}->[0],
-        sortBy => $clean_inputs->{sortBy}->[0],
-        sortOrder => $clean_inputs->{sortOrder}->[0],
-        commonCropNames => $clean_inputs->{commonCropName},
-    }, $c);
-    _standard_response_construction($c, $brapi_package_result);
-}
-
-sub studies_search_new_POST {
-    my $self = shift;
-    my $c = shift;
-    my ($auth, $user_id) = _authenticate_user($c);
-    my $clean_inputs = $c->stash->{clean_inputs};
-    my $data = $clean_inputs;
-    my @all_studies;
-	foreach my $study (values %{$data}) {
-	    push @all_studies, $study;
-	}
-    my $brapi = $self->brapi_module;
-    my $brapi_module = $brapi->brapi_wrapper('Studies');
-    my $brapi_package_result = $brapi_module->store(\@all_studies, $user_id, $c);
-    _standard_response_construction($c, $brapi_package_result);
-}
-
-sub studies_search_save  : Chained('brapi') PathPart('search/studies') Args(0) : ActionClass('REST') { }
-
-sub studies_search_save_POST {
-    my $self = shift;
-    my $c = shift;
-    save_results($self,$c,$c->stash->{clean_inputs},'Studies');
-}
-
-sub studies_search_retrieve : Chained('brapi') PathPart('search/studies') Args(1) {
-    my $self = shift;
-    my $c = shift;
-    my $search_id = shift;
-    retrieve_results($self, $c, $search_id, 'Studies');
-}
-
-# sub studies : Chained('brapi') PathPart('studies') Args(0) : ActionClass('REST') { }
-
-# sub studies_GET {
-# 	my $self = shift;
-# 	my $c = shift;
-
-# 	# Use the studies-search end point for this
-# 	studies_search_GET($self, $c);
-# }
-
 #BrAPI Trials are modeled as Folders
 sub trials_list  : Chained('brapi') PathPart('trials') Args(0) : ActionClass('REST') { }
 
@@ -1217,94 +1029,6 @@ sub trials_search_retrieve : Chained('brapi') PathPart('search/trials') Args(1) 
     my $c = shift;
     my $search_id = shift;
     retrieve_results($self, $c, $search_id, 'Trials');
-}
-
-=head2 brapi/v1/studies/{studyId}/germplasm?pageSize=20&page=1
-
- Usage: To retrieve all germplasm used in a study
- Desc:
- Return JSON example:
-{
-    "metadata": {
-        "status": [],
-        "pagination": {
-            "pageSize": 1000,
-            "currentPage": 1,
-            "totalCount": 1,
-            "totalPages": 1
-        }
-    },
-    "result": {
-        "studyDbId": 123,
-        "studyName": "myBestTrial",
-        "data": [
-            {
-                "germplasmDbId": "382",
-                "trialEntryNumberId": "1",
-                "defaultDisplayName": "Pahang",
-                "germplasmName": "Pahang",
-                "accessionNumber": "ITC0609",
-                "germplasmPUI": "http://www.crop-diversity.org/mgis/accession/01BEL084609",
-                "pedigree": "TOBA97/SW90.1057",
-                "seedSource": "",
-                "synonyms": ["01BEL084609"],
-            },
-            {
-                "germplasmDbId": "394",
-                "trialEntryNumberId": "2",
-                "defaultDisplayName": "Pahang",
-                "germplasmName": "Pahang",
-                "accessionNumber": "ITC0727",
-                "germplasmPUI": "http://www.crop-diversity.org/mgis/accession/01BEL084727",
-                "pedigree": "TOBA97/SW90.1057",
-                "seedSource": "",
-                "synonyms": [ "01BEL084727"],
-            }
-        ]
-    }
-}
- Args:
- Side Effects:
-
-=cut
-
-sub studies_single  : Chained('brapi') PathPart('studies') CaptureArgs(1) {
-	my $self = shift;
-	my $c = shift;
-	my $study_id = shift;
-
-	$c->stash->{study_id} = $study_id;
-}
-
-
-sub studies_germplasm : Chained('studies_single') PathPart('germplasm') Args(0) : ActionClass('REST') { }
-
-sub studies_germplasm_POST {
-	my $self = shift;
-	my $c = shift;
-	my ($auth) = _authenticate_user($c);
-
-	my $metadata = $c->req->params("metadata");
-	my $result = $c->req->params("result");
-	my %metadata_hash = %$metadata;
-	my %result_hash = %$result;
-
-	#print STDERR Dumper($metadata);
-	#print STDERR Dumper($result);
-
-	my $pagintation = $metadata_hash{"pagination"};
-}
-
-sub studies_germplasm_GET {
-	my $self = shift;
-	my $c = shift;
-	my ($auth) = _authenticate_user($c);
-	my $brapi = $self->brapi_module;
-	my $brapi_module = $brapi->brapi_wrapper('Studies');
-	my $brapi_package_result = $brapi_module->studies_germplasm(
-		$c->stash->{study_id}
-	);
-	_standard_response_construction($c, $brapi_package_result);
 }
 
 
@@ -2053,6 +1777,282 @@ sub programs_search_retrieve  : Chained('brapi') PathPart('search/programs') Arg
 }
 
 
+=head2 brapi/v1/studies?programId=programId
+
+ Usage: To retrieve studies
+ Desc:
+ Return JSON example:
+        {
+            "metadata": {
+                "pagination": {
+                    "pageSize": 2,
+                    "currentPage": 1,
+                    "totalCount": 100,
+                    "totalPages": 50
+                },
+            "status" : []
+            },
+            "result": {
+                "data": [
+                    {
+                        "studyDbId": 35,
+                        "name": "Earlygenerationtesting",
+                        "studyType": "Trial",
+                        "years": ["2005", "2008"],
+                        "locationDbId": 23,
+                        "programDbId": 27,
+                        "optionalInfo" : {
+                            "studyPUI" : "PUI string",
+                            "studyType": "Trial",
+                            "startDate": "2015-06-01",
+                            "endDate"  : "2015-12-31",
+                        }
+                    }
+                    ,
+                    {
+                        "studyDbId": 345,
+                        "name": "Earlygenerationtesting",
+                        "seasons": ["2005", "2008"],
+                        "locationDbId": 33,
+                        "programDbId": 58,
+                        "optionalInfo" : {
+                            "studyPUI" : "PUI string",
+                            "studyType": "Trial",
+                            "startDate": "2015-06-01",
+                            "endDate"  : "2015-12-31",
+                        }
+                    }
+                ]
+            }
+        }
+ Args:
+ Side Effects:
+
+=cut
+
+sub studies_search  : Chained('brapi') PathPart('studies-search') Args(0) : ActionClass('REST') { }
+
+sub studies_search_POST {
+    my $self = shift;
+    my $c = shift;
+    my ($auth) = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Studies');
+    my $brapi_package_result = $brapi_module->search({
+        programDbIds => $clean_inputs->{programDbIds},
+        programNames => $clean_inputs->{programNames},
+        studyDbIds => $clean_inputs->{studyDbIds},
+        studyNames => $clean_inputs->{studyNames},
+        trialDbIds => $clean_inputs->{trialDbIds},
+        trialNames => $clean_inputs->{trialNames},
+        studyLocationDbIds => $clean_inputs->{locationDbIds},
+        studyLocationNames => $clean_inputs->{studyLocations},
+        studyTypeName => $clean_inputs->{studyType},
+        germplasmDbIds => $clean_inputs->{germplasmDbIds},
+        germplasmNames => $clean_inputs->{germplasmNames},
+        seasons => $clean_inputs->{seasonDbIds},
+        observationVariableDbIds => $clean_inputs->{observationVariableDbIds},
+        observationVariableNames => $clean_inputs->{observationVariableNames},
+        active => $clean_inputs->{active}->[0],
+        sortBy => $clean_inputs->{sortBy}->[0],
+        sortOrder => $clean_inputs->{sortOrder}->[0],
+    }, $c);
+    _standard_response_construction($c, $brapi_package_result);
+}
+
+sub studies_search_GET {
+    my $self = shift;
+    my $c = shift;
+    my ($auth) = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Studies');
+    my $brapi_package_result = $brapi_module->search({
+        programDbIds => $clean_inputs->{programDbId},
+        programNames => $clean_inputs->{programName},
+        studyDbIds => $clean_inputs->{studyDbId},
+        studyNames => $clean_inputs->{studyName},
+        trialDbIds => $clean_inputs->{trialDbId},
+        trialNames => $clean_inputs->{trialName},
+        studyLocationDbIds => $clean_inputs->{locationDbId},
+        studyLocationNames => $clean_inputs->{locationName},
+        seasons => $clean_inputs->{seasonDbId},
+        studyTypeName => $clean_inputs->{studyType},
+        germplasmDbIds => $clean_inputs->{germplasmDbId},
+        germplasmNames => $clean_inputs->{germplasmName},
+        observationVariableDbIds => $clean_inputs->{observationVariableDbId},
+        observationVariableNames => $clean_inputs->{observationVariableName},
+        active => $clean_inputs->{active}->[0],
+        sortBy => $clean_inputs->{sortBy}->[0],
+        sortOrder => $clean_inputs->{sortOrder}->[0],
+    }, $c);
+    _standard_response_construction($c, $brapi_package_result);
+}
+
+sub studies_search_new  : Chained('brapi') PathPart('studies') Args(0) : ActionClass('REST') { }
+
+sub studies_search_new_GET {
+    my $self = shift;
+    my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Studies');
+    my $brapi_package_result = $brapi_module->search({
+        programDbIds => $clean_inputs->{programDbId},
+        programNames => $clean_inputs->{programName},
+        studyDbIds => $clean_inputs->{studyDbId},
+        studyNames => $clean_inputs->{studyName},
+        trialDbIds => $clean_inputs->{trialDbId},
+        trialNames => $clean_inputs->{trialName},
+        studyLocationDbIds => $clean_inputs->{locationDbId},
+        studyLocationNames => $clean_inputs->{locationName},
+        seasons => $clean_inputs->{seasonDbId},
+        seasonDbIds => $clean_inputs->{seasonDbId},
+        studyTypeName => $clean_inputs->{studyType},
+        germplasmDbIds => $clean_inputs->{germplasmDbId},
+        germplasmNames => $clean_inputs->{germplasmName},
+        observationVariableDbIds => $clean_inputs->{observationVariableDbId},
+        observationVariableNames => $clean_inputs->{observationVariableName},
+        crop => $c->config->{supportedCrop},
+        active => $clean_inputs->{active}->[0],
+        sortBy => $clean_inputs->{sortBy}->[0],
+        sortOrder => $clean_inputs->{sortOrder}->[0],
+        commonCropNames => $clean_inputs->{commonCropName},
+    }, $c);
+    _standard_response_construction($c, $brapi_package_result);
+}
+
+sub studies_search_new_POST {
+    my $self = shift;
+    my $c = shift;
+    my ($auth, $user_id) = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $data = $clean_inputs;
+    my @all_studies;
+	foreach my $study (values %{$data}) {
+	    push @all_studies, $study;
+	}
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Studies');
+    my $brapi_package_result = $brapi_module->store(\@all_studies, $user_id, $c);
+    _standard_response_construction($c, $brapi_package_result);
+}
+
+sub studies_search_save  : Chained('brapi') PathPart('search/studies') Args(0) : ActionClass('REST') { }
+
+sub studies_search_save_POST {
+    my $self = shift;
+    my $c = shift;
+    save_results($self,$c,$c->stash->{clean_inputs},'Studies');
+}
+
+sub studies_search_retrieve : Chained('brapi') PathPart('search/studies') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'Studies');
+}
+
+# sub studies : Chained('brapi') PathPart('studies') Args(0) : ActionClass('REST') { }
+
+# sub studies_GET {
+# 	my $self = shift;
+# 	my $c = shift;
+
+# 	# Use the studies-search end point for this
+# 	studies_search_GET($self, $c);
+# }
+
+
+=head2 brapi/v1/studies/{studyId}/germplasm?pageSize=20&page=1
+
+ Usage: To retrieve all germplasm used in a study
+ Desc:
+ Return JSON example:
+{
+    "metadata": {
+        "status": [],
+        "pagination": {
+            "pageSize": 1000,
+            "currentPage": 1,
+            "totalCount": 1,
+            "totalPages": 1
+        }
+    },
+    "result": {
+        "studyDbId": 123,
+        "studyName": "myBestTrial",
+        "data": [
+            {
+                "germplasmDbId": "382",
+                "trialEntryNumberId": "1",
+                "defaultDisplayName": "Pahang",
+                "germplasmName": "Pahang",
+                "accessionNumber": "ITC0609",
+                "germplasmPUI": "http://www.crop-diversity.org/mgis/accession/01BEL084609",
+                "pedigree": "TOBA97/SW90.1057",
+                "seedSource": "",
+                "synonyms": ["01BEL084609"],
+            },
+            {
+                "germplasmDbId": "394",
+                "trialEntryNumberId": "2",
+                "defaultDisplayName": "Pahang",
+                "germplasmName": "Pahang",
+                "accessionNumber": "ITC0727",
+                "germplasmPUI": "http://www.crop-diversity.org/mgis/accession/01BEL084727",
+                "pedigree": "TOBA97/SW90.1057",
+                "seedSource": "",
+                "synonyms": [ "01BEL084727"],
+            }
+        ]
+    }
+}
+ Args:
+ Side Effects:
+
+=cut
+
+sub studies_single  : Chained('brapi') PathPart('studies') CaptureArgs(1) {
+	my $self = shift;
+	my $c = shift;
+	my $study_id = shift;
+
+	$c->stash->{study_id} = $study_id;
+}
+
+
+sub studies_germplasm : Chained('studies_single') PathPart('germplasm') Args(0) : ActionClass('REST') { }
+
+sub studies_germplasm_POST {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+
+	my $metadata = $c->req->params("metadata");
+	my $result = $c->req->params("result");
+	my %metadata_hash = %$metadata;
+	my %result_hash = %$result;
+
+	#print STDERR Dumper($metadata);
+	#print STDERR Dumper($result);
+
+	my $pagintation = $metadata_hash{"pagination"};
+}
+
+sub studies_germplasm_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Studies');
+	my $brapi_package_result = $brapi_module->studies_germplasm(
+		$c->stash->{study_id}
+	);
+	_standard_response_construction($c, $brapi_package_result);
+}
 
 sub studies_info  : Chained('studies_single') PathPart('') Args(0) : ActionClass('REST') { }
 
@@ -2098,7 +2098,6 @@ sub studies_observation_variables_GET {
 	);
 	_standard_response_construction($c, $brapi_package_result);
 }
-
 
 
 sub studies_layout : Chained('studies_single') PathPart('layout') Args(0) : ActionClass('REST') { }
