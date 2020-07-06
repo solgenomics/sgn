@@ -94,10 +94,10 @@
             <ul>
                 <li><strong>id</strong>: It is an optional identification for each NIRS read. The id must be an integer.</li>
                 <li><strong>sampling_id</strong>: It is an optional identification for each sample. Strings are allowed.</li>
-                <li><strong>sampling_date</strong>: It is an optional field. The format allwed is: YYYY-MM-DD.</li>
+                <li><strong>sampling_date</strong>: It is an optional field. The format allowed is: YYYY-MM-DD.</li>
                 <li><strong>observationunit_name</strong>: It is a requiered field which matches with the databank. It can be the plot name, subplots, plant name, or tissue sample, depending how your trial is designed.</li>
                 <li><strong>device_id</strong>: It is an optional field to identify your device. Strings are allowed.</li>
-                <li><strong>device_type</strong>: It is a required field. It is possible upload data for a single device type. They can be:<strong>SCIO, ASC, FOSS, or LINKSQUARE</strong>.</li>
+                <li><strong>device_type</strong>: It is a required field. It is possible upload data for a single device type. They can be:<strong>SCiO, QST, Foss6500, BunchiN500, or LinkSquare</strong>.</li>
                 <li><strong>comments</strong>: Optional field for general comments.</li>
                 <li>All other columns are required wavelengths. You can add how many columns you want upload, there isn't a limit.</li>
             </ul>

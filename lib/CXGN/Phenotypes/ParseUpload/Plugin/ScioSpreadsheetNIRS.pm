@@ -79,10 +79,11 @@ sub validate {
                     );
 
     my %types = (
-                  SCIO      =>1,
-                  ASC       =>2,
-                  FOSS      =>3,
-                  LINKSQUARE=>4
+                  SCIO        =>1,
+                  QST         =>2,
+                  Foss6500    =>3,
+                  BunchiN500  =>4,
+                  LinkSquare  =>5
                   );
 
     open(my $fh, '<', $filename)
@@ -116,7 +117,9 @@ sub validate {
         }elsif($count>1){
           my $number2 = 9;
           while ($number2 < $size){
-            if (not exists $types{$fields[5]}){
+            # if (not exists $types{$fields[5]}){
+              print "$fields[5]\n";
+              if (not grep {/$fields[5]/i} keys %types){
                 $parse_result{'error'}= "Wrong device type '$fields[5]'. Please, check names allowed in File Format Information.";
                 return \%parse_result;
             }
