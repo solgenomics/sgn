@@ -226,13 +226,13 @@ sub detail {
 				documentationURL => "",
 				endDate => $harvest_date ? $harvest_date :  undef ,
 				environmentParameters => undef,
-				experimentalDesign => qq|$_->{design}|,
+				experimentalDesign => $t->get_design_type(),
 				externalReferences => undef,
 				growthFacility => undef,
 				lastUpdate => undef,
 				license => $data_agreement,
-				locationDbId => $_->{location_id},
-				locationName => $_->{location_name},
+				locationDbId => $location_id,
+				locationName => $location_name,
 				observationLevels => undef,
 				observationUnitsDescription => undef,
 				seasons => \@season,
@@ -375,6 +375,127 @@ sub store {
 	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Studies result constructed');
 }
 
+sub update {
+	my $self = shift;
+	my $params = shift;
+	my $user_id =shift;
+	my $c = shift;
+
+	if (!$user_id){
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must be logged in to add a seedlot!'));
+    }
+
+	my $trial_id = $params->{studyDbId};
+	my $schema = $self->bcs_schema;
+	my $metadata_schema = $self->metadata_schema;
+	my $phenome_schema = $self->phenome_schema;
+
+	my $page_size = $self->page_size;
+	my $page = $self->page;
+	my $status = $self->status;
+
+	my $dbh = $self->bcs_schema()->storage()->dbh();
+    my $person = CXGN::People::Person->new($dbh, $user_id);
+    my @user_roles = $person->get_roles;
+ 
+	# get program roles
+	my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
+	my $program_ref = $program_object->get_breeding_programs_by_trial($trial_id);
+
+	my $program_array = @$program_ref[0];
+	my $breeding_program_name = @$program_array[1];
+
+	my %has_roles = ();
+	map { $has_roles{$_} = 1; } @user_roles;
+
+	print STDERR "my user roles = @user_roles and trial breeding program = $breeding_program_name \n";
+
+	if (!exists($has_roles{$breeding_program_name})) {
+	  return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf("You need to be associated with breeding program $breeding_program_name to change the details of this trial." ));
+	}
+
+	#Get project type
+	my @project_type_ids = CXGN::Trial::get_all_project_types($self->bcs_schema());
+    my %project_type_ids;
+	foreach (@project_type_ids) {
+		$project_type_ids{$_->[1]} = $_->[0];
+    }
+
+    # set each new detail that is defined
+	my $study_name = $params->{studyName} ? $params->{studyName} : undef;
+	my $study_description = $params->{studyDescription} ? $params->{studyDescription} : undef;
+	my $study_year = $params->{seasons} ? $params->{seasons}->[0] : undef;
+	my $study_location = $params->{locationDbId} ? $params->{locationDbId} : undef;
+	my $study_design_method = $params->{experimentalDesign} ? $params->{experimentalDesign}->{PUI} : undef; #Design type must be either: genotyping_plate, CRD, Alpha, Augmented, Lattice, RCBD, MAD, p-rep, greenhouse, or splitplot;
+	my $folder_id = $params->{trialDbId} ? $params->{trialDbId} : undef;
+	my $study_t = $params->{studyType} ? $params->{studyType} : undef;
+	my $study_type = $project_type_ids{$study_t};
+	my $field_size = $params->{additionalInfo}->{field_size} ? $params->{additionalInfo}->{field_size} : undef;
+	my $plot_width = $params->{additionalInfo}->{plot_width} ? $params->{additionalInfo}->{plot_width} : undef;
+	my $plot_length = $params->{additionalInfo}->{plot_length} ? $params->{additionalInfo}->{plot_length} : undef;
+	my $planting_date = $params->{startDate} ? $params->{startDate} : undef;
+	my $harvest_date = $params->{endDate} ? $params->{endDate} : undef;
+
+	if(!$study_type && $study_t){
+		return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Study type name: ' . $study_t . ' does not exist. Check study types supported!'));
+	}
+	my $folder = CXGN::Trial::Folder->new(bcs_schema=>$self->bcs_schema(), folder_id=>$folder_id);
+	my $program = $folder->breeding_program->name();
+
+
+    eval {
+    	my $trial_name_exists = CXGN::Trial::Search->new({
+	        bcs_schema => $schema,
+	        metadata_schema => $metadata_schema,
+	        phenome_schema => $phenome_schema,
+	        trial_name_list => [$study_name]
+	    });
+	    my ($data, $total_count) = $trial_name_exists->search();
+	    
+	    if($total_count>0){
+	    	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf("Can't create trial: Trial name already exists\n"));
+		}
+    	my $trial = CXGN::Trial->new({
+	        bcs_schema => $schema,
+	        metadata_schema => $metadata_schema,
+	        phenome_schema => $phenome_schema,
+	        trial_id => $trial_id
+	    }); 
+		if ($study_name) { $trial->set_name($study_name); }
+		if ($folder_id) { $trial->set_breeding_program($program); }
+		if ($study_location) { $trial->set_location($study_location); }
+		if ($study_year) { $trial->set_year($study_year); }
+		if ($study_type) { $trial->set_project_type($study_type); }
+		if ($planting_date) {
+			if ($planting_date eq '') { $trial->remove_planting_date($trial->get_planting_date()); }
+			else { $trial->set_planting_date($planting_date); }
+		}
+		if ($harvest_date) {
+			if ($harvest_date eq '') { $trial->remove_harvest_date($trial->get_harvest_date()); }
+			else { $trial->set_harvest_date($harvest_date); }
+		}
+		if ($study_description) { $trial->set_description($study_description); }
+		if ($field_size) { $trial->set_field_size($field_size); }
+		if ($plot_width) { $trial->set_plot_width($plot_width); }
+		if ($plot_length) { $trial->set_plot_length($plot_length); }
+		if ($study_design_method) { $trial->set_design_type($study_design_method); }
+    };
+
+    my $data_out;
+	my $total_count=0;
+
+	my $supported_crop = $c->config->{"supportedCrop"};
+
+    ($data_out,$total_count) = _search($self,$schema,$page_size,$page,$supported_crop,[$trial_id]);
+
+    my %result = (data=>$data_out);
+
+	my @data_files;
+	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Studies result constructed');
+
+}
+
 sub format_date {
 
 	my $str_date = shift;
@@ -458,7 +579,7 @@ sub _search {
 		}
 
 		my $t = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $_->{trial_id} });
-		my $contacts = $t->get_trial_contacts();print Dumper $contacts;
+		my $contacts = $t->get_trial_contacts();
 		my $brapi_contacts;
 		foreach (@$contacts){
 			push @$brapi_contacts, {

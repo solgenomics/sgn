@@ -2077,6 +2077,18 @@ sub studies_info_GET {
 	_standard_response_construction($c, $brapi_package_result);
 }
 
+sub studies_info_PUT {
+	my $self = shift;
+	my $c = shift;
+	my ($auth,$user_id) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $data = $clean_inputs;
+	$data->{studyDbId} = $c->stash->{study_id};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Studies');
+	my $brapi_package_result = $brapi_module->update($data,$user_id,$c);
+	_standard_response_construction($c, $brapi_package_result);
+}
 
 sub studies_observation_variables : Chained('studies_single') PathPart('observationvariables') Args(0) : ActionClass('REST') { }
 
