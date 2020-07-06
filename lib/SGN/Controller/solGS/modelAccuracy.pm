@@ -150,10 +150,10 @@ sub cross_validation_stat {
 
 sub create_model_summary {
     my ($self, $c, $model_id, $trait_id) = @_;
-
-    my $trait_id =  $c->stash->{trait_id} if !$model_id;
-    my $model_id =  $c->stash->{model_id} if !$trait_id;
-    
+ 
+    $trait_id =  $c->stash->{trait_id} if !$trait_id;
+    $model_id =  $c->stash->{model_id} if !$model_id;
+  
     my $protocol_id = $c->stash->{genotyping_protocol_id};
     
     $c->controller("solGS::solGS")->get_trait_details($c, $trait_id);
