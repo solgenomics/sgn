@@ -911,15 +911,6 @@ MCPD CALL NO LONGER IN BRAPI SPEC
 
 sub germplasm_mcpd  : Chained('germplasm_single') PathPart('mcpd') Args(0) : ActionClass('REST') { }
 
-#sub germplasm_mcpd_POST {
-#    my $self = shift;
-#    my $c = shift;
-#    my $auth = _authenticate_user($c);
-#    my $status = $c->stash->{status};
-
-#    $c->stash->{rest} = {status=>$status};
-#}
-
 sub germplasm_mcpd_GET {
 	my $self = shift;
 	my $c = shift;
@@ -1066,6 +1057,7 @@ sub studies_search_new_GET {
         studyLocationDbIds => $clean_inputs->{locationDbId},
         studyLocationNames => $clean_inputs->{locationName},
         seasons => $clean_inputs->{seasonDbId},
+        seasonDbIds => $clean_inputs->{seasonDbId},
         studyTypeName => $clean_inputs->{studyType},
         germplasmDbIds => $clean_inputs->{germplasmDbId},
         germplasmNames => $clean_inputs->{germplasmName},
@@ -1075,25 +1067,26 @@ sub studies_search_new_GET {
         active => $clean_inputs->{active}->[0],
         sortBy => $clean_inputs->{sortBy}->[0],
         sortOrder => $clean_inputs->{sortOrder}->[0],
+        commonCropNames => $clean_inputs->{commonCropName},
     }, $c);
     _standard_response_construction($c, $brapi_package_result);
 }
 
-# sub studies_search_new_POST {
-#     my $self = shift;
-#     my $c = shift;
-#     my ($auth, $user_id) = _authenticate_user($c);
-#     my $clean_inputs = $c->stash->{clean_inputs};
-#     my $data = $clean_inputs;
-#     my @all_studies;
-# 	foreach my $study (values %{$data}) {
-# 	    push @all_studies, $study;
-# 	}
-#     my $brapi = $self->brapi_module;
-#     my $brapi_module = $brapi->brapi_wrapper('Studies');
-#     my $brapi_package_result = $brapi_module->store(\@all_studies, $user_id);
-#     _standard_response_construction($c, $brapi_package_result);
-# }
+sub studies_search_new_POST {
+    my $self = shift;
+    my $c = shift;
+    my ($auth, $user_id) = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $data = $clean_inputs;
+    my @all_studies;
+	foreach my $study (values %{$data}) {
+	    push @all_studies, $study;
+	}
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Studies');
+    my $brapi_package_result = $brapi_module->store(\@all_studies, $user_id, $c);
+    _standard_response_construction($c, $brapi_package_result);
+}
 
 sub studies_search_save  : Chained('brapi') PathPart('search/studies') Args(0) : ActionClass('REST') { }
 
