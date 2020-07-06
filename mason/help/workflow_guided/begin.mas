@@ -4,6 +4,7 @@ $locations
 $preferred_species
 $editable_stock_props
 $timestamp
+$facilities => ()
 </%args>
 
 
@@ -208,7 +209,7 @@ $timestamp
 <& /breeders_toolbox/trial/trial_create_dialogs.mas, locations => $locations, breeding_programs => $breeding_programs &>
 
 <& /breeders_toolbox/genotyping_trials/upload_genotyping_data_dialogs.mas &>
-<& /breeders_toolbox/genotyping_trials/create_genotyping_trial_dialogs.mas &>
+<& /breeders_toolbox/genotyping_trials/create_genotyping_trial_dialogs.mas, facilities=>$facilities &>
 
 <& /breeders_toolbox/upload_seedlots_inventory_dialogs.mas &>
 <& /breeders_toolbox/upload_seedlots_dialogs.mas &>
