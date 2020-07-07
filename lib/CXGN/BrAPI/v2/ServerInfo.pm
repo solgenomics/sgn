@@ -60,6 +60,7 @@ sub search {
 		[['application/json'],['GET'], 'search/images/{searchResultsDbId}',['2.0']],
 		[['application/json'],['GET','POST','PUT'], 'observations',['2.0']],
 		[['application/json'],['GET','PUT'], 'observations/{observationDbId}',['2.0']],
+		[['application/json'],['GET'], 'observations/table',['2.0']],
 		[['application/json'],['POST'],'search/observations',['2.0']],
 		[['application/json'],['GET'], 'search/observations/{searchResultsDbId}',['2.0']],
 		[['application/json'],['GET'], 'observationlevels',['2.0']],

@@ -3621,6 +3621,19 @@ sub observations_POST {
 	_standard_response_construction($c, $brapi_package_result, $http_status_code);
 }
 
+sub observations_table : Chained('brapi') PathPart('observations/table') Args(0) : ActionClass('REST') { }
+
+sub observations_table_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('ObservationTables');
+	my $brapi_package_result = $brapi_module->search($c->stash->{clean_inputs});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
 sub observations_single :  Chained('brapi') PathPart('observations') CaptureArgs(1) {
      my $self = shift;
      my $c = shift;
