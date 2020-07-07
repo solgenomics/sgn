@@ -570,7 +570,7 @@ jQuery(document).ready(function(){
                 console.log(response);
                 jQuery('#working_modal').hide();
 
-
+                console.log("ROTATION COMPLETE");
                 initializeInteractiveSvg('#drone_imagery_standard_process_raw_images_image_id_interactive_select_div', 'drone_imagery_standard_process_raw_images_image_id_interactive_select_div_area', 1, 1);
 
                 Workflow.complete("#manage_drone_imagery_standard_process_interactive_rotate_step");
@@ -895,6 +895,7 @@ jQuery(document).ready(function(){
             success: function(response){
                 console.log(response);
 
+                console.log("Match Seq Complete");
                 initializeInteractiveSvg('#drone_imagery_standard_process_raw_images_image_id_interactive_select_div', 'drone_imagery_standard_process_raw_images_image_id_interactive_select_div_area', 1, 1);
             },
             error: function(response){
@@ -920,6 +921,8 @@ jQuery(document).ready(function(){
                   width: manage_drone_imagery_standard_process_interactive_image_width,
                   length: manage_drone_imagery_standard_process_interactive_image_length
                 }
+
+                d3.select(svg_div).html("");
 
                 manage_drone_imagery_standard_process_raw_images_interactive_svg = d3.select(svg_div).append("svg")
                     .attr("width", drone_imagery_interactive_total_width)
@@ -998,6 +1001,7 @@ jQuery(document).ready(function(){
             ajax : '/api/drone_imagery/drone_run_bands?select_checkbox_name=drone_run_standard_process_interactive_band_select&disable=1&select_all=1&drone_run_project_id='+manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id
         });
 
+        console.log("Initial");
         initializeInteractiveSvg('#drone_imagery_standard_process_raw_images_interactive_bulk_rotate_div', 'drone_imagery_standard_process_raw_images_interactive_bulk_rotate_div_area', 1, 0);
     });
 

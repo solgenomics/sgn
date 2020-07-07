@@ -987,7 +987,7 @@ sub _drone_imagery_interactive_get_gps {
             nir_image_id => $nir_image_id,
             d3_rotate_angle => $nir_image->{d3_rotate_angle},
             rotated_bound => $nir_image->{rotated_bound},
-            rotated_extent => $nir_image->{rotated_extent},
+            rotated_bound_translated => $nir_image->{rotated_bound_translated},
             rotated_image_ids => \@rotated_stack_image_ids,
             image_url => $image_url,
             image_size => [$width, $length],
@@ -1193,7 +1193,12 @@ sub drone_imagery_update_gps_images_rotation_POST : Args(0) {
                 $rotated_y3 = $rotated_y3 + $cy;
                 $rotated_x4 = $rotated_x4 + $cx;
                 $rotated_y4 = $rotated_y4 + $cy;
+
+                my $x_pos = ($longitude_raw - $return->{min_longitude})*$return->{x_factor};
+                my $y_pos = $return->{y_range} - ($latitude_raw - $return->{min_latitude})*$return->{y_factor} - $return->{image_length};
+
                 my $rotated_bound = [[$rotated_x1, $rotated_y1], [$rotated_x2, $rotated_y2], [$rotated_x3, $rotated_y3], [$rotated_x4, $rotated_y4]];
+                my $rotated_bound_translated = [[$rotated_x1 + $x_pos, $rotated_y1 + $y_pos], [$rotated_x2 + $x_pos, $rotated_y2 + $y_pos], [$rotated_x3 + $x_pos, $rotated_y3 + $y_pos], [$rotated_x4 + $x_pos, $rotated_y4 + $y_pos]];
 
                 push @{$rotated_saved_micasense_stacks{$stack_key}}, {
                     rotated_image_id => $rotated_image_id,
@@ -1203,8 +1208,9 @@ sub drone_imagery_update_gps_images_rotation_POST : Args(0) {
                     latitude => $latitude_raw,
                     altitude => $altitude_raw,
                     rotated_bound => $rotated_bound,
-                    x_pos => ($longitude_raw - $return->{min_longitude})*$return->{x_factor},
-                    y_pos => $return->{y_range} - ($latitude_raw - $return->{min_latitude})*$return->{y_factor} - $return->{image_length}
+                    rotated_bound_translated => $rotated_bound_translated,
+                    x_pos => $x_pos,
+                    y_pos => $y_pos
                 };
             }
         }
@@ -1356,9 +1362,13 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
     my %nir_image_hash;
     foreach my $lat (@$latitudes) {
         foreach my $long (@$longitudes) {
-            my $i = $gps_images->{$lat}->{$long};
-            my $nir_image_id = $i->{nir_image_id};
-            $nir_image_hash{$nir_image_id} = $i;
+            if ($lat && $long) {
+                my $i = $gps_images->{$lat}->{$long};
+                my $nir_image_id = $i->{nir_image_id};
+                if ($nir_image_id) {
+                    $nir_image_hash{$nir_image_id} = $i;
+                }
+            }
         }
     }
 
@@ -1451,7 +1461,7 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
             $nir_image_hash{$image_id2}->{x_pos} = $x_pos_match_dst;
             $nir_image_hash{$image_id2}->{y_pos} = $y_pos_match_dst;
 
-            foreach (@{$nir_image_hash{$image_id2}->{rotated_bound}}) {
+            foreach (@{$nir_image_hash{$image_id2}->{rotated_bound_translated}}) {
                 $_->[0] = $_->[0] - $x_pos_translation;
                 $_->[1] = $_->[1] - $y_pos_translation;
             }
@@ -1462,7 +1472,38 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
 
     my %gps_images_matched;
     foreach (values %nir_image_hash) {
-        $gps_images_matched{$_->{latitude}}->{$_->{longitude}} = $_;
+        if ($_->{latitude} && $_->{longitude}) {
+            $gps_images_matched{$_->{latitude}}->{$_->{longitude}} = $_;
+        }
+    }
+
+    my $minimum_x_val = 10000000000;
+    my $minimum_y_val = 10000000000;
+    while (my ($latitude, $lo) = each %gps_images_matched) {
+        while (my ($longitude, $i) = each %$lo) {
+            my $x_pos = $i->{x_pos} + 0;
+            my $y_pos = $i->{y_pos} + 0;
+            if ($x_pos < $minimum_x_val) {
+                $minimum_x_val = $x_pos;
+            }
+            if ($y_pos < $minimum_y_val) {
+                $minimum_y_val = $y_pos;
+            }
+        }
+    }
+
+    while (my ($latitude, $lo) = each %gps_images_matched) {
+        while (my ($longitude, $i) = each %$lo) {
+            my $x_pos = $i->{x_pos};
+            my $y_pos = $i->{y_pos};
+            $gps_images_matched{$latitude}->{$longitude}->{x_pos} = $return->{image_width}/2 + $x_pos - $minimum_x_val;
+            $gps_images_matched{$latitude}->{$longitude}->{y_pos} = $return->{image_length}/2 + $y_pos - $minimum_y_val;
+
+            foreach (@{$i->{rotated_bound_translated}}) {
+                $_->[0] = $return->{image_width}/2 + $_->[0] - $minimum_x_val;
+                $_->[1] = $return->{image_length}/2 + $_->[1] - $minimum_y_val;
+            }
+        }
     }
 
     my $saved_gps_positions_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_gps_pixel_positions', 'project_property')->cvterm_id();
@@ -1501,6 +1542,7 @@ sub drone_imagery_delete_gps_images_POST : Args(0) {
         $saved_gps_positions_json->delete();
     }
 
+    #ROTATED RESTART
     # my $saved_image_stacks_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_micasense_stacks_rotated', 'project_property')->cvterm_id();
     # my $saved_micasense_stacks_json = $schema->resultset("Project::Projectprop")->find({
     #     project_id => $drone_run_project_id,
@@ -3416,7 +3458,7 @@ sub standard_process_apply_raw_images_interactive_POST : Args(0) {
     while (my ($lat, $lo) = each %$saved_gps_positions) {
         while (my ($long, $pos) = each %$lo) {
             my $size = $pos->{image_size};
-            my $rotated_bound = $pos->{rotated_bound};
+            my $rotated_bound = $pos->{rotated_bound_translated};
             my $x1_pos = $pos->{x_pos} + 0;
             my $y1_pos = $pos->{y_pos} + 0;
             my $x1_min = 10000000000;
