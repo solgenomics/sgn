@@ -1543,14 +1543,14 @@ sub drone_imagery_delete_gps_images_POST : Args(0) {
     }
 
     #ROTATED RESTART
-    # my $saved_image_stacks_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_micasense_stacks_rotated', 'project_property')->cvterm_id();
-    # my $saved_micasense_stacks_json = $schema->resultset("Project::Projectprop")->find({
-    #     project_id => $drone_run_project_id,
-    #     type_id => $saved_image_stacks_type_id
-    # });
-    # if ($saved_micasense_stacks_json) {
-    #     $saved_micasense_stacks_json->delete();
-    # }
+    my $saved_image_stacks_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_micasense_stacks_rotated', 'project_property')->cvterm_id();
+    my $saved_micasense_stacks_json = $schema->resultset("Project::Projectprop")->find({
+        project_id => $drone_run_project_id,
+        type_id => $saved_image_stacks_type_id
+    });
+    if ($saved_micasense_stacks_json) {
+        $saved_micasense_stacks_json->delete();
+    }
 
     $c->stash->{rest} = {
         success => 1
