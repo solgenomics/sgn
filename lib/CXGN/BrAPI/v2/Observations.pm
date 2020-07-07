@@ -615,4 +615,10 @@ sub _search_observation_id {
     return (\@result, \%unique_traits);
 }
 
+sub _sql_from_arrayref {
+    my $arrayref = shift;
+    my $sql = join ("," , @$arrayref);
+    return $sql;
+}
+
 1;

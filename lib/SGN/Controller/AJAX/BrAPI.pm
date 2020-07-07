@@ -2276,7 +2276,8 @@ sub studies_table_GET {
 		main_production_site_url => $c->config->{main_production_site_url},
 		file_path => $file_path,
 		file_uri => $uri
-	});
+	})
+	;
 	_standard_response_construction($c, $brapi_package_result);
 }
 
@@ -2495,6 +2496,19 @@ sub observation_units_PUT {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('ObservationUnits');
 	my $brapi_package_result = $brapi_module->observationunits_update(\@all_units,$user_id);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub observation_units_table : Chained('brapi') PathPart('observationunits/table') Args(0) : ActionClass('REST') { }
+
+sub observation_units_table_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('ObservationTables');
+	my $brapi_package_result = $brapi_module->search_observationunit_tables($c->stash->{clean_inputs});
 	_standard_response_construction($c, $brapi_package_result);
 }
 
