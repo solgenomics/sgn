@@ -12,7 +12,7 @@ use File::Spec::Functions;
 use File::Path qw / mkpath  /;
 
 
-BEGIN { extends 'Catalyst::Controller' }
+BEGIN { extends 'Catalyst::Controller::REST' }
 
 
 __PACKAGE__->config(
@@ -30,7 +30,7 @@ sub kinship_analysis :Path('/kinship/analysis/') Args() {
 }
 
 
-sub run_kinship :Path('kinship/run/analysis') Args() {
+sub run_kinship_analysis :Path('/kinship/run/analysis') Args() {
     my ($self, $c) = @_;
 
     my $pop_id        = $c->req->param('kinship_pop_id');
@@ -79,16 +79,14 @@ sub kinship_result :Path('/solgs/kinship/result/') Args() {
     my $json_file = $kinship_files->{json_file};
 
     print STDERR "\njson_file: $json_file\n";
-      
+ 
     if (-s $json_file)
     {
         $c->stash->{rest}{data_exists} = 1; 
 	$c->stash->{rest}{data} = read_file($json_file);
-
 	$self->stash_kinship_output($c);
-	
     } 
-
+  
 }
 
 
@@ -103,7 +101,7 @@ sub get_kinship_coef_files {
     
     if ($trait_id)
     {
-	$c->controller('solGS::solGS')->get_trait_details($$trait_id);
+	$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
 	$c->controller('solGS::Files')->relationship_matrix_adjusted_file($c);
 	
 	$json_file = $c->stash->{relationship_matrix_adjusted_json_file};
