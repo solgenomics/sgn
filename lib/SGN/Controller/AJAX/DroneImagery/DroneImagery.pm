@@ -246,7 +246,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $analysis_model_training_data_file_type;
     my $field_trial_design;
 
-    if ($statistics_select eq 'lmer_germplasmname_replicate' || $statistics_select eq 'sommer_grm_spatial_genetic_blups') {
+    if ($statistics_select eq 'lmer_germplasmname_replicate' || $statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_genetic_blups') {
 
         my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
             'MaterializedViewTable',
@@ -338,7 +338,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             }
         close($F);
 
-        if ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
+        if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_genetic_blups') {
 
             my %seen_accession_stock_ids;
             foreach my $trial_id (@$field_trial_id_list) {
@@ -427,7 +427,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             }
         }
         elsif ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
-            $statistical_ontology_term = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and row and column spatial effects computed using Sommer R|SGNSTAT:0000001";
+            $statistical_ontology_term = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and row and column spatial effects computed using Sommer R|SGNSTAT:0000001"; #In the JS this is set to either the genetic or spatial BLUP term (Multivariate linear mixed model 2D spline spatial BLUPs using genetic relationship matrix and row and column spatial effects computed using Sommer R|SGNSTAT:0000003) when saving analysis results
+
             $analysis_result_values_type = "analysis_result_values_match_accession_names";
             $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_sommer_grm_spatial_genetic_blups_phenotype_file";
 
@@ -446,7 +447,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             mat\$colNumber <- as.numeric(mat\$colNumber);
             mat\$rowNumberFactor <- as.factor(mat\$rowNumberFactor);
             mat\$colNumberFactor <- as.factor(mat\$colNumberFactor);
-            mix <- mmer(cbind('.$encoded_trait_string.')~1, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
+            mix <- mmer(cbind('.$encoded_trait_string.')~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
             #gen_cor <- cov2cor(mix\$sigma\$\`u:id\`);
             write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             write.table(mix\$U\$\`u:rowNumberFactor\`, file=\''.$stats_out_tempfile_row.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
@@ -570,6 +571,48 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 };
             }
         }
+        # elsif ($statistics_select eq 'sommer_grm_temporal_random_regression_genetic_blups') {
+        #     $statistical_ontology_term = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression computed using Sommer R|SGNSTAT:0000004"; #In the JS this is set to either the genetic of permanent environment BLUP term (Multivariate linear mixed model permanent environment BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression computed using Sommer R|SGNSTAT:0000005) when saving results
+        # 
+        #     $analysis_result_values_type = "analysis_result_values_match_accession_names";
+        #     $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_sommer_grm_temporal_leg_random_regression_genetic_blups_phenotype_file";
+        # 
+        #     @unique_plot_names = sort keys %seen_plot_names;
+        # 
+        #     my $cmd = 'R -e "library(sommer); library(data.table); library(reshape2); library(orthopolynom);
+        #     mat <- data.frame(fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\'));
+        #     geno_mat_3col <- data.frame(fread(\''.$grm_file.'\', header=FALSE, sep=\'\t\'));
+        #     geno_mat <- acast(geno_mat_3col, V1~V2, value.var=\'V3\');
+        #     geno_mat[is.na(geno_mat)] <- 0;
+        #     mat_long <- melt(mat, id.vars=c(\'replicate\', \'block\', \'id\', \'plot_id\', \'rowNumber\', \'colNumber\', \'rowNumberFactor\', \'colNumberFactor\'), variable.name=\'time\', value.name=\'value\');
+        #     mat\$rowNumber <- as.numeric(mat\$rowNumber);
+        #     mat\$colNumber <- as.numeric(mat\$colNumber);
+        #     mat\$rowNumberFactor <- as.factor(mat\$rowNumberFactor);
+        #     mat\$colNumberFactor <- as.factor(mat\$colNumberFactor);
+        #     mix <- mmer(value~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(us(leg(time,1)), id), rcov=~vs(units), data=mat_long, tolparinv='.$tolparinv.');
+        #     #gen_cor <- cov2cor(mix\$sigma\$\`u:id\`);
+        #     write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
+        #     write.table(mix\$U\$\`u:rowNumberFactor\`, file=\''.$stats_out_tempfile_row.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
+        #     write.table(mix\$U\$\`u:colNumberFactor\`, file=\''.$stats_out_tempfile_col.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
+        #     X <- with(mat, spl2D(rowNumber, colNumber));
+        #     spatial_blup_results <- data.frame(plot_id = mat\$plot_id);
+        #     ';
+        # 
+        #     my $field_trial_design_full = CXGN::Trial->new({bcs_schema => $schema, trial_id=>$field_trial_id_list->[0]})->get_layout()->get_design();
+        #     # print STDERR Dumper $field_trial_design_full;
+        #     while (my($plot_number, $plot_obj) = each %$field_trial_design_full) {
+        #         $field_trial_design->{$plot_number} = {
+        #             stock_name => $plot_obj->{accession_name},
+        #             block_number => $plot_obj->{block_number},
+        #             col_number => $plot_obj->{col_number},
+        #             row_number => $plot_obj->{row_number},
+        #             plot_name => $plot_obj->{plot_name},
+        #             plot_number => $plot_obj->{plot_number},
+        #             rep_number => $plot_obj->{rep_number},
+        #             is_a_control => $plot_obj->{is_a_control}
+        #         };
+        #     }
+        # }
     }
     elsif ($statistics_select eq 'marss_germplasmname_block') {
 
