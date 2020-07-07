@@ -23,11 +23,23 @@ The 'analysis_design' is optional and is a precomputed JSON encoded object of ob
 {
                '1' => {
                         'stock_name' => 'test_accession1',
-                        'plot_name' => 'analysisblup06112020_34_test_accession1'
+                        'plot_name' => 'analysisblup06112020_34_test_accession1',
+                        'plot_number' => 1,
+                        'col_number' => 1,
+                        'row_number' => 1,
+                        'rep_number' => 1,
+                        'block_number' => 1,
+                        'is_a_control' => 0
                       },
                '2' => {
                         'stock_name' => 'test_accession2',
-                        'plot_name' => 'analysisblup06112020_34_test_accession2'
+                        'plot_name' => 'analysisblup06112020_34_test_accession2',
+                        'plot_number' => 2,
+                        'col_number' => 1,
+                        'row_number' => 2,
+                        'rep_number' => 2,
+                        'block_number' => 1,
+                        'is_a_control' => 0
                       }
              }
 or analysis_design can be left blank and the design will be computed using accession_names once this workflow is submitted.
