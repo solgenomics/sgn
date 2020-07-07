@@ -12,6 +12,7 @@ $greenhouse_nursery_description => "A greenhouse/nursery houses plants in no par
 $splitplot_description => "Split plot designs are useful for applying treatments to subplots of a plot. If you give three treatments, there will be three subplots with the treatment(s) distributed randomly among them. Creates plot entities with subplot entities with plant entities in the database."
 $prep_description => "Have some treatments that are unreplicated and rely on replicated treatments to make the trial analysable. It is recommended that at least 20% of the experimental units are occupied by replicated treatments. Creates plot entities in the database."
 $westcott_description => "Generates fieldplan for an unreplicated design with genotypes randomly allocated on a field with checks following the method described on Westcott (1981)."
+$management_factor_types => ()
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders', 'd3.d3v4Min.js', 'moment_min', 'daterangepicker' ] &>
