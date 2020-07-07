@@ -118,12 +118,12 @@ solGS.kinship = {
 	jQuery("#kinship_message")
 	    .html("Running kinship... please wait...it may take minutes")
 	    .show();
-		
+//	  url: '/kinship/run/analysis',	
 	jQuery.ajax({
 	    type: 'POST',
 	    dataType: 'json',
 	    data: kinshipArgs,
-	    url: '/kinship/run/analysis',
+	    url: '/solgs/kinship/result',
 	    success: function(res) {
 		if (res.result == 'success') {
 		    jQuery("#kinship_canvas .multi-spinner-container").hide();
@@ -193,10 +193,6 @@ solGS.kinship = {
 
     plotKinship: function (data) {
 
-	// var pop = this.getPopulationDetails();
-	// var popId = pop.kinship_pop_id;
-	// var protocolId = pop.genotyping_protocol_id;
-
         solGS.heatmap.plot(data, '#kinship_canvas');
 		    
     },
@@ -238,7 +234,14 @@ solGS.kinship = {
 jQuery(document).ready( function () { 
 
     jQuery("#run_kinship").click(function () {
-        solGS.kinship.getKinshipResult();
+	var url = document.URL;
+    
+	if (url.match(/kinship\/analysis/)) {
+	    solGS.kinship.runKinship();
+	} else {
+            solGS.kinship.getKinshipResult();
+	}
+	
     	jQuery("#run_kinship").hide();
     }); 
   
@@ -266,15 +269,6 @@ jQuery(document).ready( function() {
         }
     }
                
-});
-
-
-jQuery(document).ready( function() { 
-
-    jQuery("#run_kinship").click(function() {
-	solGS.kinship.runKinship();
-    }); 
-  
 });
 
 
