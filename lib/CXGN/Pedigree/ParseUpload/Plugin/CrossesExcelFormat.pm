@@ -211,22 +211,27 @@ sub _validate_with_plugin {
         }
 
         if ($cross_name){
+            $cross_name =~ s/^\s+|\s+$//g;
             $seen_cross_names{$cross_name}++;
         }
 
         if ($female_parent){
+            $female_parent =~ s/^\s+|\s+$//g;
             $seen_accession_names{$female_parent}++;
         }
 
         if ($male_parent){
+            $male_parent =~ s/^\s+|\s+$//g;
             $seen_accession_names{$male_parent}++;
         }
 
         if ($female_plot_plant_name){
+            $female_plot_plant_name =~ s/^\s+|\s+$//g;
             $seen_plot_plant_names{$female_plot_plant_name}++;
         }
 
         if ($male_plot_plant_name){
+            $male_plot_plant_name =~ s/^\s+|\s+$//g;
             $seen_plot_plant_names{$male_plot_plant_name}++;
         }
     }
@@ -341,6 +346,7 @@ sub _parse_with_plugin {
 
         if ($worksheet->get_cell($row,3)) {
             $female_parent =  $worksheet->get_cell($row,3)->value();
+            $female_parent =~ s/^\s+|\s+$//g;
         }
 
         #skip blank lines or lines with no name, type and parent
@@ -349,21 +355,26 @@ sub _parse_with_plugin {
         }
         if ($worksheet->get_cell($row,4)) {
             $male_parent =  $worksheet->get_cell($row,4)->value();
+            $male_parent =~ s/^\s+|\s+$//g;
         }
 
         if ($worksheet->get_cell($row,5)) {
             if ($female_plot_plant_header eq 'female_plot') {
                 $female_plot =  $worksheet->get_cell($row,5)->value();
+                $female_plot =~ s/^\s+|\s+$//g;
             } elsif ($female_plot_plant_header eq 'female_plant') {
                 $female_plant = $worksheet->get_cell($row,5)->value();
+                $female_plant =~ s/^\s+|\s+$//g;
             }
         }
 
         if ($worksheet->get_cell($row,6)) {
             if ($male_plot_plant_header eq 'male_plot') {
                 $male_plot =  $worksheet->get_cell($row,6)->value();
+                $male_plot =~ s/^\s+|\s+$//g;
             } elsif ($male_plot_plant_header eq 'male_plant') {
                 $male_plant = $worksheet->get_cell($row,6)->value();
+                $male_plant =~ s/^\s+|\s+$//g;
             }
         }
 

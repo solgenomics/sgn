@@ -81,12 +81,14 @@ sub _validate_with_plugin {
         if (!$cross_name || $cross_name eq '') {
             push @error_messages, "Cell A$row_name: cross unique id missing";
         } else {
+            $cross_name =~ s/^\s+|\s+$//g;
             $seen_cross_names{$cross_name}++;
         }
 
         if (!$progeny_name || $progeny_name eq '') {
             push @error_messages, "Cell B$row_name: progeny name missing";
         } else {
+            $progeny_name =~ s/^\s+|\s+$//g;
             $seen_progeny_names{$progeny_name}++;
         }
     }

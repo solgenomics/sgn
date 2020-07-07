@@ -24,6 +24,7 @@ sub validate {
         my $rs = $schema->resultset("Stock::Stock")->search({
             type_id=> [$plot_type_id, $plant_type_id, $subplot_type_id, $tissue_sample_type_id, $analysis_instance_type_id],
             uniquename => $l,
+            is_obsolete => {'!=' => 't'},
         });
         if ($rs->count() == 0) {
             push @missing, $l;
