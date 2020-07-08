@@ -274,13 +274,8 @@ sub list_analyses_by_user_table :Path('/ajax/analyses/by_user') Args(0) {
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-    my $user_id;
-    if ($c->user()) {
-        $user_id = $c->user->get_object()->get_sp_person_id();
-    }
-    if (!$user_id) {
-        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
-    }
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
     my @analyses = CXGN::Analysis->retrieve_analyses_by_user($schema, $people_schema, $metadata_schema, $phenome_schema, $user_id);
 
     my @table;
@@ -305,6 +300,38 @@ sub list_analyses_by_user_table :Path('/ajax/analyses/by_user') Args(0) {
     $c->stash->{rest} = { data => \@table };
 }
 
+sub list_analyses_models_by_user_table :Path('/ajax/analyses/models/by_user') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $analysis_models_by_user = CXGN::AnalysisModel::GetModel::get_models_by_user($schema, $user_id);
+    #print STDERR Dumper $analysis_models_by_user;
+
+    my @table;
+    foreach my $saved_model (values %$analysis_models_by_user) {
+        my $model_type = $saved_model->{model_type_name} ? $saved_model->{model_type_name} : '';
+        my $protocol = $saved_model->{model_properties}->{protocol} ? $saved_model->{model_properties}->{protocol} : '';
+        my $application_name = $saved_model->{model_properties}->{application_name} ? $saved_model->{model_properties}->{application_name} : '';
+        my $application_version = $saved_model->{model_properties}->{application_version} ? $saved_model->{model_properties}->{application_version} : '';
+        my $model_language = $saved_model->{model_properties}->{model_language} ? $saved_model->{model_properties}->{model_language} : '';
+        push @table, [
+            '<a href="/analyses_model/'.$saved_model->{model_id}.'">'.$saved_model->{model_name}."</a>",
+            $saved_model->{model_description},
+            $model_type,
+            $protocol,
+            $application_name.":".$application_version,
+            $model_language,
+        ];
+    }
+    #print STDERR Dumper(\@table);
+    $c->stash->{rest} = { data => \@table };
+}
 
 =head1 retrieve_analysis_data()
 
@@ -331,6 +358,7 @@ sub retrieve_analysis_data :Chained("ajax_analysis") PathPart('retrieve') :Args(
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $a = CXGN::Analysis->new( { bcs_schema => $bcs_schema, people_schema => $people_schema, metadata_schema => $metadata_schema, phenome_schema => $phenome_schema, trial_id => $c->stash->{analysis_id} } );
 
