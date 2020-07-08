@@ -1416,9 +1416,15 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
     }
 
     my $image_counter = 0;
+    my $skipped = 0;
     foreach (@$nir_image_ids) {
-        my $image_id1 = $nir_image_ids->[$image_counter];
-        my $image_id2 = $nir_image_ids->[$image_counter+1];
+        my $image_id1;
+        my $image_id2;
+
+        if (!$skipped) {
+            $image_id1 = $nir_image_ids->[$image_counter];
+            $image_id2 = $nir_image_ids->[$image_counter+1];
+        }
 
         if ($image_id1 && $image_id2) {
             my $gps_obj_src = $nir_image_hash{$image_id1};
@@ -1490,6 +1496,22 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
             my $x_pos_match_src = $x_pos_src + $src_match_x_rotated;
             my $y_pos_match_src = $y_pos_src + $src_match_y_rotated;
 
+            my $src_match2 = $match_points_src[1];
+            my $src_match2_x = $src_match2->[0];
+            my $src_match2_y = $src_match2->[1];
+            my $src_match2_x_rotated = $src_match2_x*cos($rotate_radians) - $src_match2_y*sin($rotate_radians);
+            my $src_match2_y_rotated = $src_match2_x*sin($rotate_radians) + $src_match2_y*cos($rotate_radians);
+            my $x_pos_match2_src = $x_pos_src + $src_match2_x_rotated;
+            my $y_pos_match2_src = $y_pos_src + $src_match2_y_rotated;
+
+            my $src_match3 = $match_points_src[2];
+            my $src_match3_x = $src_match3->[0];
+            my $src_match3_y = $src_match3->[1];
+            my $src_match3_x_rotated = $src_match3_x*cos($rotate_radians) - $src_match3_y*sin($rotate_radians);
+            my $src_match3_y_rotated = $src_match3_x*sin($rotate_radians) + $src_match3_y*cos($rotate_radians);
+            my $x_pos_match3_src = $x_pos_src + $src_match3_x_rotated;
+            my $y_pos_match3_src = $y_pos_src + $src_match3_y_rotated;
+
             my $dst_match = $match_points_dst[0];
             my $dst_match_x = $dst_match->[0];
             my $dst_match_y = $dst_match->[1];
@@ -1498,8 +1520,63 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
             my $x_pos_match_dst = $x_pos_match_src - $dst_match_x_rotated;
             my $y_pos_match_dst = $y_pos_match_src - $dst_match_y_rotated;
 
+            my $dst_match2 = $match_points_dst[1];
+            my $dst_match2_x = $dst_match2->[0];
+            my $dst_match2_y = $dst_match2->[1];
+            my $dst_match2_x_rotated = $dst_match2_x*cos($rotate_radians) - $dst_match2_y*sin($rotate_radians);
+            my $dst_match2_y_rotated = $dst_match2_x*sin($rotate_radians) + $dst_match2_y*cos($rotate_radians);
+            my $x_pos_match2_dst = $x_pos_match2_src - $dst_match2_x_rotated;
+            my $y_pos_match2_dst = $y_pos_match2_src - $dst_match2_y_rotated;
+
+            my $dst_match3 = $match_points_dst[2];
+            my $dst_match3_x = $dst_match3->[0];
+            my $dst_match3_y = $dst_match3->[1];
+            my $dst_match3_x_rotated = $dst_match3_x*cos($rotate_radians) - $dst_match3_y*sin($rotate_radians);
+            my $dst_match3_y_rotated = $dst_match3_x*sin($rotate_radians) + $dst_match3_y*cos($rotate_radians);
+            my $x_pos_match3_dst = $x_pos_match3_src - $dst_match3_x_rotated;
+            my $y_pos_match3_dst = $y_pos_match3_src - $dst_match3_y_rotated;
+
             my $x_pos_translation = $x_pos_dst - $x_pos_match_dst;
             my $y_pos_translation = $y_pos_dst - $y_pos_match_dst;
+
+            my $x_pos_translation2 = $x_pos_dst - $x_pos_match2_dst;
+            my $y_pos_translation2 = $y_pos_dst - $y_pos_match2_dst;
+
+            my $x_pos_translation3 = $x_pos_dst - $x_pos_match3_dst;
+            my $y_pos_translation3 = $y_pos_dst - $y_pos_match3_dst;
+
+            my $diffx1 = $x_pos_translation - $x_pos_translation2;
+            my $diffy1 = $y_pos_translation - $y_pos_translation2;
+
+            my $diffx2 = $x_pos_translation - $x_pos_translation3;
+            my $diffy2 = $y_pos_translation - $y_pos_translation3;
+
+            my $diffx3 = $x_pos_translation3 - $x_pos_translation2;
+            my $diffy3 = $y_pos_translation3 - $y_pos_translation2;
+
+            my $p1_diff_sum = abs($diffx1) + abs($diffy1) + abs($diffx2) + abs($diffy2);
+            my $p2_diff_sum = abs($diffx1) + abs($diffy1) + abs($diffx3) + abs($diffy3);
+            my $p3_diff_sum = abs($diffx2) + abs($diffy2) + abs($diffx3) + abs($diffy3);
+            print STDERR "P1: ".$p1_diff_sum." P2: ".$p2_diff_sum." P3: ".$p3_diff_sum."\n";
+
+            if ($p1_diff_sum <= $p2_diff_sum && $p1_diff_sum <= $p3_diff_sum) {
+                $x_pos_match_dst = $x_pos_match_dst;
+                $y_pos_match_dst = $y_pos_match_dst;
+                $x_pos_translation = $x_pos_translation;
+                $y_pos_translation = $y_pos_translation;
+            }
+            elsif ($p2_diff_sum <= $p1_diff_sum && $p2_diff_sum <= $p3_diff_sum) {
+                $x_pos_match_dst = $x_pos_match2_dst;
+                $y_pos_match_dst = $y_pos_match2_dst;
+                $x_pos_translation = $x_pos_translation2;
+                $y_pos_translation = $y_pos_translation2;
+            }
+            elsif ($p3_diff_sum <= $p1_diff_sum && $p3_diff_sum <= $p2_diff_sum) {
+                $x_pos_match_dst = $x_pos_match3_dst;
+                $y_pos_match_dst = $y_pos_match3_dst;
+                $x_pos_translation = $x_pos_translation3;
+                $y_pos_translation = $y_pos_translation3;
+            }
 
             $nir_image_hash{$image_id2}->{x_pos} = $x_pos_match_dst;
             $nir_image_hash{$image_id2}->{y_pos} = $y_pos_match_dst;
@@ -1586,14 +1663,14 @@ sub drone_imagery_delete_gps_images_POST : Args(0) {
     }
 
     #ROTATED RESTART
-    my $saved_image_stacks_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_micasense_stacks_rotated', 'project_property')->cvterm_id();
-    my $saved_micasense_stacks_json = $schema->resultset("Project::Projectprop")->find({
-        project_id => $drone_run_project_id,
-        type_id => $saved_image_stacks_type_id
-    });
-    if ($saved_micasense_stacks_json) {
-        $saved_micasense_stacks_json->delete();
-    }
+    # my $saved_image_stacks_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_micasense_stacks_rotated', 'project_property')->cvterm_id();
+    # my $saved_micasense_stacks_json = $schema->resultset("Project::Projectprop")->find({
+    #     project_id => $drone_run_project_id,
+    #     type_id => $saved_image_stacks_type_id
+    # });
+    # if ($saved_micasense_stacks_json) {
+    #     $saved_micasense_stacks_json->delete();
+    # }
 
     $c->stash->{rest} = {
         success => 1
