@@ -1644,7 +1644,7 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
 }
 
 sub drone_imagery_delete_gps_images : Path('/api/drone_imagery/delete_gps_images') : ActionClass('REST') { }
-sub drone_imagery_delete_gps_images_POST : Args(0) {
+sub drone_imagery_delete_gps_images_GET : Args(0) {
     my $self = shift;
     my $c = shift;
     print STDERR Dumper $c->req->params();
