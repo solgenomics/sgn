@@ -14,6 +14,7 @@ sub search {
 	my $self = shift;
 	my $inputs = shift;
 	my @attribute_category_dbids = $inputs->{attribute_category_dbids} ? @{$inputs->{attribute_category_dbids}} : ();
+	my $attribute_ids = $inputs->{attributeDbId} || ($inputs->{attributeDbIds} || ());
 
 	my $page_size = $self->page_size;
 	my $page = $self->page;
@@ -23,6 +24,10 @@ sub search {
 	if (scalar(@attribute_category_dbids)>0) {
 		my $s = join ',', @attribute_category_dbids;
 		$where_clause .= "AND cv.cv_id IN ($s)";
+	}
+	if ($attribute_ids) {
+		my $attribute_id = _sql_from_arrayref($attribute_ids);
+		$where_clause .= "AND b.cvterm_id IN ($attribute_id)";
 	}
 	my $accession_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
 	my $q = "SELECT cv.cv_id, cv.name, cv.definition, b.cvterm_id, b.name, b.definition, stockprop.value, stock.create_date, stock.organism_id
@@ -75,7 +80,7 @@ sub search {
 	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@data,$page_size,$page);
 	my %result = (data => $data_window);
 	my @data_files;
-	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm-attributes list result constructed');
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm attributes list result constructed');
 }
 
 sub detail {
@@ -178,6 +183,12 @@ sub get_cvtermprop_hash {
 	}
 	#print STDERR Dumper $prop_hash;
 	return $prop_hash;
+}
+
+sub _sql_from_arrayref {
+    my $arrayref = shift;
+    my $sql = join ("," , @$arrayref);
+    return $sql;
 }
 
 1;

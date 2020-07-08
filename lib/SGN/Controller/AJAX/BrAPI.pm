@@ -1128,9 +1128,6 @@ sub germplasm_progeny_GET {
 	_standard_response_construction($c, $brapi_package_result);
 }
 
-
-
-
 sub germplasm_attributes_detail  : Chained('germplasm_single') PathPart('attributes') Args(0) : ActionClass('REST') { }
 
 sub germplasm_attributes_detail_GET {
@@ -1193,7 +1190,7 @@ sub germplasm_markerprofile_GET {
 
 
 #
-# Need to implement Germplasm Attributes
+# Germplasm Attributes
 #
 
 sub germplasm_attributes_list  : Chained('brapi') PathPart('attributes') Args(0) : ActionClass('REST') { }
@@ -1211,22 +1208,34 @@ sub germplasm_attributes_process {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('GermplasmAttributes');
-	my $brapi_package_result = $brapi_module->germplasm_attributes_list({
-		$clean_inputs
-	});
+	my $brapi_package_result = $brapi_module->search($clean_inputs);
 	_standard_response_construction($c, $brapi_package_result);
 }
 
+sub attribute_single  : Chained('brapi') PathPart('attributes') CaptureArgs(1) {
+	my $self = shift;
+	my $c = shift;
+	my $attribute_id = shift;
+
+	$c->stash->{attribute_id} = $attribute_id;
+}
+
+sub attribute_detail  : Chained('attribute_single') PathPart('') Args(0) : ActionClass('REST') { }
+
+sub attribute_detail_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('GermplasmAttributes');
+	my $brapi_package_result = $brapi_module->detail($c->stash->{attribute_id});
+	_standard_response_construction($c, $brapi_package_result);
+}
 
 sub germplasm_attribute_categories_list  : Chained('brapi') PathPart('attributes/categories') Args(0) : ActionClass('REST') { }
 
 sub germplasm_attribute_categories_list_GET {
-	my $self = shift;
-	my $c = shift;
-	germplasm_attributes_categories_process($self, $c);
-}
-
-sub germplasm_attributes_categories_process {
 	my $self = shift;
 	my $c = shift;
 	my ($auth) = _authenticate_user($c);
@@ -1236,7 +1245,71 @@ sub germplasm_attributes_categories_process {
 	_standard_response_construction($c, $brapi_package_result);
 }
 
+sub attributes_save : Chained('brapi') PathPart('search/attributes') Args(0) : ActionClass('REST') { }
 
+sub attributes_save_POST {
+    my $self = shift;
+    my $c = shift;
+    save_results($self,$c,$c->stash->{clean_inputs},'GermplasmAttributes');
+}
+
+sub attributes_retrieve  : Chained('brapi') PathPart('search/attributes') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'GermplasmAttributes');
+}
+
+
+sub germplasm_attributes_values  : Chained('brapi') PathPart('attributevalues') Args(0) : ActionClass('REST') { }
+
+sub germplasm_attributes_values_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('GermplasmAttributeValues');
+	my $brapi_package_result = $brapi_module->search($clean_inputs);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub germplasm_attributes_values_single  : Chained('brapi') PathPart('attributevalues') CaptureArgs(1) {
+	my $self = shift;
+	my $c = shift;
+	my $value_id = shift;
+
+	$c->stash->{value_id} = $value_id;
+}
+
+sub germplasm_attributes_values_detail  : Chained('germplasm_attributes_values_single') PathPart('') Args(0) : ActionClass('REST') { }
+
+sub germplasm_attributes_values_detail_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	$clean_inputs->{attributeValueDbId}=$c->stash->{value_id};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('GermplasmAttributeValues');
+	my $brapi_package_result = $brapi_module->search($clean_inputs);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub attributes_values_save : Chained('brapi') PathPart('search/attributevalues') Args(0) : ActionClass('REST') { }
+
+sub attributes_values_save_POST {
+    my $self = shift;
+    my $c = shift;
+    save_results($self,$c,$c->stash->{clean_inputs},'GermplasmAttributeValues');
+}
+
+sub attributes_values_retrieve  : Chained('brapi') PathPart('search/attributevalues') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $search_id = shift;
+    retrieve_results($self, $c, $search_id, 'GermplasmAttributeValues');
+}
 
 =head2 brapi/v1/markerprofiles?germplasm=germplasmDbId&extract=extractDbId&method=methodDbId
 

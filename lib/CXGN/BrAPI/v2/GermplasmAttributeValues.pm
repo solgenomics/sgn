@@ -14,7 +14,7 @@ sub search {
 	my $self = shift;
 	my $inputs = shift;
 	my @attribute_dbids = $inputs->{attribute_dbids} ? @{$inputs->{attribute_dbids}} : ();
-	my $value_id = $inputs->{attributeValueDbId} || undef;
+	my $value_id = $inputs->{attributeValueDbId} || ($inputs->{attributeValueDbIds} || ());
 
 	my $page_size = $self->page_size;
 	my $page = $self->page;
@@ -26,9 +26,17 @@ sub search {
 		$where = "and b.cvterm_id IN ($sql)";
 	}
 	if ($value_id){
-		my ($stock_id, $attribute_id) = split(/b/, $value_id);
-		if($stock_id && $attribute_id){
-			$where = $where . "and stock.stock_id IN ($stock_id) and b.cvterm_id IN ($attribute_id)";
+		my $stock_ids;
+		my $attribute_ids;
+		foreach(@$value_id){
+			my ($stock_id, $attribute_id) = split(/b/, $_);
+			$stock_ids .=  $stock_id . ",";
+			$attribute_ids .=  $attribute_id . ",";
+		}
+		if($stock_ids && $attribute_ids){
+			chop($stock_ids);
+			chop($attribute_ids);
+			$where = $where . "and stock.stock_id IN ($stock_ids) and b.cvterm_id IN ($attribute_ids)";
 		}
 	}
 
@@ -68,7 +76,13 @@ sub search {
 	);
 	my @data_files;
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm-attributes detail result constructed');
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Attribute values detail result constructed');
+}
+
+sub _sql_from_arrayref {
+    my $arrayref = shift;
+    my $sql = join ("," , @$arrayref);
+    return $sql;
 }
 
 1;
