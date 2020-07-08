@@ -1472,13 +1472,13 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
             }
         close($fh2);
 
-        my $match_image = SGN::Image->new( $schema->storage->dbh, undef, $c );
-        $match_image->set_sp_person_id($user_id);
-        my $ret = $match_image->process_image($match_temp_image, 'project', $drone_run_project_id, $match_linking_table_type_id);
-        my $match_image_fullpath = $match_image->get_filename('original_converted', 'full');
-        my $match_image_url = $match_image->get_image_url('original');
-        my $match_image_id = $match_image->get_image_id();
-        $nir_image_hash{$image_id1}->{match_image_url} = $match_image_url;
+        # my $match_image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+        # $match_image->set_sp_person_id($user_id);
+        # my $ret = $match_image->process_image($match_temp_image, 'project', $drone_run_project_id, $match_linking_table_type_id);
+        # my $match_image_fullpath = $match_image->get_filename('original_converted', 'full');
+        # my $match_image_url = $match_image->get_image_url('original');
+        # my $match_image_id = $match_image->get_image_id();
+        # $nir_image_hash{$image_id1}->{match_image_url} = $match_image_url;
 
         my $x_pos_src = $gps_obj_src->{x_pos};
         my $y_pos_src = $gps_obj_src->{y_pos};
@@ -1580,13 +1580,17 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
         }
 
         if ($smallest_diff > 80 && $skipped_counter < 3) {
-            $skipped = 1;
             $image_id1 = $nir_image_ids->[$image_counter];
             $image_id2 = $nir_image_ids->[$image_counter+$skipped_counter+1];
             $skipped_counter++;
         }
+        elsif ($skipped_counter > 2) {
+            $skipped_counter = 1;
+            $image_counter++;
+            $image_id1 = $nir_image_ids->[$image_counter];
+            $image_id2 = $nir_image_ids->[$image_counter+1];
+        }
         else {
-            $skipped = 0;
             $skipped_counter = 1;
 
             $nir_image_hash{$image_id2}->{x_pos} = $x_pos_match_dst;
