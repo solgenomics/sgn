@@ -62,8 +62,8 @@ jQuery(document).ready(function ($) {
                     alert(response.success);
                 }
             },
-            error: function () {
-                alert('An error occurred in adding population. sorry');
+            error: function (r) {
+                alert('An error occurred in adding population. sorry '+r.responseText);
             }
         });
     });
@@ -254,6 +254,7 @@ jQuery(document).ready(function ($) {
             },
             success: function (response) {
                 enable_ui();
+		//alert("ADD ACCESSIONS: "+JSON.stringify(response));
                 if (response.error) {
                     alert(response.error);
                 } else {
@@ -265,8 +266,8 @@ jQuery(document).ready(function ($) {
                     jQuery('#add_accessions_saved_message_modal').modal('show');
                 }
             },
-            error: function () {
-                alert('An error occurred in processing. sorry');
+            error: function (response) {
+                alert('An error occurred in processing. sorry'+response.responseText);
             }
         });
     }
@@ -289,8 +290,8 @@ jQuery(document).ready(function ($) {
                     validSpecies = 1;
                 }
             },
-            error: function () {
-                alert('An error occurred verifying species name. sorry');
+            error: function (response) {
+                alert('An error occurred verifying species name. sorry'+response.responseText);
                 validSpecies = 0;
             }
         });
@@ -361,7 +362,7 @@ jQuery(document).ready(function ($) {
             }
         },
         complete: function (r) {
-	    alert("DONE WITH UPLOAD "+r);
+	    //alert("DONE WITH UPLOAD "+r);
 	    var clean_r = r.replace('<pre>', '');
 	    clean_r = clean_r.replace('</pre>', '');
 	    response = JSON.parse(clean_r); //decodeURIComponent(clean_r));
@@ -461,9 +462,11 @@ function verify_accession_list(accession_list_id) {
             }
             review_verification_results(doFuzzySearch, response, accession_list_id);
         },
-        error: function () {
+        error: function (response) {
             enable_ui();
-            alert('An error occurred in processing. sorry');
+	    console.log(response.responseText);
+
+            alert('An error occurred in processing. sorry'+response.responseText);
         }
     });
 }
@@ -628,8 +631,7 @@ function process_fuzzy_options(accession_list_id) {
             data[id]=row;
         }
     });
-    //console.log(data);
-
+    console.log(data);
     jQuery.ajax({
         type: 'POST',
         url: '/ajax/accession_list/fuzzy_options',
