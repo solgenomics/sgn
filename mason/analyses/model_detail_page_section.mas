@@ -19,7 +19,7 @@ $identifier_prefix
                 <td>
                     <div id="model_name">
 % if ($model_name) {
-%   print "$model_name";
+%   print "<a href=\"/analyses_model/$model_id\">$model_name</a>";
 % } else {
 %   print "<span class='text-danger'>[No Model Name]</span>";
 % }
