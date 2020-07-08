@@ -1579,7 +1579,7 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
             $y_pos_translation = $y_pos_translation3;
         }
 
-        if ($smallest_diff > 80) {
+        if ($smallest_diff > 80 && $skipped_counter < 3) {
             $skipped = 1;
             $image_id1 = $nir_image_ids->[$image_counter];
             $image_id2 = $nir_image_ids->[$image_counter+$skipped_counter+1];
