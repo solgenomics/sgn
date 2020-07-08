@@ -1417,6 +1417,7 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
 
     my $image_counter = 0;
     my $skipped = 0;
+    my $skipped_counter = 1;
     foreach (@$nir_image_ids) {
         my $image_id1;
         my $image_id2;
@@ -1559,34 +1560,49 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
             my $p3_diff_sum = abs($diffx2) + abs($diffy2) + abs($diffx3) + abs($diffy3);
             print STDERR "P1: ".$p1_diff_sum." P2: ".$p2_diff_sum." P3: ".$p3_diff_sum."\n";
 
+            my $smallest_diff;
             if ($p1_diff_sum <= $p2_diff_sum && $p1_diff_sum <= $p3_diff_sum) {
+                $smallest_diff = $p1_diff_sum;
                 $x_pos_match_dst = $x_pos_match_dst;
                 $y_pos_match_dst = $y_pos_match_dst;
                 $x_pos_translation = $x_pos_translation;
                 $y_pos_translation = $y_pos_translation;
             }
             elsif ($p2_diff_sum <= $p1_diff_sum && $p2_diff_sum <= $p3_diff_sum) {
+                $smallest_diff = $p2_diff_sum;
                 $x_pos_match_dst = $x_pos_match2_dst;
                 $y_pos_match_dst = $y_pos_match2_dst;
                 $x_pos_translation = $x_pos_translation2;
                 $y_pos_translation = $y_pos_translation2;
             }
             elsif ($p3_diff_sum <= $p1_diff_sum && $p3_diff_sum <= $p2_diff_sum) {
+                $smallest_diff = $p3_diff_sum;
                 $x_pos_match_dst = $x_pos_match3_dst;
                 $y_pos_match_dst = $y_pos_match3_dst;
                 $x_pos_translation = $x_pos_translation3;
                 $y_pos_translation = $y_pos_translation3;
             }
 
-            $nir_image_hash{$image_id2}->{x_pos} = $x_pos_match_dst;
-            $nir_image_hash{$image_id2}->{y_pos} = $y_pos_match_dst;
-
-            foreach (@{$nir_image_hash{$image_id2}->{rotated_bound_translated}}) {
-                $_->[0] = $_->[0] - $x_pos_translation;
-                $_->[1] = $_->[1] - $y_pos_translation;
+            if ($smallest_diff > 80) {
+                $skipped = 1;
+                $image_id1 = $nir_image_ids->[$image_counter];
+                $image_id2 = $nir_image_ids->[$image_counter+$skipped_counter+1];
+                $skipped_counter++;
             }
+            else {
+                $skipped = 0;
+                $skipped_counter = 1;
 
-            $image_counter++;
+                $nir_image_hash{$image_id2}->{x_pos} = $x_pos_match_dst;
+                $nir_image_hash{$image_id2}->{y_pos} = $y_pos_match_dst;
+
+                foreach (@{$nir_image_hash{$image_id2}->{rotated_bound_translated}}) {
+                    $_->[0] = $_->[0] - $x_pos_translation;
+                    $_->[1] = $_->[1] - $y_pos_translation;
+                }
+
+                $image_counter++;
+            }
         }
     }
 
