@@ -3,6 +3,7 @@
 
 use strict;
 use warnings;
+use utf8;
 
 use lib 't/lib';
 use SGN::Test::Fixture;
@@ -17,6 +18,8 @@ use CXGN::Chado::Stock;
 use LWP::UserAgent;
 use CXGN::List;
 use CXGN::Stock::Accession;
+use Encode;
+
 local $Data::Dumper::Indent = 0;
 
 my $f = SGN::Test::Fixture->new();
@@ -32,7 +35,7 @@ print STDERR Dumper $response;
 is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
 my $sgn_session_id = $response->{access_token};
 
-$mech->post_ok('http://localhost:3010/ajax/accession_list/verify', [ "accession_list"=> '["new_accession1", "test_accession1", "test_accessionx", "test_accessiony", "test_accessionz"]', "do_fuzzy_search"=> "true" ]);
+$mech->post_ok('http://localhost:3010/ajax/accession_list/verify', [ "accession_list"=> '["new_accession1", "test_accession1", "test_accessionx", "test_accessiony", "test_accessionД"]', "do_fuzzy_search"=> "true" ]);
 $response = decode_json $mech->content;
 print STDERR Dumper $response->{'fuzzy'};
 print STDERR Dumper $response->{'found'};
@@ -45,14 +48,16 @@ is_deeply($response->{'absent'}, ['new_accession1'], 'check verify fuzzy match r
 my $fuzzy_option_data = {
     "option_form1" => { "fuzzy_name" => "test_accessionx", "fuzzy_select" => "test_accession1", "fuzzy_option" => "replace" },
     "option_form2" => { "fuzzy_name" => "test_accessiony", "fuzzy_select" => "test_accession1", "fuzzy_option" => "synonymize" },
-    "option_form3" => { "fuzzy_name" => "test_accessionz", "fuzzy_select" => "test_accession1", "fuzzy_option" => "keep" }
+    "option_form3" => { "fuzzy_name" => "test_accessionД", "fuzzy_select" => "test_accession1", "fuzzy_option" => "keep" }
 };
 
 $mech->post_ok('http://localhost:3010/ajax/accession_list/fuzzy_options', [ "accession_list_id"=> '3', "fuzzy_option_data"=>$json->encode($fuzzy_option_data), "names_to_add"=>$json->encode($response->{'absent'}) ]);
+
+print STDERR $mech->content;
 my $final_response = decode_json $mech->content;
 print STDERR Dumper $final_response;
 
-is_deeply($final_response, {'names_to_add' => ['new_accession1','test_accessionz'],'success' => '1'}, 'check verify fuzzy options response content');
+is_deeply($final_response, {'names_to_add' => ['new_accession1','test_accessionД'],'success' => '1'}, 'check verify fuzzy options response content');
 
 $mech->get_ok('http://localhost:3010/organism/verify_name?species_name='.uri_encode("Manihot esculenta") );
 $response = decode_json $mech->content;
@@ -75,7 +80,7 @@ $mech->post_ok('http://localhost:3010/ajax/accession_list/add', [ 'full_info'=>$
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 
-is_deeply($response, {'added' => [[41782,'new_accession1'],[41784,'test_accessionz']],'success' => '1'});
+is_deeply($response, {'added' => [[41782,'new_accession1'],[41784,'test_accessionД']],'success' => '1'});
 
 #Remove added synonym so tests downstream do not fail.
 my $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'test_accession1'})->stock_id();
@@ -83,7 +88,8 @@ my $stock = CXGN::Chado::Stock->new($schema,$stock_id);
 $stock->remove_synonym('test_accessiony');
 
 #Remove added stocks so tests downstream do not fail
-$stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'test_accessionz'})->stock_id();
+my $accession_name = encode('utf8', 'test_accessionД');
+$stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>$accession_name})->stock_id();
 $stock = CXGN::Chado::Stock->new($schema,$stock_id);
 $stock->set_is_obsolete(1) ;
 $stock->store();

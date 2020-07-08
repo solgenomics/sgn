@@ -31,7 +31,6 @@ use Data::Dumper;
 use CXGN::Trial;
 use CXGN::Trial::TrialDesign;
 use CXGN::Trial::TrialCreate;
-use JSON -support_by_pp;
 use SGN::View::Trial qw/design_layout_view design_info_view design_layout_map_view/;
 use CXGN::Location::LocationLookup;
 use CXGN::Stock::StockLookup;
@@ -43,7 +42,7 @@ use CXGN::Trial::ParseUpload;
 use CXGN::List::Transform;
 use CXGN::List::Validate;
 use SGN::Model::Cvterm;
-use JSON;
+use JSON::XS;
 use CXGN::BreedersToolbox::Accessions;
 use CXGN::BreederSearch;
 
@@ -298,7 +297,7 @@ sub generate_experimental_design_POST : Args(0) {
             return;
         }
         if ($seedlot_hash_json){
-            my $json = JSON->new();
+            my $json = JSON::XS->new();
             $trial_design->set_seedlot_hash($json->decode($seedlot_hash_json));
         }
         if ($num_seed_per_plot){
@@ -350,7 +349,7 @@ sub generate_experimental_design_POST : Args(0) {
             $trial_design->set_maximum_block_size($max_block_size);
         }
         if ($greenhouse_num_plants) {
-            my $json = JSON->new();
+            my $json = JSON::XS->new();
             $trial_design->set_greenhouse_num_plants($json->decode($greenhouse_num_plants));
         }
         if ($westcott_check_1){
@@ -812,7 +811,7 @@ sub verify_seedlot_list_POST : Args(0) {
 
 sub _parse_list_from_json {
     my $list_json = shift;
-    my $json = new JSON;
+    my $json = JSON::XS->new();
     if ($list_json) {
         #my $decoded_list = $json->allow_nonref->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
 	
