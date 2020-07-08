@@ -20,6 +20,7 @@ $folder_description
 $trials
 $crossing_trials
 $genotyping_trials
+$analyses_trials
 $child_folders
 $project_parent => undef
 $breeding_program => undef
@@ -44,6 +45,7 @@ $has_child_folders => undef
 
   <ul class="nav nav-tabs" role="tablist">
     <li role="presentation" class="active"><a href="#trials" aria-controls="trials" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-leaf text-success"></span>&nbsp;&nbsp;&nbsp;Trials</a></li>
+    <li role="presentation"><a href="#analyses" aria-controls="analyses" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-stats text-success"></span>&nbsp;&nbsp;&nbsp;Analyses</a></li>
     <li role="presentation"><a href="#crosses" aria-controls="crosses" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-grain text-success"></span>&nbsp;&nbsp;&nbsp;Crossing Experiments</a></li>
     <li role="presentation"><a href="#genotyping_trials" aria-controls="genotyping_trials" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-th text-success"></span>&nbsp;&nbsp;&nbsp;Genotyping Plates</a></li>
     <li role="presentation"><a href="#folders" aria-controls="folders" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;&nbsp;&nbsp;Folders</a></li>
@@ -59,7 +61,7 @@ $has_child_folders => undef
         <tbody>
 % my @trial_ids;
 % foreach (@$trials) {
-    <tr><td><a href="/breeders/trial/<% $_->folder_id() %>"><% $_->name() %></a></td></tr>
+    <tr><td><a href="/breeders/trial/<% $_->folder_id() %>" target=_blank><% $_->name() %></a></td></tr>
 % push @trial_ids, $_->folder_id();
 % }
 % my $trial_ids = join ',', @trial_ids;
@@ -72,6 +74,20 @@ $has_child_folders => undef
       </div>
     </div>
 
+    <div role="tabpanel" class="tab-pane fade" id="analyses">
+      <div class="well">
+        <h3>Analyses in Folder</h3>
+        <table name="folder_datatables_table" class="table table-hover table-bordered">
+        <thead><tr><th>Analyses Name</th></tr></thead>
+        <tbody>
+% foreach (@$analyses_trials) {
+    <tr><td><a href="/analyses/<% $_->folder_id() %>" target=_blank><% $_->name() %></a></td></tr>
+% }
+        </tbody>
+        </table>
+      </div>
+    </div>
+
     <div role="tabpanel" class="tab-pane fade" id="crosses">
       <div class="well">
         <h3>Crosses in Folder</h3>
@@ -79,7 +95,7 @@ $has_child_folders => undef
         <thead><tr><th>Cross Unique ID</th></tr></thead>
         <tbody>
 % foreach (@$crossing_trials) {
-            <tr><td><a href="/breeders/trial/<% $_->folder_id() %>"><% $_->name() %></a></td></tr>
+            <tr><td><a href="/breeders/trial/<% $_->folder_id() %>" target=_blank><% $_->name() %></a></td></tr>
 % }
         </tbody>
         </table>
@@ -94,7 +110,7 @@ $has_child_folders => undef
         <tbody>
 % my @genotyping_trial_ids;
 % foreach (@$genotyping_trials) {
-            <tr><td><a href="/breeders/trial/<% $_->folder_id() %>"><% $_->name() %></a></td></tr>
+            <tr><td><a href="/breeders/trial/<% $_->folder_id() %>" target=_blank><% $_->name() %></a></td></tr>
 % push @genotyping_trial_ids, $_->folder_id();
 % }
 % my $genotyping_trial_ids = join ',', @genotyping_trial_ids;
@@ -110,7 +126,7 @@ $has_child_folders => undef
       <div class="well">
         <h3>Parent Folder</h3>
 % if ($breeding_program->name() ne $project_parent->name()) {
-        <a href="/folder/<% $project_parent->project_id %>"><% $project_parent->name() %></a>
+        <a href="/folder/<% $project_parent->project_id %>" target=_blank><% $project_parent->name() %></a>
 % } else {
       No Parent Folder
 % }
@@ -123,7 +139,7 @@ $has_child_folders => undef
         <tbody>
 % foreach (@$child_folders) {
 %   if ($_->folder_type eq 'folder') {
-      <tr><td><a href="/folder/<% $_->folder_id() %>"><% $_->name() %></a></td></tr>
+      <tr><td><a href="/folder/<% $_->folder_id() %>" target=_blank><% $_->name() %></a></td></tr>
 % }
 % }
         </tbody>
@@ -191,7 +207,7 @@ $has_child_folders => undef
     <div class="col-sm-6">
         <div class="well">
             <center>
-            <button class="btn btn-sm btn-primary" id="open_folder_dialog_link">Add Trial to Folder</button>
+            <button class="btn btn-sm btn-primary" id="open_folder_dialog_link">Add Trial and Analyses to Folder</button>
             <br/><br/>
             <button class="btn btn-sm btn-default" id="edit_trial_name">Rename Folder</button>&nbsp;&nbsp;&nbsp;&nbsp;
             <button class="btn btn-sm btn-default" id="delete_folder_button">Delete Folder</button>

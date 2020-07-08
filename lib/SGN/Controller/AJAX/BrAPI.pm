@@ -100,15 +100,19 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	my $session_token = $c->req->headers->header("access_token") || $bearer_token;
 
 	if (defined $c->request->data){
-		$page = $c->request->data->{"page"} || $page || 0;
-		$page_size = $c->request->data->{"pageSize"} || $page_size || $DEFAULT_PAGE_SIZE;
-        $session_token = $c->request->data->{"access_token"} || $session_token;
+		my $data_type = ref $c->request->data;
+		my $current_page = $c->request->data->{"page"} if ($data_type ne 'ARRAY');
+		my $current_page_size = $c->request->data->{"pageSize"} if ($data_type ne 'ARRAY');
+		my $current_sesion_token = $c->request->data->{"access_token"} if ($data_type ne 'ARRAY');
+		$page = $current_page || $page || 0;
+		$page_size = $current_page_size || $page_size || $DEFAULT_PAGE_SIZE;
+        $session_token = $current_sesion_token|| $session_token;
 	}
 	my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 	my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
 	my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 	my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-	push @status, { 'info' => "BrAPI base call found with page=$page, pageSize=$page_size" };
+	push @status, { 'INFO' => "BrAPI base call found with page=$page, pageSize=$page_size" };
 
 	my $brapi = CXGN::BrAPI->new({
 		version => $version,
@@ -128,12 +132,15 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 
 	$c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
 	$c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
-	$c->response->headers->header( 'Access-Control-Allow-Headers' => 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range');
+	$c->response->headers->header( 'Access-Control-Allow-Headers' => 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Authorization');
 	$c->stash->{session_token} = $session_token;
 
 	if (defined $c->request->data){
-		my %allParams = (%{$c->request->data}, %{$c->req->params});
-		$c->stash->{clean_inputs} = _clean_inputs(\%allParams);
+		if ($c->request->method ne "PUT"){
+			$c->stash->{clean_inputs} = _clean_inputs($c->req->params,$c->request->data);
+		} else {
+			$c->stash->{clean_inputs} = $c->request->data;
+		}
 	}
 	else {
 		$c->stash->{clean_inputs} = _clean_inputs($c->req->params);
@@ -144,6 +151,12 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 sub _clean_inputs {
 	no warnings 'uninitialized';
 	my $params = shift;
+	my $alldata = shift;
+
+	if($alldata){
+		my %data = ref $alldata eq 'ARRAY' ? map { $_ => $_} @{$alldata} : %{$alldata};
+		%$params = $params ? (%data, %$params) : %data;
+	} 
 
 	foreach (keys %$params){
 		my $values = $params->{$_};
@@ -162,7 +175,7 @@ sub _clean_inputs {
 			$params->{$_} = $ret_val;
 		}
 		elsif (ref $values eq 'HASH') {
-			$params->{$_} = _clean_inputs($values);
+			$params->{$_} = $values;
 		}
 		else {
 			die "Input $_ is not a scalar, arrayref, or a single level hash\n";
@@ -180,14 +193,29 @@ sub _authenticate_user {
 	my $user_type;
 	my $user_pref;
 	my $expired;
+	my $wildcard = 'any';
+
+	my @server_permission;
+	my $version = $c->request->captures->[0];
+
+	my $permissions = "CXGN::BrAPI::" . $version  . "::ServerInfo"; 
+	my @server_permission;
+	my $rc = eval{
+		my $server_permission =  $permissions->info()->{$c->request->method};
+		@server_permission  = split ',', $server_permission;
+	1; };
+
+	if(!$rc && !@server_permission){
+		push @server_permission, $wildcard;
+	}
 
 	# If our brapi config is set to authenticate or the controller calling this asks for forcing of
-	# authentication, we authenticate.
-    if ($c->config->{brapi_require_login} == 1 || $force_authenticate){
+	# authentication or serverinfo call method request auth, we authenticate.
+    if ($c->config->{brapi_require_login} == 1 || $force_authenticate || !grep { $_ eq $wildcard } @server_permission){
         ($user_id, $user_type, $user_pref, $expired) = CXGN::Login->new($c->dbc->dbh)->query_from_cookie($c->stash->{session_token});
-        #print STDERR $person_id." : ".$user_type." : ".$expired;
+        #print STDERR $user_id." : ".$user_type." : ".$expired;
 
-        if (!$user_id || $expired || !$user_type) {
+        if (!$user_id || $expired || !$user_type || (grep {$_ ne $user_type} @server_permission && grep { $_ ne $wildcard } @server_permission)) {
             my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error($status, 'You must login and have permission to access this BrAPI call.');
 
             _standard_response_construction($c, $brapi_package_result, 401);
@@ -209,7 +237,7 @@ sub _standard_response_construction {
 	my %metadata = (pagination=>$pagination, status=>$status, datafiles=>$datafiles);
 	my %response = (metadata=>\%metadata, result=>$result);
 	$c->stash->{rest} = \%response;
-	$c->response->status(($return_status == undef) ? 200 : $return_status);
+	$c->response->status((!$return_status) ? 200 : $return_status);
     $c->detach;
 }
 
@@ -443,9 +471,7 @@ sub serverinfo_GET {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('ServerInfo');
-	my $brapi_package_result = $brapi_module->search( 
-		$clean_inputs
-	);
+	my $brapi_package_result = $brapi_module->search($c,$clean_inputs);
 	_standard_response_construction($c, $brapi_package_result);
 }
 
@@ -1027,6 +1053,21 @@ sub studies_search_new_GET {
     _standard_response_construction($c, $brapi_package_result);
 }
 
+# sub studies_search_new_POST {
+#     my $self = shift;
+#     my $c = shift;
+#     my ($auth, $user_id) = _authenticate_user($c);
+#     my $clean_inputs = $c->stash->{clean_inputs};
+#     my $data = $clean_inputs;
+#     my @all_studies;
+# 	foreach my $study (values %{$data}) {
+# 	    push @all_studies, $study;
+# 	}
+#     my $brapi = $self->brapi_module;
+#     my $brapi_module = $brapi->brapi_wrapper('Studies');
+#     my $brapi_package_result = $brapi_module->store(\@all_studies, $user_id);
+#     _standard_response_construction($c, $brapi_package_result);
+# }
 
 sub studies_search_save  : Chained('brapi') PathPart('search/studies') Args(0) : ActionClass('REST') { }
 
@@ -1043,15 +1084,15 @@ sub studies_search_retrieve : Chained('brapi') PathPart('search/studies') Args(1
     retrieve_results($self, $c, $search_id, 'Studies');
 }
 
-sub studies : Chained('brapi') PathPart('studies') Args(0) : ActionClass('REST') { }
+# sub studies : Chained('brapi') PathPart('studies') Args(0) : ActionClass('REST') { }
 
-sub studies_GET {
-	my $self = shift;
-	my $c = shift;
+# sub studies_GET {
+# 	my $self = shift;
+# 	my $c = shift;
 
-	# Use the studies-search end point for this
-	studies_search_GET($self, $c);
-}
+# 	# Use the studies-search end point for this
+# 	studies_search_GET($self, $c);
+# }
 
 #BrAPI Trials are modeled as Folders
 sub trials_list  : Chained('brapi') PathPart('trials') Args(0) : ActionClass('REST') { }
@@ -1411,7 +1452,7 @@ sub germplasm_attributes_process {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('GermplasmAttributes');
 	my $brapi_package_result = $brapi_module->germplasm_attributes_list({
-		attribute_category_dbids => $clean_inputs->{attributeCategoryDbId}
+		$clean_inputs
 	});
 	_standard_response_construction($c, $brapi_package_result);
 }
@@ -2294,9 +2335,9 @@ sub phenotypes_search_GET {
 
 # Observation units
 
-sub studies_observation_v2 :  Chained('brapi') PathPart('observationunits') Args(0) ActionClass('REST') { }
+sub observation_units :  Chained('brapi') PathPart('observationunits') Args(0) ActionClass('REST') { }
 
-sub studies_observation_v2_GET {
+sub observation_units_GET {
 
 	my $self = shift;
 	my $c = shift;
@@ -2306,8 +2347,44 @@ sub studies_observation_v2_GET {
 	my $brapi_module = $brapi->brapi_wrapper('ObservationUnits');
 	my $brapi_package_result = $brapi_module->search($c->stash->{clean_inputs});
 	_standard_response_construction($c, $brapi_package_result);
- }
+}
 
+sub observation_units_POST {
+
+	my $self = shift;
+	my $c = shift;
+	my ($auth,$user_id) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $data = $clean_inputs;
+	my @all_units;
+	foreach my $unit (values %{$data}) {
+		push @all_units, $unit;
+	}
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('ObservationUnits');
+	my $brapi_package_result = $brapi_module->observationunits_store(\@all_units,$c,$user_id);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub observation_units_PUT {
+
+	my $self = shift;
+	my $c = shift;
+	my ($auth,$user_id) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my %data = %$clean_inputs;
+    my @all_units;
+    foreach my $unit (keys %data) {
+        my $observationUnitDbId = $unit;
+        my $units = $data{$unit};
+        $units->{observationUnitDbId} = $observationUnitDbId;
+        push @all_units, $units;
+    }
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('ObservationUnits');
+	my $brapi_package_result = $brapi_module->observationunits_update(\@all_units,$user_id);
+	_standard_response_construction($c, $brapi_package_result);
+}
 
 sub observation_unit_single :  Chained('brapi') PathPart('observationunits') Args(1) ActionClass('REST') {
 	my $self = shift;
@@ -2322,10 +2399,14 @@ sub observation_unit_single_PUT {
     my $c = shift;
     my $observation_unit_db_id = shift;
     my $clean_inputs = $c->stash->{clean_inputs};
-    #my $auth = _authenticate_user($c);
+    my ($auth,$user_id) = _authenticate_user($c);
+    my $observationUnits = $clean_inputs;
+    $observationUnits->{observationUnitDbId} = $observation_unit_db_id;
+    my @all_observations_units;
+    push @all_observations_units, $observationUnits;	
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('ObservationUnits');
-    my $brapi_package_result = $brapi_module->observationunits_store($observation_unit_db_id,$clean_inputs);
+    my $brapi_package_result = $brapi_module->observationunits_update(\@all_observations_units,$user_id);
 
     _standard_response_construction($c, $brapi_package_result);
 }
@@ -3322,9 +3403,37 @@ sub observations : Chained('brapi') PathPart('observations') Args(0) : ActionCla
 sub observations_PUT {
 	my $self = shift;
 	my $c = shift;
-    my $clean_inputs = $c->stash->{clean_inputs};
-    my $observations = $clean_inputs->{observations};
-	save_observation_results($self, $c, $observations, 'v2');
+	my $version = $c->request->captures->[0];
+	my $brapi_package_result;
+	if ($version eq 'v2'){
+		my $force_authenticate = 1;
+		my ($auth,$user_id,$user_type) = _authenticate_user($c,$force_authenticate);
+	    my $clean_inputs = $c->stash->{clean_inputs};
+	    my %observations = %$clean_inputs;
+	    my @all_observations;
+	    foreach my $observation (keys %observations) {
+	        my $observationDbId = $observation;
+	        my $observations = $observations{$observation};
+	        $observations->{observationDbId} = $observationDbId;
+	        push @all_observations, $observations;
+	    }
+		my $brapi = $self->brapi_module;
+		my $brapi_module = $brapi->brapi_wrapper('Observations');
+		$brapi_package_result = $brapi_module->observations_store({
+			observations => \@all_observations,
+	        user_id => $user_id,
+	        user_type => $user_type,
+	    },$c);
+	} elsif ($version eq 'v1'){
+		my $clean_inputs = $c->stash->{clean_inputs};
+	    my $observations = $clean_inputs->{observations};
+		save_observation_results($self, $c, $observations, 'v1');
+	}
+
+	my $status = $brapi_package_result->{status};
+	my $http_status_code = _get_http_status_code($status);
+
+	_standard_response_construction($c, $brapi_package_result, $http_status_code);
 }
 
 sub observations_GET {
@@ -3350,6 +3459,30 @@ sub observations_GET {
     _standard_response_construction($c, $brapi_package_result);
 }
 
+sub observations_POST {
+	my $self = shift;
+	my $c = shift;
+	my ($auth,$user_id,$user_type) = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $data = $clean_inputs;
+    my @all_observations;
+    foreach my $observation (values %{$data}) {
+        push @all_observations, $observation;
+    }
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Observations');
+	my $brapi_package_result = $brapi_module->observations_store({
+		observations => \@all_observations,
+        user_id => $user_id,
+        user_type => $user_type,
+    },$c);
+
+	my $status = $brapi_package_result->{status};
+	my $http_status_code = _get_http_status_code($status);
+
+	_standard_response_construction($c, $brapi_package_result, $http_status_code);
+}
+
 sub observations_single :  Chained('brapi') PathPart('observations') CaptureArgs(1) {
      my $self = shift;
      my $c = shift;
@@ -3371,6 +3504,31 @@ sub observations_detail_GET {
     _standard_response_construction($c, $brapi_package_result);
 }
 
+sub observations_detail_PUT {
+	my $self = shift;
+	my $c = shift;
+	my ($auth,$user_id,$user_type) = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $observations = $clean_inputs;
+    my @all_observations;
+    $observations->{observationDbId} = $c->stash->{observation_id};
+    push @all_observations, $observations;
+
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Observations');
+	my $brapi_package_result = $brapi_module->observations_store({
+		observations => \@all_observations,
+        user_id => $user_id,
+        user_type => $user_type,
+    },$c);
+
+
+	my $status = $brapi_package_result->{status};
+	my $http_status_code = _get_http_status_code($status);
+
+	_standard_response_construction($c, $brapi_package_result, $http_status_code);
+}
+
 sub observation_search_save : Chained('brapi') PathPart('search/observations') Args(0) : ActionClass('REST') { }
 
 sub observation_search_save_POST {
@@ -3385,6 +3543,48 @@ sub observation_search_retrieve  : Chained('brapi') PathPart('search/observation
     my $search_id = shift;
     retrieve_results($self, $c, $search_id, 'Observations');
 }
+
+sub save_observation_results {
+    my $self = shift;
+    my $c = shift;
+    my $observations = shift;
+    my $version = shift;
+
+	# Check that the user is a user. We don't check other permissions for now.
+	my $force_authenticate = 1;
+	my ($auth_success, $user_id, $user_type, $user_pref, $expired) = _authenticate_user($c, $force_authenticate);
+
+	my $dbh = $c->dbc->dbh;
+    my $p = CXGN::People::Person->new($dbh, $user_id);
+    my $username = $p->get_username;
+    my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+
+    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+
+	my $brapi_module = $brapi->brapi_wrapper('Observations');
+	my $brapi_package_result = $brapi_module->observations_store({
+        observations => $observations,
+        user_id => $user_id,
+        username => $username,
+        user_type => $user_type,
+        version => $version,
+        archive_path => $c->config->{archive_path},
+        tempfiles_subdir => $c->config->{basepath}."/".$c->config->{tempfiles_subdir},
+        basepath => $c->config->{basepath},
+        dbhost => $c->config->{dbhost},
+        dbname => $c->config->{dbname},
+        dbuser => $c->config->{dbuser},
+        dbpass => $c->config->{dbpass},
+        temp_file_nd_experiment_id => $temp_file_nd_experiment_id
+    },$c);
+
+	my $status = $brapi_package_result->{status};
+	my $http_status_code = _get_http_status_code($status);
+
+	_standard_response_construction($c, $brapi_package_result, $http_status_code);
+ }
 
 =head2 brapi/v1/markers
 
@@ -3685,11 +3885,15 @@ sub images_POST {
 	my ($auth_success, $user_id, $user_type, $user_pref, $expired) = _authenticate_user($c, $force_authenticate);
 
     my $clean_inputs = $c->stash->{clean_inputs};
+	my @all_images;
+	foreach my $image (values %{$clean_inputs}) {
+		push @all_images, $image;
+	}
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Images');
     my $image_dir = File::Spec->catfile($c->config->{static_datasets_path}, $c->config->{image_dir});
 
-    my $brapi_package_result = $brapi_module->image_metadata_store($clean_inputs, $image_dir, $user_id, $user_type);
+    my $brapi_package_result = $brapi_module->image_metadata_store(\@all_images, $image_dir, $user_id, $user_type);
 	my $status = $brapi_package_result->{status};
 	my $http_status_code = _get_http_status_code($status);
 
@@ -3727,10 +3931,14 @@ sub images_single_PUT {
 	my ($auth_success, $user_id, $user_type, $user_pref, $expired) = _authenticate_user($c, $force_authenticate);
 
     my $clean_inputs = $c->stash->{clean_inputs};
+    my $image = $clean_inputs;
+    $image->{imageDbId} = $c->stash->{image_id};
+    my @all_images;
+    push @all_images, $image;   
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Images');
     my $image_dir = File::Spec->catfile($c->config->{static_datasets_path}, $c->config->{image_dir});
-    my $brapi_package_result = $brapi_module->image_metadata_store($clean_inputs, $image_dir, $user_id, $user_type, $c->stash->{image_id});
+    my $brapi_package_result = $brapi_module->image_metadata_store(\@all_images, $image_dir, $user_id, $user_type, $c->stash->{image_id});
 	my $status = $brapi_package_result->{status};
 	my $http_status_code = _get_http_status_code($status);
 
@@ -3751,7 +3959,7 @@ sub image_content_store_PUT {
 	my ($auth_success, $user_id, $user_type, $user_pref, $expired) = _authenticate_user($c, $force_authenticate);
 
     my $clean_inputs = $c->stash->{clean_inputs};
-    print STDERR Dumper($clean_inputs);
+    print STDERR Dumper($clean_inputs);print Dumper $c->req->body();
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Images');
     my $image_dir = File::Spec->catfile($c->config->{static_datasets_path}, $c->config->{image_dir});
@@ -3785,19 +3993,19 @@ sub _get_http_status_code {
 
 	foreach(@$status) {
 
-		if ($_->{code} eq "403") {
+		if ($_->{messageType} eq "403") {
 			$http_status_code = 403;
 			last;
 		}
-		elsif ($_->{code} eq "401") {
+		elsif ($_->{messageType} eq "401") {
 			$http_status_code = 401;
 			last;
 		}
-		elsif ($_->{code} eq "400") {
+		elsif ($_->{messageType} eq "400") {
 			$http_status_code = 400;
 			last;
 		}
-		elsif ($_->{code} eq "200") {
+		elsif ($_->{messageType} eq "200") {
 			$http_status_code = 200;
 			last;
 		}
@@ -3805,48 +4013,6 @@ sub _get_http_status_code {
 
 	return $http_status_code;
 }
-
-sub save_observation_results {
-    my $self = shift;
-    my $c = shift;
-    my $observations = shift;
-    my $version = shift;
-
-	# Check that the user is a user. We don't check other permissions for now.
-	my $force_authenticate = 1;
-	my ($auth_success, $user_id, $user_type, $user_pref, $expired) = _authenticate_user($c, $force_authenticate);
-
-	my $dbh = $c->dbc->dbh;
-    my $p = CXGN::People::Person->new($dbh, $user_id);
-    my $username = $p->get_username;
-    my $clean_inputs = $c->stash->{clean_inputs};
-	my $brapi = $self->brapi_module;
-
-    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
-    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
-
-	my $brapi_module = $brapi->brapi_wrapper('Observations');
-	my $brapi_package_result = $brapi_module->observations_store({
-        observations => $observations,
-        user_id => $user_id,
-        username => $username,
-        user_type => $user_type,
-        version => $version,
-        archive_path => $c->config->{archive_path},
-        tempfiles_subdir => $c->config->{basepath}."/".$c->config->{tempfiles_subdir},
-        basepath => $c->config->{basepath},
-        dbhost => $c->config->{dbhost},
-        dbname => $c->config->{dbname},
-        dbuser => $c->config->{dbuser},
-        dbpass => $c->config->{dbpass},
-        temp_file_nd_experiment_id => $temp_file_nd_experiment_id
-    });
-
-	my $status = $brapi_package_result->{status};
-	my $http_status_code = _get_http_status_code($status);
-
-	_standard_response_construction($c, $brapi_package_result, $http_status_code);
- }
 
 =head2 brapi/v2/callsets
 
@@ -4413,6 +4579,232 @@ sub reference_search_retrieve : Chained('brapi') PathPart('search/references') A
     my $c = shift;
     my $search_id = shift;
     retrieve_results($self, $c, $search_id, 'Referenced');
+}
+
+
+=head2 brapi/v2/crossingprojects
+
+=cut
+
+sub crossingprojects : Chained('brapi') PathPart('crossingprojects') Args(0) : ActionClass('REST') { }
+
+sub crossingprojects_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Crossing');
+	my $brapi_package_result = $brapi_module->search($clean_inputs);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub crossingprojects_POST {
+	my $self = shift;
+	my $c = shift;
+	my ($auth,$user_id) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Crossing');
+	my $brapi_package_result = $brapi_module->store_crossingproject($clean_inputs,$c,$user_id);
+	my $status = $brapi_package_result->{status};
+	my $http_status_code = _get_http_status_code($status);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub crossingproject_single : Chained('brapi') PathPart('crossingprojects') CaptureArgs(1) {
+	my $self = shift;
+	my $c = shift;
+	my $id = shift;
+	$c->stash->{crossingProjectDbId} = $id;
+}
+
+sub crossingproject_fetch : Chained('crossingproject_single') PathPart('') Args(0) : ActionClass('REST') { }
+
+
+sub crossingproject_fetch_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Crossing');
+	my $brapi_package_result = $brapi_module->detail($c->stash->{crossingProjectDbId});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub crossingproject_fetch_PUT {
+	my $self = shift;
+	my $c = shift;
+	my ($auth,$user_id,$user_type) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Crossing');
+	my $brapi_package_result = $brapi_module->update_crossingproject($c->stash->{crossingProjectDbId}, $clean_inputs,$c,$user_id,$user_type);
+	my $status = $brapi_package_result->{status};
+	my $http_status_code = _get_http_status_code($status);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+=head2 brapi/v2/crosses
+
+=cut
+
+sub crosses : Chained('brapi') PathPart('crosses') Args(0) : ActionClass('REST') { }
+
+sub crosses_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Crossing');
+	my $brapi_package_result = $brapi_module->crosses($clean_inputs);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub crosses_POST {
+	my $self = shift;
+	my $c = shift;
+	my ($auth,$user_id) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $data = $clean_inputs;
+	my @all_crosses;
+	foreach my $cross (values %{$data}) {
+	    push @all_crosses, $cross;
+	}
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Crossing');
+	my $brapi_package_result = $brapi_module->store_crosses(\@all_crosses,$c,$user_id);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+# sub crosses_PUT {
+# 	my $self = shift;
+# 	my $c = shift;
+# 	my ($auth) = _authenticate_user($c);
+# 	my $clean_inputs = $c->stash->{clean_inputs};
+# 	my $brapi = $self->brapi_module;
+# 	my $brapi_module = $brapi->brapi_wrapper('Crossing');
+# 	my $brapi_package_result = $brapi_module->update_crosses($clean_inputs);
+# 	_standard_response_construction($c, $brapi_package_result);
+# }
+
+=head2 brapi/v2/seedlots
+
+=cut
+
+sub seedlots : Chained('brapi') PathPart('seedlots') Args(0) : ActionClass('REST') { }
+
+sub seedlots_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('SeedLots');
+	my $brapi_package_result = $brapi_module->search($clean_inputs);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub seedlots_POST {
+	my $self = shift;
+	my $c = shift;
+	my ($auth,$user_id) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $data = $clean_inputs;
+	my @all_data;
+	foreach my $seedlot (values %{$data}) {
+	    push @all_data, $seedlot;
+	}
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('SeedLots');
+	my $brapi_package_result = $brapi_module->store_seedlots(\@all_data,$c,$user_id);
+
+	my $status = $brapi_package_result->{status};
+	my $http_status_code = _get_http_status_code($status);
+
+	_standard_response_construction($c, $brapi_package_result, $http_status_code);
+}
+
+sub seedlot_transactions : Chained('brapi') PathPart('seedlots/transactions') Args(0) : ActionClass('REST') { }
+
+sub seedlot_transactions_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('SeedLots');
+	my $brapi_package_result = $brapi_module->all_transactions($clean_inputs);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub seedlot_transactions_POST {
+	my $self = shift;
+	my $c = shift;
+	my ($auth,$user_id) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $data = $clean_inputs;
+	my @all_data;
+	foreach my $transaction (values %{$data}) {
+	    push @all_data, $transaction;
+	}
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('SeedLots');
+	my $brapi_package_result = $brapi_module->store_seedlot_transaction(\@all_data,$c,$user_id);
+	my $status = $brapi_package_result->{status};
+	my $http_status_code = _get_http_status_code($status);
+
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub seedlot_single : Chained('brapi') PathPart('seedlots') CaptureArgs(1) {
+	my $self = shift;
+	my $c = shift;
+	my $id = shift;
+	$c->stash->{seedLotDbId} = $id;
+}
+
+sub seedlot_single_fetch : Chained('seedlot_single') PathPart('') Args(0) : ActionClass('REST') { }
+
+
+sub seedlot_single_fetch_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('SeedLots');
+	my $brapi_package_result = $brapi_module->detail($c->stash->{seedLotDbId});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub seedlot_single_fetch_PUT {
+	my $self = shift;
+	my $c = shift;
+	my ($auth,$user_id) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('SeedLots');
+	my $brapi_package_result = $brapi_module->update_seedlot($c->stash->{seedLotDbId}, $clean_inputs,$c,$user_id);
+	my $status = $brapi_package_result->{status};
+	my $http_status_code = _get_http_status_code($status);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub seedlot_single_transaction_fetch : Chained('seedlot_single') PathPart('transactions') Args(0) : ActionClass('REST') { }
+
+
+sub seedlot_single_transaction_fetch_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('SeedLots');
+	my $brapi_package_result = $brapi_module->transactions($c->stash->{seedLotDbId}, $clean_inputs);
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 

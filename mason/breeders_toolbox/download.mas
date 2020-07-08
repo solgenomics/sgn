@@ -13,7 +13,7 @@ Choose a list for each parameter and click "Download".
 </div>
 
 <div class="well well-sm">
-<h4>Download Phenotypes</h4><p>Select Parameters:</p>
+<h4>Download Phenotypes Using Lists</h4><p>Select Parameters:</p>
 <form id="download_form" action="/breeders/download_action" method="POST" >
 <table class="table table-bordered" >
   <thead>
@@ -87,6 +87,27 @@ Choose a list for each parameter and click "Download".
 </div>
 
 <div class="well well-sm">
+<h4>Inspect Datasets</h4>
+<table class="table table-bordered" >
+  <thead>
+  <tr>
+    <th>
+      Datasets
+    </th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td>
+      <div id="phenotype_download_dataset_list">
+      </div>
+    </td>
+  </tr>
+  </tbody>
+  </table>
+</div>
+
+<div class="well well-sm">
 <h4>Download Metadata</h4><p>Select Parameters:</p>
 <form id="download_metadata_form" action="/breeders/download_action" method="POST" >
 <table class="table table-bordered" >
@@ -142,6 +163,8 @@ $(document).ready(function() {
     $('#trial_list').html(lo.listSelect('trial_list', [ 'trials' ], 'select', undefined, undefined ));
     $('#trait_list').html(lo.listSelect('trait_list', [ 'traits' ], 'select', undefined, undefined  ));
     $('#trial_metadata_list').html(lo.listSelect('trial_metadata_list', ['trials'], 'select', undefined, undefined));
+
+    get_select_box('datasets', 'phenotype_download_dataset_list');
 
     $('#metadata').click(function() { 
       var trial_list_id = $('#trial_metadata_list_list_select').val();

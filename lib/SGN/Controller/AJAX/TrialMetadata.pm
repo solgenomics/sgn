@@ -72,6 +72,7 @@ sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) {
             $param{experiment_type} = 'field_layout';
         }
         $c->stash->{trial_layout} = CXGN::Trial::TrialLayout->new(\%param);
+	# print STDERR "Trial Layout: ".Dumper($c->stash->{trial_layout})."\n";
     }
     catch {
         print STDERR "Trial Layout for $trial_id does not exist. @_\n";
@@ -367,6 +368,12 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         $stocks_per_accession = $c->stash->{trial}->get_plants_per_accession();
         $order_by_additional = ' ,accession.uniquename DESC';
     }
+    if ($display eq 'analysis_instance') {
+        $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_instance', 'stock_type')->cvterm_id();
+        $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_of', 'stock_relationship')->cvterm_id();
+        # my $plots = $c->stash->{trial}->get_plots();
+        # $total_complete_number = scalar (@$plots);
+    }
     my $accesion_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'family_name', 'stock_type')->cvterm_id();
     my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
@@ -405,7 +412,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         ORDER BY cvterm.name ASC
         $order_by_additional;");
 
-    my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
+    my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
     $h->execute($c->stash->{trial_id}, $numeric_regex, $rel_type_id, $stock_type_id, $trial_stock_type_id);
 
     my @phenotype_data;
@@ -1401,16 +1408,21 @@ sub trial_design : Chained('trial') PathPart('design') Args(0) {
 
     my $design = $layout->get_design();
     my $design_type = $layout->get_design_type();
-    my $plot_dimensions = $layout->get_plot_dimensions();
 
-    my $plot_length = $plot_dimensions->[0] ? $plot_dimensions->[0] : '';
-    my $plot_width = $plot_dimensions->[1] ? $plot_dimensions->[1] : '';
-    my $plants_per_plot = $plot_dimensions->[2] ? $plot_dimensions->[2] : '';
-
-    my $block_numbers = $layout->get_block_numbers();
+    my $plot_length = '';
+    my $plot_width = '';
+    my $plants_per_plot = '';
     my $number_of_blocks = '';
-    if ($block_numbers) {
-        $number_of_blocks = scalar(@{$block_numbers});
+    if ($design_type ne 'genotyping_plate') {
+        my $plot_dimensions = $layout->get_plot_dimensions();
+        $plot_length = $plot_dimensions->[0] ? $plot_dimensions->[0] : '';
+        $plot_width = $plot_dimensions->[1] ? $plot_dimensions->[1] : '';
+        $plants_per_plot = $plot_dimensions->[2] ? $plot_dimensions->[2] : '';
+
+        my $block_numbers = $layout->get_block_numbers();
+        if ($block_numbers) {
+            $number_of_blocks = scalar(@{$block_numbers});
+        }
     }
 
     my $replicate_numbers = $layout->get_replicate_numbers();
@@ -1443,9 +1455,12 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
+    my $cxgn_project_type = $c->stash->{trial}->get_cxgn_project_type();
+
     my $fieldmap = CXGN::Trial::FieldMap->new({
       bcs_schema => $schema,
       trial_id => $c->stash->{trial_id},
+      experiment_type => $cxgn_project_type->{experiment_type}
     });
     my $return = $fieldmap->display_fieldmap();
 

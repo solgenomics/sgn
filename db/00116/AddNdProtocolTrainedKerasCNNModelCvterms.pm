@@ -64,13 +64,6 @@ sub patch {
         'protocol_type' => [
             'trained_keras_cnn_model',
         ],
-        'experiment_type' => [
-            'trained_keras_cnn_model_experiment'
-        ],
-        'protocol_property' => [
-            'trained_keras_cnn_model_trait',
-            'trained_keras_cnn_model_type'
-        ]
     };
 
 	foreach my $t (keys %$terms){

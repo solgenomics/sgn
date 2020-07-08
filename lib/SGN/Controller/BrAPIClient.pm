@@ -3,17 +3,18 @@ package SGN::Controller::BrAPIClient;
 
 use Moose;
 use URI::FromHash 'uri';
+use JSON;
 
 BEGIN { extends 'Catalyst::Controller' };
 
 sub authorize_client :Path('/brapi/authorize') QueryParam('return_url') { #breedbase.org/brapi/authorize?success_url=fieldbook://&display_name=Field%20Book
     my $self = shift;
     my $c = shift;
-    my %authorized_clients = (
-        'fieldbook://' => 'FieldBook App',
-        'https://apps.cipotato.org/hidap_sbase/' => 'HIDAP'
-    );
-
+        
+    my $authorized_clients = decode_json $c->get_conf('authorized_clients_JSON');;
+    
+	my %authorized_clients = %$authorized_clients;
+	
     my $return_url = $c->request->param( 'return_url' );
 	my @keys = keys %authorized_clients;
 	my $display_name = undef;
@@ -32,7 +33,7 @@ sub authorize_client :Path('/brapi/authorize') QueryParam('return_url') { #breed
         } else {
             my $user_name = $c->user()->get_object()->get_username();
             my $token = CXGN::Login->new($c->dbc->dbh)->get_login_cookie();
-            my $authorize_url = $return_url . "?status=200&token=" . $token;
+            my $authorize_url = $return_url . ( (index($return_url, '?') != -1)?"&status=200&token=":"?status=200&token=") . $token;
             my $deny_url = $return_url . "?status=401";
             $c->stash->{authorize_url} = $authorize_url;
             $c->stash->{deny_url} = $deny_url;

@@ -1,0 +1,17 @@
+format-version: 1.2
+ontology: SGNStatistics_ontology
+default-namespace: SGNStatistics_ontology
+
+[Term]
+id: SGNSTAT:0000000
+name: SGNSTAT
+
+[Term]
+id: SGNSTAT:0000001
+name: Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and row and column spatial effects computed using Sommer R
+is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000002
+name: Univariate linear mixed model genetic BLUPs using germplasmName computed using LMER R
+is_a: SGNSTAT:0000000

@@ -34,6 +34,17 @@ sub mason_forward :Path('/pages') Args(1) {
     $c->stash->{template} = '/pages/'.$page.".mas";
 }
 
+sub mason_forward_with_subfolder :Path('/pages/') Args(2) {
+    my $self = shift;
+    my $c = shift;
+    my $subfolder = shift;
+    my $page = shift;
+
+    print STDERR "Forwarding to $subfolder,  $page...\n";
+    $c->stash->{schema} = $c->dbic_schema("Bio::Chado::Schema");
+    $c->stash->{template} = '/pages/'.$subfolder."/".$page.".mas";
+}
+
 sub list_all_uploads :Path('/breeders/list_all_uploads') Args(0) {
     my $self = shift;
     my $c = shift;

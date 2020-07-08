@@ -21,6 +21,10 @@ has 'trial_id' => (isa => "Int",
 	is => 'rw',
 );
 
+has 'experiment_type' => (isa => "Str",
+	is => 'rw',
+);
+
 has 'first_plot_selected' => (isa => "Int",
 	is => 'rw',
 );
@@ -68,10 +72,12 @@ sub display_fieldmap {
 	my $schema = $self->bcs_schema;
 	my $trial_id = $self->trial_id;
 
+    my $experiment_type = $self->experiment_type() ? $self->experiment_type() : 'field_layout';
+
 	my $layout = CXGN::Trial::TrialLayout->new({
 		schema => $schema,
 		trial_id => $trial_id,
-        experiment_type => 'field_layout'
+        experiment_type => $experiment_type
 	});
 
 	my $design = $layout-> get_design();
@@ -451,10 +457,11 @@ sub replace_trial_stock_fieldMap {
 
 sub _regenerate_trial_layout_cache {
     my $self = shift;
+    my $experiment_type = $self->experiment_type() ? $self->experiment_type() : 'field_layout';
     my $layout = CXGN::Trial::TrialLayout->new({
         schema => $self->bcs_schema,
         trial_id => $self->trial_id,
-        experiment_type => 'field_layout'
+        experiment_type => $experiment_type
     });
     $layout->generate_and_cache_layout();
 }
