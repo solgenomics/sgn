@@ -377,6 +377,9 @@ $model_files => {}
 % if ($info_section_id eq 'analysis_model_details'){
                                 <& /analyses/model_detail_page_section.mas, model_id => $model_id, model_name => $model_name, model_description => $model_description, model_properties => $model_properties, model_file_ids => $model_file_ids, model_type_name => $model_type_name, model_files => $model_files, identifier_prefix => $identifier_prefix &>
 % } #End analysis_model_details
+% if ($info_section_id eq 'model_analyses'){
+                                <& /analyses/model_detail_page_analyses_section.mas, model_id => $model_id &>
+% } #End model_analyses
 % if ($info_section_id eq 'manage_file_share_dump'){
                                 <& /breeders_toolbox/file_share/file_dump_share_files.mas &>
 % } #End manage_file_share_dump

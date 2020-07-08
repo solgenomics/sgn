@@ -333,6 +333,31 @@ sub list_analyses_models_by_user_table :Path('/ajax/analyses/models/by_user') Ar
     $c->stash->{rest} = { data => \@table };
 }
 
+sub list_analyses_by_model_table :Path('/ajax/analyses/by_model') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $model_id = $c->req->param('model_id');
+    my $analysis_by_model = CXGN::AnalysisModel::GetModel::get_analyses_by_model($schema, $model_id);
+    print STDERR Dumper $analysis_by_model;
+
+    my @table;
+    foreach my $a (@$analysis_by_model) {
+        push @table, [
+            '<a href="/analyses/'.$a->{analysis_id}.'">'.$a->{analysis_name}."</a>",
+            $a->{description},
+        ];
+    }
+    #print STDERR Dumper(\@table);
+    $c->stash->{rest} = { data => \@table };
+}
+
 =head1 retrieve_analysis_data()
 
 Chained from ajax_analysis

@@ -16,6 +16,7 @@ my $saved_model_object = $m->get_model();
 
 CLASS METHOD:
 my $analysis_models_by_user = CXGN::AnalysisModel::GetModel::get_models_by_user($bcs_schema, $sp_person_id);
+my $analysis_by_model = CXGN::AnalysisModel::GetModel::get_analyses_by_model($bcs_schema, $model_id);
 
 =head1 AUTHORS
 
@@ -93,7 +94,7 @@ sub get_models_by_user {
     my $schema = shift;
     my $sp_person_id = shift;
 
-    my $analysis_experiment_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_experiment', 'experiment_type')->cvterm_id();
+    my $analysis_model_experiment_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_experiment', 'experiment_type')->cvterm_id();
 
     my $model_q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, basename, dirname, md.file_id, md.filetype, nd_protocol.type_id, nd_experiment.type_id, property.type_id, property.value
         FROM metadata.md_files AS md
@@ -104,7 +105,7 @@ sub get_models_by_user {
         JOIN nd_experiment_protocol using(nd_experiment_id)
         JOIN nd_protocol using(nd_protocol_id)
         JOIN nd_protocolprop AS property ON(nd_protocol.nd_protocol_id=property.nd_protocol_id)
-        WHERE sp.sp_person_id=? AND nd_experiment.type_id=$analysis_experiment_id;";
+        WHERE sp.sp_person_id=? AND nd_experiment.type_id=$analysis_model_experiment_id;";
     my $model_h = $schema->storage->dbh()->prepare($model_q);
     $model_h->execute($sp_person_id);
     my %result;
@@ -120,6 +121,32 @@ sub get_models_by_user {
         $result{$model_id}->{model_file_ids}->{$file_id} = $basename;
     }
     return \%result;
+}
+
+sub get_analyses_by_model {
+    my $schema = shift;
+    my $model_id = shift;
+
+    my $analysis_experiment_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_experiment', 'experiment_type')->cvterm_id();
+
+    my $model_q = "SELECT project.project_id, project.name, project.description
+        FROM project
+        JOIN nd_experiment_project using(project_id)
+        JOIN nd_experiment using(nd_experiment_id)
+        JOIN nd_experiment_protocol using(nd_experiment_id)
+        JOIN nd_protocol using(nd_protocol_id)
+        WHERE nd_protocol.nd_protocol_id=? AND nd_experiment.type_id=$analysis_experiment_id;";
+    my $model_h = $schema->storage->dbh()->prepare($model_q);
+    $model_h->execute($model_id);
+    my @results;
+    while (my ($analysis_id, $analysis_name, $description) = $model_h->fetchrow_array()) {
+        push @results, {
+            analysis_id => $analysis_id,
+            analysis_name => $analysis_name,
+            description => $description
+        };
+    }
+    return \@results;
 }
 
 1;
