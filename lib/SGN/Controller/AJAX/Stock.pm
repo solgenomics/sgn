@@ -1162,6 +1162,43 @@ sub pedigree_female_parent_autocomplete_GET : Args(0){
 }
 
 
+=head2 pedigree_male_parent_autocomplete
+
+Public Path: /ajax/stock/pedigree_male_parent_autocomplete
+
+Autocomplete a male parent associated with pedigree.
+
+=cut
+
+sub pedigree_male_parent_autocomplete: Local : ActionClass('REST'){}
+
+sub pedigree_male_parent_autocomplete_GET : Args(0){
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+    my @response_list;
+
+    my $q = "SELECT distinct (pedigree_male_parent.uniquename) FROM stock AS pedigree_male_parent
+    JOIN stock_relationship ON (stock_relationship.subject_id = pedigree_male_parent.stock_id)
+    JOIN cvterm AS cvterm1 ON (stock_relationship.type_id = cvterm1.cvterm_id) AND cvterm1.name = 'male_parent'
+    JOIN stock AS check_type ON (stock_relationship.object_id = check_type.stock_id)
+    JOIN cvterm AS cvterm2 ON (check_type.type_id = cvterm2.cvterm_id) AND cvterm2.name = 'accession'
+    WHERE pedigree_male_parent.uniquename ilike ? ORDER BY pedigree_male_parent.uniquename";
+
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my($pedigree_male_parent) = $sth->fetchrow_array){
+        push @response_list, $pedigree_male_parent;
+    }
+
+    $c->stash->{rest} = \@response_list;
+
+}
+
+
 =head2 cross_female_parent_autocomplete
 
 Public Path: /ajax/stock/cross_female_parent_autocomplete
@@ -1199,6 +1236,42 @@ sub cross_female_parent_autocomplete_GET : Args(0){
 
 }
 
+
+=head2 cross_male_parent_autocomplete
+
+Public Path: /ajax/stock/cross_male_parent_autocomplete
+
+Autocomplete a male parent associated with cross.
+
+=cut
+
+sub cross_male_parent_autocomplete: Local : ActionClass('REST'){}
+
+sub cross_male_parent_autocomplete_GET : Args(0){
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+    my @response_list;
+
+    my $q = "SELECT distinct (cross_male_parent.uniquename) FROM stock AS cross_male_parent
+    JOIN stock_relationship ON (stock_relationship.subject_id = cross_male_parent.stock_id)
+    JOIN cvterm AS cvterm1 ON (stock_relationship.type_id = cvterm1.cvterm_id) AND cvterm1.name = 'male_parent'
+    JOIN stock AS check_type ON (stock_relationship.object_id = check_type.stock_id)
+    JOIN cvterm AS cvterm2 ON (check_type.type_id = cvterm2.cvterm_id) AND cvterm2.name = 'cross'
+    WHERE cross_male_parent.uniquename ilike ? ORDER BY cross_male_parent.uniquename";
+
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my($cross_male_parent) = $sth->fetchrow_array){
+        push @response_list, $cross_male_parent;
+    }
+
+    $c->stash->{rest} = \@response_list;
+
+}
 
 
 sub parents : Local : ActionClass('REST') {}

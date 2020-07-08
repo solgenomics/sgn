@@ -471,8 +471,8 @@ sub get_cross_tissue_culture_summary :Path('/ajax/cross/tissue_culture_summary')
     my $weaning1_ids = $cross_sample_data->{'Weaning1 IDs'};
     my $weaning2_ids = $cross_sample_data->{'Weaning2 IDs'};
     my $screenhouse_ids = $cross_sample_data->{'Screenhouse IDs'};
-#    my $hardening_ids = $cross_sample_data->{'Hardening IDs'};
-#    my $openfield_ids = $cross_sample_data->{'Openfield IDs'};
+    my $hardening_ids = $cross_sample_data->{'Hardening IDs'};
+    my $openfield_ids = $cross_sample_data->{'Openfield IDs'};
 
     my @embryo_ids_array;
     my @subculture_ids_array;
@@ -480,6 +480,8 @@ sub get_cross_tissue_culture_summary :Path('/ajax/cross/tissue_culture_summary')
     my @weaning1_ids_array;
     my @weaning2_ids_array;
     my @screenhouse_ids_array;
+    my @hardening_ids_array;
+    my @openfield_ids_array;
 
     if (defined $embryo_ids) {
         @embryo_ids_array = @$embryo_ids;
@@ -504,8 +506,14 @@ sub get_cross_tissue_culture_summary :Path('/ajax/cross/tissue_culture_summary')
     if (defined $screenhouse_ids) {
         @screenhouse_ids_array = @$screenhouse_ids;
     }
-#    my @hardening_ids_array = @$hardening_ids;
-#    my @openfield_ids_array = @$openfield_ids;
+
+    if (defined $hardening_ids) {
+        @hardening_ids_array = @$hardening_ids;
+    }
+
+    if (defined $openfield_ids) {
+        @openfield_ids_array = @$openfield_ids;
+    }
 
     my @all_rows;
     my @each_row;
@@ -544,6 +552,18 @@ sub get_cross_tissue_culture_summary :Path('/ajax/cross/tissue_culture_summary')
         }
 
         if ($embryo_id ~~ @screenhouse_ids_array) {
+            push @each_row, $checkmark;
+        } else {
+            push @each_row, $x_mark;
+        }
+
+        if ($embryo_id ~~ @hardening_ids_array) {
+            push @each_row, $checkmark;
+        } else {
+            push @each_row, $x_mark;
+        }
+
+        if ($embryo_id ~~ @openfield_ids_array) {
             push @each_row, $checkmark;
         } else {
             push @each_row, $x_mark;

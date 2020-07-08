@@ -351,7 +351,7 @@ jQuery(document).ready(function ($) {
 
     jQuery('#genotyping_trial_facility_select').change(function(){
         var selected = jQuery('#genotyping_trial_facility_select').val();
-        if (selected == 'igd'){
+        if (selected == 'Cornell IGD'){
             jQuery.ajax({
                 url: 'https://slimstest.biotech.cornell.edu/brapi/v2/vendor-specifications',
                 success: function(response) {

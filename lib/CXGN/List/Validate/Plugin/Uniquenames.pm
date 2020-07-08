@@ -18,6 +18,7 @@ sub validate {
         my $rs = $schema->resultset("Stock::Stock")->search({
             type_id=>$accession_type_id,
 		    uniquename => $l,
+            is_obsolete => {'!=' => 't'},
 	    });
 	    if ($rs->count() == 0){
             push @missing, $l;

@@ -337,6 +337,14 @@ $data_level => undef
                                 <& /breeders_toolbox/cross/crossing_experiment_deletion.mas, trial_id => $trial_id  &>
 %} #End crossing_experiment_deletion_section
 
+% if ($info_section_id eq 'progeny_search_section'){
+                                <& /search/cross/progeny_search_section.mas &>
+%} #End progeny_search_section
+
+% if ($info_section_id eq 'cross_search_section'){
+                                <& /search/cross/cross_search_section.mas &>
+%} #End cross_search_section
+
 % if ($info_section_id eq 'manage_drone_imagery_main'){
                                 <& /breeders_toolbox/drone_imagery/raw_image_section.mas &>
 % } #End manage_drone_imagery_main
@@ -356,6 +364,9 @@ $data_level => undef
 % if ($info_section_id eq 'model_details'){
                                 <& /analyses/model_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, analysis_metadata=>$analysis_metadata &>
 % } #End analysis_details
+% if ($info_section_id eq 'manage_file_share_dump'){
+                                <& /breeders_toolbox/file_share/file_dump_share_files.mas &>
+% } #End manage_file_share_dump
 % if (!$info_section_id){
                                 <p>No section specified! Main content goes here!</p>
 % }

@@ -124,6 +124,7 @@ sub _validate_with_plugin {
             push @error_messages, "Cell B$row_name: species_name missing.";
         }
         else {
+            $species_name =~ s/^\s+|\s+$//g;
             $seen_species_names{$species_name}=$row_name;
         }
     }
@@ -189,6 +190,7 @@ sub _parse_with_plugin {
             $seen_accession_names{$accession_name}++;
         }
         if ($species_name){
+            $species_name =~ s/^\s+|\s+$//g;
             $seen_species_names{$species_name}++;
         }
         if ($synonyms_string && $synonyms_string ne '' ) {

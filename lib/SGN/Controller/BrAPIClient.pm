@@ -3,18 +3,18 @@ package SGN::Controller::BrAPIClient;
 
 use Moose;
 use URI::FromHash 'uri';
+use JSON;
 
 BEGIN { extends 'Catalyst::Controller' };
 
 sub authorize_client :Path('/brapi/authorize') QueryParam('return_url') { #breedbase.org/brapi/authorize?success_url=fieldbook://&display_name=Field%20Book
     my $self = shift;
     my $c = shift;
-    my %authorized_clients = (
-        'fieldbook://' => 'FieldBook App',
-        'https://apps.cipotato.org/hidap_sbase/' => 'HIDAP',
-        'http://localhost:3000' => 'Image Analysis Pipeline'
-    );
-
+        
+    my $authorized_clients = decode_json $c->get_conf('authorized_clients_JSON');;
+    
+	my %authorized_clients = %$authorized_clients;
+	
     my $return_url = $c->request->param( 'return_url' );
 	my @keys = keys %authorized_clients;
 	my $display_name = undef;

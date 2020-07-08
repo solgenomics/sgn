@@ -1,0 +1,171 @@
+
+<& /page/page_title.mas, title=>'Search Progenies of Female Parents' &>
+<br>
+<&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0&>
+    <div class="row" id="progeny_search_form" >
+        <div class="col-sm-12 well">
+            <div class="row">
+                <div class="col-sm-10">
+                    <div class="form-horizontal">
+                        <div class="form-group form-group-sm">
+                            <label class="control-label col-sm-3">Female Parent:</label>
+                            <div class="col-sm-9">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="pedigree_female_parent" placeholder="Enter female parent">
+                                    <div class="input-group-btn">
+                                        <button class="btn btn-info" id="search_pedigree_male_parents"><i class="glyphicon glyphicon-search"></i> Male Parent / Population</button>
+                                        <button class="btn btn-primary" id="search_all_progenies_using_female"><i class="glyphicon glyphicon-search"></i> All Progenies of this Female Parent </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group form-group-sm">
+                            <label class="control-label col-sm-3">Male Parent / Population:</label>
+                            <div class="col-sm-9" >
+                                <div class="input-group">
+                                    <select class="form-control" id="pedigree_male_parent">
+                                        <option value="">Choose female parent first</option>
+                                    </select>
+                                    </select>
+                                    <div class="input-group-btn">
+                                        <button class="btn btn-info" id="search_pedigree_female_male"><i class="glyphicon glyphicon-search"></i> Progenies of these Parents </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</&>
+
+<&| /page/info_section.mas, title => 'Search Results', collapsible=>1, collapsed=>0 &>
+    <div class="well well-sm">
+        <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <table id="pedigree_female_male_search_results" width="100%" class="table table-hover table-striped">
+                    <thead>
+                        <tr>
+                            <th>Female Parent</th>
+                            <th>Male Parent / Population</th>
+                            <th>Progeny</th>
+                            <th>Cross Type</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <&| /page/info_section.mas, title => 'Copy Progenies to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the progeny names showing in table to a new or exisiting list</i>'&>
+                    <br>
+                    <div style="text-align:right" id="progenies_to_list_menu"></div>
+                    <div id="progeny_names" style="display: none;"></div>
+                </&>
+            </div>
+        </div>
+    </div>
+</&>
+
+
+<script>
+
+jQuery(document).ready(function (){
+
+    jQuery("#pedigree_female_parent").autocomplete({
+        source:'/ajax/stock/pedigree_female_parent_autocomplete',
+    });
+
+
+    jQuery("#search_pedigree_male_parents").click(function(){
+
+        jQuery.ajax({
+            url:'/ajax/search/pedigree_male_parents',
+            data:{'pedigree_female_parent':jQuery('#pedigree_female_parent').val()},
+            success: function(response){
+                console.log(response);
+                var html = '<select id = "pedigree_male_parent" >';
+                for (var i=0; i<response.data.length; i++) {
+                    html = html + "<option value='"+response.data[i][0]+ "'>" + response.data[i][0] + "</option>";
+                }
+                html = html + "</select>";
+                console.log(html);
+                if(i ==''){
+                    alert("No male parent");
+                    return;
+                }
+
+                jQuery('#pedigree_male_parent').html(html);
+            },
+            error:function(response){
+                alert("An error occurred");
+            }
+        });
+    });
+
+
+    jQuery('#search_pedigree_female_male').click(function(){
+
+        var table = jQuery('#pedigree_female_male_search_results').DataTable({
+            'searching': true,
+            'paging': true,
+            'ordering': false,
+            'destroy': true,
+            'ajax': {'url':'/ajax/search/progenies',
+                data:{'pedigree_female_parent':jQuery('#pedigree_female_parent').val(),
+                    'pedigree_male_parent':jQuery('#pedigree_male_parent').val(),
+                    }
+            }
+        });
+
+        jQuery('#pedigree_female_male_search_results').on( 'draw.dt', function (){
+            var name_links = table.column(2).data();
+            var names = [];
+            //console.log("name links are: "+JSON.stringify(name_links));
+            for (var i = 0; i < name_links.length; i++) {
+                names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
+            }
+
+            jQuery('#progeny_names').html(names);
+
+            addToListMenu('progenies_to_list_menu', 'progeny_names',{
+                listType:'accessions'
+            });
+        });
+    });
+
+
+    jQuery('#search_all_progenies_using_female').click(function(){
+
+        var table = jQuery('#pedigree_female_male_search_results').DataTable({
+            'searching': true,
+            'paging': true,
+            'ordering': false,
+            'destroy': true,
+            'ajax': {'url':'/ajax/search/progenies',
+                'data':{'pedigree_female_parent':jQuery('#pedigree_female_parent').val()},
+            }
+        });
+
+        jQuery('#pedigree_female_male_search_results').on( 'draw.dt', function (){
+            var name_links = table.column(2).data();
+            var names = [];
+            //console.log("name links are: "+JSON.stringify(name_links));
+            for (var i = 0; i < name_links.length; i++) {
+                names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
+            }
+            jQuery('#progeny_names').html(names);
+
+            addToListMenu('progenies_to_list_menu', 'progeny_names',{
+                listType:'accessions'
+            });
+        });
+    });
+
+
+});
+
+
+</script>
