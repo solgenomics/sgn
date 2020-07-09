@@ -1422,6 +1422,7 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
 
     my $total_image_count = scalar(@$nir_image_ids);
     my $skipped_counter = 0;
+    my $max_features = 1000;
     while ($image_id1 && $image_id2) {
 
         my $gps_obj_src = $nir_image_hash{$image_id1};
@@ -1441,7 +1442,7 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
         my $align_match_temp_results = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_align/imageXXXX');
         my $align_match_temp_results_2 = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_align/imageXXXX');
 
-        my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/MatchAndAlignImages.py --image_path1 \''.$image1_fullpath.'\' --image_path2 \''.$image2_fullpath.'\' --outfile_match_path \''.$match_temp_image.'\' --outfile_path \''.$align_temp_image.'\' --results_outfile_path_src \''.$align_match_temp_results.'\' --results_outfile_path_dst \''.$align_match_temp_results_2.'\' ';
+        my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/MatchAndAlignImages.py --image_path1 \''.$image1_fullpath.'\' --image_path2 \''.$image2_fullpath.'\' --outfile_match_path \''.$match_temp_image.'\' --outfile_path \''.$align_temp_image.'\' --results_outfile_path_src \''.$align_match_temp_results.'\' --results_outfile_path_dst \''.$align_match_temp_results_2.'\' --max_features \''.$max_features.'\'';
         print STDERR Dumper $cmd;
         my $status = system($cmd);
 
@@ -1555,7 +1556,8 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
         my $p2_diff_sum = abs($diffx1) + abs($diffy1) + abs($diffx3) + abs($diffy3);
         my $p3_diff_sum = abs($diffx2) + abs($diffy2) + abs($diffx3) + abs($diffy3);
         print STDERR "P1: ".$p1_diff_sum." P2: ".$p2_diff_sum." P3: ".$p3_diff_sum."\n";
-        print STDERR "Progress: $image_counter / $total_image_count : $skipped_counter\n";
+        my $total_image_count_adjusted = $total_image_count-2;
+        print STDERR "Progress: $image_counter / $total_image_count_adjusted (".$image_counter/$total_image_count_adjusted.") : $skipped_counter\n";
 
         my $smallest_diff;
         if ($p1_diff_sum <= $p2_diff_sum && $p1_diff_sum <= $p3_diff_sum) {
@@ -1580,22 +1582,25 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
             $y_pos_translation = $y_pos_translation3;
         }
 
-        if ($smallest_diff > 80 && $skipped_counter < $total_image_count) {
-            if ($image_counter == $skipped_counter) {
-                $skipped_counter++;
-            }
-            $image_id1 = $nir_image_ids->[$image_counter];
-            $image_id2 = $nir_image_ids->[$skipped_counter];
-            $skipped_counter++;
+        # if ($smallest_diff > 80 && $skipped_counter < 10) {
+        if ($smallest_diff > 80) {
+            $max_features = 50000;
+            # if ($image_counter == $skipped_counter) {
+            #     $skipped_counter++;
+            # }
+            # $image_id1 = $nir_image_ids->[$image_counter];
+            # $image_id2 = $nir_image_ids->[$skipped_counter];
+            # $skipped_counter++;
         }
-        elsif ($skipped_counter >= $total_image_count) {
-            die "No match!\n";
-            $skipped_counter = 0;
-            $image_counter++;
-            $image_id1 = $nir_image_ids->[$image_counter];
-            $image_id2 = $nir_image_ids->[$image_counter+1];
-        }
+        # elsif ($skipped_counter >= $total_image_count) {
+        #     die "No match!\n";
+        #     $skipped_counter = 0;
+        #     $image_counter++;
+        #     $image_id1 = $nir_image_ids->[$image_counter];
+        #     $image_id2 = $nir_image_ids->[$image_counter+1];
+        # }
         else {
+            $max_features = 1000;
             $skipped_counter = 0;
 
             $nir_image_hash{$image_id2}->{x_pos} = $x_pos_match_dst;
