@@ -1584,13 +1584,13 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
 
         # if ($smallest_diff > 80 && $skipped_counter < 10) {
         if ($smallest_diff > 80) {
-            $max_features = 50000;
+            $max_features = 50000 * ($skipped_counter + 1);
             # if ($image_counter == $skipped_counter) {
             #     $skipped_counter++;
             # }
             # $image_id1 = $nir_image_ids->[$image_counter];
             # $image_id2 = $nir_image_ids->[$skipped_counter];
-            # $skipped_counter++;
+            $skipped_counter++;
         }
         # elsif ($skipped_counter >= $total_image_count) {
         #     die "No match!\n";
