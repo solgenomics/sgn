@@ -1420,8 +1420,13 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
 
     my $return = _drone_imagery_interactive_get_gps($c, $schema, $drone_run_project_id);
     my $gps_images = $return->{gps_images};
+    my $saved_gps_positions = $return->{saved_gps_positions};
     my $longitudes = $return->{longitudes};
     my $latitudes = $return->{latitudes};
+
+    if ($saved_gps_positions && scalar (keys %$saved_gps_positions) > 0) {
+        $gps_images = $saved_gps_positions;
+    }
 
     my %nir_image_hash;
     foreach my $lat (@$latitudes) {
@@ -1443,7 +1448,6 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
 
     my $total_image_count = scalar(@$nir_image_ids);
     my $skipped_counter = 0;
-    my $skipped_image_counter = -3;
     my $max_features = 1000;
 
     while ($image_id1 && $image_id2) {
@@ -1610,25 +1614,22 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
             $skipped_counter++;
         }
         elsif ($skipped_counter >= 2) {
-            if ($skipped_image_counter < 0) {
-                $image_id1 = $nir_image_ids->[$image_counter + $skipped_image_counter];
-            }
-            else {
-                $image_id2 = $nir_image_ids->[$image_counter + 1 + $skipped_image_counter];
-            }
-            $skipped_counter = 0;
-            $skipped_image_counter++;
-        }
-        elsif ($skipped_image_counter > 3) {
-            die "No match\n";
+            $nir_image_hash{$image_id2}->{match_problem} = 1;
+            $image_id1 = undef;
+            $image_id2 = undef;
         }
         else {
             $max_features = 1000;
             $skipped_counter = 0;
-            $skipped_image_counter = -3;
 
             $nir_image_hash{$image_id2}->{x_pos} = $x_pos_match_dst;
             $nir_image_hash{$image_id2}->{y_pos} = $y_pos_match_dst;
+
+            $nir_image_hash{$image_id1}->{match_src_to} = $image_id2;
+            $nir_image_hash{$image_id2}->{match_dst_to} = $image_id1;
+
+            $nir_image_hash{$image_id1}->{match_problem} = 0;
+            $nir_image_hash{$image_id2}->{match_problem} = 0;
 
             foreach (@{$nir_image_hash{$image_id2}->{rotated_bound_translated}}) {
                 $_->[0] = $_->[0] - $x_pos_translation;

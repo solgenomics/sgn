@@ -414,7 +414,15 @@ jQuery(document).ready(function(){
         }, 100);
     }
 
-    function appendDraggableImage(url, x_pos, y_pos, latitude, longitude, nir_image_id, stack_image_ids, rotate_angle, enable_drag, rotated_bound) {
+    function appendDraggableImage(url, x_pos, y_pos, latitude, longitude, nir_image_id, stack_image_ids, rotate_angle, enable_drag, rotated_bound, match_problem) {
+
+        var color = "orange";
+        if (match_problem == 1) {
+            color = "red";
+        }
+        else if (match_problem == 0) {
+            color = "green";
+        }
 
         var imageGroup = manage_drone_imagery_standard_process_raw_images_interactive_svg.append("g")
             .datum({position: x_pos,y_pos})
@@ -428,22 +436,34 @@ jQuery(document).ready(function(){
             .attr("id", "nir_image_"+nir_image_id )
             .attr("transform", d => "translate("+x_pos+","+y_pos+") rotate("+rotate_angle+","+manage_drone_imagery_standard_process_raw_images_interactive_image.width/2+","+manage_drone_imagery_standard_process_raw_images_interactive_image.length/2+")");
 
-        var squareFill = imageGroup.append("square")
-            .attr("class", "square-fill")
-            .attr("cx", manage_drone_imagery_standard_process_raw_images_interactive_image.width / 2)
-            .attr("cy", manage_drone_imagery_standard_process_raw_images_interactive_image.length / 2);
-
-        var imageElem = imageGroup.append("image")
-            .attr("xlink:href", url)
-            .attr("height", manage_drone_imagery_standard_process_raw_images_interactive_image.length)
-            .attr("width", manage_drone_imagery_standard_process_raw_images_interactive_image.width);
-
         if (enable_drag == 1) {
             imageGroup.call(d3.drag()
                 .on("start", dragstarted)
                 .on("drag", dragged)
                 .on("end", dragended));
         }
+
+        var imageElem = imageGroup.append("image")
+            .attr("xlink:href", url)
+            .style("stroke", color)
+            .style("stroke-width", 2)
+            .attr("height", manage_drone_imagery_standard_process_raw_images_interactive_image.length)
+            .attr("width", manage_drone_imagery_standard_process_raw_images_interactive_image.width);
+
+        var squareFill = imageGroup.append("square")
+            .attr("class", "square-fill")
+            .style("stroke", color)
+            .style("stroke-width", 2)
+            .attr("cx", manage_drone_imagery_standard_process_raw_images_interactive_image.width)
+            .attr("cy", manage_drone_imagery_standard_process_raw_images_interactive_image.length);
+            
+        var imageborder = imageGroup.append('rect')
+            .attr('class', 'image-border')
+            .style("fill", "none")
+            .style("stroke", color)
+            .style("stroke-width", 2)
+            .attr('width', manage_drone_imagery_standard_process_raw_images_interactive_image.width)
+            .attr('height', manage_drone_imagery_standard_process_raw_images_interactive_image.length);
 
         if (rotated_bound && rotated_bound.length>0) {
             var bound_x1 = parseFloat(rotated_bound[0][0]) + parseFloat(x_pos);
@@ -462,7 +482,7 @@ jQuery(document).ready(function(){
                 .attr("nir_image_id", nir_image_id )
                 .attr("is_rotated_bound", 1);
             var line1 = rotatedBoundGroup.append('line')
-                .style("stroke", "green")
+                .style("stroke", color)
                 .style("stroke-width", 2)
                 .attr("x1", bound_x1)
                 .attr("y1", bound_y1)
@@ -474,7 +494,7 @@ jQuery(document).ready(function(){
                 .attr("nir_image_id", nir_image_id )
                 .attr("is_rotated_bound", 1);
             var line2 = rotatedBoundGroup.append('line')
-                .style("stroke", "green")
+                .style("stroke", color)
                 .style("stroke-width", 2)
                 .attr("x1", bound_x2)
                 .attr("y1", bound_y2)
@@ -486,7 +506,7 @@ jQuery(document).ready(function(){
                 .attr("nir_image_id", nir_image_id )
                 .attr("is_rotated_bound", 1);
             var line3 = rotatedBoundGroup.append('line')
-                .style("stroke", "green")
+                .style("stroke", color)
                 .style("stroke-width", 2)
                 .attr("x1", bound_x3)
                 .attr("y1", bound_y3)
@@ -498,7 +518,7 @@ jQuery(document).ready(function(){
                 .attr("nir_image_id", nir_image_id )
                 .attr("is_rotated_bound", 1);
             var line4 = rotatedBoundGroup.append('line')
-                .style("stroke", "green")
+                .style("stroke", color)
                 .style("stroke-width", 2)
                 .attr("x1", bound_x4)
                 .attr("y1", bound_y4)
@@ -658,6 +678,7 @@ jQuery(document).ready(function(){
         d3.selectAll("line").remove();
         d3.selectAll("circle").remove();
         d3.selectAll("text").remove();
+        d3.selectAll("rect").remove();
         manage_drone_imagery_standard_process_raw_images_nir_images = [];
 
         for (var i=0; i<manage_drone_imagery_standard_process_interactive_latitudes.length; i++) {
@@ -674,7 +695,9 @@ jQuery(document).ready(function(){
                     var rotate_angle = manage_drone_imagery_standard_process_interactive_saved_gps_positions[latitude][longitude]['d3_rotate_angle'] ? manage_drone_imagery_standard_process_interactive_saved_gps_positions[latitude][longitude]['d3_rotate_angle'] : manage_drone_imagery_standard_process_raw_images_interactive_rotate_angle;
                     manage_drone_imagery_standard_process_interactive_saved_gps_positions[latitude][longitude]['d3_rotate_angle'] = rotate_angle;
                     manage_drone_imagery_standard_process_raw_images_interactive_rotate_angle = rotate_angle;
-                    appendDraggableImage(image_url, x_pos, y_pos, latitude, longitude, nir_image_id, JSON.stringify(rotated_image_ids), rotate_angle, enable_drag, []);
+                    var rotated_bound = manage_drone_imagery_standard_process_interactive_saved_gps_positions[latitude][longitude]['rotated_bound'];
+                    var match_problem = manage_drone_imagery_standard_process_interactive_saved_gps_positions[latitude][longitude]['match_problem'];
+                    appendDraggableImage(image_url, x_pos, y_pos, latitude, longitude, nir_image_id, JSON.stringify(rotated_image_ids), rotate_angle, enable_drag, [], match_problem);
                 }
                 else if (manage_drone_imagery_standard_process_interactive_gps_images[latitude][longitude]) {
                     var image_url = manage_drone_imagery_standard_process_interactive_gps_images[latitude][longitude]['image_url'];
@@ -702,7 +725,8 @@ jQuery(document).ready(function(){
                     manage_drone_imagery_standard_process_raw_images_interactive_rotate_angle = rotate_angle;
                     manage_drone_imagery_standard_process_raw_images_nir_images.push(nir_image_id);
                     var rotated_bound = manage_drone_imagery_standard_process_interactive_gps_images[latitude][longitude]['rotated_bound'];
-                    appendDraggableImage(image_url, x_pos, y_pos, latitude, longitude, nir_image_id, JSON.stringify(rotated_image_ids), rotate_angle, enable_drag, rotated_bound);
+                    var match_problem = manage_drone_imagery_standard_process_interactive_gps_images[latitude][longitude]['match_problem'];
+                    appendDraggableImage(image_url, x_pos, y_pos, latitude, longitude, nir_image_id, JSON.stringify(rotated_image_ids), rotate_angle, enable_drag, rotated_bound, match_problem);
                 }
             }
         }
@@ -887,6 +911,9 @@ jQuery(document).ready(function(){
         jQuery.ajax({
             url : '/api/drone_imagery/match_and_align_images_sequential',
             type: 'POST',
+            //beforeSend: function(){
+            //    jQuery('#working_modal').modal('show');
+            //},
             data : {
                 'nir_image_ids':JSON.stringify(manage_drone_imagery_standard_process_raw_images_nir_images),
                 'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id,
@@ -894,11 +921,13 @@ jQuery(document).ready(function(){
             },
             success: function(response){
                 console.log(response);
+            //    jQuery('#working_modal').modal('hide');
 
                 console.log("Match Seq Complete");
                 initializeInteractiveSvg('#drone_imagery_standard_process_raw_images_image_id_interactive_select_div', 'drone_imagery_standard_process_raw_images_image_id_interactive_select_div_area', 1, 1);
             },
             error: function(response){
+            //    jQuery('#working_modal').modal('hide');
                 alert('Error matching and aligning images sequential!')
             }
         });
