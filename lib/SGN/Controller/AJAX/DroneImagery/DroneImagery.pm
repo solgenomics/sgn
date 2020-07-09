@@ -1588,6 +1588,7 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
             $skipped_counter++;
         }
         elsif ($skipped_counter >= $total_image_count) {
+            die "No match!\n";
             $skipped_counter = 0;
             $image_counter++;
             $image_id1 = $nir_image_ids->[$image_counter];
