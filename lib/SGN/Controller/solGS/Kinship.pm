@@ -9,8 +9,10 @@ use Carp qw/ carp confess croak /;
 use File::Slurp qw /write_file read_file/;
 use File::Copy;
 use File::Basename;
-use File::Spec::Functions;
+use File::Spec::Functions qw / catfile catdir/;
 use File::Path qw / mkpath  /;
+use Scalar::Util qw /weaken reftype/;
+use Storable qw/ nstore retrieve /;
 
 
 BEGIN { extends 'Catalyst::Controller' }
@@ -30,30 +32,32 @@ sub kinship_analysis :Path('/kinship/analysis/') Args() {
 }
 
 
-sub run_kinship_analysis :Path('/kinship/run/analysis') Args() {
+sub kinship_run_analysis :Path('/kinship/run/analysis') Args() {
     my ($self, $c) = @_;
 
     my $pop_id        = $c->req->param('kinship_pop_id');
     my $protocol_id   = $c->req->param('genotyping_protocol_id'); ;
     my $trait_id      = $c->req->param('trait_id');
     my $combo_pops_id = $c->req->param('combo_pops_id');
-    my $list_id       = $c->req->param('list_id');   
-    my $dataset_id    = $c->req->param('dataset_id');
-    my $data_structure = $c->req->param('data_structure');
+    my $data_str      = $c->req->param('data_structure');
 
-    if ($list_id)
-    {
-	$c->stash->{data_structure} = 'list';
+    if ($data_str =~ /dataset/)
+    {   
+	$c->stash->{dataset_id} = $pop_id;
+	$c->stash->{data_structure} = 'dataset';
     }
-    elsif ($dataset_id)
+    elsif ($data_str =~ /list/)
     {
-	$c->stash->{data_structure} = 'dataset';	
+	$c->stash->{list_id}    = $pop_id;
+	$c->stash->{data_structure} = 'list';	
     }
-      
-    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
    
-    $c->stash->{list_id}       = $list_id;
-    $c->stash->{dataset_id}    = $dataset_id;
+    $c->stash->{kinship_pop_id} = $pop_id;
+    
+    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
+    
+    $c->controller('solGS::Files')->create_file_id($c);
+    
     $c->stash->{combo_pops_id} = $combo_pops_id;
     $c->stash->{trait_id}      = $trait_id;
     
@@ -124,6 +128,70 @@ sub get_kinship_coef_files {
     return {'json_file' => $json_file, 
 	    'matrix_file' => $matrix_file
     };
+}
+
+
+sub kinship_output_files {
+    my ($self, $c) = @_;
+
+    my $pop_id = $c->stash->{kinship_pop_id};
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    my $data_str = $c->stash->{data_structure};
+     
+    if ($data_str =~ /dataset|list/)
+    {
+	$pop_id = $data_str . '_' . $pop_id;
+    }
+     
+    $c->stash->{pop_id} = $pop_id;
+    $c->controller('solGS::Files')->inbreeding_coefficients_file($c); 
+    my $inbreeding_file = $c->stash->{inbreeding_coefficients_file};
+
+    $c->controller('solGS::Files')->average_kinship_file($c);
+    my $ave_kinship_file = $c->stash->{average_kinship_file};
+    
+    my $coef_files = $self->get_kinship_coef_files($c, $pop_id, $protocol_id);
+   
+    my $file_list = join ("\t",
+                          $coef_files->{json_file},
+			  $coef_files->{matrix_file},
+			  $inbreeding_file,
+			  $ave_kinship_file
+	);
+        
+    my $tmp_dir = $c->stash->{kinship_temp_dir};
+    my $name = "kinship_output_files_${pop_id}"; 
+    my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
+    write_file($tempfile, $file_list);
+    
+    $c->stash->{kinship_output_files} = $tempfile;
+    
+}
+
+
+sub kinship_input_files {
+    my ($self, $c) = @_;
+
+    my $pop_id = $c->stash->{kinship_pop_id};
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    my $data_str = $c->stash->{data_structure};
+    
+    if ($data_str =~ /dataset|list/)
+    {
+	$pop_id = $data_str . '_' . $pop_id;
+    }
+
+    $c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
+    my $geno_file = $c->stash->{genotype_file_name};
+    
+    my $tmp_dir = $c->stash->{kinship_temp_dir};
+    my $name = "kinship_input_files_${pop_id}"; 
+    my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
+    write_file($tempfile, $geno_file);
+    
+    $c->stash->{kinship_input_files} = $tempfile;
+    
+ 
 }
 
 
