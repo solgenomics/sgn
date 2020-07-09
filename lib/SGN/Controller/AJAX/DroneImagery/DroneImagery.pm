@@ -1555,6 +1555,7 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
         my $p2_diff_sum = abs($diffx1) + abs($diffy1) + abs($diffx3) + abs($diffy3);
         my $p3_diff_sum = abs($diffx2) + abs($diffy2) + abs($diffx3) + abs($diffy3);
         print STDERR "P1: ".$p1_diff_sum." P2: ".$p2_diff_sum." P3: ".$p3_diff_sum."\n";
+        print STDERR "Progress: $image_counter / $total_image_count : $skipped_counter\n";
 
         my $smallest_diff;
         if ($p1_diff_sum <= $p2_diff_sum && $p1_diff_sum <= $p3_diff_sum) {
