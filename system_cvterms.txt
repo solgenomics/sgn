@@ -144,6 +144,8 @@ project_property	drone_run_standard_process_completed	If the drone run had the s
 project_property	drone_run_standard_process_extended_completed	If the drone run had the extended standard process run	10/5/2018	nm529	00103
 project_property	drone_run_standard_process_vi_completed	If the drone run had the vegetative index standard process run	10/5/2018	nm529	00103
 project_property	drone_run_raw_images_saved_micasense_stacks	When uploading raw Micasense images, the captures are aligned and this records which image is in which capture	02/17/2020	nm529	00117
+project_property	drone_run_raw_images_saved_micasense_stacks_rotated	When interactively matching raw drone captures, this stores the rotated positions	07/06/2020	nm529	00126
+project_property	drone_run_raw_images_saved_gps_pixel_positions	When interactively matching raw drone captures, this stores the final positions	07/06/2020	nm529	00126
 project_property	project_sp_person_id	For saving results in analysis trials	06/04/2020	lam87nm529	00119
 project_property	analysis_metadata_json	For saving results in analysis trials	06/04/2020	lam87nm529	00119
 project_relationship	breeding_program_trial_relationship				00051
@@ -741,3 +743,5 @@ project_md_image	image_analysis_sift	Image analysis sift image	08/19/2019	nm529	
 project_md_image	image_analysis_largest_contour	Image analysis largest contour image	08/19/2019	nm529	00114
 project_md_image	image_analysis_necrosis_solomon_nsumba	Image analysis necrosis percent as implemented in Solomon's service	08/19/2019	nm529	00114
 project_md_image	image_analysis_white_fly_count_solomon_nsumba	Image analysis white fly count as implemented in Solomon's service	08/19/2019	nm529	00114
+project_md_image	standard_process_interactive_match_temporary_drone_imagery	Standard interactive process for drone imagery showing the match of captures	07/06/2020	nm529	00126
+project_md_image	standard_process_interactive_align_temporary_drone_imagery	Standard interactive process for drone imagery showing the alignment of captures	07/06/2020	nm529	00126

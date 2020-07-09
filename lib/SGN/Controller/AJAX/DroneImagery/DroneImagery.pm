@@ -1422,7 +1422,10 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
 
     my $total_image_count = scalar(@$nir_image_ids);
     my $skipped_counter = 0;
+    my $skipped_image_counter = 1;
     my $max_features = 1000;
+    my %skipped_image_ids;
+
     while ($image_id1 && $image_id2) {
 
         my $gps_obj_src = $nir_image_hash{$image_id1};
@@ -1582,26 +1585,26 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
             $y_pos_translation = $y_pos_translation3;
         }
 
-        # if ($smallest_diff > 80 && $skipped_counter < 10) {
-        if ($smallest_diff > 80) {
+        if (exists($skipped_image_ids{$image_id1}) || exists($skipped_image_ids{$image_id2})) {
+            $image_counter++;
+            $image_id1 = $nir_image_ids->[$image_counter];
+            $image_id2 = $nir_image_ids->[$image_counter+1];
+        }
+        elsif ($smallest_diff > 80 && $skipped_counter < 2) {
             $max_features = 50000 * ($skipped_counter + 1);
-            # if ($image_counter == $skipped_counter) {
-            #     $skipped_counter++;
-            # }
-            # $image_id1 = $nir_image_ids->[$image_counter];
-            # $image_id2 = $nir_image_ids->[$skipped_counter];
             $skipped_counter++;
         }
-        # elsif ($skipped_counter >= $total_image_count) {
-        #     die "No match!\n";
-        #     $skipped_counter = 0;
-        #     $image_counter++;
-        #     $image_id1 = $nir_image_ids->[$image_counter];
-        #     $image_id2 = $nir_image_ids->[$image_counter+1];
-        # }
+        elsif ($skipped_counter >= 2) {
+            $skipped_image_ids{$image_id2}++;
+
+            $image_id2 = $nir_image_ids->[$image_counter + $skipped_image_counter + 1];
+            $skipped_counter = 0;
+            $skipped_image_counter++;
+        }
         else {
             $max_features = 1000;
             $skipped_counter = 0;
+            $skipped_image_counter = 1;
 
             $nir_image_hash{$image_id2}->{x_pos} = $x_pos_match_dst;
             $nir_image_hash{$image_id2}->{y_pos} = $y_pos_match_dst;
