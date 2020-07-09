@@ -4,6 +4,7 @@ package SGN::Controller::solGS::Kinship;
 use Moose;
 use namespace::autoclean;
 
+use JSON;
 use Carp qw/ carp confess croak /;
 use File::Slurp qw /write_file read_file/;
 use File::Copy;
@@ -12,12 +13,11 @@ use File::Spec::Functions;
 use File::Path qw / mkpath  /;
 
 
-BEGIN { extends 'Catalyst::Controller::REST' }
+BEGIN { extends 'Catalyst::Controller' }
 
 
 __PACKAGE__->config(
-    default   => 'application/json',
-    stash_key => 'rest',
+    default   => 'application/json' => 'JSON',
     map       => { 'application/json' => 'JSON'},
     );
 
@@ -79,14 +79,21 @@ sub kinship_result :Path('/solgs/kinship/result/') Args() {
     my $json_file = $kinship_files->{json_file};
 
     print STDERR "\njson_file: $json_file\n";
- 
+    my $res = {};
+    
     if (-s $json_file)
     {
-        $c->stash->{rest}{data_exists} = 1; 
-	$c->stash->{rest}{data} = read_file($json_file);
-	$self->stash_kinship_output($c);
+	$res->{data} = read_file($json_file);
+
+	$self->prep_download_kinship_files($c);
+      
+	$res->{kinship_table_file} = $c->stash->{download_kinship_table};
+	$res->{kinship_averages_file} = $c->stash->{download_kinship_averages};
+	$res->{inbreeding_file} = $c->stash->{download_inbreeding};    
     } 
-  
+
+    $res = to_json($res);
+    $c->res->body($res);
 }
 
 
@@ -246,16 +253,16 @@ sub create_kinship_genotype_data_query_jobs {
 }
 
 
-sub stash_kinship_output {
-    my ($self, $c) = @_;
+# sub stash_kinship_output {
+#     my ($self, $c) = @_;
     
-    $self->prep_download_kinship_files($c);
+#     $self->prep_download_kinship_files($c);
       
-    $c->stash->{rest}{kinship_table_file} = $c->stash->{download_kinship_table};
-    $c->stash->{rest}{kinship_averages_file} = $c->stash->{download_kinship_averages};
-    $c->stash->{rest}{inbreeding_file} = $c->stash->{download_inbreeding};
+#     $c->stash->{rest}{kinship_table_file} = $c->stash->{download_kinship_table};
+#     $c->stash->{rest}{kinship_averages_file} = $c->stash->{download_kinship_averages};
+#     $c->stash->{rest}{inbreeding_file} = $c->stash->{download_inbreeding};
     
-}
+# }
 
 
 sub prep_download_kinship_files {
@@ -290,8 +297,8 @@ sub prep_download_kinship_files {
   $ave_kinship_file = catfile($tmp_dir, $ave_kinship_file);
   
   $c->stash->{download_kinship_table} = $kinship_txt_file;
-  $c->stash->{download_kinship_averages}   = $ave_kinship_file;
-  $c->stash->{download_inbreeding}    = $inbreeding_file;
+  $c->stash->{download_kinship_averages} = $ave_kinship_file;
+  $c->stash->{download_inbreeding} = $inbreeding_file;
 
 }
 

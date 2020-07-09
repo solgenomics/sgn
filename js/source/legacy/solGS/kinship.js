@@ -165,7 +165,7 @@ solGS.kinship = {
             url: '/solgs/kinship/result/',
             success: function (res) {
 		
-                if (res.data_exists) {
+                if (res.data) {
 			
                     solGS.kinship.plotKinship(res.data);
 		    solGS.kinship.addDowloandLinks(res);
