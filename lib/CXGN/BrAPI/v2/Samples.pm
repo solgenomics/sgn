@@ -18,60 +18,55 @@ sub detail {
     my $page = $self->page;
     my $status = $self->status;
     my @data;
+    my $s;
+    my %result;
 
-    my $s = CXGN::Stock::TissueSample->new(schema=>$self->bcs_schema, tissue_sample_id=>$sample_id);
-    my $accession_id = $s->get_accession ? $s->get_accession->[0] : "";
-    my $accession_name = $s->get_accession ? $s->get_accession->[1] : "";
-    my $source_plot_id = $s->get_source_plot ? $s->get_source_plot->[0] : "";
-    my $source_plot_name = $s->get_source_plot ? $s->get_source_plot->[1] : "";
-    my $source_plant_id = $s->get_source_plant ? $s->get_source_plant->[0] : "";
-    my $source_plant_name = $s->get_source_plant ? $s->get_source_plant->[1] : "";
-    my $source_sample_id = $s->get_source_tissue_sample ? $s->get_source_tissue_sample->[0] : "";
-    my $source_sample_name = $s->get_source_tissue_sample ? $s->get_source_tissue_sample->[1] : "";
-    my $source_obs_id = $s->source_observation_unit ? $s->source_observation_unit->[0] : "";
-    my $source_obs_name = $s->source_observation_unit ? $s->source_observation_unit->[1] : "";
-    my $plate_id = $s->get_plate ? $s->get_plate->[0] : "";
-    my $plate_name = $s->get_plate ? $s->get_plate->[1] : "";
-    my $trial_id = $s->get_trial ? $s->get_trial->[0] : "";
-    my $trial_name = $s->get_trial ? $s->get_trial->[1] : "";
-    my $sample_db_id = $s->stock_id;
-    my %result = (
-        sampleDbId => qq|$sample_db_id|,
-        sampleName => $s->uniquename,
-        observationUnitDbId => qq|$source_obs_id|,
-        observationUnitName => $source_obs_name,
-        germplasmDbId => qq|$accession_id|,
-        germplasmName => $accession_name,
-        studyDbId => qq|$trial_id|,
-        studyName => $trial_name,
-        # plotDbId => qq|$source_plot_id|,
-        plotName => $source_plot_name,
-        # plantDbId => qq|$source_plant_id|,
-        plantName => $source_plant_name,
-        sourceSampleDbId => qq|$source_sample_id|,
-        sourceSampleName => $source_sample_name,
-        plateDbId => qq|$plate_id|,
-        plateName => $plate_name,
-        # plateIndex => 0,
-        takenBy => $s->dna_person,
-        sampleTimestamp => $s->acquisition_date,
-        sampleType => $s->get_plate_sample_type,
-        tissueType => $s->tissue_type,
-        # notes => $s->notes,
-        #
-        sampleGroupDbId => undef,
-        trialDbId => qq|$trial_id|,
-        sampleBarcode => undef, 
-        samplePUI  => undef, 
-        row  => undef,
-        column => undef, 
-        sampleDescription  => undef,
-        well  => undef,
-        additionalInfo => $s->notes,
-        externalReferences => undef, 
-        programDbId => undef
-    );
-	my $pagination = CXGN::BrAPI::Pagination->pagination_response(1,$page_size,$page);
+    eval {
+        $s = CXGN::Stock::TissueSample->new(schema=>$self->bcs_schema, tissue_sample_id=>$sample_id);
+    };
+    if($s){
+        my $accession_id = $s->get_accession ? $s->get_accession->[0] : "";
+        my $accession_name = $s->get_accession ? $s->get_accession->[1] : "";
+        my $source_plot_id = $s->get_source_plot ? $s->get_source_plot->[0] : "";
+        my $source_plot_name = $s->get_source_plot ? $s->get_source_plot->[1] : "";
+        my $source_plant_id = $s->get_source_plant ? $s->get_source_plant->[0] : "";
+        my $source_plant_name = $s->get_source_plant ? $s->get_source_plant->[1] : "";
+        my $source_sample_id = $s->get_source_tissue_sample ? $s->get_source_tissue_sample->[0] : "";
+        my $source_sample_name = $s->get_source_tissue_sample ? $s->get_source_tissue_sample->[1] : "";
+        my $source_obs_id = $s->source_observation_unit ? $s->source_observation_unit->[0] : "";
+        my $source_obs_name = $s->source_observation_unit ? $s->source_observation_unit->[1] : "";
+        my $plate_id = $s->get_plate ? $s->get_plate->[0] : "";
+        my $plate_name = $s->get_plate ? $s->get_plate->[1] : "";
+        my $trial_id = $s->get_trial ? $s->get_trial->[0] : "";
+        my $trial_name = $s->get_trial ? $s->get_trial->[1] : "";
+        my $sample_db_id = $s->stock_id;
+        %result = (
+                additionalInfo => {},
+                column => $s->col_number,
+                externalReferences => [],
+                germplasmDbId => qq|$accession_id|,
+                observationUnitDbId => qq|$source_obs_id|,
+                plateDbId => qq|$plate_id|,
+                plateName => $plate_name,
+                programDbId => undef,
+                row  => $s->row_number,
+                sampleDbId => qq|$sample_db_id|,
+                sampleName => $s->uniquename,
+                sampleGroupDbId => $source_plant_id,
+                sampleBarcode => undef, 
+                samplePUI  => undef, 
+                sampleDescription  => $s->notes,
+                sampleTimestamp => $s->acquisition_date,
+                sampleType => $s->get_plate_sample_type,
+                studyDbId => qq|$trial_id|,
+                takenBy => $s->dna_person,
+                tissueType => $s->tissue_type,
+                trialDbId => qq|$trial_id|,
+                well => $s->well ? $s->well : $s->row_number . $s->col_number,
+        );
+    }
+    my $total_count = (%result) ? 1 : 0;
+	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
     my @data_files;
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Sample get result constructed');
 }
@@ -123,45 +118,28 @@ sub search {
     my ($search_res, $total_count) = $sample_search->search();
     foreach (@$search_res){
         push @data, {
-            sampleDbId => qq|$_->{sampleDbId}|,
-            sampleName => $_->{sampleName},
-            observationUnitDbId => qq|$_->{observationUnitDbId}|,
-            observationUnitName => $_->{observationUnitName},
-            observationUnitType => $_->{observationUnitType},
+            additionalInfo => {},
+            column => $_->{col_number},
+            externalReferences => [],
             germplasmDbId => qq|$_->{germplasmDbId}|,
-            germplasmName => $_->{germplasmName},
-            studyDbId => qq|$_->{studyDbId}|,
-            studyName => $_->{studyName},
-            # plotDbId => qq|$_->{plotDbId}|,
-            plotName => $_->{plotName},
-            # plantDbId => qq|$_->{plantDbId}|,
-            plantName => $_->{plantName},
-            sourceSampleDbId => qq|$_->{sourceSampleDbId}|,
-            sourceSampleName => $_->{sourceSampleName},
+            observationUnitDbId => qq|$_->{observationUnitDbId}|,
             plateDbId => qq|$_->{plateDbId}|,
             plateName => $_->{plateName},
-            # plateIndex => 0,
-            takenBy => $_->{dna_person},
-            sampleTimestamp => $_->{acquisition_date},
-            sampleType => $_->{tissue_type},
-            tissueType => $_->{tissue_type},
-            extraction => $_->{extraction},
-            # notes => $_->{notes},
-            well => $_->{well},
-            concentration => $_->{concentration},
-            volume => $_->{volume},
-            is_blank => $_->{is_blank},
-            #
-            sampleGroupDbId => undef,
-            trialDbId => qq|$_->{studyDbId}|,
+            programDbId => undef,
+            row  => $_->{row_number},
+            sampleDbId => qq|$_->{sampleDbId}|,
+            sampleName => $_->{sampleName},
+            sampleGroupDbId => qq|$_->{plantDbId}|,
             sampleBarcode => undef, 
             samplePUI  => undef, 
-            row  => undef,
-            column => undef, 
-            sampleDescription  => undef,
-            additionalInfo => $_->{notes},
-            externalReferences => undef, 
-            programDbId => undef
+            sampleDescription  => $_->{notes},
+            sampleTimestamp => $_->{acquisition_date},
+            sampleType => $_->{tissue_type},
+            studyDbId => qq|$_->{studyDbId}|,
+            takenBy => $_->{dna_person},
+            tissueType => $_->{tissue_type},
+            trialDbId => qq|$_->{studyDbId}|,
+            well => $_->{well} ? $_->{well} : $_->{row_number} . $_->{col_number},
         };
     }
     my %result = (data => \@data);
