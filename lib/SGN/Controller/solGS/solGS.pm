@@ -1021,8 +1021,8 @@ sub output_files {
                           $c->stash->{trait_phenodata_file},                         
                           $c->stash->{selected_traits_gebv_file},
                           $c->stash->{variance_components_file},
-			  $c->stash->{relationship_matrix_file},
-			  $c->stash->{relationship_matrix_adjusted_file},
+			  $c->stash->{relationship_matrix_table_file},
+			  $c->stash->{relationship_matrix_adjusted_table_file},
 			  $c->stash->{inbreeding_coefficients_file},
 			  $c->stash->{average_kinship_file},
 			  $c->stash->{relationship_matrix_json_file},
@@ -1031,7 +1031,7 @@ sub output_files {
                           $c->stash->{rrblup_selection_gebvs_file}
         );
                           
-    my $name = "output_files_${trait}_$pop_id"; 
+    my $name = "output_files_${trait}_${pop_id}"; 
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $tempfile = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name); 
     write_file($tempfile, $file_list);
