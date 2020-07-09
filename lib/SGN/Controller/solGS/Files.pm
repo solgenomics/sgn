@@ -256,7 +256,7 @@ sub relationship_matrix_file {
         
     my $cache_data = {key    => 'relationship_matrix_table_' . $file_id ,
 		      file      => 'relationship_matrix_table_' . $file_id . '.txt',
-		      stash_key => 'relationship_matrix_file',
+		      stash_key => 'relationship_matrix_table_file',
 		      cache_dir => $c->stash->{solgs_cache_dir}
     };
  
@@ -281,13 +281,13 @@ sub relationship_matrix_adjusted_file {
     my $protocol_id = $c->stash->{genotyping_protocol_id}; 
     my $trait_abbr = $c->stash->{trait_abbr};
    
-    my $file_id = $pop_id ."-${trait_abbr}-" . "GP-${protocol_id}";
+    my $file_id = $pop_id ."-${trait_abbr}-GP-${protocol_id}";
 
     no warnings 'uninitialized';
         
     my $cache_data = {key    => 'relationship_matrix_table_' . $file_id ,
 		      file      => 'relationship_matrix_adjusted_table_' . $file_id . '.txt',
-		      stash_key => 'relationship_matrix_adjusted_file',
+		      stash_key => 'relationship_matrix_adjusted_table_file',
 		      cache_dir => $c->stash->{solgs_cache_dir}
     };
  
@@ -311,8 +311,8 @@ sub average_kinship_file {
     my $protocol_id = $c->stash->{genotyping_protocol_id};    
     my $trait_abbr = $c->stash->{trait_abbr};
     
-    my $file_id = $pop_id ."-${trait_abbr}-" . "GP-${protocol_id}";
-
+    my $file_id =  $trait_abbr ? "${pop_id}-${trait_abbr}-GP-${protocol_id}" : "${pop_id}-GP-${protocol_id}";
+   
     no warnings 'uninitialized';
         
     my $cache_data = {key    => 'average_kinship_file' . $file_id ,
@@ -332,7 +332,7 @@ sub inbreeding_coefficients_file {
     my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
     my $protocol_id = $c->stash->{genotyping_protocol_id};    
    
-    my $file_id = $pop_id . '-GP-' . $protocol_id;
+    my $file_id = "${pop_id}-GP-${protocol_id}";
 
     no warnings 'uninitialized';
         
