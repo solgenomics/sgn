@@ -148,4 +148,42 @@ sub search {
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Sample search result constructed');
 }
 
+#not avalilable now since breedbase creates default set of names
+sub store {
+    my $self = shift;
+    my $params = shift;
+    my $c = shift;
+    my $user_id = shift;
+
+    if (!$user_id){
+       return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must be logged in to add a seedlot!'));
+    }
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $status = $self->status;
+    my @data;
+    
+    my $limit = $page_size*($page+1)-1;
+    my $offset = $page_size*$page;
+
+    my $schema = $self->bcs_schema;
+    my $dbh = $self->bcs_schema()->storage()->dbh();
+
+    my $tissue_names = $params->{tissueType} ? $params->{tissueType} : undef;
+    my $trial_id = $params->{studyDbId} ? $params->{studyDbId} : undef;
+
+    my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
+    my $inherits_plot_treatments = 1;
+
+    if ($trial->create_tissue_samples($tissue_names, $inherits_plot_treatments)) {
+        my $dbh = $c->dbc->dbh();
+        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+
+    } else {
+         return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Something went wrong!'));
+    }
+
+}
+
 1;
