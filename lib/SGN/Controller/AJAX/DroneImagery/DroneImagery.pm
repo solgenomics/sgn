@@ -49,6 +49,7 @@ use CXGN::AnalysisModel::SaveModel;
 use CXGN::AnalysisModel::GetModel;
 use Math::Polygon;
 use Math::Trig;
+use List::MoreUtils qw(first_index);
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -1454,6 +1455,13 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
 
         my $gps_obj_src = $nir_image_hash{$image_id1};
         my $gps_obj_dst = $nir_image_hash{$image_id2};
+
+        if ($gps_obj_src->{match_src_to} || $gps_obj_dst->{match_dst_to} || $gps_obj_dst->{match_problem}) {
+            $image_counter++;
+            $image_id1 = $nir_image_ids->[$image_counter];
+            $image_id2 = $nir_image_ids->[$image_counter+1];
+            next;
+        }
 
         my $image1 = SGN::Image->new( $schema->storage->dbh, $image_id1, $c );
         my $image1_url = $image1->get_image_url("original");
