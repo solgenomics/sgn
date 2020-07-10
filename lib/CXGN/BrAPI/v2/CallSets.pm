@@ -81,7 +81,7 @@ sub search {
         offset=>$offset,
     });
 
-    my $file_handle = $genotypes_search->get_cached_file_search_json($c, 1); #Metadata only returned
+    my $file_handle = $genotypes_search->get_cached_file_search_json($c->config->{cluster_shared_tempdir}, 1); #Metadata only returned
 
     my %geno;
     my @variantsets;
@@ -172,7 +172,7 @@ sub detail {
         protocolprop_top_key_select=>[],
         protocolprop_marker_hash_select=>[]
     });
-    my $file_handle = $genotypes_search->get_cached_file_search_json($c, 1);
+    my $file_handle = $genotypes_search->get_cached_file_search_json($c->config->{cluster_shared_tempdir}, 1);
 
     my $counter = 0;
 
@@ -259,7 +259,7 @@ sub calls {
         protocolprop_top_key_select=>[],
         protocolprop_marker_hash_select=>[],
     });
-    my $file_handle = $genotypes_search->get_cached_file_search_json($c, 0);
+    my $file_handle = $genotypes_search->get_cached_file_search_json($c->config->{cluster_shared_tempdir}, 0);
 
     my $start_index = $page*$page_size;
     my $end_index = $page*$page_size + $page_size - 1;
