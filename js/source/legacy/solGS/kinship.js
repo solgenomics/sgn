@@ -104,33 +104,28 @@ solGS.kinship = {
 	var protocolId = jQuery('#genotyping_protocol #genotyping_protocol_id').val();
 	console.log('protocol id: ' + protocolId)
 	
-	var traitId = jQuery('#trait_id').val();
-
 	var kinshipArgs = {
 	    'kinship_pop_id' : selectId,
 	    'kinship_pop_name' : selectName,
 	    'data_structure' : dataStructure,
 	    'genotyping_protocol_id' : protocolId,
-	    'trait_id' : traitId
 	};
 	
 	jQuery("#kinship_canvas .multi-spinner-container").show();
 	jQuery("#kinship_message")
 	    .html("Running kinship... please wait...it may take minutes")
 	    .show();
-//	  url: '/kinship/run/analysis',	
+
 	jQuery.ajax({
 	    type: 'POST',
 	    dataType: 'json',
 	    data: kinshipArgs,
-	    url: '/solgs/kinship/result',
+	    url: '/kinship/run/analysis/',
 	    success: function(res) {
 		if (res.result == 'success') {
 		    jQuery("#kinship_canvas .multi-spinner-container").hide();
 		    		    
-		    solGS.kinship.plotKinship(res.data);
-		    solGS.kinship.addDowloandLinks(res);
-
+		    solGS.kinship.getKinshipResult(res);
 		    jQuery("#kinship_message").empty();
 
 		} else {                
@@ -141,7 +136,7 @@ solGS.kinship = {
 	    },
 	    error: function(res) {
 		jQuery("#kinship_message")
-		    .html('Error occured running the clustering.')
+		    .html('Error occured running the kinship.')
 		    .show()
 		    .fadeOut(8400);
 		
@@ -156,7 +151,7 @@ solGS.kinship = {
  
 	var popData = this.getPopulationDetails();
 		
-	jQuery("#kinship_message").html("Running kinship... please wait...");
+	jQuery("#kinship_message").html("Retrieving kinship output... please wait...");
         
 	jQuery.ajax({
             type: 'POST',
