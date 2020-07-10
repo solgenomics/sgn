@@ -1424,10 +1424,46 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
     my $saved_gps_positions = $return->{saved_gps_positions};
     my $longitudes = $return->{longitudes};
     my $latitudes = $return->{latitudes};
+    my $width = $return->{image_width};
+    my $length = $return->{image_length};
+
+    my $longitudes_rounded = $return->{longitudes_rounded};
+    my $longitude_rounded_map = $return->{longitude_rounded_map};
+    my $latitudes_rounded = $return->{latitudes_rounded};
+    my $latitude_rounded_map = $return->{latitude_rounded_map};
 
     if ($saved_gps_positions && scalar (keys %$saved_gps_positions) > 0) {
         $gps_images = $saved_gps_positions;
     }
+
+    my $cx = $width/2;
+    my $cy = $length/2;
+    my $temp_x1 = 0 - $cx;
+    my $temp_y1 = $length - $cy;
+    my $temp_x2 = $width - $cx;
+    my $temp_y2 = $length - $cy;
+    my $temp_x3 = $width - $cx;
+    my $temp_y3 = 0 - $cy;
+    my $temp_x4 = 0 - $cx;
+    my $temp_y4 = 0 - $cy;
+
+    my $rotated_x1 = $temp_x1*cos($rotate_radians) - $temp_y1*sin($rotate_radians);
+    my $rotated_y1 = $temp_x1*sin($rotate_radians) + $temp_y1*cos($rotate_radians);
+    my $rotated_x2 = $temp_x2*cos($rotate_radians) - $temp_y2*sin($rotate_radians);
+    my $rotated_y2 = $temp_x2*sin($rotate_radians) + $temp_y2*cos($rotate_radians);
+    my $rotated_x3 = $temp_x3*cos($rotate_radians) - $temp_y3*sin($rotate_radians);
+    my $rotated_y3 = $temp_x3*sin($rotate_radians) + $temp_y3*cos($rotate_radians);
+    my $rotated_x4 = $temp_x4*cos($rotate_radians) - $temp_y4*sin($rotate_radians);
+    my $rotated_y4 = $temp_x4*sin($rotate_radians) + $temp_y4*cos($rotate_radians);
+
+    $rotated_x1 = $rotated_x1 + $cx;
+    $rotated_y1 = $rotated_y1 + $cy;
+    $rotated_x2 = $rotated_x2 + $cx;
+    $rotated_y2 = $rotated_y2 + $cy;
+    $rotated_x3 = $rotated_x3 + $cx;
+    $rotated_y3 = $rotated_y3 + $cy;
+    $rotated_x4 = $rotated_x4 + $cx;
+    $rotated_y4 = $rotated_y4 + $cy;
 
     my %nir_image_hash;
     foreach my $lat (@$latitudes) {
@@ -1552,6 +1588,8 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
         my $dst_match_y_rotated = $dst_match_x*sin($rotate_radians) + $dst_match_y*cos($rotate_radians);
         my $x_pos_match_dst = $x_pos_match_src - $dst_match_x_rotated;
         my $y_pos_match_dst = $y_pos_match_src - $dst_match_y_rotated;
+        my $x_pos_match_rotated_translate = $src_match_x_rotated - $dst_match_x_rotated;
+        my $y_pos_match_rotated_translate = $src_match_y_rotated - $dst_match_y_rotated;
 
         my $dst_match2 = $match_points_dst[1];
         my $dst_match2_x = $dst_match2->[0];
@@ -1560,6 +1598,8 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
         my $dst_match2_y_rotated = $dst_match2_x*sin($rotate_radians) + $dst_match2_y*cos($rotate_radians);
         my $x_pos_match2_dst = $x_pos_match2_src - $dst_match2_x_rotated;
         my $y_pos_match2_dst = $y_pos_match2_src - $dst_match2_y_rotated;
+        my $x_pos_match2_rotated_translate = $src_match2_x_rotated - $dst_match2_x_rotated;
+        my $y_pos_match2_rotated_translate = $src_match2_y_rotated - $dst_match2_y_rotated;
 
         my $dst_match3 = $match_points_dst[2];
         my $dst_match3_x = $dst_match3->[0];
@@ -1568,15 +1608,23 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
         my $dst_match3_y_rotated = $dst_match3_x*sin($rotate_radians) + $dst_match3_y*cos($rotate_radians);
         my $x_pos_match3_dst = $x_pos_match3_src - $dst_match3_x_rotated;
         my $y_pos_match3_dst = $y_pos_match3_src - $dst_match3_y_rotated;
+        my $x_pos_match3_rotated_translate = $src_match3_x_rotated - $dst_match3_x_rotated;
+        my $y_pos_match3_rotated_translate = $src_match3_y_rotated - $dst_match3_y_rotated;
 
         my $x_pos_translation = $x_pos_dst - $x_pos_match_dst;
         my $y_pos_translation = $y_pos_dst - $y_pos_match_dst;
+        my $x_pos_translation_no_rotate = $src_match_x - $dst_match_x;
+        my $y_pos_translation_no_rotate = $src_match_y - $dst_match_y;
 
         my $x_pos_translation2 = $x_pos_dst - $x_pos_match2_dst;
         my $y_pos_translation2 = $y_pos_dst - $y_pos_match2_dst;
+        my $x_pos_translation2_no_rotate = $src_match2_x - $dst_match2_x;
+        my $y_pos_translation2_no_rotate = $src_match2_y - $dst_match2_y;
 
         my $x_pos_translation3 = $x_pos_dst - $x_pos_match3_dst;
         my $y_pos_translation3 = $y_pos_dst - $y_pos_match3_dst;
+        my $x_pos_translation3_no_rotate = $src_match3_x - $dst_match3_x;
+        my $y_pos_translation3_no_rotate = $src_match3_y - $dst_match3_y;
 
         my $diffx1 = $x_pos_translation - $x_pos_translation2;
         my $diffy1 = $y_pos_translation - $y_pos_translation2;
@@ -1601,6 +1649,10 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
             $y_pos_match_dst = $y_pos_match_dst;
             $x_pos_translation = $x_pos_translation;
             $y_pos_translation = $y_pos_translation;
+            $x_pos_translation_no_rotate = $x_pos_translation_no_rotate;
+            $y_pos_translation_no_rotate = $y_pos_translation_no_rotate;
+            $x_pos_match_rotated_translate = $x_pos_match_rotated_translate;
+            $y_pos_match_rotated_translate = $y_pos_match_rotated_translate;
         }
         elsif ($p2_diff_sum <= $p1_diff_sum && $p2_diff_sum <= $p3_diff_sum) {
             $smallest_diff = $p2_diff_sum;
@@ -1608,6 +1660,10 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
             $y_pos_match_dst = $y_pos_match2_dst;
             $x_pos_translation = $x_pos_translation2;
             $y_pos_translation = $y_pos_translation2;
+            $x_pos_translation_no_rotate = $x_pos_translation2_no_rotate;
+            $y_pos_translation_no_rotate = $y_pos_translation2_no_rotate;
+            $x_pos_match_rotated_translate = $x_pos_match2_rotated_translate;
+            $y_pos_match_rotated_translate = $y_pos_match2_rotated_translate;
         }
         elsif ($p3_diff_sum <= $p1_diff_sum && $p3_diff_sum <= $p2_diff_sum) {
             $smallest_diff = $p3_diff_sum;
@@ -1615,9 +1671,13 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
             $y_pos_match_dst = $y_pos_match3_dst;
             $x_pos_translation = $x_pos_translation3;
             $y_pos_translation = $y_pos_translation3;
+            $x_pos_translation_no_rotate = $x_pos_translation3_no_rotate;
+            $y_pos_translation_no_rotate = $y_pos_translation3_no_rotate;
+            $x_pos_match_rotated_translate = $x_pos_match3_rotated_translate;
+            $y_pos_match_rotated_translate = $y_pos_match3_rotated_translate;
         }
 
-        if ($smallest_diff > 80 && $skipped_counter < 2) {
+        if ($smallest_diff > 35 && $skipped_counter < 2) {
             $max_features = 50000 * ($skipped_counter + 1);
             $skipped_counter++;
         }
@@ -1639,10 +1699,15 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
             $nir_image_hash{$image_id1}->{match_problem} = 0;
             $nir_image_hash{$image_id2}->{match_problem} = 0;
 
-            foreach (@{$nir_image_hash{$image_id2}->{rotated_bound_translated}}) {
-                $_->[0] = $_->[0] - $x_pos_translation;
-                $_->[1] = $_->[1] - $y_pos_translation;
-            }
+            my $rotated_bound_dst = [[$rotated_x1, $rotated_y1], [$rotated_x2, $rotated_y2], [$rotated_x3, $rotated_y3], [$rotated_x4, $rotated_y4]];
+            my $rotated_bound_translated_dst = [[$rotated_x1 + $x_pos_match_dst, $rotated_y1 + $y_pos_match_dst], [$rotated_x2 + $x_pos_match_dst, $rotated_y2 + $y_pos_match_dst], [$rotated_x3 + $x_pos_match_dst, $rotated_y3 + $y_pos_match_dst], [$rotated_x4 + $x_pos_match_dst, $rotated_y4 + $y_pos_match_dst]];
+            my $rotated_bound_src = [[$rotated_x1, $rotated_y1], [$rotated_x2, $rotated_y2], [$rotated_x3, $rotated_y3], [$rotated_x4, $rotated_y4]];
+            my $rotated_bound_translated_src = [[$rotated_x1 + $x_pos_match_src, $rotated_y1 + $y_pos_match_src], [$rotated_x2 + $x_pos_match_src, $rotated_y2 + $y_pos_match_src], [$rotated_x3 + $x_pos_match_src, $rotated_y3 + $y_pos_match_src], [$rotated_x4 + $x_pos_match_src, $rotated_y4 + $y_pos_match_src]];
+
+            $nir_image_hash{$image_id1}->{rotated_bound} = $rotated_bound_src;
+            $nir_image_hash{$image_id1}->{rotated_bound_translated} = $rotated_bound_translated_src;
+            $nir_image_hash{$image_id2}->{rotated_bound} = $rotated_bound_dst;
+            $nir_image_hash{$image_id2}->{rotated_bound_translated} = $rotated_bound_translated_dst;
 
             $image_counter++;
             $image_id1 = $nir_image_ids->[$image_counter];
