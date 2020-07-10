@@ -83,13 +83,13 @@ sub search {
     my $limit = $page_size*($page+1)-1;
     my $offset = $page_size*$page;
 
-    my @tissue_ids = $search_params->{sampleDbId} || ($search_params->{sampleDbIds} || ());
-    my @study_names = $search_params->{studyName} || ($search_params->{studyNames} || ());
+    my $tissue_ids = $search_params->{sampleDbId} || ($search_params->{sampleDbIds} || ());
+    my $study_names = $search_params->{studyName} || ($search_params->{studyNames} || ());
     my @study_ids = $search_params->{studyDbId} || ($search_params->{studyDbIds} || ());
     my @plate_ids = $search_params->{plateDbId} || ($search_params->{plateDbIds} || ());
-    my @accession_ids = $search_params->{germplasmDbId} || ($search_params->{germplasmDbIds} || ());
-    my @accession_names = $search_params->{germplasmName} || ($search_params->{germplasmNames} || ());
-    my @obs_ids = $search_params->{observationUnitDbId} || ($search_params->{observationUnitDbIds} || ());
+    my $accession_ids = $search_params->{germplasmDbId} || ($search_params->{germplasmDbIds} || ());
+    my $accession_names = $search_params->{germplasmName} || ($search_params->{germplasmNames} || ());
+    my $obs_ids = $search_params->{observationUnitDbId} || ($search_params->{observationUnitDbIds} || ());
     my @externalreference_ids = $search_params->{externalReferenceID} || ($search_params->{externalReferenceIDs} || ());
     my @externalreference_sources = $search_params->{externalReferenceSource} || ($search_params->{externalReferenceSources} || ());
 
@@ -104,13 +104,13 @@ sub search {
 
     my $sample_search = CXGN::Stock::TissueSample::Search->new({
         bcs_schema=>$self->bcs_schema,
-        tissue_sample_db_id_list => \@tissue_ids,
+        tissue_sample_db_id_list => $tissue_ids,
         # tissue_sample_name_list => \@tissue_names,
         plate_db_id_list => @geno_trial_ids,
-        plate_name_list => \@study_names,
-        germplasm_db_id_list => \@accession_ids,
-        germplasm_name_list => \@accession_names,
-        observation_unit_db_id_list => \@obs_ids,
+        plate_name_list => $study_names,
+        germplasm_db_id_list => $accession_ids,
+        germplasm_name_list => $accession_names,
+        observation_unit_db_id_list => $obs_ids,
         # observation_unit_name_list => \@obs_names,
         limit => $limit,
         offset => $offset
@@ -129,7 +129,7 @@ sub search {
             row  => $_->{row_number},
             sampleDbId => qq|$_->{sampleDbId}|,
             sampleName => $_->{sampleName},
-            sampleGroupDbId => qq|$_->{plantDbId}|,
+            sampleGroupDbId => $_->{plantDbId} ? qq|$_->{plantDbId}| : undef,
             sampleBarcode => undef, 
             samplePUI  => undef, 
             sampleDescription  => $_->{notes},

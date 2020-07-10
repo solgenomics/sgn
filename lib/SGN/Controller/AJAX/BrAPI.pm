@@ -1289,7 +1289,7 @@ sub germplasm_attributes_values_detail_GET {
 	my $c = shift;
 	my ($auth) = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
-	$clean_inputs->{attributeValueDbId}=$c->stash->{value_id};
+	$clean_inputs->{attributeValueDbId}=[$c->stash->{value_id}];
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('GermplasmAttributeValues');
 	my $brapi_package_result = $brapi_module->search($clean_inputs);
