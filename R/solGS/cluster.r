@@ -168,8 +168,8 @@ if (length(sIndexFile) != 0) {
     sIndexData <- data.frame(fread(sIndexFile, header = TRUE))
     selectionProp <- selectionProp * 0.01
     selectedIndexGenotypes <- sIndexData %>% top_frac(selectionProp)
+  
     selectedIndexGenotypes <- column_to_rownames(selectedIndexGenotypes, var = 'V1')
-
 
     if (!is.null(selectedIndexGenotypes)) {
         clusterData <- rownames_to_column(clusterData, var = "genotypes")    
@@ -196,16 +196,28 @@ kClusters        <- data.frame(kMeansOut$cluster)
 kClusters        <- rownames_to_column(kClusters)
 names(kClusters) <- c('germplasmName', 'Cluster')
 
-clusteredData <- bind_cols(kClusters, clusterDataNotScaled)
-clusteredData <- clusteredData %>%
-                 mutate_if(is.numeric, funs(round(., 2))) %>%
-                 arrange(Cluster)
+if (!is.null(clusterDataNotScaled)) {
+    clusterDataNotScaled <- rownames_to_column(clusterDataNotScaled,
+                                               var="germplasmName")
+    
+    clusteredData <- inner_join(kClusters, clusterDataNotScaled,
+                                by="germplasmName")
+} else if (!is.null(selectedIndexGenotypes)) {
+    selectedIndexGenotypes <- rownames_to_column(selectedIndexGenotypes,
+                                                 var="germplasmName")
+    clusteredData <- inner_join(kClusters, selectedIndexGenotypes,
+                                by="germplasmName")   
+} else {
+    clusteredData <- kClusters
+}
 
+clusteredData <- clusteredData %>%
+    mutate_if(is.numeric, funs(round(., 2))) %>%
+    arrange(Cluster)
 
 png(plotKmeansFile)
 autoplot(kMeansOut, data = clusterData, frame = TRUE,  x = 1, y = 2)
 dev.off()
-
 
 cat(reportNotes, file = reportFile, sep = "\n", append = TRUE)
 
@@ -216,7 +228,6 @@ if (length(genoFiles) > 1) {
        row.names = TRUE,
        quote     = FALSE,
        )
-
 }
 
 if (length(kResultFile) != 0 ) {
@@ -226,7 +237,6 @@ if (length(kResultFile) != 0 ) {
        row.names = FALSE,
        quote     = FALSE,
        )
-
 }
 
 ####
