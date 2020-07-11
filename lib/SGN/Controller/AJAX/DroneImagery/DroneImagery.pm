@@ -1588,8 +1588,6 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
         my $dst_match_y_rotated = $dst_match_x*sin($rotate_radians) + $dst_match_y*cos($rotate_radians);
         my $x_pos_match_dst = $x_pos_match_src - $dst_match_x_rotated;
         my $y_pos_match_dst = $y_pos_match_src - $dst_match_y_rotated;
-        my $x_pos_match_rotated_translate = $src_match_x_rotated - $dst_match_x_rotated;
-        my $y_pos_match_rotated_translate = $src_match_y_rotated - $dst_match_y_rotated;
 
         my $dst_match2 = $match_points_dst[1];
         my $dst_match2_x = $dst_match2->[0];
@@ -1598,8 +1596,6 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
         my $dst_match2_y_rotated = $dst_match2_x*sin($rotate_radians) + $dst_match2_y*cos($rotate_radians);
         my $x_pos_match2_dst = $x_pos_match2_src - $dst_match2_x_rotated;
         my $y_pos_match2_dst = $y_pos_match2_src - $dst_match2_y_rotated;
-        my $x_pos_match2_rotated_translate = $src_match2_x_rotated - $dst_match2_x_rotated;
-        my $y_pos_match2_rotated_translate = $src_match2_y_rotated - $dst_match2_y_rotated;
 
         my $dst_match3 = $match_points_dst[2];
         my $dst_match3_x = $dst_match3->[0];
@@ -1608,23 +1604,15 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
         my $dst_match3_y_rotated = $dst_match3_x*sin($rotate_radians) + $dst_match3_y*cos($rotate_radians);
         my $x_pos_match3_dst = $x_pos_match3_src - $dst_match3_x_rotated;
         my $y_pos_match3_dst = $y_pos_match3_src - $dst_match3_y_rotated;
-        my $x_pos_match3_rotated_translate = $src_match3_x_rotated - $dst_match3_x_rotated;
-        my $y_pos_match3_rotated_translate = $src_match3_y_rotated - $dst_match3_y_rotated;
 
         my $x_pos_translation = $x_pos_dst - $x_pos_match_dst;
         my $y_pos_translation = $y_pos_dst - $y_pos_match_dst;
-        my $x_pos_translation_no_rotate = $src_match_x - $dst_match_x;
-        my $y_pos_translation_no_rotate = $src_match_y - $dst_match_y;
 
         my $x_pos_translation2 = $x_pos_dst - $x_pos_match2_dst;
         my $y_pos_translation2 = $y_pos_dst - $y_pos_match2_dst;
-        my $x_pos_translation2_no_rotate = $src_match2_x - $dst_match2_x;
-        my $y_pos_translation2_no_rotate = $src_match2_y - $dst_match2_y;
 
         my $x_pos_translation3 = $x_pos_dst - $x_pos_match3_dst;
         my $y_pos_translation3 = $y_pos_dst - $y_pos_match3_dst;
-        my $x_pos_translation3_no_rotate = $src_match3_x - $dst_match3_x;
-        my $y_pos_translation3_no_rotate = $src_match3_y - $dst_match3_y;
 
         my $diffx1 = $x_pos_translation - $x_pos_translation2;
         my $diffy1 = $y_pos_translation - $y_pos_translation2;
@@ -1649,10 +1637,6 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
             $y_pos_match_dst = $y_pos_match_dst;
             $x_pos_translation = $x_pos_translation;
             $y_pos_translation = $y_pos_translation;
-            $x_pos_translation_no_rotate = $x_pos_translation_no_rotate;
-            $y_pos_translation_no_rotate = $y_pos_translation_no_rotate;
-            $x_pos_match_rotated_translate = $x_pos_match_rotated_translate;
-            $y_pos_match_rotated_translate = $y_pos_match_rotated_translate;
         }
         elsif ($p2_diff_sum <= $p1_diff_sum && $p2_diff_sum <= $p3_diff_sum) {
             $smallest_diff = $p2_diff_sum;
@@ -1660,10 +1644,6 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
             $y_pos_match_dst = $y_pos_match2_dst;
             $x_pos_translation = $x_pos_translation2;
             $y_pos_translation = $y_pos_translation2;
-            $x_pos_translation_no_rotate = $x_pos_translation2_no_rotate;
-            $y_pos_translation_no_rotate = $y_pos_translation2_no_rotate;
-            $x_pos_match_rotated_translate = $x_pos_match2_rotated_translate;
-            $y_pos_match_rotated_translate = $y_pos_match2_rotated_translate;
         }
         elsif ($p3_diff_sum <= $p1_diff_sum && $p3_diff_sum <= $p2_diff_sum) {
             $smallest_diff = $p3_diff_sum;
@@ -1671,13 +1651,9 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
             $y_pos_match_dst = $y_pos_match3_dst;
             $x_pos_translation = $x_pos_translation3;
             $y_pos_translation = $y_pos_translation3;
-            $x_pos_translation_no_rotate = $x_pos_translation3_no_rotate;
-            $y_pos_translation_no_rotate = $y_pos_translation3_no_rotate;
-            $x_pos_match_rotated_translate = $x_pos_match3_rotated_translate;
-            $y_pos_match_rotated_translate = $y_pos_match3_rotated_translate;
         }
 
-        if ($smallest_diff > 35 && $skipped_counter < 2) {
+        if ($smallest_diff > 20 && $skipped_counter < 2) {
             $max_features = 50000 * ($skipped_counter + 1);
             $skipped_counter++;
         }
