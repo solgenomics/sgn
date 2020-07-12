@@ -1064,7 +1064,7 @@ sub _drone_imagery_interactive_get_gps {
             longitude => $longitude_raw
         };
 
-        $gps_images_rounded{$latitude_rounded}->{$longitude_rounded} = {
+        push @{$gps_images_rounded{$latitude_rounded}->{$longitude_rounded}}, {
             nir_image_id => $nir_image_id,
             d3_rotate_angle => $nir_image->{d3_rotate_angle},
             rotated_bound => $nir_image->{rotated_bound},
@@ -1717,21 +1717,21 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
         my $latitude_rounded_dst = $latitudes_rounded->[$latitude_ordinal_dst-1];
         my $longitude_rounded_dst = $longitudes_rounded->[$longitude_ordinal_dst-1];
 
-        my $gps_obj_src_lat_up_image_id;
+        my $gps_obj_src_lat_up_objects;
         if ($latitudes_rounded->[$latitude_ordinal_src-1+1]) {
-            $gps_obj_src_lat_up_image_id = $gps_images_rounded->{$latitudes_rounded->[$latitude_ordinal_src-1+1]}->{$longitude_rounded_src}->{nir_image_id};
+            $gps_obj_src_lat_up_objects = $gps_images_rounded->{$latitudes_rounded->[$latitude_ordinal_src-1+1]}->{$longitude_rounded_src};
         }
-        my $gps_obj_src_lat_down_image_id;
+        my $gps_obj_src_lat_down_objects;
         if ($latitudes_rounded->[$latitude_ordinal_src-1-1]) {
-            $gps_obj_src_lat_down_image_id = $gps_images_rounded->{$latitudes_rounded->[$latitude_ordinal_src-1-1]}->{$longitude_rounded_src}->{nir_image_id};
+            $gps_obj_src_lat_down_objects = $gps_images_rounded->{$latitudes_rounded->[$latitude_ordinal_src-1-1]}->{$longitude_rounded_src};
         }
-        my $gps_obj_src_long_up_image_id;
+        my $gps_obj_src_long_up_objects;
         if ($longitudes_rounded->[$longitude_ordinal_src-1+1]) {
-            $gps_obj_src_long_up_image_id = $gps_images_rounded->{$latitude_rounded_src}->{$longitudes_rounded->[$longitude_ordinal_src-1+1]}->{nir_image_id};
+            $gps_obj_src_long_up_objects = $gps_images_rounded->{$latitude_rounded_src}->{$longitudes_rounded->[$longitude_ordinal_src-1+1]};
         }
-        my $gps_obj_src_long_down_image_id;
+        my $gps_obj_src_long_down_objects;
         if ($longitudes_rounded->[$longitude_ordinal_src-1-1]) {
-            $gps_obj_src_long_down_image_id = $gps_images_rounded->{$latitude_rounded_src}->{$longitudes_rounded->[$longitude_ordinal_src-1-1]}->{nir_image_id};
+            $gps_obj_src_long_down_objects = $gps_images_rounded->{$latitude_rounded_src}->{$longitudes_rounded->[$longitude_ordinal_src-1-1]};
         }
 
         my $match = _drone_imagery_match_and_align_images($c, $schema, $image_id1, $image_id2, $gps_obj_src, $gps_obj_dst, $max_features, $rotate_radians, $total_image_count, $image_counter, $skipped_counter);
@@ -1744,25 +1744,32 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
         my $y_pos_translation = $match->{y_pos_translation};
         my $align_temp_image = $match->{align_temp_image};
 
-        if ($gps_obj_src_lat_up_image_id && $nir_image_hash{$gps_obj_src_lat_up_image_id} && $nir_image_hash{$gps_obj_src_lat_up_image_id}->{match_src_to}) {
-            my $match2 = _drone_imagery_match_and_align_images($c, $schema, $gps_obj_src_lat_up_image_id, $image_id2, $nir_image_hash{$gps_obj_src_lat_up_image_id}, $gps_obj_dst, $max_features, $rotate_radians, $total_image_count, $image_counter, $skipped_counter);
-            my $smallest_diff2 = $match2->{smallest_diff};
-            my $x_pos_match_dst2 = $match2->{x_pos_match_dst};
-            my $y_pos_match_dst2 = $match2->{y_pos_match_dst};
-            my $x_pos_match_src2 = $match2->{x_pos_match_src};
-            my $y_pos_match_src2 = $match2->{y_pos_match_src};
-            my $x_pos_translation2 = $match2->{x_pos_translation};
-            my $y_pos_translation2 = $match2->{y_pos_translation};
-            my $align_temp_image2 = $match2->{align_temp_image};
+        if ($gps_obj_src_lat_up_objects) {
+            print STDERR "LAT UP OBJS: ".scalar(@$gps_obj_src_lat_up_objects)."\n";
+            foreach (@$gps_obj_src_lat_up_objects) {
+                my $gps_obj_src_lat_up_image_id = $_->{nir_image_id};
 
-            if ($smallest_diff2 <= 30) {
-                $smallest_diff = ($smallest_diff + $smallest_diff2) / 2;
-                $x_pos_match_dst = ($x_pos_match_dst + $x_pos_match_dst2) / 2;
-                $y_pos_match_dst = ($y_pos_match_dst + $y_pos_match_dst2) / 2;
-                $x_pos_match_src = ($x_pos_match_src + $x_pos_match_src2) / 2;
-                $y_pos_match_src = ($y_pos_match_src + $y_pos_match_src2) / 2;
-                $x_pos_translation = ($x_pos_translation + $x_pos_translation2) / 2;
-                $y_pos_translation = ($y_pos_translation + $y_pos_translation2) / 2;
+                if ($gps_obj_src_lat_up_image_id && $nir_image_hash{$gps_obj_src_lat_up_image_id} && $nir_image_hash{$gps_obj_src_lat_up_image_id}->{match_src_to}) {
+                    my $match2 = _drone_imagery_match_and_align_images($c, $schema, $gps_obj_src_lat_up_image_id, $image_id2, $nir_image_hash{$gps_obj_src_lat_up_image_id}, $gps_obj_dst, 50000, $rotate_radians, $total_image_count, $image_counter, $skipped_counter);
+                    my $smallest_diff2 = $match2->{smallest_diff};
+                    my $x_pos_match_dst2 = $match2->{x_pos_match_dst};
+                    my $y_pos_match_dst2 = $match2->{y_pos_match_dst};
+                    my $x_pos_match_src2 = $match2->{x_pos_match_src};
+                    my $y_pos_match_src2 = $match2->{y_pos_match_src};
+                    my $x_pos_translation2 = $match2->{x_pos_translation};
+                    my $y_pos_translation2 = $match2->{y_pos_translation};
+                    my $align_temp_image2 = $match2->{align_temp_image};
+
+                    if ($smallest_diff2 <= 30) {
+                        $smallest_diff = ($smallest_diff + $smallest_diff2) / 2;
+                        $x_pos_match_dst = ($x_pos_match_dst + $x_pos_match_dst2) / 2;
+                        $y_pos_match_dst = ($y_pos_match_dst + $y_pos_match_dst2) / 2;
+                        $x_pos_match_src = ($x_pos_match_src + $x_pos_match_src2) / 2;
+                        $y_pos_match_src = ($y_pos_match_src + $y_pos_match_src2) / 2;
+                        $x_pos_translation = ($x_pos_translation + $x_pos_translation2) / 2;
+                        $y_pos_translation = ($y_pos_translation + $y_pos_translation2) / 2;
+                    }
+                }
             }
         }
 
