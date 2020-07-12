@@ -1750,7 +1750,7 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
                 my $gps_obj_src_lat_up_image_id = $_->{nir_image_id};
 
                 if ($gps_obj_src_lat_up_image_id && $nir_image_hash{$gps_obj_src_lat_up_image_id} && $nir_image_hash{$gps_obj_src_lat_up_image_id}->{match_src_to}) {
-                    my $match2 = _drone_imagery_match_and_align_images($c, $schema, $gps_obj_src_lat_up_image_id, $image_id2, $nir_image_hash{$gps_obj_src_lat_up_image_id}, $gps_obj_dst, 50000, $rotate_radians, $total_image_count, $image_counter, $skipped_counter);
+                    my $match2 = _drone_imagery_match_and_align_images($c, $schema, $gps_obj_src_lat_up_image_id, $image_id2, $nir_image_hash{$gps_obj_src_lat_up_image_id}, $gps_obj_dst, $max_features, $rotate_radians, $total_image_count, $image_counter, $skipped_counter);
                     my $smallest_diff2 = $match2->{smallest_diff};
                     my $x_pos_match_dst2 = $match2->{x_pos_match_dst};
                     my $y_pos_match_dst2 = $match2->{y_pos_match_dst};
@@ -1760,7 +1760,7 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
                     my $y_pos_translation2 = $match2->{y_pos_translation};
                     my $align_temp_image2 = $match2->{align_temp_image};
 
-                    if ($smallest_diff2 <= 30) {
+                    if ($smallest_diff2 <= 35) {
                         $smallest_diff = ($smallest_diff + $smallest_diff2) / 2;
                         $x_pos_match_dst = ($x_pos_match_dst + $x_pos_match_dst2) / 2;
                         $y_pos_match_dst = ($y_pos_match_dst + $y_pos_match_dst2) / 2;
@@ -1773,7 +1773,7 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
             }
         }
 
-        if ($smallest_diff > 30 && $skipped_counter < 2) {
+        if ($smallest_diff > 35 && $skipped_counter < 2) {
             $max_features = 50000 * ($skipped_counter + 1);
             $skipped_counter++;
         }
