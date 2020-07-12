@@ -1755,7 +1755,7 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
             my $y_pos_translation2 = $match2->{y_pos_translation};
             my $align_temp_image2 = $match2->{align_temp_image};
 
-            if ($smallest_diff2 < 20) {
+            if ($smallest_diff2 <= 30) {
                 $smallest_diff = ($smallest_diff + $smallest_diff2) / 2;
                 $x_pos_match_dst = ($x_pos_match_dst + $x_pos_match_dst2) / 2;
                 $y_pos_match_dst = ($y_pos_match_dst + $y_pos_match_dst2) / 2;
@@ -1766,7 +1766,7 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
             }
         }
 
-        if ($smallest_diff > 20 && $skipped_counter < 2) {
+        if ($smallest_diff > 30 && $skipped_counter < 2) {
             $max_features = 50000 * ($skipped_counter + 1);
             $skipped_counter++;
         }
