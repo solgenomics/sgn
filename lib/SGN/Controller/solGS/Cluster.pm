@@ -790,15 +790,31 @@ sub save_cluster_opts {
     my $data_type = $c->stash->{data_type};
     my $k_number  = $c->stash->{k_number};
     my $selection_prop = $c->stash->{selection_proportion};
- 
-    my $opts_data = 'Params' . "\t" . 'Value' . "\n";
-    $opts_data   .= 'data type' . "\t" . $data_type . "\n";
-    $opts_data   .= 'k numbers' . "\t" . $k_number  . "\n";
-    $opts_data   .= 'cluster type' . "\t" . $cluster_type  . "\n";
-    $opts_data   .= 'selection proportion' . "\t" . $selection_prop  . "\n" if $selection_prop;
+    my $traits_ids = $c->stash->{training_traits_ids};
+   
+    my @traits_abbrs;
+    my $predicted_traits;
+    
+    if ($traits_ids) 
+    {
+	foreach my $trait_id (@$traits_ids)
+	{
+	    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+	    push @traits_abbrs, $c->stash->{trait_abbr};
+	}
 
+	$predcited_traits = join(',', @traits_abbrs);
+    }
+    
+    my $opts_data = 'Params' . "\t" . 'Value' . "\n";
+    $opts_data   .= 'data_type' . "\t" . $data_type . "\n";
+    $opts_data   .= 'k_numbers' . "\t" . $k_number  . "\n";
+    $opts_data   .= 'cluster_type' . "\t" . $cluster_type  . "\n";
+    $opts_data   .= 'selection_proportion' . "\t" . $selection_prop  . "\n" if $selection_prop;
+    $opts_data   .= 'predicted_traits' . "\t" . $predicted_traits . "\n" if $predicted_traits;
     
     write_file($opts_file, $opts_data);
+    
     
 }
 
