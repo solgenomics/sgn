@@ -31,7 +31,7 @@ use Try::Tiny;
 use CXGN::Stock::ParseUpload;
 use CXGN::BreederSearch;
 use Encode;
-use Encode::Detect;
+#use Encode::Detect;
 use JSON::XS qw | decode_json |;
 use utf8;
 
