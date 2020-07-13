@@ -1686,6 +1686,17 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
     my $image_id1 = $nir_image_ids->[$image_counter];
     my $image_id2 = $nir_image_ids->[$image_counter+1];
 
+    my $check_change_lat = abs($nir_image_hash{$nir_image_ids->[$image_counter+2]}->{latitude} - $nir_image_hash{$image_id1}->{latitude});
+    my $check_change_long = abs($nir_image_hash{$nir_image_ids->[$image_counter+2]}->{longitude} - $nir_image_hash{$image_id1}->{longitude});
+    my $flight_dir = "latitude";
+    if ($check_change_long > $check_change_lat) {
+        $flight_dir = "longitude";
+    }
+    my $flight_dir_sign = 1;
+    if ($nir_image_hash{$image_id2}->{$flight_dir} - $nir_image_hash{$image_id1}->{$flight_dir} < 0) {
+        $flight_dir_sign = -1;
+    }
+
     my $total_image_count = scalar(@$nir_image_ids);
     my $skipped_counter = 0;
     my $max_features = 1000;
@@ -1734,44 +1745,60 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
             $gps_obj_src_long_down_objects = $gps_images_rounded->{$latitude_rounded_src}->{$longitudes_rounded->[$longitude_ordinal_src-1-1]};
         }
 
+        my $buffer_space_x = 0;
+        my $buffer_space_y = 0;
+        my $flight_dir_sign_check = 1;
+        if ($nir_image_hash{$image_id2}->{$flight_dir} - $nir_image_hash{$image_id1}->{$flight_dir} < 0) {
+            $flight_dir_sign_check = -1;
+        }
+        if ($flight_dir_sign_check != $flight_dir_sign) {
+            if ($flight_dir eq 'longitude') {
+                $buffer_space_y = $width + $length;
+            }
+            if ($flight_dir eq 'latitude') {
+                $buffer_space_x = $width + $length;
+            }
+            $flight_dir_sign = $flight_dir_sign_check;
+        }
+
         my $match = _drone_imagery_match_and_align_images($c, $schema, $image_id1, $image_id2, $gps_obj_src, $gps_obj_dst, $max_features, $rotate_radians, $total_image_count, $image_counter, $skipped_counter);
         my $smallest_diff = $match->{smallest_diff};
-        my $x_pos_match_dst = $match->{x_pos_match_dst};
-        my $y_pos_match_dst = $match->{y_pos_match_dst};
+        my $x_pos_match_dst = $match->{x_pos_match_dst} + $buffer_space_x;
+        my $y_pos_match_dst = $match->{y_pos_match_dst} + $buffer_space_y;
         my $x_pos_match_src = $match->{x_pos_match_src};
         my $y_pos_match_src = $match->{y_pos_match_src};
-        my $x_pos_translation = $match->{x_pos_translation};
-        my $y_pos_translation = $match->{y_pos_translation};
+        my $x_pos_translation = $match->{x_pos_translation} + $buffer_space_x;
+        my $y_pos_translation = $match->{y_pos_translation} + $buffer_space_y;
         my $align_temp_image = $match->{align_temp_image};
 
-        if ($gps_obj_src_lat_up_objects) {
-            print STDERR "LAT UP OBJS: ".scalar(@$gps_obj_src_lat_up_objects)."\n";
-            foreach (@$gps_obj_src_lat_up_objects) {
-                my $gps_obj_src_lat_up_image_id = $_->{nir_image_id};
-
-                if ($gps_obj_src_lat_up_image_id && $nir_image_hash{$gps_obj_src_lat_up_image_id} && $nir_image_hash{$gps_obj_src_lat_up_image_id}->{match_src_to}) {
-                    my $match2 = _drone_imagery_match_and_align_images($c, $schema, $gps_obj_src_lat_up_image_id, $image_id2, $nir_image_hash{$gps_obj_src_lat_up_image_id}, $gps_obj_dst, $max_features, $rotate_radians, $total_image_count, $image_counter, $skipped_counter);
-                    my $smallest_diff2 = $match2->{smallest_diff};
-                    my $x_pos_match_dst2 = $match2->{x_pos_match_dst};
-                    my $y_pos_match_dst2 = $match2->{y_pos_match_dst};
-                    my $x_pos_match_src2 = $match2->{x_pos_match_src};
-                    my $y_pos_match_src2 = $match2->{y_pos_match_src};
-                    my $x_pos_translation2 = $match2->{x_pos_translation};
-                    my $y_pos_translation2 = $match2->{y_pos_translation};
-                    my $align_temp_image2 = $match2->{align_temp_image};
-
-                    if ($smallest_diff2 <= 50) {
-                        $smallest_diff = ($smallest_diff + $smallest_diff2) / 2;
-                        $x_pos_match_dst = ($x_pos_match_dst + $x_pos_match_dst2) / 2;
-                        $y_pos_match_dst = ($y_pos_match_dst + $y_pos_match_dst2) / 2;
-                        $x_pos_match_src = ($x_pos_match_src + $x_pos_match_src2) / 2;
-                        $y_pos_match_src = ($y_pos_match_src + $y_pos_match_src2) / 2;
-                        $x_pos_translation = ($x_pos_translation + $x_pos_translation2) / 2;
-                        $y_pos_translation = ($y_pos_translation + $y_pos_translation2) / 2;
-                    }
-                }
-            }
-        }
+        # if ($gps_obj_src_lat_up_objects) {
+        #     print STDERR "LAT UP OBJS: ".scalar(@$gps_obj_src_lat_up_objects)."\n";
+        #     foreach (@$gps_obj_src_lat_up_objects) {
+        #         my $gps_obj_src_lat_up_image_id = $_->{nir_image_id};
+        # 
+        #         if ($gps_obj_src_lat_up_image_id && $nir_image_hash{$gps_obj_src_lat_up_image_id} && $nir_image_hash{$gps_obj_src_lat_up_image_id}->{match_src_to}) {
+        #             my $match2 = _drone_imagery_match_and_align_images($c, $schema, $gps_obj_src_lat_up_image_id, $image_id2, $nir_image_hash{$gps_obj_src_lat_up_image_id}, $gps_obj_dst, $max_features, $rotate_radians, $total_image_count, $image_counter, $skipped_counter);
+        #             my $smallest_diff2 = $match2->{smallest_diff};
+        #             my $x_pos_match_dst2 = $match2->{x_pos_match_dst};
+        #             my $y_pos_match_dst2 = $match2->{y_pos_match_dst};
+        #             my $x_pos_match_src2 = $match2->{x_pos_match_src};
+        #             my $y_pos_match_src2 = $match2->{y_pos_match_src};
+        #             my $x_pos_translation2 = $match2->{x_pos_translation};
+        #             my $y_pos_translation2 = $match2->{y_pos_translation};
+        #             my $align_temp_image2 = $match2->{align_temp_image};
+        # 
+        #             if ($smallest_diff2 <= 50) {
+        #                 $smallest_diff = ($smallest_diff + $smallest_diff2) / 2;
+        #                 $x_pos_match_dst = ($x_pos_match_dst + $x_pos_match_dst2) / 2;
+        #                 $y_pos_match_dst = ($y_pos_match_dst + $y_pos_match_dst2) / 2;
+        #                 $x_pos_match_src = ($x_pos_match_src + $x_pos_match_src2) / 2;
+        #                 $y_pos_match_src = ($y_pos_match_src + $y_pos_match_src2) / 2;
+        #                 $x_pos_translation = ($x_pos_translation + $x_pos_translation2) / 2;
+        #                 $y_pos_translation = ($y_pos_translation + $y_pos_translation2) / 2;
+        #             }
+        #         }
+        #     }
+        # }
 
         if ($smallest_diff > 35 && $skipped_counter < 2) {
             $max_features = 50000 * ($skipped_counter + 1);
