@@ -712,88 +712,100 @@ sub selection_trait :Path('/solgs/selection/') Args() {
     $c->stash->{data_set_type} = 'single population';
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
     $protocol_id = $c->stash->{genotyping_protocol_id};
-    
-    if ($training_pop_id =~ /list/) 
-    {
-	$c->stash->{list_id} = $training_pop_id =~ s/\w+_//r;
-	$c->controller('solGS::List')->list_population_summary($c);
-	$c->stash->{training_pop_id} = $c->stash->{project_id};
-	$c->stash->{training_pop_name} = $c->stash->{project_name};
-	$c->stash->{training_pop_desc} = $c->stash->{project_desc};
-	$c->stash->{training_pop_owner} = $c->stash->{owner}; 
-    }
-    elsif ($training_pop_id =~ /dataset/) 
-    {
-	$c->stash->{dataset_id} = $training_pop_id =~ s/\w+_//r;
-	$c->controller('solGS::Dataset')->dataset_population_summary($c);
-	$c->stash->{training_pop_id} = $c->stash->{project_id};
-	$c->stash->{training_pop_name} = $c->stash->{project_name};
-	$c->stash->{training_pop_desc} = $c->stash->{project_desc};
-	$c->stash->{training_pop_owner} = $c->stash->{owner}; 
-    }
-    else
-    {
-        $self->get_project_details($c, $training_pop_id); 
-	$c->stash->{training_pop_id} = $c->stash->{project_id};
-	$c->stash->{training_pop_name} = $c->stash->{project_name};
-	$c->stash->{training_pop_desc} = $c->stash->{project_desc};
-	
-        $self->get_project_owners($c, $training_pop_id);       
-        $c->stash->{training_pop_owner} = $c->stash->{project_owners};            
-    }
 
-    if ($selection_pop_id =~ /list/) 
-    {
-	$c->stash->{list_id} = $selection_pop_id =~ s/\w+_//r;
-	
-	$c->controller('solGS::List')->list_population_summary($c);
-	$c->stash->{selection_pop_id} = $c->stash->{project_id};
-	$c->stash->{selection_pop_name} = $c->stash->{project_name};
-	$c->stash->{selection_pop_desc} = $c->stash->{project_desc};
-	$c->stash->{selection_pop_owner} = $c->stash->{owner}; 
-    }
-    elsif ($selection_pop_id =~ /dataset/) 
-    {
-	$c->stash->{dataset_id} = $selection_pop_id =~ s/\w+_//r;
-	$c->controller('solGS::Dataset')->dataset_population_summary($c);
-	$c->stash->{selection_pop_id} = $c->stash->{project_id};
-	$c->stash->{selection_pop_name} = $c->stash->{project_name};
-	$c->stash->{selection_pop_desc} = $c->stash->{project_desc};
-	$c->stash->{selection_pop_owner} = $c->stash->{owner}; 
-    }
-    else
-    {
-        $self->get_project_details($c, $selection_pop_id); 
-	$c->stash->{selection_pop_id} = $c->stash->{project_id};
-	$c->stash->{selection_pop_name} = $c->stash->{project_name};
-	$c->stash->{selection_pop_desc} = $c->stash->{project_desc};
-
-        $self->get_project_owners($c, $selection_pop_id);       
-        $c->stash->{selection_pop_owner} = $c->stash->{project_owners};            
-    }
-   
-    my $tr_pop_mr_cnt = $self->get_markers_count($c, {'training_pop' => 1, 'training_pop_id' => $training_pop_id});
-    my $sel_pop_mr_cnt = $self->get_markers_count($c, {'selection_pop' => 1, 'selection_pop_id' => $selection_pop_id});
-
-    $c->stash->{training_markers_cnt} = $tr_pop_mr_cnt;
-    $c->stash->{selection_markers_cnt} = $sel_pop_mr_cnt;
-
-    my $protocol_url = $c->controller('solGS::genotypingProtocol')->create_protocol_url($c, $protocol_id);
-    $c->stash->{protocol_url} = $protocol_url;
-    
     my $identifier    = $training_pop_id . '_' . $selection_pop_id;
    
     $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
     my $gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
-   
-    my @stock_rows = read_file($gebvs_file);
-    $c->stash->{selection_stocks_cnt} = scalar(@stock_rows) - 1;
 
-    $self->top_blups($c, $gebvs_file);
- 
-    $c->stash->{blups_download_url} = qq | <a href="/solgs/download/prediction/model/$training_pop_id/prediction/$selection_pop_id/$trait_id/gp/$protocol_id">Download all GEBVs</a>|; 
+    if (!-s $gebvs_file)  
+    {    
+    	my $model_page = qq | <a href="/solgs/trait/$trait_id/population/$training_pop_id">training model page</a> |;
+	    
+    	$c->stash->{message} = "No cached output was found for this trait.\n" . 
+    	    " Please go to the $model_page and run the prediction.";
+	 
+    	$c->stash->{template} = "/generic_message.mas"; 	
+    }
+    else
+    {
+	if ($training_pop_id =~ /list/) 
+	{
+	    $c->stash->{list_id} = $training_pop_id =~ s/\w+_//r;
+	    $c->controller('solGS::List')->list_population_summary($c);
+	    $c->stash->{training_pop_id} = $c->stash->{project_id};
+	    $c->stash->{training_pop_name} = $c->stash->{project_name};
+	    $c->stash->{training_pop_desc} = $c->stash->{project_desc};
+	    $c->stash->{training_pop_owner} = $c->stash->{owner}; 
+	}
+	elsif ($training_pop_id =~ /dataset/) 
+	{
+	    $c->stash->{dataset_id} = $training_pop_id =~ s/\w+_//r;
+	    $c->controller('solGS::Dataset')->dataset_population_summary($c);
+	    $c->stash->{training_pop_id} = $c->stash->{project_id};
+	    $c->stash->{training_pop_name} = $c->stash->{project_name};
+	    $c->stash->{training_pop_desc} = $c->stash->{project_desc};
+	    $c->stash->{training_pop_owner} = $c->stash->{owner}; 
+	}
+	else
+	{
+	    $self->get_project_details($c, $training_pop_id); 
+	    $c->stash->{training_pop_id} = $c->stash->{project_id};
+	    $c->stash->{training_pop_name} = $c->stash->{project_name};
+	    $c->stash->{training_pop_desc} = $c->stash->{project_desc};
+	    
+	    $self->get_project_owners($c, $training_pop_id);       
+	    $c->stash->{training_pop_owner} = $c->stash->{project_owners};            
+	}
 
-    $c->stash->{template} = $c->controller('solGS::Files')->template('/population/selection_trait.mas');
+	if ($selection_pop_id =~ /list/) 
+	{
+	    $c->stash->{list_id} = $selection_pop_id =~ s/\w+_//r;
+	    
+	    $c->controller('solGS::List')->list_population_summary($c);
+	    $c->stash->{selection_pop_id} = $c->stash->{project_id};
+	    $c->stash->{selection_pop_name} = $c->stash->{project_name};
+	    $c->stash->{selection_pop_desc} = $c->stash->{project_desc};
+	    $c->stash->{selection_pop_owner} = $c->stash->{owner}; 
+	}
+	elsif ($selection_pop_id =~ /dataset/) 
+	{
+	    $c->stash->{dataset_id} = $selection_pop_id =~ s/\w+_//r;
+	    $c->controller('solGS::Dataset')->dataset_population_summary($c);
+	    $c->stash->{selection_pop_id} = $c->stash->{project_id};
+	    $c->stash->{selection_pop_name} = $c->stash->{project_name};
+	    $c->stash->{selection_pop_desc} = $c->stash->{project_desc};
+	    $c->stash->{selection_pop_owner} = $c->stash->{owner}; 
+	}
+	else
+	{
+	    $self->get_project_details($c, $selection_pop_id); 
+	    $c->stash->{selection_pop_id} = $c->stash->{project_id};
+	    $c->stash->{selection_pop_name} = $c->stash->{project_name};
+	    $c->stash->{selection_pop_desc} = $c->stash->{project_desc};
+
+	    $self->get_project_owners($c, $selection_pop_id);       
+	    $c->stash->{selection_pop_owner} = $c->stash->{project_owners};            
+	}
+	
+	my $tr_pop_mr_cnt = $self->get_markers_count($c, {'training_pop' => 1, 'training_pop_id' => $training_pop_id});
+	my $sel_pop_mr_cnt = $self->get_markers_count($c, {'selection_pop' => 1, 'selection_pop_id' => $selection_pop_id});
+
+	$c->stash->{training_markers_cnt} = $tr_pop_mr_cnt;
+	$c->stash->{selection_markers_cnt} = $sel_pop_mr_cnt;
+
+	my $protocol_url = $c->controller('solGS::genotypingProtocol')->create_protocol_url($c, $protocol_id);
+	$c->stash->{protocol_url} = $protocol_url;
+	
+	my @stock_rows = read_file($gebvs_file);
+	$c->stash->{selection_stocks_cnt} = scalar(@stock_rows) - 1;
+
+	$self->top_blups($c, $gebvs_file);
+	
+	$c->stash->{blups_download_url} = qq | <a href="/solgs/download/prediction/model/$training_pop_id/prediction/$selection_pop_id/$trait_id/gp/$protocol_id">Download all GEBVs</a>|; 
+
+	$c->stash->{template} = $c->controller('solGS::Files')->template('/population/selection_trait.mas');
+    }
     
 } 
 
@@ -1499,10 +1511,10 @@ sub check_training_population :Path('/solgs/check/training/population/') Args() 
 sub check_population_is_training_population {
     my ($self, $c, $pop_id, $protocol_id) = @_;
 
-    my $pr_id = $c->stash->{training_pop_id} if !$pop_id;
-    my $protocol_id = $c->stash->{genotyping_protocol_id} if !$protocol_id;
+    $pop_id = $c->stash->{training_pop_id} if !$pop_id;
+    $protocol_id = $c->stash->{genotyping_protocol_id} if !$protocol_id;
     
-    my $is_gs = $c->model("solGS::solGS")->get_project_type($pr_id);
+    my $is_gs = $c->model("solGS::solGS")->get_project_type($pop_id);
 
     my $has_phenotype;
     my $has_genotype;
@@ -2463,7 +2475,7 @@ sub create_trait_data {
 sub get_acronym_pairs {
     my ($self, $c, $pop_id) = @_;
 
-    my $pop_id = $c->stash->{training_pop_id} if !$pop_id;
+    $pop_id = $c->stash->{training_pop_id} if !$pop_id;
     #$pop_id = $c->stash->{combo_pops_id} if !$pop_id;
 
     my $dir    = $c->stash->{solgs_cache_dir};

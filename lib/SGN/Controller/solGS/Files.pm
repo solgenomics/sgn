@@ -589,7 +589,7 @@ sub create_file_id {
     } 
     elsif (scalar(@traits_ids == 1))
     {
-	$trait_id = @traits_ids[0];
+	$trait_id = $traits_ids[0];
     }
         
     my $file_id;
