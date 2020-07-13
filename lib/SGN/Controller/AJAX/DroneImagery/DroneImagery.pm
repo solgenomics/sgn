@@ -1760,7 +1760,7 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
                     my $y_pos_translation2 = $match2->{y_pos_translation};
                     my $align_temp_image2 = $match2->{align_temp_image};
 
-                    if ($smallest_diff2 <= 35) {
+                    if ($smallest_diff2 <= 50) {
                         $smallest_diff = ($smallest_diff + $smallest_diff2) / 2;
                         $x_pos_match_dst = ($x_pos_match_dst + $x_pos_match_dst2) / 2;
                         $y_pos_match_dst = ($y_pos_match_dst + $y_pos_match_dst2) / 2;
@@ -3888,7 +3888,9 @@ sub standard_process_apply_raw_images_interactive_POST : Args(0) {
 
                 my $current_image_id = $image_ids->[$band_counter];
 
-                my $return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $current_image_id, $apply_drone_run_band_project_id, encode_json $plot_polygon, $plot_polygon_type, $user_id, $user_name, $user_role, 0, 1);
+                if ($current_image_id) {
+                    my $return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $current_image_id, $apply_drone_run_band_project_id, encode_json $plot_polygon, $plot_polygon_type, $user_id, $user_name, $user_role, 0, 1);
+                }
             }
         }
         $band_counter++;
