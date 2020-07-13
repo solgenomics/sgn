@@ -2182,32 +2182,33 @@ jQuery(document).ready(function ($) {
                 if (trial_index in trial_treatments){
                     var trial = trial_treatments[trial_index];
                     if (trial_treatment in trial){
-                        trial[trial_treatment].push(plot_name);
+                        trial[trial_treatment]['new_treatment_stocks'].push(plot_name);
                     } else {
-                        trial[trial_treatment] = [plot_name];
+                        trial[trial_treatment]['new_treatment_stocks'] = [plot_name];
                     }
                     if (plant_names != 'undefined'){
                         for(var i=0; i<plant_names.length; i++){
-                            trial[trial_treatment].push(plant_names[i]);
+                            trial[trial_treatment]['new_treatment_stocks'].push(plant_names[i]);
                         }
                     }
                     if (subplot_names != 'undefined'){
                         for(var i=0; i<subplot_names.length; i++){
-                            trial[trial_treatment].push(subplot_names[i]);
+                            trial[trial_treatment]['new_treatment_stocks'].push(subplot_names[i]);
                         }
                     }
                     trial_treatments[trial_index] = trial;
                 } else {
                     obj = {};
-                    obj[trial_treatment] = [plot_name];
+                    obj[trial_treatment] = {};
+                    obj[trial_treatment]['new_treatment_stocks'] = [plot_name];
                     if (plant_names != 'undefined'){
                         for(var i=0; i<plant_names.length; i++){
-                            obj[trial_treatment].push(plant_names[i]);
+                            obj[trial_treatment]['new_treatment_stocks'].push(plant_names[i]);
                         }
                     }
                     if (subplot_names != 'undefined'){
                         for(var i=0; i<subplot_names.length; i++){
-                            obj[trial_treatment].push(subplot_names[i]);
+                            obj[trial_treatment]['new_treatment_stocks'].push(subplot_names[i]);
                         }
                     }
                     trial_treatments[trial_index] = obj;
@@ -2240,7 +2241,7 @@ jQuery(document).ready(function ($) {
             //html += "Trial "+i+"<br/>";
             for (var key in treatments){
                 html += "Treatment: <b>"+key+"</b> Plots: ";
-                var plot_array = treatments[key];
+                var plot_array = treatments[key]['new_treatment_stocks'];
                 html += plot_array.join(', ') + "<br/>";
             }
         }
