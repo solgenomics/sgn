@@ -45,9 +45,11 @@ clusterOptions <- read.table(optionsFile,
                              na.strings = "")
 print(clusterOptions)
 clusterOptions <- column_to_rownames(clusterOptions, var = "Params")
-userKNumbers   <- as.numeric(clusterOptions["k numbers", 1])
-dataType       <- clusterOptions["data type", 1]
-selectionProp  <- as.numeric(clusterOptions["selection proportion", 1])
+userKNumbers   <- as.numeric(clusterOptions["k_numbers", 1])
+dataType       <- clusterOptions["data_type", 1]
+selectionProp  <- as.numeric(clusterOptions["selection_proportion", 1])
+predictedTraits <- clusterOptions["predicted_traits", 1]
+predictedTraits <- unlist(strsplit(predictedTraits, ','))
 
 if (is.null(kResultFile)) {
   stop("Clustering output file is missing.")
@@ -153,6 +155,10 @@ if (grepl('genotype', dataType, ignore.case = TRUE)) {
 
         metaFile <- grep("meta", inputFiles,  value = TRUE)
         clusterData <- cleanAveragePhenotypes(inputFiles, metaDataFile = metaFile)
+      
+        if (!is.na(predictedTraits)) {
+            clusterData <- subset(clusterData, select = predictedTraits)
+        }
     }
 
     clusterDataNotScaled <- na.omit(clusterData)
