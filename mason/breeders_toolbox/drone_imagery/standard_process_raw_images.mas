@@ -83,6 +83,7 @@
 
                 <button class="btn btn-default" id="drone_imagery_standard_process_interactive_rotate_crosshairs">Draw Crosshairs Assist</button>
                 <button class="btn btn-primary" id="manage_drone_imagery_standard_process_interactive_rotate_step">Save Rotated Image And Go To Next Step</button>
+                <button class="btn btn-default" id="drone_imagery_standard_process_raw_images_interactive_rotate_restart">Start Over Alignment</button>
             </div>
 
             <hr>
@@ -651,6 +652,23 @@ jQuery(document).ready(function(){
     });
 
     jQuery('#drone_imagery_standard_process_raw_images_interactive_match_restart').click(function(){
+        jQuery.ajax({
+            url : '/api/drone_imagery/delete_gps_images',
+            type: 'POST',
+            data : {
+                'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id
+            },
+            success: function(response){
+                console.log(response);
+                location.reload();
+            },
+            error: function(response){
+                alert('Error deleting GPS images template!')
+            }
+        });
+    });
+
+    jQuery('#drone_imagery_standard_process_raw_images_interactive_rotate_restart').click(function(){
         jQuery.ajax({
             url : '/api/drone_imagery/delete_gps_images',
             type: 'POST',
