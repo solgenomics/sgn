@@ -1701,6 +1701,8 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
     my $skipped_counter = 0;
     my $max_features = 1000;
 
+    my $message = "Completed matching";
+
     while ($image_id1 && $image_id2) {
 
         my $gps_obj_src = $nir_image_hash{$image_id1};
@@ -1808,6 +1810,7 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
             $nir_image_hash{$image_id2}->{match_problem} = 1;
             $image_id1 = undef;
             $image_id2 = undef;
+            $message = "There was a problem matching up images. Please manually position the image outlined in red";
         }
         else {
             $max_features = 1000;
@@ -1896,7 +1899,8 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
 
     $c->stash->{rest} = {
         success => 1,
-        gps_images_matched => \%gps_images_matched
+        gps_images_matched => \%gps_images_matched,
+        message => $message
     };
 }
 

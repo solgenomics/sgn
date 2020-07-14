@@ -76,7 +76,7 @@
                     <div class="form-group form-group-sm">
                         <label class="col-sm-6 control-label">Rotate Images: </label>
                         <div class="col-sm-6">
-                            <input type="range" min="0" max="180" id="drone_imagery_standard_process_raw_images_interactive_bulk_rotate_degrees_input" name="drone_imagery_standard_process_raw_images_interactive_bulk_rotate_degrees_input" value="0.00">
+                            <input type="range" min="-180" max="180" id="drone_imagery_standard_process_raw_images_interactive_bulk_rotate_degrees_input" name="drone_imagery_standard_process_raw_images_interactive_bulk_rotate_degrees_input" value="0.00">
                         </div>
                     </div>
                 </form>
@@ -922,6 +922,7 @@ jQuery(document).ready(function(){
             success: function(response){
                 console.log(response);
             //    jQuery('#working_modal').modal('hide');
+                alert(response.message);
 
                 console.log("Match Seq Complete");
                 initializeInteractiveSvg('#drone_imagery_standard_process_raw_images_image_id_interactive_select_div', 'drone_imagery_standard_process_raw_images_image_id_interactive_select_div_area', 1, 1);
