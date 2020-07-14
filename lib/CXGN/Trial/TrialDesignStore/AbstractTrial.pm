@@ -901,11 +901,19 @@ sub store {
             my %treatments_hash = %{$design{'treatments'}};
 
             foreach my $treatment_name(keys %treatments_hash){
-                my %info_hashes = %{$treatments_hash{$treatment_name}};
-                my $stock_names = $info_hashes{'new_treatment_stocks'};
-                my $management_factor_type = $info_hashes{'new_treatment_type'};
-                my $management_factor_year = $info_hashes{'new_treatment_year'};
-                my $management_factor_date = $info_hashes{'new_treatment_date'};
+                my $stock_names;
+#                my %info_hashes = %{$treatments_hash{$treatment_name}};
+                my $info_value = $treatments_hash{$treatment_name};
+                my $info_type = ref($info_value);
+                if ($info_type eq 'HASH'){
+                    my %info_hashes = %$info_value;
+                    $stock_names = $info_hashes{'new_treatment_stocks'};
+                    my $management_factor_type = $info_hashes{'new_treatment_type'};
+                    my $management_factor_year = $info_hashes{'new_treatment_year'};
+                    my $management_factor_date = $info_hashes{'new_treatment_date'};
+                } else {
+                    $stock_names = $treatments_hash{$treatment_name};
+                }
 #                print STDERR "STOCK NAMES =".Dumper($stock_names)."\n";
                 my @treatment_nd_experiment_stocks;
                 foreach (@$stock_names){
