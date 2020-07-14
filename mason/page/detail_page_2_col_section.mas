@@ -150,6 +150,9 @@ $model_files => {}
                                 <& /breeders_toolbox/trial/files_section.mas, trial_id => $trial_id, trial_phenotype_files => $trial_phenotype_files, trial_stock_type => $trial_stock_type, for_analysis_page => $for_analysis_page &>
 % } #End trial_upload_files
 % if ($info_section_id eq 'trial_analysis_tools'){
+
+                                <& /breeders_toolbox/trial/correlation_workflow.mas, trial_id => $trial_id &>
+
                                 <!-- Phenotypic correlation analysis -->
                                 <& /solgs/population/correlation.mas,
                                     trial_id => $trial_id
@@ -371,6 +374,9 @@ $model_files => {}
 % if ($info_section_id eq 'analysis_details'){
                                 <& /analyses/analysis_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, trial_description=>$trial_description, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, year=>$year, identifier_prefix=>$identifier_prefix, trial_stock_type => $trial_stock_type, analysis_metadata=>$analysis_metadata &>
 % } #End analysis_details
+% if ($info_section_id eq 'analysis_page_analysis_tools'){
+                                <& /breeders_toolbox/trial/correlation_workflow.mas, trial_id => $trial_id, is_analysis => 1 &>
+% }
 % if ($info_section_id eq 'model_details'){
                                 <& /analyses/model_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, analysis_metadata=>$analysis_metadata &>
 % } #End analysis_details
