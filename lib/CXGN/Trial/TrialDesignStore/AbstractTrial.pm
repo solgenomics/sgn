@@ -906,7 +906,7 @@ sub store {
                 my $management_factor_type = $info_hashes{'new_treatment_type'};
                 my $management_factor_year = $info_hashes{'new_treatment_year'};
                 my $management_factor_date = $info_hashes{'new_treatment_date'};
-
+#                print STDERR "STOCK NAMES =".Dumper($stock_names)."\n";
                 my @treatment_nd_experiment_stocks;
                 foreach (@$stock_names){
                     my $stock_id;
@@ -942,7 +942,15 @@ sub store {
                 }
                 if (defined $management_factor_year){
                     push @treatment_project_props, { type_id => $self->get_management_factor_year_cvterm_id, value => $management_factor_year };
+                } else {
+                    my $t = CXGN::Trial->new({
+                        bcs_schema => $chado_schema,
+                        trial_id => $self->get_trial_id
+                    });
+                    push @treatment_project_props, { type_id => $self->get_management_factor_year_cvterm_id, value => $t->get_year() };
                 }
+
+
                 if (defined $management_factor_date){
                     push @treatment_project_props, { type_id => $self->get_management_factor_date_cvterm_id, value => $management_factor_date };
                 }
