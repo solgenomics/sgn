@@ -1755,10 +1755,10 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
         }
         if ($flight_dir_sign_check != $flight_dir_sign) {
             if ($flight_dir eq 'longitude') {
-                $buffer_space_y = 3*$length;
+                $buffer_space_y = $width + $length;
             }
             if ($flight_dir eq 'latitude') {
-                $buffer_space_x = 3*$width;
+                $buffer_space_x = $width + $length;
             }
             $flight_dir_sign = $flight_dir_sign_check;
         }
