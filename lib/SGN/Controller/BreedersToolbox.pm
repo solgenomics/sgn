@@ -86,7 +86,10 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
     }
 
     #print STDERR "Breeding programs are ".Dumper(@breeding_programs);
+    my $field_management_factors = $c->config->{management_factor_types};
+    my @management_factor_types = split ',',$field_management_factors;
 
+    $c->stash->{management_factor_types} = \@management_factor_types;
     $c->stash->{editable_stock_props} = \%editable_stock_props;
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{timestamp} = localtime;
@@ -326,6 +329,10 @@ sub manage_upload :Path("/breeders/upload") Args(0) {
     my $genotyping_facilities = $c->config->{genotyping_facilities};
     my @facilities = split ',',$genotyping_facilities;
 
+    my $field_management_factors = $c->config->{management_factor_types};
+    my @management_factor_types = split ',',$field_management_factors;
+
+    $c->stash->{management_factor_types} = \@management_factor_types;
     $c->stash->{facilities} = \@facilities;
     $c->stash->{geojson_locations} = decode_json($projects->get_all_locations_by_breeding_program());
     $c->stash->{locations} = $projects->get_all_locations();
