@@ -565,6 +565,7 @@ jQuery(document).ready(function(){
 
         var latitude = d3.select(this).attr("latitude");
         var longitude = d3.select(this).attr("longitude");
+        manage_drone_imagery_standard_process_interactive_gps_images[latitude][longitude]['manual_match'] = 1;
         manage_drone_imagery_standard_process_interactive_gps_images[latitude][longitude]['x_pos'] = newX;
         manage_drone_imagery_standard_process_interactive_gps_images[latitude][longitude]['y_pos'] = newY;
         manage_drone_imagery_standard_process_interactive_gps_images[latitude][longitude]['rotate_angle'] = manage_drone_imagery_standard_process_raw_images_interactive_rotate_angle;
