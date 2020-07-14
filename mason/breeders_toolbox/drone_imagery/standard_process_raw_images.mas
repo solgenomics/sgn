@@ -599,7 +599,7 @@ jQuery(document).ready(function(){
             },
             error: function(response){
                 jQuery('#working_modal').hide();
-                alert('Error deleting GPS images template!')
+                alert('Error rotating GPS images!')
             }
         });
     });
@@ -663,7 +663,7 @@ jQuery(document).ready(function(){
                 location.reload();
             },
             error: function(response){
-                alert('Error deleting GPS images template!')
+                alert('Error deleting GPS images template from match step!')
             }
         });
     });
@@ -680,7 +680,7 @@ jQuery(document).ready(function(){
                 location.reload();
             },
             error: function(response){
-                alert('Error deleting GPS images template!')
+                alert('Error deleting GPS images template from rotate step!')
             }
         });
     });
@@ -1072,7 +1072,7 @@ jQuery(document).ready(function(){
                 initializeImagesInteractive(1);
             },
             error: function(response){
-                alert('Error deleting GPS images template!')
+                alert('Error deleting GPS images template from NS step!')
             }
         });
     });
@@ -1091,7 +1091,7 @@ jQuery(document).ready(function(){
                 initializeImagesInteractive(1);
             },
             error: function(response){
-                alert('Error deleting GPS images template!')
+                alert('Error deleting GPS images template from EW step!')
             }
         });
     });
