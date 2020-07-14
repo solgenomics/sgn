@@ -1242,12 +1242,16 @@ sub drone_imagery_update_gps_images_rotation_POST : Args(0) {
                 my $altitude_raw = $i->{altitude};
                 my $image_id = $i->{image_id};
 
-                my $archive_rotate_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_rotate/imageXXXX');
-                $archive_rotate_temp_image .= '.png';
-                my $rotate_return = _perform_image_rotate($c, $schema, $metadata_schema, $drone_run_project_id, $image_id, $rotate_angle*-1, 0, $user_id, $user_name, $user_role, $archive_rotate_temp_image, 0, 0);
-                my $rotated_image_id = $rotate_return->{rotated_image_id};
-                my $rotated_image_url = $rotate_return->{rotated_image_url};
-                print STDERR Dumper $rotated_image_url;
+                my $rotated_image_id;
+                my $rotated_image_url;
+                if ($image_id) {
+                    my $archive_rotate_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_rotate/imageXXXX');
+                    $archive_rotate_temp_image .= '.png';
+                    my $rotate_return = _perform_image_rotate($c, $schema, $metadata_schema, $drone_run_project_id, $image_id, $rotate_angle*-1, 0, $user_id, $user_name, $user_role, $archive_rotate_temp_image, 0, 0);
+                    $rotated_image_id = $rotate_return->{rotated_image_id};
+                    $rotated_image_url = $rotate_return->{rotated_image_url};
+                    print STDERR Dumper $rotated_image_url;
+                }
 
                 my $temp_x1 = 0 - $cx;
                 my $temp_y1 = $length - $cy;

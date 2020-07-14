@@ -734,6 +734,7 @@ sub upload_drone_imagery_POST : Args(0) {
             $c->detach();
         }
         my $image_paths = $zipfile_return->{image_files};
+        # print STDERR Dumper $image_paths;
 
         my $dir = $c->tempfiles_subdir('/upload_drone_imagery_raw_images');
         my $base_path = $c->config->{basepath}."/";
@@ -748,6 +749,7 @@ sub upload_drone_imagery_POST : Args(0) {
                 print $fh "$_,$base_path,$temp_file_raw_image_blue,$temp_file_raw_image_green,$temp_file_raw_image_red,$temp_file_raw_image_nir,$temp_file_raw_image_red_edge\n";
             }
         close($fh);
+        # print STDERR $temp_file_image_file_names."\n";
 
         my @stitched_bands;
         my %raw_image_bands;
@@ -852,11 +854,20 @@ sub upload_drone_imagery_POST : Args(0) {
             my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'raw_drone_imagery', 'project_md_image')->cvterm_id();
             foreach my $image_info (@{$raw_image_bands{$m->[3]}}) {
                 my $im = $image_info->[0];
-                my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
-                $image->set_sp_person_id($user_id);
-                my $ret = $image->process_image($im, 'project', $selected_drone_run_band_id, $linking_table_type_id);
-                my $image_id = $image->get_image_id();
-                push @return_drone_run_band_image_urls, $image->get_image_url('original');
+                my $image_id;
+                my $image_url;
+                if ($im ne 'NA') {
+                    my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+                    $image->set_sp_person_id($user_id);
+                    my $ret = $image->process_image($im, 'project', $selected_drone_run_band_id, $linking_table_type_id);
+                    $image_id = $image->get_image_id();
+                    $image_url = $image->get_image_url('original');
+                }
+                else {
+                    $image_id = undef;
+                    $image_url = undef;
+                }
+                push @return_drone_run_band_image_urls, ;
                 push @return_drone_run_band_image_ids, {
                     image_id => $image_id,
                     latitude => $image_info->[1],
