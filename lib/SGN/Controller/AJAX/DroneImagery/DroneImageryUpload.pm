@@ -1097,11 +1097,20 @@ sub upload_drone_imagery_additional_raw_images_POST : Args(0) {
         my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'raw_drone_imagery', 'project_md_image')->cvterm_id();
         foreach my $image_info (@{$raw_image_bands{$m->[3]}}) {
             my $im = $image_info->[0];
-            my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
-            $image->set_sp_person_id($user_id);
-            my $ret = $image->process_image($im, 'project', $selected_drone_run_band_id, $linking_table_type_id);
-            my $image_id = $image->get_image_id();
-            push @return_drone_run_band_image_urls, $image->get_image_url('original');
+            my $image_id;
+            my $image_url;
+            if ($im ne 'NA') {
+                my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+                $image->set_sp_person_id($user_id);
+                my $ret = $image->process_image($im, 'project', $selected_drone_run_band_id, $linking_table_type_id);
+                $image_id = $image->get_image_id();
+                $image_url = $image->get_image_url('original');
+            }
+            else {
+                $image_id = undef;
+                $image_url = undef;
+            }
+            push @return_drone_run_band_image_urls, $image_url;
             push @return_drone_run_band_image_ids, {
                 image_id => $image_id,
                 latitude => $image_info->[1],
