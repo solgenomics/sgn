@@ -902,15 +902,18 @@ sub store {
 
             foreach my $treatment_name(keys %treatments_hash){
                 my $stock_names;
+                my $management_factor_type;
+                my $management_factor_year;
+                my $management_factor_date;
 #                my %info_hashes = %{$treatments_hash{$treatment_name}};
                 my $info_value = $treatments_hash{$treatment_name};
                 my $info_type = ref($info_value);
                 if ($info_type eq 'HASH'){
                     my %info_hashes = %$info_value;
                     $stock_names = $info_hashes{'new_treatment_stocks'};
-                    my $management_factor_type = $info_hashes{'new_treatment_type'};
-                    my $management_factor_year = $info_hashes{'new_treatment_year'};
-                    my $management_factor_date = $info_hashes{'new_treatment_date'};
+                    $management_factor_type = $info_hashes{'new_treatment_type'};
+                    $management_factor_year = $info_hashes{'new_treatment_year'};
+                    $management_factor_date = $info_hashes{'new_treatment_date'};
                 } else {
                     $stock_names = $treatments_hash{$treatment_name};
                 }
