@@ -30,6 +30,9 @@ $sl->accession_stock_id($seedlot_accession_id);
 $sl->organization_name($seedlot_organization);
 $sl->population_name($seedlot_population_name);
 $sl->breeding_program_id($seedlot_breeding_program_id);
+$sl->quality('MOLD');
+
+
 #TO DO
 #$sl->cross_id($cross_id);
 my $return = $sl->store();
@@ -45,6 +48,10 @@ is_deeply($s->accession_stock_id, $seedlot_accession_id);
 is($s->breeding_program_name, $seedlot_breeding_program_name);
 is($s->breeding_program_id, $seedlot_breeding_program_id);
 is($s->box_name, $seedlot_box_name);
+is($s->quality, 'MOLD', 'set/get quality test');
+
+$s->quality('ROT');
+is($s->quality(), 'ROT', 'quality update test');
 
 
 done_testing();

@@ -102,7 +102,7 @@ Seed transactions can be added using CXGN::Stock::Seedlot::Transaction.
 =head1 AUTHOR
 
 Lukas Mueller <lam87@cornell.edu>
-Nick MOrales <nm529@cornell.edu>
+Nick Morales <nm529@cornell.edu>
 
 =head1 ACCESSORS & METHODS
 
@@ -187,6 +187,34 @@ has 'cross_stock_id' =>   (
     isa => 'Int|Undef',
     is => 'rw',
 );
+
+=head2 Accessor quality()
+
+Allows to store a string describing the quality of this seedlot. A seedlot with no quality issues has no data stored here. Requested initially by AC.
+
+=cut
+
+has 'quality' => (
+    isa => 'Str',
+    is => 'rw',
+    lazy => 1,
+    builder => '_retrieve_quality',
+    );
+
+
+=head2 Accessor source()
+
+The source of this seedlot. This can be the plant, plot, or accession it was sourced from, in a seed multiplication experiment, for example, in the absence of a cross experiment. Requested initially by AC.
+
+=cut
+
+has 'source' => (
+    isa => 'Str',
+    is => 'rw',
+    lazy => 1,
+    builder => '_retrieve_source',
+    );
+
 
 =head2 Accessor accessions()
 
@@ -815,7 +843,9 @@ sub _update_content_stock_id {
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "accession", "stock_type")->cvterm_id();
     my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "cross", "stock_type")->cvterm_id();
+    
     my $acc_rs = $self->stock->search_related('stock_relationship_objects', {'me.type_id'=>$type_id, 'subject.type_id'=>[$accession_type_id,$cross_type_id]}, {'join'=>'subject'});
+    
     while (my $r=$acc_rs->next){
         $r->delete();
     }
@@ -949,6 +979,25 @@ sub get_current_count_property {
     return $recorded_current_count ? $recorded_current_count->value() : '';
 }
 
+=head2 _retrieve_quality
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub _retrieve_quality {
+    my $self = shift;
+    print STDERR "Retrieving quality ".$self->_retrieve_stockprop('seedlot_quality')."\n";
+    $self->quality($self->_retrieve_stockprop('seedlot_quality'));
+}
+
+
+
 =head2 Method current_weight()
 
  Usage:        my $current_weight = $sl->current_weight();
@@ -1042,6 +1091,9 @@ sub store {
             if ($self->box_name){
                 $self->_store_stockprop('location_code', $self->box_name);
             }
+	    if ($self->quality()) {
+		$self->_store_stockprop('seedlot_quality', $self->quality());
+	    }
 
         } else { #Updating seedlot
 
@@ -1094,6 +1146,10 @@ sub store {
             if($self->box_name){
                 $self->_update_stockprop('location_code', $self->box_name);
             }
+	    if($self->quality) {
+		print STDERR "Updating quality info (".$self->quality().")\n";
+		$self->_update_stockprop('seedlot_quality', $self->quality());
+	    }
         }
     };
 
