@@ -622,7 +622,7 @@ sub project_description {
 	$markers_no = scalar(split ('\t', $geno_lines[0])) - 1;	
     }
    
-    my $stocks_no = $self->training_pop_member_count($c, $pr_id);
+    my $stocks_no = $self->training_pop_member_count($c, $pr_id, $protocol_id);
 
     $c->controller('solGS::Files')->traits_acronym_file($c, $pr_id);
     my $traits_file = $c->stash->{traits_acronym_file};
@@ -634,32 +634,22 @@ sub project_description {
     $c->stash(markers_no => $markers_no,
               traits_no  => $traits_no,
               stocks_no  => $stocks_no,
-	      protocol_url   => $protocol_url,
+	      protocol_url => $protocol_url,
         );
 
 }
 
 
 sub training_pop_member_count {
-    my ($self, $c, $pop_id) = @_;
+    my ($self, $c, $pop_id, $protocol_id) = @_;
 
-    $c->stash->{pop_id} = $pop_id if $pop_id;
+    $c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
+    my $geno_file  = $c->stash->{genotype_file_name};
+    my $geno = qx /wc -l $geno_file/;
+    my ($geno_lines, $g_file) = split(" ", $geno);
     
-    $c->controller("solGS::Files")->trait_phenodata_file($c);
-    my $trait_pheno_file  = $c->stash->{trait_phenodata_file};
-    my @trait_pheno_lines = read_file($trait_pheno_file) if $trait_pheno_file;
-
-    my @geno_lines;
-    if (!@trait_pheno_lines) 
-    {
-	my $protocol_id = $c->stash->{genotyping_protocol_id};
-	$c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
-	my $geno_file  = $c->stash->{genotype_file_name};
-	@geno_lines = read_file($geno_file);
-    }
-  
-    my $count = @trait_pheno_lines ? scalar(@trait_pheno_lines) - 1 : scalar(@geno_lines) - 1;
-
+    my $count = $geno_lines > 1 ? $geno_lines - 1 : 0;
+    
     return $count;
 }
 
