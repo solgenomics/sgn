@@ -240,9 +240,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $grm_file;
 
     my @results;
-    my %result_blup_data;
-    my %result_blup_spatial_data;
-    my %result_blup_permanent_environment_data;
+    my $result_blup_data;
+    my $result_blup_spatial_data;
     my @sorted_trait_names;
     my @unique_accession_names;
     my @unique_plot_names;
@@ -251,6 +250,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $analysis_model_language = "R";
     my $analysis_model_training_data_file_type;
     my $field_trial_design;
+    my $pe_genetic_blup_trait;
 
     if ($statistics_select eq 'marss_germplasmname_block' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups') {
 
@@ -386,6 +386,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             close($F);
         }
         elsif ($statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups') {
+            $pe_genetic_blup_trait = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using Sommer R|SGNSTAT:0000004";
 
             my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
                 'MaterializedViewTable',
@@ -465,6 +466,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             close($F);
         }
         elsif ($statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups') {
+            $pe_genetic_blup_trait = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on growing degree days computed using Sommer R|SGNSTAT:0000006";
 
             my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
                 'MaterializedViewTable',
@@ -625,7 +627,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                         my $stock_id = $columns[0];
                         my $stock_name = $stock_info{$stock_id}->{uniquename};
                         my $value = $columns[1];
-                        $result_blup_data{$stock_name}->{$t} = [$value, $timestamp, $user_name, '', ''];
+                        $result_blup_data->{$stock_name}->{$t} = [$value, $timestamp, $user_name, '', ''];
                     }
                 close($fh);
             }
@@ -697,7 +699,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
                         my $stock_name = $stock_info{$stock_id}->{uniquename};
                         my $value = $columns[$col_counter+1];
-                        $result_blup_data{$stock_name}->{$trait} = [$value, $timestamp, $user_name, '', ''];
+                        $result_blup_data->{$stock_name}->{$trait} = [$value, $timestamp, $user_name, '', ''];
                         $col_counter++;
                         $unique_accessions_seen{$stock_name}++;
                     }
@@ -785,7 +787,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
                         my $plot_name = $plot_id_map{$plot_id};
                         my $value = $columns[$col_counter+1];
-                        $result_blup_spatial_data{$plot_name}->{$trait} = [$value, $timestamp, $user_name, '', ''];
+                        $result_blup_spatial_data->{$plot_name}->{$trait} = [$value, $timestamp, $user_name, '', ''];
                         $col_counter++;
                     }
                 }
@@ -799,7 +801,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             #
             #             my $row_val = $result_blup_row_data{$row}->{$trait};
             #             my $col_val = $result_blup_col_data{$col}->{$trait};
-            #             $result_blup_spatial_data{$uniquename}->{$trait} = [$row_val*$col_val, $timestamp, $user_name, '', ''];
+            #             $result_blup_spatial_data->{$uniquename}->{$trait} = [$row_val*$col_val, $timestamp, $user_name, '', ''];
             #         }
             #     }
             # }
@@ -823,10 +825,14 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             $statistical_ontology_term = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using Sommer R|SGNSTAT:0000004"; #In the JS this is set to either the genetic of permanent environment BLUP term (Multivariate linear mixed model permanent environment BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using Sommer R|SGNSTAT:0000005) when saving results
         
             $analysis_result_values_type = "analysis_result_values_match_accession_names";
-            $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_sommer_grm_temporal_leg_random_regression_genetic_blups_phenotype_file";
-        
-            @unique_plot_names = sort keys %seen_plot_names;
 
+            if ($statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups') {
+                $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_sommer_grm_temporal_leg_random_regression_DAP_genetic_blups_phenotype_file";
+            }
+            elsif ($statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups') {
+                $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_sommer_grm_temporal_leg_random_regression_GDD_genetic_blups_phenotype_file";
+            }
+        
             my $number_traits = scalar(@sorted_trait_names);
             my $number_traits_order = $number_traits - 1;
         
@@ -871,14 +877,14 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
                     my $stock_id = $columns[0];
                     my $stock_name = $stock_info{$stock_id}->{uniquename};
-                    $result_blup_data{$stock_name}->{"GeneticBlupPE"} = [$columns[1], $timestamp, $user_name, '', ''];
+                    $result_blup_data->{$stock_name}->{$pe_genetic_blup_trait} = [$columns[1], $timestamp, $user_name, '', ''];
                     $unique_accessions_seen{$stock_name}++;
 
                     my $col_counter = 0;
                     foreach my $time (@sorted_trait_names) {
                         my $trait = $seen_times{$time};
                         my $value = $columns[$col_counter+2];
-                        $result_blup_permanent_environment_data{$stock_name}->{$trait} = [$value, $timestamp, $user_name, '', ''];
+                        $result_blup_data->{$stock_name}->{$trait} = [$value, $timestamp, $user_name, '', ''];
                         $col_counter++;
                     }
                 }
@@ -886,7 +892,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             foreach (@sorted_trait_names) {
                 push @new_sorted_trait_names, $seen_times{$_};
             }
-            @sorted_trait_names = @new_sorted_trait_names;
+            @sorted_trait_names = ($pe_genetic_blup_trait, @new_sorted_trait_names);
         }
     }
     elsif ($statistics_select eq 'marss_germplasmname_block') {
@@ -1098,13 +1104,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         return;
     }
 
-    #print STDERR Dumper \@results;
-    #print STDERR Dumper \%result_blup_data;
     $c->stash->{rest} = {
         results => \@results,
-        result_blup_genetic_data => \%result_blup_data,
-        result_blup_spatial_data => \%result_blup_spatial_data,
-        result_blup_permanent_environment_data => \%result_blup_permanent_environment_data,
+        result_blup_genetic_data => $result_blup_data,
+        result_blup_spatial_data => $result_blup_spatial_data,
         unique_traits => \@sorted_trait_names,
         unique_accessions => \@unique_accession_names,
         unique_plots => \@unique_plot_names,

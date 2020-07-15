@@ -285,6 +285,8 @@ protocol_property	analysis_model_properties	Properties of analysis model in json
 protocol_type	trained_keras_cnn_model	An nd_protocol for a saved trained keras cnn model	9/30/2019	nm529	00116
 protocol_type	trained_keras_mask_r_cnn_model	An nd_protocol for a saved trained keras mask r cnn model	5/27/2020	nm529	00125
 protocol_type	sommer_grm_spatial_genetic_blups	An nd_protocol for analysis using R Sommer for multivariate genetic and spatial blups using replicate, genetic relationship matrix, and row and column positions	6/11/2020	nm529	00125
+protocol_type	sommer_grm_temporal_random_regression_gdd_genetic_blups	An nd_protocol for analysis using R Sommer for temporal random regression with legendre polynomials on growing degree days to calculate genetic and permanent environment blups using replicate, genetic relationship matrix, and growing degree days	6/11/2020	nm529	00125
+protocol_type	sommer_grm_temporal_random_regression_dap_genetic_blups	An nd_protocol for analysis using R Sommer for temporal random regression with legendre polynomials on days after planting to calculate genetic and permanent environment blups using replicate, genetic relationship matrix, and days after planting	6/11/2020	nm529	00125
 protocol_type	lmer_germplasmname_replicate	An nd_protocol for analysis using R LMER for univariate genetic blups using replicate and germplasm name	6/11/2020	nm529	00125
 composable_cvtypes	trait_ontology		05/01/2017		00073
 composable_cvtypes	composed_trait_ontology		05/01/2017		00073
