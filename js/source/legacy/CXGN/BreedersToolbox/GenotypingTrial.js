@@ -557,3 +557,42 @@ function save_genotyping_trial_details (categories, details, success_message) {
     },
   });
 }
+
+
+function save_replace_plot_accession () {
+    var trial_id = get_trial_id();
+    jQuery('#replace_plate_accessions_dialog').modal("hide");
+    jQuery('#working_modal').modal("show");
+
+    var new_accession = jQuery('#new_cell_accession').val();
+    var old_accession = jQuery('#cell_accession').html();
+    var old_plot_id = jQuery('#plot_id').html();
+    var old_plot_name = jQuery('#plot_name').html();
+
+    new jQuery.ajax({
+    type: 'POST',
+    url: '/ajax/breeders/trial/'+trial_id+'/replace_plot_accessions',
+    dataType: "json",
+    data: {
+            'new_accession': new_accession,
+            'old_accession': old_accession,
+            'old_plot_id': old_plot_id,
+            'old_plot_name': old_plot_name,
+    },
+
+    success: function (response) {
+      jQuery('#working_modal').modal("hide");
+
+      if (response.error) {
+        alert("Error Replacing Plot Accession: "+response.error);
+      }
+      else {
+        jQuery('#replace_accessions_dialog_message').modal("show");
+      }
+    },
+    error: function () {
+      jQuery('#working_modal').modal("hide");
+      alert('An error occurred replacing plot accession');
+    }
+    });
+}
