@@ -178,6 +178,9 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         $c->stash->{template} = '/breeders_toolbox/cross/crossing_trial.mas';
     }
     else {
+        my $field_management_factors = $c->config->{management_factor_types};
+        my @management_factor_types = split ',',$field_management_factors;
+        $c->stash->{management_factor_types} = \@management_factor_types;
         $c->stash->{trial_stock_type} = $trial->get_trial_stock_type();
         $c->stash->{template} = '/breeders_toolbox/trial.mas';
     }
