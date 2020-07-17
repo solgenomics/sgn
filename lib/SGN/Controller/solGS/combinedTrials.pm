@@ -1025,7 +1025,6 @@ sub r_combine_populations_args {
     
     my $cmd = "Rscript --slave $in_file $out_file --args $input_files $output_files";
 
-    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $args = {
 	'cmd' => $cmd,	
 	'temp_dir' => $temp_dir,
