@@ -178,6 +178,7 @@ rect.bordered {
                                             <option value="3.5">3.5</option>
                                             <option value="4">4</option>
                                             <option value="4.5">4.5</option>
+                                            <option value="4.8">4.8</option>
                                             <option value="5">5</option>
                                             <option value="5.5">5.5</option>
                                             <option value="6">6</option>
@@ -228,6 +229,7 @@ rect.bordered {
                                             <option value="3.5">3.5</option>
                                             <option value="4">4</option>
                                             <option value="4.5">4.5</option>
+                                            <option value="4.8">4.8</option>
                                             <option value="5">5</option>
                                             <option value="5.5">5.5</option>
                                             <option value="6">6</option>
