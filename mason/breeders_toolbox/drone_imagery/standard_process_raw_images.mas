@@ -482,6 +482,7 @@ jQuery(document).ready(function(){
                 .attr("x_pos", x_pos)
                 .attr("y_pos", y_pos)
                 .attr("nir_image_id", nir_image_id )
+                .attr("match_problem", match_problem )
                 .attr("is_rotated_bound", 1);
             var line1 = rotatedBoundGroup.append('line')
                 .style("stroke", color)
@@ -494,6 +495,7 @@ jQuery(document).ready(function(){
                 .attr("longitude", longitude)
                 .attr("bnum", 0)
                 .attr("nir_image_id", nir_image_id )
+                .attr("match_problem", match_problem )
                 .attr("is_rotated_bound", 1);
             var line2 = rotatedBoundGroup.append('line')
                 .style("stroke", color)
@@ -506,6 +508,7 @@ jQuery(document).ready(function(){
                 .attr("longitude", longitude)
                 .attr("bnum", 1)
                 .attr("nir_image_id", nir_image_id )
+                .attr("match_problem", match_problem )
                 .attr("is_rotated_bound", 1);
             var line3 = rotatedBoundGroup.append('line')
                 .style("stroke", color)
@@ -518,6 +521,7 @@ jQuery(document).ready(function(){
                 .attr("longitude", longitude)
                 .attr("bnum", 2)
                 .attr("nir_image_id", nir_image_id )
+                .attr("match_problem", match_problem )
                 .attr("is_rotated_bound", 1);
             var line4 = rotatedBoundGroup.append('line')
                 .style("stroke", color)
@@ -530,6 +534,7 @@ jQuery(document).ready(function(){
                 .attr("longitude", longitude)
                 .attr("bnum", 3)
                 .attr("nir_image_id", nir_image_id )
+                .attr("match_problem", match_problem )
                 .attr("is_rotated_bound", 1);
 
             manage_drone_imagery_standard_process_interactive_gps_images[latitude][longitude]['rotated_bound_translated'] = [[bound_x1, bound_y1], [bound_x2, bound_y2], [bound_x3, bound_y3], [bound_x4, bound_y4]];
@@ -761,6 +766,12 @@ jQuery(document).ready(function(){
         //console.log(manage_drone_imagery_standard_process_interactive_gps_images);
 
         d3.selectAll('g').each(function(d) {
+            var match_problem = d3.select(this).attr('match_problem');
+            if (match_problem == 1) {
+                d3.select(this).moveToFront();
+            }
+        });
+        d3.selectAll('line').each(function(d) {
             var match_problem = d3.select(this).attr('match_problem');
             if (match_problem == 1) {
                 d3.select(this).moveToFront();
