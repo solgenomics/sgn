@@ -1993,13 +1993,20 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
             $max_features = 50000 * ($skipped_counter + 1);
             $skipped_counter++;
         }
-        elsif ($skipped_counter >= 2) {
-            $nir_image_hash{$image_id2}->{match_problem} = 1;
-            $image_id1 = undef;
-            $image_id2 = undef;
-            $message = "There was a problem matching up images. Please manually position the image outlined in red";
-        }
+        # elsif ($skipped_counter >= 2) {
+        #     $nir_image_hash{$image_id2}->{match_problem} = 1;
+        #     $image_id1 = undef;
+        #     $image_id2 = undef;
+        #     $message = "There was a problem matching up images. Please manually position the image outlined in red";
+        # }
         else {
+            $nir_image_hash{$image_id1}->{match_problem} = 0;
+            $nir_image_hash{$image_id2}->{match_problem} = 0;
+            if ($skipped_counter >= 2) {
+                $x_pos_match_dst = $x_pos_match_dst + $buffer_space_x;
+                $y_pos_match_dst = $y_pos_match_dst + $buffer_space_y;
+                $nir_image_hash{$image_id2}->{match_problem} = 1;
+            }
             $max_features = 1000;
             $skipped_counter = 0;
 
@@ -2017,9 +2024,6 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
 
             $nir_image_hash{$image_id1}->{match_src_to} = $image_id2;
             $nir_image_hash{$image_id2}->{match_dst_to} = $image_id1;
-
-            $nir_image_hash{$image_id1}->{match_problem} = 0;
-            $nir_image_hash{$image_id2}->{match_problem} = 0;
 
             my $rotated_bound_dst = [[$rotated_x1, $rotated_y1], [$rotated_x2, $rotated_y2], [$rotated_x3, $rotated_y3], [$rotated_x4, $rotated_y4]];
             my $rotated_bound_translated_dst = [[$rotated_x1 + $x_pos_match_dst, $rotated_y1 + $y_pos_match_dst], [$rotated_x2 + $x_pos_match_dst, $rotated_y2 + $y_pos_match_dst], [$rotated_x3 + $x_pos_match_dst, $rotated_y3 + $y_pos_match_dst], [$rotated_x4 + $x_pos_match_dst, $rotated_y4 + $y_pos_match_dst]];
