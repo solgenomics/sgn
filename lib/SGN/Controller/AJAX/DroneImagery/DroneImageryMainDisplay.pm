@@ -493,7 +493,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                     $drone_run_band_table_html .= '<button class="btn btn-default btn-sm disabled">Rotated imagery not found. The standard process should have covered all supported image cases. Please try again or contact us.</button><br/><br/>';
                 }
             } else {
-                $drone_run_band_table_html .= '<button class="btn btn-default btn-sm disabled">Please upload previously stitched imagery. We do not support unstitched imagery at this time. Please try again or contact us.</button><br/><br/>';
+                # $drone_run_band_table_html .= '<button class="btn btn-default btn-sm disabled">Please upload previously stitched imagery. We do not support unstitched imagery at this time. Please try again or contact us.</button><br/><br/>';
             }
 
 

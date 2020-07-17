@@ -1934,30 +1934,19 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
             $gps_obj_src_long_down_objects = $gps_images_rounded->{$latitude_rounded_src}->{$longitudes_rounded->[$longitude_ordinal_src-1-1]};
         }
 
-        my $buffer_space_x = 0;
-        my $buffer_space_y = 0;
         my $flight_dir_sign_check = 1;
         if ($nir_image_hash{$image_id2}->{$flight_dir} - $nir_image_hash{$image_id1}->{$flight_dir} < 0) {
             $flight_dir_sign_check = -1;
         }
-        if ($flight_dir_sign_check != $flight_dir_sign) {
-            if ($flight_dir eq 'longitude') {
-                $buffer_space_y = $width + $length;
-            }
-            if ($flight_dir eq 'latitude') {
-                $buffer_space_x = $width + $length;
-            }
-            $flight_dir_sign = $flight_dir_sign_check;
-        }
 
         my $match = _drone_imagery_match_and_align_images($c, $schema, $image_id1, $image_id2, $gps_obj_src, $gps_obj_dst, $max_features, $rotate_radians, $total_image_count, $image_counter, $skipped_counter);
         my $smallest_diff = $match->{smallest_diff};
-        my $x_pos_match_dst = $match->{x_pos_match_dst} + $buffer_space_x;
-        my $y_pos_match_dst = $match->{y_pos_match_dst} + $buffer_space_y;
+        my $x_pos_match_dst = $match->{x_pos_match_dst};
+        my $y_pos_match_dst = $match->{y_pos_match_dst};
         my $x_pos_match_src = $match->{x_pos_match_src};
         my $y_pos_match_src = $match->{y_pos_match_src};
-        my $x_pos_translation = $match->{x_pos_translation} + $buffer_space_x;
-        my $y_pos_translation = $match->{y_pos_translation} + $buffer_space_y;
+        my $x_pos_translation = $match->{x_pos_translation};
+        my $y_pos_translation = $match->{y_pos_translation};
         my $align_temp_image = $match->{align_temp_image};
 
         # if ($gps_obj_src_lat_up_objects) {
@@ -2002,9 +1991,19 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
         else {
             $nir_image_hash{$image_id1}->{match_problem} = 0;
             $nir_image_hash{$image_id2}->{match_problem} = 0;
-            if ($skipped_counter >= 2) {
-                $x_pos_match_dst = $x_pos_match_dst + $buffer_space_x;
-                $y_pos_match_dst = $y_pos_match_dst + $buffer_space_y;
+            
+            if ($flight_dir_sign_check != $flight_dir_sign) {
+                if ($flight_dir eq 'longitude') {
+                    $x_pos_match_dst = $x_pos_match_dst + $width + $length;
+                }
+                if ($flight_dir eq 'latitude') {
+                    $x_pos_match_dst = $x_pos_match_dst + $width + $length;
+                }
+                $flight_dir_sign = $flight_dir_sign_check;
+            }
+            elsif ($skipped_counter >= 2) {
+                $x_pos_match_dst = $x_pos_match_dst + 1.5*($width + $length);
+                $y_pos_match_dst = $y_pos_match_dst + 1.5*($width + $length);
                 $nir_image_hash{$image_id2}->{match_problem} = 1;
             }
             $max_features = 1000;
