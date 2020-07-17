@@ -435,6 +435,7 @@ jQuery(document).ready(function(){
             .attr("nir_image_id", nir_image_id )
             .attr("stack_image_ids", stack_image_ids )
             .attr("id", "nir_image_"+nir_image_id )
+            .attr("match_problem", match_problem )
             .attr("transform", d => "translate("+x_pos+","+y_pos+") rotate("+rotate_angle+","+manage_drone_imagery_standard_process_raw_images_interactive_image.width/2+","+manage_drone_imagery_standard_process_raw_images_interactive_image.length/2+")");
 
         if (enable_drag == 1) {
@@ -758,6 +759,13 @@ jQuery(document).ready(function(){
         //console.log(manage_drone_imagery_standard_process_raw_images_nir_images);
         //console.log(manage_drone_imagery_standard_process_interactive_saved_gps_positions);
         //console.log(manage_drone_imagery_standard_process_interactive_gps_images);
+
+        d3.selectAll('g').each(function(d) {
+            var match_problem = d3.select(this).attr('match_problem');
+            if (match_problem == 1) {
+                d3.select(this).moveToFront();
+            }
+        });
 
         saveGPSPixelPositions();
     }
