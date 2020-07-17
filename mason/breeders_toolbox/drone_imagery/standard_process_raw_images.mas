@@ -1250,7 +1250,7 @@ jQuery(document).ready(function(){
         html = html + '<button class="btn btn-primary" id="'+generate_assign_button+'">Generate Assignments From Manual Input (Does Not Save)</button>&nbsp;&nbsp;&nbsp;<button class="btn btn-primary" name="'+save_button+'">Finish and Save Polygons To Plots</button></div>';
         
         jQuery('#'+div_id).html(html);
-        jQuery('#'+table_id).DataTable();
+        jQuery('#'+table_id).DataTable({'paging':false});
     }
 
     function drawPolylineInteractive(points){

@@ -67,7 +67,8 @@ sub patch {
         ],
         'project_property' => [
             'drone_run_raw_images_saved_gps_pixel_positions',
-            'drone_run_raw_images_saved_micasense_stacks_rotated'
+            'drone_run_raw_images_saved_micasense_stacks_rotated',
+            'drone_run_is_raw_images'
         ],
         'protocol_type' => [
             'sommer_grm_temporal_random_regression_dap_genetic_blups',

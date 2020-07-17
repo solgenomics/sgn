@@ -155,13 +155,27 @@ sub upload_drone_imagery_POST : Args(0) {
         my $project_start_date_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_start_date', 'project_property')->cvterm_id();
         my $design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'design', 'project_property')->cvterm_id();
         my $drone_run_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_project_type', 'project_property')->cvterm_id();
+        my $drone_run_is_raw_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_is_raw_images', 'project_property')->cvterm_id();
         my $drone_run_camera_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_camera_type', 'project_property')->cvterm_id();
         my $drone_run_related_cvterms_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_related_time_cvterms_json', 'project_property')->cvterm_id();
         my $project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
+        
+        my $drone_run_projectprops = [
+            {type_id => $drone_run_type_cvterm_id, value => $new_drone_run_type},
+            {type_id => $project_start_date_type_id, value => $drone_run_event},
+            {type_id => $design_cvterm_id, value => 'drone_run'},
+            {type_id => $drone_run_camera_type_cvterm_id, value => $new_drone_run_camera_info},
+            {type_id => $drone_run_related_cvterms_cvterm_id, value => encode_json \%related_cvterms}
+        ];
+
+        if ($new_drone_run_band_stitching ne 'no') {
+            push @$drone_run_projectprops, {type_id => $drone_run_is_raw_cvterm_id, value => 1};
+        }
+
         my $project_rs = $schema->resultset("Project::Project")->create({
             name => $new_drone_run_name,
             description => $new_drone_run_desc,
-            projectprops => [{type_id => $drone_run_type_cvterm_id, value => $new_drone_run_type},{type_id => $project_start_date_type_id, value => $drone_run_event}, {type_id => $design_cvterm_id, value => 'drone_run'}, {type_id => $drone_run_camera_type_cvterm_id, value => $new_drone_run_camera_info}, {type_id => $drone_run_related_cvterms_cvterm_id, value => encode_json \%related_cvterms}],
+            projectprops => $drone_run_projectprops,
             project_relationship_subject_projects => [{type_id => $project_relationship_type_id, object_project_id => $selected_trial_id}]
         });
         $selected_drone_run_id = $project_rs->project_id();

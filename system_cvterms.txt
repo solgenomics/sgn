@@ -118,6 +118,7 @@ project_property	genotyping_plate_sample_type	For genotyping plate to indicate t
 project_property	genotyping_facility_plate_id	To retrieve status info from genotyping facility this is the vendorPlateDbId	2/16/2017	nm529	00091
 project_property	drone_run_averaged_temperature_growing_degree_days	The averaged-temperature growing degree days corresponding to a drone run event	09/02/2019	nm529	00114
 project_property	drone_run_related_time_cvterms_json	A json string containing time cvterms to annotate the drone run	09/02/2019	nm529	00114
+project_property	drone_run_is_raw_images	To distinguish when uploading raw images or orthomosaic images as drone runs	07/5172020	nm529	00126
 project_property	drone_run_project_type	To distinguish the type of drone run being stored (Aerial Medium to High Res, Aerial Low Res)	10/5/2018	nm529	00103
 project_property	drone_run_camera_type	To identify the camera used in the drone run (micasense 5 band, cmos, ccd)	10/5/2018	nm529	00103
 project_property	drone_run_band_project_type	To distinguish the type of band being stored under a drone run (red, blue, nir, etc)	10/5/2018	nm529	00103

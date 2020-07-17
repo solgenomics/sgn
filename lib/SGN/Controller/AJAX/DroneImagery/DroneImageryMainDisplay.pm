@@ -44,6 +44,7 @@ sub raw_drone_imagery_summary_top_GET : Args(0) {
     my $drone_run_band_drone_run_project_relationship_type_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
     my $project_start_date_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_start_date', 'project_property')->cvterm_id();
     my $drone_run_project_type_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_project_type', 'project_property')->cvterm_id();
+    my $drone_run_is_raw_images_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_is_raw_images', 'project_property')->cvterm_id();
     my $drone_run_project_averaged_temperature_gdd_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_averaged_temperature_growing_degree_days', 'project_property')->cvterm_id();
     my $drone_run_related_time_cvterms_json_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_related_time_cvterms_json', 'project_property')->cvterm_id();
     my $process_indicator_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_standard_process_in_progress', 'project_property')->cvterm_id();
@@ -53,13 +54,14 @@ sub raw_drone_imagery_summary_top_GET : Args(0) {
     my $phenotypes_processed_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_standard_process_phenotype_calculation_in_progress', 'project_property')->cvterm_id();
     my $drone_run_band_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_project_type', 'project_property')->cvterm_id();
 
-    my $drone_run_q = "SELECT drone_run_band_project.project_id, drone_run_band_project.name, drone_run_band_project.description, drone_run_project.project_id, drone_run_project.name, drone_run_project.description, field_trial.project_id, field_trial.name, field_trial.description, drone_run_band_type.value, drone_run_date.value, drone_run_type.value, drone_run_averaged_temperature_gdd.value, drone_run_related_time_cvterm_json.value, drone_run_indicator.value, drone_run_phenotypes_indicator.value, drone_run_processed.value, drone_run_processed_extended.value, drone_run_processed_vi.value
+    my $drone_run_q = "SELECT drone_run_band_project.project_id, drone_run_band_project.name, drone_run_band_project.description, drone_run_project.project_id, drone_run_project.name, drone_run_project.description, field_trial.project_id, field_trial.name, field_trial.description, drone_run_band_type.value, drone_run_date.value, drone_run_type.value, drone_run_averaged_temperature_gdd.value, drone_run_related_time_cvterm_json.value, drone_run_indicator.value, drone_run_phenotypes_indicator.value, drone_run_processed.value, drone_run_processed_extended.value, drone_run_processed_vi.value, drone_run_is_raw_images.value
         FROM project AS drone_run_band_project
         JOIN projectprop AS drone_run_band_type ON(drone_run_band_project.project_id=drone_run_band_type.project_id AND drone_run_band_type.type_id=$drone_run_band_type_cvterm_id)
         JOIN project_relationship AS drone_run_band_rel ON (drone_run_band_rel.subject_project_id = drone_run_band_project.project_id AND drone_run_band_rel.type_id = $drone_run_band_drone_run_project_relationship_type_id_cvterm_id)
         JOIN project AS drone_run_project ON (drone_run_band_rel.object_project_id = drone_run_project.project_id)
         JOIN projectprop AS drone_run_date ON(drone_run_project.project_id=drone_run_date.project_id AND drone_run_date.type_id=$project_start_date_type_id)
         LEFT JOIN projectprop AS drone_run_type ON(drone_run_project.project_id=drone_run_type.project_id AND drone_run_type.type_id=$drone_run_project_type_type_id)
+        LEFT JOIN projectprop AS drone_run_is_raw_images ON(drone_run_project.project_id=drone_run_is_raw_images.project_id AND drone_run_is_raw_images.type_id=$drone_run_is_raw_images_type_id)
         LEFT JOIN projectprop AS drone_run_averaged_temperature_gdd ON(drone_run_project.project_id=drone_run_averaged_temperature_gdd.project_id AND drone_run_averaged_temperature_gdd.type_id=$drone_run_project_averaged_temperature_gdd_type_id)
         LEFT JOIN projectprop AS drone_run_related_time_cvterm_json ON(drone_run_related_time_cvterm_json.project_id = drone_run_project.project_id AND drone_run_related_time_cvterm_json.type_id = $drone_run_related_time_cvterms_json_type_id)
         LEFT JOIN projectprop AS drone_run_indicator ON(drone_run_indicator.project_id = drone_run_project.project_id AND drone_run_indicator.type_id = $process_indicator_cvterm_id)
@@ -74,7 +76,7 @@ sub raw_drone_imagery_summary_top_GET : Args(0) {
 
     my %unique_drone_runs;
     my %trial_id_hash;
-    while( my ($drone_run_band_project_id, $drone_run_band_project_name, $drone_run_band_project_desc, $drone_run_project_id, $drone_run_project_name, $drone_run_project_desc, $field_trial_project_id, $field_trial_project_name, $field_trial_project_desc, $drone_run_band_project_type, $drone_run_date, $drone_run_type, $drone_run_averaged_temperature_gdd, $drone_run_related_time_cvterm_json, $drone_run_indicator, $drone_run_phenotypes_indicator, $drone_run_processed, $drone_run_processed_extended, $drone_run_processed_vi) = $h->fetchrow_array()) {
+    while( my ($drone_run_band_project_id, $drone_run_band_project_name, $drone_run_band_project_desc, $drone_run_project_id, $drone_run_project_name, $drone_run_project_desc, $field_trial_project_id, $field_trial_project_name, $field_trial_project_desc, $drone_run_band_project_type, $drone_run_date, $drone_run_type, $drone_run_averaged_temperature_gdd, $drone_run_related_time_cvterm_json, $drone_run_indicator, $drone_run_phenotypes_indicator, $drone_run_processed, $drone_run_processed_extended, $drone_run_processed_vi, $drone_run_is_raw_images) = $h->fetchrow_array()) {
         $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{bands}->{$drone_run_band_project_id}->{drone_run_band_project_name} = $drone_run_band_project_name;
         $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{bands}->{$drone_run_band_project_id}->{drone_run_band_project_description} = $drone_run_band_project_desc;
         $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{bands}->{$drone_run_band_project_id}->{drone_run_band_project_type} = $drone_run_band_project_type;
@@ -83,6 +85,7 @@ sub raw_drone_imagery_summary_top_GET : Args(0) {
         $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{drone_run_project_name} = $drone_run_project_name;
         $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{drone_run_date} = $drone_run_date;
         $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{drone_run_type} = $drone_run_type;
+        $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{drone_run_is_raw_images} = $drone_run_is_raw_images;
         $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{drone_run_indicator} = $drone_run_indicator;
         $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{drone_run_processed} = $drone_run_processed;
         $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{drone_run_processed_minimal_vi} = $drone_run_processed_vi;
@@ -136,7 +139,7 @@ sub raw_drone_imagery_summary_top_GET : Args(0) {
 
             $drone_run_html .= '</div><div class="col-sm-3">';
             if (!$v->{drone_run_indicator}) {
-                if ($v->{project_image_type_name} eq 'raw_drone_imagery') {
+                if ($v->{drone_run_is_raw_images}) {
                     $drone_run_html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_stadard_process_raw_images_add_images" data-drone_run_project_id="'.$k.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Upload More Raw Images <br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
 
                     #$drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_standard_process_raw_images" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Run Raw Image Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
