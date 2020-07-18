@@ -336,6 +336,10 @@ sub manage_upload :Path("/breeders/upload") Args(0) {
     my $field_management_factors = $c->config->{management_factor_types};
     my @management_factor_types = split ',',$field_management_factors;
 
+    my $design_type_string = $c->config->{design_types};
+    my @design_types = split ',',$design_type_string;
+
+    $c->stash->{design_types} = \@design_types;
     $c->stash->{management_factor_types} = \@management_factor_types;
     $c->stash->{facilities} = \@facilities;
     $c->stash->{geojson_locations} = decode_json($projects->get_all_locations_by_breeding_program());
