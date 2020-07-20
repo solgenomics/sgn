@@ -2002,8 +2002,8 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
                 $flight_dir_sign = $flight_dir_sign_check;
             }
             elsif ($skipped_counter >= 2) {
-                $x_pos_match_dst = $x_pos_match_dst + 1.5*($width + $length);
-                $y_pos_match_dst = $y_pos_match_dst + 1.5*($width + $length);
+                $x_pos_match_dst = $x_pos_match_dst + 0.25*($width + $length);
+                $y_pos_match_dst = $y_pos_match_dst + 0.25*($width + $length);
                 $nir_image_hash{$image_id2}->{match_problem} = 1;
             }
             $max_features = 1000;
