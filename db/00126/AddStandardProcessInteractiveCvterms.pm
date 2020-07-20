@@ -73,6 +73,9 @@ sub patch {
         'protocol_type' => [
             'sommer_grm_temporal_random_regression_dap_genetic_blups',
             'sommer_grm_temporal_random_regression_gdd_genetic_blups'
+        ],
+        'experiment_type' => [
+            'drone_run_experiment'
         ]
     };
 

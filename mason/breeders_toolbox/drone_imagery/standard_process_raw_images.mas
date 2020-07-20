@@ -22,7 +22,10 @@
             <& /page/page_title.mas, title=>"This workflow will guide you through applying a standard process to your aerial imaging bands interactively" &>
 
             <div class="well well-sm">
-                <p>This process will allow you to manually assign plot-polygons to the raw images.</p>
+                <center>
+                <p>This process will allow you to assign plot-polygons to the raw images.</p>
+                <p><b>Please finish uploading your raw images before proceeding!</b></p>
+                </center>
             </div>
 
             <br/><br/>
@@ -1075,6 +1078,18 @@ jQuery(document).ready(function(){
 
     });
 
+    //jQuery('#manage_drone_imagery_standard_process_interactive_select_drone_run_band_step').click(function(){
+    //    jQuery.ajax({
+    //        url : '/api/drone_imagery/partition_drone_imagery_gps?drone_run_project_id='+manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id,
+    //        success: function(response){
+    //            console.log(response);
+    //        },
+    //        error: function(response){
+    //            alert('Error check rotation!');
+    //        }
+    //    });
+    //});
+
     jQuery('#manage_drone_imagery_standard_process_interactive_select_drone_run_band_step').click(function(){
         jQuery.ajax({
             url : '/api/drone_imagery/get_drone_imagery_gps?drone_run_project_id='+manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id,
@@ -1098,7 +1113,7 @@ jQuery(document).ready(function(){
                 }
             },
             error: function(response){
-                alert('Error check rotation!')
+                alert('Error check rotation!');
             }
         });
     });

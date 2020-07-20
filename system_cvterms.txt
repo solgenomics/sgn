@@ -18,6 +18,7 @@ experiment_type	seedlot_experiment				00077
 experiment_type	grafting_experiment				00079
 experiment_type	analysis_experiment	For saving results in analysis trials	06/04/2020	lam87nm529	00119
 experiment_type	analysis_model_experiment	For saving results in analysis models	06/04/2020	lam87nm529	00125
+experiment_type	drone_run_experiment	For saving drone run experiment	07/20/2020	nm529	00126
 genotype_property	igd number
 genotype_property	infinium array					sgn database
 genotype_property	snp genotyping

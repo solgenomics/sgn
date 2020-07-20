@@ -22,6 +22,7 @@ use Math::Round;
 use Time::Piece;
 use SGN::Image;
 use CXGN::DroneImagery::ImagesSearch;
+use File::Basename qw | basename dirname|;
 use URI::Encode qw(uri_encode uri_decode);
 use CXGN::Calendar;
 use Image::Size;
@@ -59,7 +60,10 @@ sub upload_drone_imagery_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
+    print STDERR Dumper $c->req->params();
 
     my $selected_trial_id = $c->req->param('drone_run_field_trial_id');
     if (!$selected_trial_id) {
@@ -124,8 +128,10 @@ sub upload_drone_imagery_POST : Args(0) {
         $log_file_path = "--log_file_path '".$c->config->{error_log}."'";
     }
 
+    my $drone_run_nd_experiment_id;
     if (!$selected_drone_run_id) {
-        my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $selected_trial_id });
+        my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $selected_trial_id });
+        my $trial_location_id = $trial->get_location()->[0];
         my $planting_date = $trial->get_planting_date();
         my $planting_date_time_object = Time::Piece->strptime($planting_date, "%Y-%B-%d");
         my $drone_run_date_time_object = Time::Piece->strptime($new_drone_run_date, "%Y/%m/%d %H:%M:%S");
@@ -152,6 +158,7 @@ sub upload_drone_imagery_POST : Args(0) {
 
         my $calendar_funcs = CXGN::Calendar->new({});
         my $drone_run_event = $calendar_funcs->check_value_format($new_drone_run_date);
+        my $drone_run_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_experiment', 'experiment_type')->cvterm_id();
         my $project_start_date_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_start_date', 'project_property')->cvterm_id();
         my $design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'design', 'project_property')->cvterm_id();
         my $drone_run_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_project_type', 'project_property')->cvterm_id();
@@ -172,11 +179,18 @@ sub upload_drone_imagery_POST : Args(0) {
             push @$drone_run_projectprops, {type_id => $drone_run_is_raw_cvterm_id, value => 1};
         }
 
+        my $nd_experiment_rs = $schema->resultset("NaturalDiversity::NdExperiment")->create({
+            nd_geolocation_id => $trial_location_id,
+            type_id => $drone_run_experiment_type_id
+        });
+        $drone_run_nd_experiment_id = $nd_experiment_rs->nd_experiment_id();
+
         my $project_rs = $schema->resultset("Project::Project")->create({
             name => $new_drone_run_name,
             description => $new_drone_run_desc,
             projectprops => $drone_run_projectprops,
-            project_relationship_subject_projects => [{type_id => $project_relationship_type_id, object_project_id => $selected_trial_id}]
+            project_relationship_subject_projects => [{type_id => $project_relationship_type_id, object_project_id => $selected_trial_id}],
+            nd_experiment_projects => [{nd_experiment_id => $drone_run_nd_experiment_id}]
         });
         $selected_drone_run_id = $project_rs->project_id();
     }
@@ -191,6 +205,7 @@ sub upload_drone_imagery_POST : Args(0) {
     my @raw_image_boundaries_temp_images;
     my %saved_image_stacks;
     my $output_path;
+    my $alignment_output_path;
     my $cmd;
 
     if ($new_drone_run_band_stitching eq 'no') {
@@ -808,9 +823,10 @@ sub upload_drone_imagery_POST : Args(0) {
             close($fh);
 
             $output_path = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX');
+            $alignment_output_path = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX').".pkl";
 
             # $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/MicasenseRawImageAlign.py $log_file_path --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$output_path' --temporary_development_path '/home/nmorales/Downloads'";
-            $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/MicasenseRawImageAlign.py $log_file_path --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$output_path'";
+            $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/MicasenseRawImageAlign.py $log_file_path --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$output_path' --outfile_alignment_file '$alignment_output_path' ";
 
             @stitched_bands = (
                 ["Band 1", "Blue", "Blue (450-520nm)", 0],
@@ -832,6 +848,38 @@ sub upload_drone_imagery_POST : Args(0) {
 
         print STDERR Dumper $cmd;
         my $status = system($cmd);
+
+        my $alignment_output_path_name = basename($alignment_output_path);
+        my $alignment_matrices_type = "drone_imagery_upload_alignment_matrices";
+        my $uploader_alignment = CXGN::UploadFile->new({
+            tempfile => $alignment_output_path,
+            subdirectory => $alignment_matrices_type,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $alignment_output_path_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_role
+        });
+        my $alignment_archived_filename_with_path = $uploader_alignment->archive();
+        my $alignment_md5 = $uploader_alignment->get_md5($archived_filename_with_path);
+        if (!$alignment_archived_filename_with_path) {
+            return { error => "Could not save file $alignment_output_path_name in archive." };
+        }
+        print STDERR "Archived Alignment Matrices File: $alignment_archived_filename_with_path\n";
+
+        my $alignment_md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
+        my $alignment_file_row = $metadata_schema->resultset("MdFiles")->create({
+            basename => basename($alignment_archived_filename_with_path),
+            dirname => dirname($alignment_archived_filename_with_path),
+            filetype => $alignment_matrices_type,
+            md5checksum => $alignment_md5->hexdigest(),
+            metadata_id => $alignment_md_row->metadata_id()
+        });
+
+        my $experiment_files = $phenome_schema->resultset("NdExperimentMdFiles")->create({
+            nd_experiment_id => $drone_run_nd_experiment_id,
+            file_id => $alignment_file_row->file_id()
+        });
 
         my @aligned_images;
         my $csv = Text::CSV->new({ sep_char => ',' });
@@ -881,7 +929,7 @@ sub upload_drone_imagery_POST : Args(0) {
                     $image_id = undef;
                     $image_url = undef;
                 }
-                push @return_drone_run_band_image_urls, ;
+                push @return_drone_run_band_image_urls, $image_url;
                 push @return_drone_run_band_image_ids, {
                     image_id => $image_id,
                     latitude => $image_info->[1],
@@ -937,6 +985,22 @@ sub upload_drone_imagery_additional_raw_images_POST : Args(0) {
     if (!$upload_panel_file && $new_drone_run_camera_info eq 'micasense_5') {
         $c->stash->{rest} = { error => "Please provide a zipfile of images of the Micasense radiometric calibration panels!" };
         $c->detach();
+    }
+
+    my $drone_run_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_experiment', 'experiment_type')->cvterm_id();
+
+    my $alignment_q = "SELECT basename, dirname, md.file_id, md.filetype
+        FROM metadata.md_files AS md
+        JOIN phenome.nd_experiment_md_files using(file_id)
+        JOIN nd_experiment using(nd_experiment_id)
+        JOIN nd_experiment_project using(nd_experiment_id)
+        WHERE nd_experiment.type_id=$drone_run_experiment_type_id AND nd_experiment_project.project_id=?;";
+    my $alignment_h = $schema->storage->dbh()->prepare($alignment_q);
+    $alignment_h->execute($selected_drone_run_id);
+    my ($basename, $filename, $file_id, $filetype) = $alignment_h->fetchrow_array();
+    my $alignment_file;
+    if ($basename && $filename) {
+        $alignment_file = $filename."/".$basename;
     }
 
     my @return_drone_run_band_project_ids;
@@ -1042,7 +1106,11 @@ sub upload_drone_imagery_additional_raw_images_POST : Args(0) {
         $output_path = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX');
 
         # $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/MicasenseRawImageAlign.py $log_file_path --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$output_path' --temporary_development_path '/home/nmorales/Downloads'";
-        $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/MicasenseRawImageAlign.py $log_file_path --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$output_path'";
+        my $alignment = '';
+        if ($alignment_file) {
+            $alignment = "--infile_alignment_file '$alignment_file' ";
+        }
+        $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/MicasenseRawImageAlign.py $log_file_path --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$output_path' $alignment";
 
         @stitched_bands = (
             ["Band 1", "Blue", "Blue (450-520nm)", 0],

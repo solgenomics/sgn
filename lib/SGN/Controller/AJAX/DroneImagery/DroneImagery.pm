@@ -1191,11 +1191,39 @@ sub _drone_imagery_interactive_get_gps {
     my $min_latitude = 1000000;
     my %latitude_rounded_map;
     my %longitude_rounded_map;
+
+    # print STDERR Dumper $saved_micasense_stacks;
+    my $check_change_lat = abs($saved_micasense_stacks->{2}->[3]->{latitude} - $saved_micasense_stacks->{0}->[3]->{latitude});
+    my $check_change_long = abs($saved_micasense_stacks->{2}->[3]->{longitude} - $saved_micasense_stacks->{0}->[3]->{longitude});
+    my $flight_dir = "latitude";
+    if ($check_change_long > $check_change_lat) {
+        $flight_dir = "longitude";
+    }
+    my $flight_dir_sign = 1;
+    if ($saved_micasense_stacks->{0}->[3]->{$flight_dir} - $saved_micasense_stacks->{1}->[3]->{$flight_dir} < 0) {
+        $flight_dir_sign = -1;
+    }
+
+    my $flight_pass_counter = 1;
     foreach (sort {$a <=> $b} keys %$saved_micasense_stacks) {
         my $image_ids_array = $saved_micasense_stacks->{$_};
         my $nir_image = $image_ids_array->[3];
         my $latitude_raw = $nir_image->{latitude};
         my $longitude_raw = $nir_image->{longitude};
+
+        my $flight_dir_pos1 = $saved_micasense_stacks->{$_}->[3]->{$flight_dir};
+        my $flight_dir_pos2 = $saved_micasense_stacks->{$_+1}->[3]->{$flight_dir};
+        if ($flight_dir_pos2) {
+            my $flight_dir_sign_check = 1;
+            if ($flight_dir_pos1 - $flight_dir_pos2 < 0) {
+                $flight_dir_sign_check = -1;
+            }
+
+            if ($flight_dir_sign_check != $flight_dir_sign) {
+                $flight_pass_counter++;
+                $flight_dir_sign = $flight_dir_sign_check;
+            }
+        }
 
         if ($latitude_raw > $max_latitude) {
             $max_latitude = $latitude_raw;
@@ -1244,7 +1272,8 @@ sub _drone_imagery_interactive_get_gps {
             x_pos => $nir_image->{x_pos},
             y_pos => $nir_image->{y_pos},
             latitude => $latitude_raw,
-            longitude => $longitude_raw
+            longitude => $longitude_raw,
+            flight_pass_counter => $flight_pass_counter
         };
 
         push @{$gps_images_rounded{$latitude_rounded}->{$longitude_rounded}}, {
@@ -1259,7 +1288,8 @@ sub _drone_imagery_interactive_get_gps {
             x_pos => $nir_image->{x_pos},
             y_pos => $nir_image->{y_pos},
             latitude => $latitude_raw,
-            longitude => $longitude_raw
+            longitude => $longitude_raw,
+            flight_pass_counter => $flight_pass_counter
         };
     }
     # print STDERR Dumper \%longitudes;
@@ -1479,7 +1509,8 @@ sub drone_imagery_update_gps_images_rotation_POST : Args(0) {
                     rotated_bound => $rotated_bound,
                     rotated_bound_translated => $rotated_bound_translated,
                     x_pos => $x_pos,
-                    y_pos => $y_pos
+                    y_pos => $y_pos,
+                    flight_pass_counter => $i->{flight_pass_counter}
                 };
             }
         }
@@ -3243,6 +3274,7 @@ sub get_drone_run_projects_GET : Args(0) {
     my $checkbox_select_name = $c->req->param('select_checkbox_name');
     my $checkbox_select_all = $c->req->param('checkbox_select_all');
     my $field_trial_ids = $c->req->param('field_trial_ids');
+    my $disable = $c->req->param('disable');
 
     my $project_start_date_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'project_start_date', 'project_property')->cvterm_id();
     my $design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'design', 'project_property')->cvterm_id();
@@ -3277,6 +3309,9 @@ sub get_drone_run_projects_GET : Args(0) {
             my $checkbox = "<input type='checkbox' name='$checkbox_select_name' value='$drone_run_project_id' ";
             if ($checkbox_select_all) {
                 $checkbox .= "checked";
+            }
+            if ($disable) {
+                $checkbox .= "disabled";
             }
             $checkbox .= ">";
             push @res, $checkbox;
