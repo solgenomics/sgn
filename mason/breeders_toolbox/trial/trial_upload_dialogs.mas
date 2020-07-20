@@ -2,6 +2,7 @@
 <%args>
 $breeding_programs
 $locations
+$design_types => ()
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders' ] &>
@@ -275,16 +276,27 @@ $locations
                                     <label class="col-sm-3 control-label">Design Type: </label>
                                     <div class="col-sm-9" >
                                         <select class="form-control" id="trial_upload_design_method" name="trial_upload_design_method">
-                                            <option value=CRD>Completely Randomized Design</option>
-                                            <option value=RCBD>Randomized Complete Block Design</option>
-                                            <option value=Alpha>Alpha Lattice Design</option>
-                                            <option value=Augmented>Augmented Design</option>
-                                            <option value=MAD>Modified Augmented Design</option>
-                                            <option value=Westcott>Westcott Design</option>
-                                            <option value=Lattice>Lattice Design</option>
-                                            <!--  <option value=MADIII>MADIII</option>   -->
-                                            <!--  <option value=MADIV>MADIV</option> -->
-                                            <!--  <option value=MADV>MADV</option> -->
+% foreach my $type(@$design_types){
+%    my $method;
+%    if ($type eq 'Completely Randomized'){
+%        $method = 'CRD';
+%    } elsif ($type eq 'Complete Block'){
+%        $method = 'RCBD';
+%    } elsif ($type eq 'Alpha Lattice'){
+%        $method = 'Alpha';
+%    } elsif ($type eq 'Modified Augmented Design'){
+%        $method = 'MAD';
+%    } elsif ($type eq 'Nursery/Greenhouse'){
+%        $method = 'greenhouse';
+%    } elsif ($type eq 'Split Plot'){
+%        $method = 'splitplot';
+%    } elsif ($type eq 'Partially Replicated'){
+%        $method = 'p-rep';
+%    } else {
+%        $method = $type;
+%    }
+    <option value="<%$method%>"><%$type%></option>
+%}
                                         </select>
                                     </div>
                                 </div>
