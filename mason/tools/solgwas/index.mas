@@ -123,7 +123,6 @@
 
 jQuery(document).ready(function() {
   if (isLoggedIn()) {
-//    get_select_box("datasets", "dataset_select");
     get_select_box("datasets", "dataset_select", {"checkbox_name":"dataset_select_checkbox"});
   }
   else {
@@ -140,8 +139,6 @@ jQuery(document).ready(function() {
   });
   jQuery('#selectDataset').click(function() {
     var dataset_id = get_dataset_id();
-//    var dataset_id = jQuery('#available_datasets').val();
-    alert("Dataset ID: "+dataset_id);
     $.ajax({
       url: '/ajax/solgwas/shared_phenotypes',
       data: {'dataset_id': dataset_id},
