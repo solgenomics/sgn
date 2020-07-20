@@ -10,7 +10,7 @@ use LWP::UserAgent;
 
 #Needed to update IO::Socket::SSL
 use Data::Dumper;
-use JSON;
+use JSON::XS;
 local $Data::Dumper::Indent = 0;
 
 my $f = SGN::Test::Fixture->new();
@@ -19,7 +19,7 @@ my $schema = $f->bcs_schema;
 my $mech = Test::WWW::Mechanize->new;
 
 $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
-my $response = decode_json $mech->content;
+my $response = JSON::XS->new->decode($mech->content);
 print STDERR Dumper $response;
 is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
 my $sgn_session_id = $response->{access_token};
@@ -44,7 +44,8 @@ $response = $ua->post(
 #print STDERR Dumper $response;
 ok($response->is_success);
 my $message = $response->decoded_content;
-my $message_hash = decode_json $message;
+print STDERR "MESSAGE: $message\n";
+my $message_hash = JSON::XS->new->decode($message);
 print STDERR Dumper $message_hash;
 is_deeply($message_hash, {'success' => 1});
 
@@ -65,7 +66,7 @@ $response = $ua->post(
 #print STDERR Dumper $response;
 ok($response->is_success);
 my $message = $response->decoded_content;
-my $message_hash = decode_json $message;
+my $message_hash = JSON::XS->new()->decode($message);
 print STDERR Dumper $message_hash;
 is_deeply($message_hash, {'success' => 1});
 
@@ -83,7 +84,7 @@ $response = $ua->post(
 #print STDERR Dumper $response;
 ok($response->is_success);
 $message = $response->decoded_content;
-$message_hash = decode_json $message;
+$message_hash = JSON::XS->new()->decode($message);
 print STDERR Dumper $message_hash;
 is_deeply($message_hash, {'success' => 1});
 

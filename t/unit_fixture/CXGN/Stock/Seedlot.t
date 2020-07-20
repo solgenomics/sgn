@@ -1,7 +1,7 @@
+
 #test all functions in CXGN::Stock::Seedlot
 
 use strict;
-
 use lib 't/lib';
 
 use Test::More;
@@ -22,7 +22,7 @@ my $seedlot_breeding_program_id = $schema->resultset('Project::Project')->find({
 my $seedlot_organization = 'bti';
 my $seedlot_population_name = 'seedlot1_pop';
 
-my $sl = CXGN::Stock::Seedlot->new(schema=>$schema);
+my $sl = CXGN::Stock::Seedlot->new( schema=>$schema );
 $sl->uniquename($seedlot_uniquename);
 $sl->location_code($seedlot_location);
 $sl->box_name($seedlot_box_name);

@@ -18,7 +18,6 @@ $crossing_trials
 
   <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables', 'CXGN.BreedersToolbox.Crosses' ] &>
 
-
 <&| /page/info_section.mas, title=>"About Seedlots",  collapsible => 1, collapsed=>1 &>
     <div class="well well-sm">
         <div class="panel panel-default">
@@ -44,7 +43,6 @@ $crossing_trials
         </div>
     </div>
 </&>
-
 
 <&| /page/info_section.mas, title=>"Seedlots",  collapsible => 1, subtitle => '<button class="btn btn-sm btn-primary" style="margin:3px" name="add_seedlot_button">Add New Seedlot</button> <button class="btn btn-sm btn-primary" style="margin:3px" name="seedlot_bulk_upload">Upload Seedlots</button> <button class="btn btn-sm btn-primary" style="margin:3px" name="seedlot_upload_inventory">Upload Inventory</button>'&>
 
@@ -108,6 +106,21 @@ $crossing_trials
                 <input class="form-control" id="search_seedlot_form_minimum_weight" type="number" />
             </div>
         </div>
+
+	<!-- div class="form-group form-group-sm">
+	  <label class="col-sm-3 control-label"></label>
+          <div class="col-sm-9" >
+	    <input id="search_seedlot_form_only_good_quality_checkbox" type="checkbox" /> Only show seedlots without quality issues
+          </div>
+        </div  -->
+
+	<div class="form-group form-group-sm">
+            <label class="col-sm-3 control-label">Quality: </label>
+            <div class="col-sm-9" >
+                <input class="form-control" id="search_seedlot_form_quality" type="text" />
+            </div>
+        </div>
+
     </form>
     <center>
     <button class="btn btn-primary" id="submit_seedlot_search" />Search</button>
@@ -164,6 +177,10 @@ jQuery(document).ready(function(){
                      d.contents_cross = jQuery('#search_seedlot_form_contents_cross').val();
                      d.exact_accession = jQuery('#exact_accession').is(":checked") ? 1 : 0;
                      d.exact_cross = jQuery('#exact_cross').is(":checked") ? 1 : 0;
+                     d.quality = jQuery('#search_seedlot_form_quality').val();
+                     d.only_good_quality = jQuery('#search_seedlot_form_only_good_quality_checkbox').is(":checked") ? 1 : 0;
+
+ 
                 }
         },
         columns: [
@@ -176,11 +193,12 @@ jQuery(document).ready(function(){
             { title: "Submitters", "data": "owners_string" },
             { title: "Organization", "data": "organization" },
             { title: "Box", "data": "box" },
+            { title: "Quality", "data": "seedlot_quality" },
             { title: "Delete", "data": "null", "render": function ( data, type, row ) { return "<a onclick='removeSeedlot("+row.seedlot_stock_id+")' >X</a>"; } },
         ],
         "fnInitComplete": function(oSettings, json) {
             if (!isLoggedIn()) {
-                jQuery('#available_seedlots_add_to_list').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+                jQuery('#available_seedlots_add_to_list').html("<div class='well well-sm'><h4>Please login to use lists!</h4></div>");
             } else {
                 var html = "";
                 for(var i=0; i<json.data.length; i++){
