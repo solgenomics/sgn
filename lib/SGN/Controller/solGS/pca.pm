@@ -156,12 +156,27 @@ sub format_pca_output {
 	{
 	    my $scores    = $c->controller('solGS::Utils')->read_file_data($scores_file);
 	    my $variances = $c->controller('solGS::Utils')->read_file_data($variances_file);
-	    my $loadings = $c->controller('solGS::Utils')->read_file_data($loadings_file);
+	    my $loadings  = $c->controller('solGS::Utils')->read_file_data($loadings_file);
 
 	    my $output_link =  '/pca/analysis/' . $file_id;	 
-        
-	    $c->controller('solGS::combinedTrials')->process_trials_list_details($c);
-	    my $trial_names = $c->stash->{trials_names};
+	    my $trials_names;
+	    my $sel_pages =  "/solgs\/selection\/|solgs\/combined\/model\/\d+\/selection\//";
+	    
+	    if ($c->req->referer =~ $sel_pages) 
+	    {
+		my $tr_pop = $c->stash->{training_pop_id};
+		my $sel_pop =  $c->stash->{selection_pop_id};
+		
+		$trials_names = {
+		    $tr_pop => 'Training population', 
+		    $sel_pop => 'Selection population'
+		};
+	    }
+	    else
+	    {
+		$c->controller('solGS::combinedTrials')->process_trials_list_details($c);
+		$trials_names = $c->stash->{trials_names};
+	    }
 	    
 	    if ($scores)
 	    {
@@ -171,7 +186,7 @@ sub format_pca_output {
 		$ret->{status} = 'success';  
 		$ret->{pop_id} = $file_id;# if $list_type eq 'trials';
 		$ret->{list_id} = $c->stash->{list_id};
-		$ret->{trials_names} = $trial_names;
+		$ret->{trials_names} = $trials_names;
 		$ret->{output_link}  = $output_link;
 		$ret->{data_type} = $c->stash->{data_type};
 	    }
@@ -713,11 +728,10 @@ sub pca_geno_input_files {
 sub training_selection_geno_files {
     my ($self, $c) = @_;
 
-    my @files;
-
     my $tr_pop = $c->stash->{training_pop_id};
     my $sel_pop =  $c->stash->{selection_pop_id};
-  
+    
+    my @files;
     foreach my $id (($tr_pop, $sel_pop)) 
     {
 	$c->controller('solGS::Files')->genotype_file_name($c, $id);
@@ -725,7 +739,6 @@ sub training_selection_geno_files {
     }
 
     my $files = join("\t", @files);
-
     $c->stash->{genotype_files_list} = $files;
 }
 
