@@ -87,6 +87,7 @@
             <div class="well well-sm">
                 <p>Please rotate the images so that they make sense as far as your field experiment</p>
                 <p>The plots should be in a vertically straight orientation</p>
+                <p><b>This process will cycle over the different imaging event passes.</b></p>
 
                 <div id="drone_imagery_standard_process_interactive_rotate_flight_pass"></div>
 
@@ -117,8 +118,9 @@
             <div class="well well-sm">
                 <ul>
                     <li>(1) Perform alignment.</li>
-                    <li>(2) Click the four corners encompassing the entire field.</li>
-                    <li>(3) Give the number of rows and columns.</li>
+                    <li>(2) Click the four corners encompassing the area of interest.</li>
+                    <li>(3) Give the number of rows and columns in the area of interest.</li>
+                    <li>(4) <b>This process will cycle over the different imaging event passes.</b></li>
                 </ul>
 
                 <hr>
@@ -635,14 +637,14 @@ jQuery(document).ready(function(){
 
                     initializeInteractiveSvg('#drone_imagery_standard_process_raw_images_interactive_bulk_rotate_div', 'drone_imagery_standard_process_raw_images_interactive_bulk_rotate_div_area', 1, 0);
 
-                    jQuery('#drone_imagery_standard_process_interactive_rotate_flight_pass').html("<p><b>Flight Pass: "+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></p>");
+                    jQuery('#drone_imagery_standard_process_interactive_rotate_flight_pass').html("<p><b>Imaging Event Pass: "+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></p>");
                 }
                 else {
                     console.log("ROTATION COMPLETE");
 
                     manage_drone_imagery_standard_process_raw_images_interactive_current_pass = 1;
 
-                    var html = "<p><b>Flight Pass: "+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></p>";
+                    var html = "<p><b>Imaging Event Pass: "+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></p>";
                     console.log(html);
                     jQuery('#drone_imagery_standard_process_interactive_plot_polygons_flight_pass').html(html);
 
@@ -1152,7 +1154,7 @@ jQuery(document).ready(function(){
 
                     manage_drone_imagery_standard_process_raw_images_interactive_current_pass = 1;
 
-                    var html = "<p><b>Flight Pass: "+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></p>";
+                    var html = "<p><b>Imaging Event Pass: "+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></p>";
                     console.log(html);
                     jQuery('#drone_imagery_standard_process_interactive_plot_polygons_flight_pass').html(html);
 
@@ -1168,7 +1170,7 @@ jQuery(document).ready(function(){
 
                     manage_drone_imagery_standard_process_raw_images_interactive_current_pass = 1;
 
-                    jQuery('#drone_imagery_standard_process_interactive_rotate_flight_pass').html("<p><b>Flight Pass: "+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></p>");
+                    jQuery('#drone_imagery_standard_process_interactive_rotate_flight_pass').html("<p><b>Imaging Event Pass: "+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></p>");
 
                     Workflow.complete("#manage_drone_imagery_standard_process_interactive_separated_passes_step");
                     Workflow.focus('#manage_drone_imagery_standard_process_raw_images_interactive_workflow', 3);
@@ -1978,7 +1980,7 @@ jQuery(document).ready(function(){
 
                     initializeInteractiveSvg('#drone_imagery_standard_process_raw_images_image_id_interactive_select_div', 'drone_imagery_standard_process_raw_images_image_id_interactive_select_div_area', 1, 1);
 
-                    jQuery('#drone_imagery_standard_process_interactive_plot_polygons_flight_pass').html("<p><b>Flight Pass: "+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></p>");
+                    jQuery('#drone_imagery_standard_process_interactive_plot_polygons_flight_pass').html("<p><b>Imaging Event Pass: "+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></p>");
 
                     plot_polygons_interactive_display_points = [];
                     plot_polygons_interactive_ind_4_points = [];
