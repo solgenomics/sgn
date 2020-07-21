@@ -1132,35 +1132,59 @@ sub _drone_imagery_interactive_get_gps {
     my $c = shift;
     my $schema = shift;
     my $drone_run_project_id = shift;
+    my $flight_pass_counter = shift;
 
     my $saved_image_stacks_rotated_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_micasense_stacks_rotated', 'project_property')->cvterm_id();
     my $saved_micasense_stacks_rotated_json = $schema->resultset("Project::Projectprop")->find({
         project_id => $drone_run_project_id,
         type_id => $saved_image_stacks_rotated_type_id
     });
+    my $saved_micasense_stacks_rotated_full_separated;
+    my $saved_micasense_stacks_rotated_full;
     my $saved_micasense_stacks_rotated;
     if ($saved_micasense_stacks_rotated_json) {
-        $saved_micasense_stacks_rotated = decode_json $saved_micasense_stacks_rotated_json->value();
+        $saved_micasense_stacks_rotated_full = decode_json $saved_micasense_stacks_rotated_json->value();
+        $saved_micasense_stacks_rotated_full_separated = $saved_micasense_stacks_rotated_full;
+        $saved_micasense_stacks_rotated = $saved_micasense_stacks_rotated_full->{$flight_pass_counter};
     }
-    # print STDERR Dumper $saved_micasense_stacks_rotated;
+    print STDERR Dumper $saved_micasense_stacks_rotated_full;
+    print STDERR Dumper $saved_micasense_stacks_rotated;
 
-    my $saved_image_stacks_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_micasense_stacks', 'project_property')->cvterm_id();
+    my $saved_image_stacks_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_micasense_stacks_separated', 'project_property')->cvterm_id();
     my $saved_micasense_stacks_json = $schema->resultset("Project::Projectprop")->find({
         project_id => $drone_run_project_id,
         type_id => $saved_image_stacks_type_id
     });
+    my $saved_micasense_stacks_full_separated;
+    my $saved_micasense_stacks_full;
     my $saved_micasense_stacks;
     if ($saved_micasense_stacks_json) {
-        $saved_micasense_stacks = decode_json $saved_micasense_stacks_json->value();
+        $saved_micasense_stacks_full = decode_json $saved_micasense_stacks_json->value();
+        $saved_micasense_stacks_full_separated = $saved_micasense_stacks_full;
+        $saved_micasense_stacks = $saved_micasense_stacks_full->{$flight_pass_counter};
     }
     # print STDERR Dumper $saved_micasense_stacks;
 
     my $is_rotated;
     if ($saved_micasense_stacks_rotated) {
+        $saved_micasense_stacks_full = $saved_micasense_stacks_rotated_full;
         $saved_micasense_stacks = $saved_micasense_stacks_rotated;
         $is_rotated = 1;
     }
     my @saved_micasense_stacks_values = values %$saved_micasense_stacks;
+
+    my $max_flight_pass_counter = keys %$saved_micasense_stacks_full_separated;
+
+    my $all_passes_rotated;
+    my $all_passes_rotated_one_missing;
+    for (1 .. $max_flight_pass_counter) {
+        if (!$saved_micasense_stacks_rotated_full_separated->{$_}) {
+            $all_passes_rotated_one_missing = 1;
+        }
+    }
+    if (!$all_passes_rotated_one_missing) {
+        $all_passes_rotated = 1;
+    }
 
     my $saved_gps_positions_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_gps_pixel_positions', 'project_property')->cvterm_id();
     my $saved_gps_positions_json = $schema->resultset("Project::Projectprop")->find({
@@ -1170,6 +1194,7 @@ sub _drone_imagery_interactive_get_gps {
     my $saved_gps_positions;
     if ($saved_gps_positions_json) {
         $saved_gps_positions = decode_json $saved_gps_positions_json->value();
+        $saved_gps_positions = $saved_gps_positions->{$flight_pass_counter};
     }
 
     my $first_image = SGN::Image->new( $schema->storage->dbh, $saved_micasense_stacks_values[0]->[3]->{image_id}, $c );
@@ -1193,37 +1218,12 @@ sub _drone_imagery_interactive_get_gps {
     my %longitude_rounded_map;
 
     # print STDERR Dumper $saved_micasense_stacks;
-    my $check_change_lat = abs($saved_micasense_stacks->{2}->[3]->{latitude} - $saved_micasense_stacks->{0}->[3]->{latitude});
-    my $check_change_long = abs($saved_micasense_stacks->{2}->[3]->{longitude} - $saved_micasense_stacks->{0}->[3]->{longitude});
-    my $flight_dir = "latitude";
-    if ($check_change_long > $check_change_lat) {
-        $flight_dir = "longitude";
-    }
-    my $flight_dir_sign = 1;
-    if ($saved_micasense_stacks->{0}->[3]->{$flight_dir} - $saved_micasense_stacks->{1}->[3]->{$flight_dir} < 0) {
-        $flight_dir_sign = -1;
-    }
 
-    my $flight_pass_counter = 1;
     foreach (sort {$a <=> $b} keys %$saved_micasense_stacks) {
         my $image_ids_array = $saved_micasense_stacks->{$_};
         my $nir_image = $image_ids_array->[3];
         my $latitude_raw = $nir_image->{latitude};
         my $longitude_raw = $nir_image->{longitude};
-
-        my $flight_dir_pos1 = $saved_micasense_stacks->{$_}->[3]->{$flight_dir};
-        my $flight_dir_pos2 = $saved_micasense_stacks->{$_+1}->[3]->{$flight_dir};
-        if ($flight_dir_pos2) {
-            my $flight_dir_sign_check = 1;
-            if ($flight_dir_pos1 - $flight_dir_pos2 < 0) {
-                $flight_dir_sign_check = -1;
-            }
-
-            if ($flight_dir_sign_check != $flight_dir_sign) {
-                $flight_pass_counter++;
-                $flight_dir_sign = $flight_dir_sign_check;
-            }
-        }
 
         if ($latitude_raw > $max_latitude) {
             $max_latitude = $latitude_raw;
@@ -1272,8 +1272,7 @@ sub _drone_imagery_interactive_get_gps {
             x_pos => $nir_image->{x_pos},
             y_pos => $nir_image->{y_pos},
             latitude => $latitude_raw,
-            longitude => $longitude_raw,
-            flight_pass_counter => $flight_pass_counter
+            longitude => $longitude_raw
         };
 
         push @{$gps_images_rounded{$latitude_rounded}->{$longitude_rounded}}, {
@@ -1288,8 +1287,7 @@ sub _drone_imagery_interactive_get_gps {
             x_pos => $nir_image->{x_pos},
             y_pos => $nir_image->{y_pos},
             latitude => $latitude_raw,
-            longitude => $longitude_raw,
-            flight_pass_counter => $flight_pass_counter
+            longitude => $longitude_raw
         };
     }
     # print STDERR Dumper \%longitudes;
@@ -1377,6 +1375,8 @@ sub _drone_imagery_interactive_get_gps {
         latitudes_rounded => \@latitudes_rounded_sorted,
         latitude_rounded_map => \%latitude_rounded_map,
         saved_micasense_stacks => $saved_micasense_stacks,
+        saved_micasense_stacks_full => $saved_micasense_stacks_full,
+        saved_micasense_stacks_rotated_full_separated => $saved_micasense_stacks_rotated_full_separated,
         gps_images => \%gps_images,
         gps_images_rounded => \%gps_images_rounded,
         saved_gps_positions => $saved_gps_positions,
@@ -1390,8 +1390,102 @@ sub _drone_imagery_interactive_get_gps {
         y_range => $y_range,
         x_factor => $x_factor,
         y_factor => $y_factor,
-        is_rotated => $is_rotated
+        is_rotated => $is_rotated,
+        all_passes_rotated => $all_passes_rotated,
+        max_flight_pass_counter => $max_flight_pass_counter
     };
+}
+
+sub drone_imagery_separate_gps : Path('/api/drone_imagery/separate_drone_imagery_gps') : ActionClass('REST') { }
+sub drone_imagery_separate_gps_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    print STDERR Dumper $c->req->params();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $drone_run_project_id = $c->req->param("drone_run_project_id");
+
+    my $saved_image_stacks_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_micasense_stacks', 'project_property')->cvterm_id();
+    my $saved_image_stacks_separated_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_micasense_stacks_separated', 'project_property')->cvterm_id();
+
+    my $saved_micasense_stacks_json = $schema->resultset("Project::Projectprop")->find({
+        project_id => $drone_run_project_id,
+        type_id => $saved_image_stacks_type_id
+    });
+    my $saved_micasense_stacks;
+    if ($saved_micasense_stacks_json) {
+        $saved_micasense_stacks = decode_json $saved_micasense_stacks_json->value();
+    }
+
+    my $saved_separated_micasense_stacks_json = $schema->resultset("Project::Projectprop")->find({
+        project_id => $drone_run_project_id,
+        type_id => $saved_image_stacks_separated_type_id
+    });
+    my $saved_micasense_stacks_separated;
+    if ($saved_separated_micasense_stacks_json) {
+        $saved_micasense_stacks_separated = decode_json $saved_separated_micasense_stacks_json->value();
+    }
+
+    # print STDERR Dumper $saved_micasense_stacks;
+    my %pass_micasense_stacks;
+    if (!$saved_micasense_stacks_separated) {
+
+        my $check_change_lat = abs($saved_micasense_stacks->{2}->[3]->{latitude} - $saved_micasense_stacks->{0}->[3]->{latitude});
+        my $check_change_long = abs($saved_micasense_stacks->{2}->[3]->{longitude} - $saved_micasense_stacks->{0}->[3]->{longitude});
+        my $flight_dir = "latitude";
+        if ($check_change_long > $check_change_lat) {
+            $flight_dir = "longitude";
+        }
+        my $flight_dir_sign = 1;
+        if ($saved_micasense_stacks->{0}->[3]->{$flight_dir} - $saved_micasense_stacks->{1}->[3]->{$flight_dir} < 0) {
+            $flight_dir_sign = -1;
+        }
+
+        my $flight_pass_counter = 1;
+        foreach (sort {$a <=> $b} keys %$saved_micasense_stacks) {
+            my $image_ids_array = $saved_micasense_stacks->{$_};
+            my $nir_image = $image_ids_array->[3];
+            my $latitude_raw = $nir_image->{latitude};
+            my $longitude_raw = $nir_image->{longitude};
+
+            my $flight_dir_pos1 = $saved_micasense_stacks->{$_}->[3]->{$flight_dir};
+            my $flight_dir_pos2 = $saved_micasense_stacks->{$_+1}->[3]->{$flight_dir};
+            if ($flight_dir_pos2) {
+                my $flight_dir_sign_check = 1;
+                if ($flight_dir_pos1 - $flight_dir_pos2 < 0) {
+                    $flight_dir_sign_check = -1;
+                }
+
+                if ($flight_dir_sign_check != $flight_dir_sign) {
+                    $flight_pass_counter++;
+                    $flight_dir_sign = $flight_dir_sign_check;
+                }
+            }
+            $pass_micasense_stacks{$flight_pass_counter}->{$_} = $image_ids_array;
+        }
+
+        my $saved_micasense_stacks_separated_json = $schema->resultset('Project::Projectprop')->update_or_create({
+            type_id=>$saved_image_stacks_separated_type_id,
+            project_id=>$drone_run_project_id,
+            rank=>0,
+            value=>encode_json \%pass_micasense_stacks
+        },
+        {
+            key=>'projectprop_c1'
+        });
+    }
+    else {
+        %pass_micasense_stacks = %$saved_micasense_stacks_separated;
+    }
+
+    my @results;
+    foreach my $flight_pass_counter (sort keys %pass_micasense_stacks) {
+        push @results, [$flight_pass_counter, scalar(keys %{$pass_micasense_stacks{$flight_pass_counter}})];
+    }
+
+    $c->stash->{rest} = { success => 1, results => \@results, pass_micasense_stacks => \%pass_micasense_stacks };
 }
 
 sub drone_imagery_get_gps : Path('/api/drone_imagery/get_drone_imagery_gps') : ActionClass('REST') { }
@@ -1404,8 +1498,9 @@ sub drone_imagery_get_gps_GET : Args(0) {
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $drone_run_project_id = $c->req->param("drone_run_project_id");
+    my $flight_pass_counter = $c->req->param("flight_pass_counter");
 
-    my $return = _drone_imagery_interactive_get_gps($c, $schema, $drone_run_project_id);
+    my $return = _drone_imagery_interactive_get_gps($c, $schema, $drone_run_project_id, $flight_pass_counter);
 
     $c->stash->{rest} = $return;
 }
@@ -1421,17 +1516,30 @@ sub drone_imagery_update_gps_images_rotation_POST : Args(0) {
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $drone_run_project_id = $c->req->param("drone_run_project_id");
     my $rotate_angle = $c->req->param("rotate_angle");
+    my $flight_pass_counter = $c->req->param("flight_pass_counter");
+
     my $rotate_radians = $rotate_angle * 0.0174533;
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    my $return = _drone_imagery_interactive_get_gps($c, $schema, $drone_run_project_id);
+    my $return = _drone_imagery_interactive_get_gps($c, $schema, $drone_run_project_id, $flight_pass_counter);
     my $is_rotated = $return->{is_rotated};
 
-    my %rotated_saved_micasense_stacks;
+    my %rotated_saved_micasense_stacks_full;
     if ($is_rotated) {
-        %rotated_saved_micasense_stacks = %{$return->{saved_micasense_stacks}};
+        %rotated_saved_micasense_stacks_full = %{$return->{saved_micasense_stacks_full}};
+        print STDERR "ALREADY ROTATED\n";
     } else {
+        my %rotated_saved_micasense_stacks;
         my $saved_micasense_stacks = $return->{saved_micasense_stacks};
+        my $saved_micasense_stacks_full = $return->{saved_micasense_stacks_rotated_full_separated};
+
+        foreach my $stack_key (sort {$a <=> $b} keys %$saved_micasense_stacks) {
+            if (!$saved_micasense_stacks->{$stack_key}->[0]) {
+                delete $saved_micasense_stacks->{$stack_key};
+                print STDERR "REMOVING KEY $stack_key\n";
+            }
+        }
+
         # print STDERR Dumper $saved_micasense_stacks;
         my @saved_micasense_stacks_values = values %$saved_micasense_stacks;
 
@@ -1509,18 +1617,20 @@ sub drone_imagery_update_gps_images_rotation_POST : Args(0) {
                     rotated_bound => $rotated_bound,
                     rotated_bound_translated => $rotated_bound_translated,
                     x_pos => $x_pos,
-                    y_pos => $y_pos,
-                    flight_pass_counter => $i->{flight_pass_counter}
+                    y_pos => $y_pos
                 };
             }
         }
+
+        $saved_micasense_stacks_full->{$flight_pass_counter} = \%rotated_saved_micasense_stacks;
+        %rotated_saved_micasense_stacks_full = %$saved_micasense_stacks_full;
 
         my $saved_image_stacks_rotated_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_micasense_stacks_rotated', 'project_property')->cvterm_id();
         my $drone_run_band_rotate_angle = $schema->resultset('Project::Projectprop')->update_or_create({
             type_id=>$saved_image_stacks_rotated_type_id,
             project_id=>$drone_run_project_id,
             rank=>0,
-            value=>encode_json \%rotated_saved_micasense_stacks
+            value=>encode_json \%rotated_saved_micasense_stacks_full
         },
         {
             key=>'projectprop_c1'
@@ -1538,7 +1648,7 @@ sub drone_imagery_update_gps_images_rotation_POST : Args(0) {
 
     $c->stash->{rest} = {
         success => 1,
-        gps_images => \%rotated_saved_micasense_stacks
+        gps_images => \%rotated_saved_micasense_stacks_full
     };
 }
 
@@ -1829,17 +1939,15 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $drone_run_project_id = $c->req->param('drone_run_project_id');
-    my $rotate_angle = $c->req->param('rotate_angle');
     my $nir_image_ids = decode_json $c->req->param('nir_image_ids');
-
-    my $rotate_radians = $rotate_angle * 0.0174533;
+    my $flight_pass_counter = $c->req->param("flight_pass_counter");
 
     my $dir = $c->tempfiles_subdir('/drone_imagery_align');
 
     my $match_linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'standard_process_interactive_match_temporary_drone_imagery', 'project_md_image')->cvterm_id();
     my $align_linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'standard_process_interactive_align_temporary_drone_imagery', 'project_md_image')->cvterm_id();
 
-    my $return = _drone_imagery_interactive_get_gps($c, $schema, $drone_run_project_id);
+    my $return = _drone_imagery_interactive_get_gps($c, $schema, $drone_run_project_id, $flight_pass_counter);
     my $gps_images = $return->{gps_images};
     my $gps_images_rounded = $return->{gps_images_rounded};
     my $saved_gps_positions = $return->{saved_gps_positions};
@@ -1856,35 +1964,6 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
     if ($saved_gps_positions && scalar (keys %$saved_gps_positions) > 0) {
         $gps_images = $saved_gps_positions;
     }
-
-    my $cx = $width/2;
-    my $cy = $length/2;
-    my $temp_x1 = 0 - $cx;
-    my $temp_y1 = $length - $cy;
-    my $temp_x2 = $width - $cx;
-    my $temp_y2 = $length - $cy;
-    my $temp_x3 = $width - $cx;
-    my $temp_y3 = 0 - $cy;
-    my $temp_x4 = 0 - $cx;
-    my $temp_y4 = 0 - $cy;
-
-    my $rotated_x1 = $temp_x1*cos($rotate_radians) - $temp_y1*sin($rotate_radians);
-    my $rotated_y1 = $temp_x1*sin($rotate_radians) + $temp_y1*cos($rotate_radians);
-    my $rotated_x2 = $temp_x2*cos($rotate_radians) - $temp_y2*sin($rotate_radians);
-    my $rotated_y2 = $temp_x2*sin($rotate_radians) + $temp_y2*cos($rotate_radians);
-    my $rotated_x3 = $temp_x3*cos($rotate_radians) - $temp_y3*sin($rotate_radians);
-    my $rotated_y3 = $temp_x3*sin($rotate_radians) + $temp_y3*cos($rotate_radians);
-    my $rotated_x4 = $temp_x4*cos($rotate_radians) - $temp_y4*sin($rotate_radians);
-    my $rotated_y4 = $temp_x4*sin($rotate_radians) + $temp_y4*cos($rotate_radians);
-
-    $rotated_x1 = $rotated_x1 + $cx;
-    $rotated_y1 = $rotated_y1 + $cy;
-    $rotated_x2 = $rotated_x2 + $cx;
-    $rotated_y2 = $rotated_y2 + $cy;
-    $rotated_x3 = $rotated_x3 + $cx;
-    $rotated_y3 = $rotated_y3 + $cy;
-    $rotated_x4 = $rotated_x4 + $cx;
-    $rotated_y4 = $rotated_y4 + $cy;
 
     my %nir_image_hash;
     foreach my $lat (@$latitudes) {
@@ -1903,17 +1982,6 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
 
     my $image_id1 = $nir_image_ids->[$image_counter];
     my $image_id2 = $nir_image_ids->[$image_counter+1];
-
-    my $check_change_lat = abs($nir_image_hash{$nir_image_ids->[$image_counter+2]}->{latitude} - $nir_image_hash{$image_id1}->{latitude});
-    my $check_change_long = abs($nir_image_hash{$nir_image_ids->[$image_counter+2]}->{longitude} - $nir_image_hash{$image_id1}->{longitude});
-    my $flight_dir = "latitude";
-    if ($check_change_long > $check_change_lat) {
-        $flight_dir = "longitude";
-    }
-    my $flight_dir_sign = 1;
-    if ($nir_image_hash{$image_id2}->{$flight_dir} - $nir_image_hash{$image_id1}->{$flight_dir} < 0) {
-        $flight_dir_sign = -1;
-    }
 
     my $total_image_count = scalar(@$nir_image_ids);
     my $skipped_counter = 0;
@@ -1937,6 +2005,8 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
         my $longitude_src = $gps_obj_src->{longitude};
         my $latitude_dst = $gps_obj_dst->{latitude};
         my $longitude_dst = $gps_obj_dst->{longitude};
+
+        my $rotate_radians = $nir_image_hash{$image_id2}->{d3_rotate_angle} * 0.0174533;
 
         my $latitude_ordinal_src = $latitude_rounded_map->{$latitude_src};
         my $longitude_ordinal_src = $longitude_rounded_map->{$longitude_src};
@@ -1963,11 +2033,6 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
         my $gps_obj_src_long_down_objects;
         if ($longitudes_rounded->[$longitude_ordinal_src-1-1]) {
             $gps_obj_src_long_down_objects = $gps_images_rounded->{$latitude_rounded_src}->{$longitudes_rounded->[$longitude_ordinal_src-1-1]};
-        }
-
-        my $flight_dir_sign_check = 1;
-        if ($nir_image_hash{$image_id2}->{$flight_dir} - $nir_image_hash{$image_id1}->{$flight_dir} < 0) {
-            $flight_dir_sign_check = -1;
         }
 
         my $match = _drone_imagery_match_and_align_images($c, $schema, $image_id1, $image_id2, $gps_obj_src, $gps_obj_dst, $max_features, $rotate_radians, $total_image_count, $image_counter, $skipped_counter);
@@ -2022,19 +2087,10 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
         else {
             $nir_image_hash{$image_id1}->{match_problem} = 0;
             $nir_image_hash{$image_id2}->{match_problem} = 0;
-            
-            if ($flight_dir_sign_check != $flight_dir_sign) {
-                if ($flight_dir eq 'longitude') {
-                    $x_pos_match_dst = $x_pos_match_dst + $width + $length;
-                }
-                if ($flight_dir eq 'latitude') {
-                    $x_pos_match_dst = $x_pos_match_dst + $width + $length;
-                }
-                $flight_dir_sign = $flight_dir_sign_check;
-            }
-            elsif ($skipped_counter >= 2) {
-                $x_pos_match_dst = $x_pos_match_dst + 0.25*($width + $length);
-                $y_pos_match_dst = $y_pos_match_dst + 0.25*($width + $length);
+
+            if ($skipped_counter >= 2) {
+                $x_pos_match_dst = $x_pos_match_dst + $width + $length;
+                $y_pos_match_dst = $y_pos_match_dst + $width + $length;
                 $nir_image_hash{$image_id2}->{match_problem} = 1;
             }
             $max_features = 1000;
@@ -2054,6 +2110,35 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
 
             $nir_image_hash{$image_id1}->{match_src_to} = $image_id2;
             $nir_image_hash{$image_id2}->{match_dst_to} = $image_id1;
+
+            my $cx = $width/2;
+            my $cy = $length/2;
+            my $temp_x1 = 0 - $cx;
+            my $temp_y1 = $length - $cy;
+            my $temp_x2 = $width - $cx;
+            my $temp_y2 = $length - $cy;
+            my $temp_x3 = $width - $cx;
+            my $temp_y3 = 0 - $cy;
+            my $temp_x4 = 0 - $cx;
+            my $temp_y4 = 0 - $cy;
+
+            my $rotated_x1 = $temp_x1*cos($rotate_radians) - $temp_y1*sin($rotate_radians);
+            my $rotated_y1 = $temp_x1*sin($rotate_radians) + $temp_y1*cos($rotate_radians);
+            my $rotated_x2 = $temp_x2*cos($rotate_radians) - $temp_y2*sin($rotate_radians);
+            my $rotated_y2 = $temp_x2*sin($rotate_radians) + $temp_y2*cos($rotate_radians);
+            my $rotated_x3 = $temp_x3*cos($rotate_radians) - $temp_y3*sin($rotate_radians);
+            my $rotated_y3 = $temp_x3*sin($rotate_radians) + $temp_y3*cos($rotate_radians);
+            my $rotated_x4 = $temp_x4*cos($rotate_radians) - $temp_y4*sin($rotate_radians);
+            my $rotated_y4 = $temp_x4*sin($rotate_radians) + $temp_y4*cos($rotate_radians);
+
+            $rotated_x1 = $rotated_x1 + $cx;
+            $rotated_y1 = $rotated_y1 + $cy;
+            $rotated_x2 = $rotated_x2 + $cx;
+            $rotated_y2 = $rotated_y2 + $cy;
+            $rotated_x3 = $rotated_x3 + $cx;
+            $rotated_y3 = $rotated_y3 + $cy;
+            $rotated_x4 = $rotated_x4 + $cx;
+            $rotated_y4 = $rotated_y4 + $cy;
 
             my $rotated_bound_dst = [[$rotated_x1, $rotated_y1], [$rotated_x2, $rotated_y2], [$rotated_x3, $rotated_y3], [$rotated_x4, $rotated_y4]];
             my $rotated_bound_translated_dst = [[$rotated_x1 + $x_pos_match_dst, $rotated_y1 + $y_pos_match_dst], [$rotated_x2 + $x_pos_match_dst, $rotated_y2 + $y_pos_match_dst], [$rotated_x3 + $x_pos_match_dst, $rotated_y3 + $y_pos_match_dst], [$rotated_x4 + $x_pos_match_dst, $rotated_y4 + $y_pos_match_dst]];
@@ -2108,11 +2193,22 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
     }
 
     my $saved_gps_positions_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_gps_pixel_positions', 'project_property')->cvterm_id();
+    my $saved_gps_positions_json = $schema->resultset("Project::Projectprop")->find({
+        project_id => $drone_run_project_id,
+        type_id => $saved_gps_positions_type_id
+    });
+    my $saved_gps_positions_full;
+    if ($saved_gps_positions_json) {
+        $saved_gps_positions_full = decode_json $saved_gps_positions_json->value();
+    }
+
+    $saved_gps_positions_full->{$flight_pass_counter} = \%gps_images_matched;
+
     my $drone_run_band_rotate_angle = $schema->resultset('Project::Projectprop')->update_or_create({
         type_id=>$saved_gps_positions_type_id,
         project_id=>$drone_run_project_id,
         rank=>0,
-        value=>encode_json \%gps_images_matched
+        value=>encode_json $saved_gps_positions_full
     },
     {
         key=>'projectprop_c1'
@@ -2120,7 +2216,7 @@ sub drone_imagery_match_and_align_images_sequential_POST : Args(0) {
 
     $c->stash->{rest} = {
         success => 1,
-        gps_images_matched => \%gps_images_matched,
+        gps_images_matched => $saved_gps_positions_full,
         message => $message
     };
 }
@@ -2143,6 +2239,16 @@ sub drone_imagery_delete_gps_images_POST : Args(0) {
     if ($saved_gps_positions_json) {
         $saved_gps_positions_json->delete();
     }
+
+    #Separated RESTART
+    # my $saved_image_stacks_separated_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_micasense_stacks_separated', 'project_property')->cvterm_id();
+    # my $saved_micasense_stacks_separated_json = $schema->resultset("Project::Projectprop")->find({
+    #     project_id => $drone_run_project_id,
+    #     type_id => $saved_image_stacks_separated_type_id
+    # });
+    # if ($saved_micasense_stacks_separated_json) {
+    #     $saved_micasense_stacks_separated_json->delete();
+    # }
 
     #ROTATED RESTART
     # my $saved_image_stacks_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_micasense_stacks_rotated', 'project_property')->cvterm_id();
@@ -2872,6 +2978,7 @@ sub drone_imagery_save_plot_polygons_template_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
     my $stock_polygons = $c->req->param('stock_polygons');
+    my $flight_pass_counter = $c->req->param('flight_pass_counter');
 
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
@@ -2906,7 +3013,11 @@ sub drone_imagery_save_plot_polygons_template_POST : Args(0) {
         $save_stock_polygons = decode_json $previous_plot_polygons_rs->first->value;
     }
     foreach my $stock_name (keys %$polygon_objs) {
-        $save_stock_polygons->{$stock_name} = $polygon_objs->{$stock_name};
+        if ($flight_pass_counter) {
+            $save_stock_polygons->{$flight_pass_counter}->{$stock_name} = $polygon_objs->{$stock_name};
+        } else {
+            $save_stock_polygons->{$stock_name} = $polygon_objs->{$stock_name};
+        }
     }
 
     my $drone_run_band_plot_polygons = $schema->resultset('Project::Projectprop')->update_or_create({

@@ -146,6 +146,7 @@ project_property	drone_run_standard_process_completed	If the drone run had the s
 project_property	drone_run_standard_process_extended_completed	If the drone run had the extended standard process run	10/5/2018	nm529	00103
 project_property	drone_run_standard_process_vi_completed	If the drone run had the vegetative index standard process run	10/5/2018	nm529	00103
 project_property	drone_run_raw_images_saved_micasense_stacks	When uploading raw Micasense images, the captures are aligned and this records which image is in which capture	02/17/2020	nm529	00117
+project_property	drone_run_raw_images_saved_micasense_stacks_separated	After uploading raw Micasense images, the captures are separated based on the imaging pass	07/20/2020	nm529	00126
 project_property	drone_run_raw_images_saved_micasense_stacks_rotated	When interactively matching raw drone captures, this stores the rotated positions	07/06/2020	nm529	00126
 project_property	drone_run_raw_images_saved_gps_pixel_positions	When interactively matching raw drone captures, this stores the final positions	07/06/2020	nm529	00126
 project_property	project_sp_person_id	For saving results in analysis trials	06/04/2020	lam87nm529	00119
