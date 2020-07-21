@@ -17,7 +17,10 @@ my $program_id   = $program->get_program_id;
 
 <& /page/page_title.mas, title=>"Breeding Program $program_name" &>
 
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, program_id => $program_id, info_section_title => "<h4 style='display:inline'>Locations</h4>", info_section_subtitle => 'View locations related to this breeding program', icon_class => "glyphicon glyphicon-random", info_section_id => "program_location_section" &>
 
+
+<!--
 
 <&| /page/info_section.mas, id=>"program_trials", title => "Trials" , collapsible=>1, collapsed=>0, hide_if_empty=>1 &>
     <& /breeders_toolbox/program/trials.mas, program_id => $program_id &>
@@ -31,4 +34,4 @@ my $program_id   = $program->get_program_id;
   <& /breeders_toolbox/program/traits.mas, program_id => $program_id, collapse_phenotypes_section => 0  &>
 </&>
 
-
+-->

@@ -17,7 +17,7 @@ use Moose;
 use Data::Dumper;
 use Try::Tiny;
 use SGN::Model::Cvterm;
-
+use CXGN::BreedersToolbox::Projects;
 
 has 'schema' => (
     isa => 'Bio::Chado::Schema',
@@ -28,7 +28,7 @@ has 'schema' => (
 sub BUILD {
     my $self = shift;
     my $breeding_program_cvterm_id = $self->get_breeding_program_cvterm_id;
-    my $row = $self->schema->resultset("Project::Project")->find( 
+    my $row = $self->schema->resultset("Project::Project")->find(
 	{ project_id             => $self->get_program_id(),
 	  'projectprops.type_id' => $breeding_program_cvterm_id },
 	{ join => 'projectprops' }
@@ -84,7 +84,7 @@ sub set_name {
 
 sub get_project_object {
   my $self = shift;
-  return $self->{project_object}; 
+  return $self->{project_object};
 }
 
 sub set_project_object {
@@ -105,7 +105,7 @@ sub set_project_object {
 
 sub get_description {
   my $self = shift;
-  return $self->{description}; 
+  return $self->{description};
 }
 
 sub set_description {
@@ -116,7 +116,7 @@ sub set_description {
 
 sub get_breeding_program_cvterm_id {
     my $self = shift;
-    
+
     my $breeding_program_cvterm_id;
     my $breeding_program_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'breeding_program', 'project_property');
     if ($breeding_program_cvterm) {
@@ -140,7 +140,7 @@ sub get_accession_cvterm_id {
 
  Usage: $self->get_trials
  Desc:  find the trials (projects) associated with the breeding program. Will fetch only trials that have a design. This is to avoid printing crosses etc.
- Ret:   BCS Project resultset 
+ Ret:   BCS Project resultset
  Args:  none
  Side Effects: none
  Example:
@@ -150,7 +150,7 @@ sub get_accession_cvterm_id {
 sub get_trials {
     my $self = shift;
     my $project_obj = $self->get_project_object;
-    
+
     my $trials_rs;
     my $trials_fetched;
     my $trial_rel_rs = $project_obj->project_relationship_object_projects;
@@ -160,10 +160,10 @@ sub get_trials {
 	$trials_rs = $trial_rel_rs->search_related('subject_project');
 	$trials_fetched = $trials_rs->search(
 	    {
-		'projectprops.type_id' => $design_cvterm->cvterm_id 
+		'projectprops.type_id' => $design_cvterm->cvterm_id
 	    },
 	    {
-		join => 'projectprops' 
+		join => 'projectprops'
 	    }
 	    );
     }
@@ -183,7 +183,7 @@ sub get_trials {
 sub get_traits_assayed {
     my $self= shift;
     my $dbh = $self->schema->storage()->dbh();
-    
+
     my $trials = $self->get_trials;
     my @trial_ids;
     while (my $trial = $trials->next() ) {
@@ -196,7 +196,7 @@ sub get_traits_assayed {
     my $q;
     if ($trial_ids) {
 	$q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, count(phenotype.value) FROM cvterm JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id in ( $trial_ids )  and phenotype.value~? GROUP BY trait, cvterm.cvterm_id ORDER BY trait;";
-    
+
 
 	my $traits_assayed_q = $dbh->prepare($q);
 
@@ -265,22 +265,22 @@ sub get_years {
 =cut
 
 sub get_accessions {
-    my $self = shift; 
+    my $self = shift;
     my $program_id = $self->get_program_id;
     my $dbh = $self->schema->storage()->dbh();
 
-    my $q = "SELECT distinct acc.stock_id, acc.uniquename FROM stock AS acc 
-             JOIN  stock_relationship ON object_id = acc.stock_id 
+    my $q = "SELECT distinct acc.stock_id, acc.uniquename FROM stock AS acc
+             JOIN  stock_relationship ON object_id = acc.stock_id
              JOIN  stock AS plot ON plot.stock_id = stock_relationship.subject_id
              JOIN nd_experiment_stock ON nd_experiment_stock.stock_id = plot.stock_id
-             JOIN nd_experiment_project using (nd_experiment_id) 
+             JOIN nd_experiment_project using (nd_experiment_id)
              JOIN project trial ON trial.project_id = nd_experiment_project.project_id
-             JOIN project_relationship ON project_relationship.subject_project_id = trial.project_id  
+             JOIN project_relationship ON project_relationship.subject_project_id = trial.project_id
              JOIN project program ON program.project_id = project_relationship.object_project_id
              WHERE program.project_id = ? AND acc.type_id = ?;";
     $q = $dbh->prepare($q);
     $q->execute($program_id, $self->get_accession_cvterm_id);
-    
+
     my @accessions;
     while (my ( $acc_id, $acc_name ) = $q->fetchrow_array()) {
 	push @accessions,  $acc_id;
@@ -288,8 +288,25 @@ sub get_accessions {
     return \@accessions;
 }
 
+=head2 get_locations_with_details
 
-    
+ Usage: my $locations = $breeding_program->get_locations_with_details()
+
+=cut
+
+sub get_locations_with_details {
+    my $self = shift;
+    my $project_obj = $self->get_project_object;
+    my $program_name = $project_obj->name;
+    print STDERR "PROGRAM NAME =".Dumper($program_name)."\n";
+    my $location = CXGN::BreedersToolbox::Projects->new($self->schema);
+    my $all_locations = $location->get_location_geojson();
+
+
+    return \@data;
+}
+
+
 ####
 1;##
 ####

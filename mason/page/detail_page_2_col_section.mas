@@ -89,6 +89,9 @@ $analysis_metadata => undef
 $for_analysis_page => undef
 $data_level => undef
 
+
+$program_id => undef
+
 </%args>
 
 <& /util/import_javascript.mas,
@@ -367,6 +370,11 @@ $data_level => undef
 % if ($info_section_id eq 'manage_file_share_dump'){
                                 <& /breeders_toolbox/file_share/file_dump_share_files.mas &>
 % } #End manage_file_share_dump
+
+% if ($info_section_id eq 'program_location_section'){
+                                <& /breeders_toolbox/program/program_locations.mas, program_id => $program_id &>
+% } #End program_location_section
+
 % if (!$info_section_id){
                                 <p>No section specified! Main content goes here!</p>
 % }
