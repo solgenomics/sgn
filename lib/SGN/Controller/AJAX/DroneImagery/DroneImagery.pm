@@ -1556,21 +1556,21 @@ sub drone_imagery_update_gps_images_rotation_POST : Args(0) {
         chomp($number_system_cores);
         print STDERR "NUMCORES $number_system_cores\n";
 
-        my $pm = Parallel::ForkManager->new(floor(int($number_system_cores)));
-        $pm->run_on_finish( sub {
-            my ($pid, $exit_code, $ident, $exit_signal, $core_dump, $data_structure_reference) = @_;
-            $rotated_saved_micasense_stacks{$data_structure_reference->{stack_key}} = $data_structure_reference->{i_objs};
-        });
-
         my %gps_images;
         my $dir = $c->tempfiles_subdir('/drone_imagery_rotate');
         foreach my $stack_key (sort {$a <=> $b} keys %$saved_micasense_stacks) {
-            my $pid = $pm->start and next;
-
             my $image_ids_array = $saved_micasense_stacks->{$stack_key};
 
-            my @i_objs;
+            # my $pm = Parallel::ForkManager->new(floor(int($number_system_cores)));
+            # $pm->run_on_finish( sub {
+            #     my ($pid, $exit_code, $ident, $exit_signal, $core_dump, $data_structure_reference) = @_;
+            #     $rotated_saved_micasense_stacks{$stack_key}->[$data_structure_reference->{index_counter}] = $data_structure_reference->{i_obj};
+            # });
+
+            my $index_counter = 0;
             foreach my $i (@$image_ids_array) {
+                # my $pid = $pm->start and next;
+
                 my $latitude_raw = $i->{latitude};
                 my $longitude_raw = $i->{longitude};
                 my $altitude_raw = $i->{altitude};
@@ -1620,7 +1620,8 @@ sub drone_imagery_update_gps_images_rotation_POST : Args(0) {
                 my $rotated_bound = [[$rotated_x1, $rotated_y1], [$rotated_x2, $rotated_y2], [$rotated_x3, $rotated_y3], [$rotated_x4, $rotated_y4]];
                 my $rotated_bound_translated = [[$rotated_x1 + $x_pos, $rotated_y1 + $y_pos], [$rotated_x2 + $x_pos, $rotated_y2 + $y_pos], [$rotated_x3 + $x_pos, $rotated_y3 + $y_pos], [$rotated_x4 + $x_pos, $rotated_y4 + $y_pos]];
 
-                push @i_objs, {
+                # my $i_obj = {
+                push @{$rotated_saved_micasense_stacks{$stack_key}}, {
                     rotated_image_id => $rotated_image_id,
                     d3_rotate_angle => $rotate_angle,
                     image_id => $image_id,
@@ -1632,10 +1633,12 @@ sub drone_imagery_update_gps_images_rotation_POST : Args(0) {
                     x_pos => $x_pos,
                     y_pos => $y_pos
                 };
+                # $pm->finish(0, { i_obj => $i_obj, index_counter => $index_counter });
+                $index_counter++;
             }
-            $pm->finish(0, { stack_key => $stack_key, i_objs => \@i_objs });
+            # $pm->wait_all_children;
         }
-        $pm->wait_all_children;
+        # print STDERR Dumper \%rotated_saved_micasense_stacks;
 
         $saved_micasense_stacks_full->{$flight_pass_counter} = \%rotated_saved_micasense_stacks;
         %rotated_saved_micasense_stacks_full = %$saved_micasense_stacks_full;
