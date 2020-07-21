@@ -139,6 +139,7 @@ project_property	drone_run_band_background_removed_thresholded_ndvi_mask_origina
 project_property	drone_run_band_background_removed_thresholded_ndre_mask_original_threshold	The threshold at which the original image was background removed after applying thresholded ndre mask	10/5/2018	nm529	00103
 project_property	drone_run_band_background_removed_threshold	The threshold at which the image was background removed	10/5/2018	nm529	00103
 project_property	drone_run_band_plot_polygons	The pixel coordinates for the defined plot polygons	10/5/2018	nm529	00103
+project_property	drone_run_band_plot_polygons_separated	The pixel coordinates for the defined plot polygons on raw images separated by imaging pass	07/21/2018	nm529	00126
 project_property	drone_run_band_plot_polygons_partial	The pixel coordinates for the defined plot polygons, but only for sets of plots not the whole field	03/11/2020	nm529	00117
 project_property	drone_run_standard_process_in_progress	Running a standard process on the drone run can take time, so this is an indicator for if the process is occurring	10/5/2018	nm529	00103
 project_property	drone_run_standard_process_phenotype_calculation_in_progress	Running a standard process to calculate phenotypes on the drone run can take time, so this is an indicator for if the process is occurring	10/5/2018	nm529	00103

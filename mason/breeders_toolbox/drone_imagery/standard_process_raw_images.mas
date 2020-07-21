@@ -120,6 +120,10 @@
                     <li>(2) Click the four corners encompassing the entire field.</li>
                     <li>(3) Give the number of rows and columns.</li>
                 </ul>
+
+                <hr>
+                <div id="drone_imagery_standard_process_interactive_plot_polygons_flight_pass"></div>
+
                 <hr>
                 <button class="btn btn-primary" id="drone_imagery_standard_process_raw_images_interactive_match">Match and Align Images</button>
                 <!-- button class="btn btn-default" id="drone_imagery_standard_process_raw_images_interactive_match_view">View Match</button -->
@@ -133,7 +137,7 @@
                         <input type="range" min="0" max="10" id="drone_imagery_standard_process_raw_images_interactive_rotate_degrees_input" name="drone_imagery_standard_process_raw_images_interactive_rotate_degrees_input" value="0.00">
                     </div>
                 </div-->
-                <div class="form-group form-group-sm">
+                <!--div class="form-group form-group-sm">
                     <label class="col-sm-6 control-label">Flip North and South: </label>
                     <div class="col-sm-6">
                         <select class="form-control" id="drone_imagery_standard_process_raw_images_interactive_north_south_input" name="drone_imagery_standard_process_raw_images_interactive_north_south_input" >
@@ -141,8 +145,8 @@
                             <option value="North">North</option>
                         </select>
                     </div>
-                </div>
-                <div class="form-group form-group-sm">
+                </div-->
+                <!--div class="form-group form-group-sm">
                     <label class="col-sm-6 control-label">Flip East and West: </label>
                     <div class="col-sm-6">
                         <select class="form-control" id="drone_imagery_standard_process_raw_images_interactive_east_or_west" name="drone_imagery_standard_process_raw_images_interactive_east_or_west" >
@@ -150,7 +154,7 @@
                             <option value="West">West</option>
                         </select>
                     </div>
-                </div>
+                </div-->
                 <!--div class="form-group form-group-sm">
                     <label class="col-sm-6 control-label">Rotate Frame: </label>
                     <div class="col-sm-6">
@@ -158,7 +162,7 @@
                     </div>
                 </div-->
             </form>
-            <hr>
+            <!--<hr>-->
 
             <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div"></div>
 
@@ -426,7 +430,8 @@ jQuery(document).ready(function(){
                 type: 'POST',
                 data : {
                     'gps_images': JSON.stringify(manage_drone_imagery_standard_process_interactive_gps_images),
-                    'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id
+                    'drone_run_project_id':manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id,
+                    'flight_pass_counter':manage_drone_imagery_standard_process_raw_images_interactive_current_pass
                 },
                 success: function(response){
                     console.log(response);
@@ -636,6 +641,10 @@ jQuery(document).ready(function(){
                     console.log("ROTATION COMPLETE");
 
                     manage_drone_imagery_standard_process_raw_images_interactive_current_pass = 1;
+
+                    var html = "<p><b>Flight Pass: "+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></p>";
+                    console.log(html);
+                    jQuery('#drone_imagery_standard_process_interactive_plot_polygons_flight_pass').html(html);
 
                     initializeInteractiveSvg('#drone_imagery_standard_process_raw_images_image_id_interactive_select_div', 'drone_imagery_standard_process_raw_images_image_id_interactive_select_div_area', 1, 1);
 
@@ -1135,9 +1144,18 @@ jQuery(document).ready(function(){
             url : '/api/drone_imagery/get_drone_imagery_gps?drone_run_project_id='+manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id+'&flight_pass_counter='+manage_drone_imagery_standard_process_raw_images_interactive_current_pass,
             success: function(response){
                 console.log(response);
-                
+
+                manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass = response.max_flight_pass_counter;
+
                 if (response.all_passes_rotated == 1) {
-                    console.log("ROTATION COMPLETE");
+                    console.log("ROTATION COMPLETE SEPARATED STEP");
+
+                    manage_drone_imagery_standard_process_raw_images_interactive_current_pass = 1;
+
+                    var html = "<p><b>Flight Pass: "+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></p>";
+                    console.log(html);
+                    jQuery('#drone_imagery_standard_process_interactive_plot_polygons_flight_pass').html(html);
+
                     initializeInteractiveSvg('#drone_imagery_standard_process_raw_images_image_id_interactive_select_div', 'drone_imagery_standard_process_raw_images_image_id_interactive_select_div_area', 1, 1);
 
                     Workflow.complete("#manage_drone_imagery_standard_process_interactive_separated_passes_step");
@@ -1149,7 +1167,6 @@ jQuery(document).ready(function(){
                     initializeInteractiveSvg('#drone_imagery_standard_process_raw_images_interactive_bulk_rotate_div', 'drone_imagery_standard_process_raw_images_interactive_bulk_rotate_div_area', 1, 0);
 
                     manage_drone_imagery_standard_process_raw_images_interactive_current_pass = 1;
-                    manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass = response.max_flight_pass_counter;
 
                     jQuery('#drone_imagery_standard_process_interactive_rotate_flight_pass').html("<p><b>Flight Pass: "+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></p>");
 
@@ -1307,7 +1324,7 @@ jQuery(document).ready(function(){
             html = html + '<tr><td>'+i+'</td><td><input type="number" class="form-control" data-polygon_number="'+i+'" name="'+input_name+'" /></td></tr>';
         }
         html = html + '</tbody></table></div></div>';
-        html = html + '<button class="btn btn-primary" id="'+generate_assign_button+'">Generate Assignments From Manual Input (Does Not Save)</button>&nbsp;&nbsp;&nbsp;<button class="btn btn-primary" name="'+save_button+'">Finish and Save Polygons To Plots</button></div>';
+        html = html + '<button class="btn btn-primary" id="'+generate_assign_button+'">Generate Assignments From Manual Input (Does Not Save)</button>&nbsp;&nbsp;&nbsp;<button class="btn btn-primary" name="'+save_button+'">Finish and Save Polygons To Plots. Go to Next Imaging Pass.</button></div>';
         
         jQuery('#'+div_id).html(html);
         jQuery('#'+table_id).DataTable({'paging':false});
@@ -1529,7 +1546,7 @@ jQuery(document).ready(function(){
         html = html + '<div class="panel panel-default"><div class="panel-body"><div class="form form-horizontal">';
         html = html + '<div class="row"><div class="col-sm-6"><div class="form-group form-group-sm"><label class="col-sm-6 control-label">Location of First Plot (e.g. plot number 1): </label><div class="col-sm-6"><select class="form-control" id="drone_imagery_interactive_plot_polygons_first_plot_start" name="drone_imagery_interactive_plot_polygons_first_plot_start"><option value="top_left">Top Left</option><option value="top_right">Top Right</option><option value="bottom_left" disabled>Bottom Left</option><option value="bottom_right" disabled>Bottom Right</option></select></div></div></div><div class="col-sm-6"><div class="form-group form-group-sm"><label class="col-sm-6 control-label">Second Plot Follows First Plot Going: </label><div class="col-sm-6"><select class="form-control" id="drone_imagery_interactive_plot_polygons_second_plot_follows" name="drone_imagery_interactive_plot_polygons_second_plot_follows"><option value="right">Right</option><option value="up">Up</option><option value="down">Down</option><option value="left">Left</option></select></div></div></div></div>';
         html = html + '<div class="row"><div class="col-sm-6"><div class="form-group form-group-sm"><label class="col-sm-6 control-label">Plot Number Orientation: </label><div class="col-sm-6"><select class="form-control" id="drone_imagery_interactive_plot_polygons_plot_orientation" name="drone_imagery_interactive_plot_polygons_plot_orientation"><option value="serpentine">Serpentine</option><option value="zigzag">Zigzag (Not Serpentine)</option></select></div></div></div></div>';
-        html = html + '<button class="btn btn-primary" id="'+plot_polygons_generate_assignment_button+'">Generate Assignments (Does Not Save)</button>&nbsp;&nbsp;&nbsp;<button class="btn btn-primary" name="'+plot_polygon_assignment_submit_button+'">Finish and Save Polygons To Plots</button></div>';
+        html = html + '<button class="btn btn-primary" id="'+plot_polygons_generate_assignment_button+'">Generate Assignments (Does Not Save)</button>&nbsp;&nbsp;&nbsp;<button class="btn btn-primary" name="'+plot_polygon_assignment_submit_button+'">Finish and Save Polygons To Plots. Go to Next Imaging Pass.</button></div>';
         html = html + '</div></div></div></div>';
 
         jQuery('#'+plot_polygons_layout_assignment_info).html(html);
@@ -1941,25 +1958,58 @@ jQuery(document).ready(function(){
 
         jQuery.ajax({
             type: 'POST',
-            url: '/api/drone_imagery/save_plot_polygons_template',
+            url: '/api/drone_imagery/save_plot_polygons_template_separated',
             dataType: "json",
             data: {
                 'drone_run_band_project_id': manage_drone_imagery_standard_process_interactive_drone_run_band_project_id,
-                'stock_polygons': JSON.stringify(drone_imagery_interactive_plot_polygons)
+                'stock_polygons': JSON.stringify(drone_imagery_interactive_plot_polygons),
+                'flight_pass_counter':manage_drone_imagery_standard_process_raw_images_interactive_current_pass
             },
             success: function(response){
                 console.log(response);
                 if(response.error) {
                     alert(response.error);
-                } else {
+                }
+                console.log(manage_drone_imagery_standard_process_raw_images_interactive_current_pass);
+                if (manage_drone_imagery_standard_process_raw_images_interactive_current_pass < manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass) {
+                    manage_drone_imagery_standard_process_raw_images_interactive_current_pass = manage_drone_imagery_standard_process_raw_images_interactive_current_pass + 1;
+
+                    console.log("Plot Polygon pass COMPLETE");
+
+                    initializeInteractiveSvg('#drone_imagery_standard_process_raw_images_image_id_interactive_select_div', 'drone_imagery_standard_process_raw_images_image_id_interactive_select_div_area', 1, 1);
+
+                    jQuery('#drone_imagery_standard_process_interactive_plot_polygons_flight_pass').html("<p><b>Flight Pass: "+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></p>");
+
+                    plot_polygons_interactive_display_points = [];
+                    plot_polygons_interactive_ind_4_points = [];
+                    plot_polygons_interactive_generated_polygons = {};
+                    drone_imagery_interactive_plot_polygons_display = {};
+                    plot_polygons_interactive_generated_polygons = [];
+                    drone_imagery_interactive_plot_generated_polygons = [];
+                    drone_imagery_standard_process_raw_images_interactive_plot_polygons_template_dimensions = [];
+                    drone_imagery_interactive_plot_polygons_removed_numbers = [];
+                    d3.selectAll("text").remove();
+                    d3.selectAll("line").remove();
+                    d3.selectAll("circle").remove();
+                    jQuery('#drone_imagery_interactive_generated_polygons_div').html('');
+
+                    droneImageryDrawLayoutTableInteractive(drone_imagery_interactive_field_trial_layout_response, {}, 'drone_imagery_interactive_trial_layout_div', 'drone_imagery_interactive_trial_layout_table');
+                    droneImageryDrawPlotPolygonActiveTemplatesTableInteractive('drone_imagery_plot_polygons_active_templates_raw_images_interactive', drone_imagery_standard_process_raw_images_interactive_plot_polygons_template_dimensions);
+                    plotPolygonManualAssignPlotNumberTable('drone_imagery_standard_process_interactive_generated_polygons_table', 'drone_imagery_standard_process_interactive_generated_polygons_table_id', 'drone_imagery_standard_process_interactive_generated_polygons_table_input', 'drone_imagery_standard_process_interactive_generated_polygons_table_input_generate_button', 'drone_imagery_standard_process_interactive_plot_polygons_submit_bottom');
+                }
+                else {
+                    console.log("Plot polygon COMPLETE");
+
+                    manage_drone_imagery_standard_process_raw_images_interactive_current_pass = 1;
+
+                    jQuery('#manage_drone_imagery_standard_process_interactive_drone_run_bands_apply_table').DataTable({
+                        destroy : true,
+                        ajax : '/api/drone_imagery/drone_run_bands?select_checkbox_name=drone_run_standard_process_interactive_band_apply_select&drone_run_project_id='+manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id+'&select_all=1&disable=1'
+                    });
+
                     Workflow.complete("#drone_imagery_standard_process_raw_images_interactive_match");
                     Workflow.focus('#manage_drone_imagery_standard_process_raw_images_interactive_workflow', 5);
                 }
-
-                jQuery('#manage_drone_imagery_standard_process_interactive_drone_run_bands_apply_table').DataTable({
-                    destroy : true,
-                    ajax : '/api/drone_imagery/drone_run_bands?select_checkbox_name=drone_run_standard_process_interactive_band_apply_select&drone_run_project_id='+manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id+'&select_all=1&disable=1'
-                });
             },
             error: function(response){
                 //alert('Error saving standard process assigned plot polygons!')

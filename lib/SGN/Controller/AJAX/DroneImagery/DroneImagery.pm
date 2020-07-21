@@ -1147,8 +1147,8 @@ sub _drone_imagery_interactive_get_gps {
         $saved_micasense_stacks_rotated_full_separated = $saved_micasense_stacks_rotated_full;
         $saved_micasense_stacks_rotated = $saved_micasense_stacks_rotated_full->{$flight_pass_counter};
     }
-    print STDERR Dumper $saved_micasense_stacks_rotated_full;
-    print STDERR Dumper $saved_micasense_stacks_rotated;
+    # print STDERR Dumper $saved_micasense_stacks_rotated_full;
+    # print STDERR Dumper $saved_micasense_stacks_rotated;
 
     my $saved_image_stacks_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_micasense_stacks_separated', 'project_property')->cvterm_id();
     my $saved_micasense_stacks_json = $schema->resultset("Project::Projectprop")->find({
@@ -2273,15 +2273,26 @@ sub drone_imagery_save_gps_images_POST : Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $drone_run_project_id = $c->req->param('drone_run_project_id');
+    my $flight_pass_counter = $c->req->param('flight_pass_counter');
     my $gps_images = decode_json $c->req->param('gps_images');
-    my $gps_images_json = encode_json $gps_images;
 
     my $saved_gps_positions_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_gps_pixel_positions', 'project_property')->cvterm_id();
+    my $saved_gps_positions_json = $schema->resultset("Project::Projectprop")->find({
+        project_id => $drone_run_project_id,
+        type_id => $saved_gps_positions_type_id
+    });
+    my $saved_gps_positions_full;
+    if ($saved_gps_positions_json) {
+        $saved_gps_positions_full = decode_json $saved_gps_positions_json->value();
+    }
+    
+    $saved_gps_positions_full->{$flight_pass_counter} = $gps_images;
+
     my $drone_run_band_rotate_angle = $schema->resultset('Project::Projectprop')->update_or_create({
         type_id=>$saved_gps_positions_type_id,
         project_id=>$drone_run_project_id,
         rank=>0,
-        value=>$gps_images_json
+        value => encode_json $saved_gps_positions_full
     },
     {
         key=>'projectprop_c1'
@@ -2978,7 +2989,6 @@ sub drone_imagery_save_plot_polygons_template_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
     my $stock_polygons = $c->req->param('stock_polygons');
-    my $flight_pass_counter = $c->req->param('flight_pass_counter');
 
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
@@ -3013,12 +3023,69 @@ sub drone_imagery_save_plot_polygons_template_POST : Args(0) {
         $save_stock_polygons = decode_json $previous_plot_polygons_rs->first->value;
     }
     foreach my $stock_name (keys %$polygon_objs) {
-        if ($flight_pass_counter) {
-            $save_stock_polygons->{$flight_pass_counter}->{$stock_name} = $polygon_objs->{$stock_name};
-        } else {
-            $save_stock_polygons->{$stock_name} = $polygon_objs->{$stock_name};
-        }
+        $save_stock_polygons->{$stock_name} = $polygon_objs->{$stock_name};
     }
+
+    my $drone_run_band_plot_polygons = $schema->resultset('Project::Projectprop')->update_or_create({
+        type_id=>$drone_run_band_plot_polygons_type_id,
+        project_id=>$drone_run_band_project_id,
+        rank=>0,
+        value=> encode_json($save_stock_polygons)
+    },
+    {
+        key=>'projectprop_c1'
+    });
+
+    $c->stash->{rest} = {success => 1, drone_run_band_template_id => $drone_run_band_plot_polygons->projectprop_id};
+}
+
+sub drone_imagery_save_plot_polygons_template_separated : Path('/api/drone_imagery/save_plot_polygons_template_separated') : ActionClass('REST') { }
+sub drone_imagery_save_plot_polygons_template_separated_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    print STDERR Dumper $c->req->params();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $drone_run_band_project_id = $c->req->param('drone_run_band_project_id');
+    my $stock_polygons = $c->req->param('stock_polygons');
+    my $flight_pass_counter = $c->req->param('flight_pass_counter');
+
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $polygon_objs = decode_json $stock_polygons;
+    my %stock_ids;
+
+    foreach my $stock_name (keys %$polygon_objs) {
+        my $polygon = $polygon_objs->{$stock_name};
+        my $last_point = pop @$polygon;
+        if (scalar(@$polygon) != 4){
+            $c->stash->{rest} = {error=>'Error: Polygon for '.$stock_name.' should be 4 long!'};
+            $c->detach();
+        }
+        $polygon_objs->{$stock_name} = $polygon;
+
+        my $stock = $schema->resultset("Stock::Stock")->find({uniquename => $stock_name});
+        if (!$stock) {
+            $c->stash->{rest} = {error=>'Error: Stock name '.$stock_name.' does not exist in the database!'};
+            $c->detach();
+        }
+        $stock_ids{$stock_name} = $stock->stock_id;
+    }
+
+    my $drone_run_band_plot_polygons_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_plot_polygons_separated', 'project_property')->cvterm_id();
+    my $previous_plot_polygons_rs = $schema->resultset('Project::Projectprop')->search({type_id=>$drone_run_band_plot_polygons_type_id, project_id=>$drone_run_band_project_id});
+    if ($previous_plot_polygons_rs->count > 1) {
+        die "There should not be more than one saved entry for plot polygons for a drone run band";
+    }
+
+    my $save_stock_polygons;
+    if ($previous_plot_polygons_rs->count > 0) {
+        $save_stock_polygons = decode_json $previous_plot_polygons_rs->first->value;
+    }
+    foreach my $stock_name (keys %$polygon_objs) {
+        $save_stock_polygons->{$flight_pass_counter}->{$stock_name} = $polygon_objs->{$stock_name};
+    }
+    # print STDERR Dumper $save_stock_polygons;
 
     my $drone_run_band_plot_polygons = $schema->resultset('Project::Projectprop')->update_or_create({
         type_id=>$drone_run_band_plot_polygons_type_id,
@@ -4156,67 +4223,82 @@ sub standard_process_apply_raw_images_interactive_POST : Args(0) {
         type_id=>$saved_gps_positions_type_id,
         project_id=>$drone_run_project_id_input,
     });
-    my $saved_gps_positions = decode_json $drone_run_band_saved_gps->value();
+    my $saved_gps_positions_separated = decode_json $drone_run_band_saved_gps->value();
 
-    my $drone_run_band_plot_polygons_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_band_plot_polygons', 'project_property')->cvterm_id();
+    my $drone_run_band_plot_polygons_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_band_plot_polygons_separated', 'project_property')->cvterm_id();
     my $previous_plot_polygons_rs = $bcs_schema->resultset('Project::Projectprop')->search({type_id=>$drone_run_band_plot_polygons_type_id, project_id=>$drone_run_band_project_id});
     if ($previous_plot_polygons_rs->count > 1) {
-        die "There should not be more than one saved entry for plot polygons for a drone run band";
+        $c->stash->{rest} = { error => "There should not be more than one saved entry for plot polygons for a drone run band" };
+        $c->detach();
     }
 
-    my $save_stock_polygons;
+    my $save_stock_polygons_separated;
     if ($previous_plot_polygons_rs->count > 0) {
-        $save_stock_polygons = decode_json $previous_plot_polygons_rs->first->value;
+        $save_stock_polygons_separated = decode_json $previous_plot_polygons_rs->first->value;
+    }
+    if (!$save_stock_polygons_separated) {
+        $c->stash->{rest} = { error => "There are no stock polygons saved!" };
+        $c->detach();
     }
     # print STDERR Dumper $save_stock_polygons;
     # print STDERR Dumper $saved_gps_positions;
 
+    if (scalar(keys %$saved_gps_positions_separated) != scalar(keys %$save_stock_polygons_separated)) {
+        $c->stash->{rest} = { error => "The number of imaging passes is not equal for the image positions and the plot polygons!" };
+        $c->detach();
+    }
+
     my %polygons_images_positions;
-    while (my ($lat, $lo) = each %$saved_gps_positions) {
-        while (my ($long, $pos) = each %$lo) {
-            my $size = $pos->{image_size};
-            my $rotated_bound = $pos->{rotated_bound_translated};
-            my $x1_pos = $pos->{x_pos} + 0;
-            my $y1_pos = $pos->{y_pos} + 0;
-            my $x1_min = 10000000000;
-            my $y1_min = 10000000000;
-            foreach (@$rotated_bound) {
-                if ($_->[0] < $x1_min) {
-                    $x1_min = $_->[0];
+    foreach my $flight_pass_counter (keys %$saved_gps_positions_separated) {
+        my $saved_gps_positions = $saved_gps_positions_separated->{$flight_pass_counter};
+        my $save_stock_polygons = $save_stock_polygons_separated->{$flight_pass_counter};
+
+        while (my ($lat, $lo) = each %$saved_gps_positions) {
+            while (my ($long, $pos) = each %$lo) {
+                my $size = $pos->{image_size};
+                my $rotated_bound = $pos->{rotated_bound_translated};
+                my $x1_pos = $pos->{x_pos} + 0;
+                my $y1_pos = $pos->{y_pos} + 0;
+                my $x1_min = 10000000000;
+                my $y1_min = 10000000000;
+                foreach (@$rotated_bound) {
+                    if ($_->[0] < $x1_min) {
+                        $x1_min = $_->[0];
+                    }
+                    if ($_->[1] < $y1_min) {
+                        $y1_min = $_->[1];
+                    }
                 }
-                if ($_->[1] < $y1_min) {
-                    $y1_min = $_->[1];
-                }
-            }
 
-            my @image_bound = (@$rotated_bound, $rotated_bound->[0]);
-            my $bound = Math::Polygon->new(points => \@image_bound);
+                my @image_bound = (@$rotated_bound, $rotated_bound->[0]);
+                my $bound = Math::Polygon->new(points => \@image_bound);
 
-            while (my ($plot_name, $points) = each %$save_stock_polygons) {
-                my $polygon_x1 = $points->[0]->{x} + 0;
-                my $polygon_y1 = $points->[0]->{y} + 0;
-                my $polygon_x2 = $points->[1]->{x} + 0;
-                my $polygon_y2 = $points->[1]->{y} + 0;
-                my $polygon_x3 = $points->[2]->{x} + 0;
-                my $polygon_y3 = $points->[2]->{y} + 0;
-                my $polygon_x4 = $points->[3]->{x} + 0;
-                my $polygon_y4 = $points->[3]->{y} + 0;
+                while (my ($plot_name, $points) = each %$save_stock_polygons) {
+                    my $polygon_x1 = $points->[0]->{x} + 0;
+                    my $polygon_y1 = $points->[0]->{y} + 0;
+                    my $polygon_x2 = $points->[1]->{x} + 0;
+                    my $polygon_y2 = $points->[1]->{y} + 0;
+                    my $polygon_x3 = $points->[2]->{x} + 0;
+                    my $polygon_y3 = $points->[2]->{y} + 0;
+                    my $polygon_x4 = $points->[3]->{x} + 0;
+                    my $polygon_y4 = $points->[3]->{y} + 0;
 
-                if ($bound->contains([$polygon_x1,$polygon_y1]) && $bound->contains([$polygon_x2,$polygon_y2]) && $bound->contains([$polygon_x3,$polygon_y3]) && $bound->contains([$polygon_x4,$polygon_y4])) {
-                    my $points_shifted = [
-                        {'x' => $polygon_x1 - $x1_min, 'y' => $polygon_y1 - $y1_min},
-                        {'x' => $polygon_x2 - $x1_min, 'y' => $polygon_y2 - $y1_min},
-                        {'x' => $polygon_x3 - $x1_min, 'y' => $polygon_y3 - $y1_min},
-                        {'x' => $polygon_x4 - $x1_min, 'y' => $polygon_y4 - $y1_min},
-                    ];
-                    my $obj = {
-                        images => $pos,
-                        points => $points_shifted,
-                        image_bound => \@image_bound
-                    };
-                    push @{$polygons_images_positions{$plot_name}}, $obj;
-                } else {
-                    print STDERR "Polygon outside image!\n";
+                    if ($bound->contains([$polygon_x1,$polygon_y1]) && $bound->contains([$polygon_x2,$polygon_y2]) && $bound->contains([$polygon_x3,$polygon_y3]) && $bound->contains([$polygon_x4,$polygon_y4])) {
+                        my $points_shifted = [
+                            {'x' => $polygon_x1 - $x1_min, 'y' => $polygon_y1 - $y1_min},
+                            {'x' => $polygon_x2 - $x1_min, 'y' => $polygon_y2 - $y1_min},
+                            {'x' => $polygon_x3 - $x1_min, 'y' => $polygon_y3 - $y1_min},
+                            {'x' => $polygon_x4 - $x1_min, 'y' => $polygon_y4 - $y1_min},
+                        ];
+                        my $obj = {
+                            images => $pos,
+                            points => $points_shifted,
+                            image_bound => \@image_bound
+                        };
+                        push @{$polygons_images_positions{$plot_name}}, $obj;
+                    } else {
+                        print STDERR "Polygon outside image!\n";
+                    }
                 }
             }
         }
@@ -4239,7 +4321,6 @@ sub standard_process_apply_raw_images_interactive_POST : Args(0) {
 
     my %drone_run_band_info;
     my $band_counter = 0;
-    my $dir = $c->tempfiles_subdir('/drone_imagery_rotate');
 
     foreach my $apply_drone_run_band_project_id (@$apply_drone_run_band_project_ids) {
         while (my ($plot_name, $pi_array) = each %polygons_images_positions) {
