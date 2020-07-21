@@ -18,6 +18,7 @@ use Data::Dumper;
 use Try::Tiny;
 use SGN::Model::Cvterm;
 use CXGN::BreedersToolbox::Projects;
+use JSON;
 
 has 'schema' => (
     isa => 'Bio::Chado::Schema',
@@ -296,16 +297,26 @@ sub get_accessions {
 
 sub get_locations_with_details {
     my $self = shift;
+    my $schema = $self->schema;
     my $project_obj = $self->get_project_object;
     my $program_name = $project_obj->name;
-    print STDERR "PROGRAM NAME =".Dumper($program_name)."\n";
-    my $location = CXGN::BreedersToolbox::Projects->new($self->schema);
-    my $all_locations = $location->get_location_geojson();
+#    print STDERR "PROGRAM NAME =".Dumper($program_name)."\n";
+    my $obj = CXGN::BreedersToolbox::Projects->new({schema => $schema});
+    my $all_locations = decode_json $obj->get_location_geojson();
 
+    my @program_locations;
+    foreach my $location_hash (@$all_locations) {
+        my $location = $location_hash->{'properties'};
+        my $name = $location->{'Program'};
+        if ($name eq $program_name) {
+            push @program_locations, $location_hash;
+        }
+    }
 
-    return \@data;
+    my $json = JSON->new();
+    $json->canonical(); # output sorted JSON
+    return $json->encode(\@program_locations);
 }
-
 
 ####
 1;##
