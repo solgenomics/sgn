@@ -277,18 +277,17 @@ sub callsets {
         if ($counter >= $start_index && $counter <= $end_index) {
             my $gt = decode_json $_;
             my @analysis;
-            my @additionalInfo = {};
             my @availableFormats;
             
             push @data, {
-                additionalInfo=>\@additionalInfo,
+                additionalInfo=>{},
                 callSetDbId=> qq|$gt->{stock_id}|,
                 callSetName=> qq|$gt->{stock_name}|,
                 created=>undef,
                 sampleDbId=>qq|$gt->{stock_id}|,
                 studyDbId=>qq|$gt->{genotypingDataProjectDbId}|, 
                 updated=>undef,
-                variantSetIds => [ $gt->{genotypingDataProjectDbId}. "p". $gt->{analysisMethodDbId} ],
+                variantSetDbIds => [ $gt->{genotypingDataProjectDbId}. "p". $gt->{analysisMethodDbId} ],
             };
         }
         $counter++;
@@ -371,7 +370,7 @@ sub calls {
                     $geno = $genotype->{$m}->{'DS'};
                 }
                 push @data, {
-                    additionalInfo=>undef,
+                    additionalInfo=>{},
                     variantName=>qq|$m|,
                     variantDbId=>qq|$m|,
                     callSetDbId=>qq|$gt->{stock_id}|,

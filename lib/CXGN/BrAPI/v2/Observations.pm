@@ -77,8 +77,8 @@ sub search {
             # if ( ! $observation_db_id || grep{/^$observation_id$/} @{$observation_db_id} ){
                 my @season = {
                     year => $obs_unit->{year},
-                    season => undef,
-                    seasonDbId => undef
+                    season => $obs_unit->{year},
+                    seasonDbId => $obs_unit->{year}
                 };
 
                 my $obs_timestamp = $_->{collect_date} ? $_->{collect_date} : $_->{timestamp};
@@ -173,8 +173,8 @@ sub detail {
         foreach (@$observations){
             my @season = {
                 year => $obs_unit->{year},       
-                season => undef,
-                seasonDbId => undef
+                season => $obs_unit->{year},
+                seasonDbId => $obs_unit->{year}
             };
 
             my $obs_timestamp = $_->{collect_date} ? $_->{collect_date} : $_->{timestamp};

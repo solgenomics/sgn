@@ -60,7 +60,7 @@ sub search {
         @data = $phenotypes_search->get_phenotype_matrix();
     }
     catch {
-        return CXGN::BrAPI::JSONResponse->return_error($status, 'An Error Occured During Phenotype Search Table');
+        return CXGN::BrAPI::JSONResponse->return_error($status, 'An Error Occured During Observations Search Table');
     }
 
     my @data_files;
@@ -94,7 +94,7 @@ sub search {
     );
 
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Phenotype-search table result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observations table result constructed');
 }
 
 sub search_observationunit_tables {
@@ -143,7 +143,7 @@ sub search_observationunit_tables {
         @data = $phenotypes_search->get_phenotype_matrix();
     }
     catch {
-        return CXGN::BrAPI::JSONResponse->return_error($status, 'An Error Occured During Phenotype Search Table');
+        return CXGN::BrAPI::JSONResponse->return_error($status, 'An Error Occured During Observation Units Search Table');
     }
 
     my @data_files;
@@ -177,7 +177,7 @@ sub search_observationunit_tables {
     );
 
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Phenotype-search table result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observation Units table result constructed');
 }
 
 1;
