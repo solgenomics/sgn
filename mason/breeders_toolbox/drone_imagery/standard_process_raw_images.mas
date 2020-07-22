@@ -103,10 +103,11 @@
                 </form>
 
                 <button class="btn btn-default" id="drone_imagery_standard_process_interactive_rotate_crosshairs">Draw Crosshairs Assist</button>
-                <button class="btn btn-primary" id="manage_drone_imagery_standard_process_interactive_rotate_step">Save Rotation And Go To Next (Only saves once per pass)</button>
+                <button class="btn btn-primary" id="manage_drone_imagery_standard_process_interactive_rotate_step">Save Rotation And Go To Next</button>
                 <button class="btn btn-default" id="drone_imagery_standard_process_raw_images_interactive_rotate_previous_pass">Go To Previous Imaging Pass</button>
                 <button class="btn btn-default" id="drone_imagery_standard_process_raw_images_interactive_rotate_next_pass">Go To Next Imaging Pass</button>
                 <button class="btn btn-default" id="drone_imagery_standard_process_raw_images_interactive_rotate_restart">Start Over Rotation</button>
+                <button class="btn btn-primary" id="drone_imagery_standard_process_raw_images_interactive_rotate_skip_forward">Go To Plot Polygons</button>
             </div>
 
             <hr>
@@ -723,6 +724,19 @@ jQuery(document).ready(function(){
                 }, 10000);
             })(manage_drone_imagery_standard_process_raw_images_interactive_is_rotating);
         }
+    });
+
+    jQuery('#drone_imagery_standard_process_raw_images_interactive_rotate_skip_forward').click(function(){
+        manage_drone_imagery_standard_process_raw_images_interactive_current_pass = 1;
+
+        jQuery('#drone_imagery_standard_process_interactive_plot_polygons_flight_pass').html("<p><b>Imaging Event Pass: "+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+"/"+manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass+"</b></p>");
+
+        initializeInteractiveSvg('#drone_imagery_standard_process_raw_images_image_id_interactive_select_div', 'drone_imagery_standard_process_raw_images_image_id_interactive_select_div_area', 1, 1);
+
+        Workflow.complete("#manage_drone_imagery_standard_process_interactive_rotate_step");
+        Workflow.focus('#manage_drone_imagery_standard_process_raw_images_interactive_workflow', 4);
+
+        window.scrollTo(0,0);
     });
 
     d3.select("#drone_imagery_standard_process_raw_images_interactive_bulk_rotate_degrees_input").on("input", function() {
