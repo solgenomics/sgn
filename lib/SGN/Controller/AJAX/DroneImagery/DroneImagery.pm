@@ -1562,7 +1562,7 @@ sub drone_imagery_update_gps_images_rotation_POST : Args(0) {
 
         my %rotated_saved_micasense_stacks;
         my $saved_micasense_stacks = $return->{saved_micasense_stacks};
-        my $saved_micasense_stacks_full = $return->{saved_micasense_stacks_rotated_full_separated};
+        # my $saved_micasense_stacks_full = $return->{saved_micasense_stacks_rotated_full_separated};
 
         foreach my $stack_key (sort {$a <=> $b} keys %$saved_micasense_stacks) {
             if (!$saved_micasense_stacks->{$stack_key}->[0]) {
@@ -1671,10 +1671,19 @@ sub drone_imagery_update_gps_images_rotation_POST : Args(0) {
         }
         # print STDERR Dumper \%rotated_saved_micasense_stacks;
 
+        my $saved_image_stacks_rotated_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_micasense_stacks_rotated', 'project_property')->cvterm_id();
+        my $saved_micasense_stacks_rotated_json = $schema->resultset("Project::Projectprop")->find({
+            project_id => $drone_run_project_id,
+            type_id => $saved_image_stacks_rotated_type_id
+        });
+        my $saved_micasense_stacks_full;
+        if ($saved_micasense_stacks_rotated_json) {
+            $saved_micasense_stacks_full = decode_json $saved_micasense_stacks_rotated_json->value();
+        }
+
         $saved_micasense_stacks_full->{$flight_pass_counter} = \%rotated_saved_micasense_stacks;
         %rotated_saved_micasense_stacks_full = %$saved_micasense_stacks_full;
 
-        my $saved_image_stacks_rotated_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_micasense_stacks_rotated', 'project_property')->cvterm_id();
         my $drone_run_band_rotate_angle = $schema->resultset('Project::Projectprop')->update_or_create({
             type_id=>$saved_image_stacks_rotated_type_id,
             project_id=>$drone_run_project_id,
