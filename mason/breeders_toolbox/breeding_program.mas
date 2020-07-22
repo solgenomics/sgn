@@ -18,6 +18,7 @@ my $program_id   = $program->get_program_id;
 <& /page/page_title.mas, title=>"Breeding Program $program_name" &>
 
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, program_id => $program_id, info_section_title => "<h4 style='display:inline'>Locations</h4>", info_section_subtitle => 'View locations related to this breeding program', icon_class => "glyphicon glyphicon-pushpin", info_section_id => "program_location_section" &>
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, program_id => $program_id, info_section_title => "<h4 style='display:inline'>Projects</h4>", info_section_subtitle => 'View field trials, genotyping experiments, crossing experiments of this breeding program', icon_class => "glyphicon glyphicon-th", info_section_id => "program_project_section" &>
 
 
 <!--

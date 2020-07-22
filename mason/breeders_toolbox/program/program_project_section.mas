@@ -1,0 +1,11 @@
+<%args>
+$program_id
+</%args>
+
+<div class="well well-sm">
+
+<&| /page/info_section.mas, id=>"program_trials", title => "Field Trials", is_subsection => 1, collapsible=>1, collapsed=>1, hide_if_empty=>1 &>
+    <& /breeders_toolbox/program/trials.mas, program_id => $program_id &>
+</&>
+
+</div>
