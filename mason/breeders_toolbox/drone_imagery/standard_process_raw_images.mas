@@ -107,7 +107,7 @@
                 <button class="btn btn-default" id="drone_imagery_standard_process_raw_images_interactive_rotate_previous_pass">Go To Previous Imaging Pass</button>
                 <button class="btn btn-default" id="drone_imagery_standard_process_raw_images_interactive_rotate_next_pass">Go To Next Imaging Pass</button>
                 <button class="btn btn-default" id="drone_imagery_standard_process_raw_images_interactive_rotate_restart">Start Over Rotation</button>
-                <button class="btn btn-primary" id="drone_imagery_standard_process_raw_images_interactive_rotate_skip_forward">Go To Plot Polygons</button>
+                <button class="btn btn-default" id="drone_imagery_standard_process_raw_images_interactive_rotate_skip_forward">Go To Plot Polygons</button>
             </div>
 
             <hr>
