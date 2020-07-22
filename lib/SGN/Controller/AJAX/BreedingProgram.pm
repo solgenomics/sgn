@@ -27,6 +27,7 @@ use Try::Tiny;
 use Math::Round;
 use CXGN::BreedingProgram;
 use CXGN::Phenotypes::PhenotypeMatrix;
+use CXGN::BreedersToolbox::Projects;
 
 __PACKAGE__->config(
     default   => 'application/json',
@@ -224,4 +225,27 @@ sub program_locations :Chained('ajax_breeding_program') PathPart('locations') Ar
     $c->stash->{rest} = { data => $program_locations };
 
 }
+
+sub program_field_trials :Chained('ajax_breeding_program') PathPart('field_trials') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $program = $c->stash->{program};
+    my $program_id = $program->get_program_id;
+    my $schema = $c->stash->{schema};
+
+    my $projects = CXGN::BreedersToolbox::Projects->new( { schema => $schema } );
+    my @all_trials = $projects->get_trials_by_breeding_program($program_id);
+    my $field_trials_ref = $all_trials[0];
+    my @field_trials = @$field_trials_ref;
+
+    my @field_trial_data;
+    foreach my $trial(@field_trials){
+        push @field_trial_data, [ '<a href="/breeders/trial/'.$$trial[0].'">'.$$trial[1].'</a>', $$trial[2] ];
+    }
+
+    $c->stash->{rest} = { data => \@field_trial_data };
+
+}
+
+
 1;
