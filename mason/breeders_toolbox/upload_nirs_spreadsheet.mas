@@ -317,9 +317,9 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-            <button class="btn btn-primary" id="drone_imagery_keras_cnn_train_link">Train NIRs Model Using Spectrum and Phenotypes In Database</button>
+            <button class="btn btn-primary" id="drone_imagery_keras_cnn_train_link">Train NIRs Model Using Spectrum and Phenotypes</button>
             <br/><br/>
-            <button class="btn btn-primary" id="drone_imagery_keras_cnn_predict_link">Predict Phenotypes Using Trained NIRs Model CNN</button>
+            <button class="btn btn-primary" id="drone_imagery_keras_cnn_predict_link">Predict Phenotypes Using Trained NIRs Model</button>
             <br/><br/>
             <!-- <button class="btn btn-primary" id="drone_imagery_keras_cnn_autoencoder_vegetation_indices_link">Calculate NDVI and NDRE from Keras CNN Autoencoder Model</button> -->
         </div>
@@ -376,7 +376,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Traits Phenotyped in the Selected Field Trial(s) As Auxiliary Trait(s): </label>
+                            <label class="col-sm-3 control-label">Traits Phenotyped in the Selected Field Trial(s): </label>
                             <div class="col-sm-9" >
                                 <div id="drone_imagery_train_keras_cnn_aux_trait_select_div"></div>
                             </div>
@@ -388,7 +388,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     </center>
                 </&>
                 <&| /util/workflow.mas:step, title=> "Population Selection" &>
-                    <& /page/page_title.mas, title=>"Select the population(s) you are specifically interested in predicting. Leave blank if you want to train on images from all germplasm in the selected field trial(s)." &>
+                    <& /page/page_title.mas, title=>"Select the population(s) you are specifically interested in predicting. Leave blank if you want to calculate on spectrum from all germplasm in the selected field trial(s)." &>
                     <br/><br/>
                     <form class="form-horizontal">
                         <div class="form-group">
@@ -403,20 +403,39 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <button class="btn btn-primary" id="drone_imagery_train_keras_model_population_select_step">Go to Next Step</button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Drone Run Selection" &>
-                    <& /page/page_title.mas, title=>"Select the drone runs you are interested in using in the model" &>
+                <&| /util/workflow.mas:step, title=> "Model Settings" &>
+                    <& /page/page_title.mas, title=>"Select parameters for NIRs modeling" &>
+                    <div class = "form-group form-inline">
+                       <!-- <label for = format_select>NIRs format: </label> -->
+                       <select class="form-control input-sm" id="format_select">
+                        <option value="">Select NIRs format</option>
+                        <option selected value="SCIO">SCIO</option>
+                        <option value="QST">QST</option>
+                        <option value="FOSS6500">FOSS6500</option>
+                        <option value="BUCHIN500">BuchiN500</option>
+                        <option value="LinkSquare">LinkSquare</option>
+                       </select>
+                       <div id = "format_select">
+                      </div>
+                      <br>
 
 
-                    <select class="form-control" id="drone_imagery_calculate_statistics_select_input">
-                        <option value="">Select A Cross Validation Method</option>
-                        <option value="random">Random</option>
+                      <div class = "form-group form-inline">
+                       <!-- <label for = cv_select>Cross-validation methods: </label> -->
+                       <select class="form-control input-sm" id="cv_select">
+                        <option value="">Select cross-validation</option>
+                        <option selected value="random">Random</option>
                         <option value="stratified">Stratified</option>
-                        <option value="cv1">CV1</option>
-                        <option value="cv2">CV2</option>
-                        <option value="cv0">CV0</option>
-                        <option value="cv00">CV00</option>
+                        <option value="CV1">CV1</option>
+                        <option value="CV2">CV2</option>
+                        <option value="CV0">CV0</option>
+                        <option value="CV00">CV00</option>
+                       </select>
+                       <div id = "cv_select">
+                      </div>
+                      <br>
+
                     </select>
-                    <br>
                     <select class="form-control" id="nirs_model_algorithm">
                         <option value="">Available Model Algorithm</option>
                         <option value="random">PLSR</option>
@@ -424,59 +443,47 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                         <option value="cv1">CVM with linear kernel</option>
                         <option value="cv2">CVM with radial kernel</option>
                     </select>
-
+                    <br>
                     <div class="form-group form-inline">
                         <br>
                        <label for = niter_select>Number of sampling iterations&nbsp</label>
                        <input type="number" id="niter_select" name="niter_select" min="1" max="100" step="1" value="10">
                        <br>
-                    </div> 
+                    </div>
+                    <br>
                     <div class="form-group form-inline">
                        <label for = tuneLength_select>Tuning length&nbsp</label>
                        <input type="number" id="tuneLength_select" name="tuneLength_select" min="1" max="30" step="1" value="10">
                        <br>
                     </div>
+                    <br>
                     <div class="form-group form-inline">
                         <input type="checkbox" id="preprocessing_select" name="preprocessing_select" value="preprocessing">
                         <label for="preprocessing_select">&nbspInclude preprocessing?</label>
                         <br>
                     </div>
-
+                    <br>
                     <div class="form-group form-inline">
                         <input type="checkbox" id="rf_var_imp_select" name="rf_var_imp_select" value="rfvarim">
                         <label for="rf_var_imp_select">&nbspShow random forest variable importance? (Note this may take a long time to run)</label>
                         <br>
                     </div>
 
-                    <!-- <table class="table table-bordered table-hover" id="drone_image_train_keras_drone_runs_table">
-                        <thead>
-                            <tr>
-                                <th>Select <br/><input type="checkbox" id="drone_image_train_keras_drone_runs_table_select_all" checked>Select All</th>
-                                <th>Drone Run Name</th>
-                                <th>Drone Run Type</th>
-                                <th>Drone Run Description</th>
-                                <th>Drone Run Date</th>
-                                <th>Drone Run GDD</th>
-                                <th>Camera Type</th>
-                                <th>Field Trial Name</th>
-                                <th>Field Trial Description</th>
-                            </tr>
-                        </thead>
-                    </table> -->
+                   
 
                     <br/><br/>
                     <center>
                     <button class="btn btn-primary" id="drone_imagery_train_keras_model_drone_run_select_step">Go to Next Step</button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Images Selection" &>
-                    <& /page/page_title.mas, title=>"Select the types of images you are interested in using in the model" &>
-
+                <&| /util/workflow.mas:step, title=> "Summary" &>
+                    <& /page/page_title.mas, title=>"Summary of the parameters to create the model" &>
+<!-- 
                     <table class="table table-bordered table-hover" id="drone_image_train_keras_plot_polygon_image_type_table">
                         <thead>
                             <tr>
-                                <!--th>Select <br/><input type="checkbox" id="drone_image_train_keras_plot_polygon_image_type_table_select_all" checked>Select All</th-->
-                                <th>Select</th>
+                                <th>Select <br/><input type="checkbox" id="drone_image_train_keras_plot_polygon_image_type_table_select_all" checked>Select All</th-->
+                                <!-- <th>Select</th>
                                 <th>Field Trial</th>
                                 <th>Drone Run Name</th>
                                 <th>Drone Run Band Name</th>
@@ -487,7 +494,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                         </thead>
                     </table>
 
-                    <br/><br/>
+                    <br/><br/> --> 
                     <center>
                     <button class="btn btn-primary" id="drone_imagery_train_keras_model_plot_polygon_type_select_step">Go to Next Step</button>
                     </center>
@@ -496,7 +503,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <& /page/page_title.mas, title=>"Train the model!" &>
 
                     <br/><br/>
-                    <div class="form-horizontal">
+                    <!-- <div class="form-horizontal">
                         <div class="form-group">
                             <label class="col-sm-4 control-label">Model Type: </label>
                             <div class="col-sm-8" >
@@ -511,20 +518,23 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                                     <option value="KerasCNNDenseNet121ImageNetWeights">Keras DenseNet121 ImageNet Weights Linear Regression</option>
                                 </select>
                             </div>
-                        </div>
+                        </div> -->
                         <div class="form-group">
                             <label class="col-sm-4 control-label">Model Name: </label>
                             <div class="col-sm-8" >
                                 <input class="form-control" type="text" id="drone_image_train_keras_model_name" name="drone_image_train_keras_model_name" />
                             </div>
+                            <br>
+                            <br>
                         </div>
+                        <br>
                         <div class="form-group">
                             <label class="col-sm-4 control-label">Model Description: </label>
                             <div class="col-sm-8" >
                                 <input class="form-control" type="text" id="drone_image_train_keras_model_desc" name="drone_image_train_keras_model_desc" />
                             </div>
                         </div>
-                        <div class="form-group">
+                        <!-- <div class="form-group">
                             <label class="col-sm-4 control-label">Genotyping Protocol for GRM: </label>
                             <div class="col-sm-8" >
                                 <div id="drone_image_train_keras_model_genotyping_protocol_div"></div>
@@ -539,11 +549,11 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                                 </select>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
 
                     <br/><br/>
                     <center>
-                    <button class="btn btn-primary" id="drone_imagery_train_keras_model_confirm_step">Train and Save Keras CNN Model</button>
+                    <button class="btn btn-primary" id="drone_imagery_train_keras_model_confirm_step">Train and Save NIRs Model</button>
                     </center>
 
                     <div id="drone_imagery_train_keras_model_results_div">
@@ -566,14 +576,14 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="droneImageryPredictKerasCNNDialog">Predict Phenotypes Using Trained Keras CNN Model</h4>
+        <h4 class="modal-title" id="droneImageryPredictKerasCNNDialog">Predict Phenotypes Using NIRs Model</h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
             <&| /util/workflow.mas, id=> "drone_imagery_predict_keras_model_workflow" &>
                 <&| /util/workflow.mas:step, title=> "Intro" &>
-                    <& /page/page_title.mas, title=>"This workflow will guide you through predicting phenotypes from trained Kera CNN Models and images in the database." &>
+                    <& /page/page_title.mas, title=>"This workflow will guide you through predicting phenotypes from trained NIRs Models in the database." &>
                     <br/><br/>
                     <center>
                     <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
@@ -595,19 +605,19 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <button class="btn btn-primary" id="drone_imagery_predict_keras_model_field_trial_select_step">Go to Next Step</button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Keras CNN Model Selection" &>
-                    <& /page/page_title.mas, title=>"Select the Keras CNN Model for prediction" &>
+                <&| /util/workflow.mas:step, title=> "NIRs Model Selection" &>
+                    <& /page/page_title.mas, title=>"Select the NIRs Model for prediction" &>
 
                     <br/><br/>
                     <form class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Trained Keras CNN Model: </label>
+                            <label class="col-sm-3 control-label">Trained NIRs Model: </label>
                             <div class="col-sm-9" >
                                 <div id="drone_imagery_predict_keras_cnn_model_select_div"></div>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Traits Phenotyped in the Selected Field Trial(s) As Auxiliary Trait(s) (Currently Only For Mixed MLP/CNN Model): </label>
+                            <label class="col-sm-3 control-label">Traits Phenotyped in the Selected Field Trial(s): </label>
                             <div class="col-sm-9" >
                                 <div id="drone_imagery_predict_keras_cnn_aux_trait_select_div"></div>
                             </div>
@@ -620,11 +630,11 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     </center>
                 </&>
                 <&| /util/workflow.mas:step, title=> "Population Selection" &>
-                    <& /page/page_title.mas, title=>"Select the population(s) you are specifically interested in predicting. Leave blank if you want to train on images from all germplasm in the selected field trial(s)." &>
+                    <& /page/page_title.mas, title=>"Select the population(s) you are specifically interested in predicting. Leave blank if you want to calculate on spectrum from all germplasm in the selected field trial(s)." &>
                     <br/><br/>
                     <form class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-5 control-label">Population(s) to include in training (Leave blank to include images from all germplasm in the selected field trials): </label>
+                            <label class="col-sm-5 control-label">Population(s) to include or leave blank to include spectrum from all germplasm in the selected field trials: </label>
                             <div class="col-sm-7" >
                                 <div id="drone_imagery_predict_keras_cnn_population_select_div"></div>
                             </div>
@@ -635,10 +645,25 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <button class="btn btn-primary" id="drone_imagery_predict_keras_model_population_select_step">Go to Next Step</button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Drone Run Selection" &>
-                    <& /page/page_title.mas, title=>"Select the drone runs you are interested in sourcing images from for prediction" &>
+                <&| /util/workflow.mas:step, title=> "Device Type" &>
+                    <& /page/page_title.mas, title=>"Select the device (scpectrum format) you are interested for prediction" &>
 
-                    <table class="table table-bordered table-hover" id="drone_image_predict_keras_drone_runs_table">
+                    <div class = "form-group form-inline">
+                       <!-- <label for = format_select>NIRs format: </label> -->
+                       <center>
+                       <select class="form-control input-sm" id="format_select">
+                        <option Selected value="">Select NIRs format</option>
+                        <option value="SCIO">SCIO</option>
+                        <option value="QST">QST</option>
+                        <option value="FOSS6500">FOSS6500</option>
+                        <option value="BUCHIN500">BuchiN500</option>
+                        <option value="LinkSquare">LinkSquare</option>
+                       </select></center>
+                       <div id = "format_select">
+                      </div>
+                      <br>
+
+                    <!-- <table class="table table-bordered table-hover" id="drone_image_predict_keras_drone_runs_table">
                         <thead>
                             <tr>
                                 <th>Select <br/><input type="checkbox" id="drone_image_predict_keras_drone_runs_table_select_all" checked>Select All</th>
@@ -652,27 +677,27 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                                 <th>Field Trial Description</th>
                             </tr>
                         </thead>
-                    </table>
+                    </table> -->
 
                     <br/><br/>
                     <center>
                     <button class="btn btn-primary" id="drone_imagery_predict_keras_model_drone_run_select_step">Go to Next Step</button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Images Selection" &>
-                    <& /page/page_title.mas, title=>"Select the types of images you are interested sourcing images from for prediction" &>
+                <&| /util/workflow.mas:step, title=> "NIRs Summary" &>
+                    <& /page/page_title.mas, title=>"Summary for Prediction using NIRS" &>
 
                     <table class="table table-bordered table-hover" id="drone_image_predict_keras_plot_polygon_image_type_table">
                         <thead>
                             <tr>
-                                <!--th>Select <br/><input type="checkbox" id="drone_image_predict_keras_plot_polygon_image_type_table_select_all" checked>Select All</th-->
+                                <!-- <th>Select <br/><input type="checkbox" id="drone_image_predict_keras_plot_polygon_image_type_table_select_all" checked>Select All</th> -->
                                 <th>Select</th>
-                                <th>Field Trial</th>
-                                <th>Drone Run Name</th>
-                                <th>Drone Run Band Name</th>
-                                <th>Drone Run Band Type</th>
-                                <th>Plot Polygon Type</th>
-                                <th>Number of Images</th>
+                                <th>Field Trial(s)</th>
+                                <th>Selected Trait</th>
+                                <th>NIRs Model</th>
+                                <th>Device Type</th>
+                                <!-- <th>Plot Polygon Type</th> -->
+                                <!-- <th>Number of Images</th> -->
                             </tr>
                         </thead>
                     </table>
@@ -1286,9 +1311,82 @@ jQuery(document).ready(function() {
         jQuery('input[name="train_keras_drone_imagery_drone_run_select"]:checked').each(function() {
             manage_drone_imagery_train_keras_drone_run_ids.push(jQuery(this).val());
         });
-        if (manage_drone_imagery_train_keras_drone_run_ids.length < 1){
-            alert('Please select at least one drone run!');
-        } else {
+
+        jQuery('#selectCV').on('click', function() {
+            if (!jQuery('#cv_select').val()) {
+              alert("Please select a cross-validation method.")
+            } else {
+              var check1 = 1;
+              var cv_id = jQuery('#cv_select').val();
+            $.ajax({
+                url: '/ajax/Nirs/get_cross_validation',
+                data: {'cv_id': cv_id },
+              }); // end .ajax
+            }; // end else statement 
+          });
+
+      jQuery('#selectStudyTrain').on('click', function() {
+        var train_id = jQuery('#train_select').val();
+        $.ajax({
+            url: '/ajax/Nirs/get_training_study',
+            data: {'train_id': train_id  },
+          }); // end .ajax    // }; // end else statement 
+      });
+
+      jQuery('#selectStudyTest').on('click', function() {
+        var test_id = jQuery('#test_select').val();
+            $.ajax({
+                url: '/ajax/Nirs/get_test_study',
+                data: {
+                  'test_id': test_id
+                },
+              }); // end .ajax    // }; // end else statement
+            // }
+        });
+
+      
+        jQuery('#selectIterations').on('click', function() {
+          var niter_id = jQuery('#niter_select').val();
+          $.ajax({
+            url: '/ajax/Nirs/get_niter',
+            data: {'niter_id': niter_id },
+          }); // end .ajax
+        });
+
+        jQuery('#selectAlgorithm').on('click', function() {
+            if (!jQuery('#model_algorithm_select').val()) {
+              alert("Please select an algorithm.")
+            } else {
+              var algt_id = jQuery('#model_algorithm_select').val();
+            $.ajax({
+                url: '/ajax/Nirs/get_algorithm',
+                data: {'algorithm_id': algt_id },
+              }); // end .ajax
+            }; // end else statement 
+          });
+           
+        jQuery('#selectTunebtn').on('click', function() {
+            if (!jQuery('#tuneLength_select').val()) {
+              alert("Please select number of Tuning.")
+            } else {
+              var tune_id = jQuery('#tuneLength_select').val();
+              // alert(tune_id);
+            $.ajax({
+                url: '/ajax/Nirs/get_tune',
+                data: {'tune_id': tune_id },
+              }); // end .ajax
+            }; // end else statement 
+          });
+
+
+
+
+
+
+
+        // if (check1 < 1){
+        //     alert(check1);
+        // } else {
 
             jQuery('#drone_image_train_keras_plot_polygon_image_type_table').DataTable({
                 destroy : true,
@@ -1298,7 +1396,7 @@ jQuery(document).ready(function() {
 
             Workflow.complete("#drone_imagery_train_keras_model_drone_run_select_step");
             Workflow.focus('#drone_imagery_train_keras_model_workflow', 5);
-        }
+        // }
         return false;
     });
 
@@ -1319,12 +1417,12 @@ jQuery(document).ready(function() {
         jQuery('input[name="train_keras_drone_imagery_plot_polygon_type_select"]:checked').each(function() {
             manage_drone_imagery_train_keras_plot_polygon_type_ids.push(jQuery(this).val());
         });
-        if (manage_drone_imagery_train_keras_plot_polygon_type_ids.length < 1){
-            alert('Please select at least one plot polygon type!');
-        } else {
+        // if (manage_drone_imagery_train_keras_plot_polygon_type_ids.length < 1){
+        //     alert('Please select at least one plot polygon type!');
+        // } else {
             Workflow.complete("#drone_imagery_train_keras_model_plot_polygon_type_select_step");
             Workflow.focus('#drone_imagery_train_keras_model_workflow', 6);
-        }
+        // }
 
         get_select_box('genotyping_protocol', 'drone_image_train_keras_model_genotyping_protocol_div', { 'name' : 'drone_image_train_keras_model_genotyping_protocol_select', 'id' : 'drone_image_train_keras_model_genotyping_protocol_select', 'empty':1 });
 
@@ -1495,9 +1593,9 @@ jQuery(document).ready(function() {
         jQuery('input[name="predict_keras_drone_imagery_drone_run_select"]:checked').each(function() {
             manage_drone_imagery_predict_keras_drone_run_ids.push(jQuery(this).val());
         });
-        if (manage_drone_imagery_predict_keras_drone_run_ids.length < 1){
-            alert('Please select at least one drone run!');
-        } else {
+        // if (manage_drone_imagery_predict_keras_drone_run_ids.length < 1){
+        //     alert('Please select at least one drone run!');
+        // } else {
 
             jQuery('#drone_image_predict_keras_plot_polygon_image_type_table').DataTable({
                 destroy : true,
@@ -1507,7 +1605,7 @@ jQuery(document).ready(function() {
 
             Workflow.complete("#drone_imagery_predict_keras_model_drone_run_select_step");
             Workflow.focus('#drone_imagery_predict_keras_model_workflow', 5);
-        }
+        // }
         return false;
     });
 
@@ -1522,12 +1620,12 @@ jQuery(document).ready(function() {
         jQuery('input[name="predict_keras_drone_imagery_plot_polygon_type_select"]:checked').each(function() {
             manage_drone_imagery_predict_keras_plot_polygon_type_ids.push(jQuery(this).val());
         });
-        if (manage_drone_imagery_predict_keras_plot_polygon_type_ids.length < 1){
-            alert('Please select at least one plot polygon type!');
-        } else {
+        // if (manage_drone_imagery_predict_keras_plot_polygon_type_ids.length < 1){
+        //     alert('Please select at least one plot polygon type!');
+        // } else {
             Workflow.complete("#drone_imagery_predict_keras_model_plot_polygon_type_select_step");
             Workflow.focus('#drone_imagery_predict_keras_model_workflow', 6);
-        }
+        // }
         return false;
     });
 
