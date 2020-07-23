@@ -377,6 +377,9 @@ $program_id => undef
 % if ($info_section_id eq 'program_project_section'){
                                 <& /breeders_toolbox/program/program_project_section.mas, program_id => $program_id &>
 % } #End program_location_section
+% if ($info_section_id eq 'program_stock_section'){
+                                <& /breeders_toolbox/program/program_stock_section.mas, program_id => $program_id &>
+% } #End program_location_section
 
 
 % if (!$info_section_id){
