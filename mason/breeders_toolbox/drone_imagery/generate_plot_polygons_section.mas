@@ -27,15 +27,24 @@ $id_extension => ''
                     </div>
                 </form>
             </div>
-            <button class="btn btn-sm btn-info" id="drone_imagery_plot_polygons_top_left_click<% $id_extension %>">Click Top Left Corner</button>
-            <button class="btn btn-sm btn-info" id="drone_imagery_plot_polygons_top_right_click<% $id_extension %>">Click Top Right Corner</button>
-            <button class="btn btn-sm btn-info" id="drone_imagery_plot_polygons_bottom_left_click<% $id_extension %>">Click Bottom Left Corner</button>
-            <button class="btn btn-sm btn-info" id="drone_imagery_plot_polygons_bottom_right_click<% $id_extension %>">Click Bottom Right Corner</button>
         </div>
     </div>
 
     <div class="panel panel-default">
         <div class="panel-body">
+
+            <div class="row">
+                <div class="col-sm-12">
+                    <h4> Either (A), click the four corners of the area of interest: </h4>
+
+                    <button class="btn btn-sm btn-info" id="drone_imagery_plot_polygons_top_left_click<% $id_extension %>">Click Top Left Corner</button>
+                    <button class="btn btn-sm btn-info" id="drone_imagery_plot_polygons_top_right_click<% $id_extension %>">Click Top Right Corner</button>
+                    <button class="btn btn-sm btn-info" id="drone_imagery_plot_polygons_bottom_left_click<% $id_extension %>">Click Bottom Left Corner</button>
+                    <button class="btn btn-sm btn-info" id="drone_imagery_plot_polygons_bottom_right_click<% $id_extension %>">Click Bottom Right Corner</button>
+                </div>
+            </div>
+            <hr>
+        
             <&| /page/info_section.mas, title => 'Template Parameters', collapsible=>1, collapsed => 1, subtitle=> 'View and edit template parameters. These parameters can be filled using the above button clicks' &>
                 <div class="well well-sm">
                     <form class="form-horizontal">
@@ -96,34 +105,43 @@ $id_extension => ''
                     </form>
                 </div>
             </&>
+
+            <br/>
+            <button class="btn btn-sm btn-primary" id="drone_imagery_plot_polygons_rectangles_apply<% $id_extension %>">Draw Plot Polygon Template (Does not save. Apply multiple templates if needed.)</button>
+
+        </div>
+    </div>
+
+    <div class="panel panel-default">
+        <div class="panel-body">
+
+            <div class="row">
+                <div class="col-sm-12">
+                    <h4> Or (C), paste a previously used template: </h4>
+                </div>
+            </div>
+
+            <&| /page/info_section.mas, title => 'Previously Used Plot Polygon Templates', collapsible=>1, collapsed => 1, subtitle=> 'View and use previous plot polygon templates used on this field trial' &>
+                <div class="well well-sm">
+                    <form class="form-horizontal">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-6 control-label">Previously Used Plot Polygon Templates For This Field Trial: </label>
+                                    <div class="col-sm-6">
+                                        <div id="plot_polygons_previously_saved_plot_polygon_templates<% $id_extension %>">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    <button class="btn btn-primary" id="plot_polygons_use_previously_saved_template<% $id_extension %>">Draw Plot Polygon Template (Does not save)</button>
+                </div>
+            </&>
         </div>
     </div>
 
     <div id="drone_imagery_plot_polygons_active_templates<% $id_extension %>"></div>
 
-    <button class="btn btn-sm btn-primary" id="drone_imagery_plot_polygons_rectangles_apply<% $id_extension %>">Draw Plot Polygon Template (Does not save. Apply multiple templates if needed.)</button>
 </div>
-
-<div class="panel panel-default">
-    <div class="panel-body">
-        <&| /page/info_section.mas, title => 'Previously Used Plot Polygon Templates', collapsible=>1, collapsed => 1, subtitle=> 'View and use previous plot polygon templates used on this field trial' &>
-            <div class="well well-sm">
-                <form class="form-horizontal">
-                    <div class="row">
-                        <div class="col-sm-12">
-                            <div class="form-group form-group-sm">
-                                <label class="col-sm-6 control-label">Previously Used Plot Polygon Templates For This Field Trial: </label>
-                                <div class="col-sm-6">
-                                    <div id="plot_polygons_previously_saved_plot_polygon_templates<% $id_extension %>">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-                <button class="btn btn-primary" id="plot_polygons_use_previously_saved_template<% $id_extension %>">Draw Plot Polygon Template (Does not save)</button>
-            </div>
-        </&>
-    </div>
-</div>
-

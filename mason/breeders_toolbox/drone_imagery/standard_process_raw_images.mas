@@ -171,10 +171,16 @@
             <div class="well well-sm">
                 <ul>
                     <li>(0) You should zoom out on your browser (Cntrl + -).</li>
-                    <li>(1) Perform alignment.</li>
-                    <li>(2) Click the four corners encompassing the area of interest.</li>
-                    <li>(3) Give the number of rows and columns in the area of interest.</li>
-                    <li>(4) <b>This process will cycle over the different imaging event passes.</b></li>
+                    <li>(0) Please be very careful with the mouse clicking.</li>
+                    <li>(1) Give the number of rows and columns in the area of interest.</li>
+                    <li>(2) Use the templating tools below to generate plot polygons. There are three templating tools to choose from:</li>
+                    <ul>
+                        <li>(A) Click the four light blue buttons and then click the four corners encompassing the area of interest.</li>
+                        <li>(B) Or click the four corners of an example plot, then paste the generated number of rows and columns onto the area of interest.</li>
+                        <li>(B) Or paste a previously used template onto the area of interest.</li>
+                    </ul>
+                    <li>(3) Assign plot numbers to the generated plot polygons, either automatically or manually. Click blue button to go to next.</li>
+                    <li>(4)<b> This process will cycle over the different imaging event passes.</b></li>
                 </ul>
 
                 <hr>
@@ -282,7 +288,13 @@
                 <button id="drone_imagery_interactive_plot_polygons_clear_one" class="btn btn-danger">Remove One Polygon</button>
             </div>
 
-            <div id="drone_imagery_standard_process_interactive_generated_polygons_table"></div>
+            <div class="well well-sm">
+                <h2>Either, Manually Assign Plot Numbers to Generated Polygons</h2>
+
+                <&| /page/info_section.mas, title => 'Manually Assign Plot Numbers to Polygon Numbers', collapsible=>1, collapsed => 1, subtitle=> 'Table for manually assigning plot numbers to polygon numbers.' &>
+                    <div id="drone_imagery_standard_process_interactive_generated_polygons_table"></div>
+                </&>
+            </div>
 
             <div id="drone_imagery_interactive_generated_polygons_div"></div>
 
@@ -1560,13 +1572,13 @@ jQuery(document).ready(function(){
     });
 
     function plotPolygonManualAssignPlotNumberTable(div_id, table_id, input_name, generate_assign_button, save_button) {
-        var html = '<div class="well well-sm"><h2>Manually Assign Plot Numbers to Generated Polygons</h2><div class="panel panel-default"><div class="panel-body">';
+        var html = '<div class="panel panel-default"><div class="panel-body">';
         html = html + '<table class="table table-bordered table-hover" id="'+table_id+'"><thead><tr><th>Polygon Number</th><th>Plot Number</th></tr></thead><tbody>';
         for(var i=0; i<drone_imagery_interactive_plot_generated_polygons.length; i++) {
             html = html + '<tr><td>'+i+'</td><td><input type="number" class="form-control" data-polygon_number="'+i+'" name="'+input_name+'" /></td></tr>';
         }
-        html = html + '</tbody></table></div></div>';
-        html = html + '<button class="btn btn-primary" id="'+generate_assign_button+'">Generate Assignments From Manual Input (Does Not Save)</button>&nbsp;&nbsp;&nbsp;<button class="btn btn-primary" name="'+save_button+'">Finish and Save Polygons To Plots. Go to Next Imaging Pass.</button></div>';
+        html = html + '</tbody></table><hr>';
+        html = html + '<button class="btn btn-primary" id="'+generate_assign_button+'">Generate Assignments From Manual Input (Does Not Save)</button>&nbsp;&nbsp;&nbsp;<button class="btn btn-primary" name="'+save_button+'">Finish and Save Polygons To Plots. Go to Next Imaging Pass.</button></div></div>';
         
         jQuery('#'+div_id).html(html);
         jQuery('#'+table_id).DataTable({'paging':false});
@@ -2235,6 +2247,8 @@ jQuery(document).ready(function(){
                     droneImageryDrawLayoutTableInteractive(drone_imagery_interactive_field_trial_layout_response, {}, 'drone_imagery_interactive_trial_layout_div', 'drone_imagery_interactive_trial_layout_table');
                     droneImageryDrawPlotPolygonActiveTemplatesTableInteractive('drone_imagery_plot_polygons_active_templates_raw_images_interactive', drone_imagery_standard_process_raw_images_interactive_plot_polygons_template_dimensions);
                     plotPolygonManualAssignPlotNumberTable('drone_imagery_standard_process_interactive_generated_polygons_table', 'drone_imagery_standard_process_interactive_generated_polygons_table_id', 'drone_imagery_standard_process_interactive_generated_polygons_table_input', 'drone_imagery_standard_process_interactive_generated_polygons_table_input_generate_button', 'drone_imagery_standard_process_interactive_plot_polygons_submit_bottom');
+
+                    window.scrollTo(0,0);
                 }
                 else {
                     console.log("Plot polygon COMPLETE");
