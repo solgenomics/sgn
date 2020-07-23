@@ -2084,14 +2084,21 @@ jQuery(document).ready(function(){
         var plot_polygons_first_plot_start = jQuery('#drone_imagery_interactive_plot_polygons_first_plot_start').val();
         var plot_polygons_second_plot_follows = jQuery('#drone_imagery_interactive_plot_polygons_second_plot_follows').val();
         var plot_polygons_plot_orientation = jQuery('#drone_imagery_interactive_plot_polygons_plot_orientation').val();
+        var plot_polygons_plot_number_start = jQuery('#drone_imagery_interactive_plot_polygons_plot_number_start').val();
+        var plot_polygons_plot_number_start_int = 0;
+        if (plot_polygons_plot_number_start != '') {
+            plot_polygons_plot_number_start_int = parseInt(jQuery('#drone_imagery_interactive_plot_polygons_plot_number_start').val());
+        }
 
         var plot_polygons_layout = drone_imagery_interactive_field_trial_layout_response.output;
         var plot_polygons_plot_numbers = [];
         var plot_polygons_plot_numbers_plot_names = {};
         for (var i=1; i<plot_polygons_layout.length; i++) {
             var plot_polygons_plot_number = parseInt(plot_polygons_layout[i][2]);
-            plot_polygons_plot_numbers.push(plot_polygons_plot_number);
-            plot_polygons_plot_numbers_plot_names[plot_polygons_plot_number] = plot_polygons_layout[i][0];
+            if (plot_polygons_plot_number >= plot_polygons_plot_number_start_int) {
+                plot_polygons_plot_numbers.push(plot_polygons_plot_number);
+                plot_polygons_plot_numbers_plot_names[plot_polygons_plot_number] = plot_polygons_layout[i][0];
+            }
         }
         plot_polygons_plot_numbers = plot_polygons_plot_numbers.sort(function (a, b) {  return a - b;  });
         var plot_polygons_current_plot_number_index = 0;
