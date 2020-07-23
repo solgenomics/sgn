@@ -176,7 +176,6 @@
                     <li>(2) Use the templating tools below to generate plot polygons. There are three templating tools to choose from:</li>
                     <ul>
                         <li>(A) Click the four light blue buttons and then click the four corners encompassing the area of interest.</li>
-                        <li>(B) Or click the four corners of an example plot, then paste the generated number of rows and columns onto the area of interest.</li>
                         <li>(B) Or paste a previously used template onto the area of interest.</li>
                     </ul>
                     <li>(3) Assign plot numbers to the generated plot polygons, either automatically or manually. Click blue button to go to next.</li>
@@ -1600,6 +1599,11 @@ jQuery(document).ready(function(){
     var drone_imagery_plot_polygons_rectangles_apply_square_raw_images_interactive_section_left_column_bottom_offset_val = 0;
     var drone_imagery_plot_polygons_rectangles_apply_square_raw_images_interactive_section_top_row_right_offset_val = 0;
     var drone_imagery_plot_polygons_rectangles_apply_square_raw_images_interactive_section_right_column_bottom_offset_val = 0;
+
+    jQuery('#drone_imagery_plot_polygons_rectangles_apply_square_average_raw_images_interactive').click(function() {
+        alert('Click the four corners of 10 single plots at random in the current imaging pass. For each single plot click the top left, then the top right, then the bottom right, then the bottom left.');
+        
+    });
 
     jQuery('#drone_imagery_plot_polygons_rectangles_apply_square_raw_images_interactive').click(function() {
         plot_polygons_interactive_display_points = [];
