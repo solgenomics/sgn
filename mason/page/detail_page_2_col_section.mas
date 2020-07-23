@@ -365,9 +365,12 @@ $model_files => {}
 % if ($info_section_id eq 'manage_drone_imagery_generate_plot_polygons_section'){
                                 <& /breeders_toolbox/drone_imagery/generate_plot_polygons_section.mas, id_extension=>$id_extension &>
 % } #End manage_drone_imagery_generate_plot_polygons_section
+% if ($info_section_id eq 'manage_drone_imagery_generate_plot_polygons_standard_process_raw_images_section'){
+                                <& /breeders_toolbox/drone_imagery/generate_plot_polygons_standard_process_raw_images_section.mas, id_extension=>$id_extension &>
+% } #End manage_drone_imagery_generate_plot_polygons_standard_process_raw_images_section
 % if ($info_section_id eq 'manage_drone_imagery_standard_process_generate_plot_polygons_section'){
                                 <& /breeders_toolbox/drone_imagery/generate_plot_polygons_standard_process_section.mas &>
-% } #End manage_drone_imagery_generate_plot_polygons_section
+% } #End manage_drone_imagery_standard_process_generate_plot_polygons_section
 % if ($info_section_id eq 'drone_run_project_details'){
                                 <& /breeders_toolbox/drone_imagery/drone_run_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, trial_description=>$trial_description, identifier_prefix=>$identifier_prefix, drone_run_date=>$drone_run_date &>
 % } #End trial_details

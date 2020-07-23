@@ -35,7 +35,7 @@ $id_extension => ''
 
             <div class="row">
                 <div class="col-sm-12">
-                    <h4> Either click the four corners of the area of interest: </h4>
+                    <h4> Either (A), click the four corners of the area of interest, or (B), click the four corners of a single plot: </h4>
 
                     <button class="btn btn-sm btn-info" id="drone_imagery_plot_polygons_top_left_click<% $id_extension %>">Click Top Left Corner</button>
                     <button class="btn btn-sm btn-info" id="drone_imagery_plot_polygons_top_right_click<% $id_extension %>">Click Top Right Corner</button>
@@ -107,7 +107,9 @@ $id_extension => ''
             </&>
 
             <br/>
-            <button class="btn btn-sm btn-primary" id="drone_imagery_plot_polygons_rectangles_apply<% $id_extension %>">Draw Plot Polygon Template (Does not save. Apply multiple templates if needed.)</button>
+            <button class="btn btn-sm btn-primary" id="drone_imagery_plot_polygons_rectangles_apply<% $id_extension %>">(A) Draw Plot Polygon Template (Does not save. Apply multiple templates if needed.)</button>
+            <br/><br/>
+            <button class="btn btn-sm btn-primary" id="drone_imagery_plot_polygons_rectangles_apply_square_<% $id_extension %>">(B) Paste Square Plot Polygon Template (Does not save)</button>
 
         </div>
     </div>
@@ -117,7 +119,7 @@ $id_extension => ''
 
             <div class="row">
                 <div class="col-sm-12">
-                    <h4> Or paste a previously used template: </h4>
+                    <h4> Or (C), paste a previously used template: </h4>
                 </div>
             </div>
 

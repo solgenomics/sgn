@@ -224,7 +224,14 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
 
             <canvas id="drone_imagery_standard_process_plot_polygons_original_stitched_div"></canvas>
 
-            <div id="drone_imagery_standard_process_generated_polygons_table"></div>
+            <hr>
+            <div class="well well-sm">
+                <h2>Either, Manually Assign Plot Numbers to Generated Polygons</h2>
+
+                <&| /page/info_section.mas, title => 'Manually Assign Plot Numbers to Polygon Numbers', collapsible=>1, collapsed => 1, subtitle=> 'Table for manually assigning plot numbers to polygon numbers.' &>
+                    <div id="drone_imagery_standard_process_generated_polygons_table"></div>
+                </&>
+            </div>
 
             <div id="drone_imagery_standard_process_generated_polygons_div"></div>
 
@@ -5008,13 +5015,13 @@ jQuery(document).ready(function() {
     });
 
     function plotPolygonManualAssignPlotNumberTableStandard(div_id, table_id, input_name, generate_assign_button, save_button) {
-        var html = '<div class="well well-sm"><h2>Manually Assign Plot Numbers to Generated Polygons</h2><div class="panel panel-default"><div class="panel-body">';
+        var html = '<div class="panel panel-default"><div class="panel-body">';
         html = html + '<table class="table table-bordered table-hover" id="'+table_id+'"><thead><tr><th>Polygon Number</th><th>Plot Number</th></tr></thead><tbody>';
         for(var i=0; i<plot_polygons_generated_polygons.length; i++) {
             html = html + '<tr><td>'+i+'</td><td><input type="number" class="form-control" data-polygon_number="'+i+'" name="'+input_name+'" /></td></tr>';
         }
-        html = html + '</tbody></table></div></div>';
-        html = html + '<button class="btn btn-primary" id="'+generate_assign_button+'">Generate Assignments From Manual Input (Does Not Save)</button>&nbsp;&nbsp;&nbsp;<button class="btn btn-primary" name="'+save_button+'">Finish and Save Polygons To Plots</button></div>';
+        html = html + '</tbody></table><hr>';
+        html = html + '<button class="btn btn-primary" id="'+generate_assign_button+'">Generate Assignments From Manual Input (Does Not Save)</button>&nbsp;&nbsp;&nbsp;<button class="btn btn-primary" name="'+save_button+'">Finish and Save Polygons To Plots</button></div></div>';
         console.log(html);
         jQuery('#'+div_id).html(html);
         jQuery('#'+table_id).DataTable({'paging':false});
