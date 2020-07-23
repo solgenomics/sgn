@@ -160,13 +160,14 @@ sub format_pca_output {
 
 	    my $output_link =  '/pca/analysis/' . $file_id;	 
 	    my $trials_names;
-	    my $sel_pages =  "/solgs\/selection\/|solgs\/combined\/model\/\d+\/selection\//";
+	   
+	    my $referer = $c->req->referer;
 	    
-	    if ($c->req->referer =~ $sel_pages) 
+	    if ($referer =~ /solgs\/selection\/|solgs\/combined\/model\/\d+\/selection\//) 
 	    {
 		my $tr_pop = $c->stash->{training_pop_id};
 		my $sel_pop =  $c->stash->{selection_pop_id};
-		
+	
 		$trials_names = {
 		    $tr_pop => 'Training population', 
 		    $sel_pop => 'Selection population'
