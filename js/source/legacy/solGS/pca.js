@@ -466,12 +466,12 @@ solGS.pca = {
 	}
 
 	popName = popName ? popName + ' (' + plotData.data_type + ')' : ' (' + plotData.data_type + ')';
-	var dld = 'Download PCA ' + popName + ' : ';
+	var dld = 'Download PCA ' + popName + ':';
 	var dldSp = 80;
-	
+	var dldVr = 75;
 	pcaPlot.append("text")
 	    .text(dld)
-	    .attr("y", pad.top + height + 75)
+	    .attr("y", pad.top + height + dldVr)
             .attr("x", pad.left)
             .attr("font-size", 15)
             .style("fill", "#000");
@@ -481,8 +481,8 @@ solGS.pca = {
 	    .attr("xlink:href", pcaScoresDownload)
 	    .append("text")
 	    .text(" Scores")
-	    .attr("y", pad.top + height + 75)
-            .attr("x", pad.left + (2.3 * dldSp) )
+	    .attr("y", pad.top + height + dldVr + 20)
+            .attr("x", pad.left)
             .attr("font-size", 14)
             .style("fill", "#954A09");
 	
@@ -491,8 +491,8 @@ solGS.pca = {
 	    .attr("xlink:href", pcaLoadingsDownload)
 	    .append("text")
 	    .text(" | Loadings")
-	    .attr("y", pad.top + height + 75)
-            .attr("x", pad.left + (2.9 * dldSp))
+	    .attr("y", pad.top + height +  dldVr + 20)
+            .attr("x", pad.left + 50)
             .attr("font-size", 14)
             .style("fill", "#954A09");
 
@@ -501,8 +501,8 @@ solGS.pca = {
 	    .attr("xlink:href", pcaVariancesDownload)
 	    .append("text")
 	    .text(" | Variances")
-	    .attr("y", pad.top + height + 75)
-            .attr("x", pad.left + (3.75 * dldSp) )
+	    .attr("y", pad.top + height + dldVr + 20)
+            .attr("x", pad.left + 122 )
             .attr("font-size", 14)
             .style("fill", "#954A09");
 	
@@ -522,9 +522,10 @@ solGS.pca = {
 
 
 	if (trialsNames && Object.keys(trialsNames).length > 1) {
-	    var trialsIds = jQuery.unique(trials);
+	 
+	   var trialsIds = jQuery.unique(trials);	  
 	    trialsIds = jQuery.unique(trialsIds);
-
+	  
 	    var legendValues = [];
 	    var cnt = 0;
 
@@ -533,11 +534,23 @@ solGS.pca = {
 	    for (var tr in trialsNames) {
 		allTrialsNames.push(trialsNames[tr]);
 	    };
+	    
+	    trialsIds.forEach( function (id) {		
+		var groupName = [];
 
-	    trialsIds.forEach( function (id) {
-		var trialName = trialsNames[id];
-		if (isNaN(id)) {trialName = allTrialsNames.join(' & ');}
-		legendValues.push([cnt, id, trialName]);
+		if (id.match(/\d+-\d+/)) {
+		    var ids = id.split('-');
+		    
+		    ids.forEach(function (id) {
+			groupName.push(trialsNames[id]);
+		    });
+
+		    groupName = 'common: ' + groupName.join(', ')
+		} else {
+		    groupName = trialsNames[id];
+		}
+		
+		legendValues.push([cnt, id, groupName]);
 		cnt++;
 	    });
 	    
