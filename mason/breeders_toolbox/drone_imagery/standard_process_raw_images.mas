@@ -192,6 +192,7 @@
                 <button class="btn btn-default" id="drone_imagery_standard_process_raw_images_interactive_match_previous_pass">Go To Previous Imaging Pass</button>
                 <button class="btn btn-default" id="drone_imagery_standard_process_raw_images_interactive_match_next_pass">Go To Next Imaging Pass</button>
                 <button class="btn btn-default" id="drone_imagery_standard_process_raw_images_interactive_match_restart">Start Over Alignment</button>
+                <button class="btn btn-default" id="drone_imagery_standard_process_raw_images_interactive_drop_pin">Drop Pin Marker</button>
             </div>
 
             <form class="form-horizontal">
@@ -941,7 +942,7 @@ jQuery(document).ready(function(){
         d3.selectAll(div_id+' > square').remove();
         d3.selectAll(div_id+' > image').remove();
         d3.selectAll(div_id+' > line').remove();
-        d3.selectAll(div_id+' > circle').remove();
+        //d3.selectAll(div_id+' > circle').remove();
         d3.selectAll(div_id+' > text').remove();
         d3.selectAll(div_id+' > rect').remove();
         manage_drone_imagery_standard_process_raw_images_nir_images = [];
@@ -1267,6 +1268,27 @@ jQuery(document).ready(function(){
 
     jQuery('#drone_imagery_standard_process_raw_images_interactive_match').click(function(){
         matchAndAlignSequential();
+    });
+
+    jQuery('#drone_imagery_standard_process_raw_images_interactive_drop_pin').click(function(){
+        alert('Click on a place in the current imaging event pass to drop a pin');
+
+        d3.selectAll("g").on('mousedown.drag', null);
+
+        manage_drone_imagery_standard_process_raw_images_interactive_svg.on("click", function(){
+            var current_pos = d3.mouse(this);
+
+            manage_drone_imagery_standard_process_raw_images_interactive_svg.append("circle")
+                   .attr("cx", current_pos[0])
+                   .attr("cy", current_pos[1])
+                   .attr("r", 8)
+                   .attr("fill", "yellow");
+
+            d3.selectAll("g").call(d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended));
+        });
     });
 
     function initializeInteractiveSvg(svg_div, svg_div_id, init, enable_drag){
@@ -1636,12 +1658,13 @@ jQuery(document).ready(function(){
                     .attr("fill", "red");
             }
         }
-        for(var i=0;i<points.length;i++){
-            manage_drone_imagery_standard_process_raw_images_interactive_svg.append("circle")
-                .attr("cx", points[i].x)
-                .attr("cy", points[i].y)
-                .attr("r", 4);
-        }
+        //for(var i=0;i<points.length;i++){
+        //    manage_drone_imagery_standard_process_raw_images_interactive_svg.append("circle")
+        //        .attr("cx", points[i].x)
+        //        .attr("cy", points[i].y)
+        //        .attr("r", 4)
+        //        .attr("fill", "blue");
+        //}
     }
 
     function droneImageryDrawPlotPolygonActiveTemplatesTableInteractive(div_id, plot_polygons_template_dimensions){
@@ -2327,7 +2350,7 @@ jQuery(document).ready(function(){
         drone_imagery_interactive_plot_polygons_removed_numbers = [];
         d3.selectAll('#drone_imagery_standard_process_raw_images_image_id_interactive_select_div_area_'+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+' > text').remove();
         d3.selectAll('#drone_imagery_standard_process_raw_images_image_id_interactive_select_div_area_'+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+' > line').remove();
-        d3.selectAll('#drone_imagery_standard_process_raw_images_image_id_interactive_select_div_area_'+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+' > circle').remove();
+        //d3.selectAll('#drone_imagery_standard_process_raw_images_image_id_interactive_select_div_area_'+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+' > circle').remove();
         jQuery('#drone_imagery_interactive_generated_polygons_div').html('');
 
         droneImageryDrawLayoutTableInteractive(drone_imagery_interactive_field_trial_layout_response, {}, 'drone_imagery_interactive_trial_layout_div', 'drone_imagery_interactive_trial_layout_table');
@@ -2351,7 +2374,7 @@ jQuery(document).ready(function(){
     function draw_canvas_image_interactive(random_scaling) {
         d3.selectAll('#drone_imagery_standard_process_raw_images_image_id_interactive_select_div_area_'+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+' > text').remove();
         d3.selectAll('#drone_imagery_standard_process_raw_images_image_id_interactive_select_div_area_'+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+' > line').remove();
-        d3.selectAll('#drone_imagery_standard_process_raw_images_image_id_interactive_select_div_area_'+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+' > circle').remove();
+        //d3.selectAll('#drone_imagery_standard_process_raw_images_image_id_interactive_select_div_area_'+manage_drone_imagery_standard_process_raw_images_interactive_current_pass+' > circle').remove();
         console.log("draw_canvas_image_interactive");
         console.log(drone_imagery_interactive_plot_polygons_display);
 
