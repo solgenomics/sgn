@@ -109,7 +109,7 @@ $id_extension => ''
             <br/>
             <button class="btn btn-sm btn-primary" id="drone_imagery_plot_polygons_rectangles_apply<% $id_extension %>">(A) Draw Plot Polygon Template (Does not save. Apply multiple templates if needed.)</button>
             <br/><br/>
-            <button class="btn btn-sm btn-primary" id="drone_imagery_plot_polygons_rectangles_apply_square_<% $id_extension %>">(B) Paste Square Plot Polygon Template (Does not save)</button>
+            <button class="btn btn-sm btn-primary" id="drone_imagery_plot_polygons_rectangles_apply_square<% $id_extension %>">(B) Paste Square Plot Polygon Template (Does not save)</button>
 
         </div>
     </div>
