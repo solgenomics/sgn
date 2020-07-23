@@ -17,6 +17,7 @@ $identifier_prefix => ''
 % my $basename = $cross_name."P";
 % my $cross_properties = $c->config->{cross_properties};
 % my @cross_props = split ',',$cross_properties;
+% my $odk_crossing_data_service_name = $c->config->{odk_crossing_data_service_name};
 
 <& /page/page_title.mas, title => "Details for cross '$cross_name'" &>
 
@@ -129,6 +130,32 @@ $identifier_prefix => ''
 
 </div>
 
+% if ($odk_crossing_data_service_name eq 'ONA') {
+    <&| /page/info_section.mas, id=>'tissue_culture_summary_section', title => 'Tissue culture IDs of this Cross', collapsible=>1, collapsed=>1, subtitle => 'View tissue culture IDs in each step (e.g., embryo IDs, subculture IDs, rooting IDs, weaning1 IDs)'&>
+        <div class="well well-sm">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <div style="overflow:scroll">
+                        <table id="tissue_culture_summary_table" class="table table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Embryo IDs</th>
+                                    <th>Subculture IDs</th>
+                                    <th>Rooting IDs</th>
+                                    <th>Weaning1 IDs</th>
+                                    <th>Weaning2 IDs</th>
+                                    <th>Screenhouse IDs</th>
+                                    <th>Hardening IDs</th>
+                                    <th>Openfield IDs</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </&>
+% }
 
 <& /breeders_toolbox/seedlots_section.mas, stock_id=>$cross_id, stock_type=>'cross', stock_uniquename=>$cross_name &>
 
@@ -178,7 +205,6 @@ $identifier_prefix => ''
          });
        }
     });
-
   });
 
 </script>

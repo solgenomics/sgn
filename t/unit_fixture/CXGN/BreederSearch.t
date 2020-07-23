@@ -19,7 +19,7 @@ my $dataref = {};
 my $queryref = {};
 
 my $results = $bs->metadata_query($criteria_list, $dataref, $queryref);
-#print STDERR Dumper $results;
+print STDERR Dumper $results;
 is_deeply($results, {
                'results' => [
                               [
@@ -37,6 +37,10 @@ is_deeply($results, {
                               [
                                 '2017',
                                 '2017'
+                              ],
+                              [
+                                '2020',
+                                '2020'
                               ]
                             ]
              }, 'wizard one category query');

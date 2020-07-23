@@ -4,6 +4,9 @@ $locations
 $preferred_species
 $editable_stock_props
 $timestamp
+$facilities => ()
+$management_factor_types => ()
+$design_types => ()
 </%args>
 
 
@@ -204,11 +207,11 @@ $timestamp
 <& /help/workflow_guided/trial_barcoding_modal.mas &>
 <& /help/workflow_guided/trial_comparison_modal.mas &>
 
-<& /breeders_toolbox/trial/trial_upload_dialogs.mas, breeding_programs=>$breeding_programs, locations=>$locations &>
-<& /breeders_toolbox/trial/trial_create_dialogs.mas, locations => $locations, breeding_programs => $breeding_programs &>
+<& /breeders_toolbox/trial/trial_upload_dialogs.mas, breeding_programs=>$breeding_programs, locations=>$locations, design_types => $design_types &>
+<& /breeders_toolbox/trial/trial_create_dialogs.mas, locations => $locations, breeding_programs => $breeding_programs, management_factor_types => $management_factor_types, design_types => $design_types &>
 
 <& /breeders_toolbox/genotyping_trials/upload_genotyping_data_dialogs.mas &>
-<& /breeders_toolbox/genotyping_trials/create_genotyping_trial_dialogs.mas &>
+<& /breeders_toolbox/genotyping_trials/create_genotyping_trial_dialogs.mas, facilities=>$facilities &>
 
 <& /breeders_toolbox/upload_seedlots_inventory_dialogs.mas &>
 <& /breeders_toolbox/upload_seedlots_dialogs.mas &>

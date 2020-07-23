@@ -80,6 +80,7 @@ jQuery(document).ready(function($) {
         $("#cross_type").change(function() { // show cross_type specific inputs depending on cross type selected
             $("#get_maternal_parent").toggle($("#cross_type").val() == "biparental");
             $("#get_paternal_parent").toggle($("#cross_type").val() == "biparental");
+            $("#exact_parents").toggle($("#cross_type").val() == "biparental");
             $("#get_selfed_parent").toggle($("#cross_type").val() == "self");
             $("#get_open_maternal_parent").toggle($("#cross_type").val() == "open");
             $("#get_open_paternal_population").toggle($("#cross_type").val() == "open");

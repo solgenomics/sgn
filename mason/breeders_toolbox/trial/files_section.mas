@@ -1,6 +1,7 @@
 <%args>
 $trial_id
 $trial_stock_type => undef
+$for_analysis_page => undef
 </%args>
 
 <div class="well well-sm">
@@ -10,10 +11,12 @@ $trial_stock_type => undef
             <&| /page/info_section.mas, title=>"Data Collection Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
                 <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-default" style="margin:3px" name="create_spreadsheet_link">Create Spreadsheet</button>' &>
                 </&>
+%  if (!$for_analysis_page) {
                 <&| /page/info_section.mas, title=>"Android Field Book Layout", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-default" style="margin:3px" name="create_fieldbook_link">Create Field Book</button>' &>
                 </&>
                 <&| /page/info_section.mas, title=>"Data Collector Spreadsheet", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=> '<button class="btn btn-sm btn-default" style="margin:3px" id="create_DataCollector_link">Create DataCollector Spreadsheet</button>' &>
                 </&>
+%  }
             </&><!-- closes create new phenotyping file section -->
         </div>
     </div>
@@ -22,10 +25,12 @@ $trial_stock_type => undef
             <&| /page/info_section.mas, title=>"Upload Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
                 <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_spreadsheet_phenotypes_link">Upload</button>'&>
                 </&>
+%  if (!$for_analysis_page) {
                 <&| /page/info_section.mas, title=>"Android Field Book Exported", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_fieldbook_phenotypes_link">Upload</button>'&>
                 </&>
                 <&| /page/info_section.mas, title=>"Data Collector Spreadsheet", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_datacollector_phenotypes_link">Upload</button>'&>
                 </&>
+%  }
             </&><!-- closes upload new phenotype file section -->
         </div>
     </div>

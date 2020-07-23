@@ -31,9 +31,11 @@ $dialog_name => undef
                 <div class="col-sm-9" >
                     <select class="form-control" id="download_trial_phenotypes_level_option">
                         <option value="all">All</option>
+%  if ($dialog_type ne 'Analysis') {
                         <option value="plot">Plots</option>
                         <option value="plant">Plants</option>
                         <option value="subplot">Subplots</option>
+%  }
                     </select>
                 </div>
             </div>

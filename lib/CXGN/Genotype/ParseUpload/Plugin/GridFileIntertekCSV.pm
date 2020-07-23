@@ -223,12 +223,11 @@ sub _parse_with_plugin {
                         if ($a eq $ref) {
                             push @gt_vcf_genotype, 0;
                             push @ref_calls, $a;
-                            $gt_dosage = $gt_dosage + 0;
+                            $gt_dosage++;
                         }
                         elsif ($a eq $alt) {
                             push @gt_vcf_genotype, 1;
                             push @alt_calls, $a;
-                            $gt_dosage = $gt_dosage + 1;
                         }
                         elsif ($a eq '?' || $a eq 'Uncallable') {
                             $gt_dosage = 'NA';

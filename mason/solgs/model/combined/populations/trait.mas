@@ -16,7 +16,7 @@ $trait_id
 $combo_pops_id
 $trait_combo_pops
 $descriptive_stat
-$download_prediction => ''
+$selection_prediction_download => ''
 $prediction_pop_id => ''
 $list_of_prediction_pops =>''
 $prediction_pop_name => ''
@@ -33,7 +33,7 @@ $model_link
 
 </%perl>
 
-<& /util/import_javascript.mas, classes => [ "solGS.phenotypeDataFlot", "solGS.traitGebvFlot", 
+<& /util/import_javascript.mas, classes => [ "solGS.phenotypeDataFlot", "solGS.histogram",
 					     "flot.flot", "flot.categories", 
 					     "flot.tooltip", "flot.selection", "flot.navigate", 
 					     "flot.axisLabels", "statistics/simple_statistics"
@@ -91,10 +91,13 @@ $model_link
    model_parameters => $model_parameters,
 &>
 
-<& /solgs/model/top_blups.mas, 
+
+  <& /solgs/model/gebvs.mas, 
    top_blups          => $top_blups,
    blups_download_url => $blups_download_url,
-&>
+   pop_id             => $combo_pops_id,
+  trait_id            => $trait_id
+  &>
 
  <& /solgs/population/gebv_pheno_regression.mas,
        trait_id      => $trait_id,
@@ -106,7 +109,7 @@ $model_link
 &>
 
 <& /solgs/population/selection_populations.mas, 
-   download_prediction     => $download_prediction,
+   selection_prediction_download => $selection_prediction_download,
    analyzed_traits         => $analyzed_traits,
    pop_id                  => $combo_pops_id,
    prediction_pop_id       => $prediction_pop_id,

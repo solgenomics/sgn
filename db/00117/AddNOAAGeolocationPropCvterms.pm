@@ -50,11 +50,11 @@ has '+prereq' => (
 sub patch {
     my $self=shift;
 
-    print STDOUT "Executing the patch:\n " .   $self->name . ".\n\nDescription:\n  ".  $self->description . ".\n\nExecuted by:\n " .  $self->username . " .";
+    print STDERR "Executing the patch:\n " .   $self->name . ".\n\nDescription:\n  ".  $self->description . ".\n\nExecuted by:\n " .  $self->username . " .";
 
-    print STDOUT "\nChecking if this db_patch was executed before or if previous db_patches have been executed.\n";
+    print STDERR "\nChecking if this db_patch was executed before or if previous db_patches have been executed.\n";
 
-    print STDOUT "\nExecuting the SQL commands.\n";
+    print STDERR "\nExecuting the SQL commands.\n";
     my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
 
 
@@ -79,7 +79,7 @@ sub patch {
         }
     }
 
-    print "You're done!\n";
+    print STDERR "Patch complete.\n";
 }
 
 
