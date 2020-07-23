@@ -4342,10 +4342,10 @@ sub standard_process_apply_raw_images_interactive_POST : Args(0) {
     # print STDERR Dumper $save_stock_polygons;
     # print STDERR Dumper $saved_gps_positions;
 
-    if (scalar(keys %$saved_gps_positions_separated) != scalar(keys %$save_stock_polygons_separated)) {
-        $c->stash->{rest} = { error => "The number of imaging passes is not equal for the image positions and the plot polygons!" };
-        $c->detach();
-    }
+    #if (scalar(keys %$saved_gps_positions_separated) != scalar(keys %$save_stock_polygons_separated)) {
+    #    $c->stash->{rest} = { error => "The number of imaging passes is not equal for the image positions and the plot polygons!" };
+    #    $c->detach();
+    #}
 
     my %polygons_images_positions;
     foreach my $flight_pass_counter (keys %$saved_gps_positions_separated) {

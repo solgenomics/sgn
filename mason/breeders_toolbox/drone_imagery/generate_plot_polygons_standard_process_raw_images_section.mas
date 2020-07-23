@@ -35,7 +35,7 @@ $id_extension => ''
 
             <div class="row">
                 <div class="col-sm-12">
-                    <h4> Either (A), click the four corners of the area of interest, or (B), click the four corners of a single plot: </h4>
+                    <h4> Either (A) Click the four corners of the area of interest: </h4>
 
                     <button class="btn btn-sm btn-info" id="drone_imagery_plot_polygons_top_left_click<% $id_extension %>">Click Top Left Corner</button>
                     <button class="btn btn-sm btn-info" id="drone_imagery_plot_polygons_top_right_click<% $id_extension %>">Click Top Right Corner</button>

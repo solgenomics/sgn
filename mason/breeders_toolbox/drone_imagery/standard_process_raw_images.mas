@@ -228,6 +228,25 @@
             </form>
             <!--<hr>-->
 
+            <& /page/detail_page_2_col_section.mas, info_section_collapsible=>1, info_section_collapsed=>0, info_section_title => "<h4 style='display:inline'>Generate Polygon Template Tool</h4>", info_section_subtitle => 'Overlay a uniform grid over the image.', icon_class => "glyphicon glyphicon-th-large", info_section_id => "manage_drone_imagery_generate_plot_polygons_standard_process_raw_images_section", id_extension => '_raw_images_interactive' &>
+
+            <div class="well well-sm">
+                <button id="drone_imagery_interactive_plot_polygons_clear" class="btn btn-danger">Clear All Polygons</button>
+                <button id="drone_imagery_interactive_plot_polygons_clear_one" class="btn btn-danger">Remove One Polygon</button>
+            </div>
+
+            <div class="well well-sm">
+                <h2>Either, Manually Assign Plot Numbers to Generated Polygons</h2>
+
+                <&| /page/info_section.mas, title => 'Manually Assign Plot Numbers to Polygon Numbers', collapsible=>1, collapsed => 1, subtitle=> 'Table for manually assigning plot numbers to polygon numbers.' &>
+                    <div id="drone_imagery_standard_process_interactive_generated_polygons_table"></div>
+                </&>
+            </div>
+
+            <div id="drone_imagery_interactive_generated_polygons_div"></div>
+
+            <hr>
+
             <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_50"></div>
             <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_49"></div>
             <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_48"></div>
@@ -280,25 +299,7 @@
             <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_1"></div>
 
             <hr>
-
-            <& /page/detail_page_2_col_section.mas, info_section_collapsible=>1, info_section_collapsed=>0, info_section_title => "<h4 style='display:inline'>Generate Polygon Template Tool</h4>", info_section_subtitle => 'Overlay a uniform grid over the image.', icon_class => "glyphicon glyphicon-th-large", info_section_id => "manage_drone_imagery_generate_plot_polygons_standard_process_raw_images_section", id_extension => '_raw_images_interactive' &>
-
-            <div class="well well-sm">
-                <button id="drone_imagery_interactive_plot_polygons_clear" class="btn btn-danger">Clear All Polygons</button>
-                <button id="drone_imagery_interactive_plot_polygons_clear_one" class="btn btn-danger">Remove One Polygon</button>
-            </div>
-
-            <div class="well well-sm">
-                <h2>Either, Manually Assign Plot Numbers to Generated Polygons</h2>
-
-                <&| /page/info_section.mas, title => 'Manually Assign Plot Numbers to Polygon Numbers', collapsible=>1, collapsed => 1, subtitle=> 'Table for manually assigning plot numbers to polygon numbers.' &>
-                    <div id="drone_imagery_standard_process_interactive_generated_polygons_table"></div>
-                </&>
-            </div>
-
-            <div id="drone_imagery_interactive_generated_polygons_div"></div>
-
-            <hr>
+            
             <div class="well well-sm">
                 <div id="drone_imagery_interactive_trial_layout_div"></div>
             </div>
