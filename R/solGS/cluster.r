@@ -154,10 +154,13 @@ if (grepl('genotype', dataType, ignore.case = TRUE)) {
     } else if (grepl('phenotype', dataType, ignore.case = TRUE)) {
 
         metaFile <- grep("meta", inputFiles,  value = TRUE)
-        clusterData <- cleanAveragePhenotypes(inputFiles, metaDataFile = metaFile)
       
-        if (!is.na(predictedTraits)) {
-            clusterData <- subset(clusterData, select = predictedTraits)
+        clusterData <- cleanAveragePhenotypes(inputFiles, metaDataFile = metaFile)
+
+        if (!is.na(predictedTraits) & length(predictedTraits) > 1) {
+            clusterData <- rownames_to_column(clusterData, var = 'germplasmName')
+            clusterData <- clusterData %>% select(c(germplasmName, predictedTraits))
+            clusterData <- column_to_rownames(clusterData, var = 'germplasmName')
         }
     }
 
@@ -178,11 +181,11 @@ if (length(sIndexFile) != 0) {
     selectedIndexGenotypes <- column_to_rownames(selectedIndexGenotypes, var = 'V1')
 
     if (!is.null(selectedIndexGenotypes)) {
-        clusterData <- rownames_to_column(clusterData, var = "genotypes")    
+        clusterData <- rownames_to_column(clusterData, var = "germplasmName")    
         clusterData <- clusterData %>%
             filter(genotypes %in% rownames(selectedIndexGenotypes))
         
-        clusterData <- column_to_rownames(clusterData, var = 'genotypes')
+        clusterData <- column_to_rownames(clusterData, var = 'germplasmName')
     }
 }
 
