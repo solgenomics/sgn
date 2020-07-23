@@ -12,5 +12,9 @@ $program_id
     <& /breeders_toolbox/program/program_genotyping_plates.mas, program_id => $program_id &>
 </&>
 
+<&| /page/info_section.mas, id=>"program_crossing_experiments", title => "Crossing Experiments", is_subsection => 1, collapsible=>1, collapsed=>1, hide_if_empty=>1 &>
+    <& /breeders_toolbox/program/program_crossing_experiments.mas, program_id => $program_id &>
+</&>
+
 
 </div>

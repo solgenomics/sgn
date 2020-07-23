@@ -271,6 +271,26 @@ sub program_genotyping_plates :Chained('ajax_breeding_program') PathPart('genoty
 }
 
 
+sub program_crossing_experiments :Chained('ajax_breeding_program') PathPart('crossing_experiments') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $program = $c->stash->{program};
+    my $program_id = $program->get_program_id;
+    my $schema = $c->stash->{schema};
+
+    my $projects = CXGN::BreedersToolbox::Projects->new({schema => $schema});
+    my @all_trials = $projects->get_trials_by_breeding_program($program_id);
+    my $crossing_experiment_ref = $all_trials[1];
+    my @crossing_experiments = @$crossing_experiment_ref;
+
+    my @crossing_experiment_data;
+    foreach my $experiment(@crossing_experiments){
+        push @crossing_experiment_data, ['<a href="/breeders/trial/'.$$experiment[0].'">'.$$experiment[1].'</a>', $$experiment[2]];
+    }
+
+    $c->stash->{rest} = {data => \@crossing_experiment_data};
+
+}
 
 
 
