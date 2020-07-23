@@ -694,8 +694,9 @@ sub cluster_pheno_input_files {
     if ($data_type =~ /phenotype/i)
     {	    
 	$files = $c->stash->{phenotype_files_list} 
-	|| $c->stash->{phenotype_file} 
 	|| $c->stash->{phenotype_file_name};
+#	$c->controller('solGS::Files')->trait_phenodata_file($c);
+#	$files = $c->stash->{trait_phenodata_file};
 	
 	$c->controller('solGS::Files')->phenotype_metadata_file($c);
 	my $metadata_file = $c->stash->{phenotype_metadata_file};
@@ -803,7 +804,7 @@ sub save_cluster_opts {
 	    push @traits_abbrs, $c->stash->{trait_abbr};
 	}
 
-	$predcited_traits = join(',', @traits_abbrs);
+	$predicted_traits = join(',', @traits_abbrs);
     }
     
     my $opts_data = 'Params' . "\t" . 'Value' . "\n";
@@ -836,6 +837,13 @@ sub create_cluster_phenotype_data_query_jobs {
     }
     else
     {
+	my $combo_pops_id = $c->stash->{combo_pops_id};
+	if ($combo_pops_id) 
+	{
+	    $c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id); 
+	    $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
+	}
+	
 	my $trials = $c->stash->{pops_ids_list} || [$c->stash->{training_pop_id}] || [$c->stash->{selection_pop_id}];
 	$c->controller('solGS::solGS')->get_cluster_phenotype_query_job_args($c, $trials);
 	$c->stash->{cluster_pheno_query_jobs} = $c->stash->{cluster_phenotype_query_job_args};
