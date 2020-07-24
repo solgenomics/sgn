@@ -139,7 +139,7 @@ $id_extension => ''
                             </div>
                         </div>
                     </form>
-                    <button class="btn btn-primary" id="plot_polygons_use_previously_saved_template<% $id_extension %>">Draw Plot Polygon Template (Does not save)</button>
+                    <button class="btn btn-primary" id="plot_polygons_use_previously_saved_template<% $id_extension %>">(B) Draw Plot Polygon Template (Does not save)</button>
                 </div>
             </&>
         </div>
