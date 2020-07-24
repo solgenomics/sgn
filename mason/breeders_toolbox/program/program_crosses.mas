@@ -1,0 +1,26 @@
+<%args>
+$program_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+
+<table id="program_crosses_table" class="display">
+    <thead>
+        <tr>
+            <th>Cross Unique ID</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+</table>
+
+<script>
+
+jQuery(document).ready(function () {
+
+
+});
+
+
+</script>

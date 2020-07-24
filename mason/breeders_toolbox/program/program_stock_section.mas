@@ -8,4 +8,9 @@ $program_id
         <& /breeders_toolbox/program/program_accessions.mas, program_id => $program_id &>
     </&>
 
+    <&| /page/info_section.mas, id=>"program_crosses", title=>"Crosses", collapsible=>1, collapsed=>1, hide_if_empty=>1 &>
+        <& /breeders_toolbox/program/program_crosses.mas, program_id => $program_id &>
+    </&>
+
+
 </div>
