@@ -6,6 +6,7 @@ use warnings;
 #use SGN::Test::Fixture;
 use Test::More;
 use Test::WWW::Mechanize;
+use LWP::UserAgent;
 
 #Needed to update IO::Socket::SSL
 use Data::Dumper;
@@ -13,7 +14,8 @@ use JSON;
 local $Data::Dumper::Indent = 0;
 
 my $mech = Test::WWW::Mechanize->new;
-my $response; my $searchId;
+my $ua   = LWP::UserAgent->new;
+my $response; my $searchId; my $resp; my $data;
 
 $mech->get_ok('http://localhost:3010/brapi/v2/serverinfo');
 $response = decode_json $mech->content;
@@ -118,13 +120,12 @@ $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {'result' => '','metadata' => {'datafiles' => undef,'pagination' => {'totalPages' => 1,'pageSize' => 10,'totalCount' => 1,'currentPage' => 0},'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::ObservationUnits'},{'message' => 'Observation Units have been added','messageType' => 'INFO'}]}} );
 
-print "\n#/observationunits/41299 test\n";
-$mech->get_ok('http://localhost:3010/brapi/v2/observationunits/41299?pageSize=1&page=0');
+$mech->get_ok('http://localhost:3010/brapi/v2/observationunits/41782');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is_deeply($response, {'metadata' => {'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=1'},{'message' => 'Loading CXGN::BrAPI::v2::ObservationUnits','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Observation Units search result constructed'}],'datafiles' => [],'pagination' => {'totalCount' => 1,'totalPages' => 1,'currentPage' => 0,'pageSize' => 1}},'result' => {'data' => [{'observations' => [],'trialDbId' => '','observationUnitPosition' => {'geoCoordinates' => '','positionCoordinateYType' => '','positionCoordinateX' => undef,'observationLevel' => {'levelOrder' => 2,'levelCode' => '','levelName' => 'plot'},'observationLevelRelationships' => [{'levelOrder' => 0,'levelCode' => '1','levelName' => 'replicate'},{'levelCode' => '2','levelName' => 'block','levelOrder' => 1},{'levelCode' => '201','levelOrder' => 2,'levelName' => 'plot'},{'levelOrder' => 4,'levelCode' => undef,'levelName' => 'plant'}],'entryType' => 'test','positionCoordinateY' => undef,'positionCoordinateXType' => ''},'observationUnitPUI' => '201','germplasmName' => 'BLANK','externalReferences' => [],'locationName' => 'test_location','observationUnitDbId' => '41299','additionalInfo' => {},'trialName' => undef,'germplasmDbId' => '40326','studyDbId' => '165','programDbId' => '134','treatments' => [{'factor' => 'No ManagementFactor','modality' => ''}],'observationUnitName' => 'CASS_6Genotypes_201','programName' => 'test','locationDbId' => '23','studyName' => 'CASS_6Genotypes_Sampling_2015'}]}});
+is_deeply($response, {'metadata' => {'pagination' => {'pageSize' => 10,'totalCount' => 1,'currentPage' => 0,'totalPages' => 1},'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'message' => 'Loading CXGN::BrAPI::v2::ObservationUnits','messageType' => 'INFO'},{'message' => 'Observation Units search result constructed','messageType' => 'INFO'}],'datafiles' => []},'result' => {'data' => [{'programName' => 'test','programDbId' => '134','studyName' => 'CASS_6Genotypes_Sampling_2015','studyDbId' => '165','locationDbId' => '23','treatments' => [{'modality' => '','factor' => 'No ManagementFactor'}],'germplasmDbId' => '41281','observationUnitPosition' => {'geoCoordinates' => '','positionCoordinateY' => '03','observationLevel' => {'levelName' => 'plot','levelCode' => '','levelOrder' => 2},'positionCoordinateX' => '74','positionCoordinateXType' => '','observationLevelRelationships' => [{'levelName' => 'replicate','levelCode' => '1','levelOrder' => 0},{'levelName' => 'block','levelCode' => 'Block_12','levelOrder' => 1},{'levelName' => 'plot','levelCode' => '10','levelOrder' => 2},{'levelCode' => undef,'levelOrder' => 4,'levelName' => 'plant'}],'entryType' => 'check','positionCoordinateYType' => ''},'observationUnitDbId' => '41782','trialName' => undef,'locationName' => 'test_location','observationUnitName' => 'Testing Plot','additionalInfo' => {},'externalReferences' => [],'observationUnitPUI' => '10','trialDbId' => '','observations' => [],'germplasmName' => 'IITA-TMS-IBA011412'}]}});
 
-my $data = '{
+$data = '{
   "additionalInfo": {
       "control": 1 },
   "germplasmDbId": "41281",
@@ -183,27 +184,129 @@ my $data = '{
    }';
 
 
-# $mech->default_header("Content-Type" => "application/json");
-# $mech->default_header('Authorization'=> 'Bearer ' . $access_token);
-# $mech->put('http://localhost:3010/brapi/v2/observationunits/41299', Content => $data);
-# $response = decode_json $mech->content;
-# print STDERR Dumper $response;
-# is_deeply($response, {'result' => '','metadata' => {'datafiles' => undef,'pagination' => {'totalPages' => 1,'pageSize' => 10,'totalCount' => 1,'currentPage' => 0},'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::ObservationUnits'},{'message' => 'Observation Units updated','messageType' => 'INFO'}]}} );
 
-# $mech->get_ok('http://localhost:3010/brapi/v2/observationunits/41299?pageSize=1&page=0');
-# $response = decode_json $mech->content;
-# print STDERR Dumper $response;
-# is_deeply($response, {'metadata' => {'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=1'},{'message' => 'Loading CXGN::BrAPI::v2::ObservationUnits','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Observation Units search result constructed'}],'datafiles' => [],'pagination' => {'totalCount' => 1,'totalPages' => 1,'currentPage' => 0,'pageSize' => 1}},'result' => {'data' => [{'observations' => [],'trialDbId' => '','observationUnitPosition' => {'geoCoordinates' => '','positionCoordinateYType' => '','positionCoordinateX' => undef,'observationLevel' => {'levelOrder' => 2,'levelCode' => '','levelName' => 'plot'},'observationLevelRelationships' => [{'levelOrder' => 0,'levelCode' => '1','levelName' => 'replicate'},{'levelCode' => '2','levelName' => 'block','levelOrder' => 1},{'levelCode' => '201','levelOrder' => 2,'levelName' => 'plot'},{'levelOrder' => 4,'levelCode' => undef,'levelName' => 'plant'}],'entryType' => 'test','positionCoordinateY' => undef,'positionCoordinateXType' => ''},'observationUnitPUI' => '201','germplasmName' => 'BLANK','externalReferences' => [],'locationName' => 'test_location','observationUnitDbId' => '41299','additionalInfo' => {},'trialName' => undef,'germplasmDbId' => '40326','studyDbId' => '165','programDbId' => '134','treatments' => [{'factor' => 'No ManagementFactor','modality' => ''}],'observationUnitName' => 'CASS_6Genotypes_201','programName' => 'test','locationDbId' => '23','studyName' => 'CASS_6Genotypes_Sampling_2015'}]}});
+$ua->default_header("Content-Type" => "application/json");
+$ua->default_header('Authorization'=> 'Bearer ' . $access_token);
+$resp = $ua->put("http://192.168.33.11:3010/brapi/v2/observationunits/41782", Content => $data);
+$response = decode_json $resp->{_content};
+print STDERR Dumper $response;
+is_deeply($response, {'metadata' => {'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'message' => 'Loading CXGN::BrAPI::v2::ObservationUnits','messageType' => 'INFO'},{'message' => 'Observation Units updated','messageType' => 'INFO'}],'datafiles' => undef,'pagination' => {'totalCount' => 1,'currentPage' => 0,'pageSize' => 10,'totalPages' => 1}},'result' => ''} );
+
+$mech->get_ok('http://localhost:3010/brapi/v2/observationunits/41782');
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'result' => {'data' => [{'treatments' => [{'factor' => 'No ManagementFactor','modality' => ''}],'trialDbId' => '','germplasmDbId' => '41281','observationUnitDbId' => '41782','programName' => 'test','germplasmName' => 'IITA-TMS-IBA011412','locationName' => 'test_location','studyName' => 'CASS_6Genotypes_Sampling_2015','observationUnitPUI' => '10','observations' => [],'observationUnitName' => 'Testing Plot','additionalInfo' => {},'studyDbId' => '165','locationDbId' => '23','trialName' => undef,'programDbId' => '134','externalReferences' => [],'observationUnitPosition' => {'positionCoordinateX' => '74','positionCoordinateXType' => '','entryType' => 'check','observationLevelRelationships' => [{'levelOrder' => 0,'levelName' => 'replicate','levelCode' => '1'},{'levelCode' => 'Block_12','levelName' => 'block','levelOrder' => 1},{'levelName' => 'plot','levelOrder' => 2,'levelCode' => '10'},{'levelName' => 'plant','levelOrder' => 4,'levelCode' => undef}],'geoCoordinates' => {'geometry' => {'type' => 'Point','coordinates' => ['-76.506042','42.417373',155]},'type' => 'Feature'},'observationLevel' => {'levelCode' => '','levelName' => 'plot','levelOrder' => 2},'positionCoordinateYType' => '','positionCoordinateY' => '03'}}]},'metadata' => {'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::ObservationUnits'},{'message' => 'Observation Units search result constructed','messageType' => 'INFO'}],'pagination' => {'totalCount' => 1,'pageSize' => 10,'totalPages' => 1,'currentPage' => 0},'datafiles' => []}} );
+
+$mech->get_ok('http://localhost:3010/brapi/v2/observationunits/41299?pageSize=1&page=0');
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'metadata' => {'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=1'},{'message' => 'Loading CXGN::BrAPI::v2::ObservationUnits','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Observation Units search result constructed'}],'datafiles' => [],'pagination' => {'totalCount' => 1,'totalPages' => 1,'currentPage' => 0,'pageSize' => 1}},'result' => {'data' => [{'observations' => [],'trialDbId' => '','observationUnitPosition' => {'geoCoordinates' => '','positionCoordinateYType' => '','positionCoordinateX' => undef,'observationLevel' => {'levelOrder' => 2,'levelCode' => '','levelName' => 'plot'},'observationLevelRelationships' => [{'levelOrder' => 0,'levelCode' => '1','levelName' => 'replicate'},{'levelCode' => '2','levelName' => 'block','levelOrder' => 1},{'levelCode' => '201','levelOrder' => 2,'levelName' => 'plot'},{'levelOrder' => 4,'levelCode' => undef,'levelName' => 'plant'}],'entryType' => 'test','positionCoordinateY' => undef,'positionCoordinateXType' => ''},'observationUnitPUI' => '201','germplasmName' => 'BLANK','externalReferences' => [],'locationName' => 'test_location','observationUnitDbId' => '41299','additionalInfo' => {},'trialName' => undef,'germplasmDbId' => '40326','studyDbId' => '165','programDbId' => '134','treatments' => [{'factor' => 'No ManagementFactor','modality' => ''}],'observationUnitName' => 'CASS_6Genotypes_201','programName' => 'test','locationDbId' => '23','studyName' => 'CASS_6Genotypes_Sampling_2015'}]}});
 
 
-$mech->post_ok('http://localhost:3010/brapi/v2/search/observationunits', ['pageSize'=>'2']);
+$data = '{
+  "41300": 
+	{
+	"observationUnitPosition": {"entryType": "TEST",
+	    "geoCoordinates": {
+	      "geometry": {
+	        "coordinates": [
+	          -76.506042,
+	          42.417373,
+	          10
+	        ],
+	        "type": "Point"
+	      },
+	      "type": "Feature"
+	    },
+	    "observationLevel": {
+	      "levelName": "plot",
+	      "levelOrder": 2,
+	      "levelCode": "Plot_123"
+	    },
+	    "observationLevelRelationships": [
+	      {
+	        "levelCode": "Field_1",
+	        "levelName": "field",
+	        "levelOrder": 0
+	      },
+	      {
+	        "levelCode": "Block_12",
+	        "levelName": "block",
+	        "levelOrder": 1
+	      },
+	      {
+	        "levelCode": "Plot_123",
+	        "levelName": "plot",
+	        "levelOrder": 2
+	      }
+	    ],
+	    "positionCoordinateX": "74",
+	    "positionCoordinateXType": "GRID_COL",
+	    "positionCoordinateY": "03",
+	    "positionCoordinateYType": "GRID_ROW"
+	    }
+   },
+   "41301":{
+		"observationUnitPosition": {"entryType": "TEST",
+		    "geoCoordinates": {
+		      "geometry": {
+		        "coordinates": [
+		          -76.506042,
+		          42.417373,
+		          20
+		        ],
+		        "type": "Point"
+		      },
+		      "type": "Feature"
+		    },
+		    "observationLevel": {
+		      "levelName": "plot",
+		      "levelOrder": 2,
+		      "levelCode": "Plot_123"
+		    },
+		    "observationLevelRelationships": [
+		      {
+		        "levelCode": "Field_1",
+		        "levelName": "field",
+		        "levelOrder": 0
+		      },
+		      {
+		        "levelCode": "Block_12",
+		        "levelName": "block",
+		        "levelOrder": 1
+		      },
+		      {
+		        "levelCode": "Plot_123",
+		        "levelName": "plot",
+		        "levelOrder": 2
+		      }
+		    ],
+		    "positionCoordinateX": "74",
+		    "positionCoordinateXType": "GRID_COL",
+		    "positionCoordinateY": "03",
+		    "positionCoordinateYType": "GRID_ROW"
+		    }
+   }
+}';
+$ua->default_header("Content-Type" => "application/json");
+$ua->default_header('Authorization'=> 'Bearer ' . $access_token);
+$resp = $ua->put("http://192.168.33.11:3010/brapi/v2/observationunits/", Content => $data);
+$response = decode_json $resp->{_content};
+print STDERR Dumper $response;
+is_deeply($response, {'result' => '','metadata' => {'datafiles' => undef,'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::ObservationUnits'},{'messageType' => 'INFO','message' => 'Observation Units updated'}],'pagination' => {'totalCount' => 1,'totalPages' => 1,'pageSize' => 10,'currentPage' => 0}}});
+
+$mech->get_ok('http://localhost:3010/brapi/v2/observationunits/42867');
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+
+$mech->post_ok('http://localhost:3010/brapi/v2/search/observationunits', ['observationUnitDbIds'=>['41300','41301']]);
 $response = decode_json $mech->content;
 $searchId = $response->{result} ->{searchResultDbId};
-print STDERR Dumper $response;
+# print STDERR Dumper $response;
 $mech->get_ok('http://localhost:3010/brapi/v2/search/observationunits/'. $searchId);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is_deeply($response, {'result' => {'data' => [{'observationUnitName' => 'CASS_6Genotypes_103','germplasmName' => 'IITA-TMS-IBA980581','observationUnitDbId' => '41284','programDbId' => '134','observationUnitPosition' => {'observationLevel' => {'levelName' => 'plot','levelCode' => '103','levelOrder' => 2},'positionCoordinateY' => undef,'positionCoordinateYType' => 'GRID_ROW','observationLevelRelationships' => [{'levelOrder' => 0,'levelCode' => '1','levelName' => 'replicate'},{'levelName' => 'block','levelOrder' => 1,'levelCode' => '1'},{'levelOrder' => 2,'levelCode' => '103','levelName' => 'plot'},{'levelCode' => undef,'levelOrder' => 4,'levelName' => 'plant'}],'geoCoordinates' => '','positionCoordinateXType' => 'GRID_COL','positionCoordinateX' => undef,'entryType' => 'test'},'studyName' => 'CASS_6Genotypes_Sampling_2015','locationName' => 'test_location','studyDbId' => '165','externalReferences' => [],'programName' => 'test','trialDbId' => '','treatments' => [{'modality' => '','factor' => 'No ManagementFactor'}],'observationUnitPUI' => '103','trialName' => undef,'additionalInfo' => {},'locationDbId' => '23','observations' => [],'germplasmDbId' => '41283'},{'germplasmDbId' => '41282','observations' => [],'locationDbId' => '23','additionalInfo' => {},'programName' => 'test','trialDbId' => '','observationUnitPUI' => '104','treatments' => [{'factor' => 'No ManagementFactor','modality' => ''}],'trialName' => undef,'locationName' => 'test_location','studyName' => 'CASS_6Genotypes_Sampling_2015','studyDbId' => '165','externalReferences' => [],'programDbId' => '134','observationUnitPosition' => {'positionCoordinateXType' => 'GRID_COL','positionCoordinateX' => undef,'entryType' => 'test','positionCoordinateY' => undef,'observationLevel' => {'levelCode' => '104','levelOrder' => 2,'levelName' => 'plot'},'observationLevelRelationships' => [{'levelOrder' => 0,'levelCode' => '1','levelName' => 'replicate'},{'levelOrder' => 1,'levelCode' => '1','levelName' => 'block'},{'levelName' => 'plot','levelCode' => '104','levelOrder' => 2},{'levelName' => 'plant','levelOrder' => 4,'levelCode' => undef}],'positionCoordinateYType' => 'GRID_ROW','geoCoordinates' => ''},'observationUnitName' => 'CASS_6Genotypes_104','germplasmName' => 'IITA-TMS-IBA980002','observationUnitDbId' => '41295'}]},'metadata' => {'pagination' => {'totalCount' => 2,'currentPage' => 0,'pageSize' => 10,'totalPages' => 1},'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'message' => 'Loading CXGN::BrAPI::v2::Results','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'search result constructed'}],'datafiles' => []}});
+is_deeply($response,  {'result' => {'data' => [{'observationUnitPUI' => '202','treatments' => [{'modality' => '','factor' => 'No ManagementFactor'}],'observations' => [],'programDbId' => '134','locationDbId' => '23','studyDbId' => '165','trialDbId' => '','locationName' => 'test_location','germplasmDbId' => '41280','observationUnitDbId' => '41300','observationUnitPosition' => {'geoCoordinates' => {'geometry' => {'type' => 'Point','coordinates' => ['-76.506042','42.417373',10]},'type' => 'Feature'},'positionCoordinateXType' => 'GRID_COL','positionCoordinateX' => undef,'observationLevel' => {'levelCode' => '202','levelName' => 'plot','levelOrder' => 2},'entryType' => 'test','observationLevelRelationships' => [{'levelName' => 'replicate','levelCode' => '1','levelOrder' => 0},{'levelName' => 'block','levelCode' => '2','levelOrder' => 1},{'levelName' => 'plot','levelCode' => '202','levelOrder' => 2},{'levelCode' => undef,'levelName' => 'plant','levelOrder' => 4}],'positionCoordinateY' => undef,'positionCoordinateYType' => 'GRID_ROW'},'studyName' => 'CASS_6Genotypes_Sampling_2015','additionalInfo' => {},'trialName' => undef,'observationUnitName' => 'CASS_6Genotypes_202','externalReferences' => [],'germplasmName' => 'TMEB693','programName' => 'test'},{'trialDbId' => '','studyDbId' => '165','treatments' => [{'factor' => 'No ManagementFactor','modality' => ''}],'observations' => [],'programDbId' => '134','observationUnitPUI' => '203','locationDbId' => '23','observationUnitName' => 'CASS_6Genotypes_203','germplasmName' => 'IITA-TMS-IBA980002','programName' => 'test','externalReferences' => [],'observationUnitDbId' => '41301','observationUnitPosition' => {'observationLevelRelationships' => [{'levelName' => 'replicate','levelCode' => '1','levelOrder' => 0},{'levelOrder' => 1,'levelCode' => '2','levelName' => 'block'},{'levelCode' => '203','levelName' => 'plot','levelOrder' => 2},{'levelOrder' => 4,'levelCode' => undef,'levelName' => 'plant'}],'positionCoordinateY' => undef,'positionCoordinateYType' => 'GRID_ROW','observationLevel' => {'levelName' => 'plot','levelCode' => '203','levelOrder' => 2},'entryType' => 'test','positionCoordinateX' => undef,'positionCoordinateXType' => 'GRID_COL','geoCoordinates' => {'geometry' => {'coordinates' => ['-76.506042','42.417373',20],'type' => 'Point'},'type' => 'Feature'}},'locationName' => 'test_location','germplasmDbId' => '41282','trialName' => undef,'studyName' => 'CASS_6Genotypes_Sampling_2015','additionalInfo' => {}}]},'metadata' => {'datafiles' => [],'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Results'},{'message' => 'search result constructed','messageType' => 'INFO'}],'pagination' => {'pageSize' => 10,'totalCount' => 2,'totalPages' => 1,'currentPage' => 0}}});
 
 $mech->get_ok('http://localhost:3010/brapi/v2/observationunits/table');
 $response = decode_json $mech->content;
@@ -412,6 +515,144 @@ $mech->post_ok('http://localhost:3010/brapi/v2/variantsets/extract', ['variantSe
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {'result' => {'data' => [{'callSetCount' => 280,'variantSetDbId' => '142p1','variantCount' => 500,'studyDbId' => '142','referenceSetDbId' => '1','variantSetName' => 'test_population2 - GBS ApeKI genotyping v4','availableFormats' => [{'fileURL' => undef,'fileFormat' => 'json','dataFormat' => 'json'}],'additionalInfo' => {},'analysis' => [{'software' => undef,'description' => undef,'created' => undef,'analysisName' => 'GBS ApeKI genotyping v4','type' => undef,'analysisDbId' => '1','updated' => undef}]}]},'metadata' => {'datafiles' => [],'pagination' => {'totalCount' => 1,'totalPages' => 1,'pageSize' => 10,'currentPage' => 0},'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::VariantSets'},{'messageType' => 'INFO','message' => 'VariantSets result constructed'}]}});
+
+$mech->get_ok('http://localhost:3010/brapi/v2/programs');
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'metadata' => {'datafiles' => [],'pagination' => {'totalCount' => 1,'totalPages' => 1,'pageSize' => 10,'currentPage' => 0},'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Programs'},{'message' => 'Program list result constructed','messageType' => 'INFO'}]},'result' => {'data' => [{'abbreviation' => '','externalReferences' => [],'objective' => 'test','leadPersonDbId' => '','leadPersonName' => '','programDbId' => '134','additionalInfo' => {},'programName' => 'test','documentationURL' => undef,'commonCropName' => 'Cassava'}]}} );
+
+$data = '[
+  {
+    "abbreviation": "P1",
+    "additionalInfo": {},
+    "commonCropName": "Tomatillo",
+    "documentationURL": "",
+    "externalReferences": [],
+    "leadPersonDbId": "50",
+    "leadPersonName": "Bob",
+    "objective": "Make a better tomatillo",
+    "programName": "program3"
+  },
+  {
+    "abbreviation": "P1",
+    "additionalInfo": {},
+    "commonCropName": "Tomatillo",
+    "documentationURL": "",
+    "externalReferences": [],
+    "leadPersonDbId": "50",
+    "leadPersonName": "Bob",
+    "objective": "Make a better tomatillo",
+    "programName": "Program4"
+  }
+]';
+$mech->post('http://localhost:3010/brapi/v2/programs/', Content => $data);
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'metadata' => {'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Programs'},{'message' => '2 Programs were stored.','messageType' => 'INFO'}],'datafiles' => undef,'pagination' => {'totalCount' => 2,'totalPages' => 1,'currentPage' => 0,'pageSize' => 10}},'result' => {}} );
+
+$mech->get_ok('http://localhost:3010/brapi/v2/programs/134');
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'metadata' => {'pagination' => {'pageSize' => 10,'currentPage' => 0,'totalCount' => 1,'totalPages' => 1},'datafiles' => [],'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Programs'},{'message' => 'Program list result constructed','messageType' => 'INFO'}]},'result' => {'leadPersonName' => undef,'programDbId' => '134','externalReferences' => [],'abbreviation' => undef,'leadPersonDbId' => undef,'objective' => 'test','commonCropName' => 'Cassava','documentationURL' => undef,'additionalInfo' => {},'programName' => 'test'}} );
+
+$data = '{
+    "abbreviation": "P1",
+    "additionalInfo": {},
+    "commonCropName": "Tomatillo",
+    "documentationURL": "https://breedbase.org/",
+    "externalReferences": [],
+    "leadPersonDbId": "fe6f5c50",
+    "leadPersonName": "Bob Robertson",
+    "objective": "Make a better tomatillo",
+    "programName": "Program5"
+  }';
+$resp = $ua->put("http://192.168.33.11:3010/brapi/v2/programs/167", Content => $data);
+$response = decode_json $resp->{_content};
+print STDERR Dumper $response;
+is_deeply($response, {'result' => {},'metadata' => {'datafiles' => undef,'pagination' => {'totalPages' => 1,'pageSize' => 10,'currentPage' => 0,'totalCount' => 1},'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'message' => 'Loading CXGN::BrAPI::v2::Programs','messageType' => 'INFO'},{'messageType' => 'INFO','message' => '1 Program updated.'}]}} );
+
+$mech->post_ok('http://localhost:3010/brapi/v2/search/programs', ['programDbIds'=>'134']);
+$response = decode_json $mech->content;
+$searchId = $response->{result} ->{searchResultDbId};
+$mech->get_ok('http://localhost:3010/brapi/v2/search/programs/'. $searchId);
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'metadata' => {'pagination' => {'currentPage' => 0,'pageSize' => 10,'totalPages' => 1,'totalCount' => 1},'datafiles' => [],'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'message' => 'Loading CXGN::BrAPI::v2::Results','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'search result constructed'}]},'result' => {'data' => [{'programName' => 'test','documentationURL' => undef,'additionalInfo' => {},'commonCropName' => undef,'objective' => 'test','leadPersonDbId' => '','abbreviation' => '','externalReferences' => [],'programDbId' => '134','leadPersonName' => ''}]}} );
+
+$mech->get_ok('http://localhost:3010/brapi/v2/commoncropnames');
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'result' => {'data' => ['Cassava']},'metadata' => {'datafiles' => [],'pagination' => {'totalPages' => 1,'currentPage' => 0,'pageSize' => 10,'totalCount' => 1},'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::CommonCropNames'},{'messageType' => 'INFO','message' => 'Crops result constructed'}]}});
+
+# $mech->get_ok('http://localhost:3010/brapi/v2/trials/?trialDbId=166');
+# $response = decode_json $mech->content;
+# print STDERR Dumper $response;
+# is_deeply($response, {'result' => {'data' => [{'additionalInfo' => {},'trialDescription' => 'test','commonCropName' => 'Cassava','trialName' => 'test','contacts' => undef,'active' => JSON::true,'trialDbId' => '134','startDate' => undef,'publications' => undef,'documentationURL' => undef,'programDbId' => '134','programName' => 'test','datasetAuthorships' => undef,'endDate' => undef,'externalReferences' => undef,'trialPUI' => undef},{'active' => JSON::true,'publications' => undef,'startDate' => undef,'trialDbId' => '166','trialDescription' => 'Make a better tomatillo','additionalInfo' => {},'trialName' => 'program3','contacts' => undef,'commonCropName' => 'Cassava','datasetAuthorships' => undef,'trialPUI' => undef,'externalReferences' => undef,'endDate' => undef,'programName' => 'program3','programDbId' => '166','documentationURL' => undef}]},'metadata' => {'pagination' => {'pageSize' => 2,'totalPages' => 2,'currentPage' => 0,'totalCount' => 3},'datafiles' => [],'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=2','messageType' => 'INFO'},{'message' => 'Loading CXGN::BrAPI::v2::Trials','messageType' => 'INFO'},{'message' => 'Trials result constructed','messageType' => 'INFO'}]}} );
+# $mech->get_ok('http://localhost:3010/brapi/v2/trials/134');
+# $response = decode_json $mech->content;
+# print STDERR Dumper $response;
+# is_deeply($response,  {'result' => undef,'metadata' => {'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'message' => 'Loading CXGN::BrAPI::v2::Trials','messageType' => 'INFO'},{'messageType' => '400','message' => 'The given trialDbId not found.'}],'datafiles' => [],'pagination' => {'pageSize' => 1,'currentPage' => 0,'totalPages' => 0,'totalCount' => 0}}});
+
+$mech->get_ok('http://localhost:3010/brapi/v2/studies/?pageSize=3');
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'result' => {'data' => [{'studyDescription' => 'Copy of trial with postcomposed phenotypes from cassbase.','locationDbId' => '23','experimentalDesign' => 'RCBD','studyPUI' => undef,'studyType' => 'Preliminary Yield Trial','studyCode' => '165','externalReferences' => undef,'studyDbId' => '165','observationLevels' => undef,'trialName' => undef,'observationUnitsDescription' => undef,'commonCropName' => 'Cassava','trialDbId' => '','license' => '','environmentParameters' => undef,'contacts' => undef,'studyName' => 'CASS_6Genotypes_Sampling_2015','seasons' => ['2017'],'active' => JSON::true,'growthFacility' => undef,'additionalInfo' => {'programDbId' => '134','programName' => 'test'},'dataLinks' => [],'locationName' => 'test_location','culturalPractices' => undef,'documentationURL' => '','lastUpdate' => undef,'endDate' => undef,'startDate' => undef},{'studyDescription' => 'This trial was loaded into the fixture to test solgs.','locationDbId' => '23','studyPUI' => undef,'experimentalDesign' => 'Alpha','studyType' => 'Clonal Evaluation','studyCode' => '139','externalReferences' => undef,'studyDbId' => '139','observationLevels' => undef,'trialName' => undef,'observationUnitsDescription' => undef,'commonCropName' => 'Cassava','trialDbId' => '','license' => '','environmentParameters' => undef,'contacts' => undef,'seasons' => ['2014'],'studyName' => 'Kasese solgs trial','active' => JSON::true ,'growthFacility' => undef,'additionalInfo' => {'programName' => 'test','programDbId' => '134'},'dataLinks' => [],'locationName' => 'test_location','culturalPractices' => undef,'documentationURL' => '','lastUpdate' => undef,'endDate' => undef,'startDate' => undef},{'locationName' => '','documentationURL' => '','culturalPractices' => undef,'endDate' => undef,'lastUpdate' => undef,'startDate' => undef,'growthFacility' => undef,'additionalInfo' => {'programName' => 'test','programDbId' => '134'},'dataLinks' => [],'commonCropName' => 'Cassava','observationUnitsDescription' => undef,'license' => '','trialDbId' => '','active' => JSON::true,'seasons' => [undef],'studyName' => 'new_test_cross','contacts' => undef,'environmentParameters' => undef,'locationDbId' => undef,'studyDescription' => 'new_test_cross','studyPUI' => undef,'experimentalDesign' => '','studyDbId' => '135','externalReferences' => undef,'studyCode' => '135','studyType' => undef,'trialName' => undef,'observationLevels' => undef}]},'metadata' => {'datafiles' => [],'pagination' => {'totalPages' => 2,'currentPage' => 0,'pageSize' => 3,'totalCount' => 6},'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=3'},{'message' => 'Loading CXGN::BrAPI::v2::Studies','messageType' => 'INFO'},{'message' => 'Studies search result constructed','messageType' => 'INFO'}]}});
+
+$mech->post_ok('http://localhost:3010/brapi/v2/search/studies', ['pageSize'=>'2', 'page'=>'2']);
+$response = decode_json $mech->content;
+$searchId = $response->{result} ->{searchResultDbId};
+$mech->get_ok('http://localhost:3010/brapi/v2/search/studies/'. $searchId);
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'result' => {'data' => [{'observationLevels' => undef,'startDate' => '2017-07-04','studyDbId' => '137','culturalPractices' => undef,'endDate' => '2017-07-21','environmentParameters' => undef,'studyCode' => '137','studyPUI' => undef,'additionalInfo' => {'programName' => 'test','programDbId' => '134'},'growthFacility' => undef,'locationDbId' => '23','trialDbId' => '','contacts' => undef,'externalReferences' => undef,'license' => '','studyType' => undef,'studyName' => 'test_trial','observationUnitsDescription' => undef,'studyDescription' => 'test trial','lastUpdate' => undef,'seasons' => ['2014'],'active' => JSON::true ,'dataLinks' => [],'commonCropName' => 'Cassava','documentationURL' => '','experimentalDesign' => 'CRD','trialName' => undef,'locationName' => 'test_location'},{'studyPUI' => undef,'studyCode' => '141','growthFacility' => undef,'additionalInfo' => {'programDbId' => '134','programName' => 'test'},'locationDbId' => '23','trialDbId' => '','contacts' => undef,'externalReferences' => undef,'license' => '','observationLevels' => undef,'startDate' => undef,'studyDbId' => '141','culturalPractices' => undef,'endDate' => undef,'environmentParameters' => undef,'commonCropName' => 'Cassava','documentationURL' => '','experimentalDesign' => 'CRD','trialName' => undef,'locationName' => 'test_location','studyType' => undef,'studyName' => 'trial2 NaCRRI','studyDescription' => 'another trial for solGS','observationUnitsDescription' => undef,'lastUpdate' => undef,'seasons' => ['2014'],'active' => JSON::true,'dataLinks' => []}]},'metadata' => {'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'message' => 'Loading CXGN::BrAPI::v2::Results','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'search result constructed'}],'pagination' => {'totalPages' => 1,'totalCount' => 2,'currentPage' => 0,'pageSize' => 10},'datafiles' => []}});
+
+$mech->get_ok('http://localhost:3010/brapi/v2/studies/139');
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'metadata' => {'pagination' => {'totalCount' => 1,'totalPages' => 1,'currentPage' => 0,'pageSize' => 10},'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'message' => 'Loading CXGN::BrAPI::v2::Studies','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Studies detail result constructed'}],'datafiles' => []},'result' => {'studyCode' => '139','trialDbId' => '134','environmentParameters' => undef,'externalReferences' => undef,'dataLinks' => [],'commonCropName' => 'Cassava','studyType' => 'Clonal Evaluation','additionalInfo' => {},'documentationURL' => '','endDate' => undef,'studyDescription' => 'This trial was loaded into the fixture to test solgs.','studyName' => 'Kasese solgs trial','locationName' => 'test_location','studyPUI' => undef,'lastUpdate' => undef,'experimentalDesign' => 'Alpha','observationUnitsDescription' => undef,'startDate' => undef,'studyDbId' => '139','observationLevels' => undef,'culturalPractices' => undef,'growthFacility' => undef,'locationDbId' => '23','seasons' => ['2014'],'contacts' => undef,'active' => JSON::true ,'trialName' => 'test','license' => ''}} );
+
+$mech->get_ok('http://localhost:3010/brapi/v2/locations');
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'metadata' => {'datafiles' => [],'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Locations'},{'messageType' => 'INFO','message' => 'Locations list result constructed'}],'pagination' => {'totalCount' => 3,'totalPages' => 1,'currentPage' => 0,'pageSize' => 10}},'result' => {'data' => [{'instituteName' => '','coordinateUncertainty' => undef,'coordinateDescription' => undef,'locationType' => '','topography' => undef,'abbreviation' => '','instituteAddress' => '','environmentType' => undef,'countryName' => 'United States','countryCode' => 'USA','slope' => undef,'siteStatus' => undef,'locationDbId' => '23','locationName' => 'test_location','exposure' => undef,'externalReferences' => undef,'coordinates' => [{'type' => 'Feature','geometry' => {'coordinates' => ['32.6136','-115.864','109'],'type' => 'Point'}}],'additionalInfo' => {'geodetic datum' => undef,'breeding_program' => '134'},'documentationURL' => undef},{'instituteName' => '','coordinateUncertainty' => undef,'coordinateDescription' => undef,'locationType' => '','topography' => undef,'abbreviation' => '','environmentType' => undef,'instituteAddress' => '','countryName' => 'United States','slope' => undef,'countryCode' => 'USA','siteStatus' => undef,'locationName' => 'Cornell Biotech','locationDbId' => '24','externalReferences' => undef,'exposure' => undef,'coordinates' => [{'type' => 'Feature','geometry' => {'type' => 'Point','coordinates' => ['42.4534','-76.4735','274']}}],'documentationURL' => undef,'additionalInfo' => {'breeding_program' => '134','geodetic datum' => undef}},{'environmentType' => undef,'abbreviation' => '','instituteAddress' => '','locationType' => '','topography' => undef,'coordinateDescription' => undef,'instituteName' => '','coordinateUncertainty' => undef,'coordinates' => [{'type' => 'Feature','geometry' => {'coordinates' => [undef,undef,undef],'type' => 'Point'}}],'documentationURL' => undef,'additionalInfo' => {'geodetic datum' => undef},'locationDbId' => '25','locationName' => 'NA','externalReferences' => undef,'exposure' => undef,'siteStatus' => undef,'countryName' => '','slope' => undef,'countryCode' => ''}]}} );
+
+$data = '[  {    "abbreviation": "L1",    "additionalInfo": {"noaaStationId" : "PALMIRA","programDbId" :"134"},    "coordinateDescription": "North East corner of greenhouse",    "coordinateUncertainty": "20",    "coordinates": {      "geometry": {        "coordinates": [          -76.506042,          42.417373,          123        ],        "type": "Point"      },      "type": "Feature"    },    "countryCode": "PER",    "countryName": "Peru",    "documentationURL": "https://brapi.org",    "environmentType": "Nursery",    "exposure": "Structure, no exposure",    "externalReferences": [      {        "referenceID": "doi:10.155454/12341234",        "referenceSource": "DOI"      },      {        "referenceID": "http://purl.obolibrary.org/obo/ro.owl",        "referenceSource": "OBO Library"      },      {        "referenceID": "75a50e76",        "referenceSource": "Remote Data Collection Upload Tool"      }    ],    "instituteAddress": "71 Pilgrim Avenue Chevy Chase MD 20815",    "instituteName": "Plant Science Institute",    "locationName": "Location 1",    "locationType": "Field",    "siteStatus": "Private",    "slope": "0",    "topography": "Valley"  }]';
+
+$mech->post('http://localhost:3010/brapi/v2/locations/', Content => $data);
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'metadata' => {'datafiles' => undef,'pagination' => {'currentPage' => 0,'pageSize' => 10,'totalCount' => 1,'totalPages' => 1},'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'message' => 'Loading CXGN::BrAPI::v2::Locations','messageType' => 'INFO'},{'message' => '1 Locations were saved.','messageType' => 'INFO'}]},'result' => {}});
+
+$mech->get_ok('http://localhost:3010/brapi/v2/locations/23');
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'metadata' => {'datafiles' => [],'pagination' => {'currentPage' => 0,'totalCount' => 1,'pageSize' => 10,'totalPages' => 1},'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'message' => 'Loading CXGN::BrAPI::v2::Locations','messageType' => 'INFO'},{'message' => 'Locations list result constructed','messageType' => 'INFO'}]},'result' => {'data' => [{'locationDbId' => '23','environmentType' => undef,'coordinateUncertainty' => undef,'countryName' => 'United States','abbreviation' => '','countryCode' => 'USA','instituteAddress' => '','topography' => undef,'exposure' => undef,'siteStatus' => undef,'coordinates' => [{'geometry' => {'coordinates' => ['32.6136','-115.864','109'],'type' => 'Point'},'type' => 'Feature'}],'documentationURL' => undef,'instituteName' => '','slope' => undef,'locationType' => '','locationName' => 'test_location','coordinateDescription' => undef,'additionalInfo' => {'geodetic datum' => undef,'breeding_program' => '134'},'externalReferences' => undef}]}} );
+
+$data = '{    "abbreviation": "L2",    "additionalInfo": {"noaaStationId" : "PALMIRA","programDbId" :"134"},    "coordinateDescription": "North East corner of greenhouse",    "coordinateUncertainty": "20",    "coordinates": {      "geometry": {        "coordinates": [          -76.506042,          42.417373,          123        ],        "type": "Point"      },      "type": "Feature"    },    "countryCode": "PER",    "countryName": "Peru",    "documentationURL": "https://brapi.org",    "environmentType": "Nursery",    "exposure": "Structure, no exposure",    "externalReferences": [      {        "referenceID": "doi:10.155454/12341234",        "referenceSource": "DOI"      },      {        "referenceID": "http://purl.obolibrary.org/obo/ro.owl",        "referenceSource": "OBO Library"      },      {        "referenceID": "75a50e76",        "referenceSource": "Remote Data Collection Upload Tool"      }    ],    "instituteAddress": "71 Pilgrim Avenue Chevy Chase MD 20815",    "instituteName": "Plant Science Institute",    "locationName": "Location 2",    "locationType": "Field",    "siteStatus": "Private",    "slope": "0",    "topography": "Valley"  }';
+
+$resp = $ua->put("http://192.168.33.11:3010/brapi/v2/locations/25", Content => $data);
+$response = decode_json $resp->{_content};
+print STDERR Dumper $response;
+is_deeply($response, {'metadata' => {'pagination' => {'pageSize' => 10,'currentPage' => 0,'totalCount' => 1,'totalPages' => 1},'datafiles' => undef,'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Locations'},{'message' => '1 Locations were saved.','messageType' => 'INFO'}]},'result' => {}});
+
+$mech->post_ok('http://localhost:3010/brapi/v2/search/locations', ['pageSize'=>'2', 'page'=>'1']);
+$response = decode_json $mech->content;
+$searchId = $response->{result} ->{searchResultDbId};
+$mech->get_ok('http://localhost:3010/brapi/v2/search/locations/'. $searchId);
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'result' => {'data' => [{'countryCode' => 'PER','coordinateDescription' => undef,'abbreviation' => 'L2','additionalInfo' => {'breeding_program' => '134','noaa_station_id' => 'PALMIRA','geodetic datum' => undef},'countryName' => 'Peru','locationType' => 'Field','instituteAddress' => '','topography' => undef,'locationDbId' => '25','environmentType' => undef,'siteStatus' => undef,'slope' => undef,'documentationURL' => undef,'coordinateUncertainty' => undef,'locationName' => 'Location 2','externalReferences' => undef,'instituteName' => '','coordinates' => [{'type' => 'Feature','geometry' => {'type' => 'Point','coordinates' => ['-76.506','42.4174',123]}}],'exposure' => undef},{'coordinates' => [{'type' => 'Feature','geometry' => {'coordinates' => ['-76.506','42.4174',123],'type' => 'Point'}}],'exposure' => undef,'instituteName' => '','externalReferences' => undef,'locationName' => 'Location 1','coordinateUncertainty' => undef,'slope' => undef,'documentationURL' => undef,'environmentType' => undef,'siteStatus' => undef,'locationDbId' => '26','topography' => undef,'instituteAddress' => '','locationType' => 'Field','countryName' => 'Peru','additionalInfo' => {'breeding_program' => '134','geodetic datum' => undef,'noaa_station_id' => 'PALMIRA'},'abbreviation' => 'L1','coordinateDescription' => undef,'countryCode' => 'PER'}]},'metadata' => {'datafiles' => [],'pagination' => {'pageSize' => 10,'totalPages' => 1,'currentPage' => 0,'totalCount' => 2},'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Results'},{'messageType' => 'INFO','message' => 'search result constructed'}]}} );
+
+$mech->get_ok('http://localhost:3010/brapi/v2/people');
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'result' => {'data' => [{'personDbId' => '40','mailingAddress' => undef,'userID' => 'johndoe','firstName' => 'John','emailAddress' => undef,'description' => undef,'phoneNumber' => undef,'additionalInfo' => {'country' => undef},'lastName' => 'Doe','externalReferences' => {'referenceSource' => undef,'referenceID' => undef},'middleName' => undef},{'middleName' => undef,'externalReferences' => {'referenceID' => undef,'referenceSource' => undef},'lastName' => 'Doe','additionalInfo' => {'country' => undef},'phoneNumber' => undef,'description' => undef,'emailAddress' => undef,'userID' => 'janedoe','firstName' => 'Jane','mailingAddress' => undef,'personDbId' => '41'},{'lastName' => 'Sanger','middleName' => undef,'emailAddress' => undef,'description' => undef,'phoneNumber' => undef,'additionalInfo' => {'country' => undef},'externalReferences' => {'referenceID' => undef,'referenceSource' => undef},'personDbId' => '42','mailingAddress' => undef,'firstName' => 'Fred','userID' => 'freddy'}]},'metadata' => {'pagination' => {'pageSize' => 10,'totalCount' => 3,'totalPages' => 1,'currentPage' => 0},'datafiles' => [],'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::People'},{'message' => 'People result constructed','messageType' => 'INFO'}]}});
+
+$mech->get_ok('http://localhost:3010/brapi/v2/people/41');
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'result' => {'mailingAddress' => undef,'middleName' => undef,'personDbId' => '41','additionalInfo' => {'country' => undef},'externalReferences' => {'referenceID' => undef,'referenceSource' => undef},'description' => 'Organization: ','lastName' => 'Doe','firstName' => 'Jane','userID' => 'janedoe','phoneNumber' => undef,'emailAddress' => undef},'metadata' => {'datafiles' => [],'pagination' => {'pageSize' => 10,'currentPage' => 0,'totalCount' => 1,'totalPages' => 1},'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'message' => 'Loading CXGN::BrAPI::v2::People','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'People result constructed'}]}} );
+
 
 
 done_testing();
