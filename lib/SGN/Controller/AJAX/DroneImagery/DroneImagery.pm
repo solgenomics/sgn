@@ -5973,6 +5973,82 @@ sub drone_imagery_update_details_POST : Args(0) {
     $c->stash->{rest} = {success => 1};
 }
 
+sub drone_imagery_quality_control_get_images : Path('/api/drone_imagery/quality_control_get_images') : ActionClass('REST') { }
+sub drone_imagery_quality_control_get_images_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $drone_run_project_id = $c->req->param('drone_run_project_id');
+
+    my $images_search = CXGN::DroneImagery::ImagesSearch->new({
+        bcs_schema=>$schema,
+        drone_run_project_id_list=>[$drone_run_project_id]
+    });
+    my ($result, $total_count) = $images_search->search();
+    print STDERR Dumper $total_count;
+
+    my %stock_images;
+    foreach (@$result) {
+        my $image_id = $_->{image_id};
+        my $stock_id = $_->{stock_id};
+        my $stock_uniquename = $_->{stock_uniquename};
+
+        if ($stock_uniquename) {
+            my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+            my $image_url = $image->get_image_url("original");
+            my $image_fullpath = $image->get_filename('original_converted', 'full');
+            my $image_source_tag_small = $image->get_img_src_tag("thumbnail");
+
+            push @{$stock_images{$stock_uniquename}}, {
+                stock_id => $stock_id,
+                stock_uniquename => $_->{stock_uniquename},
+                stock_type_id => $_->{stock_type_id},
+                image => '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>',
+                image_id => $image_id
+            };
+        }
+    }
+    my @result;
+    foreach (sort keys %stock_images) {
+        my $i = $stock_images{$_};
+        my $image_string = '';
+        my $counter = 0;
+        foreach my $j (@$i) {
+            if ($counter == 0) {
+                $image_string .= '<div class="row">';
+            }
+            $image_string .= '<div class="col-sm-2"><div class="well well-sm>">'.$j->{image}."<input type='checkbox' name='manage_drone_imagery_quality_control_image_select' value='".$j->{image_id}."'></div></div>";
+            if ($counter == 5) {
+                $image_string .= '</div>';
+                $counter = 0;
+            } else {
+                $counter++;
+            }
+        }
+        push @result, [$_, $image_string];
+    }
+
+    $c->stash->{rest} = {success => 1, result => \@result};
+}
+
+sub drone_imagery_obsolete_image_change : Path('/api/drone_imagery/obsolete_image_change') : ActionClass('REST') { }
+sub drone_imagery_obsolete_image_change_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $image_id = $c->req->param('image_id');
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+    $image->delete(); #makes obsolete
+
+    $c->stash->{rest} = {success => 1};
+}
+
 sub drone_imagery_calculate_phenotypes : Path('/api/drone_imagery/calculate_phenotypes') : ActionClass('REST') { }
 sub drone_imagery_calculate_phenotypes_POST : Args(0) {
     my $self = shift;
