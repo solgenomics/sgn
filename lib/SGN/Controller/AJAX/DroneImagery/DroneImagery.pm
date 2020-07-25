@@ -1533,6 +1533,7 @@ sub drone_imagery_update_gps_images_rotation_POST : Args(0) {
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $drone_run_project_id = $c->req->param("drone_run_project_id");
     my $rotate_angle = $c->req->param("rotate_angle");
+    my $rotate_angle_neg = $rotate_angle*-1;
     my $nir_image_ids = decode_json $c->req->param("nir_image_ids");
     my $flight_pass_counter = $c->req->param("flight_pass_counter");
 
@@ -1589,86 +1590,131 @@ sub drone_imagery_update_gps_images_rotation_POST : Args(0) {
 
         my %gps_images;
         my $dir = $c->tempfiles_subdir('/drone_imagery_rotate');
+        my $bulk_input_temp_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_rotate/bulkinputXXXX');
+
+        open(my $F, ">", $bulk_input_temp_file) || die "Can't open file ".$bulk_input_temp_file;
+
+        my %input_bulk_hash;
         foreach my $stack_key (sort {$a <=> $b} keys %$saved_micasense_stacks) {
             my $image_ids_array = $saved_micasense_stacks->{$stack_key};
 
-            # my $pm = Parallel::ForkManager->new(floor(int($number_system_cores)));
-            # $pm->run_on_finish( sub {
-            #     my ($pid, $exit_code, $ident, $exit_signal, $core_dump, $data_structure_reference) = @_;
-            #     $rotated_saved_micasense_stacks{$stack_key}->[$data_structure_reference->{index_counter}] = $data_structure_reference->{i_obj};
-            # });
-
             my $index_counter = 0;
             foreach my $i (@$image_ids_array) {
-                # my $pid = $pm->start and next;
 
                 my $latitude_raw = $i->{latitude};
                 my $longitude_raw = $i->{longitude};
                 my $altitude_raw = $i->{altitude};
                 my $image_id = $i->{image_id};
 
-                my $rotated_image_id;
-                my $rotated_image_url;
                 if ($image_id) {
                     my $archive_rotate_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_rotate/imageXXXX');
                     $archive_rotate_temp_image .= '.png';
-                    my $rotate_return = _perform_image_rotate($c, $schema, $metadata_schema, $drone_run_project_id, $image_id, $rotate_angle*-1, 0, $user_id, $user_name, $user_role, $archive_rotate_temp_image, 0, 0);
-                    $rotated_image_id = $rotate_return->{rotated_image_id};
-                    $rotated_image_url = $rotate_return->{rotated_image_url};
-                    print STDERR Dumper $rotated_image_url;
+
+                    my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+                    my $image_fullpath = $image->get_filename('original_converted', 'full');
+
+                    print $F "$image_fullpath\t$archive_rotate_temp_image\t$rotate_angle_neg\n";
+
+                    $input_bulk_hash{$image_id} = {
+                        stack_key => $stack_key,
+                        latitude_raw => $latitude_raw,
+                        longitude_raw => $longitude_raw,
+                        altitude_raw => $altitude_raw,
+                        rotated_temp_image => $archive_rotate_temp_image,
+                        index_counter => $index_counter
+                    };
                 }
-
-                my $temp_x1 = 0 - $cx;
-                my $temp_y1 = $length - $cy;
-                my $temp_x2 = $width - $cx;
-                my $temp_y2 = $length - $cy;
-                my $temp_x3 = $width - $cx;
-                my $temp_y3 = 0 - $cy;
-                my $temp_x4 = 0 - $cx;
-                my $temp_y4 = 0 - $cy;
-
-                my $rotated_x1 = $temp_x1*cos($rotate_radians) - $temp_y1*sin($rotate_radians);
-                my $rotated_y1 = $temp_x1*sin($rotate_radians) + $temp_y1*cos($rotate_radians);
-                my $rotated_x2 = $temp_x2*cos($rotate_radians) - $temp_y2*sin($rotate_radians);
-                my $rotated_y2 = $temp_x2*sin($rotate_radians) + $temp_y2*cos($rotate_radians);
-                my $rotated_x3 = $temp_x3*cos($rotate_radians) - $temp_y3*sin($rotate_radians);
-                my $rotated_y3 = $temp_x3*sin($rotate_radians) + $temp_y3*cos($rotate_radians);
-                my $rotated_x4 = $temp_x4*cos($rotate_radians) - $temp_y4*sin($rotate_radians);
-                my $rotated_y4 = $temp_x4*sin($rotate_radians) + $temp_y4*cos($rotate_radians);
-
-                $rotated_x1 = $rotated_x1 + $cx;
-                $rotated_y1 = $rotated_y1 + $cy;
-                $rotated_x2 = $rotated_x2 + $cx;
-                $rotated_y2 = $rotated_y2 + $cy;
-                $rotated_x3 = $rotated_x3 + $cx;
-                $rotated_y3 = $rotated_y3 + $cy;
-                $rotated_x4 = $rotated_x4 + $cx;
-                $rotated_y4 = $rotated_y4 + $cy;
-
-                my $x_pos = ($longitude_raw - $return->{min_longitude})*$return->{x_factor};
-                my $y_pos = $return->{y_range} - ($latitude_raw - $return->{min_latitude})*$return->{y_factor} - $return->{image_length};
-
-                my $rotated_bound = [[$rotated_x1, $rotated_y1], [$rotated_x2, $rotated_y2], [$rotated_x3, $rotated_y3], [$rotated_x4, $rotated_y4]];
-                my $rotated_bound_translated = [[$rotated_x1 + $x_pos, $rotated_y1 + $y_pos], [$rotated_x2 + $x_pos, $rotated_y2 + $y_pos], [$rotated_x3 + $x_pos, $rotated_y3 + $y_pos], [$rotated_x4 + $x_pos, $rotated_y4 + $y_pos]];
-
-                # my $i_obj = {
-                push @{$rotated_saved_micasense_stacks{$stack_key}}, {
-                    rotated_image_id => $rotated_image_id,
-                    d3_rotate_angle => $rotate_angle,
-                    image_id => $image_id,
-                    longitude => $longitude_raw,
-                    latitude => $latitude_raw,
-                    altitude => $altitude_raw,
-                    rotated_bound => $rotated_bound,
-                    rotated_bound_translated => $rotated_bound_translated,
-                    x_pos => $x_pos,
-                    y_pos => $y_pos
-                };
-                # $pm->finish(0, { i_obj => $i_obj, index_counter => $index_counter });
                 $index_counter++;
             }
-            # $pm->wait_all_children;
         }
+        close($F);
+
+        my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/RotateBulk.py --input_path \''.$bulk_input_temp_file.'\'';
+        print STDERR Dumper $cmd;
+        my $status = system($cmd);
+
+        my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'rotated_stitched_temporary_drone_imagery', 'project_md_image')->cvterm_id();
+        while ( my ($image_id, $i_obj) = each %input_bulk_hash) {
+            my $stack_key = $i_obj->{stack_key};
+            my $latitude_raw = $i_obj->{latitude_raw};
+            my $longitude_raw = $i_obj->{longitude_raw};
+            my $altitude_raw = $i_obj->{altitude_raw};
+            my $index_counter = $i_obj->{index_counter};
+            my $archive_rotate_temp_image = $i_obj->{rotated_temp_image};
+
+            my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+            my $md5checksum = $image->calculate_md5sum($archive_rotate_temp_image);
+            my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
+                JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id)
+                WHERE md_image.obsolete = 'f' AND md_image.md5sum = ? AND project_md_image.type_id = ? AND project_md_image.project_id = ?;";
+            my $h = $schema->storage->dbh->prepare($q);
+            $h->execute($md5checksum, $linking_table_type_id, $drone_run_project_id);
+            my ($saved_image_id) = $h->fetchrow_array();
+
+            my $rotated_image_fullpath;
+            my $rotated_image_id;
+            my $rotated_image_url;
+            if ($saved_image_id) {
+                print STDERR Dumper "Image $archive_rotate_temp_image has already been added to the database and will not be added again.";
+                $image = SGN::Image->new( $schema->storage->dbh, $saved_image_id, $c );
+                $rotated_image_fullpath = $image->get_filename('original_converted', 'full');
+                $rotated_image_url = $image->get_image_url('original');
+                $rotated_image_id = $image->get_image_id();
+            } else {
+                $image->set_sp_person_id($user_id);
+                my $ret = $image->process_image($archive_rotate_temp_image, 'project', $drone_run_project_id, $linking_table_type_id);
+                $rotated_image_fullpath = $image->get_filename('original_converted', 'full');
+                $rotated_image_url = $image->get_image_url('original');
+                $rotated_image_id = $image->get_image_id();
+            }
+
+            my $temp_x1 = 0 - $cx;
+            my $temp_y1 = $length - $cy;
+            my $temp_x2 = $width - $cx;
+            my $temp_y2 = $length - $cy;
+            my $temp_x3 = $width - $cx;
+            my $temp_y3 = 0 - $cy;
+            my $temp_x4 = 0 - $cx;
+            my $temp_y4 = 0 - $cy;
+
+            my $rotated_x1 = $temp_x1*cos($rotate_radians) - $temp_y1*sin($rotate_radians);
+            my $rotated_y1 = $temp_x1*sin($rotate_radians) + $temp_y1*cos($rotate_radians);
+            my $rotated_x2 = $temp_x2*cos($rotate_radians) - $temp_y2*sin($rotate_radians);
+            my $rotated_y2 = $temp_x2*sin($rotate_radians) + $temp_y2*cos($rotate_radians);
+            my $rotated_x3 = $temp_x3*cos($rotate_radians) - $temp_y3*sin($rotate_radians);
+            my $rotated_y3 = $temp_x3*sin($rotate_radians) + $temp_y3*cos($rotate_radians);
+            my $rotated_x4 = $temp_x4*cos($rotate_radians) - $temp_y4*sin($rotate_radians);
+            my $rotated_y4 = $temp_x4*sin($rotate_radians) + $temp_y4*cos($rotate_radians);
+
+            $rotated_x1 = $rotated_x1 + $cx;
+            $rotated_y1 = $rotated_y1 + $cy;
+            $rotated_x2 = $rotated_x2 + $cx;
+            $rotated_y2 = $rotated_y2 + $cy;
+            $rotated_x3 = $rotated_x3 + $cx;
+            $rotated_y3 = $rotated_y3 + $cy;
+            $rotated_x4 = $rotated_x4 + $cx;
+            $rotated_y4 = $rotated_y4 + $cy;
+
+            my $x_pos = ($longitude_raw - $return->{min_longitude})*$return->{x_factor};
+            my $y_pos = $return->{y_range} - ($latitude_raw - $return->{min_latitude})*$return->{y_factor} - $return->{image_length};
+
+            my $rotated_bound = [[$rotated_x1, $rotated_y1], [$rotated_x2, $rotated_y2], [$rotated_x3, $rotated_y3], [$rotated_x4, $rotated_y4]];
+            my $rotated_bound_translated = [[$rotated_x1 + $x_pos, $rotated_y1 + $y_pos], [$rotated_x2 + $x_pos, $rotated_y2 + $y_pos], [$rotated_x3 + $x_pos, $rotated_y3 + $y_pos], [$rotated_x4 + $x_pos, $rotated_y4 + $y_pos]];
+
+            $rotated_saved_micasense_stacks{$stack_key}->[$index_counter] = {
+                rotated_image_id => $rotated_image_id,
+                d3_rotate_angle => $rotate_angle,
+                image_id => $image_id,
+                longitude => $longitude_raw,
+                latitude => $latitude_raw,
+                altitude => $altitude_raw,
+                rotated_bound => $rotated_bound,
+                rotated_bound_translated => $rotated_bound_translated,
+                x_pos => $x_pos,
+                y_pos => $y_pos
+            };
+        }
+
         # print STDERR Dumper \%rotated_saved_micasense_stacks;
 
         my $saved_image_stacks_rotated_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_micasense_stacks_rotated', 'project_property')->cvterm_id();
