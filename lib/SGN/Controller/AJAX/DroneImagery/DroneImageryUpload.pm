@@ -27,6 +27,7 @@ use URI::Encode qw(uri_encode uri_decode);
 use CXGN::Calendar;
 use Image::Size;
 use CXGN::DroneImagery::ImageTypes;
+use Parallel::ForkManager;
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -904,6 +905,17 @@ sub upload_drone_imagery_POST : Args(0) {
             }
         }
 
+        my $number_system_cores = `getconf _NPROCESSORS_ONLN` or die "Could not get number of system cores!\n";
+        chomp($number_system_cores);
+        print STDERR "NUMCORES $number_system_cores\n";
+
+        my $pm = Parallel::ForkManager->new(10);
+        $pm->run_on_finish( sub {
+            my ($pid, $exit_code, $ident, $exit_signal, $core_dump, $data_structure_reference) = @_;
+            push @return_drone_run_band_image_urls, $data_structure_reference->{image_url};
+            push @return_drone_run_band_image_ids, $data_structure_reference->{obj};
+        });
+
         foreach my $m (@stitched_bands) {
             my $project_rs = $schema->resultset("Project::Project")->create({
                 name => $new_drone_run_name."_".$m->[1],
@@ -915,6 +927,8 @@ sub upload_drone_imagery_POST : Args(0) {
 
             my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'raw_drone_imagery', 'project_md_image')->cvterm_id();
             foreach my $image_info (@{$raw_image_bands{$m->[3]}}) {
+                my $pid = $pm->start and next;
+
                 my $im = $image_info->[0];
                 my $image_id;
                 my $image_url;
@@ -929,16 +943,17 @@ sub upload_drone_imagery_POST : Args(0) {
                     $image_id = undef;
                     $image_url = undef;
                 }
-                push @return_drone_run_band_image_urls, $image_url;
-                push @return_drone_run_band_image_ids, {
+                my $obj = {
                     image_id => $image_id,
                     latitude => $image_info->[1],
                     longitude => $image_info->[2],
                     altitude => $image_info->[3]
                 };
+                $pm->finish(0, { image_url => $image_url, obj => $obj });
             }
             push @return_drone_run_band_project_ids, $selected_drone_run_band_id;
         }
+        $pm->wait_all_children;
 
         my $image_stack_counter = 0;
         foreach (@return_drone_run_band_image_ids) {
@@ -1173,11 +1188,24 @@ sub upload_drone_imagery_additional_raw_images_POST : Args(0) {
     }
     print STDERR Dumper \%drone_run_bands_all;
 
+    my $number_system_cores = `getconf _NPROCESSORS_ONLN` or die "Could not get number of system cores!\n";
+    chomp($number_system_cores);
+    print STDERR "NUMCORES $number_system_cores\n";
+
+    my $pm = Parallel::ForkManager->new(10);
+    $pm->run_on_finish( sub {
+        my ($pid, $exit_code, $ident, $exit_signal, $core_dump, $data_structure_reference) = @_;
+        push @return_drone_run_band_image_urls, $data_structure_reference->{image_url};
+        push @return_drone_run_band_image_ids, $data_structure_reference->{obj};
+    });
+
     foreach my $m (@stitched_bands) {
         my $selected_drone_run_band_id = $drone_run_bands_all{$m->[2]};
 
         my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'raw_drone_imagery', 'project_md_image')->cvterm_id();
         foreach my $image_info (@{$raw_image_bands{$m->[3]}}) {
+            my $pid = $pm->start and next;
+
             my $im = $image_info->[0];
             my $image_id;
             my $image_url;
@@ -1192,16 +1220,17 @@ sub upload_drone_imagery_additional_raw_images_POST : Args(0) {
                 $image_id = undef;
                 $image_url = undef;
             }
-            push @return_drone_run_band_image_urls, $image_url;
-            push @return_drone_run_band_image_ids, {
+            my $obj = {
                 image_id => $image_id,
                 latitude => $image_info->[1],
                 longitude => $image_info->[2],
                 altitude => $image_info->[3]
             };
+            $pm->finish(0, { image_url => $image_url, obj => $obj });
         }
         push @return_drone_run_band_project_ids, $selected_drone_run_band_id;
     }
+    $pm->wait_all_children;
 
     my $saved_image_stacks_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_micasense_stacks', 'project_property')->cvterm_id();
     my $image_stack_projectprop_previous_rs = $schema->resultset("Project::Projectprop")->find({project_id => $selected_drone_run_id, type_id => $saved_image_stacks_type_id});
