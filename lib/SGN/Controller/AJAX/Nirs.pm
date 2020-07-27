@@ -109,7 +109,8 @@ sub extract_trait_data :Path('/ajax/Nirs/getdata') Args(0) {
     $c->stash->{rest} = { data => \@data, trait => $trait};
 }
 
-sub generate_results: Path('/ajax/Nirs/generate_results') : {
+sub generate_results : Path('/ajax/Nirs/generate_results') : ActionClass('REST') { }
+sub generate_results_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $dataset_id = $c->req->param('dataset_id');

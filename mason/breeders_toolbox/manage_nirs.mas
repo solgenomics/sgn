@@ -13,6 +13,8 @@ $locations => undef
 
 <!--button class="btn btn-info" onclick=location.href="/search/stocks">Phenotype Search</button><br /><br /-->
 
+<& /tools/nirs/nirs_analysis_dialogs.mas &>
+
 <& /breeders_toolbox/upload_nirs_spreadsheet.mas &>
 
 <div class="well">
