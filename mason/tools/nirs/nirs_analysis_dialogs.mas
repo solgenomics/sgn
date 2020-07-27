@@ -20,20 +20,38 @@
                     <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Dataset" &>
-                    <& /page/page_title.mas, title=>"Select the dataset you are interested in" &>
+                <&| /util/workflow.mas:step, title=> "Train Dataset" &>
+                    <& /page/page_title.mas, title=>"Select the dataset you are interested in training" &>
                     <br/><br/>
                     <form class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Dataset(s): </label>
-                            <div class="col-sm-9" >
-                                <div id="nirs_analysis_training_dataset_select_div"></div>
+                            <label class="col-sm-1 control-label">Dataset: </label>
+                            <div class="col-sm-11" >
+                                <div id="nirs_analysis_training_dataset_train_select_div"></div>
                             </div>
                         </div>
                     </form>
                     <br/><br/>
                     <center>
-                    <button class="btn btn-primary" id="nirs_analysis_training_dataset_select_step">Go to Next Step</button>
+                    <button class="btn btn-primary" id="nirs_analysis_training_dataset_train_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Test Dataset" &>
+                    <& /page/page_title.mas, title=>"Select the dataset you are interested in testing (optional)" &>
+                    <br/><br/>
+
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Dataset (Optional): </label>
+                            <div class="col-sm-11" >
+                                <div id="nirs_analysis_training_dataset_test_select_div"></div>
+                            </div>
+                        </div>
+                    </form>
+
+                    <br/><br/>
+                    <center>
+                    <button class="btn btn-primary" id="nirs_analysis_training_dataset_test_select_step">Go to Next Step</button>
                     </center>
                 </&>
                 <&| /util/workflow.mas:step, title=> "Model Settings" &>
@@ -179,25 +197,44 @@ jQuery(document).ready(function(){
     jQuery('#nirs_analysis_training_dialog_show').click(function(){
         jQuery('#nirs_analysis_training_dialog').modal('show');
 
-        get_select_box('datasets','nirs_analysis_training_dataset_select_div', {'checkbox_name':'nirs_analysis_training_dataset_select_id'});
+        get_select_box('datasets','nirs_analysis_training_dataset_train_select_div', {'checkbox_name':'nirs_analysis_training_dataset_train_select_id'});
+        get_select_box('datasets','nirs_analysis_training_dataset_test_select_div', {'checkbox_name':'nirs_analysis_training_dataset_test_select_id'});
     });
 
-    var nirs_analysis_training_dataset_id;
-    jQuery('#nirs_analysis_training_dataset_select_step').click(function(){
-        var selected = [];
-        jQuery('input[name="nirs_analysis_training_dataset_select_id"]:checked').each(function() {
-            selected.push(jQuery(this).val());
+    var nirs_analysis_training_dataset_train_id;
+    jQuery('#nirs_analysis_training_dataset_train_select_step').click(function(){
+        var selected_train = [];
+        jQuery('input[name="nirs_analysis_training_dataset_train_select_id"]:checked').each(function() {
+            selected_train.push(jQuery(this).val());
         });
-        console.log(selected);
 
-        if(selected.length > 1 || selected.length == 0) {
+        if(selected_train.length > 1 || selected_train.length == 0) {
             alert('Please select one dataset!');
             return false;
         }
         else {
-            nirs_analysis_training_dataset_id = selected[0];
-            Workflow.complete("#nirs_analysis_training_dataset_select_step");
+            nirs_analysis_training_dataset_train_id = selected_train[0];
+            Workflow.complete("#nirs_analysis_training_dataset_train_select_step");
             Workflow.focus('#nirs_analysis_training_workflow', 2);
+        }
+    });
+    
+    var nirs_analysis_training_dataset_test_id;
+    jQuery('#nirs_analysis_training_dataset_test_select_step').click(function(){
+
+        var selected_test = [];
+        jQuery('input[name="nirs_analysis_training_dataset_test_select_id"]:checked').each(function() {
+            selected_test.push(jQuery(this).val());
+        });
+
+        if(selected_test.length > 1) {
+            alert('Please select one dataset!');
+            return false;
+        }
+        else {
+            nirs_analysis_training_dataset_test_id = selected_test[0];
+            Workflow.complete("#nirs_analysis_training_dataset_test_select_step");
+            Workflow.focus('#nirs_analysis_training_workflow', 3);
         }
     });
 
@@ -211,10 +248,11 @@ jQuery(document).ready(function(){
         var nirs_analysis_training_rf_var_imp_select = jQuery('#nirs_analysis_training_rf_var_imp_select').val();
 
         jQuery.ajax({
-            url : '/ANALYSIS',
+            url : '/ajax/Nirs/generate_results',
             type : 'POST',
             data : {
-                'dataset_id' : nirs_analysis_training_dataset_id,
+                'train_dataset_id' : nirs_analysis_training_dataset_train_id,
+                'test_dataset_id' : nirs_analysis_training_dataset_test_id,
                 'format' : nirs_analysis_training_format_select,
                 'cv' : nirs_analysis_training_cv_select,
                 'algorithm' : nirs_analysis_training_nirs_model_algorithm,

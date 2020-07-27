@@ -18,9 +18,8 @@ use CXGN::Blast::Parse;
 use CXGN::Blast::SeqQuery;
 # use Path::Tiny qw(path);
 use Cwd qw(cwd);
-use JSON::Parse 'parse_json';
+# use JSON::Parse 'parse_json';
 use JSON::XS;
-
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -187,18 +186,22 @@ sub generate_results : Path('/ajax/Nirs/generate_results') : ActionClass('REST')
 sub generate_results_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    # my $format2 = $c->req->param('format_id');
+    print STDERR Dumper $c->req->params();
+
+    my $format_id = $c->req->param('format');
     my $device_id = $format_id;
-    my $cv_scheme = $c->req->param('cv_id');
-    my $dataset_id = $c->req->param('dataset_id');
+    my $dataset_id;
+    my $cv_scheme = $c->req->param('cv');
+    my $train_dataset_id = $c->req->param('train_dataset_id');
+    my $test_dataset_id = $c->req->param('test_dataset_id');
     my $train_id = $c->req->param('train_id');
     my $test_id = $c->req->param('test_id');
     my $trait_id = $c->req->param('trait_id');
-    my $niter_id = $c->req->param('niter_id');
-    my $algo_id =$c->req->param('alg_id');
-    my $preprocessing_boolean = $c->req->param('preprocessing_bool');
-    my $tune_id = $c->req->param('tune_id');
-    my $rf_var_imp = $c->req->param('rf_var_imp');
+    my $niter_id = $c->req->param('niter');
+    my $algo_id =$c->req->param('algorithm');
+    my $preprocessing_boolean = $c->req->param('preprocessing');
+    my $tune_id = $c->req->param('tune');
+    my $rf_var_imp = $c->req->param('rf');
 
     # print STDERR $format2;
     print STDERR $device_id;
