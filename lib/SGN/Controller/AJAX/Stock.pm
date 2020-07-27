@@ -1934,7 +1934,7 @@ sub get_stock_datatables_genotype_data_GET  {
     my @result;
     my $counter = 0;
 
-    open my $fh, "<&", $file_handle or die "Can't open output file: $!";
+    open my $fh, "<& :encoding(UTF-8)", $file_handle or die "Can't open output file: $!";
     my $header_line = <$fh>;
     if ($header_line) {
         my $marker_objects = decode_json $header_line;
