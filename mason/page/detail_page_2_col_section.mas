@@ -84,6 +84,11 @@ $sample_observation_unit_type_name => undef
 #Specific to drone run detail page
 $drone_run_date => undef
 
+#Specific to analysis detail page
+$analysis_metadata => undef
+$for_analysis_page => undef
+$data_level => undef
+
 </%args>
 
 <& /util/import_javascript.mas,
@@ -114,7 +119,7 @@ $drone_run_date => undef
                             <div class="panel-body">
 
 % if ($info_section_id eq 'pheno_heatmap'){
-                                <& /breeders_toolbox/trial/phenotype_heatmap.mas, trial_id => $trial_id &>
+                                <& /breeders_toolbox/trial/phenotype_heatmap.mas, trial_id => $trial_id, data_level => $data_level &>
 % } #End pheno_heatmap
 % if ($info_section_id eq 'trial_design_section'){
                                 <& /breeders_toolbox/trial/design_section.mas, trial_id => $trial_id, trial_name => $trial_name, has_subplot_entries => $has_subplot_entries, has_plant_entries => $has_plant_entries, has_tissue_sample_entries => $has_tissue_sample_entries, design_name => $design_name, trial_stock_type => $trial_stock_type &>
@@ -132,7 +137,7 @@ $drone_run_date => undef
                                 <& /breeders_toolbox/trial/derived_trait.mas, trial_id => $trial_id &>
 % } #End compute_derived_traits
 % if ($info_section_id eq 'trial_upload_files'){
-                                <& /breeders_toolbox/trial/files_section.mas, trial_id => $trial_id, trial_phenotype_files => $trial_phenotype_files, trial_stock_type => $trial_stock_type &>
+                                <& /breeders_toolbox/trial/files_section.mas, trial_id => $trial_id, trial_phenotype_files => $trial_phenotype_files, trial_stock_type => $trial_stock_type, for_analysis_page => $for_analysis_page &>
 % } #End trial_upload_files
 % if ($info_section_id eq 'trial_analysis_tools'){
                                 <!-- Phenotypic correlation analysis -->
@@ -332,6 +337,14 @@ $drone_run_date => undef
                                 <& /breeders_toolbox/cross/crossing_experiment_deletion.mas, trial_id => $trial_id  &>
 %} #End crossing_experiment_deletion_section
 
+% if ($info_section_id eq 'progeny_search_section'){
+                                <& /search/cross/progeny_search_section.mas &>
+%} #End progeny_search_section
+
+% if ($info_section_id eq 'cross_search_section'){
+                                <& /search/cross/cross_search_section.mas &>
+%} #End cross_search_section
+
 % if ($info_section_id eq 'manage_drone_imagery_main'){
                                 <& /breeders_toolbox/drone_imagery/raw_image_section.mas &>
 % } #End manage_drone_imagery_main
@@ -345,6 +358,15 @@ $drone_run_date => undef
 % if ($info_section_id eq 'drone_run_project_details'){
                                 <& /breeders_toolbox/drone_imagery/drone_run_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, trial_description=>$trial_description, identifier_prefix=>$identifier_prefix, drone_run_date=>$drone_run_date &>
 % } #End trial_details
+% if ($info_section_id eq 'analysis_details'){
+                                <& /analyses/analysis_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, trial_description=>$trial_description, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, year=>$year, identifier_prefix=>$identifier_prefix, trial_stock_type => $trial_stock_type, analysis_metadata=>$analysis_metadata &>
+% } #End analysis_details
+% if ($info_section_id eq 'model_details'){
+                                <& /analyses/model_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, analysis_metadata=>$analysis_metadata &>
+% } #End analysis_details
+% if ($info_section_id eq 'manage_file_share_dump'){
+                                <& /breeders_toolbox/file_share/file_dump_share_files.mas &>
+% } #End manage_file_share_dump
 % if (!$info_section_id){
                                 <p>No section specified! Main content goes here!</p>
 % }

@@ -135,7 +135,7 @@ sub search {
         GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id, accession.stock_id, accession.uniquename
         ORDER BY cvterm.name ASC;");
 
-    my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
+    my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
     $h->execute($numeric_regex, $accession_type_id);
 
     my @phenotype_data;

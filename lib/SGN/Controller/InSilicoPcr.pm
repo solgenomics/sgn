@@ -168,15 +168,18 @@ sub run_pcr_blast :Path('/tools/pcr_results') :Args(0) {
 
 
 
-  # get matrix
-  my $m = $params->{matrix};
-  $m =~ /^(BLOSUM|PAM)\d+$/ or $c->throw( is_error => 0, message => "invalid matrix '$m'" );
+  # get matrix (note: matrix not needed for blasn, comment out (Lukas, 5/2020)
+  #my $m = $params->{matrix};
+  ##$m =~ /^(BLOSUM|PAM)\d+$/ or $c->throw( is_error => 0, message => "invalid matrix '$m'" );
            
   # get evalue
   my $evalue = $params->{evalue} ? $params->{evalue} : 1;
-	
+
+  # get word_size
+  my $word_size = $params->{word_size} ? $params->{word_size} : 7;
+  
   # get filter
-  my $filter = $params->{filterq} ? 'T' : 'F';
+  my $filter = $params->{filterq} ? 'yes' : 'no';
 	
   # get blast database
   my $schema = $c->dbic_schema("SGN::Schema");
@@ -188,7 +191,7 @@ sub run_pcr_blast :Path('/tools/pcr_results') :Args(0) {
   # my $result_file = File::Spec->catfile($c->config->{basepath}, $c->tempfiles_subdir('blast'), $jobid.".out");
   
   # create blast command
-  my $blast_cmd = "blastall -p blastn -i $seqfile -d $basename -m 8 -M $m -F $filter -e $evalue -o $result_file";
+  my $blast_cmd = "blastn -query $seqfile -db $basename -word_size $word_size -outfmt 6 -dust $filter -evalue $evalue -out $result_file";
 	
   print STDERR "COMMAND: $blast_cmd\n";
   my $blast_error = system($blast_cmd);
@@ -269,48 +272,48 @@ sub _blast_to_pcr {
 
   foreach my $forward (@fprimer_ids){
     
-    # print STDERR "fwd: ".$subject_id{$forward}."\t".$s_start{$forward}."\t".$align_length{$forward}."\t".$mismatches {$forward}."\n";
-    # print STDERR "params: product length: ".$params->{productLength}."\tmm: ".$params->{allowedMismatches}."\tfwd length: ".$params->{flength}."\trev length: ".$params->{rlength}."\n";
+    print STDERR "fwd: ".$subject_id{$forward}."\t".$s_start{$forward}."\t".$align_length{$forward}."\t".$mismatches {$forward}."\n";
+   # print STDERR "params: product length: ".$params->{productLength}."\tmm: ".$params->{allowedMismatches}."\tfwd length: ".$params->{flength}."\trev length: ".$params->{rlength}."\n";
     
     foreach my $reverse (@rprimer_ids){
-      # print STDERR "rev: ".$subject_id{$reverse}."\t".$s_start{$reverse}."\t".$align_length{$reverse}."\t".$mismatches {$reverse}."\n";
+	print STDERR "rev: ".$subject_id{$reverse}."\t".$s_start{$reverse}."\t".$align_length{$reverse}."\t".$mismatches {$reverse}."\n";
+      
+	if ($subject_id{$forward} eq $subject_id{$reverse}    #both on the same subject seq
+	    and  $s_start{$reverse}- $s_start{$forward}<= $params->{productLength} #product Length is within user's choice
+	    and  $mismatches {$forward} <= $params->{allowedMismatches}  #Allowed mismatches by user
+	    and  $mismatches {$reverse} <= $params->{allowedMismatches}
+	    and  $align_length{$forward} == $params->{flength}  #primers match exact length
+	    and  $align_length {$reverse} == $params->{rlength}
+	    ) {
+	    print STDERR "\ninside the if\n";
+	    print STDERR "orientation fwd: ".$orientation{$forward}." s_end fwd: ".$s_end{$forward}."\n";
+	    print STDERR "orientation rev: ".$orientation{$reverse}." s_end rev: ".$s_end{$reverse}."\n";
 	    
-  		if ($subject_id{$forward} eq $subject_id{$reverse}    #both on the same subject seq
-        and  $s_start{$reverse}- $s_start{$forward}<= $params->{productLength} #product Length is within user's choice
-        and  $mismatches {$forward} <= $params->{allowedMismatches}  #Allowed mismatches by user
-        and  $mismatches {$reverse} <= $params->{allowedMismatches}
-        and  $align_length{$forward} == $params->{flength}  #primers match exact length
-        and  $align_length {$reverse} == $params->{rlength}
-  		) {
-        # print STDERR "\ninside the if\n";
-        # print STDERR "orientation fwd: ".$orientation{$forward}." s_end fwd: ".$s_end{$forward}."\n";
-        # print STDERR "orientation rev: ".$orientation{$reverse}." s_end rev: ".$s_end{$reverse}."\n";
-        
-          #if the product is in the + starnd of parent seq add a + sign in the array
-        
-          if ( $orientation{$forward} eq '+'     #forward is on the + strand
-          and  $orientation{$reverse} eq '-'     #reverse is on the - strand b/c its a complement
-          and  $s_end{$forward} < $s_end{$reverse}  #end of forward located upstream of beginning of reverse 
-          ){
-            # print STDERR "first if";
+	    #if the product is in the + strand of parent seq add a + sign in the array
+	    
+	    if ( $orientation{$forward} eq '+'     #forward is on the + strand
+		 and  $orientation{$reverse} eq '-'     #reverse is on the - strand b/c its a complement
+		 and  $s_end{$forward} < $s_end{$reverse}  #end of forward located upstream of beginning of reverse 
+		){
+		# print STDERR "first if";
           	push (@pcr_results , [$forward,$reverse, '+']) ;
-           }
-        	
-          #if the product is in the - strand of the parent seq add a - sign in the array	
-          elsif ( $orientation{$forward} eq '-'     #forward is on the - strand (complemet here)
-             and  $orientation{$reverse} eq '+'     #reverse is on the + strand 
-             and  $s_end{$forward} > $s_end{$reverse}  #end of forward located downstream of beginning of reverse
-            )
-             {
-               # print STDERR "scond if\n";
+	    }
+	    
+	    #if the product is in the - strand of the parent seq add a - sign in the array	
+	    elsif ( $orientation{$forward} eq '-'     #forward is on the - strand (complemet here)
+		    and  $orientation{$reverse} eq '+'     #reverse is on the + strand 
+		    and  $s_end{$forward} > $s_end{$reverse}  #end of forward located downstream of beginning of reverse
+		)
+	    {
+		# print STDERR "scond if\n";
                 push (@pcr_results , [$forward,$reverse, '-']);
-             }	
-             else {
-               # print STDERR "\nin else\n";
-             }
-       }
+	    }	
+	    else {
+		# print STDERR "\nin else\n";
+	    }
+	}
     }#end of the 4each loop
-
+    
   }
   
   ##############################################################################################################################

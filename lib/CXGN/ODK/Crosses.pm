@@ -55,8 +55,11 @@ use Time::Piece;
 use CXGN::Pedigree::AddCrossingtrial;
 use CXGN::Pedigree::AddCrosses;
 use CXGN::Pedigree::AddCrossInfo;
+use CXGN::Pedigree::AddCrossTissueSamples;
+use CXGN::Pedigree::AddProgeny;
 use Scalar::Util qw(looks_like_number);
-use List::Util qw(max);
+use Sort::Key::Natural qw(natsort);
+
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -278,11 +281,15 @@ sub save_ona_cross_info {
         my %musa_cross_info;
         my $cross_property;
         my %number_germinating;
-        my %number_subcultures;
-        my %number_rooting;
-        my %number_weaning1;
-        my %number_weaning2;
-        my %number_screenhouse;
+        my %subcultures_hash;
+        my %rooting_hash;
+        my %weaning1_hash;
+        my %weaning2_hash;
+        my %screenhouse_hash;
+        my %tissue_culture_details;
+        my %embryoID_hash;
+        my %hardening_hash;
+        my %openfield_hash;
 
         foreach my $activity_hash (@$message_hash){
             #print STDERR Dumper $activity_hash;
@@ -631,13 +638,23 @@ sub save_ona_cross_info {
                             my $weaning2_cross_id = $a->{'Nursery/Weaning2/getweaning2_crossid'};
                             my $weaning2_id = $a->{'Nursery/Weaning2/weaning2ID'};
                             my $number_of_weaning2_plantlets = $a->{'Nursery/Weaning2/number_of_weaning2_plantlets'};
-                            $number_weaning2{$weaning2_cross_id}{$weaning2_id}++;
+                            $weaning2_hash{$weaning2_cross_id}{$weaning2_id}++;
 
                         } elsif ($a->{'Nursery/nurseryActivity'} eq 'screenhouse'){
                             my $screenhouse_cross_id = $a->{'Nursery/Screenhouse/crossid_of_screenhouseID'};
                             my $screenhouse_id = $a->{'Nursery/Screenhouse/screenhouseID'};
                             my $number_of_screenhouse_plantlets = $a->{'Nursery/Screenhouse/number_of_screenhouse_plantlets'};
-                            $number_screenhouse{$screenhouse_cross_id}{$screenhouse_id}++;
+                            $screenhouse_hash{$screenhouse_cross_id}{$screenhouse_id}++;
+                        } elsif ($a->{'Nursery/nurseryActivity'} eq 'hardening'){
+                            my $hardening_cross_id = $a->{'Nursery/Hardening/hardeningID_crossid'};
+                            my $hardening_id = $a->{'Nursery/Hardening/hardeningID'};
+                            my $number_of_hardening_plantlets = $a->{'Nursery/Hardening/number_of_hardening_plantlets'};
+                            $hardening_hash{$hardening_cross_id}{$hardening_id}++;
+                        } elsif ($a->{'Nursery/nurseryActivity'} eq 'openfield'){
+                            my $openfield_cross_id = $a->{'Nursery/Openfield/openfieldID_crossid'};
+                            my $openfield_id = $a->{'Nursery/Openfield/openfieldID'};
+                            my $number_of_openfield_plantlets = $a->{'Nursery/Openfield/number_openfield_transferred_plantlets'};
+                            $openfield_hash{$openfield_cross_id}{$openfield_id}++;
                         } elsif ($a->{'Nursery/nurseryActivity'} eq 'status'){
 
                         }
@@ -684,78 +701,135 @@ sub save_ona_cross_info {
                         my $total_number_germinating = $number_germinating + $previous_number_germinating;
                         $number_germinating{$germination_cross_id}{$germination_date} = $total_number_germinating;
 
+                        my $embryoID_info = $activity_hash->{'Laboratory/EmbryoGermination/germinating_embryo'};
+                        if (defined $embryoID_info) {
+                            foreach my $germinating_embryo(@{ $embryoID_info }) {
+                                my $embryo_id = $germinating_embryo->{'Laboratory/EmbryoGermination/germinating_embryo/embryoID'};
+                                $embryoID_hash{$germination_cross_id}{$embryo_id}++;
+                            }
+                        }
+
                     } elsif ($activity_hash->{'Laboratory/labActivity'} eq 'subculture') {
                         my $subculture_cross_id = $activity_hash->{'Laboratory/subculturing/cross_Sub'};
                         my $subculture_id = $activity_hash->{'Laboratory/subculturing/subcultureID'};
-                        $number_subcultures{$subculture_cross_id}{$subculture_id}++;
+                        $subcultures_hash{$subculture_cross_id}{$subculture_id}++;
 
                     } elsif ($activity_hash->{'Laboratory/labActivity'} eq 'rooting') {
                         my $rooting_cross_id = $activity_hash->{'Laboratory/rooting/getRoot_crossid'};
                         my $rooting_id = $activity_hash->{'Laboratory/rooting/rootingID'};
                         if (defined $rooting_cross_id) {
-                            $number_rooting{$rooting_cross_id}{$rooting_id}++;
+                            $rooting_hash{$rooting_cross_id}{$rooting_id}++;
                         }
 
                     } elsif ($activity_hash->{'Laboratory/labActivity'} eq 'weaning1') {
                         my $weaning1_cross_id = $activity_hash->{'Laboratory/weaning1/getWeaning1_crossid'};
                         my $weaning1_id = $activity_hash->{'Laboratory/weaning1/weaning1ID'};
-                        $number_weaning1{$weaning1_cross_id}{$weaning1_id}++;
+                        $weaning1_hash{$weaning1_cross_id}{$weaning1_id}++;
                     }
 
                 }
             }
         }
-
-        foreach my $name_hash (keys %number_germinating) {
-            my $germination_date_ref = $number_germinating{$name_hash};
-            my %germination_info = %$germination_date_ref;
-            my $latest_total_number = max values %germination_info;
+#        print STDERR "EMBRYO ID HASH =".Dumper(\%embryoID_hash);
+        foreach my $embryo_cross (keys %embryoID_hash) {
+            my $embryo_ids = $embryoID_hash{$embryo_cross};
+            my %embryo_hash = %{$embryo_ids};
+            my @all_embryo_ids = keys %embryo_hash;
+            my $embryo_ids_count = keys %embryo_hash;
             my $germinating_number_property = 'Number of Germinating Embryos';
-            $musa_cross_info{$germinating_number_property}{$name_hash} = $latest_total_number;
-#            print STDERR "LATEST NUMBER =".Dumper($latest_number)."\n";
+            my $embryo_ids_property = 'Embryo IDs';
+            $musa_cross_info{$germinating_number_property}{$embryo_cross} = $embryo_ids_count;
+            $tissue_culture_details{$embryo_ids_property}{$embryo_cross} = \@all_embryo_ids;
         }
 
-        foreach my $subculture_cross (keys %number_subcultures) {
-            my $subculture_ref = $number_subcultures{$subculture_cross};
+        foreach my $subculture_cross (keys %subcultures_hash) {
+            my $subculture_ref = $subcultures_hash{$subculture_cross};
             my %subculture_info = %$subculture_ref;
             my $subculture_id_count = keys %subculture_info;
+            my @all_subculture_ids = keys %subculture_info;
             my $subculture_property = 'Subculture ID Count';
+            my $subculture_ids_property = 'Subculture IDs';
             $musa_cross_info{$subculture_property}{$subculture_cross} = $subculture_id_count;
+            $tissue_culture_details{$subculture_ids_property}{$subculture_cross} = \@all_subculture_ids;
         }
 
-        foreach my $rooting_cross (keys %number_rooting) {
-            my $rooting_ref = $number_rooting{$rooting_cross};
+        foreach my $rooting_cross (keys %rooting_hash) {
+            my $rooting_ref = $rooting_hash{$rooting_cross};
             my %rooting_info = %$rooting_ref;
             my $rooting_id_count = keys %rooting_info;
+            my @all_rooting_ids = keys %rooting_info;
             my $rooting_property = 'Rooting ID Count';
+            my $rooting_ids_property = 'Rooting IDs';
             $musa_cross_info{$rooting_property}{$rooting_cross} = $rooting_id_count;
+            $tissue_culture_details{$rooting_ids_property}{$rooting_cross} = \@all_rooting_ids;
+
         }
 
-        foreach my $weaning1_cross (keys %number_weaning1) {
-            my $weaning1_ref = $number_weaning1{$weaning1_cross};
+        foreach my $weaning1_cross (keys %weaning1_hash) {
+            my $weaning1_ref = $weaning1_hash{$weaning1_cross};
             my %weaning1_info = %$weaning1_ref;
             my $weaning1_id_count = keys %weaning1_info;
+            my @all_weaning1_ids = keys %weaning1_info;
             my $weaning1_property = 'Weaning1 ID Count';
+            my $weaning1_ids_property = 'Weaning1 IDs';
             $musa_cross_info{$weaning1_property}{$weaning1_cross} = $weaning1_id_count;
+            $tissue_culture_details{$weaning1_ids_property}{$weaning1_cross} = \@all_weaning1_ids;
         }
 
-        foreach my $weaning2_cross (keys %number_weaning2) {
-            my $weaning2_ref = $number_weaning2{$weaning2_cross};
+        foreach my $weaning2_cross (keys %weaning2_hash) {
+            my $weaning2_ref = $weaning2_hash{$weaning2_cross};
             my %weaning2_info = %$weaning2_ref;
             my $weaning2_id_count = keys %weaning2_info;
+            my @all_weaning2_ids = keys %weaning2_info;
             my $weaning2_property = 'Weaning2 ID Count';
+            my $weaning2_ids_property = 'Weaning2 IDs';
             $musa_cross_info{$weaning2_property}{$weaning2_cross} = $weaning2_id_count;
+            $tissue_culture_details{$weaning2_ids_property}{$weaning2_cross} = \@all_weaning2_ids;
         }
 
-        foreach my $screenhouse_cross (keys %number_screenhouse) {
-            my $screenhouse_ref = $number_screenhouse{$screenhouse_cross};
+        foreach my $screenhouse_cross (keys %screenhouse_hash) {
+            my $screenhouse_ref = $screenhouse_hash{$screenhouse_cross};
             my %screenhouse_info = %$screenhouse_ref;
             my $screenhouse_id_count = keys %screenhouse_info;
+            my @all_screenhouse_ids = keys %screenhouse_info;
             my $screenhouse_property = 'Screenhouse ID Count';
+            my $screenhouse_ids_property = 'Screenhouse IDs';
             $musa_cross_info{$screenhouse_property}{$screenhouse_cross} = $screenhouse_id_count;
+            $tissue_culture_details{$screenhouse_ids_property}{$screenhouse_cross} = \@all_screenhouse_ids;
+        }
+
+        foreach my $hardening_cross (keys %hardening_hash) {
+            my $hardening_ref = $hardening_hash{$hardening_cross};
+            my %hardening_info = %$hardening_ref;
+            my $hardening_id_count = keys %hardening_info;
+            my @all_hardening_ids = keys %hardening_info;
+            my $hardening_property = 'Hardening ID Count';
+            my $hardening_ids_property = 'Hardening IDs';
+            $musa_cross_info{$hardening_property}{$hardening_cross} = $hardening_id_count;
+            $tissue_culture_details{$hardening_ids_property}{$hardening_cross} = \@all_hardening_ids;
+        }
+
+        my %new_progeny_hash;
+        foreach my $openfield_cross (keys %openfield_hash) {
+            my $openfield_ref = $openfield_hash{$openfield_cross};
+            my %openfield_info = %$openfield_ref;
+            my $openfield_id_count = keys %openfield_info;
+            my @all_openfield_ids = keys %openfield_info;
+            foreach my $id (@all_openfield_ids) {
+                my $id_rs = $schema->resultset("Stock::Stock")->find({uniquename => $id});
+                if (!defined $id_rs) {
+                    $new_progeny_hash{$openfield_cross}{$id}++;
+                }
+            }
+            my $openfield_property = 'Openfield ID Count';
+            my $openfield_ids_property = 'Openfield IDs';
+            $musa_cross_info{$openfield_property}{$openfield_cross} = $openfield_id_count;
+            $tissue_culture_details{$openfield_ids_property}{$openfield_cross} = \@all_openfield_ids;
         }
 
 #        print STDERR "CHECKING CROSS INFO =".Dumper(\%musa_cross_info)."\n";
+#        print STDERR "CHECKING TISSUE CULTURE INFO =".Dumper(\%tissue_culture_details)."\n";
+
 #        print STDERR "CHECKING FEMALE PLOT =".Dumper(\@checking_female_plots)."\n";
 #        print STDERR "CHECKING MALE PLOT =".Dumper(\@checking_male_plots)."\n";
 
@@ -797,9 +871,39 @@ sub save_ona_cross_info {
             }
         }
 
-        #print STDERR Dumper \%cross_info;
-        #print STDERR Dumper \%plant_status_info;
-        #print STDERR Dumper \%cross_parents;
+        foreach my $sample_type(keys %tissue_culture_details){
+                my %sample_info_hash = %{$tissue_culture_details{$sample_type}};
+                foreach my $cross_name (keys %sample_info_hash){
+                    my $value = $sample_info_hash{$cross_name};
+                    my $cross_add_samples = CXGN::Pedigree::AddCrossTissueSamples->new({
+                        chado_schema => $schema,
+                        cross_name => $cross_name,
+                        key => $sample_type,
+                        value => $value,
+                    });
+
+                    $cross_add_samples->add_samples();
+                }
+        }
+
+        foreach my $cross_name_key (keys %new_progeny_hash){
+            my $progenies_ref = $new_progeny_hash{$cross_name_key};
+            my %progenies = %$progenies_ref;
+            my @new_progenies = keys %progenies;
+            my @sorted_progenies = natsort @new_progenies;
+
+            my $progeny_add = CXGN::Pedigree::AddProgeny->new({
+                chado_schema => $schema,
+                phenome_schema => $phenome_schema,
+                dbh => $schema->storage->dbh,
+                cross_name => $cross_name_key,
+                progeny_names => \@sorted_progenies,
+                owner_name => $self->sp_person_username,
+            });
+            if (!$progeny_add->add_progeny()){
+                return {error => 'Error saving progenies'};
+            }
+        }
 
         my %odk_cross_hash = (
             cross_info => \%cross_info,

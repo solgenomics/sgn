@@ -531,9 +531,12 @@ sub studies_layout {
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 	my $status = $self->status;
-	my $tl = CXGN::Trial::TrialLayout->new({ schema => $self->bcs_schema, trial_id => $study_id, experiment_type=>'field_layout' });
+    my $trial = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $study_id });
+	my $tl = $trial->get_layout();
 	my $design = $tl->get_design();
     my $design_type = $tl->get_design_type();
+
+    my $cxgn_trial_type = $trial->get_cxgn_project_type();
 
 	my $plot_data = [];
 	my $formatted_plot = {};
@@ -574,7 +577,7 @@ sub studies_layout {
 				studyDbId => $study_id,
 				observationUnitDbId => $design->{$plot_number}->{plot_id},
 				observationUnitName => $design->{$plot_number}->{plot_name},
-				observationLevel => 'plot',
+				observationLevel => $cxgn_trial_type->{data_level},
 				replicate => $design->{$plot_number}->{rep_number} ? $design->{$plot_number}->{rep_number} : '',
 				blockNumber => $design->{$plot_number}->{block_number} ? $design->{$plot_number}->{block_number} : '',
 				Y => $design->{$plot_number}->{row_number} ? $design->{$plot_number}->{row_number} : '',

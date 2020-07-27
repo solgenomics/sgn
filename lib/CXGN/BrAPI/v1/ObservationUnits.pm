@@ -66,7 +66,7 @@ sub search {
         }
     );
     my ($data, $unique_traits) = $phenotypes_search->search();
-    #print STDERR Dumper $data;
+    # print STDERR Dumper $data;
 
     my @data_window;
     my $total_count = 0;

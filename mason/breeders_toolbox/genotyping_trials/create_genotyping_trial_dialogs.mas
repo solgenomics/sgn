@@ -1,7 +1,9 @@
 <%args>
+$facilities => ();
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.GenotypingTrial' ] &>
+
 
 <div class="modal fade" id="genotyping_trial_dialog" name="genotyping_trial_dialog" tabindex="-1" role="dialog" aria-labelledby="addGenoTrialDialog">
     <div class="modal-dialog modal-xl" role="document">
@@ -37,11 +39,9 @@
                                     <label class="col-sm-5 control-label">Genotyping Facility: </label>
                                     <div class="col-sm-7">
                                         <select class="form-control" id="genotyping_trial_facility_select">
-                                            <option value="none">None</option>
-                                            <option value="igd">Cornell IGD</option>
-                                            <option value="dart">DArT</option>
-                                            <option value="intertek">Intertek</option>
-                                            <option value="bgi">BGI</option>
+% foreach my $facility(@$facilities){
+    <option value="<%$facility%>"><%$facility%></option>
+%}
                                         </select>
                                     </div>
                                 </div>
@@ -402,7 +402,7 @@
                     <li>source_observation_unit_name (must exist in the database. the identifier of the origin material. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, plot name, accession name. For blank wells, you can write BLANK here and place a 1 in the is_blank column also.)</li>
                     <li>tissue_type (must be either leaf, root, or stem)</li>
                     </ul>
-                    
+
                     <b>Optional fields:</b>
                     <ul>
                     <li>ncbi_taxonomy_id (NCBI taxonomy identifier)</li>

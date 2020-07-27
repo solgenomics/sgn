@@ -269,7 +269,7 @@ sub verify {
     # print STDERR Dumper \%plot_trait_value;
     my $plot_validator = CXGN::List::Validate->new();
     my $trait_validator = CXGN::List::Validate->new();
-    my @plots_missing = @{$plot_validator->validate($schema,'plots_or_subplots_or_plants_or_tissue_samples',\@plot_list)->{'missing'}};
+    my @plots_missing = @{$plot_validator->validate($schema,'plots_or_subplots_or_plants_or_tissue_samples_or_analysis_instances',\@plot_list)->{'missing'}};
     my @traits_missing = @{$trait_validator->validate($schema,'traits',\@trait_list)->{'missing'}};
     my $error_message = '';
     my $warning_message = '';
@@ -456,7 +456,7 @@ sub store {
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
     my $subplot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot', 'stock_type')->cvterm_id();
     my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
-
+    my $analysis_instance_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_instance', 'stock_type')->cvterm_id();
     my %experiment_ids;
     my @stored_details;
     my %nd_experiment_md_images;
@@ -466,7 +466,7 @@ sub store {
     my $rs;
     my %data;
     $rs = $schema->resultset('Stock::Stock')->search(
-        {'type.name' => 'field_layout', 'me.type_id' => [$plot_cvterm_id, $plant_cvterm_id, $subplot_cvterm_id, $tissue_sample_cvterm_id], 'me.stock_id' => {-in=>$self->stock_id_list } },
+        {'type.name' => ['field_layout', 'analysis_experiment'], 'me.type_id' => [$plot_cvterm_id, $plant_cvterm_id, $subplot_cvterm_id, $tissue_sample_cvterm_id, $analysis_instance_cvterm_id], 'me.stock_id' => {-in=>$self->stock_id_list } },
         {join=> {'nd_experiment_stocks' => {'nd_experiment' => ['type', 'nd_experiment_projects'  ] } } ,
             '+select'=> ['me.stock_id', 'me.uniquename', 'nd_experiment.nd_geolocation_id', 'nd_experiment_projects.project_id'],
             '+as'=> ['stock_id', 'uniquename', 'nd_geolocation_id', 'project_id']
@@ -476,6 +476,7 @@ sub store {
         $data{$s->get_column('uniquename')} = [$s->get_column('stock_id'), $s->get_column('nd_geolocation_id'), $s->get_column('project_id') ];
     }
 
+    # print STDERR "DATA: ".Dumper(\%data);
     ## Use txn_do with the following coderef so that if any part fails, the entire transaction fails.
     my $coderef = sub {
         my %trait_and_stock_to_overwrite;

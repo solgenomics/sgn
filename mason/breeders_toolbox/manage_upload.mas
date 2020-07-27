@@ -5,6 +5,8 @@ $breeding_programs
 $timestamp
 $preferred_species => ""
 $editable_stock_props => {}
+$facilities => ()
+$management_factor_types => ()
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List', 'CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.GenotypingTrial','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees','CXGN.BreedersToolbox.Crosses','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial','CXGN.TrialTreeFolders' ] &>
@@ -63,7 +65,7 @@ $editable_stock_props => {}
 </tbody>
 </table>
 </div>
-<& /breeders_toolbox/trial/trial_create_dialogs.mas, locations => $geojson_locations, breeding_programs => $breeding_programs &>
+<& /breeders_toolbox/trial/trial_create_dialogs.mas, locations => $geojson_locations, breeding_programs => $breeding_programs, management_factor_types => $management_factor_types &>
 <& /breeders_toolbox/trial/trial_upload_dialogs.mas, locations => $geojson_locations, breeding_programs => $breeding_programs &>
 
 <div class="well well-sm">
@@ -87,7 +89,7 @@ $editable_stock_props => {}
 </tbody>
 </table>
 </div>
-<& /breeders_toolbox/genotyping_trials/create_genotyping_trial_dialogs.mas &>
+<& /breeders_toolbox/genotyping_trials/create_genotyping_trial_dialogs.mas, facilities => $facilities &>
 
 <div class="well well-sm">
 <h1>Locations</h1><br/>

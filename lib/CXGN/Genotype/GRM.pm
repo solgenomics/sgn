@@ -344,7 +344,7 @@ sub get_grm {
         # print STDERR Dumper \@female_stock_ids_found;
         # print STDERR Dumper \@male_stock_ids_found;
 
-        @all_individual_accessions_stock_ids = @accession_stock_ids_found;
+        @all_individual_accessions_stock_ids = @$accession_list;
 
         for my $i (0..scalar(@accession_stock_ids_found)-1) {
             my $female_stock_id = $female_stock_ids_found[$i];
@@ -412,10 +412,27 @@ sub get_grm {
     #    ';
     #}
     #else {
-        $cmd .= 'A_matrix <- A.mat(mat, min.MAF='.$maf.', max.missing='.$marker_filter.', impute.method=\'mean\', n.core='.$number_system_cores.', return.imputed=FALSE);
-        ';
+    $cmd .= 'A <- A.mat(mat, min.MAF='.$maf.', max.missing='.$marker_filter.', impute.method=\'mean\', n.core='.$number_system_cores.', return.imputed=FALSE);
+    ';
     #}
-    $cmd .= 'write.table(A_matrix, file=\''.$grm_tempfile_out.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
+    # Ensure positive definite matrix. Taken from Schaeffer
+    $cmd .= 'E = eigen(A);
+    ev = E\$values;
+    U = E\$vectors;
+    no = dim(A)[1];
+    nev = which(ev < 0);
+    wr = 0;
+    k=length(nev);
+    if(k > 0){
+        p = ev[no - k];
+        B = sum(ev[nev])*2.0;
+        wr = (B*B*100.0)+1;
+        val = ev[nev];
+        ev[nev] = p*(B-val)*(B-val)/wr;
+        A = U%*%diag(ev)%*%t(U);
+    }
+    ';
+    $cmd .= 'write.table(A, file=\''.$grm_tempfile_out.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
     print STDERR Dumper $cmd;
 
     # Do the GRM on the cluster
@@ -473,7 +490,7 @@ sub download_grm {
     my $download_format = $self->download_format();
     my $grm_tempfile = $self->grm_temp_file();
 
-    my $key = $self->grm_cache_key("download_grm_v01".$download_format);
+    my $key = $self->grm_cache_key("download_grm_v02".$download_format);
     $self->_cache_key($key);
     $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
 
@@ -496,18 +513,20 @@ sub download_grm {
             my @vals = split "\t", $row;
             push @grm, \@vals;
         }
-        
+
         my $data = '';
         if ($download_format eq 'matrix') {
             my @header = ("stock_id");
-            push @header, @$stock_ids;
+            foreach (@$stock_ids) {
+                push @header, "S".$_;
+            }
 
             my $header_line = join "\t", @header;
             $data = "$header_line\n";
 
             my $row_num = 0;
             foreach my $s (@$stock_ids) {
-                my @row = ($s);
+                my @row = ("S".$s);
                 my $col_num = 0;
                 foreach my $c (@$stock_ids) {
                     push @row, $grm[$row_num]->[$col_num];
@@ -551,14 +570,61 @@ sub download_grm {
                 foreach my $s (sort keys %{$result_hash{$r}}) {
                     my $val = $result_hash{$r}->{$s};
                     if (defined $val and length $val) {
-                        $data .= "$r\t$s\t$val\n";
+                        $data .= "S$r\tS$s\t$val\n";
                     }
                 }
             }
 
             foreach my $a (@$all_accession_stock_ids) {
                 if (!exists($seen_stock_ids{$a})) {
-                    $data .= "$a\t$a\t1\n";
+                    $data .= "S$a\tS$a\t1\n";
+                }
+            }
+
+            $self->cache()->set($key, $data);
+            if ($return_type eq 'filehandle') {
+                $return = $self->cache()->handle($key);
+            }
+            elsif ($return_type eq 'data') {
+                $return = $data;
+            }
+        }
+        elsif ($download_format eq 'three_column_reciprocal') {
+            my %result_hash;
+            my $row_num = 0;
+            my %seen_stock_ids;
+            # print STDERR Dumper \@grm;
+            foreach my $s (@$stock_ids) {
+                my $col_num = 0;
+                foreach my $c (@$stock_ids) {
+                    if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
+                        my $val = $grm[$row_num]->[$col_num];
+                        if (defined $val and length $val) {
+                            $result_hash{$s}->{$c} = $val;
+                            $seen_stock_ids{$s}++;
+                            $seen_stock_ids{$c}++;
+                        }
+                    }
+                    $col_num++;
+                }
+                $row_num++;
+            }
+
+            foreach my $r (sort keys %result_hash) {
+                foreach my $s (sort keys %{$result_hash{$r}}) {
+                    my $val = $result_hash{$r}->{$s};
+                    if (defined $val and length $val) {
+                        $data .= "S$r\tS$s\t$val\n";
+                        if ($s != $r) {
+                            $data .= "S$s\tS$r\t$val\n";
+                        }
+                    }
+                }
+            }
+
+            foreach my $a (@$all_accession_stock_ids) {
+                if (!exists($seen_stock_ids{$a})) {
+                    $data .= "S$a\tS$a\t1\n";
                 }
             }
 

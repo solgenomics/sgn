@@ -53,7 +53,7 @@ my $model_link = "<a href=\"/solgs/trait/$trait_id/population/$training_pop_id\"
 
 </%perl>
 
-  <& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.solGS","solGS.traitGebvFlot", 
+  <& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.solGS", "solGS.histogram",
                                               "flot.flot", "flot.categories", 
                                               "flot.tooltip", "flot.selection", "flot.navigate", 
                                               "flot.axisLabels",
@@ -91,9 +91,10 @@ my $model_link = "<a href=\"/solgs/trait/$trait_id/population/$training_pop_id\"
 
 <& /solgs/pca/analysis.mas &>
   
-<& /solgs/model/top_blups.mas, 
+<& /solgs/model/gebvs.mas, 
    top_blups          => $top_blups,
-   blups_download_url => $blups_download_url,
+  blups_download_url => $blups_download_url,
+  
 &>
 
 

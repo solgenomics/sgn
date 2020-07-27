@@ -86,6 +86,8 @@ foreach my $ds (@datasets) {
 
     my $traits = $ds->retrieve_traits();
 
+    print STDERR Dumper($traits);
+    
     is_deeply($traits, [
 		  [
 		   70741,
@@ -193,5 +195,7 @@ foreach my $ds (@datasets) {
 	      ], "plot retrieve test");
 
 }
+
+print STDERR "DATA = ".$ds->data()."\n";
 
 done_testing();

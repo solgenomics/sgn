@@ -109,17 +109,22 @@ ok(my $crosses_trial_lookup = CXGN::Trial::TrialLookup->new({
 }), "create trial lookup object");
 ok(my $crosses_trial = $crosses_trial_lookup->get_trial());
 ok(my $cross_trial_id = $crosses_trial->project_id());
-ok(my $cross_trial_layout = CXGN::Trial::TrialLayout->new({
+
+print STDERR "########## CREATING NEW TRIAL LAYOUT OBJECT \n";
+my $cross_trial_layout;
+ok($cross_trial_layout = CXGN::Trial::TrialLayout->new({
     schema => $schema,
     trial_id => $cross_trial_id,
     experiment_type => 'field_layout'
-}), "create trial layout object");
+}), "create trial layout object for cross trial");
 
 my $cross_trial_design = $cross_trial_layout->get_design();
 my @cross_plot_nums;
 my @crosses;
 my @cross_block_nums;
 my @cross_plot_names;
+
+print STDERR "CROSS LAYOUT = ".Dumper($cross_trial_design);
 
 # note:cross and family_name stock types use the same accession_name key as accession stock type in trial design
 foreach my $cross_plot_num (keys %$cross_trial_design) {
@@ -180,7 +185,8 @@ is($cross_trial_stock_type, 'cross');
 
 
 # create trial with family_name stock type
-ok(my $fam_trial_design = CXGN::Trial::TrialDesign->new(), "create trial design object");
+my $fam_trial_design;
+ok($fam_trial_design = CXGN::Trial::TrialDesign->new(), "create trial design object");
 ok($fam_trial_design->set_trial_name("family_name_to_trial1"), "set trial name");
 ok($fam_trial_design->set_stock_list(\@family_names), "set stock list");
 ok($fam_trial_design->set_plot_start_number(1), "set plot start number");
@@ -188,9 +194,12 @@ ok($fam_trial_design->set_plot_number_increment(1), "set plot increment");
 ok($fam_trial_design->set_number_of_reps(2), "set rep number");
 ok($fam_trial_design->set_design_type("CRD"), "set design type");
 ok($fam_trial_design->calculate_design(), "calculate design");
-ok(my $fam_design = $fam_trial_design->get_design(), "retrieve design");
 
-ok(my $fam_trial_create = CXGN::Trial::TrialCreate->new({
+my $fam_design;
+ok($fam_design = $fam_trial_design->get_design(), "retrieve design");
+
+my $fam_trial_create;
+ok($fam_trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $schema,
     dbh => $dbh,
     user_name => "janedoe", #not implemented
@@ -221,7 +230,7 @@ ok(my $fam_trial_layout = CXGN::Trial::TrialLayout->new({
     schema => $schema,
     trial_id => $fam_trial_id,
     experiment_type => 'field_layout'
-}), "create trial layout object");
+}), "create trial layout object for family trial");
 
 my $fam_trial_design = $fam_trial_layout->get_design();
 my @fam_plot_nums;
@@ -229,6 +238,7 @@ my @family_names;
 my @fam_rep_nums;
 my @fam_plot_names;
 
+print STDERR "FAMILY TRIAL DESIGN: ".Dumper($fam_trial_design);
 # note:cross and family_name stock types use the same accession_name key as accession stock type in trial design
 foreach my $fam_plot_num (keys %$fam_trial_design) {
     push @fam_plot_nums, $fam_plot_num;
@@ -362,6 +372,7 @@ my @cross_unique_ids_westcott;
 for (my $i = 1; $i <= 100; $i++) {
     push(@cross_unique_ids_westcott, "cross_for_westcott_trial".$i);
 }
+
 foreach my $cross_unique_id (@cross_unique_ids_westcott) {
     my $cross_stock = $schema->resultset('Stock::Stock')->create({
 	    organism_id => $organism->organism_id,
@@ -375,18 +386,25 @@ my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession",
 
 my @accessions_westcott;
 for (my $i = 1; $i <= 2; $i++) {
-    push(@accessions_westcott, "check_accession_for_westcott_trial".$i);
+    push @accessions_westcott, "check_accession_for_westcott_trial".$i;
 }
+
+print STDERR "ACCESSIONS WESTCOTT: ".Dumper(\@accessions_westcott);
+
 foreach my $accession (@accessions_westcott) {
-    my $accession_stock = $schema->resultset('Stock::Stock')->create({
+    my $accession_stock = $schema->resultset('Stock::Stock')->create(
+	{
 	    organism_id => $organism->organism_id,
-	    name       => $accession,
-	    uniquename => $accession,
-	    type_id     => $accession_type_id,
-    });
-};
+	    name        => $accession,
+	    uniquename  => $accession,
+	    #type_id     => $accession_type_id,
+	    type_id     => $cross_type_id,
+	});
+    print STDERR "Created accession $accession with type_id $accession_type_id\n";
+}
 
 ok(my $trial_design = CXGN::Trial::TrialDesign->new(), "create trial design object");
+
 ok($trial_design->set_trial_name("cross_westcott_trial"), "set trial name");
 ok($trial_design->set_stock_list(\@cross_unique_ids_westcott), "set stock list");
 ok($trial_design->set_plot_start_number(1), "set plot start number");
@@ -427,9 +445,11 @@ ok(my $trial_layout = CXGN::Trial::TrialLayout->new({
     schema => $schema,
     trial_id => $trial_id,
     experiment_type => 'field_layout'
-}), "create trial layout object");
+}), "create trial layout object for westcott trial");
 
 ok(my $stock_names = $trial_layout->get_accession_names(), "retrieve cross_unique_ids");
+
+print STDERR "STOCK NAMES IN WESTCOTT = ".Dumper($stock_names);
 
 my %stocks = map { $_ => 1 } @cross_unique_ids_westcott;
 my @crosses;

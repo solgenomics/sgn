@@ -1,0 +1,54 @@
+<%doc>
+
+=head1 NAME
+ 
+/mode/top_blups.mas - displays a plot of the gebvs of a trait for all genotypes; displays top 10 genotypes in tablar form with download function for the entire genotypes set. 
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$top_blups
+$blups_download_url => ''
+
+</%args>
+
+<& /util/import_javascript.mas, classes => ["solGS.gebvs"] &>
+
+
+<&| /page/info_section.mas, 
+  collapsible => 1, 
+  collapsed   => 0, 
+  title       => "Genomic estimated breeding values (GEBVs) - GBLUP method" 
+&>
+
+<div id="gebvs">
+<div id="gebvs_histo_canvas"> 
+  <div id="gebvs_histo_plot"> </div>
+</div>
+
+<br/>
+<br/>
+<i>Top 10 genotypes</i>:
+
+<& /page/columnar_table.mas,
+  headings     => ["Genotypes", "GEBV"], 
+  data         => $top_blups,
+  __alt_freq   => 2,
+  __alt_width  => 1,
+  __alt_offset => 3,
+  __align      => 'll',
+&>
+
+<br />
+[ <% $blups_download_url %> ]
+</div>
+</&>
+
+

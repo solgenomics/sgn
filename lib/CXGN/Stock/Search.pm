@@ -620,7 +620,7 @@ ORDER BY organism_id ASC;";
         my $mother = $r[3] || 'NA';
         my $father = $r[4] || 'NA';
         my $syn_json = $r[6] ? JSON->new->utf8(0)->decode($r[6]) : {};
-        my @synonyms = keys %{$syn_json};
+        my @synonyms = sort keys %{$syn_json};
         my $donor_json = $r[7] ? JSON->new->utf8(0)->decode($r[7]) : {};
         my $donor_inst_json = $r[8] ? JSON->new->utf8(0)->decode($r[8]) : {};
         my $donor_pui_json = $r[8] ? JSON->new->utf8(0)->decode($r[8]) : {};
