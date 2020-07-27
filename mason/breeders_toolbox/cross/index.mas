@@ -145,6 +145,8 @@ $identifier_prefix => ''
                                     <th>Weaning1 IDs</th>
                                     <th>Weaning2 IDs</th>
                                     <th>Screenhouse IDs</th>
+                                    <th>Hardening IDs</th>
+                                    <th>Openfield IDs</th>
                                 </tr>
                             </thead>
                         </table>

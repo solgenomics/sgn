@@ -6,6 +6,8 @@ use lib 't/lib';
 use SGN::Test::Fixture;
 use JSON::Any;
 use Data::Dumper;
+use Test::WWW::Mechanize;
+use JSON;
 
 my $fix = SGN::Test::Fixture->new();
 
@@ -352,6 +354,12 @@ $genotyping_stocks{'BLANK'} = 1;
 foreach my $acc (@$genotyping_accession_names) {
     ok(exists($genotyping_stocks{$acc->{accession_name}}), "check existence of accession names $acc->{accession_name}");
 }
+
+my $mech = Test::WWW::Mechanize->new;
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$save->{'trial_id'}.'/design');
+my $response = decode_json $mech->content;
+print STDERR Dumper $response;
+is(scalar(keys %{$response->{design}}), 11);
 
 #create westcott trial design_type
 

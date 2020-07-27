@@ -84,7 +84,7 @@ sub patch {
             my $g_hash = $genotype_data->{selected_genotype_hash};
 
             while (my ($k, $v) = each %$g_hash) {
-                if ($v->{GT} eq './.' || $v->{GT} eq '.|.' || $v->{GT} eq '././.' || $v->{GT} eq '.|.|.' || $v->{GT} eq './././.' || $v->{GT} eq '.|.|.|.') {
+                if (!$v->{GT} || $v->{GT} eq './.' || $v->{GT} eq '.|.' || $v->{GT} eq '././.' || $v->{GT} eq '.|.|.' || $v->{GT} eq './././.' || $v->{GT} eq '.|.|.|.') {
                     $v->{DS} = 'NA';
                     $v->{NT} = '';
                 }

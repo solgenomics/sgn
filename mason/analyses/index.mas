@@ -22,18 +22,17 @@ Lukas Mueller <lam87@cornell.edu>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ], entries => ['analyses' ] &>
 
-<& /page/page_title.mas, title => "Your analyses" &>
+<& /page/page_title.mas, title => "Your Analyses and Analysis Models" &>
 
-  <button class="btn btn-light" style="float:right">Upload analysis</button><br />
-  <hr>
+  <!-- button class="btn btn-light" style="float:right">Upload analysis</button><br />
+  <hr-->
 
-<!-- data table -->
-
-<table id="analyses_by_user_table">
+<div class="well">
+<table class="table table-bordered table-hover" id="analyses_by_user_table">
   <thead>
   <tr>
     <th>
-      Name
+      Analysis Name
     </th>
     <th>
       Description
@@ -55,12 +54,45 @@ Lukas Mueller <lam87@cornell.edu>
   <tbody>
   </tbody>
 </table>
-     
+</div>
+
+<div class="well">
+<table class="table table-bordered table-hover" id="models_by_user_table">
+  <thead>
+  <tr>
+    <th>
+      Model Name
+    </th>
+    <th>
+      Description
+    </th>
+    <th>
+      Model Type
+    </th>
+    <th>
+      Protocol
+    </th>
+    <th>
+      Application
+    </th>
+    <th>
+      Language
+    </th>
+  </tr>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
+</div>
 
 <script>
 jQuery(document).ready(function(){
     jQuery('#analyses_by_user_table').DataTable({
         'ajax': { 'url': '/ajax/analyses/by_user' }
+    });
+
+    jQuery('#models_by_user_table').DataTable({
+        'ajax': { 'url': '/ajax/analyses/models/by_user' }
     });
 });
 </script>
