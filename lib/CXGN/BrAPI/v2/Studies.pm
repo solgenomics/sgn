@@ -162,12 +162,14 @@ sub detail {
 				$planting_date = $t->get_planting_date();
 				my $t = Time::Piece->strptime($planting_date, "%Y-%B-%d");
 				$planting_date = $t->strftime("%Y-%m-%d");
+				if($planting_date == "") { $planting_date = undef; }
 			}
 			my $harvest_date;
 			if ($t->get_harvest_date()) {
 				$harvest_date = $t->get_harvest_date();
 				my $t = Time::Piece->strptime($harvest_date, "%Y-%B-%d");
 				$harvest_date = $t->strftime("%Y-%m-%d");
+				if($harvest_date == "") { $harvest_date = undef;}
 			}
 			my $contacts = $t->get_trial_contacts();
 			my $brapi_contacts;
@@ -572,10 +574,12 @@ sub _search {
 		my $planting_date;
 		if ($_->{project_planting_date}) {
 			$planting_date = format_date($_->{project_planting_date});
+			if($planting_date == "") { $planting_date = undef; }
 		}
 		my $harvest_date;
 		if ($_->{project_harvest_date}) {
 			$harvest_date = format_date($_->{project_harvest_date});
+			if($harvest_date == "") { $harvest_date = undef;}
 		}
 
 		my $t = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $_->{trial_id} });
@@ -621,6 +625,7 @@ sub _search {
         }
         my $data_agreement = $t->get_data_agreement() ? $t->get_data_agreement() : '';
 
+		my $folder_id = $t->get_folder()->id();	
         my %data_obj = (
 			active=>JSON::true,
 			additionalInfo=>\%additional_info,
@@ -648,8 +653,8 @@ sub _search {
 			studyName => $_->{trial_name},
 			studyPUI => undef,
 			studyType => $_->{trial_type},
-            trialDbId => qq|$_->{folder_id}|,
-            trialName => $_->{folder_name},
+            trialDbId => qq|$folder_id|,
+            trialName => $t->get_folder()->name(),
         );
         push @data_out, \%data_obj;
     }

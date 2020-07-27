@@ -584,10 +584,10 @@ $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {'result' => {'data' => ['Cassava']},'metadata' => {'datafiles' => [],'pagination' => {'totalPages' => 1,'currentPage' => 0,'pageSize' => 10,'totalCount' => 1},'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::CommonCropNames'},{'messageType' => 'INFO','message' => 'Crops result constructed'}]}});
 
-# $mech->get_ok('http://localhost:3010/brapi/v2/trials/?trialDbId=166');
+# $mech->get_ok('http://localhost:3010/brapi/v2/trials/');
 # $response = decode_json $mech->content;
 # print STDERR Dumper $response;
-# is_deeply($response, {'result' => {'data' => [{'additionalInfo' => {},'trialDescription' => 'test','commonCropName' => 'Cassava','trialName' => 'test','contacts' => undef,'active' => JSON::true,'trialDbId' => '134','startDate' => undef,'publications' => undef,'documentationURL' => undef,'programDbId' => '134','programName' => 'test','datasetAuthorships' => undef,'endDate' => undef,'externalReferences' => undef,'trialPUI' => undef},{'active' => JSON::true,'publications' => undef,'startDate' => undef,'trialDbId' => '166','trialDescription' => 'Make a better tomatillo','additionalInfo' => {},'trialName' => 'program3','contacts' => undef,'commonCropName' => 'Cassava','datasetAuthorships' => undef,'trialPUI' => undef,'externalReferences' => undef,'endDate' => undef,'programName' => 'program3','programDbId' => '166','documentationURL' => undef}]},'metadata' => {'pagination' => {'pageSize' => 2,'totalPages' => 2,'currentPage' => 0,'totalCount' => 3},'datafiles' => [],'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=2','messageType' => 'INFO'},{'message' => 'Loading CXGN::BrAPI::v2::Trials','messageType' => 'INFO'},{'message' => 'Trials result constructed','messageType' => 'INFO'}]}} );
+# is_deeply($response,  JSON::true {'result' => {'data' => [{'trialName' => 'test','programDbId' => '134','documentationURL' => undef,'contacts' => undef,'programName' => 'test','startDate' => undef,'endDate' => undef,'trialDescription' => 'test','commonCropName' => 'Cassava','additionalInfo' => {},'active' => JSON::true,'trialDbId' => '134','datasetAuthorships' => undef,'publications' => undef,'trialPUI' => undef,'externalReferences' => undef},{'startDate' => undef,'programName' => 'Program4','endDate' => undef,'contacts' => undef,'trialName' => 'Program4','programDbId' => '166','documentationURL' => undef,'datasetAuthorships' => undef,'publications' => undef,'trialPUI' => undef,'externalReferences' => undef,'active' => JSON::true,'trialDbId' => '166','commonCropName' => 'Cassava','additionalInfo' => {},'trialDescription' => 'Make a better tomatillo'},{'commonCropName' => 'Cassava','additionalInfo' => {},'trialDescription' => 'Make a better tomatillo','datasetAuthorships' => undef,'publications' => undef,'trialPUI' => undef,'externalReferences' => undef,'active' => JSON::true,'trialDbId' => '167','trialName' => 'Program5','programDbId' => '167','documentationURL' => undef,'startDate' => undef,'programName' => 'Program5','endDate' => undef,'contacts' => undef}]},'metadata' => {'pagination' => {'totalCount' => 3,'currentPage' => 0,'pageSize' => 10,'totalPages' => 1},'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Trials'},{'messageType' => 'INFO','message' => 'Trials result constructed'}],'datafiles' => []}} );
 # $mech->get_ok('http://localhost:3010/brapi/v2/trials/134');
 # $response = decode_json $mech->content;
 # print STDERR Dumper $response;
@@ -596,7 +596,7 @@ is_deeply($response, {'result' => {'data' => ['Cassava']},'metadata' => {'datafi
 $mech->get_ok('http://localhost:3010/brapi/v2/studies/?pageSize=3');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is_deeply($response, {'result' => {'data' => [{'studyDescription' => 'Copy of trial with postcomposed phenotypes from cassbase.','locationDbId' => '23','experimentalDesign' => 'RCBD','studyPUI' => undef,'studyType' => 'Preliminary Yield Trial','studyCode' => '165','externalReferences' => undef,'studyDbId' => '165','observationLevels' => undef,'trialName' => undef,'observationUnitsDescription' => undef,'commonCropName' => 'Cassava','trialDbId' => '','license' => '','environmentParameters' => undef,'contacts' => undef,'studyName' => 'CASS_6Genotypes_Sampling_2015','seasons' => ['2017'],'active' => JSON::true,'growthFacility' => undef,'additionalInfo' => {'programDbId' => '134','programName' => 'test'},'dataLinks' => [],'locationName' => 'test_location','culturalPractices' => undef,'documentationURL' => '','lastUpdate' => undef,'endDate' => undef,'startDate' => undef},{'studyDescription' => 'This trial was loaded into the fixture to test solgs.','locationDbId' => '23','studyPUI' => undef,'experimentalDesign' => 'Alpha','studyType' => 'Clonal Evaluation','studyCode' => '139','externalReferences' => undef,'studyDbId' => '139','observationLevels' => undef,'trialName' => undef,'observationUnitsDescription' => undef,'commonCropName' => 'Cassava','trialDbId' => '','license' => '','environmentParameters' => undef,'contacts' => undef,'seasons' => ['2014'],'studyName' => 'Kasese solgs trial','active' => JSON::true ,'growthFacility' => undef,'additionalInfo' => {'programName' => 'test','programDbId' => '134'},'dataLinks' => [],'locationName' => 'test_location','culturalPractices' => undef,'documentationURL' => '','lastUpdate' => undef,'endDate' => undef,'startDate' => undef},{'locationName' => '','documentationURL' => '','culturalPractices' => undef,'endDate' => undef,'lastUpdate' => undef,'startDate' => undef,'growthFacility' => undef,'additionalInfo' => {'programName' => 'test','programDbId' => '134'},'dataLinks' => [],'commonCropName' => 'Cassava','observationUnitsDescription' => undef,'license' => '','trialDbId' => '','active' => JSON::true,'seasons' => [undef],'studyName' => 'new_test_cross','contacts' => undef,'environmentParameters' => undef,'locationDbId' => undef,'studyDescription' => 'new_test_cross','studyPUI' => undef,'experimentalDesign' => '','studyDbId' => '135','externalReferences' => undef,'studyCode' => '135','studyType' => undef,'trialName' => undef,'observationLevels' => undef}]},'metadata' => {'datafiles' => [],'pagination' => {'totalPages' => 2,'currentPage' => 0,'pageSize' => 3,'totalCount' => 6},'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=3'},{'message' => 'Loading CXGN::BrAPI::v2::Studies','messageType' => 'INFO'},{'message' => 'Studies search result constructed','messageType' => 'INFO'}]}});
+is_deeply($response, {'result' => {'data' => [{'locationName' => 'test_location','environmentParameters' => undef,'culturalPractices' => undef,'endDate' => undef,'observationUnitsDescription' => undef,'dataLinks' => [],'studyDbId' => '165','observationLevels' => undef,'documentationURL' => '','growthFacility' => undef,'externalReferences' => undef,'studyName' => 'CASS_6Genotypes_Sampling_2015','studyPUI' => undef,'studyType' => 'Preliminary Yield Trial','commonCropName' => 'Cassava','startDate' => undef,'experimentalDesign' => 'RCBD','contacts' => undef,'trialDbId' => '134','seasons' => ['2017'],'license' => '','trialName' => 'test','locationDbId' => '23','studyCode' => '165','studyDescription' => 'Copy of trial with postcomposed phenotypes from cassbase.','lastUpdate' => undef,'active' => JSON::true,'additionalInfo' => {'programName' => 'test','programDbId' => '134'}},{'license' => '','seasons' => ['2014'],'trialDbId' => '134','contacts' => undef,'additionalInfo' => {'programDbId' => '134','programName' => 'test'},'active' => JSON::true,'lastUpdate' => undef,'studyDescription' => 'This trial was loaded into the fixture to test solgs.','studyCode' => '139','locationDbId' => '23','trialName' => 'test','observationLevels' => undef,'studyDbId' => '139','dataLinks' => [],'observationUnitsDescription' => undef,'culturalPractices' => undef,'endDate' => undef,'environmentParameters' => undef,'locationName' => 'test_location','experimentalDesign' => 'Alpha','startDate' => undef,'commonCropName' => 'Cassava','studyType' => 'Clonal Evaluation','studyPUI' => undef,'studyName' => 'Kasese solgs trial','externalReferences' => undef,'growthFacility' => undef,'documentationURL' => ''},{'experimentalDesign' => '','startDate' => undef,'commonCropName' => 'Cassava','studyType' => undef,'studyPUI' => undef,'studyName' => 'new_test_cross','externalReferences' => undef,'growthFacility' => undef,'documentationURL' => '','observationLevels' => undef,'dataLinks' => [],'studyDbId' => '135','observationUnitsDescription' => undef,'endDate' => undef,'culturalPractices' => undef,'environmentParameters' => undef,'locationName' => '','additionalInfo' => {'programDbId' => '134','programName' => 'test'},'active' => JSON::true,'lastUpdate' => undef,'studyDescription' => 'new_test_cross','studyCode' => '135','locationDbId' => undef,'trialName' => 'test','license' => '','contacts' => undef,'seasons' => [undef],'trialDbId' => '134'}]},'metadata' => {'datafiles' => [],'pagination' => {'totalCount' => 6,'totalPages' => 2,'currentPage' => 0,'pageSize' => 3},'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=3'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Studies'},{'messageType' => 'INFO','message' => 'Studies search result constructed'}]}});
 
 $mech->post_ok('http://localhost:3010/brapi/v2/search/studies', ['pageSize'=>'2', 'page'=>'2']);
 $response = decode_json $mech->content;
@@ -604,8 +604,7 @@ $searchId = $response->{result} ->{searchResultDbId};
 $mech->get_ok('http://localhost:3010/brapi/v2/search/studies/'. $searchId);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is_deeply($response, {'result' => {'data' => [{'observationLevels' => undef,'startDate' => '2017-07-04','studyDbId' => '137','culturalPractices' => undef,'endDate' => '2017-07-21','environmentParameters' => undef,'studyCode' => '137','studyPUI' => undef,'additionalInfo' => {'programName' => 'test','programDbId' => '134'},'growthFacility' => undef,'locationDbId' => '23','trialDbId' => '','contacts' => undef,'externalReferences' => undef,'license' => '','studyType' => undef,'studyName' => 'test_trial','observationUnitsDescription' => undef,'studyDescription' => 'test trial','lastUpdate' => undef,'seasons' => ['2014'],'active' => JSON::true ,'dataLinks' => [],'commonCropName' => 'Cassava','documentationURL' => '','experimentalDesign' => 'CRD','trialName' => undef,'locationName' => 'test_location'},{'studyPUI' => undef,'studyCode' => '141','growthFacility' => undef,'additionalInfo' => {'programDbId' => '134','programName' => 'test'},'locationDbId' => '23','trialDbId' => '','contacts' => undef,'externalReferences' => undef,'license' => '','observationLevels' => undef,'startDate' => undef,'studyDbId' => '141','culturalPractices' => undef,'endDate' => undef,'environmentParameters' => undef,'commonCropName' => 'Cassava','documentationURL' => '','experimentalDesign' => 'CRD','trialName' => undef,'locationName' => 'test_location','studyType' => undef,'studyName' => 'trial2 NaCRRI','studyDescription' => 'another trial for solGS','observationUnitsDescription' => undef,'lastUpdate' => undef,'seasons' => ['2014'],'active' => JSON::true,'dataLinks' => []}]},'metadata' => {'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'message' => 'Loading CXGN::BrAPI::v2::Results','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'search result constructed'}],'pagination' => {'totalPages' => 1,'totalCount' => 2,'currentPage' => 0,'pageSize' => 10},'datafiles' => []}});
-
+is_deeply($response, {'result' => {'data' => [{'studyDescription' => 'test trial','studyCode' => '137','lastUpdate' => undef,'observationUnitsDescription' => undef,'experimentalDesign' => 'CRD','environmentParameters' => undef,'externalReferences' => undef,'studyType' => undef,'locationName' => 'test_location','commonCropName' => 'Cassava','growthFacility' => undef,'startDate' => '2017-07-04','studyName' => 'test_trial','trialDbId' => '134','studyPUI' => undef,'license' => '','additionalInfo' => {'programName' => 'test','programDbId' => '134'},'locationDbId' => '23','observationLevels' => undef,'contacts' => undef,'seasons' => ['2014'],'endDate' => '2017-07-21','studyDbId' => '137','trialName' => 'test','dataLinks' => [],'active' => JSON::true,'culturalPractices' => undef,'documentationURL' => ''},{'trialName' => 'test','studyDbId' => '141','documentationURL' => '','culturalPractices' => undef,'dataLinks' => [],'active' => JSON::true,'contacts' => undef,'endDate' => undef,'seasons' => ['2014'],'observationLevels' => undef,'trialDbId' => '134','startDate' => undef,'studyName' => 'trial2 NaCRRI','locationDbId' => '23','additionalInfo' => {'programName' => 'test','programDbId' => '134'},'license' => '','studyPUI' => undef,'commonCropName' => 'Cassava','locationName' => 'test_location','growthFacility' => undef,'externalReferences' => undef,'environmentParameters' => undef,'studyType' => undef,'observationUnitsDescription' => undef,'lastUpdate' => undef,'experimentalDesign' => 'CRD','studyDescription' => 'another trial for solGS','studyCode' => '141'}]},'metadata' => {'pagination' => {'totalCount' => 2,'pageSize' => 10,'totalPages' => 1,'currentPage' => 0},'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Results'},{'messageType' => 'INFO','message' => 'search result constructed'}],'datafiles' => []}});
 $mech->get_ok('http://localhost:3010/brapi/v2/studies/139');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
@@ -654,5 +653,342 @@ print STDERR Dumper $response;
 is_deeply($response, {'result' => {'mailingAddress' => undef,'middleName' => undef,'personDbId' => '41','additionalInfo' => {'country' => undef},'externalReferences' => {'referenceID' => undef,'referenceSource' => undef},'description' => 'Organization: ','lastName' => 'Doe','firstName' => 'Jane','userID' => 'janedoe','phoneNumber' => undef,'emailAddress' => undef},'metadata' => {'datafiles' => [],'pagination' => {'pageSize' => 10,'currentPage' => 0,'totalCount' => 1,'totalPages' => 1},'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'message' => 'Loading CXGN::BrAPI::v2::People','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'People result constructed'}]}} );
 
 
+#post
+$data = '[
+  {
+    "active": "true",
+    "additionalInfo": {},
+    "commonCropName": "Tomato",
+    "contacts": [],
+    "datasetAuthorships": [],
+    "documentationURL": "https://breedbase.org/",
+    "endDate": "2020-06-24",
+    "externalReferences": [],
+    "programDbId": "219",
+    "programName": "Tomatillo_Breeding_Program",
+    "publications": [],
+    "startDate": "2020-06-24",
+    "trialDescription": "General drought resistance trial initiated in Peru",
+    "trialName": "Peru Yield Trial 2010",
+    "trialPUI": "https://doi.org/101093190",
+  },
+  {
+    "active": "true",
+    "additionalInfo": {},
+    "commonCropName": "Tomato",
+    "contacts": [],
+    "datasetAuthorships": [],
+    "documentationURL": "https://breedbase.org/",
+    "endDate": "2020-06-24",
+    "externalReferences": [],
+    "programDbId": "218",
+    "programName": "Tomatillo_Breeding_Program",
+    "publications": [],
+    "startDate": "2020-06-24",
+    "trialDescription": "General drought resistance trial initiated in Peru",
+    "trialName": "Peru Yield Trial 2020",
+    "trialPUI": "https://doi.org/101093190",
+  }
+]';
+# $mech->post('http://localhost:3010/brapi/v2/trials/', Content => $data);
+# $response = decode_json $mech->content;
+# print STDERR Dumper $response;
+# is_deeply($response, );
+
+$data = '{
+    "active": "true",
+    "additionalInfo": {},
+    "commonCropName": "Tomato",
+    "contacts": [],
+    "datasetAuthorships": [],
+    "documentationURL": "https://breedbase.org/",
+    "endDate": "2020-06-24",
+    "externalReferences": [],
+    "programDbId": "218",
+    "programName": "Tomatillo_Breeding_Program",
+    "publications": [],
+    "startDate": "2020-06-24",
+    "trialDescription": "Trial initiated in Peru",
+    "trialName": "Peru Yield Trial 2020",
+    "trialPUI": "https://doi.org/101093190",
+  }';
+# $resp = $ua->put("http://192.168.33.11:3010/brapi/v2/trials/166", Content => $data);
+# $response = decode_json $resp->{_content};
+# print STDERR Dumper $response;
+
+# $ua->default_header("Content-Type" => "application/json");
+# $ua->default_header('Authorization'=> 'Bearer ' . $access_token);
+# my $response = $ua->put("http://192.168.33.11:3010/brapi/v2/trials/228", Content => $data);
+# print $response->as_string;
+
+$data = '[
+    {
+    "accessionNumber": "fem_maleProgeny_002new",
+    "acquisitionDate": "2018-01-01",
+    "additionalInfo": {},
+    "biologicalStatusOfAccessionCode": "420",
+    "biologicalStatusOfAccessionDescription": "Genetic stock",
+    "breedingMethodDbId": "ffcce7ef", 
+    "collection": "Rice Diversity Panel 1 (RDP1)", 
+    "commonCropName": "Maize", 							
+    "countryOfOriginCode": "BES",
+    "defaultDisplayName": "fem_maleProgeny_002",
+    "documentationURL": "https://breedbase.org/",		
+    "donors": [
+      {
+        "donorAccessionNumber": "A0000123new",
+        "donorInstituteCode": "PER001",						
+        "germplasmPUI": "http://pui.per/accession/A0000003"	
+      }
+    ],
+    "externalReferences": [], 				
+    "genus": "Aspergillus",					
+    "germplasmName": "test_Germplasm9",
+    "germplasmOrigin": [					
+      {
+        "coordinateUncertainty": "20",
+        "coordinates": {
+          "geometry": {
+            "coordinates": [
+              -76.506042,
+              42.417373,
+              123
+            ],
+            "type": "Point"
+          },
+          "type": "Feature"
+        }
+      }
+    ],
+    "germplasmPUI": "http://pui.per/accession/fem_maleProgeny_002",		
+    "germplasmPreprocessing": "EO:0007210; transplanted from study 2351 observation unit ID: pot:894",		
+    "instituteCode": "PER001",
+    "instituteName": "BTI",
+    "pedigree": "A0000001/A0000002",	
+    "seedSource": "A0000001/A0000002",	
+    "seedSourceDescription": "Branches were collected from a 10-year-old",
+    "species": "Solanum lycopersicum",
+    "speciesAuthority": "Smith, 1822", 			
+    "storageTypes": [
+      {
+        "code": "20",
+        "description": "Field collection"
+      },
+      {
+        "code": "10",
+        "description": "Field collection"
+      }
+    ],
+    "subtaxa": "Aspergillus fructus A",		
+    "subtaxaAuthority": "Smith, 1822",		
+    "synonyms": [
+      {
+        "synonym": "variety_1",				
+        "type": "Pre-Code"
+      }
+    ],
+    "taxonIds": [
+      {
+        "sourceName": "NCBI",				
+        "taxonId": "2026747"
+      }
+    ]
+  }
+]'; 
+
+$mech->post('http://localhost:3010/brapi/v2/germplasm/', Content => $data);
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'metadata' => {'datafiles' => [],'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Germplasm'},{'messageType' => 'INFO','message' => 'Germplasm saved'}],'pagination' => {'currentPage' => 0,'pageSize' => 10,'totalCount' => 1,'totalPages' => 1}},'result' => {'data' => [{'countryOfOriginCode' => 'BES','biologicalStatusOfAccessionDescription' => undef,'germplasmName' => 'test_Germplasm9','taxonIds' => [],'collection' => undef,'acquisitionDate' => '2018-01-01','synonyms' => [{'synonym' => 'variety_1','type' => undef}],'germplasmDbId' => '41783','instituteCode' => 'PER001','germplasmPreprocessing' => undef,'externalReferences' => [],'speciesAuthority' => undef,'instituteName' => 'BTI','germplasmOrigin' => [],'seedSource' => 'A0000001/A0000002','donors' => [{'donorAccessionNumber' => 'A0000123new','donorInstituteCode' => 'PER001','germplasmPUI' => 'PER001'}],'breedingMethodDbId' => undef,'storageTypes' => [{'description' => undef,'code' => '20'}],'additionalInfo' => undef,'seedSourceDescription' => 'A0000001/A0000002','species' => 'Solanum lycopersicum','documentationURL' => 'http://pui.per/accession/fem_maleProgeny_002,localhost/stock/41783/view','germplasmPUI' => 'http://pui.per/accession/fem_maleProgeny_002,localhost/stock/41783/view','genus' => 'Lycopersicon','subtaxaAuthority' => undef,'accessionNumber' => 'fem_maleProgeny_002new','subtaxa' => undef,'defaultDisplayName' => 'fem_maleProgeny_002','biologicalStatusOfAccessionCode' => '420','pedigree' => 'NA/NA','commonCropName' => 'tomato'}]}} );
+
+$data = '{
+    "accessionNumber": "fem_maleProgeny_002new7",
+    "acquisitionDate": "2018-01-07",
+    "additionalInfo": {},
+    "biologicalStatusOfAccessionCode": "4207",
+    "biologicalStatusOfAccessionDescription": "Genetic stock",
+    "breedingMethodDbId": "ffcce7ef", 
+    "collection": "Rice Diversity Panel 1 (RDP1)", 
+    "commonCropName": "Maize", 							
+    "countryOfOriginCode": "BES7",
+    "defaultDisplayName": "fem_maleProgeny_0027",
+    "documentationURL": "https://wiki.brapi.org7",		
+    "donors": [
+      {
+        "donorAccessionNumber": "A0000123new7",
+        "donorInstituteCode": "PER0017",						
+        "germplasmPUI": "http://pui.per/accession/A00000037"	
+      }
+    ],
+    "externalReferences": [], 				
+    "genus": "Aspergillus7",					
+    "germplasmName": "test_Germplasm71",
+    "germplasmOrigin": [					
+      {
+        "coordinateUncertainty": "20",
+        "coordinates": {
+          "geometry": {
+            "coordinates": [
+              -76.506042,
+              42.417373,
+              123
+            ],
+            "type": "Point"
+          },
+          "type": "Feature"
+        }
+      }
+    ],
+    "germplasmPUI": "http://pui.per/accession/fem_maleProgeny_0027",		
+    "germplasmPreprocessing": "EO:0007210; transplanted from study 2351 observation unit ID: pot:894",		
+    "instituteCode": "PER0017",
+    "instituteName": "The BrAPI Institute7",
+    "pedigree": "A0000001/A00000027",	
+    "seedSource": "A0000001/A00000027",	
+    "seedSourceDescription": "Branches were collected from a 10-year-old tree growing in a progeny trial established in a loamy brown earth soil7.",
+    "species": "Solanum lycopersicum",
+    "speciesAuthority": "Smith, 1822", 			
+    "storageTypes": [
+      {
+        "code": "207",
+        "description": "Field collection"
+      },
+      {
+        "code": "10",
+        "description": "Field collection"
+      }
+    ],
+    "subtaxa": "Aspergillus fructus A",		
+    "subtaxaAuthority": "Smith, 1822",		
+    "synonyms": [
+      {
+        "synonym": "variety_17",				
+        "type": "Pre-Code"
+      }
+    ],
+    "taxonIds": [
+      {
+        "sourceName": "NCBI",				
+        "taxonId": "2026747"
+      }
+    ]
+  }';
+
+# $resp = $ua->put("http://192.168.33.11:3010/brapi/v2/germplasm/41279", Content => $data);
+# $response = decode_json $resp->{_content};
+# print STDERR Dumper $response;
+
+
+$data = '[
+  {
+    "active": "true",
+    "additionalInfo": {},
+    "commonCropName": "Grape",
+    "contacts": [],
+    "culturalPractices": "Irrigation was applied according needs during summer to prevent water stress.",
+    "dataLinks": [],
+    "documentationURL": "https://breedbase.org/",
+    "endDate": "2020-06-12T22:05:35.680Z",
+    "environmentParameters": [],
+    "experimentalDesign": {
+      "PUI": "RCBD",
+      "description": "Random"
+    },
+    "externalReferences": [],
+    "growthFacility": { },
+    "lastUpdate": {},
+    "license": "MIT License",
+    "locationDbId": "23",
+    "locationName": "Lima",
+    "observationLevels": [],
+    "observationUnitsDescription": "Observation units",
+    "seasons": [
+      "2018"
+    ],
+    "startDate": "2020-06-12T22:05:35.680Z",
+    "studyCode": "Grape_Yield_Spring_2018",
+    "studyDescription": "This is a yield study for Spring 2018",
+    "studyName": "Observation at Kenya 1",
+    "studyPUI": "doi:10.155454/12349537312",
+    "studyType": "phenotyping_trial",
+    "trialDbId": "134",
+    "trialName": "test"
+  }
+]';
+
+# $mech->post('http://localhost:3010/brapi/v2/studies', Content => $data);
+# $response = decode_json $mech->content;
+# print STDERR Dumper $response;
+
+
+
+$data = '[
+  {
+    "additionalInfo": {},
+    "copyright": "Copyright 2018 Bob",
+    "description": "Tomatoes",
+    "descriptiveOntologyTerms": [],
+    "externalReferences": [],
+    "imageFileName": "image_00G00231a.jpg",
+    "imageFileSize": 50000,
+    "imageHeight": 550,
+    "imageLocation": {
+      "geometry": {
+        "coordinates": [
+          -76.506042,
+          42.417373,
+          9
+        ],
+        "type": "Point"
+      },
+      "type": "Feature"
+    },
+    "imageName": "Tomato Imag-10",
+    "imageTimeStamp": "2020-06-17T16:20:00.217Z",
+    "imageURL": "https://breedbase.org/images/tomato",
+    "imageWidth": 700,
+    "mimeType": "image/jpeg",
+    "observationDbIds": [],
+    "observationUnitDbId": "38842"
+  }
+]';
+$mech->post('http://localhost:3010/brapi/v2/images', Content => $data);
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response->{metadata}, {'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Images'},{'message' => 'Image metadata stored','messageType' => 'INFO'}],'datafiles' => undef,'pagination' => {'pageSize' => 10,'totalPages' => 1,'currentPage' => 0,'totalCount' => 1}});
+
+$data = '{
+  "additionalInfo": {},
+  "copyright": "Copyright 2019 Bob",
+  "description": "picture of a tomato",
+  "descriptiveOntologyTerms": [],
+  "externalReferences": [],
+  "imageFileName": "image_0AA0231.jpg",
+  "imageFileSize": 50000,
+  "imageHeight": 550,
+  "imageLocation": {
+    "geometry": {
+      "coordinates": [
+        -76.506042,
+        42.417373,
+        123
+      ],
+      "type": "Point"
+    },
+    "type": "Feature"
+  },
+  "imageName": "Tomato Image-x1",
+  "imageTimeStamp": "2020-06-17T16:08:42.015Z",
+  "imageURL": "https://breedbase.org/images/tomato",
+  "imageWidth": 700,
+  "mimeType": "image/jpeg",
+  "observationDbIds": [],
+  "observationUnitDbId": "38843"
+}';
+
+$resp = $ua->put("http://192.168.33.11:3010/brapi/v2/images/2425", Content => $data);
+$response = decode_json $resp->{_content};
+print STDERR Dumper $response;
+is_deeply($response->{result}->{data}[0]->{observationUnitDbId} , '38843');
 
 done_testing();

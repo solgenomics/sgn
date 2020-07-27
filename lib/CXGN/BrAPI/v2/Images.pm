@@ -460,7 +460,7 @@ sub image_metadata_store {
 
     my %result = (data => \@data);
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success( \%result, $pagination, undef, $self->status());
+    return CXGN::BrAPI::JSONResponse->return_success( \%result, $pagination, undef, $self->status(), 'Image metadata stored');
 }
 
 sub image_data_store {
