@@ -5,7 +5,7 @@ package SGN::Controller::AJAX::Nirs;
 use Moose;
 use Data::Dumper;
 use File::Temp qw | tempfile |;
-use File::Slurp;
+# use File::Slurp;
 use File::Spec qw | catfile|;
 use File::Basename qw | basename |;
 use File::Copy;
@@ -16,7 +16,10 @@ use CXGN::Page::UserPrefs;
 use CXGN::Tools::List qw/distinct evens/;
 use CXGN::Blast::Parse;
 use CXGN::Blast::SeqQuery;
+# use Path::Tiny qw(path);
 use Cwd qw(cwd);
+use JSON::Parse 'parse_json';
+use JSON::XS;
 
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -26,8 +29,6 @@ __PACKAGE__->config(
     stash_key => 'rest',
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
     );
-
-# TODO to JSON?
 
 sub shared_phenotypes: Path('/ajax/Nirs/shared_phenotypes') : {
     my $self = shift;
@@ -52,16 +53,88 @@ sub shared_phenotypes: Path('/ajax/Nirs/shared_phenotypes') : {
     my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath);
     my $phenotype_data_ref = $ds2->retrieve_phenotypes();
 
+    my $trials_ref = $ds2->retrieve_trials();
+    my @trials = @$trials_ref;
+
+    my $dbh = $c->dbc->dbh();
+    my @trial_name= ();
+    foreach my $name (@trials){
+        my $sql = "SELECT trial_name from public.trials where trial_id=?;";
+
+        my $fh_db= $dbh->prepare($sql);    
+        $fh_db->execute($name);
+        while (my @trl = $fh_db->fetchrow_array()) {
+            push @trial_name, @trl;
+        }
+    }
+
     print STDERR Dumper(@trait_info);
+    print STDERR Dumper(@trial_name);
     $c->stash->{rest} = {
         options => \@trait_info,
+        trialname => \@trial_name,
         tempfile => $tempfile."_phenotype.txt",
-#        tempfile => $file_response,
     };
 }
 
+sub get_training_study: Path('/ajax/Nirs/get_training_study') : {
+    my $self = shift;
+    my $c = shift;
+    my $train_id = $c->req->param('train_id');
+    print STDERR Dumper($train_id);
 
-# TODO change this to JSON
+}
+
+sub get_test_study: Path('/ajax/Nirs/get_test_study') : {
+    my $self = shift;
+    my $c = shift;
+    my $test_id = $c->req->param('test_id');
+    print STDERR Dumper($test_id);
+
+}
+my $format_id;
+sub get_nirs_format: Path('/ajax/Nirs/get_nirs_format') : {
+    my $self = shift;
+    my $c = shift;
+    $format_id = $c->req->param('format_id');
+    print STDERR Dumper($format_id);
+
+}
+
+sub get_cross_validation: Path('/ajax/Nirs/get_cross_validation') : {
+    my $self = shift;
+    my $c = shift;
+    my $crossv_id = $c->req->param('cv_id');
+    print STDERR Dumper($crossv_id);
+    print "The cv_id is $crossv_id \n";
+
+}
+
+sub get_niter: Path('/ajax/Nirs/get_niter') : {
+    my $self = shift;
+    my $c = shift;
+    my $niter_id = $c->req->param('niter_id');
+    print STDERR Dumper($niter_id);
+    return $niter_id;
+
+}
+
+sub get_algorithm: Path('/ajax/Nirs/get_algorithm') : {
+    my $self = shift;
+    my $c = shift;
+    my $algo_id = $c->req->param('algorithm_id');
+    print STDERR Dumper($algo_id);
+}
+
+sub get_tune: Path('/ajax/Nirs/get_tune') : {
+    my $self = shift;
+    my $c = shift;
+    my $tune_id = $c->req->param('tune_id');
+    print STDERR Dumper($tune_id);
+
+}
+
+
 sub extract_trait_data :Path('/ajax/Nirs/getdata') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -107,16 +180,43 @@ sub extract_trait_data :Path('/ajax/Nirs/getdata') Args(0) {
     }
 
     $c->stash->{rest} = { data => \@data, trait => $trait};
+
 }
 
 sub generate_results: Path('/ajax/Nirs/generate_results') : {
     my $self = shift;
     my $c = shift;
+    # my $format2 = $c->req->param('format_id');
+    my $device_id = $format_id;
+    my $cv_scheme = $c->req->param('cv_id');
     my $dataset_id = $c->req->param('dataset_id');
+    my $train_id = $c->req->param('train_id');
+    my $test_id = $c->req->param('test_id');
     my $trait_id = $c->req->param('trait_id');
+    my $niter_id = $c->req->param('niter_id');
+    my $algo_id =$c->req->param('alg_id');
+    my $preprocessing_boolean = $c->req->param('preprocessing_bool');
+    my $tune_id = $c->req->param('tune_id');
+    my $rf_var_imp = $c->req->param('rf_var_imp');
+
+    # print STDERR $format2;
+    print STDERR $device_id;
     print STDERR $dataset_id;
     print STDERR $trait_id;
 
+    if ($preprocessing_boolean == 0){
+        $preprocessing_boolean = "FALSE";
+    }else{
+        $preprocessing_boolean = "TRUE";
+    }
+
+    if ($rf_var_imp == 0){
+        $rf_var_imp = "FALSE";
+    }else{
+        $rf_var_imp = "TRUE";
+    }
+
+    
     $c->tempfiles_subdir("nirs_files");
     my $nirs_tmp_output = $c->config->{cluster_shared_tempdir}."/nirs_files";
     mkdir $nirs_tmp_output if ! -d $nirs_tmp_output;
@@ -132,74 +232,276 @@ sub generate_results: Path('/ajax/Nirs/generate_results') : {
     my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath);
     my $phenotype_data_ref = $ds->retrieve_phenotypes($pheno_filepath);
 
-    print "***************************************\n";
-
-    my @plot_name;
+    
+    my @plot_train;
+    my @plot_test;
     open(my $f, '<', $pheno_filepath) or die;
-
+    my $rawnum;
+    my $j=39;
+    my $seltrait;
     while (my $line = <$f>){
-        my @elements = split ' ', $line;
-        # print join "\t", $elements[25];
-        # print "\n";
-        push @plot_name, $elements[25];
-    }
+        my @elements = split '\t', $line;
+        # push @plot_train, $elements[22];
+        my $trail = $elements[5];
+        if ($trail eq $train_id){
+            push @plot_train, $elements[22];
+        }
+        if ($trail eq $test_id){
+            push @plot_test, $elements[22];
+        }
+
+        my $size = scalar @elements;
+        while ($j <= $size){
+            my $test = $elements[$j];
+            $test =~ s/\|CO.*//;
+            if ($test eq $trait_id){
+                $seltrait = $test;
+                $rawnum = $j;
+                $j=1000;
+            } else {
+                $j=$j+1;
+            }
+        }
+    };
     close($f);
+
     
     my ($fh, $filename) = tempfile(
       "nirs_XXXXX",
       DIR=> $nirs_tmp_output,
-      SUFFIX => "_spectra.txt",
+      SUFFIX => "_spectra",
       EXLOCK => 0
     );
 
     my $dbh = $c->dbc->dbh();
+    my @rawjson = ();
+	my @rawplot = ();
+    foreach my $name (@plot_train){
+        my $sql = "SELECT
+				      jsonb_pretty(cast(json->>'spectra' AS jsonb)) AS nirs_spectra
+					FROM metadata.md_json
+					JOIN phenome.nd_experiment_md_json USING(json_id)
+					JOIN nd_experiment_stock USING(nd_experiment_id)
+					JOIN stock using(stock_id) where stock.uniquename=?
+					AND jsonb_pretty(json - 'spectra'->'device_type')='\"$device_id\"';";
 
-    foreach my $name (@plot_name){
-        my $sql = "SELECT stock.uniquename AS plot_name,
-                  jsonb_pretty(cast(json->>'spectra' AS jsonb)) AS nirs_spectra
-                FROM metadata.md_json
-                JOIN phenome.nd_experiment_md_json USING(json_id)
-                JOIN nd_experiment_stock USING(nd_experiment_id)
-                JOIN stock using(stock_id) where stock.uniquename=?;";
-    
+        my $sql1 = "SELECT json AS nirs_spectra 
+                    FROM metadata.md_json JOIN phenome.nd_experiment_md_json USING(json_id)  
+                    JOIN nd_experiment_stock USING(nd_experiment_id)              
+                    JOIN stock using(stock_id) where stock.uniquename=?
+                    AND jsonb_pretty(json - 'spectra'->'device_type')='\"$device_id\"';";
+     
+    	
         my $fh_db= $dbh->prepare($sql);    
         $fh_db->execute($name);
         while (my @spt = $fh_db->fetchrow_array()) {
-            print "It is working: $spt[0]\n";
-            print $fh @spt;
+            if (!$spt[0]){
+                my $fh_db= $dbh->prepare($sql1);   
+                my $result = $fh_db->execute($name);
+
+                my @spt1 = $fh_db->fetchrow_array();
+                            push @rawjson, @spt1;
+                            print $fh @spt1;
+                
+                }else{
+                    push @rawjson, @spt;
+                    print $fh @spt;
+                }
+              }
+        
+         my $unitname = "SELECT
+				    		stock.uniquename AS observationUnitId
+				                FROM metadata.md_json
+				                JOIN phenome.nd_experiment_md_json USING(json_id)
+				                JOIN nd_experiment_stock USING(nd_experiment_id)
+				                JOIN stock using(stock_id) where stock.uniquename=?
+				                AND jsonb_pretty(json - 'spectra'->'device_type')='\"$device_id\"';";
+
+ 		my $fh_db2= $dbh->prepare($unitname);    
+        $fh_db2->execute($name);
+        while (my @spt2 = $fh_db2->fetchrow_array()) {
+        	push @rawplot, @spt2;
+          }
+        
+    }
+
+    #creating a list with plot and seleted phenotype.
+    open(my $f, '<', $pheno_filepath) or die;
+    my %list;
+    my $i=0;
+    while (my $line = <$f>){
+        my @elm = split '\t', $line;
+        my $plot2 = $elm[22];
+        if($rawplot[$i] eq $plot2){
+            my $ph = $elm[$rawnum];
+            if ($ph eq ""){
+                $ph = "NA";
+            }
+            $list{$rawplot[$i]}=$ph;
+            $i=$i+1;
+        }
+     }
+
+    close($f);
+
+    #creating and saving a file for trainig population in json format
+    #with nirs spectra and pheno data
+
+    my $j;
+    my @formated = ();
+    for($j=0; $j < @rawjson; $j++){
+        print "The number is $j \n";
+    }
+    my $limit;
+    my $i;
+    if($j==1){
+        $i = 0;
+        push @formated, "[\n{\"observationUnitId\":\"$rawplot[$i]\",\"trait\":{ \"$trait_id\":\"$list{$rawplot[$i]}\"},\n\"nirs_spectra\":$rawjson[$i]\n}\n]\n";
+        } elsif($j>1){
+            $limit = ($j-1);
+        for($i = 0; $i < @rawjson; $i++) {
+            if($i==0){
+                push @formated, "[\n{\"observationUnitId\":\"$rawplot[$i]\",\"trait\":{ \"$trait_id\":\"$list{$rawplot[$i]}\"},\n\"nirs_spectra\":$rawjson[$i]\n},";
+            }elsif($i<$limit){
+                push @formated, "{\"observationUnitId\":\"$rawplot[$i]\",\"trait\":{ \"$trait_id\":\"$list{$rawplot[$i]}\"},\n\"nirs_spectra\":$rawjson[$i]\n},";
+            }
+            if($i==$limit){
+                push @formated, "{\"observationUnitId\":\"$rawplot[$i]\",\"trait\":{ \"$trait_id\":\"$list{$rawplot[$i]}\"},\n\"nirs_spectra\":$rawjson[$i]\n}\n\]\n";
+            }
+        }
+    }
+
+    open(my $outfile1, '>', $filename."_train.json");
+    foreach my $data (@formated){
+        print $outfile1 $data;
+    }
+
+    close($outfile1);
+
+    #Extracting nirs spectra from testing population
+    my $dbh_test = $c->dbc->dbh();
+    my @rawjson_test = ();
+    my @rawplot_test = ();
+    foreach my $name_test (@plot_test){
+        my $sql_test = "SELECT
+                      jsonb_pretty(cast(json->>'spectra' AS jsonb)) AS nirs_spectra
+                    FROM metadata.md_json
+                    JOIN phenome.nd_experiment_md_json USING(json_id)
+                    JOIN nd_experiment_stock USING(nd_experiment_id)
+                    JOIN stock using(stock_id) where stock.uniquename=?
+                    AND jsonb_pretty(json - 'spectra'->'device_type')='\"$device_id\"';";
+        
+        my $sql_test1 = "SELECT json AS nirs_spectra 
+                    FROM metadata.md_json JOIN phenome.nd_experiment_md_json USING(json_id)  
+                    JOIN nd_experiment_stock USING(nd_experiment_id)              
+                    JOIN stock using(stock_id) where stock.uniquename= ?
+                    AND jsonb_pretty(json - 'spectra'->'device_type')='\"$device_id\"';";
+     
+        
+        my $fh_db_test= $dbh_test->prepare($sql_test);    
+        $fh_db_test->execute($name_test);
+
+
+        while (my @spt_test = $fh_db_test->fetchrow_array()) {
+            if (!$spt_test[0]){
+                my $fh_db_test= $dbh_test->prepare($sql_test1);   
+                my $result_test = $fh_db_test->execute($name_test);
+
+                my @spt_test1 = $fh_db_test->fetchrow_array();
+                            push @rawjson_test, @spt_test1;
+                            print $fh @spt_test1;
+                
+                }else{
+                    push @rawjson_test, @spt_test;
+                    print $fh @spt_test;
+                }
+              }
+
+         my $unitname = "SELECT
+                            stock.uniquename AS observationUnitId
+                                FROM metadata.md_json
+                                JOIN phenome.nd_experiment_md_json USING(json_id)
+                                JOIN nd_experiment_stock USING(nd_experiment_id)
+                                JOIN stock using(stock_id) where stock.uniquename=?
+                                AND jsonb_pretty(json - 'spectra'->'device_type')='\"$device_id\"';";
+        
+        my $fh_db2= $dbh->prepare($unitname);    
+        $fh_db2->execute($name_test);
+        while (my @spt2 = $fh_db2->fetchrow_array()) {
+            push @rawplot_test, @spt2;
           }
         
     }
 
 
-     
-    # my $phenotype_data_ref2 = $h->retrieve_phenotypes($pheno_filepath);
+    open(my $f, '<', $pheno_filepath) or die;
+    my %list;
+    my $i=0;
+    while (my $line = <$f>){
+        my @elm = split '\t', $line;
+        my $plot2 = $elm[22];
+        if($rawplot_test[$i] eq $plot2){
+            my $ph = $elm[$rawnum];
+            if ($ph eq ""){
+                $ph = "NA";
+            }
+            $list{$rawplot_test[$i]}=$ph;
+            $i=$i+1;
+        }
+     }
 
-    # my $figure3file = $tempfile . "_" . "figure3.png";
-    # my $figure4file = $tempfile . "_" . "figure4.png";
-    my $pheno_name; # args[1]
-    my $preprocessing_boolean = $c->req->param('preprocessing_bool'); # args[2]
-    my $num_iterations = $c->req->param('niter'); # args[3]
-    my $modelmethod = $c->req->param('model_alg'); # args[4]
-    my $tune_length= $c->req->param('tunelen'); # args[5]
-    my $rf_var_imp = $c->req->param('rf_var_imp'); # args[6]
-    my $cv_scheme = $c->req->param('cv_id'); # args[7]
-    # my $pheno_filepath = $tempfile . "_phenotype.txt"; # args[8]
+     close($f);
+
+    my $j;
+    my @formated = ();
+    for($j=0; $j < @rawjson_test; $j++){
+    	print "The number test is $j \n";
+    }
+    my $limit;
+    my $i;
+    if($j==1){
+        $i = 0;
+        push @formated, "[\n{\"observationUnitId\":\"$rawplot_test[$i]\",\"trait\":{ \"$trait_id\":\"$list{$rawplot_test[$i]}\"},\n\"nirs_spectra\":$rawjson_test[$i]\n}\n]\n";
+        } elsif($j>1){
+            $limit = ($j-1);
+        for($i = 0; $i < @rawjson_test; $i++) {
+            if($i==0){
+            	push @formated, "[\n{\"observationUnitId\":\"$rawplot_test[$i]\",\"trait\":{ \"$trait_id\":\"$list{$rawplot_test[$i]}\"},\n\"nirs_spectra\":$rawjson_test[$i]\n},";
+            }elsif($i<$limit){
+            	push @formated, "{\"observationUnitId\":\"$rawplot_test[$i]\",\"trait\":{ \"$trait_id\":\"$list{$rawplot_test[$i]}\"},\n\"nirs_spectra\":$rawjson_test[$i]\n},";
+            }
+            if($i==$limit){
+            	push @formated, "{\"observationUnitId\":\"$rawplot_test[$i]\",\"trait\":{ \"$trait_id\":\"$list{$rawplot_test[$i]}\"},\n\"nirs_spectra\":$rawjson_test[$i]\n}\n\]\n";
+            }
+        }
+    }
+
+open(my $outfile2, '>', $filename."_test.json");
+foreach my $data (@formated){
+	print $outfile2 $data;
+}
+
+close($outfile2);
+
+    # my $pheno_name; # args[1] $seltrait
+    # my $preprocessing_boolean = $c->req->param('preprocessing_bool'); # args[2] 0k
+    # my $num_iterations = $c->req->param('niter'); # args[3] $niter_id
+    # my $modelmethod = $c->req->param('model_alg'); # args[4] $algo_id
+    # my $tune_length = $c->req->param('tunelen'); # args[5] $tune_id
+    # my $rf_var_imp = $c->req->param('rf_var_imp'); # args[6] ok
+    # my $cv_scheme = $c->req->param('cv_id'); # args[7] ok
+    my $pheno_filepath = $tempfile . "_phenotype.txt"; # args[8] $outfile1
+    my $trainset_filepath = $filename . "json"; # args[8] $outfile1
+    my $trainset_filepath, # args[9] $
     my $testset_filepath, # args[9]
     my $trial1_filepath, # args[10]
     my $trial2_filepath, # args[11]
     my $trial3_filepath, # args[12]
-    my $nirs_output_filepath = $tempfile . "_" . "nirsFile.txt"; # args[13]
+    my $nirs_output_filepath = $tempfile . "_" . "nirsResults.txt"; # args[13]
 
-
-    my $modelmethod,
-    my $tune_length,
-    my $cv_scheme; 
-
-
-    # $trait_id =~ tr/ /./;
-    # $trait_id =~ tr/\//./;
-
+    my $algoFile = $tempfile . "_" . "algoFile.txt";
+    my $tuneFile = $tempfile . "_" . "tune.txt";
+    my $cvFile = $tempfile . "_" . "cv.txt";
 
     my $cmd = CXGN::Tools::Run->new({
             backend => $c->config->{backend},
@@ -216,15 +518,15 @@ sub generate_results: Path('/ajax/Nirs/generate_results') : {
     $cmd->run_cluster(
             "Rscript ",
             $c->config->{basepath} . "/R/Nirs/nirs.R",
-            $pheno_name, # args[1]
+            $seltrait, # args[1]
             $preprocessing_boolean, # args[2]
-            $num_iterations, # args[3]
-            $modelmethod, # args[4]
-            $tune_length, # args[5]
+            $niter_id, # args[3]
+            $algo_id, # args[4]
+            $tune_id, # args[5]
             $rf_var_imp, # args[6]
             $cv_scheme, # args[7]
-            $pheno_filepath, # args[8]
-            $testset_filepath, # args[9]
+            $outfile1, # args[8]
+            $outfile2, # args[9]
             $trial1_filepath, # args[10]
             $trial2_filepath, # args[11]
             $trial3_filepath, # args[12]
@@ -236,17 +538,17 @@ sub generate_results: Path('/ajax/Nirs/generate_results') : {
 
    # TODO 
     my $figure_path = $c->{basepath} . "./documents/tempfiles/nirs_files/";
-    copy($modelmethod, $figure_path);
-    copy($tune_length, $figure_path);
-    copy($cv_scheme, $figure_path);
+    copy($algoFile, $figure_path);
+    copy($tuneFile, $figure_path);
+    copy($cvFile, $figure_path);
 
-    my $h2Filebasename = basename($modelmethod);
+    my $h2Filebasename = basename($algoFile);
     my $h2File_response = "/documents/tempfiles/nirs_files/" . $h2Filebasename;
     
-    my $figure3basename = basename($tune_length);
+    my $figure3basename = basename($tuneFile);
     my $figure3_response = "/documents/tempfiles/nirs_files/" . $figure3basename;
     
-    my $figure4basename = basename($cv_scheme);
+    my $figure4basename = basename($cvFile);
     my $figure4_response = "/documents/tempfiles/nirs_files/" . $figure4basename;
 
 
