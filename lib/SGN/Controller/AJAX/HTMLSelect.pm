@@ -1272,8 +1272,15 @@ sub get_drone_imagery_parameter_select : Path('/ajax/html/select/drone_imagery_p
     if ($drone_run_parameter eq 'plot_polygons') {
         $parameter_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_plot_polygons', 'project_property')->cvterm_id();
     }
-    if ($drone_run_parameter eq 'image_cropping') {
+    elsif ($drone_run_parameter eq 'plot_polygons_separated') {
+        $parameter_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_plot_polygons_separated', 'project_property')->cvterm_id();
+    }
+    elsif ($drone_run_parameter eq 'image_cropping') {
         $parameter_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_cropped_polygon', 'project_property')->cvterm_id();
+    }
+    else {
+        $c->stash->{rest} = { error => "Parameter not supported!" };
+        $c->detach();
     }
 
     my $project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
