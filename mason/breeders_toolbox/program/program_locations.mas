@@ -43,7 +43,8 @@ jQuery(document).ready(function (){
             locationJSON = JSON.parse(response.data);
             //console.log("Data is "+JSON.stringify(locationJSON, null, 2));
 
-            var table = jQuery('#program_location_table').DataTable( {
+            var table = jQuery('#program_location_table').DataTable({
+                'autoWidth': false,
                 data: locationJSON,
                 dom: 'Bfrtip',
                 select: true,

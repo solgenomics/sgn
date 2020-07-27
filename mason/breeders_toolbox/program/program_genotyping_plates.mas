@@ -19,7 +19,8 @@ $program_id
 
 jQuery(document).ready(function () {
 
-    jQuery('#program_genotyping_plates').DataTable( {
+    jQuery('#program_genotyping_plates').DataTable({
+        'autoWidth': false,
         'ajax': '/ajax/breeders/program/'+ <% $program_id %> + '/genotyping_plates',
     });
 

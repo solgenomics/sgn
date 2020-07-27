@@ -22,6 +22,7 @@ $program_id
 jQuery(document).ready(function () {
 
     jQuery('#program_cross_table').DataTable( {
+        'autoWidth': false,
         'ajax': '/ajax/breeders/program/'+ <% $program_id %> + '/crosses',
     });
 
