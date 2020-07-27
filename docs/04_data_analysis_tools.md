@@ -324,13 +324,6 @@ The GWAS will filter the data by the input MAF and missing data filters provided
 <img src='{{"assets/images/search_wizard_genotype_analyses_gwas.png" | relative_url }}' width="522" />
 
 <img src='{{"assets/images/search_wizard_genotype_analyses_manhattan_plot.png" | relative_url }}' width="522" />
-<<<<<<< HEAD
-<<<<<<< HEAD
-
-<img src='{{"assets/images/search_wizard_genotype_analyses_qq_plot.png" | relative_url }}' width="522" />
-=======
-=======
->>>>>>> 12c5dfca8d616be6ff85873ce7c981d17553c23e
 
 <img src='{{"assets/images/search_wizard_genotype_analyses_qq_plot.png" | relative_url }}' width="522" />
 
@@ -338,7 +331,9 @@ The GWAS will filter the data by the input MAF and missing data filters provided
 4.11 Spectral Analysis
 --------------
 
-Visible and near-infrared spectroscopy (vis-NIRS) can be related to reference phenotypes through statistical models to produce accurate phenotypic predictions for unobserved samples, increaseing phenotyping throughput. This technique is commonly used for predicting traits such as total starch, protein, carotenoid, and water content in many plant breeding programs. Breedbase implements the R package waves to offer training, evaluation, storage, and use of vis-NIRS prediction models for a wide range of spectrometers and phenotypes.
+Visible and near-infrared spectroscopy (vis-NIRS) can be related to reference phenotypes through statistical models to produce accurate phenotypic predictions for unobserved samples, increasing phenotyping throughput. This technique is commonly used for predicting traits such as total starch, protein, carotenoid, and water content in many plant breeding programs. Breedbase implements the R package *waves* to offer training, evaluation, storage, and use of vis-NIRS prediction models for a wide range of spectrometers and phenotypes.
+
+<img src='{{"assets/images/waves_breedbase_schema.png" | relative_url }}' width="522" />
 
 ### Dataset selection
 In order to initiate an analysis, the user must select one or more datasets using the Breedbase [**Search Wizard**]({{site.baseurl}}{% link 02_searching_the_database%}#the-search-wizard). A dataset in Breedbase can contain observationUnit-level (plot-, plant-, or sample-level) trial metadata and phenotypic data from one or more trials. After navigating to the “Spectral Analysis” webpage under the “Analysis” tab in Breedbase, the user can select one of these datasets as input for model training.
@@ -346,21 +341,26 @@ In order to initiate an analysis, the user must select one or more datasets usin
 [screenshot of selecting dataset]
 
 ### Cross-validation
-Five cross-validation schemes that represent scenarios common in plant breeding are available for this analysis. These include CV1, CV2, CV0, and CV00 as outlined below and described in depth by Jarquín et al. (2017) as well as random and stratified random sampling. For those schemes from Jarquín et al., specific input datasets must be chosen based on genotype and environment relatedness.
+Five cross-validation schemes that represent scenarios common in plant breeding are available for this analysis. These include CV1, CV2, CV0, and CV00 as outlined below and described in depth by Jarquín et al. (2017) as well as random and stratified random sampling with a 70% training and 30% validation split. For those schemes from Jarquín et al. (2017), specific input datasets must be chosen based on genotype and environment relatedness. Cross-validation choices:
+* **Random sampling** (70% training / 30% validation)
+* **Stratified random sampling**, stratified based on phenotype (70% training / 30% validation)
+* **CV1**, untested lines in tested environments
+* **CV2**, tested lines in tested environments
+* **CV0**, tested lines in untested environments
+* **CV00**, untested lines in untested environments
 
-[additional info on CV choices]
 [screenshot of pop-up guide]
 
 ### Preprocessing
 Preprocessing, also known as pretreatment, is often used to increase the signal to noise ratio in vis-NIR datasets. The *waves* function *DoPreprocessing()* applies functions from the *stats* and *prospectr* packages for common spectral preprocessing methods with the following options:
--- Raw data (default)
--- First derivative
--- Second derivative
--- Gap segment derivative
--- Standard normal variate (SNV; Barnes et al., 1989)
--- Savitzky-Golay polynomial smoothing (Savitzky and Golay, 1964)
+* Raw data (default)
+* First derivative
+* Second derivative
+* Gap segment derivative
+* Standard normal variate (SNV; Barnes et al., 1989)
+* Savitzky-Golay polynomial smoothing (Savitzky and Golay, 1964)
 
-For more information on preprocessing methods and implementation, see the waves manual [link to waves manual]
+For more information on preprocessing methods and implementation, see the *waves* manual [link to waves manual]
 
 [insert plot with example data raw and with each transformation]
 
@@ -372,20 +372,20 @@ Several algorithms are available for calibration model development in Breedbase 
 
 ### Output: common model summary statistics
 After training, model performance statistics are both displayed on a results webpage and made available for download in .csv format. These statistics are calculated by the *TrainSpectralModel()* function in *waves* using the *caret* and *spectacles* packages. Reported statistics include:
-* Tuned parameters depending on model algoritm
-	* Best.n.comp, the best number of components to be included in a PLSR model
-	* Best.ntree, the best number of trees in an RF model
-	* Best.mtry, the best number of variables to include at every decision point in an RF model
-* RMSECV, the root mean squared error of cross-validation
-* R<sup>2</sup><sub>cv</sub>, the coefficient of multiple determination of cross-validation for PLSR models
-* RMSEP, the root mean squared error of prediction
-* R<sup>2</sup><sub>p</sub>, the squared Pearson’s correlation between predicted and observed test set values
-* RPD, the ratio of standard deviation of observed test set values to RMSEP
-* RPIQ, the ratio of performance to interquartile distance
-* CCC, the concordance correlation coefficient
-* Bias, the average difference between the predicted and observed values
-* SE, the standard error of prediction
-* Spearman, the Spearman rank correlation between predicted and observed test set values
+* Tuned parameters depending on the model algoritm
+	* **Best.n.comp**, the best number of components to be included in a PLSR model
+	* **Best.ntree**, the best number of trees in an RF model
+	* **Best.mtry**, the best number of variables to include at every decision point in an RF model
+* **RMSECV**, the root mean squared error of cross-validation
+* **R<sup>2</sup><sub>cv</sub>**, the coefficient of multiple determination of cross-validation for PLSR models
+* **RMSEP**, the root mean squared error of prediction
+* **R<sup>2</sup><sub>p</sub>**, the squared Pearson’s correlation between predicted and observed test set values
+* **RPD**, the ratio of standard deviation of observed test set values to RMSEP
+* **RPIQ**, the ratio of performance to interquartile distance
+* **CCC**, the concordance correlation coefficient
+* **Bias**, the average difference between the predicted and observed values
+* **SEP**, the standard error of prediction
+* **R<sup>2</sup><sub>sp</sub>**, the squared Spearman's rank correlation between predicted and observed test set values
 
 [screenshot of output]
 
@@ -395,7 +395,10 @@ Once a model has been trained, it can be stored for later use. This action calls
 [screenshot of save model page]
 
 ### Predict phenotypes from an exported model (routine use)
-For phenotype predictions, users can select the model of their choice, and if their selected dataset has scans that were taken using the same spectrometer model, the phenotype the model was trained on can be used for prediction. Predicted phenotypes are stored as asuch in the database and are tagged with an ontology term specifying that they are predicted and not directly measured. Metadata regarding the model used for prediction is stored alongside the predicted value in the database. Predicted phenotypes can then be used as normal in other Breedbase analysis tools such as the Selection Index and GWAS.
+For phenotype predictions, users select a dataset and can then choose from models in the database that were trained using the same spectrometer type as the spectral data in the chosen dataset. Predicted phenotypes are stored as such in the database and are tagged with an ontology term specifying that they are predicted and not directly measured. Metadata regarding the model used for prediction is stored alongside the predicted value in the database. Predicted phenotypes can then be used as normal in other Breedbase analysis tools such as the Selection Index and GWAS.
+
+### FAQ
+The Breedbase Apectral Analysis Tool does not allow for prediction models involving data from multiple spectrometer types at once.
 
 References
 * Barnes, R.J., M.S. Dhanoa, and S.J. Lister. 1989. Standard normal variate transformation and de-trending of near-infrared diffuse reflectance spectra. Appl. Spectrosc. 43(5): 772-777. doi: 10.1366/0003702894202201.
