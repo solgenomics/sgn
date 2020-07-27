@@ -28,6 +28,7 @@ use Math::Round;
 use CXGN::BreedingProgram;
 use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::BreedersToolbox::Projects;
+use CXGN::Stock::Search;
 
 __PACKAGE__->config(
     default   => 'application/json',
@@ -292,6 +293,24 @@ sub program_crossing_experiments :Chained('ajax_breeding_program') PathPart('cro
 
 }
 
+
+sub program_crosses :Chained('ajax_breeding_program') PathPart('crosses') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $program = $c->stash->{program};
+    my $result = $program->get_crosses;
+
+    my @cross_data;
+    foreach my $r (@$result){
+        my ($cross_id, $cross_name, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_type) = @$r;
+        push @cross_data, [qq{<a href="/cross/$cross_id">$cross_name</a>},
+            qq{<a href="/stock/$female_parent_id/view">$female_parent_name</a>},
+            qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a>}, $cross_type]
+    }
+
+    $c->stash->{rest} = {data => \@cross_data};
+
+}
 
 
 1;

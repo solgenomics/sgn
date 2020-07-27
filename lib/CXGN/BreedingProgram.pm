@@ -318,6 +318,49 @@ sub get_locations_with_details {
     return $json->encode(\@program_locations);
 }
 
+
+=head2 get_crosses
+
+ Usage: $self->get_crosses
+ Desc:
+ Ret: crosses with parents
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_crosses {
+    my $self = shift;
+    my $program_id = $self->get_program_id;
+    my $schema = $self->schema;
+    my $dbh = $self->schema->storage()->dbh();
+    my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+    my $female_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
+    my $male_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
+
+    my $q = "select stock.stock_id, stock.uniquename, female.stock_id, female.uniquename, male.stock_id, male.uniquename, stock_relationship1.value
+        From stock join stock_relationship as stock_relationship1 on (stock.stock_id = stock_relationship1.object_id) and stock_relationship1.type_id = ?
+        JOIN stock as female on (stock_relationship1.subject_id = female.stock_id)
+        LEFT JOIN stock_relationship as stock_relationship2 on (stock.stock_id = stock_relationship2.object_id) and stock_relationship2.type_id = ?
+        LEFT JOIN stock as male on (stock_relationship2.subject_id = male.stock_id)
+        LEFT JOIN nd_experiment_stock on (stock.stock_id = nd_experiment_stock.stock_id)
+        LEFT JOIN nd_experiment_project on (nd_experiment_stock.nd_experiment_id = nd_experiment_project.nd_experiment_id)
+        LEFT JOIN project_relationship on (project_relationship.subject_project_id = nd_experiment_project.project_id)  where stock.type_id = ? and project_relationship.object_project_id = ?;";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($female_cvterm_id, $male_cvterm_id, $cross_cvterm_id, $program_id);
+
+    my @crosses = ();
+    while (my($cross_id, $cross_name, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_type) = $h->fetchrow_array()){
+        push @crosses, [$cross_id, $cross_name, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_type]
+    }
+
+    return \@crosses;
+
+}
+
+
 ####
 1;##
 ####
