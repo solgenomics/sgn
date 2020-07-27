@@ -361,6 +361,48 @@ sub get_crosses {
 }
 
 
+=head2 get_seedlots
+
+ Usage: $self->get_seedlots
+ Desc:
+ Ret: seedlot with content
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_seedlots {
+    my $self = shift;
+    my $program_id = $self->get_program_id;
+    my $schema = $self->schema;
+    my $dbh = $self->schema->storage()->dbh();
+    my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
+    my $collection_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'collection_of', 'stock_relationship')->cvterm_id();
+
+    my $q = "select stock.stock_id, stock.uniquename, content.stock_id, content.uniquename, cvterm.name
+        From stock join stock_relationship on (stock.stock_id = stock_relationship.object_id) and stock_relationship.type_id = ?
+        JOIN stock as content on (stock_relationship.subject_id = content.stock_id)
+        JOIN cvterm on (content.type_id = cvterm.cvterm_id)
+        JOIN nd_experiment_stock on (stock.stock_id = nd_experiment_stock.stock_id)
+        JOIN nd_experiment_project on (nd_experiment_stock.nd_experiment_id = nd_experiment_project.nd_experiment_id)
+        where stock.type_id = ? and nd_experiment_project.project_id = ?;";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($collection_of_cvterm_id, $seedlot_cvterm_id, $program_id);
+
+    my @seedlots = ();
+    while (my($seedlot_id, $seedlot_name, $content_id, $content_name, $content_type) = $h->fetchrow_array()){
+        push @seedlots, [$seedlot_id, $seedlot_name, $content_id, $content_name, $content_type]
+    }
+
+    return \@seedlots;
+
+}
+
+
+
+
 ####
 1;##
 ####

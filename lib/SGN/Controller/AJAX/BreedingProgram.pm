@@ -304,11 +304,34 @@ sub program_crosses :Chained('ajax_breeding_program') PathPart('crosses') Args(0
     foreach my $r (@$result){
         my ($cross_id, $cross_name, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_type) = @$r;
         push @cross_data, [qq{<a href="/cross/$cross_id">$cross_name</a>},
-            qq{<a href="/stock/$female_parent_id/view">$female_parent_name</a>},
-            qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a>}, $cross_type]
+        qq{<a href="/stock/$female_parent_id/view">$female_parent_name</a>},
+        qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a>}, $cross_type]
     }
 
     $c->stash->{rest} = {data => \@cross_data};
+
+}
+
+
+sub program_seedlots :Chained('ajax_breeding_program') PathPart('seedlots') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $program = $c->stash->{program};
+    my $result = $program->get_seedlots;
+    print STDERR "SEEDLOTS =".Dumper($result)."\n";
+    my @seedlot_data;
+    foreach my $r (@$result){
+        my ($seedlot_id, $seedlot_name, $content_id, $content_name, $content_type) = @$r;
+        if ($content_type eq 'accession') {
+            push @seedlot_data, [qq{<a href="/breeders/seedlot/$seedlot_id">$seedlot_name</a>},
+            qq{<a href="/stock/$content_id/view">$content_name</a>}, $content_type]
+        } elsif ($content_type eq 'cross') {
+            push @seedlot_data, [qq{<a href="/breeders/seedlot/$seedlot_id">$seedlot_name</a>},
+            qq{<a href="/cross/$content_id">$content_name</a>}, $content_type]
+        }
+    }
+
+    $c->stash->{rest} = {data => \@seedlot_data};
 
 }
 
