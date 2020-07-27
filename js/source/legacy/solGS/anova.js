@@ -61,7 +61,7 @@ jQuery(document).ready(function () {
    
 	    jQuery("#run_anova").hide();
 	    jQuery("#anova_canvas .multi-spinner-container").show();
-	    showMessage("Running anova analysis...");
+	    showMessage("Running ANOVA...please wait.");
 	} else {
 	    var msg = 'You need to select a trait first.'
 	    anovaAlert(msg);
