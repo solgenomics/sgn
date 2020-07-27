@@ -944,14 +944,34 @@ jQuery(document).ready(function ($) {
     });
 
     $(document).on('change', '#select_design_method', function () {
-        if (jQuery(this).find("option:selected").data("title")){
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>'+jQuery(this).find("option:selected").data("title")+'</p></div>');
+
+        var design_method = $("#select_design_method").val();
+        var stock_type = jQuery('#select_stock_type').val();
+
+        if (design_method == "CRD"){
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates completely a randomized design with equal or different repetition, using the methods of random number generation in R. Creates plot entities in the database.</p></div>');
+        } else if (design_method == "RCBD") {
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates Randomized Complete Block Design, using the methods of random number generation in R. Creates plot entities in the database.</p></div>');
+        } else if (design_method == "Alpha") {
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Creates alpha designs starting from the alpha design fixing under the 4 series formulated by Patterson and Williams. Creates plot entities in the database.</p></div>');
+        } else if (design_method == "Lattice") {
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>SIMPLE and TRIPLE lattice designs. It randomizes treatments in K x K lattice. Creates plot entities in the database.</p></div>');
+        } else if (design_method == "Augmented") {
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Some  treatments  (checks)  are  replicate  r  times  and  other  treatments  (new)  are replicated once. Creates plot entities in the database.</p></div>');
+        } else if (design_method == "MAD") {
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Adjustments are calculated using data from all checks. Creates plot entities in the database.</p></div>');
+        } else if (design_method == "greenhouse") {
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>A greenhouse/nursery houses plants in no particular layout design. The plants can be of named accessions or in the case of seedling nurseries from crosses, the plants can be of named crosses. Creates plot entities with plant entities in the database.</p></div>');
+        } else if (design_method == "splitplot") {
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Split plot designs are useful for applying treatments to subplots of a plot. If you give three treatments, there will be three subplots with the treatment(s) distributed randomly among them. Creates plot entities with subplot entities with plant entities in the database.</p></div>');
+        } else if (design_method == "p-rep") {
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Have some treatments that are unreplicated and rely on replicated treatments to make the trial analysable. It is recommended that at least 20% of the experimental units are occupied by replicated treatments. Creates plot entities in the database.</p></div>');
+        } else if (design_method == "Westcott") {
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates fieldplan for an unreplicated design with genotypes randomly allocated on a field with checks following the method described on Westcott (1981).</p></div>');
         } else {
             jQuery('#create_trial_design_description_div').html('');
         }
 
-        var design_method = $("#select_design_method").val();
-        var stock_type = jQuery('#select_stock_type').val();
 
         if (design_method == "CRD") {
             if (stock_type == "accession") {
@@ -2171,6 +2191,11 @@ jQuery(document).ready(function ($) {
     });
 
     jQuery('#new_trial_add_treatments_submit').click(function(){
+        var new_treatment_year = jQuery('#new_treatment_year').val();
+        var new_treatment_date = jQuery('#new_treatment_date').val();
+        var new_treatment_type = jQuery('#new_treatment_type').val();
+        new_treatment_date = moment(new_treatment_date).format('YYYY/MM/DD HH:mm:ss')
+
         var trial_treatments = [];
         jQuery('input[name="add_trial_treatment_input"]').each(function() {
             if (this.checked){
@@ -2182,32 +2207,37 @@ jQuery(document).ready(function ($) {
                 if (trial_index in trial_treatments){
                     var trial = trial_treatments[trial_index];
                     if (trial_treatment in trial){
-                        trial[trial_treatment].push(plot_name);
+                        trial[trial_treatment]['new_treatment_stocks'].push(plot_name);
                     } else {
-                        trial[trial_treatment] = [plot_name];
+                        trial[trial_treatment]['new_treatment_stocks'] = [plot_name];
                     }
                     if (plant_names != 'undefined'){
                         for(var i=0; i<plant_names.length; i++){
-                            trial[trial_treatment].push(plant_names[i]);
+                            trial[trial_treatment]['new_treatment_stocks'].push(plant_names[i]);
                         }
                     }
                     if (subplot_names != 'undefined'){
                         for(var i=0; i<subplot_names.length; i++){
-                            trial[trial_treatment].push(subplot_names[i]);
+                            trial[trial_treatment]['new_treatment_stocks'].push(subplot_names[i]);
                         }
                     }
+                    trial[trial_treatment]["new_treatment_type"] = new_treatment_type;
+                    trial[trial_treatment]["new_treatment_date"] = new_treatment_date;
+                    trial[trial_treatment]["new_treatment_year"] = new_treatment_year;
+
                     trial_treatments[trial_index] = trial;
                 } else {
                     obj = {};
-                    obj[trial_treatment] = [plot_name];
+                    obj[trial_treatment] = {};
+                    obj[trial_treatment]['new_treatment_stocks'] = [plot_name];
                     if (plant_names != 'undefined'){
                         for(var i=0; i<plant_names.length; i++){
-                            obj[trial_treatment].push(plant_names[i]);
+                            obj[trial_treatment]['new_treatment_stocks'].push(plant_names[i]);
                         }
                     }
                     if (subplot_names != 'undefined'){
                         for(var i=0; i<subplot_names.length; i++){
-                            obj[trial_treatment].push(subplot_names[i]);
+                            obj[trial_treatment]['new_treatment_stocks'].push(subplot_names[i]);
                         }
                     }
                     trial_treatments[trial_index] = obj;
@@ -2240,7 +2270,7 @@ jQuery(document).ready(function ($) {
             //html += "Trial "+i+"<br/>";
             for (var key in treatments){
                 html += "Treatment: <b>"+key+"</b> Plots: ";
-                var plot_array = treatments[key];
+                var plot_array = treatments[key]['new_treatment_stocks'];
                 html += plot_array.join(', ') + "<br/>";
             }
         }

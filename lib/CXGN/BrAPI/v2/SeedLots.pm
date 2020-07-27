@@ -70,8 +70,8 @@ sub search {
             amount=>$_->{current_count},
             createdDate=>undef,
             externalReferences=>[],
-            germplasmDbId=>qq|$accession_id|,
-            crossDbId=>qq|$cross_id|,
+            germplasmDbId=>$accession_id ? qq|$accession_id| : undef,
+            crossDbId=>$cross_id ? qq|$cross_id| : undef,
             lastUpdated=>undef,
             locationDbId=>qq|$_->{location_id}|,
             programDbId=>qq|$_->{breeding_program_id}|,
@@ -110,10 +110,10 @@ sub detail {
     );};
 
     if ($seedlot){
-        my $accession = $seedlot->accession()->[0];
+        my $accession = $seedlot->accession() ? $seedlot->accession()->[0] : undef;
         my $location = $seedlot->nd_geolocation_id();
         my $program = $seedlot->breeding_program_id();
-        my $cross = $seedlot->cross()->[0];
+        my $cross = $seedlot->cross() ? $seedlot->cross()->[0] : undef;
 
         %result = (
                 additionalInfo=>{},

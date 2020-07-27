@@ -23,11 +23,23 @@ The 'analysis_design' is optional and is a precomputed JSON encoded object of ob
 {
                '1' => {
                         'stock_name' => 'test_accession1',
-                        'plot_name' => 'analysisblup06112020_34_test_accession1'
+                        'plot_name' => 'analysisblup06112020_34_test_accession1',
+                        'plot_number' => 1,
+                        'col_number' => 1,
+                        'row_number' => 1,
+                        'rep_number' => 1,
+                        'block_number' => 1,
+                        'is_a_control' => 0
                       },
                '2' => {
                         'stock_name' => 'test_accession2',
-                        'plot_name' => 'analysisblup06112020_34_test_accession2'
+                        'plot_name' => 'analysisblup06112020_34_test_accession2',
+                        'plot_number' => 2,
+                        'col_number' => 1,
+                        'row_number' => 2,
+                        'rep_number' => 2,
+                        'block_number' => 1,
+                        'is_a_control' => 0
                       }
              }
 or analysis_design can be left blank and the design will be computed using accession_names once this workflow is submitted.
@@ -152,7 +164,7 @@ The trait names will be post-composed with the analysis_statistical_ontology_ter
 <& /util/import_javascript.mas, classes => ['jquery', 'CXGN.BreedersToolbox.HTMLSelect'], entries => [ ] &>
 
 <div class="modal fade" id="generic_save_analysis_dialog" name="generic_save_analysis_dialog" tabindex="-1" role="dialog" aria-labelledby="genericStoreAnalysisDialog" data-backdrop="static">
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -184,6 +196,11 @@ The trait names will be post-composed with the analysis_statistical_ontology_ter
                                 </div>
                             </form>
                             <hr>
+
+                            <center>
+                            <button class="btn btn-primary" id="generic_save_analysis_next">Go to Next Step</button>
+                            </center>
+                            <br/><br/>
 
                             <form class="form-horizontal" id="generic_save_analysis_analysis_form" style="display:none">
                                 <div class="form-group form-group-sm">
@@ -269,29 +286,24 @@ The trait names will be post-composed with the analysis_statistical_ontology_ter
                                     </div>
                                 </div>
                             </form>
-
-                            <br/><br/>
-                            <center>
-                            <button class="btn btn-primary" id="generic_save_analysis_next">Go to Next Step</button>
-                            </center>
                         </&>
                         <&| /util/workflow.mas:step, title=> "Model Info" &>
                             <& /page/page_title.mas, title=>"Save model information" &>
 
                             <form class="form-horizontal" id="generic_save_analysis_model_form">
-                                <div class="form-group form-group-sm">
+                                <div class="form-group form-group-sm" id="generic_save_analysis_model_name_div">
                                     <label class="col-sm-3 control-label">Model Name (must be unique): </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_model_name" name="generic_save_analysis_model_name" type="text" />
                                     </div>
                                 </div>
-                                <div class="form-group form-group-sm">
+                                <div class="form-group form-group-sm" id="generic_save_analysis_model_description_div">
                                     <label class="col-sm-3 control-label">Model Description: </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_model_description" name="generic_save_analysis_model_description" type="text" />
                                     </div>
                                 </div>
-                                <div class="form-group form-group-sm">
+                                <div class="form-group form-group-sm" id="generic_save_analysis_model_is_public_div">
                                     <label class="col-sm-3 control-label">Model Is Public: </label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="generic_save_analysis_model_is_public" name="generic_save_analysis_model_is_public" >
@@ -302,6 +314,12 @@ The trait names will be post-composed with the analysis_statistical_ontology_ter
                                 </div>
                                 <hr>
 
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-3 control-label">Model ID: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="generic_save_analysis_model_id" name="generic_save_analysis_model_id" type="text" disabled/>
+                                    </div>
+                                </div>
                                 <div class="form-group form-group-sm">
                                     <label class="col-sm-3 control-label">Model Language: </label>
                                     <div class="col-sm-9">
@@ -423,7 +441,8 @@ jQuery(document).ready(function() {
         var generic_save_analysis_result_values = jQuery('#generic_save_analysis_result_values').val();
         var generic_save_analysis_result_values_type = jQuery('#generic_save_analysis_result_values_type').val();
         var generic_save_analysis_result_summary_values = jQuery('#generic_save_analysis_result_summary_values').val();
-        
+
+        var generic_save_analysis_model_id = jQuery('#generic_save_analysis_model_id').val();
         var generic_save_analysis_model_name = jQuery('#generic_save_analysis_model_name').val();
         var generic_save_analysis_model_description = jQuery('#generic_save_analysis_model_description').val();
         var generic_save_analysis_model_is_public = jQuery('#generic_save_analysis_model_is_public').val();
@@ -483,6 +502,14 @@ jQuery(document).ready(function() {
                 alert('Please give analysis result summary info');
                 return false;
             }
+        }
+        if (generic_save_analysis_model_id != '' && generic_save_analysis_model_name != '') {
+            alert('If Model ID is populated, then you should not be able to give a model name!');
+            return false;
+        }
+        if (generic_save_analysis_model_id != '' && generic_save_analysis_model_description != '') {
+            alert('If Model ID is populated, then you should not be able to give a model description!');
+            return false;
         }
         if (generic_save_analysis_model_name == '') {
             alert('Please give a model name');
@@ -559,6 +586,7 @@ jQuery(document).ready(function() {
                 'analysis_result_values':generic_save_analysis_result_values,
                 'analysis_result_values_type':generic_save_analysis_result_values_type,
                 'analysis_result_summary':generic_save_analysis_result_summary_values,
+                'analysis_model_id':generic_save_analysis_model_id,
                 'analysis_model_name':generic_save_analysis_model_name,
                 'analysis_model_description':generic_save_analysis_model_description,
                 'analysis_model_is_public':generic_save_analysis_model_is_public,

@@ -2378,13 +2378,13 @@ sub gebv_graph :Path('/solgs/trait/gebv/graph') Args(0) {
 
 
 sub save_single_trial_traits {
-    my ($self, $c) = @_;
+    my ($self, $c, $pop_id) = @_;
 
-    my $pop_id = $c->stash->{training_pop_id};
+    $pop_id = $c->stash->{training_pop_id} if !$pop_id;
 
-    $c->controller('solGS::Files')->traits_list_file($c);
+    $c->controller('solGS::Files')->traits_list_file($c, $pop_id);
     my $traits_file = $c->stash->{traits_list_file};
-   
+    print STDERR "\save single : pop_id: $pop_id -- file: $traits_file\n";
     if (!-s $traits_file)
     {
 	my $trait_names = $c->controller('solGS::Utils')->get_clean_trial_trait_names($c, $pop_id);
@@ -2408,9 +2408,9 @@ sub get_all_traits {
     {
 	my $page = $c->req->path;
 	
-	if ($page =~ /solgs\/population\// && $pop_id !~ /\D+/)
+	if ($page =~ /solgs\/population\/|anova\// && $pop_id !~ /\D+/)
 	{
-	    $self->save_single_trial_traits($c);
+	    $self->save_single_trial_traits($c, $pop_id);
 	}
     }  
     
@@ -2425,17 +2425,17 @@ sub get_all_traits {
 	my $acronymized_traits = $c->controller('solGS::Utils')->acronymize_traits(\@filtered_traits);    
 	my $acronym_table = $acronymized_traits->{acronym_table};
 
-	$self->traits_acronym_table($c, $acronym_table);
+	$self->traits_acronym_table($c, $acronym_table, $pop_id);
     }
 	
-    $self->create_trait_data($c);       
+    $self->create_trait_data($c, $pop_id);       
 }
 
 
 sub create_trait_data {
-    my ($self, $c) = @_;   
+    my ($self, $c, $pop_id) = @_;   
           
-    my $acronym_pairs = $self->get_acronym_pairs($c);
+    my $acronym_pairs = $self->get_acronym_pairs($c, $pop_id);
 
     if (@$acronym_pairs)
     {
@@ -2453,7 +2453,7 @@ sub create_trait_data {
 	    } 
 	}
 
-	$c->controller('solGS::Files')->all_traits_file($c);
+	$c->controller('solGS::Files')->all_traits_file($c, $pop_id);
 	my $traits_file =  $c->stash->{all_traits_file};
 	write_file($traits_file, $table);
     }
@@ -2494,9 +2494,9 @@ sub get_acronym_pairs {
 
 
 sub traits_acronym_table {
-    my ($self, $c, $acronym_table) = @_;
+    my ($self, $c, $acronym_table, $pop_id) = @_;
     
-    my $pop_id = $c->stash->{training_pop_id};
+    $pop_id = $c->stash->{training_pop_id} if !$pop_id;
 
     if (keys %$acronym_table)
     {

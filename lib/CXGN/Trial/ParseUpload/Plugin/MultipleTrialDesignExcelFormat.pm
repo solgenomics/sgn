@@ -745,7 +745,7 @@ sub _parse_with_plugin {
     foreach my $treatment_name (@treatment_names){
         if($worksheet->get_cell($row,$treatment_col)){
             if($worksheet->get_cell($row,$treatment_col)->value()){
-                push @{$design_details{treatments}->{$treatment_name}}, $plot_name;
+                push @{$design_details{treatments}->{$treatment_name}{new_treatment_stocks}}, $plot_name;
             }
         }
         $treatment_col++;
