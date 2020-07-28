@@ -2882,21 +2882,20 @@ sub _perform_plot_polygon_assign {
     my $image_tag = CXGN::Tag->new($schema->storage->dbh, $image_tag_id);
 
     my $corresponding_channel = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_observation_unit_plot_polygon_types($schema)->{$linking_table_type_id}->{corresponding_channel};
-    my $image_band_index_string = '';
-    if (defined($corresponding_channel)) {
-        $image_band_index_string = "--image_band_index $corresponding_channel";
-    }
+    # my $image_band_index_string = '';
+    # if (defined($corresponding_channel)) {
+    #     $image_band_index_string = "--image_band_index $corresponding_channel";
+    # }
 
     my @plot_polygon_image_fullpaths;
     my @plot_polygon_image_urls;
 
-    # my $pm = Parallel::ForkManager->new(floor(int($number_system_cores)*0.5));
-    # $pm->run_on_finish( sub {
-    #     my ($pid, $exit_code, $ident, $exit_signal, $core_dump, $data_structure_reference) = @_;
-    #     push @plot_polygon_image_urls, $data_structure_reference->{plot_polygon_image_url};
-    #     push @plot_polygon_image_fullpaths, $data_structure_reference->{plot_polygon_image_fullpath};
-    # });
+    my $dir = $c->tempfiles_subdir('/drone_imagery_plot_polygons');    
+    my $bulk_input_temp_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_plot_polygons/bulkinputXXXX');
 
+    open(my $F, ">", $bulk_input_temp_file) || die "Can't open file ".$bulk_input_temp_file;
+
+    my @plot_polygons;
     foreach my $stock_name (keys %$polygon_objs) {
         #my $pid = $pm->start and next;
 
@@ -2904,13 +2903,31 @@ sub _perform_plot_polygon_assign {
         my $polygons = encode_json [$polygon];
         my $stock_id = $stock_ids{$stock_name};
 
-        my $dir = $c->tempfiles_subdir('/drone_imagery_plot_polygons');
         my $archive_plot_polygons_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_plot_polygons/imageXXXX');
         $archive_plot_polygons_temp_image .= '.png';
 
-        my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageCropping/CropToPolygon.py --inputfile_path '$image_fullpath' --outputfile_path '$archive_plot_polygons_temp_image' --polygon_json '$polygons' $image_band_index_string --polygon_type rectangular_square";
-        print STDERR Dumper $cmd;
-        my $status = system($cmd);
+        print $F "$image_fullpath\t$archive_plot_polygons_temp_image\t$polygons\trectangular_square\t$corresponding_channel\n";
+
+        push @plot_polygons, {
+            temp_plot_image => $archive_plot_polygons_temp_image,
+            stock_id => $stock_id
+        };
+    }
+
+    my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageCropping/CropToPolygonBulk.py --inputfile_path '$bulk_input_temp_file'";
+    print STDERR Dumper $cmd;
+    my $status = system($cmd);
+
+    my $pm = Parallel::ForkManager->new(10);
+    $pm->run_on_finish( sub {
+        my ($pid, $exit_code, $ident, $exit_signal, $core_dump, $data_structure_reference) = @_;
+        push @plot_polygon_image_urls, $data_structure_reference->{plot_polygon_image_url};
+        push @plot_polygon_image_fullpaths, $data_structure_reference->{plot_polygon_image_fullpath};
+    });
+
+    foreach my $obj (@plot_polygons) {
+        my $archive_plot_polygons_temp_image = $obj->{temp_plot_image};
+        my $stock_id = $obj->{stock_id};
 
         my $plot_polygon_image_fullpath;
         my $plot_polygon_image_url;
@@ -2939,9 +2956,9 @@ sub _perform_plot_polygon_assign {
         }
         unlink($archive_plot_polygons_temp_image);
 
-        #$pm->finish(0, { plot_polygon_image_url => $plot_polygon_image_url, plot_polygon_image_fullpath => $plot_polygon_image_fullpath });
+        $pm->finish(0, { plot_polygon_image_url => $plot_polygon_image_url, plot_polygon_image_fullpath => $plot_polygon_image_fullpath });
     }
-    #$pm->wait_all_children;
+    $pm->wait_all_children;
 
     return {
         image_url => $image_url, image_fullpath => $image_fullpath, success => 1, drone_run_band_template_id => $drone_run_band_plot_polygons->projectprop_id
