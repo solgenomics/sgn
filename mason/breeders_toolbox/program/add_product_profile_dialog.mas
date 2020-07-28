@@ -1,5 +1,6 @@
 <%args>
-
+$program_id
+$program_name
 </%args>
 
 <div class="modal fade" id="add_product_profile_dialog" name="add_product_profile_dialog" tabindex="-1" role="dialog" aria-labelledby="addProductProfileDialog">
@@ -13,11 +14,25 @@
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Product Profile Name: </label>
-                            <div class="col-sm-8">
+                            <label class="col-sm-3 control-label">Breeding Program: </label>
+                            <div class="col-sm-9">
+                                <input class="form-control" name="profile_program_name" id="profile_program_name" disabled value="<% $program_name %>">
+                                <input name="profile_program_id" id="profile_program_id" type="hidden" value="<% $program_id %>">
+                            </div>
+                        </div><br/><br/>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Product Profile Name: </label>
+                            <div class="col-sm-9">
                                 <input class="form-control" id="new_product_profile_name" name="new_product_profile_name" type="text"/>
                             </div>
+                        </div><br/><br/>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="select_list_list_select">Select a List of Traits: </label>
+                            <div class="col-sm-9">
+                                <span id="select_list_div"></span>
+                            </div>
                         </div>
+
                     </form>
                 </div>
             </div>
