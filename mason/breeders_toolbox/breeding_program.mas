@@ -17,10 +17,15 @@ my $program_id   = $program->get_program_id;
 
 <& /page/page_title.mas, title=>"Breeding Program $program_name" &>
 
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, program_id => $program_id, info_section_title => "<h4 style='display:inline'>Product Profiles</h4>", info_section_subtitle => 'View product profiles and benchmarks',buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="add_product_profile_button">Add Product Profile</button>', icon_class => "glyphicon glyphicon-signal", info_section_id => "program_production_profile_section" &>
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, program_id => $program_id, info_section_title => "<h4 style='display:inline'>Locations</h4>", info_section_subtitle => 'View locations related to this breeding program', icon_class => "glyphicon glyphicon-pushpin", info_section_id => "program_location_section" &>
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, program_id => $program_id, info_section_title => "<h4 style='display:inline'>Projects</h4>", info_section_subtitle => 'View field trials, genotyping experiments, crossing experiments', icon_class => "glyphicon glyphicon-th", info_section_id => "program_project_section" &>
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, program_id => $program_id, info_section_title => "<h4 style='display:inline'>Stocks</h4>", info_section_subtitle => 'View accessions, crosses, seedlots', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "program_stock_section" &>
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, program_id => $program_id, info_section_title => "<h4 style='display:inline'>Phenotype Summary</h4>", info_section_subtitle => 'View phenotype summary and histogram', icon_class => "glyphicon glyphicon-equalizer", info_section_id => "program_phenotype_section" &>
+
+
+<& /breeders_toolbox/program/add_product_profile_dialog.mas &>
+
 
 
 <!--
@@ -38,3 +43,17 @@ my $program_id   = $program->get_program_id;
 </&>
 
 -->
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#add_product_profile_button').click(function(){
+
+        jQuery('#add_product_profile_dialog').modal("show");
+
+    });
+
+});
+
+</script>
