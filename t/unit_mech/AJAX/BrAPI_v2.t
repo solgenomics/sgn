@@ -41,6 +41,11 @@ is($response->{'userDisplayName'}, 'Jane Doe');
 is($response->{'expires_in'}, '7200');
 my $access_token = $response->{access_token};
 
+$ua->default_header("Content-Type" => "application/json");
+$ua->default_header('Authorization'=> 'Bearer ' . $access_token);
+$mech->default_header("Content-Type" => "application/json");
+$mech->default_header('Authorization'=> 'Bearer ' . $access_token);
+
 # Phenotyping
 
 $mech->get_ok('http://localhost:3010/brapi/v2/observationlevels');
@@ -113,8 +118,7 @@ my $data = '[{
    }]';
 
 
-$mech->default_header("Content-Type" => "application/json");
-$mech->default_header('Authorization'=> 'Bearer ' . $access_token);
+
 $mech->post('http://localhost:3010/brapi/v2/observationunits/', Content => $data);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
@@ -185,8 +189,7 @@ $data = '{
 
 
 
-$ua->default_header("Content-Type" => "application/json");
-$ua->default_header('Authorization'=> 'Bearer ' . $access_token);
+
 $resp = $ua->put("http://192.168.33.11:3010/brapi/v2/observationunits/41782", Content => $data);
 $response = decode_json $resp->{_content};
 print STDERR Dumper $response;
@@ -610,10 +613,10 @@ $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {'metadata' => {'pagination' => {'totalCount' => 1,'totalPages' => 1,'currentPage' => 0,'pageSize' => 10},'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'message' => 'Loading CXGN::BrAPI::v2::Studies','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Studies detail result constructed'}],'datafiles' => []},'result' => {'studyCode' => '139','trialDbId' => '134','environmentParameters' => undef,'externalReferences' => undef,'dataLinks' => [],'commonCropName' => 'Cassava','studyType' => 'Clonal Evaluation','additionalInfo' => {},'documentationURL' => '','endDate' => undef,'studyDescription' => 'This trial was loaded into the fixture to test solgs.','studyName' => 'Kasese solgs trial','locationName' => 'test_location','studyPUI' => undef,'lastUpdate' => undef,'experimentalDesign' => 'Alpha','observationUnitsDescription' => undef,'startDate' => undef,'studyDbId' => '139','observationLevels' => undef,'culturalPractices' => undef,'growthFacility' => undef,'locationDbId' => '23','seasons' => ['2014'],'contacts' => undef,'active' => JSON::true ,'trialName' => 'test','license' => ''}} );
 
-$mech->get_ok('http://localhost:3010/brapi/v2/locations');
+$mech->get_ok('http://localhost:3010/brapi/v2/locations?pageSize=3');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is_deeply($response, {'metadata' => {'datafiles' => [],'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Locations'},{'messageType' => 'INFO','message' => 'Locations list result constructed'}],'pagination' => {'totalCount' => 3,'totalPages' => 1,'currentPage' => 0,'pageSize' => 10}},'result' => {'data' => [{'instituteName' => '','coordinateUncertainty' => undef,'coordinateDescription' => undef,'locationType' => '','topography' => undef,'abbreviation' => '','instituteAddress' => '','environmentType' => undef,'countryName' => 'United States','countryCode' => 'USA','slope' => undef,'siteStatus' => undef,'locationDbId' => '23','locationName' => 'test_location','exposure' => undef,'externalReferences' => undef,'coordinates' => [{'type' => 'Feature','geometry' => {'coordinates' => ['32.6136','-115.864','109'],'type' => 'Point'}}],'additionalInfo' => {'geodetic datum' => undef,'breeding_program' => '134'},'documentationURL' => undef},{'instituteName' => '','coordinateUncertainty' => undef,'coordinateDescription' => undef,'locationType' => '','topography' => undef,'abbreviation' => '','environmentType' => undef,'instituteAddress' => '','countryName' => 'United States','slope' => undef,'countryCode' => 'USA','siteStatus' => undef,'locationName' => 'Cornell Biotech','locationDbId' => '24','externalReferences' => undef,'exposure' => undef,'coordinates' => [{'type' => 'Feature','geometry' => {'type' => 'Point','coordinates' => ['42.4534','-76.4735','274']}}],'documentationURL' => undef,'additionalInfo' => {'breeding_program' => '134','geodetic datum' => undef}},{'environmentType' => undef,'abbreviation' => '','instituteAddress' => '','locationType' => '','topography' => undef,'coordinateDescription' => undef,'instituteName' => '','coordinateUncertainty' => undef,'coordinates' => [{'type' => 'Feature','geometry' => {'coordinates' => [undef,undef,undef],'type' => 'Point'}}],'documentationURL' => undef,'additionalInfo' => {'geodetic datum' => undef},'locationDbId' => '25','locationName' => 'NA','externalReferences' => undef,'exposure' => undef,'siteStatus' => undef,'countryName' => '','slope' => undef,'countryCode' => ''}]}} );
+is_deeply($response, {'metadata' => {'datafiles' => [],'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=3'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Locations'},{'messageType' => 'INFO','message' => 'Locations list result constructed'}],'pagination' => {'totalCount' => 4,'totalPages' => 2,'currentPage' => 0,'pageSize' => 3}},'result' => {'data' => [{'instituteName' => '','coordinateUncertainty' => undef,'coordinateDescription' => undef,'locationType' => '','topography' => undef,'abbreviation' => '','instituteAddress' => '','environmentType' => undef,'countryName' => 'United States','countryCode' => 'USA','slope' => undef,'siteStatus' => undef,'locationDbId' => '23','locationName' => 'test_location','exposure' => undef,'externalReferences' => undef,'coordinates' => [{'type' => 'Feature','geometry' => {'coordinates' => ['32.6136','-115.864','109'],'type' => 'Point'}}],'additionalInfo' => {'geodetic datum' => undef,'breeding_program' => '134'},'documentationURL' => undef},{'instituteName' => '','coordinateUncertainty' => undef,'coordinateDescription' => undef,'locationType' => '','topography' => undef,'abbreviation' => '','environmentType' => undef,'instituteAddress' => '','countryName' => 'United States','slope' => undef,'countryCode' => 'USA','siteStatus' => undef,'locationName' => 'Cornell Biotech','locationDbId' => '24','externalReferences' => undef,'exposure' => undef,'coordinates' => [{'type' => 'Feature','geometry' => {'type' => 'Point','coordinates' => ['42.4534','-76.4735','274']}}],'documentationURL' => undef,'additionalInfo' => {'breeding_program' => '134','geodetic datum' => undef}},{'environmentType' => undef,'abbreviation' => '','instituteAddress' => '','locationType' => '','topography' => undef,'coordinateDescription' => undef,'instituteName' => '','coordinateUncertainty' => undef,'coordinates' => [{'type' => 'Feature','geometry' => {'coordinates' => [undef,undef,undef],'type' => 'Point'}}],'documentationURL' => undef,'additionalInfo' => {'geodetic datum' => undef},'locationDbId' => '25','locationName' => 'NA','externalReferences' => undef,'exposure' => undef,'siteStatus' => undef,'countryName' => '','slope' => undef,'countryCode' => ''}]}} );
 
 $data = '[  {    "abbreviation": "L1",    "additionalInfo": {"noaaStationId" : "PALMIRA","programDbId" :"134"},    "coordinateDescription": "North East corner of greenhouse",    "coordinateUncertainty": "20",    "coordinates": {      "geometry": {        "coordinates": [          -76.506042,          42.417373,          123        ],        "type": "Point"      },      "type": "Feature"    },    "countryCode": "PER",    "countryName": "Peru",    "documentationURL": "https://brapi.org",    "environmentType": "Nursery",    "exposure": "Structure, no exposure",    "externalReferences": [      {        "referenceID": "doi:10.155454/12341234",        "referenceSource": "DOI"      },      {        "referenceID": "http://purl.obolibrary.org/obo/ro.owl",        "referenceSource": "OBO Library"      },      {        "referenceID": "75a50e76",        "referenceSource": "Remote Data Collection Upload Tool"      }    ],    "instituteAddress": "71 Pilgrim Avenue Chevy Chase MD 20815",    "instituteName": "Plant Science Institute",    "locationName": "Location 1",    "locationType": "Field",    "siteStatus": "Private",    "slope": "0",    "topography": "Valley"  }]';
 
@@ -634,13 +637,13 @@ $response = decode_json $resp->{_content};
 print STDERR Dumper $response;
 is_deeply($response, {'metadata' => {'pagination' => {'pageSize' => 10,'currentPage' => 0,'totalCount' => 1,'totalPages' => 1},'datafiles' => undef,'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Locations'},{'message' => '1 Locations were saved.','messageType' => 'INFO'}]},'result' => {}});
 
-$mech->post_ok('http://localhost:3010/brapi/v2/search/locations', ['pageSize'=>'2', 'page'=>'1']);
+$mech->post_ok('http://localhost:3010/brapi/v2/search/locations', ['locationDbIds'=>['25','27']]);
 $response = decode_json $mech->content;
 $searchId = $response->{result} ->{searchResultDbId};
 $mech->get_ok('http://localhost:3010/brapi/v2/search/locations/'. $searchId);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is_deeply($response, {'result' => {'data' => [{'countryCode' => 'PER','coordinateDescription' => undef,'abbreviation' => 'L2','additionalInfo' => {'breeding_program' => '134','noaa_station_id' => 'PALMIRA','geodetic datum' => undef},'countryName' => 'Peru','locationType' => 'Field','instituteAddress' => '','topography' => undef,'locationDbId' => '25','environmentType' => undef,'siteStatus' => undef,'slope' => undef,'documentationURL' => undef,'coordinateUncertainty' => undef,'locationName' => 'Location 2','externalReferences' => undef,'instituteName' => '','coordinates' => [{'type' => 'Feature','geometry' => {'type' => 'Point','coordinates' => ['-76.506','42.4174',123]}}],'exposure' => undef},{'coordinates' => [{'type' => 'Feature','geometry' => {'coordinates' => ['-76.506','42.4174',123],'type' => 'Point'}}],'exposure' => undef,'instituteName' => '','externalReferences' => undef,'locationName' => 'Location 1','coordinateUncertainty' => undef,'slope' => undef,'documentationURL' => undef,'environmentType' => undef,'siteStatus' => undef,'locationDbId' => '26','topography' => undef,'instituteAddress' => '','locationType' => 'Field','countryName' => 'Peru','additionalInfo' => {'breeding_program' => '134','geodetic datum' => undef,'noaa_station_id' => 'PALMIRA'},'abbreviation' => 'L1','coordinateDescription' => undef,'countryCode' => 'PER'}]},'metadata' => {'datafiles' => [],'pagination' => {'pageSize' => 10,'totalPages' => 1,'currentPage' => 0,'totalCount' => 2},'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Results'},{'messageType' => 'INFO','message' => 'search result constructed'}]}} );
+is_deeply($response, {'result' => {'data' => [{'countryCode' => 'PER','coordinateDescription' => undef,'abbreviation' => 'L2','additionalInfo' => {'breeding_program' => '134','noaa_station_id' => 'PALMIRA','geodetic datum' => undef},'countryName' => 'Peru','locationType' => 'Field','instituteAddress' => '','topography' => undef,'locationDbId' => '25','environmentType' => undef,'siteStatus' => undef,'slope' => undef,'documentationURL' => undef,'coordinateUncertainty' => undef,'locationName' => 'Location 2','externalReferences' => undef,'instituteName' => '','coordinates' => [{'type' => 'Feature','geometry' => {'type' => 'Point','coordinates' => ['-76.506','42.4174',123]}}],'exposure' => undef},{'coordinates' => [{'type' => 'Feature','geometry' => {'coordinates' => ['-76.506','42.4174',123],'type' => 'Point'}}],'exposure' => undef,'instituteName' => '','externalReferences' => undef,'locationName' => 'Location 1','coordinateUncertainty' => undef,'slope' => undef,'documentationURL' => undef,'environmentType' => undef,'siteStatus' => undef,'locationDbId' => '27','topography' => undef,'instituteAddress' => '','locationType' => 'Field','countryName' => 'Peru','additionalInfo' => {'breeding_program' => '134','geodetic datum' => undef,'noaa_station_id' => 'PALMIRA'},'abbreviation' => 'L1','coordinateDescription' => undef,'countryCode' => 'PER'}]},'metadata' => {'datafiles' => [],'pagination' => {'pageSize' => 10,'totalPages' => 1,'currentPage' => 0,'totalCount' => 2},'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Results'},{'messageType' => 'INFO','message' => 'search result constructed'}]}} );
 
 $mech->get_ok('http://localhost:3010/brapi/v2/people');
 $response = decode_json $mech->content;
@@ -736,7 +739,7 @@ $data = '[
     "documentationURL": "https://breedbase.org/",		
     "donors": [
       {
-        "donorAccessionNumber": "A0000123new",
+        "donorAccessionNumber": "A0000123",
         "donorInstituteCode": "PER001",						
         "germplasmPUI": "http://pui.per/accession/A0000003"	
       }
@@ -799,10 +802,10 @@ $data = '[
 $mech->post('http://localhost:3010/brapi/v2/germplasm/', Content => $data);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is_deeply($response, {'metadata' => {'datafiles' => [],'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Germplasm'},{'messageType' => 'INFO','message' => 'Germplasm saved'}],'pagination' => {'currentPage' => 0,'pageSize' => 10,'totalCount' => 1,'totalPages' => 1}},'result' => {'data' => [{'countryOfOriginCode' => 'BES','biologicalStatusOfAccessionDescription' => undef,'germplasmName' => 'test_Germplasm9','taxonIds' => [],'collection' => undef,'acquisitionDate' => '2018-01-01','synonyms' => [{'synonym' => 'variety_1','type' => undef}],'germplasmDbId' => '41783','instituteCode' => 'PER001','germplasmPreprocessing' => undef,'externalReferences' => [],'speciesAuthority' => undef,'instituteName' => 'BTI','germplasmOrigin' => [],'seedSource' => 'A0000001/A0000002','donors' => [{'donorAccessionNumber' => 'A0000123new','donorInstituteCode' => 'PER001','germplasmPUI' => 'PER001'}],'breedingMethodDbId' => undef,'storageTypes' => [{'description' => undef,'code' => '20'}],'additionalInfo' => undef,'seedSourceDescription' => 'A0000001/A0000002','species' => 'Solanum lycopersicum','documentationURL' => 'http://pui.per/accession/fem_maleProgeny_002,localhost/stock/41783/view','germplasmPUI' => 'http://pui.per/accession/fem_maleProgeny_002,localhost/stock/41783/view','genus' => 'Lycopersicon','subtaxaAuthority' => undef,'accessionNumber' => 'fem_maleProgeny_002new','subtaxa' => undef,'defaultDisplayName' => 'fem_maleProgeny_002','biologicalStatusOfAccessionCode' => '420','pedigree' => 'NA/NA','commonCropName' => 'tomato'}]}} );
+is_deeply($response,  {'metadata' => {'datafiles' => [],'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'message' => 'Loading CXGN::BrAPI::v2::Germplasm','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Germplasm saved'}],'pagination' => {'totalPages' => 1,'currentPage' => 0,'pageSize' => 10,'totalCount' => 1}},'result' => {'data' => [{'instituteCode' => 'PER001','additionalInfo' => undef,'speciesAuthority' => undef,'defaultDisplayName' => 'fem_maleProgeny_002','collection' => undef,'germplasmName' => 'test_Germplasm9','acquisitionDate' => '2018-01-01','genus' => 'Lycopersicon','synonyms' => [{'type' => undef,'synonym' => 'variety_1'}],'externalReferences' => [],'donors' => [{'germplasmPUI' => 'PER001','donorInstituteCode' => 'PER001','donorAccessionNumber' => 'A0000123'}],'biologicalStatusOfAccessionCode' => '420','instituteName' => 'BTI','subtaxa' => undef,'countryOfOriginCode' => 'BES','biologicalStatusOfAccessionDescription' => undef,'germplasmPUI' => 'http://pui.per/accession/fem_maleProgeny_002,localhost/stock/41783/view','species' => 'Solanum lycopersicum','taxonIds' => [],'storageTypes' => [{'code' => '20','description' => undef}],'germplasmPreprocessing' => undef,'germplasmOrigin' => [],'accessionNumber' => 'fem_maleProgeny_002new','breedingMethodDbId' => undef,'commonCropName' => 'tomato','germplasmDbId' => '41783','seedSource' => 'A0000001/A0000002','pedigree' => 'NA/NA','documentationURL' => 'http://pui.per/accession/fem_maleProgeny_002,localhost/stock/41783/view','seedSourceDescription' => 'A0000001/A0000002','subtaxaAuthority' => undef}]}});
 
 $data = '{
-    "accessionNumber": "fem_maleProgeny_002new7",
+    "accessionNumber": "fem_maleProgeny_002",
     "acquisitionDate": "2018-01-07",
     "additionalInfo": {},
     "biologicalStatusOfAccessionCode": "4207",
@@ -815,14 +818,14 @@ $data = '{
     "documentationURL": "https://wiki.brapi.org7",		
     "donors": [
       {
-        "donorAccessionNumber": "A0000123new7",
+        "donorAccessionNumber": "A0000123",
         "donorInstituteCode": "PER0017",						
-        "germplasmPUI": "http://pui.per/accession/A00000037"	
+        "germplasmPUI": "http://accession/A00000037"	
       }
     ],
     "externalReferences": [], 				
     "genus": "Aspergillus7",					
-    "germplasmName": "test_Germplasm71",
+    "germplasmName": "test_Germplasm",
     "germplasmOrigin": [					
       {
         "coordinateUncertainty": "20",
@@ -839,10 +842,10 @@ $data = '{
         }
       }
     ],
-    "germplasmPUI": "http://pui.per/accession/fem_maleProgeny_0027",		
+    "germplasmPUI": "http://accession/fem_maleProgeny_0027",		
     "germplasmPreprocessing": "EO:0007210; transplanted from study 2351 observation unit ID: pot:894",		
     "instituteCode": "PER0017",
-    "instituteName": "The BrAPI Institute7",
+    "instituteName": "BTI Ithaca",
     "pedigree": "A0000001/A00000027",	
     "seedSource": "A0000001/A00000027",	
     "seedSourceDescription": "Branches were collected from a 10-year-old tree growing in a progeny trial established in a loamy brown earth soil7.",
@@ -874,10 +877,10 @@ $data = '{
     ]
   }';
 
-# $resp = $ua->put("http://192.168.33.11:3010/brapi/v2/germplasm/41279", Content => $data);
-# $response = decode_json $resp->{_content};
-# print STDERR Dumper $response;
-
+$resp = $ua->put("http://192.168.33.11:3010/brapi/v2/germplasm/41279", Content => $data);
+$response = decode_json $resp->{_content};
+print STDERR Dumper $response;
+is_deeply($response, {'metadata' => {'pagination' => {'totalCount' => 1,'currentPage' => 0,'pageSize' => 10,'totalPages' => 1},'datafiles' => [],'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Germplasm'},{'message' => 'Germplasm updated','messageType' => 'INFO'}]},'result' => {'pedigree' => 'NA/NA','instituteCode' => 'PER0017','species' => 'Manihot esculenta','externalReferences' => [],'collection' => undef,'commonCropName' => undef,'breedingMethodDbId' => undef,'speciesAuthority' => undef,'donors' => [{'donorAccessionNumber' => 'A0000123','germplasmPUI' => 'PER0017','donorInstituteCode' => 'PER0017'}],'seedSource' => 'A0000001/A00000027','seedSourceDescription' => 'A0000001/A00000027','acquisitionDate' => '2018-01-07','genus' => 'Manihot','germplasmPreprocessing' => undef,'accessionNumber' => 'fem_maleProgeny_002','germplasmPUI' => 'http://accession/fem_maleProgeny_0027,192.168.33.11/stock/41279/view','documentationURL' => 'http://accession/fem_maleProgeny_0027,192.168.33.11/stock/41279/view','synonyms' => [{'type' => undef,'synonym' => 'variety_17'}],'biologicalStatusOfAccessionCode' => '4207','instituteName' => 'BTI Ithaca','additionalInfo' => undef,'germplasmName' => 'IITA-TMS-IBA30572','subtaxa' => undef,'biologicalStatusOfAccessionDescription' => undef,'germplasmOrigin' => [],'taxonIds' => [],'germplasmDbId' => '41279','storageTypes' => [{'code' => '207','description' => undef}],'defaultDisplayName' => 'IITA-TMS-IBA30572','countryOfOriginCode' => 'BES7','subtaxaAuthority' => undef}});
 
 $data = '[
   {
@@ -899,7 +902,7 @@ $data = '[
     "lastUpdate": {},
     "license": "MIT License",
     "locationDbId": "23",
-    "locationName": "Lima",
+    "locationName": "test_location",
     "observationLevels": [],
     "observationUnitsDescription": "Observation units",
     "seasons": [
@@ -916,10 +919,66 @@ $data = '[
   }
 ]';
 
-# $mech->post('http://localhost:3010/brapi/v2/studies', Content => $data);
-# $response = decode_json $mech->content;
-# print STDERR Dumper $response;
+$mech->post('http://localhost:3010/brapi/v2/studies', Content => $data);
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'metadata' => {'datafiles' => [],'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Studies'},{'messageType' => 'INFO','message' => 'Studies result constructed'}],'pagination' => {'currentPage' => 0,'pageSize' => 10,'totalCount' => 1,'totalPages' => 1}},'result' => {'data' => [{'experimentalDesign' => 'RCBD','license' => '','environmentParameters' => undef,'studyType' => 'phenotyping_trial','studyDbId' => '168','dataLinks' => [],'startDate' => undef,'locationDbId' => '23','externalReferences' => undef,'seasons' => ['2018'],'additionalInfo' => {'programName' => 'test','programDbId' => '134'},'trialName' => 'test','active' => bless( do{\(my $o = 1)}, 'JSON::PP::Boolean' ),'studyDescription' => 'This is a yield study for Spring 2018','studyName' => 'Observation at Kenya 1','documentationURL' => '','locationName' => 'test_location','contacts' => undef,'culturalPractices' => undef,'growthFacility' => undef,'studyPUI' => undef,'studyCode' => '168','observationLevels' => undef,'endDate' => undef,'lastUpdate' => undef,'commonCropName' => 'Cassava','observationUnitsDescription' => undef,'trialDbId' => '134'}]}});
 
+$data = '{
+  "active": true,
+  "additionalInfo": {},
+  "commonCropName": "Grape",
+  "contacts": [],
+  "culturalPractices": "Irrigation was applied according needs during summer to prevent water stress.",
+  "dataLinks": [],
+  "documentationURL": "http://breedbase.org",
+  "endDate": "2018-01-01",
+  "environmentParameters": [
+    {
+      "description": "the soil type was clay",
+      "parameterName": "soil type",
+      "parameterPUI": "PECO:0007155",
+      "unit": "pH",
+      "unitPUI": "PECO:0007059",
+      "value": "clay soil",
+      "valuePUI": "ENVO:00002262"
+    }
+  ],
+  "experimentalDesign": {
+    "PUI": "CO_715:0000145",
+    "description": "Lines were repeated twice at each location using a complete block design. In order to limit competition effects, each block was organized into four sub-blocks corresponding to earliest groups based on a prior information."
+  },
+  "externalReferences": [],
+  "growthFacility": {
+    "PUI": "CO_715:0000162",
+    "description": "field environment condition, greenhouse"
+  },
+  "lastUpdate": {
+    "timestamp": "2018-01-01T14:47:23-0600",
+    "version": "1.2.3"
+  },
+  "license": "MIT License",
+  "locationDbId": "23",
+  "locationName": "test_location",
+  "observationLevels": [],
+  "observationUnitsDescription": "Observation units consisted in individual plots themselves consisting of a row of 15 plants at a density of approximately six plants per square meter.",
+  "seasons": [
+    "Spring_2018"
+  ],
+  "startDate": "2018-01-01",
+  "studyCode": "Grape_Yield_Spring_2018",
+  "studyDescription": "This is a yield study for Spring 2018",
+  "studyName": "INRAs Walnut Genetic Resources Observation at Kenya modified",
+  "studyPUI": "doi:10.155454/12349537312",
+  "studyType": "phenotyping_trial",
+  "trialDbId": "134",
+  "trialName": "test"
+}';
+
+$resp = $ua->put("http://192.168.33.11:3010/brapi/v2/studies/257", Content => $data);
+$response = decode_json $resp->{_content};
+print STDERR Dumper $response;
+is_deeply($response, {'result' => undef,'metadata' => {'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Studies'},{'messageType' => '400','message' => 'You need to be associated with breeding program  to change the details of this trial.'}],'pagination' => {'pageSize' => 1,'currentPage' => 0,'totalCount' => 0,'totalPages' => 0},'datafiles' => []}});
 
 
 $data = '[
