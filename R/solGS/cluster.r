@@ -183,7 +183,7 @@ if (length(sIndexFile) != 0) {
     if (!is.null(selectedIndexGenotypes)) {
         clusterData <- rownames_to_column(clusterData, var = "germplasmName")    
         clusterData <- clusterData %>%
-            filter(genotypes %in% rownames(selectedIndexGenotypes))
+            filter(germplasmName %in% rownames(selectedIndexGenotypes))
         
         clusterData <- column_to_rownames(clusterData, var = 'germplasmName')
     }
