@@ -653,9 +653,9 @@ sub create_file_id {
     {
 	$file_id = $file_id . '-traits-' . $traits_selection_id if $traits_selection_id;
     }
- 
-    if (!$traits_selection_id & $trait_id) 
-    {
+   
+    if (!$traits_selection_id && $trait_id) 
+    { 
 	$file_id = $file_id . '-' . $trait_id;
     }
 
