@@ -40,7 +40,7 @@ $program_name
                         </div>
                         <div class="form-group form-group-sm" id="target_value_section" style="display: none" >
                             <hr>
-                            <center><h4>Target Value:</h4></center>
+                            <center><h4>Add Target Value:</h4></center>
                             <div id="target_value_for_trait" >
                             </div>
                         </div
@@ -59,9 +59,22 @@ $program_name
 
 jQuery(document).ready(function () {
 
+    jQuery(document).on('change', '#select_list_list_select', function() {
+
+        var list = new CXGN.List();
+        var trait_list_id = jQuery('#select_list_list_select').val();
+        var trait_list = list.getList(trait_list_id);
+        var html = '<form class="form-horizontal">';
+        for (var i=0; i<trait_list.length; i++){
+            html = html + '<div class="form-group"><label class="col-sm-9 control-label">' + trait_list[i] + ': </label><div class="col-sm-3"><input class="form-control" id="target_value_input_' + i + '" type="text" value="" /></div></div>';
+        }
+        html = html + '</form>';
+        jQuery("#target_value_for_trait").empty().html(html);
 
 
+        jQuery("#target_value_section").show();
 
+    });
 
 });
 
