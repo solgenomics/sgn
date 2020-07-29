@@ -59,8 +59,8 @@ $program_name
 
 jQuery(document).ready(function () {
 
-    jQuery(document).on('change', '#select_list_list_select', function() {
 
+    jQuery(document).on('change', '#select_list_list_select', function() {
         var list = new CXGN.List();
         var trait_list_id = jQuery('#select_list_list_select').val();
         var trait_list = list.getList(trait_list_id);
@@ -76,6 +76,68 @@ jQuery(document).ready(function () {
 
     });
 
+    jQuery('#submit_new_profile').click(function(){
+
+        var list = new CXGN.List();
+        var profile_program_id = jQuery('#profile_program_id').val();
+        var product_profile_name = jQuery('#new_product_profile_name').val();
+        var product_profile_scope = jQuery('#new_product_profile_scope').val();
+        var trait_list_id = jQuery('#select_list_list_select').val();
+        var trait_list = list.getList(trait_list_id);
+        trait_list_json = JSON.stringify(trait_list);
+
+        if (product_profile_name === '') {
+            alert("Please supply a product profile name");
+            return;
+        }
+
+        if (product_profile_scope === '') {
+            alert("Please supply a product profile scope");
+            return;
+        }
+
+        if (trait_list_id === '') {
+            alert("Please select a trait list");
+            return;
+        }
+
+        var target_values = [];
+        for (var i=0; i<trait_list.length; i++) {
+            var target_value = jQuery("input#target_value_input_" + i).val();
+            target_values.push(target_value);
+        }
+
+        target_values_json = JSON.stringify(target_values);
+
+        jQuery.ajax({
+            url: '/ajax/breeders/program/add_product_profile',
+            timeout: 3000000,
+            dataType: "json",
+            type: 'POST',
+            data:{
+                'profile_program_id': profile_program_id,
+                'product_profile_name': product_profile_name,
+                'product_profile_scope': product_profile_scope,
+                'trait_list_json': trait_list_json,
+                'target_values_json': target_values_json,
+            },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            error: function(response) {
+                alert("An error occurred!" + JSON.stringify(response));
+                return;
+            },
+            success: function(response) {
+                if (response.error) {
+                    alert(response.error);
+                }
+            },
+        });
+
+    });
+
 });
+
 
 </script>

@@ -336,4 +336,24 @@ sub program_seedlots :Chained('ajax_breeding_program') PathPart('seedlots') Args
 }
 
 
+sub add_product_profile : Path('/ajax/breeders/program/add_product_profile') : ActionClass('REST') { }
+
+sub add_product_profile_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $program_id = $c->req->param('profile_program_id');
+    my $product_profile_name = $c->req->param('product_profile_name');
+    my $product_profile_scope = $c->req->param('product_profile_scope');
+    my $trait_list_json = $c->req->param('trait_list_json');
+    my $target_values_json = $c->req->param('target_values_json');
+
+    print STDERR "PROGRAM ID =".Dumper($program_id)."\n";
+    print STDERR "PROFILE NAME =".Dumper($product_profile_name)."\n";
+    print STDERR "SCOPE =".Dumper($product_profile_scope)."\n";
+    print STDERR "TRAIT LIST =".Dumper($trait_list_json)."\n";
+    print STDERR "TARGET VALUES =".Dumper($target_values_json)."\n";
+
+}
+
+
 1;
