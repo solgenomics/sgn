@@ -184,6 +184,8 @@ The trait names will be post-composed with the analysis_statistical_ontology_ter
                         <&| /util/workflow.mas:step, title=> "Analysis Info" &>
                             <& /page/page_title.mas, title=>"Save analysis results" &>
 
+                            <p>This is an optional step and is only available when there are actual results to save. Please move on to saving the model weights if there are no results to save.</p>
+
                             <form class="form-horizontal">
                                 <div class="form-group form-group-sm">
                                     <label class="col-sm-3 control-label">Do you want to save the analysis results?: </label>

@@ -5,7 +5,7 @@ $deleted_nirs_files => undef
 $locations => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.Trial','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial' ] &>
+<& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.Trial','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial', 'jquery.iframe-post-form' ] &>
 
 <& /page/page_title.mas, title=>"Manage NIRS Data" &>
 
@@ -14,8 +14,7 @@ $locations => undef
 <!--button class="btn btn-info" onclick=location.href="/search/stocks">Phenotype Search</button><br /><br /-->
 
 <& /tools/nirs/nirs_analysis_dialogs.mas &>
-
-<& /breeders_toolbox/upload_nirs_spreadsheet.mas &>
+<hr>
 
 <div class="well">
 

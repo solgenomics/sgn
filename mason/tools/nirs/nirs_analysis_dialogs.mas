@@ -160,7 +160,7 @@
 
                     <br/><br/>
                     <center>
-                    <button class="btn btn-primary" id="nir_analysis_training_model_step">Go to Next Step</button>
+                    <button class="btn btn-primary" id="nir_analysis_training_model_step">Train the Model</button>
                     </center>
                 </&>
                 <&| /util/workflow.mas:step, title=> "Summary" &>
@@ -170,25 +170,10 @@
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Do you want to save model weights for future predictions?: </label>
                             <div class="col-sm-9" >
-                                <input type="checkbox" id="nirs_analysis_training_save_model_select" name="nirs_analysis_training_save_model_select" >
+                                <button class="btn btn-primary" id="nir_analysis_training_model_save_step">Save the Model</button>
                             </div>
                         </div>
                     </div>
-
-                    <br/><br/>
-                    <center>
-                    <button class="btn btn-primary" id="nir_analysis_training_model_save_step">Go to Next Step</button>
-                    </center>
-                </&>
-                <&| /util/workflow.mas:step, title=> "Confirm" &>
-                    <& /page/page_title.mas, title=>"Train the model!" &>
-
-                    <br/><br/>
-
-                    <br/><br/>
-                    <center>
-                    <button class="btn btn-primary" >Train and Save NIRs Model</button>
-                    </center>
 
                 </&>
             </&>
@@ -223,6 +208,8 @@
     </div>
   </div>
 </div>
+
+<& /analyses/store_new_analysis_values_and_model.mas &>
 
 <script>
 jQuery(document).ready(function(){
@@ -304,6 +291,7 @@ jQuery(document).ready(function(){
     var nirs_analysis_training_preprocessing_select;
     var nirs_analysis_training_niter_select;
     var nirs_analysis_training_rf_var_imp_select;
+    var nirs_analysis_training_response;
 
     jQuery('#nir_analysis_training_model_step').click(function(){
         nirs_analysis_training_format_select = jQuery('#nirs_analysis_training_format_select').val();
@@ -333,14 +321,15 @@ jQuery(document).ready(function(){
                 'niter' : nirs_analysis_training_niter_select,
                 'tune' : nirs_analysis_training_tuneLength_select,
                 'preprocessing' : nirs_analysis_training_preprocessing_select,
-                'rf' : nirs_analysis_training_rf_var_imp_select,
-                'save_model' : 0
+                'rf' : nirs_analysis_training_rf_var_imp_select
             },
             beforeSend: function(){
                 jQuery('#working_modal').modal('show');
             },
             success: function(response){
                 console.log(response);
+                nirs_analysis_training_response = response;
+
                 jQuery('#working_modal').modal('hide');
 
                 Workflow.complete("#nir_analysis_training_model_step");
@@ -353,46 +342,21 @@ jQuery(document).ready(function(){
         });
     });
 
-    var nirs_analysis_training_save_model_select = 0;
 
     jQuery('#nir_analysis_training_model_save_step').click(function(){
-        nirs_analysis_training_save_model_select = 0;
-        if (jQuery('#nirs_analysis_training_save_model_select').is(":checked")) {
-            nirs_analysis_training_save_model_select = 1;
-        }
-        if (nirs_analysis_training_save_model_select == 1) {
-            jQuery.ajax({
-                url : '/ajax/Nirs/generate_results',
-                type : 'POST',
-                data : {
-                    'train_dataset_id' : nirs_analysis_training_dataset_train_id,
-                    'test_dataset_id' : nirs_analysis_training_dataset_test_id,
-                    'trait_id' : nirs_analysis_training_trait_id,
-                    'format' : nirs_analysis_training_format_select,
-                    'cv' : nirs_analysis_training_cv_select,
-                    'algorithm' : nirs_analysis_training_nirs_model_algorithm,
-                    'niter' : nirs_analysis_training_niter_select,
-                    'tune' : nirs_analysis_training_tuneLength_select,
-                    'preprocessing' : nirs_analysis_training_preprocessing_select,
-                    'rf' : nirs_analysis_training_rf_var_imp_select,
-                    'save_model' : 1
-                },
-                beforeSend: function(){
-                    jQuery('#working_modal').modal('show');
-                },
-                success: function(response){
-                    console.log(response);
-                    jQuery('#working_modal').modal('hide');
+        jQuery('#generic_save_analysis_analysis_to_save').prop('disabled', 'disabled');
+        jQuery('#generic_save_analysis_model_language').val('R');
+        jQuery('#generic_save_analysis_model_type').val('waves_nirs_spectral_predictions');
+        jQuery('#generic_save_analysis_model_properties').val(JSON.stringify(nirs_analysis_training_response.model_properties));
+        jQuery('#generic_save_analysis_model_application_name').val("Jenna's Waves R Package NIRs Analysis");
+        jQuery('#generic_save_analysis_model_application_version').val("V1.01");
+        jQuery('#generic_save_analysis_model_file').val(nirs_analysis_training_response.model_file);
+        jQuery('#generic_save_analysis_model_archived_model_file_type').val("jennasrwaves_V1.01_waves_nirs_spectral_predictions_weights_file");
+        jQuery('#generic_save_analysis_model_training_data_file').val(nirs_analysis_training_response.training_data_file);
+        jQuery('#generic_save_analysis_model_archived_training_data_file_type').val("jennasrwaves_V1.01_waves_nirs_spectral_predictions_training_data_file");
+        jQuery('#generic_save_analysis_model_auxiliary_files').val(JSON.stringify(nirs_analysis_training_response.model_aux_files));
 
-                    Workflow.complete("#nir_analysis_training_model_save_step");
-                    Workflow.focus('#nirs_analysis_training_workflow', 6);
-                },
-                error: function(response){
-                    alert('Error training NIRS!');
-                    jQuery('#working_modal').modal('hide');
-                }
-            });
-        }
+        jQuery('#generic_save_analysis_dialog').modal('show');
     });
 
 });
