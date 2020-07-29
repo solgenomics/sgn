@@ -2881,11 +2881,7 @@ sub _perform_plot_polygon_assign {
     }
     my $image_tag = CXGN::Tag->new($schema->storage->dbh, $image_tag_id);
 
-    my $corresponding_channel = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_observation_unit_plot_polygon_types($schema)->{$linking_table_type_id}->{corresponding_channel};
-    # my $image_band_index_string = '';
-    # if (defined($corresponding_channel)) {
-    #     $image_band_index_string = "--image_band_index $corresponding_channel";
-    # }
+    my $corresponding_channel = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_observation_unit_plot_polygon_types($schema)->{$linking_table_type_id}->{corresponding_channel} || '';
 
     my @plot_polygon_image_fullpaths;
     my @plot_polygon_image_urls;
