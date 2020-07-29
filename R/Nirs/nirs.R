@@ -10,10 +10,8 @@ library(devtools)
 library(jsonlite)
 library(waves)
 
-# Error handling 
+# Error handling
 # TODO where do I check for genotype and/or environment overlap for the CVs? Here or in controller?
-# TODO Check that number and wls of test and training dfs match
-# TODO Check that spectrometer types match
 
 #### Read in and assign arguments ####
 args <- commandArgs(trailingOnly = TRUE)
@@ -47,66 +45,44 @@ if(cv.scheme == "random"){
   cv.scheme <- NULL
 }
 
+# args[8] = training data.frame: observationUnit level data with phenotypes and spectra in JSON format
+train.ready <- jsonlite::fromJSON(txt = args[8], flatten = T) %>%
+  rename(uniqueid = observationUnitId) %>%
+  rename_at(vars(starts_with("trait.")), ~paste0("reference")) %>%
+  rename_at(vars(starts_with("nirs_spectra")), ~str_replace(., "nirs_spectra.", "X"))
+
+# args[9] = test data.frame: observationUnit level data with phenotypes and spectra in JSON format
+if(args[9] != "NULL"){
+  test.ready <- jsonlite::fromJSON(txt = args[9], flatten = T) %>%
+  rename(uniqueid = observationUnitId) %>%
+  rename_at(vars(starts_with("trait.")), ~paste0("reference")) %>%
+  rename_at(vars(starts_with("nirs_spectra")), ~str_replace(., "nirs_spectra.", "X"))
+} else{
+  test.input <- NULL
+}
+
+wls <- ncol(train.ready) - 2
 
 if(is.null(cv.scheme)){
-  # args[8] = training data.frame: observationUnit level data with phenotypes and spectra in JSON format
-  # TODO do we need to read in a separate pheno file or will it be included in the json with spectra?
-  df.ready <- jsonlite::fromJSON(txt = args[8], flatten = T) %>% 
-  rename(uniqueid = observationUnitId) %>% 
-  rename_at(vars(starts_with("trait.")), ~paste0("reference")) %>% 
-  rename_at(vars(starts_with("nirs_spectra")), ~str_replace(., "nirs_spectra.", "X"))
-  
-
-  # args[9] = test data.frame: observationUnit level data with phenotypes and spectra in JSON format
-  if(args[9] != "NULL"){
-    test.ready <- jsonlite::fromJSON(txt = args[9], flatten = T) %>% 
-    rename(uniqueid = observationUnitId) %>% 
-    rename_at(vars(starts_with("trait.")), ~paste0("reference")) %>% 
-    rename_at(vars(starts_with("nirs_spectra")), ~str_replace(., "nirs_spectra.", "X"))
-  } else{
-    test.input <- NULL
-  }
-  
-  wls <- ncol(df.ready) - 2
-
-  # Test model
-  results.df <- TestModelPerformance(train.data = df.ready, num.iterations = num.iterations, 
-                                     test.data = test.ready, preprocessing = preprocessing, 
-                                     wavelengths = wls, tune.length = tune.length, 
+  # Test model using non-specialized cv scheme
+  results.df <- TestModelPerformance(train.data = train.ready, num.iterations = num.iterations,
+                                     test.data = test.ready, preprocessing = preprocessing,
+                                     wavelengths = wls, tune.length = tune.length,
                                      model.method = model.method, output.summary = TRUE,
-                                     rf.variable.importance = rf.var.importance, 
+                                     rf.variable.importance = rf.var.importance,
                                      stratified.sampling = stratified.sampling, cv.scheme = NULL,
                                      trial1 = NULL, trial2 = NULL, trial3 = NULL)
-  
 } else{
-  training.input <- NULL
-  test.input <- NULL
-  
-  # args[10:11] = trial1 and trial2
-  trial1.ready <- jsonlite::fromJSON(args[10]) %>% rename(reference = pheno, uniqueid = observationunitid) %>%
-    %>% rename_at(vars(starts_with("nirs_spectra")), funs(str_replace(., "nirs_spectra.", "X")))
-  trial2.ready <- jsonlite::fromJSON(args[11]) %>% rename(reference = pheno, uniqueid = observationunitid) %>%
-    %>% rename_at(vars(starts_with("nirs_spectra")), funs(str_replace(., "nirs_spectra.", "X")))
-  
-  # args[12] = trial3
-  trial3.input <- NULL
-  if(args[12] != "NULL"){
-    trial3.ready <- jsonlite::fromJSON(args[12]) %>% rename(reference = pheno, uniqueid = observationunitid) %>%
-    %>% rename_at(vars(starts_with("nirs_spectra")), funs(str_replace(., "nirs_spectra.", "X")))
-  }
-  
-  wls <- ncol(trial1.ready) - 2
-  
-  # Test model
-  results.df <- TestModelPerformance(train.data = NULL, num.iterations = num.iterations, 
-                                     test.data = NULL, preprocessing = preprocessing, 
-                                     wavelengths = wls, tune.length = tune.length, 
+  # Test model using specialized cv scheme
+  results.df <- TestModelPerformance(train.data = NULL, num.iterations = num.iterations,
+                                     test.data = NULL, preprocessing = preprocessing,
+                                     wavelengths = wls, tune.length = tune.length,
                                      model.method = model.method, output.summary = TRUE,
-                                     rf.variable.importance = rf.var.importance, 
+                                     rf.variable.importance = rf.var.importance,
                                      stratified.sampling = FALSE, cv.scheme = cv.scheme,
-                                     trial1 = trial1.ready, trial2 = trial2.ready, 
-                                     trial3 = trial3.ready)
-  
+                                     trial1 = training.input, trial2 = test.input,
+                                     trial3 = NULL)
+
 }
 
 if(rf.var.importance){
@@ -114,21 +90,15 @@ if(rf.var.importance){
   results.df <- results.df[[1]]
 }
 
-# TODO output results summary table, variable importance results, and figure
-# TODO save model
+# args[10] = table output file name
+write.table(x = results.df, file = args[10], row.names = F)
 
-# args[13] = table output file name
-write.table(x = results.df, file = args[13], row.names = F)
+# args[11] = figure output file name
+ggsave(filename = args[11], plot = results.plot, device = "png")
 
-# argsp[14] = figure output file name
-ggsave(filename = args[14], plot = results.plot, device = "png")
-
-# args[15] = variable importance results output file name
+# args[12] = variable importance results output file name
 if(rf.var.importance){
-  write.table(var.imp, file = args[15], row.names = F)
-  # args[16] = variable importance figure output file name
-  ggsave(filename = args[16], plot = results.plot, device = "png")
+  write.table(var.imp, file = args[12], row.names = F)
+  # args[13] = variable importance figure output file name
+  ggsave(filename = args[13], plot = results.plot, device = "png")
 }
-
-
-
