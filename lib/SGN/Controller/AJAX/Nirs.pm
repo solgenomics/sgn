@@ -18,8 +18,8 @@ use CXGN::Blast::Parse;
 use CXGN::Blast::SeqQuery;
 # use Path::Tiny qw(path);
 use Cwd qw(cwd);
-# use JSON::Parse 'parse_json';
 use JSON::XS;
+use List::Util qw(shuffle);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -187,7 +187,8 @@ sub generate_results_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $dbh = $c->dbc->dbh();
-
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     print STDERR Dumper $c->req->params();
 
     my $format_id = $c->req->param('format');
@@ -227,51 +228,119 @@ sub generate_results_POST : Args(0) {
     my $nirs_tmp_output = $c->config->{cluster_shared_tempdir}."/nirs_files";
     mkdir $nirs_tmp_output if ! -d $nirs_tmp_output;
     my ($tmp_fh, $tempfile) = tempfile(
-      "nirs_download_XXXXX",
-      DIR=> $nirs_tmp_output,
+        "nirs_download_XXXXX",
+        DIR=> $nirs_tmp_output,
     );
 
-    my $pheno_filepath = $tempfile . "_phenotype.txt";
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-    my $temppath = $nirs_tmp_output . "/" . $tempfile;
-    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath);
-    my $phenotype_data_ref = $ds->retrieve_phenotypes($pheno_filepath);
+    my $train_json_filepath = $tempfile."_train_json";
+    my $test_json_filepath = $tempfile."_test_json";
 
-    
-    my @plot_train;
-    my @plot_test;
-    open(my $f, '<', $pheno_filepath) or die;
-    my $rawnum;
-    my $j=39;
-    my $seltrait;
-    while (my $line = <$f>){
-        my @elements = split '\t', $line;
-        # push @plot_train, $elements[22];
-        my $trail = $elements[5];
-        if ($trail eq $train_id){
-            push @plot_train, $elements[22];
-        }
-        if ($trail eq $test_id){
-            push @plot_test, $elements[22];
-        }
+    # my $pheno_filepath = $tempfile . "_phenotype.txt";
+    # my $temppath = $nirs_tmp_output . "/" . $tempfile;
+    # my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $train_dataset_id, file_name => $temppath);
+    # my $phenotype_data_ref = $ds->retrieve_phenotypes($pheno_filepath);
+    # 
+    # 
+    # my @plot_train;
+    # my @plot_test;
+    # open(my $f, '<', $pheno_filepath) or die;
+    # my $rawnum;
+    # my $j=39;
+    # my $seltrait;
+    # while (my $line = <$f>){
+    #     my @elements = split '\t', $line;
+    #     # push @plot_train, $elements[22];
+    #     my $trail = $elements[5];
+    #     if ($trail eq $train_id){
+    #         push @plot_train, $elements[22];
+    #     }
+    #     if ($trail eq $test_id){
+    #         push @plot_test, $elements[22];
+    #     }
+    # 
+    #     my $size = scalar @elements;
+    #     while ($j <= $size){
+    #         my $test = $elements[$j];
+    #         $test =~ s/\|CO.*//;
+    #         if ($test eq $trait_id){
+    #             $seltrait = $test;
+    #             $rawnum = $j;
+    #             $j=1000;
+    #         } else {
+    #             $j=$j+1;
+    #         }
+    #     }
+    # };
+    # close($f);
 
-        my $size = scalar @elements;
-        while ($j <= $size){
-            my $test = $elements[$j];
-            $test =~ s/\|CO.*//;
-            if ($test eq $trait_id){
-                $seltrait = $test;
-                $rawnum = $j;
-                $j=1000;
-            } else {
-                $j=$j+1;
+    my $training_dataset = CXGN::Dataset->new({people_schema => $people_schema, schema => $schema, sp_dataset_id => $train_dataset_id});
+    my ($training_pheno_data, $train_unique_traits) = $training_dataset->retrieve_phenotypes_ref();
+    # print STDERR Dumper $training_pheno_data;
+
+    my %training_pheno_data;
+    foreach my $d (@$training_pheno_data) {
+        my $obsunit_id = $d->{observationunit_stock_id};
+        foreach my $o (@{$d->{observations}}) {
+            my $t_id = $o->{trait_id};
+            my $t_name = $o->{trait_name};
+            my $value = $o->{value};
+            if ($trait_id == $t_id) {
+                $training_pheno_data{$obsunit_id} = {
+                    value => $value,
+                    trait_id => $t_id,
+                    trait_name => $t_name
+                };
             }
         }
-    };
-    close($f);
+    }
+    print STDERR Dumper \%training_pheno_data;
 
-    my $stock_ids_sql;
+    my %testing_pheno_data;
+    if ($test_dataset_id) {
+        my $test_dataset = CXGN::Dataset->new({people_schema => $people_schema, schema => $schema, sp_dataset_id => $test_dataset_id});
+        my ($test_pheno_data, $test_unique_traits) = $test_dataset->retrieve_phenotypes_ref();
+        # print STDERR Dumper $test_pheno_data;
+
+        foreach my $d ($test_pheno_data) {
+            my $obsunit_id = $d->{observationunit_stock_id};
+            foreach my $o (@{$d->{observations}}) {
+                my $t_id = $o->{trait_id};
+                my $t_name = $o->{trait_name};
+                my $value = $o->{value};
+                if ($trait_id == $t_id) {
+                    $testing_pheno_data{$obsunit_id} = {
+                        value => $value,
+                        trait_id => $t_id,
+                        trait_name => $t_name
+                    };
+                }
+            }
+        }
+    }
+    else {
+        my @full_training_plots = keys %training_pheno_data;
+        my $cutoff = int(scalar(@full_training_plots)*0.2);
+        my @random_plots = shuffle(@full_training_plots);
+        
+        my @testing_plots = @random_plots[0..$cutoff];
+        my @training_plots = @random_plots[$cutoff+1..scalar(@full_training_plots)-1];
+
+        my %training_pheno_data_split;
+        my %testing_pheno_data_split;
+        foreach (@training_plots) {
+            $training_pheno_data_split{$_} = $training_pheno_data{$_};
+        }
+        foreach (@testing_plots) {
+            $testing_pheno_data_split{$_} = $training_pheno_data{$_};
+        }
+        %training_pheno_data = %training_pheno_data_split;
+        %testing_pheno_data = %testing_pheno_data_split;
+    }
+    print STDERR Dumper \%training_pheno_data;
+    print STDERR Dumper \%testing_pheno_data;
+
+    my @all_plot_ids = (keys %training_pheno_data, keys %testing_pheno_data);
+    my $stock_ids_sql = join ',', @all_plot_ids;
     my $nirs_training_q = "SELECT stock.uniquename, stock.stock_id, metadata.md_json.json->>'spectra'
         FROM stock
         JOIN nd_experiment_stock USING(stock_id)
@@ -282,224 +351,265 @@ sub generate_results_POST : Args(0) {
     my $nirs_training_h = $dbh->prepare($nirs_training_q);    
     $nirs_training_h->execute($device_id);
     while (my ($stock_uniquename, $stock_id, $spectra) = $nirs_training_h->fetchrow_array()) {
-        
-    }
-
-    my ($fh, $filename) = tempfile(
-      "nirs_XXXXX",
-      DIR=> $nirs_tmp_output,
-      SUFFIX => "_spectra",
-      EXLOCK => 0
-    );
-
-    my @rawjson = ();
-	my @rawplot = ();
-    foreach my $name (@plot_train){
-        my $sql = "SELECT
-				      jsonb_pretty(cast(json->>'spectra' AS jsonb)) AS nirs_spectra
-					FROM metadata.md_json
-					JOIN phenome.nd_experiment_md_json USING(json_id)
-					JOIN nd_experiment_stock USING(nd_experiment_id)
-					JOIN stock using(stock_id) where stock.uniquename=?
-					AND jsonb_pretty(json - 'spectra'->'device_type')='\"$device_id\"';";
-
-        my $sql1 = "SELECT json AS nirs_spectra 
-                    FROM metadata.md_json JOIN phenome.nd_experiment_md_json USING(json_id)  
-                    JOIN nd_experiment_stock USING(nd_experiment_id)              
-                    JOIN stock using(stock_id) where stock.uniquename=?
-                    AND jsonb_pretty(json - 'spectra'->'device_type')='\"$device_id\"';";
-     
-    	
-        my $fh_db= $dbh->prepare($sql);    
-        $fh_db->execute($name);
-        while (my @spt = $fh_db->fetchrow_array()) {
-            if (!$spt[0]){
-                my $fh_db= $dbh->prepare($sql1);   
-                my $result = $fh_db->execute($name);
-
-                my @spt1 = $fh_db->fetchrow_array();
-                            push @rawjson, @spt1;
-                            print $fh @spt1;
-                
-                }else{
-                    push @rawjson, @spt;
-                    print $fh @spt;
-                }
-              }
-        
-         my $unitname = "SELECT
-				    		stock.uniquename AS observationUnitId
-				                FROM metadata.md_json
-				                JOIN phenome.nd_experiment_md_json USING(json_id)
-				                JOIN nd_experiment_stock USING(nd_experiment_id)
-				                JOIN stock using(stock_id) where stock.uniquename=?
-				                AND jsonb_pretty(json - 'spectra'->'device_type')='\"$device_id\"';";
-
- 		my $fh_db2= $dbh->prepare($unitname);    
-        $fh_db2->execute($name);
-        while (my @spt2 = $fh_db2->fetchrow_array()) {
-        	push @rawplot, @spt2;
-          }
-        
-    }
-
-    #creating a list with plot and seleted phenotype.
-    open(my $f, '<', $pheno_filepath) or die;
-    my %list;
-    my $i=0;
-    while (my $line = <$f>){
-        my @elm = split '\t', $line;
-        my $plot2 = $elm[22];
-        if($rawplot[$i] eq $plot2){
-            my $ph = $elm[$rawnum];
-            if ($ph eq ""){
-                $ph = "NA";
-            }
-            $list{$rawplot[$i]}=$ph;
-            $i=$i+1;
+        if (exists($training_pheno_data{$stock_id})) {
+            $training_pheno_data{$stock_id}->{spectra} = $spectra;
         }
-     }
-
-    close($f);
-
-    #creating and saving a file for trainig population in json format
-    #with nirs spectra and pheno data
-
-    my $j;
-    my @formated = ();
-    for($j=0; $j < @rawjson; $j++){
-        print "The number is $j \n";
-    }
-    my $limit;
-    my $i;
-    if($j==1){
-        $i = 0;
-        push @formated, "[\n{\"observationUnitId\":\"$rawplot[$i]\",\"trait\":{ \"$trait_id\":\"$list{$rawplot[$i]}\"},\n\"nirs_spectra\":$rawjson[$i]\n}\n]\n";
-        } elsif($j>1){
-            $limit = ($j-1);
-        for($i = 0; $i < @rawjson; $i++) {
-            if($i==0){
-                push @formated, "[\n{\"observationUnitId\":\"$rawplot[$i]\",\"trait\":{ \"$trait_id\":\"$list{$rawplot[$i]}\"},\n\"nirs_spectra\":$rawjson[$i]\n},";
-            }elsif($i<$limit){
-                push @formated, "{\"observationUnitId\":\"$rawplot[$i]\",\"trait\":{ \"$trait_id\":\"$list{$rawplot[$i]}\"},\n\"nirs_spectra\":$rawjson[$i]\n},";
-            }
-            if($i==$limit){
-                push @formated, "{\"observationUnitId\":\"$rawplot[$i]\",\"trait\":{ \"$trait_id\":\"$list{$rawplot[$i]}\"},\n\"nirs_spectra\":$rawjson[$i]\n}\n\]\n";
-            }
+        if (exists($testing_pheno_data{$stock_id})) {
+            $testing_pheno_data{$stock_id}->{spectra} = $spectra;
         }
     }
+    print STDERR Dumper \%training_pheno_data;
+    print STDERR Dumper \%testing_pheno_data;
 
-    open(my $outfile1, '>', $filename."_train.json");
-    foreach my $data (@formated){
-        print $outfile1 $data;
+    my @training_data_input;
+    while ( my ($stock_id, $o) = each %training_pheno_data) {
+        my $trait_name = $o->{trait_name};
+        my $value = $o->{value};
+        my $spectra = $o->{spectra};
+        push @training_data_input, {
+            "observationUnitId" => $stock_id,
+            "trait" => {$trait_name => $value},
+            "nirs_spectra" => $spectra
+        };
     }
+    my $training_data_input_json = encode_json \@training_data_input;
+    open(my $train_json_outfile, '>', $train_json_filepath);
+        print STDERR Dumper $train_json_filepath;
+        print $train_json_outfile $training_data_input_json;
+    close($train_json_outfile);
 
-    close($outfile1);
+    my @testing_data_input;
+    while ( my ($stock_id, $o) = each %testing_pheno_data) {
+        my $trait_name = $o->{trait_name};
+        my $value = $o->{value};
+        my $spectra = $o->{spectra};
+        push @testing_data_input, {
+            "observationUnitId" => $stock_id,
+            "trait" => {$trait_name => $value},
+            "nirs_spectra" => $spectra
+        };
+    }
+    my $testing_data_input_json = encode_json \@testing_data_input;
+    open(my $test_json_outfile, '>', $test_json_filepath);
+        print STDERR Dumper $test_json_filepath;
+        print $test_json_outfile $testing_data_input_json;
+    close($test_json_outfile);
+
+    # my ($fh, $filename) = tempfile(
+    #   "nirs_XXXXX",
+    #   DIR=> $nirs_tmp_output,
+    #   SUFFIX => "_spectra",
+    #   EXLOCK => 0
+    # );
+    # 
+    # my @rawjson = ();
+	# my @rawplot = ();
+    # foreach my $name (@plot_train){
+    #     my $sql = "SELECT
+	# 			      jsonb_pretty(cast(json->>'spectra' AS jsonb)) AS nirs_spectra
+	# 				FROM metadata.md_json
+	# 				JOIN phenome.nd_experiment_md_json USING(json_id)
+	# 				JOIN nd_experiment_stock USING(nd_experiment_id)
+	# 				JOIN stock using(stock_id) where stock.uniquename=?
+	# 				AND jsonb_pretty(json - 'spectra'->'device_type')='\"$device_id\"';";
+    # 
+    #     my $sql1 = "SELECT json AS nirs_spectra 
+    #                 FROM metadata.md_json JOIN phenome.nd_experiment_md_json USING(json_id)  
+    #                 JOIN nd_experiment_stock USING(nd_experiment_id)              
+    #                 JOIN stock using(stock_id) where stock.uniquename=?
+    #                 AND jsonb_pretty(json - 'spectra'->'device_type')='\"$device_id\"';";
+    # 
+    # 
+    #     my $fh_db= $dbh->prepare($sql);    
+    #     $fh_db->execute($name);
+    #     while (my @spt = $fh_db->fetchrow_array()) {
+    #         if (!$spt[0]){
+    #             my $fh_db= $dbh->prepare($sql1);   
+    #             my $result = $fh_db->execute($name);
+    # 
+    #             my @spt1 = $fh_db->fetchrow_array();
+    #                         push @rawjson, @spt1;
+    #                         print $fh @spt1;
+    # 
+    #             }else{
+    #                 push @rawjson, @spt;
+    #                 print $fh @spt;
+    #             }
+    #           }
+    # 
+    #      my $unitname = "SELECT
+	# 			    		stock.uniquename AS observationUnitId
+	# 			                FROM metadata.md_json
+	# 			                JOIN phenome.nd_experiment_md_json USING(json_id)
+	# 			                JOIN nd_experiment_stock USING(nd_experiment_id)
+	# 			                JOIN stock using(stock_id) where stock.uniquename=?
+	# 			                AND jsonb_pretty(json - 'spectra'->'device_type')='\"$device_id\"';";
+    # 
+ 	# 	my $fh_db2= $dbh->prepare($unitname);    
+    #     $fh_db2->execute($name);
+    #     while (my @spt2 = $fh_db2->fetchrow_array()) {
+    #     	push @rawplot, @spt2;
+    #       }
+    # 
+    # }
+    # 
+    # #creating a list with plot and seleted phenotype.
+    # open(my $f, '<', $pheno_filepath) or die;
+    # my %list;
+    # my $i=0;
+    # while (my $line = <$f>){
+    #     my @elm = split '\t', $line;
+    #     my $plot2 = $elm[22];
+    #     if($rawplot[$i] eq $plot2){
+    #         my $ph = $elm[$rawnum];
+    #         if ($ph eq ""){
+    #             $ph = "NA";
+    #         }
+    #         $list{$rawplot[$i]}=$ph;
+    #         $i=$i+1;
+    #     }
+    #  }
+    # 
+    # close($f);
+    # 
+    # #creating and saving a file for trainig population in json format
+    # #with nirs spectra and pheno data
+    # 
+    # my $j;
+    # my @formated = ();
+    # for($j=0; $j < @rawjson; $j++){
+    #     print "The number is $j \n";
+    # }
+    # my $limit;
+    # my $i;
+    # if($j==1){
+    #     $i = 0;
+    #     push @formated, "[\n{\"observationUnitId\":\"$rawplot[$i]\",\"trait\":{ \"$trait_id\":\"$list{$rawplot[$i]}\"},\n\"nirs_spectra\":$rawjson[$i]\n}\n]\n";
+    #     } elsif($j>1){
+    #         $limit = ($j-1);
+    #     for($i = 0; $i < @rawjson; $i++) {
+    #         if($i==0){
+    #             push @formated, "[\n{\"observationUnitId\":\"$rawplot[$i]\",\"trait\":{ \"$trait_id\":\"$list{$rawplot[$i]}\"},\n\"nirs_spectra\":$rawjson[$i]\n},";
+    #         }elsif($i<$limit){
+    #             push @formated, "{\"observationUnitId\":\"$rawplot[$i]\",\"trait\":{ \"$trait_id\":\"$list{$rawplot[$i]}\"},\n\"nirs_spectra\":$rawjson[$i]\n},";
+    #         }
+    #         if($i==$limit){
+    #             push @formated, "{\"observationUnitId\":\"$rawplot[$i]\",\"trait\":{ \"$trait_id\":\"$list{$rawplot[$i]}\"},\n\"nirs_spectra\":$rawjson[$i]\n}\n\]\n";
+    #         }
+    #     }
+    # }
+    # 
+    # open(my $outfile1, '>', $filename."_train.json");
+    # foreach my $data (@formated){
+    #     print $outfile1 $data;
+    # }
+    # 
+    # close($outfile1);
 
     #Extracting nirs spectra from testing population
-    my $dbh_test = $c->dbc->dbh();
-    my @rawjson_test = ();
-    my @rawplot_test = ();
-    foreach my $name_test (@plot_test){
-        my $sql_test = "SELECT
-                      jsonb_pretty(cast(json->>'spectra' AS jsonb)) AS nirs_spectra
-                    FROM metadata.md_json
-                    JOIN phenome.nd_experiment_md_json USING(json_id)
-                    JOIN nd_experiment_stock USING(nd_experiment_id)
-                    JOIN stock using(stock_id) where stock.uniquename=?
-                    AND jsonb_pretty(json - 'spectra'->'device_type')='\"$device_id\"';";
-        
-        my $sql_test1 = "SELECT json AS nirs_spectra 
-                    FROM metadata.md_json JOIN phenome.nd_experiment_md_json USING(json_id)  
-                    JOIN nd_experiment_stock USING(nd_experiment_id)              
-                    JOIN stock using(stock_id) where stock.uniquename= ?
-                    AND jsonb_pretty(json - 'spectra'->'device_type')='\"$device_id\"';";
-     
-        
-        my $fh_db_test= $dbh_test->prepare($sql_test);    
-        $fh_db_test->execute($name_test);
-
-
-        while (my @spt_test = $fh_db_test->fetchrow_array()) {
-            if (!$spt_test[0]){
-                my $fh_db_test= $dbh_test->prepare($sql_test1);   
-                my $result_test = $fh_db_test->execute($name_test);
-
-                my @spt_test1 = $fh_db_test->fetchrow_array();
-                            push @rawjson_test, @spt_test1;
-                            print $fh @spt_test1;
-                
-                }else{
-                    push @rawjson_test, @spt_test;
-                    print $fh @spt_test;
-                }
-              }
-
-         my $unitname = "SELECT
-                            stock.uniquename AS observationUnitId
-                                FROM metadata.md_json
-                                JOIN phenome.nd_experiment_md_json USING(json_id)
-                                JOIN nd_experiment_stock USING(nd_experiment_id)
-                                JOIN stock using(stock_id) where stock.uniquename=?
-                                AND jsonb_pretty(json - 'spectra'->'device_type')='\"$device_id\"';";
-        
-        my $fh_db2= $dbh->prepare($unitname);    
-        $fh_db2->execute($name_test);
-        while (my @spt2 = $fh_db2->fetchrow_array()) {
-            push @rawplot_test, @spt2;
-          }
-        
-    }
-
-
-    open(my $f, '<', $pheno_filepath) or die;
-    my %list;
-    my $i=0;
-    while (my $line = <$f>){
-        my @elm = split '\t', $line;
-        my $plot2 = $elm[22];
-        if($rawplot_test[$i] eq $plot2){
-            my $ph = $elm[$rawnum];
-            if ($ph eq ""){
-                $ph = "NA";
-            }
-            $list{$rawplot_test[$i]}=$ph;
-            $i=$i+1;
-        }
-     }
-
-     close($f);
-
-    my $j;
-    my @formated = ();
-    for($j=0; $j < @rawjson_test; $j++){
-    	print "The number test is $j \n";
-    }
-    my $limit;
-    my $i;
-    if($j==1){
-        $i = 0;
-        push @formated, "[\n{\"observationUnitId\":\"$rawplot_test[$i]\",\"trait\":{ \"$trait_id\":\"$list{$rawplot_test[$i]}\"},\n\"nirs_spectra\":$rawjson_test[$i]\n}\n]\n";
-        } elsif($j>1){
-            $limit = ($j-1);
-        for($i = 0; $i < @rawjson_test; $i++) {
-            if($i==0){
-            	push @formated, "[\n{\"observationUnitId\":\"$rawplot_test[$i]\",\"trait\":{ \"$trait_id\":\"$list{$rawplot_test[$i]}\"},\n\"nirs_spectra\":$rawjson_test[$i]\n},";
-            }elsif($i<$limit){
-            	push @formated, "{\"observationUnitId\":\"$rawplot_test[$i]\",\"trait\":{ \"$trait_id\":\"$list{$rawplot_test[$i]}\"},\n\"nirs_spectra\":$rawjson_test[$i]\n},";
-            }
-            if($i==$limit){
-            	push @formated, "{\"observationUnitId\":\"$rawplot_test[$i]\",\"trait\":{ \"$trait_id\":\"$list{$rawplot_test[$i]}\"},\n\"nirs_spectra\":$rawjson_test[$i]\n}\n\]\n";
-            }
-        }
-    }
-
-open(my $outfile2, '>', $filename."_test.json");
-foreach my $data (@formated){
-	print $outfile2 $data;
-}
-
-close($outfile2);
+#     my $dbh_test = $c->dbc->dbh();
+#     my @rawjson_test = ();
+#     my @rawplot_test = ();
+#     foreach my $name_test (@plot_test){
+#         my $sql_test = "SELECT
+#                       jsonb_pretty(cast(json->>'spectra' AS jsonb)) AS nirs_spectra
+#                     FROM metadata.md_json
+#                     JOIN phenome.nd_experiment_md_json USING(json_id)
+#                     JOIN nd_experiment_stock USING(nd_experiment_id)
+#                     JOIN stock using(stock_id) where stock.uniquename=?
+#                     AND jsonb_pretty(json - 'spectra'->'device_type')='\"$device_id\"';";
+# 
+#         my $sql_test1 = "SELECT json AS nirs_spectra 
+#                     FROM metadata.md_json JOIN phenome.nd_experiment_md_json USING(json_id)  
+#                     JOIN nd_experiment_stock USING(nd_experiment_id)              
+#                     JOIN stock using(stock_id) where stock.uniquename= ?
+#                     AND jsonb_pretty(json - 'spectra'->'device_type')='\"$device_id\"';";
+# 
+# 
+#         my $fh_db_test= $dbh_test->prepare($sql_test);    
+#         $fh_db_test->execute($name_test);
+# 
+# 
+#         while (my @spt_test = $fh_db_test->fetchrow_array()) {
+#             if (!$spt_test[0]){
+#                 my $fh_db_test= $dbh_test->prepare($sql_test1);   
+#                 my $result_test = $fh_db_test->execute($name_test);
+# 
+#                 my @spt_test1 = $fh_db_test->fetchrow_array();
+#                             push @rawjson_test, @spt_test1;
+#                             print $fh @spt_test1;
+# 
+#                 }else{
+#                     push @rawjson_test, @spt_test;
+#                     print $fh @spt_test;
+#                 }
+#               }
+# 
+#          my $unitname = "SELECT
+#                             stock.uniquename AS observationUnitId
+#                                 FROM metadata.md_json
+#                                 JOIN phenome.nd_experiment_md_json USING(json_id)
+#                                 JOIN nd_experiment_stock USING(nd_experiment_id)
+#                                 JOIN stock using(stock_id) where stock.uniquename=?
+#                                 AND jsonb_pretty(json - 'spectra'->'device_type')='\"$device_id\"';";
+# 
+#         my $fh_db2= $dbh->prepare($unitname);    
+#         $fh_db2->execute($name_test);
+#         while (my @spt2 = $fh_db2->fetchrow_array()) {
+#             push @rawplot_test, @spt2;
+#           }
+# 
+#     }
+# 
+# 
+#     open(my $f, '<', $pheno_filepath) or die;
+#     my %list;
+#     my $i=0;
+#     while (my $line = <$f>){
+#         my @elm = split '\t', $line;
+#         my $plot2 = $elm[22];
+#         if($rawplot_test[$i] eq $plot2){
+#             my $ph = $elm[$rawnum];
+#             if ($ph eq ""){
+#                 $ph = "NA";
+#             }
+#             $list{$rawplot_test[$i]}=$ph;
+#             $i=$i+1;
+#         }
+#      }
+# 
+#      close($f);
+# 
+#     my $j;
+#     my @formated = ();
+#     for($j=0; $j < @rawjson_test; $j++){
+#     	print "The number test is $j \n";
+#     }
+#     my $limit;
+#     my $i;
+#     if($j==1){
+#         $i = 0;
+#         push @formated, "[\n{\"observationUnitId\":\"$rawplot_test[$i]\",\"trait\":{ \"$trait_id\":\"$list{$rawplot_test[$i]}\"},\n\"nirs_spectra\":$rawjson_test[$i]\n}\n]\n";
+#         } elsif($j>1){
+#             $limit = ($j-1);
+#         for($i = 0; $i < @rawjson_test; $i++) {
+#             if($i==0){
+#             	push @formated, "[\n{\"observationUnitId\":\"$rawplot_test[$i]\",\"trait\":{ \"$trait_id\":\"$list{$rawplot_test[$i]}\"},\n\"nirs_spectra\":$rawjson_test[$i]\n},";
+#             }elsif($i<$limit){
+#             	push @formated, "{\"observationUnitId\":\"$rawplot_test[$i]\",\"trait\":{ \"$trait_id\":\"$list{$rawplot_test[$i]}\"},\n\"nirs_spectra\":$rawjson_test[$i]\n},";
+#             }
+#             if($i==$limit){
+#             	push @formated, "{\"observationUnitId\":\"$rawplot_test[$i]\",\"trait\":{ \"$trait_id\":\"$list{$rawplot_test[$i]}\"},\n\"nirs_spectra\":$rawjson_test[$i]\n}\n\]\n";
+#             }
+#         }
+#     }
+# 
+# open(my $outfile2, '>', $filename."_test.json");
+# foreach my $data (@formated){
+# 	print $outfile2 $data;
+# }
+# 
+# close($outfile2);
 
     # my $pheno_name; # args[1] $seltrait
     # my $preprocessing_boolean = $c->req->param('preprocessing_bool'); # args[2] 0k

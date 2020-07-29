@@ -273,7 +273,7 @@ jQuery(document).ready(function(){
         else {
             nirs_analysis_training_dataset_test_id = selected_test[0];
 
-            get_select_box('datasets_intersect', 'nirs_analysis_training_trait_select_div', {'name':'nirs_analysis_training_trait_select_id', 'id':'nirs_analysis_training_trait_select_id', 'param':'traits', 'dataset_ids':JSON.stringify([nirs_analysis_training_dataset_train_id,nirs_analysis_training_dataset_test_id]), 'names_as_values':1 });
+            get_select_box('datasets_intersect', 'nirs_analysis_training_trait_select_div', {'name':'nirs_analysis_training_trait_select_id', 'id':'nirs_analysis_training_trait_select_id', 'param':'traits', 'dataset_ids':JSON.stringify([nirs_analysis_training_dataset_train_id,nirs_analysis_training_dataset_test_id]) });
 
             Workflow.complete("#nirs_analysis_training_dataset_test_select_step");
             Workflow.focus('#nirs_analysis_training_workflow', 3);
@@ -322,6 +322,7 @@ jQuery(document).ready(function(){
             },
             error: function(response){
                 alert('Error training NIRS!');
+                jQuery('#working_modal').modal('hide');
             }
         });
     });

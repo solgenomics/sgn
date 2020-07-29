@@ -553,7 +553,7 @@ sub retrieve_phenotypes_ref {
     );
     my ($data, $unique_traits) = $phenotypes_search->search();
 
-    return [$data, $unique_traits];
+    return ($data, $unique_traits);
 }
 
 =head2 retrieve_accessions()
