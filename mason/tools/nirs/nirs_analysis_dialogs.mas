@@ -125,11 +125,10 @@
                             <label class="col-sm-3 control-label">Algorithm: </label>
                             <div class="col-sm-9" >
                                 <select class="form-control" id="nirs_analysis_training_nirs_model_algorithm">
-                                    <option value="">Available Model Algorithm</option>
-                                    <option value="random">PLSR</option>
-                                    <option value="stratified">Random Forest</option>
-                                    <option value="cv1">CVM with linear kernel</option>
-                                    <option value="cv2">CVM with radial kernel</option>
+                                    <option value="pls">PLSR</option>
+                                    <option value="rf">Random Forest</option>
+                                    <option value="svmLinear">SVM with Linear Kernel</option>
+                                    <option value="svmRadial">SVM with Radial Kernel</option>
                                 </select>
                             </div>
                         </div>
@@ -148,13 +147,13 @@
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Include preprocessing?: </label>
                             <div class="col-sm-9" >
-                                <input type="checkbox" id="nirs_analysis_training_preprocessing_select" name="preprocessing_select" value="preprocessing">
+                                <input type="checkbox" id="nirs_analysis_training_preprocessing_select" name="preprocessing_select" >
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Show random forest variable importance? (Note this may take a long time to run): </label>
                             <div class="col-sm-9" >
-                                <input type="checkbox" id="nirs_analysis_training_rf_var_imp_select" name="rf_var_imp_select" value="rfvarim">
+                                <input type="checkbox" id="nirs_analysis_training_rf_var_imp_select" name="rf_var_imp_select" >
                             </div>
                         </div>
                     </div>
@@ -294,9 +293,15 @@ jQuery(document).ready(function(){
         var nirs_analysis_training_cv_select = jQuery('#nirs_analysis_training_cv_select').val();
         var nirs_analysis_training_nirs_model_algorithm = jQuery('#nirs_analysis_training_nirs_model_algorithm').val();
         var nirs_analysis_training_tuneLength_select = jQuery('#nirs_analysis_training_tuneLength_select').val();
-        var nirs_analysis_training_preprocessing_select = jQuery('#nirs_analysis_training_preprocessing_select').val();
+        var nirs_analysis_training_preprocessing_select = 0;
+        if (jQuery('#nirs_analysis_training_preprocessing_select').is(":checked")) {
+            nirs_analysis_training_preprocessing_select = 1;
+        }
         var nirs_analysis_training_niter_select = jQuery('#nirs_analysis_training_niter_select').val();
-        var nirs_analysis_training_rf_var_imp_select = jQuery('#nirs_analysis_training_rf_var_imp_select').val();
+        var nirs_analysis_training_rf_var_imp_select = 0;
+        if (jQuery('#nirs_analysis_training_rf_var_imp_select').is(":checked")) {
+            nirs_analysis_training_rf_var_imp_select = 1;
+        }
 
         jQuery.ajax({
             url : '/ajax/Nirs/generate_results',

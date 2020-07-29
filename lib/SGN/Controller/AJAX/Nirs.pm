@@ -192,8 +192,6 @@ sub generate_results_POST : Args(0) {
     print STDERR Dumper $c->req->params();
 
     my $format_id = $c->req->param('format');
-    my $device_id = $format_id;
-    my $dataset_id;
     my $cv_scheme = $c->req->param('cv');
     my $train_dataset_id = $c->req->param('train_dataset_id');
     my $test_dataset_id = $c->req->param('test_dataset_id');
@@ -207,8 +205,8 @@ sub generate_results_POST : Args(0) {
     my $rf_var_imp = $c->req->param('rf');
 
     # print STDERR $format2;
-    print STDERR $device_id;
-    print STDERR $dataset_id;
+    print STDERR $format_id;
+    # print STDERR $dataset_id;
     print STDERR $trait_id;
 
     if ($preprocessing_boolean == 0){
@@ -234,6 +232,12 @@ sub generate_results_POST : Args(0) {
 
     my $train_json_filepath = $tempfile."_train_json";
     my $test_json_filepath = $tempfile."_test_json";
+
+    my $output_table_filepath = $tempfile."_table_results.txt";
+    my $output_figure_filepath = $tempfile."_figure_results.png";
+    my $output_table2_filepath = $tempfile."_table2_results.txt";
+    my $output_figure2_filepath = $tempfile."_figure2_results.png";
+    my $output_result_filepath = $tempfile."_results";
 
     # my $pheno_filepath = $tempfile . "_phenotype.txt";
     # my $temppath = $nirs_tmp_output . "/" . $tempfile;
@@ -278,22 +282,25 @@ sub generate_results_POST : Args(0) {
     # print STDERR Dumper $training_pheno_data;
 
     my %training_pheno_data;
+    my $seltrait;
     foreach my $d (@$training_pheno_data) {
         my $obsunit_id = $d->{observationunit_stock_id};
+        my $germplasm_name = $d->{germplasm_uniquename};
         foreach my $o (@{$d->{observations}}) {
             my $t_id = $o->{trait_id};
             my $t_name = $o->{trait_name};
             my $value = $o->{value};
+            $seltrait = $t_name;
             if ($trait_id == $t_id) {
                 $training_pheno_data{$obsunit_id} = {
                     value => $value,
                     trait_id => $t_id,
-                    trait_name => $t_name
+                    trait_name => $t_name,
+                    germplasm_name => $germplasm_name
                 };
             }
         }
     }
-    print STDERR Dumper \%training_pheno_data;
 
     my %testing_pheno_data;
     if ($test_dataset_id) {
@@ -303,6 +310,7 @@ sub generate_results_POST : Args(0) {
 
         foreach my $d ($test_pheno_data) {
             my $obsunit_id = $d->{observationunit_stock_id};
+            my $germplasm_name = $d->{germplasm_uniquename};
             foreach my $o (@{$d->{observations}}) {
                 my $t_id = $o->{trait_id};
                 my $t_name = $o->{trait_name};
@@ -311,33 +319,32 @@ sub generate_results_POST : Args(0) {
                     $testing_pheno_data{$obsunit_id} = {
                         value => $value,
                         trait_id => $t_id,
-                        trait_name => $t_name
+                        trait_name => $t_name,
+                        germplasm_name => $germplasm_name
                     };
                 }
             }
         }
     }
-    else {
-        my @full_training_plots = keys %training_pheno_data;
-        my $cutoff = int(scalar(@full_training_plots)*0.2);
-        my @random_plots = shuffle(@full_training_plots);
-        
-        my @testing_plots = @random_plots[0..$cutoff];
-        my @training_plots = @random_plots[$cutoff+1..scalar(@full_training_plots)-1];
-
-        my %training_pheno_data_split;
-        my %testing_pheno_data_split;
-        foreach (@training_plots) {
-            $training_pheno_data_split{$_} = $training_pheno_data{$_};
-        }
-        foreach (@testing_plots) {
-            $testing_pheno_data_split{$_} = $training_pheno_data{$_};
-        }
-        %training_pheno_data = %training_pheno_data_split;
-        %testing_pheno_data = %testing_pheno_data_split;
-    }
-    print STDERR Dumper \%training_pheno_data;
-    print STDERR Dumper \%testing_pheno_data;
+    # else { #waves package will do random split if the input JSON = 'NULL'
+    #     my @full_training_plots = keys %training_pheno_data;
+    #     my $cutoff = int(scalar(@full_training_plots)*0.2);
+    #     my @random_plots = shuffle(@full_training_plots);
+    # 
+    #     my @testing_plots = @random_plots[0..$cutoff];
+    #     my @training_plots = @random_plots[$cutoff+1..scalar(@full_training_plots)-1];
+    # 
+    #     my %training_pheno_data_split;
+    #     my %testing_pheno_data_split;
+    #     foreach (@training_plots) {
+    #         $training_pheno_data_split{$_} = $training_pheno_data{$_};
+    #     }
+    #     foreach (@testing_plots) {
+    #         $testing_pheno_data_split{$_} = $training_pheno_data{$_};
+    #     }
+    #     %training_pheno_data = %training_pheno_data_split;
+    #     %testing_pheno_data = %testing_pheno_data_split;
+    # }
 
     my @all_plot_ids = (keys %training_pheno_data, keys %testing_pheno_data);
     my $stock_ids_sql = join ',', @all_plot_ids;
@@ -349,7 +356,7 @@ sub generate_results_POST : Args(0) {
         JOIN metadata.md_json USING(json_id)
         WHERE stock.stock_id IN ($stock_ids_sql) AND metadata.md_json.json->>'device_type' = ? ;";
     my $nirs_training_h = $dbh->prepare($nirs_training_q);    
-    $nirs_training_h->execute($device_id);
+    $nirs_training_h->execute($format_id);
     while (my ($stock_uniquename, $stock_id, $spectra) = $nirs_training_h->fetchrow_array()) {
         if (exists($training_pheno_data{$stock_id})) {
             $training_pheno_data{$stock_id}->{spectra} = $spectra;
@@ -358,16 +365,18 @@ sub generate_results_POST : Args(0) {
             $testing_pheno_data{$stock_id}->{spectra} = $spectra;
         }
     }
-    print STDERR Dumper \%training_pheno_data;
-    print STDERR Dumper \%testing_pheno_data;
+    # print STDERR Dumper \%training_pheno_data;
+    # print STDERR Dumper \%testing_pheno_data;
 
     my @training_data_input;
     while ( my ($stock_id, $o) = each %training_pheno_data) {
         my $trait_name = $o->{trait_name};
         my $value = $o->{value};
         my $spectra = $o->{spectra};
+        my $germplasm_name = $o->{germplasm_name};
         push @training_data_input, {
             "observationUnitId" => $stock_id,
+            "germplasmName" => $germplasm_name,
             "trait" => {$trait_name => $value},
             "nirs_spectra" => $spectra
         };
@@ -383,17 +392,27 @@ sub generate_results_POST : Args(0) {
         my $trait_name = $o->{trait_name};
         my $value = $o->{value};
         my $spectra = $o->{spectra};
+        my $germplasm_name = $o->{germplasm_name};
         push @testing_data_input, {
             "observationUnitId" => $stock_id,
+            "germplasmName" => $germplasm_name,
             "trait" => {$trait_name => $value},
             "nirs_spectra" => $spectra
         };
     }
-    my $testing_data_input_json = encode_json \@testing_data_input;
-    open(my $test_json_outfile, '>', $test_json_filepath);
-        print STDERR Dumper $test_json_filepath;
-        print $test_json_outfile $testing_data_input_json;
-    close($test_json_outfile);
+    my $testing_data_input_json;
+    if (scalar(@testing_data_input) == 0) {
+        # $testing_data_input_json = 'NULL';
+        $test_json_filepath = 'NULL';
+    }
+    else {
+        $testing_data_input_json = encode_json \@testing_data_input;
+
+        open(my $test_json_outfile, '>', $test_json_filepath);
+            print STDERR Dumper $test_json_filepath;
+            print $test_json_outfile $testing_data_input_json;
+        close($test_json_outfile);
+    }
 
     # my ($fh, $filename) = tempfile(
     #   "nirs_XXXXX",
@@ -618,51 +637,55 @@ sub generate_results_POST : Args(0) {
     # my $tune_length = $c->req->param('tunelen'); # args[5] $tune_id
     # my $rf_var_imp = $c->req->param('rf_var_imp'); # args[6] ok
     # my $cv_scheme = $c->req->param('cv_id'); # args[7] ok
-    my $pheno_filepath = $tempfile . "_phenotype.txt"; # args[8] $outfile1
-    my $trainset_filepath = $filename . "json"; # args[8] $outfile1
-    my $trainset_filepath, # args[9] $
-    my $testset_filepath, # args[9]
-    my $trial1_filepath, # args[10]
-    my $trial2_filepath, # args[11]
-    my $trial3_filepath, # args[12]
-    my $nirs_output_filepath = $tempfile . "_" . "nirsResults.txt"; # args[13]
+    # my $pheno_filepath = $tempfile . "_phenotype.txt"; # args[8] $outfile1
+    # my $trainset_filepath = $filename . "json"; # args[8] $outfile1
+    # my $trainset_filepath, # args[9] $
+    # my $testset_filepath, # args[9]
+    my $trial1_filepath = ''; # args[10]
+    my $trial2_filepath = ''; # args[11]
+    my $trial3_filepath = ''; # args[12]
+    # my $nirs_output_filepath = $tempfile . "_" . "nirsResults.txt"; # args[13]
 
     my $algoFile = $tempfile . "_" . "algoFile.txt";
     my $tuneFile = $tempfile . "_" . "tune.txt";
     my $cvFile = $tempfile . "_" . "cv.txt";
 
-    my $cmd = CXGN::Tools::Run->new({
-            backend => $c->config->{backend},
-            temp_base => $c->config->{cluster_shared_tempdir} . "/nirs_files",
-            queue => $c->config->{'web_cluster_queue'},
-            do_cleanup => 0,
-            # don't block and wait if the cluster looks full
-            max_cluster_jobs => 1_000_000_000,
-        });
+    # my $cmd = CXGN::Tools::Run->new({
+    #         backend => $c->config->{backend},
+    #         temp_base => $c->config->{cluster_shared_tempdir} . "/nirs_files",
+    #         queue => $c->config->{'web_cluster_queue'},
+    #         do_cleanup => 0,
+    #         # don't block and wait if the cluster looks full
+    #         max_cluster_jobs => 1_000_000_000,
+    #     });
+    # 
+    #     # print STDERR Dumper $pheno_filepath;
+    # 
+    # # my $job;
+    # $cmd->run_cluster(
+    #         "Rscript ",
+    #         $c->config->{basepath} . "/R/Nirs/nirs.R",
+    #         $seltrait, # args[1]
+    #         $preprocessing_boolean, # args[2]
+    #         $niter_id, # args[3]
+    #         $algo_id, # args[4]
+    #         $tune_id, # args[5]
+    #         $rf_var_imp, # args[6]
+    #         $cv_scheme, # args[7]
+    #         $train_json_filepath, # args[8]
+    #         $test_json_filepath, # args[9]
+    #         $trial1_filepath, # args[10]
+    #         $trial2_filepath, # args[11]
+    #         $trial3_filepath, # args[12]
+    #         $output_result_filepath # args[13]
+    # );
+    # $cmd->alive;
+    # $cmd->is_cluster(1);
+    # $cmd->wait;
 
-        print STDERR Dumper $pheno_filepath;
-
-    # my $job;
-    $cmd->run_cluster(
-            "Rscript ",
-            $c->config->{basepath} . "/R/Nirs/nirs.R",
-            $seltrait, # args[1]
-            $preprocessing_boolean, # args[2]
-            $niter_id, # args[3]
-            $algo_id, # args[4]
-            $tune_id, # args[5]
-            $rf_var_imp, # args[6]
-            $cv_scheme, # args[7]
-            $outfile1, # args[8]
-            $outfile2, # args[9]
-            $trial1_filepath, # args[10]
-            $trial2_filepath, # args[11]
-            $trial3_filepath, # args[12]
-            $nirs_output_filepath # args[13]
-    );
-    $cmd->alive;
-    $cmd->is_cluster(1);
-    $cmd->wait;
+    my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirs.R '$seltrait' '$preprocessing_boolean' '$niter_id' '$algo_id' '$tune_id' '$rf_var_imp' '$cv_scheme' '$train_json_filepath' '$test_json_filepath' '$output_table_filepath' '$output_figure_filepath' '$output_table2_filepath' '$output_figure2_filepath' '$output_result_filepath' ";
+    print STDERR $cmd_s;
+    my $cmd_status = system($cmd_s);
 
    # TODO 
     my $figure_path = $c->{basepath} . "./documents/tempfiles/nirs_files/";
@@ -686,7 +709,7 @@ sub generate_results_POST : Args(0) {
         h2Table => $h2File_response,
         figure3 => $figure3_response,
         figure4 => $figure4_response,
-        dummy_response => $dataset_id
+        dummy_response => $train_dataset_id
         # dummy_response2 => $trait_id,
     };
 }
