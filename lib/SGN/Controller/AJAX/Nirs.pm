@@ -330,12 +330,14 @@ sub generate_results_POST : Args(0) {
         my $value = $o->{value};
         my $spectra = $o->{spectra};
         my $germplasm_name = $o->{germplasm_name};
-        push @training_data_input, {
-            "observationUnitId" => $stock_id,
-            "germplasmName" => $germplasm_name,
-            "trait" => {$trait_name => $value},
-            "nirs_spectra" => $spectra
-        };
+        if ($spectra && $value) {
+            push @training_data_input, {
+                "observationUnitId" => $stock_id,
+                "germplasmName" => $germplasm_name,
+                "trait" => {$trait_name => $value},
+                "nirs_spectra" => $spectra
+            };
+        }
     }
     my $training_data_input_json = encode_json \@training_data_input;
     open(my $train_json_outfile, '>', $train_json_filepath);
@@ -349,12 +351,14 @@ sub generate_results_POST : Args(0) {
         my $value = $o->{value};
         my $spectra = $o->{spectra};
         my $germplasm_name = $o->{germplasm_name};
-        push @testing_data_input, {
-            "observationUnitId" => $stock_id,
-            "germplasmName" => $germplasm_name,
-            "trait" => {$trait_name => $value},
-            "nirs_spectra" => $spectra
-        };
+        if ($spectra && $value) {
+            push @testing_data_input, {
+                "observationUnitId" => $stock_id,
+                "germplasmName" => $germplasm_name,
+                "trait" => {$trait_name => $value},
+                "nirs_spectra" => $spectra
+            };
+        }
     }
     my $testing_data_input_json;
     if (scalar(@testing_data_input) == 0) {
