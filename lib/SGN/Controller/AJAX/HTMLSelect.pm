@@ -38,6 +38,7 @@ use JSON;
 use Image::Size;
 use Math::Round;
 use URI::Encode qw(uri_encode uri_decode);
+use Array::Utils qw(:all);
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -1165,6 +1166,7 @@ sub get_datasets_select :Path('/ajax/html/select/datasets') Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
 
+    my $num = int(rand(1000));
     my $user_id;
     my @datasets;
     if ($c->user()) {
@@ -1214,7 +1216,7 @@ sub get_datasets_select :Path('/ajax/html/select/datasets') Args(0) {
         'genotyping_protocols' => 'nd_protocol_ids_2_protocols'
     );
 
-    my $html = '<table class="table table-bordered table-hover" id="html-select-dataset-table"><thead><tr><th>Select</th><th>Dataset Name</th><th>Contents</th></tr></thead><tbody>';
+    my $html = '<table class="table table-bordered table-hover" id="html-select-dataset-table-'.$num.'"><thead><tr><th>Select</th><th>Dataset Name</th><th>Contents</th></tr></thead><tbody>';
     foreach my $ds (@datasets) {
         $html .= '<tr><td><input type="checkbox" name="'.$checkbox_name.'" value="'.$ds->{id}.'"></td><td>'.$ds->{name}.'</td><td>';
 
@@ -1251,8 +1253,73 @@ sub get_datasets_select :Path('/ajax/html/select/datasets') Args(0) {
 
     $html .= "</tbody></table>";
 
-    $html .= "<script>jQuery(document).ready(function() { jQuery('#html-select-dataset-table').DataTable({ 'lengthMenu': [[2, 4, 6, 8, 10, 25, 50, -1], [2, 4, 6, 8, 10, 25, 50, 'All']] }); } );</script>";
+    $html .= "<script>jQuery(document).ready(function() { jQuery('#html-select-dataset-table-".$num."').DataTable({ 'lengthMenu': [[2, 4, 6, 8, 10, 25, 50, -1], [2, 4, 6, 8, 10, 25, 50, 'All']] }); } );</script>";
 
+    $c->stash->{rest} = { select => $html };
+}
+
+sub get_datasets_intersect_select : Path('/ajax/html/select/datasets_intersect') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+
+    my $name = $c->req->param("name");
+    my $id = $c->req->param("id");
+    my $empty = $c->req->param("empty") || "";
+
+    my $dataset_param = $c->req->param("param");
+    my $dataset_ids = decode_json $c->req->param("dataset_ids");
+
+    my $first_dataset_id = shift @$dataset_ids;
+    my $dataset_info = CXGN::Dataset->new({people_schema => $people_schema, schema => $schema, sp_dataset_id => $first_dataset_id})->get_dataset_data();
+    my $i = $dataset_info->{categories}->{$dataset_param} || [];
+
+    my @intersect = @$i;
+    foreach my $dataset_id (@$dataset_ids) {
+        if ($dataset_id) {
+            my $dataset_info = CXGN::Dataset->new({people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id})->get_dataset_data();
+            my $j = $dataset_info->{categories}->{$dataset_param} || [];
+            @intersect = intersect (@intersect, @$j);
+        }
+    }
+    # print STDERR Dumper @intersect;
+
+    my $lt = CXGN::List::Transform->new();
+    my %transform_dict = (
+        'plots' => 'stock_ids_2_stocks',
+        'accessions' => 'stock_ids_2_stocks',
+        'traits' => 'trait_ids_2_trait_names',
+        'locations' => 'locations_ids_2_location',
+        'plants' => 'stock_ids_2_stocks',
+        'trials' => 'project_ids_2_projects',
+        'trial_types' => 'cvterm_ids_2_cvterms',
+        'breeding_programs' => 'project_ids_2_projects',
+        'genotyping_protocols' => 'nd_protocol_ids_2_protocols'
+    );
+
+    my @items;
+    if (exists($transform_dict{$dataset_param})) {
+        my $transform = $lt->transform($schema, $transform_dict{$dataset_param}, \@intersect);
+        @items = @{$transform->{transform}};
+    }
+
+    my @result;
+    my $counter = 0;
+    foreach (@intersect) {
+        push @result, [$_, $items[$counter]];
+        $counter++;
+    }
+
+    if ($empty) {
+        unshift @result, ['', "Select one"];
+    }
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@result,
+    );
     $c->stash->{rest} = { select => $html };
 }
 
