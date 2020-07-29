@@ -59,66 +59,7 @@ print STDERR Dumper $response;
 is_deeply($response, {'metadata' => {'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'message' => 'Loading CXGN::BrAPI::v2::ObservationUnits','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Observation Units search result constructed'}],'datafiles' => [],'pagination' => {'totalPages' => 196,'pageSize' => 10,'totalCount' => 1954,'currentPage' => 0}},'result' => {'data' => [{'observationUnitDbId' => '41284','locationDbId' => '23','locationName' => 'test_location','studyName' => 'CASS_6Genotypes_Sampling_2015','observationUnitName' => 'CASS_6Genotypes_103','trialName' => undef,'observations' => [],'additionalInfo' => {},'programDbId' => '134','germplasmName' => 'IITA-TMS-IBA980581','programName' => 'test','externalReferences' => [],'treatments' => [{'modality' => '','factor' => 'No ManagementFactor'}],'observationUnitPosition' => {'positionCoordinateYType' => 'GRID_ROW','positionCoordinateX' => undef,'observationLevelRelationships' => [{'levelCode' => '1','levelName' => 'replicate','levelOrder' => 0},{'levelOrder' => 1,'levelName' => 'block','levelCode' => '1'},{'levelName' => 'plot','levelCode' => '103','levelOrder' => 2},{'levelCode' => undef,'levelName' => 'plant','levelOrder' => 4}],'observationLevel' => {'levelCode' => '103','levelName' => 'plot','levelOrder' => 2},'positionCoordinateY' => undef,'entryType' => 'test','positionCoordinateXType' => 'GRID_COL','geoCoordinates' => ''},'germplasmDbId' => '41283','trialDbId' => '','studyDbId' => '165','observationUnitPUI' => '103'},{'programName' => 'test','externalReferences' => [],'observationUnitPosition' => {'positionCoordinateYType' => 'GRID_ROW','positionCoordinateX' => undef,'observationLevelRelationships' => [{'levelCode' => '1','levelName' => 'replicate','levelOrder' => 0},{'levelOrder' => 1,'levelCode' => '1','levelName' => 'block'},{'levelCode' => '104','levelName' => 'plot','levelOrder' => 2},{'levelOrder' => 4,'levelName' => 'plant','levelCode' => undef}],'geoCoordinates' => '','observationLevel' => {'levelName' => 'plot','levelCode' => '104','levelOrder' => 2},'positionCoordinateY' => undef,'entryType' => 'test','positionCoordinateXType' => 'GRID_COL'},'treatments' => [{'modality' => '','factor' => 'No ManagementFactor'}],'trialDbId' => '','germplasmDbId' => '41282','studyDbId' => '165','observationUnitPUI' => '104','observationUnitDbId' => '41295','locationName' => 'test_location','locationDbId' => '23','observationUnitName' => 'CASS_6Genotypes_104','studyName' => 'CASS_6Genotypes_Sampling_2015','programDbId' => '134','germplasmName' => 'IITA-TMS-IBA980002','observations' => [],'trialName' => undef,'additionalInfo' => {}},{'programName' => 'test','externalReferences' => [],'observationUnitPosition' => {'observationLevel' => {'levelName' => 'plot','levelCode' => '105','levelOrder' => 2},'positionCoordinateXType' => 'GRID_COL','positionCoordinateY' => undef,'entryType' => 'test','geoCoordinates' => '','positionCoordinateX' => undef,'positionCoordinateYType' => 'GRID_ROW','observationLevelRelationships' => [{'levelOrder' => 0,'levelCode' => '1','levelName' => 'replicate'},{'levelName' => 'block','levelCode' => '1','levelOrder' => 1},{'levelName' => 'plot','levelCode' => '105','levelOrder' => 2},{'levelOrder' => 4,'levelCode' => undef,'levelName' => 'plant'}]},'treatments' => [{'modality' => '','factor' => 'No ManagementFactor'}],'germplasmDbId' => '41279','trialDbId' => '','studyDbId' => '165','observationUnitPUI' => '105','observationUnitDbId' => '41296','locationName' => 'test_location','locationDbId' => '23','observationUnitName' => 'CASS_6Genotypes_105','studyName' => 'CASS_6Genotypes_Sampling_2015','observations' => [],'trialName' => undef,'additionalInfo' => {},'programDbId' => '134','germplasmName' => 'IITA-TMS-IBA30572'},{'observationUnitDbId' => '41297','locationDbId' => '23','locationName' => 'test_location','studyName' => 'CASS_6Genotypes_Sampling_2015','observationUnitName' => 'CASS_6Genotypes_106','additionalInfo' => {},'observations' => [],'trialName' => undef,'germplasmName' => 'IITA-TMS-IBA011412','programDbId' => '134','programName' => 'test','observationUnitPosition' => {'observationLevelRelationships' => [{'levelName' => 'replicate','levelCode' => '1','levelOrder' => 0},{'levelName' => 'block','levelCode' => '1','levelOrder' => 1},{'levelName' => 'plot','levelCode' => '106','levelOrder' => 2},{'levelOrder' => 4,'levelCode' => undef,'levelName' => 'plant'}],'positionCoordinateX' => undef,'positionCoordinateYType' => 'GRID_ROW','geoCoordinates' => '','positionCoordinateXType' => 'GRID_COL','positionCoordinateY' => undef,'entryType' => 'test','observationLevel' => {'levelCode' => '106','levelName' => 'plot','levelOrder' => 2}},'treatments' => [{'factor' => 'No ManagementFactor','modality' => ''}],'externalReferences' => [],'germplasmDbId' => '41281','trialDbId' => '','observationUnitPUI' => '106','studyDbId' => '165'},{'studyDbId' => '165','observationUnitPUI' => '107','germplasmDbId' => '41280','trialDbId' => '','externalReferences' => [],'treatments' => [{'factor' => 'No ManagementFactor','modality' => ''}],'observationUnitPosition' => {'geoCoordinates' => '','observationLevel' => {'levelName' => 'plot','levelCode' => '107','levelOrder' => 2},'entryType' => 'test','positionCoordinateY' => undef,'positionCoordinateXType' => 'GRID_COL','positionCoordinateYType' => 'GRID_ROW','positionCoordinateX' => undef,'observationLevelRelationships' => [{'levelName' => 'replicate','levelCode' => '1','levelOrder' => 0},{'levelName' => 'block','levelCode' => '1','levelOrder' => 1},{'levelCode' => '107','levelName' => 'plot','levelOrder' => 2},{'levelOrder' => 4,'levelCode' => undef,'levelName' => 'plant'}]},'programName' => 'test','trialName' => undef,'observations' => [],'additionalInfo' => {},'germplasmName' => 'TMEB693','programDbId' => '134','observationUnitName' => 'CASS_6Genotypes_107','studyName' => 'CASS_6Genotypes_Sampling_2015','locationName' => 'test_location','locationDbId' => '23','observationUnitDbId' => '41298'},{'trialName' => undef,'observations' => [],'additionalInfo' => {},'programDbId' => '134','germplasmName' => 'BLANK','studyName' => 'CASS_6Genotypes_Sampling_2015','observationUnitName' => 'CASS_6Genotypes_201','locationDbId' => '23','locationName' => 'test_location','observationUnitDbId' => '41299','studyDbId' => '165','observationUnitPUI' => '201','germplasmDbId' => '40326','trialDbId' => '','externalReferences' => [],'observationUnitPosition' => {'positionCoordinateX' => undef,'positionCoordinateYType' => 'GRID_ROW','observationLevelRelationships' => [{'levelOrder' => 0,'levelName' => 'replicate','levelCode' => '1'},{'levelName' => 'block','levelCode' => '2','levelOrder' => 1},{'levelOrder' => 2,'levelName' => 'plot','levelCode' => '201'},{'levelName' => 'plant','levelCode' => undef,'levelOrder' => 4}],'geoCoordinates' => '','observationLevel' => {'levelName' => 'plot','levelCode' => '201','levelOrder' => 2},'positionCoordinateXType' => 'GRID_COL','entryType' => 'test','positionCoordinateY' => undef},'treatments' => [{'modality' => '','factor' => 'No ManagementFactor'}],'programName' => 'test'},{'observationUnitPosition' => {'observationLevelRelationships' => [{'levelName' => 'replicate','levelCode' => '1','levelOrder' => 0},{'levelOrder' => 1,'levelName' => 'block','levelCode' => '2'},{'levelCode' => '202','levelName' => 'plot','levelOrder' => 2},{'levelName' => 'plant','levelCode' => undef,'levelOrder' => 4}],'positionCoordinateX' => undef,'positionCoordinateYType' => 'GRID_ROW','positionCoordinateXType' => 'GRID_COL','entryType' => 'test','positionCoordinateY' => undef,'observationLevel' => {'levelCode' => '202','levelName' => 'plot','levelOrder' => 2},'geoCoordinates' => ''},'treatments' => [{'modality' => '','factor' => 'No ManagementFactor'}],'externalReferences' => [],'programName' => 'test','observationUnitPUI' => '202','studyDbId' => '165','germplasmDbId' => '41280','trialDbId' => '','locationDbId' => '23','locationName' => 'test_location','observationUnitDbId' => '41300','additionalInfo' => {},'observations' => [],'trialName' => undef,'programDbId' => '134','germplasmName' => 'TMEB693','studyName' => 'CASS_6Genotypes_Sampling_2015','observationUnitName' => 'CASS_6Genotypes_202'},{'locationDbId' => '23','locationName' => 'test_location','observationUnitDbId' => '41301','germplasmName' => 'IITA-TMS-IBA980002','programDbId' => '134','additionalInfo' => {},'trialName' => undef,'observations' => [],'observationUnitName' => 'CASS_6Genotypes_203','studyName' => 'CASS_6Genotypes_Sampling_2015','treatments' => [{'modality' => '','factor' => 'No ManagementFactor'}],'observationUnitPosition' => {'geoCoordinates' => '','observationLevel' => {'levelOrder' => 2,'levelCode' => '203','levelName' => 'plot'},'positionCoordinateXType' => 'GRID_COL','positionCoordinateY' => undef,'entryType' => 'test','positionCoordinateX' => undef,'positionCoordinateYType' => 'GRID_ROW','observationLevelRelationships' => [{'levelOrder' => 0,'levelName' => 'replicate','levelCode' => '1'},{'levelCode' => '2','levelName' => 'block','levelOrder' => 1},{'levelOrder' => 2,'levelCode' => '203','levelName' => 'plot'},{'levelOrder' => 4,'levelName' => 'plant','levelCode' => undef}]},'externalReferences' => [],'programName' => 'test','observationUnitPUI' => '203','studyDbId' => '165','trialDbId' => '','germplasmDbId' => '41282'},{'observationUnitPUI' => '204','studyDbId' => '165','trialDbId' => '','germplasmDbId' => '41283','treatments' => [{'modality' => '','factor' => 'No ManagementFactor'}],'observationUnitPosition' => {'positionCoordinateYType' => 'GRID_ROW','positionCoordinateX' => undef,'observationLevelRelationships' => [{'levelOrder' => 0,'levelName' => 'replicate','levelCode' => '1'},{'levelOrder' => 1,'levelName' => 'block','levelCode' => '2'},{'levelCode' => '204','levelName' => 'plot','levelOrder' => 2},{'levelOrder' => 4,'levelName' => 'plant','levelCode' => undef}],'observationLevel' => {'levelName' => 'plot','levelCode' => '204','levelOrder' => 2},'positionCoordinateY' => undef,'entryType' => 'test','positionCoordinateXType' => 'GRID_COL','geoCoordinates' => ''},'externalReferences' => [],'programName' => 'test','germplasmName' => 'IITA-TMS-IBA980581','programDbId' => '134','additionalInfo' => {},'trialName' => undef,'observations' => [],'studyName' => 'CASS_6Genotypes_Sampling_2015','observationUnitName' => 'CASS_6Genotypes_204','locationDbId' => '23','locationName' => 'test_location','observationUnitDbId' => '41302'},{'observationUnitDbId' => '41285','locationName' => 'test_location','locationDbId' => '23','observationUnitName' => 'CASS_6Genotypes_205','studyName' => 'CASS_6Genotypes_Sampling_2015','germplasmName' => 'IITA-TMS-IBA011412','programDbId' => '134','additionalInfo' => {},'observations' => [],'trialName' => undef,'programName' => 'test','treatments' => [{'modality' => '','factor' => 'No ManagementFactor'}],'observationUnitPosition' => {'observationLevelRelationships' => [{'levelCode' => '1','levelName' => 'replicate','levelOrder' => 0},{'levelCode' => '2','levelName' => 'block','levelOrder' => 1},{'levelOrder' => 2,'levelName' => 'plot','levelCode' => '205'},{'levelName' => 'plant','levelCode' => undef,'levelOrder' => 4}],'positionCoordinateYType' => 'GRID_ROW','positionCoordinateX' => undef,'geoCoordinates' => '','positionCoordinateY' => undef,'entryType' => 'test','positionCoordinateXType' => 'GRID_COL','observationLevel' => {'levelOrder' => 2,'levelName' => 'plot','levelCode' => '205'}},'externalReferences' => [],'trialDbId' => '','germplasmDbId' => '41281','observationUnitPUI' => '205','studyDbId' => '165'}]}});
 
 
-my $data = '[{
-  "additionalInfo": {
-      "control": 1 },
-  "germplasmDbId": "41281",
-  "germplasmName": "IITA-TMS-IBA011412",
-  "locationDbId": "23",
-  "locationName": "test_location",
-  "observationUnitName": "Testing Plot",
-  "observationUnitPUI": "10",
-  "programDbId": "134",
-  "programName": "test",
-  "seedLotDbId": "",
-  "studyDbId": "165",
-  "studyName": "CASS_6Genotypes_Sampling_2015",
-  "treatments": [],
-  "trialDbId": "165",
-  "trialName": "",
-  "observationUnitPosition": {"entryType": "TEST",
-      "geoCoordinates": {
-        "geometry": {
-          "coordinates": [
-            -76.506042,
-            42.417373,
-            155
-          ],
-          "type": "Point"
-        },
-        "type": "Feature"
-      },
-      "observationLevel": {
-        "levelName": "plot",
-        "levelOrder": 2,
-        "levelCode": "10"
-      },
-      "observationLevelRelationships": [
-        {
-          "levelCode": "Field_1",
-          "levelName": "field",
-          "levelOrder": 0
-        },
-        {
-          "levelCode": "Block_12",
-          "levelName": "block",
-          "levelOrder": 1
-        },
-        {
-          "levelCode": "Plot_123",
-          "levelName": "plot",
-          "levelOrder": 2
-        }
-      ],
-      "positionCoordinateX": "74",
-      "positionCoordinateXType": "GRID_COL",
-      "positionCoordinateY": "03",
-      "positionCoordinateYType": "GRID_ROW"
-      }
-   }]';
-
-
-
+$data = '[{ "additionalInfo": {"control": 1 },"germplasmDbId": "41281","germplasmName": "IITA-TMS-IBA011412","locationDbId": "23","locationName": "test_location","observationUnitName": "Testing Plot","observationUnitPUI": "10","programDbId": "134","programName": "test","seedLotDbId": "","studyDbId": "165","studyName": "CASS_6Genotypes_Sampling_2015","treatments": [],"trialDbId": "165","trialName": "","observationUnitPosition": {"entryType": "TEST","geoCoordinates": {"geometry": {  "coordinates": [-76.506042,42.417373,155  ],  "type": "Point"},"type": "Feature"},"observationLevel": {"levelName": "plot","levelOrder": 2,"levelCode": "10"},"observationLevelRelationships": [{  "levelCode": "Field_1",  "levelName": "field",  "levelOrder": 0},{  "levelCode": "Block_12",  "levelName": "block",  "levelOrder": 1},{  "levelCode": "Plot_123",  "levelName": "plot",  "levelOrder": 2}],"positionCoordinateX": "74","positionCoordinateXType": "GRID_COL","positionCoordinateY": "03","positionCoordinateYType": "GRID_ROW"} }]';
 $mech->post('http://localhost:3010/brapi/v2/observationunits/', Content => $data);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
@@ -373,11 +314,6 @@ is_deeply($response,  {'result' => {'ontologyReference' => {'version' => undef,'
 # $response = decode_json $mech->content;
 # print STDERR Dumper $response;
 
-##need add imageand retrieve items
-# $mech->get_ok('http://localhost:3010/brapi/v2/images');
-# $response = decode_json $mech->content;
-# print STDERR Dumper $response;
-
 $mech->get_ok('http://localhost:3010/brapi/v2/germplasm?pageSize=3');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
@@ -501,10 +437,14 @@ $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {'metadata' => {'datafiles' => [],'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::VariantSets'},{'message' => 'VariantSets result constructed','messageType' => 'INFO'}],'pagination' => {'currentPage' => 0,'pageSize' => 10,'totalPages' => 24,'totalCount' => 235}},'result' => {'data' => [{'additionalInfo' => {},'callSetDbId' => '38878','callSetName' => 'UG120001','created' => undef,'sampleDbId' => '38878','updated' => undef,'studyDbId' => '140','variantSetDbIds' => ['140p1']},{'callSetName' => 'UG120002','callSetDbId' => '38879','additionalInfo' => {},'sampleDbId' => '38879','created' => undef,'studyDbId' => '140','updated' => undef,'variantSetDbIds' => ['140p1']},{'updated' => undef,'studyDbId' => '140','variantSetDbIds' => ['140p1'],'callSetName' => 'UG120003','additionalInfo' => {},'callSetDbId' => '38880','sampleDbId' => '38880','created' => undef},{'updated' => undef,'studyDbId' => '140','variantSetDbIds' => ['140p1'],'callSetName' => 'UG120004','callSetDbId' => '38881','additionalInfo' => {},'sampleDbId' => '38881','created' => undef},{'studyDbId' => '140','updated' => undef,'variantSetDbIds' => ['140p1'],'additionalInfo' => {},'callSetDbId' => '38882','callSetName' => 'UG120005','created' => undef,'sampleDbId' => '38882'},{'studyDbId' => '140','updated' => undef,'variantSetDbIds' => ['140p1'],'additionalInfo' => {},'callSetDbId' => '38883','callSetName' => 'UG120006','sampleDbId' => '38883','created' => undef},{'callSetName' => 'UG120007','additionalInfo' => {},'callSetDbId' => '38884','created' => undef,'sampleDbId' => '38884','updated' => undef,'studyDbId' => '140','variantSetDbIds' => ['140p1']},{'created' => undef,'sampleDbId' => '38885','callSetDbId' => '38885','additionalInfo' => {},'callSetName' => 'UG120008','variantSetDbIds' => ['140p1'],'studyDbId' => '140','updated' => undef},{'studyDbId' => '140','updated' => undef,'variantSetDbIds' => ['140p1'],'callSetDbId' => '38886','additionalInfo' => {},'callSetName' => 'UG120009','sampleDbId' => '38886','created' => undef},{'variantSetDbIds' => ['140p1'],'updated' => undef,'studyDbId' => '140','sampleDbId' => '38887','created' => undef,'callSetDbId' => '38887','additionalInfo' => {},'callSetName' => 'UG120010'}]}} );
 
+#no data for variants
+# $mech->get_ok('http://localhost:3010/brapi/v2/variants');
+# $response = decode_json $mech->content;
+# print STDERR Dumper $response;
 # $mech->get_ok('http://localhost:3010/brapi/v2/variantsets/140p1/variants');
 # $response = decode_json $mech->content;
 # print STDERR Dumper $response;
-# is_deeply($response, 
+
 
 $mech->post_ok('http://localhost:3010/brapi/v2/search/variantsets', ['variantSetDbIds' => ['143p1']]);
 $response = decode_json $mech->content;
@@ -519,35 +459,18 @@ $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {'result' => {'data' => [{'callSetCount' => 280,'variantSetDbId' => '142p1','variantCount' => 500,'studyDbId' => '142','referenceSetDbId' => '1','variantSetName' => 'test_population2 - GBS ApeKI genotyping v4','availableFormats' => [{'fileURL' => undef,'fileFormat' => 'json','dataFormat' => 'json'}],'additionalInfo' => {},'analysis' => [{'software' => undef,'description' => undef,'created' => undef,'analysisName' => 'GBS ApeKI genotyping v4','type' => undef,'analysisDbId' => '1','updated' => undef}]}]},'metadata' => {'datafiles' => [],'pagination' => {'totalCount' => 1,'totalPages' => 1,'pageSize' => 10,'currentPage' => 0},'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::VariantSets'},{'messageType' => 'INFO','message' => 'VariantSets result constructed'}]}});
 
+$mech->get_ok('http://localhost:3010/brapi/v2/trials/');
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'metadata' => {'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'message' => 'Loading CXGN::BrAPI::v2::Trials','messageType' => 'INFO'},{'message' => 'Trials result constructed','messageType' => 'INFO'}],'pagination' => {'currentPage' => 0,'totalCount' => 1,'totalPages' => 1,'pageSize' => 10},'datafiles' => []},'result' => {'data' => [{'trialDescription' => 'test','programName' => 'test','trialPUI' => undef,'documentationURL' => undef,'datasetAuthorships' => undef,'programDbId' => '134','active' => bless( do{\(my $o = 1)}, 'JSON::PP::Boolean' ),'publications' => undef,'trialDbId' => '134','commonCropName' => 'Cassava','endDate' => undef,'startDate' => undef,'trialName' => 'test','externalReferences' => undef,'additionalInfo' => {},'contacts' => undef}]}} );
+
+
 $mech->get_ok('http://localhost:3010/brapi/v2/programs');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {'metadata' => {'datafiles' => [],'pagination' => {'totalCount' => 1,'totalPages' => 1,'pageSize' => 10,'currentPage' => 0},'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Programs'},{'message' => 'Program list result constructed','messageType' => 'INFO'}]},'result' => {'data' => [{'abbreviation' => '','externalReferences' => [],'objective' => 'test','leadPersonDbId' => '','leadPersonName' => '','programDbId' => '134','additionalInfo' => {},'programName' => 'test','documentationURL' => undef,'commonCropName' => 'Cassava'}]}} );
 
-$data = '[
-  {
-    "abbreviation": "P1",
-    "additionalInfo": {},
-    "commonCropName": "Tomatillo",
-    "documentationURL": "",
-    "externalReferences": [],
-    "leadPersonDbId": "50",
-    "leadPersonName": "Bob",
-    "objective": "Make a better tomatillo",
-    "programName": "program3"
-  },
-  {
-    "abbreviation": "P1",
-    "additionalInfo": {},
-    "commonCropName": "Tomatillo",
-    "documentationURL": "",
-    "externalReferences": [],
-    "leadPersonDbId": "50",
-    "leadPersonName": "Bob",
-    "objective": "Make a better tomatillo",
-    "programName": "Program4"
-  }
-]';
+$data = '[{"abbreviation": "P1","additionalInfo": {},"commonCropName": "Tomatillo","documentationURL": "","externalReferences": [],"leadPersonDbId": "50","leadPersonName": "Bob","objective": "Make a better tomatillo","programName": "program3" }, {"abbreviation": "P1","additionalInfo": {},"commonCropName": "Tomatillo","documentationURL": "","externalReferences": [],"leadPersonDbId": "50","leadPersonName": "Bob","objective": "Make a better tomatillo","programName": "Program4" }]';
 $mech->post('http://localhost:3010/brapi/v2/programs/', Content => $data);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
@@ -558,17 +481,7 @@ $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {'metadata' => {'pagination' => {'pageSize' => 10,'currentPage' => 0,'totalCount' => 1,'totalPages' => 1},'datafiles' => [],'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Programs'},{'message' => 'Program list result constructed','messageType' => 'INFO'}]},'result' => {'leadPersonName' => undef,'programDbId' => '134','externalReferences' => [],'abbreviation' => undef,'leadPersonDbId' => undef,'objective' => 'test','commonCropName' => 'Cassava','documentationURL' => undef,'additionalInfo' => {},'programName' => 'test'}} );
 
-$data = '{
-    "abbreviation": "P1",
-    "additionalInfo": {},
-    "commonCropName": "Tomatillo",
-    "documentationURL": "https://breedbase.org/",
-    "externalReferences": [],
-    "leadPersonDbId": "fe6f5c50",
-    "leadPersonName": "Bob Robertson",
-    "objective": "Make a better tomatillo",
-    "programName": "Program5"
-  }';
+$data = '{ "abbreviation": "P1","additionalInfo": {},"commonCropName": "Tomatillo","documentationURL": "https://breedbase.org/","externalReferences": [],"leadPersonDbId": "fe6f5c50","leadPersonName": "Bob Robertson","objective": "Make a better tomatillo","programName": "Program5" }';
 $resp = $ua->put("http://192.168.33.11:3010/brapi/v2/programs/167", Content => $data);
 $response = decode_json $resp->{_content};
 print STDERR Dumper $response;
@@ -587,14 +500,33 @@ $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {'result' => {'data' => ['Cassava']},'metadata' => {'datafiles' => [],'pagination' => {'totalPages' => 1,'currentPage' => 0,'pageSize' => 10,'totalCount' => 1},'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::CommonCropNames'},{'messageType' => 'INFO','message' => 'Crops result constructed'}]}});
 
-# $mech->get_ok('http://localhost:3010/brapi/v2/trials/');
+
+
+# #post
+# $data = '[ {"active": "true","additionalInfo": {},"commonCropName": "Tomato","contacts": [],"datasetAuthorships": [],"documentationURL": "https://breedbase.org/","endDate": "2020-06-24","externalReferences": [],"programDbId": "134","programName": "test","publications": [],"startDate": "2020-06-24","trialDescription": "General drought resistance trial initiated in Peru","trialName": "Peru Yield Trial 2010","trialPUI": "https://doi.org/101093190"  }]';
+# $mech->post('http://localhost:3010/brapi/v2/trials/', Content => $data);
 # $response = decode_json $mech->content;
 # print STDERR Dumper $response;
-# is_deeply($response,  JSON::true {'result' => {'data' => [{'trialName' => 'test','programDbId' => '134','documentationURL' => undef,'contacts' => undef,'programName' => 'test','startDate' => undef,'endDate' => undef,'trialDescription' => 'test','commonCropName' => 'Cassava','additionalInfo' => {},'active' => JSON::true,'trialDbId' => '134','datasetAuthorships' => undef,'publications' => undef,'trialPUI' => undef,'externalReferences' => undef},{'startDate' => undef,'programName' => 'Program4','endDate' => undef,'contacts' => undef,'trialName' => 'Program4','programDbId' => '166','documentationURL' => undef,'datasetAuthorships' => undef,'publications' => undef,'trialPUI' => undef,'externalReferences' => undef,'active' => JSON::true,'trialDbId' => '166','commonCropName' => 'Cassava','additionalInfo' => {},'trialDescription' => 'Make a better tomatillo'},{'commonCropName' => 'Cassava','additionalInfo' => {},'trialDescription' => 'Make a better tomatillo','datasetAuthorships' => undef,'publications' => undef,'trialPUI' => undef,'externalReferences' => undef,'active' => JSON::true,'trialDbId' => '167','trialName' => 'Program5','programDbId' => '167','documentationURL' => undef,'startDate' => undef,'programName' => 'Program5','endDate' => undef,'contacts' => undef}]},'metadata' => {'pagination' => {'totalCount' => 3,'currentPage' => 0,'pageSize' => 10,'totalPages' => 1},'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Trials'},{'messageType' => 'INFO','message' => 'Trials result constructed'}],'datafiles' => []}} );
+# is_deeply($response,        );
+
+# $mech->get_ok('http://localhost:3010/brapi/v2/trials/?trialDbId=134');
+# $response = decode_json $mech->content;
+# print STDERR Dumper $response;
+
+# $mech->get_ok('http://localhost:3010/brapi/v2/trials/?trialDbId=166');
+# $response = decode_json $mech->content;
+# print STDERR Dumper $response;
+
+$data = '{ "active": "true","additionalInfo": {},"commonCropName": "Tomato","contacts": [],"datasetAuthorships": [],"documentationURL": "https://breedbase.org/","endDate": "2020-06-24","externalReferences": [],"programDbId": "218","programName": "Tomatillo_Breeding_Program","publications": [],"startDate": "2020-06-24","trialDescription": "Trial initiated in Peru","trialName": "Peru Yield Trial 2020","trialPUI": "https://doi.org/101093190" }';
+# $resp = $ua->put("http://192.168.33.11:3010/brapi/v2/trials/166", Content => $data);
+# $response = decode_json $resp->{_content};
+# print STDERR Dumper $response;
+
 # $mech->get_ok('http://localhost:3010/brapi/v2/trials/134');
 # $response = decode_json $mech->content;
 # print STDERR Dumper $response;
 # is_deeply($response,  {'result' => undef,'metadata' => {'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'message' => 'Loading CXGN::BrAPI::v2::Trials','messageType' => 'INFO'},{'messageType' => '400','message' => 'The given trialDbId not found.'}],'datafiles' => [],'pagination' => {'pageSize' => 1,'currentPage' => 0,'totalPages' => 0,'totalCount' => 0}}});
+
 
 $mech->get_ok('http://localhost:3010/brapi/v2/studies/?pageSize=3');
 $response = decode_json $mech->content;
@@ -656,73 +588,6 @@ print STDERR Dumper $response;
 is_deeply($response, {'result' => {'mailingAddress' => undef,'middleName' => undef,'personDbId' => '41','additionalInfo' => {'country' => undef},'externalReferences' => {'referenceID' => undef,'referenceSource' => undef},'description' => 'Organization: ','lastName' => 'Doe','firstName' => 'Jane','userID' => 'janedoe','phoneNumber' => undef,'emailAddress' => undef},'metadata' => {'datafiles' => [],'pagination' => {'pageSize' => 10,'currentPage' => 0,'totalCount' => 1,'totalPages' => 1},'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'message' => 'Loading CXGN::BrAPI::v2::People','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'People result constructed'}]}} );
 
 
-#post
-$data = '[
-  {
-    "active": "true",
-    "additionalInfo": {},
-    "commonCropName": "Tomato",
-    "contacts": [],
-    "datasetAuthorships": [],
-    "documentationURL": "https://breedbase.org/",
-    "endDate": "2020-06-24",
-    "externalReferences": [],
-    "programDbId": "219",
-    "programName": "Tomatillo_Breeding_Program",
-    "publications": [],
-    "startDate": "2020-06-24",
-    "trialDescription": "General drought resistance trial initiated in Peru",
-    "trialName": "Peru Yield Trial 2010",
-    "trialPUI": "https://doi.org/101093190",
-  },
-  {
-    "active": "true",
-    "additionalInfo": {},
-    "commonCropName": "Tomato",
-    "contacts": [],
-    "datasetAuthorships": [],
-    "documentationURL": "https://breedbase.org/",
-    "endDate": "2020-06-24",
-    "externalReferences": [],
-    "programDbId": "218",
-    "programName": "Tomatillo_Breeding_Program",
-    "publications": [],
-    "startDate": "2020-06-24",
-    "trialDescription": "General drought resistance trial initiated in Peru",
-    "trialName": "Peru Yield Trial 2020",
-    "trialPUI": "https://doi.org/101093190",
-  }
-]';
-# $mech->post('http://localhost:3010/brapi/v2/trials/', Content => $data);
-# $response = decode_json $mech->content;
-# print STDERR Dumper $response;
-# is_deeply($response, );
-
-$data = '{
-    "active": "true",
-    "additionalInfo": {},
-    "commonCropName": "Tomato",
-    "contacts": [],
-    "datasetAuthorships": [],
-    "documentationURL": "https://breedbase.org/",
-    "endDate": "2020-06-24",
-    "externalReferences": [],
-    "programDbId": "218",
-    "programName": "Tomatillo_Breeding_Program",
-    "publications": [],
-    "startDate": "2020-06-24",
-    "trialDescription": "Trial initiated in Peru",
-    "trialName": "Peru Yield Trial 2020",
-    "trialPUI": "https://doi.org/101093190",
-  }';
-# $resp = $ua->put("http://192.168.33.11:3010/brapi/v2/trials/166", Content => $data);
-# $response = decode_json $resp->{_content};
-# print STDERR Dumper $response;
-
-# $ua->default_header("Content-Type" => "application/json");
-# $ua->default_header('Authorization'=> 'Bearer ' . $access_token);
-# my $response = $ua->put("http://192.168.33.11:3010/brapi/v2/trials/228", Content => $data);
-# print $response->as_string;
 
 $data = '[
     {
@@ -981,73 +846,23 @@ print STDERR Dumper $response;
 is_deeply($response, {'result' => undef,'metadata' => {'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Studies'},{'messageType' => '400','message' => 'You need to be associated with breeding program  to change the details of this trial.'}],'pagination' => {'pageSize' => 1,'currentPage' => 0,'totalCount' => 0,'totalPages' => 0},'datafiles' => []}});
 
 
-$data = '[
-  {
-    "additionalInfo": {},
-    "copyright": "Copyright 2018 Bob",
-    "description": "Tomatoes",
-    "descriptiveOntologyTerms": [],
-    "externalReferences": [],
-    "imageFileName": "image_00G00231a.jpg",
-    "imageFileSize": 50000,
-    "imageHeight": 550,
-    "imageLocation": {
-      "geometry": {
-        "coordinates": [
-          -76.506042,
-          42.417373,
-          9
-        ],
-        "type": "Point"
-      },
-      "type": "Feature"
-    },
-    "imageName": "Tomato Imag-10",
-    "imageTimeStamp": "2020-06-17T16:20:00.217Z",
-    "imageURL": "https://breedbase.org/images/tomato",
-    "imageWidth": 700,
-    "mimeType": "image/jpeg",
-    "observationDbIds": [],
-    "observationUnitDbId": "38842"
-  }
-]';
+$data = '[  {"additionalInfo": {},"copyright": "Copyright 2018 Bob","description": "Tomatoes","descriptiveOntologyTerms": [],"externalReferences": [],"imageFileName": "image_00G00231a.jpg","imageFileSize": 50000,"imageHeight": 550,"imageLocation": {  "geometry": {"coordinates": [  -76.506042,  42.417373,  9],"type": "Point"  },  "type": "Feature"},"imageName": "Tomato Imag-10","imageTimeStamp": "2020-06-17T16:20:00.217Z","imageURL": "https://breedbase.org/images/tomato","imageWidth": 700,"mimeType": "image/jpeg","observationDbIds": [],"observationUnitDbId": "38842"  }]';
 $mech->post('http://localhost:3010/brapi/v2/images', Content => $data);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response->{metadata}, {'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Images'},{'message' => 'Image metadata stored','messageType' => 'INFO'}],'datafiles' => undef,'pagination' => {'pageSize' => 10,'totalPages' => 1,'currentPage' => 0,'totalCount' => 1}});
 
-$data = '{
-  "additionalInfo": {},
-  "copyright": "Copyright 2019 Bob",
-  "description": "picture of a tomato",
-  "descriptiveOntologyTerms": [],
-  "externalReferences": [],
-  "imageFileName": "image_0AA0231.jpg",
-  "imageFileSize": 50000,
-  "imageHeight": 550,
-  "imageLocation": {
-    "geometry": {
-      "coordinates": [
-        -76.506042,
-        42.417373,
-        123
-      ],
-      "type": "Point"
-    },
-    "type": "Feature"
-  },
-  "imageName": "Tomato Image-x1",
-  "imageTimeStamp": "2020-06-17T16:08:42.015Z",
-  "imageURL": "https://breedbase.org/images/tomato",
-  "imageWidth": 700,
-  "mimeType": "image/jpeg",
-  "observationDbIds": [],
-  "observationUnitDbId": "38843"
-}';
+$data = '{  "additionalInfo": {},  "copyright": "Copyright 2019 Bob",  "description": "picture of a tomato",  "descriptiveOntologyTerms": [],  "externalReferences": [],  "imageFileName": "image_0AA0231.jpg",  "imageFileSize": 50000,  "imageHeight": 550,  "imageLocation": {"geometry": {  "coordinates": [-76.506042,42.417373,123  ],  "type": "Point"},"type": "Feature"  },  "imageName": "Tomato Image-x1",  "imageTimeStamp": "2020-06-17T16:08:42.015Z",  "imageURL": "https://breedbase.org/images/tomato",  "imageWidth": 700,  "mimeType": "image/jpeg",  "observationDbIds": [],  "observationUnitDbId": "38843"}';
 
 $resp = $ua->put("http://192.168.33.11:3010/brapi/v2/images/2425", Content => $data);
 $response = decode_json $resp->{_content};
 print STDERR Dumper $response;
 is_deeply($response->{result}->{data}[0]->{observationUnitDbId} , '38843');
+my $image_timestamp = $response->{result}->{data}[0]->{imageTimeStamp} ;
+
+$mech->get_ok('http://localhost:3010/brapi/v2/images');
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'result' => {'data' => [{'descriptiveOntologyTerms' => [],'imageWidth' => undef,'imageLocation' => {'type' => '','geometry' => {'type' => '','coordinates' => []}},'imageFileName' => 'image_0AA0231.jpg','imageFileSize' => undef,'imageURL' => 'localhost/data/images/image_files/XX/XX/XX/XX/XXXXXXXXXXXXXXXXXXXXXXXX/medium.jpg','description' => 'picture of a tomato','copyright' => 'janedoe 2020','imageDbId' => '2425','imageTimeStamp' => $image_timestamp,'mimeType' => 'image/jpeg','additionalInfo' => {'observationLevel' => 'accession','tags' => [],'observationUnitName' => 'test_accession4'},'imageHeight' => undef,'observationUnitDbId' => '38843','observationDbIds' => [],'imageName' => 'Tomato Image-x1','externalReferences' => []}]},'metadata' => {'datafiles' => [],'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'message' => 'Loading CXGN::BrAPI::v2::Images','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Image search result constructed'}],'pagination' => {'currentPage' => 0,'totalCount' => 1,'totalPages' => 1,'pageSize' => 10}}} );
 
 done_testing();
