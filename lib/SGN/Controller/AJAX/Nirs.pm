@@ -203,6 +203,7 @@ sub generate_results_POST : Args(0) {
     my $preprocessing_boolean = $c->req->param('preprocessing');
     my $tune_id = $c->req->param('tune');
     my $rf_var_imp = $c->req->param('rf');
+    my $save_model_boolean = $c->req->param('save_model');
 
     # print STDERR $format2;
     print STDERR $format_id;
@@ -211,17 +212,22 @@ sub generate_results_POST : Args(0) {
 
     if ($preprocessing_boolean == 0){
         $preprocessing_boolean = "FALSE";
-    }else{
+    } else{
         $preprocessing_boolean = "TRUE";
     }
 
     if ($rf_var_imp == 0){
         $rf_var_imp = "FALSE";
-    }else{
+    } else{
         $rf_var_imp = "TRUE";
     }
 
-    
+    if ($save_model_boolean == 0){
+        $save_model_boolean = "FALSE";
+    } else{
+        $save_model_boolean = "TRUE";
+    }
+
     $c->tempfiles_subdir("nirs_files");
     my $nirs_tmp_output = $c->config->{cluster_shared_tempdir}."/nirs_files";
     mkdir $nirs_tmp_output if ! -d $nirs_tmp_output;
@@ -237,7 +243,7 @@ sub generate_results_POST : Args(0) {
     my $output_figure_filepath = $tempfile."_figure_results.png";
     my $output_table2_filepath = $tempfile."_table2_results.txt";
     my $output_figure2_filepath = $tempfile."_figure2_results.png";
-    my $output_result_filepath = $tempfile."_results";
+    my $output_model_filepath = $tempfile."_model.Rds";
 
     # my $pheno_filepath = $tempfile . "_phenotype.txt";
     # my $temppath = $nirs_tmp_output . "/" . $tempfile;
@@ -646,9 +652,9 @@ sub generate_results_POST : Args(0) {
     my $trial3_filepath = ''; # args[12]
     # my $nirs_output_filepath = $tempfile . "_" . "nirsResults.txt"; # args[13]
 
-    my $algoFile = $tempfile . "_" . "algoFile.txt";
-    my $tuneFile = $tempfile . "_" . "tune.txt";
-    my $cvFile = $tempfile . "_" . "cv.txt";
+    # my $algoFile = $tempfile . "_" . "algoFile.txt";
+    # my $tuneFile = $tempfile . "_" . "tune.txt";
+    # my $cvFile = $tempfile . "_" . "cv.txt";
 
     # my $cmd = CXGN::Tools::Run->new({
     #         backend => $c->config->{backend},
@@ -683,32 +689,29 @@ sub generate_results_POST : Args(0) {
     # $cmd->is_cluster(1);
     # $cmd->wait;
 
-    my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirs.R '$seltrait' '$preprocessing_boolean' '$niter_id' '$algo_id' '$tune_id' '$rf_var_imp' '$cv_scheme' '$train_json_filepath' '$test_json_filepath' '$output_table_filepath' '$output_figure_filepath' '$output_table2_filepath' '$output_figure2_filepath' '$output_result_filepath' ";
+    my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirs.R '$seltrait' '$preprocessing_boolean' '$niter_id' '$algo_id' '$tune_id' '$rf_var_imp' '$cv_scheme' '$train_json_filepath' '$test_json_filepath' '$output_table_filepath' '$output_figure_filepath' '$output_table2_filepath' '$output_figure2_filepath' '$save_model_boolean' '$output_model_filepath' ";
     print STDERR $cmd_s;
     my $cmd_status = system($cmd_s);
 
    # TODO 
-    my $figure_path = $c->{basepath} . "./documents/tempfiles/nirs_files/";
-    copy($algoFile, $figure_path);
-    copy($tuneFile, $figure_path);
-    copy($cvFile, $figure_path);
+    # my $figure_path = $c->{basepath} . "./documents/tempfiles/nirs_files/";
+    # copy($algoFile, $figure_path);
+    # copy($tuneFile, $figure_path);
+    # copy($cvFile, $figure_path);
+    # 
+    # my $h2Filebasename = basename($algoFile);
+    # my $h2File_response = "/documents/tempfiles/nirs_files/" . $h2Filebasename;
+    # 
+    # my $figure3basename = basename($tuneFile);
+    # my $figure3_response = "/documents/tempfiles/nirs_files/" . $figure3basename;
+    # 
+    # my $figure4basename = basename($cvFile);
+    # my $figure4_response = "/documents/tempfiles/nirs_files/" . $figure4basename;
 
-    my $h2Filebasename = basename($algoFile);
-    my $h2File_response = "/documents/tempfiles/nirs_files/" . $h2Filebasename;
-    
-    my $figure3basename = basename($tuneFile);
-    my $figure3_response = "/documents/tempfiles/nirs_files/" . $figure3basename;
-    
-    my $figure4basename = basename($cvFile);
-    my $figure4_response = "/documents/tempfiles/nirs_files/" . $figure4basename;
-
-
-    print $h2File_response;
-        
     $c->stash->{rest} = {
-        h2Table => $h2File_response,
-        figure3 => $figure3_response,
-        figure4 => $figure4_response,
+        # h2Table => $h2File_response,
+        # figure3 => $figure3_response,
+        # figure4 => $figure4_response,
         dummy_response => $train_dataset_id
         # dummy_response2 => $trait_id,
     };
