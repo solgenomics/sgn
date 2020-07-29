@@ -9,6 +9,7 @@ library(magrittr)
 library(devtools)
 library(jsonlite)
 library(waves)
+library(stringr)
 
 # Error handling
 # TODO where do I check for genotype and/or environment overlap for the CVs? Here or in controller?
@@ -46,14 +47,14 @@ if(cv.scheme == "random"){
 }
 
 # args[8] = training data.frame: observationUnit level data with phenotypes and spectra in JSON format
-train.ready <- jsonlite::fromJSON(txt = args[8], flatten = T) %>%
+train.input <- jsonlite::fromJSON(txt = args[8], flatten = T) %>%
   rename(uniqueid = observationUnitId) %>%
   rename_at(vars(starts_with("trait.")), ~paste0("reference")) %>%
   rename_at(vars(starts_with("nirs_spectra")), ~str_replace(., "nirs_spectra.", "X"))
 
 # args[9] = test data.frame: observationUnit level data with phenotypes and spectra in JSON format
 if(args[9] != "NULL"){
-  test.ready <- jsonlite::fromJSON(txt = args[9], flatten = T) %>%
+  test.input <- jsonlite::fromJSON(txt = args[9], flatten = T) %>%
   rename(uniqueid = observationUnitId) %>%
   rename_at(vars(starts_with("trait.")), ~paste0("reference")) %>%
   rename_at(vars(starts_with("nirs_spectra")), ~str_replace(., "nirs_spectra.", "X"))
@@ -61,9 +62,15 @@ if(args[9] != "NULL"){
   test.input <- NULL
 }
 
-wls <- ncol(train.ready) - 2
-
 if(is.null(cv.scheme)){
+  train.ready <- train.input %>% dplyr::select(-germplasmName)
+  if(is.null(test.input)){
+    test.ready <- test.input
+  } else{
+    test.ready <- test.input %>% dplyr::select(-germplasmName)
+  }
+
+  wls <- ncol(train.ready) - 2
   # Test model using non-specialized cv scheme
   results.df <- TestModelPerformance(train.data = train.ready, num.iterations = num.iterations,
                                      test.data = test.ready, preprocessing = preprocessing,
@@ -74,13 +81,14 @@ if(is.null(cv.scheme)){
                                      trial1 = NULL, trial2 = NULL, trial3 = NULL)
 } else{
   # Test model using specialized cv scheme
+  wls <- ncol(train.ready) - 3
   results.df <- TestModelPerformance(train.data = NULL, num.iterations = num.iterations,
                                      test.data = NULL, preprocessing = preprocessing,
                                      wavelengths = wls, tune.length = tune.length,
                                      model.method = model.method, output.summary = TRUE,
                                      rf.variable.importance = rf.var.importance,
                                      stratified.sampling = FALSE, cv.scheme = cv.scheme,
-                                     trial1 = training.input, trial2 = test.input,
+                                     trial1 = train.input, trial2 = test.input,
                                      trial3 = NULL)
 
 }
