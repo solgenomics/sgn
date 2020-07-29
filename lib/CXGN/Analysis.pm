@@ -492,7 +492,7 @@ sub store_analysis_values {
         trait_list => $traits, 
         values_hash => $values,
         has_timestamps => 0,
-        overwrite_values => 0,
+        overwrite_values => 1,
         metadata_hash => \%phenotype_metadata,
     });
 

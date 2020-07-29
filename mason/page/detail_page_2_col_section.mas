@@ -83,11 +83,21 @@ $sample_observation_unit_type_name => undef
 
 #Specific to drone run detail page
 $drone_run_date => undef
+$id_extension => undef
 
 #Specific to analysis detail page
 $analysis_metadata => undef
 $for_analysis_page => undef
 $data_level => undef
+
+#Specific to analysis model detail page
+$model_id => undef
+$model_name => undef
+$model_description => undef
+$model_properties => {}
+$model_file_ids => {}
+$model_type_name => undef
+$model_files => {}
 
 </%args>
 
@@ -140,6 +150,9 @@ $data_level => undef
                                 <& /breeders_toolbox/trial/files_section.mas, trial_id => $trial_id, trial_phenotype_files => $trial_phenotype_files, trial_stock_type => $trial_stock_type, for_analysis_page => $for_analysis_page &>
 % } #End trial_upload_files
 % if ($info_section_id eq 'trial_analysis_tools'){
+
+                                <& /breeders_toolbox/trial/correlation_workflow.mas, trial_id => $trial_id &>
+
                                 <!-- Phenotypic correlation analysis -->
                                 <& /solgs/population/correlation.mas,
                                     trial_id => $trial_id
@@ -350,20 +363,32 @@ $data_level => undef
 % } #End manage_drone_imagery_main
 
 % if ($info_section_id eq 'manage_drone_imagery_generate_plot_polygons_section'){
-                                <& /breeders_toolbox/drone_imagery/generate_plot_polygons_section.mas &>
+                                <& /breeders_toolbox/drone_imagery/generate_plot_polygons_section.mas, id_extension=>$id_extension &>
 % } #End manage_drone_imagery_generate_plot_polygons_section
+% if ($info_section_id eq 'manage_drone_imagery_generate_plot_polygons_standard_process_raw_images_section'){
+                                <& /breeders_toolbox/drone_imagery/generate_plot_polygons_standard_process_raw_images_section.mas, id_extension=>$id_extension &>
+% } #End manage_drone_imagery_generate_plot_polygons_standard_process_raw_images_section
 % if ($info_section_id eq 'manage_drone_imagery_standard_process_generate_plot_polygons_section'){
                                 <& /breeders_toolbox/drone_imagery/generate_plot_polygons_standard_process_section.mas &>
-% } #End manage_drone_imagery_generate_plot_polygons_section
+% } #End manage_drone_imagery_standard_process_generate_plot_polygons_section
 % if ($info_section_id eq 'drone_run_project_details'){
                                 <& /breeders_toolbox/drone_imagery/drone_run_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, trial_description=>$trial_description, identifier_prefix=>$identifier_prefix, drone_run_date=>$drone_run_date &>
 % } #End trial_details
 % if ($info_section_id eq 'analysis_details'){
                                 <& /analyses/analysis_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, trial_description=>$trial_description, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, year=>$year, identifier_prefix=>$identifier_prefix, trial_stock_type => $trial_stock_type, analysis_metadata=>$analysis_metadata &>
 % } #End analysis_details
+% if ($info_section_id eq 'analysis_page_analysis_tools'){
+                                <& /breeders_toolbox/trial/correlation_workflow.mas, trial_id => $trial_id, is_analysis => 1 &>
+% }
 % if ($info_section_id eq 'model_details'){
                                 <& /analyses/model_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, analysis_metadata=>$analysis_metadata &>
 % } #End analysis_details
+% if ($info_section_id eq 'analysis_model_details'){
+                                <& /analyses/model_detail_page_section.mas, model_id => $model_id, model_name => $model_name, model_description => $model_description, model_properties => $model_properties, model_file_ids => $model_file_ids, model_type_name => $model_type_name, model_files => $model_files, identifier_prefix => $identifier_prefix &>
+% } #End analysis_model_details
+% if ($info_section_id eq 'model_analyses'){
+                                <& /analyses/model_detail_page_analyses_section.mas, model_id => $model_id &>
+% } #End model_analyses
 % if ($info_section_id eq 'manage_file_share_dump'){
                                 <& /breeders_toolbox/file_share/file_dump_share_files.mas &>
 % } #End manage_file_share_dump

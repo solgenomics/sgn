@@ -96,43 +96,43 @@ has 'year' => (
 sub BUILD {
     my $self = shift;
     my $args = shift;
-    
+
     print STDERR "BUILD CXGN::Project... with ".$args->{trial_id}."\n";
 
-    if (! $args->{description}) { 
-	$args->{description} = "(No description provided)"; 
+    if (! $args->{description}) {
+	$args->{description} = "(No description provided)";
     }
-    
+
     my $row = $self->bcs_schema()->resultset("Project::Project")->find( { project_id => $args->{trial_id} });
 
-    print STDERR "PROJECT ID = $args->{trial_id}\n";
+    # print STDERR "PROJECT ID = $args->{trial_id}\n";
     if ($row){
 	$self->name( $row->name() );
     }
-    
-    if ($args->{trial_id} && ! $row) { 
+
+    if ($args->{trial_id} && ! $row) {
 	die "The trial ".$args->{trial_id}." does not exist - aborting.";
     }
 
     $row = $self->bcs_schema()->resultset("Project::Project")->find( { name => $args->{name } } );
 
-    
+
     if (! $args->{trial_id} && $row) {
 	die "A trial with the name $args->{name} already exists. Please choose another name.";
     }
 
-    if (! $args->{trial_id} && ! $row) { 
+    if (! $args->{trial_id} && ! $row) {
 	print STDERR "INSERTING A NEW ROW...\n";
-	
+
         my $new_row = $args->{bcs_schema}->resultset("Project::Project")->create( { name => $args->{name}, description => $args->{description} });
 	my $project_id = $new_row->project_id();
 	print STDERR "new project object has project id $project_id\n";
-	
+
 	$self->set_trial_id($project_id);
     }
 
     if ($args->{trial_id} && $row) {
-	print STDERR "Existing project... populating object.\n";
+	# print STDERR "Existing project... populating object.\n";
 	$self->set_trial_id($args->{trial_id});
 	$self->name($args->{name});
 	$self->description($args->{description});
@@ -158,8 +158,8 @@ has 'trial_id' => (isa => 'Int',
 
 =cut
 
-has 'layout' => (isa => 'CXGN::Trial::TrialLayout::Phenotyping | 
-                         CXGN::Trial::TrialLayout::Genotyping | 
+has 'layout' => (isa => 'CXGN::Trial::TrialLayout::Phenotyping |
+                         CXGN::Trial::TrialLayout::Genotyping |
                          CXGN::Trial::TrialLayout::Analysis',
 		 is => 'rw',
 		 reader => 'get_layout',
@@ -242,7 +242,7 @@ sub get_year {
     my $self = shift;
 
     print STDERR "get_year()...\n";
-    
+
     if ($self->year()) { return $self->year(); }
 
     my $type_id = $self->get_year_type_id();
@@ -255,7 +255,7 @@ sub get_year {
     else {
 	return $rs->first()->value();
     }
-   
+
 }
 
 sub set_year {
@@ -299,7 +299,7 @@ getter/setter for the description
 sub get_description {
     my $self = shift;
 
-    print STDERR "Get description for trial id ".$self->get_trial_id()."\n";
+    # print STDERR "Get description for trial id ".$self->get_trial_id()."\n";
     my $rs = $self->bcs_schema->resultset('Project::Project')->search( { project_id => $self->get_trial_id() });
 
     return $rs->first()->description();
@@ -418,7 +418,7 @@ sub set_location {
 
  Usage:        my $noaa_station_id = $trial->get_location_noaa_station_id();
  Desc:
- Ret:          
+ Ret:
  Args:
  Side Effects:
  Example:
@@ -3412,11 +3412,13 @@ sub get_plants {
         selected_columns => {"plant_name"=>1,"plant_id"=>1},
     });
     my $output = $trial_layout_download->get_layout_output()->{output};
-    my $header = shift @$output;
-    foreach (@$output) {
-        push @plants, [$_->[1], $_->[0]];
-    }
-    if (scalar(@plants) == 0) {
+
+    if (defined $output){
+        my $header = shift @$output;
+        foreach (@$output) {
+            push @plants, [$_->[1], $_->[0]];
+        }
+    } else {
         @plants = @{$self->get_observation_units_direct('plant')};
     }
     return \@plants;
@@ -3523,11 +3525,13 @@ sub get_plots {
         selected_columns => {"plot_name"=>1,"plot_id"=>1},
     });
     my $output = $trial_layout_download->get_layout_output()->{output};
-    my $header = shift @$output;
-    foreach (@$output) {
-        push @plots, [$_->[1], $_->[0]];
-    }
-    if (scalar(@plots) == 0) {
+
+    if (defined $output){
+        my $header = shift @$output;
+        foreach (@$output) {
+            push @plots, [$_->[1], $_->[0]];
+        }
+    } else {
         @plots = @{$self->get_observation_units_direct('plot')};
     }
     return \@plots;
@@ -3621,11 +3625,13 @@ sub get_subplots {
         selected_columns => {"subplot_name"=>1,"subplot_id"=>1},
     });
     my $output = $trial_layout_download->get_layout_output()->{output};
-    my $header = shift @$output;
-    foreach (@$output) {
-        push @subplots, [$_->[1], $_->[0]];
-    }
-    if (scalar(@subplots) == 0) {
+
+    if (defined $output){
+        my $header = shift @$output;
+        foreach (@$output) {
+            push @subplots, [$_->[1], $_->[0]];
+        }
+    } else {
         @subplots = @{$self->get_observation_units_direct('subplot')};
     }
     print STDERR Dumper \@subplots;
@@ -3654,11 +3660,12 @@ sub get_tissue_samples {
         selected_columns => {"tissue_sample_name"=>1,"tissue_sample_id"=>1},
     });
     my $output = $trial_layout_download->get_layout_output()->{output};
-    my $header = shift @$output;
-    foreach (@$output) {
-        push @tissues, [$_->[1], $_->[0]];
-    }
-    if (scalar(@tissues) == 0) {
+    if (defined $output){
+        my $header = shift @$output;
+        foreach (@$output) {
+            push @tissues, [$_->[1], $_->[0]];
+        }
+    } else {
         @tissues = @{$self->get_observation_units_direct('tissue_sample')};
     }
     return \@tissues;

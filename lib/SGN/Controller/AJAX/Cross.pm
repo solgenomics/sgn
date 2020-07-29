@@ -241,17 +241,17 @@ sub upload_cross_file_POST : Args(0) {
         }
     }
 
-    while (my $info_type = shift (@properties)){
-        if ($parsed_data->{$info_type}) {
-            print STDERR "Handling info type $info_type\n";
-            my %info_hash = %{$parsed_data->{$info_type}};
-            foreach my $cross_name_key (keys %info_hash) {
-                my $value = $info_hash{$cross_name_key};
-                my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name_key, key => $info_type, value => $value, } );
-                $cross_add_info->add_info();
-            }
-        }
-    }
+#    while (my $info_type = shift (@properties)){
+#        if ($parsed_data->{$info_type}) {
+#            print STDERR "Handling info type $info_type\n";
+#            my %info_hash = %{$parsed_data->{$info_type}};
+#            foreach my $cross_name_key (keys %info_hash) {
+#                my $value = $info_hash{$cross_name_key};
+#                my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name_key, key => $info_type, value => $value, } );
+#                $cross_add_info->add_info();
+#            }
+#        }
+#    }
 
     $c->stash->{rest} = {success => "1",};
 }

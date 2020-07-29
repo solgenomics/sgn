@@ -399,7 +399,7 @@ my $after_updating_info_stockprop = $schema->resultset("Stock::Stockprop")->sear
 my $after_updating_info_relationship = $schema->resultset("Stock::StockRelationship")->search({})->count();
 
 is($after_updating_info_stocks, $before_updating_info_stocks);
-is($after_updating_info_stockprop, $before_updating_info_stockprop+1);
+is($after_updating_info_stockprop, $before_updating_info_stockprop+3);
 is($after_updating_info_relationship, $before_updating_info_relationship);
 
 # test retrieving crossing experimental info after updating
