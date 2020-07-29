@@ -1266,6 +1266,7 @@ sub get_datasets_intersect_select : Path('/ajax/html/select/datasets_intersect')
 
     my $name = $c->req->param("name");
     my $id = $c->req->param("id");
+    my $names_as_values = $c->req->param("names_as_values");
     my $empty = $c->req->param("empty") || "";
 
     my $dataset_param = $c->req->param("param");
@@ -1307,7 +1308,11 @@ sub get_datasets_intersect_select : Path('/ajax/html/select/datasets_intersect')
     my @result;
     my $counter = 0;
     foreach (@intersect) {
-        push @result, [$_, $items[$counter]];
+        if (!$names_as_values) {
+            push @result, [$_, $items[$counter]];
+        } else {
+            push @result, [$items[$counter], $items[$counter]];
+        }
         $counter++;
     }
 

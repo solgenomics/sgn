@@ -186,6 +186,8 @@ sub generate_results : Path('/ajax/Nirs/generate_results') : ActionClass('REST')
 sub generate_results_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    my $dbh = $c->dbc->dbh();
+
     print STDERR Dumper $c->req->params();
 
     my $format_id = $c->req->param('format');
@@ -269,7 +271,20 @@ sub generate_results_POST : Args(0) {
     };
     close($f);
 
-    
+    my $stock_ids_sql;
+    my $nirs_training_q = "SELECT stock.uniquename, stock.stock_id, metadata.md_json.json->>'spectra'
+        FROM stock
+        JOIN nd_experiment_stock USING(stock_id)
+        JOIN nd_experiment USING(nd_experiment_id)
+        JOIN phenome.nd_experiment_md_json USING(nd_experiment_id)
+        JOIN metadata.md_json USING(json_id)
+        WHERE stock.stock_id IN ($stock_ids_sql) AND metadata.md_json.json->>'device_type' = ? ;";
+    my $nirs_training_h = $dbh->prepare($nirs_training_q);    
+    $nirs_training_h->execute($device_id);
+    while (my ($stock_uniquename, $stock_id, $spectra) = $nirs_training_h->fetchrow_array()) {
+        
+    }
+
     my ($fh, $filename) = tempfile(
       "nirs_XXXXX",
       DIR=> $nirs_tmp_output,
@@ -277,7 +292,6 @@ sub generate_results_POST : Args(0) {
       EXLOCK => 0
     );
 
-    my $dbh = $c->dbc->dbh();
     my @rawjson = ();
 	my @rawplot = ();
     foreach my $name (@plot_train){
