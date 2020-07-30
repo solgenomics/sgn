@@ -125,14 +125,20 @@ jQuery(document).ready(function () {
                 jQuery("#working_modal").modal("show");
             },
             error: function(response) {
-                alert("An error occurred!" + JSON.stringify(response));
-                return;
+                alert("An error occurred. Please try again later!" + JSON.stringify(response));
+            },
+            parseerror: function(response) {
+                alert("A parse error occurred. Please try again." + response);
             },
             success: function(response) {
+                jQuery("#working_modal").modal("hide");
                 if (response.error) {
                     alert(response.error);
+                } else {
+                    alert('The product profile was saved successfully.');
                 }
             },
+
         });
 
     });
