@@ -19,7 +19,9 @@
     <& /page/page_title.mas, title=>"Manage Drone Imagery" &>
 
 <%perl>
-my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Imagery</button><button class='btn btn-default' style='margin:3px' id='download_phenotypes_drone_imagery_link'>Download Image-Phenotypes</button><button class='btn btn-success' style='margin:3px' id='keras_cnn_drone_imagery_link'>Keras CNN Models</button><button class='btn btn-success' style='margin:3px' id='drone_imagery_calculate_statistics_link'>Calculate Statistics</button><button class='btn btn-default' style='margin:3px' id='drone_imagery_compare_field_images_link'>Compare Aerial Field Images</button>";
+#my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Imagery</button><button class='btn btn-default' style='margin:3px' id='download_phenotypes_drone_imagery_link'>Download Image-Phenotypes</button><button class='btn btn-success' style='margin:3px' id='keras_cnn_drone_imagery_link'>Keras CNN Models</button><button class='btn btn-success' style='margin:3px' id='drone_imagery_calculate_statistics_link'>Calculate Statistics</button><button class='btn btn-default' style='margin:3px' id='drone_imagery_compare_field_images_link'>Compare Aerial Field Images</button>";
+
+my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Imagery</button><button class='btn btn-success' style='margin:3px' id='keras_cnn_drone_imagery_link'>Keras CNN Models</button><button class='btn btn-success' style='margin:3px' id='drone_imagery_calculate_statistics_link'>Calculate Statistics</button><button class='btn btn-default' style='margin:3px' id='drone_imagery_compare_field_images_link'>Compare Aerial Field Images</button>";
 </%perl>
 
     <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Drone Imagery</h4>", info_section_subtitle => 'Upload and view field drone imagery', buttons_html => $buttons_html, icon_class => undef, col1_width_class => "col-sm-0", col2_width_class => "col-sm-12", info_section_id => "manage_drone_imagery_main" &>
@@ -1726,7 +1728,22 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <label class="col-sm-3 control-label">Base Temperature:</label>
                     <div class="col-sm-9" >
                         <select class="form-control" id="drone_imagery_calculate_gdd_base_temperature_input">
+                            <option value="40">40F</option>
+                            <option value="41">41F</option>
+                            <option value="42">42F</option>
+                            <option value="43">43F</option>
+                            <option value="44">44F</option>
+                            <option value="45">45F</option>
+                            <option value="46">46F</option>
+                            <option value="47">47F</option>
+                            <option value="48">48F</option>
+                            <option value="49">49F</option>
                             <option value="50">50F</option>
+                            <option value="51">51F</option>
+                            <option value="52">52F</option>
+                            <option value="53">53F</option>
+                            <option value="54">54F</option>
+                            <option value="55">55F</option>
                         </select>
                     </div>
                 </div>
