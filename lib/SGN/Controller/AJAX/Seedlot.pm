@@ -20,13 +20,11 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
    );
 
-
 sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
     my $self = shift;
     my $c = shift;
 
     my $params = $c->req->params() || {};
-    #print STDERR Dumper $params;
     my $seedlot_name = $params->{seedlot_name} || '';
     my $breeding_program = $params->{breeding_program} || '';
     my $location = $params->{location} || '';
@@ -36,6 +34,9 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
     my $contents_cross = $params->{contents_cross} || '';
     my $exact_accession = $params->{exact_accession};
     my $exact_cross = $params->{exact_cross};
+    my $quality = $params->{quality};
+    my $only_good_quality = $params->{only_good_quality};
+
     my $rows = $params->{length} || 10;
     my $offset = $params->{start} || 0;
     my $limit = ($offset+$rows)-1;
@@ -65,7 +66,11 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
         \@accessions,
         \@crosses,
         $exact_match_uniquenames,
-        $minimum_weight
+        $minimum_weight,
+	undef,
+	undef,
+	$quality,
+	$only_good_quality,
     );
     my @seedlots;
     foreach my $sl (@$list) {
@@ -89,11 +94,10 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
             weight_gram => $sl->{current_weight_gram},
             owners_string => $sl->{owners_string},
             organization => $sl->{organization},
-            box => $sl->{box}
+            box => $sl->{box},
+	    seedlot_quality => $sl->{seedlot_quality},
         };
     }
-
-    #print STDERR Dumper(\@seedlots);
 
     $c->stash->{rest} = { data => \@seedlots, draw => $draw, recordsTotal => $records_total,  recordsFiltered => $records_total };
 }
@@ -102,8 +106,6 @@ sub seedlot_base : Chained('/') PathPart('ajax/breeders/seedlot') CaptureArgs(1)
     my $self = shift;
     my $c = shift;
     my $seedlot_id = shift;
-
-    print STDERR "Seedlot id = $seedlot_id\n";
 
     $c->stash->{schema} = $c->dbic_schema("Bio::Chado::Schema");
     $c->stash->{phenome_schema} = $c->dbic_schema("CXGN::Phenome::Schema");
@@ -132,6 +134,7 @@ sub seedlot_details :Chained('seedlot_base') PathPart('') Args(0) {
         accession => $c->stash->{seedlot}->accession(),
         cross => $c->stash->{seedlot}->cross(),
         box_name => $c->stash->{seedlot}->box_name(),
+	quality => $c->stash->{seedlot}->quality(),
     };
 }
 
@@ -156,6 +159,7 @@ sub seedlot_edit :Chained('seedlot_base') PathPart('edit') Args(0) {
     my $population = $c->req->param('population');
     my $location = $c->req->param('location');
     my $box_name = $c->req->param('box_name');
+    my $quality = $c->req->param('quality');
     my $accession_uniquename = $c->req->param('accession');
     my $cross_uniquename = $c->req->param('cross');
     my $schema = $c->stash->{schema};
@@ -208,6 +212,7 @@ sub seedlot_edit :Chained('seedlot_base') PathPart('edit') Args(0) {
     $seedlot->organization_name($organization);
     $seedlot->location_code($location);
     $seedlot->box_name($box_name);
+    $seedlot->quality($quality);
     $seedlot->accession_stock_id($accession_id);
     $seedlot->cross_stock_id($cross_id);
     $seedlot->population_name($population);
@@ -255,7 +260,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $box_name = $c->req->param("seedlot_box_name");
     my $accession_uniquename = $c->req->param("seedlot_accession_uniquename");
     my $cross_uniquename = $c->req->param("seedlot_cross_uniquename");
-
+    my $seedlot_quality = $c->req->param("seedlot_quality");
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
     my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
@@ -329,7 +334,6 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     }
     my $user_id = $c->user()->get_object()->get_sp_person_id();
 
-    print STDERR "Creating new Seedlot $seedlot_uniquename\n";
     my $seedlot_id;
 
     eval {
@@ -342,6 +346,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         $sl->organization_name($organization);
         $sl->population_name($population_name);
         $sl->breeding_program_id($breeding_program_id);
+	$sl->quality($seedlot_quality);
         my $return = $sl->store();
         my $seedlot_id = $return->{seedlot_id};
 
@@ -437,7 +442,7 @@ sub upload_seedlots_POST : Args(0) {
         $upload = $upload_harvested_from_crosses;
         $parser_type = 'SeedlotHarvestedXLS';
     }
-    print STDERR "$parser_type \n";
+
     my $subdirectory = "seedlot_upload";
     my $upload_original_name = $upload->filename();
     my $upload_tempfile = $upload->tempname;
@@ -464,7 +469,6 @@ sub upload_seedlots_POST : Args(0) {
     my $parser = CXGN::Stock::Seedlot::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
     $parser->load_plugin($parser_type);
     my $parsed_data = $parser->parse();
-    #print STDERR Dumper $parsed_data;
 
     if (!$parsed_data) {
         my $return_error = '';
@@ -473,7 +477,6 @@ sub upload_seedlots_POST : Args(0) {
             $c->stash->{rest} = {error_string => "Could not get parsing errors"};
         } else {
             $parse_errors = $parser->get_parse_errors();
-            #print STDERR Dumper $parse_errors;
 
             foreach my $error_string (@{$parse_errors->{'error_messages'}}){
                 $return_error .= $error_string."<br>";
@@ -492,6 +495,8 @@ sub upload_seedlots_POST : Args(0) {
             } else {
                 $sl = CXGN::Stock::Seedlot->new(schema => $schema);
             }
+
+	    $sl->quality($val->{quality});
             $sl->uniquename($key);
             $sl->location_code($location);
             $sl->box_name($val->{box_name});
@@ -500,6 +505,7 @@ sub upload_seedlots_POST : Args(0) {
             $sl->organization_name($organization);
             $sl->population_name($population);
             $sl->breeding_program_id($breeding_program_id);
+	    $sl->quality($val->{quality});
             $sl->check_name_exists(0); #already validated
             my $return = $sl->store();
             my $seedlot_id = $return->{seedlot_id};
@@ -514,9 +520,18 @@ sub upload_seedlots_POST : Args(0) {
                 $from_stock_id = $val->{cross_stock_id};
                 $from_stock_name = $val->{cross_name};
             }
+
             if (!$from_stock_id || !$from_stock_name){
-                die "A source accession or source cross must be given to make a seedlot transaction.\n";
+                die "An accession or cross must be given to make a seedlot transaction.\n";
             }
+
+	    # if an alternate source is given, use that, but only if there is an accession present, and
+	    # there is no cross.
+	    #
+	    if ($val->{source_id} && $val->{accession_stock_id} && !$val->{cross_stock_id}) {
+		$from_stock_id = $val->{source_id};
+		$from_stock_name = $val->{source_name};
+	    }
 
             my $transaction_amount;
             my $transaction_weight;
@@ -690,8 +705,13 @@ sub upload_seedlots_inventory_POST : Args(0) {
         while (my ($key, $val) = each(%$parsed_data)){
             my $sl = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $val->{seedlot_id});
             $sl->box_name($val->{box_id});
+
+	    print STDERR "QUALITY: $val->{quality}\n";
+	    $sl->quality($val->{quality});
+
             my $return = $sl->store();
-            my $current_stored_count = $sl->get_current_count_property();
+
+	    my $current_stored_count = $sl->get_current_count_property();
             my $current_stored_weight = $sl->get_current_weight_property();
 
             my $weight_difference = $val->{weight_gram} - $current_stored_weight;
@@ -705,7 +725,16 @@ sub upload_seedlots_inventory_POST : Args(0) {
 
             my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
             $transaction->factor($factor);
-            $transaction->from_stock([$val->{seedlot_id}, $val->{seedlot_name}]);
+
+	    my $from_stock_id = $val->{seedlot_id};
+	    my $from_stock_name = $val->{seedlot_name};
+
+	    if ($val->{source_id}) {
+		$from_stock_id = $val->{source_id};
+		$from_stock_name = $val->{source};
+	    }
+
+            $transaction->from_stock([ $from_stock_id, $from_stock_name ]);
             $transaction->to_stock([$val->{seedlot_id}, $val->{seedlot_name}]);
             $transaction->weight_gram($weight_difference);
             $transaction->timestamp($val->{inventory_date});
@@ -850,7 +879,6 @@ sub list_seedlot_transactions :Chained('seedlot_base') :PathPart('transactions')
     }
 
     $c->stash->{rest} = { data => \@transactions };
-
 }
 
 sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add') :Args(0) {
