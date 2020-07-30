@@ -138,15 +138,37 @@ sub upload_drone_imagery_POST : Args(0) {
         my $time_diff = $drone_run_date_time_object - $planting_date_time_object;
         my $time_diff_weeks = $time_diff->weeks;
         my $time_diff_days = $time_diff->days;
+        my $time_diff_hours = $time_diff->hours;
         my $rounded_time_diff_weeks = round($time_diff_weeks);
+        if ($rounded_time_diff_weeks == 0) {
+            $rounded_time_diff_weeks = 1;
+        }
 
+        my $week_term_string = "week $rounded_time_diff_weeks";
         my $q = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
         my $h = $schema->storage->dbh()->prepare($q);
-        $h->execute("week $rounded_time_diff_weeks", 'cxgn_time_ontology');
+        $h->execute($week_term_string, 'cxgn_time_ontology');
         my ($week_cvterm_id) = $h->fetchrow_array();
 
-        $h->execute("day $time_diff_days", 'cxgn_time_ontology');
+        if (!$week_cvterm_id) {
+            my $new_week_term = $schema->resultset("Cv::Cvterm")->create_with({
+               name => $week_term_string,
+               cv => 'cxgn_time_ontology'
+            });
+            $week_cvterm_id = $new_week_term->cvterm_id();
+        }
+
+        my $day_term_string = "day $time_diff_days";
+        $h->execute($day_term_string, 'cxgn_time_ontology');
         my ($day_cvterm_id) = $h->fetchrow_array();
+
+        if (!$day_cvterm_id) {
+            my $new_day_term = $schema->resultset("Cv::Cvterm")->create_with({
+               name => $day_term_string,
+               cv => 'cxgn_time_ontology'
+            });
+            $day_cvterm_id = $new_day_term->cvterm_id();
+        }
 
         my $week_term = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $week_cvterm_id, 'extended');
         my $day_term = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $day_cvterm_id, 'extended');

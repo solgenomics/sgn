@@ -4095,7 +4095,7 @@ sub _perform_get_weeks_drone_run_after_planting {
     my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
     my $planting_date = $trial->get_planting_date();
 
-    my $drone_date_time_object = Time::Piece->strptime($drone_date, "%Y-%B-%d");
+    my $drone_date_time_object = Time::Piece->strptime($drone_date, "%Y-%B-%d %H:%M:%S");
     my $drone_date_full_calendar_datetime = $drone_date_time_object->strftime("%Y/%m/%d %H:%M:%S");
 
     if (!$planting_date) {
@@ -4107,19 +4107,37 @@ sub _perform_get_weeks_drone_run_after_planting {
     my $time_diff = $drone_date_time_object - $planting_date_time_object;
     my $time_diff_weeks = $time_diff->weeks;
     my $time_diff_days = $time_diff->days;
+    my $time_diff_hours = $time_diff->hours;
     my $rounded_time_diff_weeks = round($time_diff_weeks);
     if ($rounded_time_diff_weeks == 0) {
         $rounded_time_diff_weeks = 1;
     }
-    print STDERR Dumper $rounded_time_diff_weeks;
 
+    my $week_term_string = "week $rounded_time_diff_weeks";
     my $q = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
     my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute("week $rounded_time_diff_weeks", 'cxgn_time_ontology');
+    $h->execute($week_term_string, 'cxgn_time_ontology');
     my ($week_cvterm_id) = $h->fetchrow_array();
 
-    $h->execute("day $time_diff_days", 'cxgn_time_ontology');
+    if (!$week_cvterm_id) {
+        my $new_week_term = $schema->resultset("Cv::Cvterm")->create_with({
+           name => $week_term_string,
+           cv => 'cxgn_time_ontology'
+        });
+        $week_cvterm_id = $new_week_term->cvterm_id();
+    }
+
+    my $day_term_string = "day $time_diff_days";
+    $h->execute($day_term_string, 'cxgn_time_ontology');
     my ($day_cvterm_id) = $h->fetchrow_array();
+
+    if (!$day_cvterm_id) {
+        my $new_day_term = $schema->resultset("Cv::Cvterm")->create_with({
+           name => $day_term_string,
+           cv => 'cxgn_time_ontology'
+        });
+        $day_cvterm_id = $new_day_term->cvterm_id();
+    }
 
     if (!$week_cvterm_id) {
         return { planting_date => $planting_date, planting_date_calendar => $planting_date_full_calendar_datetime, drone_run_date => $drone_date, drone_run_date_calendar => $drone_date_full_calendar_datetime, time_difference_weeks => $time_diff_weeks, time_difference_days => $time_diff_days, rounded_time_difference_weeks => $rounded_time_diff_weeks, error => 'The time ontology term was not found automatically! Maybe the field trial planting date or the drone run date are not correct in the database? The maximum number of weeks currently allowed between these two dates is 54 weeks. This should not be possible, please contact us; however you can still select the time manually'};

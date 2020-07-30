@@ -547,6 +547,8 @@ jQuery(document).ready(function() {
             "singleDatePicker": true,
             "showDropdowns": true,
             "autoUpdateInput": false,
+            "timePicker": true,
+            "timePicker24Hour": true,
         },
         function(start){
             drone_run_date_element.val(start.format('YYYY/MM/DD HH:mm:ss'));
