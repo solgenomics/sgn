@@ -240,9 +240,14 @@ sub program_field_trials :Chained('ajax_breeding_program') PathPart('field_trial
     my $projects = CXGN::BreedersToolbox::Projects->new({schema => $schema});
     my @all_trials = $projects->get_trials_by_breeding_program($program_id);
     my $field_trials_ref = $all_trials[0];
-    my @field_trials = @$field_trials_ref;
 
+    my @field_trials;
     my @field_trial_data;
+
+    if (defined $field_trials_ref) {
+        @field_trials = @$field_trials_ref;
+    }
+
     foreach my $trial(@field_trials){
         push @field_trial_data, ['<a href="/breeders/trial/'.$$trial[0].'">'.$$trial[1].'</a>', $$trial[2]];
     }
@@ -262,9 +267,14 @@ sub program_genotyping_plates :Chained('ajax_breeding_program') PathPart('genoty
     my $projects = CXGN::BreedersToolbox::Projects->new({schema => $schema});
     my @all_trials = $projects->get_trials_by_breeding_program($program_id);
     my $genotyping_plates_ref = $all_trials[2];
-    my @genotyping_plates = @$genotyping_plates_ref;
 
+    my @genotyping_plates;
     my @genotyping_plate_data;
+
+    if (defined $genotyping_plates_ref) {
+        @genotyping_plates = @$genotyping_plates_ref;
+    }
+
     foreach my $plate(@genotyping_plates){
         push @genotyping_plate_data, ['<a href="/breeders/trial/'.$$plate[0].'">'.$$plate[1].'</a>', $$plate[2]];
     }
@@ -284,9 +294,14 @@ sub program_crossing_experiments :Chained('ajax_breeding_program') PathPart('cro
     my $projects = CXGN::BreedersToolbox::Projects->new({schema => $schema});
     my @all_trials = $projects->get_trials_by_breeding_program($program_id);
     my $crossing_experiment_ref = $all_trials[1];
-    my @crossing_experiments = @$crossing_experiment_ref;
 
+    my @crossing_experiments;
     my @crossing_experiment_data;
+
+    if (defined $crossing_experiment_ref) {
+        @crossing_experiments = @$crossing_experiment_ref;
+    }
+
     foreach my $experiment(@crossing_experiments){
         push @crossing_experiment_data, ['<a href="/breeders/trial/'.$$experiment[0].'">'.$$experiment[1].'</a>', $$experiment[2]];
     }
