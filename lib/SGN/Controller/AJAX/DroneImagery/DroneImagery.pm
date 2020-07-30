@@ -8592,10 +8592,10 @@ sub _perform_gdd_calculation_and_drone_run_time_saving {
     my %related_cvterms;
     if ($formula eq 'average_daily_temp_sum') {
         $gdd_result = $gdd->get_temperature_averaged_gdd($gdd_base_temperature);
-        if (exists($gdd_result->{error})) {
-            $c->stash->{rest} = {error => $gdd_result->{error}};
-            $c->detach();
-        }
+        # if (exists($gdd_result->{error})) {
+        #     $c->stash->{rest} = {error => $gdd_result->{error}};
+        #     $c->detach();
+        # }
         $gdd_result = $gdd_result->{gdd};
         $related_cvterms{gdd_average_temp} = $gdd_result;
 
