@@ -314,6 +314,7 @@ sub generate_results_POST : Args(0) {
     my $nirs_training_h = $dbh->prepare($nirs_training_q);    
     $nirs_training_h->execute($format_id);
     while (my ($stock_uniquename, $stock_id, $spectra) = $nirs_training_h->fetchrow_array()) {
+        $spectra = decode_json $spectra;
         if (exists($training_pheno_data{$stock_id})) {
             $training_pheno_data{$stock_id}->{spectra} = $spectra;
         }
