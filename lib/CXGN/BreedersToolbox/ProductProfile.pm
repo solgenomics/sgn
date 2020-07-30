@@ -1,3 +1,5 @@
+package CXGN::BreedersToolbox::ProductProfile;
+
 
 =head1 NAME
 
@@ -17,7 +19,6 @@ Titima Tantikanjana <tt15@cornell.edu>
 
 =cut
 
-package CXGN::BreedersToolbox::ProductProfile;
 
 use Moose;
 
@@ -27,19 +28,17 @@ use JSON::Any;
 use Data::Dumper;
 use SGN::Model::Cvterm;
 
-=cut
-
-has 'schema' => (isa => 'Ref', is => 'rw', required => 1);
 
 has 'product_profile_name' => (isa => 'Str', is => 'rw');
 
 has 'product_profile_scope' => (isa => 'Str', is => 'rw');
 
-has 'product_profile_details' => (isa => 'HashRef', is => 'rw');
+has 'product_profile_details' => (isa => 'Str', is => 'rw');
 
 
 sub BUILD {
     my $self = shift;
+    my $args = shift;
 
     $self->prop_table('projectprop');
     $self->prop_namespace('Project::Projectprop');

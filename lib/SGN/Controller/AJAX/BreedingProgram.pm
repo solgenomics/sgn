@@ -30,7 +30,7 @@ use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::Stock::Search;
 use JSON;
-
+use CXGN::BreedersToolbox::ProductProfile;
 
 __PACKAGE__->config(
     default   => 'application/json',
@@ -343,14 +343,12 @@ sub add_product_profile : Path('/ajax/breeders/program/add_product_profile') : A
 sub add_product_profile_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $program_id = $c->req->param('profile_program_id');
     my $product_profile_name = $c->req->param('product_profile_name');
     my $product_profile_scope = $c->req->param('product_profile_scope');
     my $trait_list_json = $c->req->param('trait_list_json');
     my $target_values_json = $c->req->param('target_values_json');
-
-    print STDERR "TRAIT LIST =".Dumper($trait_list_json)."\n";
-    print STDERR "TARGET VALUES =".Dumper($target_values_json)."\n";
 
     my @traits = @{_parse_list_from_json($trait_list_json)};
     my @target_values = @{_parse_list_from_json($target_values_json)};
@@ -359,11 +357,22 @@ sub add_product_profile_POST : Args(0) {
     for my $i (0 .. $#traits) {
         $trait_value_hash{$traits[$i]} = $target_values[$i];
     }
-    print STDERR "PROFILE HASH =".Dumper(\%trait_value_hash)."\n";
     my $profile_string = encode_json \%trait_value_hash;
-    print STDERR "PROFILE STRING =".Dumper($profile_string)."\n";
 
+    my $product_profile = CXGN::BreedersToolbox::ProductProfile->new({ bcs_schema => $schema });
+    $product_profile->product_profile_name($product_profile_name);
+    $product_profile->product_profile_scope($product_profile_scope);
+    $product_profile->product_profile_details($profile_string);
+    $product_profile->parent_id($program_id);
+	my $project_prop_id = $product_profile->store();
 
+    print STDERR "PROJECT PROP ID =".Dumper($project_prop_id)."\n";
+    if ($@) {
+        $c->stash->{rest} = { error => "Error storing product profile. ($@)" };
+        return;
+    }
+
+    $c->stash->{rest} = { success => 1};
 }
 
 
