@@ -8534,6 +8534,35 @@ sub drone_imagery_delete_drone_run_GET : Args(0) {
     $c->stash->{rest} = {success => 1};
 }
 
+sub drone_imagery_get_image_types : Path('/api/drone_imagery/get_image_types') : ActionClass('REST') { }
+sub drone_imagery_get_image_types_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my @image_types = (
+        'Blue (450-520nm)',
+        'Green (515-600nm)',
+        'Red (600-690nm)',
+        'Red Edge (690-750nm)',
+        'NIR (780-3000nm)',
+        'MIR (3000-50000nm)',
+        'FIR (50000-1000000nm)',
+        'Thermal IR (9000-14000nm)',
+        'Black and White Image',
+        'RGB Color Image',
+        'Merged 3 Bands BGR',
+        'Merged 3 Bands NRN',
+        'Merged 3 Bands NReN',
+        'Raster DSM'
+    );
+
+    $c->stash->{rest} = {success => 1, image_types => \@image_types};
+}
+
 sub drone_imagery_growing_degree_days : Path('/api/drone_imagery/growing_degree_days') : ActionClass('REST') { }
 sub drone_imagery_growing_degree_days_GET : Args(0) {
     my $self = shift;
