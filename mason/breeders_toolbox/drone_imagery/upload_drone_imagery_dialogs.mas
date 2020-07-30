@@ -130,7 +130,7 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Imaging Event Date (Must be after the planting date and must be less than 365 days after planting date):</label>
+                                <label class="col-sm-3 control-label">Imaging Event Date and Hour (Must be after the planting date):</label>
                                 <div class="col-sm-9" >
                                     <input class="form-control" id="drone_run_date" name="drone_run_date" title="drone_run_date" type="text" />
                                 </div>
