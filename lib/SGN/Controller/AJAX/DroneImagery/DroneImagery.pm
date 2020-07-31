@@ -4637,6 +4637,82 @@ sub standard_process_apply_raw_images_interactive_POST : Args(0) {
     $c->stash->{rest} = { data => \@result, success => 1 };
 }
 
+sub drone_imagery_save_single_plot_image : Path('/api/drone_imagery/save_single_plot_image') : ActionClass('REST') { }
+sub drone_imagery_save_single_plot_image_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my $observation_unit_id = $c->req->param('observation_unit_id');
+    my $drone_run_band_project_id_input = $c->req->param('drone_run_band_project_id');
+    my $image_input = $c->req->upload('image');
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my %expected_types = (
+        'observation_unit_polygon_blue_imagery',
+        'observation_unit_polygon_green_imagery',
+        'observation_unit_polygon_red_imagery',
+        'observation_unit_polygon_nir_imagery',
+        'observation_unit_polygon_red_edge_imagery'
+    );
+
+    my $drone_run_band_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_band_project_type', 'project_property')->cvterm_id();
+    my $q = "SELECT name,value FROM projectprop JOIN project USING(project_id) WHERE type_id=$drone_run_band_type_cvterm_id and project_id=?;";
+    my $h = $bcs_schema->storage->dbh()->prepare($q);
+    $h->execute($drone_run_band_project_id_input);
+    my ($project_band_name, $project_band_type) = $h->fetchrow_array();
+    if (!$project_band_name || !$project_band_type) {
+        $c->stash->{rest} = { error => "Drone run band not found or the drone run band is not of a known type!" };
+        $c->detach();
+    }
+
+    my $plot_polygon_types = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_observation_unit_plot_polygon_types($bcs_schema);
+    my %band_type_image_hash;
+    while ( my ($plot_image_type_id, $o) = each %$plot_polygon_types) {
+        foreach my $band_type (@{$o->{drone_run_project_types}}) {
+            if ($band_type eq $project_band_type && exists($expected_types{$o->{name}})) {
+                $band_type_image_hash{$band_type} = {
+                    cvterm_id => $plot_image_type_id,
+                    name => $o->{name}
+                };
+            }
+        }
+    }
+    my $linking_table_type_id = $band_type_image_hash{$project_band_type}->{cvterm_id};
+    my $assign_plot_polygons_type = $band_type_image_hash{$project_band_type}->{name};
+
+    my $image_tag_id = CXGN::Tag::exists_tag_named($bcs_schema->storage->dbh, $assign_plot_polygons_type);
+    if (!$image_tag_id) {
+        my $image_tag = CXGN::Tag->new($bcs_schema->storage->dbh);
+        $image_tag->set_name($assign_plot_polygons_type);
+        $image_tag->set_description('Drone run band project type for plot polygon assignment: '.$assign_plot_polygons_type);
+        $image_tag->set_sp_person_id($user_id);
+        $image_tag_id = $image_tag->store();
+    }
+    my $image_tag = CXGN::Tag->new($bcs_schema->storage->dbh, $image_tag_id);
+
+    if (!$image_input) {
+        $c->stash->{rest} = { error => "ERROR!" };
+        $c->detach();
+    }
+
+    my $stock = $bcs_schema->resultset("Stock::Stock")->find({stock_id => $observation_unit_id});
+    if (!$stock) {
+        $c->stash->{rest} = {error=>'Error: Stock '.$observation_unit_id.' does not exist in the database!'};
+        $c->detach();
+    }
+
+    my $image = SGN::Image->new( $bcs_schema->storage->dbh, undef, $c );
+    $image->set_sp_person_id($user_id);
+    my $ret = $image->process_image($image_input, 'project', $drone_run_band_project_id_input, $linking_table_type_id);
+    my $stock_associate = $image->associate_stock($observation_unit_id, $user_name);
+    my $plot_polygon_image_fullpath = $image->get_filename('original_converted', 'full');
+    my $plot_polygon_image_url = $image->get_image_url('original');
+    my $added_image_tag_id = $image->add_tag($image_tag);
+
+    $c->stash->{rest} = { success => 1 };
+}
+
 sub standard_process_minimal_vi_apply : Path('/api/drone_imagery/standard_process_minimal_vi_apply') : ActionClass('REST') { }
 sub standard_process_minimal_vi_apply_POST : Args(0) {
     my $self = shift;
