@@ -92,7 +92,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
 
                 <form class="form-horizontal">
                     <div class="form-group form-group-sm">
-                        <label class="col-sm-6 control-label">Rotate Counter-Clockwise Degrees: </label>
+                        <label class="col-sm-6 control-label">Rotate Counter-Clockwise Degrees (Use Left and Right Arrows For Fine Tuning): </label>
                         <div class="col-sm-6">
                             <input type="range" min="-180" max="180" step="0.01" id="drone_imagery_standard_process_rotate_degrees_input" name="drone_imagery_standard_process_rotate_degrees_input" value="0.00"><div id="drone_imagery_standard_process_rotate_degrees_input_text"></div>
                         </div>
