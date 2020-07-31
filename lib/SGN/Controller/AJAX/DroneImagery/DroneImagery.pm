@@ -3669,6 +3669,60 @@ sub get_drone_run_projects_GET : Args(0) {
     $c->stash->{rest} = { data => \@result };
 }
 
+sub get_drone_run_projects_kv : Path('/api/drone_imagery/drone_runs_json') : ActionClass('REST') { }
+sub get_drone_run_projects_kv_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $checkbox_select_all = $c->req->param('checkbox_select_all');
+    my $field_trial_ids = $c->req->param('field_trial_ids');
+
+    my $project_start_date_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'project_start_date', 'project_property')->cvterm_id();
+    my $design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'design', 'project_property')->cvterm_id();
+    my $drone_run_camera_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_camera_type', 'project_property')->cvterm_id();
+    my $drone_run_project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_project_type', 'project_property')->cvterm_id();
+    my $drone_run_gdd_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_averaged_temperature_growing_degree_days', 'project_property')->cvterm_id();
+    my $project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
+
+    my $where_clause = '';
+    if ($field_trial_ids) {
+        $where_clause = ' WHERE field_trial.project_id IN ('.$field_trial_ids.') ';
+    }
+
+    my $q = "SELECT project.project_id, project.name, project.description, drone_run_type.value, project_start_date.value, field_trial.project_id, field_trial.name, field_trial.description, drone_run_camera_type.value, drone_run_gdd.value FROM project
+        JOIN projectprop AS project_start_date ON (project.project_id=project_start_date.project_id AND project_start_date.type_id=$project_start_date_type_id)
+        LEFT JOIN projectprop AS drone_run_type ON (project.project_id=drone_run_type.project_id AND drone_run_type.type_id=$drone_run_project_type_cvterm_id)
+        LEFT JOIN projectprop AS drone_run_camera_type ON (project.project_id=drone_run_camera_type.project_id AND drone_run_camera_type.type_id=$drone_run_camera_cvterm_id)
+        LEFT JOIN projectprop AS drone_run_gdd ON (project.project_id=drone_run_gdd.project_id AND drone_run_gdd.type_id=$drone_run_gdd_cvterm_id)
+        JOIN project_relationship ON (project.project_id = project_relationship.subject_project_id AND project_relationship.type_id=$project_relationship_type_id)
+        JOIN project AS field_trial ON (field_trial.project_id=project_relationship.object_project_id)
+        $where_clause
+        ORDER BY project.project_id;";
+
+    my $calendar_funcs = CXGN::Calendar->new({});
+
+    my $h = $bcs_schema->storage->dbh()->prepare($q);
+    $h->execute();
+    my @result;
+    while (my ($drone_run_project_id, $drone_run_project_name, $drone_run_project_description, $drone_run_type, $drone_run_date, $field_trial_project_id, $field_trial_project_name, $field_trial_project_description, $drone_run_camera_type, $drone_run_gdd) = $h->fetchrow_array()) {
+        my @res;
+        my $drone_run_date_display = $drone_run_date ? $calendar_funcs->display_start_date($drone_run_date) : '';
+        my %data = (
+            "Drone Run Name" => $drone_run_project_name,
+            "Drone Run Type" => $drone_run_type,
+            "Drone Run Description" => $drone_run_project_description,
+            "Imaging Date" => $drone_run_date_display,
+            "Drone Run GDD" => $drone_run_gdd,
+            "Camera Type" => $drone_run_camera_type,
+            "Field Trial Name" => $field_trial_project_name,
+            "Field Trial Description" => $field_trial_project_description
+        );
+        push @result,\%data;
+    }
+
+    $c->stash->{rest} = { data => \@result };
+}
+
 
 sub get_plot_polygon_types_images : Path('/api/drone_imagery/plot_polygon_types_images') : ActionClass('REST') { }
 sub get_plot_polygon_types_images_GET : Args(0) {
