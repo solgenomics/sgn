@@ -58,6 +58,7 @@
                                     <th>Imaging Event Type</th>
                                     <th>Imaging Event Description</th>
                                     <th>Imaging Event Date</th>
+                                    <th>Drone Run GDD</th>
                                     <th>Sensor</th>
                                     <th>Field Trial Name</th>
                                     <th>Field Trial Description</th>

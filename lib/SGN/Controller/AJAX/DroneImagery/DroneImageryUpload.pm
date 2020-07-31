@@ -59,8 +59,8 @@ sub upload_drone_imagery : Path('/api/drone_imagery/upload_drone_imagery') : Act
 sub upload_drone_imagery_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    $c->response->headers->header( "Access-Control-Allow-Origin" => '*' ); 
-	$c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" ); 
+    $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
+    $c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
