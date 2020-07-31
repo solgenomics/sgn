@@ -615,7 +615,7 @@ sub create_file_id {
     {
 	if ($selection_pop_id)
 	{
-	    $file_id =  $selection_pop_id ? 
+	    $file_id =  $selection_pop_id  && $selection_pop_id != $training_pop_id ? 
 		$training_pop_id . '-' . $selection_pop_id : 
 		$training_pop_id;
 	}
@@ -643,7 +643,7 @@ sub create_file_id {
 
     if ($sindex_name)
     {
-	if ($sindex_name !~ $selection_pop_id)
+	if ($sindex_name ne $selection_pop_id)
 	{
 	    $file_id = $sindex_name ? $file_id . '-' . $sindex_name : $file_id;
 	}
