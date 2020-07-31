@@ -5520,7 +5520,7 @@ sub drone_imagery_get_image_GET : Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $image_id = $c->req->param('image_id');
-    my $size = $c->req->param('size') || 'original';
+    my $size = $c->req->param('size') || 'original_converted';
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
