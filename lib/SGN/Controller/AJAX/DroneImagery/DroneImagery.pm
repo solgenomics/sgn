@@ -6275,7 +6275,7 @@ sub drone_imagery_quality_control_get_images_GET : Args(0) {
         drone_run_project_id_list=>[$drone_run_project_id]
     });
     my ($result, $total_count) = $images_search->search();
-    print STDERR Dumper $total_count;
+    # print STDERR Dumper $total_count;
 
     my %stock_images;
     foreach (@$result) {
@@ -6294,7 +6294,8 @@ sub drone_imagery_quality_control_get_images_GET : Args(0) {
                 stock_uniquename => $_->{stock_uniquename},
                 stock_type_id => $_->{stock_type_id},
                 image => '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>',
-                image_id => $image_id
+                image_id => $image_id,
+                project_image_type_name => $_->{project_image_type_name}
             };
         }
     }
@@ -6307,7 +6308,7 @@ sub drone_imagery_quality_control_get_images_GET : Args(0) {
             if ($counter == 0) {
                 $image_string .= '<div class="row">';
             }
-            $image_string .= '<div class="col-sm-2"><div class="well well-sm>">'.$j->{image}."<input type='checkbox' name='manage_drone_imagery_quality_control_image_select' value='".$j->{image_id}."'></div></div>";
+            $image_string .= '<div class="col-sm-2"><div class="well well-sm>"><span title="'.$j->{project_image_type_name}.'">'.$j->{image}."</span><input type='checkbox' name='manage_drone_imagery_quality_control_image_select' value='".$j->{image_id}."'></div></div>";
             if ($counter == 5) {
                 $image_string .= '</div>';
                 $counter = 0;
