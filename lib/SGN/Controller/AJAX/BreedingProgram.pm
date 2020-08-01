@@ -379,7 +379,7 @@ sub add_product_profile_POST : Args(0) {
     $product_profile->product_profile_scope($product_profile_scope);
     $product_profile->product_profile_details($profile_string);
     $product_profile->parent_id($program_id);
-	my $project_prop_id = $product_profile->store();
+	my $project_prop_id = $product_profile->store_by_rank();
 
     print STDERR "PROJECT PROP ID =".Dumper($project_prop_id)."\n";
     if ($@) {
