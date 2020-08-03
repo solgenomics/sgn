@@ -2386,24 +2386,24 @@ sub drone_imagery_delete_gps_images_POST : Args(0) {
     }
 
     #Separated RESTART
-    # my $saved_image_stacks_separated_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_micasense_stacks_separated', 'project_property')->cvterm_id();
-    # my $saved_micasense_stacks_separated_json = $schema->resultset("Project::Projectprop")->find({
-    #     project_id => $drone_run_project_id,
-    #     type_id => $saved_image_stacks_separated_type_id
-    # });
-    # if ($saved_micasense_stacks_separated_json) {
-    #     $saved_micasense_stacks_separated_json->delete();
-    # }
+    my $saved_image_stacks_separated_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_micasense_stacks_separated', 'project_property')->cvterm_id();
+    my $saved_micasense_stacks_separated_json = $schema->resultset("Project::Projectprop")->find({
+        project_id => $drone_run_project_id,
+        type_id => $saved_image_stacks_separated_type_id
+    });
+    if ($saved_micasense_stacks_separated_json) {
+        $saved_micasense_stacks_separated_json->delete();
+    }
 
     #ROTATED RESTART
-    # my $saved_image_stacks_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_micasense_stacks_rotated', 'project_property')->cvterm_id();
-    # my $saved_micasense_stacks_json = $schema->resultset("Project::Projectprop")->find({
-    #     project_id => $drone_run_project_id,
-    #     type_id => $saved_image_stacks_type_id
-    # });
-    # if ($saved_micasense_stacks_json) {
-    #     $saved_micasense_stacks_json->delete();
-    # }
+    my $saved_image_stacks_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_micasense_stacks_rotated', 'project_property')->cvterm_id();
+    my $saved_micasense_stacks_json = $schema->resultset("Project::Projectprop")->find({
+        project_id => $drone_run_project_id,
+        type_id => $saved_image_stacks_type_id
+    });
+    if ($saved_micasense_stacks_json) {
+        $saved_micasense_stacks_json->delete();
+    }
 
     $c->stash->{rest} = {
         success => 1
@@ -2881,22 +2881,17 @@ sub _perform_plot_polygon_assign {
     }
     my $image_tag = CXGN::Tag->new($schema->storage->dbh, $image_tag_id);
 
-    my $corresponding_channel = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_observation_unit_plot_polygon_types($schema)->{$linking_table_type_id}->{corresponding_channel};
-    my $image_band_index_string = '';
-    if (defined($corresponding_channel)) {
-        $image_band_index_string = "--image_band_index $corresponding_channel";
-    }
+    my $corresponding_channel = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_observation_unit_plot_polygon_types($schema)->{$linking_table_type_id}->{corresponding_channel} || '';
 
     my @plot_polygon_image_fullpaths;
     my @plot_polygon_image_urls;
 
-    # my $pm = Parallel::ForkManager->new(floor(int($number_system_cores)*0.5));
-    # $pm->run_on_finish( sub {
-    #     my ($pid, $exit_code, $ident, $exit_signal, $core_dump, $data_structure_reference) = @_;
-    #     push @plot_polygon_image_urls, $data_structure_reference->{plot_polygon_image_url};
-    #     push @plot_polygon_image_fullpaths, $data_structure_reference->{plot_polygon_image_fullpath};
-    # });
+    my $dir = $c->tempfiles_subdir('/drone_imagery_plot_polygons');    
+    my $bulk_input_temp_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_plot_polygons/bulkinputXXXX');
 
+    open(my $F, ">", $bulk_input_temp_file) || die "Can't open file ".$bulk_input_temp_file;
+
+    my @plot_polygons;
     foreach my $stock_name (keys %$polygon_objs) {
         #my $pid = $pm->start and next;
 
@@ -2904,13 +2899,31 @@ sub _perform_plot_polygon_assign {
         my $polygons = encode_json [$polygon];
         my $stock_id = $stock_ids{$stock_name};
 
-        my $dir = $c->tempfiles_subdir('/drone_imagery_plot_polygons');
         my $archive_plot_polygons_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_plot_polygons/imageXXXX');
         $archive_plot_polygons_temp_image .= '.png';
 
-        my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageCropping/CropToPolygon.py --inputfile_path '$image_fullpath' --outputfile_path '$archive_plot_polygons_temp_image' --polygon_json '$polygons' $image_band_index_string --polygon_type rectangular_square";
-        print STDERR Dumper $cmd;
-        my $status = system($cmd);
+        print $F "$image_fullpath\t$archive_plot_polygons_temp_image\t$polygons\trectangular_square\t$corresponding_channel\n";
+
+        push @plot_polygons, {
+            temp_plot_image => $archive_plot_polygons_temp_image,
+            stock_id => $stock_id
+        };
+    }
+
+    my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageCropping/CropToPolygonBulk.py --inputfile_path '$bulk_input_temp_file'";
+    print STDERR Dumper $cmd;
+    my $status = system($cmd);
+
+    my $pm = Parallel::ForkManager->new(10);
+    $pm->run_on_finish( sub {
+        my ($pid, $exit_code, $ident, $exit_signal, $core_dump, $data_structure_reference) = @_;
+        push @plot_polygon_image_urls, $data_structure_reference->{plot_polygon_image_url};
+        push @plot_polygon_image_fullpaths, $data_structure_reference->{plot_polygon_image_fullpath};
+    });
+
+    foreach my $obj (@plot_polygons) {
+        my $archive_plot_polygons_temp_image = $obj->{temp_plot_image};
+        my $stock_id = $obj->{stock_id};
 
         my $plot_polygon_image_fullpath;
         my $plot_polygon_image_url;
@@ -2939,9 +2952,9 @@ sub _perform_plot_polygon_assign {
         }
         unlink($archive_plot_polygons_temp_image);
 
-        #$pm->finish(0, { plot_polygon_image_url => $plot_polygon_image_url, plot_polygon_image_fullpath => $plot_polygon_image_fullpath });
+        $pm->finish(0, { plot_polygon_image_url => $plot_polygon_image_url, plot_polygon_image_fullpath => $plot_polygon_image_fullpath });
     }
-    #$pm->wait_all_children;
+    $pm->wait_all_children;
 
     return {
         image_url => $image_url, image_fullpath => $image_fullpath, success => 1, drone_run_band_template_id => $drone_run_band_plot_polygons->projectprop_id
@@ -3656,6 +3669,60 @@ sub get_drone_run_projects_GET : Args(0) {
     $c->stash->{rest} = { data => \@result };
 }
 
+sub get_drone_run_projects_kv : Path('/api/drone_imagery/drone_runs_json') : ActionClass('REST') { }
+sub get_drone_run_projects_kv_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $checkbox_select_all = $c->req->param('checkbox_select_all');
+    my $field_trial_ids = $c->req->param('field_trial_ids');
+
+    my $project_start_date_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'project_start_date', 'project_property')->cvterm_id();
+    my $design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'design', 'project_property')->cvterm_id();
+    my $drone_run_camera_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_camera_type', 'project_property')->cvterm_id();
+    my $drone_run_project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_project_type', 'project_property')->cvterm_id();
+    my $drone_run_gdd_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_averaged_temperature_growing_degree_days', 'project_property')->cvterm_id();
+    my $project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
+
+    my $where_clause = '';
+    if ($field_trial_ids) {
+        $where_clause = ' WHERE field_trial.project_id IN ('.$field_trial_ids.') ';
+    }
+
+    my $q = "SELECT project.project_id, project.name, project.description, drone_run_type.value, project_start_date.value, field_trial.project_id, field_trial.name, field_trial.description, drone_run_camera_type.value, drone_run_gdd.value FROM project
+        JOIN projectprop AS project_start_date ON (project.project_id=project_start_date.project_id AND project_start_date.type_id=$project_start_date_type_id)
+        LEFT JOIN projectprop AS drone_run_type ON (project.project_id=drone_run_type.project_id AND drone_run_type.type_id=$drone_run_project_type_cvterm_id)
+        LEFT JOIN projectprop AS drone_run_camera_type ON (project.project_id=drone_run_camera_type.project_id AND drone_run_camera_type.type_id=$drone_run_camera_cvterm_id)
+        LEFT JOIN projectprop AS drone_run_gdd ON (project.project_id=drone_run_gdd.project_id AND drone_run_gdd.type_id=$drone_run_gdd_cvterm_id)
+        JOIN project_relationship ON (project.project_id = project_relationship.subject_project_id AND project_relationship.type_id=$project_relationship_type_id)
+        JOIN project AS field_trial ON (field_trial.project_id=project_relationship.object_project_id)
+        $where_clause
+        ORDER BY project.project_id;";
+
+    my $calendar_funcs = CXGN::Calendar->new({});
+
+    my $h = $bcs_schema->storage->dbh()->prepare($q);
+    $h->execute();
+    my @result;
+    while (my ($drone_run_project_id, $drone_run_project_name, $drone_run_project_description, $drone_run_type, $drone_run_date, $field_trial_project_id, $field_trial_project_name, $field_trial_project_description, $drone_run_camera_type, $drone_run_gdd) = $h->fetchrow_array()) {
+        my @res;
+        my $drone_run_date_display = $drone_run_date ? $calendar_funcs->display_start_date($drone_run_date) : '';
+        my %data = (
+            "Drone Run Name" => $drone_run_project_name,
+            "Drone Run Type" => $drone_run_type,
+            "Drone Run Description" => $drone_run_project_description,
+            "Imaging Date" => $drone_run_date_display,
+            "Drone Run GDD" => $drone_run_gdd,
+            "Camera Type" => $drone_run_camera_type,
+            "Field Trial Name" => $field_trial_project_name,
+            "Field Trial Description" => $field_trial_project_description
+        );
+        push @result,\%data;
+    }
+
+    $c->stash->{rest} = { data => \@result };
+}
+
 
 sub get_plot_polygon_types_images : Path('/api/drone_imagery/plot_polygon_types_images') : ActionClass('REST') { }
 sub get_plot_polygon_types_images_GET : Args(0) {
@@ -4082,7 +4149,7 @@ sub _perform_get_weeks_drone_run_after_planting {
     my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
     my $planting_date = $trial->get_planting_date();
 
-    my $drone_date_time_object = Time::Piece->strptime($drone_date, "%Y-%B-%d");
+    my $drone_date_time_object = Time::Piece->strptime($drone_date, "%Y-%B-%d %H:%M:%S");
     my $drone_date_full_calendar_datetime = $drone_date_time_object->strftime("%Y/%m/%d %H:%M:%S");
 
     if (!$planting_date) {
@@ -4094,19 +4161,37 @@ sub _perform_get_weeks_drone_run_after_planting {
     my $time_diff = $drone_date_time_object - $planting_date_time_object;
     my $time_diff_weeks = $time_diff->weeks;
     my $time_diff_days = $time_diff->days;
+    my $time_diff_hours = $time_diff->hours;
     my $rounded_time_diff_weeks = round($time_diff_weeks);
     if ($rounded_time_diff_weeks == 0) {
         $rounded_time_diff_weeks = 1;
     }
-    print STDERR Dumper $rounded_time_diff_weeks;
 
+    my $week_term_string = "week $rounded_time_diff_weeks";
     my $q = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
     my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute("week $rounded_time_diff_weeks", 'cxgn_time_ontology');
+    $h->execute($week_term_string, 'cxgn_time_ontology');
     my ($week_cvterm_id) = $h->fetchrow_array();
 
-    $h->execute("day $time_diff_days", 'cxgn_time_ontology');
+    if (!$week_cvterm_id) {
+        my $new_week_term = $schema->resultset("Cv::Cvterm")->create_with({
+           name => $week_term_string,
+           cv => 'cxgn_time_ontology'
+        });
+        $week_cvterm_id = $new_week_term->cvterm_id();
+    }
+
+    my $day_term_string = "day $time_diff_days";
+    $h->execute($day_term_string, 'cxgn_time_ontology');
     my ($day_cvterm_id) = $h->fetchrow_array();
+
+    if (!$day_cvterm_id) {
+        my $new_day_term = $schema->resultset("Cv::Cvterm")->create_with({
+           name => $day_term_string,
+           cv => 'cxgn_time_ontology'
+        });
+        $day_cvterm_id = $new_day_term->cvterm_id();
+    }
 
     if (!$week_cvterm_id) {
         return { planting_date => $planting_date, planting_date_calendar => $planting_date_full_calendar_datetime, drone_run_date => $drone_date, drone_run_date_calendar => $drone_date_full_calendar_datetime, time_difference_weeks => $time_diff_weeks, time_difference_days => $time_diff_days, rounded_time_difference_weeks => $rounded_time_diff_weeks, error => 'The time ontology term was not found automatically! Maybe the field trial planting date or the drone run date are not correct in the database? The maximum number of weeks currently allowed between these two dates is 54 weeks. This should not be possible, please contact us; however you can still select the time manually'};
@@ -4312,7 +4397,7 @@ sub standard_process_apply_raw_images_interactive_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     print STDERR Dumper $c->req->params();
-    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
     my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
     my $apply_drone_run_band_project_ids = decode_json $c->req->param('apply_drone_run_band_project_ids');
@@ -4324,11 +4409,11 @@ sub standard_process_apply_raw_images_interactive_POST : Args(0) {
     my $standard_process_type = $c->req->param('standard_process_type');
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    my $process_indicator_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_standard_process_in_progress', 'project_property')->cvterm_id();
-    my $processed_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_standard_process_completed', 'project_property')->cvterm_id();
-    my $processed_minimal_vi_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_standard_process_vi_completed', 'project_property')->cvterm_id();
+    my $process_indicator_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_standard_process_in_progress', 'project_property')->cvterm_id();
+    my $processed_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_standard_process_completed', 'project_property')->cvterm_id();
+    my $processed_minimal_vi_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_standard_process_vi_completed', 'project_property')->cvterm_id();
 
-    my $drone_run_process_in_progress = $bcs_schema->resultset('Project::Projectprop')->update_or_create({
+    my $drone_run_process_in_progress = $schema->resultset('Project::Projectprop')->update_or_create({
         type_id=>$process_indicator_cvterm_id,
         project_id=>$drone_run_project_id_input,
         rank=>0,
@@ -4338,7 +4423,7 @@ sub standard_process_apply_raw_images_interactive_POST : Args(0) {
         key=>'projectprop_c1'
     });
 
-    my $drone_run_process_completed = $bcs_schema->resultset('Project::Projectprop')->update_or_create({
+    my $drone_run_process_completed = $schema->resultset('Project::Projectprop')->update_or_create({
         type_id=>$processed_cvterm_id,
         project_id=>$drone_run_project_id_input,
         rank=>0,
@@ -4348,7 +4433,7 @@ sub standard_process_apply_raw_images_interactive_POST : Args(0) {
         key=>'projectprop_c1'
     });
 
-    my $drone_run_process_minimal_vi_completed = $bcs_schema->resultset('Project::Projectprop')->update_or_create({
+    my $drone_run_process_minimal_vi_completed = $schema->resultset('Project::Projectprop')->update_or_create({
         type_id=>$processed_minimal_vi_cvterm_id,
         project_id=>$drone_run_project_id_input,
         rank=>0,
@@ -4363,15 +4448,15 @@ sub standard_process_apply_raw_images_interactive_POST : Args(0) {
         $vegetative_indices_hash{$_}++;
     }
 
-    my $saved_gps_positions_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_raw_images_saved_gps_pixel_positions', 'project_property')->cvterm_id();
-    my $drone_run_band_saved_gps = $bcs_schema->resultset('Project::Projectprop')->find({
+    my $saved_gps_positions_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_gps_pixel_positions', 'project_property')->cvterm_id();
+    my $drone_run_band_saved_gps = $schema->resultset('Project::Projectprop')->find({
         type_id=>$saved_gps_positions_type_id,
         project_id=>$drone_run_project_id_input,
     });
     my $saved_gps_positions_separated = decode_json $drone_run_band_saved_gps->value();
 
-    my $drone_run_band_plot_polygons_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_band_plot_polygons_separated', 'project_property')->cvterm_id();
-    my $previous_plot_polygons_rs = $bcs_schema->resultset('Project::Projectprop')->search({type_id=>$drone_run_band_plot_polygons_type_id, project_id=>$drone_run_band_project_id});
+    my $drone_run_band_plot_polygons_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_plot_polygons_separated', 'project_property')->cvterm_id();
+    my $previous_plot_polygons_rs = $schema->resultset('Project::Projectprop')->search({type_id=>$drone_run_band_plot_polygons_type_id, project_id=>$drone_run_band_project_id});
     if ($previous_plot_polygons_rs->count > 1) {
         $c->stash->{rest} = { error => "There should not be more than one saved entry for plot polygons for a drone run band" };
         $c->detach();
@@ -4451,45 +4536,126 @@ sub standard_process_apply_raw_images_interactive_POST : Args(0) {
     # print STDERR Dumper \%polygons_images_positions;
 
     my $term_map = CXGN::DroneImagery::ImageTypes::get_base_imagery_observation_unit_plot_polygon_term_map();
-    my $drone_image_types = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_observation_unit_plot_polygon_types($bcs_schema);
+    my $drone_image_types = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_observation_unit_plot_polygon_types($schema);
     my @plot_polygon_type_ids = (
-        SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'observation_unit_polygon_blue_imagery', 'project_md_image')->cvterm_id(),
-        SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'observation_unit_polygon_green_imagery', 'project_md_image')->cvterm_id(),
-        SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'observation_unit_polygon_red_imagery', 'project_md_image')->cvterm_id(),
-        SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'observation_unit_polygon_nir_imagery', 'project_md_image')->cvterm_id(),
-        SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'observation_unit_polygon_red_edge_imagery', 'project_md_image')->cvterm_id()
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_blue_imagery', 'project_md_image')->cvterm_id(),
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_green_imagery', 'project_md_image')->cvterm_id(),
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_red_imagery', 'project_md_image')->cvterm_id(),
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_nir_imagery', 'project_md_image')->cvterm_id(),
+        SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_red_edge_imagery', 'project_md_image')->cvterm_id()
     );
     my @plot_polygon_type_objects;
+    my @plot_polygon_type_tags;
     foreach (@plot_polygon_type_ids) {
         push @plot_polygon_type_objects, $drone_image_types->{$_};
+        my $assign_plot_polygons_type = $drone_image_types->{$_}->{name};
+
+        my $image_tag_id = CXGN::Tag::exists_tag_named($schema->storage->dbh, $assign_plot_polygons_type);
+        if (!$image_tag_id) {
+            my $image_tag = CXGN::Tag->new($schema->storage->dbh);
+            $image_tag->set_name($assign_plot_polygons_type);
+            $image_tag->set_description('Drone run band project type for plot polygon assignment: '.$assign_plot_polygons_type);
+            $image_tag->set_sp_person_id($user_id);
+            $image_tag_id = $image_tag->store();
+        }
+        my $image_tag = CXGN::Tag->new($schema->storage->dbh, $image_tag_id);
+        push @plot_polygon_type_tags, $image_tag;
     }
 
     my %drone_run_band_info;
     my $band_counter = 0;
 
+    my $dir = $c->tempfiles_subdir('/drone_imagery_plot_polygons');    
+    my $bulk_input_temp_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_plot_polygons/bulkinputXXXX');
+
+    open(my $F, ">", $bulk_input_temp_file) || die "Can't open file ".$bulk_input_temp_file;
+    # print STDERR Dumper \%polygons_images_positions;
+    
+    my $plot_polygon_type_hash = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_observation_unit_plot_polygon_types($schema);
+    my @input_bulk_hash;
     foreach my $apply_drone_run_band_project_id (@$apply_drone_run_band_project_ids) {
         while (my ($plot_name, $pi_array) = each %polygons_images_positions) {
+
+            my $stock = $schema->resultset("Stock::Stock")->find({uniquename => $plot_name});
+            if (!$stock) {
+                $c->stash->{rest} = {error=>'Error: Stock name '.$plot_name.' does not exist in the database!'};
+                $c->detach();
+            }
+            my $stock_id = $stock->stock_id;
+
             foreach my $pi (@$pi_array) {
                 my $points = $pi->{points};
                 my $images = $pi->{images};
                 my $image_ids = $images->{rotated_image_ids};
 
-                my $plot_polygon = {$plot_name => $points};
-
-                my $drone_run_band_project_type = $plot_polygon_type_objects[$band_counter]->{drone_run_project_types}->[0];
-                my $plot_polygon_type = $plot_polygon_type_objects[$band_counter]->{name};
-
                 my $current_image_id = $image_ids->[$band_counter];
 
                 if ($current_image_id) {
-                    my $return = _perform_plot_polygon_assign($c, $bcs_schema, $metadata_schema, $current_image_id, $apply_drone_run_band_project_id, encode_json $plot_polygon, $plot_polygon_type, $user_id, $user_name, $user_role, 0, 1);
+                    my $plot_polygon_json = encode_json [$points];
+
+                    my $linking_table_type_id = $plot_polygon_type_ids[$band_counter];
+                    my $corresponding_channel = $plot_polygon_type_hash->{$linking_table_type_id}->{corresponding_channel};
+
+                    my $image = SGN::Image->new( $schema->storage->dbh, $current_image_id, $c );
+                    my $image_url = $image->get_image_url("original");
+                    my $image_fullpath = $image->get_filename('original_converted', 'full');
+                    my $archive_plot_polygons_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_plot_polygons/imageXXXX');
+                    $archive_plot_polygons_temp_image .= '.png';
+
+                    print $F "$image_fullpath\t$archive_plot_polygons_temp_image\t$plot_polygon_json\trectangular_square\t$corresponding_channel\n";
+
+                    push @input_bulk_hash, {
+                        plot_temp_image => $archive_plot_polygons_temp_image,
+                        plot_id => $stock_id,
+                        band_counter => $band_counter,
+                        drone_run_band_project_id => $apply_drone_run_band_project_id
+                    };
+                    # my $return = _perform_plot_polygon_assign_bulk($c, $bcs_schema, $metadata_schema, $current_image_id, $apply_drone_run_band_project_id, $plot_polygon_json, $plot_polygon_type, $user_id, $user_name, $user_role, 0, 1);
                 }
             }
         }
         $band_counter++;
     }
+    close($F);
+    # print STDERR Dumper \@input_bulk_hash;
 
-    $drone_run_process_in_progress = $bcs_schema->resultset('Project::Projectprop')->update_or_create({
+    my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageCropping/CropToPolygonBulk.py --inputfile_path '$bulk_input_temp_file'";
+    print STDERR Dumper $cmd;
+    my $status = system($cmd);
+
+    my $pm = Parallel::ForkManager->new(10);
+    $pm->run_on_finish( sub {
+        my ($pid, $exit_code, $ident, $exit_signal, $core_dump, $data_structure_reference) = @_;
+    });
+
+    foreach my $obj (@input_bulk_hash) {
+        my $pid = $pm->start and next;
+
+        my $archive_plot_polygons_temp_image = $obj->{plot_temp_image};
+        my $stock_id = $obj->{plot_id};
+        print STDERR Dumper $stock_id;
+        my $drone_run_band_project_id = $obj->{drone_run_band_project_id};
+
+        my $drone_run_band_project_type = $plot_polygon_type_objects[$band_counter]->{drone_run_project_types}->[0];
+        my $plot_polygon_type = $plot_polygon_type_objects[$band_counter]->{name};
+        my $image_tag = $plot_polygon_type_tags[$band_counter];
+        my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $plot_polygon_type, 'project_md_image')->cvterm_id();
+
+        my $plot_polygon_image_fullpath;
+        my $plot_polygon_image_url;
+        my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+        $image->set_sp_person_id($user_id);
+        my $ret = $image->process_image($archive_plot_polygons_temp_image, 'project', $drone_run_band_project_id, $linking_table_type_id);
+        my $stock_associate = $image->associate_stock($stock_id, $user_name);
+        $plot_polygon_image_fullpath = $image->get_filename('original_converted', 'full');
+        $plot_polygon_image_url = $image->get_image_url('original');
+        my $added_image_tag_id = $image->add_tag($image_tag);
+
+        $pm->finish(0, {});
+    }
+    $pm->wait_all_children;
+
+    $drone_run_process_in_progress = $schema->resultset('Project::Projectprop')->update_or_create({
         type_id=>$process_indicator_cvterm_id,
         project_id=>$drone_run_project_id_input,
         rank=>0,
@@ -4499,7 +4665,7 @@ sub standard_process_apply_raw_images_interactive_POST : Args(0) {
         key=>'projectprop_c1'
     });
 
-    $drone_run_process_completed = $bcs_schema->resultset('Project::Projectprop')->update_or_create({
+    $drone_run_process_completed = $schema->resultset('Project::Projectprop')->update_or_create({
         type_id=>$processed_cvterm_id,
         project_id=>$drone_run_project_id_input,
         rank=>0,
@@ -4509,7 +4675,7 @@ sub standard_process_apply_raw_images_interactive_POST : Args(0) {
         key=>'projectprop_c1'
     });
 
-    $drone_run_process_minimal_vi_completed = $bcs_schema->resultset('Project::Projectprop')->update_or_create({
+    $drone_run_process_minimal_vi_completed = $schema->resultset('Project::Projectprop')->update_or_create({
         type_id=>$processed_minimal_vi_cvterm_id,
         project_id=>$drone_run_project_id_input,
         rank=>0,
@@ -4519,10 +4685,86 @@ sub standard_process_apply_raw_images_interactive_POST : Args(0) {
         key=>'projectprop_c1'
     });
 
-    my $return = _perform_phenotype_automated($c, $bcs_schema, $metadata_schema, $phenome_schema, $drone_run_project_id_input, $time_cvterm_id, $phenotype_methods, $standard_process_type, 1, undef, $user_id, $user_name, $user_role);
+    my $return = _perform_phenotype_automated($c, $schema, $metadata_schema, $phenome_schema, $drone_run_project_id_input, $time_cvterm_id, $phenotype_methods, $standard_process_type, 1, undef, $user_id, $user_name, $user_role);
 
     my @result;
     $c->stash->{rest} = { data => \@result, success => 1 };
+}
+
+sub drone_imagery_save_single_plot_image : Path('/api/drone_imagery/save_single_plot_image') : ActionClass('REST') { }
+sub drone_imagery_save_single_plot_image_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my $observation_unit_id = $c->req->param('observation_unit_id');
+    my $drone_run_band_project_id_input = $c->req->param('drone_run_band_project_id');
+    my $image_input = $c->req->upload('image');
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my %expected_types = (
+        'observation_unit_polygon_blue_imagery',
+        'observation_unit_polygon_green_imagery',
+        'observation_unit_polygon_red_imagery',
+        'observation_unit_polygon_nir_imagery',
+        'observation_unit_polygon_red_edge_imagery'
+    );
+
+    my $drone_run_band_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_band_project_type', 'project_property')->cvterm_id();
+    my $q = "SELECT name,value FROM projectprop JOIN project USING(project_id) WHERE type_id=$drone_run_band_type_cvterm_id and project_id=?;";
+    my $h = $bcs_schema->storage->dbh()->prepare($q);
+    $h->execute($drone_run_band_project_id_input);
+    my ($project_band_name, $project_band_type) = $h->fetchrow_array();
+    if (!$project_band_name || !$project_band_type) {
+        $c->stash->{rest} = { error => "Drone run band not found or the drone run band is not of a known type!" };
+        $c->detach();
+    }
+
+    my $plot_polygon_types = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_observation_unit_plot_polygon_types($bcs_schema);
+    my %band_type_image_hash;
+    while ( my ($plot_image_type_id, $o) = each %$plot_polygon_types) {
+        foreach my $band_type (@{$o->{drone_run_project_types}}) {
+            if ($band_type eq $project_band_type && exists($expected_types{$o->{name}})) {
+                $band_type_image_hash{$band_type} = {
+                    cvterm_id => $plot_image_type_id,
+                    name => $o->{name}
+                };
+            }
+        }
+    }
+    my $linking_table_type_id = $band_type_image_hash{$project_band_type}->{cvterm_id};
+    my $assign_plot_polygons_type = $band_type_image_hash{$project_band_type}->{name};
+
+    my $image_tag_id = CXGN::Tag::exists_tag_named($bcs_schema->storage->dbh, $assign_plot_polygons_type);
+    if (!$image_tag_id) {
+        my $image_tag = CXGN::Tag->new($bcs_schema->storage->dbh);
+        $image_tag->set_name($assign_plot_polygons_type);
+        $image_tag->set_description('Drone run band project type for plot polygon assignment: '.$assign_plot_polygons_type);
+        $image_tag->set_sp_person_id($user_id);
+        $image_tag_id = $image_tag->store();
+    }
+    my $image_tag = CXGN::Tag->new($bcs_schema->storage->dbh, $image_tag_id);
+
+    if (!$image_input) {
+        $c->stash->{rest} = { error => "ERROR!" };
+        $c->detach();
+    }
+
+    my $stock = $bcs_schema->resultset("Stock::Stock")->find({stock_id => $observation_unit_id});
+    if (!$stock) {
+        $c->stash->{rest} = {error=>'Error: Stock '.$observation_unit_id.' does not exist in the database!'};
+        $c->detach();
+    }
+
+    my $image = SGN::Image->new( $bcs_schema->storage->dbh, undef, $c );
+    $image->set_sp_person_id($user_id);
+    my $ret = $image->process_image($image_input, 'project', $drone_run_band_project_id_input, $linking_table_type_id);
+    my $stock_associate = $image->associate_stock($observation_unit_id, $user_name);
+    my $plot_polygon_image_fullpath = $image->get_filename('original_converted', 'full');
+    my $plot_polygon_image_url = $image->get_image_url('original');
+    my $added_image_tag_id = $image->add_tag($image_tag);
+
+    $c->stash->{rest} = { success => 1 };
 }
 
 sub standard_process_minimal_vi_apply : Path('/api/drone_imagery/standard_process_minimal_vi_apply') : ActionClass('REST') { }
@@ -5278,7 +5520,7 @@ sub drone_imagery_get_image_GET : Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $image_id = $c->req->param('image_id');
-    my $size = $c->req->param('size') || 'original';
+    my $size = $c->req->param('size') || 'original_converted';
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
@@ -6033,7 +6275,7 @@ sub drone_imagery_quality_control_get_images_GET : Args(0) {
         drone_run_project_id_list=>[$drone_run_project_id]
     });
     my ($result, $total_count) = $images_search->search();
-    print STDERR Dumper $total_count;
+    # print STDERR Dumper $total_count;
 
     my %stock_images;
     foreach (@$result) {
@@ -6052,7 +6294,8 @@ sub drone_imagery_quality_control_get_images_GET : Args(0) {
                 stock_uniquename => $_->{stock_uniquename},
                 stock_type_id => $_->{stock_type_id},
                 image => '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>',
-                image_id => $image_id
+                image_id => $image_id,
+                project_image_type_name => $_->{project_image_type_name}
             };
         }
     }
@@ -6065,7 +6308,7 @@ sub drone_imagery_quality_control_get_images_GET : Args(0) {
             if ($counter == 0) {
                 $image_string .= '<div class="row">';
             }
-            $image_string .= '<div class="col-sm-2"><div class="well well-sm>">'.$j->{image}."<input type='checkbox' name='manage_drone_imagery_quality_control_image_select' value='".$j->{image_id}."'></div></div>";
+            $image_string .= '<div class="col-sm-2"><div class="well well-sm>"><span title="'.$j->{project_image_type_name}.'">'.$j->{image}."</span><input type='checkbox' name='manage_drone_imagery_quality_control_image_select' value='".$j->{image_id}."'></div></div>";
             if ($counter == 5) {
                 $image_string .= '</div>';
                 $counter = 0;
@@ -6077,6 +6320,91 @@ sub drone_imagery_quality_control_get_images_GET : Args(0) {
     }
 
     $c->stash->{rest} = {success => 1, result => \@result};
+}
+
+sub drone_imagery_get_image_for_saving_gcp : Path('/api/drone_imagery/get_image_for_saving_gcp') : ActionClass('REST') { }
+sub drone_imagery_get_image_for_saving_gcp_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $drone_run_project_id = $c->req->param('drone_run_project_id');
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $image_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    my $images_search = CXGN::DroneImagery::ImagesSearch->new({
+        bcs_schema=>$schema,
+        drone_run_project_id_list=>[$drone_run_project_id],
+        project_image_type_id_list => [$image_type_id]
+    });
+    my ($result, $total_count) = $images_search->search();
+    # print STDERR Dumper $result;
+
+    my @image_ids;
+    my @image_types;
+    foreach (@$result) {
+        push @image_ids, $_->{image_id};
+        push @image_types, $_->{drone_run_band_project_type};
+    }
+
+    my $gcps_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_ground_control_points', 'project_property')->cvterm_id();
+    my $saved_gcps_json = $schema->resultset("Project::Projectprop")->find({
+        project_id => $drone_run_project_id,
+        type_id => $gcps_type_id
+    });
+    my $saved_gcps_full;
+    if ($saved_gcps_json) {
+        $saved_gcps_full = decode_json $saved_gcps_json->value();
+    }
+
+    $c->stash->{rest} = {success => 1, result => $result, image_ids => \@image_ids, image_types => \@image_types, saved_gcps_full => $saved_gcps_full};
+}
+
+sub drone_imagery_saving_gcp : Path('/api/drone_imagery/saving_gcp') : ActionClass('REST') { }
+sub drone_imagery_saving_gcp_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $drone_run_project_id = $c->req->param('drone_run_project_id');
+    my $gcp_name = $c->req->param('name');
+    my $gcp_x_pos = $c->req->param('x_pos');
+    my $gcp_y_pos = $c->req->param('y_pos');
+    my $gcp_latitude = $c->req->param('latitude');
+    my $gcp_longitude = $c->req->param('longitude');
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $gcps_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_ground_control_points', 'project_property')->cvterm_id();
+    my $saved_gcps_json = $schema->resultset("Project::Projectprop")->find({
+        project_id => $drone_run_project_id,
+        type_id => $gcps_type_id
+    });
+    my $saved_gcps_full;
+    if ($saved_gcps_json) {
+        $saved_gcps_full = decode_json $saved_gcps_json->value();
+    }
+
+    $saved_gcps_full->{$gcp_name} = {
+        name => $gcp_name,
+        x_pos => $gcp_x_pos,
+        y_pos => $gcp_y_pos,
+        latitude => $gcp_latitude,
+        longitude => $gcp_longitude
+    };
+
+    my $saved_gcps_update = $schema->resultset('Project::Projectprop')->update_or_create({
+        type_id=>$gcps_type_id,
+        project_id=>$drone_run_project_id,
+        rank=>0,
+        value=>encode_json $saved_gcps_full
+    },
+    {
+        key=>'projectprop_c1'
+    });
+
+    $c->stash->{rest} = {success => 1};
 }
 
 sub drone_imagery_obsolete_image_change : Path('/api/drone_imagery/obsolete_image_change') : ActionClass('REST') { }
@@ -8422,6 +8750,20 @@ sub drone_imagery_delete_drone_run_GET : Args(0) {
     $c->stash->{rest} = {success => 1};
 }
 
+sub drone_imagery_get_image_types : Path('/api/drone_imagery/get_image_types') : ActionClass('REST') { }
+sub drone_imagery_get_image_types_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $image_types = CXGN::DroneImagery::ImageTypes::get_all_drone_run_band_image_types()->{array_ref};
+
+    $c->stash->{rest} = {success => 1, image_types => $image_types};
+}
+
 sub drone_imagery_growing_degree_days : Path('/api/drone_imagery/growing_degree_days') : ActionClass('REST') { }
 sub drone_imagery_growing_degree_days_GET : Args(0) {
     my $self = shift;
@@ -8466,7 +8808,7 @@ sub _perform_gdd_calculation_and_drone_run_time_saving {
 
     my $planting_date_time_object = Time::Piece->strptime($planting_date, "%Y-%B-%d");
     my $planting_date_datetime = $planting_date_time_object->strftime("%Y-%m-%d");
-    my $project_start_date_time_object = Time::Piece->strptime($project_start_date, "%Y-%B-%d");
+    my $project_start_date_time_object = Time::Piece->strptime($project_start_date, "%Y-%B-%d %H:%M:%S");
     my $project_start_date_datetime = $project_start_date_time_object->strftime("%Y-%m-%d");
 
     my $gdd = CXGN::NOAANCDC->new({
@@ -8480,10 +8822,10 @@ sub _perform_gdd_calculation_and_drone_run_time_saving {
     my %related_cvterms;
     if ($formula eq 'average_daily_temp_sum') {
         $gdd_result = $gdd->get_temperature_averaged_gdd($gdd_base_temperature);
-        if (exists($gdd_result->{error})) {
-            $c->stash->{rest} = {error => $gdd_result->{error}};
-            $c->detach();
-        }
+        # if (exists($gdd_result->{error})) {
+        #     $c->stash->{rest} = {error => $gdd_result->{error}};
+        #     $c->detach();
+        # }
         $gdd_result = $gdd_result->{gdd};
         $related_cvterms{gdd_average_temp} = $gdd_result;
 
@@ -8500,13 +8842,31 @@ sub _perform_gdd_calculation_and_drone_run_time_saving {
     my $time_diff_days = $time_diff->days;
     my $rounded_time_diff_weeks = round($time_diff_weeks);
 
+    my $week_term_string = "week $rounded_time_diff_weeks";
     my $q = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
     my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute("week $rounded_time_diff_weeks", 'cxgn_time_ontology');
+    $h->execute($week_term_string, 'cxgn_time_ontology');
     my ($week_cvterm_id) = $h->fetchrow_array();
 
-    $h->execute("day $time_diff_days", 'cxgn_time_ontology');
+    if (!$week_cvterm_id) {
+        my $new_week_term = $schema->resultset("Cv::Cvterm")->create_with({
+           name => $week_term_string,
+           cv => 'cxgn_time_ontology'
+        });
+        $week_cvterm_id = $new_week_term->cvterm_id();
+    }
+
+    my $day_term_string = "day $time_diff_days";
+    $h->execute($day_term_string, 'cxgn_time_ontology');
     my ($day_cvterm_id) = $h->fetchrow_array();
+
+    if (!$day_cvterm_id) {
+        my $new_day_term = $schema->resultset("Cv::Cvterm")->create_with({
+           name => $day_term_string,
+           cv => 'cxgn_time_ontology'
+        });
+        $day_cvterm_id = $new_day_term->cvterm_id();
+    }
 
     my $week_term = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $week_cvterm_id, 'extended');
     my $day_term = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $day_cvterm_id, 'extended');

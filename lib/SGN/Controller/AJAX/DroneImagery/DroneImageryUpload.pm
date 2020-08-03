@@ -59,6 +59,8 @@ sub upload_drone_imagery : Path('/api/drone_imagery/upload_drone_imagery') : Act
 sub upload_drone_imagery_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
+    $c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
@@ -138,15 +140,37 @@ sub upload_drone_imagery_POST : Args(0) {
         my $time_diff = $drone_run_date_time_object - $planting_date_time_object;
         my $time_diff_weeks = $time_diff->weeks;
         my $time_diff_days = $time_diff->days;
+        my $time_diff_hours = $time_diff->hours;
         my $rounded_time_diff_weeks = round($time_diff_weeks);
+        if ($rounded_time_diff_weeks == 0) {
+            $rounded_time_diff_weeks = 1;
+        }
 
+        my $week_term_string = "week $rounded_time_diff_weeks";
         my $q = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
         my $h = $schema->storage->dbh()->prepare($q);
-        $h->execute("week $rounded_time_diff_weeks", 'cxgn_time_ontology');
+        $h->execute($week_term_string, 'cxgn_time_ontology');
         my ($week_cvterm_id) = $h->fetchrow_array();
 
-        $h->execute("day $time_diff_days", 'cxgn_time_ontology');
+        if (!$week_cvterm_id) {
+            my $new_week_term = $schema->resultset("Cv::Cvterm")->create_with({
+               name => $week_term_string,
+               cv => 'cxgn_time_ontology'
+            });
+            $week_cvterm_id = $new_week_term->cvterm_id();
+        }
+
+        my $day_term_string = "day $time_diff_days";
+        $h->execute($day_term_string, 'cxgn_time_ontology');
         my ($day_cvterm_id) = $h->fetchrow_array();
+
+        if (!$day_cvterm_id) {
+            my $new_day_term = $schema->resultset("Cv::Cvterm")->create_with({
+               name => $day_term_string,
+               cv => 'cxgn_time_ontology'
+            });
+            $day_cvterm_id = $new_day_term->cvterm_id();
+        }
 
         my $week_term = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $week_cvterm_id, 'extended');
         my $day_term = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $day_cvterm_id, 'extended');
@@ -208,6 +232,9 @@ sub upload_drone_imagery_POST : Args(0) {
     my $alignment_output_path;
     my $cmd;
 
+    my $image_types_allowed = CXGN::DroneImagery::ImageTypes::get_all_drone_run_band_image_types()->{hash_ref};
+    my %seen_image_types_upload;
+
     if ($new_drone_run_band_stitching eq 'no') {
         my @new_drone_run_bands;
         if ($new_drone_run_band_numbers eq 'one_bw' || $new_drone_run_band_numbers eq 'one_rgb') {
@@ -226,6 +253,15 @@ sub upload_drone_imagery_POST : Args(0) {
                 $c->stash->{rest} = { error => "Please give a new drone run band type!" };
                 $c->detach();
             }
+            if (!exists($image_types_allowed->{$new_drone_run_band_type})) {
+                $c->stash->{rest} = { error => "Drone run band type not supported: $new_drone_run_band_type!" };
+                $c->detach();
+            }
+            if (exists($seen_image_types_upload{$new_drone_run_band_type})) {
+                $c->stash->{rest} = { error => "Drone run band type is repeated: $new_drone_run_band_type! Each drone run band in an imaging event should have a unique type!" };
+                $c->detach();
+            }
+            $seen_image_types_upload{$new_drone_run_band_type}++;
 
             my $upload_file = $c->req->upload('drone_run_band_stitched_ortho_image_1');
             if (!$upload_file) {
@@ -256,6 +292,15 @@ sub upload_drone_imagery_POST : Args(0) {
                     $c->stash->{rest} = { error => "Please give a new drone run band type!" };
                     $c->detach();
                 }
+                if (!exists($image_types_allowed->{$new_drone_run_band_type})) {
+                    $c->stash->{rest} = { error => "Drone run band type not supported: $new_drone_run_band_type!" };
+                    $c->detach();
+                }
+                if (exists($seen_image_types_upload{$new_drone_run_band_type})) {
+                    $c->stash->{rest} = { error => "Drone run band type is repeated: $new_drone_run_band_type! Each drone run band in an imaging event should have a unique type!" };
+                    $c->detach();
+                }
+                $seen_image_types_upload{$new_drone_run_band_type}++;
 
                 my $upload_file = $c->req->upload('drone_run_band_stitched_ortho_image_'.$_);
                 if (!$upload_file) {

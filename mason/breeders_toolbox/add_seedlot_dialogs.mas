@@ -40,6 +40,13 @@ $cross_uniquename => ''
                     </div>
                 </div>
 
+		<div class="form-group">
+                    <label class="col-sm-3 control-label">Quality issues:</label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" id="seedlot_quality" placeholder="list quality issues here, leave blank for good quality seed">
+                    </div>
+                </div>
+
                 <div class="well well-sm">
                     <div class="row">
                         <div class="col-sm-3">
@@ -176,6 +183,7 @@ jQuery(document).ready(function(){
         var timestamp = jQuery('#seedlot_timestamp').val();
         var description = jQuery('#seedlot_description').val();
         var breeding_program_id = jQuery('#seedlot_breeding_program_id').val();
+        var seedlot_quality = jQuery('#seedlot_quality').val();
 
         if (name == '') { alert("Please provide a name"); return; }
         else if (location == '') { alert("Please provide a location"); return; }
@@ -204,7 +212,9 @@ jQuery(document).ready(function(){
                     'seedlot_weight':weight,
                     'seedlot_timestamp':timestamp,
                     'seedlot_description':description,
-                    'seedlot_breeding_program_id':breeding_program_id
+                    'seedlot_breeding_program_id':breeding_program_id,
+                    'seedlot_quality' : seedlot_quality
+
                 },
                 beforeSend: function(response){
                     jQuery('#working_modal').modal('show');
