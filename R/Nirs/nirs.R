@@ -22,6 +22,7 @@ pheno <- args[1]
 
 # args[2] = test preprocessing methods boolean
 preprocessing <- ifelse(args[2]=="TRUE", TRUE, FALSE)
+preprocessing.method <- ifelse(preprocessing, NULL, 1) # tells SaveModel() to use raw data if false
 
 # args[3] = number of sampling iterations
 num.iterations <- as.numeric(args[3])
@@ -55,58 +56,92 @@ train.input <- jsonlite::fromJSON(txt = args[8], flatten = T) %>%
 # args[9] = test data.frame: observationUnit level data with phenotypes and spectra in JSON format
 if(args[9] != "NULL"){
   test.input <- jsonlite::fromJSON(txt = args[9], flatten = T) %>%
-  rename(uniqueid = observationUnitId) %>%
-  rename_at(vars(starts_with("trait.")), ~paste0("reference")) %>%
-  rename_at(vars(starts_with("nirs_spectra")), ~str_replace(., "nirs_spectra.", "X"))
+    rename(uniqueid = observationUnitId) %>%
+    rename_at(vars(starts_with("trait.")), ~paste0("reference")) %>%
+    rename_at(vars(starts_with("nirs_spectra")), ~str_replace(., "nirs_spectra.", "X"))
 } else{
   test.input <- NULL
 }
 
-if(is.null(cv.scheme)){
-  train.ready <- train.input %>% dplyr::select(-germplasmName)
-  if(is.null(test.input)){
-    test.ready <- test.input
+# args[10] = save model boolean
+if(args[10]=="TRUE"){ # SAVE MODEL WITHOUT CV.SCHEME
+  if(is.null(cv.scheme)){
+    train.ready <- train.input %>% dplyr::select(-germplasmName)
+    if(is.null(test.input)){
+      test.ready <- test.input
+    } else{
+      test.ready <- test.input %>% dplyr::select(-germplasmName)
+    }
+
+    wls <- colnames(train.ready)[-1] %>% parse_number()
+    # Test model using non-specialized cv scheme
+    sm.output <- SaveModel(df = train.ready, save.model = TRUE,
+                           autoselect.preprocessing = preprocessing,
+                           preprocessing.method = preprocessing.method,
+                           model.save.folder = NULL, model.name = "PredictionModel",
+                           best.model.metric = "RMSE", tune.length = tune.length,
+                           model.method = model.method, num.iterations = num.iterations,
+                           wavelengths = wls, stratified.sampling = stratified.sampling,
+                           cv.scheme = NULL, trial1 = NULL, trial2 = NULL, trial3 = NULL)
+
   } else{
-    test.ready <- test.input %>% dplyr::select(-germplasmName)
+    # Test model using specialized cv scheme AND SAVE
+    wls <- colnames(train.ready)[-c(1:2)] %>% parse_number()
+    sm.output <- SaveModel(df = NULL, save.model = TRUE,
+                           autoselect.preprocessing = preprocessing,
+                           preprocessing.method = preprocessing.method,
+                           model.save.folder = NULL, model.name = "PredictionModel",
+                           best.model.metric = "RMSE", tune.length = tune.length,
+                           model.method = model.method, num.iterations = num.iterations,
+                           wavelengths = wls, stratified.sampling = stratified.sampling,
+                           cv.scheme = cv.scheme, trial1 = train.input, trial2 = test.input,
+                           trial3 = NULL)
   }
+  results.df <- sm.output[[1]]
+  saveRDS(sm.output[[2]], file = args[11]) # args[11] = model save location with .Rds in filename
 
-  wls <- ncol(train.ready) - 2
-  # Test model using non-specialized cv scheme
-  results.df <- TestModelPerformance(train.data = train.ready, num.iterations = num.iterations,
-                                     test.data = test.ready, preprocessing = preprocessing,
-                                     wavelengths = wls, tune.length = tune.length,
-                                     model.method = model.method, output.summary = TRUE,
-                                     rf.variable.importance = rf.var.importance,
-                                     stratified.sampling = stratified.sampling, cv.scheme = NULL,
-                                     trial1 = NULL, trial2 = NULL, trial3 = NULL)
-} else{
-  # Test model using specialized cv scheme
-  wls <- ncol(train.ready) - 3
-  results.df <- TestModelPerformance(train.data = NULL, num.iterations = num.iterations,
-                                     test.data = NULL, preprocessing = preprocessing,
-                                     wavelengths = wls, tune.length = tune.length,
-                                     model.method = model.method, output.summary = TRUE,
-                                     rf.variable.importance = rf.var.importance,
-                                     stratified.sampling = FALSE, cv.scheme = cv.scheme,
-                                     trial1 = train.input, trial2 = test.input,
-                                     trial3 = NULL)
+} else{ # DON'T SAVE MODEL
+  if(is.null(cv.scheme)){
+    train.ready <- train.input %>% dplyr::select(-germplasmName)
+    if(is.null(test.input)){
+      test.ready <- test.input
+    } else{
+      test.ready <- test.input %>% dplyr::select(-germplasmName)
+    }
 
+    wls <- colnames(train.ready)[-1] %>% parse_number()
+    # Test model using non-specialized cv scheme
+    results.df <- TestModelPerformance(train.data = train.ready, num.iterations = num.iterations,
+                                       test.data = test.ready, preprocessing = preprocessing,
+                                       wavelengths = wls, tune.length = tune.length,
+                                       model.method = model.method, output.summary = TRUE,
+                                       rf.variable.importance = rf.var.importance,
+                                       stratified.sampling = stratified.sampling, cv.scheme = NULL,
+                                       trial1 = NULL, trial2 = NULL, trial3 = NULL)
+  } else{
+    # Test model using specialized cv scheme
+    wls <- colnames(train.ready)[-c(1:2)] %>% parse_number()
+    results.df <- TestModelPerformance(train.data = NULL, num.iterations = num.iterations,
+                                       test.data = NULL, preprocessing = preprocessing,
+                                       wavelengths = wls, tune.length = tune.length,
+                                       model.method = model.method, output.summary = TRUE,
+                                       rf.variable.importance = rf.var.importance,
+                                       stratified.sampling = FALSE, cv.scheme = cv.scheme,
+                                       trial1 = train.input, trial2 = test.input,
+                                       trial3 = NULL)
+  }
+  if(rf.var.importance){
+    var.imp <- results.df[[2]]
+    results.df <- results.df[[1]]
+    # args[12] = variable importance results output file name
+    write.table(var.imp, file = args[12], row.names = F)
+    # args[13] = variable importance figure output file name
+    ggsave(filename = args[13], plot = results.plot, device = "png")
+  }
 }
 
-if(rf.var.importance){
-  var.imp <- results.df[[2]]
-  results.df <- results.df[[1]]
-}
+# args[14] = table output file name
+write.table(x = results.df, file = args[14], row.names = F)
 
-# args[10] = table output file name
-write.table(x = results.df, file = args[10], row.names = F)
-
-# args[11] = figure output file name
-ggsave(filename = args[11], plot = results.plot, device = "png")
-
-# args[12] = variable importance results output file name
-if(rf.var.importance){
-  write.table(var.imp, file = args[12], row.names = F)
-  # args[13] = variable importance figure output file name
-  ggsave(filename = args[13], plot = results.plot, device = "png")
-}
+# args[15] = figure output file name
+# ggsave(filename = args[15], plot = results.plot, device = "png")
