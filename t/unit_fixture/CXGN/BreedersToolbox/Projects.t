@@ -246,7 +246,6 @@ is_deeply($all_locations, [
 my @all_years = $p->get_all_years();
 print STDERR Dumper \@all_years;
 is_deeply(\@all_years, [
-            '2020',
           '2017',
           '2016',
           '2015',
