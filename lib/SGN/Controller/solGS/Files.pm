@@ -139,10 +139,12 @@ sub formatted_phenotype_file {
 
 
 sub phenotype_file_name {
-    my ($self, $c, $pop_id) = @_;
+    my ($self, $c, $pop_id, $trait_id) = @_;
    
     $pop_id = $c->stash->{pop_id} || $c->{stash}->{combo_pops_id} if !$pop_id;
-
+    # my $trait_id = $c-stash->{trait_id} if !$trait_id;
+   
+    # if
     my $dir; 
     if ($pop_id =~ /list/) 
     {
@@ -574,7 +576,8 @@ sub create_file_id {
     my $sindex_name      = $c->stash->{sindex_weigths} || $c->stash->{sindex_name};
     my $sel_prop         = $c->stash->{selection_proportion};
     my $protocol_id      = $c->stash->{genotyping_protocol_id};
-
+    my $cluster_pop_id   = $c->stash->{cluster_pop_id};
+    
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
     $protocol_id = $c->stash->{genotyping_protocol_id};
       
@@ -589,12 +592,12 @@ sub create_file_id {
     } 
     elsif (scalar(@traits_ids == 1))
     {
-	$trait_id = @traits_ids[0];
+	$trait_id = $traits_ids[0];
     }
         
     my $file_id;
     my $referer = $c->req->referer;
-
+ 
     my $selection_pages = 'solgs\/selection\/'
 	. '|solgs\/combined\/model\/\d+\/selection\/'
 	. '|/solgs\/traits\/all\/population\/'
@@ -610,7 +613,19 @@ sub create_file_id {
     } 
     elsif ($referer =~ /$selection_pages/) 
     {
-	$file_id =  $selection_pop_id ? $training_pop_id . '-' . $selection_pop_id : $training_pop_id;
+	if ($selection_pop_id)
+	{
+	    $file_id =  $selection_pop_id  && $selection_pop_id != $training_pop_id ? 
+		$training_pop_id . '-' . $selection_pop_id : 
+		$training_pop_id;
+	}
+	else
+	{
+	    $file_id =  $cluster_pop_id && $cluster_pop_id != $training_pop_id ? 
+		$training_pop_id . '-' . $cluster_pop_id : 
+		$training_pop_id;
+	}
+	
     }
     else 
     {
@@ -628,18 +643,19 @@ sub create_file_id {
 
     if ($sindex_name)
     {
-	if ($sindex_name !~ $selection_pop_id)
+	if ($sindex_name ne $selection_pop_id)
 	{
 	    $file_id = $sindex_name ? $file_id . '-' . $sindex_name : $file_id;
 	}
-	
-	$file_id = $sel_prop ? $file_id . '-' . $sel_prop : $file_id;
     }
-    
-    $file_id = $file_id . '-traits-' . $traits_selection_id if $traits_selection_id;
- 
-    if ($trait_id) 
+
+    if (!$sindex_name)
     {
+	$file_id = $file_id . '-traits-' . $traits_selection_id if $traits_selection_id;
+    }
+   
+    if (!$traits_selection_id && $trait_id) 
+    { 
 	$file_id = $file_id . '-' . $trait_id;
     }
 
@@ -647,7 +663,12 @@ sub create_file_id {
     $file_id = $data_type ? $file_id . '-' . $data_type : $file_id;
     $file_id = $k_number  ? $file_id . '-k-' . $k_number : $file_id;
     $file_id = $protocol_id && $data_type =~ /genotype/i ? $file_id . '-gp-' . $protocol_id : $file_id;
-     
+
+    if ($sindex_name)
+    {
+	$file_id = $sel_prop ? $file_id . '-sp-' . $sel_prop : $file_id;
+    }
+    
     return $file_id;
     
 }
