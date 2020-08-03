@@ -332,22 +332,28 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
 
     <& /page/page_title.mas, title=>"Manage Drone Imagery: Save Ground Control Points" &>
 
+    <div id="project_drone_imagery_ground_control_points_title_div"></div>
+
     <div class="well well-sm">
         <ul>
-            <li>Click on the ground control points in the image below and save them.</li>
+            <li>Click on the ground control points (GCPs) in the image below and save them.</li>
             <li>You can move to different images (e.g. blue, green, red, NIR, BGR) which are available after the standard process has been completed.</li>
             <li>You can zoom out on your browser (Cntrl + -).</li>
         </ul>
     </div>
 
-    <div id="project_drone_imagery_ground_control_points_info_div"></div>
-
     <div id="project_drone_imagery_ground_control_points_next_buttons" style="display:none">
         <button class="btn btn-default" id="project_drone_imagery_ground_control_points_previous_image">View Previous Image</button>
         <button class="btn btn-default" id="project_drone_imagery_ground_control_points_next_image">View Next Image</button>
+        <br/><br/>
+    </div>
+
+    <div class="well well-sm">
+        <div id="project_drone_imagery_ground_control_points_saved_div"></div>
     </div>
 
     <div id="project_drone_imagery_ground_control_points_image_type_div"></div>
+    <div id="project_drone_imagery_ground_control_points_info_div"></div>
 
     <div id="project_drone_imagery_ground_control_points_loading_div"><img src="/img/wheel.gif" /></div>
 
@@ -2624,16 +2630,21 @@ jQuery(document).ready(function() {
     //
 
     var project_drone_imagery_ground_control_points_drone_run_project_id;
+    var project_drone_imagery_ground_control_points_drone_run_project_name;
     var project_drone_imagery_ground_control_points_image_ids;
     var project_drone_imagery_ground_control_points_image_types;
     var project_drone_imagery_ground_control_points_image_id;
     var project_drone_imagery_ground_control_points_image_type;
     var project_drone_imagery_ground_control_points_image_id_counter = 0;
     var project_drone_imagery_ground_control_points_saved;
+    var project_drone_imagery_ground_control_points_saved_array;
 
     jQuery(document).on('click', 'button[name="project_drone_imagery_ground_control_points"]', function(){
         project_drone_imagery_ground_control_points_drone_run_project_id = jQuery(this).data('drone_run_project_id');
-    
+        project_drone_imagery_ground_control_points_drone_run_project_name = jQuery(this).data('drone_run_project_name');
+
+        jQuery('#project_drone_imagery_ground_control_points_title_div').html('<center><h3>'+project_drone_imagery_ground_control_points_drone_run_project_name+'</h3></center>');
+
         showManageDroneImagerySection('project_drone_imagery_ground_control_points_div');
 
         jQuery.ajax({
@@ -2647,6 +2658,7 @@ jQuery(document).ready(function() {
                 project_drone_imagery_ground_control_points_image_ids = response.image_ids;
                 project_drone_imagery_ground_control_points_image_types = response.image_types;
                 project_drone_imagery_ground_control_points_saved = response.saved_gcps_full;
+                project_drone_imagery_ground_control_points_saved_array = response.gcps_array;
 
                 project_drone_imagery_ground_control_points_image_id = project_drone_imagery_ground_control_points_image_ids[0];
                 project_drone_imagery_ground_control_points_image_type = project_drone_imagery_ground_control_points_image_types[0];
@@ -2657,6 +2669,8 @@ jQuery(document).ready(function() {
                 jQuery('#project_drone_imagery_ground_control_points_next_buttons').show();
 
                 drone_imagery_plot_polygon_click_type = 'save_ground_control_point';
+
+                _redraw_ground_control_points_table();
             },
             error: function(response){
                 alert('Error getting image for GCP saving!')
@@ -2695,6 +2709,41 @@ jQuery(document).ready(function() {
         }
     });
 
+    function _redraw_ground_control_points_table() {
+        var html = "<table class='table table-bordered table-hover'><thead><tr><th>Saved GCP Name</th><th>X Pos</th><th>Y Pos</th><th>Latitude</th><th>Longitude</th><th>Remove</th></thead><tbody>";
+        for (var i=0; i<project_drone_imagery_ground_control_points_saved_array.length; i++) {
+            html = html + "<tr><td>"+project_drone_imagery_ground_control_points_saved_array[i]['name']+"</td><td>"+project_drone_imagery_ground_control_points_saved_array[i]['x_pos']+"</td><td>"+project_drone_imagery_ground_control_points_saved_array[i]['y_pos']+"</td><td>"+project_drone_imagery_ground_control_points_saved_array[i]['latitude']+"</td><td>"+project_drone_imagery_ground_control_points_saved_array[i]['longitude']+"</td><td><p style='color:red' name='project_drone_imagery_ground_control_points_delete_one' data-name='"+project_drone_imagery_ground_control_points_saved_array[i]['name']+"' data-drone_run_project_id="+project_drone_imagery_ground_control_points_drone_run_project_id+" >X</p></td></tr>";
+        }
+        html = html + "</tbody></table><button class='btn btn-default' id='project_drone_imagery_ground_control_points_draw_points'>Draw Saved GCPs</button>";
+        jQuery('#project_drone_imagery_ground_control_points_saved_div').html(html);
+    }
+
+    jQuery(document).on('click', 'p[name="project_drone_imagery_ground_control_points_delete_one"]', function(){
+        var drone_run_project_id = jQuery(this).data('drone_run_project_id');
+        var name = jQuery(this).data('name');
+
+        jQuery.ajax({
+            type: 'POST',
+            url: '/api/drone_imagery/remove_one_gcp',
+            data: {
+                'drone_run_project_id' : drone_run_project_id,
+                'name' : name,
+            },
+            success: function(response){
+                console.log(response);
+                if (response.error) {
+                    alert(response.error);
+                }
+                project_drone_imagery_ground_control_points_saved = response.saved_gcps_full;
+                project_drone_imagery_ground_control_points_saved_array = response.gcps_array;
+                _redraw_ground_control_points_table();
+            },
+            error: function(response){
+                alert('Error deleting GCP name!');
+            }
+        });
+    });
+
     jQuery('#project_drone_imagery_ground_control_points_form_save').click(function(){
         var name = jQuery('#project_drone_imagery_ground_control_points_form_input_name').val();
         var longitude = jQuery('#project_drone_imagery_ground_control_points_form_input_longitude').val();
@@ -2724,14 +2773,28 @@ jQuery(document).ready(function() {
             },
             success: function(response){
                 console.log(response);
-                if(response.error) {
+                if (response.error) {
                     alert(response.error);
+                }
+                project_drone_imagery_ground_control_points_saved = response.saved_gcps_full;
+                project_drone_imagery_ground_control_points_saved_array = response.gcps_array;
+
+                _redraw_ground_control_points_table();
+
+                for(var i=0; i<project_drone_imagery_ground_control_points_saved_array.length; i++) {
+                    drawWaypoints([{'x':project_drone_imagery_ground_control_points_saved_array[i]['x_pos'], 'y':project_drone_imagery_ground_control_points_saved_array[i]['y_pos']}], project_drone_imagery_ground_control_points_saved_array[i]['name'], 0);
                 }
             },
             error: function(response){
                 alert('Error getting image for GCP saving!')
             }
         });
+    });
+
+    jQuery(document).on('click', 'button[id="project_drone_imagery_ground_control_points_draw_points"]', function(){
+        for(var i=0; i<project_drone_imagery_ground_control_points_saved_array.length; i++) {
+            drawWaypoints([{'x':project_drone_imagery_ground_control_points_saved_array[i]['x_pos'], 'y':project_drone_imagery_ground_control_points_saved_array[i]['y_pos']}], project_drone_imagery_ground_control_points_saved_array[i]['name'], 0);
+        }
     });
 
     //
@@ -5030,7 +5093,7 @@ jQuery(document).ready(function() {
             } else {
                 ctx.font = "bold 18px Arial";
                 ctx.fillStyle = 'red';
-                ctx.fillText(label, points[0].x + 3, points[0].y + 14 + plot_polygon_random_number);
+                ctx.fillText(label, parseInt(points[0].x) + 3, parseInt(points[0].y) + 14 + plot_polygon_random_number);
                 //ctx.fillText(label.toString().substring(label.length - 3), points[0].x + 3, points[0].y + 14 + plot_polygon_random_number);
             }
         }

@@ -6353,12 +6353,14 @@ sub drone_imagery_get_image_for_saving_gcp_GET : Args(0) {
         project_id => $drone_run_project_id,
         type_id => $gcps_type_id
     });
-    my $saved_gcps_full;
+    my $saved_gcps_full = {};
     if ($saved_gcps_json) {
         $saved_gcps_full = decode_json $saved_gcps_json->value();
     }
 
-    $c->stash->{rest} = {success => 1, result => $result, image_ids => \@image_ids, image_types => \@image_types, saved_gcps_full => $saved_gcps_full};
+    my @saved_gcps_array = values %$saved_gcps_full;
+
+    $c->stash->{rest} = {success => 1, result => $result, image_ids => \@image_ids, image_types => \@image_types, saved_gcps_full => $saved_gcps_full, gcps_array => \@saved_gcps_array};
 }
 
 sub drone_imagery_saving_gcp : Path('/api/drone_imagery/saving_gcp') : ActionClass('REST') { }
@@ -6381,7 +6383,7 @@ sub drone_imagery_saving_gcp_POST : Args(0) {
         project_id => $drone_run_project_id,
         type_id => $gcps_type_id
     });
-    my $saved_gcps_full;
+    my $saved_gcps_full = {};
     if ($saved_gcps_json) {
         $saved_gcps_full = decode_json $saved_gcps_json->value();
     }
@@ -6404,7 +6406,47 @@ sub drone_imagery_saving_gcp_POST : Args(0) {
         key=>'projectprop_c1'
     });
 
-    $c->stash->{rest} = {success => 1};
+    my @saved_gcps_array = values %$saved_gcps_full;
+
+    $c->stash->{rest} = {success => 1, saved_gcps_full => $saved_gcps_full, gcps_array => \@saved_gcps_array};
+}
+
+sub drone_imagery_remove_one_gcp : Path('/api/drone_imagery/remove_one_gcp') : ActionClass('REST') { }
+sub drone_imagery_remove_one_gcp_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $drone_run_project_id = $c->req->param('drone_run_project_id');
+    my $gcp_name = $c->req->param('name');
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $gcps_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_ground_control_points', 'project_property')->cvterm_id();
+    my $saved_gcps_json = $schema->resultset("Project::Projectprop")->find({
+        project_id => $drone_run_project_id,
+        type_id => $gcps_type_id
+    });
+    my $saved_gcps_full = {};
+    if ($saved_gcps_json) {
+        $saved_gcps_full = decode_json $saved_gcps_json->value();
+    }
+
+    delete $saved_gcps_full->{$gcp_name};
+
+    my $saved_gcps_update = $schema->resultset('Project::Projectprop')->update_or_create({
+        type_id=>$gcps_type_id,
+        project_id=>$drone_run_project_id,
+        rank=>0,
+        value=>encode_json $saved_gcps_full
+    },
+    {
+        key=>'projectprop_c1'
+    });
+
+    my @saved_gcps_array = values %$saved_gcps_full;
+
+    $c->stash->{rest} = {success => 1, saved_gcps_full => $saved_gcps_full, gcps_array => \@saved_gcps_array};
 }
 
 sub drone_imagery_obsolete_image_change : Path('/api/drone_imagery/obsolete_image_change') : ActionClass('REST') { }
