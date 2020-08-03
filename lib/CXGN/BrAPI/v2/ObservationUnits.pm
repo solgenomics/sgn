@@ -398,6 +398,7 @@ sub detail {
 sub observationunits_update {
     my $self = shift;
     my $data = shift;
+    my $c = shift;
     my $user_id = shift;
 
     my $page_size = $self->page_size;
@@ -408,7 +409,7 @@ sub observationunits_update {
     my $schema = $self->bcs_schema;
     my $stock_geo_json_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_geo_json', 'stock_property');
 
-    foreach my $params (@{$data}) {
+    foreach my $params (@$data) {
         my $observation_unit_db_id = $params->{observationUnitDbId} ? $params->{observationUnitDbId} : undef;
         my $data_level = $params->{observationLevel}->[0] || 'all';
         my $years_arrayref = $params->{seasonDbId} || ($params->{seasonDbIds} || ());
@@ -418,8 +419,8 @@ sub observationunits_update {
         my $trait_list_arrayref = $params->{observationVariableDbId} || ($params->{observationVariableDbIds} || ());
         my $program_ids_arrayref = $params->{programDbId} || ($params->{programDbIds} || ());
         my $folder_ids_arrayref = $params->{trialDbId} || ($params->{trialDbIds} || ());
-        my $observationUnit_name = $params->{observationUnitName}->[0] || "";
-        my $observationUnit_position_arrayref = $params->{observationUnitPosition} || ($params->{observationUnitPosition} || ());
+        my $observationUnit_name = $params->{observationUnitName} ? $params->{observationUnitName} : undef; 
+        my $observationUnit_position_arrayref = $params->{observationUnitPosition} ? $params->{observationUnitPosition} : undef;
         my $observationUnit_x_ref = $params->{externalReferences} || ""; #not implemented
         my $seedlot_id = $params->{seedLotDbId} || ""; #not implemented yet
         my $treatments = $params->{treatments} || ""; #not implemented yet
@@ -450,7 +451,7 @@ sub observationunits_update {
             return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('An error condition occurred, was not able to upload trial plot GPS coordinates. ($@)'));
         }
     }
-
+ 
     my $result = '';
     my $total_count = 1;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);

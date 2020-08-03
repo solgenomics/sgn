@@ -125,7 +125,7 @@ sub details {
 			my @folder_studies;
 			my %additional_info;
             my $folder_id = $folder->folder_id;
-            my $folder_description = $folder->name;
+            my $folder_description = $folder->name; #description doesn't exist 
             my $breeding_program_id = $folder->breeding_program->project_id();
 
 			my %result = (
@@ -140,7 +140,7 @@ sub details {
                 programDbId=>qq|$breeding_program_id|,
                 programName=>$folder->breeding_program->name(),
                 publications=>undef,
-                startDate=>undef,
+                startDate=>undef,#get_project_start_date
                 trialDbId=>qq|$folder_id|,
                 trialName=>$folder->name,
                 trialDescription=>$folder_description,
@@ -155,6 +155,147 @@ sub details {
 	} else {
 		return CXGN::BrAPI::JSONResponse->return_error($status, 'The given trialDbId not found.');
 	}
+}
+
+sub store {
+    my $self = shift;
+    my $data = shift;
+    my $user_id = shift;
+
+    if (!$user_id){
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must be logged in to add a seedlot!'));
+    }
+    my $schema = $self->bcs_schema;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $status = $self->status();
+    my @stored_ids;
+
+    foreach my $params (@$data){
+        my $folder_name = $params->{trialName} || undef;
+        my $existing = $schema->resultset("Project::Project")->find( { name => $folder_name });
+        if ($existing) {
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('A folder or trial with the name %s already exists in the database. Please select another name.',$folder_name ));
+        }
+    }
+
+    foreach my $params (@$data){
+        my $folder_name = $params->{trialName} || undef;
+        my $parent_folder_id = $params->{programDbId} || undef;        
+        my $breeding_program_id = $params->{programDbId} || undef;
+        my $description = $params->{trialDescription} || undef;
+        my $folder_for_trials = 1;
+        my $folder_for_crosses = 0;
+        my $folder_for_genotyping_trials = 0;     
+
+        my $folder = CXGN::Trial::Folder->create({
+            bcs_schema => $schema,
+            parent_folder_id => $parent_folder_id,
+            name => $folder_name,
+            breeding_program_id => $breeding_program_id,
+            description => $description,
+            folder_for_trials => $folder_for_trials,
+            folder_for_crosses => $folder_for_crosses,
+            folder_for_genotyping_trials => $folder_for_genotyping_trials
+        });
+
+        push @stored_ids, $folder->folder_id();
+    }
+
+    my %location_id_list;
+    my %location_names_list;
+    my %study_id_list;
+    my %study_name_list;
+    my %program_id_list;
+    my %program_name_list;
+    my %trial_id_list;
+    my %trial_name_list;
+    if (scalar(@stored_ids)>0){
+        %trial_id_list = map { $_ => 1} @stored_ids;
+        my $p = CXGN::BreedersToolbox::Projects->new( { schema => $schema  } );
+        my $programs = $p->get_breeding_programs();
+
+        foreach my $program (@$programs) {
+            $program = { "id" => $program->[0], "name" => $program->[1], "program_id" => $program->[0], "program_name" => $program->[1],  "program_description" => $program->[2] };
+            $data = _get_folders($program, $schema, $data, 'breeding_program', undef, \%location_id_list, \%location_names_list, \%study_id_list, \%study_name_list, \%trial_id_list, \%trial_name_list);
+        }
+    }
+
+    my $total_count = $data ? scalar @{$data} : 0;
+    my %result = (data => $data);
+    my @data_files;
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $self->status, 'Trials result constructed');
+}
+
+sub update {
+    my $self = shift;
+    my $params = shift;
+    my $user_id = shift;
+    my $crop = shift;
+
+    if (!$user_id){
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must be logged in to add a seedlot!'));
+    }
+    my $schema = $self->bcs_schema;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $status = $self->status();
+
+    my $folder_id = $params->{trialDbId} || undef;
+    my $folder_name = $params->{trialName} || undef;
+    my $parent_folder_id = $params->{programDbId} || undef;        
+    my $breeding_program_id = $params->{programDbId} || undef;
+    my $description = $params->{trialDescription} || undef;
+
+    my $folder = $self->bcs_schema->resultset('Project::Project')->find( { project_id => $folder_id });
+    if ($folder){
+        $folder->name($folder_name);
+        $folder->description($description);
+        $folder->update();
+    }
+
+    my $project_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->find(
+    { 
+      subject_project_id =>  $folder_id,
+    }); 
+    if ($project_rel_row){
+        $project_rel_row->object_project_id($breeding_program_id);
+        $project_rel_row->update();
+    }
+
+    #retrieve updated trial
+    my $folder = CXGN::Trial::Folder->new(bcs_schema=>$schema, folder_id=>$folder_id);
+
+    my $total_count = 1;
+    my @folder_studies;
+    my %additional_info;
+    my $folder_id = $folder->folder_id;
+    my $folder_description = $folder->name; #description doesn't exist 
+    my $breeding_program_id = $folder->breeding_program->project_id();
+
+    my %result = (
+        active=>JSON::true,
+        additionalInfo=>\%additional_info,
+        commonCropName=>$crop,
+        contacts=>undef,
+        datasetAuthorships=>undef,
+        documentationURL=>undef,
+        endDate=>undef,
+        externalReferences=>undef,
+        programDbId=>qq|$breeding_program_id|,
+        programName=>$folder->breeding_program->name(),
+        publications=>undef,
+        startDate=>undef,#get_project_start_date
+        trialDbId=>qq|$folder_id|,
+        trialName=>$folder->name,
+        trialDescription=>$folder_description,
+        trialPUI=>undef
+    );
+    my @data_files;
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Trial detail result constructed');
 }
 
 sub _get_folders {

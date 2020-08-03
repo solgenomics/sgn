@@ -29,6 +29,33 @@ has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     required => 1,
 );
 
+sub get_all_drone_run_band_image_types {
+    my @image_types = (
+        'Blue (450-520nm)',
+        'Green (515-600nm)',
+        'Red (600-690nm)',
+        'Red Edge (690-750nm)',
+        'NIR (780-3000nm)',
+        'MIR (3000-50000nm)',
+        'FIR (50000-1000000nm)',
+        'Thermal IR (9000-14000nm)',
+        'Black and White Image',
+        'RGB Color Image',
+        'Merged 3 Bands BGR',
+        'Merged 3 Bands NRN',
+        'Merged 3 Bands NReN',
+        'Raster DSM'
+    );
+    my %image_type_hash;
+    foreach (@image_types) {
+        $image_type_hash{$_}++;
+    }
+    return {
+        array_ref => \@image_types,
+        hash_ref => \%image_type_hash
+    }
+}
+
 sub get_all_project_md_image_observation_unit_plot_polygon_types {
     my $schema = shift;
     my %project_type_lookup = (
