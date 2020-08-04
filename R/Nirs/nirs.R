@@ -10,6 +10,7 @@ library(devtools)
 library(jsonlite)
 library(waves)
 library(stringr)
+library(readr)
 
 # Error handling
 # TODO where do I check for genotype and/or environment overlap for the CVs? Here or in controller?
@@ -51,15 +52,24 @@ if(cv.scheme == "random"){
 train.input <- jsonlite::fromJSON(txt = args[8], flatten = T) %>%
   rename(uniqueid = observationUnitId) %>%
   rename_at(vars(starts_with("trait.")), ~paste0("reference")) %>%
-  rename_at(vars(starts_with("nirs_spectra")), ~str_replace(., "nirs_spectra.", ""))
+  rename_at(vars(starts_with("nirs_spectra")), ~str_replace(., "nirs_spectra.", "")) %>%
+  dplyr::select(uniqueid, reference, starts_with("germplasm"), num_range(prefix = "X", range = 1:100000))
+
+
+print(train.input[1:5,1:5])
 
 # args[9] = test data.frame: observationUnit level data with phenotypes and spectra in JSON format
 if(args[9] != "NULL"){
+    print("TEST DATA PROVIDED")
+
   test.input <- jsonlite::fromJSON(txt = args[9], flatten = T) %>%
     rename(uniqueid = observationUnitId) %>%
     rename_at(vars(starts_with("trait.")), ~paste0("reference")) %>%
-    rename_at(vars(starts_with("nirs_spectra")), ~str_replace(., "nirs_spectra.", ""))
+    rename_at(vars(starts_with("nirs_spectra")), ~str_replace(., "nirs_spectra.", "")) %>%
+    dplyr::select(uniqueid, reference, starts_with("germplasm"), num_range(prefix = "X", range = 1:100000))
+
 } else{
+    print("NO TEST DATA")
   test.input <- NULL
 }
 
@@ -69,13 +79,15 @@ if(args[10]=="TRUE"){ # SAVE MODEL WITHOUT CV.SCHEME
     train.ready <- train.input %>% dplyr::select(-germplasmName)
     if(is.null(test.input)){
       test.ready <- test.input
+      print(test.ready[1:5,1:5])
     } else{
       test.ready <- test.input %>% dplyr::select(-germplasmName)
     }
 
+    print(train.ready$reference)
     wls <- colnames(train.ready)[-c(1:2)] %>% parse_number() # take off sample name and reference columns
     # Test model using non-specialized cv scheme
-    sm.output <- SaveModel(df = train.ready, save.model = TRUE,
+    sm.output <- SaveModel(df = train.ready, save.model = FALSE,
                            autoselect.preprocessing = preprocessing,
                            preprocessing.method = preprocessing.method,
                            model.save.folder = NULL, model.name = "PredictionModel",
