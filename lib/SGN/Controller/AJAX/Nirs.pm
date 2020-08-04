@@ -497,6 +497,20 @@ sub generate_predictions_POST : Args(0) {
     my @unique_plot_names = sort keys %seen_plot_names;
     my @unique_accession_names = sort keys %seen_accessions;
 
+    my $stat_term;
+    if ($algorithm eq 'pls') {
+        $stat_term = "Partial least squares regression (PLSR) as implemented with the pls package in R|SGNSTAT:0000008";
+    }
+    elsif ($algorithm eq 'rf') {
+        $stat_term = "Random Forest Regression (RF)  as implemented with the RandomForest package in R|SGNSTAT:0000009";
+    }
+    elsif ($algorithm eq 'svmLinear') {
+        $stat_term = "Support vector machine (SVM) with linear kernel as implemented with the kernLab package in R|SGNSTAT:0000010";
+    }
+    elsif ($algorithm eq 'svmRadial') {
+        $stat_term = "Support vector machine (SVM) with radial kernel as implemented with the kernLab package in R|SGNSTAT:0000011";
+    }
+
     $c->stash->{rest} = {
         success => 1,
         result_predictions => \%result_predictions,
@@ -504,7 +518,7 @@ sub generate_predictions_POST : Args(0) {
         unique_plots => \@unique_plot_names,
         unique_accessions => \@unique_accession_names,
         protocol => "R waves $format_id $algorithm",
-        stat_term => '',
+        stat_term => $stat_term,
         analysis_design => '',
         result_summary => {}
     };
