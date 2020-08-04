@@ -700,6 +700,44 @@ sub get_ontologies : Path('/ajax/html/select/trait_variable_ontologies') Args(0)
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_trained_nirs_models : Path('/ajax/html/select/trained_nirs_models') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $checkbox_name = $c->req->param('checkbox_name');
+
+    my $nirs_model_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'waves_nirs_spectral_predictions', 'protocol_type')->cvterm_id();
+    my $model_properties_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_properties', 'protocol_property')->cvterm_id();
+
+    my $model_q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, model_type.value
+        FROM nd_protocol
+        JOIN nd_protocolprop AS model_type ON(nd_protocol.nd_protocol_id=model_type.nd_protocol_id AND model_type.type_id=$model_properties_cvterm_id)
+        WHERE nd_protocol.type_id=$nirs_model_cvterm_id;";
+    my $model_h = $schema->storage->dbh()->prepare($model_q);
+    $model_h->execute();
+
+    my $html = '<table class="table table-bordered table-hover" id="html-select-nirsmodel-table"><thead><tr><th>Select</th><th>Model Name</th><th>Description</th><th>Format</th><th>Trait</th><th>Algorithm</th></tr></thead><tbody>';
+
+    while (my ($nd_protocol_id, $name, $description, $model_type) = $model_h->fetchrow_array()) {
+        my $model_type_hash = decode_json $model_type;
+        my $selected_trait_name = $model_type_hash->{selected_trait};
+        my $preprocessing_boolean = $model_type_hash->{preprocessing_boolean};
+        my $niter = $model_type_hash->{niter};
+        my $algorithm = $model_type_hash->{algorithm};
+        my $tune = $model_type_hash->{tune};
+        my $random_forest_importance = $model_type_hash->{random_forest_importance};
+        my $cross_validation = $model_type_hash->{cross_validation};
+        my $format = $model_type_hash->{format};
+
+        $html .= '<tr><td><input type="checkbox" name="'.$checkbox_name.'" value="'.$nd_protocol_id.'"></td><td>'.$name.'</td><td>'.$description.'</td><td>'.$format.'</td><td>'.$selected_trait_name.'</td></tr>';
+    }
+    $html .= "</tbody></table>";
+
+    $html .= "<script>jQuery(document).ready(function() { jQuery('#html-select-nirsmodel-table').DataTable({ 'lengthMenu': [[2, 4, 6, 8, 10, 25, 50, -1], [2, 4, 6, 8, 10, 25, 50, 'All']] }); } );</script>";
+
+    $c->stash->{rest} = { select => $html };
+}
+
 sub get_trained_keras_cnn_models : Path('/ajax/html/select/trained_keras_cnn_models') Args(0) {
     my $self = shift;
     my $c = shift;

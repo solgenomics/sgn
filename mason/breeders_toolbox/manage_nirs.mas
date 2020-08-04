@@ -14,7 +14,10 @@ $locations => undef
 <!--button class="btn btn-info" onclick=location.href="/search/stocks">Phenotype Search</button><br /><br /-->
 
 <& /breeders_toolbox/upload_nirs_spreadsheet_dialogs.mas &>
-<& /tools/nirs/nirs_analysis_dialogs.mas &>
+<& /tools/nirs/nirs_analysis_train_dialogs.mas &>
+<& /tools/nirs/nirs_analysis_predict_dialogs.mas &>
+
+<& /analyses/store_new_analysis_values_and_model.mas &>
 
 <hr>
 

@@ -21,7 +21,7 @@
                     </center>
                 </&>
                 <&| /util/workflow.mas:step, title=> "Train Dataset" &>
-                    <& /page/page_title.mas, title=>"Select the dataset you are interested in training" &>
+                    <& /page/page_title.mas, title=>"Select the dataset you are interested in training (the accessions or plots or tissues samples in the dataset need to have NIRs uploaded)" &>
                     <br/><br/>
                     <form class="form-horizontal">
                         <div class="form-group">
@@ -59,7 +59,7 @@
 
                     <div class="form-horizontal" id="nirs_analysis_training_dataset_test_div" style="display:none">
                         <div class="form-group">
-                            <label class="col-sm-1 control-label">Dataset (Optional): </label>
+                            <label class="col-sm-1 control-label">Dataset (Optional) (the accessions or plots or tissues samples in the dataset need to have NIRs uploaded): </label>
                             <div class="col-sm-11" >
                                 <div id="nirs_analysis_training_dataset_test_select_div"></div>
                             </div>
@@ -209,8 +209,6 @@
   </div>
 </div>
 
-<& /analyses/store_new_analysis_values_and_model.mas &>
-
 <script>
 jQuery(document).ready(function(){
 
@@ -351,7 +349,7 @@ jQuery(document).ready(function(){
         jQuery('#generic_save_analysis_model_application_name').val("Jenna's Waves R Package NIRs Analysis");
         jQuery('#generic_save_analysis_model_application_version').val("V1.01");
         jQuery('#generic_save_analysis_model_file').val(nirs_analysis_training_response.model_file);
-        jQuery('#generic_save_analysis_model_archived_model_file_type').val("jennasrwaves_V1.01_waves_nirs_spectral_predictions_weights_file");
+        jQuery('#generic_save_analysis_model_archived_model_file_type').val(nirs_analysis_training_response.model_file_type);
         jQuery('#generic_save_analysis_model_training_data_file').val(nirs_analysis_training_response.training_data_file);
         jQuery('#generic_save_analysis_model_archived_training_data_file_type').val("jennasrwaves_V1.01_waves_nirs_spectral_predictions_training_data_file");
         jQuery('#generic_save_analysis_model_auxiliary_files').val(JSON.stringify(nirs_analysis_training_response.model_aux_files));
