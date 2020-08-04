@@ -1,0 +1,137 @@
+<button class="btn btn-primary" id="nirs_analysis_prediction_dialog_show">Predict Phenotypes From NIRS Model</button>
+
+<div class="modal fade" id="nirs_analysis_prediction_dialog" name="nirs_analysis_prediction_dialog" tabindex="-1" role="dialog" aria-labelledby="nirsAnalysisPredictionDialog" data-backdrop="static">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="nirsAnalysisPredictionDialog">Predict Phenotypes From NIRs Model</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <&| /util/workflow.mas, id=> "nirs_analysis_prediction_workflow" &>
+                <&| /util/workflow.mas:step, title=> "Intro" &>
+                    <& /page/page_title.mas, title=>"This workflow will guide you through predicting phenotypes from trained NIRs models in the database." &>
+                    <br/><br/>
+                    <center>
+                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Test Dataset" &>
+                    <& /page/page_title.mas, title=>"Select the dataset you are interested in predicting phenotypes for (the accessions or plots or tissues samples in the dataset need to have NIRs uploaded):" &>
+                    <br/><br/>
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Dataset: </label>
+                            <div class="col-sm-11" >
+                                <div id="nirs_analysis_prediction_dataset_select_div"></div>
+                            </div>
+                        </div>
+                    </form>
+                    <br/><br/>
+                    <center>
+                    <button class="btn btn-primary" id="nirs_analysis_prediction_dataset_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "NIRs Model" &>
+                    <& /page/page_title.mas, title=>"Select the NIRs model to use in predictions" &>
+
+                    <center>
+                    <button class="btn btn-info" id="nirs_analysis_prediction_dataset_info">More Info</button>
+                    </center>
+                    <hr>
+
+                    <div id="nirs_analysis_prediction_model_select_div"></div>
+
+                    <br/><br/>
+                    <center>
+                    <button class="btn btn-primary" id="nir_analysis_prediction_model_step">Predict</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Summary" &>
+                    <& /page/page_title.mas, title=>"Summary of the predictions" &>
+
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Do you want to save the analysis prediction results?: </label>
+                            <div class="col-sm-9" >
+                                <button class="btn btn-primary" id="nir_analysis_prediction_analysis_save_step">Save the Results</button>
+                            </div>
+                        </div>
+                    </div>
+
+                </&>
+            </&>
+
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="nirs_analysis_prediction_dialog_info" name="nirs_analysis_prediction_dialog_info" tabindex="-1" role="dialog" aria-labelledby="nirsAnalysisPredictionInfoDialog" data-backdrop="static">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="nirsAnalysisPredictionInfoDialog">Predictino Phenotypes from NIRs Model</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+        
+            <h1>More </h1>
+        
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+jQuery(document).ready(function(){
+
+    jQuery('#nirs_analysis_prediction_dataset_info').click(function(){
+        jQuery('#nirs_analysis_prediction_dialog_info').modal('show');
+    });
+
+    jQuery('#nirs_analysis_prediction_dialog_show').click(function(){
+        jQuery('#nirs_analysis_prediction_dialog').modal('show');
+
+        get_select_box('datasets','nirs_analysis_prediction_dataset_select_div', {'checkbox_name':'nirs_analysis_prediction_dataset_select_id'});
+    });
+
+    var nirs_analysis_prediction_dataset_id;
+    jQuery('#nirs_analysis_prediction_dataset_select_step').click(function(){
+        var selected = [];
+        jQuery('input[name="nirs_analysis_prediction_dataset_select_id"]:checked').each(function() {
+            selected.push(jQuery(this).val());
+        });
+
+        if(selected.length > 1 || selected.length == 0) {
+            alert('Please select one dataset!');
+            return false;
+        }
+        else {
+            nirs_analysis_prediction_dataset_id = selected[0];
+            
+            get_select_box('trained_nirs_models','nirs_analysis_prediction_model_select_div', {'checkbox_name':'nirs_analysis_prediction_model_select_id'});
+
+            Workflow.complete("#nirs_analysis_prediction_dataset_select_step");
+            Workflow.focus('#nirs_analysis_prediction_workflow', 2);
+        }
+    });
+
+
+    jQuery('#').click(function(){
+        
+    });
+});
+</script>

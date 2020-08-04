@@ -412,7 +412,7 @@ sub generate_results_POST : Args(0) {
     # $cmd->is_cluster(1);
     # $cmd->wait;
 
-    my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirs.R '$seltrait' '$preprocessing_boolean' '$niter_id' '$algo_id' '$tune_id' '$rf_var_imp' '$cv_scheme' '$train_json_filepath' '$test_json_filepath' '$output_table_filepath' '$output_figure_filepath' '$output_table2_filepath' '$output_figure2_filepath' '$output_model_filepath' ";
+    my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirs.R '$seltrait' '$preprocessing_boolean' '$niter_id' '$algo_id' '$tune_id' '$rf_var_imp' '$cv_scheme' '$train_json_filepath' '$test_json_filepath' 'TRUE' '$output_model_filepath' '$output_table2_filepath' '$output_figure2_filepath' '$output_table_filepath' '$output_figure_filepath' ";
     print STDERR $cmd_s;
     my $cmd_status = system($cmd_s);
 
@@ -425,13 +425,15 @@ sub generate_results_POST : Args(0) {
             'algorithm' => $algo_id,
             'tune' => $tune_id,
             'random_forest_importance' => $rf_var_imp,
-            'cross_validation' => $cv_scheme
+            'cross_validation' => $cv_scheme,
+            'format' => $format_id
         },
         model_file => $output_model_filepath,
         training_data_file => $train_json_filepath,
-        model_aux_files => [{
-            "jennasrwaves_V1.01_waves_nirs_spectral_predictions_testing_data_file" => $test_json_filepath
-        }]
+        model_aux_files => [
+            {"jennasrwaves_V1.01_waves_nirs_spectral_predictions_testing_data_file" => $test_json_filepath},
+            {"jennasrwaves_V1.01_waves_nirs_spectral_predictions_performance_output" => $output_table_filepath}
+        ]
     };
 }
 
