@@ -25,6 +25,7 @@ my $m = CXGN::Analysis::AnalysisCreate->new({
     analysis_result_values=>$analysis_result_values,
     analysis_result_values_type=>$analysis_result_values_type,
     analysis_result_summary=>$analysis_result_summary,
+    analysis_model_id=>$analysis_model_id,
     analysis_model_name=>$analysis_model_name,
     analysis_model_description=>$analysis_model_description,
     analysis_model_is_public=>$analysis_model_is_public,
@@ -201,52 +202,49 @@ has 'analysis_result_summary' => (
     is => 'rw',
 );
 
-has 'analysis_model_name' => (
-    isa => 'Str',
+has 'analysis_model_id' => (
+    isa => 'Int|Undef',
     is => 'rw',
-    required => 1
+);
+
+has 'analysis_model_name' => (
+    isa => 'Str|Undef',
+    is => 'rw',
 );
 
 has 'analysis_model_description' => (
-    isa => 'Str',
+    isa => 'Str|Undef',
     is => 'rw',
-    required => 1
 );
 
 has 'analysis_model_is_public' => (
-    isa => 'Str',
+    isa => 'Str|Undef',
     is => 'rw',
-    required => 1
 );
 
 has 'analysis_model_language' => (
-    isa => 'Str',
+    isa => 'Str|Undef',
     is => 'rw',
-    required => 1
 );
 
 has 'analysis_model_type' => (
-    isa => 'Str',
+    isa => 'Str|Undef',
     is => 'rw',
-    required => 1
 );
 
 has 'analysis_model_properties' => (
-    isa => 'HashRef',
+    isa => 'HashRef|Undef',
     is => 'rw',
-    required => 1
 );
 
 has 'analysis_model_application_name' => (
-    isa => 'Str',
+    isa => 'Str|Undef',
     is => 'rw',
-    required => 1
 );
 
 has 'analysis_model_application_version' => (
-    isa => 'Str',
+    isa => 'Str|Undef',
     is => 'rw',
-    required => 1
 );
 
 has 'analysis_model_file' => (
@@ -260,15 +258,13 @@ has 'analysis_model_file_type' => (
 );
 
 has 'analysis_model_training_data_file' => (
-    isa => 'Str',
+    isa => 'Str|Undef',
     is => 'rw',
-    required => 1
 );
 
 has 'analysis_model_training_data_file_type' => (
-    isa => 'Str',
+    isa => 'Str|Undef',
     is => 'rw',
-    required => 1
 );
 
 has 'analysis_model_auxiliary_files' => (
@@ -336,6 +332,7 @@ sub store {
     my $analysis_result_values = $self->analysis_result_values();
     my $analysis_result_values_type = $self->analysis_result_values_type();
     my $analysis_result_summary = $self->analysis_result_summary();
+    my $analysis_model_protocol_id = $self->analysis_model_id();
     my $analysis_model_name = $self->analysis_model_name();
     my $analysis_model_description = $self->analysis_model_description();
     my $analysis_model_is_public = $self->analysis_model_is_public;
@@ -358,29 +355,31 @@ sub store {
 
     my $model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, $analysis_model_type, 'protocol_type')->cvterm_id();
 
-    my $mo = CXGN::AnalysisModel::SaveModel->new({
-        bcs_schema=>$bcs_schema,
-        metadata_schema=>$metadata_schema,
-        phenome_schema=>$phenome_schema,
-        archive_path=>$archive_path,
-        model_name=>$analysis_model_name,
-        model_description=>$analysis_model_description,
-        model_language=>$analysis_model_language,
-        model_type_cvterm_id=>$model_type_cvterm_id,
-        model_properties=>$analysis_model_properties,
-        application_name=>$analysis_model_application_name,
-        application_version=>$analysis_model_application_version,
-        dataset_id=>$analysis_dataset_id,
-        is_public=>$analysis_model_is_public,
-        archived_model_file_type=>$analysis_model_file_type,
-        model_file=>$analysis_model_file,
-        archived_training_data_file_type=>$analysis_model_training_data_file_type,
-        archived_training_data_file=>$analysis_model_training_data_file,
-        archived_auxiliary_files=>$analysis_model_auxiliary_files,
-        user_id=>$user_id,
-        user_role=>$user_role
-    });
-    my $analysis_model_protocol_id = $mo->save_model()->{nd_protocol_id};
+    if (!$analysis_model_protocol_id) {
+        my $mo = CXGN::AnalysisModel::SaveModel->new({
+            bcs_schema=>$bcs_schema,
+            metadata_schema=>$metadata_schema,
+            phenome_schema=>$phenome_schema,
+            archive_path=>$archive_path,
+            model_name=>$analysis_model_name,
+            model_description=>$analysis_model_description,
+            model_language=>$analysis_model_language,
+            model_type_cvterm_id=>$model_type_cvterm_id,
+            model_properties=>$analysis_model_properties,
+            application_name=>$analysis_model_application_name,
+            application_version=>$analysis_model_application_version,
+            dataset_id=>$analysis_dataset_id,
+            is_public=>$analysis_model_is_public,
+            archived_model_file_type=>$analysis_model_file_type,
+            model_file=>$analysis_model_file,
+            archived_training_data_file_type=>$analysis_model_training_data_file_type,
+            archived_training_data_file=>$analysis_model_training_data_file,
+            archived_auxiliary_files=>$analysis_model_auxiliary_files,
+            user_id=>$user_id,
+            user_role=>$user_role
+        });
+        $analysis_model_protocol_id = $mo->save_model()->{nd_protocol_id};
+    }
 
     my $saved_analysis_id;
     if ($analysis_to_save_boolean eq 'yes') {

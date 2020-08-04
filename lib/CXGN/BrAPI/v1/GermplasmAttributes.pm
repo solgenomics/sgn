@@ -10,7 +10,7 @@ use CXGN::BrAPI::JSONResponse;
 
 extends 'CXGN::BrAPI::v1::Common';
 
-sub germplasm_attributes_list {
+sub search {
 	my $self = shift;
 	my $inputs = shift;
 	my @attribute_category_dbids = $inputs->{attribute_category_dbids} ? @{$inputs->{attribute_category_dbids}} : ();

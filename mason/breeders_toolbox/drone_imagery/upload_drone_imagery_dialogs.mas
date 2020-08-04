@@ -20,10 +20,10 @@
                         <& /page/page_title.mas, title=>"This workflow will guide you through uploading aerial images to the database" &>
                         <p>Your field trial must already be in the database before you can upload images for it. Please go to <a href="/breeders/trials">Manage->Field Trials</a> if it is not.</p>
                         <p>A field trial represents plots in the field where each plot has a globally unique <i>plot_name</i>, a sequential <i>plot_number</i> that is unique in the trial (e.g. 101, 102, 103 for three separate plots), and an <i>accession_name</i> representing the genotype being tested in that plot. Each plot can belong to different blocks (<i>block_number</i>) and reps (<i>rep_number</i>) depending on the experimental design you are using (e.g. complete block vs augmented design). Each plot can have a <i>row_number</i> and <i>col_number</i> indicating the relative position of the plot in the field. A field trial can represent a yield trial, a phenotyping trial, a crossing block, a greenhouse, a nursery, etc.</p>
-                        <p>If you have raw aerial images that have not been stitched into an orthophotomosaic image of the whole field, your raw images should be uploaded using a zipfile (.zip). You can have several drone runs for a single field trial. For an individual drone run, once you have uploaded all photos, you can stitch an orthophotoimage together. Afterwards, you will have options to cut the ortho image into plot polygons and extract phenotypes for those plots into the database. The maximum zipfile size is 2GB.</p>
-                        <p>If you already have an orthophotomosaic image of your entire field, you can upload that image under a field trial and a drone run. Afterwards,  you will have options to cut the ortho-image into plot polygons and extract phenotypes for those plots into the database. The maximum size for each image is 200MB. The preferred upload format is PNG.</p>
-                        <p><b>Example Data:</b> <a href="/static_content/imagebreed/AlfalfaExample35MeterMicasenseAerialDroneFlightRawCaptures.zip" download>Micasense 5 Band Raw Images (Unstitched image-captures) (Upload zipfile for ImageBreed to stitch.)</a></p>
-                        <p><b>Example Data:</b> <a href="/static_content/imagebreed/ExampleAerialDroneFlightMicasensePanel.zip" download>Micasense 5 Band Panel Images (Micasense calibration panel images.) (Upload zipfile for ImageBreed to calibrate Micasense raw-captures during stitching.)</a></p>
+                        <p>If you have raw aerial images (.tiff) that have not been stitched into an orthophotomosaic image of the whole field, your raw images should be uploaded using a zipfile (.zip). You can have several drone runs for a single field trial. The maximum zipfile size is 2GB; however, you can upload many separate zipfiles.</p>
+                        <p>If you already have an orthophotomosaic image of your entire field, you can upload that image under a field trial and a drone run. The maximum size for each image is 200MB. The preferred upload format is PNG.</p>
+                        <p><b>Example Data:</b> <a href="/static_content/imagebreed/AlfalfaExample35MeterMicasenseAerialDroneFlightRawCaptures.zip" download>Micasense 5 Band Raw Images (Unstitched image-captures) (Upload zipfile for ImageBreed.)</a></p>
+                        <p><b>Example Data:</b> <a href="/static_content/imagebreed/ExampleAerialDroneFlightMicasensePanel.zip" download>Micasense 5 Band Panel Images (Micasense calibration panel images.) (Upload zipfile for ImageBreed to calibrate Micasense raw-captures.)</a></p>
                         <p><b>Example Data:</b> <a href="/static_content/imagebreed/AlfalfaExample35MeterMicasenseAerialDroneFlightOrthomosaics.zip" download>Micasense 5 Band Previously Stitched Orthophotomosaic Images (PNG Files in provided zipfile. Can upload each band separately into ImageBreed.)</a></p>
                         <br/><br/>
                         <center>
@@ -48,7 +48,7 @@
                         </center>
                     </&>
                     <&| /util/workflow.mas:step, title=> "Drone Run" &>
-                        <& /page/page_title.mas, title=>"Select or create new drone run" &>
+                        <& /page/page_title.mas, title=>"Create a new drone run" &>
 
                         <table class="table table-bordered table-hover" id="drone_image_upload_drone_runs_table">
                             <thead>
@@ -89,12 +89,8 @@
                         <input id="drone_run_raw_image_boundaries_row_alley_width" name="drone_run_raw_image_boundaries_row_alley_width" type="hidden" value=""/>
                         <input id="drone_run_raw_image_boundaries_column_alley_width" name="drone_run_raw_image_boundaries_column_alley_width" type="hidden" value=""/>
 
-                        <center>
-                        <button class="btn btn-primary" id="drone_image_upload_create_drone_run">Create new drone run if not present in table</button>
-                        </center>
-
                         <br/>
-                        <div id="drone_image_upload_create_drone_inputs" style="display:none">
+                        <div id="drone_image_upload_create_drone_inputs">
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">Imaging Event Name (Must be unique): </label>
                                 <div class="col-sm-9" >
@@ -134,7 +130,7 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Imaging Event Date (Must be after the planting date and must be less than 365 days after planting date):</label>
+                                <label class="col-sm-3 control-label">Imaging Event Date and Hour (Must be after the planting date):</label>
                                 <div class="col-sm-9" >
                                     <input class="form-control" id="drone_run_date" name="drone_run_date" title="drone_run_date" type="text" />
                                 </div>
@@ -151,9 +147,9 @@
 
                         <div class="well">
                             <ul>
-                                <li>Raw images (unstitched) coming from your drone can be uploaded in a zip file. We can then stitch them together into an orthophotomosaic of the entire drone run.</li>
-                                <li>Or you can choose to upload a single image and skip any stitching.</li>
-                                <li>The single image can be for interpolated soil data, such as altitude or electrical conductance EC measurement s(CH1m, IH1m) from an EM38. </li>
+                                <li>Raw images (unstitched) coming from your drone can be uploaded in a zip file. Maximum zipfile size is 2GB, but you can upload many zipfiles in the process.</li>
+                                <li>Or you can choose to upload orthomosaic images (PNG).</li>
+                                <li>Or you can upload any image and the single image can be for interpolated soil data, such as altitude or electrical conductance EC measurement s(CH1m, IH1m) from an EM38. </li>
                             </ul>
                         </div>
                         <div class="well">
@@ -161,7 +157,7 @@
                                 <li>It is possible to upload regular RGB or Black and White photos.</li>
                                 <li>For multi-spectral cameras, it is possible to upload individual spectra orthomosaicphotos.</li>
                                 <li>It is possible to upload raster digital surface model (DSM) images to estimate plant heights/volumes.</li>
-                                <li>When uploading many separate bands of unstitched images, you will upload a single zipfile (.zip) which contains all images. In the zipfile each image is named following the template IMG_0001_1.tif, IMG_0001_2.tif, ..., IMG_0001_5.tif, ..., IMG_9999_5.tif. The final number represents the 5 bands coming from the camera, while the middle number is an index for the image capture. The middle number can be as many digits long as needed. The images should be in order in the zipfile. You will also need to upload a zipfile (.zip) containing the Micasense radiometrix calibration panel images, so that ImageBreed can produce the best orthomosaic possible.</li>
+                                <li>When uploading many separate bands of unstitched images, you will upload a single zipfile (.zip) which contains all images. In the zipfile each image is named following the template IMG_0001_1.tif, IMG_0001_2.tif, ..., IMG_0001_5.tif, ..., IMG_9999_5.tif. The final number represents the 5 bands coming from the camera, while the middle number is an index for the image capture. The middle number can be as many digits long as needed. The images should be in order in the zipfile. You will also need to upload a zipfile (.zip) containing the Micasense radiometrix calibration panel images, so that ImageBreed can produce the best result possible.</li>
                             </ul>
                         </div>
 
@@ -170,8 +166,8 @@
                             <div class="col-sm-9" >
                                 <select class="form-control" id="drone_image_upload_drone_run_band_stitching" name="drone_image_upload_drone_run_band_stitching">
                                     <option value="">Select One</option>
-                                    <option value="yes">Yes, I am uploading a zipfile of raw images to stitch</option>
-                                    <option value="yes_raw">Yes, I am uploading a zipfile of raw images to use as raw images</option>
+                                    <!-- option value="yes">Yes, I am uploading a zipfile of raw images to stitch</option -->
+                                    <option value="yes_raw">Yes, I am uploading a zipfile of raw images</option>
                                     <!-- option value="yes_automated">Yes, I am uploading a zipfile of raw images to automatically get plot images from</option -->
                                     <option value="no">No, I am uploading a stitched orthomosaic</option>
                                 </select>
@@ -509,7 +505,7 @@ jQuery(document).ready(function() {
         var field_trial_id = jQuery(this).val();
         jQuery('#drone_image_upload_drone_runs_table').DataTable({
             destroy : true,
-            ajax : '/api/drone_imagery/drone_runs?select_checkbox_name=upload_drone_imagery_drone_run_select&field_trial_ids='+field_trial_id
+            ajax : '/api/drone_imagery/drone_runs?select_checkbox_name=upload_drone_imagery_drone_run_select&field_trial_ids='+field_trial_id+'&disable=1'
         });
     });
 
@@ -551,16 +547,13 @@ jQuery(document).ready(function() {
             "singleDatePicker": true,
             "showDropdowns": true,
             "autoUpdateInput": false,
+            "timePicker": true,
+            "timePicker24Hour": true,
         },
         function(start){
             drone_run_date_element.val(start.format('YYYY/MM/DD HH:mm:ss'));
         }
     );
-
-    jQuery('#drone_image_upload_create_drone_run').click(function(){
-        jQuery('#drone_image_upload_create_drone_inputs').show();
-        return false;
-    });
 
     jQuery('#drone_image_upload_drone_run_band_stitching').change(function(){
         if (jQuery('#drone_image_upload_drone_run_band_stitching').val() == 'yes' || jQuery('#drone_image_upload_drone_run_band_stitching').val() == 'yes_raw' || jQuery('#drone_image_upload_drone_run_band_stitching').val() == 'yes_automated') {
@@ -576,6 +569,9 @@ jQuery(document).ready(function() {
         var drone_run_band_unstitched = jQuery('#drone_image_upload_drone_run_band_stitching').val();
         var drone_run_camera_info = jQuery('#drone_image_upload_camera_info').val();
         var drone_run_id = jQuery('#drone_run_id').val();
+        var drone_run_name = jQuery('#drone_run_name').val();
+        var drone_run_date = jQuery('#drone_run_date').val();
+
         if (drone_run_id != '' && (drone_run_band_unstitched == 'yes' || drone_run_band_unstitched == 'yes_raw' || drone_run_band_unstitched == 'yes_automated')) {
             alert('Please create a new drone run band if you are uploading a zipfile of raw images.');
             return false;
@@ -595,8 +591,24 @@ jQuery(document).ready(function() {
                 alert('Please select the number of drone run bands you will upload');
             } else {
                 if (drone_run_band_number == 'one_bw' || drone_run_band_number == 'one_rgb') {
-                    html = html + '<div class="well well-sm"><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Name (Must be unique): </label><div class="col-sm-9" ><input class="form-control" id="drone_run_band_name_1" name="drone_run_band_name_1" type="text" placeholder="e.g. Field Trial Name + Date + Band Type"/></div></div><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Description: </label><div class="col-sm-9" ><input class="form-control" id="drone_run_band_description_1" name="drone_run_band_description_1" type="text" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Type:</label><div class="col-sm-9" ><select class="form-control" id="drone_run_band_type_1" name="drone_run_band_type_1"><option value="Black and White Image">Black and White Image</option><option value="RGB Color Image">RGB Color Image</option><option value="Blue (450-520nm)">Blue (450-520nm)</option><option value="Green (515-600nm)">Green (515-600nm)</option><option value="Red (600-690nm)">Red (600-690nm)</option><option value="Red Edge (690-750nm)">Red Edge (690-750nm)</option><option value="NIR (780-3000nm)">NIR (780-3000nm)</option><option value="MIR (3000-50000nm)">MIR (3000-50000nm)</option><option value="FIR (50000-1000000nm)">FIR (50000-1000000nm)</option><option value="Thermal IR (9000-14000nm)">Thermal IR (9000-14000nm)</option><option value="Raster DSM">Raster DSM</option></select></div></div>';
+                    html = html + '<div class="well well-sm"><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Name (Must be unique): </label><div class="col-sm-9" ><input class="form-control" id="drone_run_band_name_1" name="drone_run_band_name_1" type="text" placeholder="e.g. Field Trial Name + Date + Band Type" value="'+drone_run_name+'_'+drone_run_date+'_RGB" disabled/></div></div><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Description: </label><div class="col-sm-9" ><input class="form-control" id="drone_run_band_description_1" name="drone_run_band_description_1" type="text" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Type:</label><div class="col-sm-9" ><select class="form-control" id="drone_run_band_type_1" name="drone_run_band_type_1"><option value="Black and White Image">Black and White Image</option><option value="RGB Color Image">RGB Color Image</option><option value="Blue (450-520nm)">Blue (450-520nm)</option><option value="Green (515-600nm)">Green (515-600nm)</option><option value="Red (600-690nm)">Red (600-690nm)</option><option value="Red Edge (690-750nm)">Red Edge (690-750nm)</option><option value="NIR (780-3000nm)">NIR (780-3000nm)</option><option value="MIR (3000-50000nm)">MIR (3000-50000nm)</option><option value="FIR (50000-1000000nm)">FIR (50000-1000000nm)</option><option value="Thermal IR (9000-14000nm)">Thermal IR (9000-14000nm)</option><option value="Raster DSM">Raster DSM</option></select></div></div>';
                     html = html + '<div class="form-group"><label class="col-sm-3 control-label">Image: (.jpeg, .png)</label><div class="col-sm-9" ><input type="file" id="drone_run_band_stitched_ortho_image_1" name="drone_run_band_stitched_ortho_image_1" encoding="multipart/form-data" /></div></div>';
+                    html = html + '</div>';
+                } else if (drone_run_band_number == 5 && drone_run_camera_info == 'micasense_5'){
+                    html = html + '<div class="well well-sm"><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Name (Must be unique): </label><div class="col-sm-9" ><input class="form-control" id="drone_run_band_name_0" name="drone_run_band_name_0" type="text" placeholder="e.g. Field Trial Name + Date + Band Type" value="'+drone_run_name+'_'+drone_run_date+'_Blue" disabled/></div></div><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Description: </label><div class="col-sm-9" ><input class="form-control" id="drone_run_band_description_0" name="drone_run_band_description_0" type="text" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Type:</label><div class="col-sm-9" ><select class="form-control" id="drone_run_band_type_0" name="drone_run_band_type_0" disabled><option value="Black and White Image">Black and White Image</option><option value="RGB Color Image">RGB Color Image</option><option value="Blue (450-520nm)" selected>Blue (450-520nm)</option><option value="Green (515-600nm)">Green (515-600nm)</option><option value="Red (600-690nm)">Red (600-690nm)</option><option value="Red Edge (690-750nm)">Red Edge (690-750nm)</option><option value="NIR (780-3000nm)">NIR (780-3000nm)</option><option value="MIR (3000-50000nm)">MIR (3000-50000nm)</option><option value="FIR (50000-1000000nm)">FIR (50000-1000000nm)</option><option value="Thermal IR (9000-14000nm)">Thermal IR (9000-14000nm)</option><option value="Raster DSM">Raster DSM</option></select></div></div>';
+                    html = html + '<div class="form-group"><label class="col-sm-3 control-label">Image: (.jpeg, .png)</label><div class="col-sm-9" ><input type="file" id="drone_run_band_stitched_ortho_image_0" name="drone_run_band_stitched_ortho_image_0" encoding="multipart/form-data" /></div></div>';
+                    html = html + '</div>';
+                    html = html + '<div class="well well-sm"><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Name (Must be unique): </label><div class="col-sm-9" ><input class="form-control" id="drone_run_band_name_1" name="drone_run_band_name_1" type="text" placeholder="e.g. Field Trial Name + Date + Band Type" value="'+drone_run_name+'_'+drone_run_date+'_Green" disabled/></div></div><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Description: </label><div class="col-sm-9" ><input class="form-control" id="drone_run_band_description_1" name="drone_run_band_description_1" type="text" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Type:</label><div class="col-sm-9" ><select class="form-control" id="drone_run_band_type_1" name="drone_run_band_type_1" disabled><option value="Black and White Image">Black and White Image</option><option value="RGB Color Image">RGB Color Image</option><option value="Blue (450-520nm)">Blue (450-520nm)</option><option value="Green (515-600nm)" selected>Green (515-600nm)</option><option value="Red (600-690nm)">Red (600-690nm)</option><option value="Red Edge (690-750nm)">Red Edge (690-750nm)</option><option value="NIR (780-3000nm)">NIR (780-3000nm)</option><option value="MIR (3000-50000nm)">MIR (3000-50000nm)</option><option value="FIR (50000-1000000nm)">FIR (50000-1000000nm)</option><option value="Thermal IR (9000-14000nm)">Thermal IR (9000-14000nm)</option><option value="Raster DSM">Raster DSM</option></select></div></div>';
+                    html = html + '<div class="form-group"><label class="col-sm-3 control-label">Image: (.jpeg, .png)</label><div class="col-sm-9" ><input type="file" id="drone_run_band_stitched_ortho_image_1" name="drone_run_band_stitched_ortho_image_1" encoding="multipart/form-data" /></div></div>';
+                    html = html + '</div>';
+                    html = html + '<div class="well well-sm"><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Name (Must be unique): </label><div class="col-sm-9" ><input class="form-control" id="drone_run_band_name_2" name="drone_run_band_name_2" type="text" placeholder="e.g. Field Trial Name + Date + Band Type" value="'+drone_run_name+'_'+drone_run_date+'_Red" disabled/></div></div><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Description: </label><div class="col-sm-9" ><input class="form-control" id="drone_run_band_description_2" name="drone_run_band_description_2" type="text" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Type:</label><div class="col-sm-9" ><select class="form-control" id="drone_run_band_type_2" name="drone_run_band_type_2" disabled><option value="Black and White Image">Black and White Image</option><option value="RGB Color Image">RGB Color Image</option><option value="Blue (450-520nm)">Blue (450-520nm)</option><option value="Green (515-600nm)">Green (515-600nm)</option><option value="Red (600-690nm)" selected>Red (600-690nm)</option><option value="Red Edge (690-750nm)">Red Edge (690-750nm)</option><option value="NIR (780-3000nm)">NIR (780-3000nm)</option><option value="MIR (3000-50000nm)">MIR (3000-50000nm)</option><option value="FIR (50000-1000000nm)">FIR (50000-1000000nm)</option><option value="Thermal IR (9000-14000nm)">Thermal IR (9000-14000nm)</option><option value="Raster DSM">Raster DSM</option></select></div></div>';
+                    html = html + '<div class="form-group"><label class="col-sm-3 control-label">Image: (.jpeg, .png)</label><div class="col-sm-9" ><input type="file" id="drone_run_band_stitched_ortho_image_2" name="drone_run_band_stitched_ortho_image_2" encoding="multipart/form-data" /></div></div>';
+                    html = html + '</div>';
+                    html = html + '<div class="well well-sm"><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Name (Must be unique): </label><div class="col-sm-9" ><input class="form-control" id="drone_run_band_name_3" name="drone_run_band_name_3" type="text" placeholder="e.g. Field Trial Name + Date + Band Type" value="'+drone_run_name+'_'+drone_run_date+'_NIR" disabled/></div></div><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Description: </label><div class="col-sm-9" ><input class="form-control" id="drone_run_band_description_3" name="drone_run_band_description_3" type="text" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Type:</label><div class="col-sm-9" ><select class="form-control" id="drone_run_band_type_3" name="drone_run_band_type_3" disabled><option value="Black and White Image">Black and White Image</option><option value="RGB Color Image">RGB Color Image</option><option value="Blue (450-520nm)">Blue (450-520nm)</option><option value="Green (515-600nm)">Green (515-600nm)</option><option value="Red (600-690nm)">Red (600-690nm)</option><option value="Red Edge (690-750nm)">Red Edge (690-750nm)</option><option value="NIR (780-3000nm)" selected>NIR (780-3000nm)</option><option value="MIR (3000-50000nm)">MIR (3000-50000nm)</option><option value="FIR (50000-1000000nm)">FIR (50000-1000000nm)</option><option value="Thermal IR (9000-14000nm)">Thermal IR (9000-14000nm)</option><option value="Raster DSM">Raster DSM</option></select></div></div>';
+                    html = html + '<div class="form-group"><label class="col-sm-3 control-label">Image: (.jpeg, .png)</label><div class="col-sm-9" ><input type="file" id="drone_run_band_stitched_ortho_image_3" name="drone_run_band_stitched_ortho_image_3" encoding="multipart/form-data" /></div></div>';
+                    html = html + '</div>';
+                    html = html + '<div class="well well-sm"><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Name (Must be unique): </label><div class="col-sm-9" ><input class="form-control" id="drone_run_band_name_4" name="drone_run_band_name_4" type="text" placeholder="e.g. Field Trial Name + Date + Band Type" value="'+drone_run_name+'_'+drone_run_date+'_RedEdge" disabled/></div></div><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Description: </label><div class="col-sm-9" ><input class="form-control" id="drone_run_band_description_4" name="drone_run_band_description_4" type="text" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Drone Run Band Type:</label><div class="col-sm-9" ><select class="form-control" id="drone_run_band_type_4" name="drone_run_band_type_4" disabled><option value="Black and White Image">Black and White Image</option><option value="RGB Color Image">RGB Color Image</option><option value="Blue (450-520nm)">Blue (450-520nm)</option><option value="Green (515-600nm)">Green (515-600nm)</option><option value="Red (600-690nm)">Red (600-690nm)</option><option value="Red Edge (690-750nm)" selected>Red Edge (690-750nm)</option><option value="NIR (780-3000nm)">NIR (780-3000nm)</option><option value="MIR (3000-50000nm)">MIR (3000-50000nm)</option><option value="FIR (50000-1000000nm)">FIR (50000-1000000nm)</option><option value="Thermal IR (9000-14000nm)">Thermal IR (9000-14000nm)</option><option value="Raster DSM">Raster DSM</option></select></div></div>';
+                    html = html + '<div class="form-group"><label class="col-sm-3 control-label">Image: (.jpeg, .png)</label><div class="col-sm-9" ><input type="file" id="drone_run_band_stitched_ortho_image_4" name="drone_run_band_stitched_ortho_image_4" encoding="multipart/form-data" /></div></div>';
                     html = html + '</div>';
                 } else {
                     for (var i=0; i<drone_run_band_number; i++) {
@@ -785,6 +797,11 @@ jQuery(document).ready(function() {
     });
 
     function upload_drone_imagery_form() {
+        jQuery('#upload_drone_imagery_form').submit(function(e) {
+            jQuery(':disabled').each(function(e) {
+                jQuery(this).removeAttr('disabled');
+            })
+        });
         jQuery('#upload_drone_imagery_form').attr("action", "/api/drone_imagery/upload_drone_imagery");
         jQuery("#upload_drone_imagery_form").submit();
     }
@@ -836,7 +853,7 @@ jQuery(document).ready(function() {
                 alert(response.error);
                 return;
             }
-            if (drone_run_band_unstitched == 'yes' || drone_run_band_unstitched == 'yes_raw') {
+            if (drone_run_band_unstitched == 'yes' || drone_run_band_unstitched == 'yes_raw' || drone_run_band_unstitched == 'no') {
                 location.reload();
             }
             else if (drone_run_band_unstitched == 'yes_automated') {

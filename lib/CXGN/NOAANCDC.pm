@@ -111,7 +111,8 @@ sub get_noaa_data {
         # print STDERR Dumper $message_hash;
     }
     else {
-        print STDERR Dumper $resp;
+        my $message = $resp->decoded_content;
+        $message_hash = decode_json $message;
     }
     return $message_hash;
 }
@@ -124,6 +125,10 @@ sub get_temperature_averaged_gdd {
     $self->data_types(['TMIN','TMAX']);
 
     my $message_hash = $self->get_noaa_data();
+    print STDERR Dumper $message_hash;
+    if ($message_hash->{status} eq '400') {
+        return {error => $message_hash->{message}};
+    }
 
     my %weather_hash;
     foreach (@{$message_hash->{results}}) {
@@ -141,7 +146,7 @@ sub get_temperature_averaged_gdd {
         }
     }
 
-    return round($result);
+    return {gdd => round($result) };
 }
 
 sub get_averaged_precipitation {

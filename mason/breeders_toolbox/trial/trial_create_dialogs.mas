@@ -2,16 +2,8 @@
 <%args>
 $locations
 $breeding_programs
-$crd_description => "generates completely a randomized design with equal or different repetition, using the methods of random number generation in R. Creates plot entities in the database."
-$rcbd_description => "generates Randomized Complete Block Design, using the methods of random number generation in R. Creates plot entities in the database."
-$alpha_description => "creates alpha designs starting from the alpha design fixing under the 4 series formulated by Patterson and Williams. Creates plot entities in the database."
-$lattice_description => "SIMPLE and TRIPLE lattice designs. It randomizes treatments in K x K lattice. Creates plot entities in the database."
-$augmented_description => "some  treatments  (checks)  are  replicate  r  times  and  other  treatments  (new)  are replicated once. Creates plot entities in the database."
-$mad_description => "Adjustments are calculated using data from all checks. Creates plot entities in the database."
-$greenhouse_nursery_description => "A greenhouse/nursery houses plants in no particular layout design. The plants can be of named accessions or in the case of seedling nurseries from crosses, the plants can be of named crosses. Creates plot entities with plant entities in the database."
-$splitplot_description => "Split plot designs are useful for applying treatments to subplots of a plot. If you give three treatments, there will be three subplots with the treatment(s) distributed randomly among them. Creates plot entities with subplot entities with plant entities in the database."
-$prep_description => "Have some treatments that are unreplicated and rely on replicated treatments to make the trial analysable. It is recommended that at least 20% of the experimental units are occupied by replicated treatments. Creates plot entities in the database."
-$westcott_description => "Generates fieldplan for an unreplicated design with genotypes randomly allocated on a field with checks following the method described on Westcott (1981)."
+$management_factor_types => ()
+$design_types => ()
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders', 'd3.d3v4Min.js', 'moment_min', 'daterangepicker' ] &>
@@ -177,6 +169,7 @@ rect.bordered {
                                             <option value="3.5">3.5</option>
                                             <option value="4">4</option>
                                             <option value="4.5">4.5</option>
+                                            <option value="4.8">4.8</option>
                                             <option value="5">5</option>
                                             <option value="5.5">5.5</option>
                                             <option value="6">6</option>
@@ -227,6 +220,7 @@ rect.bordered {
                                             <option value="3.5">3.5</option>
                                             <option value="4">4</option>
                                             <option value="4.5">4.5</option>
+                                            <option value="4.8">4.8</option>
                                             <option value="5">5</option>
                                             <option value="5.5">5.5</option>
                                             <option value="6">6</option>
@@ -275,19 +269,27 @@ rect.bordered {
                                     <label class="col-sm-3 control-label">Design Type: </label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="select_design_method" name="select_design_method">
-                                            <option data-title="<% $crd_description %>" title="<% $crd_description %>" value="CRD">Completely Randomized</option>
-                                            <option data-title="<% $rcbd_description %>" title="<% $rcbd_description %>" value="RCBD">Complete Block</option>
-                                            <option data-title="<% $alpha_description %>" title="<% $alpha_description %>" value="Alpha">Alpha Lattice</option>
-                                            <option data-title="<% $lattice_description %>" title="<% $lattice_description %>" value="Lattice">Lattice</option>
-                                            <option data-title="<% $augmented_description %>" title="<% $augmented_description %>" value="Augmented">Augmented</option>
-                                            <option data-title="<% $mad_description %>" title="<% $mad_description %>" value="MAD">Modified Augmented Design </option>
-                                            <option data-title="<% $greenhouse_nursery_description %>" title="<% $greenhouse_nursery_description %>" value="greenhouse" >Nursery/Greenhouse </option>
-                                            <option data-title="<% $splitplot_description %>" title="<% $splitplot_description %>" value="splitplot">Split Plot</option>
-                                            <option data-title="<% $prep_description %>" title="<% $prep_description %>" value="p-rep">Partially Replicated</option>
-                                            <option data-title="<% $westcott_description %>" title="<% $westcott_description %>" value="Westcott">Westcott Design</option>
-                                            <!--<option value=MADIII>MADIII</option>-->
-                                            <!--<option value=MADIV>MADIV</option>-->
-                                            <!--<option value=MADV>MADV</option>-->
+% foreach my $type(@$design_types){
+%    my $method;
+%    if ($type eq 'Completely Randomized'){
+%        $method = 'CRD';
+%    } elsif ($type eq 'Complete Block'){
+%        $method = 'RCBD';
+%    } elsif ($type eq 'Alpha Lattice'){
+%        $method = 'Alpha';
+%    } elsif ($type eq 'Modified Augmented Design'){
+%        $method = 'MAD';
+%    } elsif ($type eq 'Nursery/Greenhouse'){
+%        $method = 'greenhouse';
+%    } elsif ($type eq 'Split Plot'){
+%        $method = 'splitplot';
+%    } elsif ($type eq 'Partially Replicated'){
+%        $method = 'p-rep';
+%    } else {
+%        $method = $type;
+%    }
+    <option value="<%$method%>"><%$type%></option>
+%}
                                         </select>
                                         <div id="create_trial_design_description_div">
                                         </div>
@@ -839,7 +841,7 @@ rect.bordered {
     </div>
 </div>
 
-<& /breeders_toolbox/trial/add_trial_treatment_dialogs.mas &>
+<& /breeders_toolbox/trial/add_trial_treatment_dialogs.mas, management_factor_types => $management_factor_types &>
 
 <div class="modal fade" id="partial_rep_help_dialog" name="partial_rep_help_dialog" tabindex="-1" role="dialog" aria-labelledby="partialRepHelpDialog">
     <div class="modal-dialog modal-lg" role="document">

@@ -87,6 +87,7 @@ sub detail {
 	if ($trait->name){
 		$total_count = 1;
 	}
+	my $trait_id = $trait->cvterm_id;
 	my %result = (	
 		        alternativeAbbreviations => undef,
                 attribute => $trait->name,
@@ -103,7 +104,7 @@ sub detail {
                 synonyms => undef,
                 traitClass => undef,
                 traitDescription => $trait->definition,
-                traitDbId => qq|$trait->cvterm_id|,
+                traitDbId => qq|$trait_id|,
 				traitName => $trait->name,
 	);
 	my @data_files;

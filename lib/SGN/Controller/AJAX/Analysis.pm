@@ -50,6 +50,7 @@ sub store_analysis_json_POST {
     my $analysis_result_values = $c->req->param("analysis_result_values") ? decode_json $c->req->param("analysis_result_values") : {};
     my $analysis_result_values_type = $c->req->param("analysis_result_values_type");
     my $analysis_result_summary = $c->req->param("analysis_result_summary") ? decode_json $c->req->param("analysis_result_summary") : {};
+    my $analysis_model_id = $c->req->param("analysis_model_id") ? $c->req->param("analysis_model_id") : undef;
     my $analysis_model_name = $c->req->param("analysis_model_name");
     my $analysis_model_description = $c->req->param("analysis_model_description");
     my $analysis_model_is_public = $c->req->param("analysis_model_is_public");
@@ -74,7 +75,7 @@ sub store_analysis_json_POST {
     $self->store_data($c,
         $analysis_to_save_boolean,
         $analysis_name, $analysis_description, $analysis_year, $analysis_breeding_program_id, $analysis_protocol, $analysis_dataset_id, $analysis_accession_names, $analysis_trait_names, $analysis_statistical_ontology_term, $analysis_precomputed_design_optional, $analysis_result_values, $analysis_result_values_type, $analysis_result_summary,
-        $analysis_model_name, $analysis_model_description, $analysis_model_is_public, $analysis_model_language, $analysis_model_type, $analysis_model_properties, $analysis_model_application_name, $analysis_model_application_version, $analysis_model_file, $analysis_model_file_type, $analysis_model_training_data_file, $analysis_model_training_data_file_type, $analysis_model_auxiliary_files,
+        $analysis_model_id, $analysis_model_name, $analysis_model_description, $analysis_model_is_public, $analysis_model_language, $analysis_model_type, $analysis_model_properties, $analysis_model_application_name, $analysis_model_application_version, $analysis_model_file, $analysis_model_file_type, $analysis_model_training_data_file, $analysis_model_training_data_file_type, $analysis_model_auxiliary_files,
         $user_id, $user_name, $user_role
     );
 }
@@ -199,7 +200,7 @@ sub store_analysis_json_POST {
 
 sub store_data {
     my $self = shift;
-    my ($c, $analysis_to_save_boolean, $analysis_name, $analysis_description, $analysis_year, $analysis_breeding_program_id, $analysis_protocol, $analysis_dataset_id, $analysis_accession_names, $analysis_trait_names, $analysis_statistical_ontology_term, $analysis_precomputed_design_optional, $analysis_result_values, $analysis_result_values_type, $analysis_result_summary, $analysis_model_name, $analysis_model_description, $analysis_model_is_public, $analysis_model_language, $analysis_model_type, $analysis_model_properties, $analysis_model_application_name, $analysis_model_application_version, $analysis_model_file, $analysis_model_file_type, $analysis_model_training_data_file, $analysis_model_training_data_file_type, $analysis_model_auxiliary_files, $user_id, $user_name, $user_role) = @_;
+    my ($c, $analysis_to_save_boolean, $analysis_name, $analysis_description, $analysis_year, $analysis_breeding_program_id, $analysis_protocol, $analysis_dataset_id, $analysis_accession_names, $analysis_trait_names, $analysis_statistical_ontology_term, $analysis_precomputed_design_optional, $analysis_result_values, $analysis_result_values_type, $analysis_result_summary, $analysis_model_id, $analysis_model_name, $analysis_model_description, $analysis_model_is_public, $analysis_model_language, $analysis_model_type, $analysis_model_properties, $analysis_model_application_name, $analysis_model_application_version, $analysis_model_file, $analysis_model_file_type, $analysis_model_training_data_file, $analysis_model_training_data_file_type, $analysis_model_auxiliary_files, $user_id, $user_name, $user_role) = @_;
     
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');;
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
@@ -239,6 +240,7 @@ sub store_data {
         analysis_result_values=>$analysis_result_values,
         analysis_result_values_type=>$analysis_result_values_type,
         analysis_result_summary=>$analysis_result_summary,
+        analysis_model_id=>$analysis_model_id,
         analysis_model_name=>$analysis_model_name,
         analysis_model_description=>$analysis_model_description,
         analysis_model_is_public=>$analysis_model_is_public,
@@ -272,13 +274,8 @@ sub list_analyses_by_user_table :Path('/ajax/analyses/by_user') Args(0) {
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-    my $user_id;
-    if ($c->user()) {
-        $user_id = $c->user->get_object()->get_sp_person_id();
-    }
-    if (!$user_id) {
-        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
-    }
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
     my @analyses = CXGN::Analysis->retrieve_analyses_by_user($schema, $people_schema, $metadata_schema, $phenome_schema, $user_id);
 
     my @table;
@@ -303,6 +300,63 @@ sub list_analyses_by_user_table :Path('/ajax/analyses/by_user') Args(0) {
     $c->stash->{rest} = { data => \@table };
 }
 
+sub list_analyses_models_by_user_table :Path('/ajax/analyses/models/by_user') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $analysis_models_by_user = CXGN::AnalysisModel::GetModel::get_models_by_user($schema, $user_id);
+    #print STDERR Dumper $analysis_models_by_user;
+
+    my @table;
+    foreach my $saved_model (values %$analysis_models_by_user) {
+        my $model_type = $saved_model->{model_type_name} ? $saved_model->{model_type_name} : '';
+        my $protocol = $saved_model->{model_properties}->{protocol} ? $saved_model->{model_properties}->{protocol} : '';
+        my $application_name = $saved_model->{model_properties}->{application_name} ? $saved_model->{model_properties}->{application_name} : '';
+        my $application_version = $saved_model->{model_properties}->{application_version} ? $saved_model->{model_properties}->{application_version} : '';
+        my $model_language = $saved_model->{model_properties}->{model_language} ? $saved_model->{model_properties}->{model_language} : '';
+        push @table, [
+            '<a href="/analyses_model/'.$saved_model->{model_id}.'">'.$saved_model->{model_name}."</a>",
+            $saved_model->{model_description},
+            $model_type,
+            $protocol,
+            $application_name.":".$application_version,
+            $model_language,
+        ];
+    }
+    #print STDERR Dumper(\@table);
+    $c->stash->{rest} = { data => \@table };
+}
+
+sub list_analyses_by_model_table :Path('/ajax/analyses/by_model') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $model_id = $c->req->param('model_id');
+    my $analysis_by_model = CXGN::AnalysisModel::GetModel::get_analyses_by_model($schema, $model_id);
+    print STDERR Dumper $analysis_by_model;
+
+    my @table;
+    foreach my $a (@$analysis_by_model) {
+        push @table, [
+            '<a href="/analyses/'.$a->{analysis_id}.'">'.$a->{analysis_name}."</a>",
+            $a->{description},
+        ];
+    }
+    #print STDERR Dumper(\@table);
+    $c->stash->{rest} = { data => \@table };
+}
 
 =head1 retrieve_analysis_data()
 
@@ -329,6 +383,7 @@ sub retrieve_analysis_data :Chained("ajax_analysis") PathPart('retrieve') :Args(
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $a = CXGN::Analysis->new( { bcs_schema => $bcs_schema, people_schema => $people_schema, metadata_schema => $metadata_schema, phenome_schema => $phenome_schema, trial_id => $c->stash->{analysis_id} } );
 

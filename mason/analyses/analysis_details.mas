@@ -55,19 +55,6 @@ $analysis_metadata
                 </td>
             </tr>
 
-            <tr>
-                <td><b>Stock Type Being Evaluated</b></td>
-                <td>
-                    <div id="stock_type_in_trial">
-% if ($trial_stock_type) {
-%     print "$trial_stock_type";
-% } else {
-%     print "accession";
-% }
-                    </div>
-                </td>
-            </tr>
-
             <tr><td><b>Description</b></td>
                 <td>
                     <div id="trial_description">

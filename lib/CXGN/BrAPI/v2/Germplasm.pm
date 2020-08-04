@@ -10,6 +10,7 @@ use CXGN::Chado::Organism;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 use CXGN::Cross;
+use Try::Tiny;
 
 extends 'CXGN::BrAPI::v2::Common';
 
@@ -120,9 +121,9 @@ sub search {
             }
         }
         my @donors = {
-            donorAccessionNumber=>$_->{'accession number'},
-            donorInstituteCode=>$_->{donors},
-            germplasmPUI=>undef
+            donorAccessionNumber=>$_->{donors}->[0]->{donorAccessionNumber},
+            donorInstituteCode=>$_->{donors}->[0]->{donorInstituteCode},
+            germplasmPUI=>$_->{donors}->[0]->{germplasmPUI}
         };
         my @synonyms;
         if($_->{synonyms}){
@@ -151,13 +152,13 @@ sub search {
             collection=>undef,
             commonCropName=>$_->{common_name},
             countryOfOriginCode=>$_->{'country of origin'},
-            defaultDisplayName=>$_->{uniquename},
-            documentationURL=>undef,
+            defaultDisplayName=>$_->{stock_name},
+            documentationURL=>$_->{'PUI'},
             donors=>\@donors,
-            externalReferences=>undef,
+            externalReferences=>[],
             genus=>$_->{genus},
             germplasmName=>$_->{uniquename},
-            germplasmOrigin=>undef,
+            germplasmOrigin=>[],
             germplasmDbId=>qq|$_->{stock_id}|,
             germplasmPUI=>$_->{'PUI'},     
             germplasmPreprocessing=>undef,
@@ -184,7 +185,10 @@ sub search {
 sub germplasm_detail {
     my $self = shift;
     my $stock_id = shift;
+
     my $status = $self->status;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
     my @data_files;
 
     my $verify_id = $self->bcs_schema->resultset('Stock::Stock')->find({stock_id=>$stock_id});
@@ -192,86 +196,11 @@ sub germplasm_detail {
         return CXGN::BrAPI::JSONResponse->return_error($status, 'GermplasmDbId does not exist in the database');
     }
 
-    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
-    my $stock_search = CXGN::Stock::Search->new({
-        bcs_schema=>$self->bcs_schema,
-        people_schema=>$self->people_schema,
-        phenome_schema=>$self->phenome_schema,
-        match_type=>'exactly',
-        stock_id_list=>[$stock_id],
-        stock_type_id=>$accession_cvterm_id,
-        display_pedigree=>1,
-        stockprop_columns_view=>{'accession number'=>1, 'PUI'=>1, 'seed source'=>1, 'institute code'=>1, 'institute name'=>1, 'biological status of accession code'=>1, 'country of origin'=>1, 'type of germplasm storage code'=>1, 'acquisition date'=>1, 'ncbi_taxonomy_id'=>1},
-    });
-    my ($result, $total_count) = $stock_search->search();
+    my @result = _simple_search($self,[$stock_id]);
+    my $total_count = scalar(@result);
 
-    if ($total_count != 1){
-        return CXGN::BrAPI::JSONResponse->return_error($status, 'GermplasmDbId did not return 1 result');
-    }
-    # my @type_of_germplasm_storage_codes = $result->[0]->{'type of germplasm storage code'} ? split ',', $result->[0]->{'type of germplasm storage code'} : ();
-    my @type_of_germplasm_storage_codes;
-    my @items = split ',', $result->[0]->{'type of germplasm storage code'};
-    foreach(@items){
-        push @type_of_germplasm_storage_codes ,{
-            code=>$_,
-            description=>undef
-        };
-    }
-    my @donors = {
-            donorAccessionNumber=>$result->[0]->{'accession number'},
-            donorInstituteCode=>$result->[0]->{donors},
-            germplasmPUI=>undef
-        };
-    my @synonyms;
-    foreach(@{ $result->[0]->{synonyms} }){
-        push @synonyms, {
-            synonym=>$_,
-            type=>undef
-        };
-    }
-    my @ncbi_taxon_ids = split ',', $result->[0]->{'ncbi_taxonomy_id'};
-    my @taxons;
-    foreach (@ncbi_taxon_ids){
-        push @taxons, {
-            sourceName => 'NCBI',
-            taxonId => $_
-        };
-    }
-    my %result = (
-        additionalInfo=>{},
-        accessionNumber=>$result->[0]->{'accession number'},
-        acquisitionDate=>$result->[0]->{'acquisition date'},
-        biologicalStatusOfAccessionCode=>$result->[0]->{'biological status of accession code'} + 0,
-        biologicalStatusOfAccessionDescription=>undef,
-        breedingMethodDbId=>undef,
-        collection=>undef,
-        commonCropName=>$result->[0]->{common_name},
-        countryOfOriginCode=>$result->[0]->{'country of origin'},
-        defaultDisplayName=>$result->[0]->{uniquename},
-        documentationURL=>undef,
-        donors=>\@donors,
-        externalReferences=>undef,
-        genus=>$result->[0]->{genus},
-        germplasmDbId=>qq|$result->[0]->{stock_id}|,     
-        germplasmName=>$result->[0]->{uniquename},
-        germplasmOrigin=>undef,
-        germplasmPUI=>$result->[0]->{'PUI'},
-        germplasmPreprocessing=>undef,
-        instituteCode=>$result->[0]->{'institute code'},
-        instituteName=>$result->[0]->{'institute name'},
-        pedigree=>$result->[0]->{pedigree},
-        seedSource=>$result->[0]->{'seed source'},
-        seedSourceDescription=>$result->[0]->{'seed source'},
-        species=>$result->[0]->{species},
-        speciesAuthority=>$result->[0]->{speciesAuthority},
-        storageTypes=>\@type_of_germplasm_storage_codes,
-        subtaxa=>$result->[0]->{subtaxa},
-        subtaxaAuthority=>$result->[0]->{subtaxaAuthority},
-        synonyms=>\@synonyms,
-        taxonIds=>\@taxons,  
-    );
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,1,0);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm detail result constructed');
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success(@result, $pagination, \@data_files, $status, 'Germplasm detail result constructed');
 }
 
 sub germplasm_pedigree {
@@ -291,7 +220,7 @@ sub germplasm_pedigree {
     my @data_files;
     my $total_count = 0;
     my $s = CXGN::Stock->new( schema => $self->bcs_schema(), stock_id => $stock_id);
-    if ($s) { print Dumper $s;
+    if ($s) {
         $total_count = 1;
         my $uniquename = $s->uniquename;
         my $parents = $s->get_parents();
@@ -362,7 +291,7 @@ sub germplasm_progeny {
     my $mother_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'female_parent', 'stock_relationship')->cvterm_id();
     my $father_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'male_parent', 'stock_relationship')->cvterm_id();
     my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
-    #print STDERR Dumper $stock_id;
+
     my $stock = $self->bcs_schema()->resultset("Stock::Stock")->find({
         'type_id'=> $accession_cvterm,
         'stock_id'=> $stock_id,
@@ -415,6 +344,562 @@ sub germplasm_progeny {
     my @data_files;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
     return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'Germplasm progeny result constructed');
+}
+
+sub germplasm_mcpd {
+    my $self = shift;
+    my $stock_id = shift;
+
+    my $status = $self->status;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+
+    my $schema = $self->bcs_schema();
+        my $accession_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
+
+    my $stock_search = CXGN::Stock::Search->new({
+        bcs_schema=>$self->bcs_schema,
+        people_schema=>$self->people_schema,
+        phenome_schema=>$self->phenome_schema,
+        match_type=>'exactly',
+        stock_id_list=>[$stock_id],
+        stock_type_id=>$accession_type_cvterm_id,
+        stockprop_columns_view=>{'accession number'=>1, 'PUI'=>1, 'seed source'=>1, 'institute code'=>1, 'institute name'=>1, 'biological status of accession code'=>1, 'country of origin'=>1, 'type of germplasm storage code'=>1, 'acquisition date'=>1, 'ncbi_taxonomy_id'=>1},
+        display_pedigree=>1
+    });
+    
+    my ($result, $total_count) = $stock_search->search();
+
+    my %result;
+
+    foreach (@$result){
+        my $donors = $_->{donors};
+        my @donors;
+        foreach(@$donors){
+            push @donors, {
+                donorAccessionNumber=>$_->{donorAccessionNumber},
+                donorInstitute=>{
+                    instituteCode=>$_->{donorInstituteCode},
+                    instituteName=>undef,
+                },
+                donorAccessionPui=>$_->{germplasmPUI}
+            };
+        }
+
+        my @type_of_germplasm_storage_codes;
+        if($_->{'type of germplasm storage code'}){
+            my @items = split ',', $_->{'type of germplasm storage code'};
+            foreach(@items){
+                push @type_of_germplasm_storage_codes, $_;
+            }
+        }
+        my @names;
+        if($_->{uniquename}){
+            push @names, $_->{uniquename};
+        }
+        if($_->{synonyms}){
+            foreach(@{ $_->{synonyms} }){
+                push @names, $_;
+            }
+        }
+        if($_->{stock_name}){
+            push @names, $_->{stock_name};
+        }
+
+        my @ids;
+        if($_->{stock_id}){
+            push @ids, $_->{stock_id};
+        }
+        if($_->{'PUI'}){
+            push @ids, $_->{'PUI'};
+        }
+        if($_->{ncbi_taxonomy_id}){
+            push @ids, $_->{ncbi_taxonomy_id};
+        }
+
+        %result = (
+            accessionNames=>\@names,
+            alternateIDs=>\@ids,
+            breedingInstitutes=>{
+                instituteCode=>$_->{'institute code'},
+                instituteName=>$_->{'institute name'},
+            },
+            collectingInfo=>{},
+            mlsStatus=> undef,
+            remarks=>undef,
+            safetyDuplicateInstitutes=>undef,
+            germplasmDbId=>qq|$_->{stock_id}|,
+            accessionNumber=>$_->{'accession number'},
+            germplasmPUI=>$_->{'PUI'},
+            ancestralData=>$_->{pedigree},
+            commonCropName=>$_->{common_name},
+            instituteCode=>$_->{'institute code'}, 
+            biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} || 0,
+            countryOfOrigin=>$_->{'country of origin'},
+            storageTypeCodes=>\@type_of_germplasm_storage_codes, 
+            genus=>$_->{genus},
+            species=>$_->{species},
+            speciesAuthority=>$_->{speciesAuthority},
+            subtaxon=>$_->{subtaxa},
+            subtaxonAuthority=>$_->{subtaxaAuthority},
+            donorInfo=>\@donors, 
+            acquisitionDate=>$_->{'acquisition date'}
+        );
+    }
+    my $total_count = (%result) ? 1 : 0;
+    my @data_files;
+
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm detail result constructed');
+
+}
+
+sub store {
+    my $self = shift;
+    my $data = shift;
+    my $user_id = shift;
+    my $c = shift;
+
+    if (!$user_id){
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must be logged in to add a seedlot!'));
+    }
+
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $status = $self->status;
+
+    my $schema = $self->bcs_schema;
+    my $dbh = $self->bcs_schema()->storage()->dbh();
+    my $person = CXGN::People::Person->new($dbh, $user_id);
+    my $user_name = $person->get_username;
+
+    my $page_obj = CXGN::Page->new();
+    my $main_production_site_url = $page_obj->get_hostname();
+
+    my $accession_list;
+    my $organism_list;
+
+    foreach (@$data){
+        my $accession = $_->{germplasmName} || undef;
+        my $organism = $_->{species} || undef;
+        push @$accession_list, $accession;
+        push @$organism_list, $organism;
+    }
+
+    #validate accessions
+    my $validator = CXGN::List::Validate->new();
+    my @absent_accessions = @{$validator->validate($schema, 'accessions', $accession_list)->{'missing'}};
+    my %accessions_missing_hash = map { $_ => 1 } @absent_accessions;
+    my $existing_accessions = '';
+
+    foreach (@$accession_list){
+        if (!exists($accessions_missing_hash{$_})){
+            $existing_accessions = $existing_accessions . $_ ."," ;
+        }
+    }
+
+    if (length($existing_accessions) >0){
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Existing germplasm in the database: %s', $existing_accessions));
+    }
+
+    #validate organism
+    my $organism_search = CXGN::BreedersToolbox::OrganismFuzzySearch->new({schema => $schema});
+    my $organism_result = $organism_search->get_matches($organism_list, '1');
+
+    my @allowed_organisms;
+    my $missing_organisms = '';
+    my $found = $organism_result->{found};
+
+    foreach (@$found){
+        push @allowed_organisms, $_->{unique_name};
+    }
+    my %allowed_organisms = map {$_=>1} @allowed_organisms;
+
+    foreach (@$organism_list){
+        if (!exists($allowed_organisms{$_})){
+            $missing_organisms = $missing_organisms . $_ . ",";
+        }
+    }
+    if (length($missing_organisms) >0){
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Organisms were not found on the database: %s', $missing_organisms));
+    }
+
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+
+    my @added_fullinfo_stocks;
+    my @added_stocks;
+    my $coderef_bcs = sub {
+        foreach my $params (@$data){
+            my $species = $params->{species} || undef;
+            my $name = $params->{defaultDisplayName} || undef;
+            my $uniquename = $params->{germplasmName} || undef;
+            my $accessionNumber = $params->{accessionNumber} || undef;
+            my $germplasmPUI = $params->{germplasmPUI} || undef;
+            my $germplasmSeedSource = $params->{seedSource} || undef;
+            my $synonyms = $params->{synonyms}->[0]->{synonym} || undef;
+            my $instituteCode = $params->{instituteCode} || undef;
+            my $instituteName = $params->{instituteName} || undef;
+            my $biologicalStatusOfAccessionCode = $params->{biologicalStatusOfAccessionCode} || undef;
+            my $countryOfOriginCode = $params->{countryOfOriginCode} || undef;
+            my $typeOfGermplasmStorageCode = $params->{storageTypes}->[0]->{code} || undef;
+            my $donors = $params->{donors} || undef;
+            my $acquisitionDate = $params->{acquisitionDate} || undef;
+            #adding breedbase specific info using additionalInfo
+            my $organization_name = $params->{additionalInfo}->{organizationName} || undef;
+            my $population_name = $params->{additionalInfo}->{populationName} || undef;
+            my $transgenic = $params->{additionalInfo}->{transgenic} || undef;
+            my $notes = $params->{additionalInfo}->{notes} || undef;
+            my $state = $params->{additionalInfo}->{state} || undef;
+            my $variety = $params->{additionalInfo}->{variety} || undef;
+            my $locationCode = $params->{additionalInfo}->{locationCode} || undef;
+            my $description = $params->{additionalInfo}->{description} || undef;
+            my $stock_id = $params->{additionalInfo}->{stock_id} || undef;
+            #not supported
+            # speciesAuthority
+            # genus
+            # commonCropName
+            # biologicalStatusOfAccessionDescription
+            # germplasmSeedSourceDescription
+            # breedingMethodDbId
+            # collection
+            # documentationURL
+            # externalReferences
+            # germplasmOrigin
+            # germplasmPreprocessing
+            # taxonIds
+            # subtaxa
+            # subtaxaAuthority
+            # pedigree
+
+            if (exists($allowed_organisms{$species})){
+                my $stock = CXGN::Stock::Accession->new({
+                    schema=>$schema,
+                    check_name_exists=>0,
+                    main_production_site_url=>$main_production_site_url,
+                    type=>'accession',
+                    type_id=>$type_id,
+                    species=>$species,
+                    name=>$name,
+                    uniquename=>$uniquename,
+                    organization_name=>$organization_name,
+                    population_name=>$population_name,
+                    description=>$description,
+                    accessionNumber=>$accessionNumber,
+                    germplasmPUI=>$germplasmPUI,
+                    germplasmSeedSource=>$germplasmSeedSource,
+                    synonyms=>[$synonyms],
+                    instituteCode=>$instituteCode,
+                    instituteName=>$instituteName,
+                    biologicalStatusOfAccessionCode=>$biologicalStatusOfAccessionCode,
+                    countryOfOriginCode=>$countryOfOriginCode,
+                    typeOfGermplasmStorageCode=>$typeOfGermplasmStorageCode,
+                    donors=>$donors,
+                    acquisitionDate=>$acquisitionDate,
+                    transgenic=>$transgenic,
+                    notes=>$notes,
+                    state=>$state,
+                    variety=>$variety,
+                    locationCode=>$locationCode,
+                    sp_person_id => $user_id,
+                    user_name => $user_name,
+                    modification_note => 'Bulk load of accession information'
+                });
+                my $added_stock_id = $stock->store();
+                push @added_stocks, $added_stock_id;
+                push @added_fullinfo_stocks, [$added_stock_id, $_->{germplasmName}];
+            }
+        }
+    };
+
+    #save data
+    my $transaction_error;
+
+    try {
+       $schema->txn_do($coderef_bcs);
+    } 
+    catch {
+        $transaction_error = $_;
+    };
+
+    if ($transaction_error){
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('There was an error storing germplasm %s', $transaction_error));
+    }
+
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+
+    #retrieve saved items
+    my @data = _simple_search($self,undef,$accession_list);
+    my $total_count = scalar(@data);
+
+    my @data_files;
+    my %result = (data => \@data);
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm saved');
+
+}
+
+sub update {
+    my $self = shift;
+    my $germplasm_id = shift;
+    my $data = shift;
+    my $user_id = shift;
+    my $c = shift;
+
+    if (!$user_id){
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must be logged in to add a seedlot!'));
+    }
+
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $status = $self->status;
+
+    my $schema = $self->bcs_schema;
+    my $dbh = $self->bcs_schema()->storage()->dbh();
+    my $person = CXGN::People::Person->new($dbh, $user_id);
+    my $user_name = $person->get_username;
+
+    my $verify_id = $schema->resultset('Stock::Stock')->find({stock_id=>$germplasm_id});
+    if (!$verify_id) {
+        return CXGN::BrAPI::JSONResponse->return_error($status, 'GermplasmDbId does not exist in the database');
+    }
+
+    my $page_obj = CXGN::Page->new();
+    my $main_production_site_url = $page_obj->get_hostname();
+
+    #validate organism
+    my $organism_list;
+
+    foreach (@$data){
+        my $organism = $_->{species} || undef;
+        push @$organism_list, $organism;
+    }
+
+    my $organism_search = CXGN::BreedersToolbox::OrganismFuzzySearch->new({schema => $schema});
+    my $organism_result = $organism_search->get_matches($organism_list, '1');
+
+    my @allowed_organisms;
+    my $missing_organisms = '';
+    my $found = $organism_result->{found};
+
+    foreach (@$found){
+        push @allowed_organisms, $_->{unique_name};
+    }
+    my %allowed_organisms = map {$_=>1} @allowed_organisms;
+
+    foreach (@$organism_list){
+        if (!exists($allowed_organisms{$_})){
+            $missing_organisms = $missing_organisms . $_ . ",";
+        }
+    }
+    if (length($missing_organisms) >0){
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Organisms were not found on the database: %s', $missing_organisms));
+    }
+
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+
+    #sub rutine to save data
+    my @added_fullinfo_stocks;
+    my @added_stocks;
+    my $coderef_bcs = sub {
+        foreach my $params (@$data){
+            my $species = $params->{species} || undef;
+            my $name = $params->{defaultDisplayName} || undef;
+            my $uniquename = $params->{germplasmName} || undef;
+            my $accessionNumber = $params->{accessionNumber} || undef;
+            my $germplasmPUI = $params->{germplasmPUI} || undef;
+            my $germplasmSeedSource = $params->{seedSource} || undef;
+            my $synonyms = $params->{synonyms}->[0]->{synonym} || undef;
+            my $instituteCode = $params->{instituteCode} || undef;
+            my $instituteName = $params->{instituteName} || undef;
+            my $biologicalStatusOfAccessionCode = $params->{biologicalStatusOfAccessionCode} || undef;
+            my $countryOfOriginCode = $params->{countryOfOriginCode} || undef;
+            my $typeOfGermplasmStorageCode = $params->{storageTypes}->[0]->{code} || undef;
+            my $donors = $params->{donors} || undef;
+            my $acquisitionDate = $params->{acquisitionDate} || undef;
+            #adding breedbase specific info using additionalInfo
+            my $organization_name = $params->{additionalInfo}->{organizationName} || undef;
+            my $population_name = $params->{additionalInfo}->{populationName} || undef;
+            my $transgenic = $params->{additionalInfo}->{transgenic} || undef;
+            my $notes = $params->{additionalInfo}->{notes} || undef;
+            my $state = $params->{additionalInfo}->{state} || undef;
+            my $variety = $params->{additionalInfo}->{variety} || undef;
+            my $locationCode = $params->{additionalInfo}->{locationCode} || undef;
+            my $description = $params->{additionalInfo}->{description} || undef;
+            #not supported
+            # speciesAuthority
+            # genus
+            # commonCropName
+            # biologicalStatusOfAccessionDescription
+            # germplasmSeedSourceDescription
+            # breedingMethodDbId
+            # collection
+            # documentationURL
+            # externalReferences
+            # germplasmOrigin
+            # germplasmPreprocessing
+            # taxonIds
+            # subtaxa
+            # subtaxaAuthority
+            # pedigree
+
+            if (exists($allowed_organisms{$species})){
+                my $stock = CXGN::Stock::Accession->new({
+                    schema=>$schema,
+                    check_name_exists=>0,
+                    main_production_site_url=>$main_production_site_url,
+                    type=>'accession',
+                    type_id=>$type_id,
+                    species=>$species,
+                    stock_id=>$germplasm_id, #For adding properties to an accessions
+                    name=>$name,
+                    uniquename=>$uniquename,
+                    organization_name=>$organization_name,
+                    population_name=>$population_name,
+                    description=>$description,
+                    accessionNumber=>$accessionNumber,
+                    germplasmPUI=>$germplasmPUI,
+                    germplasmSeedSource=>$germplasmSeedSource,
+                    synonyms=>[$synonyms],
+                    instituteCode=>$instituteCode,
+                    instituteName=>$instituteName,
+                    biologicalStatusOfAccessionCode=>$biologicalStatusOfAccessionCode,
+                    countryOfOriginCode=>$countryOfOriginCode,
+                    typeOfGermplasmStorageCode=>$typeOfGermplasmStorageCode,
+                    donors=>$donors,
+                    acquisitionDate=>$acquisitionDate,
+                    transgenic=>$transgenic,
+                    notes=>$notes,
+                    state=>$state,
+                    variety=>$variety,
+                    locationCode=>$locationCode,
+                    sp_person_id => $user_id,
+                    user_name => $user_name,
+                    modification_note => 'Bulk load of accession information'
+                });
+                my $added_stock_id = $stock->store();
+                push @added_stocks, $added_stock_id;
+                push @added_fullinfo_stocks, [$added_stock_id, $_->{germplasmName}];
+            }
+        }
+    };
+
+    #update data
+    my $transaction_error;
+
+    try {
+       $schema->txn_do($coderef_bcs);
+    }
+    catch {
+        $transaction_error = $_;
+    };
+
+    if ($transaction_error){
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('There was an error storing germplasm %s', $transaction_error));
+    }
+
+    #update matviews
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+
+     #retrieve updated item
+    my @result = _simple_search($self,[$germplasm_id]);
+    my @data_files;
+    my $total_count = scalar(@result);
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success(@result, $pagination, \@data_files, $status, 'Germplasm updated');
+}
+
+sub _simple_search {
+    my $self = shift;
+    my $germplasm_ids_arrayref = shift;
+    my $germplasm_names_arrayref = shift;
+
+    my $accession_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
+
+    my $stock_search = CXGN::Stock::Search->new({
+        bcs_schema=>$self->bcs_schema,
+        people_schema=>$self->people_schema,
+        phenome_schema=>$self->phenome_schema,
+        match_type=>'exactly',
+        uniquename_list=>$germplasm_names_arrayref,
+        stock_id_list=>$germplasm_ids_arrayref,
+        stock_type_id=>$accession_type_cvterm_id,
+        stockprop_columns_view=>{'accession number'=>1, 'PUI'=>1, 'seed source'=>1, 'institute code'=>1, 'institute name'=>1, 'biological status of accession code'=>1, 'country of origin'=>1, 'type of germplasm storage code'=>1, 'acquisition date'=>1, 'ncbi_taxonomy_id'=>1},
+        display_pedigree=>1
+    });
+    my ($result, $total_count) = $stock_search->search();
+
+    my @data;
+    foreach (@$result){
+        # my @type_of_germplasm_storage_codes = $_->{'type of germplasm storage code'} ? split ',', $_->{'type of germplasm storage code'} : ();
+        my @type_of_germplasm_storage_codes;
+        if($_->{'type of germplasm storage code'}){
+            my @items = split ',', $_->{'type of germplasm storage code'};
+            foreach(@items){
+                push @type_of_germplasm_storage_codes ,{
+                    code=>$_,
+                    description=>undef
+                };
+            }
+        }
+        my @donors = {
+            donorAccessionNumber=>$_->{donors}->[0]->{donorAccessionNumber},
+            donorInstituteCode=>$_->{donors}->[0]->{donorInstituteCode},
+            germplasmPUI=>$_->{donors}->[0]->{germplasmPUI}
+        };
+        my @synonyms;
+        if($_->{synonyms}){
+            foreach(@{ $_->{synonyms} }){
+                push @synonyms, {
+                    synonym=>$_,
+                    type=>undef
+                };
+            }
+        }
+        my @ncbi_taxon_ids = split ',', $_->{'ncbi_taxonomy_id'};
+        my @taxons;
+        foreach (@ncbi_taxon_ids){
+            push @taxons, {
+                sourceName => 'NCBI',
+                taxonId => $_
+            };
+        }
+        push @data, {
+            accessionNumber=>$_->{'accession number'},
+            acquisitionDate=>$_->{'acquisition date'},
+            additionalInfo=>undef,
+            biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} || 0,
+            biologicalStatusOfAccessionDescription=>undef,
+            breedingMethodDbId=>undef,
+            collection=>undef,
+            commonCropName=>$_->{common_name},
+            countryOfOriginCode=>$_->{'country of origin'},
+            defaultDisplayName=>$_->{stock_name},
+            documentationURL=>$_->{'PUI'},
+            donors=>\@donors,
+            externalReferences=>[],
+            genus=>$_->{genus},
+            germplasmName=>$_->{uniquename},
+            germplasmOrigin=>[],
+            germplasmDbId=>qq|$_->{stock_id}|,
+            germplasmPUI=>$_->{'PUI'},     
+            germplasmPreprocessing=>undef,
+            instituteCode=>$_->{'institute code'},
+            instituteName=>$_->{'institute name'},
+            pedigree=>$_->{pedigree},
+            seedSource=>$_->{'seed source'},
+            seedSourceDescription=>$_->{'seed source'}, 
+            species=>$_->{species},
+            speciesAuthority=>$_->{speciesAuthority},
+            storageTypes=>\@type_of_germplasm_storage_codes,
+            subtaxa=>$_->{subtaxa},
+            subtaxaAuthority=>$_->{subtaxaAuthority},
+            synonyms=> \@synonyms,
+            taxonIds=>\@taxons,
+        };
+    }
+    return @data;
 }
 
 1;
