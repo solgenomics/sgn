@@ -70,11 +70,8 @@ jQuery(document).ready(function () {
                     var cell = "&nbsp";
                     var bgcolor = "lightgrey";
                     var cell_id = "";
+                    var cell_name = "";
                     var cell_accession = "";
-                    var cell_plot_name = "";
-                    var cell_source_plot = "";
-                    var cell_source_plant = "";
-                    var cell_source_tissue = "";
 
                     if (response.design[well]) {
                         if (response.design[well].accession_name) {
@@ -86,23 +83,20 @@ jQuery(document).ready(function () {
                             cell = "<br/>Sample: <a href='/stock/" + response.design[well].plot_id +"/view'>" + response.design[well].plot_name + "</a> <br/>Accession: <a href='/stock/" + response.design[well].accession_id +"/view'>" + response.design[well].accession_name + "</a>";
                             if(response.design[well].source_plot_id){
                                 cell = cell + "<br/>Source Plot: <a href='/stock/" + response.design[well].source_plot_id +"/view'>" + response.design[well].source_plot_name + "</a>";
-                                cell_source_plot = response.design[well].source_plot_name;
                             }
                             if(response.design[well].source_plant_id){
                                 cell = cell + "<br/>Source Plant: <a href='/stock/" + response.design[well].source_plant_id +"/view'>" + response.design[well].source_plant_name + "</a>";
-                                cell_source_plant = response.design[well].source_plant_name;
                             }
                             if(response.design[well].source_tissue_id){
                                 cell = cell + "<br/>Source Tissue: <a href='/stock/" + response.design[well].source_tissue_id +"/view'>" + response.design[well].source_tissue_name + "</a>";
-                                cell_source_tissue = response.design[well].source_tissue_name;
                             }
                             cell = cell + "<br/><br/>";
                         }
                         cell_accession = response.design[well].accession_name;
-                        cell_plot_id = response.design[well].plot_id;
-                        cell_plot_name = response.design[well].plot_name;
+                        cell_id = response.design[well].plot_id;
+                        cell_name = response.design[well].plot_name;
                     }
-                    trial_plate_view_html = trial_plate_view_html + "<td onclick='replace_plate_accessions(\""+ cell_plot_name +"\",\""+ cell_plot_id +"\",\""+ cell_accession +"\",\""+ cell_source_plot +"\",\""+ cell_source_plant +"\",\""+ cell_source_tissue +"\");' bgcolor=" + bgcolor + ">" + cell + "</td>";
+                    trial_plate_view_html = trial_plate_view_html + "<td onclick='replace_plate_accessions(\""+ cell_name +"\",\""+ cell_id +"\",\""+ cell_accession +"\");' bgcolor=" + bgcolor + ">" + cell + "</td>";
                 }
                 trial_plate_view_html = trial_plate_view_html + "</tr>";
             });
@@ -119,12 +113,9 @@ jQuery(document).ready(function () {
 
 });
 
-function replace_plate_accessions(sample, sample_id, accession, plot, plant, tissue){
+function replace_plate_accessions(sample, sample_id, accession){
     jQuery('#plot_name').html(sample);
     jQuery('#plot_id').html(sample_id);
-    jQuery('#source_plot_id').html(plot);
-    jQuery('#plant_id').html(plant);
-    jQuery('#tissue_id').html(tissue);
     jQuery('#cell_accession').html(accession);
     jQuery('#replace_plate_accessions_dialog').modal('show');
 }

@@ -571,7 +571,7 @@ function save_replace_plot_accession () {
 
     new jQuery.ajax({
     type: 'POST',
-    url: '/ajax/breeders/trial/'+trial_id+'/replace_plot_accessions',
+    url: '/ajax/breeders/trial/'+trial_id+'/replace_well_accessions',
     dataType: "json",
     data: {
             'new_accession': new_accession,

@@ -31,24 +31,6 @@ $trial_name
                       </div>
 
                       <div class="form-group">
-                        <label class="col-sm-3 control-label">Source Plot: </label>
-                        <div class="col-sm-9" id="source_plot_id">
-                        </div>
-                      </div>
-
-                      <div class="form-group">
-                        <label class="col-sm-3 control-label">Source Plant: </label>
-                        <div class="col-sm-9" id="plant_id">
-                        </div>
-                      </div>
-
-                      <div class="form-group">
-                        <label class="col-sm-3 control-label">Source Tissue: </label>
-                        <div class="col-sm-9" id="tissue_id">
-                        </div>
-                      </div>
-
-                      <div class="form-group">
                         <label class="col-sm-3 control-label">Accession: </label>
                         <div class="col-sm-9" id="cell_accession">
                         </div>
