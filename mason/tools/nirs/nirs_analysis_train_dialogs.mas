@@ -7,21 +7,21 @@
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="nirsAnalysisTrainingDialog">Train NIRs Model</h4>
+        <h4 class="modal-title" id="nirsAnalysisTrainingDialog">Train Spectral Model</h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
             <&| /util/workflow.mas, id=> "nirs_analysis_training_workflow" &>
                 <&| /util/workflow.mas:step, title=> "Intro" &>
-                    <& /page/page_title.mas, title=>"This workflow will guide you through NIRs model using spectrum and phenotypes in the database." &>
+                    <& /page/page_title.mas, title=>"This workflow will guide you through the training of a model using spectra and phenotypes in the database." &>
                     <br/><br/>
                     <center>
                     <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
                     </center>
                 </&>
                 <&| /util/workflow.mas:step, title=> "Train Dataset" &>
-                    <& /page/page_title.mas, title=>"Select the dataset you are interested in training (the accessions or plots or tissues samples in the dataset need to have NIRs uploaded)" &>
+                    <& /page/page_title.mas, title=>"Select the dataset you are interested in training (the accessions or plots or tissues samples in the dataset need to have spectra uploaded)" &>
                     <br/><br/>
                     <form class="form-horizontal">
                         <div class="form-group">
@@ -42,7 +42,7 @@
 
                     <div class="form-horizontal" >
                         <div class="form-group">
-                            <label class="col-sm-7 control-label">Select Custom Dataset for Testing? If No, the training and test set will be randomly partitioned from the training dataset you already selected: </label>
+                            <label class="col-sm-7 control-label">Select Custom Dataset for Testing? If No, the training and test set will be partitioned from the training dataset you already selected: </label>
                             <div class="col-sm-5" >
                                 <select class="form-control" id="nirs_analysis_training_dataset_test_select_option">
                                     <option value="No">No</option>
@@ -59,7 +59,7 @@
 
                     <div class="form-horizontal" id="nirs_analysis_training_dataset_test_div" style="display:none">
                         <div class="form-group">
-                            <label class="col-sm-1 control-label">Dataset (Optional) (the accessions or plots or tissues samples in the dataset need to have NIRs uploaded): </label>
+                            <label class="col-sm-1 control-label">Dataset (Optional) (the accessions or plots or tissues samples in the dataset need to have spectra uploaded): </label>
                             <div class="col-sm-11" >
                                 <div id="nirs_analysis_training_dataset_test_select_div"></div>
                             </div>
@@ -68,7 +68,7 @@
 
                 </&>
                 <&| /util/workflow.mas:step, title=> "Trait" &>
-                    <& /page/page_title.mas, title=>"Select the trait you are interested in. If there are none, the training and test datasets you selected do not share any traits in common!" &>
+                    <& /page/page_title.mas, title=>"Select the trait you are interested in. If there are no available options, the training and test datasets you selected do not share any traits in common!" &>
                     <br/><br/>
                     <form class="form-horizontal">
                         <div class="form-group">
@@ -84,7 +84,7 @@
                     </center>
                 </&>
                 <&| /util/workflow.mas:step, title=> "Model Settings" &>
-                    <& /page/page_title.mas, title=>"Select parameters for NIRs modeling" &>
+                    <& /page/page_title.mas, title=>"Select parameters for spectral modeling" &>
 
                     <center>
                     <button class="btn btn-info" id="nirs_analysis_training_dataset_info">More Info</button>
@@ -93,15 +93,15 @@
 
                     <div class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">NIRs format: </label>
+                            <label class="col-sm-3 control-label">Spectrometer format: </label>
                             <div class="col-sm-9" >
 
                                 <select class="form-control input-sm" id="nirs_analysis_training_format_select">
-                                    <option value="">Select NIRs format</option>
-                                    <option selected value="SCIO">SCIO</option>
-                                    <option value="QST">QST</option>
-                                    <option value="FOSS6500">FOSS6500</option>
-                                    <option value="BUCHIN500">BuchiN500</option>
+                                    <option value="">Select spectrometer format</option>
+                                    <option selected value="SCIO">SCiO</option>
+                                    <option value="QST">QualitySpec Trek</option>
+                                    <option value="FOSS6500">FOSS 6500</option>
+                                    <option value="BUCHIN500">Buchi N500</option>
                                     <option value="LinkSquare">LinkSquare</option>
                                 </select>
                             </div>
@@ -164,11 +164,11 @@
                     </center>
                 </&>
                 <&| /util/workflow.mas:step, title=> "Summary" &>
-                    <& /page/page_title.mas, title=>"Summary of the parameters to create the model" &>
+                    <& /page/page_title.mas, title=>"Summary of the parameters selected for model creation" &>
 
                     <div class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Do you want to save model weights for future predictions?: </label>
+                            <label class="col-sm-3 control-label">Do you want to save the model for future predictions?: </label>
                             <div class="col-sm-9" >
                                 <button class="btn btn-primary" id="nir_analysis_training_model_save_step">Save the Model</button>
                             </div>
@@ -193,13 +193,18 @@
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="nirsAnalysisTrainingInfoDialog">Train NIRs Model</h4>
+        <h4 class="modal-title" id="nirsAnalysisTrainingInfoDialog">Train Spectral Model</h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-        
+
             <h1>More </h1>
-        
+            <ul>
+              <li>"CV1": untested lines in tested environments</li>
+              <li>"CV2": tested lines in tested environments</li>
+              <li>"CV0": tested lines in untested environments</li>
+              <li>"CV00": untested lines in untested environments</li>
+            </ul>
         </div>
       </div>
       <div class="modal-footer">
