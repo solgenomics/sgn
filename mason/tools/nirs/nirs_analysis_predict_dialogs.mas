@@ -162,6 +162,21 @@ jQuery(document).ready(function(){
                         return false;
                     }
 
+                    jQuery('#generic_save_analysis_protocol').val(response.protocol);
+                    jQuery('#generic_save_analysis_dataset_id').val(nirs_analysis_prediction_dataset_id);
+                    jQuery('#generic_save_analysis_accession_names').val(JSON.stringify(response.unique_accessions));
+                    jQuery('#generic_save_analysis_trait_names').val(JSON.stringify(response.unique_traits));
+                    jQuery('#generic_save_analysis_statistical_ontology_term').val(response.stat_term);
+                    jQuery('#generic_save_analysis_design').val(JSON.stringify(response.analysis_design));
+                    jQuery('#generic_save_analysis_result_values').val(JSON.stringify(response.result_predictions));
+                    jQuery('#generic_save_analysis_result_values_type').val('analysis_result_values_match_precomputed_design');
+                    jQuery('#generic_save_analysis_result_summary_values').val(JSON.stringify(response.result_summary));
+
+                    jQuery('#generic_save_analysis_model_name_div').hide();
+                    jQuery('#generic_save_analysis_model_description_div').hide();
+                    jQuery('#generic_save_analysis_model_is_public_div').hide();
+                    jQuery('#generic_save_analysis_model_id').val(nirs_analysis_prediction_model_id);
+
                     Workflow.complete("#nir_analysis_prediction_model_step");
                     Workflow.focus('#nirs_analysis_prediction_workflow', 3);
                 },
@@ -171,6 +186,10 @@ jQuery(document).ready(function(){
                 }
             });
         }
+    });
+
+    jQuery('#nir_analysis_prediction_analysis_save_step').click(function(){
+        jQuery('#generic_save_analysis_dialog').modal('show');
     });
 
 });

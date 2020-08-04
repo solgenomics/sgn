@@ -292,6 +292,8 @@ The trait names will be post-composed with the analysis_statistical_ontology_ter
                         <&| /util/workflow.mas:step, title=> "Model Info" &>
                             <& /page/page_title.mas, title=>"Save model information" &>
 
+                            <p>This step may be pre-populated if you are using a model that is already saved in the database. If there is no input enabled, move to the next step.</p>
+
                             <form class="form-horizontal" id="generic_save_analysis_model_form">
                                 <div class="form-group form-group-sm" id="generic_save_analysis_model_name_div">
                                     <label class="col-sm-3 control-label">Model Name (must be unique): </label>

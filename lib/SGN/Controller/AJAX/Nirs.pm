@@ -380,11 +380,13 @@ sub generate_predictions_POST : Args(0) {
     my %training_pheno_data;
     my $seltrait;
     my %stock_info;
+    my %seen_accessions;
     foreach my $d (@$training_pheno_data) {
         my $obsunit_id = $d->{observationunit_stock_id};
         my $obsunit_name = $d->{observationunit_uniquename};
         my $germplasm_name = $d->{germplasm_uniquename};
         $stock_info{$obsunit_id} = $obsunit_name;
+        $seen_accessions{$germplasm_name}++;
         foreach my $o (@{$d->{observations}}) {
             my $t_id = $o->{trait_id};
             my $t_name = $o->{trait_name};
@@ -493,12 +495,18 @@ sub generate_predictions_POST : Args(0) {
     close($fh);
 
     my @unique_plot_names = sort keys %seen_plot_names;
+    my @unique_accession_names = sort keys %seen_accessions;
 
     $c->stash->{rest} = {
         success => 1,
         result_predictions => \%result_predictions,
         unique_traits => [$seltrait],
-        unique_plots => \@unique_plot_names
+        unique_plots => \@unique_plot_names,
+        unique_accessions => \@unique_accession_names,
+        protocol => "R waves $format_id $algorithm",
+        stat_term => '',
+        analysis_design => '',
+        result_summary => {}
     };
 }
 
