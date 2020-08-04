@@ -228,7 +228,7 @@ sub generate_results_POST : Args(0) {
         my $value = $o->{value};
         my $spectra = $o->{spectra};
         my $germplasm_name = $o->{germplasm_name};
-        if ($spectra && $value) {
+        if ($spectra && defined($value)) {
             push @training_data_input, {
                 "observationUnitId" => $stock_id,
                 "germplasmName" => $germplasm_name,
@@ -237,7 +237,14 @@ sub generate_results_POST : Args(0) {
             };
         }
     }
-    my $training_data_input_json = encode_json \@training_data_input;
+
+    if (scalar(@training_data_input) < 10) {
+        $c->stash->{rest} = { error => "Not enough data! Need atleast 10 samples with a phenotype and spectra!"};
+        $c->detach();
+    }
+
+    my $json = JSON->new->utf8->canonical();
+    my $training_data_input_json = $json->encode(\@training_data_input);
     open(my $train_json_outfile, '>', $train_json_filepath);
         print STDERR Dumper $train_json_filepath;
         print $train_json_outfile $training_data_input_json;
@@ -249,7 +256,7 @@ sub generate_results_POST : Args(0) {
         my $value = $o->{value};
         my $spectra = $o->{spectra};
         my $germplasm_name = $o->{germplasm_name};
-        if ($spectra && $value) {
+        if ($spectra && defined($value)) {
             push @testing_data_input, {
                 "observationUnitId" => $stock_id,
                 "germplasmName" => $germplasm_name,
@@ -264,7 +271,7 @@ sub generate_results_POST : Args(0) {
         $test_json_filepath = 'NULL';
     }
     else {
-        $testing_data_input_json = encode_json \@testing_data_input;
+        $testing_data_input_json = $json->encode(\@testing_data_input);
 
         open(my $test_json_outfile, '>', $test_json_filepath);
             print STDERR Dumper $test_json_filepath;
@@ -361,6 +368,7 @@ sub generate_predictions_POST : Args(0) {
     my $trait_name = $saved_model_object->{model_properties}->{trait_name};
     my $trait_id = $saved_model_object->{model_properties}->{trait_id};
     my $format_id = $saved_model_object->{model_properties}->{format};
+    my $algorithm = $saved_model_object->{model_properties}->{algorithm};
     my $model_file = $saved_model_object->{model_files}->{"jennasrwaves_V1.01_waves_nirs_spectral_predictions_weights_file"};
 
     my $training_dataset = CXGN::Dataset->new({people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id});
@@ -436,19 +444,22 @@ sub generate_predictions_POST : Args(0) {
         DIR=> $nirs_tmp_output,
     );
 
-    my $input_json_filepath = $tempfile."_train_json";
-    my $output_table_filepath = $tempfile."_table_results.txt";
+    my $input_json_filepath = $tempfile."_json";
+    my $output_table_filepath = $tempfile."_table_performance_results.csv";
+    my $output_results_filepath = $tempfile."_table_predictions_results.csv";
     my $output_figure_filepath = $tempfile."_figure_results.png";
-    
+
     my $training_data_input_json = encode_json \@training_data_input;
     open(my $train_json_outfile, '>', $input_json_filepath);
         print STDERR Dumper $input_json_filepath;
         print $train_json_outfile $training_data_input_json;
     close($train_json_outfile);
 
-    my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirsPredict.R '$seltrait' '$input_json_filepath' '$model_file' '$output_table_filepath' '$output_figure_filepath' ";
+    my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/predict_NIRS.R '$input_json_filepath' '$output_table_filepath' '$model_file' $algorithm '$output_results_filepath' ";
     print STDERR $cmd_s;
     my $cmd_status = system($cmd_s);
+
+    #output is two columns, stock_id and prediction
 
     $c->stash->{rest} = { success => 1 };
 }
