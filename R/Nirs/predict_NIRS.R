@@ -10,6 +10,7 @@ library(devtools)
 library(jsonlite)
 library(waves)
 library(stringr)
+library(readr)
 
 ### Read in and assign arguments ####
 args <- commandArgs(trailingOnly = TRUE)
@@ -17,7 +18,8 @@ args <- commandArgs(trailingOnly = TRUE)
 # args[1] = new spectral data for prediction
 dataset.input <- jsonlite::fromJSON(txt = args[1], flatten = T) %>%
   rename(uniqueid = observationUnitId) %>%
-  rename_at(vars(starts_with("nirs_spectra")), ~str_replace(., "nirs_spectra.", ""))
+  rename_at(vars(starts_with("nirs_spectra")), ~str_replace(., "nirs_spectra.", "")) %>%
+  dplyr::select(uniqueid, reference, starts_with("germplasm"), num_range(prefix = "X", range = 1:100000))
 
 wls <- colnames(dataset.input)[-1] %>% parse_number()
 
