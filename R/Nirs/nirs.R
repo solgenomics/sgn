@@ -1,4 +1,4 @@
-# Runs `waves` package with data from the NIRS Breedbase tool to generate phenotypic predictions
+# Runs `waves` package with data from the NIRS Breedbase tool to train phenotypic prediction models
 
 # AUTHOR
 # Jenna Hershberger (jmh579@cornell.edu)
@@ -51,14 +51,14 @@ if(cv.scheme == "random"){
 train.input <- jsonlite::fromJSON(txt = args[8], flatten = T) %>%
   rename(uniqueid = observationUnitId) %>%
   rename_at(vars(starts_with("trait.")), ~paste0("reference")) %>%
-  rename_at(vars(starts_with("nirs_spectra")), ~str_replace(., "nirs_spectra.", "X"))
+  rename_at(vars(starts_with("nirs_spectra")), ~str_replace(., "nirs_spectra.", ""))
 
 # args[9] = test data.frame: observationUnit level data with phenotypes and spectra in JSON format
 if(args[9] != "NULL"){
   test.input <- jsonlite::fromJSON(txt = args[9], flatten = T) %>%
     rename(uniqueid = observationUnitId) %>%
     rename_at(vars(starts_with("trait.")), ~paste0("reference")) %>%
-    rename_at(vars(starts_with("nirs_spectra")), ~str_replace(., "nirs_spectra.", "X"))
+    rename_at(vars(starts_with("nirs_spectra")), ~str_replace(., "nirs_spectra.", ""))
 } else{
   test.input <- NULL
 }
@@ -73,7 +73,7 @@ if(args[10]=="TRUE"){ # SAVE MODEL WITHOUT CV.SCHEME
       test.ready <- test.input %>% dplyr::select(-germplasmName)
     }
 
-    wls <- colnames(train.ready)[-1] %>% parse_number()
+    wls <- colnames(train.ready)[-c(1:2)] %>% parse_number() # take off sample name and reference columns
     # Test model using non-specialized cv scheme
     sm.output <- SaveModel(df = train.ready, save.model = TRUE,
                            autoselect.preprocessing = preprocessing,
@@ -86,7 +86,7 @@ if(args[10]=="TRUE"){ # SAVE MODEL WITHOUT CV.SCHEME
 
   } else{
     # Test model using specialized cv scheme AND SAVE
-    wls <- colnames(train.ready)[-c(1:2)] %>% parse_number()
+    wls <- colnames(train.ready)[-c(1:3)] %>% parse_number() # take off sample name, reference, and genotype columns
     sm.output <- SaveModel(df = NULL, save.model = TRUE,
                            autoselect.preprocessing = preprocessing,
                            preprocessing.method = preprocessing.method,
@@ -109,7 +109,7 @@ if(args[10]=="TRUE"){ # SAVE MODEL WITHOUT CV.SCHEME
       test.ready <- test.input %>% dplyr::select(-germplasmName)
     }
 
-    wls <- colnames(train.ready)[-1] %>% parse_number()
+    wls <- colnames(train.ready)[-c(1:2)] %>% parse_number() # take off sample name and reference columns
     # Test model using non-specialized cv scheme
     results.df <- TestModelPerformance(train.data = train.ready, num.iterations = num.iterations,
                                        test.data = test.ready, preprocessing = preprocessing,
@@ -120,7 +120,7 @@ if(args[10]=="TRUE"){ # SAVE MODEL WITHOUT CV.SCHEME
                                        trial1 = NULL, trial2 = NULL, trial3 = NULL)
   } else{
     # Test model using specialized cv scheme
-    wls <- colnames(train.ready)[-c(1:2)] %>% parse_number()
+    wls <- colnames(train.ready)[-c(1:3)] %>% parse_number() # take off sample name, reference, and genotype columns
     results.df <- TestModelPerformance(train.data = NULL, num.iterations = num.iterations,
                                        test.data = NULL, preprocessing = preprocessing,
                                        wavelengths = wls, tune.length = tune.length,
