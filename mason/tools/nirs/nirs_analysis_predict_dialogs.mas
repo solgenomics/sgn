@@ -79,7 +79,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="nirsAnalysisPredictionInfoDialog">Predictino Phenotypes from NIRs Model</h4>
+        <h4 class="modal-title" id="nirsAnalysisPredictionInfoDialog">Predict Phenotypes from NIRs Model</h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
@@ -129,9 +129,49 @@ jQuery(document).ready(function(){
         }
     });
 
+    var nirs_analysis_prediction_model_id;
+    jQuery('#nir_analysis_prediction_model_step').click(function(){
+        var selected = [];
+        jQuery('input[name="nirs_analysis_prediction_model_select_id"]:checked').each(function() {
+            selected.push(jQuery(this).val());
+        });
 
-    jQuery('#').click(function(){
-        
+        if(selected.length > 1 || selected.length == 0) {
+            alert('Please select one model!');
+            return false;
+        }
+        else {
+            nirs_analysis_prediction_model_id = selected[0];
+
+            jQuery.ajax({
+                url : '/ajax/Nirs/generate_predictions',
+                type : 'POST',
+                data : {
+                    'model_id' : nirs_analysis_prediction_model_id,
+                    'dataset_id' : nirs_analysis_prediction_dataset_id,
+                },
+                beforeSend: function(){
+                    jQuery('#working_modal').modal('show');
+                },
+                success: function(response){
+                    console.log(response);
+                    jQuery('#working_modal').modal('hide');
+
+                    if (response.error) {
+                        alert(response.error);
+                        return false;
+                    }
+
+                    Workflow.complete("#nir_analysis_prediction_model_step");
+                    Workflow.focus('#nirs_analysis_prediction_workflow', 3);
+                },
+                error: function(response){
+                    alert('Error predicting phenotypes from NIRS!');
+                    jQuery('#working_modal').modal('hide');
+                }
+            });
+        }
     });
+
 });
 </script>

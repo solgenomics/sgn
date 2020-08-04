@@ -20,6 +20,7 @@ use CXGN::Blast::SeqQuery;
 use Cwd qw(cwd);
 use JSON::XS;
 use List::Util qw(shuffle);
+use CXGN::AnalysisModel::GetModel;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -28,110 +29,6 @@ __PACKAGE__->config(
     stash_key => 'rest',
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
     );
-
-sub shared_phenotypes: Path('/ajax/Nirs/shared_phenotypes') : {
-    my $self = shift;
-    my $c = shift;
-    my $dataset_id = $c->req->param('dataset_id');
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-    my $ds = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id);
-    my $traits = $ds->retrieve_traits();
-    my @trait_info;
-    foreach my $t (@$traits) {
-          my $tobj = CXGN::Cvterm->new({ schema=>$schema, cvterm_id => $t });
-        push @trait_info, [ $tobj->cvterm_id(), $tobj->name()];
-    }
-
-    
-    $c->tempfiles_subdir("nirs_files");
-    my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"nirs_files/trait_XXXXX");
-    $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-    my $temppath = $c->config->{basepath}."/".$tempfile;
-    my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath);
-    my $phenotype_data_ref = $ds2->retrieve_phenotypes();
-
-    my $trials_ref = $ds2->retrieve_trials();
-    my @trials = @$trials_ref;
-
-    my $dbh = $c->dbc->dbh();
-    my @trial_name= ();
-    foreach my $name (@trials){
-        my $sql = "SELECT trial_name from public.trials where trial_id=?;";
-
-        my $fh_db= $dbh->prepare($sql);    
-        $fh_db->execute($name);
-        while (my @trl = $fh_db->fetchrow_array()) {
-            push @trial_name, @trl;
-        }
-    }
-
-    print STDERR Dumper(@trait_info);
-    print STDERR Dumper(@trial_name);
-    $c->stash->{rest} = {
-        options => \@trait_info,
-        trialname => \@trial_name,
-        tempfile => $tempfile."_phenotype.txt",
-    };
-}
-
-sub get_training_study: Path('/ajax/Nirs/get_training_study') : {
-    my $self = shift;
-    my $c = shift;
-    my $train_id = $c->req->param('train_id');
-    print STDERR Dumper($train_id);
-
-}
-
-sub get_test_study: Path('/ajax/Nirs/get_test_study') : {
-    my $self = shift;
-    my $c = shift;
-    my $test_id = $c->req->param('test_id');
-    print STDERR Dumper($test_id);
-
-}
-my $format_id;
-sub get_nirs_format: Path('/ajax/Nirs/get_nirs_format') : {
-    my $self = shift;
-    my $c = shift;
-    $format_id = $c->req->param('format_id');
-    print STDERR Dumper($format_id);
-
-}
-
-sub get_cross_validation: Path('/ajax/Nirs/get_cross_validation') : {
-    my $self = shift;
-    my $c = shift;
-    my $crossv_id = $c->req->param('cv_id');
-    print STDERR Dumper($crossv_id);
-    print "The cv_id is $crossv_id \n";
-
-}
-
-sub get_niter: Path('/ajax/Nirs/get_niter') : {
-    my $self = shift;
-    my $c = shift;
-    my $niter_id = $c->req->param('niter_id');
-    print STDERR Dumper($niter_id);
-    return $niter_id;
-
-}
-
-sub get_algorithm: Path('/ajax/Nirs/get_algorithm') : {
-    my $self = shift;
-    my $c = shift;
-    my $algo_id = $c->req->param('algorithm_id');
-    print STDERR Dumper($algo_id);
-}
-
-sub get_tune: Path('/ajax/Nirs/get_tune') : {
-    my $self = shift;
-    my $c = shift;
-    my $tune_id = $c->req->param('tune_id');
-    print STDERR Dumper($tune_id);
-
-}
 
 
 sub extract_trait_data :Path('/ajax/Nirs/getdata') Args(0) {
@@ -419,7 +316,8 @@ sub generate_results_POST : Args(0) {
     $c->stash->{rest} = {
         train_dataset_id => $train_dataset_id,
         model_properties => {
-            'selected_trait' => $seltrait,
+            'trait_id' => $trait_id,
+            'trait_name' => $seltrait,
             'preprocessing_boolean' => $preprocessing_boolean,
             'niter' => $niter_id,
             'algorithm' => $algo_id,
@@ -429,12 +327,130 @@ sub generate_results_POST : Args(0) {
             'format' => $format_id
         },
         model_file => $output_model_filepath,
+        model_file_type => "jennasrwaves_V1.01_waves_nirs_spectral_predictions_weights_file",
         training_data_file => $train_json_filepath,
         model_aux_files => [
             {"jennasrwaves_V1.01_waves_nirs_spectral_predictions_testing_data_file" => $test_json_filepath},
             {"jennasrwaves_V1.01_waves_nirs_spectral_predictions_performance_output" => $output_table_filepath}
         ]
     };
+}
+
+sub generate_predictions : Path('/ajax/Nirs/generate_predictions') : ActionClass('REST') { }
+sub generate_predictions_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $dbh = $c->dbc->dbh();
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    print STDERR Dumper $c->req->params();
+
+    my $model_id = $c->req->param('model_id');
+    my $dataset_id = $c->req->param('dataset_id');
+
+    my $m = CXGN::AnalysisModel::GetModel->new({
+        bcs_schema=>$schema,
+        metadata_schema=>$metadata_schema,
+        phenome_schema=>$phenome_schema,
+        nd_protocol_id=>$model_id
+    });
+    my $saved_model_object = $m->get_model();
+    print STDERR Dumper $saved_model_object;
+    my $trait_name = $saved_model_object->{model_properties}->{trait_name};
+    my $trait_id = $saved_model_object->{model_properties}->{trait_id};
+    my $format_id = $saved_model_object->{model_properties}->{format};
+    my $model_file = $saved_model_object->{model_files}->{"jennasrwaves_V1.01_waves_nirs_spectral_predictions_weights_file"};
+
+    my $training_dataset = CXGN::Dataset->new({people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id});
+    my ($training_pheno_data, $train_unique_traits) = $training_dataset->retrieve_phenotypes_ref();
+    # print STDERR Dumper $training_pheno_data;
+
+    my %training_pheno_data;
+    my $seltrait;
+    foreach my $d (@$training_pheno_data) {
+        my $obsunit_id = $d->{observationunit_stock_id};
+        my $germplasm_name = $d->{germplasm_uniquename};
+        foreach my $o (@{$d->{observations}}) {
+            my $t_id = $o->{trait_id};
+            my $t_name = $o->{trait_name};
+            my $value = $o->{value};
+            $seltrait = $t_name;
+            if ($trait_id == $t_id) {
+                $training_pheno_data{$obsunit_id} = {
+                    value => $value,
+                    trait_id => $t_id,
+                    trait_name => $t_name,
+                    germplasm_name => $germplasm_name
+                };
+            }
+        }
+    }
+
+    my @all_plot_ids = keys %training_pheno_data;
+    my $stock_ids_sql = join ',', @all_plot_ids;
+    my $nirs_training_q = "SELECT stock.uniquename, stock.stock_id, metadata.md_json.json->>'spectra'
+        FROM stock
+        JOIN nd_experiment_stock USING(stock_id)
+        JOIN nd_experiment USING(nd_experiment_id)
+        JOIN phenome.nd_experiment_md_json USING(nd_experiment_id)
+        JOIN metadata.md_json USING(json_id)
+        WHERE stock.stock_id IN ($stock_ids_sql) AND metadata.md_json.json->>'device_type' = ? ;";
+    my $nirs_training_h = $dbh->prepare($nirs_training_q);    
+    $nirs_training_h->execute($format_id);
+    while (my ($stock_uniquename, $stock_id, $spectra) = $nirs_training_h->fetchrow_array()) {
+        $spectra = decode_json $spectra;
+        if (exists($training_pheno_data{$stock_id})) {
+            $training_pheno_data{$stock_id}->{spectra} = $spectra;
+        }
+    }
+    # print STDERR Dumper \%training_pheno_data;
+
+    my @training_data_input;
+    while ( my ($stock_id, $o) = each %training_pheno_data) {
+        my $trait_name = $o->{trait_name};
+        my $value = $o->{value};
+        my $spectra = $o->{spectra};
+        my $germplasm_name = $o->{germplasm_name};
+        if ($spectra && $value) {
+            push @training_data_input, {
+                "observationUnitId" => $stock_id,
+                "germplasmName" => $germplasm_name,
+                "trait" => {$trait_name => $value},
+                "nirs_spectra" => $spectra
+            };
+        }
+    }
+
+    if (scalar(@training_data_input) == 0) {
+        $c->stash->{rest} = { error => "There is no NIRs using $format_id and phenotype data for $trait_name through the dataset selected!" };
+        $c->detach();
+    }
+
+    $c->tempfiles_subdir("nirs_files");
+    my $nirs_tmp_output = $c->config->{cluster_shared_tempdir}."/nirs_files";
+    mkdir $nirs_tmp_output if ! -d $nirs_tmp_output;
+    my ($tmp_fh, $tempfile) = tempfile(
+        "nirs_download_XXXXX",
+        DIR=> $nirs_tmp_output,
+    );
+
+    my $input_json_filepath = $tempfile."_train_json";
+    my $output_table_filepath = $tempfile."_table_results.txt";
+    my $output_figure_filepath = $tempfile."_figure_results.png";
+    
+    my $training_data_input_json = encode_json \@training_data_input;
+    open(my $train_json_outfile, '>', $input_json_filepath);
+        print STDERR Dumper $input_json_filepath;
+        print $train_json_outfile $training_data_input_json;
+    close($train_json_outfile);
+
+    my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirsPredict.R '$seltrait' '$input_json_filepath' '$model_file' '$output_table_filepath' '$output_figure_filepath' ";
+    print STDERR $cmd_s;
+    my $cmd_status = system($cmd_s);
+
+    $c->stash->{rest} = { success => 1 };
 }
 
 1
