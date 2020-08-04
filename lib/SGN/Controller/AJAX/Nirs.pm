@@ -86,6 +86,7 @@ sub generate_results_POST : Args(0) {
     my $dbh = $c->dbc->dbh();
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
     print STDERR Dumper $c->req->params();
 
     my $format_id = $c->req->param('format');
@@ -143,8 +144,8 @@ sub generate_results_POST : Args(0) {
             my $t_id = $o->{trait_id};
             my $t_name = $o->{trait_name};
             my $value = $o->{value};
-            $seltrait = $t_name;
             if ($trait_id == $t_id) {
+                $seltrait = $t_name;
                 $training_pheno_data{$obsunit_id} = {
                     value => $value,
                     trait_id => $t_id,
@@ -352,6 +353,7 @@ sub generate_predictions_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
     print STDERR Dumper $c->req->params();
 
     my $model_id = $c->req->param('model_id');
@@ -377,15 +379,18 @@ sub generate_predictions_POST : Args(0) {
 
     my %training_pheno_data;
     my $seltrait;
+    my %stock_info;
     foreach my $d (@$training_pheno_data) {
         my $obsunit_id = $d->{observationunit_stock_id};
+        my $obsunit_name = $d->{observationunit_uniquename};
         my $germplasm_name = $d->{germplasm_uniquename};
+        $stock_info{$obsunit_id} = $obsunit_name;
         foreach my $o (@{$d->{observations}}) {
             my $t_id = $o->{trait_id};
             my $t_name = $o->{trait_name};
             my $value = $o->{value};
-            $seltrait = $t_name;
             if ($trait_id == $t_id) {
+                $seltrait = $t_name;
                 $training_pheno_data{$obsunit_id} = {
                     value => $value,
                     trait_id => $t_id,
@@ -421,7 +426,7 @@ sub generate_predictions_POST : Args(0) {
         my $value = $o->{value};
         my $spectra = $o->{spectra};
         my $germplasm_name = $o->{germplasm_name};
-        if ($spectra && $value) {
+        if ($spectra && defined($value)) {
             push @training_data_input, {
                 "observationUnitId" => $stock_id,
                 "germplasmName" => $germplasm_name,
@@ -459,9 +464,72 @@ sub generate_predictions_POST : Args(0) {
     print STDERR $cmd_s;
     my $cmd_status = system($cmd_s);
 
-    #output is two columns, stock_id and prediction
+    my $csv = Text::CSV->new({ sep_char => "\t" });
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my %result_predictions;
+    my %seen_plot_names;
+    open(my $fh, '<', $output_results_filepath)
+        or die "Could not open file '$output_results_filepath' $!";
 
-    $c->stash->{rest} = { success => 1 };
+        print STDERR "Opened $output_results_filepath\n";
+        my $header = <$fh>;
+        my @header_cols;
+        if ($csv->parse($header)) {
+            @header_cols = $csv->fields();
+        }
+
+        while (my $row = <$fh>) {
+            my @columns;
+            if ($csv->parse($row)) {
+                @columns = $csv->fields();
+            }
+            my $stock_id = $columns[0];
+            my $stock_name = $stock_info{$stock_id};
+            my $value = $columns[1];
+            $result_predictions{$stock_name}->{$seltrait} = [$value, $timestamp, $user_name, '', ''];
+            $seen_plot_names{$stock_name}++;
+        }
+    close($fh);
+
+    my @unique_plot_names = sort keys %seen_plot_names;
+
+    $c->stash->{rest} = {
+        success => 1,
+        result_predictions => \%result_predictions,
+        unique_traits => [$seltrait],
+        unique_plots => \@unique_plot_names
+    };
+}
+
+sub _check_user_login {
+    my $c = shift;
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to do this!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to do this!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+    return ($user_id, $user_name, $user_role);
 }
 
 1
