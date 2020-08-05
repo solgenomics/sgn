@@ -112,7 +112,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                             <div class="well well-sm">
                                 <ul>
                                     <li>Click on the ground control points (GCPs) in the image below and save them.</li>
-                                    <li>Please click and save at least three points. They can be named anything, though it makes sense to use consistent names.</li>
+                                    <li>Please click and save at least three points. The names of the GCPs MUST be consistent across imaging events!</li>
                                     <li>You can zoom out on your browser (Cntrl + -).</li>
                                 </ul>
                             </div>
@@ -401,7 +401,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
     <div class="well well-sm">
         <ul>
             <li>Click on the ground control points (GCPs) in the image below and save them.</li>
-            <li>Please click and save at least three points. They are can saved anything, though it makes sense to use consistent names.</li>
+            <li>Please click and save at least three points. The names of the GCPs MUST be consistent across imaging events!.</li>
             <li>You can move to different images (e.g. blue, green, red, NIR, BGR) which are available after the standard process has been completed.</li>
             <li>You can zoom out on your browser (Cntrl + -).</li>
         </ul>
