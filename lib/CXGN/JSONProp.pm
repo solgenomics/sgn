@@ -271,15 +271,15 @@ Example:
 sub store_by_rank {
     my $self = shift;
 
-    my $rs = $self->bcs_schema()->resultset($self->prop_namespace())->search( { $self->parent_primary_key() => $self->parent_id(), type_id => $self->_prop_type_id() }, {order_by => { -desc => 'rank'} });
-    my $new_rank = 0;
-    if (defined $rs) {
-        $new_rank = $rs->first->rank()+1;
-    }
-    print STDERR "RANK =".Dumper($new_rank)."\n";
+    my $rs = $self->bcs_schema()->resultset($self->prop_namespace())->search( { $self->parent_primary_key() => $self->parent_id(), type_id => $self->_prop_type_id() });
 
-    print STDERR "INSERTING JSONPROP ".$self->to_json().", parent_id = ".$self->parent_id(),"\n";
-	my $row = $self->bcs_schema()->resultset($self->prop_namespace())->create( { $self->parent_primary_key()=> $self->parent_id(), value => $self->to_json(), type_id => $self->_prop_type_id(), rank => $new_rank });
+    my $rank;
+    if ($rs->count() > 0) {
+        $rank = $rs->get_column("rank")->max();
+    }
+    $rank++;
+
+	my $row = $self->bcs_schema()->resultset($self->prop_namespace())->create( { $self->parent_primary_key()=> $self->parent_id(), value => $self->to_json(), type_id => $self->_prop_type_id(), rank => $rank });
 	my $prop_primary_key = $self->prop_primary_key();
 	$self->prop_id($row->$prop_primary_key);
 
