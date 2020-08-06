@@ -45,9 +45,11 @@ clusterOptions <- read.table(optionsFile,
                              na.strings = "")
 print(clusterOptions)
 clusterOptions <- column_to_rownames(clusterOptions, var = "Params")
-userKNumbers   <- as.numeric(clusterOptions["k numbers", 1])
-dataType       <- clusterOptions["data type", 1]
-selectionProp  <- as.numeric(clusterOptions["selection proportion", 1])
+userKNumbers   <- as.numeric(clusterOptions["k_numbers", 1])
+dataType       <- clusterOptions["data_type", 1]
+selectionProp  <- as.numeric(clusterOptions["selection_proportion", 1])
+predictedTraits <- clusterOptions["predicted_traits", 1]
+predictedTraits <- unlist(strsplit(predictedTraits, ','))
 
 if (is.null(kResultFile)) {
   stop("Clustering output file is missing.")
@@ -152,7 +154,14 @@ if (grepl('genotype', dataType, ignore.case = TRUE)) {
     } else if (grepl('phenotype', dataType, ignore.case = TRUE)) {
 
         metaFile <- grep("meta", inputFiles,  value = TRUE)
+      
         clusterData <- cleanAveragePhenotypes(inputFiles, metaDataFile = metaFile)
+
+        if (!is.na(predictedTraits) & length(predictedTraits) > 1) {
+            clusterData <- rownames_to_column(clusterData, var = 'germplasmName')
+            clusterData <- clusterData %>% select(c(germplasmName, predictedTraits))
+            clusterData <- column_to_rownames(clusterData, var = 'germplasmName')
+        }
     }
 
     clusterDataNotScaled <- na.omit(clusterData)
@@ -168,15 +177,15 @@ if (length(sIndexFile) != 0) {
     sIndexData <- data.frame(fread(sIndexFile, header = TRUE))
     selectionProp <- selectionProp * 0.01
     selectedIndexGenotypes <- sIndexData %>% top_frac(selectionProp)
+  
     selectedIndexGenotypes <- column_to_rownames(selectedIndexGenotypes, var = 'V1')
 
-
     if (!is.null(selectedIndexGenotypes)) {
-        clusterData <- rownames_to_column(clusterData, var = "genotypes")    
+        clusterData <- rownames_to_column(clusterData, var = "germplasmName")    
         clusterData <- clusterData %>%
-            filter(genotypes %in% rownames(selectedIndexGenotypes))
+            filter(germplasmName %in% rownames(selectedIndexGenotypes))
         
-        clusterData <- column_to_rownames(clusterData, var = 'genotypes')
+        clusterData <- column_to_rownames(clusterData, var = 'germplasmName')
     }
 }
 
@@ -196,16 +205,28 @@ kClusters        <- data.frame(kMeansOut$cluster)
 kClusters        <- rownames_to_column(kClusters)
 names(kClusters) <- c('germplasmName', 'Cluster')
 
-clusteredData <- bind_cols(kClusters, clusterDataNotScaled)
-clusteredData <- clusteredData %>%
-                 mutate_if(is.numeric, funs(round(., 2))) %>%
-                 arrange(Cluster)
+if (!is.null(clusterDataNotScaled)) {
+    clusterDataNotScaled <- rownames_to_column(clusterDataNotScaled,
+                                               var="germplasmName")
+    
+    clusteredData <- inner_join(kClusters, clusterDataNotScaled,
+                                by="germplasmName")
+} else if (!is.null(selectedIndexGenotypes)) {
+    selectedIndexGenotypes <- rownames_to_column(selectedIndexGenotypes,
+                                                 var="germplasmName")
+    clusteredData <- inner_join(kClusters, selectedIndexGenotypes,
+                                by="germplasmName")   
+} else {
+    clusteredData <- kClusters
+}
 
+clusteredData <- clusteredData %>%
+    mutate_if(is.numeric, funs(round(., 2))) %>%
+    arrange(Cluster)
 
 png(plotKmeansFile)
 autoplot(kMeansOut, data = clusterData, frame = TRUE,  x = 1, y = 2)
 dev.off()
-
 
 cat(reportNotes, file = reportFile, sep = "\n", append = TRUE)
 
@@ -216,7 +237,6 @@ if (length(genoFiles) > 1) {
        row.names = TRUE,
        quote     = FALSE,
        )
-
 }
 
 if (length(kResultFile) != 0 ) {
@@ -226,7 +246,6 @@ if (length(kResultFile) != 0 ) {
        row.names = FALSE,
        quote     = FALSE,
        )
-
 }
 
 ####

@@ -25,18 +25,21 @@ solGS.cluster = {
 	if (trainingTraitsIds) {
 	    trainingTraitsIds = trainingTraitsIds.split(',');
 	}
+
+	var args = {
+	    'list_id': listId,
+	    'combo_pops_id': comboPopsId,
+	    'training_pop_id': popDetails.training_pop_id,
+	    'selection_pop_id': popDetails.selection_pop_id,
+	    'training_traits_ids': trainingTraitsIds,
+	    'cluster_type': clusterType,
+	    'data_type': dataType
+	};
 	
 	jQuery.ajax({
             type: 'POST',
             dataType: 'json',
-	    data: {'list_id': listId,
-		   'combo_pops_id': comboPopsId,
-		   'training_pop_id': popDetails.training_pop_id,
-		   'selection_pop_id': popDetails.selection_pop_id,
-		   'training_traits_ids': trainingTraitsIds,
-		   'cluster_type': clusterType,
-		   'data_type': dataType
-		  },
+	    data: args,
             url: '/cluster/check/result/',
             success: function(res) {
 		if (res.result) {
@@ -223,6 +226,7 @@ solGS.cluster = {
 	    popId   = jQuery("#cluster_selected_population_id").val();
 	    popType = jQuery("#cluster_selected_population_type").val();
 	    popName = jQuery("#cluster_selected_population_name").val();
+	    console.log('popId - selectId ' + popId)
 	}
 
 	if(!selectName) {
@@ -250,8 +254,7 @@ solGS.cluster = {
 		.show().fadeOut(9400);
 	    
 	} else {
-
-	    if (url.match(/\solgs\/models\/combined\/trials\//)) {
+	    if (url.match(/solgs\/models\/combined\/trials\//)) {
 		if (popType.match(/training/)) {
 		    popDetails['combo_pops_id'] = popId;
 		} else if (popType.match(/selection/)) {
@@ -301,6 +304,7 @@ solGS.cluster = {
 	    	    
 	    if (popType == 'selection_index') {
 		sIndexName = selectName;
+	//	clusterPopId = selectName;		
 	    }
 
 	    var clusterArgs =  {'training_pop_id': popDetails.training_pop_id,
@@ -433,7 +437,7 @@ solGS.cluster = {
 
 	var resultName = res.result_name; 
 	var imageId = res.plot_name;
-	
+	console.log('image id: ' + imageId)
 	imageId = 'id="' + imageId + '"';
 	var plot = '<img '+ imageId + ' src="' + res.kcluster_plot + '">';
 	var filePlot  = res.kcluster_plot.split('/').pop();
@@ -606,7 +610,7 @@ solGS.cluster = {
        
             var selectedPopId   = idPopName.id;
             var selectedPopName = idPopName.name;
-            var selectedPopType = idPopName.pop_type; 
+            var selectedPopType = idPopName.pop_type;
 	    
             jQuery("#cluster_selected_population_name").val(selectedPopName);
             jQuery("#cluster_selected_population_id").val(selectedPopId);
@@ -737,6 +741,10 @@ jQuery(document).ready( function() {
 	
 	var clusterOptsId = 'cluster_options';
 	var clusterOpts = solGS.cluster.clusteringOptions(clusterOptsId);
+
+	// if (clusterOpts.selection_proportion) {
+	//     selectId = selectName;
+	// }
 	
 	var clusterArgs = { 'select_id': selectId,
 			    'select_name': selectName,

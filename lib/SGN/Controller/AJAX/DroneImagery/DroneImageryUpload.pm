@@ -59,8 +59,8 @@ sub upload_drone_imagery : Path('/api/drone_imagery/upload_drone_imagery') : Act
 sub upload_drone_imagery_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    $c->response->headers->header( "Access-Control-Allow-Origin" => '*' ); 
-	$c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" ); 
+    $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
+    $c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
@@ -232,6 +232,9 @@ sub upload_drone_imagery_POST : Args(0) {
     my $alignment_output_path;
     my $cmd;
 
+    my $image_types_allowed = CXGN::DroneImagery::ImageTypes::get_all_drone_run_band_image_types()->{hash_ref};
+    my %seen_image_types_upload;
+
     if ($new_drone_run_band_stitching eq 'no') {
         my @new_drone_run_bands;
         if ($new_drone_run_band_numbers eq 'one_bw' || $new_drone_run_band_numbers eq 'one_rgb') {
@@ -250,6 +253,15 @@ sub upload_drone_imagery_POST : Args(0) {
                 $c->stash->{rest} = { error => "Please give a new drone run band type!" };
                 $c->detach();
             }
+            if (!exists($image_types_allowed->{$new_drone_run_band_type})) {
+                $c->stash->{rest} = { error => "Drone run band type not supported: $new_drone_run_band_type!" };
+                $c->detach();
+            }
+            if (exists($seen_image_types_upload{$new_drone_run_band_type})) {
+                $c->stash->{rest} = { error => "Drone run band type is repeated: $new_drone_run_band_type! Each drone run band in an imaging event should have a unique type!" };
+                $c->detach();
+            }
+            $seen_image_types_upload{$new_drone_run_band_type}++;
 
             my $upload_file = $c->req->upload('drone_run_band_stitched_ortho_image_1');
             if (!$upload_file) {
@@ -280,6 +292,15 @@ sub upload_drone_imagery_POST : Args(0) {
                     $c->stash->{rest} = { error => "Please give a new drone run band type!" };
                     $c->detach();
                 }
+                if (!exists($image_types_allowed->{$new_drone_run_band_type})) {
+                    $c->stash->{rest} = { error => "Drone run band type not supported: $new_drone_run_band_type!" };
+                    $c->detach();
+                }
+                if (exists($seen_image_types_upload{$new_drone_run_band_type})) {
+                    $c->stash->{rest} = { error => "Drone run band type is repeated: $new_drone_run_band_type! Each drone run band in an imaging event should have a unique type!" };
+                    $c->detach();
+                }
+                $seen_image_types_upload{$new_drone_run_band_type}++;
 
                 my $upload_file = $c->req->upload('drone_run_band_stitched_ortho_image_'.$_);
                 if (!$upload_file) {
