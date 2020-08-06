@@ -377,13 +377,16 @@ $program_name => undef
 % } #End program_location_section
 % if ($info_section_id eq 'program_project_section'){
                                 <& /breeders_toolbox/program/program_project_section.mas, program_id => $program_id &>
-% } #End program_location_section
+% } #End program_project_section
 % if ($info_section_id eq 'program_stock_section'){
                                 <& /breeders_toolbox/program/program_stock_section.mas, program_id => $program_id &>
-% } #End program_location_section
+% } #End program_stock_section
 % if ($info_section_id eq 'program_phenotype_section'){
                                 <& /breeders_toolbox/program/traits.mas, program_id => $program_id, collapse_phenotypes_section => 0 &>
 % } #End program_phenotype_section
+% if ($info_section_id eq 'program_product_profile_section'){
+                                <& /breeders_toolbox/program/product_profile.mas, program_id => $program_id, collapse_phenotypes_section => 0 &>
+% } #End program_product_profile_section
 
 % if (!$info_section_id){
                                 <p>No section specified! Main content goes here!</p>
