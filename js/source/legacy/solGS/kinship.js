@@ -120,7 +120,7 @@ solGS.kinship = {
 	    type: 'POST',
 	    dataType: 'json',
 	    data: kinshipArgs,
-	    url: '/kinship/run/analysis/',
+	    url: '/kinship/kinship/result/',
 	    success: function(res) {
 		if (res.result == 'success') {
 		    jQuery("#kinship_canvas .multi-spinner-container").hide();

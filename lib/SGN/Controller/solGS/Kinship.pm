@@ -78,6 +78,8 @@ sub kinship_result :Path('/solgs/kinship/result/') Args() {
     my $pop_id = $c->req->param('kinship_pop_id');
     my $protocol_id = $c->req->param('genotyping_protocol_id'); ;
     my $trait_id = $c->req->param('trait_id');
+
+    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
     
     my $kinship_files = $self->get_kinship_coef_files($c, $pop_id, $protocol_id, $trait_id);
     my $json_file = $kinship_files->{json_file};
@@ -342,7 +344,7 @@ sub prep_download_kinship_files {
   mkpath ([$base_tmp_dir], 0, 0755);  
 
   $c->controller('solGS::Files')->relationship_matrix_adjusted_file($c);  
-  my $kinship_txt_file  = $c->stash->{relationship_matrix_adjusted_file};
+  my $kinship_txt_file  = $c->stash->{relationship_matrix_adjusted_table_file};
   #my $kinship_json_file = $c->stash->{relationship_matrix_json_file};
 
   $c->controller('solGS::Files')->inbreeding_coefficients_file($c); 
@@ -350,11 +352,11 @@ sub prep_download_kinship_files {
 
   $c->controller('solGS::Files')->average_kinship_file($c);
   my $ave_kinship_file = $c->stash->{average_kinship_file};
-  
+
   $c->controller('solGS::Files')->copy_file($kinship_txt_file, $base_tmp_dir);					     
   $c->controller('solGS::Files')->copy_file($inbreeding_file, $base_tmp_dir); 
   $c->controller('solGS::Files')->copy_file($ave_kinship_file, $base_tmp_dir);  
-										     
+
   $kinship_txt_file = fileparse($kinship_txt_file);
   $kinship_txt_file = catfile($tmp_dir, $kinship_txt_file);
 
@@ -363,7 +365,7 @@ sub prep_download_kinship_files {
 
   $ave_kinship_file = fileparse($ave_kinship_file);
   $ave_kinship_file = catfile($tmp_dir, $ave_kinship_file);
-  
+ 
   $c->stash->{download_kinship_table} = $kinship_txt_file;
   $c->stash->{download_kinship_averages} = $ave_kinship_file;
   $c->stash->{download_inbreeding} = $inbreeding_file;
