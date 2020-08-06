@@ -2915,7 +2915,7 @@ sub _perform_plot_polygon_assign {
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
-    my $pm = Parallel::ForkManager->new(10);
+    my $pm = Parallel::ForkManager->new(ceil($number_system_cores/4));
     $pm->run_on_finish( sub {
         my ($pid, $exit_code, $ident, $exit_signal, $core_dump, $data_structure_reference) = @_;
         push @plot_polygon_image_urls, $data_structure_reference->{plot_polygon_image_url};
@@ -4749,22 +4749,23 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
     my $cropping_value = decode_json $cropping_value_json;
     # print STDERR Dumper $cropping_value;
 
+    #SHOULD USE DIFF IN SIZE OF ROTATED IMAGES AS X AD Y SCALES
     my $image_crop = [
         {
-            'x' => $rotated_current_points[0][0] - ( ($gcp_points_template[0][0] - $cropping_value->[0]->[0]->{'x'})/$template_gcp_x_scale),
-            'y' => $rotated_current_points[0][1] - ( ($gcp_points_template[0][1] - $cropping_value->[0]->[0]->{'y'})/$template_gcp_y_scale)
+            'x' => $cropping_value->[0]->[0]->{'x'}/$template_gcp_x_scale,
+            'y' => $cropping_value->[0]->[0]->{'y'}/$template_gcp_y_scale
         },
         {
-            'x' => $rotated_current_points[0][0] + ( ($cropping_value->[0]->[1]->{'x'} - $gcp_points_template[0][0])/$template_gcp_x_scale),
-            'y' => $rotated_current_points[0][1] - ( ($gcp_points_template[0][1] - $cropping_value->[0]->[1]->{'y'})/$template_gcp_y_scale)
+            'x' => $cropping_value->[0]->[1]->{'x'}/$template_gcp_x_scale,
+            'y' => $cropping_value->[0]->[1]->{'y'}/$template_gcp_y_scale
         },
         {
-            'x' => $rotated_current_points[0][0] + ( ($cropping_value->[0]->[2]->{'x'} - $gcp_points_template[0][0])/$template_gcp_x_scale),
-            'y' => $rotated_current_points[0][1] + ( ($cropping_value->[0]->[2]->{'y'} - $gcp_points_template[0][1])/$template_gcp_y_scale)
+            'x' => $cropping_value->[0]->[2]->{'x'}/$template_gcp_x_scale,
+            'y' => $cropping_value->[0]->[2]->{'y'}/$template_gcp_y_scale
         },
         {
-            'x' => $rotated_current_points[0][0] - ( ($gcp_points_template[0][0] - $cropping_value->[0]->[3]->{'x'})/$template_gcp_x_scale),
-            'y' => $rotated_current_points[0][1] + ( ($cropping_value->[0]->[3]->{'y'} - $gcp_points_template[0][1])/$template_gcp_y_scale)
+            'x' => $cropping_value->[0]->[3]->{'x'}/$template_gcp_x_scale,
+            'y' => $cropping_value->[0]->[3]->{'y'}/$template_gcp_y_scale
         }
     ];
     
@@ -5146,7 +5147,11 @@ sub standard_process_apply_raw_images_interactive_POST : Args(0) {
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
-    my $pm = Parallel::ForkManager->new(10);
+    my $number_system_cores = `getconf _NPROCESSORS_ONLN` or die "Could not get number of system cores!\n";
+    chomp($number_system_cores);
+    print STDERR "NUMCORES $number_system_cores\n";
+
+    my $pm = Parallel::ForkManager->new(ceil($number_system_cores/4));
     $pm->run_on_finish( sub {
         my ($pid, $exit_code, $ident, $exit_signal, $core_dump, $data_structure_reference) = @_;
     });
