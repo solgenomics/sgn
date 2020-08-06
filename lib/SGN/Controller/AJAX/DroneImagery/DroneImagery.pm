@@ -5220,7 +5220,7 @@ sub standard_process_apply_raw_images_interactive_POST : Args(0) {
 }
 
 sub drone_imagery_save_single_plot_image : Path('/api/drone_imagery/save_single_plot_image') : ActionClass('REST') { }
-sub drone_imagery_save_single_plot_image_GET : Args(0) {
+sub drone_imagery_save_single_plot_image_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
@@ -6889,6 +6889,59 @@ sub drone_imagery_get_image_for_saving_gcp_GET : Args(0) {
     my @saved_gcps_array = values %$saved_gcps_full;
 
     $c->stash->{rest} = {success => 1, result => $result, image_ids => \@image_ids, image_types => \@image_types, saved_gcps_full => $saved_gcps_full, gcps_array => \@saved_gcps_array};
+}
+
+sub drone_imagery_get_image_for_time_series : Path('/api/drone_imagery/get_image_for_time_series') : ActionClass('REST') { }
+sub drone_imagery_get_image_for_time_series_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $field_trial_id = $c->req->param('field_trial_id');
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    if (!$field_trial_id) {
+        $c->stash->{rest} = {error => "No field trial id given!" };
+        $c->detach();
+    }
+
+    my $image_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    my $images_search = CXGN::DroneImagery::ImagesSearch->new({
+        bcs_schema=>$schema,
+        trial_id_list=>[$field_trial_id],
+        project_image_type_id_list => [$image_type_id]
+    });
+    my ($result, $total_count) = $images_search->search();
+    # print STDERR Dumper $result;
+
+    my $calendar_funcs = CXGN::Calendar->new({});
+
+    my %image_ids;
+    my %seen_epoch_seconds;
+    my %seen_image_types;
+    foreach (@$result) {
+        if ($_->{drone_run_band_plot_polygons}) {
+            my $image_type = $_->{drone_run_band_project_type};
+            my $drone_run_date = $calendar_funcs->display_start_date($_->{drone_run_date});
+            my $drone_run_date_object = Time::Piece->strptime($drone_run_date, "%Y-%B-%d %H:%M:%S");
+            my $epoch_seconds = $drone_run_date_object->epoch;
+            $seen_epoch_seconds{$epoch_seconds}++;
+            $seen_image_types{$image_type}++;
+            $image_ids{$epoch_seconds}->{$image_type} = {
+                image_id => $_->{image_id},
+                drone_run_band_project_type => $image_type,
+                drone_run_project_id => $_->{drone_run_project_id},
+                drone_run_project_name => $_->{drone_run_project_name},
+                plot_polygons => $_->{drone_run_band_plot_polygons},
+                date => $drone_run_date
+            };
+        }
+    }
+    my @sorted_epoch_seconds = sort keys %seen_epoch_seconds;
+    my @sorted_image_types = sort keys %seen_image_types;
+
+    $c->stash->{rest} = {success => 1, image_ids_hash => \%image_ids, sorted_times => \@sorted_epoch_seconds, sorted_image_types => \@sorted_image_types};
 }
 
 sub drone_imagery_saving_gcp : Path('/api/drone_imagery/saving_gcp') : ActionClass('REST') { }
