@@ -6957,7 +6957,20 @@ sub drone_imagery_get_image_for_time_series_GET : Args(0) {
         push @sorted_dates, $time_lookup{$_};
     }
 
-    $c->stash->{rest} = {success => 1, image_ids_hash => \%image_ids, sorted_times => \@sorted_epoch_seconds, sorted_image_types => \@sorted_image_types, sorted_dates => \@sorted_dates};
+    my $field_layout = CXGN::Trial->new({bcs_schema => $schema, trial_id => $field_trial_id})->get_layout->get_design;
+    my %plot_layout;
+    while (my ($k, $v) = each %$field_layout) {
+        $plot_layout{$v->{plot_name}} = $v;
+    }
+
+    $c->stash->{rest} = {
+        success => 1,
+        image_ids_hash => \%image_ids,
+        sorted_times => \@sorted_epoch_seconds,
+        sorted_image_types => \@sorted_image_types,
+        sorted_dates => \@sorted_dates,
+        # field_layout => \%plot_layout
+    };
 }
 
 sub drone_imagery_saving_gcp : Path('/api/drone_imagery/saving_gcp') : ActionClass('REST') { }
