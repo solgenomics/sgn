@@ -6920,12 +6920,14 @@ sub drone_imagery_get_image_for_time_series_GET : Args(0) {
     my %image_ids;
     my %seen_epoch_seconds;
     my %seen_image_types;
+    my %time_lookup;
     foreach (@$result) {
         if ($_->{drone_run_band_plot_polygons}) {
             my $image_type = $_->{drone_run_band_project_type};
             my $drone_run_date = $calendar_funcs->display_start_date($_->{drone_run_date});
             my $drone_run_date_object = Time::Piece->strptime($drone_run_date, "%Y-%B-%d %H:%M:%S");
             my $epoch_seconds = $drone_run_date_object->epoch;
+            $time_lookup{$epoch_seconds} = $drone_run_date;
             $seen_epoch_seconds{$epoch_seconds}++;
             $seen_image_types{$image_type}++;
             $image_ids{$epoch_seconds}->{$image_type} = {
@@ -6940,8 +6942,12 @@ sub drone_imagery_get_image_for_time_series_GET : Args(0) {
     }
     my @sorted_epoch_seconds = sort keys %seen_epoch_seconds;
     my @sorted_image_types = sort keys %seen_image_types;
+    my @sorted_dates;
+    foreach (@sorted_epoch_seconds) {
+        push @sorted_dates, $time_lookup{$_};
+    }
 
-    $c->stash->{rest} = {success => 1, image_ids_hash => \%image_ids, sorted_times => \@sorted_epoch_seconds, sorted_image_types => \@sorted_image_types};
+    $c->stash->{rest} = {success => 1, image_ids_hash => \%image_ids, sorted_times => \@sorted_epoch_seconds, sorted_image_types => \@sorted_image_types, sorted_dates => \@sorted_dates};
 }
 
 sub drone_imagery_saving_gcp : Path('/api/drone_imagery/saving_gcp') : ActionClass('REST') { }

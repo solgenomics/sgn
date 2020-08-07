@@ -907,28 +907,10 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
 
     <div class="well well-sm">
         <div class="panel panel-default">
-        <div class="panel-body">
-        <div class="row">
-            <div class="col-sm-6">
-                <div id="manage_drone_imagery_field_trial_time_series_next_time_buttons" style="display:none">
-                    <button class="btn btn-default" id="manage_drone_imagery_field_trial_time_series_previous_time">View Previous Time Point</button>
-                    <button class="btn btn-default" id="manage_drone_imagery_field_trial_time_series_next_time">View Next Time Point</button>
-                    <br/><br/>
-                </div>
-
+            <div class="panel-body">
                 <div id="manage_drone_imagery_field_trial_time_series_times_div"></div>
-            </div>
-            <div class="col-sm-6">
-                <div id="manage_drone_imagery_field_trial_time_series_next_buttons" style="display:none">
-                    <button class="btn btn-default" id="manage_drone_imagery_field_trial_time_series_previous_image">View Previous Image Type</button>
-                    <button class="btn btn-default" id="manage_drone_imagery_field_trial_time_series_next_image">View Next Image Type</button>
-                    <br/><br/>
-                </div>
-
                 <div id="manage_drone_imagery_field_trial_time_series_image_type_div"></div>
             </div>
-        </div>
-        </div>
         </div>
     </div>
 
@@ -2854,6 +2836,8 @@ jQuery(document).ready(function() {
     var manage_drone_imagery_field_trial_time_series_image_id;
     var manage_drone_imagery_field_trial_time_series_drone_run_project_id;
     var manage_drone_imagery_field_trial_time_series_sorted_times;
+    var manage_drone_imagery_field_trial_time_series_sorted_dates;
+    var manage_drone_imagery_field_trial_time_series_date;
     var manage_drone_imagery_field_trial_time_series_time;
     var manage_drone_imagery_field_trial_time_series_sorted_image_types;
     var manage_drone_imagery_field_trial_time_series_image_type;
@@ -2863,6 +2847,7 @@ jQuery(document).ready(function() {
     function _drone_imagery_time_series_image_show() {
         manage_drone_imagery_field_trial_time_series_image_type = manage_drone_imagery_field_trial_time_series_sorted_image_types[manage_drone_imagery_field_trial_time_series_image_type_counter];
         manage_drone_imagery_field_trial_time_series_time = manage_drone_imagery_field_trial_time_series_sorted_times[manage_drone_imagery_field_trial_time_series_time_counter];
+        manage_drone_imagery_field_trial_time_series_date = manage_drone_imagery_field_trial_time_series_sorted_dates[manage_drone_imagery_field_trial_time_series_time_counter];
 
         manage_drone_imagery_field_trial_time_series_image_id = manage_drone_imagery_field_trial_time_series_image_id_hash[manage_drone_imagery_field_trial_time_series_time][manage_drone_imagery_field_trial_time_series_image_type]['image_id'];
         manage_drone_imagery_field_trial_time_series_drone_run_project_id = manage_drone_imagery_field_trial_time_series_image_id_hash[manage_drone_imagery_field_trial_time_series_time][manage_drone_imagery_field_trial_time_series_image_type]['drone_run_project_id'];
@@ -2871,12 +2856,41 @@ jQuery(document).ready(function() {
 
         showPlotPolygonStart(manage_drone_imagery_field_trial_time_series_image_id, manage_drone_imagery_field_trial_time_series_drone_run_project_id, 'manage_drone_imagery_field_trial_time_series_canvas_div', 'manage_drone_imagery_field_trial_time_series_info_div', 'manage_drone_imagery_field_trial_time_series_loading_div');
 
-        jQuery('#manage_drone_imagery_field_trial_time_series_image_type_div').html('<div class="well well-sm"><h4>Current Image Type: '+manage_drone_imagery_field_trial_time_series_image_type+'</h4><p>Available Types: '+manage_drone_imagery_field_trial_time_series_sorted_image_types.join(', ')+'</p></div>');
-        jQuery('#manage_drone_imagery_field_trial_time_series_next_buttons').show();
+        var image_type_html = "<table class='table table-bordered table-hover'><thead><tr><th>Image Types (Select an image type)</th></tr></thead><tbody><tr><td>";
+        for (var i=0; i<manage_drone_imagery_field_trial_time_series_sorted_image_types.length; i++) {
+            if (manage_drone_imagery_field_trial_time_series_sorted_image_types[i] == manage_drone_imagery_field_trial_time_series_image_type) {
+                image_type_html = image_type_html + "<button class='btn btn-sm btn-info' style='margin:3px'>"+manage_drone_imagery_field_trial_time_series_sorted_image_types[i]+"</button>";
+            }
+            else {
+                image_type_html = image_type_html + "<button class='btn btn-sm btn-default' style='margin:3px' name='drone_runs_trial_view_timeseries_image_type_select' data-index="+i+" >"+manage_drone_imagery_field_trial_time_series_sorted_image_types[i]+"</button>";
+            }
+        }
+        image_type_html = image_type_html + "</td></tr></tbody></table>";
 
-        jQuery('#manage_drone_imagery_field_trial_time_series_times_div').html('<div class="well well-sm"><h4>Current Time Point: '+manage_drone_imagery_field_trial_time_series_time+'</h4><p>Available Time Points: '+manage_drone_imagery_field_trial_time_series_sorted_times.join(', ')+'</p></div>');
-        jQuery('#manage_drone_imagery_field_trial_time_series_next_time_buttons').show();
+        var time_html = "<table class='table table-bordered table-hover'><thead><tr><th>Time Points (Select a time point)</th></tr></thead><tbody><tr><td>";
+        for (var i=0; i<manage_drone_imagery_field_trial_time_series_sorted_dates.length; i++) {
+            if (manage_drone_imagery_field_trial_time_series_sorted_dates[i] == manage_drone_imagery_field_trial_time_series_date) {
+                time_html = time_html + "<button class='btn btn-sm btn-info' style='margin:3px' >"+manage_drone_imagery_field_trial_time_series_sorted_dates[i]+"</button>";
+            }
+            else {
+                time_html = time_html + "<button class='btn btn-sm btn-default' style='margin:3px' name='drone_runs_trial_view_timeseries_date_select' data-index="+i+" >"+manage_drone_imagery_field_trial_time_series_sorted_dates[i]+"</button>";
+            }
+        }
+        time_html = time_html + "</td></tr></tbody></table>";
+
+        jQuery('#manage_drone_imagery_field_trial_time_series_image_type_div').html(image_type_html);
+        jQuery('#manage_drone_imagery_field_trial_time_series_times_div').html(time_html);
     }
+
+    jQuery(document).on('click', 'button[name="drone_runs_trial_view_timeseries_image_type_select"]', function(){
+        manage_drone_imagery_field_trial_time_series_image_type_counter = jQuery(this).data('index');
+        _drone_imagery_time_series_image_show();
+    });
+
+    jQuery(document).on('click', 'button[name="drone_runs_trial_view_timeseries_date_select"]', function(){
+        manage_drone_imagery_field_trial_time_series_time_counter = jQuery(this).data('index');
+        _drone_imagery_time_series_image_show();
+    });
 
     jQuery(document).on('click', 'button[name="drone_runs_trial_view_timeseries"]', function(){
         manage_drone_imagery_field_trial_time_series_field_trial_id = jQuery(this).data('field_trial_id');
@@ -2898,6 +2912,7 @@ jQuery(document).ready(function() {
 
                 manage_drone_imagery_field_trial_time_series_image_id_hash = response.image_ids_hash;
                 manage_drone_imagery_field_trial_time_series_sorted_times = response.sorted_times;
+                manage_drone_imagery_field_trial_time_series_sorted_dates = response.sorted_dates;
                 manage_drone_imagery_field_trial_time_series_sorted_image_types = response.sorted_image_types;
                 manage_drone_imagery_field_trial_time_series_time_counter = 0;
                 manage_drone_imagery_field_trial_time_series_image_type_counter = 0
