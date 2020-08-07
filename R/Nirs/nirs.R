@@ -146,14 +146,14 @@ if(args[10]=="TRUE"){ # SAVE MODEL WITHOUT CV.SCHEME
     var.imp <- results.df[[2]]
     results.df <- results.df[[1]]
     # args[12] = variable importance results output file name
-    write.table(var.imp, file = args[12], row.names = F)
+    write.csv(var.imp, file = args[12], row.names = F)
     # args[13] = variable importance figure output file name
     ggsave(filename = args[13], plot = results.plot, device = "png")
   }
 }
 
 # args[14] = table output file name
-write.table(x = results.df, file = args[14], row.names = F)
+write.csv(x = results.df, file = args[14], row.names = F)
 
 # args[15] = figure output file name
 # ggsave(filename = args[15], plot = results.plot, device = "png")
