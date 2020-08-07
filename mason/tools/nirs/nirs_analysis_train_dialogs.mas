@@ -166,6 +166,8 @@
                 <&| /util/workflow.mas:step, title=> "Summary" &>
                     <& /page/page_title.mas, title=>"Summary of the parameters selected for model creation" &>
 
+                    <div id="nir_analysis_training_model_performance_results"></div>
+
                     <div class="form-horizontal">
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Do you want to save the model for future predictions?: </label>
@@ -335,6 +337,8 @@ jQuery(document).ready(function(){
 
                 jQuery('#working_modal').modal('hide');
 
+                jQuery('#nir_analysis_training_model_performance_results').html("<div class='well'>"+response.performance_output+"</div>");
+
                 Workflow.complete("#nir_analysis_training_model_step");
                 Workflow.focus('#nirs_analysis_training_workflow', 5);
             },
@@ -358,6 +362,7 @@ jQuery(document).ready(function(){
         jQuery('#generic_save_analysis_model_training_data_file').val(nirs_analysis_training_response.training_data_file);
         jQuery('#generic_save_analysis_model_archived_training_data_file_type').val("jennasrwaves_V1.01_waves_nirs_spectral_predictions_training_data_file");
         jQuery('#generic_save_analysis_model_auxiliary_files').val(JSON.stringify(nirs_analysis_training_response.model_aux_files));
+        jQuery('#generic_save_analysis_dataset_id').val(nirs_analysis_training_dataset_train_id);
 
         jQuery('#generic_save_analysis_dialog').modal('show');
     });

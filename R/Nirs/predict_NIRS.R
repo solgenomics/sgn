@@ -20,6 +20,7 @@ dataset.input <- jsonlite::fromJSON(txt = args[1], flatten = T) %>%
   rename(uniqueid = observationUnitId) %>%
   rename_at(vars(starts_with("nirs_spectra")), ~str_replace(., "nirs_spectra.", "")) %>%
   dplyr::select(uniqueid, num_range(prefix = "X", range = 1:100000))
+print(dataset.input[1:10,1:10])
 
 wls <- colnames(dataset.input)[-1] %>% parse_number()
 

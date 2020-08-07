@@ -54,7 +54,7 @@ train.input <- jsonlite::fromJSON(txt = args[8], flatten = T) %>%
   rename_at(vars(starts_with("trait.")), ~paste0("reference")) %>%
   rename_at(vars(starts_with("nirs_spectra")), ~str_replace(., "nirs_spectra.", "")) %>%
   dplyr::select(uniqueid, reference, starts_with("germplasm"), num_range(prefix = "X", range = 1:100000))
-
+train.input$reference <- as.numeric(train.input$reference)
 
 print(train.input[1:5,1:5])
 
@@ -67,7 +67,7 @@ if(args[9] != "NULL"){
     rename_at(vars(starts_with("trait.")), ~paste0("reference")) %>%
     rename_at(vars(starts_with("nirs_spectra")), ~str_replace(., "nirs_spectra.", "")) %>%
     dplyr::select(uniqueid, reference, starts_with("germplasm"), num_range(prefix = "X", range = 1:100000))
-
+  test.input$reference <- as.numeric(test.input$reference)
 } else{
     print("NO TEST DATA")
   test.input <- NULL

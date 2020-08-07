@@ -720,7 +720,7 @@ sub get_trained_nirs_models : Path('/ajax/html/select/trained_nirs_models') Args
 
     while (my ($nd_protocol_id, $name, $description, $model_type) = $model_h->fetchrow_array()) {
         my $model_type_hash = decode_json $model_type;
-        my $selected_trait_name = $model_type_hash->{selected_trait};
+        my $selected_trait_name = $model_type_hash->{trait_name};
         my $preprocessing_boolean = $model_type_hash->{preprocessing_boolean};
         my $niter = $model_type_hash->{niter};
         my $algorithm = $model_type_hash->{algorithm};
@@ -729,11 +729,11 @@ sub get_trained_nirs_models : Path('/ajax/html/select/trained_nirs_models') Args
         my $cross_validation = $model_type_hash->{cross_validation};
         my $format = $model_type_hash->{format};
 
-        $html .= '<tr><td><input type="checkbox" name="'.$checkbox_name.'" value="'.$nd_protocol_id.'"></td><td>'.$name.'</td><td>'.$description.'</td><td>'.$format.'</td><td>'.$selected_trait_name.'</td></tr>';
+        $html .= '<tr><td><input type="checkbox" name="'.$checkbox_name.'" value="'.$nd_protocol_id.'"></td><td>'.$name.'</td><td>'.$description.'</td><td>'.$format.'</td><td>'.$selected_trait_name.'</td><td>'.$algorithm.'</td></tr>';
     }
     $html .= "</tbody></table>";
 
-    $html .= "<script>jQuery(document).ready(function() { jQuery('#html-select-nirsmodel-table').DataTable({ 'lengthMenu': [[2, 4, 6, 8, 10, 25, 50, -1], [2, 4, 6, 8, 10, 25, 50, 'All']] }); } );</script>";
+    $html .= "<script>jQuery(document).ready(function() { jQuery('#html-select-nirsmodel-table').DataTable({ }); } );</script>";
 
     $c->stash->{rest} = { select => $html };
 }

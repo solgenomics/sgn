@@ -353,6 +353,7 @@ sub store {
     my $user_name = $self->user_name();
     my $user_role = $self->user_role();
 
+    print STDERR Dumper $analysis_model_type;
     my $model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, $analysis_model_type, 'protocol_type')->cvterm_id();
 
     if (!$analysis_model_protocol_id) {

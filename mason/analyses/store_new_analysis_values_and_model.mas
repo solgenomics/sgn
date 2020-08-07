@@ -319,7 +319,7 @@ The trait names will be post-composed with the analysis_statistical_ontology_ter
 
                                 <hr>
                                 <center>
-                                <button class="btn btn-primary" id="generic_save_analysis_submit_button" onclick="return false;">Save Analysis</button>
+                                <button class="btn btn-primary" id="generic_save_analysis_submit_button" onclick="return false;">Save Analysis Results And/Or Model</button>
                                 </center>
                                 <br/><br/>
 
@@ -516,35 +516,35 @@ jQuery(document).ready(function() {
             alert('If Model ID is populated, then you should not be able to give a model description!');
             return false;
         }
-        if (generic_save_analysis_model_name == '') {
+        if (generic_save_analysis_model_id == '' && generic_save_analysis_model_name == '') {
             alert('Please give a model name');
             return false;
         }
-        if (generic_save_analysis_model_description == '') {
+        if (generic_save_analysis_model_id == '' && generic_save_analysis_model_description == '') {
             alert('Please give a model description');
             return false;
         }
-        if (generic_save_analysis_model_is_public == '') {
+        if (generic_save_analysis_model_id == '' && generic_save_analysis_model_is_public == '') {
             alert('Please tell if a model is public');
             return false;
         }
-        if (generic_save_analysis_model_language == '') {
+        if (generic_save_analysis_model_id == '' && generic_save_analysis_model_language == '') {
             alert('Please give a model language');
             return false;
         }
-        if (generic_save_analysis_model_type == '') {
+        if (generic_save_analysis_model_id == '' && generic_save_analysis_model_type == '') {
             alert('Please give a model type');
             return false;
         }
-        if (generic_save_analysis_model_properties == '') {
+        if (generic_save_analysis_model_id == '' && generic_save_analysis_model_properties == '') {
             alert('Please give a model properties JSON object');
             return false;
         }
-        if (generic_save_analysis_model_application_name == '') {
+        if (generic_save_analysis_model_id == '' && generic_save_analysis_model_application_name == '') {
             alert('Please give a model application name');
             return false;
         }
-        if (generic_save_analysis_model_application_version == '') {
+        if (generic_save_analysis_model_id == '' && generic_save_analysis_model_application_version == '') {
             alert('Please give a model application version');
             return false;
         }
@@ -556,22 +556,6 @@ jQuery(document).ready(function() {
         //    alert('Please give a model file type');
         //    return false;
         //}
-        if (generic_save_analysis_model_language == '') {
-            alert('Please give a model language');
-            return false;
-        }
-        if (generic_save_analysis_model_type == '') {
-            alert('Please give a model type');
-            return false;
-        }
-        if (generic_save_analysis_model_application_name == '') {
-            alert('Please give a model application name');
-            return false;
-        }
-        if (generic_save_analysis_model_application_version == '') {
-            alert('Please give a model application version');
-            return false;
-        }
 
         jQuery.ajax({
             type: 'POST',
@@ -617,9 +601,16 @@ jQuery(document).ready(function() {
                 }
                 if (response.success) {
                     alert('Analysis and/or model saved!');
+                    var html = '<center>';
                     if (response.analysis_id) {
-                        jQuery('#generic_save_analysis_response_div').html('Go to saved <a href="/analyses/'+response.analysis_id+'" target=_blank >analysis</a>');
+                        html = html + '<p>Go to saved <a href="/analyses/'+response.analysis_id+'" target=_blank >analysis</a></p>';
                     }
+                    if (response.model_id) {
+                        html = html + '<p>Go to saved <a href="/analyses_model/'+response.model_id+'" target=_blank >model</a></p>';
+                    }
+                    html = html + '</center>';
+                    jQuery('#generic_save_analysis_response_div').html(html);
+
                     Workflow.complete("#generic_save_analysis_submit_button");
                     Workflow.focus('#generic_save_analysis_workflow', 3);
                 }

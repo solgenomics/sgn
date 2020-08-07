@@ -61,6 +61,8 @@
                         </div>
                     </div>
 
+                    <div id="nir_analysis_prediction_analysis_predictions"></div>
+
                 </&>
             </&>
 
@@ -162,6 +164,13 @@ jQuery(document).ready(function(){
                         return false;
                     }
 
+                    var html = "<table class='table table-bordered table-hover'><thead><tr><th>Stock</th><th>Prediction</th></tr></thead><tbody>";
+                    for (var i=0; i<response.unique_plots.length; i++) {
+                        html = html + '<tr><td>'+response.unique_plots[i]+'</td><td>'+response.result_predictions[response.unique_plots[i]][response.unique_traits[0]][0]+'</td></tr>';
+                    }
+                    html = html + "</tbody></table>";
+                    jQuery('#nir_analysis_prediction_analysis_predictions').html(html);
+
                     jQuery('#generic_save_analysis_protocol').val(response.protocol);
                     jQuery('#generic_save_analysis_dataset_id').val(nirs_analysis_prediction_dataset_id);
                     jQuery('#generic_save_analysis_accession_names').val(JSON.stringify(response.unique_accessions));
@@ -171,6 +180,7 @@ jQuery(document).ready(function(){
                     jQuery('#generic_save_analysis_result_values').val(JSON.stringify(response.result_predictions));
                     jQuery('#generic_save_analysis_result_values_type').val('analysis_result_values_match_precomputed_design');
                     jQuery('#generic_save_analysis_result_summary_values').val(JSON.stringify(response.result_summary));
+                    jQuery('#generic_save_analysis_model_type').val('waves_nirs_spectral_predictions');
 
                     jQuery('#generic_save_analysis_model_name_div').hide();
                     jQuery('#generic_save_analysis_model_description_div').hide();

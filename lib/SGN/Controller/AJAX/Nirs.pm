@@ -125,7 +125,7 @@ sub generate_results_POST : Args(0) {
     my $train_json_filepath = $tempfile."_train_json";
     my $test_json_filepath = $tempfile."_test_json";
 
-    my $output_table_filepath = $tempfile."_table_results.txt";
+    my $output_table_filepath = $tempfile."_table_results.csv";
     my $output_figure_filepath = $tempfile."_figure_results.png";
     my $output_table2_filepath = $tempfile."_table2_results.txt";
     my $output_figure2_filepath = $tempfile."_figure2_results.png";
@@ -321,6 +321,29 @@ sub generate_results_POST : Args(0) {
     print STDERR $cmd_s;
     my $cmd_status = system($cmd_s);
 
+    my @aux_files = (
+        {
+            auxiliary_model_file_archive_type => "jennasrwaves_V1.01_waves_nirs_spectral_predictions_performance_output",
+            auxiliary_model_file => $output_table_filepath
+        }
+    );
+    if ($test_json_filepath ne 'NULL') {
+        push @aux_files, {
+            auxiliary_model_file_archive_type => "jennasrwaves_V1.01_waves_nirs_spectral_predictions_testing_data_file",
+            auxiliary_model_file => $test_json_filepath
+        };
+    }
+
+    my $performance_output = '';
+    open(my $fh, '<', $output_table_filepath)
+        or die "Could not open file '$output_table_filepath' $!";
+
+        print STDERR "Opened $output_table_filepath\n";
+        while(my $l = <$fh>) {
+            $performance_output .= $l;
+        }
+    close($fh);
+
     $c->stash->{rest} = {
         train_dataset_id => $train_dataset_id,
         model_properties => {
@@ -337,10 +360,8 @@ sub generate_results_POST : Args(0) {
         model_file => $output_model_filepath,
         model_file_type => "jennasrwaves_V1.01_waves_nirs_spectral_predictions_weights_file",
         training_data_file => $train_json_filepath,
-        model_aux_files => [
-            {"jennasrwaves_V1.01_waves_nirs_spectral_predictions_testing_data_file" => $test_json_filepath},
-            {"jennasrwaves_V1.01_waves_nirs_spectral_predictions_performance_output" => $output_table_filepath}
-        ]
+        model_aux_files => \@aux_files,
+        performance_output => $performance_output
     };
 }
 
@@ -371,36 +392,34 @@ sub generate_predictions_POST : Args(0) {
     my $trait_id = $saved_model_object->{model_properties}->{trait_id};
     my $format_id = $saved_model_object->{model_properties}->{format};
     my $algorithm = $saved_model_object->{model_properties}->{algorithm};
+    my $niter = $saved_model_object->{model_properties}->{niter};
+    my $tune = $saved_model_object->{model_properties}->{tune};
+    my $cross_validation = $saved_model_object->{model_properties}->{cross_validation};
+    my $random_forest_importance = $saved_model_object->{model_properties}->{random_forest_importance};
+    my $preprocessing_boolean = $saved_model_object->{model_properties}->{preprocessing_boolean};
     my $model_file = $saved_model_object->{model_files}->{"jennasrwaves_V1.01_waves_nirs_spectral_predictions_weights_file"};
+    my $performance_file = $saved_model_object->{model_files}->{"jennasrwaves_V1.01_waves_nirs_spectral_predictions_performance_output"};
 
     my $training_dataset = CXGN::Dataset->new({people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id});
     my ($training_pheno_data, $train_unique_traits) = $training_dataset->retrieve_phenotypes_ref();
     # print STDERR Dumper $training_pheno_data;
 
     my %training_pheno_data;
-    my $seltrait;
     my %stock_info;
+    my $obs_unit_type_name;
     my %seen_accessions;
     foreach my $d (@$training_pheno_data) {
         my $obsunit_id = $d->{observationunit_stock_id};
         my $obsunit_name = $d->{observationunit_uniquename};
         my $germplasm_name = $d->{germplasm_uniquename};
+        $obs_unit_type_name = $d->{observationunit_type_name};
+
         $stock_info{$obsunit_id} = $obsunit_name;
         $seen_accessions{$germplasm_name}++;
-        foreach my $o (@{$d->{observations}}) {
-            my $t_id = $o->{trait_id};
-            my $t_name = $o->{trait_name};
-            my $value = $o->{value};
-            if ($trait_id == $t_id) {
-                $seltrait = $t_name;
-                $training_pheno_data{$obsunit_id} = {
-                    value => $value,
-                    trait_id => $t_id,
-                    trait_name => $t_name,
-                    germplasm_name => $germplasm_name
-                };
-            }
-        }
+        $training_pheno_data{$obsunit_id} = {
+            germplasm_name => $germplasm_name,
+            trial_id => $d->{trial_id}
+        };
     }
 
     my @all_plot_ids = keys %training_pheno_data;
@@ -422,25 +441,56 @@ sub generate_predictions_POST : Args(0) {
     }
     # print STDERR Dumper \%training_pheno_data;
 
+    my %seen_field_trial_ids;
+    my %seen_stock_ids;
     my @training_data_input;
     while ( my ($stock_id, $o) = each %training_pheno_data) {
-        my $trait_name = $o->{trait_name};
-        my $value = $o->{value};
         my $spectra = $o->{spectra};
         my $germplasm_name = $o->{germplasm_name};
-        if ($spectra && defined($value)) {
+        if ($spectra) {
             push @training_data_input, {
                 "observationUnitId" => $stock_id,
-                "germplasmName" => $germplasm_name,
-                "trait" => {$trait_name => $value},
+                # "germplasmName" => $germplasm_name,
                 "nirs_spectra" => $spectra
             };
+            $seen_field_trial_ids{$o->{trial_id}}++;
+            $seen_stock_ids{$stock_id}++;
         }
     }
+    my @field_trial_ids_seen = sort keys %seen_field_trial_ids;
 
     if (scalar(@training_data_input) == 0) {
         $c->stash->{rest} = { error => "There is no NIRs using $format_id and phenotype data for $trait_name through the dataset selected!" };
         $c->detach();
+    }
+
+    my %layout_obs;
+    print STDERR Dumper $obs_unit_type_name;
+    foreach (@field_trial_ids_seen) {
+        my $field_layout = CXGN::Trial->new({bcs_schema => $schema, trial_id => $_})->get_layout->get_design;
+        while (my($plot_number, $o) = each %$field_layout) {
+            if ($obs_unit_type_name eq 'plot' && exists($seen_stock_ids{$o->{plot_id}})) {
+                $layout_obs{$o->{plot_name}} = $o;
+            }
+        }
+    }
+
+    my %analysis_design;
+    my $counter = 1;
+    if ($obs_unit_type_name eq 'plot') {
+        foreach (values %layout_obs) {
+            $analysis_design{$counter} = {
+                stock_name => $_->{accession_name},
+                plot_name => $_->{plot_name},
+                plot_number => $counter,
+                col_number => $_->{col_number},
+                row_number => $_->{row_number},
+                rep_number => $_->{rep_number},
+                block_number => $_->{block_number},
+                is_a_control => $_->{is_a_control}
+            };
+            $counter++;
+        }
     }
 
     $c->tempfiles_subdir("nirs_files");
@@ -452,7 +502,6 @@ sub generate_predictions_POST : Args(0) {
     );
 
     my $input_json_filepath = $tempfile."_json";
-    my $output_table_filepath = $tempfile."_table_performance_results.csv";
     my $output_results_filepath = $tempfile."_table_predictions_results.csv";
     my $output_figure_filepath = $tempfile."_figure_results.png";
 
@@ -462,11 +511,11 @@ sub generate_predictions_POST : Args(0) {
         print $train_json_outfile $training_data_input_json;
     close($train_json_outfile);
 
-    my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/predict_NIRS.R '$input_json_filepath' '$output_table_filepath' '$model_file' $algorithm '$output_results_filepath' ";
+    my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/predict_NIRS.R '$input_json_filepath' '$performance_file' '$model_file' $algorithm '$output_results_filepath' ";
     print STDERR $cmd_s;
     my $cmd_status = system($cmd_s);
 
-    my $csv = Text::CSV->new({ sep_char => "\t" });
+    my $csv = Text::CSV->new({ sep_char => "," });
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my %result_predictions;
@@ -489,7 +538,7 @@ sub generate_predictions_POST : Args(0) {
             my $stock_id = $columns[0];
             my $stock_name = $stock_info{$stock_id};
             my $value = $columns[1];
-            $result_predictions{$stock_name}->{$seltrait} = [$value, $timestamp, $user_name, '', ''];
+            $result_predictions{$stock_name}->{$trait_name} = [$value, $timestamp, $user_name, '', ''];
             $seen_plot_names{$stock_name}++;
         }
     close($fh);
@@ -511,15 +560,17 @@ sub generate_predictions_POST : Args(0) {
         $stat_term = "Support vector machine (SVM) with radial kernel as implemented with the kernLab package in R|SGNSTAT:0000011";
     }
 
+    my $protocol = "waves::SaveModel( df = train.ready, save.model = FALSE, autoselect.preprocessing = $preprocessing_boolean, preprocessing.method = $algorithm, model.save.folder = NULL, model.name = 'PredictionModel', best.model.metric = 'RMSE', tune.length = $tune, model.method = model.method, num.iterations = $niter, wavelengths = wls, stratified.sampling = stratified.sampling, cv.scheme = $cross_validation, trial1 = NULL, trial2 = NULL, trial3 = NULL)";
+
     $c->stash->{rest} = {
         success => 1,
         result_predictions => \%result_predictions,
-        unique_traits => [$seltrait],
+        unique_traits => [$trait_name],
         unique_plots => \@unique_plot_names,
         unique_accessions => \@unique_accession_names,
-        protocol => "R waves $format_id $algorithm",
+        protocol => $protocol,
         stat_term => $stat_term,
-        analysis_design => '',
+        analysis_design => \%analysis_design,
         result_summary => {}
     };
 }
