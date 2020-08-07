@@ -4791,7 +4791,7 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
         type_id=>$process_indicator_cvterm_id,
         project_id=>$drone_run_project_id_input,
         rank=>0,
-        value=>0 #CHANGE BACK ############################################################################
+        value=>1
     },
     {
         key=>'projectprop_c1'
