@@ -559,7 +559,7 @@ function save_genotyping_trial_details (categories, details, success_message) {
 }
 
 
-function save_replace_plot_accession () {
+function save_replace_well_accession () {
     var trial_id = get_trial_id();
     jQuery('#replace_plate_accessions_dialog').modal("hide");
     jQuery('#working_modal').modal("show");

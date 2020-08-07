@@ -286,8 +286,8 @@ trial_name => $trial_name
         });
     });
 
-    jQuery('#save_replace_plot_accession').click(function(){
-        save_replace_plot_accession();
+    jQuery('#save_replace_well_accession').click(function(){
+        save_replace_well_accession();
     });
 
 </script>

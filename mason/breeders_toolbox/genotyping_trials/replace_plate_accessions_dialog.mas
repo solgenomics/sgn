@@ -50,7 +50,7 @@ $trial_name
             </div>
             <div class="modal-footer">
                 <button id="hm_close_replace_plot_accession_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="save_replace_plot_accession" id="save_replace_plot_accession">Replace Well Accession</button>
+                <button type="button" class="btn btn-primary" name="save_replace_well_accession" id="save_replace_well_accession">Replace Well Accession</button>
             </div>
         </div>
     </div>
