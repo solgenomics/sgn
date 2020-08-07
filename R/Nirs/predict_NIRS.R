@@ -19,7 +19,7 @@ args <- commandArgs(trailingOnly = TRUE)
 dataset.input <- jsonlite::fromJSON(txt = args[1], flatten = T) %>%
   rename(uniqueid = observationUnitId) %>%
   rename_at(vars(starts_with("nirs_spectra")), ~str_replace(., "nirs_spectra.", "")) %>%
-  dplyr::select(uniqueid, reference, starts_with("germplasm"), num_range(prefix = "X", range = 1:100000))
+  dplyr::select(uniqueid, num_range(prefix = "X", range = 1:100000))
 
 wls <- colnames(dataset.input)[-1] %>% parse_number()
 
