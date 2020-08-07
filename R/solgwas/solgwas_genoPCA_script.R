@@ -38,16 +38,15 @@ geno_trim <- geno_trim - 1
 #  coordinate_matrix[marker,3] = current_string[[1]][2]
 #}
 
-#geno.filtered <- geno_trim
-#dim(geno.filtered)
-geno.gwas <- geno_trim
+geno.filtered <- geno_trim
+dim(geno.filtered)
 
 ##### The data in the database has already been imputed, but we use the A.mat function here for MAF filtering and to generate the kinship matrix #####
 library(rrBLUP)
-#Imputation <- A.mat(geno.filtered,impute.method="EM",return.imputed=T,min.MAF=0.05)
+Imputation <- A.mat(t(geno.filtered),impute.method="EM",return.imputed=T,min.MAF=0.05)
 
-#K.mat <- Imputation$A ### KINSHIP matrix
-#geno.gwas <- Imputation$imputed #NEW geno data.
+K.mat <- Imputation$A ### KINSHIP matrix
+geno.gwas <- Imputation$imputed #NEW geno data.
 dim(geno.gwas)
 
 ##### PCA/Population Structure #####
