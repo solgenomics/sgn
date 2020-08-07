@@ -4404,6 +4404,7 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
     my $drone_run_project_id_input = $c->req->param('drone_run_project_id');
     my $gcp_drone_run_project_id_input = $c->req->param('gcp_drone_run_project_id');
     my $time_cvterm_id = $c->req->param('time_cvterm_id');
+    my $is_test = $c->req->param('is_test');
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $phenotype_methods = ['zonal'];
@@ -4413,6 +4414,11 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
     my %vegetative_indices_hash;
     foreach (@$vegetative_indices) {
         $vegetative_indices_hash{$_}++;
+    }
+
+    if (!$gcp_drone_run_project_id_input) {
+        $c->stash->{rest} = { error => "Please select an imaging event to use as a template!" };
+        $c->detach();
     }
 
     my $drone_run_band_drone_run_project_relationship_type_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
@@ -4884,7 +4890,7 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
 
     $drone_run_process_in_progress = $bcs_schema->resultset('Project::Projectprop')->update_or_create({
         type_id=>$process_indicator_cvterm_id,
-        project_id=>$drone_run_project_id,
+        project_id=>$drone_run_project_id_input,
         rank=>0,
         value=>0
     },
@@ -4912,7 +4918,9 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
         key=>'projectprop_c1'
     });
 
-    my $return = _perform_phenotype_automated($c, $bcs_schema, $metadata_schema, $phenome_schema, $drone_run_project_id_input, $time_cvterm_id, $phenotype_methods, $standard_process_type, 1, undef, $user_id, $user_name, $user_role);
+    if (!$is_test) {
+        my $return = _perform_phenotype_automated($c, $bcs_schema, $metadata_schema, $phenome_schema, $drone_run_project_id_input, $time_cvterm_id, $phenotype_methods, $standard_process_type, 1, undef, $user_id, $user_name, $user_role);
+    }
 
     my @result;
     $c->stash->{rest} = { data => \@result, success => 1 };
@@ -6995,7 +7003,7 @@ sub drone_imagery_saving_gcp_POST : Args(0) {
         key=>'projectprop_c1'
     });
 
-    my @saved_gcps_array = values %$saved_gcps_full;
+    my @saved_gcps_array = sort values %$saved_gcps_full;
 
     $c->stash->{rest} = {success => 1, saved_gcps_full => $saved_gcps_full, gcps_array => \@saved_gcps_array};
 }
