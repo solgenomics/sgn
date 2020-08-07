@@ -23,6 +23,7 @@ jQuery(document).ready(function () {
     jQuery('#product_profile_table').DataTable( {
         'autoWidth': false,
         'ajax': '/ajax/breeders/program/'+ <% $program_id %> + '/product_profiles',
+        'order': false,
     });
 
 });

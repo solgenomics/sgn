@@ -53,4 +53,30 @@ sub BUILD {
 }
 
 
+sub get_product_profile_info {
+    my $self = shift;
+    my $schema = $self->bcs_schema();
+    my $project_id = $self->parent_id();
+    my $type = $self->prop_type();
+    my $type_id = $self->_prop_type_id();
+    my $key_ref = $self->allowed_fields();
+    my @fields = @$key_ref;
+
+    my $profile_rs = $schema->resultset("Project::Projectprop")->search({ project_id => $project_id, type_id => $type_id }, { order_by => {-asc => 'projectprop_id'} });
+    my @profile_list;
+    while (my $r = $profile_rs->next()){
+        my @each_row = ();
+        my $profile_json = $r->value();
+        my $profile_hash = JSON::Any->jsonToObj($profile_json);
+        foreach my $field (@fields){
+            push @each_row, $profile_hash->{$field};
+        }
+        push @profile_list, [@each_row];
+    }
+    print STDERR "PROFILE LIST =".Dumper(\@profile_list)."\n";
+
+    return \@profile_list;
+}
+
+
 1;

@@ -335,7 +335,7 @@ sub program_seedlots :Chained('ajax_breeding_program') PathPart('seedlots') Args
     my $c = shift;
     my $program = $c->stash->{program};
     my $result = $program->get_seedlots;
-    print STDERR "SEEDLOTS =".Dumper($result)."\n";
+#    print STDERR "SEEDLOTS =".Dumper($result)."\n";
     my @seedlot_data;
     foreach my $r (@$result){
         my ($seedlot_id, $seedlot_name, $content_id, $content_name, $content_type) = @$r;
@@ -381,13 +381,28 @@ sub add_product_profile_POST : Args(0) {
     $product_profile->parent_id($program_id);
 	my $project_prop_id = $product_profile->store_by_rank();
 
-    print STDERR "PROJECT PROP ID =".Dumper($project_prop_id)."\n";
+#    print STDERR "PROJECT PROP ID =".Dumper($project_prop_id)."\n";
     if ($@) {
         $c->stash->{rest} = { error => "Error storing product profile. ($@)" };
         return;
     }
 
     $c->stash->{rest} = { success => 1};
+}
+
+
+sub get_product_profiles :Chained('ajax_breeding_program') PathPart('product_profiles') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $program = $c->stash->{program};
+    my $program_id = $program->get_program_id;
+    my $schema = $c->stash->{schema};
+
+    my $product_profile_obj = CXGN::BreedersToolbox::ProductProfile->new({ bcs_schema => $schema, parent_id => $program_id });
+    my $product_profiles = $product_profile_obj->get_product_profile_info();
+#    print STDERR "PRODUCT PROFILE RESULTS =".Dumper($product_profiles)."\n";
+    $c->stash->{rest} = {data => $product_profiles};
+
 }
 
 
