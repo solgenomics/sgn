@@ -5663,6 +5663,7 @@ jQuery(document).ready(function() {
 
         ctx.clearRect(0,0,background_image_width,background_image_height);
 
+        var hovering_plot_name;
         for (key in drone_imagery_plot_polygons_display) {
             if (drone_imagery_plot_polygons_display.hasOwnProperty(key)) {
                 var s = drone_imagery_plot_polygons_display[key];
@@ -5675,15 +5676,18 @@ jQuery(document).ready(function() {
                 ctx.closePath();
 
                 if (ctx.isPointInPath(mouseX,mouseY)){
-                    s.drawcolor='red';
-                } else {
-                    s.drawcolor=s.color;
+                    hovering_plot_name = key;
                 }
             }
         }
 
         for (key in drone_imagery_plot_polygons_display) {
             if (drone_imagery_plot_polygons_display.hasOwnProperty(key)) {
+
+                if (key == hovering_plot_name && drone_imagery_plot_polygons_display_plot_field_layout.hasOwnProperty(key)) {
+                    var plot_info = drone_imagery_plot_polygons_display_plot_field_layout[key];
+                }
+
                 var plot_polygons_display_points_again = drone_imagery_plot_polygons_display[key];
                 drawPolyline(plot_polygons_display_points_again);
                 drawWaypoints(plot_polygons_display_points_again, key, random_scaling);
