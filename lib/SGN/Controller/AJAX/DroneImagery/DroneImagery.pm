@@ -4593,7 +4593,10 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
     print STDERR "AVG ROTATION: $rotate_rad_gcp\n";
 
     my $project_image_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    my $rotated_image_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'rotated_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    my $cropped_image_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'cropped_stitched_drone_imagery', 'project_md_image')->cvterm_id();
     my $denoised_project_image_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'denoised_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+
     my $drone_run_band_type_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_band_project_type', 'project_property')->cvterm_id();
     my $q2 = "SELECT project_md_image.image_id, drone_run_band_type.value, drone_run_band.project_id
         FROM project AS drone_run_band
@@ -4692,39 +4695,31 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
         }
     }
 
-    my $template_gcp_x_scale;
-    my $template_gcp_y_scale;
-    if ($tr_gcp_current_point_x - $tl_gcp_current_point_x != 0 && $tr_gcp_template_point_x - $tl_gcp_template_point_x != 0) {
-        $template_gcp_x_scale = ($tr_gcp_template_point_x - $tl_gcp_template_point_x) / ($tr_gcp_current_point_x - $tl_gcp_current_point_x);
-    }
-    elsif ($br_gcp_current_point_x - $bl_gcp_current_point_x != 0 && $br_gcp_template_point_x - $bl_gcp_template_point_x != 0) {
-        $template_gcp_x_scale = ($br_gcp_template_point_x - $bl_gcp_template_point_x) / ($br_gcp_current_point_x - $bl_gcp_current_point_x);
-    }
-    else {
-        $c->stash->{rest} = { error => "Not enough GCP points defined!" };
-        $c->detach();
-    }
-    if ($br_gcp_current_point_y - $tr_gcp_current_point_y != 0 && $br_gcp_template_point_y - $tr_gcp_template_point_y != 0) {
-        $template_gcp_y_scale = ($br_gcp_template_point_y - $tr_gcp_template_point_y) / ($br_gcp_current_point_y - $tr_gcp_current_point_y);
-    }
-    elsif ($bl_gcp_current_point_y - $tl_gcp_current_point_y != 0 && $bl_gcp_template_point_y - $tl_gcp_template_point_y != 0) {
-        $template_gcp_y_scale = ($bl_gcp_template_point_y - $tl_gcp_template_point_y) / ($bl_gcp_current_point_y - $tl_gcp_current_point_y);
-    }
-    else {
-        $c->stash->{rest} = { error => "Not enough GCP points defined!" };
-        $c->detach();
-    }
+    my $dir = $c->tempfiles_subdir('/drone_imagery_rotate');
+    my $archive_rotate_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_rotate/imageXXXX');
+    $archive_rotate_temp_image .= '.png';
+    my $rotate_return = _perform_image_rotate($c, $bcs_schema, $metadata_schema, $check_drone_run_band_project_id_q, $check_image_id, $rotate_rad_gcp/$rad_conversion, 0, $user_id, $user_name, $user_role, $archive_rotate_temp_image, 0, 0);
+    my $rotated_image_id = $rotate_return->{rotated_image_id};
+
+    my $h_rotate_check = $bcs_schema->storage->dbh()->prepare($q2);
+    $h_rotate_check->execute($rotated_image_type_id, $gcp_drone_run_band_project_id);
+    my ($rotate_check_image_id, $rotate_check_drone_run_band_type, $rotate_check_drone_run_band_project_id_q) = $h_rotate_check->fetchrow_array();
+
+    my $rotate_check_target_image = SGN::Image->new( $bcs_schema->storage->dbh, $rotated_image_id, $c );
+    my $rotate_check_target_image_url = $rotate_check_target_image->get_image_url("original");
+    my $rotate_check_target_image_fullpath = $rotate_check_target_image->get_filename('original_converted', 'full');
+    my ($rotate_check_target_image_width, $rotate_check_target_image_height) = imgsize($rotate_check_target_image_fullpath);
+    print STDERR "Target Rotation: $rotate_check_target_image_width $rotate_check_target_image_height \n";
+
+    my $rotate_check_image = SGN::Image->new( $bcs_schema->storage->dbh, $rotate_check_image_id, $c );
+    my $rotate_check_image_url = $rotate_check_image->get_image_url("original");
+    my $rotate_check_image_fullpath = $rotate_check_image->get_filename('original_converted', 'full');
+    my ($rotate_check_image_width, $rotate_check_image_height) = imgsize($rotate_check_image_fullpath);
+    print STDERR "Template Rotation: $rotate_check_image_width $rotate_check_image_height \n";
+
+    my $template_gcp_x_scale = $rotate_check_image_width/$rotate_check_target_image_width;
+    my $template_gcp_y_scale = $rotate_check_image_height/$rotate_check_target_image_height;
     print STDERR Dumper [$template_gcp_x_scale, $template_gcp_y_scale];
-
-    my $h3 = $bcs_schema->storage->dbh()->prepare($q2);
-    $h3->execute($denoised_project_image_type_id, $gcp_drone_run_band_project_id);
-    my ($gcp_image_id, $gcp_drone_run_band_type, $gcp_drone_run_band_project_id_q) = $h3->fetchrow_array();
-
-    my $gcp_image = SGN::Image->new( $bcs_schema->storage->dbh, $gcp_image_id, $c );
-    my $gcp_image_url = $gcp_image->get_image_url("original");
-    # print STDERR Dumper $gcp_image_url;
-    my $gcp_image_fullpath = $gcp_image->get_filename('original_converted', 'full');
-    my ($gcp_image_width, $gcp_image_height) = imgsize($gcp_image_fullpath);
 
     my $rotate_angle_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_band_rotate_angle', 'project_property')->cvterm_id();
     my $cropping_polygon_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_band_cropped_polygon', 'project_property')->cvterm_id();
@@ -4742,42 +4737,52 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
 
     my $h = $bcs_schema->storage->dbh()->prepare($q);
     $h->execute();
-    my ($rotate_value, $plot_polygons_value, $cropping_value_json, $drone_run_project_id, $drone_run_project_name) = $h->fetchrow_array();
-    print STDERR Dumper $rotate_value;
-    print STDERR Dumper $rotate_value * $rad_conversion;
+    my ($rotate_value_old, $plot_polygons_value_json, $cropping_value_json, $drone_run_project_id, $drone_run_project_name) = $h->fetchrow_array();
+    print STDERR Dumper $rotate_value_old;
+    print STDERR Dumper $rotate_value_old * $rad_conversion;
     print STDERR Dumper $cropping_value_json;
-    my $cropping_value = decode_json $cropping_value_json;
-    # print STDERR Dumper $cropping_value;
+    print STDERR Dumper $plot_polygons_value_json;
+    my $cropping_value_old = decode_json $cropping_value_json;
+    my $plot_polygons_value_old = decode_json $plot_polygons_value_json;
 
-    #SHOULD USE DIFF IN SIZE OF ROTATED IMAGES AS X AD Y SCALES
-    my $image_crop = [
+    my $image_crop = [[
         {
-            'x' => $cropping_value->[0]->[0]->{'x'}/$template_gcp_x_scale,
-            'y' => $cropping_value->[0]->[0]->{'y'}/$template_gcp_y_scale
+            'x' => $cropping_value_old->[0]->[0]->{'x'}/$template_gcp_x_scale,
+            'y' => $cropping_value_old->[0]->[0]->{'y'}/$template_gcp_y_scale
         },
         {
-            'x' => $cropping_value->[0]->[1]->{'x'}/$template_gcp_x_scale,
-            'y' => $cropping_value->[0]->[1]->{'y'}/$template_gcp_y_scale
+            'x' => $cropping_value_old->[0]->[1]->{'x'}/$template_gcp_x_scale,
+            'y' => $cropping_value_old->[0]->[1]->{'y'}/$template_gcp_y_scale
         },
         {
-            'x' => $cropping_value->[0]->[2]->{'x'}/$template_gcp_x_scale,
-            'y' => $cropping_value->[0]->[2]->{'y'}/$template_gcp_y_scale
+            'x' => $cropping_value_old->[0]->[2]->{'x'}/$template_gcp_x_scale,
+            'y' => $cropping_value_old->[0]->[2]->{'y'}/$template_gcp_y_scale
         },
         {
-            'x' => $cropping_value->[0]->[3]->{'x'}/$template_gcp_x_scale,
-            'y' => $cropping_value->[0]->[3]->{'y'}/$template_gcp_y_scale
+            'x' => $cropping_value_old->[0]->[3]->{'x'}/$template_gcp_x_scale,
+            'y' => $cropping_value_old->[0]->[3]->{'y'}/$template_gcp_y_scale
         }
-    ];
-    
-    my $dir = $c->tempfiles_subdir('/drone_imagery_rotate');
-    my $archive_rotate_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_rotate/imageXXXX');
-    $archive_rotate_temp_image .= '.png';
-    my $rotate_return = _perform_image_rotate($c, $bcs_schema, $metadata_schema, $check_drone_run_band_project_id_q, $check_image_id, $rotate_rad_gcp/$rad_conversion, 0, $user_id, $user_name, $user_role, $archive_rotate_temp_image, 0, 0);
-    my $rotated_image_id = $rotate_return->{rotated_image_id};
+    ]];
 
     # print STDERR Dumper $image_crop;
-    $c->stash->{rest} = { old_cropped_points => $cropping_value, cropped_points => $image_crop, rotated_points => \@rotated_current_points, rotated_image_id => $rotated_image_id };
-    $c->detach();
+    # $c->stash->{rest} = { old_cropped_points => $cropping_value, cropped_points => $image_crop, rotated_points => \@rotated_current_points, rotated_image_id => $rotated_image_id };
+    # $c->detach();
+    
+    my %scaled_plot_polygons;
+    while (my ($key, $v) = each %$plot_polygons_value_old) {
+        my @n;
+        foreach (@$v) {
+            push @n, {
+                x => $_->{x}/$template_gcp_x_scale,
+                y => $_->{y}/$template_gcp_y_scale
+            };
+        }
+        $scaled_plot_polygons{$key} = \@n;
+    }
+
+    my $rotate_value = $rotate_rad_gcp/$rad_conversion;
+    my $cropping_value = encode_json $image_crop;
+    my $plot_polygons_value = encode_json \%scaled_plot_polygons;
 
     my $process_indicator_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_standard_process_in_progress', 'project_property')->cvterm_id();
     my $processed_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_standard_process_completed', 'project_property')->cvterm_id();
@@ -4812,12 +4817,9 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
         key=>'projectprop_c1'
     });
 
-    $rotate_value = $rotate_rad_gcp/$rad_conversion;
-
     my %selected_drone_run_band_types;
 
     my $term_map = CXGN::DroneImagery::ImageTypes::get_base_imagery_observation_unit_plot_polygon_term_map();
-    die;
     my %drone_run_band_info;
     foreach my $apply_drone_run_band_project_id (@$apply_drone_run_band_project_ids) {
         my $h2 = $bcs_schema->storage->dbh()->prepare($q2);

@@ -437,7 +437,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
         <div class="container-fluid">
             <div class="form-horizontal">
                 <div class="form-group form-group-sm">
-                    <label class="col-sm-6 control-label">Ground Control Point Name (Can overwrite if same name is used): </label>
+                    <label class="col-sm-6 control-label">Ground Control Point Name (Can overwrite if same name is used. Names MUST be consistent across imaging events!): </label>
                     <div class="col-sm-6">
                         <input class="form-control" id="project_drone_imagery_ground_control_points_form_input_name" name="project_drone_imagery_ground_control_points_form_input_name" type="text" placeholder="e.g. NorthWest Corner, or Point 1" />
                     </div>
