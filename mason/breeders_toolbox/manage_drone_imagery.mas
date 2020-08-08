@@ -122,7 +122,8 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
 
                                 <br/><br/>
                                 <center>
-                                <button class="btn btn-primary" id="manage_drone_imagery_standard_process_ground_control_points_step">Finish</button>
+                                <button class="btn btn-primary" id="manage_drone_imagery_standard_process_ground_control_points_step">Draw Computed Plot Polygons</button>
+                                <button class="btn btn-primary" id="manage_drone_imagery_standard_process_ground_control_points_step_confirm">Confirm and Save</button>
                                 </center></div>
 
                             <div id="project_drone_imagery_standard_process_ground_control_points_info_div"></div>
@@ -2196,6 +2197,7 @@ jQuery(document).ready(function() {
     var manage_drone_imagery_standard_process_phenotype_time = '';
     var manage_drone_imagery_standard_process_image_width;
     var manage_drone_imagery_standard_process_image_height;
+    var manage_drone_imagery_standard_process_gcp_test_run = 'Yes';
 
     jQuery(document).on('click', 'button[name="project_drone_imagery_standard_process"]', function(){
         showManageDroneImagerySection('manage_drone_imagery_standard_process_div');
@@ -2314,7 +2316,8 @@ jQuery(document).ready(function() {
                             'field_trial_id':manage_drone_imagery_standard_process_field_trial_id,
                             'drone_run_project_id':manage_drone_imagery_standard_process_drone_run_project_id,
                             'drone_run_band_project_id':manage_drone_imagery_standard_process_drone_run_band_project_id,
-                            'time_cvterm_id':manage_drone_imagery_standard_process_phenotype_time
+                            'time_cvterm_id':manage_drone_imagery_standard_process_phenotype_time,
+                            'test_run':manage_drone_imagery_standard_process_gcp_test_run
                         },
                         success: function(response){
                             console.log(response);
@@ -2323,6 +2326,7 @@ jQuery(document).ready(function() {
                             }
                             if (response.plot_polygons) {
                                 drone_imagery_plot_polygons_display = response.plot_polygons;
+                                manage_drone_imagery_standard_process_gcp_test_run = 'No';
                             }
                             if (response.rotated_image_id && checkonce == 1) {
                                 showPlotPolygonStart(response.rotated_image_id, manage_drone_imagery_standard_process_drone_run_project_id, 'project_drone_imagery_standard_process_ground_control_points_canvas_div', 'project_drone_imagery_standard_process_ground_control_points_info_div', 'project_drone_imagery_standard_process_ground_control_points_loading_div');
@@ -2354,6 +2358,37 @@ jQuery(document).ready(function() {
                     jQuery('#working_modal').modal('hide');
                 }
             });
+        }
+    });
+
+    jQuery('#manage_drone_imagery_standard_process_ground_control_points_step_confirm').click(function(){
+        if (manage_drone_imagery_standard_process_gcp_test_run == 'Yes') {
+            alert('Please calculate the plot polygons and confirm they look good first!');
+            return false;
+        } else {
+            jQuery.ajax({
+                type : 'POST',
+                url : '/api/drone_imagery/standard_process_apply_ground_control_points',
+                data : {
+                    'gcp_drone_run_project_id':manage_drone_imagery_standard_process_gcp_drone_run_band_project_id,
+                    'field_trial_id':manage_drone_imagery_standard_process_field_trial_id,
+                    'drone_run_project_id':manage_drone_imagery_standard_process_drone_run_project_id,
+                    'drone_run_band_project_id':manage_drone_imagery_standard_process_drone_run_band_project_id,
+                    'time_cvterm_id':manage_drone_imagery_standard_process_phenotype_time,
+                    'test_run':manage_drone_imagery_standard_process_gcp_test_run
+                },
+                success: function(response){
+                    console.log(response);
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                },
+                error: function(response){
+                    alert('Error doing standard process with ground control points confirmation!');
+                }
+            });
+            alert('The standard process will continue in the background and may take some time. You can check the indicator on the manage drone imagery page to see when it is complete.');
+            location.reload();
         }
     });
 

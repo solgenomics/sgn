@@ -4405,6 +4405,7 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
     my $gcp_drone_run_project_id_input = $c->req->param('gcp_drone_run_project_id');
     my $time_cvterm_id = $c->req->param('time_cvterm_id');
     my $is_test = $c->req->param('is_test');
+    my $is_test_run = $c->req->param('test_run');
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $phenotype_methods = ['zonal'];
@@ -4659,9 +4660,6 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
         push @rotated_current_points, [$x_rot, $y_rot];
     }
 
-    # $c->stash->{rest} = { rotated_points => \@rotated_current_points };
-    # $c->detach();
-
     my $tl_gcp_current_point_x = 1000000000;
     my $tl_gcp_current_point_y = 1000000000;
     my $tr_gcp_current_point_x = 0;
@@ -4829,8 +4827,10 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
         $scaled_plot_polygons_display{$key} = \@n_display;
     }
 
-    # $c->stash->{rest} = { old_cropped_points => $cropping_value_old, cropped_points => $image_crop, rotated_points => \@rotated_current_points, rotated_image_id => $rotated_image_id, plot_polygons => \%scaled_plot_polygons_display };
-    # $c->detach();
+    if ($is_test_run eq 'Yes') {
+        $c->stash->{rest} = { old_cropped_points => $cropping_value_old, cropped_points => $image_crop, rotated_points => \@rotated_current_points, rotated_image_id => $rotated_image_id, plot_polygons => \%scaled_plot_polygons_display };
+        $c->detach();
+    }
 
     my $rotate_value = $rotate_rad_gcp/$rad_conversion;
     my $cropping_value = encode_json $image_crop;
