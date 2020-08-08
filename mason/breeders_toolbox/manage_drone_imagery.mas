@@ -2321,6 +2321,9 @@ jQuery(document).ready(function() {
                             if (response.error) {
                                 alert(response.error);
                             }
+                            if (response.plot_polygons) {
+                                drone_imagery_plot_polygons_display = response.plot_polygons;
+                            }
                             if (response.rotated_image_id && checkonce == 1) {
                                 showPlotPolygonStart(response.rotated_image_id, manage_drone_imagery_standard_process_drone_run_project_id, 'project_drone_imagery_standard_process_ground_control_points_canvas_div', 'project_drone_imagery_standard_process_ground_control_points_info_div', 'project_drone_imagery_standard_process_ground_control_points_loading_div');
                                 checkonce = 0;
@@ -2331,8 +2334,8 @@ jQuery(document).ready(function() {
                                 }
                             }
                             if (response.cropped_points) {
-                                for (var i=0; i<response.cropped_points.length; i++) {
-                                    drawWaypoints([{'x':response.cropped_points[i]['x'], 'y':response.cropped_points[i]['y']}], 'c'+i, 0);
+                                for (var i=0; i<response.cropped_points[0].length; i++) {
+                                    drawWaypoints([{'x':response.cropped_points[0][i]['x'], 'y':response.cropped_points[0][i]['y']}], 'c'+i, 0);
                                 }
                             }
                             if (response.old_cropped_points) {

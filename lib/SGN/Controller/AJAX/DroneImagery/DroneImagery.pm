@@ -4751,40 +4751,86 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
     my $cropping_value_old = decode_json $cropping_value_json;
     my $plot_polygons_value_old = decode_json $plot_polygons_value_json;
 
+    my $min_old_crop_x = 1000000000;
+    my $min_old_crop_y = 1000000000;
+    foreach (@{$cropping_value_old->[0]}) {
+        my $x = $_->{'x'};
+        my $y = $_->{'y'};
+        if ($x < $min_old_crop_x) {
+            $min_old_crop_x = $x;
+        }
+        if ($y < $min_old_crop_y) {
+            $min_old_crop_y = $y;
+        }
+    }
+
+    my $counter_o = 0;
+    my @crop_offset_x_vals;
+    my @crop_offset_y_vals;
+    foreach (@rotated_current_points) {
+        my $template_point = $gcp_points_template[$counter_o];
+        push @crop_offset_x_vals, $template_point->[0] + $min_old_crop_x - $_->[0];
+        push @crop_offset_y_vals, $template_point->[1] + $min_old_crop_y - $_->[1];
+        $counter_o++;
+    }
+    my $crop_offset_x = sum(@crop_offset_x_vals)/scalar(@crop_offset_x_vals);
+    my $crop_offset_y = sum(@crop_offset_y_vals)/scalar(@crop_offset_y_vals);
+    print STDERR Dumper [$crop_offset_x,$crop_offset_y];
+
     my $image_crop = [[
         {
-            'x' => $cropping_value_old->[0]->[0]->{'x'}/$template_gcp_x_scale,
-            'y' => $cropping_value_old->[0]->[0]->{'y'}/$template_gcp_y_scale
+            'x' => $crop_offset_x + ($cropping_value_old->[0]->[0]->{'x'})/$template_gcp_x_scale,
+            'y' => $crop_offset_y + ($cropping_value_old->[0]->[0]->{'y'})/$template_gcp_y_scale
         },
         {
-            'x' => $cropping_value_old->[0]->[1]->{'x'}/$template_gcp_x_scale,
-            'y' => $cropping_value_old->[0]->[1]->{'y'}/$template_gcp_y_scale
+            'x' => $crop_offset_x + ($cropping_value_old->[0]->[1]->{'x'})/$template_gcp_x_scale,
+            'y' => $crop_offset_y + ($cropping_value_old->[0]->[1]->{'y'})/$template_gcp_y_scale
         },
         {
-            'x' => $cropping_value_old->[0]->[2]->{'x'}/$template_gcp_x_scale,
-            'y' => $cropping_value_old->[0]->[2]->{'y'}/$template_gcp_y_scale
+            'x' => $crop_offset_x + ($cropping_value_old->[0]->[2]->{'x'})/$template_gcp_x_scale,
+            'y' => $crop_offset_y + ($cropping_value_old->[0]->[2]->{'y'})/$template_gcp_y_scale
         },
         {
-            'x' => $cropping_value_old->[0]->[3]->{'x'}/$template_gcp_x_scale,
-            'y' => $cropping_value_old->[0]->[3]->{'y'}/$template_gcp_y_scale
+            'x' => $crop_offset_x + ($cropping_value_old->[0]->[3]->{'x'})/$template_gcp_x_scale,
+            'y' => $crop_offset_y + ($cropping_value_old->[0]->[3]->{'y'})/$template_gcp_y_scale
         }
     ]];
-
     # print STDERR Dumper $image_crop;
-    # $c->stash->{rest} = { old_cropped_points => $cropping_value, cropped_points => $image_crop, rotated_points => \@rotated_current_points, rotated_image_id => $rotated_image_id };
-    # $c->detach();
-    
+
+    my $min_new_crop_x = 1000000000;
+    my $min_new_crop_y = 1000000000;
+    foreach (@{$image_crop->[0]}) {
+        my $x = $_->{'x'};
+        my $y = $_->{'y'};
+        if ($x < $min_new_crop_x) {
+            $min_new_crop_x = $x;
+        }
+        if ($y < $min_new_crop_y) {
+            $min_new_crop_y = $y;
+        }
+    }
+
     my %scaled_plot_polygons;
+    my %scaled_plot_polygons_display;
     while (my ($key, $v) = each %$plot_polygons_value_old) {
         my @n;
+        my @n_display;
         foreach (@$v) {
             push @n, {
-                x => $_->{x}/$template_gcp_x_scale,
-                y => $_->{y}/$template_gcp_y_scale
+                x => ($_->{x} - $crop_offset_x)/$template_gcp_x_scale,
+                y => ($_->{y} - $crop_offset_y)/$template_gcp_y_scale
+            };
+            push @n_display, {
+                x => $min_new_crop_x + ($_->{x} - $crop_offset_x)/$template_gcp_x_scale,
+                y => $min_new_crop_y + ($_->{y} - $crop_offset_y)/$template_gcp_y_scale
             };
         }
         $scaled_plot_polygons{$key} = \@n;
+        $scaled_plot_polygons_display{$key} = \@n_display;
     }
+
+    # $c->stash->{rest} = { old_cropped_points => $cropping_value_old, cropped_points => $image_crop, rotated_points => \@rotated_current_points, rotated_image_id => $rotated_image_id, plot_polygons => \%scaled_plot_polygons_display };
+    # $c->detach();
 
     my $rotate_value = $rotate_rad_gcp/$rad_conversion;
     my $cropping_value = encode_json $image_crop;
