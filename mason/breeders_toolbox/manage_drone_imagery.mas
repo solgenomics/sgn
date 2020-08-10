@@ -89,8 +89,8 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <label class="col-sm-6 control-label">Has a previous imaging event on this field trial completed the standard process and also has GCPs defined already?: </label>
                     <div class="col-sm-6">
                         <select class="form-control" id="manage_drone_imagery_standard_process_ground_control_points_option">
-                            <option value="No">No</option>
-                            <option value="Yes">Yes</option>
+                            <option value="No">No (Work in progress)</option>
+                            <!--option value="Yes">Yes</option-->
                         </select>
                     </div>
                 </div>
