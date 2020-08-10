@@ -11,6 +11,7 @@ sub search {
     my $self = shift;
     my $params = shift;
     my $c = shift;
+
     my $status = $self->status;
 
     my $crossing_ids = $params->{crossingProjectDbId} || undef;
@@ -111,7 +112,7 @@ sub _get_detail {
 
 sub store_crossingproject {
     my $self = shift;
-    my $params = shift;
+    my $data = shift;
     my $c = shift;
     my $user_id = shift;
 
@@ -121,61 +122,65 @@ sub store_crossingproject {
     my $page_size = $self->page_size;
     my $page = $self->page;
 
-    my $crossingtrial_name = $params->{crossingProjectName} ? $params->{crossingProjectName}[0] : undef;
-    my $breeding_program_id = $params->{programDbId} ? $params->{programDbId}[0] : undef;
-    my $breeding_program_name = $params->{programName} ? $params->{programName}[0] : undef;
-    my $location = $params->{location} ? $params->{location}[0] : undef;
-    my $year = $params->{year} ? $params->{year}[0] : undef;
-    my $project_description = $params->{crossingProjectDescription} ? $params->{crossingProjectDescription}[0] : undef;
-    my $additional_info = $params->{additionalInfo} ? $params->{additionalInfo}[0] : undef; #not implemented
-    my $crop_name = $params->{commonCropName} ? $params->{commonCropName}[0] : undef; #not implemented
-    my $external_references = $params->{externalReferences} ? $params->{externalReferences}[0] : undef; #not implemented
-
-    my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema =>$schema);
-    $geolocation_lookup->set_location_name($location);
-    if(!$geolocation_lookup->get_geolocation()){
-        return CXGN::BrAPI::JSONResponse->return_error($self->status, "Location not found");
-    }
-
+    my @list;
     if (!$user_id){
         return CXGN::BrAPI::JSONResponse->return_error($self->status, 'You need to be logged in to add a crossingtrial.');
     }
 
-    my $error;
-    my $crossingproj_id;
-    eval{
-        my $add_crossingtrial = CXGN::Pedigree::AddCrossingtrial->new({
-            chado_schema => $schema,
-            dbh => $dbh,
-            breeding_program_id => $breeding_program_id,
-            year => $year,
-            project_description => $project_description,
-            crossingtrial_name => $crossingtrial_name,
-            nd_geolocation_id => $geolocation_lookup->get_geolocation()->nd_geolocation_id()
-        });
-        my $store_return = $add_crossingtrial->save_crossingtrial();
-        if ($store_return->{error}){
-            $error = $store_return->{error};
+    foreach my $params (@$data){
+        my $crossingtrial_name = $params->{crossingProjectName} ? $params->{crossingProjectName} : undef;
+        my $breeding_program_id = $params->{programDbId} ? $params->{programDbId} : undef;
+        my $breeding_program_name = $params->{programName} ? $params->{programName} : undef;
+        my $location = $params->{additionalInfo}->{locationName} ? $params->{additionalInfo}->{locationName} : undef;
+        my $year = $params->{additionalInfo}->{year} ? $params->{additionalInfo}->{year} : undef;
+        my $project_description = $params->{crossingProjectDescription} ? $params->{crossingProjectDescription} : undef;
+        my $additional_info = $params->{additionalInfo} ? $params->{additionalInfo} : undef; #not implemented
+        my $crop_name = $params->{commonCropName} ? $params->{commonCropName} : undef; #not implemented
+        my $external_references = $params->{externalReferences} ? $params->{externalReferences} : undef; #not implemented
+
+        my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema =>$schema);
+        $geolocation_lookup->set_location_name($location);
+
+        if(!$geolocation_lookup->get_geolocation()){
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, "Location not found");
         }
-        $crossingproj_id = $store_return->{trial_id};
-    };
 
-    if ($@) {
-        return CXGN::BrAPI::JSONResponse->return_error($self->status, $@);
-    };
+        my $error;
+        my $crossingproj_id;
+        eval{
+            my $add_crossingtrial = CXGN::Pedigree::AddCrossingtrial->new({
+                chado_schema => $schema,
+                dbh => $dbh,
+                breeding_program_id => $breeding_program_id,
+                year => $year,
+                project_description => $project_description,
+                crossingtrial_name => $crossingtrial_name,
+                nd_geolocation_id => $geolocation_lookup->get_geolocation()->nd_geolocation_id()
+            });
+            my $store_return = $add_crossingtrial->save_crossingtrial();
+            if ($store_return->{error}){
+                $error = $store_return->{error};
+            }
+            $crossingproj_id = $store_return->{trial_id};
+        };
 
-    if ($error){
-        return CXGN::BrAPI::JSONResponse->return_error($self->status, $error);
-    } 
+        if ($@) {
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, $@);
+        };
 
-    my $counter = 0;
-    my %result = _get_detail($self,$crossingproj_id);
-    $counter = 1 if (%result);
+        if ($error){
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, $error);
+        } 
+        push @list, $crossingproj_id;
+    }
+    
+    my $counter = scalar @list;
+    my %result;
 
     my @data_files;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
 
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Crossing projects stored');
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, $counter . ' Crossing projects stored');
 
 }
 
@@ -195,15 +200,15 @@ sub update_crossingproject {
     my $page_size = $self->page_size;
     my $page = $self->page;
 
-    my $crossingtrial_name = $params->{crossingProjectName} ? $params->{crossingProjectName}[0] : undef;
-    my $breeding_program_id = $params->{programDbId} ? $params->{programDbId}[0] : undef;
-    my $breeding_p_name = $params->{programName} ? $params->{programName}[0] : undef;
-    my $location = $params->{location} ? $params->{location}[0] : undef;
-    my $year = $params->{year} ? $params->{year}[0] : undef;
-    my $project_description = $params->{crossingProjectDescription} ? $params->{crossingProjectDescription}[0] : undef;
-    my $additional_info = $params->{additionalInfo} ? $params->{additionalInfo}[0] : undef; #not implemented
-    my $crop_name = $params->{commonCropName} ? $params->{commonCropName}[0] : undef; #not implemented
-    my $external_references = $params->{externalReferences} ? $params->{externalReferences}[0] : undef; #not implemented
+    my $crossingtrial_name = $params->{crossingProjectName} ? $params->{crossingProjectName} : undef;
+    my $breeding_program_id = $params->{programDbId} ? $params->{programDbId} : undef;
+    my $breeding_p_name = $params->{programName} ? $params->{programName} : undef;
+    my $location = $params->{additionalInfo}->{locationName} ? $params->{additionalInfo}->{locationName} : undef;
+    my $year = $params->{year} ? $params->{year} : undef;
+    my $project_description = $params->{crossingProjectDescription} ? $params->{crossingProjectDescription} : undef;
+    my $additional_info = $params->{additionalInfo} ? $params->{additionalInfo} : undef; #not implemented
+    my $crop_name = $params->{commonCropName} ? $params->{commonCropName} : undef; #not implemented
+    my $external_references = $params->{externalReferences} ? $params->{externalReferences} : undef; #not implemented
 
     if (!$user_id){
         return CXGN::BrAPI::JSONResponse->return_error($self->status, 'You need to be logged in to add a crossingtrial.');
@@ -344,7 +349,6 @@ sub store_crosses { #crosses must belong to same experiment
     my $user_id = shift;
 
     my $chado_schema = $self->bcs_schema;
-    # my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $phenome_schema = $self->phenome_schema();
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $dbh = $self->bcs_schema()->storage()->dbh();

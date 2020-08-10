@@ -301,9 +301,15 @@ sub store {
 
 	    if(!$trial_type){
 	    	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Study type name: ' . $study_type . ' does not exist. Check study types supported!'));
-	    }
+	    } 
 	    my $folder = CXGN::Trial::Folder->new(bcs_schema=>$self->bcs_schema(), folder_id=>$folder_id);
-	    my $program = $folder->breeding_program->name();
+	    
+	    my $program;
+	    if($folder->breeding_program){
+	    	$program = $folder->breeding_program->name();
+	    } elsif ($folder->name()){
+	    	$program = $folder->name();
+	    }
 
 	    my $save;
 		my $coderef = sub {

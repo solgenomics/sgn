@@ -116,7 +116,7 @@
 
             <div class="row">
                 <div class="col-sm-12">
-                    <h4> Or (B) paste a previously used template, optionally (C) using ground control points (GCPs): </h4>
+                    <h4> Or (B) paste a previously used template: </h4>
                 </div>
             </div>
 
@@ -136,7 +136,6 @@
                         </div>
                     </form>
                     <button class="btn btn-primary" id="plot_polygons_standard_process_use_previously_saved_template">(B) Draw Plot Polygon Template (Does not save)</button>
-                    <button class="btn btn-primary" id="plot_polygons_standard_process_use_previously_saved_template_with_gcps">(C) Draw Plot Polygon Template Using Ground Control Points (Does not save)</button>
                 </div>
             </&>
         </div>
