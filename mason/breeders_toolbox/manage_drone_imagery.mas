@@ -902,6 +902,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
     <div class="well well-sm">
         <ul>
             <li>Here you can view the plot polygon templates on the imagery over the course of the field trial. All of the image bands are visible here (e.g. blue, green, RGB, etc).</li>
+            <li>Click on a plot polygon to go to the plot detail page.</li>
             <li>You can zoom out on your browser (Cntrl + -).</li>
         </ul>
     </div>
@@ -921,6 +922,25 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
     </div>
     <canvas id="manage_drone_imagery_field_trial_time_series_canvas_div"></canvas>
 
+</div>
+
+<div class="modal fade" id="manage_drone_imagery_field_trial_time_series_popup" name="manage_drone_imagery_field_trial_time_series_popup" tabindex="-1" role="dialog" aria-labelledby="droneImageryTImeSeriesHoverDialog" data-backdrop="static">
+  <div class="modal-dialog modal-sm" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="droneImageryTImeSeriesHoverDialog">Plot Information</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <div id="manage_drone_imagery_field_trial_time_series_popup_content"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div id="manage_drone_imagery_loading_div" style="display:none">
@@ -5676,11 +5696,14 @@ jQuery(document).ready(function() {
                 draw_canvas_image(background_image_url, 0);
 
                 plotpolygonsImg = document.getElementById(canvas_div_id);
-                //plotpolygonsImg.onmousedown = GetCoordinatesPlotPolygons;
-                plotpolygonsImg.onmousedown = GetCoordinatesPlotPolygonsPoint;
-
                 if (hover_plot_layout == 1) {
-                    plotpolygonsImg.mousemove = function(e){handleMouseMovePlotLayoutHover(e);};
+                    console.log('hover plot');
+                    plotpolygonsImg.onmousemove = handleMouseMovePlotLayoutHover;
+                    plotpolygonsImg.onmousedown = handleMouseMovePlotLayoutHoverClick;
+                }
+                else {
+                    //plotpolygonsImg.onmousedown = GetCoordinatesPlotPolygons;
+                    plotpolygonsImg.onmousedown = GetCoordinatesPlotPolygonsPoint;
                 }
 
                 jQuery('#'+load_div_id).hide();
@@ -5692,14 +5715,26 @@ jQuery(document).ready(function() {
         });
     }
 
+    var handleMouseMovePlotLayoutHoverPlotInfo = {};
+    var handleMouseMovePlotLayoutHoverPlotPolygonsSeen = {};
     function handleMouseMovePlotLayoutHover(e){
-        e.preventDefault();
-        e.stopPropagation();
+        var PosX = 0;
+        var PosY = 0;
+        var ImgPos;
+        ImgPos = FindPosition(plotpolygonsImg);
+        if (!e) var e = window.event;
+        if (e.pageX || e.pageY) {
+            PosX = e.pageX;
+            PosY = e.pageY;
+        }
+        else if (e.clientX || e.clientY) {
+            PosX = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+            PosY = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+        }
+        PosX = PosX - ImgPos[0];
+        PosY = PosY - ImgPos[1];
 
-        mouseX = parseInt(e.clientX-offsetX);
-        mouseY = parseInt(e.clientY-offsetY);
-
-        ctx.clearRect(0,0,background_image_width,background_image_height);
+        //ctx.clearRect(0,0,background_image_width,background_image_height);
 
         var hovering_plot_name;
         for (key in drone_imagery_plot_polygons_display) {
@@ -5713,25 +5748,37 @@ jQuery(document).ready(function() {
                 }
                 ctx.closePath();
 
-                if (ctx.isPointInPath(mouseX,mouseY)){
+                if (ctx.isPointInPath(PosX,PosY)){
                     hovering_plot_name = key;
                 }
             }
         }
+
+        //draw_canvas_image(background_image_url, 0);
 
         for (key in drone_imagery_plot_polygons_display) {
             if (drone_imagery_plot_polygons_display.hasOwnProperty(key)) {
 
                 if (key == hovering_plot_name && drone_imagery_plot_polygons_display_plot_field_layout.hasOwnProperty(key)) {
                     var plot_info = drone_imagery_plot_polygons_display_plot_field_layout[key];
+                    handleMouseMovePlotLayoutHoverPlotInfo = plot_info;
                 }
 
-                var plot_polygons_display_points_again = drone_imagery_plot_polygons_display[key];
-                drawPolyline(plot_polygons_display_points_again);
-                drawWaypoints(plot_polygons_display_points_again, key, random_scaling);
+                if (!handleMouseMovePlotLayoutHoverPlotPolygonsSeen.hasOwnProperty(key)) {
+                    var plot_polygons_display_points_again = drone_imagery_plot_polygons_display[key];
+                    drawPolyline(plot_polygons_display_points_again);
+                    drawWaypoints(plot_polygons_display_points_again, key, undefined);
+                    handleMouseMovePlotLayoutHoverPlotPolygonsSeen[key] = 1;
+                }
             }
         }
     };
+
+    function handleMouseMovePlotLayoutHoverClick(e) {
+        var html = "<a href='/stock/"+handleMouseMovePlotLayoutHoverPlotInfo.plot_id+"/view' target='_blank'>"+handleMouseMovePlotLayoutHoverPlotInfo.plot_name+"</a>";
+        jQuery('#manage_drone_imagery_field_trial_time_series_popup_content').html(html);
+        jQuery('#manage_drone_imagery_field_trial_time_series_popup').modal('show');
+    }
 
     var drone_imagery_plot_polygon_click_type = '';
     jQuery('#drone_imagery_plot_polygons_top_left_click').click(function(){

@@ -7015,7 +7015,7 @@ sub drone_imagery_get_image_for_time_series_GET : Args(0) {
         sorted_times => \@sorted_epoch_seconds,
         sorted_image_types => \@sorted_image_types,
         sorted_dates => \@sorted_dates,
-        # field_layout => \%plot_layout
+        field_layout => \%plot_layout
     };
 }
 
