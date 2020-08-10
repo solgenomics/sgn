@@ -407,7 +407,7 @@ sub get_genotype_info {
     if ($accession_list && scalar(@$accession_list)>0) {
         my $accession_sql = join ("," , @$accession_list);
         push @where_clause, " ( stock.stock_id in ($accession_sql) OR (accession_of_tissue_sample.stock_id in ($accession_sql) AND accession_of_tissue_sample.type_id = $accession_cvterm_id) ) ";
-        push @where_clause, "stock.type_id in ($accession_cvterm_id, $tissue_sample_cvterm_id, $plot_cvterm_id, $plant_cvterm_id)";
+        push @where_clause, "stock.type_id in ($accession_cvterm_id, $tissue_sample_cvterm_id)";
     }
     if ($tissue_sample_list && scalar(@$tissue_sample_list)>0) {
         my $stock_sql = join ("," , @$tissue_sample_list);
@@ -754,7 +754,7 @@ sub init_genotype_iterator {
     if ($accession_list && scalar(@$accession_list)>0) {
         my $accession_sql = join ("," , @$accession_list);
         push @where_clause, " ( stock.stock_id in ($accession_sql) OR (accession_of_tissue_sample.stock_id in ($accession_sql) AND accession_of_tissue_sample.type_id = $accession_cvterm_id) ) ";
-        push @where_clause, "stock.type_id in ($accession_cvterm_id, $tissue_sample_cvterm_id, $plot_cvterm_id, $plant_cvterm_id)";
+        push @where_clause, "stock.type_id in ($accession_cvterm_id, $tissue_sample_cvterm_id)";
     }
     if ($tissue_sample_list && scalar(@$tissue_sample_list)>0) {
         my $stock_sql = join ("," , @$tissue_sample_list);
