@@ -1,6 +1,6 @@
 
 
-<button class="btn btn-primary" id="nirs_analysis_training_dialog_show">Train NIRS Model</button>
+<!--button class="btn btn-success" id="nirs_analysis_training_dialog_show">Train NIRS Model</button-->
 
 <div class="modal fade" id="nirs_analysis_training_dialog" name="nirs_analysis_training_dialog" tabindex="-1" role="dialog" aria-labelledby="nirsAnalysisTrainingDialog" data-backdrop="static">
   <div class="modal-dialog modal-xl" role="document">

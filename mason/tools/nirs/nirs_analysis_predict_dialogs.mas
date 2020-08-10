@@ -1,4 +1,5 @@
-<button class="btn btn-primary" id="nirs_analysis_prediction_dialog_show">Predict Phenotypes From Spectral Model</button>
+
+<!--button class="btn btn-primary" id="nirs_analysis_prediction_dialog_show">Predict Phenotypes From Spectral Model</button-->
 
 <div class="modal fade" id="nirs_analysis_prediction_dialog" name="nirs_analysis_prediction_dialog" tabindex="-1" role="dialog" aria-labelledby="nirsAnalysisPredictionDialog" data-backdrop="static">
   <div class="modal-dialog modal-xl" role="document">
@@ -29,7 +30,6 @@
                             </div>
                         </div>
                     </form>
-                    <br/><br/>
                     <center>
                     <button class="btn btn-primary" id="nirs_analysis_prediction_dataset_select_step">Go to Next Step</button>
                     </center>
@@ -44,7 +44,6 @@
 
                     <div id="nirs_analysis_prediction_model_select_div"></div>
 
-                    <br/><br/>
                     <center>
                     <button class="btn btn-primary" id="nir_analysis_prediction_model_step">Predict</button>
                     </center>
@@ -128,6 +127,7 @@ jQuery(document).ready(function(){
 
             Workflow.complete("#nirs_analysis_prediction_dataset_select_step");
             Workflow.focus('#nirs_analysis_prediction_workflow', 2);
+            window.scrollTo(0,0);
         }
     });
 
@@ -189,6 +189,7 @@ jQuery(document).ready(function(){
 
                     Workflow.complete("#nir_analysis_prediction_model_step");
                     Workflow.focus('#nirs_analysis_prediction_workflow', 3);
+                    window.scrollTo(0,0);
                 },
                 error: function(response){
                     alert('Error predicting phenotypes from NIRS!');

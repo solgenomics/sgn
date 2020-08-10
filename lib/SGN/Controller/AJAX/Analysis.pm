@@ -275,8 +275,9 @@ sub list_analyses_by_user_table :Path('/ajax/analyses/by_user') Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
+    my $analysis_model_type = $c->req->param('analysis_model_type');
 
-    my @analyses = CXGN::Analysis->retrieve_analyses_by_user($schema, $people_schema, $metadata_schema, $phenome_schema, $user_id);
+    my @analyses = CXGN::Analysis->retrieve_analyses_by_user($schema, $people_schema, $metadata_schema, $phenome_schema, $user_id, $analysis_model_type);
 
     my @table;
     foreach my $a (@analyses) {
@@ -309,8 +310,9 @@ sub list_analyses_models_by_user_table :Path('/ajax/analyses/models/by_user') Ar
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
+    my $analysis_model_type = $c->req->param('analysis_model_type');
 
-    my $analysis_models_by_user = CXGN::AnalysisModel::GetModel::get_models_by_user($schema, $user_id);
+    my $analysis_models_by_user = CXGN::AnalysisModel::GetModel::get_models_by_user($schema, $user_id, $analysis_model_type);
     #print STDERR Dumper $analysis_models_by_user;
 
     my @table;

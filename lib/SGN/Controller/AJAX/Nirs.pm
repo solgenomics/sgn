@@ -355,7 +355,8 @@ sub generate_results_POST : Args(0) {
             'tune' => $tune_id,
             'random_forest_importance' => $rf_var_imp,
             'cross_validation' => $cv_scheme,
-            'format' => $format_id
+            'format' => $format_id,
+            'protocol' => 'R waves'
         },
         model_file => $output_model_filepath,
         model_file_type => "jennasrwaves_V1.01_waves_nirs_spectral_predictions_weights_file",

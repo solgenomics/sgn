@@ -3,7 +3,7 @@
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form', 'CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial' ] &>
 
-<button class="btn btn-primary" id="upload_spreadsheet_phenotypes_link">Upload NIRS</button>
+<!--button class="btn btn-primary" id="upload_spreadsheet_phenotypes_link">Upload NIRS</button-->
 
 <div class="modal fade" id="upload_phenotype_spreadsheet_dialog" name="upload_phenotype_spreadsheet_dialog" tabindex="-1" role="dialog" aria-labelledby="addSpreadsheetNIRSDialog">
   <div class="modal-dialog" role="document">

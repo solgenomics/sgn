@@ -460,6 +460,7 @@ sub store {
         $a->metadata()->traits(\@composed_trait_names);
         $a->metadata()->analysis_protocol($analysis_protocol);
         $a->metadata()->result_summary($analysis_result_summary);
+        $a->metadata()->analysis_model_type($analysis_model_type);
         $a->analysis_model_protocol_id($analysis_model_protocol_id);
 
         if ($analysis_precomputed_design_optional) {
