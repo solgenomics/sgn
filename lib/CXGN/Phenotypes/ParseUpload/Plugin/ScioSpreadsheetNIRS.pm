@@ -146,8 +146,6 @@ sub validate {
     return 1;
 }
 
-  
-
 sub parse {
     my $self = shift;
     my $filename = shift;
@@ -207,6 +205,7 @@ sub parse {
         }
         $row_number++;
     }
+    close($fh);
 
     foreach my $obs (sort keys %observation_units_seen) {
         push @observation_units, $obs;
@@ -220,8 +219,6 @@ sub parse {
     $parse_result{'variables'} = \@traits;
     return \%parse_result;
     # print STDERR Dumper \%parse_result;
-
 }
-    
+
 1;
-  
