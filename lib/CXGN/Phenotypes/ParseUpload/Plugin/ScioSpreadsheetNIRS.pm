@@ -172,13 +172,10 @@ sub parse {
     my %metadata_hash;
     my $row_number = 0;
     my $col_number=0;
-    my $observation_column_index;
-    my $seen_spectra = 0;
     my $number=0;
     my $size;
     my $count;
-
-    
+    my $num_cols;
 
     open(my $fh, '<', $filename)
         or die "Could not open file '$filename' $!";
@@ -189,47 +186,28 @@ sub parse {
         return \%parse_result;
     }
 
-    
     while (my $row = $csv->getline ($fh)) {
         # print STDERR "Row is ".Dumper($row)."\n";
         if ( $row_number == 0 ) {
             @header = @{$row};
-            for my $i ( 0 .. scalar(@header)-1 ) {
-                if ($header[$i] eq 'User_input_id') {
-                    $observation_column_index = $i;
-                    last;
+            $num_cols = scalar(@header);
+        } elsif ( $row_number > 0 ) {# get data
+            my @columns = @{$row};
+            my $observationunit_name = $columns[3];
+            $observation_units_seen{$observationunit_name} = 1;
+            # print "The plots are $observationunit_name\n";
+            foreach my $col (0..$num_cols-1){
+                my $column_name = $header[$col];
+                if ($column_name ne '' && $column_name =~ /^[+]?\d+\.?\d*$/){
+                    my $wavelength = "X".$column_name;
+                    my $nir_value = $columns[$col];
+                    $data{$observationunit_name}->{'nirs'}->{'spectra'}->{$wavelength} = $nir_value;
                 }
             }
-        }elsif ( $row_number > 0 )   {# get data
-          my @columns = @{$row};
-          my $num_cols = scalar(@columns);
-          my $observationunit_name = $columns[3];
-                    $observation_units_seen{$observationunit_name} = 1;
-                    # print "The plots are $observationunit_name\n";
-                          foreach my $col (0..$num_cols-1){
-                              my $column_name = $header[$col];
-                              if ($column_name ne '' && $column_name !~ /^[+]?\d+\.?\d*$/){
-                                if ($seen_spectra) {
-                                   last;
-                                }
-                                my $metadata_value = '';
-                                $metadata_value = $columns[$col];
-                                $data{$observationunit_name}->{'nirs'}->{$column_name} = $metadata_value;
-                                # print "The pot is $observationunit_name and data is $metadata_value\n";
-                              }
-
-                              if ($column_name ne '' && $column_name =~ /^[+]?\d+\.?\d*$/){
-                                my $wavelength = "X".$column_name;
-                                my $nir_value = '';
-                                $nir_value = $columns[$col];
-                                $data{$observationunit_name}->{'nirs'}->{'spectra'}->{$wavelength} = $nir_value;
-                              }
-
-                          }
-
         }
-      $row_number++;
+        $row_number++;
     }
+
     foreach my $obs (sort keys %observation_units_seen) {
         push @observation_units, $obs;
     }

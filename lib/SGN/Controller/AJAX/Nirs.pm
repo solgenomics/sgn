@@ -208,7 +208,7 @@ sub generate_results_POST : Args(0) {
         JOIN nd_experiment USING(nd_experiment_id)
         JOIN phenome.nd_experiment_md_json USING(nd_experiment_id)
         JOIN metadata.md_json USING(json_id)
-        WHERE stock.stock_id IN ($stock_ids_sql) AND metadata.md_json.json->>'device_type' = ? ;";
+        WHERE stock.stock_id IN ($stock_ids_sql) AND metadata.md_json.json_type = 'nirs_spectra' AND metadata.md_json.json->>'device_type' = ? ;";
     my $nirs_training_h = $dbh->prepare($nirs_training_q);    
     $nirs_training_h->execute($format_id);
     while (my ($stock_uniquename, $stock_id, $spectra) = $nirs_training_h->fetchrow_array()) {
@@ -431,7 +431,7 @@ sub generate_predictions_POST : Args(0) {
         JOIN nd_experiment USING(nd_experiment_id)
         JOIN phenome.nd_experiment_md_json USING(nd_experiment_id)
         JOIN metadata.md_json USING(json_id)
-        WHERE stock.stock_id IN ($stock_ids_sql) AND metadata.md_json.json->>'device_type' = ? ;";
+        WHERE stock.stock_id IN ($stock_ids_sql) AND metadata.md_json.json_type = 'nirs_spectra' AND metadata.md_json.json->>'device_type' = ? ;";
     my $nirs_training_h = $dbh->prepare($nirs_training_q);    
     $nirs_training_h->execute($format_id);
     while (my ($stock_uniquename, $stock_id, $spectra) = $nirs_training_h->fetchrow_array()) {

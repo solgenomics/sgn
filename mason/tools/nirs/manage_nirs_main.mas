@@ -29,7 +29,7 @@ $locations => undef
 </div>
 
 <div class="well">
-<&| /page/info_section.mas, title=>'Trained NIRS Models', is_subsection=>1, collapsible=>1, collapsed=>1, subtitle=>'View and manage your NIRS models' &>
+<&| /page/info_section.mas, title=>'NIRS Analyses', is_subsection=>1, collapsible=>1, collapsed=>1, subtitle=>'View and manage your NIRS analyses' &>
     <div class="panel panel-default">
         <div class="panel-body">
             <table class="table table-bordered table-hover" id="analyses_by_user_table">
