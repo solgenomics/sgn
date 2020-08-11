@@ -498,14 +498,16 @@ sub save_ona_cross_info {
                             $db_male_accession_name = $self-> _get_accession_from_plot_name($male_plot_name);
 
                              # debugging
-#                            if (!defined $db_female_accession_name) {
-#                                push @checking_female_plots, $odk_female_plot_data;
-#                            }
+                            if (!defined $db_female_accession_name) {
+                                push @checking_female_plots, $odk_female_plot_data;
+                            }
 
-#                            if (!defined $db_male_accession_name) {
-#                                push @checking_male_plots, $odk_male_plot_data;
-#                            }
-
+                            if (!defined $db_male_accession_name) {
+                                push @checking_male_plots, $odk_male_plot_data;
+                            }
+                            print STDERR "CHECKING FEMALE PLOT =".Dumper(\@checking_female_plots)."\n";
+                            print STDERR "CHECKING MALE PLOT =".Dumper(\@checking_male_plots)."\n";
+                          
                             $odk_cross_unique_id = $a->{'FieldActivities/FirstPollination/print_crossBarcode/crossID'};
                             $cross_combination = $db_female_accession_name.'/'.$db_male_accession_name;
 
