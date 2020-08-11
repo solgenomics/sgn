@@ -46,15 +46,10 @@ sub kinship_run_analysis :Path('/kinship/run/analysis') Args() {
     if ($data_str =~ /dataset/)
     {   
 	$c->stash->{dataset_id} = $pop_id;
-#	$c->stash->{data_structure} = 'dataset';
-#	$pop_id = 'dataset_' . $pop_id;
     }
     elsif ($data_str =~ /list/)
     {
 	$c->stash->{list_id}    = $pop_id;
-#	$c->stash->{data_structure} = 'list';
-	#	$pop_id = 'list_' . $pop_id;
-   
     }
 
     my $kinship_pop_id;
@@ -154,7 +149,7 @@ sub kinship_result :Path('/solgs/kinship/result/') Args() {
 	$res->{kinship_table_file} = $c->stash->{download_kinship_table};
 	$res->{kinship_averages_file} = $c->stash->{download_kinship_averages};
 	$res->{inbreeding_file} = $c->stash->{download_inbreeding};    
-    } 
+    }
 
     $res = to_json($res);
     $c->res->body($res);
