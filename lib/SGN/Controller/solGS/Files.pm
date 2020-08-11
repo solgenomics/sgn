@@ -267,7 +267,7 @@ sub relationship_matrix_file {
     my $cache_data = {key    => 'relationship_matrix_json_' . $file_id ,
 		      file      => 'relationship_matrix_json_' . $file_id . '.txt',
 		      stash_key => 'relationship_matrix_json_file',
-		      cache_dir => $c->stash->{solgs_cache_dir}
+		      cache_dir => $c->stash->{kinship_cache_dir}
     };
   
     $self->cache_file($c, $cache_data);
@@ -290,7 +290,7 @@ sub relationship_matrix_adjusted_file {
     my $cache_data = {key    => 'relationship_matrix_table_' . $file_id ,
 		      file      => 'relationship_matrix_adjusted_table_' . $file_id . '.txt',
 		      stash_key => 'relationship_matrix_adjusted_table_file',
-		      cache_dir => $c->stash->{solgs_cache_dir}
+		      cache_dir => $c->stash->{kinship_cache_dir}
     };
  
     $self->cache_file($c, $cache_data);
@@ -298,7 +298,7 @@ sub relationship_matrix_adjusted_file {
     my $cache_data = {key    => 'relationship_matrix_json_' . $file_id ,
 		      file      => 'relationship_matrix_adjusted_json_' . $file_id . '.txt',
 		      stash_key => 'relationship_matrix_adjusted_json_file',
-		      cache_dir => $c->stash->{solgs_cache_dir}
+		      cache_dir => $c->stash->{kinship_cache_dir}
     };
   
     $self->cache_file($c, $cache_data);
@@ -320,7 +320,7 @@ sub average_kinship_file {
     my $cache_data = {key    => 'average_kinship_file' . $file_id ,
 		      file      => 'average_kinship_file_' . $file_id . '.txt',
 		      stash_key => 'average_kinship_file',
-		      cache_dir => $c->stash->{solgs_cache_dir}
+		      cache_dir => $c->stash->{kinship_cache_dir}
     };
   
     $self->cache_file($c, $cache_data);
@@ -341,7 +341,7 @@ sub inbreeding_coefficients_file {
     my $cache_data = {key    => 'inbreeding_coefficients' . $file_id ,
 		      file      => 'inbreeding_coefficients_' . $file_id . '.txt',
 		      stash_key => 'inbreeding_coefficients_file',
-		      cache_dir => $c->stash->{solgs_cache_dir}
+		      cache_dir => $c->stash->{kinship_cache_dir}
     };
   
 
