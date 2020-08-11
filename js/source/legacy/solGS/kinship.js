@@ -4,6 +4,7 @@
 *
 */
 
+
 var solGS = solGS || function solGS() {};
 
 solGS.kinship = {
@@ -120,13 +121,28 @@ solGS.kinship = {
 	    type: 'POST',
 	    dataType: 'json',
 	    data: kinshipArgs,
-	    url: '/kinship/kinship/result/',
+	    url: '/kinship/run/analysis/',
 	    success: function(res) {
 		if (res.result == 'success') {
 		    jQuery("#kinship_canvas .multi-spinner-container").hide();
 		    		    
-		    solGS.kinship.getKinshipResult(res);
-		    jQuery("#kinship_message").empty();
+		    //solGS.kinship.getKinshipResult(res);
+
+		    console.log('resdata ' + res.data)
+
+		    if (res.data) {
+			solGS.kinship.plotKinship(res.data);
+			solGS.kinship.addDowloandLinks(res);
+
+			jQuery("#kinship_message").empty();
+		    } else {
+			 jQuery("#kinship_message")
+			    .html('There is no kinship data to plot.')
+			    .show()
+			    .fadeOut(8400);
+		
+			jQuery("#kinship_canvas .multi-spinner-container").hide();
+		    }
 
 		} else {                
 		    jQuery("#kinship_message").html(res.result);
@@ -161,7 +177,7 @@ solGS.kinship = {
             success: function (res) {
 		
                 if (res.data) {
-			
+
                     solGS.kinship.plotKinship(res.data);
 		    solGS.kinship.addDowloandLinks(res);
 
