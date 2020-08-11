@@ -41,33 +41,88 @@ sub kinship_run_analysis :Path('/kinship/run/analysis') Args() {
     my $combo_pops_id = $c->req->param('combo_pops_id');
     my $data_str      = $c->req->param('data_structure');
 
+    $c->stash->{data_structure} = $data_str;
+    
     if ($data_str =~ /dataset/)
     {   
 	$c->stash->{dataset_id} = $pop_id;
-	$c->stash->{data_structure} = 'dataset';
+#	$c->stash->{data_structure} = 'dataset';
+#	$pop_id = 'dataset_' . $pop_id;
     }
     elsif ($data_str =~ /list/)
     {
 	$c->stash->{list_id}    = $pop_id;
-	$c->stash->{data_structure} = 'list';	
-    }
+#	$c->stash->{data_structure} = 'list';
+	#	$pop_id = 'list_' . $pop_id;
    
-    $c->stash->{kinship_pop_id} = $pop_id;
+    }
+
+    my $kinship_pop_id;
+    if ($data_str =~ /dataset|list/)
+    {
+	$kinship_pop_id = $data_str . '_' . $pop_id;
+    }
+
+    my $file_id = $c->controller('solGS::Files')->create_file_id($c);
+    $c->stash->{file_id} = $file_id;
+
+    my $list_id = $c->stash->{list_id};
+    if ($list_id)
+    {
+	$c->controller('solGS::List')->create_list_population_metadata_file($c, $file_id);
+	my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
+	$c->stash->{list_type} =  $list->type;
+	$c->stash->{list_name} =  $list->name;	
+    }
     
-    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
+   
+    $c->stash->{kinship_pop_id} = $kinship_pop_id || $pop_id;
     
-    $c->controller('solGS::Files')->create_file_id($c);
-    
+    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);    
+       
     $c->stash->{combo_pops_id} = $combo_pops_id;
     $c->stash->{trait_id}      = $trait_id;
-    
+
     if ($combo_pops_id)
     {
 	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
 	$c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};	
     }
-   
-    $self->run_kinship($c);	  	   
+
+    if ($trait_id)
+    {
+	$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+    }
+    
+    $self->run_kinship($c);	  
+    
+    my $res = {};
+
+    if ($c->stash->{error})
+    {
+	$res->{result} = $c->stash->{error};
+    }
+    else
+    {
+	$res->{result} = 'success';
+
+	my $kinship_files = $self->get_kinship_coef_files($c, $kinship_pop_id, $protocol_id, $trait_id);
+	my $json_file = $kinship_files->{json_file};
+
+	print STDERR "\nrun analysis json_file: $json_file\n";
+  
+
+	$res->{data} = read_file($json_file);
+
+	$self->prep_download_kinship_files($c);
+    
+	$res->{kinship_table_file} = $c->stash->{download_kinship_table};
+	$res->{kinship_averages_file} = $c->stash->{download_kinship_averages};
+	$res->{inbreeding_file} = $c->stash->{download_inbreeding};	
+    }
+    
+    $res = to_json($res);
+    $c->res->body($res);	   
     
 }
 
@@ -79,7 +134,10 @@ sub kinship_result :Path('/solgs/kinship/result/') Args() {
     my $protocol_id = $c->req->param('genotyping_protocol_id'); ;
     my $trait_id = $c->req->param('trait_id');
 
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+    if ($trait_id)
+    {
+	$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+    }
     
     my $kinship_files = $self->get_kinship_coef_files($c, $pop_id, $protocol_id, $trait_id);
     my $json_file = $kinship_files->{json_file};
@@ -140,10 +198,10 @@ sub kinship_output_files {
     my $protocol_id = $c->stash->{genotyping_protocol_id};
     my $data_str = $c->stash->{data_structure};
      
-    if ($data_str =~ /dataset|list/)
-    {
-	$pop_id = $data_str . '_' . $pop_id;
-    }
+    # if ($data_str =~ /dataset|list/ && $pop_id =~ /^\d+$/)
+    # {
+    # 	$pop_id = $data_str . '_' . $pop_id;
+    # }
      
     $c->stash->{pop_id} = $pop_id;
     $c->controller('solGS::Files')->inbreeding_coefficients_file($c); 
@@ -178,10 +236,10 @@ sub kinship_input_files {
     my $protocol_id = $c->stash->{genotyping_protocol_id};
     my $data_str = $c->stash->{data_structure};
     
-    if ($data_str =~ /dataset|list/)
-    {
-	$pop_id = $data_str . '_' . $pop_id;
-    }
+    # if ($data_str =~ /dataset|list/ && )
+    # {
+    # 	$pop_id = $data_str . '_' . $pop_id;
+    # }
 
     $c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
     my $geno_file = $c->stash->{genotype_file_name};
@@ -243,7 +301,7 @@ sub kinship_r_jobs {
     
     $c->stash->{input_files}  = $input_file;
     $c->stash->{output_files} = $output_file;
-    $c->stash->{r_temp_file}  = "kinship${file_id}";
+    $c->stash->{r_temp_file}  = "kinship-${file_id}";
     $c->stash->{r_script}     = 'R/solGS/kinship.r';
     
     $c->controller('solGS::solGS')->get_cluster_r_job_args($c);
@@ -265,7 +323,7 @@ sub kinship_query_jobs_file {
     $self->kinship_query_jobs($c);
     my $jobs = $c->stash->{kinship_query_jobs};
   
-    my $temp_dir = $c->stash->{pca_temp_dir};
+    my $temp_dir = $c->stash->{kinship_temp_dir};
     my $jobs_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'kinship-query-jobs-file');	   
    
     nstore $jobs, $jobs_file
@@ -296,7 +354,7 @@ sub create_kinship_genotype_data_query_jobs {
 
     my $data_str = $c->stash->{data_structure};
     my $protocol_id = $c->stash->{genotyping_protocol_id};
-   
+
     if ($data_str =~ /list/)
     {
 	$c->controller('solGS::List')->create_list_geno_data_query_jobs($c);
