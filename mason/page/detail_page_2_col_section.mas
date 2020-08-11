@@ -177,6 +177,10 @@ $model_files => {}
                                     trial_id => $trial_id
                                 &>
 
+                                <& /tools/qualityControl/qualityControl.mas,
+                                    trial_id => $trial_id
+                                &>
+
 
 % if ($hidap_enabled) {
                                 <& /hidap/hidap_trial_link.mas, main_production_site_url=>$main_production_site_url, program => $breeding_program_name, folder => $folder_name, trial => $trial_name &>
