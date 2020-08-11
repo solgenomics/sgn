@@ -24,7 +24,7 @@
 my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Imagery</button><button class='btn btn-success' style='margin:3px' id='keras_cnn_drone_imagery_link'>Keras CNN Models</button><button class='btn btn-success' style='margin:3px' id='drone_imagery_calculate_statistics_link'>Calculate Statistics</button><button class='btn btn-default' style='margin:3px' id='drone_imagery_compare_field_images_link'>Compare Aerial Field Images</button>";
 </%perl>
 
-    <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Drone Imagery</h4>", info_section_subtitle => 'Upload and view field drone imagery', buttons_html => $buttons_html, icon_class => undef, col1_width_class => "col-sm-0", col2_width_class => "col-sm-12", info_section_id => "manage_drone_imagery_main" &>
+    <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Drone Imagery</h4>", info_section_subtitle => 'Please cite <a href="https://acsess.onlinelibrary.wiley.com/doi/full/10.1002/ppj2.20004" target=_blank>ImageBreed</a> if you find any of these tools useful', buttons_html => $buttons_html, icon_class => undef, col1_width_class => "col-sm-0", col2_width_class => "col-sm-12", info_section_id => "manage_drone_imagery_main" &>
 
 </div>
 
@@ -89,8 +89,8 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <label class="col-sm-6 control-label">Has a previous imaging event on this field trial completed the standard process and also has GCPs defined already?: </label>
                     <div class="col-sm-6">
                         <select class="form-control" id="manage_drone_imagery_standard_process_ground_control_points_option">
-                            <option value="No">No (Work in progress)</option>
-                            <!--option value="Yes">Yes</option-->
+                            <option value="No">No</option>
+                            <option value="Yes">Yes</option>
                         </select>
                     </div>
                 </div>
@@ -2337,7 +2337,7 @@ jQuery(document).ready(function() {
                             'drone_run_project_id':manage_drone_imagery_standard_process_drone_run_project_id,
                             'drone_run_band_project_id':manage_drone_imagery_standard_process_drone_run_band_project_id,
                             'time_cvterm_id':manage_drone_imagery_standard_process_phenotype_time,
-                            'test_run':manage_drone_imagery_standard_process_gcp_test_run
+                            'test_run':'Yes'
                         },
                         success: function(response){
                             console.log(response);

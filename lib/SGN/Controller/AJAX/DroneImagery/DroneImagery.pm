@@ -4548,16 +4548,16 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
         my $x_diff = $g->[0]-$template_central_x;
         my $y_diff = $g->[1]-$template_central_y;
         if ($x_diff > 0 && $y_diff > 0) {
-            push @angle_rad_templates, atan($x_diff/$y_diff);
+            push @angle_rad_templates, atan(abs($x_diff/$y_diff));
         }
         elsif ($x_diff < 0 && $y_diff > 0) {
-            push @angle_rad_templates, 180*$rad_conversion - atan(($x_diff*-1)/$y_diff);
+            push @angle_rad_templates, 360*$rad_conversion - atan(abs($x_diff/$y_diff));
         }
         elsif ($x_diff < 0 && $y_diff < 0) {
-            push @angle_rad_templates, atan($x_diff/$y_diff);
+            push @angle_rad_templates, 180*$rad_conversion + atan(abs($x_diff/$y_diff));
         }
         elsif ($x_diff > 0 && $y_diff < 0) {
-            push @angle_rad_templates, 180*$rad_conversion - atan($x_diff/($y_diff*-1));
+            push @angle_rad_templates, 180*$rad_conversion - atan(abs($x_diff/$y_diff));
         }
         else {
             push @angle_rad_templates, undef;
@@ -4569,16 +4569,16 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
         my $x_diff = $g->[0]-$current_central_x;
         my $y_diff = $g->[1]-$current_central_y;
         if ($x_diff > 0 && $y_diff > 0) {
-            push @angle_rad_currents, atan($x_diff/$y_diff);
+            push @angle_rad_currents, atan(abs($x_diff/$y_diff));
         }
         elsif ($x_diff < 0 && $y_diff > 0) {
-            push @angle_rad_currents, 180*$rad_conversion - atan(($x_diff*-1)/$y_diff);
+            push @angle_rad_currents, 360*$rad_conversion - atan(abs($x_diff/$y_diff));
         }
         elsif ($x_diff < 0 && $y_diff < 0) {
-            push @angle_rad_currents, atan($x_diff/$y_diff);
+            push @angle_rad_currents, 180*$rad_conversion + atan(abs($x_diff/$y_diff));
         }
         elsif ($x_diff > 0 && $y_diff < 0) {
-            push @angle_rad_currents, 180*$rad_conversion - atan($x_diff/($y_diff*-1));
+            push @angle_rad_currents, 180*$rad_conversion - atan(abs($x_diff/$y_diff));
         }
         else {
             push @angle_rad_currents, undef;
@@ -4721,8 +4721,10 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
     my ($rotate_check_image_width, $rotate_check_image_height) = imgsize($rotate_check_image_fullpath);
     print STDERR "Template Rotation: $rotate_check_image_width $rotate_check_image_height \n";
 
-    my $template_gcp_x_scale = $rotate_check_image_width/$rotate_check_target_image_width;
-    my $template_gcp_y_scale = $rotate_check_image_height/$rotate_check_target_image_height;
+    # my $template_gcp_x_scale = $rotate_check_image_width/$rotate_check_target_image_width;
+    # my $template_gcp_y_scale = $rotate_check_image_height/$rotate_check_target_image_height;
+    my $template_gcp_x_scale = ($tr_gcp_template_point_x - $tl_gcp_template_point_x) / ($tr_gcp_current_point_x - $tl_gcp_current_point_x);
+    my $template_gcp_y_scale = ($bl_gcp_template_point_y - $tl_gcp_template_point_y) / ($bl_gcp_current_point_y - $tl_gcp_current_point_y);
     print STDERR Dumper [$template_gcp_x_scale, $template_gcp_y_scale];
 
     my $rotate_angle_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_band_rotate_angle', 'project_property')->cvterm_id();
@@ -4762,38 +4764,40 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
         }
     }
 
-    my $counter_o = 0;
-    my @crop_offset_x_vals;
-    my @crop_offset_y_vals;
-    foreach (@rotated_current_points) {
-        my $template_point = $gcp_points_template[$counter_o];
-        push @crop_offset_x_vals, $template_point->[0] + $min_old_crop_x - $_->[0];
-        push @crop_offset_y_vals, $template_point->[1] + $min_old_crop_y - $_->[1];
-        $counter_o++;
-    }
-    my $crop_offset_x = sum(@crop_offset_x_vals)/scalar(@crop_offset_x_vals);
-    my $crop_offset_y = sum(@crop_offset_y_vals)/scalar(@crop_offset_y_vals);
-    print STDERR Dumper [$crop_offset_x,$crop_offset_y];
-
-    my $image_crop = [[
-        {
-            'x' => $crop_offset_x + ($cropping_value_old->[0]->[0]->{'x'})/$template_gcp_x_scale,
-            'y' => $crop_offset_y + ($cropping_value_old->[0]->[0]->{'y'})/$template_gcp_y_scale
-        },
-        {
-            'x' => $crop_offset_x + ($cropping_value_old->[0]->[1]->{'x'})/$template_gcp_x_scale,
-            'y' => $crop_offset_y + ($cropping_value_old->[0]->[1]->{'y'})/$template_gcp_y_scale
-        },
-        {
-            'x' => $crop_offset_x + ($cropping_value_old->[0]->[2]->{'x'})/$template_gcp_x_scale,
-            'y' => $crop_offset_y + ($cropping_value_old->[0]->[2]->{'y'})/$template_gcp_y_scale
-        },
-        {
-            'x' => $crop_offset_x + ($cropping_value_old->[0]->[3]->{'x'})/$template_gcp_x_scale,
-            'y' => $crop_offset_y + ($cropping_value_old->[0]->[3]->{'y'})/$template_gcp_y_scale
+    my @old_cropping_val_dists;
+    foreach (@{$cropping_value_old->[0]}) {
+        my $x = $_->{'x'} - $min_old_crop_x;
+        my $y = $_->{'y'} - $min_old_crop_y;
+        my @diffs;
+        foreach my $t (@gcp_points_template) {
+            push @diffs, [$t->[0] - $x, $t->[1] - $y];
         }
-    ]];
-    # print STDERR Dumper $image_crop;
+        push @old_cropping_val_dists, \@diffs;
+    }
+    # print STDERR Dumper \@old_cropping_val_dists;
+
+    my $image_crop;
+    my $counter_c = 0;
+    foreach my $o (@old_cropping_val_dists) {
+        my @pos_x;
+        my @pos_y;
+        my $counter = 0;
+        foreach my $r (@rotated_current_points) {
+            my $o_x = $o->[$counter]->[0]/$template_gcp_x_scale;
+            my $o_y = $o->[$counter]->[1]/$template_gcp_y_scale;
+            my $r_x = $r->[0];
+            my $r_y = $r->[1];
+            push @pos_x, $r_x - $o_x;
+            push @pos_y, $r_y - $o_y;
+            $counter++;
+        }
+        $image_crop->[0]->[$counter_c] = {
+            x => sum(@pos_x)/scalar(@pos_x),
+            y => sum(@pos_y)/scalar(@pos_y)
+        };
+        $counter_c++;
+    }
+    print STDERR Dumper $image_crop;
 
     my $min_new_crop_x = 1000000000;
     my $min_new_crop_y = 1000000000;
@@ -4808,24 +4812,73 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
         }
     }
 
+    my @old_plot_val_names;
+    my @old_plot_val_dists;
+    foreach my $key (sort keys %$plot_polygons_value_old) {
+        push @old_plot_val_names, $key;
+        my $v = $plot_polygons_value_old->{$key};
+        my @points;
+        foreach (@{$v}) {
+            my $x = $_->{'x'} - $min_old_crop_x;
+            my $y = $_->{'y'} - $min_old_crop_y;
+            my @diffs;
+            foreach my $t (@gcp_points_template) {
+                push @diffs, [$t->[0] - $x, $t->[1] - $y];
+            }
+            push @points, \@diffs;
+        }
+        push @old_plot_val_dists, \@points;
+    }
+
     my %scaled_plot_polygons;
     my %scaled_plot_polygons_display;
-    while (my ($key, $v) = each %$plot_polygons_value_old) {
-        my @n;
-        my @n_display;
-        foreach (@$v) {
-            push @n, {
-                x => ($_->{x} - $crop_offset_x)/$template_gcp_x_scale,
-                y => ($_->{y} - $crop_offset_y)/$template_gcp_y_scale
+    my $counter_p = 0;
+    foreach my $o (@old_plot_val_names) {
+        my $point_diffs = $old_plot_val_dists[$counter_p];
+        my @adjusted;
+        my @adjusted_display;
+        foreach my $p (@$point_diffs) {
+            my @pos_x;
+            my @pos_y;
+            my $counter = 0;
+            foreach my $r (@rotated_current_points) {
+                my $o_x = $p->[$counter]->[0]/$template_gcp_x_scale;
+                my $o_y = $p->[$counter]->[1]/$template_gcp_y_scale;
+                my $r_x = $r->[0];
+                my $r_y = $r->[1];
+                push @pos_x, $r_x - $o_x;
+                push @pos_y, $r_y - $o_y;
+                $counter++;
+            }
+            push @adjusted, {
+                x => sum(@pos_x)/scalar(@pos_x),
+                y => sum(@pos_y)/scalar(@pos_y)
             };
-            push @n_display, {
-                x => $min_new_crop_x + ($_->{x} - $crop_offset_x)/$template_gcp_x_scale,
-                y => $min_new_crop_y + ($_->{y} - $crop_offset_y)/$template_gcp_y_scale
+            push @adjusted_display, {
+                x => $min_new_crop_x + sum(@pos_x)/scalar(@pos_x),
+                y => $min_new_crop_y + sum(@pos_y)/scalar(@pos_y)
             };
         }
-        $scaled_plot_polygons{$key} = \@n;
-        $scaled_plot_polygons_display{$key} = \@n_display;
+        $scaled_plot_polygons{$o} = \@adjusted;
+        $scaled_plot_polygons_display{$o} = \@adjusted_display;
+        $counter_p++;
     }
+    # while (my ($key, $v) = each %$plot_polygons_value_old) {
+    #     my @n;
+    #     my @n_display;
+    #     foreach (@$v) {
+    #         push @n, {
+    #             x => ($_->{x} - $crop_offset_x)/$template_gcp_x_scale,
+    #             y => ($_->{y} - $crop_offset_y)/$template_gcp_y_scale
+    #         };
+    #         push @n_display, {
+    #             x => $min_new_crop_x + ($_->{x} - $crop_offset_x)/$template_gcp_x_scale,
+    #             y => $min_new_crop_y + ($_->{y} - $crop_offset_y)/$template_gcp_y_scale
+    #         };
+    #     }
+    #     $scaled_plot_polygons{$key} = \@n;
+    #     $scaled_plot_polygons_display{$key} = \@n_display;
+    # }
 
     if ($is_test_run eq 'Yes') {
         $c->stash->{rest} = { old_cropped_points => $cropping_value_old, cropped_points => $image_crop, rotated_points => \@rotated_current_points, rotated_image_id => $rotated_image_id, plot_polygons => \%scaled_plot_polygons_display };
