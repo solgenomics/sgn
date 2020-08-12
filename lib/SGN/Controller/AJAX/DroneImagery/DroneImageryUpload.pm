@@ -1090,6 +1090,8 @@ sub upload_drone_imagery_POST : Args(0) {
             my $image_paths_panel = $zipfile_return_panel->{image_files};
 
             $cmd = "docker run --rm -v $image_path_remaining:/datasets/code opendronemap/odm --project-path /$image_path_project_name";
+            print STDERR Dumper $cmd;
+            my $status = system($cmd);
 
             my $temp_file_raw_image_blue = $c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX').".png";
             my $temp_file_raw_image_green = $c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX').".png";
@@ -1116,32 +1118,6 @@ sub upload_drone_imagery_POST : Args(0) {
         # }
         else {
             die "Camera info not supported for raw image upload: $new_drone_run_camera_info\n";
-        }
-
-        print STDERR Dumper $cmd;
-        my $status = system($cmd);
-
-        my @aligned_images;
-        my $csv = Text::CSV->new({ sep_char => ',' });
-        open(my $fh_out, '<', $output_path) or die "Could not open file '$output_path' $!";
-            while ( my $row = <$fh_out> ) {
-                my @columns;
-                if ($csv->parse($row)) {
-                    @columns = $csv->fields();
-                }
-                push @aligned_images, \@columns;
-            }
-        close($fh_out);
-
-        my $counter = 0;
-        my $total_images = scalar(@aligned_images);
-        my $total_captures = $total_images/5;
-        foreach (@aligned_images) {
-            push @{$raw_image_bands{$counter}}, $_;
-            $counter++;
-            if ($counter >= 5) {
-                $counter = 0;
-            }
         }
 
         foreach my $m (@stitched_bands) {
