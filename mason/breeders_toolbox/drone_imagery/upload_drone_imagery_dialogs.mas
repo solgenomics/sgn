@@ -168,9 +168,10 @@
                                 <select class="form-control" id="drone_image_upload_drone_run_band_stitching" name="drone_image_upload_drone_run_band_stitching">
                                     <option value="">Select One</option>
                                     <!-- option value="yes">Yes, I am uploading a zipfile of raw images to stitch</option -->
-                                    <option value="yes_raw">Yes, I am uploading a zipfile of raw images</option>
                                     <!-- option value="yes_automated">Yes, I am uploading a zipfile of raw images to automatically get plot images from</option -->
                                     <option value="no">No, I am uploading a stitched orthomosaic</option>
+                                    <option value="yes_raw">Yes, I am uploading a zipfile of raw images</option>
+                                    <option value="yes_open_data_map_stitch">Yes, I am uploading a zipfile of raw images to stitch using OpenDataMap</option>
                                 </select>
                             </div>
                         </div>
@@ -557,7 +558,7 @@ jQuery(document).ready(function() {
     );
 
     jQuery('#drone_image_upload_drone_run_band_stitching').change(function(){
-        if (jQuery('#drone_image_upload_drone_run_band_stitching').val() == 'yes' || jQuery('#drone_image_upload_drone_run_band_stitching').val() == 'yes_raw' || jQuery('#drone_image_upload_drone_run_band_stitching').val() == 'yes_automated') {
+        if (jQuery('#drone_image_upload_drone_run_band_stitching').val() == 'yes' || jQuery('#drone_image_upload_drone_run_band_stitching').val() == 'yes_raw' || jQuery('#drone_image_upload_drone_run_band_stitching').val() == 'yes_automated' || jQuery('#drone_image_upload_drone_run_band_stitching').val() == 'yes_open_data_map_stitch') {
             jQuery('#drone_run_upload_drone_run_band_number_div').hide();
         } else {
             jQuery('#drone_run_upload_drone_run_band_number_div').show();
@@ -573,7 +574,7 @@ jQuery(document).ready(function() {
         var drone_run_name = jQuery('#drone_run_name').val();
         var drone_run_date = jQuery('#drone_run_date').val();
 
-        if (drone_run_id != '' && (drone_run_band_unstitched == 'yes' || drone_run_band_unstitched == 'yes_raw' || drone_run_band_unstitched == 'yes_automated')) {
+        if (drone_run_id != '' && (drone_run_band_unstitched == 'yes' || drone_run_band_unstitched == 'yes_raw' || drone_run_band_unstitched == 'yes_automated' || drone_run_band_unstitched == 'yes_open_data_map_stitch')) {
             alert('Please create a new drone run band if you are uploading a zipfile of raw images.');
             return false;
         }
@@ -632,7 +633,7 @@ jQuery(document).ready(function() {
             html = html + '</div>';
         }
 
-        else if (drone_run_band_unstitched == 'yes_raw') {
+        else if (drone_run_band_unstitched == 'yes_raw' || drone_run_band_unstitched == 'yes_open_data_map_stitch') {
             html = html + '<div class="well well-sm">';
             html = html + '<div class="form-group"><label class="col-sm-3 control-label">Drone Images ZipFile (.zip) (2GB Maximum): </label><div class="col-sm-9" ><input type="file" id="upload_drone_images_zipfile" name="upload_drone_images_zipfile" encoding="multipart/form-data" /></div></div>';
 
@@ -773,7 +774,7 @@ jQuery(document).ready(function() {
                     }
                 }
             }
-        } else if (drone_run_band_unstitched == 'yes' || drone_run_band_unstitched == 'yes_raw' || (drone_run_band_unstitched == 'yes_automated' && drone_run_band_unstitched_raw_image_boundaries == 0)) {
+        } else if (drone_run_band_unstitched == 'yes' || drone_run_band_unstitched == 'yes_raw' || drone_run_band_unstitched == 'yes_open_data_map_stitch' || (drone_run_band_unstitched == 'yes_automated' && drone_run_band_unstitched_raw_image_boundaries == 0)) {
             if (jQuery('#upload_drone_images_zipfile').val() == ''){
                 alert('Please select a zipfile of images');
                 return;
@@ -854,7 +855,7 @@ jQuery(document).ready(function() {
                 alert(response.error);
                 return;
             }
-            if (drone_run_band_unstitched == 'yes' || drone_run_band_unstitched == 'yes_raw' || drone_run_band_unstitched == 'no') {
+            if (drone_run_band_unstitched == 'yes' || drone_run_band_unstitched == 'yes_raw' || drone_run_band_unstitched == 'yes_open_data_map_stitch' || drone_run_band_unstitched == 'no') {
                 location.reload();
             }
             else if (drone_run_band_unstitched == 'yes_automated') {
