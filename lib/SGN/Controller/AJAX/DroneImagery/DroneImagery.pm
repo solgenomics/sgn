@@ -4797,7 +4797,18 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
         };
         $counter_c++;
     }
-    print STDERR Dumper $image_crop;
+    # print STDERR Dumper $image_crop;
+
+    $dir = $c->tempfiles_subdir('/drone_imagery_cropped_image');
+    my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_cropped_image/imageXXXX');
+    $archive_temp_image .= '.png';
+
+    my $check_cropping_return = _perform_image_cropping($c, $bcs_schema, $check_drone_run_band_project_id_q, $rotated_image_id, encode_json $image_crop, $user_id, $user_name, $user_role, $archive_temp_image);
+    my $check_cropped_image_id = $check_cropping_return->{cropped_image_id};
+
+    my $crop_check_target_image = SGN::Image->new( $bcs_schema->storage->dbh, $check_cropped_image_id, $c );
+    my $crop_check_target_image_url = $crop_check_target_image->get_image_url("original");
+    my $crop_check_target_image_fullpath = $crop_check_target_image->get_filename('original_converted', 'full');
 
     my $min_new_crop_x = 1000000000;
     my $min_new_crop_y = 1000000000;
@@ -4819,8 +4830,8 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
         my $v = $plot_polygons_value_old->{$key};
         my @points;
         foreach (@{$v}) {
-            my $x = $_->{'x'} - $min_old_crop_x;
-            my $y = $_->{'y'} - $min_old_crop_y;
+            my $x = $_->{'x'};
+            my $y = $_->{'y'};
             my @diffs;
             foreach my $t (@gcp_points_template) {
                 push @diffs, [$t->[0] - $x, $t->[1] - $y];
@@ -4831,7 +4842,6 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
     }
 
     my %scaled_plot_polygons;
-    my %scaled_plot_polygons_display;
     my $counter_p = 0;
     foreach my $o (@old_plot_val_names) {
         my $point_diffs = $old_plot_val_dists[$counter_p];
@@ -4844,8 +4854,8 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
             foreach my $r (@rotated_current_points) {
                 my $o_x = $p->[$counter]->[0]/$template_gcp_x_scale;
                 my $o_y = $p->[$counter]->[1]/$template_gcp_y_scale;
-                my $r_x = $r->[0];
-                my $r_y = $r->[1];
+                my $r_x = $r->[0] - $min_new_crop_x;
+                my $r_y = $r->[1] - $min_new_crop_y;
                 push @pos_x, $r_x - $o_x;
                 push @pos_y, $r_y - $o_y;
                 $counter++;
@@ -4854,34 +4864,13 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
                 x => sum(@pos_x)/scalar(@pos_x),
                 y => sum(@pos_y)/scalar(@pos_y)
             };
-            push @adjusted_display, {
-                x => $min_new_crop_x + sum(@pos_x)/scalar(@pos_x),
-                y => $min_new_crop_y + sum(@pos_y)/scalar(@pos_y)
-            };
         }
         $scaled_plot_polygons{$o} = \@adjusted;
-        $scaled_plot_polygons_display{$o} = \@adjusted_display;
         $counter_p++;
     }
-    # while (my ($key, $v) = each %$plot_polygons_value_old) {
-    #     my @n;
-    #     my @n_display;
-    #     foreach (@$v) {
-    #         push @n, {
-    #             x => ($_->{x} - $crop_offset_x)/$template_gcp_x_scale,
-    #             y => ($_->{y} - $crop_offset_y)/$template_gcp_y_scale
-    #         };
-    #         push @n_display, {
-    #             x => $min_new_crop_x + ($_->{x} - $crop_offset_x)/$template_gcp_x_scale,
-    #             y => $min_new_crop_y + ($_->{y} - $crop_offset_y)/$template_gcp_y_scale
-    #         };
-    #     }
-    #     $scaled_plot_polygons{$key} = \@n;
-    #     $scaled_plot_polygons_display{$key} = \@n_display;
-    # }
 
     if ($is_test_run eq 'Yes') {
-        $c->stash->{rest} = { old_cropped_points => $cropping_value_old, cropped_points => $image_crop, rotated_points => \@rotated_current_points, rotated_image_id => $rotated_image_id, plot_polygons => \%scaled_plot_polygons_display };
+        $c->stash->{rest} = { old_cropped_points => $cropping_value_old, cropped_points => $image_crop, rotated_points => \@rotated_current_points, rotated_image_id => $check_cropped_image_id, plot_polygons => \%scaled_plot_polygons };
         $c->detach();
     }
 
