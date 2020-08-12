@@ -498,16 +498,16 @@ sub save_ona_cross_info {
                             $db_male_accession_name = $self-> _get_accession_from_plot_name($male_plot_name);
 
                              # debugging
-                            if (!defined $db_female_accession_name) {
-                                push @checking_female_plots, $odk_female_plot_data;
-                            }
+#                            if (!defined $db_female_accession_name) {
+#                                push @checking_female_plots, $odk_female_plot_data;
+#                            }
 
-                            if (!defined $db_male_accession_name) {
-                                push @checking_male_plots, $odk_male_plot_data;
-                            }
-                            print STDERR "CHECKING FEMALE PLOT =".Dumper(\@checking_female_plots)."\n";
-                            print STDERR "CHECKING MALE PLOT =".Dumper(\@checking_male_plots)."\n";
-                          
+#                            if (!defined $db_male_accession_name) {
+#                                push @checking_male_plots, $odk_male_plot_data;
+#                            }
+#                            print STDERR "CHECKING FEMALE PLOT =".Dumper(\@checking_female_plots)."\n";
+#                            print STDERR "CHECKING MALE PLOT =".Dumper(\@checking_male_plots)."\n";
+
                             $odk_cross_unique_id = $a->{'FieldActivities/FirstPollination/print_crossBarcode/crossID'};
                             $cross_combination = $db_female_accession_name.'/'.$db_male_accession_name;
 
@@ -643,10 +643,13 @@ sub save_ona_cross_info {
                             $weaning2_hash{$weaning2_cross_id}{$weaning2_id}++;
 
                         } elsif ($a->{'Nursery/nurseryActivity'} eq 'screenhouse'){
+#                        print STDERR "CHECKING SCREENHOUSE =".Dumper($a)."\n";
                             my $screenhouse_cross_id = $a->{'Nursery/Screenhouse/crossid_of_screenhouseID'};
                             my $screenhouse_id = $a->{'Nursery/Screenhouse/screenhouseID'};
                             my $number_of_screenhouse_plantlets = $a->{'Nursery/Screenhouse/number_of_screenhouse_plantlets'};
-                            $screenhouse_hash{$screenhouse_cross_id}{$screenhouse_id}++;
+                            if (defined $screenhouse_cross_id) {
+                                $screenhouse_hash{$screenhouse_cross_id}{$screenhouse_id}++;
+                            }
                         } elsif ($a->{'Nursery/nurseryActivity'} eq 'hardening'){
                             my $hardening_cross_id = $a->{'Nursery/Hardening/hardeningID_crossid'};
                             my $hardening_id = $a->{'Nursery/Hardening/hardeningID'};
@@ -861,14 +864,18 @@ sub save_ona_cross_info {
                 my %info_hash = %{$musa_cross_info{$info_type}};
                 foreach my $cross_name_key (keys %info_hash){
                     my $value = $info_hash{$cross_name_key};
-                    my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({
-                        chado_schema => $schema,
-                        cross_name => $cross_name_key,
-                        key => $info_type,
-                        value => $value,
-                    });
-
-                    $cross_add_info->add_info();
+                    print STDERR "CROSS NAME =".Dumper($cross_name_key)."\n";
+                    print STDERR "INFO TYPE =".Dumper($info_type)."\n";
+                    print STDERR "INFO VALUE =".Dumper($value)."\n";
+                    if (defined $value) {
+                        my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({
+                            chado_schema => $schema,
+                            cross_name => $cross_name_key,
+                            key => $info_type,
+                            value => $value,
+                        });
+                        $cross_add_info->add_info();
+                    }
                 }
             }
         }
@@ -925,6 +932,9 @@ sub save_ona_cross_info {
         return { error => "Could not connect to ONA" };
     }
 }
+
+
+
 
 sub create_odk_cross_progress_tree {
     print STDERR "CREATE ODK CROSS PROGRESS TREE START\n";
@@ -1445,19 +1455,19 @@ sub create_odk_cross_progress_tree {
         while ( my ($cross_name, $activities) = each %$cross_hash){
             while ( my ($activity_name, $entries) = each %$activities){
                 if ($activity_name eq 'firstPollination'){
-                    foreach my $e (@$entries){
-                        my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name=>$cross_name, cross_type=>'biparental');
-                        my $female_parent_individual = Bio::GeneticRelationships::Individual->new(name => $e->{femaleAccessionName});
-                        $pedigree->set_female_parent($female_parent_individual);
-                        my $male_parent_individual = Bio::GeneticRelationships::Individual->new(name => $e->{maleAccessionName});
-                        $pedigree->set_male_parent($male_parent_individual);
-                        my $female_plot_individual = Bio::GeneticRelationships::Individual->new(name => $e->{femalePlotName});
-                        $pedigree->set_female_plot($female_plot_individual);
-                        my $male_plot_individual = Bio::GeneticRelationships::Individual->new(name => $e->{malePlotName});
-                        $pedigree->set_male_plot($male_plot_individual);
-                        push @{$parsed_data{crosses}}, $pedigree;
-                        $parsed_data{'First Pollation Date'}->{$cross_name} = $e->{date};
-                    }
+#                    foreach my $e (@$entries){
+#                        my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name=>$cross_name, cross_type=>'biparental');
+#                        my $female_parent_individual = Bio::GeneticRelationships::Individual->new(name => $e->{femaleAccessionName});
+#                        $pedigree->set_female_parent($female_parent_individual);
+#                        my $male_parent_individual = Bio::GeneticRelationships::Individual->new(name => $e->{maleAccessionName});
+#                        $pedigree->set_male_parent($male_parent_individual);
+#                        my $female_plot_individual = Bio::GeneticRelationships::Individual->new(name => $e->{femalePlotName});
+#                        $pedigree->set_female_plot($female_plot_individual);
+#                        my $male_plot_individual = Bio::GeneticRelationships::Individual->new(name => $e->{malePlotName});
+#                        $pedigree->set_male_plot($male_plot_individual);
+#                        push @{$parsed_data{crosses}}, $pedigree;
+#                        $parsed_data{'First Pollation Date'}->{$cross_name} = $e->{date};
+#                    }
                 }
                 if ($activity_name eq 'repeatPollination'){
                     foreach my $e (@$entries){
@@ -1609,6 +1619,7 @@ sub _get_accession_from_plot_name {
 
     return $accession_name;
 }
+
 
 
 1;
