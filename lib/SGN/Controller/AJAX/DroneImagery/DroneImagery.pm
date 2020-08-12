@@ -4550,9 +4550,9 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
         if ($x_diff > 0 && $y_diff > 0) {
             push @angle_rad_templates, atan(abs($x_diff/$y_diff));
         }
-        elsif ($x_diff < 0 && $y_diff > 0) {
-            push @angle_rad_templates, 360*$rad_conversion - atan(abs($x_diff/$y_diff));
-        }
+        # elsif ($x_diff < 0 && $y_diff > 0) {
+        #     push @angle_rad_templates, 360*$rad_conversion - atan(abs($x_diff/$y_diff));
+        # }
         elsif ($x_diff < 0 && $y_diff < 0) {
             push @angle_rad_templates, 180*$rad_conversion + atan(abs($x_diff/$y_diff));
         }
@@ -4571,9 +4571,9 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
         if ($x_diff > 0 && $y_diff > 0) {
             push @angle_rad_currents, atan(abs($x_diff/$y_diff));
         }
-        elsif ($x_diff < 0 && $y_diff > 0) {
-            push @angle_rad_currents, 360*$rad_conversion - atan(abs($x_diff/$y_diff));
-        }
+        # elsif ($x_diff < 0 && $y_diff > 0) {
+        #     push @angle_rad_currents, 360*$rad_conversion - atan(abs($x_diff/$y_diff));
+        # }
         elsif ($x_diff < 0 && $y_diff < 0) {
             push @angle_rad_currents, 180*$rad_conversion + atan(abs($x_diff/$y_diff));
         }
@@ -4584,6 +4584,8 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
             push @angle_rad_currents, undef;
         }
     }
+    # print STDERR Dumper \@angle_rad_templates;
+    # print STDERR Dumper \@angle_rad_currents;
 
     my $counter = 0;
     my @angle_diffs;
@@ -4595,6 +4597,7 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
         }
         $counter++;
     }
+    print STDERR Dumper \@angle_diffs;
 
     my $rotate_rad_gcp = sum(@angle_diffs)/scalar(@angle_diffs);
     print STDERR "AVG ROTATION: $rotate_rad_gcp\n";
@@ -4723,8 +4726,28 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
 
     # my $template_gcp_x_scale = $rotate_check_image_width/$rotate_check_target_image_width;
     # my $template_gcp_y_scale = $rotate_check_image_height/$rotate_check_target_image_height;
-    my $template_gcp_x_scale = ($tr_gcp_template_point_x - $tl_gcp_template_point_x) / ($tr_gcp_current_point_x - $tl_gcp_current_point_x);
-    my $template_gcp_y_scale = ($bl_gcp_template_point_y - $tl_gcp_template_point_y) / ($bl_gcp_current_point_y - $tl_gcp_current_point_y);
+    my $template_gcp_x_scale;
+    if ($tr_gcp_template_point_x - $tl_gcp_template_point_x != 0 && $tr_gcp_current_point_x - $tl_gcp_current_point_x != 0) {
+        $template_gcp_x_scale = ($tr_gcp_template_point_x - $tl_gcp_template_point_x) / ($tr_gcp_current_point_x - $tl_gcp_current_point_x);
+    }
+    elsif ($br_gcp_template_point_x - $bl_gcp_template_point_x != 0 && $br_gcp_current_point_x - $bl_gcp_current_point_x != 0) {
+        $template_gcp_x_scale = ($br_gcp_template_point_x - $bl_gcp_template_point_x) / ($br_gcp_current_point_x - $bl_gcp_current_point_x);
+    }
+    else {
+        $c->stash->{rest} = { error => "Not enough GCP points to get the x scale!" };
+        $c->detach();
+    }
+    my $template_gcp_y_scale;
+    if ($bl_gcp_template_point_y - $tl_gcp_template_point_y != 0 && $bl_gcp_current_point_y - $tl_gcp_current_point_y != 0) {
+        $template_gcp_y_scale = ($bl_gcp_template_point_y - $tl_gcp_template_point_y) / ($bl_gcp_current_point_y - $tl_gcp_current_point_y);
+    }
+    if ($br_gcp_template_point_y - $tr_gcp_template_point_y != 0 && $br_gcp_current_point_y - $tr_gcp_current_point_y != 0) {
+        $template_gcp_y_scale = ($br_gcp_template_point_y - $tr_gcp_template_point_y) / ($br_gcp_current_point_y - $tr_gcp_current_point_y);
+    }
+    else {
+        $c->stash->{rest} = { error => "Not enough GCP points to get the y scale!" };
+        $c->detach();
+    }
     print STDERR Dumper [$template_gcp_x_scale, $template_gcp_y_scale];
 
     my $rotate_angle_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_band_rotate_angle', 'project_property')->cvterm_id();
