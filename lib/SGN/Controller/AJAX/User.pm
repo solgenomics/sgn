@@ -362,8 +362,11 @@ sub process_reset_password_form :Path('/ajax/user/process_reset_password') Args(
     }
 
     eval {
-        my $login = CXGN::People::Login->new($c->dbc->dbh(), $c->user->get_sp_person_id());
-        my $token_check = $login->get_confirm_code();
+        my $q = "SELECT sp_person_id FROM sgn_people.sp_person WHERE confirm_code=?;";
+        my $h = $c->dbc->dbh()->prepare($q);
+        $h->execute($token);
+        my ($person_id) = $h->fetchrow_array();
+        my $login = CXGN::People::Login->new($c->dbc->dbh(), $person_id);
         $login->update_password($new_password);
         $login->update_confirm_code("");
     };
