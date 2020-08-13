@@ -416,6 +416,7 @@ sub observationunits_update {
         my $location_ids_arrayref = $params->{locationDbId} || ($params->{locationDbIds} || ());
         my $study_ids_arrayref = $params->{studyDbId} || ($params->{studyDbIds} || ());
         my $accession_ids_arrayref = $params->{germplasmDbId} || ($params->{germplasmDbIds} || ());
+        my $accession_name = $params->{germplasmName} || ($params->{germplasmNames} || ());
         my $trait_list_arrayref = $params->{observationVariableDbId} || ($params->{observationVariableDbIds} || ());
         my $program_ids_arrayref = $params->{programDbId} || ($params->{programDbIds} || ());
         my $folder_ids_arrayref = $params->{trialDbId} || ($params->{trialDbIds} || ());
@@ -427,6 +428,18 @@ sub observationunits_update {
 
         if(!$observation_unit_db_id){
             return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Check ObservationUnits Ids'));
+        }
+
+        my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate('MaterializedViewTable',
+        {
+            bcs_schema=>$schema,
+            data_level=>'all',
+            plot_list=>[$observation_unit_db_id],
+        });
+        my ($data, $unique_traits) = $phenotypes_search->search();
+        my $old_accession;
+        foreach my $obs_unit (@$data){
+            $old_accession = $obs_unit->{germplasm_uniquename};
         }
 
         my $geo_coordinates = $observationUnit_position_arrayref->{geoCoordinates} || "";
@@ -450,8 +463,34 @@ sub observationunits_update {
         if ($@) {
             return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('An error condition occurred, was not able to upload trial plot GPS coordinates. ($@)'));
         }
+
+        #update accession
+        if ($old_accession && $accession_ids_arrayref && $old_accession ne $accession_ids_arrayref) {
+            my $replace_plot_accession_fieldmap = CXGN::Trial::FieldMap->new({
+                bcs_schema => $schema,
+                trial_id => $study_ids_arrayref,
+                new_accession => $accession_name,
+                old_accession => $old_accession,
+                old_plot_id => $observation_unit_db_id,
+                old_plot_name => $observationUnit_name,
+                experiment_type => 'field_layout'
+            });
+
+            my $return_error = $replace_plot_accession_fieldmap->update_fieldmap_precheck();
+            if ($return_error) {
+                return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Something went wrong. Accession cannot be replaced.'));
+            }
+
+            my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap();
+            if ($replace_return_error) {
+                return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Something went wrong. Accession cannot be replaced.'));
+            }
+
+            my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+            my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
+        }
     }
- 
+
     my $result = '';
     my $total_count = 1;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
