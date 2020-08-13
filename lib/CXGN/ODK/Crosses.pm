@@ -569,7 +569,7 @@ sub save_ona_cross_info {
 
                         } elsif ($a->{'FieldActivities/fieldActivity'} eq 'seedExtraction'){
                             my $seed_extraction_cross_id = $a->{'FieldActivities/seedExtraction/extractionID'} || $a->{'FieldActivities/seedExtraction/extraction/extractionID'};
-                            push @{$cross_info{$seed_extraction_cross_id}->{'seedExtraction'}}, $a;
+#                            push @{$cross_info{$seed_extraction_cross_id}->{'seedExtraction'}}, $a;
 
                             my $odk_extraction_date = $a->{'FieldActivities/seedExtraction/extraction_date'};
                             my $extraction_date_property = 'Seed Extraction Date';
@@ -635,7 +635,6 @@ sub save_ona_cross_info {
                         }
 
                     } elsif ($activity_category eq 'nursery'){
-#                        print STDERR "NURSERY HASHES =".Dumper($activity_hash)."\n";
                         if ($a->{'Nursery/nurseryActivity'} eq 'weaning2'){
                             my $weaning2_cross_id = $a->{'Nursery/Weaning2/getweaning2_crossid'};
                             my $weaning2_id = $a->{'Nursery/Weaning2/weaning2ID'};
@@ -643,7 +642,6 @@ sub save_ona_cross_info {
                             $weaning2_hash{$weaning2_cross_id}{$weaning2_id}++;
 
                         } elsif ($a->{'Nursery/nurseryActivity'} eq 'screenhouse'){
-#                        print STDERR "CHECKING SCREENHOUSE =".Dumper($a)."\n";
                             my $screenhouse_cross_id = $a->{'Nursery/Screenhouse/crossid_of_screenhouseID'};
                             my $screenhouse_id = $a->{'Nursery/Screenhouse/screenhouseID'};
                             my $number_of_screenhouse_plantlets = $a->{'Nursery/Screenhouse/number_of_screenhouse_plantlets'};
@@ -660,10 +658,7 @@ sub save_ona_cross_info {
                             my $openfield_id = $a->{'Nursery/Openfield/openfieldID'};
                             my $number_of_openfield_plantlets = $a->{'Nursery/Openfield/number_openfield_transferred_plantlets'};
                             $openfield_hash{$openfield_cross_id}{$openfield_id}++;
-                        } elsif ($a->{'Nursery/nurseryActivity'} eq 'status'){
-
                         }
-
                     }
                 }
 #                    elsif ($activity_category eq 'screenhouse'){
@@ -767,7 +762,6 @@ sub save_ona_cross_info {
             my $rooting_ids_property = 'Rooting IDs';
             $musa_cross_info{$rooting_property}{$rooting_cross} = $rooting_id_count;
             $tissue_culture_details{$rooting_ids_property}{$rooting_cross} = \@all_rooting_ids;
-
         }
 
         foreach my $weaning1_cross (keys %weaning1_hash) {
@@ -835,8 +829,6 @@ sub save_ona_cross_info {
 #        print STDERR "CHECKING CROSS INFO =".Dumper(\%musa_cross_info)."\n";
 #        print STDERR "CHECKING TISSUE CULTURE INFO =".Dumper(\%tissue_culture_details)."\n";
 
-#        print STDERR "CHECKING FEMALE PLOT =".Dumper(\@checking_female_plots)."\n";
-#        print STDERR "CHECKING MALE PLOT =".Dumper(\@checking_male_plots)."\n";
 
         my $cross_add = CXGN::Pedigree::AddCrosses->new({
             chado_schema => $schema,
@@ -864,9 +856,6 @@ sub save_ona_cross_info {
                 my %info_hash = %{$musa_cross_info{$info_type}};
                 foreach my $cross_name_key (keys %info_hash){
                     my $value = $info_hash{$cross_name_key};
-                    print STDERR "CROSS NAME =".Dumper($cross_name_key)."\n";
-                    print STDERR "INFO TYPE =".Dumper($info_type)."\n";
-                    print STDERR "INFO VALUE =".Dumper($value)."\n";
                     if (defined $value) {
                         my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({
                             chado_schema => $schema,
@@ -932,8 +921,6 @@ sub save_ona_cross_info {
         return { error => "Could not connect to ONA" };
     }
 }
-
-
 
 
 sub create_odk_cross_progress_tree {
