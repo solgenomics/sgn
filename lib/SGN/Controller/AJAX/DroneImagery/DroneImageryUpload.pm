@@ -77,6 +77,14 @@ sub upload_drone_imagery_POST : Args(0) {
     my $new_drone_run_type = $c->req->param('drone_run_type');
     my $new_drone_run_date = $c->req->param('drone_run_date');
     my $new_drone_run_desc = $c->req->param('drone_run_description');
+    my $new_drone_run_vehicle_id = $c->req->param('drone_run_imaging_vehicle_id');
+    my $new_drone_run_battery_name = $c->req->param('drone_run_imaging_vehicle_battery_name');
+
+    if (!$new_drone_run_vehicle_id) {
+        $c->stash->{rest} = { error => "Please give an imaging event vehicle id!" };
+        $c->detach();
+    }
+
     if (!$selected_drone_run_id && !$new_drone_run_name) {
         $c->stash->{rest} = { error => "Please select a drone run or create a new drone run!" };
         $c->detach();
@@ -190,6 +198,8 @@ sub upload_drone_imagery_POST : Args(0) {
         my $drone_run_camera_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_camera_type', 'project_property')->cvterm_id();
         my $drone_run_related_cvterms_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_related_time_cvterms_json', 'project_property')->cvterm_id();
         my $project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
+        my $imaging_vehicle_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'imaging_event_vehicle', 'stock_type')->cvterm_id();
+        my $imaging_vehicle_properties_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'imaging_event_vehicle_json', 'stock_property')->cvterm_id();
         
         my $drone_run_projectprops = [
             {type_id => $drone_run_type_cvterm_id, value => $new_drone_run_type},
@@ -205,7 +215,8 @@ sub upload_drone_imagery_POST : Args(0) {
 
         my $nd_experiment_rs = $schema->resultset("NaturalDiversity::NdExperiment")->create({
             nd_geolocation_id => $trial_location_id,
-            type_id => $drone_run_experiment_type_id
+            type_id => $drone_run_experiment_type_id,
+            nd_experiment_stocks => [{stock_id => $new_drone_run_vehicle_id, type_id => $drone_run_experiment_type_id}]
         });
         $drone_run_nd_experiment_id = $nd_experiment_rs->nd_experiment_id();
 
@@ -217,6 +228,18 @@ sub upload_drone_imagery_POST : Args(0) {
             nd_experiment_projects => [{nd_experiment_id => $drone_run_nd_experiment_id}]
         });
         $selected_drone_run_id = $project_rs->project_id();
+
+        my $vehicle_prop = decode_json $schema->resultset("Stock::Stockprop")->search({stock_id => $new_drone_run_vehicle_id, type_id=>$imaging_vehicle_properties_cvterm_id})->first()->value();
+        $vehicle_prop->{batteries}->{$new_drone_run_battery_name}->{usage}++;
+        my $vehicle_prop_update = $schema->resultset('Stock::Stockprop')->update_or_create({
+            type_id=>$imaging_vehicle_properties_cvterm_id,
+            stock_id=>$new_drone_run_vehicle_id,
+            rank=>0,
+            value=>encode_json $vehicle_prop
+        },
+        {
+            key=>'stockprop_c1'
+        });
     }
 
     my $drone_run_band_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_project_type', 'project_property')->cvterm_id();
@@ -1712,6 +1735,46 @@ sub upload_drone_imagery_raw_images_automated_boundaries_POST : Args(0) {
     my $br_image_id = $image_br->get_image_id();
 
     $c->stash->{rest} = { success => 1, drone_run_project_id => $selected_drone_run_id, tl_url => $tl_url, tl_image_id => $tl_image_id, tr_url => $tr_url, tr_image_id => $tr_image_id, bl_url => $bl_url, bl_image_id => $bl_image_id, br_url => $br_url, br_image_id => $br_image_id, corners_gps => \%corners };
+}
+
+sub upload_drone_imagery_new_vehicle : Path('/api/drone_imagery/new_imaging_vehicle') : ActionClass('REST') { }
+sub upload_drone_imagery_new_vehicle_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+    my $vehicle_name = $c->req->param('vehicle_name');
+    my $vehicle_desc = $c->req->param('vehicle_description');
+    my $battery_names_string = $c->req->param('battery_names');
+    my @battery_names = split ',', $battery_names_string;
+
+    my $vehicle_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'imaging_event_vehicle', 'stock_type')->cvterm_id();
+    my $vehicle_prop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'imaging_event_vehicle_json', 'stock_property')->cvterm_id();
+
+    my $v_check = $schema->resultset("Stock::Stock")->find({uniquename => $vehicle_name});
+    if ($v_check) {
+        $c->stash->{rest} = {error => "Vehicle name $vehicle_name is already in use!"};
+        $c->detach();
+    }
+
+    my %vehicle_prop;
+    foreach (@battery_names) {
+        $vehicle_prop{batteries}->{$_} = {
+            usage => 0,
+            obsolete => 0
+        };
+    }
+
+    my $new_vehicle = $schema->resultset("Stock::Stock")->create({
+        uniquename => $vehicle_name,
+        name => $vehicle_name,
+        description => $vehicle_desc,
+        type_id => $vehicle_cvterm_id,
+        stockprops => [{type_id => $vehicle_prop_cvterm_id, value => encode_json \%vehicle_prop}]
+    });
+    my $new_vehicle_id = $new_vehicle->stock_id();
+
+    $c->stash->{rest} = {success => 1, new_vehicle_id => $new_vehicle_id};
 }
 
 sub _check_user_login {
