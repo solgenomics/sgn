@@ -5506,11 +5506,14 @@ sub drone_imagery_accession_phenotype_histogram_GET : Args(0) {
     close($F);
 
     my $cmd = 'R -e "library(ggplot2);
+    options(device=\'png\');
+    par();
     pheno_all <- read.table(\''.$phenos_tempfile.'\', header=TRUE, sep=\',\');
     pheno_plot <- read.table(\''.$pheno_plot_tempfile.'\', header=TRUE, sep=\',\');
     sp <- ggplot(pheno_all, aes(x=phenotype)) + geom_histogram();
-    sp + geom_vline(xintercept = pheno_plot\$phenotype[1], color = \'red\', size=2);
-    ggsave(\''.$pheno_figure_tempfile.'\', device=\'png\', width=3, height=3, units=\'in\');"';
+    sp2 <- sp + geom_vline(xintercept = pheno_plot\$phenotype[1], color = \'red\', size=2);
+    ggsave(\''.$pheno_figure_tempfile.'\', sp2, device=\'png\', width=3, height=3, units=\'in\');
+    dev.off();"';
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
