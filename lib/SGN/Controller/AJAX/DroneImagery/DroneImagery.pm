@@ -5370,7 +5370,39 @@ sub drone_imagery_get_vehicle_GET : Args(0) {
     }
 
     $c->stash->{rest} = { vehicle => \%vehicle, success => 1 };
+}
+
+sub drone_imagery_get_vehicles : Path('/api/drone_imagery/imaging_vehicles') : ActionClass('REST') { }
+sub drone_imagery_get_vehicles_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $imaging_vehicle_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'imaging_event_vehicle', 'stock_type')->cvterm_id();
+    my $imaging_vehicle_properties_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'imaging_event_vehicle_json', 'stock_property')->cvterm_id();
+
+    my $q = "SELECT stock.stock_id, stock.uniquename, stock.description, stockprop.value
+        FROM stock
+        JOIN stockprop ON(stock.stock_id=stockprop.stock_id AND stockprop.type_id=$imaging_vehicle_properties_cvterm_id)
+        WHERE stock.type_id=$imaging_vehicle_cvterm_id;";
+    my $h = $bcs_schema->storage->dbh()->prepare($q);
+    $h->execute();
+    my @vehicles;
+    while (my ($stock_id, $name, $description, $prop) = $h->fetchrow_array()) {
+        my $prop_hash = decode_json $prop;
+        my @batt_info;
+        foreach (sort keys %{$prop_hash->{batteries}}) {
+            my $p = $prop_hash->{batteries}->{$_};
+            push @batt_info, "$_: Usage = ".$p->{usage}." Obsolete = ".$p->{obsolete};
+        }
+        my $batt_info_string = join '<br/>', @batt_info;
+        push @vehicles, [$name, $description, $batt_info_string]
     }
+
+    $c->stash->{rest} = { data => \@vehicles };
+}
 
 sub drone_imagery_save_single_plot_image : Path('/api/drone_imagery/save_single_plot_image') : ActionClass('REST') { }
 sub drone_imagery_save_single_plot_image_POST : Args(0) {

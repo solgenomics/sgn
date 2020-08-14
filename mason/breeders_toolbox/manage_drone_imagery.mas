@@ -19,9 +19,9 @@
     <& /page/page_title.mas, title=>"Manage Drone Imagery" &>
 
 <%perl>
-#my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Imagery</button><button class='btn btn-default' style='margin:3px' id='download_phenotypes_drone_imagery_link'>Download Image-Phenotypes</button><button class='btn btn-success' style='margin:3px' id='keras_cnn_drone_imagery_link'>Keras CNN Models</button><button class='btn btn-success' style='margin:3px' id='drone_imagery_calculate_statistics_link'>Calculate Statistics</button><button class='btn btn-default' style='margin:3px' id='drone_imagery_compare_field_images_link'>Compare Aerial Field Images</button>";
+#my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Imagery</button><button class='btn btn-default' style='margin:3px' id='download_phenotypes_drone_imagery_link'>Download Image-Phenotypes</button><button class='btn btn-success' style='margin:3px' id='keras_cnn_drone_imagery_link'>Keras CNN Models</button><button class='btn btn-success' style='margin:3px' id='drone_imagery_calculate_statistics_link'>Calculate Statistics</button><button class='btn btn-default' style='margin:3px' id='drone_imagery_compare_field_images_link'>Compare Aerial Field Images</button><button class='btn btn-default' style='margin:3px' id='drone_imagery_view_imaging_vehicles_link'>Imaging Vehicles</button>";
 
-my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Imagery</button><button class='btn btn-success' style='margin:3px' id='keras_cnn_drone_imagery_link'>Keras CNN Models</button><button class='btn btn-success' style='margin:3px' id='drone_imagery_calculate_statistics_link'>Calculate Statistics</button><button class='btn btn-default' style='margin:3px' id='drone_imagery_compare_field_images_link'>Compare Aerial Field Images</button>";
+my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Imagery</button><button class='btn btn-success' style='margin:3px' id='keras_cnn_drone_imagery_link'>Keras CNN Models</button><button class='btn btn-success' style='margin:3px' id='drone_imagery_calculate_statistics_link'>Calculate Statistics</button><button class='btn btn-default' style='margin:3px' id='drone_imagery_compare_field_images_link'>Compare Aerial Field Images</button><button class='btn btn-default' style='margin:3px' id='drone_imagery_view_imaging_vehicles_link'>Imaging Vehicles</button>";
 </%perl>
 
     <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Drone Imagery</h4>", info_section_subtitle => 'Please cite <a href="https://acsess.onlinelibrary.wiley.com/doi/full/10.1002/ppj2.20004" target=_blank>ImageBreed</a> if you find any of these tools useful', buttons_html => $buttons_html, icon_class => undef, col1_width_class => "col-sm-0", col2_width_class => "col-sm-12", info_section_id => "manage_drone_imagery_main" &>
@@ -2192,11 +2192,56 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
   </div>
 </div>
 
+<div class="modal fade" id="drone_imagery_view_imaging_vehicles_modal" name="drone_imagery_view_imaging_vehicles_modal" tabindex="-1" role="dialog" aria-labelledby="droneImageryImagingVehiclesDialog" data-backdrop="static">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="droneImageryImagingVehiclesDialog">Available Imaging Vehicles</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <table class="table table-bordered table-hover" id="drone_imagery_view_imaging_vehicles_table">
+                <thead>
+                    <tr>
+                        <th>Vehicles Name</th>
+                        <th>Description</th>
+                        <th>Battery Usage</th>
+                    </tr>
+                </thead>
+            </table>
+
+            <button class="btn btn-primary" name="drone_run_imaging_vehicle_add_new">Add New Imaging Vehicle</button>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <& /breeders_toolbox/drone_imagery/upload_drone_imagery_dialogs.mas &>
 
 <script>
 
 jQuery(document).ready(function() {
+
+    //
+    // Imaging vehicles
+    //
+
+    jQuery('#drone_imagery_view_imaging_vehicles_link').click(function(){
+        jQuery('#drone_imagery_view_imaging_vehicles_table').DataTable({
+            destroy : true,
+            paging : true,
+            ajax : '/api/drone_imagery/imaging_vehicles'
+        });
+    
+        jQuery('#drone_imagery_view_imaging_vehicles_modal').modal('show');
+    })
 
     //
     // Standard Process for Drone Runs
