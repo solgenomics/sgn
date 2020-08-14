@@ -826,6 +826,7 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     my $select_format = $c->req->param('select_format') || 'html_select'; #html_select or component_table_select
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $multiple = $c->req->param('multiple');
+    my $empty = $c->req->param('empty');
 
     my $id = $c->req->param("id") || "html_trial_select";
     my $name = $c->req->param("name") || "html_trial_select";
@@ -923,6 +924,7 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     }
 
     @traits = sort { $a->[1] cmp $b->[1] } @traits;
+    if ($empty) { unshift @traits, [ "", "Please select a trait" ]; }
 
     my $html = simple_selectbox_html(
       multiple => $multiple,

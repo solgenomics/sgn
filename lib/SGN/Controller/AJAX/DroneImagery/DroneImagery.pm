@@ -5404,6 +5404,119 @@ sub drone_imagery_get_vehicles_GET : Args(0) {
     $c->stash->{rest} = { data => \@vehicles };
 }
 
+sub drone_imagery_accession_phenotype_histogram : Path('/api/drone_imagery/accession_phenotype_histogram') : ActionClass('REST') { }
+sub drone_imagery_accession_phenotype_histogram_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+    my $plot_id = $c->req->param('plot_id');
+    my $accession_id = $c->req->param('accession_id');
+    my $trait_id = $c->req->param('trait_id');
+    my $field_trial_id = $c->req->param('field_trial_id');
+
+    my $search_params = {
+        bcs_schema=>$bcs_schema,
+        data_level=>'all',
+        trait_list=>[$trait_id],
+        include_timestamp=>0,
+        exclude_phenotype_outlier=>0
+    };
+
+    # Comparing plot_id pheno against all phenotypes in trial
+    if ($field_trial_id) {
+        $search_params->{trial_list} = [$field_trial_id];
+    }
+    # Comparing plot_id pheno against all phenotypes for accession
+    if ($accession_id){
+        $search_params->{accession_list} = [$accession_id];
+    }
+
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        'MaterializedViewTable',
+        $search_params
+    );
+    my ($data, $unique_traits) = $phenotypes_search->search();
+    my @sorted_trait_names = sort keys %$unique_traits;
+
+    my $plot_phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        'MaterializedViewTable',
+        {
+            bcs_schema=>$bcs_schema,
+            data_level=>'plot',
+            trait_list=>[$trait_id],
+            plot_list=>[$plot_id],
+            include_timestamp=>0,
+            exclude_phenotype_outlier=>0
+        }
+    );
+    my ($plot_data, $plot_unique_traits) = $plot_phenotypes_search->search();
+    my @plot_sorted_trait_names = sort keys %$plot_unique_traits;
+
+    if (scalar(@sorted_trait_names) != 1 && scalar(@plot_sorted_trait_names) != 1) {
+        $c->stash->{rest} = { error => "Trait not found correctly!"};
+        $c->detach();
+    }
+
+    if (scalar(@$data) == 0) {
+        $c->stash->{rest} = { error => "There are no phenotypes for the trials and traits you have selected!"};
+        $c->detach();
+    }
+
+    my @all_phenotypes;
+    foreach my $obs_unit (@$data){
+        my $observations = $obs_unit->{observations};
+        foreach (@$observations){
+            push @all_phenotypes, $_->{value};
+        }
+    }
+
+    my @plot_phenotypes;
+    foreach my $obs_unit (@$plot_data){
+        my $observations = $obs_unit->{observations};
+        foreach (@$observations){
+            push @plot_phenotypes, $_->{value};
+        }
+    }
+
+    if (scalar(@plot_phenotypes) != 1) {
+        $c->stash->{rest} = { error => "Trait not found correctly!"};
+        $c->detach();
+    }
+
+    my $dir = $c->tempfiles_subdir('/drone_imagery_pheno_plot_dir');
+    my $phenos_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_pheno_plot_dir/phenoXXXX');
+    my $pheno_plot_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_pheno_plot_dir/phenoplotXXXX');
+    my $pheno_figure_tempfile_string = $c->tempfile( TEMPLATE => 'drone_imagery_pheno_plot_dir/figureXXXX');
+    my $pheno_figure_tempfile = $c->config->{basepath}."/".$pheno_figure_tempfile_string;
+
+    open(my $F, ">", $phenos_tempfile) || die "Can't open file ".$phenos_tempfile;
+        print $F "phenotype\n";
+        foreach (@all_phenotypes) {
+            print $F "$_\n";
+        }
+    close($F);
+
+    open(my $F, ">", $pheno_plot_tempfile) || die "Can't open file ".$pheno_plot_tempfile;
+        print $F "phenotype\n";
+        foreach (@plot_phenotypes) {
+            print $F "$_\n";
+        }
+    close($F);
+
+    my $cmd = 'R -e "library(ggplot2);
+    pheno_all <- read.table(\''.$phenos_tempfile.'\', header=TRUE, sep=\',\');
+    pheno_plot <- read.table(\''.$pheno_plot_tempfile.'\', header=TRUE, sep=\',\');
+    sp <- ggplot(pheno_all, aes(x=phenotype)) + geom_histogram();
+    sp + geom_vline(xintercept = pheno_plot\$phenotype[1], color = \'red\', size=2);
+    ggsave(\''.$pheno_figure_tempfile.'\', device=\'png\', width=3, height=3, units=\'in\');"';
+    print STDERR Dumper $cmd;
+    my $status = system($cmd);
+
+    $c->stash->{rest} = { success => 1, figure => $pheno_figure_tempfile_string };
+}
+
 sub drone_imagery_save_single_plot_image : Path('/api/drone_imagery/save_single_plot_image') : ActionClass('REST') { }
 sub drone_imagery_save_single_plot_image_POST : Args(0) {
     my $self = shift;
