@@ -113,6 +113,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                                 <ul>
                                     <li>Click on the ground control points (GCPs) in the image below and save them.</li>
                                     <li>Please click and save at least three points. The names of the GCPs MUST be consistent across imaging events!</li>
+                                    <li>For best results, use ground control points at the far four corners of the field.</li>
                                     <li>You can zoom out on your browser (Cntrl + -).</li>
                                 </ul>
                             </div>
@@ -124,7 +125,8 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                                 <center>
                                 <button class="btn btn-primary" id="manage_drone_imagery_standard_process_ground_control_points_step">Draw Computed Plot Polygons</button>
                                 <button class="btn btn-primary" id="manage_drone_imagery_standard_process_ground_control_points_step_confirm">Confirm and Save</button>
-                                </center></div>
+                                </center>
+                            </div>
 
                             <div id="project_drone_imagery_standard_process_ground_control_points_info_div"></div>
 
@@ -2422,6 +2424,8 @@ jQuery(document).ready(function() {
                 console.log(response);
                 manage_drone_imagery_standard_process_rotate_stitched_image_id = response.data[0]['image_id'];
                 manage_drone_imagery_standard_process_rotate_stitched_image_degrees = 0.00;
+
+                drone_imagery_plot_polygon_click_type = '';
 
                 showRotateImageD3(manage_drone_imagery_standard_process_rotate_stitched_image_id, '#drone_imagery_standard_process_rotate_original_stitched_div', 'manage_drone_imagery_standard_process_rotate_load_div');
 
