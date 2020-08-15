@@ -143,24 +143,37 @@ sub generate_pca: Path('/ajax/solgwas/generate_pca') : {
     my $c = shift;
     my $dataset_id = $c->req->param('dataset_id');
     my $trait_id = $c->req->param('trait_id');
+    my $pc_check = $c->req->param('pc_check');
+    my $kinship_check = $c->req->param('kinship_check');
+	my $forbid_cache = defined($c->req->param('forbid_cache')) ? $c->req->param('forbid_cache') : 0;
+
+    print STDERR $dataset_id;
+    print STDERR $trait_id;
     $c->tempfiles_subdir("solgwas_files");
-#    my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"solgwas_files/solgwas_download_XXXXX");
+#    my ($fh, $tempfiletest) = $c->tempfile(TEMPLATE=>"solgwas_files/solgwas_download_XXXXX");
     my $solgwas_tmp_output = $c->config->{cluster_shared_tempdir}."/solgwas_files";
     mkdir $solgwas_tmp_output if ! -d $solgwas_tmp_output;
     my ($tmp_fh, $tempfile) = tempfile(
       "solgwas_download_XXXXX",
       DIR=> $solgwas_tmp_output,
     );
-#    my $pheno_filepath = $tempfile . "_phenotype.txt";
-    my $geno_filepath = $tempfile . "_genotype.txt";
     #my $tmp_dir = File::Spec->catfile($c->config->{basepath}, 'gwas_tmpdir');
+    my $pheno_filepath = $tempfile . "_phenotype.txt";
+    my $geno_filepath = $tempfile . "_genotype.txt";
+#    my $pheno_filepath = "." . $tempfile . "_phenotype.txt";
+#    my $geno_filepath = "." . $tempfile . "_genotype.txt";
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
 #    my $temppath = $c->config->{basepath}."/".$tempfile;
-#    my $temppath = $c->config->{cluster_shared_tempdir}."/".$tempfile;
+##    my $temppath = $c->config->{cluster_shared_tempdir}."/".$tempfile;
     my $temppath = $solgwas_tmp_output . "/" . $tempfile;
+
+#    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath);
     my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath);
-#    my $phenotype_data_ref = $ds->retrieve_phenotypes();
+
+##    my $phenotype_data_ref = $ds->retrieve_phenotypes();
+    my $phenotype_data_ref = $ds->retrieve_phenotypes($pheno_filepath);
+
 #    my ($fh, $tempfile2) = $c->tempfile(TEMPLATE=>"solgwas_files/solgwas_genotypes_download_XXXXX");
 #    my $temppath2 = $c->config->{basepath}."/".$tempfile2;
 #    my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath2);
@@ -172,69 +185,93 @@ sub generate_pca: Path('/ajax/solgwas/generate_pca') : {
 	      $protocol_id = $row->nd_protocol_id();
     }
 
-    $ds -> retrieve_genotypes($protocol_id, $geno_filepath);
+    my $filehandle = $ds->retrieve_genotypes($protocol_id,$geno_filepath, $c->config->{cache_file_path}, $c->config->{cluster_shared_tempdir}, $c->config->{backend}, $c->config->{cluster_host}, $c->config->{'web_cluster_queue'}, $c->config->{basepath}, $forbid_cache);
+#    my $base_filename = $$filehandle;
+    print STDERR $filehandle . "\n";
+#    print STDERR $base_filename . "\n";
 #    $ds-> @$trials_ref = retrieve_genotypes();
     my $newtrait = $trait_id;
     $newtrait =~ s/\s/\_/g;
     $newtrait =~ s/\//\_/g;
     print STDERR $newtrait . "\n";
+#    my $figure1file = "." . $tempfile . "_" . $newtrait . "_figure1.png";
+#    my $figure2file = "." . $tempfile . "_" . $newtrait . "_figure2.png";
+#    my $figure3file = "." . $tempfile . "_" . $newtrait . "_figure3.png";
+#    my $figure4file = "." . $tempfile . "_" . $newtrait . "_figure4.png";
+    my $tempfile2 = $tempfile;
     my $figure1file = $tempfile . "_" . $newtrait . "_figure1.png";
     my $figure2file = $tempfile . "_" . $newtrait . "_figure2.png";
     my $figure3file = $tempfile . "_" . $newtrait . "_figure3.png";
     my $figure4file = $tempfile . "_" . $newtrait . "_figure4.png";
+
     $trait_id =~ tr/ /./;
     $trait_id =~ tr/\//./;
 #    my $clean_cmd = "rm /home/vagrant/cxgn/sgn/documents/tempfiles/solgwas_files/SolGWAS_Figure*.png";
 #    system($clean_cmd);
-    my $geno_filepath2 = $tempfile . "_genotype_edit.txt";
-    my $edit_cmd = "sed -e '1 s/\^/row.names\t/' " . $geno_filepath . " > " . $geno_filepath2;
-    system($edit_cmd);
+    my $geno_filepath2 = $tempfile . "_genotype.txt";
+#    my $geno_filepath2 = $base_filename . "_genotype_edit.txt";
+#    my $edit_cmd = "sed -e '1 s/\^/row.names\t/' " . $base_filename . " > " . $geno_filepath2;
+#    system($edit_cmd);
+#    my $geno_filepath3 = "." . $tempfile . "_genotype_edit_subset.txt";
     my $geno_filepath3 = $tempfile . "_genotype_edit_subset.txt";
+
 #    my $trim_cmd = "cut -f 1-50 " . $geno_filepath2 . " > " . $geno_filepath3;
 #    system($trim_cmd);
 
-    open my $filehandle_in,  "<", "$geno_filepath2"  or die "Could not open $geno_filepath2: $!\n";
-    open my $filehandle_in2,  "<", "$geno_filepath2"  or die "Could not open $geno_filepath2: $!\n";
-    open my $filehandle_out, ">", "$geno_filepath3" or die "Could not create $geno_filepath3: $!\n";
+#    open my $filehandle_in2,  "<", "$geno_filepath2"  or die "Could not open $geno_filepath2: $!\n";
+    open my $filehandle_out, ">", "$geno_filepath2" or die "Could not create $geno_filepath2: $!\n";
 
     my $marker_total;
 
-    while ( my $line = <$filehandle_in2> ) {
+    while ( my $line = <$filehandle> ) {
         my @sample_line = (split /\s+/, $line);
         $marker_total = scalar(@sample_line);
+        print $filehandle_out $line;
     }
-    close $filehandle_in2;
-# Hardcoded number of markers to be selected - make this selectable by user?
-    my $markers_selected = 500;
-#    my @column_selection = (0,2);
-# Initialize column selection so the row.names are selected first
-    my @column_selection = (0);
-    my %columns_seen;
-    for (my $i=0; $i <= $markers_selected; $i++) {
-        my $random_current = int(rand($marker_total));
-        redo if $columns_seen{$random_current}++;
-        push @column_selection, $random_current;
-    }
-
-#    foreach my $item (@column_selection) {
-        while ( my $line = <$filehandle_in> ) {
-            my $curr_line;
-            my @first_item = (split /\s+/, $line);
-            foreach my $item (@column_selection) {
-                $curr_line .= $first_item[$item] . "\t";
-            }
-#            $curr_line .= "\n";
-            print $filehandle_out "$curr_line\n";
-        }
-#    }
-    close $filehandle_in;
+    close $filehandle;
     close $filehandle_out;
 
-#    my $cmd = "Rscript " . $c->config->{basepath} . "/R/solgwas/solgwas_genoPCA_script.R " . $geno_filepath3 . " " . $figure2file;
+#
+# # Hardcoded number of markers to be selected - make this selectable by user?
+#     my $markers_selected = 500;
+# #    my @column_selection = (0,2);
+# # Initialize column selection so the row.names are selected first
+#     my @column_selection = (0);
+#     my %columns_seen;
+#     for (my $i=0; $i <= $markers_selected; $i++) {
+#         my $random_current = int(rand($marker_total));
+#         redo if $columns_seen{$random_current}++;
+#         push @column_selection, $random_current;
+#         print STDERR $random_current . "\n";
+#     }
+#
+#     open my $filehandle_in, "<", "$geno_filepath2"  or die "Could not open $geno_filepath2: $!\n";
+#     open my $filehandle_out2, ">", "$geno_filepath3" or die "Could not create $geno_filepath3: $!\n";
+#
+# #    foreach my $item (@column_selection) {
+#     while ( my $line = <$filehandle_in> ) {
+#         my $curr_line;
+#         my @first_item = (split /\s+/, $line);
+#         foreach my $item (@column_selection) {
+#             $curr_line .= $first_item[$item] . "\t";
+#         }
+# #           $curr_line .= "\n";
+#         print STDERR $curr_line . "\n";
+#         print $filehandle_out2 "$curr_line\n";
+#     }
+#
+#     close $filehandle_in;
+#     close $filehandle_out2;
+
+#    my $cmd = "Rscript " . $c->config->{basepath} . "/R/solgwas/solgwas_script.R " . $pheno_filepath . " " . $geno_filepath3 . " " . $trait_id . " " . $figure3file . " " . $figure4file . " " . $pc_check . " " . $kinship_check;
 #    system($cmd);
+
+    my $figure2file = $tempfile . "_" . $newtrait . "_figure2.png";
+
     my $cmd = CXGN::Tools::Run->new(
         {
             backend => $c->config->{backend},
+            submit_host => $c->config->{cluster_host},
             temp_base => $c->config->{cluster_shared_tempdir} . "/solgwas_files",
             queue => $c->config->{'web_cluster_queue'},
             do_cleanup => 0,
@@ -245,12 +282,12 @@ sub generate_pca: Path('/ajax/solgwas/generate_pca') : {
     $cmd->run_cluster(
             "Rscript ",
             $c->config->{basepath} . "/R/solgwas/solgwas_genoPCA_script.R",
-            $geno_filepath3,
+            $geno_filepath2,
             $figure2file,
     );
-    $cmd->alive;
     $cmd->is_cluster(1);
     $cmd->wait;
+
 
     my $figure_path = $c->{basepath} . "./documents/tempfiles/solgwas_files/";
     copy($figure2file,$figure_path);

@@ -77,6 +77,7 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
     $c->stash->{content_cross_name} = $content_cross_names[0];
     $c->stash->{current_count} = $sl->get_current_count_property();
     $c->stash->{current_weight} = $sl->get_current_weight_property();
+    $c->stash->{quality} = $sl->quality();
     $c->stash->{owners_string} = $owners_string;
     $c->stash->{timestamp} = localtime();
     $c->stash->{template} = '/breeders_toolbox/seedlot_details.mas';

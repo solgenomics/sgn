@@ -152,7 +152,7 @@ sub detail {
             	type=>'Point'
             },
             type=>'Feature'
-        };
+        };print Dumper $_;
 		push @data, {
 			locationDbId => qq|$_->[0]|,
 			locationType=> $_->[8],
@@ -179,6 +179,80 @@ sub detail {
 	my %result = (data=>\@data);
 	my @data_files;
 	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Locations list result constructed');
+}
+
+sub store {
+	my $self = shift;
+	my $data = shift;
+	my $user_id =shift;
+
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+    my $status = $self->status;
+    my $schema = $self->bcs_schema();
+    my @location_ids;
+
+	if (!$user_id) {
+		return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must login and have permission to access this BrAPI call.'));
+	}
+
+	foreach my $params (@{$data}) {
+		my $id = $params->{locationDbId} || undef;
+		my $name = $params->{locationName};
+		my $abbreviation =  $params->{abbreviation} || undef;
+		my $country_name =  $params->{countryName} || undef;
+		my $country_code =  $params->{countryCode} || undef;
+		my $program_id =  $params->{additionalInfo}->{programDbId}  || undef;
+		my $type =  $params->{locationType} || undef;
+		my $geo_coordinates = $params->{coordinates}->{geometry}->{coordinates} || undef;
+		my $latitude = $geo_coordinates->[0] || undef;
+		my $longitude = $geo_coordinates->[1] || undef;
+		my $altitude  = $geo_coordinates->[2]|| undef;
+		my $noaa_station_id    = $params->{additionalInfo}->{noaaStationId} || undef;
+		my $program_name;
+	
+		my $existing_name_count = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { description => $name } )->count();
+		if ($existing_name_count > 0) {
+			return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Location name %s already exists.', $name ));
+		}
+
+		if ($program_id) {
+			my $program = $schema->resultset('Project::Project')->find({project_id => $program_id});
+			if (!$program) {
+				return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Program %s does not exist.',$program_id));
+			}
+			$program_name = $program->name();
+		}
+
+		print STDERR "Creating location object\n";
+
+		my $location = CXGN::Location->new( {
+			bcs_schema => $schema,
+			nd_geolocation_id => $id,
+			name => $name,
+			abbreviation => $abbreviation,
+			country_name => $country_name,
+			country_code => $country_code,
+			breeding_programs => $program_name,
+			location_type => $type,
+			latitude => $latitude,
+			longitude => $longitude,
+			altitude => $altitude,
+			noaa_station_id => $noaa_station_id
+		});
+
+		my $store = $location->store_location();
+
+		if ($store->{'error'}) {
+		   		return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Location %s was not stored.',$name));
+		} else {
+			push @location_ids, $store->{'nd_geolocation_id'};
+		}
+	}
+	my %result;
+	my $count = scalar @location_ids;
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($count,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success( \%result, $pagination, undef, $self->status(), $count . " Locations were saved.");
 }
 
 1;

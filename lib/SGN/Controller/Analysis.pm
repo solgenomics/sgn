@@ -3,7 +3,7 @@ package SGN::Controller::Analysis;
 
 use Moose;
 use URI::FromHash 'uri';
-
+use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller' };
 
@@ -58,6 +58,40 @@ sub analysis_detail :Path('/analyses') Args(1) {
     $c->stash->{identifier_prefix} = $c->config->{identifier_prefix};
     $c->stash->{analysis_metadata} = $a->metadata();
     $c->stash->{template} = '/analyses/detail.mas';
+}
+
+sub analysis_model_detail :Path('/analyses_model') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $model_id = shift;
+    my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    print STDERR "Viewing analysis model with id $model_id\n";
+
+    my $m = CXGN::AnalysisModel::GetModel->new({
+        bcs_schema=>$bcs_schema,
+        metadata_schema=>$c->dbic_schema("CXGN::Metadata::Schema"),
+        phenome_schema=>$c->dbic_schema("CXGN::Phenome::Schema"),
+        nd_protocol_id=>$model_id
+    });
+    my $saved_model_object = $m->get_model();
+    #print STDERR Dumper $saved_model_object;
+
+    if (!$saved_model_object) {
+        $c->stash->{template} = '/generic_message.mas';
+        $c->stash->{message} = 'The requested model ID does not exist in the database.';
+        return;
+    }
+
+    $c->stash->{model_id} = $saved_model_object->{model_id};
+    $c->stash->{model_name} = $saved_model_object->{model_name};
+    $c->stash->{model_description} = $saved_model_object->{model_description};
+    $c->stash->{model_properties} = $saved_model_object->{model_properties};
+    $c->stash->{model_file_ids} = $saved_model_object->{model_file_ids};
+    $c->stash->{model_type_name} = $saved_model_object->{model_type_name};
+    $c->stash->{model_files} = $saved_model_object->{model_files};
+    $c->stash->{identifier_prefix} = $c->config->{identifier_prefix}."_Model_";
+    $c->stash->{template} = '/analyses/model_detail.mas';
 }
 
 1;

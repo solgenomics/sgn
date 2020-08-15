@@ -1,0 +1,85 @@
+<%args>
+$model_id => undef
+$model_name => undef
+$model_description => undef
+$model_properties => {}
+$model_file_ids => {}
+$model_type_name => undef
+$model_files => {}
+$identifier_prefix
+</%args>
+
+<div class="row">
+    <div class="col-sm-8">
+
+        <table class="table table-hover table-bordered" >
+
+            <tr>
+                <td><b>Model Name</b></td>
+                <td>
+                    <div id="model_name">
+% if ($model_name) {
+%   print "<a href=\"/analyses_model/$model_id\">$model_name</a>";
+% } else {
+%   print "<span class='text-danger'>[No Model Name]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr><td><b>Description</b></td>
+                <td>
+                    <div id="model_description">
+% if ($model_description) {
+%  print "$model_description";
+% } else {
+%  print "<span class='text-danger'>[No Description]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Model Type</b></td>
+                <td>
+                    <div id="model_type">
+%  print "$model_type_name";
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Model Properties</b></td>
+                <td>
+                    <div id="model_properties">
+%  my $model_properties_string = '';
+%  while (my ($key, $val) = each %$model_properties) {
+%        $model_properties_string .= "$key : $val<br/>";
+%  }
+%  print "$model_properties_string";
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Model Files</b></td>
+                <td>
+                    <div id="model_files">
+%  my $model_files_string = '';
+%  while (my ($key, $val) = each %$model_file_ids) {
+%       $model_files_string .= "$val : <a href=\"/breeders/phenotyping/download/$key\">Download</a><br/>";
+%  }
+%  print "$model_files_string";
+                    </div>
+                </td>
+            </tr>
+
+        </table>
+
+    </div>
+    <div class="col-sm-4">
+        <div class="well well-sm">
+            <& /util/barcode.mas, identifier => "$identifier_prefix"."$model_id", trial_id=> "$model_id", trial_name=> "$model_name", format=>"trial_qrcode"  &>
+        </div>
+    </div>
+</div>

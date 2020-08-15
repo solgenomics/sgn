@@ -14,6 +14,7 @@ use Data::Dumper;
 use JSON;
 use URI::Encode qw(uri_encode uri_decode);
 use CXGN::Chado::Stock;
+use CXGN::Trial;
 local $Data::Dumper::Indent = 0;
 
 my $f = SGN::Test::Fixture->new();
@@ -133,10 +134,12 @@ is_deeply($response, {'design' => {'8' => {'rep_number' => '2','plot_name' => 't
 
 my %design_treatment = (
     'treatments' => {
-        'treatmentname1' => [
-            'test_trial22',
-            'test_trial29'
-        ]
+        'treatmentname1' => {
+            'new_treatment_stocks' => ['test_trial22','test_trial29'],
+            'new_treatment_type' => 'Fertilizer',
+            'new_treatment_year' => '2019',
+            'new_treatment_date' => '2019-July-01'
+        }
     }
 );
 
@@ -155,5 +158,22 @@ $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$management_factor_pr
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {'plots' => [[[38858,'test_trial22'],[38865,'test_trial29']]]});
+
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$management_factor_project_id.'/subplots');
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'subplots' => [[]]});
+
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$management_factor_project_id.'/plants');
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'plants' => [[]]});
+
+my $treatment_project = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $management_factor_project_id });
+my $management_factor_type = $treatment_project->get_management_factor_type;
+my $management_factor_date = $treatment_project->get_management_factor_date;
+is($management_factor_type, 'Fertilizer');
+is($management_factor_date, '2019-July-01');
+
 
 done_testing();

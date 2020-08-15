@@ -197,7 +197,7 @@ sub calls {
         protocolprop_top_key_select=>[],
         protocolprop_marker_hash_select=>[],
     });
-    my $file_handle = $genotypes_search->get_cached_file_search_json($c, 0);
+    my $file_handle = $genotypes_search->get_cached_file_search_json($c->config->{cluster_shared_tempdir}, 0);
 
     my $start_index = $page*$page_size;
     my $end_index = $page*$page_size + $page_size - 1;

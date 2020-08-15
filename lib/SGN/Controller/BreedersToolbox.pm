@@ -86,7 +86,14 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
     }
 
     #print STDERR "Breeding programs are ".Dumper(@breeding_programs);
+    my $field_management_factors = $c->config->{management_factor_types};
+    my @management_factor_types = split ',',$field_management_factors;
 
+    my $design_type_string = $c->config->{design_types};
+    my @design_types = split ',',$design_type_string;
+
+    $c->stash->{design_types} = \@design_types;
+    $c->stash->{management_factor_types} = \@management_factor_types;
     $c->stash->{editable_stock_props} = \%editable_stock_props;
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{timestamp} = localtime;
@@ -329,6 +336,15 @@ sub manage_upload :Path("/breeders/upload") Args(0) {
     my @facilities = split ',',$genotyping_facilities;
 
     my $json = JSON::XS->new();
+
+    my $field_management_factors = $c->config->{management_factor_types};
+    my @management_factor_types = split ',',$field_management_factors;
+
+    my $design_type_string = $c->config->{design_types};
+    my @design_types = split ',',$design_type_string;
+
+    $c->stash->{design_types} = \@design_types;
+    $c->stash->{management_factor_types} = \@management_factor_types;
     $c->stash->{facilities} = \@facilities;
     $c->stash->{geojson_locations} = $json->decode($projects->get_all_locations_by_breeding_program());
     $c->stash->{locations} = $projects->get_all_locations();

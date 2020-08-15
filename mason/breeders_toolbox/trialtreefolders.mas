@@ -5,6 +5,8 @@ $breeding_programs
 $preferred_species
 $editable_stock_props
 $timestamp
+$management_factor_types => ()
+$design_types => ()
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jstree.dist.jstree', 'bootstrap_min.js', 'jquery.iframe-post-form', 'CXGN.List', 'CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.GenotypingTrial','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees','CXGN.BreedersToolbox.Crosses','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial','CXGN.TrialTreeFolders' ] &>
@@ -16,11 +18,11 @@ $timestamp
 <& /breeders_toolbox/folder/folder_move.mas &>
 <& /breeders_toolbox/folder/folders_edit.mas, folder_tree_type => 'Trial', folder_tree_identifier => 'trial_list', folder_tree_refresh_name => 'refresh_jstree_html' &>
 
-<& /breeders_toolbox/trial/trial_create_dialogs.mas, locations => \@locations, breeding_programs => $breeding_programs &>
+<& /breeders_toolbox/trial/trial_create_dialogs.mas, locations => \@locations, breeding_programs => $breeding_programs, management_factor_types => $management_factor_types, design_types => $design_types &>
 
 <& /breeders_toolbox/trial/download_trials_phenotypes_dialog.mas &>
 
-<& /breeders_toolbox/trial/trial_upload_dialogs.mas, locations => \@locations, breeding_programs => $breeding_programs &>
+<& /breeders_toolbox/trial/trial_upload_dialogs.mas, locations => \@locations, breeding_programs => $breeding_programs, design_types => $design_types &>
 <& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props &>
 <& /breeders_toolbox/upload_seedlots_dialogs.mas &>
 <& /breeders_toolbox/add_seedlot_dialogs.mas, timestamp=>$timestamp &>

@@ -8,6 +8,8 @@ use List::Util qw | any |;
 use CXGN::Trial;
 use Math::Round::Var;
 use List::MoreUtils qw(uniq);
+use File::Temp 'tempfile';
+use Text::CSV;
 use CXGN::Trial::FieldMap;
 use JSON;
 use CXGN::Phenotypes::PhenotypeMatrix;
@@ -2481,6 +2483,113 @@ sub crossing_trial_from_field_trial : Chained('trial') PathPart('crossing_trial_
     my $field_trials_source_of_crossing_trial = $c->stash->{trial}->get_field_trials_source_of_crossing_trial();
 
     $c->stash->{rest} = {success => 1, crossing_trials_from_field_trial => $crossing_trials_from_field_trial, field_trials_source_of_crossing_trial => $field_trials_source_of_crossing_trial};
+}
+
+sub trial_correlate_traits : Chained('trial') PathPart('correlate_traits') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $trait_ids = decode_json $c->req->param('trait_ids');
+    my $obsunit_level = $c->req->param('observation_unit_level');
+    my $correlation_type = $c->req->param('correlation_type');
+
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        'MaterializedViewTable',
+        {
+            bcs_schema=>$schema,
+            data_level=>$obsunit_level,
+            trait_list=>$trait_ids,
+            trial_list=>[$c->stash->{trial_id}],
+            include_timestamp=>0,
+            exclude_phenotype_outlier=>0
+        }
+    );
+    my ($data, $unique_traits) = $phenotypes_search->search();
+    my @sorted_trait_names = sort keys %$unique_traits;
+
+    if (scalar(@$data) == 0) {
+        $c->stash->{rest} = { error => "There are no phenotypes for the trials and traits you have selected!"};
+        return;
+    }
+
+    my %phenotype_data;
+    my %trait_hash;
+    my %seen_obsunit_ids;
+    foreach my $obs_unit (@$data){
+        my $obsunit_id = $obs_unit->{observationunit_stock_id};
+        my $observations = $obs_unit->{observations};
+        foreach (@$observations){
+            $phenotype_data{$obsunit_id}->{$_->{trait_id}} = $_->{value};
+            $trait_hash{$_->{trait_id}} = $_->{trait_name};
+        }
+        $seen_obsunit_ids{$obsunit_id}++;
+    }
+    my @sorted_obs_units = sort keys %seen_obsunit_ids;
+
+    my $header_string = join ',', @$trait_ids;
+
+    my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
+    my $tmp_stats_dir = $shared_cluster_dir_config."/tmp_trial_correlation";
+    mkdir $tmp_stats_dir if ! -d $tmp_stats_dir;
+    my ($stats_tempfile_fh, $stats_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    my ($stats_out_tempfile_fh, $stats_out_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+
+    open(my $F, ">", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
+        print $F $header_string."\n";
+        foreach my $s (@sorted_obs_units) {
+            my @line = ();
+            foreach my $t (@$trait_ids) {
+                my $val = $phenotype_data{$s}->{$t};
+                if (!$val && $val != 0) {
+                    $val = 'NA';
+                }
+                push @line, $val;
+            }
+            my $line_string = join ',', @line;
+            print $F "$line_string\n";
+        }
+    close($F);
+
+    my $cmd = 'R -e "library(data.table);
+    mat <- fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\');
+    res <- cor(mat, method=\''.$correlation_type.'\', use = \'complete.obs\')
+    res_rounded <- round(res, 2)
+    write.table(res_rounded, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
+    print STDERR Dumper $cmd;
+    my $status = system($cmd);
+
+    my $csv = Text::CSV->new({ sep_char => "\t" });
+    my @result;
+    open(my $fh, '<', $stats_out_tempfile)
+        or die "Could not open file '$stats_out_tempfile' $!";
+
+        print STDERR "Opened $stats_out_tempfile\n";
+        my $header = <$fh>;
+        my @header_cols;
+        if ($csv->parse($header)) {
+            @header_cols = $csv->fields();
+        }
+
+        my @header_trait_names = ("Trait");
+        foreach (@header_cols) {
+            push @header_trait_names, $trait_hash{$_};
+        }
+        push @result, \@header_trait_names;
+
+        while (my $row = <$fh>) {
+            my @columns;
+            if ($csv->parse($row)) {
+                @columns = $csv->fields();
+            }
+
+            my $trait_id = shift @columns;
+            my @line = ($trait_hash{$trait_id});
+            push @line, @columns;
+            push @result, \@line;
+        }
+    close($fh);
+
+    $c->stash->{rest} = {success => 1, result => \@result};
 }
 
 1;
