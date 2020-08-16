@@ -5852,6 +5852,11 @@ jQuery(document).ready(function() {
                 console.log(response);
                 jQuery("#working_modal").modal("hide");
 
+                if (response.error) {
+                    alert(response.error);
+                    return false;
+                }
+
                 jQuery('#manage_drone_imagery_field_trial_time_series_popup_content_figure2').html("<div class='well well-sm'><center><h3>Performance of accession: "+handleMouseMovePlotLayoutHoverPlotInfo.accession_name+" in the current field plot compared to all phenotypes of this accession</h3><p>The value of the current field plot is drawn in red</p><img src='"+response.figure+"' width='500' height='400'></center></div>");
             },
             error: function(response){
@@ -5869,6 +5874,11 @@ jQuery(document).ready(function() {
                 console.log(response);
                 jQuery("#working_modal").modal("hide");
 
+                if (response.error) {
+                    alert(response.error);
+                    return false;
+                }
+
                 jQuery('#manage_drone_imagery_field_trial_time_series_popup_content_figure1').html("<div class='well well-sm'><center><h3>Performance of accession: "+handleMouseMovePlotLayoutHoverPlotInfo.accession_name+" in the current field plot compared to all other phenotypes in this field trial</h3><p>The value of the current field plot is drawn in red</p><img src='"+response.figure+"' width='500' height='400'></center></div>");
             },
             error: function(response){
@@ -5885,6 +5895,11 @@ jQuery(document).ready(function() {
             success: function(response){
                 console.log(response);
                 jQuery("#working_modal").modal("hide");
+
+                if (response.error) {
+                    alert(response.error);
+                    return false;
+                }
 
                 jQuery('#manage_drone_imagery_field_trial_time_series_popup_content_figure3').html("<div class='well well-sm'><center><h3>Performance of accession: "+handleMouseMovePlotLayoutHoverPlotInfo.accession_name+" in the current plot compared to all other phenotypes in the database</h3><p>The value of the current field plot is drawn in red</p><img src='"+response.figure+"' width='500' height='400'></center></div>");
             },

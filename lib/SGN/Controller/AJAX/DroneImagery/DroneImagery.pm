@@ -5455,7 +5455,7 @@ sub drone_imagery_accession_phenotype_histogram_GET : Args(0) {
     my @plot_sorted_trait_names = sort keys %$plot_unique_traits;
 
     if (scalar(@sorted_trait_names) != 1 && scalar(@plot_sorted_trait_names) != 1) {
-        $c->stash->{rest} = { error => "Trait not found correctly!"};
+        $c->stash->{rest} = { error => "The selected trait was not phenotyped for the selected plot and the selected accession!"};
         $c->detach();
     }
 
@@ -5481,7 +5481,7 @@ sub drone_imagery_accession_phenotype_histogram_GET : Args(0) {
     }
 
     if (scalar(@plot_phenotypes) != 1) {
-        $c->stash->{rest} = { error => "Trait not found correctly!"};
+        $c->stash->{rest} = { error => "The selected trait was not phenotyped for the selected plot!"};
         $c->detach();
     }
 
