@@ -5454,13 +5454,8 @@ sub drone_imagery_accession_phenotype_histogram_GET : Args(0) {
     my ($plot_data, $plot_unique_traits) = $plot_phenotypes_search->search();
     my @plot_sorted_trait_names = sort keys %$plot_unique_traits;
 
-    if (scalar(@sorted_trait_names) != 1 && scalar(@plot_sorted_trait_names) != 1) {
-        $c->stash->{rest} = { error => "The selected trait was not phenotyped for the selected plot and the selected accession!"};
-        $c->detach();
-    }
-
     if (scalar(@$data) == 0) {
-        $c->stash->{rest} = { error => "There are no phenotypes for the trials and traits you have selected!"};
+        $c->stash->{rest} = { error => "There are no phenotypes for the trait you have selected in the current field trial!"};
         $c->detach();
     }
 
@@ -5478,11 +5473,6 @@ sub drone_imagery_accession_phenotype_histogram_GET : Args(0) {
         foreach (@$observations){
             push @plot_phenotypes, $_->{value};
         }
-    }
-
-    if (scalar(@plot_phenotypes) != 1) {
-        $c->stash->{rest} = { error => "The selected trait was not phenotyped for the selected plot!"};
-        $c->detach();
     }
 
     my $dir = $c->tempfiles_subdir('/drone_imagery_pheno_plot_dir');
@@ -5511,8 +5501,10 @@ sub drone_imagery_accession_phenotype_histogram_GET : Args(0) {
     pheno_all <- read.table(\''.$phenos_tempfile.'\', header=TRUE, sep=\',\');
     pheno_plot <- read.table(\''.$pheno_plot_tempfile.'\', header=TRUE, sep=\',\');
     sp <- ggplot(pheno_all, aes(x=phenotype)) + geom_histogram();
-    sp2 <- sp + geom_vline(xintercept = pheno_plot\$phenotype[1], color = \'red\', size=2);
-    ggsave(\''.$pheno_figure_tempfile.'\', sp2, device=\'png\', width=3, height=3, units=\'in\');
+    if (length(pheno_plot\$phenotype) > 0) {
+        sp <- sp + geom_vline(xintercept = pheno_plot\$phenotype[1], color = \'red\', size=2);
+    }
+    ggsave(\''.$pheno_figure_tempfile.'\', sp, device=\'png\', width=3, height=3, units=\'in\');
     dev.off();"';
     print STDERR Dumper $cmd;
     my $status = system($cmd);
