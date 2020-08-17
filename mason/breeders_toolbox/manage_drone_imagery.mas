@@ -5837,14 +5837,22 @@ jQuery(document).ready(function() {
 
         get_select_box('traits', 'drone_imagery_time_series_hover_trait_select_div', {'id':'drone_imagery_time_series_hover_trait_select_id', 'name':'drone_imagery_time_series_hover_trait_select_id', 'stock_id':handleMouseMovePlotLayoutHoverPlotInfo.accession_id, 'empty':1});
 
+        jQuery('#manage_drone_imagery_field_trial_time_series_popup_content_figure1').html("");
+        jQuery('#manage_drone_imagery_field_trial_time_series_popup_content_figure2').html("");
+        jQuery('#manage_drone_imagery_field_trial_time_series_popup_content_figure3').html("");
+
         jQuery('#manage_drone_imagery_field_trial_time_series_popup').modal('show');
     }
 
     jQuery(document).on('change', '#drone_imagery_time_series_hover_trait_select_id', function() {
         handleMouseMovePlotLayoutHoverTraitId = jQuery(this).val();
 
+        jQuery('#manage_drone_imagery_field_trial_time_series_popup_content_figure1').html("");
+        jQuery('#manage_drone_imagery_field_trial_time_series_popup_content_figure2').html("");
+        jQuery('#manage_drone_imagery_field_trial_time_series_popup_content_figure3').html("");
+
         jQuery.ajax({
-            url : '/api/drone_imagery/accession_phenotype_histogram?accession_id='+handleMouseMovePlotLayoutHoverPlotInfo.accession_id+'&trait_id='+handleMouseMovePlotLayoutHoverTraitId+'&plot_id='+handleMouseMovePlotLayoutHoverPlotInfo.plot_id,
+            url : '/api/drone_imagery/accession_phenotype_histogram?accession_id='+handleMouseMovePlotLayoutHoverPlotInfo.accession_id+'&trait_id='+handleMouseMovePlotLayoutHoverTraitId+'&plot_id='+handleMouseMovePlotLayoutHoverPlotInfo.plot_id+'&figure_type=all_pheno_of_this_accession',
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
@@ -5857,7 +5865,7 @@ jQuery(document).ready(function() {
                     return false;
                 }
 
-                jQuery('#manage_drone_imagery_field_trial_time_series_popup_content_figure2').html("<div class='well well-sm'><center><h3>Performance of accession: "+handleMouseMovePlotLayoutHoverPlotInfo.accession_name+" in the current field plot compared to all phenotypes of this accession</h3><p>The value of the current field plot is drawn in red</p><img src='"+response.figure+"' width='500' height='400'></center></div>");
+                jQuery('#manage_drone_imagery_field_trial_time_series_popup_content_figure2').html("<div class='well well-sm'><center><h3>Performance of accession: <a href='/stock/"+handleMouseMovePlotLayoutHoverPlotInfo.accession_id+"/view' target=_blank>"+handleMouseMovePlotLayoutHoverPlotInfo.accession_name+"</a> in the current field plot compared to all phenotypes of this accession</h3><p>The mean value of this accession is in green.<p><p>The value of the current field plot is drawn in red.</p><img src='"+response.figure+"' width='500' height='400'></center></div>");
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");
@@ -5866,7 +5874,7 @@ jQuery(document).ready(function() {
         });
 
         jQuery.ajax({
-            url : '/api/drone_imagery/accession_phenotype_histogram?field_trial_id='+manage_drone_imagery_field_trial_time_series_field_trial_id+'&trait_id='+handleMouseMovePlotLayoutHoverTraitId+'&plot_id='+handleMouseMovePlotLayoutHoverPlotInfo.plot_id,
+            url : '/api/drone_imagery/accession_phenotype_histogram?field_trial_id='+manage_drone_imagery_field_trial_time_series_field_trial_id+'&trait_id='+handleMouseMovePlotLayoutHoverTraitId+'&plot_id='+handleMouseMovePlotLayoutHoverPlotInfo.plot_id+'&accession_id='+handleMouseMovePlotLayoutHoverPlotInfo.accession_id+'&figure_type=all_pheno_of_this_trial',
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
@@ -5879,7 +5887,7 @@ jQuery(document).ready(function() {
                     return false;
                 }
 
-                jQuery('#manage_drone_imagery_field_trial_time_series_popup_content_figure1').html("<div class='well well-sm'><center><h3>Performance of accession: "+handleMouseMovePlotLayoutHoverPlotInfo.accession_name+" in the current field plot compared to all other phenotypes in this field trial</h3><p>The value of the current field plot is drawn in red</p><img src='"+response.figure+"' width='500' height='400'></center></div>");
+                jQuery('#manage_drone_imagery_field_trial_time_series_popup_content_figure1').html("<div class='well well-sm'><center><h3>Performance of accession: <a href='/stock/"+handleMouseMovePlotLayoutHoverPlotInfo.accession_id+"/view' target=_blank>"+handleMouseMovePlotLayoutHoverPlotInfo.accession_name+"</a> in the current field plot compared to all other phenotypes in this field trial</h3><p>The mean value of this accession is in green.<p><p>The value of the current field plot is drawn in red</p><img src='"+response.figure+"' width='500' height='400'></center></div>");
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");
@@ -5888,7 +5896,7 @@ jQuery(document).ready(function() {
         });
 
         jQuery.ajax({
-            url : '/api/drone_imagery/accession_phenotype_histogram?trait_id='+handleMouseMovePlotLayoutHoverTraitId+'&plot_id='+handleMouseMovePlotLayoutHoverPlotInfo.plot_id,
+            url : '/api/drone_imagery/accession_phenotype_histogram?trait_id='+handleMouseMovePlotLayoutHoverTraitId+'&plot_id='+handleMouseMovePlotLayoutHoverPlotInfo.plot_id+'&accession_id='+handleMouseMovePlotLayoutHoverPlotInfo.accession_id+'&figure_type=all_pheno_in_database',
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
@@ -5901,7 +5909,7 @@ jQuery(document).ready(function() {
                     return false;
                 }
 
-                jQuery('#manage_drone_imagery_field_trial_time_series_popup_content_figure3').html("<div class='well well-sm'><center><h3>Performance of accession: "+handleMouseMovePlotLayoutHoverPlotInfo.accession_name+" in the current plot compared to all other phenotypes in the database</h3><p>The value of the current field plot is drawn in red</p><img src='"+response.figure+"' width='500' height='400'></center></div>");
+                jQuery('#manage_drone_imagery_field_trial_time_series_popup_content_figure3').html("<div class='well well-sm'><center><h3>Performance of accession: <a href='/stock/"+handleMouseMovePlotLayoutHoverPlotInfo.accession_id+"/view' target=_blank>"+handleMouseMovePlotLayoutHoverPlotInfo.accession_name+"</a> in the current plot compared to all other phenotypes in the database</h3><p>The mean value of this accession is in green.<p><p>The value of the current field plot is drawn in red</p><img src='"+response.figure+"' width='500' height='400'></center></div>");
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");

@@ -5415,6 +5415,14 @@ sub drone_imagery_accession_phenotype_histogram_GET : Args(0) {
     my $accession_id = $c->req->param('accession_id');
     my $trait_id = $c->req->param('trait_id');
     my $field_trial_id = $c->req->param('field_trial_id');
+    my $figure_type = $c->req->param('figure_type');
+
+    my $dir = $c->tempfiles_subdir('/drone_imagery_pheno_plot_dir');
+    my $phenos_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_pheno_plot_dir/phenoXXXX');
+    my $pheno_plot_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_pheno_plot_dir/phenoplotXXXX');
+    my $pheno_accession_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_pheno_plot_dir/phenoplotaccXXXX');
+    my $pheno_figure_tempfile_string = $c->tempfile( TEMPLATE => 'drone_imagery_pheno_plot_dir/figureXXXX');
+    my $pheno_figure_tempfile = $c->config->{basepath}."/".$pheno_figure_tempfile_string;
 
     my $search_params = {
         bcs_schema=>$bcs_schema,
@@ -5425,11 +5433,11 @@ sub drone_imagery_accession_phenotype_histogram_GET : Args(0) {
     };
 
     # Comparing plot_id pheno against all phenotypes in trial
-    if ($field_trial_id) {
+    if ($field_trial_id && $figure_type eq 'all_pheno_of_this_trial') {
         $search_params->{trial_list} = [$field_trial_id];
     }
     # Comparing plot_id pheno against all phenotypes for accession
-    if ($accession_id){
+    if ($accession_id && $figure_type eq 'all_pheno_of_this_accession'){
         $search_params->{accession_list} = [$accession_id];
     }
 
@@ -5439,6 +5447,35 @@ sub drone_imagery_accession_phenotype_histogram_GET : Args(0) {
     );
     my ($data, $unique_traits) = $phenotypes_search->search();
     my @sorted_trait_names = sort keys %$unique_traits;
+
+    if (scalar(@$data) == 0) {
+        $c->stash->{rest} = { error => "There are no phenotypes for the trait you have selected in the current field trial!"};
+        $c->detach();
+    }
+
+    my @accession_phenotypes;
+    if ($accession_id) {
+        my $accession_phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+            'MaterializedViewTable',
+            {
+                bcs_schema=>$bcs_schema,
+                data_level=>'plot',
+                trait_list=>[$trait_id],
+                accession_list=>[$accession_id],
+                include_timestamp=>0,
+                exclude_phenotype_outlier=>0
+            }
+        );
+        my ($accession_data, $accession_unique_traits) = $accession_phenotypes_search->search();
+        my @accession_sorted_trait_names = sort keys %$accession_unique_traits;
+
+        foreach my $obs_unit (@$accession_data){
+            my $observations = $obs_unit->{observations};
+            foreach (@$observations){
+                push @accession_phenotypes, $_->{value};
+            }
+        }
+    }
 
     my $plot_phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         'MaterializedViewTable',
@@ -5453,11 +5490,6 @@ sub drone_imagery_accession_phenotype_histogram_GET : Args(0) {
     );
     my ($plot_data, $plot_unique_traits) = $plot_phenotypes_search->search();
     my @plot_sorted_trait_names = sort keys %$plot_unique_traits;
-
-    if (scalar(@$data) == 0) {
-        $c->stash->{rest} = { error => "There are no phenotypes for the trait you have selected in the current field trial!"};
-        $c->detach();
-    }
 
     my @all_phenotypes;
     foreach my $obs_unit (@$data){
@@ -5475,12 +5507,6 @@ sub drone_imagery_accession_phenotype_histogram_GET : Args(0) {
         }
     }
 
-    my $dir = $c->tempfiles_subdir('/drone_imagery_pheno_plot_dir');
-    my $phenos_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_pheno_plot_dir/phenoXXXX');
-    my $pheno_plot_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_pheno_plot_dir/phenoplotXXXX');
-    my $pheno_figure_tempfile_string = $c->tempfile( TEMPLATE => 'drone_imagery_pheno_plot_dir/figureXXXX');
-    my $pheno_figure_tempfile = $c->config->{basepath}."/".$pheno_figure_tempfile_string;
-
     open(my $F, ">", $phenos_tempfile) || die "Can't open file ".$phenos_tempfile;
         print $F "phenotype\n";
         foreach (@all_phenotypes) {
@@ -5488,21 +5514,32 @@ sub drone_imagery_accession_phenotype_histogram_GET : Args(0) {
         }
     close($F);
 
-    open(my $F, ">", $pheno_plot_tempfile) || die "Can't open file ".$pheno_plot_tempfile;
-        print $F "phenotype\n";
+    open(my $F2, ">", $pheno_plot_tempfile) || die "Can't open file ".$pheno_plot_tempfile;
+        print $F2 "phenotype\n";
         foreach (@plot_phenotypes) {
-            print $F "$_\n";
+            print $F2 "$_\n";
         }
-    close($F);
+    close($F2);
+
+    open(my $F3, ">", $pheno_accession_tempfile) || die "Can't open file ".$pheno_accession_tempfile;
+        print $F3 "phenotype\n";
+        foreach (@accession_phenotypes) {
+            print $F3 "$_\n";
+        }
+    close($F3);
 
     my $cmd = 'R -e "library(ggplot2);
     options(device=\'png\');
     par();
     pheno_all <- read.table(\''.$phenos_tempfile.'\', header=TRUE, sep=\',\');
     pheno_plot <- read.table(\''.$pheno_plot_tempfile.'\', header=TRUE, sep=\',\');
+    pheno_accession <- read.table(\''.$pheno_accession_tempfile.'\', header=TRUE, sep=\',\');
     sp <- ggplot(pheno_all, aes(x=phenotype)) + geom_histogram();
     if (length(pheno_plot\$phenotype) > 0) {
-        sp <- sp + geom_vline(xintercept = pheno_plot\$phenotype[1], color = \'red\', size=2);
+        sp <- sp + geom_vline(xintercept = pheno_plot\$phenotype[1], color = \'red\', size=1.2);
+    }
+    if (length(pheno_accession\$phenotype) > 0) {
+        sp <- sp + geom_vline(xintercept = mean(pheno_accession\$phenotype), color = \'green\', size=1.2);
     }
     ggsave(\''.$pheno_figure_tempfile.'\', sp, device=\'png\', width=3, height=3, units=\'in\');
     dev.off();"';
