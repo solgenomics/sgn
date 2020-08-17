@@ -33,7 +33,7 @@ $program_name
                             </div>
                         </div><br/><br/>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="select_list_list_select">Select a List of Traits: </label>
+                            <label class="col-sm-3 control-label" for="select_list_list_selectxx">Select a List of Traits: </label>
                             <div class="col-sm-9">
                                 <span id="select_list_div"></span>
                             </div>

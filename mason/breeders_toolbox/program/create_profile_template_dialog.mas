@@ -1,0 +1,37 @@
+
+<div class="modal fade" id="create_profile_template_dialog" name="create_profile_template_dialog" tabindex="-1" role="dialog" aria-labelledby="createProfileTemplateDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="createProfileTemplateDialog">Create Product Profile Template</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Template File Name: </label>
+                            <div class="col-sm-9">
+                                <input class="form-control" id="template_file_name" name="template_file_name" type="text" placeholder="Enter template file name"/>
+                            </div>
+                        </div><br/><br/>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="select_list_list_select">Select a List of Traits: </label>
+                            <div class="col-sm-9">
+                                <span id="select_list_div"></span>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info" id="create_profile_template" >Create Template</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+</script>
