@@ -1310,10 +1310,12 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
 
                     <select class="form-control" id="drone_imagery_calculate_statistics_select_input">
                         <option value="">Select A Model</option>
-                        <option value="sommer_grm_spatial_genetic_blups">Sommer Spatial GBLUPs Y~replicate+GRM+spatial. Multivariate genetic + spatial effects</option>
+                        <option value="lmer_germplasmname_replicate">LMER BLUPs y~replicate+1|Germplasm. Univariate genetic effects</option>
+                        <option value="sommer_grm_spatial_genetic_blups">Sommer Spatial GBLUPs Y~replicate+GRM+spatial. Multivariate genetic + 2Dspl spatial effects</option>
+                        <option value="blupf90_grm_random_regression_dap_blups">REMLf90 GBLUPs Y~replicate+GRM+temporal random regression using days after planting. Multivariate genetic + permanent environment effects</option>
+                        <option value="blupf90_grm_random_regression_gdd_blups">REMLf90 GBLUPs Y~replicate+GRM+temporal random regression using growing degree days. Multivariate genetic + permanent environment effects</option>
                         <option value="sommer_grm_temporal_random_regression_dap_genetic_blups">Sommer Temporal Random Regression GBLUPs Y~replicate+GRM+LegendrePoly. Multivariate genetic + permanent environment effects using days after planting</option>
                         <option value="sommer_grm_temporal_random_regression_gdd_genetic_blups">Sommer Temporal Random Regression GBLUPs Y~replicate+GRM+LegendrePoly. Multivariate genetic + permanent environment effects using growing degree days</option>
-                        <option value="lmer_germplasmname_replicate">LMER BLUPs y~replicate+1|Germplasm. Univariate genetic effects</option>
                         <!--option value="marss_germplasmname_block">MARSS prediction for each germplasm</option-->
                     </select>
 
@@ -4251,6 +4253,12 @@ jQuery(document).ready(function() {
             jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_spatial').show();
         }
         else if (manage_drone_imagery_calculate_statistics_select == 'sommer_grm_temporal_random_regression_dap_genetic_blups' || manage_drone_imagery_calculate_statistics_select == 'sommer_grm_temporal_random_regression_gdd_genetic_blups') {
+            jQuery('#drone_imagery_calculate_statistics_marss_div').hide();
+            jQuery('#drone_imagery_calculate_statistics_genotyping_protocol_div').show();
+            jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_genetic').show();
+            jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_spatial').hide();
+        }
+        else if (manage_drone_imagery_calculate_statistics_select == 'blupf90_grm_random_regression_dap_blups' || manage_drone_imagery_calculate_statistics_select == 'blupf90_grm_random_regression_gdd_blups') {
             jQuery('#drone_imagery_calculate_statistics_marss_div').hide();
             jQuery('#drone_imagery_calculate_statistics_genotyping_protocol_div').show();
             jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_genetic').show();

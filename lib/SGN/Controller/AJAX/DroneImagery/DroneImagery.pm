@@ -233,6 +233,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $tmp_stats_dir = $shared_cluster_dir_config."/tmp_drone_statistics";
     mkdir $tmp_stats_dir if ! -d $tmp_stats_dir;
     my ($stats_tempfile_fh, $stats_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    my ($parameter_tempfile_fh, $parameter_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_tempfile_fh, $stats_out_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_tempfile_row_fh, $stats_out_tempfile_row) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_tempfile_col_fh, $stats_out_tempfile_col) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
@@ -253,7 +254,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $field_trial_design;
     my $pe_genetic_blup_trait;
 
-    if ($statistics_select eq 'marss_germplasmname_block' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups') {
+    if ($statistics_select eq 'marss_germplasmname_block' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups') {
 
         my $drone_run_related_time_cvterms_json_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_related_time_cvterms_json', 'project_property')->cvterm_id();
         my $drone_run_field_trial_project_relationship_type_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
@@ -288,7 +289,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         }
     }
 
-    if ($statistics_select eq 'lmer_germplasmname_replicate' || $statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups') {
+    if ($statistics_select eq 'lmer_germplasmname_replicate' || $statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups') {
 
         my %trait_name_encoder;
         my %trait_name_encoder_rev;
@@ -544,8 +545,148 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 }
             close($F);
         }
+        elsif ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups') {
+            $pe_genetic_blup_trait = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on growing degree days computed using Sommer R|SGNSTAT:0000006";
 
-        if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups') {
+            my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+                'MaterializedViewTable',
+                {
+                    bcs_schema=>$schema,
+                    data_level=>'plot',
+                    trait_list=>$trait_id_list,
+                    trial_list=>$field_trial_id_list,
+                    include_timestamp=>0,
+                    exclude_phenotype_outlier=>0
+                }
+            );
+            my ($data, $unique_traits) = $phenotypes_search->search();
+            @sorted_trait_names = sort keys %$unique_traits;
+
+            if (scalar(@$data) == 0) {
+                $c->stash->{rest} = { error => "There are no phenotypes for the trials and traits you have selected!"};
+                return;
+            }
+
+            foreach my $obs_unit (@$data){
+                my $germplasm_name = $obs_unit->{germplasm_uniquename};
+                my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
+                $unique_accessions{$germplasm_name}++;
+                $stock_info{"S".$germplasm_stock_id} = {
+                    uniquename => $germplasm_name
+                };
+                my $observations = $obs_unit->{observations};
+                foreach (@$observations){
+                    my $related_time_terms_json = decode_json $_->{associated_image_project_time_json};
+                    my $gdd_time = $related_time_terms_json->{gdd_average_temp} + 0;
+                    $phenotype_data{$obs_unit->{observationunit_uniquename}}->{$gdd_time} = $_->{value};
+                    $seen_times{$gdd_time} = $_->{trait_name};
+                }
+            }
+            @unique_accession_names = sort keys %unique_accessions;
+            @sorted_trait_names = sort keys %seen_times;
+
+            my $time_min = 100000000;
+            my $time_max = 0;
+            foreach (@sorted_trait_names) {
+                if ($_ < $time_min) {
+                    $time_min = $_;
+                }
+                if ($_ > $time_max) {
+                    $time_max = $_;
+                }
+            }
+
+            my @sorted_trait_names_scaled;
+            foreach (@sorted_trait_names) {
+                push @sorted_trait_names_scaled, 2*(($_ - $time_min)/($time_max - $time_min)) - 1;
+            }
+            my $sorted_trait_names_scaled_string = join ',', @sorted_trait_names_scaled;
+
+            my $cmd = 'R -e "library(sommer); library(orthopolynom);
+            polynomials <- leg(c('.$sorted_trait_names_scaled_string.'), n='.scalar(@sorted_trait_names_scaled).', intercept=TRUE);
+            write.table(polynomials, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
+            my $status = system($cmd);
+
+            my %polynomial_map;
+            my $csv = Text::CSV->new({ sep_char => "\t" });
+            open(my $fh, '<', $stats_out_tempfile)
+                or die "Could not open file '$stats_out_tempfile' $!";
+
+                print STDERR "Opened $stats_out_tempfile\n";
+                my $header = <$fh>;
+                my @header_cols;
+                if ($csv->parse($header)) {
+                    @header_cols = $csv->fields();
+                }
+
+                my $p_counter = 0;
+                while (my $row = <$fh>) {
+                    my @columns;
+                    if ($csv->parse($row)) {
+                        @columns = $csv->fields();
+                    }
+                    my $time = $sorted_trait_names[$p_counter];
+                    $polynomial_map{$time} = \@columns;
+                    $p_counter++;
+                }
+            close($fh);
+
+            my %rep_time_map;
+            foreach (@$data) {
+                my $obsunit_stock_id = $_->{observationunit_stock_id};
+                my $replicate = $_->{obsunit_rep};
+                foreach my $t (@sorted_trait_names) {
+                    $rep_time_map{$obsunit_stock_id}++;
+                }
+            }
+
+            foreach (@$data) {
+                my $germplasm_name = $_->{germplasm_uniquename};
+                my $germplasm_stock_id = $_->{germplasm_stock_id};
+                my $obsunit_stock_id = $_->{observationunit_stock_id};
+                my $obsunit_stock_uniquename = $_->{observationunit_uniquename};
+                my $row_number = $_->{obsunit_row_number};
+                my $col_number = $_->{obsunit_col_number};
+                $obsunit_row_col{$row_number}->{$col_number} = {
+                    stock_id => $obsunit_stock_id,
+                    stock_uniquename => $obsunit_stock_uniquename
+                };
+                $plot_id_map{$obsunit_stock_id} = $obsunit_stock_uniquename;
+                $seen_plot_names{$obsunit_stock_uniquename}++;
+                foreach my $t (@sorted_trait_names) {
+                    my @row = ("S".$germplasm_stock_id, $obsunit_stock_id, $_->{obsunit_rep});
+
+                    my $polys = $polynomial_map{$t};
+                    push @row, @$polys;
+
+                    push @row, $rep_time_map{$obsunit_stock_id};
+
+                    if (defined($phenotype_data{$obsunit_stock_uniquename}->{$t})) {
+                        push @row, $phenotype_data{$obsunit_stock_uniquename}->{$t} + 0;
+                    } else {
+                        print STDERR $obsunit_stock_uniquename." : $t : $germplasm_name : NA \n";
+                        push @row, '';
+                    }
+
+                    push @data_matrix, \@row;
+                }
+            }
+
+            my @phenotype_header = ("id", "plot_id", "replicate");
+            push @phenotype_header, @sorted_trait_names;
+            push @phenotype_header, ("replicate_time", "phenotype");
+            my $header_string = join ',', @phenotype_header;
+
+            open(my $F, ">", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
+                # print $F $header_string."\n";
+                foreach (@data_matrix) {
+                    my $line = join ',', @$_;
+                    print $F "$line\n";
+                }
+            close($F);
+        }
+
+        if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups') {
 
             my %seen_accession_stock_ids;
             foreach my $trial_id (@$field_trial_id_list) {
@@ -894,6 +1035,51 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 push @new_sorted_trait_names, $seen_times{$_};
             }
             @sorted_trait_names = ($pe_genetic_blup_trait, @new_sorted_trait_names);
+        }
+        elsif ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups') {
+            $statistical_ontology_term = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using Sommer R|SGNSTAT:0000004"; #In the JS this is set to either the genetic of permanent environment BLUP term (Multivariate linear mixed model permanent environment BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using Sommer R|SGNSTAT:0000005) when saving results
+        
+            $analysis_result_values_type = "analysis_result_values_match_accession_names";
+
+            if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups') {
+                $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_remlf90_grm_temporal_leg_random_regression_GDD_genetic_blups_phenotype_file";
+            }
+            elsif ($statistics_select eq 'blupf90_grm_random_regression_dap_blups') {
+                $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_remlf90_grm_temporal_leg_random_regression_DAP_genetic_blups_phenotype_file";
+            }
+
+            my @param_file_rows = (
+                'DATAFILE',
+                $stats_tempfile,
+                'NUMBER_OF_TRAITS',
+                scalar(@sorted_trait_names),
+                'NUMBER_OF_EFFECTS',
+                scalar(@sorted_trait_names)*2 + 1,
+                'OBSERVATION(S)',
+                scalar(@sorted_trait_names) + 4,
+                'WEIGHT(S)',
+                '',
+                'EFFECTS: POSITION_IN_DATAFILE NUMBER_OF_LEVELS TYPE_OF_EFFECT',
+                
+            );
+
+            my $cmd = 'echo '.$parameter_tempfile.' | blupf90 > '.$stats_out_tempfile;
+            print STDERR Dumper $cmd;
+            my $status = system($cmd);
+
+            my $csv = Text::CSV->new({ sep_char => "\t" });
+
+            my %unique_accessions_seen;
+            open(my $fh, '<', $stats_out_tempfile)
+                or die "Could not open file '$stats_out_tempfile' $!";
+
+                print STDERR "Opened $stats_out_tempfile\n";
+                my $header = <$fh>;
+                my @header_cols;
+                if ($csv->parse($header)) {
+                    @header_cols = $csv->fields();
+                }
+            close($fh);
         }
     }
     elsif ($statistics_select eq 'marss_germplasmname_block') {
