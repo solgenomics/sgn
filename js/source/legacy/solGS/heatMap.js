@@ -4,11 +4,12 @@
 *
 */
 
+
 var solGS = solGS || function solGS() {};
 
 solGS.heatmap = {
 
-    plot: function (data, heatMapDiv) {
+    plot: function (data, heatmapCanvasDiv, heatmapPlotDiv, downloadLinks) {
 
 	data = JSON.parse(data);
 
@@ -44,11 +45,19 @@ solGS.heatmap = {
 	    }
 	}
 
-	if (heatMapDiv.match(/#/) == null) {heatMapDiv = '#' + heatMapDiv;}
+	if (heatmapCanvasDiv.match(/#/) == null) {heatmapCanvasDiv = '#' + heatmapCanvasDiv;}
 	
-	var heatmapCanvas = heatMapDiv; 
-	var heatmapPlotDiv =  "#heatmap_plot";
+	if (heatmapPlotDiv) {
+	    if (heatmapPlotDiv.match(/#/) == null) {heatmapPlotDiv = '#' + heatmapPlotDiv;}
+	} else {
+	    heatmapPlotDiv =  "#heatmap_plot"; 
+	}
 
+	var heatmapCanvas = heatmapCanvasDiv; 
+
+	var plotExists = jQuery(heatmapCanvas).text();
+	console.log('plotexist ', plotExists)
+	
 	var height = 400;
 	var width  = 400;
 
@@ -57,7 +66,7 @@ solGS.heatmap = {
             width  = width  * 0.5;
 	}
 
-	var pad    = {left:70, top:20, right:100, bottom: 70};
+	var pad    = {left:70, top:30, right:100, bottom: 90};
 	var totalH = height + pad.top + pad.bottom;
 	var totalW = width + pad.left + pad.right;
 
@@ -89,7 +98,7 @@ solGS.heatmap = {
 	var corrplot = svg.append("g")
             .attr("id", heatmapPlotDiv)
             .attr("transform", "translate(" + pad.left + "," + pad.top + ")");
-	
+
 	corrplot.append("g")
             .attr("class", "x axis")
             .attr("transform", "translate(0," + height +")")
@@ -218,7 +227,12 @@ solGS.heatmap = {
             })  
             .attr("dominant-baseline", "middle")
             .attr("text-anchor", "start");
-    
+
+
+	if (downloadLinks) {
+	    jQuery(heatmapCanvas).append('<p>' + downloadLinks + '</p>');
+	}
+   
     },
 
     
