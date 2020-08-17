@@ -126,14 +126,11 @@ solGS.kinship = {
 		if (res.result == 'success') {
 		    jQuery("#kinship_canvas .multi-spinner-container").hide();
 		    		    
-		    //solGS.kinship.getKinshipResult(res);
-
-		    console.log('resdata ' + res.data)
-
 		    if (res.data) {
-			solGS.kinship.plotKinship(res.data);
-			solGS.kinship.addDowloandLinks(res);
-
+			var links = solGS.kinship.addDowloandLinks(res);
+			solGS.kinship.plotKinship(res.data, links);
+		//	solGS.kinship.addDowloandLinks(res);
+		
 			jQuery("#kinship_message").empty();
 		    } else {
 			 jQuery("#kinship_message")
@@ -202,9 +199,9 @@ solGS.kinship = {
     },
 
 
-    plotKinship: function (data) {
-
-        solGS.heatmap.plot(data, '#kinship_canvas');
+    plotKinship: function (data, links) {
+	console.log('plotkinship links ' + links)
+        solGS.heatmap.plot(data, '#kinship_canvas', '#kinship_plot', links);
 		    
     },
 
@@ -226,15 +223,19 @@ solGS.kinship = {
 	    +  "\" download=" + fileNameAve + ">Average kinship</a>";
 	
 	inbreedingFile = "<a href=\"" + inbreedingFile
-	    +  "\" download=" + fileNameInbreeding + ">Inbreeding Coefficients</a>";
+	    +  "\" download=" + fileNameInbreeding + ">Inbreeding coefficients</a>";
 		
-	jQuery("#kinship_canvas")
-	    .append('<br /> <strong>Download:</strong> '
+	// jQuery("#kinship_canvas")
+	//     .append('<br /> <strong>Download:</strong> '
+	// 	     + kinshipFile + ' | '
+	// 	     + aveFile + ' | '
+	// 	     + inbreedingFile)
+	//     .show();
+
+	return '<strong>Download:</strong> '
 		     + kinshipFile + ' | '
 		     + aveFile + ' | '
-		     + inbreedingFile)
-	    .show();
-	
+	    + inbreedingFile;
     },
 
 ///////
