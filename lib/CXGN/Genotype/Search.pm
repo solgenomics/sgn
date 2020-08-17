@@ -1122,7 +1122,7 @@ sub get_cached_file_search_json {
     my $protocol_ids = $self->protocol_id_list;
 
     my $metadata_only_string = $metadata_only ? "metadata_only" : "all_data";
-    my $key = $self->key("get_cached_file_search_json_".$metadata_only_string);
+    my $key = $self->key("get_cached_file_search_json_v02_".$metadata_only_string);
     $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
 
     my $file_handle;
@@ -1227,7 +1227,7 @@ sub get_cached_file_dosage_matrix {
     my $basepath_config = shift;
     my $protocol_ids = $self->protocol_id_list;
 
-    my $key = $self->key("get_cached_file_dosage_matrix");
+    my $key = $self->key("get_cached_file_dosage_matrix_v02");
     $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
 
     my $file_handle;
@@ -1372,7 +1372,7 @@ sub get_cached_file_dosage_matrix_compute_from_parents {
     }
     my $protocol_id = $protocol_ids->[0];
 
-    my $key = $self->key("get_cached_file_dosage_matrix_compute_from_parents_v01");
+    my $key = $self->key("get_cached_file_dosage_matrix_compute_from_parents_v02");
     $self->cache( Cache::File->new( cache_root => $cache_root_dir ));
 
     my $file_handle;
@@ -1534,7 +1534,7 @@ sub get_cached_file_VCF {
     my $web_cluster_queue_config = shift;
     my $basepath_config = shift;
 
-    my $key = $self->key("get_cached_file_VCF");
+    my $key = $self->key("get_cached_file_VCF_v02");
     $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
     my $protocol_ids = $self->protocol_id_list;
 
@@ -1803,7 +1803,7 @@ sub get_cached_file_VCF_compute_from_parents {
     }
     my $protocol_id = $protocol_ids->[0];
 
-    my $key = $self->key("get_cached_file_VCF_compute_from_parents_v01");
+    my $key = $self->key("get_cached_file_VCF_compute_from_parents_v02");
     $self->cache( Cache::File->new( cache_root => $cache_root_dir ));
 
     my $file_handle;
