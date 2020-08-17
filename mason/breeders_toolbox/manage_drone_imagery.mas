@@ -19,12 +19,12 @@
     <& /page/page_title.mas, title=>"Manage Drone Imagery" &>
 
 <%perl>
-#my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Imagery</button><button class='btn btn-default' style='margin:3px' id='download_phenotypes_drone_imagery_link'>Download Image-Phenotypes</button><button class='btn btn-success' style='margin:3px' id='keras_cnn_drone_imagery_link'>Keras CNN Models</button><button class='btn btn-success' style='margin:3px' id='drone_imagery_calculate_statistics_link'>Calculate Statistics</button><button class='btn btn-default' style='margin:3px' id='drone_imagery_compare_field_images_link'>Compare Aerial Field Images</button>";
+#my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Imagery</button><button class='btn btn-default' style='margin:3px' id='download_phenotypes_drone_imagery_link'>Download Image-Phenotypes</button><button class='btn btn-success' style='margin:3px' id='keras_cnn_drone_imagery_link'>Keras CNN Models</button><button class='btn btn-success' style='margin:3px' id='drone_imagery_calculate_statistics_link'>Calculate Statistics</button><button class='btn btn-default' style='margin:3px' id='drone_imagery_compare_field_images_link'>Compare Aerial Field Images</button><button class='btn btn-default' style='margin:3px' id='drone_imagery_view_imaging_vehicles_link'>Imaging Vehicles</button>";
 
-my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Imagery</button><button class='btn btn-success' style='margin:3px' id='keras_cnn_drone_imagery_link'>Keras CNN Models</button><button class='btn btn-success' style='margin:3px' id='drone_imagery_calculate_statistics_link'>Calculate Statistics</button><button class='btn btn-default' style='margin:3px' id='drone_imagery_compare_field_images_link'>Compare Aerial Field Images</button>";
+my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Imagery</button><button class='btn btn-success' style='margin:3px' id='keras_cnn_drone_imagery_link'>Keras CNN Models</button><button class='btn btn-success' style='margin:3px' id='drone_imagery_calculate_statistics_link'>Calculate Statistics</button><button class='btn btn-default' style='margin:3px' id='drone_imagery_compare_field_images_link'>Compare Aerial Field Images</button><button class='btn btn-default' style='margin:3px' id='drone_imagery_view_imaging_vehicles_link'>Imaging Vehicles</button>";
 </%perl>
 
-    <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Drone Imagery</h4>", info_section_subtitle => 'Upload and view field drone imagery', buttons_html => $buttons_html, icon_class => undef, col1_width_class => "col-sm-0", col2_width_class => "col-sm-12", info_section_id => "manage_drone_imagery_main" &>
+    <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Drone Imagery</h4>", info_section_subtitle => 'Please cite <a href="https://acsess.onlinelibrary.wiley.com/doi/full/10.1002/ppj2.20004" target=_blank>ImageBreed</a> if you find any of these tools useful', buttons_html => $buttons_html, icon_class => undef, col1_width_class => "col-sm-0", col2_width_class => "col-sm-12", info_section_id => "manage_drone_imagery_main" &>
 
 </div>
 
@@ -89,8 +89,8 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <label class="col-sm-6 control-label">Has a previous imaging event on this field trial completed the standard process and also has GCPs defined already?: </label>
                     <div class="col-sm-6">
                         <select class="form-control" id="manage_drone_imagery_standard_process_ground_control_points_option">
-                            <option value="No">No (Work in progress)</option>
-                            <!--option value="Yes">Yes</option-->
+                            <option value="No">No</option>
+                            <option value="Yes">Yes</option>
                         </select>
                     </div>
                 </div>
@@ -113,6 +113,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                                 <ul>
                                     <li>Click on the ground control points (GCPs) in the image below and save them.</li>
                                     <li>Please click and save at least three points. The names of the GCPs MUST be consistent across imaging events!</li>
+                                    <li>For best results, use ground control points at the far four corners of the field.</li>
                                     <li>You can zoom out on your browser (Cntrl + -).</li>
                                 </ul>
                             </div>
@@ -124,7 +125,8 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                                 <center>
                                 <button class="btn btn-primary" id="manage_drone_imagery_standard_process_ground_control_points_step">Draw Computed Plot Polygons</button>
                                 <button class="btn btn-primary" id="manage_drone_imagery_standard_process_ground_control_points_step_confirm">Confirm and Save</button>
-                                </center></div>
+                                </center>
+                            </div>
 
                             <div id="project_drone_imagery_standard_process_ground_control_points_info_div"></div>
 
@@ -925,7 +927,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
 </div>
 
 <div class="modal fade" id="manage_drone_imagery_field_trial_time_series_popup" name="manage_drone_imagery_field_trial_time_series_popup" tabindex="-1" role="dialog" aria-labelledby="droneImageryTImeSeriesHoverDialog" data-backdrop="static">
-  <div class="modal-dialog modal-sm" role="document">
+  <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -934,6 +936,9 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
       <div class="modal-body">
         <div class="container-fluid">
             <div id="manage_drone_imagery_field_trial_time_series_popup_content"></div>
+            <div id="manage_drone_imagery_field_trial_time_series_popup_content_figure1"></div>
+            <div id="manage_drone_imagery_field_trial_time_series_popup_content_figure2"></div>
+            <div id="manage_drone_imagery_field_trial_time_series_popup_content_figure3"></div>
         </div>
       </div>
       <div class="modal-footer">
@@ -2190,11 +2195,56 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
   </div>
 </div>
 
+<div class="modal fade" id="drone_imagery_view_imaging_vehicles_modal" name="drone_imagery_view_imaging_vehicles_modal" tabindex="-1" role="dialog" aria-labelledby="droneImageryImagingVehiclesDialog" data-backdrop="static">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="droneImageryImagingVehiclesDialog">Available Imaging Vehicles</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <table class="table table-bordered table-hover" id="drone_imagery_view_imaging_vehicles_table">
+                <thead>
+                    <tr>
+                        <th>Vehicles Name</th>
+                        <th>Description</th>
+                        <th>Battery Usage</th>
+                    </tr>
+                </thead>
+            </table>
+
+            <button class="btn btn-primary" name="drone_run_imaging_vehicle_add_new">Add New Imaging Vehicle</button>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <& /breeders_toolbox/drone_imagery/upload_drone_imagery_dialogs.mas &>
 
 <script>
 
 jQuery(document).ready(function() {
+
+    //
+    // Imaging vehicles
+    //
+
+    jQuery('#drone_imagery_view_imaging_vehicles_link').click(function(){
+        jQuery('#drone_imagery_view_imaging_vehicles_table').DataTable({
+            destroy : true,
+            paging : true,
+            ajax : '/api/drone_imagery/imaging_vehicles'
+        });
+    
+        jQuery('#drone_imagery_view_imaging_vehicles_modal').modal('show');
+    })
 
     //
     // Standard Process for Drone Runs
@@ -2337,7 +2387,7 @@ jQuery(document).ready(function() {
                             'drone_run_project_id':manage_drone_imagery_standard_process_drone_run_project_id,
                             'drone_run_band_project_id':manage_drone_imagery_standard_process_drone_run_band_project_id,
                             'time_cvterm_id':manage_drone_imagery_standard_process_phenotype_time,
-                            'test_run':manage_drone_imagery_standard_process_gcp_test_run
+                            'test_run':'Yes'
                         },
                         success: function(response){
                             console.log(response);
@@ -2422,6 +2472,8 @@ jQuery(document).ready(function() {
                 console.log(response);
                 manage_drone_imagery_standard_process_rotate_stitched_image_id = response.data[0]['image_id'];
                 manage_drone_imagery_standard_process_rotate_stitched_image_degrees = 0.00;
+
+                drone_imagery_plot_polygon_click_type = '';
 
                 showRotateImageD3(manage_drone_imagery_standard_process_rotate_stitched_image_id, '#drone_imagery_standard_process_rotate_original_stitched_div', 'manage_drone_imagery_standard_process_rotate_load_div');
 
@@ -5716,6 +5768,7 @@ jQuery(document).ready(function() {
     }
 
     var handleMouseMovePlotLayoutHoverPlotInfo = {};
+    var handleMouseMovePlotLayoutHoverTraitId;
     var handleMouseMovePlotLayoutHoverPlotPolygonsSeen = {};
     function handleMouseMovePlotLayoutHover(e){
         var PosX = 0;
@@ -5775,10 +5828,95 @@ jQuery(document).ready(function() {
     };
 
     function handleMouseMovePlotLayoutHoverClick(e) {
-        var html = "<a href='/stock/"+handleMouseMovePlotLayoutHoverPlotInfo.plot_id+"/view' target='_blank'>"+handleMouseMovePlotLayoutHoverPlotInfo.plot_name+"</a>";
+        console.log(handleMouseMovePlotLayoutHoverPlotInfo);
+        var html = "<center><h4>Go To <a href='/stock/"+handleMouseMovePlotLayoutHoverPlotInfo.plot_id+"/view' target='_blank'>"+handleMouseMovePlotLayoutHoverPlotInfo.plot_name+" Detail Page</a></h4></center><hr>";
+
+        html = html + '<div class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Select a Trait:</label><div class="col-sm-9" ><div id="drone_imagery_time_series_hover_trait_select_div"></div></div></div></div>';
+
         jQuery('#manage_drone_imagery_field_trial_time_series_popup_content').html(html);
+
+        get_select_box('traits', 'drone_imagery_time_series_hover_trait_select_div', {'id':'drone_imagery_time_series_hover_trait_select_id', 'name':'drone_imagery_time_series_hover_trait_select_id', 'stock_id':handleMouseMovePlotLayoutHoverPlotInfo.accession_id, 'empty':1});
+
+        jQuery('#manage_drone_imagery_field_trial_time_series_popup_content_figure1').html("");
+        jQuery('#manage_drone_imagery_field_trial_time_series_popup_content_figure2').html("");
+        jQuery('#manage_drone_imagery_field_trial_time_series_popup_content_figure3').html("");
+
         jQuery('#manage_drone_imagery_field_trial_time_series_popup').modal('show');
     }
+
+    jQuery(document).on('change', '#drone_imagery_time_series_hover_trait_select_id', function() {
+        handleMouseMovePlotLayoutHoverTraitId = jQuery(this).val();
+
+        jQuery('#manage_drone_imagery_field_trial_time_series_popup_content_figure1').html("");
+        jQuery('#manage_drone_imagery_field_trial_time_series_popup_content_figure2').html("");
+        jQuery('#manage_drone_imagery_field_trial_time_series_popup_content_figure3').html("");
+
+        jQuery.ajax({
+            url : '/api/drone_imagery/accession_phenotype_histogram?accession_id='+handleMouseMovePlotLayoutHoverPlotInfo.accession_id+'&trait_id='+handleMouseMovePlotLayoutHoverTraitId+'&plot_id='+handleMouseMovePlotLayoutHoverPlotInfo.plot_id+'&figure_type=all_pheno_of_this_accession',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+                if (response.error) {
+                    alert(response.error);
+                    return false;
+                }
+
+                jQuery('#manage_drone_imagery_field_trial_time_series_popup_content_figure2').html("<div class='well well-sm'><center><h3>Performance of accession: <a href='/stock/"+handleMouseMovePlotLayoutHoverPlotInfo.accession_id+"/view' target=_blank>"+handleMouseMovePlotLayoutHoverPlotInfo.accession_name+"</a> in the current field plot compared to all phenotypes of this accession</h3><p>The mean value of this accession is in green.<p><p>The value of the current field plot is drawn in red.</p><img src='"+response.figure+"' width='500' height='400'></center></div>");
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert('Error retrieving accession phenotype plot!')
+            }
+        });
+
+        jQuery.ajax({
+            url : '/api/drone_imagery/accession_phenotype_histogram?field_trial_id='+manage_drone_imagery_field_trial_time_series_field_trial_id+'&trait_id='+handleMouseMovePlotLayoutHoverTraitId+'&plot_id='+handleMouseMovePlotLayoutHoverPlotInfo.plot_id+'&accession_id='+handleMouseMovePlotLayoutHoverPlotInfo.accession_id+'&figure_type=all_pheno_of_this_trial',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+                if (response.error) {
+                    alert(response.error);
+                    return false;
+                }
+
+                jQuery('#manage_drone_imagery_field_trial_time_series_popup_content_figure1').html("<div class='well well-sm'><center><h3>Performance of accession: <a href='/stock/"+handleMouseMovePlotLayoutHoverPlotInfo.accession_id+"/view' target=_blank>"+handleMouseMovePlotLayoutHoverPlotInfo.accession_name+"</a> in the current field plot compared to all other phenotypes in this field trial</h3><p>The mean value of this accession is in green.<p><p>The value of the current field plot is drawn in red</p><img src='"+response.figure+"' width='500' height='400'></center></div>");
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert('Error retrieving accession phenotype plot for field trial!')
+            }
+        });
+
+        jQuery.ajax({
+            url : '/api/drone_imagery/accession_phenotype_histogram?trait_id='+handleMouseMovePlotLayoutHoverTraitId+'&plot_id='+handleMouseMovePlotLayoutHoverPlotInfo.plot_id+'&accession_id='+handleMouseMovePlotLayoutHoverPlotInfo.accession_id+'&figure_type=all_pheno_in_database',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+                if (response.error) {
+                    alert(response.error);
+                    return false;
+                }
+
+                jQuery('#manage_drone_imagery_field_trial_time_series_popup_content_figure3').html("<div class='well well-sm'><center><h3>Performance of accession: <a href='/stock/"+handleMouseMovePlotLayoutHoverPlotInfo.accession_id+"/view' target=_blank>"+handleMouseMovePlotLayoutHoverPlotInfo.accession_name+"</a> in the current plot compared to all other phenotypes in the database</h3><p>The mean value of this accession is in green.<p><p>The value of the current field plot is drawn in red</p><img src='"+response.figure+"' width='500' height='400'></center></div>");
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert('Error retrieving accession phenotype plot for field trial!')
+            }
+        });
+    });
 
     var drone_imagery_plot_polygon_click_type = '';
     jQuery('#drone_imagery_plot_polygons_top_left_click').click(function(){

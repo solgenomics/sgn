@@ -780,6 +780,40 @@ sub get_trained_keras_mask_r_cnn_models : Path('/ajax/html/select/trained_keras_
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_imaging_event_vehicles : Path('/ajax/html/select/imaging_event_vehicles') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $imaging_vehicle_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'imaging_event_vehicle', 'stock_type')->cvterm_id();
+    my $imaging_vehicle_properties_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'imaging_event_vehicle_json', 'stock_property')->cvterm_id();
+
+    my $q = "SELECT stock.stock_id, stock.uniquename, stock.description, stockprop.value
+        FROM stock
+        JOIN stockprop ON(stock.stock_id=stockprop.stock_id AND stockprop.type_id=$imaging_vehicle_properties_cvterm_id)
+        WHERE stock.type_id=$imaging_vehicle_cvterm_id;";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute();
+    my @imaging_vehicles;
+    while (my ($stock_id, $name, $description, $prop) = $h->fetchrow_array()) {
+        my $prop_hash = decode_json $prop;
+
+        push @imaging_vehicles, [$stock_id, $name];
+    }
+
+    my $id = $c->req->param("id") || "html_imaging_vehicle_select";
+    my $name = $c->req->param("name") || "html_imaging_vehicle_select";
+
+    @imaging_vehicles = sort { $a->[1] cmp $b->[1] } @imaging_vehicles;
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@imaging_vehicles
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
 sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -792,6 +826,7 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     my $select_format = $c->req->param('select_format') || 'html_select'; #html_select or component_table_select
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $multiple = $c->req->param('multiple');
+    my $empty = $c->req->param('empty');
 
     my $id = $c->req->param("id") || "html_trial_select";
     my $name = $c->req->param("name") || "html_trial_select";
@@ -889,6 +924,7 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     }
 
     @traits = sort { $a->[1] cmp $b->[1] } @traits;
+    if ($empty) { unshift @traits, [ "", "Please select a trait" ]; }
 
     my $html = simple_selectbox_html(
       multiple => $multiple,

@@ -4548,16 +4548,16 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
         my $x_diff = $g->[0]-$template_central_x;
         my $y_diff = $g->[1]-$template_central_y;
         if ($x_diff > 0 && $y_diff > 0) {
-            push @angle_rad_templates, atan($x_diff/$y_diff);
+            push @angle_rad_templates, atan(abs($x_diff/$y_diff));
         }
-        elsif ($x_diff < 0 && $y_diff > 0) {
-            push @angle_rad_templates, 180*$rad_conversion - atan(($x_diff*-1)/$y_diff);
-        }
+        # elsif ($x_diff < 0 && $y_diff > 0) {
+        #     push @angle_rad_templates, 360*$rad_conversion - atan(abs($x_diff/$y_diff));
+        # }
         elsif ($x_diff < 0 && $y_diff < 0) {
-            push @angle_rad_templates, atan($x_diff/$y_diff);
+            push @angle_rad_templates, 180*$rad_conversion + atan(abs($x_diff/$y_diff));
         }
         elsif ($x_diff > 0 && $y_diff < 0) {
-            push @angle_rad_templates, 180*$rad_conversion - atan($x_diff/($y_diff*-1));
+            push @angle_rad_templates, 180*$rad_conversion - atan(abs($x_diff/$y_diff));
         }
         else {
             push @angle_rad_templates, undef;
@@ -4569,21 +4569,23 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
         my $x_diff = $g->[0]-$current_central_x;
         my $y_diff = $g->[1]-$current_central_y;
         if ($x_diff > 0 && $y_diff > 0) {
-            push @angle_rad_currents, atan($x_diff/$y_diff);
+            push @angle_rad_currents, atan(abs($x_diff/$y_diff));
         }
-        elsif ($x_diff < 0 && $y_diff > 0) {
-            push @angle_rad_currents, 180*$rad_conversion - atan(($x_diff*-1)/$y_diff);
-        }
+        # elsif ($x_diff < 0 && $y_diff > 0) {
+        #     push @angle_rad_currents, 360*$rad_conversion - atan(abs($x_diff/$y_diff));
+        # }
         elsif ($x_diff < 0 && $y_diff < 0) {
-            push @angle_rad_currents, atan($x_diff/$y_diff);
+            push @angle_rad_currents, 180*$rad_conversion + atan(abs($x_diff/$y_diff));
         }
         elsif ($x_diff > 0 && $y_diff < 0) {
-            push @angle_rad_currents, 180*$rad_conversion - atan($x_diff/($y_diff*-1));
+            push @angle_rad_currents, 180*$rad_conversion - atan(abs($x_diff/$y_diff));
         }
         else {
             push @angle_rad_currents, undef;
         }
     }
+    # print STDERR Dumper \@angle_rad_templates;
+    # print STDERR Dumper \@angle_rad_currents;
 
     my $counter = 0;
     my @angle_diffs;
@@ -4595,6 +4597,7 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
         }
         $counter++;
     }
+    print STDERR Dumper \@angle_diffs;
 
     my $rotate_rad_gcp = sum(@angle_diffs)/scalar(@angle_diffs);
     print STDERR "AVG ROTATION: $rotate_rad_gcp\n";
@@ -4721,8 +4724,30 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
     my ($rotate_check_image_width, $rotate_check_image_height) = imgsize($rotate_check_image_fullpath);
     print STDERR "Template Rotation: $rotate_check_image_width $rotate_check_image_height \n";
 
-    my $template_gcp_x_scale = $rotate_check_image_width/$rotate_check_target_image_width;
-    my $template_gcp_y_scale = $rotate_check_image_height/$rotate_check_target_image_height;
+    # my $template_gcp_x_scale = $rotate_check_image_width/$rotate_check_target_image_width;
+    # my $template_gcp_y_scale = $rotate_check_image_height/$rotate_check_target_image_height;
+    my $template_gcp_x_scale;
+    if ($tr_gcp_template_point_x - $tl_gcp_template_point_x != 0 && $tr_gcp_current_point_x - $tl_gcp_current_point_x != 0) {
+        $template_gcp_x_scale = ($tr_gcp_template_point_x - $tl_gcp_template_point_x) / ($tr_gcp_current_point_x - $tl_gcp_current_point_x);
+    }
+    elsif ($br_gcp_template_point_x - $bl_gcp_template_point_x != 0 && $br_gcp_current_point_x - $bl_gcp_current_point_x != 0) {
+        $template_gcp_x_scale = ($br_gcp_template_point_x - $bl_gcp_template_point_x) / ($br_gcp_current_point_x - $bl_gcp_current_point_x);
+    }
+    else {
+        $c->stash->{rest} = { error => "Not enough GCP points to get the x scale!" };
+        $c->detach();
+    }
+    my $template_gcp_y_scale;
+    if ($bl_gcp_template_point_y - $tl_gcp_template_point_y != 0 && $bl_gcp_current_point_y - $tl_gcp_current_point_y != 0) {
+        $template_gcp_y_scale = ($bl_gcp_template_point_y - $tl_gcp_template_point_y) / ($bl_gcp_current_point_y - $tl_gcp_current_point_y);
+    }
+    if ($br_gcp_template_point_y - $tr_gcp_template_point_y != 0 && $br_gcp_current_point_y - $tr_gcp_current_point_y != 0) {
+        $template_gcp_y_scale = ($br_gcp_template_point_y - $tr_gcp_template_point_y) / ($br_gcp_current_point_y - $tr_gcp_current_point_y);
+    }
+    else {
+        $c->stash->{rest} = { error => "Not enough GCP points to get the y scale!" };
+        $c->detach();
+    }
     print STDERR Dumper [$template_gcp_x_scale, $template_gcp_y_scale];
 
     my $rotate_angle_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_band_rotate_angle', 'project_property')->cvterm_id();
@@ -4762,38 +4787,51 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
         }
     }
 
-    my $counter_o = 0;
-    my @crop_offset_x_vals;
-    my @crop_offset_y_vals;
-    foreach (@rotated_current_points) {
-        my $template_point = $gcp_points_template[$counter_o];
-        push @crop_offset_x_vals, $template_point->[0] + $min_old_crop_x - $_->[0];
-        push @crop_offset_y_vals, $template_point->[1] + $min_old_crop_y - $_->[1];
-        $counter_o++;
-    }
-    my $crop_offset_x = sum(@crop_offset_x_vals)/scalar(@crop_offset_x_vals);
-    my $crop_offset_y = sum(@crop_offset_y_vals)/scalar(@crop_offset_y_vals);
-    print STDERR Dumper [$crop_offset_x,$crop_offset_y];
-
-    my $image_crop = [[
-        {
-            'x' => $crop_offset_x + ($cropping_value_old->[0]->[0]->{'x'})/$template_gcp_x_scale,
-            'y' => $crop_offset_y + ($cropping_value_old->[0]->[0]->{'y'})/$template_gcp_y_scale
-        },
-        {
-            'x' => $crop_offset_x + ($cropping_value_old->[0]->[1]->{'x'})/$template_gcp_x_scale,
-            'y' => $crop_offset_y + ($cropping_value_old->[0]->[1]->{'y'})/$template_gcp_y_scale
-        },
-        {
-            'x' => $crop_offset_x + ($cropping_value_old->[0]->[2]->{'x'})/$template_gcp_x_scale,
-            'y' => $crop_offset_y + ($cropping_value_old->[0]->[2]->{'y'})/$template_gcp_y_scale
-        },
-        {
-            'x' => $crop_offset_x + ($cropping_value_old->[0]->[3]->{'x'})/$template_gcp_x_scale,
-            'y' => $crop_offset_y + ($cropping_value_old->[0]->[3]->{'y'})/$template_gcp_y_scale
+    my @old_cropping_val_dists;
+    foreach (@{$cropping_value_old->[0]}) {
+        my $x = $_->{'x'} - $min_old_crop_x;
+        my $y = $_->{'y'} - $min_old_crop_y;
+        my @diffs;
+        foreach my $t (@gcp_points_template) {
+            push @diffs, [$t->[0] - $x, $t->[1] - $y];
         }
-    ]];
+        push @old_cropping_val_dists, \@diffs;
+    }
+    # print STDERR Dumper \@old_cropping_val_dists;
+
+    my $image_crop;
+    my $counter_c = 0;
+    foreach my $o (@old_cropping_val_dists) {
+        my @pos_x;
+        my @pos_y;
+        my $counter = 0;
+        foreach my $r (@rotated_current_points) {
+            my $o_x = $o->[$counter]->[0]/$template_gcp_x_scale;
+            my $o_y = $o->[$counter]->[1]/$template_gcp_y_scale;
+            my $r_x = $r->[0];
+            my $r_y = $r->[1];
+            push @pos_x, $r_x - $o_x;
+            push @pos_y, $r_y - $o_y;
+            $counter++;
+        }
+        $image_crop->[0]->[$counter_c] = {
+            x => sum(@pos_x)/scalar(@pos_x),
+            y => sum(@pos_y)/scalar(@pos_y)
+        };
+        $counter_c++;
+    }
     # print STDERR Dumper $image_crop;
+
+    $dir = $c->tempfiles_subdir('/drone_imagery_cropped_image');
+    my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_cropped_image/imageXXXX');
+    $archive_temp_image .= '.png';
+
+    my $check_cropping_return = _perform_image_cropping($c, $bcs_schema, $check_drone_run_band_project_id_q, $rotated_image_id, encode_json $image_crop, $user_id, $user_name, $user_role, $archive_temp_image);
+    my $check_cropped_image_id = $check_cropping_return->{cropped_image_id};
+
+    my $crop_check_target_image = SGN::Image->new( $bcs_schema->storage->dbh, $check_cropped_image_id, $c );
+    my $crop_check_target_image_url = $crop_check_target_image->get_image_url("original");
+    my $crop_check_target_image_fullpath = $crop_check_target_image->get_filename('original_converted', 'full');
 
     my $min_new_crop_x = 1000000000;
     my $min_new_crop_y = 1000000000;
@@ -4808,27 +4846,54 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
         }
     }
 
+    my @old_plot_val_names;
+    my @old_plot_val_dists;
+    foreach my $key (sort keys %$plot_polygons_value_old) {
+        push @old_plot_val_names, $key;
+        my $v = $plot_polygons_value_old->{$key};
+        my @points;
+        foreach (@{$v}) {
+            my $x = $_->{'x'};
+            my $y = $_->{'y'};
+            my @diffs;
+            foreach my $t (@gcp_points_template) {
+                push @diffs, [$t->[0] - $x, $t->[1] - $y];
+            }
+            push @points, \@diffs;
+        }
+        push @old_plot_val_dists, \@points;
+    }
+
     my %scaled_plot_polygons;
-    my %scaled_plot_polygons_display;
-    while (my ($key, $v) = each %$plot_polygons_value_old) {
-        my @n;
-        my @n_display;
-        foreach (@$v) {
-            push @n, {
-                x => ($_->{x} - $crop_offset_x)/$template_gcp_x_scale,
-                y => ($_->{y} - $crop_offset_y)/$template_gcp_y_scale
-            };
-            push @n_display, {
-                x => $min_new_crop_x + ($_->{x} - $crop_offset_x)/$template_gcp_x_scale,
-                y => $min_new_crop_y + ($_->{y} - $crop_offset_y)/$template_gcp_y_scale
+    my $counter_p = 0;
+    foreach my $o (@old_plot_val_names) {
+        my $point_diffs = $old_plot_val_dists[$counter_p];
+        my @adjusted;
+        my @adjusted_display;
+        foreach my $p (@$point_diffs) {
+            my @pos_x;
+            my @pos_y;
+            my $counter = 0;
+            foreach my $r (@rotated_current_points) {
+                my $o_x = $p->[$counter]->[0]/$template_gcp_x_scale;
+                my $o_y = $p->[$counter]->[1]/$template_gcp_y_scale;
+                my $r_x = $r->[0] - $min_new_crop_x;
+                my $r_y = $r->[1] - $min_new_crop_y;
+                push @pos_x, $r_x - $o_x;
+                push @pos_y, $r_y - $o_y;
+                $counter++;
+            }
+            push @adjusted, {
+                x => sum(@pos_x)/scalar(@pos_x),
+                y => sum(@pos_y)/scalar(@pos_y)
             };
         }
-        $scaled_plot_polygons{$key} = \@n;
-        $scaled_plot_polygons_display{$key} = \@n_display;
+        $scaled_plot_polygons{$o} = \@adjusted;
+        $counter_p++;
     }
 
     if ($is_test_run eq 'Yes') {
-        $c->stash->{rest} = { old_cropped_points => $cropping_value_old, cropped_points => $image_crop, rotated_points => \@rotated_current_points, rotated_image_id => $rotated_image_id, plot_polygons => \%scaled_plot_polygons_display };
+        $c->stash->{rest} = { old_cropped_points => $cropping_value_old, cropped_points => $image_crop, rotated_points => \@rotated_current_points, rotated_image_id => $check_cropped_image_id, plot_polygons => \%scaled_plot_polygons };
         $c->detach();
     }
 
@@ -5273,6 +5338,215 @@ sub standard_process_apply_raw_images_interactive_POST : Args(0) {
 
     my @result;
     $c->stash->{rest} = { data => \@result, success => 1 };
+}
+
+sub drone_imagery_get_vehicle : Path('/api/drone_imagery/get_vehicle') : ActionClass('REST') { }
+sub drone_imagery_get_vehicle_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my $vehicle_id = $c->req->param('vehicle_id');
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $imaging_vehicle_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'imaging_event_vehicle', 'stock_type')->cvterm_id();
+    my $imaging_vehicle_properties_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'imaging_event_vehicle_json', 'stock_property')->cvterm_id();
+
+    my $q = "SELECT stock.stock_id, stock.uniquename, stock.description, stockprop.value
+        FROM stock
+        JOIN stockprop ON(stock.stock_id=stockprop.stock_id AND stockprop.type_id=$imaging_vehicle_properties_cvterm_id)
+        WHERE stock.type_id=$imaging_vehicle_cvterm_id and stock.stock_id=?;";
+    my $h = $bcs_schema->storage->dbh()->prepare($q);
+    $h->execute($vehicle_id);
+    my %vehicle;
+    while (my ($stock_id, $name, $description, $prop) = $h->fetchrow_array()) {
+        my $prop_hash = decode_json $prop;
+        %vehicle = (
+            vehicle_id => $stock_id,
+            name => $name,
+            description => $description,
+            properties => $prop_hash
+        );
+    }
+
+    $c->stash->{rest} = { vehicle => \%vehicle, success => 1 };
+}
+
+sub drone_imagery_get_vehicles : Path('/api/drone_imagery/imaging_vehicles') : ActionClass('REST') { }
+sub drone_imagery_get_vehicles_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $imaging_vehicle_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'imaging_event_vehicle', 'stock_type')->cvterm_id();
+    my $imaging_vehicle_properties_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'imaging_event_vehicle_json', 'stock_property')->cvterm_id();
+
+    my $q = "SELECT stock.stock_id, stock.uniquename, stock.description, stockprop.value
+        FROM stock
+        JOIN stockprop ON(stock.stock_id=stockprop.stock_id AND stockprop.type_id=$imaging_vehicle_properties_cvterm_id)
+        WHERE stock.type_id=$imaging_vehicle_cvterm_id;";
+    my $h = $bcs_schema->storage->dbh()->prepare($q);
+    $h->execute();
+    my @vehicles;
+    while (my ($stock_id, $name, $description, $prop) = $h->fetchrow_array()) {
+        my $prop_hash = decode_json $prop;
+        my @batt_info;
+        foreach (sort keys %{$prop_hash->{batteries}}) {
+            my $p = $prop_hash->{batteries}->{$_};
+            push @batt_info, "$_: Usage = ".$p->{usage}." Obsolete = ".$p->{obsolete};
+        }
+        my $batt_info_string = join '<br/>', @batt_info;
+        push @vehicles, [$name, $description, $batt_info_string]
+    }
+
+    $c->stash->{rest} = { data => \@vehicles };
+}
+
+sub drone_imagery_accession_phenotype_histogram : Path('/api/drone_imagery/accession_phenotype_histogram') : ActionClass('REST') { }
+sub drone_imagery_accession_phenotype_histogram_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+    my $plot_id = $c->req->param('plot_id');
+    my $accession_id = $c->req->param('accession_id');
+    my $trait_id = $c->req->param('trait_id');
+    my $field_trial_id = $c->req->param('field_trial_id');
+    my $figure_type = $c->req->param('figure_type');
+
+    my $dir = $c->tempfiles_subdir('/drone_imagery_pheno_plot_dir');
+    my $phenos_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_pheno_plot_dir/phenoXXXX');
+    my $pheno_plot_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_pheno_plot_dir/phenoplotXXXX');
+    my $pheno_accession_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_pheno_plot_dir/phenoplotaccXXXX');
+    my $pheno_figure_tempfile_string = $c->tempfile( TEMPLATE => 'drone_imagery_pheno_plot_dir/figureXXXX');
+    my $pheno_figure_tempfile = $c->config->{basepath}."/".$pheno_figure_tempfile_string;
+
+    my $search_params = {
+        bcs_schema=>$bcs_schema,
+        data_level=>'all',
+        trait_list=>[$trait_id],
+        include_timestamp=>0,
+        exclude_phenotype_outlier=>0
+    };
+
+    # Comparing plot_id pheno against all phenotypes in trial
+    if ($field_trial_id && $figure_type eq 'all_pheno_of_this_trial') {
+        $search_params->{trial_list} = [$field_trial_id];
+    }
+    # Comparing plot_id pheno against all phenotypes for accession
+    if ($accession_id && $figure_type eq 'all_pheno_of_this_accession'){
+        $search_params->{accession_list} = [$accession_id];
+    }
+
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        'MaterializedViewTable',
+        $search_params
+    );
+    my ($data, $unique_traits) = $phenotypes_search->search();
+    my @sorted_trait_names = sort keys %$unique_traits;
+
+    if (scalar(@$data) == 0) {
+        $c->stash->{rest} = { error => "There are no phenotypes for the trait you have selected in the current field trial!"};
+        $c->detach();
+    }
+
+    my @accession_phenotypes;
+    if ($accession_id) {
+        my $accession_phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+            'MaterializedViewTable',
+            {
+                bcs_schema=>$bcs_schema,
+                data_level=>'plot',
+                trait_list=>[$trait_id],
+                accession_list=>[$accession_id],
+                include_timestamp=>0,
+                exclude_phenotype_outlier=>0
+            }
+        );
+        my ($accession_data, $accession_unique_traits) = $accession_phenotypes_search->search();
+        my @accession_sorted_trait_names = sort keys %$accession_unique_traits;
+
+        foreach my $obs_unit (@$accession_data){
+            my $observations = $obs_unit->{observations};
+            foreach (@$observations){
+                push @accession_phenotypes, $_->{value};
+            }
+        }
+    }
+
+    my $plot_phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        'MaterializedViewTable',
+        {
+            bcs_schema=>$bcs_schema,
+            data_level=>'plot',
+            trait_list=>[$trait_id],
+            plot_list=>[$plot_id],
+            include_timestamp=>0,
+            exclude_phenotype_outlier=>0
+        }
+    );
+    my ($plot_data, $plot_unique_traits) = $plot_phenotypes_search->search();
+    my @plot_sorted_trait_names = sort keys %$plot_unique_traits;
+
+    my @all_phenotypes;
+    foreach my $obs_unit (@$data){
+        my $observations = $obs_unit->{observations};
+        foreach (@$observations){
+            push @all_phenotypes, $_->{value};
+        }
+    }
+
+    my @plot_phenotypes;
+    foreach my $obs_unit (@$plot_data){
+        my $observations = $obs_unit->{observations};
+        foreach (@$observations){
+            push @plot_phenotypes, $_->{value};
+        }
+    }
+
+    open(my $F, ">", $phenos_tempfile) || die "Can't open file ".$phenos_tempfile;
+        print $F "phenotype\n";
+        foreach (@all_phenotypes) {
+            print $F "$_\n";
+        }
+    close($F);
+
+    open(my $F2, ">", $pheno_plot_tempfile) || die "Can't open file ".$pheno_plot_tempfile;
+        print $F2 "phenotype\n";
+        foreach (@plot_phenotypes) {
+            print $F2 "$_\n";
+        }
+    close($F2);
+
+    open(my $F3, ">", $pheno_accession_tempfile) || die "Can't open file ".$pheno_accession_tempfile;
+        print $F3 "phenotype\n";
+        foreach (@accession_phenotypes) {
+            print $F3 "$_\n";
+        }
+    close($F3);
+
+    my $cmd = 'R -e "library(ggplot2);
+    options(device=\'png\');
+    par();
+    pheno_all <- read.table(\''.$phenos_tempfile.'\', header=TRUE, sep=\',\');
+    pheno_plot <- read.table(\''.$pheno_plot_tempfile.'\', header=TRUE, sep=\',\');
+    pheno_accession <- read.table(\''.$pheno_accession_tempfile.'\', header=TRUE, sep=\',\');
+    sp <- ggplot(pheno_all, aes(x=phenotype)) + geom_histogram();
+    if (length(pheno_plot\$phenotype) > 0) {
+        sp <- sp + geom_vline(xintercept = pheno_plot\$phenotype[1], color = \'red\', size=1.2);
+    }
+    if (length(pheno_accession\$phenotype) > 0) {
+        sp <- sp + geom_vline(xintercept = mean(pheno_accession\$phenotype), color = \'green\', size=1.2);
+    }
+    ggsave(\''.$pheno_figure_tempfile.'\', sp, device=\'png\', width=3, height=3, units=\'in\');
+    dev.off();"';
+    print STDERR Dumper $cmd;
+    my $status = system($cmd);
+
+    $c->stash->{rest} = { success => 1, figure => $pheno_figure_tempfile_string };
 }
 
 sub drone_imagery_save_single_plot_image : Path('/api/drone_imagery/save_single_plot_image') : ActionClass('REST') { }
@@ -5946,10 +6220,10 @@ sub _perform_minimal_vi_standard_process {
         }
         if (exists($selected_drone_run_band_types->{'RGB Color Image'})) {
             if (exists($vegetative_indices->{'TGI'})) {
-                _perform_standard_process_minimal_vi_calc($c, $bcs_schema, $metadata_schema, $drone_run_band_info->{$selected_drone_run_band_types->{'Blue (450-520nm)'}}->{original_denoised_image_id}, $selected_drone_run_band_types->{'RGB Color Image'}, $user_id, $user_name, $user_role, $drone_run_band_info->{$selected_drone_run_band_types->{'Blue (450-520nm)'}}->{plot_polygons_value}, 'TGI', 'BGR');
+                _perform_standard_process_minimal_vi_calc($c, $bcs_schema, $metadata_schema, $drone_run_band_info->{$selected_drone_run_band_types->{'RGB Color Image'}}->{original_denoised_image_id}, $selected_drone_run_band_types->{'RGB Color Image'}, $user_id, $user_name, $user_role, $drone_run_band_info->{$selected_drone_run_band_types->{'RGB Color Image'}}->{plot_polygons_value}, 'TGI', 'BGR');
             }
             if (exists($vegetative_indices->{'VARI'})) {
-                _perform_standard_process_minimal_vi_calc($c, $bcs_schema, $metadata_schema, $drone_run_band_info->{$selected_drone_run_band_types->{'Blue (450-520nm)'}}->{original_denoised_image_id}, $selected_drone_run_band_types->{'RGB Color Image'}, $user_id, $user_name, $user_role, $drone_run_band_info->{$selected_drone_run_band_types->{'Blue (450-520nm)'}}->{plot_polygons_value}, 'VARI', 'BGR');
+                _perform_standard_process_minimal_vi_calc($c, $bcs_schema, $metadata_schema, $drone_run_band_info->{$selected_drone_run_band_types->{'RGB Color Image'}}->{original_denoised_image_id}, $selected_drone_run_band_types->{'RGB Color Image'}, $user_id, $user_name, $user_role, $drone_run_band_info->{$selected_drone_run_band_types->{'RGB Color Image'}}->{plot_polygons_value}, 'VARI', 'BGR');
             }
         }
     }
