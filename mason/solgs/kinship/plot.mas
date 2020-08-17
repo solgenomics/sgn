@@ -44,17 +44,18 @@ $pop_id = undef if $list_id;
 }
 </style>
 
-<div id='kinship_canvas'>
-<& /solgs/spinner.mas &>
-  
-  <div id="kinship_message"  style="font-weight:bold;text-align:center;color:#A7C942;display:block;clear:both"> </div>
 
-  <div id="kinship_plot">
+<div id='kinship_canvas'>
+  <& /solgs/spinner.mas &>
+    
+  <div id="kinship_message"  class="message"> </div>
+
+  <div id="kinship_plot" >
     <input type="hidden"  id="training_pop_id" value="<% $pop_id %>" />
     <input type="hidden"  id="dataset_id" value="<% $dataset_id %>" />
     <input type="hidden"  id="list_id" value="<% $list_id %>" />
     <input type="hidden"  id="data_structure" value="<% $data_structure %>" />
   </div>
-
     
 </div>
+  

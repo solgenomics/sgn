@@ -55,7 +55,6 @@ $collapsed = 1;
 </%perl>
 
 
-
   
 % if ($url =~ /kinship\/analysis/) {
 
@@ -73,7 +72,7 @@ $collapsed = 1;
 %}
 
 <& /solgs/kinship/select_menu.mas &>
-         
+      
 <& /solgs/kinship/plot.mas,
      pop_id => $pop_id,
     list_id => $list_id,

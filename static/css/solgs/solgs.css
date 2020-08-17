@@ -6,6 +6,15 @@
 * custom css for Flot plots
 */
 
+
+.message {
+    font-weight:bold;
+    text-align:center;
+    color:#A7C942;
+    display:block;
+    clear:both;
+}
+
 .button {
     position: relative;
     margin-right: 10px;  
