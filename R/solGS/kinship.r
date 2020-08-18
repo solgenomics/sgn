@@ -1,6 +1,5 @@
 #SNOPSIS
-#calculates genomic estimated breeding values (GEBVs) using rrBLUP,
-#GBLUP method
+#calculates kinship, indbreeding coefficients 
 
 #AUTHOR
 # Isaak Y Tecle (iyt2@cornell.edu)
@@ -92,16 +91,7 @@ inbreeding <- c()
 aveKinship <- c()
 
 if (length(relationshipMatrixFile) != 0) {
-  if (file.info(relationshipMatrixFile)$size > 0 ) {
-      relationshipMatrix <- data.frame(fread(relationshipMatrixFile,
-                                             header = TRUE))
 
-      rownames(relationshipMatrix) <- relationshipMatrix[, 1]
-      relationshipMatrix[, 1]      <- NULL
-      colnames(relationshipMatrix) <- rownames(relationshipMatrix)
-      relationshipMatrix           <- data.matrix(relationshipMatrix)
-      
-  } else {
     relationshipMatrix           <- A.mat(genoData)
     diag(relationshipMatrix)     <- diag(relationshipMatrix) + 1e-6
     colnames(relationshipMatrix) <- rownames(relationshipMatrix)
@@ -120,7 +110,7 @@ if (length(relationshipMatrixFile) != 0) {
         arrange(Inbreeding) %>%
         mutate_at('Inbreeding', round, 3) %>%
         column_to_rownames('genotypes')
-  }
+
 }
 
 
@@ -175,12 +165,12 @@ if (file.info(inbreedingFile)$size == 0) {
 
 
 if (file.info(aveKinshipFile)$size == 0) {
-
+ 
     aveKinship <- data.frame(apply(relationshipMatrix, 1, mean))
-    
+  
     aveKinship <- aveKinship %>%
         rownames_to_column('genotypes') %>%     
-        rename(Mean_kinship = contains('traitRe')) %>%
+        rename(Mean_kinship = contains('apply')) %>%
         arrange(Mean_kinship) %>%
         mutate_at('Mean_kinship', round, 3) %>%
         column_to_rownames('genotypes')  
