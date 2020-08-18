@@ -1220,7 +1220,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             close($Fp);
 
             my $parameter_tempfile_basename = basename($parameter_tempfile);
-            my $cmd = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_basename.' | blupf90 > '.$stats_out_tempfile;
+            my $cmd = 'scp '.$grm_file.' '.$tmp_stats_dir.'; cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd;
             my $status = system($cmd);
 
