@@ -174,9 +174,8 @@ solGS.kinship = {
             success: function (res) {
 		
                 if (res.data) {
-
-                    solGS.kinship.plotKinship(res.data);
-		    solGS.kinship.addDowloandLinks(res);
+		    var links = solGS.kinship.addDowloandLinks(res);
+                    solGS.kinship.plotKinship(res.data, links);		
 
 		    jQuery("#kinship_message").empty();
                 } else {
