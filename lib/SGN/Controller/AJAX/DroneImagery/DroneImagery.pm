@@ -256,6 +256,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my @rep_time_factors;
     my @ind_rep_factors;
     my %accession_id_factor_map;
+    my %accession_id_factor_map_reverse;
+    my %plot_id_factor_map_reverse;
     my @unique_accession_names;
     my @unique_plot_names;
     my $statistical_ontology_term;
@@ -578,14 +580,16 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 return;
             }
 
+            my %seen_plots;
             foreach my $obs_unit (@$data){
                 my $germplasm_name = $obs_unit->{germplasm_uniquename};
                 my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
                 my $replicate_number = $obs_unit->{obsunit_rep};
                 $unique_accessions{$germplasm_name}++;
-                $stock_info{"S".$germplasm_stock_id} = {
+                $stock_info{$germplasm_stock_id} = {
                     uniquename => $germplasm_name
                 };
+                $seen_plots{$obs_unit->{observationunit_stock_id}} = $obs_unit->{observationunit_uniquename};
                 my $observations = $obs_unit->{observations};
                 foreach (@$observations){
                     my $related_time_terms_json = decode_json $_->{associated_image_project_time_json};
@@ -720,6 +724,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     $seen_rep_times{$rep_time}++;
                     $seen_ind_reps{$ind_rep}++;
                     $accession_id_factor_map{$accession_id} = $accession_id_factor;
+                    $accession_id_factor_map_reverse{$accession_id_factor} = $stock_info{$accession_id}->{uniquename};
+                    $plot_id_factor_map_reverse{$ind_rep} = $seen_plots{$plot_id};
                 }
             close($fh_factor);
             # print STDERR Dumper \%plot_factor_map;
@@ -1190,6 +1196,11 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             my $stats_tempfile_2_basename = basename($stats_tempfile_2);
             my $grm_file_basename = basename($grm_rename_tempfile);
             #my @phenotype_header = ("id", "plot_id", "replicate", "time", "replicate_time", "ind_replicate", @sorted_trait_names, "phenotype");
+
+            my $effect_1_levels = scalar(@rep_time_factors);
+            my $effect_grm_levels = scalar(@unique_accession_names);
+            my $effect_pe_levels = scalar(@ind_rep_factors);
+
             my @param_file_rows = (
                 'DATAFILE',
                 $stats_tempfile_2_basename,
@@ -1202,16 +1213,16 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 'WEIGHT(S)',
                 '',
                 'EFFECTS: POSITION_IN_DATAFILE NUMBER_OF_LEVELS TYPE_OF_EFFECT',
-                '5 '.scalar(@rep_time_factors).' cross',
+                '5 '.$effect_1_levels.' cross',
             );
             my $p_counter = 1;
             foreach (@sorted_trait_names) {
-                push @param_file_rows, 6+$p_counter.' '.scalar(@unique_accession_names).' cov 1';
+                push @param_file_rows, 6+$p_counter.' '.$effect_grm_levels.' cov 1';
                 $p_counter++;
             }
             my $p2_counter = 1;
             foreach (@sorted_trait_names) {
-                push @param_file_rows, 6+$p2_counter.' '.scalar(@ind_rep_factors).' cov 6';
+                push @param_file_rows, 6+$p2_counter.' '.$effect_pe_levels.' cov 6';
                 $p2_counter++;
             }
             my @random_group1;
@@ -1285,15 +1296,40 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 }
             close($fh_log);
 
+            my %fixed_effects;
+            my %grm_effects;
+            my %pe_effects;
             my $solutions_tempfile = $tmp_stats_dir."/solutions";
             open(my $fh_sol, '<', $solutions_tempfile)
                 or die "Could not open file '$solutions_tempfile' $!";
-
                 print STDERR "Opened $solutions_tempfile\n";
+
+                my $head = <$fh_sol>;
+                print STDERR $head;
+
+                my $solution_file_counter = 0;
                 while (my $row = <$fh_sol>) {
                     print STDERR $row;
+                    my @vals = split ' ', $row;
+                    if ($solution_file_counter < $effect_1_levels) {
+                        $fixed_effects{$solution_file_counter}->{$vals[2]} = $vals[3];
+                    }
+                    elsif ($solution_file_counter < $effect_1_levels + $effect_grm_levels*scalar(@sorted_trait_names)) {
+                        $grm_effects{$solution_file_counter}->{$vals[2]} = $vals[3];
+                    }
+                    else {
+                        $pe_effects{$solution_file_counter}->{$vals[2]} = $vals[3];
+                    }
+                    $solution_file_counter++;
                 }
             close($fh_sol);
+            print STDERR Dumper \%fixed_effects;
+            print STDERR Dumper \%grm_effects;
+            print STDERR Dumper \%pe_effects;
+            # foreach my $time (1..scalar(@sorted_trait_names)) {
+            #     my $trait = $seen_times{$time};
+            #     $result_blup_data->{$stock_name}->{$trait} = [$value, $timestamp, $user_name, '', ''];
+            # }
         }
     }
     elsif ($statistics_select eq 'marss_germplasmname_block') {
