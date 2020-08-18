@@ -31,6 +31,13 @@ use CXGN::BreedersToolbox::Projects;
 use CXGN::Stock::Search;
 use JSON;
 use CXGN::BreedersToolbox::ProductProfile;
+use File::Spec::Functions;
+use Spreadsheet::WriteExcel;
+
+use File::Basename qw | basename dirname|;
+use File::Copy;
+use Digest::MD5;
+use DateTime;
 
 __PACKAGE__->config(
     default   => 'application/json',
@@ -402,6 +409,110 @@ sub get_product_profiles :Chained('ajax_breeding_program') PathPart('product_pro
     my $product_profiles = $product_profile_obj->get_product_profile_info();
 #    print STDERR "PRODUCT PROFILE RESULTS =".Dumper($product_profiles)."\n";
     $c->stash->{rest} = {data => $product_profiles};
+
+}
+
+
+sub create_product_profile_template : Path('/ajax/program/create_profile_template') : ActionClass('REST') { }
+
+sub create_product_profile_template_POST : Args(0) {
+  my ($self, $c) = @_;
+
+  if (!$c->user()) {
+    $c->stash->{rest} = {error => "You need to be logged in to create a field book" };
+    return;
+  }
+  if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+    $c->stash->{rest} = {error =>  "You have insufficient privileges to create a field book." };
+    return;
+  }
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+
+    my $template_file_name = $c->req->param('template_file_name');
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $user_name = $c->user()->get_object()->get_username();
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $subdirectory_name = "profile_template_files";
+    my $archived_file_name = catfile($user_id, $subdirectory_name,$timestamp."_".$template_file_name.".xls");
+    my $archive_path = $c->config->{archive_path};
+    my $file_destination =  catfile($archive_path, $archived_file_name);
+    my $dbh = $c->dbc->dbh();
+    my @trait_ids;
+
+    my @trait_list = @{_parse_list_from_json($c->req->param('trait_list_json'))};
+    print STDERR "TRAIT LIST =".Dumper(\@trait_list)."\n";
+
+    my @template_rows = ("Trait");
+    push @template_rows, @trait_list;
+
+    my %errors;
+    my @error_messages;
+    my $tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'other/excelXXXX');
+    my $wb = Spreadsheet::WriteExcel->new($tempfile);
+    if (!$wb) {
+        push @error_messages, "Could not create file.";
+        $errors{'error_messages'} = \@error_messages;
+        return \%errors;
+    }
+
+    my $ws = $wb->add_worksheet();
+
+    my $row_num = 0;
+    foreach my $r (@template_rows){
+        my $col_num = 0;
+        $ws->write($row_num, $col_num, $r);
+        $row_num++;
+    }
+    $wb->close();
+
+    open(my $F, "<", $tempfile) || die "Can't open file ".$self->tempfile();
+        binmode $F;
+        my $md5 = Digest::MD5->new();
+        $md5->addfile($F);
+    close($F);
+
+    if (!-d $archive_path) {
+      mkdir $archive_path;
+    }
+
+    if (! -d catfile($archive_path, $user_id)) {
+      mkdir (catfile($archive_path, $user_id));
+    }
+
+    if (! -d catfile($archive_path, $user_id,$subdirectory_name)) {
+      mkdir (catfile($archive_path, $user_id, $subdirectory_name));
+    }
+
+    my $md_row = $metadata_schema->resultset("MdMetadata")->create({
+        create_person_id => $user_id,
+    });
+    $md_row->insert();
+
+    my $file_row = $metadata_schema->resultset("MdFiles")->create({
+        basename => basename($file_destination),
+        dirname => dirname($file_destination),
+        filetype => 'profile template xls',
+        md5checksum => $md5->hexdigest(),
+        metadata_id => $md_row->metadata_id(),
+    });
+    $file_row->insert();
+    my $file_id = $file_row->file_id();
+
+    move($tempfile,$file_destination);
+    unlink $tempfile;
+
+    my $result = $file_row->file_id;
+
+    print STDERR "FILE =".Dumper($file_destination)."\n";
+    print STDERR "FILE ID =".Dumper($file_id)."\n";
+
+    $c->stash->{rest} = {
+        success => 1,
+        result => $result,
+        file => $file_destination,
+        file_id => $file_id,
+    };
 
 }
 

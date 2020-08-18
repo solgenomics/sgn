@@ -80,7 +80,7 @@ jQuery(document).ready(function () {
         }
 
         jQuery.ajax({
-            url: '/ajax/breeders/program/create_profile_template',
+            url: '/ajax/program/create_profile_template',
             dataType: "json",
             type: 'POST',
             data:{
