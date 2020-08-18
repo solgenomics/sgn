@@ -106,14 +106,8 @@ sub kinship_run_analysis :Path('/kinship/run/analysis') Args() {
 
 	print STDERR "\nrun analysis json_file: $json_file\n";
   
-
 	$res->{data} = read_file($json_file);
-
-	$self->prep_download_kinship_files($c);
-    
-	$res->{kinship_table_file} = $c->stash->{download_kinship_table};
-	$res->{kinship_averages_file} = $c->stash->{download_kinship_averages};
-	$res->{inbreeding_file} = $c->stash->{download_inbreeding};	
+	$self->stash_output_links($c);	
     }
     
     $res = to_json($res);
@@ -143,12 +137,7 @@ sub kinship_result :Path('/solgs/kinship/result/') Args() {
     if (-s $json_file)
     {
 	$res->{data} = read_file($json_file);
-
-	$self->prep_download_kinship_files($c);
-      
-	$res->{kinship_table_file} = $c->stash->{download_kinship_table};
-	$res->{kinship_averages_file} = $c->stash->{download_kinship_averages};
-	$res->{inbreeding_file} = $c->stash->{download_inbreeding};    
+	$self->stash_output_links($c);	
     }
 
     $res = to_json($res);
@@ -164,7 +153,7 @@ sub get_kinship_coef_files {
     
     my $matrix_file;
     my $json_file;
-    
+ 
     if ($trait_id)
     {
 	$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
@@ -192,11 +181,6 @@ sub kinship_output_files {
     my $pop_id = $c->stash->{kinship_pop_id};
     my $protocol_id = $c->stash->{genotyping_protocol_id};
     my $data_str = $c->stash->{data_structure};
-     
-    # if ($data_str =~ /dataset|list/ && $pop_id =~ /^\d+$/)
-    # {
-    # 	$pop_id = $data_str . '_' . $pop_id;
-    # }
      
     $c->stash->{pop_id} = $pop_id;
     $c->controller('solGS::Files')->inbreeding_coefficients_file($c); 
@@ -230,11 +214,6 @@ sub kinship_input_files {
     my $pop_id = $c->stash->{kinship_pop_id};
     my $protocol_id = $c->stash->{genotyping_protocol_id};
     my $data_str = $c->stash->{data_structure};
-    
-    # if ($data_str =~ /dataset|list/ && )
-    # {
-    # 	$pop_id = $data_str . '_' . $pop_id;
-    # }
 
     $c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
     my $geno_file = $c->stash->{genotype_file_name};
@@ -376,16 +355,16 @@ sub create_kinship_genotype_data_query_jobs {
 }
 
 
-# sub stash_kinship_output {
-#     my ($self, $c) = @_;
+sub stash_output_links {
+    my ($self, $c) = @_;
     
-#     $self->prep_download_kinship_files($c);
+    $self->prep_download_kinship_files($c);
       
-#     $c->stash->{rest}{kinship_table_file} = $c->stash->{download_kinship_table};
-#     $c->stash->{rest}{kinship_averages_file} = $c->stash->{download_kinship_averages};
-#     $c->stash->{rest}{inbreeding_file} = $c->stash->{download_inbreeding};
+    $c->stash->{rest}{kinship_table_file} = $c->stash->{download_kinship_table};
+    $c->stash->{rest}{kinship_averages_file} = $c->stash->{download_kinship_averages};
+    $c->stash->{rest}{inbreeding_file} = $c->stash->{download_inbreeding};
     
-# }
+}
 
 
 sub prep_download_kinship_files {
@@ -396,8 +375,18 @@ sub prep_download_kinship_files {
    
   mkpath ([$base_tmp_dir], 0, 0755);  
 
-  $c->controller('solGS::Files')->relationship_matrix_adjusted_file($c);  
-  my $kinship_txt_file  = $c->stash->{relationship_matrix_adjusted_table_file};
+  my $kinship_txt_file;
+  if ($c->stash->{trait_id})
+  {
+      $c->controller('solGS::Files')->relationship_matrix_adjusted_file($c);  
+      $kinship_txt_file  = $c->stash->{relationship_matrix_adjusted_table_file};
+  }
+  else
+  {
+      $c->controller('solGS::Files')->relationship_matrix_file($c);  
+      $kinship_txt_file  = $c->stash->{relationship_matrix_table_file};  
+  }
+  
   #my $kinship_json_file = $c->stash->{relationship_matrix_json_file};
 
   $c->controller('solGS::Files')->inbreeding_coefficients_file($c); 
