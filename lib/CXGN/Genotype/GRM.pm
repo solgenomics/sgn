@@ -589,6 +589,50 @@ sub download_grm {
                 $return = $data;
             }
         }
+        elsif ($download_format eq 'three_column_stock_id_integer') {
+            my %result_hash;
+            my $row_num = 0;
+            my %seen_stock_ids;
+            # print STDERR Dumper \@grm;
+            foreach my $s (@$stock_ids) {
+                my $col_num = 0;
+                foreach my $c (@$stock_ids) {
+                    if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
+                        my $val = $grm[$row_num]->[$col_num];
+                        if (defined $val and length $val) {
+                            $result_hash{$s}->{$c} = $val;
+                            $seen_stock_ids{$s}++;
+                            $seen_stock_ids{$c}++;
+                        }
+                    }
+                    $col_num++;
+                }
+                $row_num++;
+            }
+
+            foreach my $r (sort keys %result_hash) {
+                foreach my $s (sort keys %{$result_hash{$r}}) {
+                    my $val = $result_hash{$r}->{$s};
+                    if (defined $val and length $val) {
+                        $data .= "$r\t$s\t$val\n";
+                    }
+                }
+            }
+
+            foreach my $a (@$all_accession_stock_ids) {
+                if (!exists($seen_stock_ids{$a})) {
+                    $data .= "$a\t$a\t1\n";
+                }
+            }
+
+            $self->cache()->set($key, $data);
+            if ($return_type eq 'filehandle') {
+                $return = $self->cache()->handle($key);
+            }
+            elsif ($return_type eq 'data') {
+                $return = $data;
+            }
+        }
         elsif ($download_format eq 'three_column_reciprocal') {
             my %result_hash;
             my $row_num = 0;
@@ -625,6 +669,53 @@ sub download_grm {
             foreach my $a (@$all_accession_stock_ids) {
                 if (!exists($seen_stock_ids{$a})) {
                     $data .= "S$a\tS$a\t1\n";
+                }
+            }
+
+            $self->cache()->set($key, $data);
+            if ($return_type eq 'filehandle') {
+                $return = $self->cache()->handle($key);
+            }
+            elsif ($return_type eq 'data') {
+                $return = $data;
+            }
+        }
+        elsif ($download_format eq 'three_column_reciprocal_stock_id_integer') {
+            my %result_hash;
+            my $row_num = 0;
+            my %seen_stock_ids;
+            # print STDERR Dumper \@grm;
+            foreach my $s (@$stock_ids) {
+                my $col_num = 0;
+                foreach my $c (@$stock_ids) {
+                    if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
+                        my $val = $grm[$row_num]->[$col_num];
+                        if (defined $val and length $val) {
+                            $result_hash{$s}->{$c} = $val;
+                            $seen_stock_ids{$s}++;
+                            $seen_stock_ids{$c}++;
+                        }
+                    }
+                    $col_num++;
+                }
+                $row_num++;
+            }
+
+            foreach my $r (sort keys %result_hash) {
+                foreach my $s (sort keys %{$result_hash{$r}}) {
+                    my $val = $result_hash{$r}->{$s};
+                    if (defined $val and length $val) {
+                        $data .= "$r\t$s\t$val\n";
+                        if ($s != $r) {
+                            $data .= "$s\t$r\t$val\n";
+                        }
+                    }
+                }
+            }
+
+            foreach my $a (@$all_accession_stock_ids) {
+                if (!exists($seen_stock_ids{$a})) {
+                    $data .= "$a\t$a\t1\n";
                 }
             }
 
