@@ -107,7 +107,7 @@ sub kinship_run_analysis :Path('/kinship/run/analysis') Args() {
 	print STDERR "\nrun analysis json_file: $json_file\n";
   
 	$res->{data} = read_file($json_file);
-	$self->stash_output_links($c);	
+	$self->add_output_links($c, $res);	
     }
     
     $res = to_json($res);
@@ -137,7 +137,7 @@ sub kinship_result :Path('/solgs/kinship/result/') Args() {
     if (-s $json_file)
     {
 	$res->{data} = read_file($json_file);
-	$self->stash_output_links($c);	
+	$self->add_output_links($c, $res);	
     }
 
     $res = to_json($res);
@@ -355,14 +355,14 @@ sub create_kinship_genotype_data_query_jobs {
 }
 
 
-sub stash_output_links {
-    my ($self, $c) = @_;
+sub add_output_links {
+    my ($self, $c, $res) = @_;
     
     $self->prep_download_kinship_files($c);
       
-    $c->stash->{rest}{kinship_table_file} = $c->stash->{download_kinship_table};
-    $c->stash->{rest}{kinship_averages_file} = $c->stash->{download_kinship_averages};
-    $c->stash->{rest}{inbreeding_file} = $c->stash->{download_inbreeding};
+    $res->{kinship_table_file} = $c->stash->{download_kinship_table};
+    $res->{kinship_averages_file} = $c->stash->{download_kinship_averages};
+    $res->{inbreeding_file} = $c->stash->{download_inbreeding};
     
 }
 
