@@ -259,7 +259,7 @@ sub relationship_matrix_file {
     my $cache_data = {key    => 'relationship_matrix_table_' . $file_id ,
 		      file      => 'relationship_matrix_table_' . $file_id . '.txt',
 		      stash_key => 'relationship_matrix_table_file',
-		      cache_dir => $c->stash->{solgs_cache_dir}
+		      cache_dir => $c->stash->{kinship_cache_dir}
     };
  
     $self->cache_file($c, $cache_data);
