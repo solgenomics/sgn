@@ -60,3 +60,13 @@ is_a: SGNSTAT:0000000
 id: SGNSTAT:0000011
 name: Multivariate linear mixed model permanent environment BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on growing degree days computed using BLUPf90
 is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000012
+name: Univariate linear mixed model genetic BLUPs using genetic relationship matrix and separable Ar1xAr1 row and column effect computed using ASReml
+is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000013
+name: Univariate linear mixed model spatial BLUPs using genetic relationship matrix and separable Ar1xAr1 row and column effect computed using ASReml
+is_a: SGNSTAT:0000000
