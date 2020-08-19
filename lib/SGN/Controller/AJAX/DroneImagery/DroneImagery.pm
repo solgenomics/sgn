@@ -251,7 +251,9 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my @results;
     my $result_blup_data;
     my $result_blup_spatial_data;
+    my $result_blup_pe_data;
     my @sorted_trait_names;
+    my %seen_trait_names;
     my @sorted_scaled_ln_times;
     my @rep_time_factors;
     my @ind_rep_factors;
@@ -266,6 +268,21 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $analysis_model_training_data_file_type;
     my $field_trial_design;
     my $pe_genetic_blup_trait;
+
+    my $field_trial_design_full = CXGN::Trial->new({bcs_schema => $schema, trial_id=>$field_trial_id_list->[0]})->get_layout()->get_design();
+    # print STDERR Dumper $field_trial_design_full;
+    while (my($plot_number, $plot_obj) = each %$field_trial_design_full) {
+        $field_trial_design->{$plot_number} = {
+            stock_name => $plot_obj->{accession_name},
+            block_number => $plot_obj->{block_number},
+            col_number => $plot_obj->{col_number},
+            row_number => $plot_obj->{row_number},
+            plot_name => $plot_obj->{plot_name},
+            plot_number => $plot_obj->{plot_number},
+            rep_number => $plot_obj->{rep_number},
+            is_a_control => $plot_obj->{is_a_control}
+        };
+    }
 
     if ($statistics_select eq 'marss_germplasmname_block' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups') {
 
@@ -561,6 +578,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         elsif ($statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups') {
             $pe_genetic_blup_trait = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on growing degree days computed using Sommer R|SGNSTAT:0000006";
 
+            $analysis_model_language = "F90";
+
             my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
                 'MaterializedViewTable',
                 {
@@ -581,6 +600,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             }
 
             my %seen_plots;
+            my %seen_plot_names;
             foreach my $obs_unit (@$data){
                 my $germplasm_name = $obs_unit->{germplasm_uniquename};
                 my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
@@ -590,6 +610,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     uniquename => $germplasm_name
                 };
                 $seen_plots{$obs_unit->{observationunit_stock_id}} = $obs_unit->{observationunit_uniquename};
+                $seen_plot_names{$obs_unit->{observationunit_uniquename}}++;
                 my $observations = $obs_unit->{observations};
                 foreach (@$observations){
                     my $related_time_terms_json = decode_json $_->{associated_image_project_time_json};
@@ -604,10 +625,12 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     }
                     $phenotype_data{$obs_unit->{observationunit_uniquename}}->{$time} = $_->{value};
                     $seen_times{$time} = $_->{trait_name};
+                    $seen_trait_names{$_->{trait_name}}++;
                 }
             }
             @unique_accession_names = sort keys %unique_accessions;
             @sorted_trait_names = sort {$a <=> $b} keys %seen_times;
+            @unique_plot_names = sort keys %seen_plot_names;
             print STDERR Dumper \@sorted_trait_names;
 
             my $time_min = 100000000;
@@ -762,7 +785,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     push @data_matrix, \@row;
                 }
             }
-            print STDERR Dumper \@data_matrix;
+            # print STDERR Dumper \@data_matrix;
 
             my @phenotype_header = ("id", "plot_id", "replicate", "time", "replicate_time", "ind_replicate", @sorted_trait_names, "phenotype");
             open(my $F, ">", $stats_tempfile_2) || die "Can't open file ".$stats_tempfile_2;
@@ -1043,21 +1066,6 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             #         }
             #     }
             # }
-
-            my $field_trial_design_full = CXGN::Trial->new({bcs_schema => $schema, trial_id=>$field_trial_id_list->[0]})->get_layout()->get_design();
-            # print STDERR Dumper $field_trial_design_full;
-            while (my($plot_number, $plot_obj) = each %$field_trial_design_full) {
-                $field_trial_design->{$plot_number} = {
-                    stock_name => $plot_obj->{accession_name},
-                    block_number => $plot_obj->{block_number},
-                    col_number => $plot_obj->{col_number},
-                    row_number => $plot_obj->{row_number},
-                    plot_name => $plot_obj->{plot_name},
-                    plot_number => $plot_obj->{plot_number},
-                    rep_number => $plot_obj->{rep_number},
-                    is_a_control => $plot_obj->{is_a_control}
-                };
-            }
         }
         elsif ($statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups') {
             $statistical_ontology_term = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using Sommer R|SGNSTAT:0000004"; #In the JS this is set to either the genetic of permanent environment BLUP term (Multivariate linear mixed model permanent environment BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using Sommer R|SGNSTAT:0000005) when saving results
@@ -1297,8 +1305,6 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             close($fh_log);
 
             my %fixed_effects;
-            my %grm_effects;
-            my %pe_effects;
             my $solutions_tempfile = $tmp_stats_dir."/solutions";
             open(my $fh_sol, '<', $solutions_tempfile)
                 or die "Could not open file '$solutions_tempfile' $!";
@@ -1308,28 +1314,49 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 print STDERR $head;
 
                 my $solution_file_counter = 0;
+                my $grm_sol_counter = 0;
+                my $grm_sol_trait_counter = 0;
+                my $pe_sol_counter = 0;
+                my $pe_sol_trait_counter = 0;
                 while (my $row = <$fh_sol>) {
                     print STDERR $row;
                     my @vals = split ' ', $row;
+                    my $level = $vals[2];
+                    my $value = $vals[3];
                     if ($solution_file_counter < $effect_1_levels) {
-                        $fixed_effects{$solution_file_counter}->{$vals[2]} = $vals[3];
+                        $fixed_effects{$solution_file_counter}->{$level} = $value;
                     }
                     elsif ($solution_file_counter < $effect_1_levels + $effect_grm_levels*scalar(@sorted_trait_names)) {
-                        $grm_effects{$solution_file_counter}->{$vals[2]} = $vals[3];
+                        my $accession_name = $accession_id_factor_map_reverse{$level};
+                        my $trait = $seen_times{$sorted_trait_names[$grm_sol_trait_counter]};
+                        if ($grm_sol_counter < $effect_grm_levels-1) {
+                            $grm_sol_counter++;
+                        }
+                        else {
+                            $grm_sol_counter = 0;
+                            $grm_sol_trait_counter++;
+                        }
+                        $result_blup_data->{$accession_name}->{$trait} = [$value, $timestamp, $user_name, '', ''];
                     }
                     else {
-                        $pe_effects{$solution_file_counter}->{$vals[2]} = $vals[3];
+                        my $plot_name = $plot_id_factor_map_reverse{$level};
+                        my $trait = $seen_times{$sorted_trait_names[$pe_sol_trait_counter]};
+                        if ($pe_sol_counter < $effect_pe_levels-1) {
+                            $pe_sol_counter++;
+                        }
+                        else {
+                            $pe_sol_counter = 0;
+                            $pe_sol_trait_counter++;
+                        }
+                        $result_blup_pe_data->{$plot_name}->{$trait} = [$value, $timestamp, $user_name, '', ''];
                     }
                     $solution_file_counter++;
                 }
             close($fh_sol);
-            print STDERR Dumper \%fixed_effects;
-            print STDERR Dumper \%grm_effects;
-            print STDERR Dumper \%pe_effects;
-            # foreach my $time (1..scalar(@sorted_trait_names)) {
-            #     my $trait = $seen_times{$time};
-            #     $result_blup_data->{$stock_name}->{$trait} = [$value, $timestamp, $user_name, '', ''];
-            # }
+            # print STDERR Dumper \%fixed_effects;
+            # print STDERR Dumper $result_blup_data;
+            # print STDERR Dumper $result_blup_pe_data;
+            @sorted_trait_names = sort keys %seen_trait_names;
         }
     }
     elsif ($statistics_select eq 'marss_germplasmname_block') {
@@ -1545,12 +1572,16 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         results => \@results,
         result_blup_genetic_data => $result_blup_data,
         result_blup_spatial_data => $result_blup_spatial_data,
+        result_blup_pe_data => $result_blup_pe_data,
         unique_traits => \@sorted_trait_names,
         unique_accessions => \@unique_accession_names,
         unique_plots => \@unique_plot_names,
         statistics_select => $statistics_select,
         grm_file => $grm_file,
         stats_tempfile => $stats_tempfile,
+        blupf90_grm_file => $grm_rename_tempfile,
+        blupf90_param_file => $parameter_tempfile,
+        blupf90_training_file => $stats_tempfile_2,
         stats_out_tempfile => $stats_out_tempfile,
         stats_out_tempfile_col => $stats_out_tempfile_col,
         stats_out_tempfile_row => $stats_out_tempfile_row,
