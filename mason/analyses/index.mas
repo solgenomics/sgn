@@ -24,8 +24,10 @@ Lukas Mueller <lam87@cornell.edu>
 
 <& /page/page_title.mas, title => "Your Analyses and Analysis Models" &>
 
-  <!-- button class="btn btn-light" style="float:right">Upload analysis</button><br />
-  <hr-->
+<button class="btn btn-primary" name="upload_new_analysis_button" style="float:right">Upload Analysis</button><br />
+<hr>
+
+<& /analyses/upload_analysis_dialogs.mas &>
 
 <div class="well">
 <table class="table table-bordered table-hover" id="analyses_by_user_table">

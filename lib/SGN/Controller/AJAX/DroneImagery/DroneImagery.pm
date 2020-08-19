@@ -269,19 +269,21 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $field_trial_design;
     my $pe_genetic_blup_trait;
 
-    my $field_trial_design_full = CXGN::Trial->new({bcs_schema => $schema, trial_id=>$field_trial_id_list->[0]})->get_layout()->get_design();
-    # print STDERR Dumper $field_trial_design_full;
-    while (my($plot_number, $plot_obj) = each %$field_trial_design_full) {
-        $field_trial_design->{$plot_number} = {
-            stock_name => $plot_obj->{accession_name},
-            block_number => $plot_obj->{block_number},
-            col_number => $plot_obj->{col_number},
-            row_number => $plot_obj->{row_number},
-            plot_name => $plot_obj->{plot_name},
-            plot_number => $plot_obj->{plot_number},
-            rep_number => $plot_obj->{rep_number},
-            is_a_control => $plot_obj->{is_a_control}
-        };
+    foreach my $field_trial_id (@$field_trial_id_list) {
+        my $field_trial_design_full = CXGN::Trial->new({bcs_schema => $schema, trial_id=>$field_trial_id})->get_layout()->get_design();
+        while (my($plot_number, $plot_obj) = each %$field_trial_design_full) {
+            my $plot_number_unique = $field_trial_id."_".$plot_number;
+            $field_trial_design->{$plot_number_unique} = {
+                stock_name => $plot_obj->{accession_name},
+                block_number => $plot_obj->{block_number},
+                col_number => $plot_obj->{col_number},
+                row_number => $plot_obj->{row_number},
+                plot_name => $plot_obj->{plot_name},
+                plot_number => $plot_number_unique,
+                rep_number => $plot_obj->{rep_number},
+                is_a_control => $plot_obj->{is_a_control}
+            };
+        }
     }
 
     if ($statistics_select eq 'marss_germplasmname_block' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups') {

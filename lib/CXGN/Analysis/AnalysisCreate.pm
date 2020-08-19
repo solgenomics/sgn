@@ -356,6 +356,8 @@ sub store {
     my $model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, $analysis_model_type, 'protocol_type')->cvterm_id();
 
     if (!$analysis_model_protocol_id) {
+        $analysis_model_properties->{protocol} = $analysis_protocol;
+
         my $mo = CXGN::AnalysisModel::SaveModel->new({
             bcs_schema=>$bcs_schema,
             metadata_schema=>$metadata_schema,
