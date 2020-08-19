@@ -97,11 +97,11 @@ str(inputFiles)
 # In this example, only extreme values are detected
 
 #This part I must add to breedbase
-check.data(mydata)
+check.data(phenoData)
 
 # See what happens if number of roots were 0 for some plot
 
-d <- mydata # A copy of mydata
+d <- phenoData # A copy of mydata
 d[5, 'nocr'] <- 0 # Zero commercial roots for plot 5
 check.data(d)
 

@@ -258,19 +258,14 @@ function runPhenoqualityControlAnalysis () {
         url: '/phenotypic/qualityControl/analysis/output',
         success: function(response) {
             if (response.status== 'success') {
-                plotqualityControl(response.data);
-        
-        var qcDownload = "<a href=\"/download/phenotypic/qualityControl/population/" 
-                            + popId + "\">Download qualityControl coefficients</a>";
+		                plotqualityControl(response.data);
+		        
+		        var qcDownload = "<a href=\"/download/phenotypic/qualityControl/population/" 
+		                            + popId + "\">Download qualityControl coefficients</a>";
 
-        jQuery("#qualityControl_canvas").append("<br />[ " + qcDownload + " ]").show();
-    
-        // if(document.URL.match('/breeders/trial/')) {
-        //     displayTraitAcronyms(response.acronyms);
-        // }
-        
-                jQuery("#qualityControl_message").empty();
-		jQuery("#run_pheno_qualityControl").hide();
+		        jQuery("#qualityControl_canvas").append("<br />[ " + qcDownload + " ]").show();
+		        jQuery("#qualityControl_message").empty();
+				jQuery("#run_pheno_qualityControl").hide();
             } else {
                 jQuery("#qualityControl_message")
                     .css({"padding-left": '0px'})
