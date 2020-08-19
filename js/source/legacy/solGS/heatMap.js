@@ -161,13 +161,11 @@ solGS.heatmap = {
                         .attr("id", "corrtext")
                         .text("[" + labels[d.row]
                               + " vs. " + labels[d.col] 
-                              + ": " + d3.format(".2f")(d.value) 
+                              + ": " + d3.format(".3f")(d.value) 
                               + "]")
                         .style("fill", function () { 
-                            if (d.value > 0) 
-                            { return pve; } 
-                            else if (d.value < 0) 
-                            { return nve; }
+                            if (d.value != 0) 
+                            { return corZscale(d.value); } 
 			    else if (d.value == 0) {
 				return nral;
 			    }
