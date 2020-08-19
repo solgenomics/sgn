@@ -549,16 +549,16 @@ sub generate_predictions_POST : Args(0) {
 
     my $stat_term;
     if ($algorithm eq 'pls') {
-        $stat_term = "Partial least squares regression (PLSR) as implemented with the pls package in R|SGNSTAT:0000008";
+        $stat_term = "Partial least squares regression (PLSR) as implemented with the pls package in R|SGNSTAT:0000014";
     }
     elsif ($algorithm eq 'rf') {
-        $stat_term = "Random Forest Regression (RF)  as implemented with the RandomForest package in R|SGNSTAT:0000009";
+        $stat_term = "Random Forest Regression (RF)  as implemented with the RandomForest package in R|SGNSTAT:0000015";
     }
     elsif ($algorithm eq 'svmLinear') {
-        $stat_term = "Support vector machine (SVM) with linear kernel as implemented with the kernLab package in R|SGNSTAT:0000010";
+        $stat_term = "Support vector machine (SVM) with linear kernel as implemented with the kernLab package in R|SGNSTAT:0000016";
     }
     elsif ($algorithm eq 'svmRadial') {
-        $stat_term = "Support vector machine (SVM) with radial kernel as implemented with the kernLab package in R|SGNSTAT:0000011";
+        $stat_term = "Support vector machine (SVM) with radial kernel as implemented with the kernLab package in R|SGNSTAT:0000017";
     }
 
     my $protocol = "waves::SaveModel( df = train.ready, save.model = FALSE, autoselect.preprocessing = $preprocessing_boolean, preprocessing.method = $algorithm, model.save.folder = NULL, model.name = 'PredictionModel', best.model.metric = 'RMSE', tune.length = $tune, model.method = model.method, num.iterations = $niter, wavelengths = wls, stratified.sampling = stratified.sampling, cv.scheme = $cross_validation, trial1 = NULL, trial2 = NULL, trial3 = NULL)";
