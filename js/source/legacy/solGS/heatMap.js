@@ -70,10 +70,23 @@ solGS.heatmap = {
 	var totalH = height + pad.top + pad.bottom;
 	var totalW = width + pad.left + pad.right;
 
+	var nve  = "#6A0888";
+	var pve  = "#86B404";
+	var nral = "blue";
+
+	var rmax = d3.max(coefs);
+	var rmin = d3.min(coefs);
+	
+	if (rmin >= 0 && rmax > 0 ) {
+            rmax = rmax;
+	} else if (rmin < 0 && -rmin > rmax )  {
+            rmax = -rmin;
+	}
+	
 	var corXscale = d3.scale.ordinal().domain(d3.range(nLabels)).rangeBands([0, width]);
 	var corYscale = d3.scale.ordinal().domain(d3.range(nLabels)).rangeBands([height, 0]);
-	var corZscale = d3.scale.linear().domain([-1, 0, 1]).range(["#6A0888","white", "#86B404"]);
-
+	var corZscale = d3.scale.linear().domain([-rmax, rmax]).range([nve, pve]);
+	
 	var xAxisScale = d3.scale.ordinal()
             .domain(labels)
             .rangeBands([0, width]);
@@ -132,8 +145,11 @@ solGS.heatmap = {
             .attr("width", corXscale.rangeBand())
             .attr("height", corYscale.rangeBand())      
             .attr("fill", function (d) {
-                if (d.value == 'NA') {return "white";} 
-                else { return corZscale(d.value)}
+                if (d.value == 'NA') {
+		    return "white";
+		} else if (d.value == 0) {
+		    return nral;
+		} else { return corZscale(d.value);}
             })
             .attr("stroke", "white")
             .attr("stroke-width", 1)
@@ -149,9 +165,13 @@ solGS.heatmap = {
                               + "]")
                         .style("fill", function () { 
                             if (d.value > 0) 
-                            { return "#86B404"; } 
+                            { return pve; } 
                             else if (d.value < 0) 
-                            { return "#6A0888"; }
+                            { return nve; }
+			    else if (d.value == 0) {
+				return nral;
+			    }
+		
                         })  
                         .attr("x", totalW * 0.5)
                         .attr("y", totalH * 0.5)
@@ -203,7 +223,7 @@ solGS.heatmap = {
             .attr("height", recLW)
             .style("stroke", "black")
             .attr("fill", function (d) { 
-		if (d == 'NA') {return "white"} 
+		if (d == 'NA') {return "white"}
 		else {return corZscale(d[1])}
             });
 	
@@ -221,9 +241,9 @@ solGS.heatmap = {
             .attr("x", 1)
             .attr("y", function (d) { return 1 + (d[0] * recLH) + (d[0] * 5); })
             .text(function (d) { 
-		if (d[1] > 0) { return "Positive"; } 
-		else if (d[1] < 0) { return "Negative"; } 
-		else if (d[1] === 0) { return "Neutral"; }
+		if (d[1] > 0) { return '> 0'; } 
+		else if (d[1] < 0) { return '< 0'; } 
+		else if (d[1] == 0 ){ return '0'; }
             })  
             .attr("dominant-baseline", "middle")
             .attr("text-anchor", "start");
