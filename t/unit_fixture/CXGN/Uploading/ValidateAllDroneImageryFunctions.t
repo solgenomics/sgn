@@ -41,7 +41,7 @@ my $field_trial_id = $schema->resultset("Project::Project")->search({name => 'te
 
 #Testing upload of unstitched Micasense RedEdge 5 band raw captures.
 
-my $python_dependencies_installed = `locate keras.py`;
+# my $python_dependencies_installed = `locate keras.py`;
 #print STDERR "PYTHON DEPENDENCIES INSTALLED=".Dumper($python_dependencies_installed)."\n";
 
 # SKIP: {
@@ -102,6 +102,15 @@ my $micasense5bandpanelzipfile = $f->config->{basepath}."/t/data/imagebreed/Exam
 # is(scalar(@{$message_hash_rgb_stitch->{drone_run_band_project_ids}}), 1);
 # is(scalar(@{$message_hash_rgb_stitch->{drone_run_band_image_ids}}), 1);
 
+$response = $ua->get('http://localhost:3010/api/drone_imagery/new_imaging_vehicle?sgn_session_id='.$sgn_session_id.'&vehicle_name=Drone1&vehicle_description=dronedesc&battery_names=blue,green');
+ok($response->is_success);
+my $message = $response->decoded_content;
+my $message_hash = decode_json $message;
+print STDERR Dumper $message_hash;
+ok($message_hash->{success});
+ok($message_hash->{new_vehicle_id});
+my $new_vehicle_id = $message_hash->{new_vehicle_id};
+
 #Testing upload of RGB unstitched raw captures.
 my $rasterblue = $f->config->{basepath}."/t/data/imagebreed/RasterBlue.png";
 my $rastergreen = $f->config->{basepath}."/t/data/imagebreed/RasterGreen.png";
@@ -120,6 +129,8 @@ my $response_raster = $ua->post(
             "drone_run_date"=>"2019/01/01 12:12:12",
             "drone_run_description"=>"test new drone run",
             "drone_image_upload_camera_info"=>"micasense_5",
+            "drone_run_imaging_vehicle_id"=>$new_vehicle_id,
+            "drone_run_imaging_vehicle_battery_name"=>"blue",
             "drone_image_upload_drone_run_band_stitching"=>"no",
             "drone_run_band_number"=>5,
             "drone_run_band_name_0"=>"NewStitchedMicasense5BandDroneRunProject_Blue",
@@ -390,6 +401,8 @@ my $response_raster_gcp_run = $ua->post(
             "drone_run_description"=>"test new drone run",
             "drone_image_upload_camera_info"=>"micasense_5",
             "drone_image_upload_drone_run_band_stitching"=>"no",
+            "drone_run_imaging_vehicle_id"=>$new_vehicle_id,
+            "drone_run_imaging_vehicle_battery_name"=>"blue",
             "drone_run_band_number"=>5,
             "drone_run_band_name_0"=>"NewStitchedMicasense5BandDroneRunProjectForGCPStandardProcess_Blue",
             "drone_run_band_description_0"=>"raster blue",

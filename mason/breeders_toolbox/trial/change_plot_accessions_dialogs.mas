@@ -67,7 +67,6 @@ jQuery(document).ready(function () {
     });
 
     jQuery('#trial_design_change_accessions_submit').click( function() {
-        console.log("HERE");
         var uploadFile = jQuery("#trial_design_change_accessions_file").val();
         jQuery('#trial_design_change_accessions_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/change_plot_accessions_using_file");
         if (uploadFile === '') {

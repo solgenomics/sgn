@@ -96,7 +96,7 @@ $analysis_metadata
                     <div id="analysis_result_summary">
 %  if ($analysis_metadata->result_summary) {
 %    while (my($k,$v) = each %{$analysis_metadata->result_summary}) {
-%       print $k." = ".$v;
+%       print $k." : ".$v."<br/>";
 %    }
 %  }
                     </div>
