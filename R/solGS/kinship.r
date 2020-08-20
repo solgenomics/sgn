@@ -78,49 +78,57 @@ if(length(genoTrCode) != 0) {
   genoData            <- genoData - 1
 }
 
-relationshipMatrix    <- c()
-
 relationshipMatrixFile <- grep("relationship_matrix_table", outputFiles, value = TRUE)
 relationshipMatrixJsonFile <- grep("relationship_matrix_json", outputFiles, value = TRUE)
-
 
 inbreedingFile <- grep('inbreeding_coefficients', outputFiles, value=TRUE)
 aveKinshipFile <- grep('average_kinship', outputFiles, value=TRUE)
 
+relationshipMatrix    <- c()
 inbreeding <- c()
 aveKinship <- c()
-
-if (length(relationshipMatrixFile) != 0) {
-
-    relationshipMatrix           <- A.mat(genoData)
-    diag(relationshipMatrix)     <- diag(relationshipMatrix) + 1e-6
-    colnames(relationshipMatrix) <- rownames(relationshipMatrix)
-
-    relationshipMatrix <- round(data.frame(relationshipMatrix), 3)
-
-    inbreeding <- diag(data.matrix(relationshipMatrix))
-    inbreeding <- inbreeding - 1
-   
-    inbreeding <- inbreeding %>% replace(., . < 0, 0)
-    inbreeding <- data.frame(inbreeding)
-
-    inbreeding <- inbreeding %>%
-        rownames_to_column('genotypes') %>%
-        rename(Inbreeding = inbreeding) %>%
-        arrange(Inbreeding) %>%
-        mutate_at('Inbreeding', round, 3) %>%
-        column_to_rownames('genotypes')
-
-}
+relationshipMatrixJson <- c()
 
 
-## nCores <- detectCores()
+relationshipMatrix           <- A.mat(genoData)
+diag(relationshipMatrix)     <- diag(relationshipMatrix) + 1e-6
+colnames(relationshipMatrix) <- rownames(relationshipMatrix)
+relationshipMatrix           <- round(data.frame(relationshipMatrix), 3)
 
-## if (nCores > 1) {
-##   nCores <- (nCores %/% 2)
-## } else {
-##   nCores <- 1
-## }
+inbreeding <- diag(data.matrix(relationshipMatrix))
+inbreeding <- inbreeding - 1
+diag(relationshipMatrix) <- inbreeding
+
+relationshipMatrix <- data.frame(relationshipMatrix) %>% replace(., . < 0, 0)
+
+inbreeding <- inbreeding %>% replace(., . < 0, 0)
+inbreeding <- data.frame(inbreeding)
+
+inbreeding <- inbreeding %>%
+    rownames_to_column('genotypes') %>%
+    rename(Inbreeding = inbreeding) %>%
+    arrange(Inbreeding) %>%
+    mutate_at('Inbreeding', round, 3) %>%
+    column_to_rownames('genotypes')
+
+
+aveKinship <- data.frame(apply(relationshipMatrix, 1, mean))
+
+aveKinship <- aveKinship %>%
+    rownames_to_column('genotypes') %>%     
+    rename(Mean_kinship = contains('apply')) %>%
+    arrange(Mean_kinship) %>%
+    mutate_at('Mean_kinship', round, 3) %>%
+    column_to_rownames('genotypes')
+
+relationshipMatrixJson <- relationshipMatrix
+relationshipMatrixJson[upper.tri(relationshipMatrixJson)] <- NA
+
+
+relationshipMatrixJson <- data.frame(relationshipMatrixJson)  
+relationshipMatrixList <- list(labels = names(relationshipMatrixJson),
+                               values = relationshipMatrixJson)
+relationshipMatrixJson <- jsonlite::toJSON(relationshipMatrixList)
 
 
 if (file.info(relationshipMatrixFile)$size == 0) {
@@ -134,16 +142,7 @@ if (file.info(relationshipMatrixFile)$size == 0) {
 }
 
 if (file.info(relationshipMatrixJsonFile)$size == 0) {
-
-    relationshipMatrixJson <- relationshipMatrix
-    relationshipMatrixJson[upper.tri(relationshipMatrixJson)] <- NA
  
-    
-    relationshipMatrixJson <- data.frame(relationshipMatrixJson)  
-    relationshipMatrixList <- list(labels = names(relationshipMatrixJson),
-                                       values = relationshipMatrixJson)
-    relationshipMatrixJson <- jsonlite::toJSON(relationshipMatrixList)
-  
     write(relationshipMatrixJson,
                     file  = relationshipMatrixJsonFile,
                     )
@@ -165,16 +164,7 @@ if (file.info(inbreedingFile)$size == 0) {
 
 
 if (file.info(aveKinshipFile)$size == 0) {
- 
-    aveKinship <- data.frame(apply(relationshipMatrix, 1, mean))
-  
-    aveKinship <- aveKinship %>%
-        rownames_to_column('genotypes') %>%     
-        rename(Mean_kinship = contains('apply')) %>%
-        arrange(Mean_kinship) %>%
-        mutate_at('Mean_kinship', round, 3) %>%
-        column_to_rownames('genotypes')  
-    
+     
     fwrite(aveKinship,
            file  = aveKinshipFile,
            row.names = TRUE,
