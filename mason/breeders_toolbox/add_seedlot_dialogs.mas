@@ -43,7 +43,7 @@ $cross_uniquename => ''
 		<div class="form-group">
                     <label class="col-sm-3 control-label">Quality issues:</label>
                     <div class="col-sm-9" >
-                        <input class="form-control" id="seedlot_quality" placeholder="list quality issues here, leave blank for good quality seed">
+                        <input class="form-control" id="seedlot_quality" placeholder="list quality issues here, or 'ok' for good quality seed" >
                     </div>
                 </div>
 

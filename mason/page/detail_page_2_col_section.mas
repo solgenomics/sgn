@@ -368,6 +368,9 @@ $model_files => {}
 % if ($info_section_id eq 'manage_drone_imagery_generate_plot_polygons_standard_process_raw_images_section'){
                                 <& /breeders_toolbox/drone_imagery/generate_plot_polygons_standard_process_raw_images_section.mas, id_extension=>$id_extension &>
 % } #End manage_drone_imagery_generate_plot_polygons_standard_process_raw_images_section
+% if ($info_section_id eq 'manage_drone_imagery_generate_plot_polygons_standard_process_raw_images_section_ground_control_points'){
+                                <& /breeders_toolbox/drone_imagery/generate_plot_polygons_standard_process_raw_images_section_ground_control_points.mas &>
+% } #End manage_drone_imagery_generate_plot_polygons_standard_process_raw_images_section_ground_control_points
 % if ($info_section_id eq 'manage_drone_imagery_standard_process_generate_plot_polygons_section'){
                                 <& /breeders_toolbox/drone_imagery/generate_plot_polygons_standard_process_section.mas &>
 % } #End manage_drone_imagery_standard_process_generate_plot_polygons_section

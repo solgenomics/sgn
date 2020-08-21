@@ -356,6 +356,8 @@ sub store {
     my $model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, $analysis_model_type, 'protocol_type')->cvterm_id();
 
     if (!$analysis_model_protocol_id) {
+        $analysis_model_properties->{protocol} = $analysis_protocol;
+
         my $mo = CXGN::AnalysisModel::SaveModel->new({
             bcs_schema=>$bcs_schema,
             metadata_schema=>$metadata_schema,
@@ -370,11 +372,6 @@ sub store {
             application_version=>$analysis_model_application_version,
             dataset_id=>$analysis_dataset_id,
             is_public=>$analysis_model_is_public,
-            archived_model_file_type=>$analysis_model_file_type,
-            model_file=>$analysis_model_file,
-            archived_training_data_file_type=>$analysis_model_training_data_file_type,
-            archived_training_data_file=>$analysis_model_training_data_file,
-            archived_auxiliary_files=>$analysis_model_auxiliary_files,
             user_id=>$user_id,
             user_role=>$user_role
         });
@@ -543,6 +540,25 @@ sub store {
         my $bs = CXGN::BreederSearch->new( { dbh=>$bcs_schema->storage->dbh, dbname=>$dbname } );
         my $refresh = $bs->refresh_matviews($dbhost, $dbname, $dbuser, $dbpass, 'fullview', 'concurrent', $basepath);
     }
+
+    my $analysis_model = CXGN::AnalysisModel::GetModel->new({
+        bcs_schema=>$bcs_schema,
+        metadata_schema=>$metadata_schema,
+        phenome_schema=>$phenome_schema,
+        nd_protocol_id=>$analysis_model_protocol_id
+    });
+    $analysis_model->store_analysis_model_files({
+        project_id => $saved_analysis_id,
+        archived_model_file_type=>$analysis_model_file_type,
+        model_file=>$analysis_model_file,
+        archived_training_data_file_type=>$analysis_model_training_data_file_type,
+        archived_training_data_file=>$analysis_model_training_data_file,
+        archived_auxiliary_files=>$analysis_model_auxiliary_files,
+        archive_path=>$archive_path,
+        user_id=>$user_id,
+        user_role=>$user_role
+    });
+
     return { success => 1, analysis_id => $saved_analysis_id, model_id => $analysis_model_protocol_id };
 }
 

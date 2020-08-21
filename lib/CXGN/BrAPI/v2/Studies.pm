@@ -301,9 +301,15 @@ sub store {
 
 	    if(!$trial_type){
 	    	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Study type name: ' . $study_type . ' does not exist. Check study types supported!'));
-	    }
+	    } 
 	    my $folder = CXGN::Trial::Folder->new(bcs_schema=>$self->bcs_schema(), folder_id=>$folder_id);
-	    my $program = $folder->breeding_program->name();
+	    
+	    my $program;
+	    if($folder->breeding_program){
+	    	$program = $folder->breeding_program->name();
+	    } elsif ($folder->name()){
+	    	$program = $folder->name();
+	    }
 
 	    my $save;
 		my $coderef = sub {
@@ -353,9 +359,16 @@ sub store {
 
 	        if (ref \$trial_id eq 'SCALAR'){
 		    	push @study_dbids, $trial_id;
+
+				my $folder = CXGN::Trial::Folder->new(
+				{
+					bcs_schema => $schema,
+					folder_id => $trial_id
+				});
+
+				$folder->associate_parent($folder_id);
 			}
 	    };
-
 	}
 
 	my $data_out;
@@ -384,7 +397,7 @@ sub update {
 	my $c = shift;
 
 	if (!$user_id){
-        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must be logged in to add a seedlot!'));
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must be logged in to update studies!'));
     }
 
 	my $trial_id = $params->{studyDbId};
@@ -411,10 +424,6 @@ sub update {
 	map { $has_roles{$_} = 1; } @user_roles;
 
 	print STDERR "my user roles = @user_roles and trial breeding program = $breeding_program_name \n";
-
-	if (!exists($has_roles{$breeding_program_name})) {
-	  return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf("You need to be associated with breeding program $breeding_program_name to change the details of this trial." ));
-	}
 
 	#Get project type
 	my @project_type_ids = CXGN::Trial::get_all_project_types($self->bcs_schema());
@@ -444,7 +453,7 @@ sub update {
 	my $folder = CXGN::Trial::Folder->new(bcs_schema=>$self->bcs_schema(), folder_id=>$folder_id);
 	my $program = $folder->breeding_program->name();
 
-
+			
     eval {
     	my $trial_name_exists = CXGN::Trial::Search->new({
 	        bcs_schema => $schema,
@@ -464,7 +473,14 @@ sub update {
 	        trial_id => $trial_id
 	    }); 
 		if ($study_name) { $trial->set_name($study_name); }
-		if ($folder_id) { $trial->set_breeding_program($program); }
+		if ($folder_id) { 
+			$trial->set_breeding_program($program);
+			my $update_folder = CXGN::Trial::Folder->new({
+					bcs_schema => $schema,
+					folder_id => $trial_id
+				});
+			$update_folder->associate_parent($folder_id);
+		}
 		if ($study_location) { $trial->set_location($study_location); }
 		if ($study_year) { $trial->set_year($study_year); }
 		if ($study_type) { $trial->set_project_type($study_type); }

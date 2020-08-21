@@ -1115,6 +1115,142 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
     $c->stash->{rest} = { success => 1 };
 }
 
+sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot_accessions_using_file') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $upload = $c->req->upload('trial_design_change_accessions_file');
+    my $subdirectory = "trial_change_plot_accessions_upload";
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    ## Store uploaded temporary file in archive
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+    my $archived_filename_with_path = $uploader->archive();
+    my $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->detach();
+    }
+    unlink $upload_tempfile;
+    my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
+    $parser->load_plugin('TrialChangePlotAccessionsCSV');
+    my $parsed_data = $parser->parse();
+    #print STDERR Dumper $parsed_data;
+
+    if (!$parsed_data) {
+        my $return_error = '';
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $c->detach();
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+            #print STDERR Dumper $parse_errors;
+
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
+            }
+        }
+        $c->stash->{rest} = {error_string => $return_error, missing_plots => $parse_errors->{'missing_plots'}, missing_accessions => $parse_errors->{'missing_stocks'}};
+        $c->detach();
+    }
+
+    my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+    my $upload_change_plot_accessions_txn = sub {
+        my @stock_names;
+        print STDERR Dumper $parsed_data;
+        while (my ($key, $val) = each(%$parsed_data)){
+            my $plot_name = $val->{plot_name};
+            my $accession_name = $val->{accession_name};
+            push @stock_names, $plot_name;
+            push @stock_names, $accession_name;
+        }
+        my %stock_id_map;
+        my $stock_rs = $schema->resultset("Stock::Stock")->search({
+            uniquename => {'-in' => \@stock_names}
+        });
+        while (my $r = $stock_rs->next()){
+            $stock_id_map{$r->uniquename} = $r->stock_id;
+        }
+        print STDERR Dumper \%stock_id_map;
+        while (my ($key, $val) = each(%$parsed_data)){
+            my $plot_id = $stock_id_map{$val->{plot_name}};
+            my $accession_id = $stock_id_map{$val->{accession_name}};
+            my $stockprop_rs = $schema->resultset("Stock::StockRelationship")->search({
+                subject_id => $plot_id,
+                type_id => $plot_of_type_id
+            });
+            if ($stockprop_rs->count == 1) {
+                $stockprop_rs->first->delete();
+            }
+            else {
+                die "There should only be one accession linked to the plot via plot_of\n";
+            }
+
+            my $new_stockprop_rs = $schema->resultset("Stock::StockRelationship")->create({
+                subject_id => $plot_id,
+                object_id => $accession_id,
+                type_id => $plot_of_type_id
+            });
+        }
+
+        my $layout = $c->stash->{trial_layout};
+        $layout->generate_and_cache_layout();
+    };
+    eval {
+        $schema->txn_do($upload_change_plot_accessions_txn);
+    };
+    if ($@) {
+        $c->stash->{rest} = { error => $@ };
+        print STDERR "An error condition occurred, was not able to change plot accessions. ($@).\n";
+        $c->detach();
+    }
+
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+
+    $c->stash->{rest} = { success => 1 };
+}
+
 sub trial_additional_file_upload : Chained('trial') PathPart('upload_additional_file') Args(0) {
     my $self = shift;
     my $c = shift;

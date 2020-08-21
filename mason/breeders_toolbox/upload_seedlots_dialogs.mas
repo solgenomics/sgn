@@ -255,6 +255,8 @@
                                 <td>weight(g)</td>
                                 <td>description</td>
                                 <td>box_name</td>
+				<td>quality</td>
+				<td>source</td>
                             </tr>
                         </tbody>
                     </table>
@@ -274,8 +276,12 @@
 
                     <b>Optional fields:</b>
                     <ul>
-                    <li>description (information about why this seedlot is being added)</li>
+                      <li>description (information about why this seedlot is being added)</li>
+		      <li>quality (status of the seedlot, for example "ok", "moldy", "insect damage" etc.</li>
+		      <li>source (an alternate source, such as a plot or plant identifier from which the seed was sourced if no specific cross experiment was entered in the database)</li>
                     </ul>
+
+		    Note that the columns have to be arranged in the order presented above and carry the correct column headers.
 
                 </div>
             </div>
@@ -315,6 +321,8 @@
                                 <td>weight(g)</td>
                                 <td>description</td>
                                 <td>box_name</td>
+				<td>quality</td>
+				<td>source</td>
                             </tr>
                         </tbody>
                     </table>
@@ -334,8 +342,11 @@
 
                     <b>Optional fields:</b>
                     <ul>
-                    <li>description (information about why this seedlot is being added)</li>
-                    </ul>
+                      <li>description (information about why this seedlot is being added)</li>
+		      <li>quality (brief description of quality, e.g.,  "ok", "moldy", "insect damage", etc)</li>
+		      <li>source (an alternate source, such as a plot or plant identifier from which the seed was sourced if no specific cross experiment was entered in the database)</li>
+		    </ul>
+		    
 
                 </div>
             </div>
