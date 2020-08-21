@@ -55,9 +55,6 @@ solGS.heatmap = {
 
 	var heatmapCanvas = heatmapCanvasDiv; 
 
-	var plotExists = jQuery(heatmapCanvas).text();
-	console.log('plotexist ', plotExists)
-	
 	var height = 400;
 	var width  = 400;
 
@@ -72,20 +69,34 @@ solGS.heatmap = {
 
 	var nve  = "#6A0888";
 	var pve  = "#86B404";
-	var nral = "blue";
+	var nral = "#98AFC7"; //blue gray
 
 	var rmax = d3.max(coefs);
 	var rmin = d3.min(coefs);
+
+	var coefRange = [];
+	var coefDom = [];
 	
 	if (rmin >= 0 && rmax > 0 ) {
             rmax = rmax;
-	} else if (rmin < 0 && -rmin > rmax )  {
-            rmax = -rmin;
+	    coefDom = [0, rmax];
+	    coefRange = ["white", pve];
+	    
+	} else if (rmin < 0 && rmax > 0)  {
+	    if (-rmin > rmax) {
+		rmax = -rmin;
+	    }
+	    coefDom = [-rmax, 0, rmax];
+	    coefRange = [nve, "white", pve];
+	    
+	} else if (rmin <= 0 && rmax < 0 ) {
+	    coefDom = [rmin, 0];
+	    coefRange = [nve, "white"];
 	}
-	
+
 	var corXscale = d3.scale.ordinal().domain(d3.range(nLabels)).rangeBands([0, width]);
 	var corYscale = d3.scale.ordinal().domain(d3.range(nLabels)).rangeBands([height, 0]);
-	var corZscale = d3.scale.linear().domain([-rmax, rmax]).range([nve, pve]);
+	var corZscale = d3.scale.linear().domain(coefDom).range(coefRange);
 	
 	var xAxisScale = d3.scale.ordinal()
             .domain(labels)
@@ -147,9 +158,11 @@ solGS.heatmap = {
             .attr("fill", function (d) {
                 if (d.value == 'NA') {
 		    return "white";
-		} else if (d.value == 0) {
+		}  else if (d.value == 0){
 		    return nral;
-		} else { return corZscale(d.value);}
+		} else {
+		    return corZscale(d.value);
+		}
             })
             .attr("stroke", "white")
             .attr("stroke-width", 1)
@@ -164,10 +177,14 @@ solGS.heatmap = {
                               + ": " + d3.format(".3f")(d.value) 
                               + "]")
                         .style("fill", function () { 
-                            if (d.value != 0) 
-                            { return corZscale(d.value); } 
+                            if (d.value >  0) {
+				return pve;
+			    } 
 			    else if (d.value == 0) {
 				return nral;
+			    }
+			    else if (d.value < 0) {
+				return nve;
 			    }
 		
                         })  
@@ -194,10 +211,10 @@ solGS.heatmap = {
 	
 	var legendValues = []; 
 	
-	if (d3.min(coefs) > 0 && d3.max(coefs) > 0 ) {
+	if (d3.min(coefs) >= 0 && d3.max(coefs) > 0 ) {
             legendValues = [[0, 0], [1, d3.max(coefs)]];
 	} else if (d3.min(coefs) < 0 && d3.max(coefs) < 0 )  {
-            legendValues = [[0, d3.min(coefs)], [1, 0]]; 
+            legendValues = [[0, d3.min(coefs)], [1, 0], [2, 1]]; 
 	} else {
             legendValues = [[0, d3.min(coefs)], [1, 0], [2, d3.max(coefs)]];
 	}
@@ -221,8 +238,13 @@ solGS.heatmap = {
             .attr("height", recLW)
             .style("stroke", "black")
             .attr("fill", function (d) { 
-		if (d == 'NA') {return "white"}
-		else {return corZscale(d[1])}
+		if (d == 'NA') {
+		    return "white";
+		} else if( d[1] == 0) {
+		    return nral;
+		} else {
+		    return corZscale(d[1])
+		}
             });
 	
 	var legendTxt = corrplot.append("g")
