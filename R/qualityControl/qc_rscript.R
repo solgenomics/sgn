@@ -138,7 +138,7 @@ print(Message)
 Message = Message %>% 
   dplyr::rename(
     trait = traits,
-    "QC - comment"  = result_traits,
+  	"QC - comments"  = result_traits,
   )
 
 
