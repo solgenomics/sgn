@@ -210,6 +210,7 @@ sub _parse_with_plugin {
 
                 my $ref = $marker_info->{$customer_snp_id}->{ref};
                 my $alt = $marker_info->{$customer_snp_id}->{alt};
+                my $chrom = $marker_info->{$customer_snp_id}->{chrom};
                 my $marker_name = $marker_info->{$customer_snp_id}->{name} || $customer_snp_id;
 
                 my $genotype_obj;
@@ -250,7 +251,7 @@ sub _parse_with_plugin {
                     die "There should always be a ref and alt according to validation above\n";
                 }
 
-                $genotype_info{$sample_id_with_lab_id}->{$marker_name} = $genotype_obj;
+                $genotype_info{$sample_id_with_lab_id}->{$chrom}->{$marker_name} = $genotype_obj;
             }
         }
 

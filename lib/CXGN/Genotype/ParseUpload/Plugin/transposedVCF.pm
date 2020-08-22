@@ -357,6 +357,7 @@ sub next_genotype {
 
         for(my $i=1; $i<=@scores; $i++) {
             my $marker_name = $self->ids()->[$i];
+            my $chrom = $self->chroms()->[$i];
             my @separated_alts = split ',', $self->alts()->[$i];
             my @format =  split /:/,  $self->format()->[$i];
 
@@ -410,7 +411,7 @@ sub next_genotype {
                 my $rounded_ds = round($value{'DS'});
                 $value{'DS'} = "$rounded_ds";
             }
-            $genotypeprop->{$marker_name} = \%value;
+            $genotypeprop->{$chrom}->{$marker_name} = \%value;
         }
         $self->_is_first_line(0);
     }
