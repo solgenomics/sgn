@@ -80,12 +80,32 @@ for(i in 6:ncol(myNewdata)){
 
 testit <- suppressWarnings(catch_expr(check.data(myNewdata), warning = c(collect)))
 message <-testit$warning
+
+curationMessage <- function(original){
+  message1 <- original
+  message2 <- str_replace_all(message1, "[[:punct:]]", " ")
+  message3 <- unlist(str_split(message2,"  "))
+  message4 <<- message3[2]
+  message5 <<- message3[3]
+}
+
 if (length(message)==0){
-	message = "All good!"
-	cat(message,"\n")
+  curation <- capture.output(check.data(myNewdata))
+  cicle <- length(curation)/6
+  j=0
+  black_list <- c(1:length(cicle))
+  black_list_message <- c(1:length(cicle))
+  for (i in 1:cicle){
+    curationMessage(curation[2+j])
+    black_list[i] <- message5
+    black_list_message[i] <- message4
+    cat(message4,"\n",message5,"\n")
+    j=j+6
+  }
 }else{
-	message<-paste( unlist(testit$warning), collapse = '')
-	cat(message,"\n")
+  message<-paste( unlist(testit$warning), collapse = '')
+  black_list <- c(1:length(traits))
+  black_list_message <- c(1:length(traits))
 }
 
 #formating the result
@@ -96,30 +116,39 @@ result <- unlist(str_split(result,"  "))
 result <- gsub(" ","",result)
 
 #preparing the black list of traits that not passed on the test
-black_list <- c(1:length(traits))
-
-for (i in 1:length(result)){
-  if (result[i]=="c"){
-    cat("removing ",result[i],"\n" )
-  }else if (result[i] == ""){
-    cat("removing empty spaces ",i,"\n")
-      
-  }else{
+if (length(result)>=1){
+  for (i in 1:length(result)){
+    if (result[i]=="c"){
+      cat("removing ",result[i],"\n" )
+    }else if (result[i] == ""){
+      cat("removing empty spaces ",i,"\n")
+    }else{
       black_list[i] = result[i]
+      black_list_message[i] = "This trait is not in st4gi"
     }
+  }
 }
 
 black_list<-black_list[!is.na(black_list)]
-
 result_traits <- c(1:length(traits))
+for (i in 1:length(traits)){
+  result_traits[i] <- "Trait passed on QC"
+}
+
+for (i in 1:length(result_traits)){
+  for (z in 1:length(black_list)){
+    if (traits[i] == black_list[z]){
+      result_traits[i] <- black_list_message[z]
+    }
+  }
+}
 
 if (length(result)>1){
   for (i in 1:length(traits)){
-    result_traits[i] = "Trait passed on QC"
     j=1
     for (j in 1:length(black_list)){
       if (traits[i] == black_list[j]){
-        result_traits[i] = "Trait is not in the QC script"
+        result_traits[i] = "Trait is not in st4gi"
         cat("Found the wrong trait!", "\n")
         j=length(black_list)
       }else{
@@ -129,9 +158,6 @@ if (length(result)>1){
   }
 }
 
-
-
-
 Message = data.frame(traits,result_traits)
 print(Message)
 
@@ -140,9 +166,6 @@ Message = Message %>%
     trait = traits,
   	"QC - comments"  = result_traits,
   )
-
-
-
 
 qualityControlList <- list(
                      "traits" = toJSON(traits),

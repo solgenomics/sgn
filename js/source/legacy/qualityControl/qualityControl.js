@@ -261,7 +261,7 @@ function runPhenoqualityControlAnalysis () {
 		                plotqualityControl(response.data);
 		        
 		        var qcDownload = "<a href=\"/download/phenotypic/qualityControl/population/" 
-		                            + popId + "\">Download qualityControl coefficients</a>";
+		                            + popId + "\">Download QC comments</a>";
 
 		        jQuery("#qualityControl_canvas").append("<br />[ " + qcDownload + " ]").show();
 		        jQuery("#qualityControl_message").empty();
