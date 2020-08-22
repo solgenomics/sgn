@@ -26,7 +26,7 @@ sub check_pheno_qc_result :Path('/phenotype/qualityControl/check/result/') Args(
     $c->stash->{pop_id} = $pop_id;
 
     $self->pheno_qualityControl_output_files($c);
-    my $qc_output_file = $c->stash->{qc_coefficients_json_file};
+    my $qc_output_file = $c->stash->{qc_messages_json_file};
    
     my $ret->{result} = undef;
    
@@ -161,26 +161,26 @@ sub pheno_qualityControl_output_files {
     my $file_cache  = Cache::File->new(cache_root => $qc_cache_dir);
     $file_cache->purge();
                                        
-    my $key_table = 'qc_coefficients_table_' . $pop_id;
-    my $key_json  = 'qc_coefficients_json_' . $pop_id;
-    my $qc_coefficients_file      = $file_cache->get($key_table);
-    my $qc_coefficients_json_file = $file_cache->get($key_json);
+    my $key_table = 'qc_messages_table_' . $pop_id;
+    my $key_json  = 'qc_messages_json_' . $pop_id;
+    my $qc_messages_file      = $file_cache->get($key_table);
+    my $qc_messages_json_file = $file_cache->get($key_json);
 
-    unless ($qc_coefficients_file && $qc_coefficients_json_file )
+    unless ($qc_messages_file && $qc_messages_json_file )
     {         
-        $qc_coefficients_file = catfile($qc_cache_dir, "qc_coefficients_table_${pop_id}");
+        $qc_messages_file = catfile($qc_cache_dir, "qc_messages_table_${pop_id}");
 
-        write_file($qc_coefficients_file);
-        $file_cache->set($key_table, $qc_coefficients_file, '30 days');
+        write_file($qc_messages_file);
+        $file_cache->set($key_table, $qc_messages_file, '30 days');
 
-        $qc_coefficients_json_file = catfile($qc_cache_dir, "qc_coefficients_json_${pop_id}");
+        $qc_messages_json_file = catfile($qc_cache_dir, "qc_messages_json_${pop_id}");
 
-        write_file($qc_coefficients_json_file);
-        $file_cache->set($key_json, $qc_coefficients_json_file, '30 days');
+        write_file($qc_messages_json_file);
+        $file_cache->set($key_json, $qc_messages_json_file, '30 days');
     }
 
-    $c->stash->{qc_coefficients_table_file} = $qc_coefficients_file;
-    $c->stash->{qc_coefficients_json_file}  = $qc_coefficients_json_file;
+    $c->stash->{qc_messages_table_file} = $qc_messages_file;
+    $c->stash->{qc_messages_json_file}  = $qc_messages_json_file;
 }
 
 
@@ -192,15 +192,15 @@ sub pheno_qualityControl_analysis_output :Path('/phenotypic/qualityControl/analy
     $c->stash->{pop_id} = $pop_id;
    
     $self->pheno_qualityControl_output_files($c);
-    my $qc_json_file = $c->stash->{qc_coefficients_json_file};
-    my $qc_table_file = $c->stash->{qc_coefficients_table_file}; 
+    my $qc_json_file = $c->stash->{qc_messages_json_file};
+    my $qc_table_file = $c->stash->{qc_messages_table_file}; 
     my $ret->{status} = 'failed';
 
     if (!-s $qc_json_file)
     {
         $self->run_pheno_qualityControl_analysis($c);  
-        $qc_json_file = $c->stash->{qc_coefficients_json_file};
-        $qc_table_file = $c->stash->{qc_coefficients_table_file}; 
+        $qc_json_file = $c->stash->{qc_messages_json_file};
+        $qc_table_file = $c->stash->{qc_messages_table_file}; 
     }
     
     if (-s $qc_json_file)
@@ -230,7 +230,7 @@ sub download_phenotypic_qualityControl : Path('/download/phenotypic/qualityContr
     
     $self->create_qualityControl_dir($c);
     my $qc_dir = $c->stash->{qualityControl_cache_dir};
-    my $qc_file = catfile($qc_dir,  "qc_coefficients_table_${id}");
+    my $qc_file = catfile($qc_dir,  "qc_messages_table_${id}");
   
     unless (!-e $qc_file || -s $qc_file <= 1) 
     {
@@ -261,8 +261,8 @@ sub temp_pheno_qc_output_file {
     $self->pheno_qualityControl_output_files($c);
    
     my $files = join ("\t",
-              $c->stash->{qc_coefficients_table_file},
-              $c->stash->{qc_coefficients_json_file},              
+              $c->stash->{qc_messages_table_file},
+              $c->stash->{qc_messages_json_file},              
     );
      
     my $tmp_dir = $c->stash->{qualityControl_temp_dir};

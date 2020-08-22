@@ -13,10 +13,11 @@ library(rjson)
 library(data.table)
 library(phenoAnalysis)
 library(dplyr)
-#library(rbenchmark)
 library(methods)
 library(na.tools)
 library(st4gi)
+library(stringr)
+library(catchr)
 
 
 allArgs <- commandArgs()
@@ -29,14 +30,12 @@ inputFiles  <- scan(grep("input_files", allArgs, value = TRUE),
                     what = "character")
 
 
-refererQtl <- grep("qtl", inputFiles, value=TRUE)
-
 phenoDataFile      <- grep("\\/phenotype_data", inputFiles, value=TRUE)
 formattedPhenoFile <- grep("formatted_phenotype_data", inputFiles, fixed = FALSE, value = TRUE)
 metadataFile       <-  grep("metadata", inputFiles, value=TRUE)
 
-qcCoefficientsFile     <- grep("qc_coefficients_table", outputFiles, value=TRUE)
-qcCoefficientsJsonFile <- grep("qc_coefficients_json", outputFiles, value=TRUE)
+qcMessagesFile     <- grep("qc_messages_table", outputFiles, value=TRUE)
+qcMessagesJsonFile <- grep("qc_messages_json", outputFiles, value=TRUE)
 
 formattedPhenoData <- c()
 phenoData          <- c()
@@ -48,61 +47,127 @@ phenoData <- as.data.frame(fread(phenoDataFile, sep="\t",
 metaData <- scan(metadataFile, what="character")
 
 message('pheno file ', phenoDataFile)
-print(phenoData[1:3, ])
-print(metaData)
-
-allTraitNames <- c()
-nonTraitNames <- c()
-naTraitNames  <- c()
-
-if (length(refererQtl) != 0) {
-
-  allNames      <- names(phenoData)
-  nonTraitNames <- c("ID")
-  allTraitNames <- allNames[! allNames %in% nonTraitNames]
-
-} else {
-  allNames <- names(phenoData)
-  nonTraitNames <- metaData
-
-  allTraitNames <- allNames[! allNames %in% nonTraitNames]
+if (colnames(phenoData[ncol(phenoData)]) =="notes"){
+  mydata<-select(phenoData, -c("notes"))
+}else{
+  mydata <- phenoData
 }
 
-print(allTraitNames)
+mycolnames = tolower(colnames(mydata))
 
-colnames(phenoData)
+myNewdata <- data.frame(mydata[,23],
+                        mydata[,19],
+                        mydata[,27],
+                        mydata[,28],
+                        mydata[,24])
 
-#Calculating missing data
-missingData <- apply(phenoData, 2, function(x) sum(is.na(x)))
-md = data.frame(missingData)
-
-
-# colnames(phenoData)
-
-# Load the st4gi package
-
-
-# Load the data
-
-# mydata <- read.csv("PECIP2018_ST01CSR.csv")
-
-# Have a look to the structure of the file
-# Check that all numeric traits are of type num or int
-
-str(inputFiles)
+for (i in 40:ncol(mydata)){
+  myNewdata<-cbind(myNewdata, mydata[,i])
+}
 
 
-# Check data
-# This will check for inconsistencies  in the data as well as outliers
-# In this example, only extreme values are detected
+colnames(myNewdata) <- c("cipno","geno","row","col","rep")
+traits = c(6:ncol(myNewdata))
+j = 1
+for(i in 6:ncol(myNewdata)){
+  names(myNewdata)[i] <- mycolnames[i+34]
+  traits[j] <- mycolnames[i+34]
+  j=j+1
+}
 
-#This part I must add to breedbase
-check.data(phenoData)
 
-# See what happens if number of roots were 0 for some plot
+#This part I have to add to breedbase
 
-d <- phenoData # A copy of mydata
-d[5, 'nocr'] <- 0 # Zero commercial roots for plot 5
-check.data(d)
+testit <- suppressWarnings(catch_expr(check.data(myNewdata), warning = c(collect)))
+message <-testit$warning
+if (length(message)==0){
+	message = "All good!"
+	cat(message,"\n")
+}else{
+	message<-paste( unlist(testit$warning), collapse = '')
+	cat(message,"\n")
+}
 
-# Fix all the detected problems in the data file and load the data again
+#formating the result
+result <- unlist(str_split(message,":"))
+result <- result[2]
+result <- str_replace_all(result, "[[:punct:]]", " ")
+result <- unlist(str_split(result,"  "))
+result <- gsub(" ","",result)
+
+#preparing the black list of traits that not passed on the test
+black_list <- c(1:length(traits))
+
+for (i in 1:length(result)){
+  if (result[i]=="c"){
+    cat("removing ",result[i],"\n" )
+  }else if (result[i] == ""){
+    cat("removing empty spaces ",i,"\n")
+      
+  }else{
+      black_list[i] = result[i]
+    }
+}
+
+black_list<-black_list[!is.na(black_list)]
+
+result_traits <- c(1:length(traits))
+
+if (length(result)>1){
+  for (i in 1:length(traits)){
+    result_traits[i] = "Trait passed on QC"
+    j=1
+    for (j in 1:length(black_list)){
+      if (traits[i] == black_list[j]){
+        result_traits[i] = "Trait is not in the QC script"
+        cat("Found the wrong trait!", "\n")
+        j=length(black_list)
+      }else{
+        j=j+1
+      }
+    }
+  }
+}
+
+
+
+
+Message = data.frame(traits,result_traits)
+print(Message)
+
+Message = Message %>% 
+  dplyr::rename(
+    trait = traits,
+    "QC - comment"  = result_traits,
+  )
+
+
+
+
+qualityControlList <- list(
+                     "traits" = toJSON(traits),
+                     "messages" = toJSON(result_traits)
+                   )
+
+
+qualityControlJson <- paste("{",paste("\"", names(qualityControlList), "\":", qualityControlList, collapse=","), "}")
+qualityControlJson <- list(qualityControlJson)
+
+fwrite(Message,
+       file      = qcMessagesFile,
+       row.names = FALSE,
+       sep       = "\t",
+       quote     = FALSE,
+       )
+
+fwrite(qualityControlJson,
+       file      = qcMessagesJsonFile,
+       col.names = FALSE,
+       row.names = FALSE,
+       qmethod   = "escape"
+       )
+
+
+# write.table(Message, file = qcMessagesFile, append = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+
+q(save = "no", runLast = FALSE)

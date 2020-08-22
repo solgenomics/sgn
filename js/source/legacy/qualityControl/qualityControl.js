@@ -289,7 +289,7 @@ function createqualityControlTable (tableId) {
     
     var table = '<table id="' + tableId + '" class="table" style="width:100%;text-align:left">';
     table    += '<thead><tr>';
-    table    += '<th>Trait</th><th>VG</th><th>VE</th><th>VRes</th><th>qualityControl</th>'; 
+    table    += '<th>Trait</th><th>QC - comments</t'; 
     table    += '</tr></thead>';
     table    += '</table>';
 
