@@ -833,6 +833,23 @@ sub store_metadata {
         my $nd_protocolprop_markers_json_string = encode_json $nd_protocolprop_markers;
         my $nd_protocolprop_markers_array_json_string = encode_json $nd_protocolprop_markers_array;
 
+        my %unique_chromosomes;
+        foreach (@$nd_protocolprop_markers_array) {
+            $unique_chromosomes{$_->{chrom}}++;
+        }
+        my %chromosomes;
+        my $chr_count = 0;
+        foreach my $chr_name (sort keys %unique_chromosomes) {
+            my $marker_count = $unique_chromosomes{$chr_name};
+            $chromosomes{$chr_name} = {
+                rank => $chr_count,
+                marker_count => $marker_count
+            };
+            $chr_count++;
+        }
+        print STDERR Dumper \%chromosomes;
+        $new_protocol_info->{chromosomes} = \%chromosomes;
+
         delete($new_protocol_info->{markers});
         delete($new_protocol_info->{markers_array});
 
@@ -1006,9 +1023,6 @@ sub store_identifiers {
                 my $genotypeprop_id = $stock_lookup_obj->{chrom}->{$chromosome_counter};
 
                 my $chrom_genotypeprop = $genotypeprop_json->{$chromosome};
-
-                #TOP LEVEL KEY FOR CHROMOSOME IN CHROMOSOME SEPARATED GENOTYPEPROPS
-                $chrom_genotypeprop->{'CHROMOSOME'} = $chromosome;
 
                 if (!$genotypeprop_id) {
 
