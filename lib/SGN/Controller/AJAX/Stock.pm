@@ -1952,7 +1952,7 @@ sub get_stock_datatables_genotype_data_GET  {
                     $g->{genotypingDataProjectDescription},
                     $g->{analysisMethod},
                     $g->{genotypeDescription},
-                    '<a href="/stock/'.$stock_id.'/genotypes?genotypeprop_id='.$g->{markerProfileDbId}.'">Download</a>'
+                    '<a href="/stock/'.$stock_id.'/genotypes?genotype_id='.$g->{genotypeDbId}.'">Download</a>'
                 ];
             }
             $counter++;
