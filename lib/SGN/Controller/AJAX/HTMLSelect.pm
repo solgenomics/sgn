@@ -780,6 +780,40 @@ sub get_trained_keras_mask_r_cnn_models : Path('/ajax/html/select/trained_keras_
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_analysis_models : Path('/ajax/html/select/models') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $model_properties_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_properties', 'protocol_property')->cvterm_id();
+
+    my $model_q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, model_type.value
+        FROM nd_protocol
+        JOIN nd_protocolprop AS model_type ON(nd_protocol.nd_protocol_id=model_type.nd_protocol_id AND model_type.type_id=$model_properties_cvterm_id);";
+    my $model_h = $schema->storage->dbh()->prepare($model_q);
+    $model_h->execute();
+    my @models;
+    while (my ($nd_protocol_id, $name, $description, $model_type) = $model_h->fetchrow_array()) {
+        my $model_type_hash = decode_json $model_type;
+
+        push @models, [$nd_protocol_id, $name];
+    }
+
+    my $id = $c->req->param("id") || "html_model_select";
+    my $name = $c->req->param("name") || "html_model_select";
+    my $empty = $c->req->param("empty");
+
+    @models = sort { $a->[1] cmp $b->[1] } @models;
+    if ($empty) { unshift @models, [ "", "Please select a model" ]; }
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@models
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
 sub get_imaging_event_vehicles : Path('/ajax/html/select/imaging_event_vehicles') Args(0) {
     my $self = shift;
     my $c = shift;
