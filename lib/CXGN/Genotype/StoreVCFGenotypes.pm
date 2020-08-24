@@ -1027,7 +1027,7 @@ sub store_identifiers {
 
                 if (!$genotypeprop_id) {
 
-                    #$chrom_genotypeprop->{CHROMOSOME} = $chromosome;
+                    $chrom_genotypeprop->{CHROM} = $chromosome;
 
                     my $json_string = encode_json $chrom_genotypeprop;
                     if ($self->marker_by_marker_storage) { #Used when standard VCF is being stored (NOTE VCF is transpoed prior to parsing by default now), where genotype scores are appended into jsonb.

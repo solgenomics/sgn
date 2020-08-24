@@ -568,6 +568,7 @@ sub get_genotype_info {
     my %selected_protocol_marker_info;
     my %selected_protocol_top_key_info;
     my %filtered_markers;
+    my $genotypeprop_chromosome_rank_string = '';
     if (scalar(@found_protocolprop_ids)>0){
         my $protocolprop_id_sql = join ("," , @found_protocolprop_ids);
         my $protocolprop_where_sql = "nd_protocol_id in ($protocolprop_id_sql) and type_id = $vcf_map_details_cvterm_id";
@@ -579,6 +580,7 @@ sub get_genotype_info {
         if ($chromosome_list && scalar(@$chromosome_list)>0) {
             my $chromosome_list_sql = '\'' . join('\', \'', @$chromosome_list) . '\'';
             $chromosome_where = " AND (s.value->>'chrom')::text IN ($chromosome_list_sql)";
+            #$genotypeprop_chromosome_rank_string = " AND value->>'CHROM' IN ($chromosome_list_sql) ";
         }
         my $start_position_where = '';
         if (defined($start_position)) {
@@ -649,12 +651,12 @@ sub get_genotype_info {
         }
 
         my $q2 = "SELECT genotypeprop_id
-            FROM genotypeprop WHERE genotype_id = ? and type_id=$vcf_snp_genotyping_cvterm_id;";
+            FROM genotypeprop WHERE genotype_id = ? AND type_id=$vcf_snp_genotyping_cvterm_id $genotypeprop_chromosome_rank_string;";
         my $h2 = $schema->storage->dbh()->prepare($q2);
 
         my $genotypeprop_q = "SELECT s.key $genotypeprop_hash_select_sql
             FROM genotypeprop, jsonb_each(genotypeprop.value) as s
-            WHERE genotypeprop_id = ? AND type_id = $vcf_snp_genotyping_cvterm_id $filtered_markers_sql;";
+            WHERE genotypeprop_id = ? AND s.key != 'CHROM' AND type_id = $vcf_snp_genotyping_cvterm_id $filtered_markers_sql;";
         my $genotypeprop_h = $schema->storage->dbh()->prepare($genotypeprop_q);
 
         foreach my $genotype_id (@genotype_id_array){
@@ -857,9 +859,11 @@ sub init_genotype_iterator {
     my $protocolprop_hash_select_sql = scalar(@protocolprop_marker_hash_select_arr) > 0 ? ', '.join ',', @protocolprop_marker_hash_select_arr : '';
 
     my $chromosome_where = '';
+    my $genotypeprop_chromosome_rank_string = '';
     if ($chromosome_list && scalar(@$chromosome_list)>0) {
         my $chromosome_list_sql = '\'' . join('\', \'', @$chromosome_list) . '\'';
         $chromosome_where = " AND (s.value->>'chrom')::text IN ($chromosome_list_sql)";
+        #$genotypeprop_chromosome_rank_string = " AND value->>'CHROM' IN ($chromosome_list_sql) ";
     }
     my $start_position_where = '';
     if (defined($start_position)) {
@@ -1026,12 +1030,12 @@ sub init_genotype_iterator {
 
     my $genotypeprop_q = "SELECT s.key $genotypeprop_hash_select_sql
         FROM genotypeprop, jsonb_each(genotypeprop.value) as s
-        WHERE genotypeprop_id = ? AND type_id = $vcf_snp_genotyping_cvterm_id $filtered_markers_sql;";
+        WHERE genotypeprop_id = ? AND s.key != 'CHROM' AND type_id = $vcf_snp_genotyping_cvterm_id $filtered_markers_sql;";
     my $genotypeprop_h = $schema->storage->dbh()->prepare($genotypeprop_q);
     $self->_genotypeprop_h($genotypeprop_h);
 
     my $q2 = "SELECT genotypeprop_id
-        FROM genotypeprop WHERE genotype_id = ? and type_id=$vcf_snp_genotyping_cvterm_id;";
+        FROM genotypeprop WHERE genotype_id = ? AND type_id=$vcf_snp_genotyping_cvterm_id $genotypeprop_chromosome_rank_string;";
     my $h2 = $schema->storage->dbh()->prepare($q2);
     $self->_iterator_genotypeprop_query_handle($h2);
 
