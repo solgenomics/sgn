@@ -245,7 +245,7 @@ my $stock_id = $schema->resultset("Stock::Stock")->find({uniquename => 'SRLI1_90
 $mech->get_ok('http://localhost:3010/stock/'.$stock_id.'/datatables/genotype_data');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is(scalar(@{$response->{data}}), 3);
+is(scalar(@{$response->{data}}), 4);
 
 
 my $file = $f->config->{basepath}."/t/data/genotype_data/10acc_200Ksnps.transposedVCF.hd.txt";
