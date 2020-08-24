@@ -99,8 +99,14 @@ sub _validate_with_plugin {
             }
             push @markers, $marker_name;
 
-            if (!$marker_name) {
-                push @error_messages, "No marker name given on line $line_count";
+            if ($marker_info[2] eq '' || !defined($marker_info[2])) {
+                push @error_messages, "No marker name given on line $line_count. Marker name can be . if not assigned";
+            }
+            if ($marker_info[0] eq '' || !defined($marker_info[0])) {
+                push @error_messages, "No chromosome 'chrom' given for marker $marker_name";
+            }
+            if ($marker_info[1] eq '' || !defined($marker_info[1])) {
+                push @error_messages, "No position 'pos' given for marker $marker_name";
             }
             if (!$marker_info[3]) {
                 push @error_messages, "No reference 'ref' allele given for marker $marker_name";
