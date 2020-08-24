@@ -478,7 +478,7 @@ sub get_genotype_info {
         $stock_select = 'stock.stock_id';
     }
 
-    my $q = "SELECT $stock_select, genotype_values.genotypeprop_id, igd_number_genotypeprop.value, nd_protocol.nd_protocol_id, nd_protocol.name, stock.uniquename, stock.type_id, stock_cvterm.name, genotype.genotype_id, genotype.uniquename, genotype.description, project.project_id, project.name, project.description, accession_of_tissue_sample.stock_id, accession_of_tissue_sample.uniquename, count(genotype_values.genotypeprop_id) OVER() AS full_count
+    my $q = "SELECT $stock_select, igd_number_genotypeprop.value, nd_protocol.nd_protocol_id, nd_protocol.name, stock.uniquename, stock.type_id, stock_cvterm.name, genotype.genotype_id, genotype.uniquename, genotype.description, project.project_id, project.name, project.description, accession_of_tissue_sample.stock_id, accession_of_tissue_sample.uniquename, count(genotype.genotype_id) OVER() AS full_count
         FROM stock
         JOIN cvterm AS stock_cvterm ON(stock.type_id = stock_cvterm.cvterm_id)
         LEFT JOIN stock_relationship ON(stock_relationship.subject_id=stock.stock_id AND stock_relationship.type_id = $tissue_sample_of_cvterm_id)
@@ -492,10 +492,9 @@ sub get_genotype_info {
         LEFT JOIN nd_protocolprop ON(nd_protocolprop.nd_protocol_id = nd_protocol.nd_protocol_id AND nd_protocolprop.type_id = $vcf_map_details_cvterm_id)
         JOIN genotype USING(genotype_id)
         LEFT JOIN genotypeprop AS igd_number_genotypeprop ON(igd_number_genotypeprop.genotype_id = genotype.genotype_id AND igd_number_genotypeprop.type_id = $igd_genotypeprop_cvterm_id)
-        JOIN genotypeprop AS genotype_values ON(genotype_values.genotype_id = genotype.genotype_id AND genotype_values.type_id IN ($vcf_snp_genotyping_cvterm_id))
         JOIN project USING(project_id)
         $where_clause
-        ORDER BY stock.stock_id, genotype_values.genotypeprop_id ASC
+        ORDER BY stock.stock_id, genotype.genotype_id ASC
         $limit_clause
         $offset_clause;";
 
@@ -505,12 +504,11 @@ sub get_genotype_info {
 
     my $total_count = 0;
     my @genotype_id_array;
-    my %genotype_id_lookup;
     my @genotypeprop_array;
     my %genotype_hash;
     my %genotypeprop_hash;
     my %protocolprop_hash;
-    while (my ($stock_id, $genotypeprop_id, $igd_number_json, $protocol_id, $protocol_name, $stock_name, $stock_type_id, $stock_type_name, $genotype_id, $genotype_uniquename, $genotype_description, $project_id, $project_name, $project_description, $accession_id, $accession_uniquename, $full_count) = $h->fetchrow_array()) {
+    while (my ($stock_id, $igd_number_json, $protocol_id, $protocol_name, $stock_name, $stock_type_id, $stock_type_name, $genotype_id, $genotype_uniquename, $genotype_description, $project_id, $project_name, $project_description, $accession_id, $accession_uniquename, $full_count) = $h->fetchrow_array()) {
         my $igd_number_hash = $igd_number_json ? decode_json $igd_number_json : undef;
         my $igd_number = $igd_number_hash ? $igd_number_hash->{'igd number'} : undef;
         $igd_number = !$igd_number && $igd_number_hash ? $igd_number_hash->{'igd_number'} : undef;
@@ -529,8 +527,6 @@ sub get_genotype_info {
         my $stock_object = CXGN::Stock::Accession->new({schema=>$self->bcs_schema, stock_id=>$germplasmDbId});
 
         push @genotype_id_array, $genotype_id;
-        push @genotypeprop_array, $genotypeprop_id;
-        $genotype_id_lookup{$genotypeprop_id} = $genotype_id;
 
         $genotype_hash{$genotype_id} = {
             markerProfileDbId => $genotype_id,
@@ -554,7 +550,7 @@ sub get_genotype_info {
         $protocolprop_hash{$protocol_id}++;
         $total_count = $full_count;
     }
-    print STDERR "CXGN::Genotype::Search has genotypeprop_ids $total_count\n";
+    print STDERR "CXGN::Genotype::Search has genotype_ids $total_count\n";
 
     my @found_protocolprop_ids = keys %protocolprop_hash;
     my @protocolprop_marker_hash_select_arr;
@@ -639,13 +635,12 @@ sub get_genotype_info {
         }
     }
 
-    my @found_genotypeprop_ids = keys %genotype_id_lookup;
     my @genotypeprop_hash_select_arr;
     foreach (@$genotypeprop_hash_select){
         push @genotypeprop_hash_select_arr, "s.value->>'$_'";
     }
-    if (scalar(@found_genotypeprop_ids)>0) {
-        my $genotypeprop_id_sql = join ("," , @found_genotypeprop_ids);
+    if (scalar(@genotype_id_array)>0) {
+        my $genotypeprop_id_sql = join ("," , @genotype_id_array);
         my $genotypeprop_hash_select_sql = scalar(@genotypeprop_hash_select_arr) > 0 ? ', '.join ',', @genotypeprop_hash_select_arr : '';
 
         my $filtered_markers_sql = '';
@@ -653,15 +648,23 @@ sub get_genotype_info {
             $filtered_markers_sql = " AND s.key IN ('". join ("','", keys %filtered_markers) ."')";
         }
 
+        my $q2 = "SELECT genotypeprop_id
+            FROM genotypeprop WHERE genotype_id = ? and type_id=$vcf_snp_genotyping_cvterm_id;";
+        my $h2 = $schema->storage->dbh()->prepare($q2);
+
         my $genotypeprop_q = "SELECT s.key $genotypeprop_hash_select_sql
             FROM genotypeprop, jsonb_each(genotypeprop.value) as s
             WHERE genotypeprop_id = ? AND type_id = $vcf_snp_genotyping_cvterm_id $filtered_markers_sql;";
         my $genotypeprop_h = $schema->storage->dbh()->prepare($genotypeprop_q);
-        foreach my $genotypeprop_id (@found_genotypeprop_ids){
-            $genotypeprop_h->execute($genotypeprop_id);
-            while (my ($marker_name, @genotypeprop_info_return) = $genotypeprop_h->fetchrow_array()) {
-                for my $s (0 .. scalar(@genotypeprop_hash_select_arr)-1){
-                    $genotype_hash{$genotype_id_lookup{$genotypeprop_id}}->{selected_genotype_hash}->{$marker_name}->{$genotypeprop_hash_select->[$s]} = $genotypeprop_info_return[$s];
+
+        foreach my $genotype_id (@genotype_id_array){
+            $h2->execute($genotype_id);
+            while (my ($genotypeprop_id) = $h2->fetchrow_array()) {
+                $genotypeprop_h->execute($genotypeprop_id);
+                while (my ($marker_name, @genotypeprop_info_return) = $genotypeprop_h->fetchrow_array()) {
+                    for my $s (0 .. scalar(@genotypeprop_hash_select_arr)-1){
+                        $genotype_hash{$genotype_id}->{selected_genotype_hash}->{$marker_name}->{$genotypeprop_hash_select->[$s]} = $genotypeprop_info_return[$s];
+                    }
                 }
             }
         }
