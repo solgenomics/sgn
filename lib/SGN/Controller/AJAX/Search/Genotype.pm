@@ -82,7 +82,7 @@ sub genotyping_data_search_GET : Args(0) {
                     $g->{genotypeDescription},
                     $g->{resultCount},
                     $g->{igd_number},
-                    "<a href=\"/stock/$g->{stock_id}/genotypes?genotypeprop_id=$g->{markerProfileDbId}\">Download</a>"
+                    "<a href=\"/stock/$g->{stock_id}/genotypes?genotype_id=$g->{markerProfileDbId}\">Download</a>"
                 ];
             }
             $counter++;
