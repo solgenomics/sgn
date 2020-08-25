@@ -69,9 +69,6 @@ jQuery(document).ready(function () {
 
                     var cell = "&nbsp";
                     var bgcolor = "lightgrey";
-                    var cell_id = "";
-                    var cell_name = "";
-                    var cell_accession = "";
 
                     if (response.design[well]) {
                         if (response.design[well].accession_name) {
@@ -90,13 +87,11 @@ jQuery(document).ready(function () {
                             if(response.design[well].source_tissue_id){
                                 cell = cell + "<br/>Source Tissue: <a href='/stock/" + response.design[well].source_tissue_id +"/view'>" + response.design[well].source_tissue_name + "</a>";
                             }
+                            cell = cell + "<br/><a onclick='replace_plate_accessions(\""+ response.design[well].plot_name +"\",\""+ response.design[well].plot_id +"\",\""+ response.design[well].accession_name +"\");'>Details</a>";
                             cell = cell + "<br/><br/>";
                         }
-                        cell_accession = response.design[well].accession_name;
-                        cell_id = response.design[well].plot_id;
-                        cell_name = response.design[well].plot_name;
                     }
-                    trial_plate_view_html = trial_plate_view_html + "<td onclick='replace_plate_accessions(\""+ cell_name +"\",\""+ cell_id +"\",\""+ cell_accession +"\");' bgcolor=" + bgcolor + ">" + cell + "</td>";
+                    trial_plate_view_html = trial_plate_view_html + "<td bgcolor=" + bgcolor + ">" + cell + "</td>";
                 }
                 trial_plate_view_html = trial_plate_view_html + "</tr>";
             });
