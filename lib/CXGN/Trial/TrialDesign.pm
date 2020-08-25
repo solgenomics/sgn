@@ -189,25 +189,53 @@ sub _convert_plot_numbers {
   my @rep_numbers = @{$rep_numbers_ref};
   my $total_plot_count = scalar(@plot_numbers);
   my $rep_plot_count = $total_plot_count / $number_of_reps;
+  my $first_plot_number = $self->get_plot_start_number();
+  my $increment = int($first_plot_number/100)*100;
+  my $round = 1;
+  my $p = 1;
+
   for (my $i = 0; $i < scalar(@plot_numbers); $i++) {
     my $plot_number;
-    my $first_plot_number;
-    if($self->has_plot_start_number || $self->has_plot_number_increment){
-        if ($self->has_plot_start_number()){
-          $first_plot_number = $self->get_plot_start_number();
-        } else {
-          $first_plot_number = 1;
-        }
-        if ($self->has_plot_number_increment()){
-          $plot_number = $first_plot_number + ($i * $self->get_plot_number_increment());
-        }
-        else {
-          $plot_number = $first_plot_number + $i;
-        }
-    }
-    else {
-        $plot_number = $plot_numbers[$i];
-    }
+    my $first_plot_number = $self->get_plot_start_number();
+
+    if ($first_plot_number > 90){
+      if (!(($i) % scalar($rep_plot_count))){
+        $round++;
+        $p = 1;
+      }
+
+      if($self->has_plot_start_number || $self->has_plot_number_increment){
+          if ($self->has_plot_start_number()){
+            $first_plot_number = $self->get_plot_start_number();
+          } else {
+            $first_plot_number = 1;
+          }
+          if ($self->has_plot_number_increment()){
+            $plot_number = $first_plot_number + (($p-1) * $self->get_plot_number_increment()) + ($rep_numbers[$i]-1) * $increment;
+          }
+          else {
+            $plot_number = $first_plot_number + $i;
+          }
+      }
+      else {
+          $plot_number = $plot_numbers[$i];
+      }
+
+    }else{
+
+      $first_plot_number = 1;
+
+          if ($self->has_plot_number_increment()){
+            $plot_number = $first_plot_number + ($i * $self->get_plot_number_increment()) + ($rep_numbers[$i]-1) * $increment;
+          }
+          else {
+            $plot_number = $first_plot_number + $i;
+          }
+
+          $plot_number = $plot_numbers[$i];
+      }
+
+    $p++;
     $plot_numbers[$i] = $plot_number;
   }
   return \@plot_numbers;
