@@ -160,67 +160,112 @@
                                             <input class="form-control" id="upload_new_analysis_model_application_version" name="upload_new_analysis_model_application_version" type="text"/>
                                         </div>
                                     </div>
-                                    <div class="form-group form-group-sm">
-                                        <label class="col-sm-3 control-label">Training Data File To Archive (required) (this should be the primary data file input into the model e.g. MyPhenotypes.csv): </label>
-                                        <div class="col-sm-9">
-                                            <input id="upload_new_analysis_model_training_data_file" name="upload_new_analysis_model_training_data_file" type="file" encoding="multipart/form-data"/>
-                                        </div>
-                                    </div>
-                                    <div class="form-group form-group-sm">
-                                        <label class="col-sm-3 control-label">Archive Training Data File Type (required) (e.g. MyAmazingPipeline_MainPhenotypeFile): </label>
-                                        <div class="col-sm-9">
-                                            <input class="form-control" id="upload_new_analysis_model_training_data_file_type" name="upload_new_analysis_model_training_data_file_type" type="text"/>
-                                        </div>
-                                    </div>
-                                    <div class="form-group form-group-sm">
-                                        <label class="col-sm-3 control-label">Model File To Archive (optional) (this should be a model weights file): </label>
-                                        <div class="col-sm-9">
-                                            <input id="upload_new_analysis_model_file" name="upload_new_analysis_model_file" type="file" encoding="multipart/form-data"/>
-                                        </div>
-                                    </div>
-                                    <div class="form-group form-group-sm">
-                                        <label class="col-sm-3 control-label">Archive Model File Type (optional) (e.g. MyAmazingPipeline_ModelWeights.Rds or MyAmazingPipeline_CNNWeights.hdf5): </label>
-                                        <div class="col-sm-9">
-                                            <input class="form-control" id="upload_new_analysis_model_file_type" name="upload_new_analysis_model_file_type" type="text"/>
-                                        </div>
-                                    </div>
-                                    <div class="form-group form-group-sm">
-                                        <label class="col-sm-3 control-label">(1) Auxiliary File To Archive (optional) (e.g. log file, param file, grm input file): </label>
-                                        <div class="col-sm-9">
-                                            <input id="upload_new_analysis_model_auxiliary_file_1" name="upload_new_analysis_model_auxiliary_file_1" type="file" encoding="multipart/form-data"/>
-                                        </div>
-                                    </div>
-                                    <div class="form-group form-group-sm">
-                                        <label class="col-sm-3 control-label">(1) Auxiliary File Type (optional): </label>
-                                        <div class="col-sm-9">
-                                            <input class="form-control" id="upload_new_analysis_model_auxiliary_file_type_1" name="upload_new_analysis_model_auxiliary_file_type_1" type="text"/>
-                                        </div>
-                                    </div>
-                                    <div class="form-group form-group-sm">
-                                        <label class="col-sm-3 control-label">(2) Auxiliary File To Archive (optional) (e.g. log file, param file, grm input file): </label>
-                                        <div class="col-sm-9">
-                                            <input id="upload_new_analysis_model_auxiliary_file_2" name="upload_new_analysis_model_auxiliary_file_2" type="file" encoding="multipart/form-data"/>
-                                        </div>
-                                    </div>
-                                    <div class="form-group form-group-sm">
-                                        <label class="col-sm-3 control-label">(2) Auxiliary File Type (optional): </label>
-                                        <div class="col-sm-9">
-                                            <input class="form-control" id="upload_new_analysis_model_auxiliary_file_type_2" name="upload_new_analysis_model_auxiliary_file_type_2" type="text"/>
-                                        </div>
-                                    </div>
-                                    <div class="form-group form-group-sm">
-                                        <label class="col-sm-3 control-label">(3) Auxiliary File To Archive (optional) (e.g. log file, param file, grm input file): </label>
-                                        <div class="col-sm-9">
-                                            <input id="upload_new_analysis_model_auxiliary_file_3" name="upload_new_analysis_model_auxiliary_file_3" type="file" encoding="multipart/form-data"/>
-                                        </div>
-                                    </div>
-                                    <div class="form-group form-group-sm">
-                                        <label class="col-sm-3 control-label">(3) Auxiliary File Type (optional): </label>
-                                        <div class="col-sm-9">
-                                            <input class="form-control" id="upload_new_analysis_model_auxiliary_file_type_3" name="upload_new_analysis_model_auxiliary_file_type_3" type="text"/>
-                                        </div>
-                                    </div>
 
+                                </div>
+
+                                <div class="well well-sm">
+                                    <h4>Data files from this analysis model</h4>
+                                    
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>File Upload</th>
+                                                <th>File Type</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <div class="form-group form-group-sm">
+                                                        <label class="col-sm-3 control-label">Main Phenotype Data File To Archive (required) (this should be the primary data file input into the model e.g. MyPhenotypes.csv): </label>
+                                                        <div class="col-sm-9">
+                                                            <input id="upload_new_analysis_model_training_data_file" name="upload_new_analysis_model_training_data_file" type="file" encoding="multipart/form-data"/>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="form-group form-group-sm">
+                                                        <label class="col-sm-3 control-label">Archive Main Phenotype Data File Type (required) (e.g. MyAmazingPipeline_MainPhenotypeFile): </label>
+                                                        <div class="col-sm-9">
+                                                            <input class="form-control" id="upload_new_analysis_model_training_data_file_type" name="upload_new_analysis_model_training_data_file_type" type="text"/>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <div class="form-group form-group-sm">
+                                                        <label class="col-sm-3 control-label">Model File To Archive (optional) (this should be a model weights file): </label>
+                                                        <div class="col-sm-9">
+                                                            <input id="upload_new_analysis_model_file" name="upload_new_analysis_model_file" type="file" encoding="multipart/form-data"/>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="form-group form-group-sm">
+                                                        <label class="col-sm-3 control-label">Archive Model File Type (optional) (e.g. MyAmazingPipeline_ModelWeights.Rds or MyAmazingPipeline_CNNWeights.hdf5): </label>
+                                                        <div class="col-sm-9">
+                                                            <input class="form-control" id="upload_new_analysis_model_file_type" name="upload_new_analysis_model_file_type" type="text"/>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <div class="form-group form-group-sm">
+                                                        <label class="col-sm-3 control-label">(1) Auxiliary File To Archive (optional) (e.g. log file, param file, grm input file): </label>
+                                                        <div class="col-sm-9">
+                                                            <input id="upload_new_analysis_model_auxiliary_file_1" name="upload_new_analysis_model_auxiliary_file_1" type="file" encoding="multipart/form-data"/>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="form-group form-group-sm">
+                                                        <label class="col-sm-3 control-label">(1) Auxiliary File Type (optional): </label>
+                                                        <div class="col-sm-9">
+                                                            <input class="form-control" id="upload_new_analysis_model_auxiliary_file_type_1" name="upload_new_analysis_model_auxiliary_file_type_1" type="text"/>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <div class="form-group form-group-sm">
+                                                        <label class="col-sm-3 control-label">(2) Auxiliary File To Archive (optional) (e.g. log file, param file, grm input file): </label>
+                                                        <div class="col-sm-9">
+                                                            <input id="upload_new_analysis_model_auxiliary_file_2" name="upload_new_analysis_model_auxiliary_file_2" type="file" encoding="multipart/form-data"/>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="form-group form-group-sm">
+                                                        <label class="col-sm-3 control-label">(2) Auxiliary File Type (optional): </label>
+                                                        <div class="col-sm-9">
+                                                            <input class="form-control" id="upload_new_analysis_model_auxiliary_file_type_2" name="upload_new_analysis_model_auxiliary_file_type_2" type="text"/>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <div class="form-group form-group-sm">
+                                                        <label class="col-sm-3 control-label">(3) Auxiliary File To Archive (optional) (e.g. log file, param file, grm input file): </label>
+                                                        <div class="col-sm-9">
+                                                            <input id="upload_new_analysis_model_auxiliary_file_3" name="upload_new_analysis_model_auxiliary_file_3" type="file" encoding="multipart/form-data"/>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="form-group form-group-sm">
+                                                        <label class="col-sm-3 control-label">(3) Auxiliary File Type (optional): </label>
+                                                        <div class="col-sm-9">
+                                                            <input class="form-control" id="upload_new_analysis_model_auxiliary_file_type_3" name="upload_new_analysis_model_auxiliary_file_type_3" type="text"/>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
 
                                 <center>
@@ -355,12 +400,12 @@ jQuery(document).ready(function () {
             alert('Please give a new model application version');
             return false;
         }
-        if (upload_new_analysis_model_id == '' && upload_new_analysis_model_training_data_file === '') {
-            alert('Please give a new model training data file');
+        if (upload_new_analysis_model_training_data_file === '') {
+            alert('Please give a new model training data file (or the main phenotype file you used to do the analysis)');
             return false;
         }
-        if (upload_new_analysis_model_id == '' && upload_new_analysis_model_training_data_file_type == '') {
-            alert('Please give a new model training data file type');
+        if (upload_new_analysis_model_training_data_file_type == '') {
+            alert('Please give a new model training data file type (or the main phenotype file you used to do the analysis)');
             return false;
         }
         if ( (upload_new_analysis_model_file == '' && upload_new_analysis_model_file_type != '') || (upload_new_analysis_model_file != '' && upload_new_analysis_model_file_type == '') ) {

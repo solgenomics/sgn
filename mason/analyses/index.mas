@@ -30,6 +30,7 @@ Lukas Mueller <lam87@cornell.edu>
 <& /analyses/upload_analysis_dialogs.mas &>
 
 <div class="well">
+<h3>Your Analyses</h3>
 <table class="table table-bordered table-hover" id="analyses_by_user_table">
   <thead>
   <tr>
@@ -59,6 +60,7 @@ Lukas Mueller <lam87@cornell.edu>
 </div>
 
 <div class="well">
+<h3>Your Models</h3>
 <table class="table table-bordered table-hover" id="models_by_user_table">
   <thead>
   <tr>
