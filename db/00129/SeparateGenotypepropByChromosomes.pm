@@ -68,7 +68,7 @@ sub patch {
     my $vcf_snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_snp_genotyping', 'genotype_property')->cvterm_id();
     my $vcf_map_details_markers_array_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details_markers_array', 'protocol_property')->cvterm_id();
 
-    my $q = "SELECT nd_protocol_id, nd_protocolprop.nd_protocolprop_id, nd_protocolprop.value, genotype_id, genotypeprop.genotypeprop_id, genotypeprop.value
+    my $q = "SELECT nd_protocol.nd_protocol_id, nd_protocolprop.nd_protocolprop_id, nd_protocolprop.value, genotype.genotype_id, genotypeprop.genotypeprop_id, genotypeprop.value
         FROM nd_protocol
         JOIN nd_protocolprop ON(nd_protocol.nd_protocol_id = nd_protocolprop.nd_protocol_id)
         JOIN nd_experiment_protocol ON(nd_protocolprop.nd_protocol_id = nd_experiment_protocol.nd_protocol_id)
@@ -130,6 +130,8 @@ sub patch {
                 $seen_protocols{$protocol_id}++;
             }
 
+            $h4->execute($genotypeprop_id);
+
             while (my ($rank, $chromosome_markers) = each %chrom_map) {
                 my $chr_name = $chrom_name_map{$rank};
                 my %geno = ('CHROM' => $chr_name);
@@ -141,7 +143,6 @@ sub patch {
                 $h5->execute($vcf_snp_genotyping_cvterm_id, $rank, encode_json \%geno, $genotype_id);
             }
 
-            $h4->execute($genotypeprop_id);
         }
     }
 
