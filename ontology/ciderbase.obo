@@ -1,0 +1,168 @@
+format-version: 1.2
+data-version: 1
+date: 08:24:2020 03:00
+default-namespace: ciderbase_ontology
+ontology: ciderbase_ontology
+
+
+[Term]
+id: CIDER:0000001
+name: CiderBase trait ontology
+
+[Term]
+id: CIDER:0000002
+name: Fruit
+is_a: CIDER:0000001 ! CiderBase trait ontology
+
+[Term]
+id: CIDER:0000003
+name: Juice
+is_a: CIDER:0000001 ! CiderBase trait ontology
+
+[Term]
+id: CIDER:0000004
+name: Tree
+is_a: CIDER:0000001 ! CiderBase trait ontology
+
+[Term]
+id: CIDER:0000005
+name: fruit mass per apple (g)
+def: "Total mass divided by number of measured fruit"
+is_a: CIDER:0000017 ! Variables
+relationship: variable_of CIDER:0000002 ! Fruit
+
+[Term]
+id: CIDER:0000006
+name: fruit diameter per apple (mm)
+is_a: CIDER:0000017 ! Variables
+relationship: variable_of CIDER:0000002 ! Fruit
+
+[Term]
+id: CIDER:0000007
+name: red peel color percentage
+is_a: CIDER:0000017 ! Variables
+relationship: variable_of CIDER:0000002 ! Fruit
+
+[Term]
+id: CIDER:0000008
+name: green/yellow peel color observation 1-5
+is_a: CIDER:0000017 ! Variables
+relationship: variable_of CIDER:0000002 ! Fruit
+
+[Term]
+id: CIDER:0000009
+name: flesh firmness (N)
+is_a: CIDER:0000017 ! Variables
+relationship: variable_of CIDER:0000002 ! Fruit
+
+[Term]
+id: CIDER:0000010
+name: starch pattern index 1-8
+is_a: CIDER:0000017 ! Variables
+relationship: variable_of CIDER:0000002 ! Fruit
+
+[Term]
+id: CIDER:0000011
+name: sunburn incidence 1-4
+is_a: CIDER:0000017 ! Variables
+relationship: variable_of CIDER:0000002 ! Fruit
+
+[Term]
+id: CIDER:0000012
+name: chlorophyll A content 0-3
+is_a: CIDER:0000017 ! Variables
+relationship: variable_of CIDER:0000002 ! Fruit
+
+[Term]
+id: CIDER:0000013
+name: internal browning percentage
+is_a: CIDER:0000017 ! Variables
+relationship: variable_of CIDER:0000002 ! Fruit
+
+[Term]
+id: CIDER:0000014
+name: watercore percentage
+is_a: CIDER:0000017 ! Variables
+relationship: variable_of CIDER:0000002 ! Fruit
+
+[Term]
+id: CIDER:0000015
+name: fruit cracking 1-4
+is_a: CIDER:0000017 ! Variables
+relationship: variable_of CIDER:0000002 ! Fruit
+
+[Term]
+id: CIDER:0000017
+name: Variables
+is_a: CIDER:0000001 ! CiderBase trait ontology
+
+[Term]
+id: CIDER:0000018
+name: titratable acidity (g malic acid/L)
+is_a: CIDER:0000017 ! Variables
+relationship: variable_of CIDER:0000003 ! Juice
+
+[Term]
+id: CIDER:0000019
+name: pH (1-14)
+is_a: CIDER:0000017 ! Variables
+relationship: variable_of CIDER:0000003 ! Juice
+
+[Term]
+id: CIDER:0000021
+name: total polyphenols (g GAEL/L)
+is_a: CIDER:0000017 ! Variables
+relationship: variable_of CIDER:0000003 ! Juice
+
+[Term]
+id: CIDER:0000022
+name: soluble solid concentration (Brix)
+is_a: CIDER:0000017 ! Variables
+relationship: variable_of CIDER:0000003 ! Juice
+
+[Term]
+id: CIDER:0000023
+name: glucose (g/L)
+is_a: CIDER:0000017 ! Variables
+relationship: variable_of CIDER:0000003 ! Juice
+
+[Term]
+id: CIDER:0000024
+name: frucose (g/L)
+is_a: CIDER:0000017 ! Variables
+relationship: variable_of CIDER:0000003 ! Juice
+
+[Term]
+id: CIDER:0000025
+name: sucrose (g/L)
+is_a: CIDER:0000017 ! Variables
+relationship: variable_of CIDER:0000003 ! Juice
+
+[Term]
+id: CIDER:0000026
+name: sorbitol (g/L)
+is_a: CIDER:0000017 ! Variables
+relationship: variable_of CIDER:0000003 ! Juice
+
+[Term]
+id: CIDER:0000027
+name: flowering date
+is_a: CIDER:0000017 ! Variables
+relationship: variable_of CIDER:0000004 ! Tree
+
+[Term]
+id: CIDER:0000028
+name: harvest date
+is_a: CIDER:0000017 ! Variables
+relationship: variable_of CIDER:0000004 ! Tree
+
+[Term]
+id: CIDER:0000029
+name: biennial bearing index (0-1)
+is_a: CIDER:0000017 ! Variables
+relationship: variable_of CIDER:0000004 ! Tree
+
+[Typedef]
+id: variable_of
+name: variable_of
+
