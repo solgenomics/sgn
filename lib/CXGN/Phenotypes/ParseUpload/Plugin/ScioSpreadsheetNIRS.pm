@@ -118,7 +118,7 @@ sub validate {
           my $number2 = 9;
           while ($number2 < $size){
             # if (not exists $types{$fields[5]}){
-              print "$fields[5]\n";
+              #print "$fields[5]\n";
               if (not grep {/$fields[5]/i} keys %types){
                 $parse_result{'error'}= "Wrong device type '$fields[5]'. Please, check names allowed in File Format Information.";
                 return \%parse_result;
@@ -130,7 +130,7 @@ sub validate {
             if (not $fields[2] eq ''){
               if (not $fields[2] =~/(\d{4})-(\d{2})-(\d{2})/) {
                   $parse_result{'error'} = "Sampling date needs to be of form YYYY-MM-DD";
-                  print STDERR "value: $fields[2]\n";
+                 # print STDERR "value: $fields[2]\n";
                   return \%parse_result;
               }
             }
@@ -194,6 +194,7 @@ sub parse {
             my $observationunit_name = $columns[3];
             $observation_units_seen{$observationunit_name} = 1;
             # print "The plots are $observationunit_name\n";
+            $data{$observationunit_name}->{'nirs'}->{'device_type'} = 'SCIO';
             foreach my $col (0..$num_cols-1){
                 my $column_name = $header[$col];
                 if ($column_name ne '' && $column_name =~ /^[+]?\d+\.?\d*$/){

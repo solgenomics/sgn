@@ -111,12 +111,15 @@ sub store_analysis_model_files {
 
     my $model_experiment_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_experiment', 'experiment_type')->cvterm_id();
     my $location_id = $schema->resultset("NaturalDiversity::NdGeolocation")->search({description=>'[Computation]'})->first->nd_geolocation_id();
-	my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create({
+    my $nd_experiment_params = {
         nd_geolocation_id => $location_id,
         type_id => $model_experiment_type_cvterm_id,
-        nd_experiment_protocols => [{nd_protocol_id => $nd_protocol_id}],
-        nd_experiment_projects => [{project_id => $analysis_project_id}]
-    });
+        nd_experiment_protocols => [{nd_protocol_id => $nd_protocol_id}]
+    };
+    if ($analysis_project_id) {
+        $nd_experiment_params->{nd_experiment_projects} = [{project_id => $analysis_project_id}];
+    }
+	my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create($nd_experiment_params);
     my $nd_experiment_id = $experiment->nd_experiment_id();
 
     my $time = DateTime->now();

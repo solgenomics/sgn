@@ -333,6 +333,9 @@ jQuery(document).ready(function(){
             },
             success: function(response){
                 console.log(response);
+                if (response.error) {
+                    alert(response.error);
+                }
                 nirs_analysis_training_response = response;
 
                 jQuery('#working_modal').modal('hide');

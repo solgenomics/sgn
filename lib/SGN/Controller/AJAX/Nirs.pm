@@ -133,7 +133,6 @@ sub generate_results_POST : Args(0) {
 
     my $training_dataset = CXGN::Dataset->new({people_schema => $people_schema, schema => $schema, sp_dataset_id => $train_dataset_id});
     my ($training_pheno_data, $train_unique_traits) = $training_dataset->retrieve_phenotypes_ref();
-    # print STDERR Dumper $training_pheno_data;
 
     my %training_pheno_data;
     my $seltrait;
@@ -155,6 +154,7 @@ sub generate_results_POST : Args(0) {
             }
         }
     }
+    # print STDERR Dumper \%training_pheno_data;
 
     my %testing_pheno_data;
     if ($test_dataset_id) {
@@ -209,6 +209,7 @@ sub generate_results_POST : Args(0) {
         JOIN phenome.nd_experiment_md_json USING(nd_experiment_id)
         JOIN metadata.md_json USING(json_id)
         WHERE stock.stock_id IN ($stock_ids_sql) AND metadata.md_json.json_type = 'nirs_spectra' AND metadata.md_json.json->>'device_type' = ? ;";
+    print STDERR Dumper $nirs_training_q;
     my $nirs_training_h = $dbh->prepare($nirs_training_q);    
     $nirs_training_h->execute($format_id);
     while (my ($stock_uniquename, $stock_id, $spectra) = $nirs_training_h->fetchrow_array()) {
@@ -238,6 +239,7 @@ sub generate_results_POST : Args(0) {
             };
         }
     }
+    # print STDERR Dumper \@training_data_input;
 
     if (scalar(@training_data_input) < 10) {
         $c->stash->{rest} = { error => "Not enough data! Need atleast 10 samples with a phenotype and spectra!"};
