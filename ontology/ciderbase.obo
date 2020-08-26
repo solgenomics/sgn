@@ -1,9 +1,8 @@
 format-version: 1.2
 data-version: 1
-date: 08:24:2020 03:00
+date: 08:12:2021 03:00
 default-namespace: ciderbase_ontology
 ontology: ciderbase_ontology
-
 
 [Term]
 id: CIDER:0000001
@@ -27,67 +26,80 @@ is_a: CIDER:0000001 ! CiderBase trait ontology
 [Term]
 id: CIDER:0000005
 name: fruit mass per apple (g)
-def: "Total mass divided by number of measured fruit"
+def: "Total mass divided by number of measured fruit" []
 is_a: CIDER:0000017 ! Variables
 relationship: variable_of CIDER:0000002 ! Fruit
 
 [Term]
 id: CIDER:0000006
 name: fruit diameter per apple (mm)
+def: "Fruit diameter per apple measured in millimeters" []
 is_a: CIDER:0000017 ! Variables
 relationship: variable_of CIDER:0000002 ! Fruit
 
 [Term]
 id: CIDER:0000007
-name: red peel color percentage
+name: red peel color percentage visual assesment
+def: "Assessed visually as the area of the fruit peel with red coloration (0-100%)" []
 is_a: CIDER:0000017 ! Variables
 relationship: variable_of CIDER:0000002 ! Fruit
 
 [Term]
 id: CIDER:0000008
 name: green/yellow peel color observation 1-5
+def: "Assessed visually as the area of the fruit peel between 1 (yellow) to 5 (green) using the Cornell McIntosh apple color chart" []
+comment: Simons, L.R. (1948). Ground color chart for McIntosh apples. In Cornell Extension Bulletin 750. Ithaca, NY: Cornell Cooperative Extension.
 is_a: CIDER:0000017 ! Variables
 relationship: variable_of CIDER:0000002 ! Fruit
 
 [Term]
 id: CIDER:0000009
 name: flesh firmness (N)
+def: "Measured on both the sun- and the shade-exposed sides of each fruit along the equator with a penetrometer fitted with an 11.1-mm-diameter tip" []
+comment: GS Fruit Texture Analyzer; Guss, Strand, South Africa
 is_a: CIDER:0000017 ! Variables
 relationship: variable_of CIDER:0000002 ! Fruit
 
 [Term]
 id: CIDER:0000010
-name: starch pattern index 1-8
+name: starch pattern index 1-8 scale
+def: "Rated on a 1- to 8-point scale on a cross-sectional slice of each sample apple. 1 = 0% starch degradation and 8 = 100% starch degradation" []
+comment: Blanpied, G.D. and K.J. Silsby. 1992. Predicting harvest date windows for apples. Bull. 221. Cornell Coop. Ext., Ithaca, NY.
 is_a: CIDER:0000017 ! Variables
 relationship: variable_of CIDER:0000002 ! Fruit
 
 [Term]
 id: CIDER:0000011
-name: sunburn incidence 1-4
+name: sunburn incidence 1-4 scale
+def: "Fruit sunburn was evaluated on an anchored 1-4 scale for each apple harvested, where 1 = indicated no sunburn present on the fruit and 4 = indicated severe fruit sunburn." []
 is_a: CIDER:0000017 ! Variables
 relationship: variable_of CIDER:0000002 ! Fruit
 
 [Term]
 id: CIDER:0000012
 name: chlorophyll A content 0-3
+def: "Measured on a 0- to 3-point index on both the sun and the shade side of each apple along the equator using the Turoni 53500 DA meter (Forli, Italy)" []
 is_a: CIDER:0000017 ! Variables
 relationship: variable_of CIDER:0000002 ! Fruit
 
 [Term]
 id: CIDER:0000013
 name: internal browning percentage
+def: "Percentage of fruit with internal browning " []
 is_a: CIDER:0000017 ! Variables
 relationship: variable_of CIDER:0000002 ! Fruit
 
 [Term]
 id: CIDER:0000014
 name: watercore percentage
+def: "Percentage of fruit with watercore" []
 is_a: CIDER:0000017 ! Variables
 relationship: variable_of CIDER:0000002 ! Fruit
 
 [Term]
 id: CIDER:0000015
-name: fruit cracking 1-4
+name: fruit cracking visual observation 1-4
+def: "Fruit cracking evaluated on an anchored 1-4 scale for each apple harvested, where 1 = no fruit cracking and 4 = severe fruit cracking" []
 is_a: CIDER:0000017 ! Variables
 relationship: variable_of CIDER:0000002 ! Fruit
 
@@ -99,66 +111,78 @@ is_a: CIDER:0000001 ! CiderBase trait ontology
 [Term]
 id: CIDER:0000018
 name: titratable acidity (g malic acid/L)
+def: "A 5-mL composite juice sample was titrated against a 0.1 M NaOH solution to an endpoint of pH 8.2 and expressed in grams per liter of malic acid equivalents" []
 is_a: CIDER:0000017 ! Variables
 relationship: variable_of CIDER:0000003 ! Juice
 
 [Term]
 id: CIDER:0000019
 name: pH (1-14)
+def: "Measured on a composite juice sample with a temperature compensating pH meter" []
 is_a: CIDER:0000017 ! Variables
 relationship: variable_of CIDER:0000003 ! Juice
 
 [Term]
 id: CIDER:0000021
 name: total polyphenols (g GAEL/L)
+def: "Measured on a composite juice sample with the Folin Ciocalteu assay in a 96-well microplate at 765 nm" []
+comment: Singleton, V.L. and J.A. Rossi. 1965. Colorimetry of total phenolics with phosphomolybdicphosphotungstic acid reagents. Amer. J. Enol. Viticult. 16:144–158.
 is_a: CIDER:0000017 ! Variables
 relationship: variable_of CIDER:0000003 ! Juice
 
 [Term]
 id: CIDER:0000022
 name: soluble solid concentration (Brix)
+def: "Measured on a composite juice sample with a temperature compensating refractometer" []
 is_a: CIDER:0000017 ! Variables
 relationship: variable_of CIDER:0000003 ! Juice
 
 [Term]
 id: CIDER:0000023
 name: glucose (g/L)
+def: "Measured on a composite juice sample using the Sucrose/D-Fructose/D-Glucose Assay Kit (KSUFRG) (Megazyme International, Ireland)" []
 is_a: CIDER:0000017 ! Variables
 relationship: variable_of CIDER:0000003 ! Juice
 
 [Term]
 id: CIDER:0000024
 name: frucose (g/L)
+def: "Measured on a composite juice sample using the Sucrose/D-Fructose/D-Glucose Assay Kit (KSUFRG) (Megazyme International, Ireland)" []
 is_a: CIDER:0000017 ! Variables
 relationship: variable_of CIDER:0000003 ! Juice
 
 [Term]
 id: CIDER:0000025
 name: sucrose (g/L)
+def: "Measured on a composite juice sample using the Sucrose/D-Fructose/D-Glucose Assay Kit (KSUFRG) (Megazyme International, Ireland)" []
 is_a: CIDER:0000017 ! Variables
 relationship: variable_of CIDER:0000003 ! Juice
 
 [Term]
 id: CIDER:0000026
 name: sorbitol (g/L)
+def: "Measured on a composite juice sample using the D-Sorbitol/Xylitol Assay Kit (K-SORB) (Megazyme International, Ireland)" []
 is_a: CIDER:0000017 ! Variables
 relationship: variable_of CIDER:0000003 ! Juice
 
 [Term]
 id: CIDER:0000027
 name: flowering date
+def: "Date at which 50% of flowers are at full king bloom" []
 is_a: CIDER:0000017 ! Variables
 relationship: variable_of CIDER:0000004 ! Tree
 
 [Term]
 id: CIDER:0000028
 name: harvest date
+def: "Apples harvested when the mean starch pattern index value is between 6-8" []
 is_a: CIDER:0000017 ! Variables
 relationship: variable_of CIDER:0000004 ! Tree
 
 [Term]
 id: CIDER:0000029
 name: biennial bearing index (0-1)
+def: "A measure of variation in yield among consecutive year pairs. A value of 0 indicates completely consistent yields from year to year, while a value of 1 indicates that in one year there was a complete absence of fruit borne on the tree." []
 is_a: CIDER:0000017 ! Variables
 relationship: variable_of CIDER:0000004 ! Tree
 
