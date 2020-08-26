@@ -290,4 +290,8 @@ trial_name => $trial_name
         save_replace_well_accession();
     });
 
+    jQuery('#close_message_dialog').click(function(){
+        close_message_dialog();
+    });
+
 </script>
