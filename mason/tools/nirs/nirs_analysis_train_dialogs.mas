@@ -363,7 +363,7 @@ jQuery(document).ready(function(){
         jQuery('#generic_save_analysis_model_file').val(nirs_analysis_training_response.model_file);
         jQuery('#generic_save_analysis_model_archived_model_file_type').val(nirs_analysis_training_response.model_file_type);
         jQuery('#generic_save_analysis_model_training_data_file').val(nirs_analysis_training_response.training_data_file);
-        jQuery('#generic_save_analysis_model_archived_training_data_file_type').val("jennasrwaves_V1.01_waves_nirs_spectral_predictions_training_data_file");
+        jQuery('#generic_save_analysis_model_archived_training_data_file_type').val(nirs_analysis_training_response.training_data_file_type);
         jQuery('#generic_save_analysis_model_auxiliary_files').val(JSON.stringify(nirs_analysis_training_response.model_aux_files));
         jQuery('#generic_save_analysis_dataset_id').val(nirs_analysis_training_dataset_train_id);
 

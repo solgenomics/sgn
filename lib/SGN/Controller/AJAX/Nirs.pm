@@ -363,6 +363,7 @@ sub generate_results_POST : Args(0) {
         model_file => $output_model_filepath,
         model_file_type => "jennasrwaves_V1.01_waves_nirs_spectral_predictions_weights_file",
         training_data_file => $train_json_filepath,
+        training_data_file_type => "jennasrwaves_V1.01_waves_nirs_spectral_predictions_training_data_file",
         model_aux_files => \@aux_files,
         performance_output => $performance_output
     };
@@ -504,7 +505,7 @@ sub generate_predictions_POST : Args(0) {
         DIR=> $nirs_tmp_output,
     );
 
-    my $input_json_filepath = $tempfile."_json";
+    my $input_json_filepath = $tempfile."_prediction_input_json";
     my $output_results_filepath = $tempfile."_table_predictions_results.csv";
     my $output_figure_filepath = $tempfile."_figure_results.png";
 
@@ -574,7 +575,9 @@ sub generate_predictions_POST : Args(0) {
         protocol => $protocol,
         stat_term => $stat_term,
         analysis_design => \%analysis_design,
-        result_summary => {}
+        result_summary => {},
+        training_data_file => $input_json_filepath,
+        training_data_file_type => "jennasrwaves_V1.01_waves_nirs_spectral_predictions_training_data_file",
     };
 }
 

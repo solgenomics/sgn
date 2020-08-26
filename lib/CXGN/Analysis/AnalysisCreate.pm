@@ -260,11 +260,13 @@ has 'analysis_model_file_type' => (
 has 'analysis_model_training_data_file' => (
     isa => 'Str|Undef',
     is => 'rw',
+    required => 1
 );
 
 has 'analysis_model_training_data_file_type' => (
     isa => 'Str|Undef',
     is => 'rw',
+    required => 1
 );
 
 has 'analysis_model_auxiliary_files' => (

@@ -187,6 +187,9 @@ jQuery(document).ready(function(){
                     jQuery('#generic_save_analysis_model_is_public_div').hide();
                     jQuery('#generic_save_analysis_model_id').val(nirs_analysis_prediction_model_id);
 
+                    jQuery('#generic_save_analysis_model_training_data_file').val(response.training_data_file);
+                    jQuery('#generic_save_analysis_model_archived_training_data_file_type').val(response.training_data_file_type);
+
                     Workflow.complete("#nir_analysis_prediction_model_step");
                     Workflow.focus('#nirs_analysis_prediction_workflow', 3);
                     window.scrollTo(0,0);
