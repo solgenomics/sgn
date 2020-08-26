@@ -105,7 +105,11 @@ jQuery(document).ready(function () {
             alert("Error retrieving plate layout.");
         }
     });
-
+    
+    jQuery("#new_cell_accession").autocomplete({
+        appendTo: "#replace_plate_accessions_dialog",
+        source: '/ajax/stock/accession_autocomplete',
+    }); 
 });
 
 function replace_plate_accessions(sample, sample_id, accession){
