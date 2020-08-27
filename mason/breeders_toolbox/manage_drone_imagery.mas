@@ -4399,7 +4399,12 @@ jQuery(document).ready(function() {
                             var plot = response.unique_plots[k];
                             html = html + '<tr><td>'+plot+'</td>';
                             for (var i=0; i<response.unique_traits.length; i++) {
-                                html = html + '<td>'+response.result_blup_pe_data[plot][response.unique_traits[i]][0]+'</td>';
+                                if (response.result_blup_pe_data[plot][response.unique_traits[i]]) {
+                                    html = html + '<td>'+response.result_blup_pe_data[plot][response.unique_traits[i]][0]+'</td>';
+                                }
+                                else {
+                                    html = html + '<td>NA</td>';
+                                }
                             }
                             html = html + '</tr>';
                         }
