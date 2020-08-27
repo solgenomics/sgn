@@ -531,6 +531,31 @@ sub retrieve_phenotypes {
     return \@data;
 }
 
+=head2 retrieve_phenotypes_ref()
+
+retrieves phenotypes as a hashref representation
+
+=cut
+
+sub retrieve_phenotypes_ref {
+    my $self = shift;
+
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        'MaterializedViewTable',
+        {
+            bcs_schema=>$self->schema(),
+            data_level=>$self->data_level(),
+            trait_list=>$self->traits(),
+            trial_list=>$self->trials(),
+            accession_list=>$self->accessions(),
+            exclude_phenotype_outlier=>$self->exclude_phenotype_outlier
+        }
+    );
+    my ($data, $unique_traits) = $phenotypes_search->search();
+
+    return ($data, $unique_traits);
+}
+
 =head2 retrieve_accessions()
 
 retrieves accessions as a listref of listref [stock_id, uniquname]

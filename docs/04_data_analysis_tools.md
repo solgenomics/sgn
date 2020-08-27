@@ -241,34 +241,34 @@ You can do ANOVA from two places: trial detail and training population detail. I
 --------------
 Clustering, currently using the K-Means method, allows you to partition a dataset into groups (K number). You can do this partition based on marker data, phenotype data and GEBVs. When you use phenotype data, first clone averages for each trait are calculated.
 
-There are three pathways to using this tool. 
+There are three pathways to using this tool.
 
 (1) When you have data in the form of a list or dataset from the search wizard:
 
    (A) -- go to the 'Analyze' menu and select the clustering option
-  
+
    (B) -- make sure you are logged in
-  
+
    (C) -- select your list or dataset, click 'Go'
-  
+
    (D) -- select the data type to use
-  
+
    (E) -- provide the number of partitions, if left blank it will partition the data set into optimal numbers for the dataset.
 
    (F) -- click the 'Run Cluster' and wait for the analysis to finish, depending on the data size this may take minutes.
-   
+
    (G) -- You can download the outputs following the download links.
-   
+
 (2) From the trial detail page:
 
    (A) -- Go to the 'Analysis Tools' section
-   
+
    (B) -- Follow steps D to G in (1)
-   
+
 (3) In the solGS pipeline:
 
    (A) -- Once you you are in a model output put page, you will see a section where you can do clustering in the same way as above (option 2).
- 
+
  <img src='{{"assets/images/k-means-cluster.png" | relative_url }}' width="522" />
 
 
@@ -282,7 +282,7 @@ You can check for genetic gain by comparing the the GEBVs of a training and a se
 4.8 Creating Crossing Groups
 --------------
 
-If you calculate selection index based on GEBVs of multiple traits, and you want to select a certain proportion of the indexed individuals (e.g. top 10%, or bottom 10%) and then you want to partition the selected individuals into a number of groups based on their genotypes, you can use the k-means clustering method. 
+If you calculate selection index based on GEBVs of multiple traits, and you want to select a certain proportion of the indexed individuals (e.g. top 10%, or bottom 10%) and then you want to partition the selected individuals into a number of groups based on their genotypes, you can use the k-means clustering method.
 
 The procedure is:
 
@@ -290,18 +290,18 @@ The procedure is:
 
 (2) In the models output page, calculate selection indices. Note the name of the selection index data.
 
-(3) Go to the clustering section, 
+(3) Go to the clustering section,
 
-   -- select the selection index data, 
-   
-   -- select 'K-means', 
-   
+   -- select the selection index data,
+
+   -- select 'K-means',
+
    -- select 'Genotype',   
-   
-   -- in the K-numbers textbox, fill in the number of groups you want to create, 
-   
+
+   -- in the K-numbers textbox, fill in the number of groups you want to create,
+
    -- in the selection proportion textbox, fill in the proportion of the indexed individuals you want to select, e.g. for the top 15 percent, 15. if you wish to select bottom performing, prefix the number with minus sign (e.g. -15)
-   
+
    -- then run cluster and wait for the result.
 
 <img src='{{"assets/images/selection_proportion_clustering.png" | relative_url }}' width="522" />
@@ -326,3 +326,90 @@ The GWAS will filter the data by the input MAF and missing data filters provided
 <img src='{{"assets/images/search_wizard_genotype_analyses_manhattan_plot.png" | relative_url }}' width="522" />
 
 <img src='{{"assets/images/search_wizard_genotype_analyses_qq_plot.png" | relative_url }}' width="522" />
+
+
+4.11 Spectral Analysis
+--------------
+
+Visible and near-infrared spectroscopy (vis-NIRS) can be related to reference phenotypes through statistical models to produce accurate phenotypic predictions for unobserved samples, increasing phenotyping throughput. This technique is commonly used for predicting traits such as total starch, protein, carotenoid, and water content in many plant breeding programs. Breedbase implements the R package *waves* to offer training, evaluation, storage, and use of vis-NIRS prediction models for a wide range of spectrometers and phenotypes.
+
+<img src='{{"assets/images/waves_breedbase_schema.png" | relative_url }}' width="522" />
+
+### Dataset selection
+In order to initiate an analysis, the user must select one or more datasets using the Breedbase [**Search Wizard**]({{site.baseurl}}{% link 02_searching_the_database%}#the-search-wizard). A dataset in Breedbase can contain observationUnit-level (plot-, plant-, or sample-level) trial metadata and phenotypic data from one or more trials. After navigating to the “Spectral Analysis” webpage under the “Analysis” tab in Breedbase, the user can select one of these datasets as input for model training.
+
+[screenshot of selecting dataset]
+
+### Cross-validation
+Five cross-validation schemes that represent scenarios common in plant breeding are available for this analysis. These include CV1, CV2, CV0, and CV00 as outlined below and described in depth by Jarquín et al. (2017) as well as random and stratified random sampling with a 70% training and 30% validation split. For those schemes from Jarquín et al. (2017), specific input datasets must be chosen based on genotype and environment relatedness. Cross-validation choices:
+* **Random sampling** (70% training / 30% validation)
+* **Stratified random sampling**, stratified based on phenotype (70% training / 30% validation)
+* **CV1**, untested lines in tested environments
+* **CV2**, tested lines in tested environments
+* **CV0**, tested lines in untested environments
+* **CV00**, untested lines in untested environments
+
+[screenshot of pop-up guide]
+
+### Preprocessing
+Preprocessing, also known as pretreatment, is often used to increase the signal to noise ratio in vis-NIR datasets. The *waves* function *DoPreprocessing()* applies functions from the *stats* and *prospectr* packages for common spectral preprocessing methods with the following options:
+* Raw data (default)
+* First derivative
+* Second derivative
+* Gap segment derivative
+* Standard normal variate (SNV; Barnes et al., 1989)
+* Savitzky-Golay polynomial smoothing (Savitzky and Golay, 1964)
+
+For more information on preprocessing methods and implementation, see the *waves* manual [link to waves manual]
+
+[insert plot with example data raw and with each transformation]
+
+### Algorithms
+Several algorithms are available for calibration model development in Breedbase via the *waves* package. The *TrainSpectralModel()* function in waves performs hyperparameter tuning as applicable using these algorithms in combination with cross validation and train functions from the package *caret*. Currently, only regression algorithms are available, but classification algorithms such as PLS-DA and SVM clasification are under development.
+* **Partial least squares regression** (PLSR; Wold et al., 1982; Wold et al., 1984) is a popular method for spectral calibrations, as it can handle datasets with high levels of collinearity, reducing the dimensionality of these data into orthogonal latent variables (components) that are then related to the response variable through a linear model (reviewed in Wold et al., 2001). To avoid overfitting, the number of these components included in the final model must be tuned for each use case. The PLSR algorithm from the *pls* package is implemented by waves.
+* **Random Forest regression** (RF; Ho, 1995) is a machine learning algorithm based on a series of decision trees. The number of trees and decisions at each junction are hyperparameters that must be tuned for each model. Another feature of this algorithm is the ability to extract variable importance measures from a fitted model (Breiman, 2001). In Breedbase, this option is made available through implementation of the RF algorithm from the package randomForest in the waves function TrainSpectralModel(). This function outputs both model performance statistics and a downloadable table of importance values for each wavelength. It is worth noting that this algorithm is computationally intensive, so the user should not be alarmed if results do not come right away. Breedbase will continue to work in the background and will display results when the analysis is finished.
+* **Support vector machine regression** (SVM; Vapnik, 2000) is another useful algorithm for working with high-dimension datasets consisting of non-linear data, with applications in both classification and regression. The package waves implements SVM with both linear and radial basis function kernels using the kernlab package.
+
+### Output: common model summary statistics
+After training, model performance statistics are both displayed on a results webpage and made available for download in .csv format. These statistics are calculated by the *TrainSpectralModel()* function in *waves* using the *caret* and *spectacles* packages. Reported statistics include:
+* Tuned parameters depending on the model algoritm
+	* **Best.n.comp**, the best number of components to be included in a PLSR model
+	* **Best.ntree**, the best number of trees in an RF model
+	* **Best.mtry**, the best number of variables to include at every decision point in an RF model
+* **RMSECV**, the root mean squared error of cross-validation
+* **R<sup>2</sup><sub>cv</sub>**, the coefficient of multiple determination of cross-validation for PLSR models
+* **RMSEP**, the root mean squared error of prediction
+* **R<sup>2</sup><sub>p</sub>**, the squared Pearson’s correlation between predicted and observed test set values
+* **RPD**, the ratio of standard deviation of observed test set values to RMSEP
+* **RPIQ**, the ratio of performance to interquartile distance
+* **CCC**, the concordance correlation coefficient
+* **Bias**, the average difference between the predicted and observed values
+* **SEP**, the standard error of prediction
+* **R<sup>2</sup><sub>sp</sub>**, the squared Spearman's rank correlation between predicted and observed test set values
+
+[screenshot of output]
+
+### Export model for later use
+Once a model has been trained, it can be stored for later use. This action calls the *SaveModel()* function from *waves*. Metadata regarding the training dataset and other parameters specified by the user upon training initialization are stored alongside the model object itself in the database.
+
+[screenshot of save model page]
+
+### Predict phenotypes from an exported model (routine use)
+For phenotype predictions, users select a dataset and can then choose from models in the database that were trained using the same spectrometer type as the spectral data in the chosen dataset. Predicted phenotypes are stored as such in the database and are tagged with an ontology term specifying that they are predicted and not directly measured. Metadata regarding the model used for prediction is stored alongside the predicted value in the database. Predicted phenotypes can then be used as normal in other Breedbase analysis tools such as the Selection Index and GWAS.
+
+### FAQ
+The Breedbase Apectral Analysis Tool does not allow for prediction models involving data from multiple spectrometer types at once.
+
+References
+* Barnes, R.J., M.S. Dhanoa, and S.J. Lister. 1989. Standard normal variate transformation and de-trending of near-infrared diffuse reflectance spectra. Appl. Spectrosc. 43(5): 772-777. doi: 10.1366/0003702894202201.
+* Breiman, L. 2001. Random forests. Mach. Learn. 45: 5-32. doi: 10.1201/9780429469275-8.
+* Ho, T.K. 1995. Random decision forests. Proc. Int. Conf. Doc. Anal. Recognition, ICDAR 1: 278-282. doi: 10.1109/ICDAR.1995.598994.
+* Jarquín, D., C. Lemes da Silva, R.C. Gaynor, J. Poland, A. Fritz, et al. 2017. Increasing Genomic-Enabled Prediction Accuracy by Modeling Genotype x Environment Interactions in Kansas Wheat. Plant Genome 10(2): plantgenome2016.12.0130. doi: 10.3835/plantgenome2016.12.0130.
+* Johnson, R.A., and D.W. Wichern. 2007. Applied Multivariate Statistical Analysis (6th Edition).
+De Maesschalck, R., D. Jouan-Rimbaud, and D.L. Massart. 2000. The Mahalanobis distance. Chemom. Intell. Lab. Syst. 50(1): 1-18. doi: 10.1016/S0169-7439(99)00047-7.
+* Mahalanobis, P.C. 1936. On the generalized distance in statistics. Natl. Inst. Sci. India.
+* Savitzky, A., and M.J.E. Golay. 1964. Smoothing and Differentiation of Data by Simplified Least Squares Procedures. Anal. Chem. 36(8): 1627-1639. doi: 10.1021/ac60214a047.
+* Shrestha, R., L. Matteis, M. Skofic, A. Portugal, G. McLaren, et al. 2012. Bridging the phenotypic and genetic data useful for integrated breeding through a data annotation using the Crop Ontology developed by the crop communities of practice. Front. Physiol. 3 AUG(August): 1-10. doi: 10.3389/fphys.2012.00326.
+* Vapnik, V.N. 2000. The Nature of Statistical Learning Theory. Springer New York, New York, NY.
+* Wold, S., A. Ruhe, H. Wold, and W.J. Dunn, III. 1984. The Collinearity Problem in Linear Regression. The Partial Least Squares (PLS) Approach to Generalized Inverses. SIAM J. Sci. Stat. Comput. 5(3): 735-743. doi: 10.1137/0905052.
+* Wold, S., M. Sjöström, and L. Eriksson. 2001. PLS-regression: a basic tool of chemometrics. Chemom. Intell. Lab. Syst. 58(2): 109-130. doi: 10.1016/S0169-7439(01)00155-1.

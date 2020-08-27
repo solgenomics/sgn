@@ -692,7 +692,7 @@ sub store_nirs_data {
     my $nirs_hashref = shift;
     my $nd_experiment_id = shift;
     my %nirs_hash = %{$nirs_hashref};
-    print STDERR "NIRS hashref is " . Dumper($nirs_hashref);
+    # print STDERR "NIRS hashref is " . Dumper($nirs_hashref);
     #convert hashref to json, store in md_json table with type 'nirs_spectra'
     my $nirs_json = encode_json \%nirs_hash;
 
