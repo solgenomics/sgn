@@ -218,17 +218,15 @@ The trait names will be post-composed with the analysis_statistical_ontology_ter
                                 <div class="form-group form-group-sm">
                                     <label class="col-sm-3 control-label">Breeding Program: </label>
                                     <div class="col-sm-9">
-                                        <div id="generic_save_analysis_breeding_program_div">
+                                        <div id="generic_save_analysis_breeding_program_div"></div>
                                     </div>
                                 </div>
-                                <br/><br/>
                                 <div class="form-group form-group-sm">
                                     <label class="col-sm-3 control-label">Year: </label>
                                     <div class="col-sm-9">
-                                        <div id="generic_save_analysis_analysis_year_div">
+                                        <div id="generic_save_analysis_analysis_year_div"></div>
                                     </div>
                                 </div>
-                                <br/><br/>
                                 <hr>
 
                                 <div class="form-group form-group-sm">

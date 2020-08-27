@@ -4,6 +4,7 @@ use Moose;
 
 use File::Slurp;
 use Data::Dumper;
+use CXGN::Phenotypes::ParseUpload;
 use CXGN::Phenotypes::StorePhenotypes;
 use CXGN::Trial::TrialDesign;
 use CXGN::Analysis::AnalysisCreate;
@@ -80,8 +81,327 @@ sub store_analysis_json_POST {
     );
 }
 
-#PLEASE ONLY USE JSON FUNCTION ABOVE
-#
+sub store_analysis_spreadsheet : Path('/ajax/analysis/store/spreadsheet') ActionClass("REST") Args(0) {}
+
+sub store_analysis_spreadsheet_POST {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    print STDERR Dumper $c->req->params();
+    my $analysis_to_save_boolean = "yes";
+    my $analysis_name = $c->req->param("upload_new_analysis_name");
+    my $analysis_description = $c->req->param("upload_new_analysis_description");
+    my $analysis_year = $c->req->param("upload_new_analysis_year");
+    my $analysis_breeding_program_id = $c->req->param("upload_new_analysis_breeding_program_id");
+    my $analysis_protocol = $c->req->param("upload_new_analysis_protocol");
+    my $analysis_dataset_id = $c->req->param("upload_new_analysis_dataset_id");
+    my $analysis_result_file = $c->req->upload("upload_new_analysis_file");
+    # my $analysis_accession_names = $c->req->param("analysis_accession_names") ? decode_json $c->req->param("analysis_accession_names") : [];
+    # my $analysis_trait_names = $c->req->param("analysis_trait_names") ? decode_json $c->req->param("analysis_trait_names") : [];
+    my $analysis_statistical_ontology_term = $c->req->param('upload_new_analysis_statistical_ontology_term');
+    # my $analysis_precomputed_design_optional = $c->req->param("analysis_precomputed_design_optional") ? decode_json $c->req->param("analysis_precomputed_design_optional") : undef;
+    # my $analysis_result_values = $c->req->param("analysis_result_values") ? decode_json $c->req->param("analysis_result_values") : {};
+    my $analysis_result_values_type = $c->req->param("upload_new_analysis_result_values_type");
+    my $analysis_result_summary_string = $c->req->param("upload_new_analysis_result_summary_string");
+    my $analysis_model_id = $c->req->param("upload_new_analysis_model_id") ? $c->req->param("upload_new_analysis_model_id") : undef;
+    my $analysis_model_name = $c->req->param("upload_new_analysis_model_name");
+    my $analysis_model_description = $c->req->param("upload_new_analysis_model_description");
+    my $analysis_model_is_public = $c->req->param("upload_new_analysis_model_is_public");
+    my $analysis_model_language = $c->req->param("upload_new_analysis_model_language");
+    my $analysis_model_type = 'uploaded_generic_analysis_model';
+    my $analysis_model_properties_string = $c->req->param("upload_new_analysis_model_properties_string");
+    my $analysis_model_application_name = $c->req->param("upload_new_analysis_model_application_name");
+    my $analysis_model_application_version = $c->req->param("upload_new_analysis_model_application_version");
+    my $analysis_model_file_upload = $c->req->upload("upload_new_analysis_model_file");
+    my $analysis_model_file_type = $c->req->param("upload_new_analysis_model_file_type");
+    my $analysis_model_training_data_file_upload = $c->req->upload("upload_new_analysis_model_training_data_file");
+    my $analysis_model_training_data_file_type = $c->req->param("upload_new_analysis_model_training_data_file_type");
+    my $analysis_model_auxiliary_file_1 = $c->req->upload("upload_new_analysis_model_auxiliary_file_1");
+    my $analysis_model_auxiliary_file_type_1 = $c->req->param("upload_new_analysis_model_auxiliary_file_type_1");
+    my $analysis_model_auxiliary_file_2 = $c->req->upload("upload_new_analysis_model_auxiliary_file_2");
+    my $analysis_model_auxiliary_file_type_2 = $c->req->param("upload_new_analysis_model_auxiliary_file_type_2");
+    my $analysis_model_auxiliary_file_3 = $c->req->upload("upload_new_analysis_model_auxiliary_file_3");
+    my $analysis_model_auxiliary_file_type_3 = $c->req->param("upload_new_analysis_model_auxiliary_file_type_3");
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+    my @error_status;
+
+    my $check_name = $schema->resultset("Project::Project")->find({ name => $analysis_name });
+    if ($check_name) {
+        $c->stash->{rest} = {error => "An analysis with name $analysis_name already exists in the database. Please choose another name."};
+        $c->detach();
+    }
+
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $subdirectory = 'upload_analysis_generic';
+
+    my $analysis_model_auxiliary_files;
+    if ($analysis_model_auxiliary_file_1 && $analysis_model_auxiliary_file_type_1) {
+        my $upload_original_name = $analysis_model_auxiliary_file_1->filename();
+        my $upload_tempfile = $analysis_model_auxiliary_file_1->tempname;
+
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_role
+        });
+        my $archived_filename_with_path = $uploader->archive();
+        my $md5 = $uploader->get_md5($archived_filename_with_path);
+        if (!$archived_filename_with_path) {
+            $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive."};
+            $c->detach();
+        }
+        unlink $upload_tempfile;
+        
+        push @$analysis_model_auxiliary_files, {
+            auxiliary_model_file_archive_type => $analysis_model_auxiliary_file_type_1,
+            auxiliary_model_file => $archived_filename_with_path
+        };
+    }
+    if ($analysis_model_auxiliary_file_2 && $analysis_model_auxiliary_file_type_2) {
+        my $upload_original_name = $analysis_model_auxiliary_file_2->filename();
+        my $upload_tempfile = $analysis_model_auxiliary_file_2->tempname;
+
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_role
+        });
+        my $archived_filename_with_path = $uploader->archive();
+        my $md5 = $uploader->get_md5($archived_filename_with_path);
+        if (!$archived_filename_with_path) {
+            $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive."};
+            $c->detach();
+        }
+        unlink $upload_tempfile;
+
+        push @$analysis_model_auxiliary_files, {
+            auxiliary_model_file_archive_type => $analysis_model_auxiliary_file_type_2,
+            auxiliary_model_file => $archived_filename_with_path
+        };
+    }
+    if ($analysis_model_auxiliary_file_3 && $analysis_model_auxiliary_file_type_3) {
+        my $upload_original_name = $analysis_model_auxiliary_file_3->filename();
+        my $upload_tempfile = $analysis_model_auxiliary_file_3->tempname;
+
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_role
+        });
+        my $archived_filename_with_path = $uploader->archive();
+        my $md5 = $uploader->get_md5($archived_filename_with_path);
+        if (!$archived_filename_with_path) {
+            $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive."};
+            $c->detach();
+        }
+        unlink $upload_tempfile;
+
+        push @$analysis_model_auxiliary_files, {
+            auxiliary_model_file_archive_type => $analysis_model_auxiliary_file_type_3,
+            auxiliary_model_file => $archived_filename_with_path
+        };
+    }
+
+    my $analysis_model_file;
+    if ($analysis_model_file_upload && $analysis_model_file_type) {
+        my $upload_original_name = $analysis_model_file_upload->filename();
+        my $upload_tempfile = $analysis_model_file_upload->tempname;
+
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_role
+        });
+        my $archived_filename_with_path = $uploader->archive();
+        my $md5 = $uploader->get_md5($archived_filename_with_path);
+        if (!$archived_filename_with_path) {
+            $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive."};
+            $c->detach();
+        }
+        unlink $upload_tempfile;
+
+        $analysis_model_file = $archived_filename_with_path;
+    }
+
+    my $analysis_model_training_data_file;
+    if ($analysis_model_training_data_file_upload && $analysis_model_training_data_file_type) {
+        my $upload_original_name = $analysis_model_training_data_file_upload->filename();
+        my $upload_tempfile = $analysis_model_training_data_file_upload->tempname;
+
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_role
+        });
+        my $archived_filename_with_path = $uploader->archive();
+        my $md5 = $uploader->get_md5($archived_filename_with_path);
+        if (!$archived_filename_with_path) {
+            $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive."};
+            $c->detach();
+        }
+        unlink $upload_tempfile;
+
+        $analysis_model_training_data_file = $archived_filename_with_path;
+    }
+
+    my $data_level;
+    if ($analysis_result_values_type eq 'analysis_result_values_match_precomputed_design') {
+        $data_level = 'plot';
+    }
+    elsif ($analysis_result_values_type eq 'analysis_result_values_match_accession_names'){
+        $data_level = 'accession';
+    }
+    else {
+        $c->stash->{rest} = {error => "Analysis result type not accepted!"};
+        $c->detach();
+    }
+
+    my @analysis_result_summary_array = split ',', $analysis_result_summary_string;
+    my $analysis_result_summary;
+    foreach (@analysis_result_summary_array) {
+        my ($key, $value) = split ':', $_;
+        $analysis_result_summary->{$key} = $value;
+    }
+
+    my @analysis_model_properties_array = split ',', $analysis_model_properties_string;
+    my $analysis_model_properties;
+    foreach (@analysis_model_properties_array) {
+        my ($key, $value) = split ':', $_;
+        $analysis_model_properties->{$key} = $value;
+    }
+
+    my $upload_original_name = $analysis_result_file->filename();
+    my $upload_tempfile = $analysis_result_file->tempname;
+
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+    my $archived_filename_with_path = $uploader->archive();
+    my $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive."};
+        $c->detach();
+    }
+    unlink $upload_tempfile;
+    #print STDERR "Archived Phenotype File: $archived_filename_with_path\n";
+
+    my $validate_type = 'analysis phenotype spreadsheet csv';
+    my $parser = CXGN::Phenotypes::ParseUpload->new();
+    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, undef, $data_level, $schema, undef);
+    if (!$validate_file) {
+        push @error_status, "Archived file not valid: $upload_original_name.";
+        $c->stash->{rest} = {error_messages => \@error_status};
+        $c->detach();
+    }
+    if ($validate_file == 1){
+    } else {
+        if ($validate_file->{'error'}) {
+            push @error_status, $validate_file->{'error'};
+        }
+        $c->stash->{rest} = {error_messages => \@error_status};
+        $c->detach();
+    }
+
+    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, undef, $data_level, $schema, undef, $user_id);
+    if (!$parsed_file) {
+        push @error_status, "Error parsing file $upload_original_name.";
+        $c->stash->{rest} = {error_messages => \@error_status};
+        $c->detach();
+    }
+    if ($parsed_file->{'error'}) {
+        push @error_status, $parsed_file->{'error'};
+        $c->stash->{rest} = {error_messages => \@error_status};
+        $c->detach();
+    }
+    my $analysis_result_values;
+    my @stocks;
+    my $analysis_trait_names;
+    if (scalar(@error_status) == 0) {
+        if ($parsed_file && !$parsed_file->{'error'}) {
+            $analysis_result_values = $parsed_file->{'data'};
+            @stocks = @{$parsed_file->{'units'}};
+            $analysis_trait_names = $parsed_file->{'variables'};
+        }
+    }
+
+    my $analysis_accession_names;
+    my $analysis_precomputed_design_optional;
+    if ($analysis_result_values_type eq 'analysis_result_values_match_precomputed_design') {
+
+        my %seen_stocks = map {$_ => 1} @stocks;
+        my $plot_names_string = join '\',\'', @stocks;
+        my $field_trial_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_layout', 'experiment_type')->cvterm_id();
+        my $q = "SELECT project_id
+            FROM nd_experiment_project
+            JOIN nd_experiment ON(nd_experiment.nd_experiment_id = nd_experiment_project.nd_experiment_id and nd_experiment.type_id=$field_trial_experiment_cvterm_id)
+            JOIN nd_experiment_stock ON(nd_experiment.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+            JOIN stock USING(stock_id)
+            WHERE stock.uniquename IN ('$plot_names_string');";
+        my $h = $schema->storage->dbh()->prepare($q);
+        $h->execute();
+        my %unique_field_trials;
+        while( my ($field_trial_id) = $h->fetchrow_array()) {
+            $unique_field_trials{$field_trial_id}++;
+        }
+        foreach my $field_trial_id (keys %unique_field_trials) {
+            my $field_trial_design_full = CXGN::Trial->new({bcs_schema => $schema, trial_id=>$field_trial_id})->get_layout()->get_design();
+            while (my($plot_number, $plot_obj) = each %$field_trial_design_full) {
+                my $plot_name = $plot_obj->{plot_name};
+                if (exists($seen_stocks{$plot_name})) {
+                    my $plot_number_unique = $field_trial_id."_".$plot_number;
+                    $analysis_precomputed_design_optional->{$plot_number_unique} = {
+                        stock_name => $plot_obj->{accession_name},
+                        block_number => $plot_obj->{block_number},
+                        col_number => $plot_obj->{col_number},
+                        row_number => $plot_obj->{row_number},
+                        plot_name => $plot_name,
+                        plot_number => $plot_number_unique,
+                        rep_number => $plot_obj->{rep_number},
+                        is_a_control => $plot_obj->{is_a_control}
+                    };
+                }
+            }
+        }
+    }
+    elsif ($analysis_result_values_type eq 'analysis_result_values_match_accession_names') {
+        $analysis_accession_names = \@stocks;
+    }
+
+    $self->store_data($c,
+        $analysis_to_save_boolean,
+        $analysis_name, $analysis_description, $analysis_year, $analysis_breeding_program_id, $analysis_protocol, $analysis_dataset_id, $analysis_accession_names, $analysis_trait_names, $analysis_statistical_ontology_term, $analysis_precomputed_design_optional, $analysis_result_values, $analysis_result_values_type, $analysis_result_summary,
+        $analysis_model_id, $analysis_model_name, $analysis_model_description, $analysis_model_is_public, $analysis_model_language, $analysis_model_type, $analysis_model_properties, $analysis_model_application_name, $analysis_model_application_version, $analysis_model_file, $analysis_model_file_type, $analysis_model_training_data_file, $analysis_model_training_data_file_type, $analysis_model_auxiliary_files,
+        $user_id, $user_name, $user_role
+    );
+}
+
 # sub store_analysis_file : Path('/ajax/analysis/store/file') ActionClass("REST") Args(0) {}
 # 
 # sub store_analysis_file_POST {

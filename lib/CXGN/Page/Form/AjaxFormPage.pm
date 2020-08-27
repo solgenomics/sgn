@@ -188,18 +188,23 @@ sub check_modify_privileges {
     #
     my ($person_id, $user_type)=$self->get_login()->has_session();
     $user_type ||= '';
-
-    if ($user_type eq 'curator') {
+    my @owners = $self->get_owners();
+    my $is_owner = 0;
+    if ((@owners) && ((grep { $_ =~ /^$person_id$/ } @owners) )) {
+	$self->set_is_owner(1);
+	$is_owner = 1;
+    }
+    if ($user_type eq 'curator' || $is_owner == 1) {
 	return 0;
     }
     if (!$person_id) { $json_hash{login} = 1 ;  }
-    if ($user_type !~ /submitter|sequencer|curator/) { 
+    if ($user_type !~ /curator/) { 
         if (!$json_hash{error} ) {
-	    $json_hash{error} = "You must have an account of type submitter to be able to submit data. Please contact SGN to change your account type."; }
+	    $json_hash{error} = "You must have an account of type curator or be the owner of this object to be able to edit. Please contact SGN for further help"; }
 	$self->set_json_hash(%json_hash);
 	return 0;
     }
-    my @owners = $self->get_owners();
+    
 
     if ((@owners) && (!(grep { $_ =~ /^$person_id$/ } @owners) )) {
 	# check the owner only if the action is not new
@@ -623,8 +628,8 @@ sub set_object_name {
 =cut
 
 sub get_owners {
-  my $self=shift;
-  return @{$self->{owners}};
+    my $self=shift;
+    return @{$self->{owners}};
   
 }
 

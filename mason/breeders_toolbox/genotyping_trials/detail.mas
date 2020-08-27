@@ -244,6 +244,10 @@ genotyping_plate_sample_type => $genotyping_plate_sample_type,
 genotyping_raw_data_link => $raw_data_link
 &>
 
+<& /breeders_toolbox/genotyping_trials/replace_plate_accessions_dialog.mas,
+trial_name => $trial_name
+&>
+
 <script>
 
     jQuery(document).ready(function(){
@@ -280,6 +284,14 @@ genotyping_raw_data_link => $raw_data_link
             }
 
         });
+    });
+
+    jQuery('#save_replace_well_accession').click(function(){
+        save_replace_well_accession();
+    });
+
+    jQuery('#close_message_dialog').click(function(){
+        close_message_dialog();
     });
 
 </script>

@@ -37,15 +37,15 @@ sub shared_phenotypes: Path('/ajax/heritability/shared_phenotypes') : {
     my $traits = $ds->retrieve_traits();
     my @trait_info;
     foreach my $t (@$traits) {
-	      my $tobj = CXGN::Cvterm->new({ schema=>$schema, cvterm_id => $t });
+          my $tobj = CXGN::Cvterm->new({ schema=>$schema, cvterm_id => $t });
         push @trait_info, [ $tobj->cvterm_id(), $tobj->name()];
     }
 
-    
     $c->tempfiles_subdir("heritability_files");
     my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"heritability_files/trait_XXXXX");
-    $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $temppath = $c->config->{basepath}."/".$tempfile;
     my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath);
     my $phenotype_data_ref = $ds2->retrieve_phenotypes();
@@ -54,9 +54,9 @@ sub shared_phenotypes: Path('/ajax/heritability/shared_phenotypes') : {
     $c->stash->{rest} = {
         options => \@trait_info,
         tempfile => $tempfile."_phenotype.txt",
-#        tempfile => $file_response,
     };
 }
+
 
 
 sub extract_trait_data :Path('/ajax/heritability/getdata') Args(0) {
@@ -111,6 +111,8 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
     my $c = shift;
     my $dataset_id = $c->req->param('dataset_id');
     my $trait_id = $c->req->param('trait_id');
+    print"****************************************************************************\n";
+    print"The dataset is $dataset_id\n";
     print STDERR $dataset_id;
     print STDERR $trait_id;
     $c->tempfiles_subdir("heritability_files");

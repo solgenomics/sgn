@@ -675,7 +675,7 @@ sub update_seedlot {
     );};
 
     if ($seedlot_r){
-        my $accession = $seedlot_r->accession()->[0]; print Dumper $accession;
+        my $accession = $seedlot_r->accession()->[0];
         my $location = $seedlot_r->nd_geolocation_id();
         my $program = $seedlot_r->breeding_program_id();
         my $cross = $seedlot_r->cross();
