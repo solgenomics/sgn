@@ -1323,7 +1323,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                         <hr>
                         <form class="form-horizontal">
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Genotyping Protocol To Calculate Genomic Relationship Matrix: </label>
+                                <label class="col-sm-3 control-label">Genotyping Protocol To Calculate Genomic Relationship Matrix (optional): </label>
                                 <div class="col-sm-9" >
                                     <div id="drone_imagery_calculate_statistics_genotyping_protocol_select_div"></div>
                                 </div>

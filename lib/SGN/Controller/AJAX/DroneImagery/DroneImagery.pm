@@ -817,6 +817,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             my ($grm_tempfile_fh, $grm_tempfile) = tempfile("wizard_download_grm_XXXXX", DIR=> $tmp_grm_dir);
             my ($grm_out_tempfile_fh, $grm_out_tempfile) = tempfile("wizard_download_grm_XXXXX", DIR=> $tmp_grm_dir);
 
+            if (!$protocol_id) {
+                $protocol_id = undef;
+            }
+
             my $grm_search_params = {
                 bcs_schema=>$schema,
                 grm_temp_file=>$grm_tempfile,
