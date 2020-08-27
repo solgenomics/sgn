@@ -96,9 +96,9 @@
 
                 <form class="form-horizontal">
                     <div class="form-group form-group-sm">
-                        <label class="col-sm-6 control-label">Rotate Images: </label>
+                        <label class="col-sm-6 control-label">Rotate Images (Use Left and Right Arrows For Fine Tuning): </label>
                         <div class="col-sm-6">
-                            <input type="range" min="-180" max="180" id="drone_imagery_standard_process_raw_images_interactive_bulk_rotate_degrees_input" name="drone_imagery_standard_process_raw_images_interactive_bulk_rotate_degrees_input" value="0.00">
+                            <input type="range" min="-180" max="180" step="0.01" id="drone_imagery_standard_process_raw_images_interactive_bulk_rotate_degrees_input" name="drone_imagery_standard_process_raw_images_interactive_bulk_rotate_degrees_input" value="0.00"><div id="drone_imagery_standard_process_raw_images_interactive_bulk_rotate_degrees_input_text"></div>
                         </div>
                     </div>
                 </form>
@@ -228,75 +228,81 @@
             </form>
             <!--<hr>-->
 
-            <& /page/detail_page_2_col_section.mas, info_section_collapsible=>1, info_section_collapsed=>0, info_section_title => "<h4 style='display:inline'>Generate Polygon Template Tool</h4>", info_section_subtitle => 'Overlay a uniform grid over the image.', icon_class => "glyphicon glyphicon-th-large", info_section_id => "manage_drone_imagery_generate_plot_polygons_standard_process_raw_images_section", id_extension => '_raw_images_interactive' &>
+            <& /page/detail_page_2_col_section.mas, info_section_collapsible=>1, info_section_collapsed=>1, info_section_title => "<h4 style='display:inline'>(1) Generate Polygon Template Tool</h4>", info_section_subtitle => 'Overlay a uniform grid over the image.', icon_class => "glyphicon glyphicon-th-large", info_section_id => "manage_drone_imagery_generate_plot_polygons_standard_process_raw_images_section", id_extension => '_raw_images_interactive' &>
+
+            <& /page/detail_page_2_col_section.mas, info_section_collapsible=>1, info_section_collapsed=>1, info_section_title => "<h4 style='display:inline'>(2) Or, Use Ground Control Points</h4>", info_section_subtitle => 'Overlay a uniform grid over the image.', icon_class => "glyphicon glyphicon-th-large", info_section_id => "manage_drone_imagery_generate_plot_polygons_standard_process_raw_images_section_ground_control_points" &>
 
             <div class="well well-sm">
                 <button id="drone_imagery_interactive_plot_polygons_clear" class="btn btn-danger">Clear All Polygons</button>
                 <button id="drone_imagery_interactive_plot_polygons_clear_one" class="btn btn-danger">Remove One Polygon</button>
             </div>
 
-            <div class="well well-sm">
-                <h2>Either, Manually Assign Plot Numbers to Generated Polygons</h2>
+            <div id="drone_imagery_standard_process_interactive_generated_polygons_input_div" style="display:none">
 
-                <&| /page/info_section.mas, title => 'Manually Assign Plot Numbers to Polygon Numbers', collapsible=>1, collapsed => 1, subtitle=> 'Table for manually assigning plot numbers to polygon numbers.' &>
-                    <div id="drone_imagery_standard_process_interactive_generated_polygons_table"></div>
-                </&>
+                <div class="well well-sm">
+                    <h2>Either, Manually Assign Plot Numbers to Generated Polygons</h2>
+
+                    <&| /page/info_section.mas, title => 'Manually Assign Plot Numbers to Polygon Numbers', collapsible=>1, collapsed => 1, subtitle=> 'Table for manually assigning plot numbers to polygon numbers.' &>
+                        <div id="drone_imagery_standard_process_interactive_generated_polygons_table"></div>
+                    </&>
+                </div>
+
+                <div id="drone_imagery_interactive_generated_polygons_div"></div>
+
+                <hr>
+
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_50"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_49"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_48"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_47"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_46"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_45"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_44"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_43"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_42"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_41"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_40"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_39"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_38"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_37"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_36"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_35"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_34"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_33"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_32"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_31"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_30"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_29"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_28"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_27"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_26"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_25"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_24"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_23"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_22"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_21"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_20"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_19"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_18"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_17"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_16"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_15"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_14"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_13"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_12"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_11"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_10"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_9"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_8"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_7"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_6"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_5"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_4"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_3"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_2"></div>
+                <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_1"></div>
+
             </div>
-
-            <div id="drone_imagery_interactive_generated_polygons_div"></div>
-
-            <hr>
-
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_50"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_49"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_48"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_47"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_46"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_45"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_44"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_43"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_42"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_41"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_40"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_39"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_38"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_37"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_36"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_35"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_34"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_33"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_32"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_31"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_30"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_29"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_28"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_27"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_26"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_25"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_24"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_23"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_22"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_21"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_20"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_19"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_18"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_17"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_16"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_15"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_14"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_13"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_12"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_11"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_10"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_9"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_8"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_7"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_6"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_5"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_4"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_3"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_2"></div>
-            <div id="drone_imagery_standard_process_raw_images_image_id_interactive_select_div_1"></div>
 
             <hr>
             
@@ -532,6 +538,9 @@ jQuery(document).ready(function(){
     var manage_drone_imagery_standard_process_interactive_current_ordinal_latitude_current;
     var manage_drone_imagery_standard_process_interactive_current_ordinal_longitude_raw;
     var manage_drone_imagery_standard_process_interactive_current_ordinal_longitude_current;
+    var project_drone_imagery_interactive_ground_control_points_saved_div_table;
+    var project_drone_imagery_interactive_ground_control_points_saved;
+    var project_drone_imagery_interactive_ground_control_points_saved_array;
 
     d3.selection.prototype.moveToFront = function() {
         return this.each(function(){
@@ -855,6 +864,7 @@ jQuery(document).ready(function(){
     d3.select("#drone_imagery_standard_process_raw_images_interactive_bulk_rotate_degrees_input").on("input", function() {
         manage_drone_imagery_standard_process_raw_images_interactive_bulk_rotate_angle = this.value;
         droneImageryInteractiveRotateImages(manage_drone_imagery_standard_process_raw_images_interactive_bulk_rotate_angle, 1, '#drone_imagery_standard_process_raw_images_interactive_bulk_rotate_div_area_'+manage_drone_imagery_standard_process_raw_images_interactive_current_pass);
+        jQuery('#drone_imagery_standard_process_raw_images_interactive_bulk_rotate_degrees_input_text').html(manage_drone_imagery_standard_process_raw_images_interactive_bulk_rotate_angle);
     });
 
     function getRandomColorInteractive() {
@@ -1387,12 +1397,22 @@ jQuery(document).ready(function(){
 
         jQuery('#manage_drone_imagery_standard_process_interactive_drone_run_bands_table').DataTable({
             destroy : true,
-            ajax : '/api/drone_imagery/drone_run_bands?select_checkbox_name=drone_run_standard_process_interactive_band_select&disable=1&select_all=1&drone_run_project_id='+manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id
+            ajax : '/api/drone_imagery/drone_run_bands?select_checkbox_name=drone_run_standard_process_interactive_band_select&drone_run_project_id='+manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id
         });
 
     });
 
     jQuery('#manage_drone_imagery_standard_process_interactive_select_drone_run_band_step').click(function(){
+        var selected = [];
+        jQuery('input[name="drone_run_standard_process_interactive_band_select"]:checked').each(function() {
+            selected.push(jQuery(this).val());
+        });
+        if (selected.length > 1 || selected.length == 0) {
+            alert('Please select one band!');
+            return false;
+        }
+        manage_drone_imagery_standard_process_interactive_drone_run_band_project_id = selected[0];
+
         jQuery.ajax({
             url : '/api/drone_imagery/separate_drone_imagery_gps?drone_run_project_id='+manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id,
             success: function(response){
@@ -1417,10 +1437,28 @@ jQuery(document).ready(function(){
     });
 
     jQuery('#manage_drone_imagery_standard_process_interactive_separated_passes_step').click(function(){
+        project_drone_imagery_interactive_ground_control_points_saved_div_table = 'project_drone_imagery_standard_process_interactive_ground_control_points_saved_div';
+
         jQuery.ajax({
             url : '/api/drone_imagery/get_drone_imagery_gps?drone_run_project_id='+manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id+'&flight_pass_counter='+manage_drone_imagery_standard_process_raw_images_interactive_current_pass,
             success: function(response){
                 console.log(response);
+
+                get_select_box('drone_runs_with_gcps', 'manage_drone_imagery_standard_process_interactive_ground_control_points_select', {'id':'manage_drone_imagery_standard_process_interactive_ground_control_points_select_id', 'name':'manage_drone_imagery_standard_process_interactive_ground_control_points_select_id', 'field_trial_id':manage_drone_imagery_standard_process_raw_images_interactive_field_trial_id, 'empty':1});
+
+                jQuery.ajax({
+                    url : '/api/drone_imagery/get_image_for_saving_gcp?drone_run_project_id='+manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id,
+                    success: function(response){
+                        console.log(response);
+
+                        project_drone_imagery_interactive_ground_control_points_saved = response.saved_gcps_full;
+                        project_drone_imagery_interactive_ground_control_points_saved_array = response.gcps_array;
+                        _redraw_ground_control_points_table_interactive();
+                    },
+                    error: function(response){
+                        alert('Error getting standard process interactive gcps!');
+                    }
+                });
 
                 manage_drone_imagery_standard_process_raw_images_interactive_maximum_pass = response.max_flight_pass_counter;
 
@@ -1454,6 +1492,55 @@ jQuery(document).ready(function(){
                 alert('Error check rotation!');
             }
         });
+    });
+
+    jQuery('#manage_drone_imagery_standard_process_interactive_ground_control_points_option').change(function(){
+        if (jQuery(this).val() == 'Yes') {
+            jQuery('#manage_drone_imagery_standard_process_interactive_ground_control_points_select_div').show();
+            
+            //Change click type to save ground control points
+        }
+        else {
+            jQuery('#manage_drone_imagery_standard_process_interactive_ground_control_points_select_div').hide();
+        }
+    });
+
+    function _redraw_ground_control_points_table_interactive() {
+        var html = "<table class='table table-bordered table-hover'><thead><tr><th>Saved GCP Name</th><th>X Pos</th><th>Y Pos</th><th>Latitude</th><th>Longitude</th><th>Remove</th></thead><tbody>";
+        for (var i=0; i<project_drone_imagery_interactive_ground_control_points_saved_array.length; i++) {
+            html = html + "<tr><td>"+project_drone_imagery_interactive_ground_control_points_saved_array[i]['name']+"</td><td>"+project_drone_imagery_interactive_ground_control_points_saved_array[i]['x_pos']+"</td><td>"+project_drone_imagery_interactive_ground_control_points_saved_array[i]['y_pos']+"</td><td>"+project_drone_imagery_interactive_ground_control_points_saved_array[i]['latitude']+"</td><td>"+project_drone_imagery_interactive_ground_control_points_saved_array[i]['longitude']+"</td><td><p style='color:red' name='project_drone_imagery_interactive_ground_control_points_delete_one' data-name='"+project_drone_imagery_interactive_ground_control_points_saved_array[i]['name']+"' data-drone_run_project_id="+manage_drone_imagery_standard_process_raw_images_interactive_drone_run_id+" >X</p></td></tr>";
+        }
+        html = html + "</tbody></table>";
+        html = html + "<button class='btn btn-default' name='project_drone_imagery_interactive_ground_control_points_draw_points'>Draw Saved GCPs</button>";
+        jQuery('#'+project_drone_imagery_interactive_ground_control_points_saved_div_table).html(html);
+    }
+
+    jQuery(document).on('click', 'p[name="project_drone_imagery_interactive_ground_control_points_delete_one"]', function(){
+        var drone_run_project_id = jQuery(this).data('drone_run_project_id');
+        var name = jQuery(this).data('name');
+
+        if (confirm("Remove this GCP?")) {
+            jQuery.ajax({
+                type: 'POST',
+                url: '/api/drone_imagery/remove_one_gcp',
+                data: {
+                    'drone_run_project_id' : drone_run_project_id,
+                    'name' : name,
+                },
+                success: function(response){
+                    console.log(response);
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                    project_drone_imagery_interactive_ground_control_points_saved = response.saved_gcps_full;
+                    project_drone_imagery_interactive_ground_control_points_saved_array = response.gcps_array;
+                    _redraw_ground_control_points_table_interactive();
+                },
+                error: function(response){
+                    alert('Error deleting GCP name!');
+                }
+            });
+        }
     });
 
     d3.select("#drone_imagery_standard_process_raw_images_interactive_rotate_degrees_input").on("input", function() {
@@ -1591,6 +1678,8 @@ jQuery(document).ready(function(){
         plotPolygonsRectanglesApplyInteractive(num_rows_val, num_cols_val, section_top_row_left_offset_val, section_bottom_row_left_offset_val, section_left_column_top_offset_val, section_left_column_bottom_offset_val, section_top_row_right_offset_val, section_right_column_bottom_offset_val, drone_imagery_interactive_total_width, drone_imagery_interactive_total_length, 'drone_imagery_interactive_generated_polygons_div');
 
         plotPolygonManualAssignPlotNumberTable('drone_imagery_standard_process_interactive_generated_polygons_table', 'drone_imagery_standard_process_interactive_generated_polygons_table_id', 'drone_imagery_standard_process_interactive_generated_polygons_table_input', 'drone_imagery_standard_process_interactive_generated_polygons_table_input_generate_button', 'drone_imagery_standard_process_interactive_plot_polygons_submit_bottom');
+
+        jQuery('#drone_imagery_standard_process_interactive_generated_polygons_input_div').show();
     });
 
     var drone_imagery_plot_polygons_rectangles_apply_square_raw_images_interactive_counter = 0;
@@ -2415,11 +2504,6 @@ jQuery(document).ready(function(){
     }
 
     jQuery(document).on('click', 'button[name="drone_imagery_standard_process_interactive_plot_polygons_submit_bottom"]', function(){
-        var selected = [];
-        jQuery('input[name="drone_run_standard_process_interactive_band_select"]:checked').each(function() {
-            selected.push(jQuery(this).val());
-        });
-        manage_drone_imagery_standard_process_interactive_drone_run_band_project_id = selected[3];
         console.log(manage_drone_imagery_standard_process_interactive_saved_gps_positions);
 
         console.log(drone_imagery_interactive_plot_polygons);

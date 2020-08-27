@@ -377,7 +377,7 @@ sub has_genotype {
     my ($self, $pr_id, $protocol_id) = @_;
 
     my $protocol_detail = $self->protocol_detail();
-    my $protocol = $protocol_detail->{name};
+    my $protocol_name = $protocol_detail->{name};
    
     my $q = "SELECT genotyping_protocol_name, genotyping_protocol_id 
                  FROM genotyping_protocolsXtrials 
@@ -387,9 +387,9 @@ sub has_genotype {
 
     my $sth = $self->context->dbc->dbh->prepare($q);
 
-    $sth->execute($pr_id, $protocol);
+    $sth->execute($pr_id, $protocol_name);
 
-    my ($protocol_name, $protocol_id)  = $sth->fetchrow_array();
+    ($protocol_name, $protocol_id)  = $sth->fetchrow_array();
   
     return $protocol_id;
    

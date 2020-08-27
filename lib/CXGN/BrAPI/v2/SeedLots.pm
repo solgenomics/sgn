@@ -56,7 +56,7 @@ sub search {
         $accession_id
     );
 
-    foreach (@$list){ print Dumper $_;
+    foreach (@$list){
         my $accession_id;
         my $cross_id;
         if ($_->{source_stocks}->[0][2] eq 'accession'){
@@ -113,7 +113,7 @@ sub detail {
         my $accession = $seedlot->accession() ? $seedlot->accession()->[0] : undef;
         my $location = $seedlot->nd_geolocation_id();
         my $program = $seedlot->breeding_program_id();
-        my $cross = $seedlot->cross() ? $seedlot->cross()->[0] : undef;
+        my $cross = $seedlot->cross() ? qq|$seedlot->cross()->[0]| : undef;
 
         %result = (
                 additionalInfo=>{},
@@ -121,7 +121,7 @@ sub detail {
                 createdDate=>undef,
                 externalReferences=>[],
                 germplasmDbId=>qq|$accession|,
-                crossDbId=>qq|$cross|,
+                crossDbId=>$cross,
                 lastUpdated=>undef,
                 locationDbId=>qq|$location|,
                 programDbId=>qq|$program|,
@@ -263,7 +263,7 @@ sub store_seedlots {
     foreach my $params (@$data){
         my $seedlot_uniquename = $params->{seedLotName} ? $params->{seedLotName} : undef;
         my $location_id = $params->{locationDbId} ? $params->{locationDbId} : undef;
-        my $box_name = $params->{additionalInfo} ? $params->{additionalInfo} : undef;
+        my $box_name = $params->{additionalInfo}->{boxName} ? $params->{additionalInfo}->{boxName} : undef;
         my $source_collection = $params->{sourceCollection} ? $params->{sourceCollection} : undef;
         my $accession_id = $params->{germplasmDbId} ? $params->{germplasmDbId} : undef;
         my $cross_id = $params->{crossDbId} ? $params->{crossDbId} : undef;
@@ -380,10 +380,8 @@ sub store_seedlots {
         };
 
         if ($@) {
-            $c->stash->{rest} = { success => 0, seedlot_id => 0, error => $@ };
             return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('An error condition occurred, was not able to create seedlot.'));
         }
-        $c->stash->{rest} = { success => 1, seedlot_id => $seedlot_id };
         push @$seedlot_ids, $seedlot_id;
     }
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
@@ -594,18 +592,18 @@ sub update_seedlot {
     );
 
     my $saved_seedlot_name = $seedlot->uniquename;
-    my $seedlot_name = $params->{seedLotName} ? $params->{seedLotName}[0] : undef;
-    my $location_id = $params->{locationDbId} ? $params->{locationDbId}[0] : undef;
-    my $box_name = $params->{additionalInfo} ? $params->{additionalInfo}[0] : undef;
-    my $source_collection = $params->{sourceCollection} ? $params->{sourceCollection}[0] : undef; # not implemented
-    my $accession_id = $params->{germplasmDbId} ? $params->{germplasmDbId}[0] : undef;
-    my $cross_id = $params->{crossDbId} ? $params->{crossDbId}[0] : undef;
-    my $organization = $params->{organization} ? $params->{organization}[0] : undef;
-    my $amount = $params->{amount} ? $params->{amount}[0] : undef; # not implemented
-    my $weight = $params->{weight} ? $params->{weight}[0] : undef; # not implemented
-    my $timestamp = $params->{lastUpdated} ? $params->{lastUpdated}[0] : undef; # not implemented
-    my $description = $params->{seedLotDescription} ? $params->{seedLotDescription}[0] : undef;
-    my $breeding_program_id = $params->{programDbId} ? $params->{programDbId}[0] : undef;
+    my $seedlot_name = $params->{seedLotName} ? $params->{seedLotName} : undef;
+    my $location_id = $params->{locationDbId} ? $params->{locationDbId} : undef;
+    my $box_name = $params->{additionalInfo}->{boxName} ? $params->{additionalInfo}->{boxName} : undef;
+    my $source_collection = $params->{sourceCollection} ? $params->{sourceCollection} : undef; # not implemented
+    my $accession_id = $params->{germplasmDbId} ? $params->{germplasmDbId} : undef;
+    my $cross_id = $params->{crossDbId} ? $params->{crossDbId} : undef;
+    my $organization = $params->{organization} ? $params->{organization} : undef;
+    my $amount = $params->{amount} ? $params->{amount} : undef; # not implemented
+    my $weight = $params->{weight} ? $params->{weight} : undef; # not implemented
+    my $timestamp = $params->{lastUpdated} ? $params->{lastUpdated} : undef; # not implemented
+    my $description = $params->{seedLotDescription} ? $params->{seedLotDescription} : undef;
+    my $breeding_program_id = $params->{programDbId} ? $params->{programDbId} : undef;
     my $accession_uniquename;
 
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
@@ -653,18 +651,16 @@ sub update_seedlot {
     $seedlot->breeding_program_id($breeding_program_id);
     $seedlot->organization_name($organization);
     $seedlot->location_code($location_code);
-    $seedlot->box_name($box_name);
+    # $seedlot->box_name($box_name);
     $seedlot->accession_stock_id($accession_id);
     $seedlot->cross_stock_id($cross_id);
     $seedlot->description($description);
 
     my $return = $seedlot->store();
     if (exists($return->{error})){
-        $c->stash->{rest} = { error => $return->{error} };
         return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('An error occurred, seed lot can not be stored.'));
-    } else {
-        $c->stash->{rest} = { success => 1 };
-    }
+    } 
+
     $phenome_schema->resultset("StockOwner")->find_or_create({
             stock_id     => $seedlot_id,
             sp_person_id =>  $user_id,
@@ -682,7 +678,7 @@ sub update_seedlot {
         my $accession = $seedlot_r->accession()->[0];
         my $location = $seedlot_r->nd_geolocation_id();
         my $program = $seedlot_r->breeding_program_id();
-        my $cross = $seedlot_r->cross()->[0];
+        my $cross = $seedlot_r->cross();
 
         %result = (
                 additionalInfo=>{},

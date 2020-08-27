@@ -525,7 +525,7 @@ my $trial_phenotype_count = $trial->phenotype_count();
 
 #print STDERR "Total phentoypes: $total_phenotypes\n";
 #print STDERR "Trial phentoypes: $trial_phenotype_count\n";
-is($total_phenotypes, 3520, "total phenotype data");
+is($total_phenotypes, 3529, "total phenotype data");
 is($trial_phenotype_count, 6, "trial has phenotype data");
 
 my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -691,7 +691,7 @@ my $trial_phenotype_count = $trial->phenotype_count();
 
 print STDERR "Total phentoypes: $total_phenotypes\n";
 print STDERR "Trial phentoypes: $trial_phenotype_count\n";
-is($total_phenotypes, 3529, "total phenotype data");
+is($total_phenotypes, 3538, "total phenotype data");
 is($trial_phenotype_count, 15, "trial has phenotype data");
 
 my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),

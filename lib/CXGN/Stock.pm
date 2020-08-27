@@ -161,6 +161,7 @@ has 'owners' => (
     builder  => '_retrieve_stock_owner',
 );
 
+
 =head2 accessor organism()
 
  Usage:
@@ -499,6 +500,10 @@ sub BUILD {
         $self->is_obsolete($stock->is_obsolete);
         $self->organization_name($self->_retrieve_stockprop('organization'));
         $self->_retrieve_populations();
+	my $phenome_schema = CXGN::Phenome::Schema->connect(
+	sub { $self->schema()->storage()->dbh() }, { on_connect_do => [ 'SET search_path TO phenome, public, sgn'], limit_dialect => 'LimitOffset' }
+	);
+	$self->phenome_schema($phenome_schema);
     }
 
 
@@ -518,6 +523,7 @@ sub BUILD {
 	}
 
 	$self->subjects(\@subjects);
+	$self->owners($self->_retrieve_stock_owner);
     }
     return $self;
 }

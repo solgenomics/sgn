@@ -8,7 +8,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadDroneImageryDialog">Upload Drone Imagery</h4>
+        <h4 class="modal-title" id="uploadDroneImageryDialog">Upload Aerial Imagery</h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
@@ -21,7 +21,7 @@
                         <p>Your field trial must already be in the database before you can upload images for it. Please go to <a href="/breeders/trials">Manage->Field Trials</a> if it is not.</p>
                         <p>A field trial represents plots in the field where each plot has a globally unique <i>plot_name</i>, a sequential <i>plot_number</i> that is unique in the trial (e.g. 101, 102, 103 for three separate plots), and an <i>accession_name</i> representing the genotype being tested in that plot. Each plot can belong to different blocks (<i>block_number</i>) and reps (<i>rep_number</i>) depending on the experimental design you are using (e.g. complete block vs augmented design). Each plot can have a <i>row_number</i> and <i>col_number</i> indicating the relative position of the plot in the field. A field trial can represent a yield trial, a phenotyping trial, a crossing block, a greenhouse, a nursery, etc.</p>
                         <p>If you have raw aerial images (.tiff) that have not been stitched into an orthophotomosaic image of the whole field, your raw images should be uploaded using a zipfile (.zip). You can have several drone runs for a single field trial. The maximum zipfile size is 2GB; however, you can upload many separate zipfiles.</p>
-                        <p>If you already have an orthophotomosaic image of your entire field, you can upload that image under a field trial and a drone run. The maximum size for each image is 200MB. The preferred upload format is PNG.</p>
+                        <p>If you already have an orthophotomosaic image of your entire field, you can upload that image under a field trial and a drone run. The maximum size for each image is 200MB. Upload orthomosaics as .TIFF, .PNG, or .JPG images.</p>
                         <p><b>Example Data:</b> <a href="/static_content/imagebreed/AlfalfaExample35MeterMicasenseAerialDroneFlightRawCaptures.zip" download>Micasense 5 Band Raw Images (Unstitched image-captures) (Upload zipfile for ImageBreed.)</a></p>
                         <p><b>Example Data:</b> <a href="/static_content/imagebreed/ExampleAerialDroneFlightMicasensePanel.zip" download>Micasense 5 Band Panel Images (Micasense calibration panel images.) (Upload zipfile for ImageBreed to calibrate Micasense raw-captures.)</a></p>
                         <p><b>Example Data:</b> <a href="/static_content/imagebreed/AlfalfaExample35MeterMicasenseAerialDroneFlightOrthomosaics.zip" download>Micasense 5 Band Previously Stitched Orthophotomosaic Images (PNG Files in provided zipfile. Can upload each band separately into ImageBreed.)</a></p>
@@ -58,6 +58,7 @@
                                     <th>Imaging Event Type</th>
                                     <th>Imaging Event Description</th>
                                     <th>Imaging Event Date</th>
+                                    <th>Drone Run GDD</th>
                                     <th>Sensor</th>
                                     <th>Field Trial Name</th>
                                     <th>Field Trial Description</th>
@@ -124,13 +125,25 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Imaging Event Description: </label>
+                                <label class="col-sm-3 control-label">Imaging Vehicle: <button class="btn btn-sm btn-default" name="drone_run_imaging_vehicle_add_new" type="button">Add New Vehicle</button></label>
+                                <div class="col-sm-9" >
+                                    <div id="drone_run_imaging_vehicle_div"></div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Imaging Vehicle Battery Set:</label>
+                                <div class="col-sm-9" >
+                                    <div id="drone_run_imaging_vehicle_battery_div"></div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Imaging Event Description (e.g. flight altitude, flight plan name, overall weather conditions): </label>
                                 <div class="col-sm-9" >
                                     <input class="form-control" id="drone_run_description" name="drone_run_description" type="text" />
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Imaging Event Date (Must be after the planting date and must be less than 365 days after planting date):</label>
+                                <label class="col-sm-3 control-label">Imaging Event Date and Hour (Must be after the planting date):</label>
                                 <div class="col-sm-9" >
                                     <input class="form-control" id="drone_run_date" name="drone_run_date" title="drone_run_date" type="text" />
                                 </div>
@@ -167,9 +180,10 @@
                                 <select class="form-control" id="drone_image_upload_drone_run_band_stitching" name="drone_image_upload_drone_run_band_stitching">
                                     <option value="">Select One</option>
                                     <!-- option value="yes">Yes, I am uploading a zipfile of raw images to stitch</option -->
-                                    <option value="yes_raw">Yes, I am uploading a zipfile of raw images</option>
                                     <!-- option value="yes_automated">Yes, I am uploading a zipfile of raw images to automatically get plot images from</option -->
                                     <option value="no">No, I am uploading a stitched orthomosaic</option>
+                                    <option value="yes_raw">Yes, I am uploading a zipfile of raw images</option>
+                                    <!--option value="yes_open_data_map_stitch">Yes, I am uploading a zipfile of raw images to stitch using OpenDataMap</option-->
                                 </select>
                             </div>
                         </div>
@@ -210,6 +224,48 @@
 
                 <div id="upload_drone_imagery_verify_status"></div>
             </form><br/>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="drone_run_imaging_vehicle_add_new_modal" name="drone_run_imaging_vehicle_add_new_modal" tabindex="-1" role="dialog" aria-labelledby="uploadDroneImageryAddNewVehicleDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadDroneImageryAddNewVehicleDialog">Add New Imaging Vehicle</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <div class="form-horizontal">
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Imaging Vehicle Name (Must be unique): </label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" id="drone_run_new_imaging_vehicle_name" name="drone_run_new_imaging_vehicle_name" type="text" placeholder="e.g. MyLabDrone1" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Imaging Vehicle Description: </label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" id="drone_run_new_imaging_vehicle_desc" name="drone_run_new_imaging_vehicle_desc" type="text" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Battery Set Names (optional) (comma separated string of names e.g. blue,green,red,black): </label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" id="drone_run_new_imaging_vehicle_battery_names" name="drone_run_new_imaging_vehicle_battery_names" type="text" placeholder="default_battery" value="default_battery"/>
+                    </div>
+                </div>
+            </div>
+            <br/><br/>
+            <center>
+                <button class="btn btn-primary" type="button" id="drone_run_new_imaging_vehicle_submit" name="drone_run_new_imaging_vehicle_submit">Submit</button>
+            </center>
         </div>
       </div>
       <div class="modal-footer">
@@ -497,8 +553,14 @@ jQuery(document).ready(function() {
 
     get_select_box('trials', 'upload_drone_image_trial_select_div', { 'name' : 'drone_run_field_trial_id', 'id' : 'drone_run_field_trial_id', 'empty':1, 'multiple':0 });
 
+    var upload_drone_imagery_vehicle_id;
     jQuery('#upload_drone_imagery_link').click( function() {
         jQuery('#upload_drone_imagery_dialog').modal("show");
+        upload_drone_imagery_vehicle_id = jQuery('#drone_run_imaging_vehicle_id').val();
+
+        if (upload_drone_imagery_vehicle_id) {
+            _show_vehicle_battery_select();
+        }
     });
 
     jQuery(document).on('change', '#drone_run_field_trial_id', function() {
@@ -547,14 +609,90 @@ jQuery(document).ready(function() {
             "singleDatePicker": true,
             "showDropdowns": true,
             "autoUpdateInput": false,
+            "timePicker": true,
+            "timePicker24Hour": true,
         },
         function(start){
             drone_run_date_element.val(start.format('YYYY/MM/DD HH:mm:ss'));
         }
     );
 
+    get_select_box('imaging_event_vehicles', 'drone_run_imaging_vehicle_div', {'id':'drone_run_imaging_vehicle_id', 'name':'drone_run_imaging_vehicle_id'});
+
+    function _show_vehicle_battery_select() {
+        jQuery.ajax({
+            url : '/api/drone_imagery/get_vehicle?vehicle_id='+upload_drone_imagery_vehicle_id,
+            success: function(response){
+                console.log(response);
+                if (response.success) {
+                    var html = "<select class='form-control' name='drone_run_imaging_vehicle_battery_name' id='drone_run_imaging_vehicle_battery_name'>";
+                    for (var name in response.vehicle.properties.batteries) {
+                        if (response.vehicle.properties.batteries.hasOwnProperty(name)) {
+                            if (response.vehicle.properties.batteries[name]['obsolete'] == 0) {
+                                html = html + "<option value='"+name+"'>"+name+"</option>";
+                            }
+                        }
+                    }
+                    html = html + "</select>";
+                    jQuery('#drone_run_imaging_vehicle_battery_div').html(html);
+                }
+                else if (response.error) {
+                    alert(response.error);
+                }
+                return false;
+            },
+            error: function(response){
+                alert('Error getting vehicle!');
+            }
+        });
+    }
+
+    jQuery('button[name="drone_run_imaging_vehicle_add_new"]').click(function(e){
+        e.preventDefault();
+        jQuery('#drone_run_imaging_vehicle_add_new_modal').modal('show');
+    });
+
+    jQuery('#drone_run_new_imaging_vehicle_submit').click(function(e){
+        e.preventDefault();
+        var vehicle_name = jQuery('#drone_run_new_imaging_vehicle_name').val();
+        var vehicle_desc = jQuery('#drone_run_new_imaging_vehicle_desc').val();
+        var vehicle_batteries = jQuery('#drone_run_new_imaging_vehicle_battery_names').val();
+
+        if (vehicle_name == '' || vehicle_desc == '') {
+            alert('Please give a vehicle name and description!');
+            return false;
+        }
+        if (vehicle_batteries == '') {
+            alert('Please give at least default battery name!');
+            return false;
+        }
+
+        jQuery.ajax({
+            url : '/api/drone_imagery/new_imaging_vehicle?vehicle_name='+vehicle_name+'&vehicle_description='+vehicle_desc+'&battery_names='+vehicle_batteries,
+            success: function(response){
+                console.log(response);
+                if (response.success) {
+                    alert('Vehicle added!');
+                    get_select_box('imaging_event_vehicles', 'drone_run_imaging_vehicle_div', {'id':'drone_run_imaging_vehicle_id', 'name':'drone_run_imaging_vehicle_id'});
+                }
+                else if (response.error) {
+                    alert(response.error);
+                }
+                return false;
+            },
+            error: function(response){
+                alert('Error adding new imaging vehicle!');
+            }
+        });
+    });
+
+    jQuery(document).on('change', '#drone_run_imaging_vehicle_id', function(){
+        upload_drone_imagery_vehicle_id = jQuery(this).val();
+        _show_vehicle_battery_select();
+    });
+
     jQuery('#drone_image_upload_drone_run_band_stitching').change(function(){
-        if (jQuery('#drone_image_upload_drone_run_band_stitching').val() == 'yes' || jQuery('#drone_image_upload_drone_run_band_stitching').val() == 'yes_raw' || jQuery('#drone_image_upload_drone_run_band_stitching').val() == 'yes_automated') {
+        if (jQuery('#drone_image_upload_drone_run_band_stitching').val() == 'yes' || jQuery('#drone_image_upload_drone_run_band_stitching').val() == 'yes_raw' || jQuery('#drone_image_upload_drone_run_band_stitching').val() == 'yes_automated' || jQuery('#drone_image_upload_drone_run_band_stitching').val() == 'yes_open_data_map_stitch') {
             jQuery('#drone_run_upload_drone_run_band_number_div').hide();
         } else {
             jQuery('#drone_run_upload_drone_run_band_number_div').show();
@@ -569,8 +707,10 @@ jQuery(document).ready(function() {
         var drone_run_id = jQuery('#drone_run_id').val();
         var drone_run_name = jQuery('#drone_run_name').val();
         var drone_run_date = jQuery('#drone_run_date').val();
+        var drone_run_vehicle_id = jQuery('#drone_run_imaging_vehicle_id').val();
+        var drone_run_vehicle_battery_name = jQuery('#drone_run_imaging_vehicle_battery_name').val();
 
-        if (drone_run_id != '' && (drone_run_band_unstitched == 'yes' || drone_run_band_unstitched == 'yes_raw' || drone_run_band_unstitched == 'yes_automated')) {
+        if (drone_run_id != '' && (drone_run_band_unstitched == 'yes' || drone_run_band_unstitched == 'yes_raw' || drone_run_band_unstitched == 'yes_automated' || drone_run_band_unstitched == 'yes_open_data_map_stitch')) {
             alert('Please create a new drone run band if you are uploading a zipfile of raw images.');
             return false;
         }
@@ -580,6 +720,11 @@ jQuery(document).ready(function() {
         }
         if (drone_run_id == '' && drone_run_camera_info == '') {
             alert('Please select the camera type used.');
+            return false;
+        }
+
+        if (drone_run_vehicle_id == '' || drone_run_vehicle_battery_name == '') {
+            alert('Please select an imaging event vehicle and the associated battery! You can create a new vehicle if needed');
             return false;
         }
 
@@ -629,7 +774,7 @@ jQuery(document).ready(function() {
             html = html + '</div>';
         }
 
-        else if (drone_run_band_unstitched == 'yes_raw') {
+        else if (drone_run_band_unstitched == 'yes_raw' || drone_run_band_unstitched == 'yes_open_data_map_stitch') {
             html = html + '<div class="well well-sm">';
             html = html + '<div class="form-group"><label class="col-sm-3 control-label">Drone Images ZipFile (.zip) (2GB Maximum): </label><div class="col-sm-9" ><input type="file" id="upload_drone_images_zipfile" name="upload_drone_images_zipfile" encoding="multipart/form-data" /></div></div>';
 
@@ -770,7 +915,7 @@ jQuery(document).ready(function() {
                     }
                 }
             }
-        } else if (drone_run_band_unstitched == 'yes' || drone_run_band_unstitched == 'yes_raw' || (drone_run_band_unstitched == 'yes_automated' && drone_run_band_unstitched_raw_image_boundaries == 0)) {
+        } else if (drone_run_band_unstitched == 'yes' || drone_run_band_unstitched == 'yes_raw' || drone_run_band_unstitched == 'yes_open_data_map_stitch' || (drone_run_band_unstitched == 'yes_automated' && drone_run_band_unstitched_raw_image_boundaries == 0)) {
             if (jQuery('#upload_drone_images_zipfile').val() == ''){
                 alert('Please select a zipfile of images');
                 return;
@@ -851,7 +996,7 @@ jQuery(document).ready(function() {
                 alert(response.error);
                 return;
             }
-            if (drone_run_band_unstitched == 'yes' || drone_run_band_unstitched == 'yes_raw' || drone_run_band_unstitched == 'no') {
+            if (drone_run_band_unstitched == 'yes' || drone_run_band_unstitched == 'yes_raw' || drone_run_band_unstitched == 'yes_open_data_map_stitch' || drone_run_band_unstitched == 'no') {
                 location.reload();
             }
             else if (drone_run_band_unstitched == 'yes_automated') {

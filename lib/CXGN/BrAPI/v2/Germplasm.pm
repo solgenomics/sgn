@@ -526,7 +526,6 @@ sub store {
 
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 
-    my @added_fullinfo_stocks;
     my @added_stocks;
     my $coderef_bcs = sub {
         foreach my $params (@$data){
@@ -606,7 +605,6 @@ sub store {
                 });
                 my $added_stock_id = $stock->store();
                 push @added_stocks, $added_stock_id;
-                push @added_fullinfo_stocks, [$added_stock_id, $_->{germplasmName}];
             }
         }
     };
@@ -699,7 +697,6 @@ sub update {
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 
     #sub rutine to save data
-    my @added_fullinfo_stocks;
     my @added_stocks;
     my $coderef_bcs = sub {
         foreach my $params (@$data){
@@ -779,7 +776,6 @@ sub update {
                 });
                 my $added_stock_id = $stock->store();
                 push @added_stocks, $added_stock_id;
-                push @added_fullinfo_stocks, [$added_stock_id, $_->{germplasmName}];
             }
         }
     };

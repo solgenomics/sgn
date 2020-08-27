@@ -120,6 +120,7 @@ project_property	genotyping_facility_plate_id	To retrieve status info from genot
 project_property	drone_run_averaged_temperature_growing_degree_days	The averaged-temperature growing degree days corresponding to a drone run event	09/02/2019	nm529	00114
 project_property	drone_run_related_time_cvterms_json	A json string containing time cvterms to annotate the drone run	09/02/2019	nm529	00114
 project_property	drone_run_is_raw_images	To distinguish when uploading raw images or orthomosaic images as drone runs	07/5172020	nm529	00126
+project_property	drone_run_ground_control_points	Ground control points (GCPs) can optionally be saved for a drone run	08/01/2020	nm529	00127
 project_property	drone_run_project_type	To distinguish the type of drone run being stored (Aerial Medium to High Res, Aerial Low Res)	10/5/2018	nm529	00103
 project_property	drone_run_camera_type	To identify the camera used in the drone run (micasense 5 band, cmos, ccd)	10/5/2018	nm529	00103
 project_property	drone_run_band_project_type	To distinguish the type of band being stored under a drone run (red, blue, nir, etc)	10/5/2018	nm529	00103
@@ -232,6 +233,7 @@ stock_property	tissue_type	For indicating tissue type in genotype plate well	2/1
 stock_property	ncbi_taxonomy_id	For indicating ncbi taxonomy	2/15/2018	nm529	00091
 stock_property  family_name    00101 (obsoleted) changed to stock_type 00111
 stock_property  cross_combination    Some breeding programs use cross combination (accession level) as a short informative name to indicate parents used in each cross    00111
+stock_property	imaging_event_vehicle_json	For saving imaging event vehicle information (e.g. battery info)	08/14/2020	nm529	00127
 stock_relationship	female_parent				00052
 stock_relationship	male_parent				00052
 stock_relationship	member_of				00052
@@ -258,6 +260,7 @@ stock_type	mutant population				00052
 stock_type	plant				00052
 stock_type	plot				00052
 stock_type	analysis_instance	For saving results in analysis trials	06/04/2020	lam87nm529	00119
+stock_type	imaging_event_vehicle	For saving imaging event vehicles (e.g. drones or rovers)	08/14/2020	nm529	00127
 stock_type	population				00052
 stock_type	tissue_sample				00052
 stock_type	training population				00052
@@ -292,6 +295,7 @@ protocol_type	sommer_grm_spatial_genetic_blups	An nd_protocol for analysis using
 protocol_type	sommer_grm_temporal_random_regression_gdd_genetic_blups	An nd_protocol for analysis using R Sommer for temporal random regression with legendre polynomials on growing degree days to calculate genetic and permanent environment blups using replicate, genetic relationship matrix, and growing degree days	6/11/2020	nm529	00125
 protocol_type	sommer_grm_temporal_random_regression_dap_genetic_blups	An nd_protocol for analysis using R Sommer for temporal random regression with legendre polynomials on days after planting to calculate genetic and permanent environment blups using replicate, genetic relationship matrix, and days after planting	6/11/2020	nm529	00125
 protocol_type	lmer_germplasmname_replicate	An nd_protocol for analysis using R LMER for univariate genetic blups using replicate and germplasm name	6/11/2020	nm529	00125
+protocol_type	uploaded_generic_analysis_model	An nd_protocol for analysis for uploaded user results	8/19/2020	nm529	00128
 composable_cvtypes	trait_ontology		05/01/2017		00073
 composable_cvtypes	composed_trait_ontology		05/01/2017		00073
 composable_cvtypes	object_ontology		05/01/2017		00073

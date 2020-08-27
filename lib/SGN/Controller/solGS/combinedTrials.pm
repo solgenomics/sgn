@@ -1025,7 +1025,6 @@ sub r_combine_populations_args {
     
     my $cmd = "Rscript --slave $in_file $out_file --args $input_files $output_files";
 
-    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $args = {
 	'cmd' => $cmd,	
 	'temp_dir' => $temp_dir,
@@ -1212,16 +1211,14 @@ sub count_combined_trials_members {
     $combo_pops_id = $c->stash->{combo_pops_id} if !$combo_pops_id;
     $c->stash->{combo_pops_id} = $combo_pops_id if $combo_pops_id;        
     
-    my $genos_cnt;
-    
     $self->cache_combined_pops_data($c);   
     my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
-    my $size = -s $combined_pops_geno_file;
 
-    if (-s $combined_pops_geno_file > 1)
+    my @genotypes;
+    if (-s $combined_pops_geno_file)
     {
-	my @geno_data = read_file($combined_pops_geno_file);
-	$genos_cnt = scalar(@geno_data);	
+	my $genos = qx /cut -f 1 $combined_pops_geno_file/;
+	@genotypes = split(" ", $genos);	
     }
     else
     {
@@ -1233,17 +1230,16 @@ sub count_combined_trials_members {
 
 	my @geno_files = split(/\t/, $geno_files);
 
-	my @genotypes;
 	foreach my $geno_file (@geno_files) 
 	{
-	    my $geno_data = read_file($geno_file);
-	    my @genos = map{(split(/\t/), $_)[0]} split(/\n/, $geno_data);
-	    shift(@genos);
+	    my $genos = qx /cut -f 1 $geno_file/;
+	    my @genos = split(" ", $genos);
+	    
 	    push @genotypes, @genos;	
 	}
-	
-	$genos_cnt = scalar(uniq(@genotypes));
     }
+
+    my $genos_cnt = scalar(uniq(@genotypes));
   
     return $genos_cnt;
     

@@ -115,7 +115,7 @@
 
 jQuery(document).ready(function() {
   if (isLoggedIn()) {
-    get_select_box("datasets", "dataset_select");
+    get_select_box("datasets", "dataset_select", {"checkbox_name":"dataset_select_checkbox"});
   }
   else {
     alert('You must be logged in to use Stability');
@@ -127,8 +127,7 @@ jQuery(document).ready(function() {
     $('#stability_output').empty();
   });
   jQuery('#selectDataset').click(function() {
-    var dataset_id = jQuery('#available_datasets').val();
-//    alert("Dataset ID: "+dataset_id);
+    var dataset_id = get_dataset_id();
     $.ajax({
       url: '/ajax/stability/shared_phenotypes',
       data: {'dataset_id': dataset_id},
@@ -209,7 +208,7 @@ jQuery(document).ready(function() {
     } else {
       $('#stability_files').empty();
       if ($('#pheno_select').val() != ""){
-        var dataset_id = $('#available_datasets').val();
+        var dataset_id = get_dataset_id();
         var trait_id = $('#pheno_select').val();
         $.ajax({
           url: '/ajax/stability/generate_results',
@@ -246,6 +245,22 @@ jQuery(document).ready(function() {
     };
   });
 
+function get_dataset_id() {
+      var selected_datasets = [];
+      jQuery('input[name="dataset_select_checkbox"]:checked').each(function() {
+          selected_datasets.push(jQuery(this).val());
+      });
+      if (selected_datasets.length < 1){
+          alert('Please select at least one dataset!');
+          return false;
+      } else if (selected_datasets.length > 1){
+          alert('Please select only one dataset!');
+          return false;
+      } else {
+    var dataset_id=selected_datasets[0];
+    return dataset_id;
+    }
+  }
 
 });
 

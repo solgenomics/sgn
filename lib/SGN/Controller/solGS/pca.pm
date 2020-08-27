@@ -156,12 +156,28 @@ sub format_pca_output {
 	{
 	    my $scores    = $c->controller('solGS::Utils')->read_file_data($scores_file);
 	    my $variances = $c->controller('solGS::Utils')->read_file_data($variances_file);
-	    my $loadings = $c->controller('solGS::Utils')->read_file_data($loadings_file);
+	    my $loadings  = $c->controller('solGS::Utils')->read_file_data($loadings_file);
 
 	    my $output_link =  '/pca/analysis/' . $file_id;	 
-        
-	    $c->controller('solGS::combinedTrials')->process_trials_list_details($c);
-	    my $trial_names = $c->stash->{trials_names};
+	    my $trials_names;
+	   
+	    my $referer = $c->req->referer;
+	    
+	    if ($referer =~ /solgs\/selection\/|solgs\/combined\/model\/\d+\/selection\//) 
+	    {
+		my $tr_pop = $c->stash->{training_pop_id};
+		my $sel_pop =  $c->stash->{selection_pop_id};
+	
+		$trials_names = {
+		    $tr_pop => 'Training population', 
+		    $sel_pop => 'Selection population'
+		};
+	    }
+	    else
+	    {
+		$c->controller('solGS::combinedTrials')->process_trials_list_details($c);
+		$trials_names = $c->stash->{trials_names};
+	    }
 	    
 	    if ($scores)
 	    {
@@ -171,7 +187,7 @@ sub format_pca_output {
 		$ret->{status} = 'success';  
 		$ret->{pop_id} = $file_id;# if $list_type eq 'trials';
 		$ret->{list_id} = $c->stash->{list_id};
-		$ret->{trials_names} = $trial_names;
+		$ret->{trials_names} = $trials_names;
 		$ret->{output_link}  = $output_link;
 		$ret->{data_type} = $c->stash->{data_type};
 	    }
@@ -310,69 +326,70 @@ sub format_pca_scores {
 }
 
 
-sub create_pca_data {
-    my ($self, $c) = @_;
+# sub create_pca_data {
+#     my ($self, $c) = @_;
 
-    my $data_type = $c->stash->{data_type};
+#     my $data_type = $c->stash->{data_type};
    
-    if ($data_type =~ /genotype/i)
-    { 
-	$self->create_pca_genotype_data($c);
-    }
-    elsif ($data_type =~ /phenotype/i)
-    { 
-	$self->create_pca_phenotype_data($c);
-    }    
+#     if ($data_type =~ /genotype/i)
+#     { 
+# 	$self->create_pca_genotype_data($c);
+#     }
+#     elsif ($data_type =~ /phenotype/i)
+#     { 
+# 	$self->create_pca_phenotype_data($c);
+#     }    
     
-}
+# }
 
 
-sub create_pca_genotype_data {    
-    my ($self, $c) = @_;
+# sub create_pca_genotype_data {    
+#     my ($self, $c) = @_;
    
-    my $data_structure = $c->stash->{data_structure};
+#     my $data_structure = $c->stash->{data_structure};
 
-    my $pca_query_jobs;
+#     if ($data_structure =~ /list/) 
+#     {
+# 	$self->pca_list_genotype_data($c);
+#     }
+#     elsif ($data_structure =~ /dataset/)
+#     {
+# 	$self->pca_dataset_genotype_data($c);	
+#     }
+#     else
+#     {
+# 	$self->pca_trials_genotype_data($c);
+#     }
 
-    if ($data_structure =~ /list/) 
-    {
-	$self->pca_list_genotype_data($c);
-    }
-    elsif ($data_structure =~ /dataset/)
-    {
-	$self->pca_dataset_genotype_data($c);	
-    }
-    else
-    {
-	$self->pca_trials_genotype_data($c);
-    }
-
-}
+# }
 
 
-sub pca_trials_genotype_data {
-    my ($self, $c) = @_;
+# sub pca_trials_genotype_data {
+#     my ($self, $c) = @_;
 
-    my $combo_pops_id = $c->stash->{combo_pops_id};
+#     my $combo_pops_id = $c->stash->{combo_pops_id};
+
   
-    if ($combo_pops_id)
-    {
-	$c->controller('solGS::combinedTrials')->cache_combined_pops_data($c);
-	$c->stash->{genotype_file_name} = $c->stash->{trait_combined_geno_file};
-	my $geno_file = $c->stash->{genotype_file_name};
+#     if ($combo_pops_id)
+#     {
+# 	# $c->controller('solGS::combinedTrials')->cache_combined_pops_data($c);
 
-	if (!-s $geno_file) 
-	{
-	    $c->controller('solGS::List')->get_trials_list_geno_data($c);
-	}
-    }
-    else 
-    {
-	$c->stash->{pop_id} = $c->stash->{training_pop_id};
-	$c->controller('solGS::solGS')->genotype_file($c);
-    }
+	
+# 	# $c->stash->{genotype_file_name} = $c->stash->{trait_combined_geno_file};
+# 	# my $geno_file = $c->stash->{genotype_file_name};
+
+# 	# if (!-s $geno_file) 
+# 	# {
+# 	    $c->controller('solGS::List')->get_trials_list_geno_data($c);
+# 	#}
+#     }
+#     else 
+#     {
+# 	#$c->stash->{pop_id} = $c->stash->{training_pop_id};
+# 	$c->controller('solGS::solGS')->genotype_file_name($c);
+#     }
     
-}
+# }
 
 
 sub pca_dataset_genotype_data {
@@ -436,8 +453,7 @@ sub pca_list_genotype_data {
 	    $c->stash->{pops_ids_list} = $c->stash->{trials_ids};
 	    $c->controller('solGS::List')->get_trials_list_geno_data($c);
 	    $c->controller('solGS::combinedTrials')->process_trials_list_details($c);
-	}
-	
+	}	
     }
 
 }
@@ -491,10 +507,19 @@ sub create_pca_genotype_data_query_jobs {
 	    $c->stash->{pops_ids_list} = [$c->stash->{training_pop_id}, $c->stash->{selection_pop_id}];
 	}
 
+	my $trials_ids;
+	
+	if ($c->stash->{pops_ids_list})
+	{	    
+	    $c->controller('solGS::combinedTrials')->process_trials_list_details($c);
+	    $c->controller('solGS::combinedTrials')->multi_pops_geno_files($c, $c->stash->{pops_ids_list}, $protocol_id);  
+	    $c->stash->{genotype_files_list} = $c->stash->{multi_pops_geno_files};					 	  
+	}
+
 	my $trials = $c->stash->{pops_ids_list} || [$c->stash->{training_pop_id}] || [$c->stash->{selection_pop_id}];
 
 	$c->controller('solGS::solGS')->get_cluster_genotype_query_job_args($c, $trials, $protocol_id);
-	$c->stash->{pca_geno_query_jobs} = $c->stash->{cluster_genotype_query_job_args};
+	$c->stash->{pca_geno_query_jobs} = $c->stash->{cluster_genotype_query_job_args};	    
     }
     
 }
@@ -696,6 +721,7 @@ sub pca_geno_input_files {
 	$files = $c->stash->{genotype_files_list} || $c->stash->{genotype_file_name};	
     }
 
+    $files = join("\t", @$files) if reftype($files) eq 'ARRAY';
     $c->stash->{pca_geno_input_files} = $files;
 }
 
@@ -703,11 +729,10 @@ sub pca_geno_input_files {
 sub training_selection_geno_files {
     my ($self, $c) = @_;
 
-    my @files;
-
     my $tr_pop = $c->stash->{training_pop_id};
     my $sel_pop =  $c->stash->{selection_pop_id};
-  
+    
+    my @files;
     foreach my $id (($tr_pop, $sel_pop)) 
     {
 	$c->controller('solGS::Files')->genotype_file_name($c, $id);
@@ -715,7 +740,6 @@ sub training_selection_geno_files {
     }
 
     my $files = join("\t", @files);
-
     $c->stash->{genotype_files_list} = $files;
 }
 
@@ -729,8 +753,9 @@ sub pca_pheno_input_files {
     if ($data_type =~ /phenotype/i)
     {
 	$files = $c->stash->{phenotype_files_list} 
-	|| $c->stash->{phenotype_file} 
 	|| $c->stash->{phenotype_file_name};
+	
+	$files = join("\t", @$files) if reftype($files) eq 'ARRAY';
 	
 	$c->controller('solGS::Files')->phenotype_metadata_file($c);
 	my $metadata_file = $c->stash->{phenotype_metadata_file};

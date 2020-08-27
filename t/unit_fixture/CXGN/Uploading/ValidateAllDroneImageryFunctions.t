@@ -41,7 +41,7 @@ my $field_trial_id = $schema->resultset("Project::Project")->search({name => 'te
 
 #Testing upload of unstitched Micasense RedEdge 5 band raw captures.
 
-my $python_dependencies_installed = `locate keras.py`;
+# my $python_dependencies_installed = `locate keras.py`;
 #print STDERR "PYTHON DEPENDENCIES INSTALLED=".Dumper($python_dependencies_installed)."\n";
 
 # SKIP: {
@@ -102,6 +102,15 @@ my $micasense5bandpanelzipfile = $f->config->{basepath}."/t/data/imagebreed/Exam
 # is(scalar(@{$message_hash_rgb_stitch->{drone_run_band_project_ids}}), 1);
 # is(scalar(@{$message_hash_rgb_stitch->{drone_run_band_image_ids}}), 1);
 
+$response = $ua->get('http://localhost:3010/api/drone_imagery/new_imaging_vehicle?sgn_session_id='.$sgn_session_id.'&vehicle_name=Drone1&vehicle_description=dronedesc&battery_names=blue,green');
+ok($response->is_success);
+my $message = $response->decoded_content;
+my $message_hash = decode_json $message;
+print STDERR Dumper $message_hash;
+ok($message_hash->{success});
+ok($message_hash->{new_vehicle_id});
+my $new_vehicle_id = $message_hash->{new_vehicle_id};
+
 #Testing upload of RGB unstitched raw captures.
 my $rasterblue = $f->config->{basepath}."/t/data/imagebreed/RasterBlue.png";
 my $rastergreen = $f->config->{basepath}."/t/data/imagebreed/RasterGreen.png";
@@ -120,6 +129,8 @@ my $response_raster = $ua->post(
             "drone_run_date"=>"2019/01/01 12:12:12",
             "drone_run_description"=>"test new drone run",
             "drone_image_upload_camera_info"=>"micasense_5",
+            "drone_run_imaging_vehicle_id"=>$new_vehicle_id,
+            "drone_run_imaging_vehicle_battery_name"=>"blue",
             "drone_image_upload_drone_run_band_stitching"=>"no",
             "drone_run_band_number"=>5,
             "drone_run_band_name_0"=>"NewStitchedMicasense5BandDroneRunProject_Blue",
@@ -152,6 +163,8 @@ print STDERR Dumper $message_hash_raster;
 is($message_hash_raster->{success}, 1);
 is(scalar(@{$message_hash_raster->{drone_run_band_project_ids}}), 5);
 is(scalar(@{$message_hash_raster->{drone_run_band_image_ids}}), 5);
+my $a_drone_run_project_id = $message_hash_raster->{drone_run_project_id};
+ok($a_drone_run_project_id);
 
 $ua = LWP::UserAgent->new;
 my $response_get_image = $ua->get('http://localhost:3010/api/drone_imagery/get_image?sgn_session_id='.$sgn_session_id.'&image_id='.$message_hash_raster->{drone_run_band_image_ids}->[0]);
@@ -174,8 +187,11 @@ print STDERR Dumper $message_hash_denoised;
 ok($message_hash_denoised->{denoised_image_id});
 ok($message_hash_denoised->{denoised_image_url});
 
+my $sp_rotate_angle = "2.1";
+my $sp_rotate_angle_rad = $sp_rotate_angle*0.0174533;
+
 $ua = LWP::UserAgent->new;
-my $response_rotate = $ua->get('http://localhost:3010/api/drone_imagery/rotate_image?sgn_session_id='.$sgn_session_id.'&image_id='.$message_hash_denoised->{denoised_image_id}.'&drone_run_band_project_id='.$message_hash_raster->{drone_run_band_project_ids}->[0].'&angle=2.1&view_only=0');
+my $response_rotate = $ua->get('http://localhost:3010/api/drone_imagery/rotate_image?sgn_session_id='.$sgn_session_id.'&image_id='.$message_hash_denoised->{denoised_image_id}.'&drone_run_band_project_id='.$message_hash_raster->{drone_run_band_project_ids}->[0].'&angle='.$sp_rotate_angle.'&view_only=0');
 ok($response_rotate->is_success);
 my $message_rotate = $response_rotate->decoded_content;
 my $message_hash_rotate = decode_json $message_rotate;
@@ -281,11 +297,14 @@ my $response_weeks_after_planting = $ua->get('http://localhost:3010/api/drone_im
 ok($response_weeks_after_planting->is_success);
 my $message_weeks_after_planting = $response_weeks_after_planting->decoded_content;
 my $message_hash_weeks_after_planting = decode_json $message_weeks_after_planting;
+my $message_hash_days_time_cvterm_id = $message_hash_weeks_after_planting->{time_ontology_day_cvterm_id};
+ok($message_hash_days_time_cvterm_id);
 print STDERR Dumper $message_hash_weeks_after_planting;
 ok($message_hash_weeks_after_planting->{drone_run_date});
 is($message_hash_weeks_after_planting->{rounded_time_difference_weeks}, 78);
 
 $ua = LWP::UserAgent->new;
+$ua->timeout(1200);
 my $apply_drone_run_band_project_ids = encode_json $message_hash_raster->{drone_run_band_project_ids};
 my $vegetative_indices = encode_json ['TGI','VARI','NDVI','NDRE'];
 my $response_standard_process = $ua->post('http://localhost:3010/api/drone_imagery/standard_process_apply?sgn_session_id='.$sgn_session_id.'&apply_drone_run_band_project_ids='.$apply_drone_run_band_project_ids.'&drone_run_band_project_id='.$message_hash_raster->{drone_run_band_project_ids}->[0].'&drone_run_project_id='.$message_hash_raster->{drone_run_project_id}.'&vegetative_indices='.$vegetative_indices);
@@ -301,6 +320,193 @@ ok($message_hash_standard_process->{success});
 # my $message_hash_extended = decode_json $message_extended;
 # print STDERR Dumper $message_hash_extended;
 # ok($message_hash_extended->{success});
+
+$ua = LWP::UserAgent->new;
+my $saving_gcp_template_1 = $ua->post(
+        'http://localhost:3010/api/drone_imagery/saving_gcp',
+        Content_Type => 'form-data',
+        Content => [
+            "sgn_session_id"=>$sgn_session_id,
+            "drone_run_project_id"=>$a_drone_run_project_id,
+            "name"=>"GCP1",
+            "x_pos"=>"101",
+            "y_pos"=>"101",
+            "latitude"=>"62.21",
+            "longitude"=>"-79.11"
+        ]
+    );
+ok($saving_gcp_template_1->is_success);
+
+my $saving_gcp_template_2 = $ua->post(
+        'http://localhost:3010/api/drone_imagery/saving_gcp',
+        Content_Type => 'form-data',
+        Content => [
+            "sgn_session_id"=>$sgn_session_id,
+            "drone_run_project_id"=>$a_drone_run_project_id,
+            "name"=>"GCP2",
+            "x_pos"=>"105",
+            "y_pos"=>"105",
+            "latitude"=>"63.21",
+            "longitude"=>"-78.11"
+        ]
+    );
+ok($saving_gcp_template_2->is_success);
+
+my $saving_gcp_template_3 = $ua->post(
+        'http://localhost:3010/api/drone_imagery/saving_gcp',
+        Content_Type => 'form-data',
+        Content => [
+            "sgn_session_id"=>$sgn_session_id,
+            "drone_run_project_id"=>$a_drone_run_project_id,
+            "name"=>"GCP3",
+            "x_pos"=>"101",
+            "y_pos"=>"105",
+            "latitude"=>"",
+            "longitude"=>""
+        ]
+    );
+ok($saving_gcp_template_3->is_success);
+
+my $saving_gcp_template_4 = $ua->post(
+        'http://localhost:3010/api/drone_imagery/saving_gcp',
+        Content_Type => 'form-data',
+        Content => [
+            "sgn_session_id"=>$sgn_session_id,
+            "drone_run_project_id"=>$a_drone_run_project_id,
+            "name"=>"GCP4",
+            "x_pos"=>"102",
+            "y_pos"=>"105",
+            "latitude"=>"",
+            "longitude"=>""
+        ]
+    );
+ok($saving_gcp_template_4->is_success);
+
+my $message_save_gcp_template = $saving_gcp_template_4->decoded_content;
+my $message_hash_gcp_template = decode_json $message_save_gcp_template;
+print STDERR Dumper $message_hash_gcp_template;
+is_deeply($message_hash_gcp_template->{saved_gcps_full}, {'GCP4' => {'x_pos' => '102','longitude' => '','name' => 'GCP4','latitude' => '','y_pos' => '105'},'GCP3' => {'longitude' => '','x_pos' => '101','y_pos' => '105','latitude' => '','name' => 'GCP3'},'GCP2' => {'x_pos' => '105','longitude' => '-78.11','name' => 'GCP2','latitude' => '63.21','y_pos' => '105'},'GCP1' => {'name' => 'GCP1','latitude' => '62.21','y_pos' => '101','x_pos' => '101','longitude' => '-79.11'}} );
+
+
+$ua = LWP::UserAgent->new;
+my $response_raster_gcp_run = $ua->post(
+        'http://localhost:3010/api/drone_imagery/upload_drone_imagery',
+        Content_Type => 'form-data',
+        Content => [
+            "sgn_session_id"=>$sgn_session_id,
+            "drone_run_field_trial_id"=>$field_trial_id,
+            "drone_run_name"=>"NewStitchedMicasense5BandDroneRunProjectForGCPStandardProcess",
+            "drone_run_type"=>"Aerial Medium to High Res",
+            "drone_run_date"=>"2019/01/01 18:12:12",
+            "drone_run_description"=>"test new drone run",
+            "drone_image_upload_camera_info"=>"micasense_5",
+            "drone_image_upload_drone_run_band_stitching"=>"no",
+            "drone_run_imaging_vehicle_id"=>$new_vehicle_id,
+            "drone_run_imaging_vehicle_battery_name"=>"blue",
+            "drone_run_band_number"=>5,
+            "drone_run_band_name_0"=>"NewStitchedMicasense5BandDroneRunProjectForGCPStandardProcess_Blue",
+            "drone_run_band_description_0"=>"raster blue",
+            "drone_run_band_type_0"=>"Blue (450-520nm)",
+            drone_run_band_stitched_ortho_image_0 => [ $rasterblue, basename($rasterblue) ],
+            "drone_run_band_name_1"=>"NewStitchedMicasense5BandDroneRunProjectForGCPStandardProcess_Green",
+            "drone_run_band_description_1"=>"raster green",
+            "drone_run_band_type_1"=>"Green (515-600nm)",
+            drone_run_band_stitched_ortho_image_1 => [ $rastergreen, basename($rastergreen) ],
+            "drone_run_band_name_2"=>"NewStitchedMicasense5BandDroneRunProjectForGCPStandardProcess_Red",
+            "drone_run_band_description_2"=>"raster red",
+            "drone_run_band_type_2"=>"Red (600-690nm)",
+            drone_run_band_stitched_ortho_image_2 => [ $rasterred, basename($rasterred) ],
+            "drone_run_band_name_3"=>"NewStitchedMicasense5BandDroneRunProjectForGCPStandardProcess_NIR",
+            "drone_run_band_description_3"=>"raster NIR",
+            "drone_run_band_type_3"=>"NIR (780-3000nm)",
+            drone_run_band_stitched_ortho_image_3 => [ $rasternir, basename($rasternir) ],
+            "drone_run_band_name_4"=>"NewStitchedMicasense5BandDroneRunProjectForGCPStandardProcess_RedEdge",
+            "drone_run_band_description_4"=>"raster rededge",
+            "drone_run_band_type_4"=>"Red Edge (690-750nm)",
+            drone_run_band_stitched_ortho_image_4 => [ $rasterrededge, basename($rasterrededge) ],
+        ]
+    );
+
+ok($response_raster_gcp_run->is_success);
+my $message_raster_gcp_run = $response_raster_gcp_run->decoded_content;
+my $message_hash_raster_gcp_run = decode_json $message_raster_gcp_run;
+print STDERR Dumper $message_hash_raster_gcp_run;
+is($message_hash_raster_gcp_run->{success}, 1);
+is(scalar(@{$message_hash_raster_gcp_run->{drone_run_band_project_ids}}), 5);
+is(scalar(@{$message_hash_raster_gcp_run->{drone_run_band_image_ids}}), 5);
+my $gcp_apply_drone_run_project_id = $message_hash_raster_gcp_run->{drone_run_project_id};
+ok($gcp_apply_drone_run_project_id);
+
+my $saving_gcp_target_1 = $ua->post(
+        'http://localhost:3010/api/drone_imagery/saving_gcp',
+        Content_Type => 'form-data',
+        Content => [
+            "sgn_session_id"=>$sgn_session_id,
+            "drone_run_project_id"=>$gcp_apply_drone_run_project_id,
+            "name"=>"GCP1",
+            "x_pos"=>"202",
+            "y_pos"=>"202",
+            "latitude"=>"62.21",
+            "longitude"=>"-79.11"
+        ]
+    );
+ok($saving_gcp_target_1->is_success);
+
+my $saving_gcp_target_2 = $ua->post(
+        'http://localhost:3010/api/drone_imagery/saving_gcp',
+        Content_Type => 'form-data',
+        Content => [
+            "sgn_session_id"=>$sgn_session_id,
+            "drone_run_project_id"=>$gcp_apply_drone_run_project_id,
+            "name"=>"GCP2",
+            "x_pos"=>"206",
+            "y_pos"=>"206",
+            "latitude"=>"63.21",
+            "longitude"=>"-78.11"
+        ]
+    );
+ok($saving_gcp_target_2->is_success);
+
+my $saving_gcp_target_3 = $ua->post(
+        'http://localhost:3010/api/drone_imagery/saving_gcp',
+        Content_Type => 'form-data',
+        Content => [
+            "sgn_session_id"=>$sgn_session_id,
+            "drone_run_project_id"=>$gcp_apply_drone_run_project_id,
+            "name"=>"GCP3",
+            "x_pos"=>"202",
+            "y_pos"=>"206",
+            "latitude"=>"",
+            "longitude"=>""
+        ]
+    );
+ok($saving_gcp_target_3->is_success);
+
+my $saving_gcp_target_4 = $ua->post(
+        'http://localhost:3010/api/drone_imagery/saving_gcp',
+        Content_Type => 'form-data',
+        Content => [
+            "sgn_session_id"=>$sgn_session_id,
+            "drone_run_project_id"=>$gcp_apply_drone_run_project_id,
+            "name"=>"GCP4",
+            "x_pos"=>"203",
+            "y_pos"=>"206",
+            "latitude"=>"",
+            "longitude"=>""
+        ]
+    );
+ok($saving_gcp_target_4->is_success);
+
+$ua = LWP::UserAgent->new;
+$ua->timeout(1200);
+my $response_raster_gcp_apply = $ua->post('http://localhost:3010/api/drone_imagery/standard_process_apply_ground_control_points?sgn_session_id='.$sgn_session_id.'&gcp_drone_run_project_id='.$a_drone_run_project_id.'&field_trial_id='.$field_trial_id.'&drone_run_project_id='.$gcp_apply_drone_run_project_id.'&drone_run_band_project_id='.$message_hash_raster_gcp_run->{drone_run_band_image_ids}->[3].'&time_cvterm_id='.$message_hash_days_time_cvterm_id.'&is_test=1&test_run=No');
+ok($response_raster_gcp_apply->is_success);
+my $message_raster_gcp_apply = $response_raster_gcp_apply->decoded_content;
+my $message_hash_raster_gcp_apply = decode_json $message_raster_gcp_apply;
+print STDERR Dumper $message_hash_raster_gcp_apply;
+is($message_hash_raster_gcp_apply->{success}, 1);
+
+
 
 my $response_project_md_image = $ua->get('http://localhost:3010/api/drone_imagery/get_project_md_image?sgn_session_id='.$sgn_session_id.'&drone_run_band_project_id='.$message_hash_raster->{drone_run_band_project_ids}->[0].'&project_image_type_name=observation_unit_polygon_blue_imagery');
 ok($response_project_md_image->is_success);

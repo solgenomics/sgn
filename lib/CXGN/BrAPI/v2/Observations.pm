@@ -70,7 +70,7 @@ sub search {
     my $counter = 0;
 
     foreach my $obs_unit (@$data){
-        my @brapi_observations; #print Dumper $obs_unit;
+        my @brapi_observations;
         my $observations = $obs_unit->{observations};
         foreach (@$observations){
             my $observation_id = "$_->{phenotype_id}";

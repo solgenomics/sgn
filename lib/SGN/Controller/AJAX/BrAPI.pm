@@ -4842,9 +4842,17 @@ sub crossingprojects_POST {
 	my $c = shift;
 	my ($auth,$user_id) = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
+
+	my $data = $clean_inputs;
+	my @all_data;
+	foreach my $project (values %{$data}) {
+	    push @all_data, $project;
+	}
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Crossing');
-	my $brapi_package_result = $brapi_module->store_crossingproject($clean_inputs,$c,$user_id);
+	my $brapi_package_result = $brapi_module->store_crossingproject(\@all_data,$c,$user_id);
+
+
 	my $status = $brapi_package_result->{status};
 	my $http_status_code = _get_http_status_code($status);
 	_standard_response_construction($c, $brapi_package_result);

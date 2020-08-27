@@ -780,6 +780,74 @@ sub get_trained_keras_mask_r_cnn_models : Path('/ajax/html/select/trained_keras_
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_analysis_models : Path('/ajax/html/select/models') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $model_properties_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_properties', 'protocol_property')->cvterm_id();
+
+    my $model_q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, model_type.value
+        FROM nd_protocol
+        JOIN nd_protocolprop AS model_type ON(nd_protocol.nd_protocol_id=model_type.nd_protocol_id AND model_type.type_id=$model_properties_cvterm_id);";
+    my $model_h = $schema->storage->dbh()->prepare($model_q);
+    $model_h->execute();
+    my @models;
+    while (my ($nd_protocol_id, $name, $description, $model_type) = $model_h->fetchrow_array()) {
+        my $model_type_hash = decode_json $model_type;
+
+        push @models, [$nd_protocol_id, $name];
+    }
+
+    my $id = $c->req->param("id") || "html_model_select";
+    my $name = $c->req->param("name") || "html_model_select";
+    my $empty = $c->req->param("empty");
+
+    @models = sort { $a->[1] cmp $b->[1] } @models;
+    if ($empty) { unshift @models, [ "", "Please select a model" ]; }
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@models
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+sub get_imaging_event_vehicles : Path('/ajax/html/select/imaging_event_vehicles') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $imaging_vehicle_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'imaging_event_vehicle', 'stock_type')->cvterm_id();
+    my $imaging_vehicle_properties_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'imaging_event_vehicle_json', 'stock_property')->cvterm_id();
+
+    my $q = "SELECT stock.stock_id, stock.uniquename, stock.description, stockprop.value
+        FROM stock
+        JOIN stockprop ON(stock.stock_id=stockprop.stock_id AND stockprop.type_id=$imaging_vehicle_properties_cvterm_id)
+        WHERE stock.type_id=$imaging_vehicle_cvterm_id;";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute();
+    my @imaging_vehicles;
+    while (my ($stock_id, $name, $description, $prop) = $h->fetchrow_array()) {
+        my $prop_hash = decode_json $prop;
+
+        push @imaging_vehicles, [$stock_id, $name];
+    }
+
+    my $id = $c->req->param("id") || "html_imaging_vehicle_select";
+    my $name = $c->req->param("name") || "html_imaging_vehicle_select";
+
+    @imaging_vehicles = sort { $a->[1] cmp $b->[1] } @imaging_vehicles;
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@imaging_vehicles
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
 sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -792,6 +860,7 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     my $select_format = $c->req->param('select_format') || 'html_select'; #html_select or component_table_select
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $multiple = $c->req->param('multiple');
+    my $empty = $c->req->param('empty');
 
     my $id = $c->req->param("id") || "html_trial_select";
     my $name = $c->req->param("name") || "html_trial_select";
@@ -889,6 +958,7 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     }
 
     @traits = sort { $a->[1] cmp $b->[1] } @traits;
+    if ($empty) { unshift @traits, [ "", "Please select a trait" ]; }
 
     my $html = simple_selectbox_html(
       multiple => $multiple,
@@ -1295,6 +1365,47 @@ sub get_drone_imagery_parameter_select : Path('/ajax/html/select/drone_imagery_p
     my @result;
     while (my $r = $drone_imagery_plot_polygons_rs->next) {
         push @result, [$r->projectprop_id, $r->get_column('project_name')];
+    }
+
+    if ($empty) {
+        unshift @result, ['', "Select one"];
+    }
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@result,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+sub get_drone_imagery_drone_runs_with_gcps : Path('/ajax/html/select/drone_runs_with_gcps') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $id = $c->req->param("id") || "drone_imagery_drone_run_gcp_select";
+    my $name = $c->req->param("name") || "drone_imagery_drone_run_gcp_select";
+    my $empty = $c->req->param("empty") || "";
+
+    my $field_trial_id = $c->req->param('field_trial_id');
+
+    my $drone_run_field_trial_project_relationship_type_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
+    my $drone_run_ground_control_points_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_ground_control_points', 'project_property')->cvterm_id();
+    my $processed_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_standard_process_completed', 'project_property')->cvterm_id();
+
+    my $q = "SELECT project.project_id, project.name
+        FROM project
+        JOIN projectprop AS gcps ON(project.project_id = gcps.project_id AND gcps.type_id=$drone_run_ground_control_points_type_id)
+        JOIN projectprop AS processed ON(project.project_id = processed.project_id AND processed.type_id=$processed_cvterm_id)
+        JOIN project_relationship ON(project.project_id=project_relationship.subject_project_id AND project_relationship.type_id=$drone_run_field_trial_project_relationship_type_id_cvterm_id)
+        WHERE project_relationship.object_project_id=?;";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($field_trial_id);
+
+    my @result;
+    while( my ($project_id, $name) = $h->fetchrow_array()) {
+        push @result, [$project_id, $name];
     }
 
     if ($empty) {

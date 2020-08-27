@@ -34,7 +34,7 @@
 
             <div class="row">
                 <div class="col-sm-12">
-                    <h4> Either click the four corners of the area of interest: </h4>
+                    <h4> Either (A) click the four corners of the area of interest: </h4>
 
                     <button class="btn btn-sm btn-info" id="drone_imagery_standard_process_plot_polygons_top_left_click">Click Top Left Corner</button>
                     <button class="btn btn-sm btn-info" id="drone_imagery_standard_process_plot_polygons_top_right_click">Click Top Right Corner</button>
@@ -106,7 +106,7 @@
             </&>
 
             <br/>
-            <button class="btn btn-sm btn-primary" id="drone_imagery_standard_process_plot_polygons_rectangles_apply">Draw Plot Polygon Template (Does not save. Apply multiple templates if needed.)</button>
+            <button class="btn btn-sm btn-primary" id="drone_imagery_standard_process_plot_polygons_rectangles_apply">(A) Draw Plot Polygon Template (Does not save. Apply multiple templates if needed.)</button>
             
         </div>
     </div>
@@ -116,7 +116,7 @@
 
             <div class="row">
                 <div class="col-sm-12">
-                    <h4> Or paste a previously used template: </h4>
+                    <h4> Or (B) paste a previously used template: </h4>
                 </div>
             </div>
 
@@ -135,7 +135,7 @@
                             </div>
                         </div>
                     </form>
-                    <button class="btn btn-primary" id="plot_polygons_standard_process_use_previously_saved_template">Draw Plot Polygon Template (Does not save)</button>
+                    <button class="btn btn-primary" id="plot_polygons_standard_process_use_previously_saved_template">(B) Draw Plot Polygon Template (Does not save)</button>
                 </div>
             </&>
         </div>
