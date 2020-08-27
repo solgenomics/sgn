@@ -4359,7 +4359,12 @@ jQuery(document).ready(function() {
                             var acc = response.unique_accessions[k];
                             html = html + '<tr><td>'+acc+'</td>';
                             for (var i=0; i<manage_drone_imagery_calculate_statistics_trait_names.length; i++) {
-                                html = html + '<td>'+response.result_blup_genetic_data[acc][manage_drone_imagery_calculate_statistics_trait_names[i]][0]+'</td>';
+                                if (response.result_blup_genetic_data[acc] && response.result_blup_genetic_data[acc][manage_drone_imagery_calculate_statistics_trait_names[i]]) {
+                                    html = html + '<td>'+response.result_blup_genetic_data[acc][manage_drone_imagery_calculate_statistics_trait_names[i]][0]+'</td>';
+                                }
+                                else {
+                                    html = html + '<td>NA</td>';
+                                }
                             }
                             html = html + '</tr>';
                         }
