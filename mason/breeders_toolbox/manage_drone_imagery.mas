@@ -1351,6 +1351,27 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                             </div>
                         </form>
                     </div>
+                    <div id="drone_imagery_calculate_statistics_legendre_polynomial_div" style="display:none">
+                        <hr>
+                        <form class="form-horizontal">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Legendre Polynomial Order: </label>
+                                <div class="col-sm-9" >
+                                    <select class="form-control" id="drone_image_calculate_statistics_legendre_order_number_select">
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                        <option value="5">5</option>
+                                        <option value="6">6</option>
+                                        <option value="7">7</option>
+                                        <option value="8">8</option>
+                                        <option value="9">9</option>
+                                        <option value="10">10</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
 
                     <div id="drone_imagery_calculate_statistics_marss_div" style="display:none">
                         $$x_t = Bx_{t-1} + u + w_t\\ w_t \sim MVN(0,Q)\\ y_t = Zx_t + a + v_t\\ v_t \sim MVN(0,R)\\ x_0 \sim MVN(\pi, \Lambda)$$
@@ -4241,6 +4262,7 @@ jQuery(document).ready(function() {
             jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_genetic').hide();
             jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_spatial').hide();
             jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_pe').hide();
+            jQuery('#drone_imagery_calculate_statistics_legendre_polynomial_div').hide();
         }
         else if (manage_drone_imagery_calculate_statistics_select == 'lmer_germplasmname_replicate') {
             jQuery('#drone_imagery_calculate_statistics_marss_div').hide();
@@ -4248,6 +4270,7 @@ jQuery(document).ready(function() {
             jQuery('#drone_imagery_calculate_statistics_genotyping_protocol_div').hide();
             jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_spatial').hide();
             jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_pe').hide();
+            jQuery('#drone_imagery_calculate_statistics_legendre_polynomial_div').hide();
         }
         else if (manage_drone_imagery_calculate_statistics_select == 'sommer_grm_spatial_genetic_blups') {
             jQuery('#drone_imagery_calculate_statistics_marss_div').hide();
@@ -4255,6 +4278,7 @@ jQuery(document).ready(function() {
             jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_genetic').show();
             jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_spatial').show();
             jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_pe').hide();
+            jQuery('#drone_imagery_calculate_statistics_legendre_polynomial_div').hide();
         }
         else if (manage_drone_imagery_calculate_statistics_select == 'sommer_grm_temporal_random_regression_dap_genetic_blups' || manage_drone_imagery_calculate_statistics_select == 'sommer_grm_temporal_random_regression_gdd_genetic_blups') {
             jQuery('#drone_imagery_calculate_statistics_marss_div').hide();
@@ -4262,6 +4286,7 @@ jQuery(document).ready(function() {
             jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_genetic').show();
             jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_spatial').hide();
             jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_pe').hide();
+            jQuery('#drone_imagery_calculate_statistics_legendre_polynomial_div').hide();
         }
         else if (manage_drone_imagery_calculate_statistics_select == 'blupf90_grm_random_regression_dap_blups' || manage_drone_imagery_calculate_statistics_select == 'blupf90_grm_random_regression_gdd_blups') {
             jQuery('#drone_imagery_calculate_statistics_marss_div').hide();
@@ -4269,6 +4294,7 @@ jQuery(document).ready(function() {
             jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_genetic').show();
             jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_spatial').hide();
             jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_pe').show();
+            jQuery('#drone_imagery_calculate_statistics_legendre_polynomial_div').show();
         }
         else {
             jQuery('#drone_imagery_calculate_statistics_marss_div').hide();
@@ -4276,6 +4302,7 @@ jQuery(document).ready(function() {
             jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_genetic').hide();
             jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_spatial').hide();
             jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_pe').hide();
+            jQuery('#drone_imagery_calculate_statistics_legendre_polynomial_div').hide();
         }
     });
 
@@ -4297,7 +4324,8 @@ jQuery(document).ready(function() {
                 'statistics_select_marss_options':jQuery('#drone_imagery_calculate_statistics_select_marss').val(),
                 'protocol_id':jQuery('#drone_image_calculate_statistics_genotyping_protocol_select').val(),
                 'compute_from_parents':jQuery('#drone_image_calculate_statistics_genotyping_protocol_compute_from_parents_select').val(),
-                'tolparinv':jQuery('#drone_image_calculate_statistics_tolparinv_select').val()
+                'tolparinv':jQuery('#drone_image_calculate_statistics_tolparinv_select').val(),
+                'legendre_order_number':jQuery('#drone_image_calculate_statistics_legendre_order_number_select').val()
             },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
@@ -4313,6 +4341,9 @@ jQuery(document).ready(function() {
                     manage_drone_imagery_calculate_statistics_response = response;
 
                     var html = '';
+                    if (response.sum_square_residual) {
+                        html = html + '<h4>Sum square residual: '+response.sum_square_residual+'</h4><hr>';
+                    }
                     if (response.unique_accessions.length > 0 && response.unique_traits.length > 0 && response.result_blup_genetic_data) {
                         manage_drone_imagery_calculate_statistics_accession_names = response.unique_accessions;
                         manage_drone_imagery_calculate_statistics_trait_names = response.unique_traits;
