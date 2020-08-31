@@ -691,13 +691,13 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             close($fh);
 
             open(my $F_prep, ">", $stats_prep_tempfile) || die "Can't open file ".$stats_prep_tempfile;
-                print $F_prep "accession_id,accession_id_factor,plot_id,replicate,time,replicate_time,ind_replicate\n";
+                print $F_prep "accession_id,accession_id_factor,plot_id,plot_id_factor,replicate,time,replicate_time,ind_replicate\n";
                 foreach (@$data) {
                     my $obsunit_stock_id = $_->{observationunit_stock_id};
                     my $replicate = $_->{obsunit_rep};
                     my $germplasm_stock_id = $_->{germplasm_stock_id};
                     foreach my $t (@sorted_trait_names) {
-                        print $F_prep "$germplasm_stock_id,,$obsunit_stock_id,$replicate,$t,$replicate"."_"."$t,$germplasm_stock_id"."_"."$replicate\n";
+                        print $F_prep "$germplasm_stock_id,,$obsunit_stock_id,,$replicate,$t,$replicate"."_"."$t,$germplasm_stock_id"."_"."$replicate\n";
                     }
                 }
             close($F_prep);
@@ -707,7 +707,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             mat\$replicate_time <- as.numeric(as.factor(mat\$replicate_time));
             mat\$ind_replicate <- as.numeric(as.factor(mat\$ind_replicate));
             mat\$accession_id_factor <- as.numeric(as.factor(mat\$accession_id));
-            mat <- mat[order(accession_id_factor, ind_replicate, replicate_time), ];
+            mat\$plot_id_factor <- as.numeric(as.factor(mat\$plot_id));
             write.table(mat, file=\''.$stats_prep_factor_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');"';
             print STDERR Dumper $cmd_factor;
             my $status_factor = system($cmd_factor);
@@ -736,12 +736,14 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     my $accession_id = $columns[0];
                     my $accession_id_factor = $columns[1];
                     my $plot_id = $columns[2];
-                    my $rep = $columns[3];
-                    my $time = $columns[4];
-                    my $rep_time = $columns[5];
-                    my $ind_rep = $columns[6];
+                    my $plot_id_factor = $columns[3];
+                    my $rep = $columns[4];
+                    my $time = $columns[5];
+                    my $rep_time = $columns[6];
+                    my $ind_rep = $columns[7];
                     $plot_factor_map{$plot_id} = {
                         plot_id => $plot_id,
+                        plot_id_factor => $plot_id_factor,
                         accession_id => $accession_id,
                         accession_id_factor => $accession_id_factor,
                         replicate => $rep,
@@ -752,10 +754,12 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     $plot_rep_time_factor_map{$plot_id}->{$rep}->{$time} = $rep_time;
                     $plot_ind_rep_factor_map{$plot_id}->{$accession_id}->{$rep} = $ind_rep;
                     $seen_rep_times{$rep_time}++;
-                    $seen_ind_reps{$ind_rep}++;
+                    # $seen_ind_reps{$ind_rep}++;
+                    $seen_ind_reps{$plot_id_factor}++;
                     $accession_id_factor_map{$accession_id} = $accession_id_factor;
                     $accession_id_factor_map_reverse{$accession_id_factor} = $stock_info{$accession_id}->{uniquename};
-                    $plot_id_factor_map_reverse{$ind_rep} = $seen_plots{$plot_id};
+                    # $plot_id_factor_map_reverse{$ind_rep} = $seen_plots{$plot_id};
+                    $plot_id_factor_map_reverse{$plot_id_factor} = $seen_plots{$plot_id};
                 }
             close($fh_factor);
             # print STDERR Dumper \%plot_factor_map;
@@ -779,7 +783,15 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 $seen_plot_names{$obsunit_stock_uniquename}++;
                 my @data_matrix_phenotypes_row;
                 foreach my $t (@sorted_trait_names) {
-                    my @row = ($accession_id_factor_map{$germplasm_stock_id}, $obsunit_stock_id, $replicate_number, $t, $plot_rep_time_factor_map{$obsunit_stock_id}->{$replicate_number}->{$t}, $plot_ind_rep_factor_map{$obsunit_stock_id}->{$germplasm_stock_id}->{$replicate_number});
+                    my @row = (
+                        $accession_id_factor_map{$germplasm_stock_id},
+                        $obsunit_stock_id,
+                        $replicate_number,
+                        $t,
+                        $plot_rep_time_factor_map{$obsunit_stock_id}->{$replicate_number}->{$t},
+                        #$plot_ind_rep_factor_map{$obsunit_stock_id}->{$germplasm_stock_id}->{$replicate_number},
+                        $plot_factor_map{$obsunit_stock_id}->{plot_id_factor}
+                    );
 
                     my $polys = $polynomial_map{$t};
                     push @row, @$polys;
