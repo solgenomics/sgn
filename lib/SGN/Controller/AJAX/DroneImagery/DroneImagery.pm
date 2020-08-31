@@ -707,6 +707,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             mat\$replicate_time <- as.numeric(as.factor(mat\$replicate_time));
             mat\$ind_replicate <- as.numeric(as.factor(mat\$ind_replicate));
             mat\$accession_id_factor <- as.numeric(as.factor(mat\$accession_id));
+            mat <- mat[order(accession_id_factor, ind_replicate, replicate_time), ];
             write.table(mat, file=\''.$stats_prep_factor_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');"';
             print STDERR Dumper $cmd_factor;
             my $status_factor = system($cmd_factor);
