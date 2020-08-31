@@ -6101,7 +6101,7 @@ sub drone_imagery_save_single_plot_image_POST : Args(0) {
         $c->stash->{rest} = { error => "ERROR!" };
         $c->detach();
     }
-    my $image_input_filename = $image_input->filename();
+    my $image_input_filename = $image_input->tempname();
     if (!$image_input_filename) {
         $c->stash->{rest} = { error => "ERROR! filename" };
         $c->detach();
