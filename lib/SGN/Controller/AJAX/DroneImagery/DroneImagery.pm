@@ -1200,7 +1200,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     push @pheno_var, \@columns;
                 }
             close($fh_r);
-            print STDERR Dumper \@pheno_var;
+            # print STDERR Dumper \@pheno_var;
 
             my @grm_old;
             open(my $fh_grm_old, '<', $grm_file)
@@ -1396,7 +1396,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     $solution_file_counter++;
                 }
             close($fh_sol);
-            unlink($solutions_tempfile);
+            # unlink($solutions_tempfile);
+
             # print STDERR Dumper \%fixed_effects;
             # print STDERR Dumper $result_blup_data;
             # print STDERR Dumper $result_blup_pe_data;
