@@ -228,6 +228,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $compute_from_parents = $c->req->param('compute_from_parents') eq 'yes' ? 1 : 0;
     my $protocol_id = $c->req->param('protocol_id');
     my $tolparinv = $c->req->param('tolparinv');
+    my $legendre_order_number = $c->req->param('legendre_order_number') || scalar(@$trait_id_list) - 1;
 
     my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
     my $tmp_stats_dir = $shared_cluster_dir_config."/tmp_drone_statistics";
@@ -268,6 +269,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $analysis_model_training_data_file_type;
     my $field_trial_design;
     my $pe_genetic_blup_trait;
+    my $model_sum_square_residual;
 
     foreach my $field_trial_id (@$field_trial_id_list) {
         my $field_trial_design_full = CXGN::Trial->new({bcs_schema => $schema, trial_id=>$field_trial_id})->get_layout()->get_design();
@@ -659,7 +661,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
             my $order_num = scalar(@sorted_trait_names_scaled)-1;
             my $cmd = 'R -e "library(sommer); library(orthopolynom);
-            polynomials <- leg(c('.$sorted_trait_names_scaled_string.'), n='.$order_num.', intercept=TRUE);
+            polynomials <- leg(c('.$sorted_trait_names_scaled_string.'), n='.$legendre_order_number.', intercept=TRUE);
             write.table(polynomials, file=\''.$stats_out_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');"';
             my $status = system($cmd);
 
@@ -816,6 +818,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             mkdir $tmp_grm_dir if ! -d $tmp_grm_dir;
             my ($grm_tempfile_fh, $grm_tempfile) = tempfile("wizard_download_grm_XXXXX", DIR=> $tmp_grm_dir);
             my ($grm_out_tempfile_fh, $grm_out_tempfile) = tempfile("wizard_download_grm_XXXXX", DIR=> $tmp_grm_dir);
+
+            if (!$protocol_id) {
+                $protocol_id = undef;
+            }
 
             my $grm_search_params = {
                 bcs_schema=>$schema,
@@ -1306,6 +1312,24 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 }
             close($fh_log);
 
+            my $sum_square_res = 0;
+            my $yhat_residual_tempfile = $tmp_stats_dir."/yhat_residual";
+            open(my $fh_yhat_res, '<', $yhat_residual_tempfile)
+                or die "Could not open file '$yhat_residual_tempfile' $!";
+                print STDERR "Opened $yhat_residual_tempfile\n";
+
+                my $pred_res_counter = 0;
+                while (my $row = <$fh_yhat_res>) {
+                    print STDERR $row;
+                    my @vals = split ' ', $row;
+                    my $pred = $vals[0];
+                    my $residual = $vals[1];
+                    $sum_square_res = $sum_square_res + $residual*$residual;
+                    $pred_res_counter++;
+                }
+            close($fh_yhat_res);
+            $model_sum_square_residual = $sum_square_res;
+
             my %fixed_effects;
             my $solutions_tempfile = $tmp_stats_dir."/solutions";
             open(my $fh_sol, '<', $solutions_tempfile)
@@ -1594,7 +1618,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         application_name => "NickMorales Mixed Models",
         application_version => "V1.01",
         analysis_model_training_data_file_type => $analysis_model_training_data_file_type,
-        field_trial_design => $field_trial_design
+        field_trial_design => $field_trial_design,
+        sum_square_residual => $model_sum_square_residual
     };
 }
 
