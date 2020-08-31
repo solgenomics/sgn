@@ -6101,6 +6101,11 @@ sub drone_imagery_save_single_plot_image_POST : Args(0) {
         $c->stash->{rest} = { error => "ERROR!" };
         $c->detach();
     }
+    my $image_input_filename = $image_input->filename();
+    if (!$image_input_filename) {
+        $c->stash->{rest} = { error => "ERROR! filename" };
+        $c->detach();
+    }
 
     my $stock = $bcs_schema->resultset("Stock::Stock")->find({stock_id => $observation_unit_id});
     if (!$stock) {
@@ -6110,7 +6115,7 @@ sub drone_imagery_save_single_plot_image_POST : Args(0) {
 
     my $image = SGN::Image->new( $bcs_schema->storage->dbh, undef, $c );
     $image->set_sp_person_id($user_id);
-    my $ret = $image->process_image($image_input, 'project', $drone_run_band_project_id_input, $linking_table_type_id);
+    my $ret = $image->process_image($image_input_filename, 'project', $drone_run_band_project_id_input, $linking_table_type_id);
     my $stock_associate = $image->associate_stock($observation_unit_id, $user_name);
     my $plot_polygon_image_fullpath = $image->get_filename('original_converted', 'full');
     my $plot_polygon_image_url = $image->get_image_url('original');
