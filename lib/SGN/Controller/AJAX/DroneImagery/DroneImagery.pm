@@ -240,6 +240,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my ($stats_tempfile_2_fh, $stats_tempfile_2) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     $stats_tempfile_2 .= '.dat';
     my ($stats_prep_tempfile_fh, $stats_prep_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    my ($stats_prep_factor_tempfile_fh, $stats_prep_factor_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_prep2_tempfile_fh, $stats_prep2_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($parameter_tempfile_fh, $parameter_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_tempfile_fh, $stats_out_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
@@ -706,7 +707,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             mat\$replicate_time <- as.numeric(as.factor(mat\$replicate_time));
             mat\$ind_replicate <- as.numeric(as.factor(mat\$ind_replicate));
             mat\$accession_id_factor <- as.numeric(as.factor(mat\$accession_id));
-            write.table(mat, file=\''.$stats_out_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');"';
+            write.table(mat, file=\''.$stats_prep_factor_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');"';
             print STDERR Dumper $cmd_factor;
             my $status_factor = system($cmd_factor);
 
@@ -716,10 +717,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             my %seen_rep_times;
             my %seen_ind_reps;
             $csv = Text::CSV->new({ sep_char => "\t" });
-            open(my $fh_factor, '<', $stats_out_tempfile)
-                or die "Could not open file '$stats_out_tempfile' $!";
+            open(my $fh_factor, '<', $stats_prep_factor_tempfile)
+                or die "Could not open file '$stats_prep_factor_tempfile' $!";
 
-                print STDERR "Opened $stats_out_tempfile\n";
+                print STDERR "Opened $stats_prep_factor_tempfile\n";
                 $header = <$fh_factor>;
                 @header_cols;
                 if ($csv->parse($header)) {
