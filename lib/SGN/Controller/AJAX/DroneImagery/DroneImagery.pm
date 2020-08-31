@@ -1336,7 +1336,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
                 my $pred_res_counter = 0;
                 while (my $row = <$fh_yhat_res>) {
-                    print STDERR $row;
+                    # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
@@ -1362,7 +1362,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 my $pe_sol_counter = 0;
                 my $pe_sol_trait_counter = 0;
                 while (my $row = <$fh_sol>) {
-                    print STDERR $row;
+                    # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $level = $vals[2];
                     my $value = $vals[3];
