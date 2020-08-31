@@ -659,7 +659,6 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             }
             my $sorted_trait_names_scaled_string = join ',', @sorted_trait_names_scaled;
 
-            my $order_num = scalar(@sorted_trait_names_scaled)-1;
             my $cmd = 'R -e "library(sommer); library(orthopolynom);
             polynomials <- leg(c('.$sorted_trait_names_scaled_string.'), n='.$legendre_order_number.', intercept=TRUE);
             write.table(polynomials, file=\''.$stats_out_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');"';
@@ -790,8 +789,11 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 }
             }
             # print STDERR Dumper \@data_matrix;
-
-            my @phenotype_header = ("id", "plot_id", "replicate", "time", "replicate_time", "ind_replicate", @sorted_trait_names, "phenotype");
+            my @legs_header;
+            for (0..$legendre_order_number) {
+                push @legs_header, "legendre$_";
+            }
+            my @phenotype_header = ("id", "plot_id", "replicate", "time", "replicate_time", "ind_replicate", @legs_header, "phenotype");
             open(my $F, ">", $stats_tempfile_2) || die "Can't open file ".$stats_tempfile_2;
                 # print $F $header_string."\n";
                 foreach (@data_matrix) {
@@ -1160,7 +1162,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_remlf90_grm_temporal_leg_random_regression_DAP_genetic_blups_phenotype_file";
             }
 
-            my $pheno_var_pos = 7+scalar(@sorted_trait_names)-1;
+            my $pheno_var_pos = 7+$legendre_order_number+1;
             my $cmd_r = 'R -e "
             mat <- read.csv(\''.$stats_tempfile_2.'\', header=FALSE, sep=\' \');
             pheno <- mat[ ,7:'.$pheno_var_pos.'];
