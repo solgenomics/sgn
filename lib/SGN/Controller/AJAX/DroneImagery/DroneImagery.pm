@@ -240,6 +240,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my ($stats_tempfile_2_fh, $stats_tempfile_2) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     $stats_tempfile_2 .= '.dat';
     my ($stats_prep_tempfile_fh, $stats_prep_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    my ($stats_prep2_tempfile_fh, $stats_prep2_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($parameter_tempfile_fh, $parameter_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_tempfile_fh, $stats_out_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_param_tempfile_fh, $stats_out_param_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
@@ -758,6 +759,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             @rep_time_factors = sort keys %seen_rep_times;
             @ind_rep_factors = sort keys %seen_ind_reps;
 
+            my @data_matrix_phenotypes;
             foreach (@$data) {
                 my $germplasm_name = $_->{germplasm_uniquename};
                 my $germplasm_stock_id = $_->{germplasm_stock_id};
@@ -772,6 +774,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 };
                 $plot_id_map{$obsunit_stock_id} = $obsunit_stock_uniquename;
                 $seen_plot_names{$obsunit_stock_uniquename}++;
+                my @data_matrix_phenotypes_row;
                 foreach my $t (@sorted_trait_names) {
                     my @row = ($accession_id_factor_map{$germplasm_stock_id}, $obsunit_stock_id, $replicate_number, $t, $plot_rep_time_factor_map{$obsunit_stock_id}->{$replicate_number}->{$t}, $plot_ind_rep_factor_map{$obsunit_stock_id}->{$germplasm_stock_id}->{$replicate_number});
 
@@ -780,12 +783,15 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
                     if (defined($phenotype_data{$obsunit_stock_uniquename}->{$t})) {
                         push @row, $phenotype_data{$obsunit_stock_uniquename}->{$t} + 0;
+                        push @data_matrix_phenotypes_row, $phenotype_data{$obsunit_stock_uniquename}->{$t} + 0;
                     } else {
                         print STDERR $obsunit_stock_uniquename." : $t : $germplasm_name : NA \n";
                         push @row, '';
+                        push @data_matrix_phenotypes_row, 'NA';
                     }
 
                     push @data_matrix, \@row;
+                    push @data_matrix_phenotypes, \@data_matrix_phenotypes_row;
                 }
             }
             # print STDERR Dumper \@data_matrix;
@@ -801,6 +807,14 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     print $F "$line\n";
                 }
             close($F);
+
+            open(my $F2, ">", $stats_prep2_tempfile) || die "Can't open file ".$stats_prep2_tempfile;
+                # print $F $header_string."\n";
+                foreach (@data_matrix_phenotypes) {
+                    my $line = join ',', @$_;
+                    print $F2 "$line\n";
+                }
+            close($F2);
         }
 
         if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups') {
@@ -1164,8 +1178,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
             my $pheno_var_pos = 7+$legendre_order_number+1;
             my $cmd_r = 'R -e "
-            mat <- read.csv(\''.$stats_tempfile_2.'\', header=FALSE, sep=\' \');
-            pheno <- mat[ ,7:'.$pheno_var_pos.'];
+            pheno <- read.csv(\''.$stats_prep2_tempfile.'\', header=FALSE, sep=\',\');
             v <- var(pheno);
             write.table(v, file=\''.$stats_out_param_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');
             "';
@@ -1228,7 +1241,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 'NUMBER_OF_EFFECTS',
                 scalar(@sorted_trait_names)*2 + 1,
                 'OBSERVATION(S)',
-                scalar(@sorted_trait_names) + 6 + 1,
+                $legendre_order_number + 6 + 1,
                 'WEIGHT(S)',
                 '',
                 'EFFECTS: POSITION_IN_DATAFILE NUMBER_OF_LEVELS TYPE_OF_EFFECT',
