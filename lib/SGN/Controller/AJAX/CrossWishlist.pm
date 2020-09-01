@@ -531,7 +531,8 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     }
 
     my $header = '"FemaleObservationUnitType","FemaleObservationUnitName","FemaleObservationUnitID","FemalePlotID","FemalePlotName","FemaleAccessionName","FemaleAccessionID","FemalePlotNumber","FemaleAccessionNameAndPlotNumber","FemaleBlockNumber","FemaleRepNumber","FemalePlantName","FemalePlantID","FemalePlantNumber","FemaleAccessionNameAndPlotNumberAndPlantNumber","Timestamp","CrossWishlistCreatedByUsername","NumberMales"';
-    my @lines;
+    my @plot_lines;
+    my @plant_lines;
     my $max_male_num = 0;
     foreach my $female_id (keys %individual_cross_plot_ids){
         my $male_ids = $ordered_data{$female_id};
@@ -583,7 +584,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                 foreach (@male_segments){
                     $line .= $_;
                 }
-                push @lines, $line;
+                push @plot_lines, $line;
             }
 
             if ($num_males > $max_male_num){
@@ -591,6 +592,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             }
 
             my $plant_names = $female->{plant_names};
+            print STDERR "PLANT NAMES =".Dumper($plant_names)."\n";
             my $plant_ids = $female->{plant_ids};
             my $plant_number = 1;
             my $plant_index = 0;
@@ -628,7 +630,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                     foreach (@male_segments){
                         $line .= $_;
                     }
-                    push @lines, $line;
+                    push @plant_lines, $line;
                 }
                 $plant_number++;
                 $plant_index++;
@@ -650,7 +652,8 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     }
     my @new_header_row = split ',', $header;
     #print STDERR Dumper \%priority_order_hash;
-    #print STDERR Dumper \@lines;
+    #print STDERR Dumper \@plot_lines;
+    #print STDERR Dumper \@plant_lines;
     #print STDERR Dumper \@plot_info_lines;
 
     if (scalar(@old_header_row_array)>scalar(@new_header_row)){
@@ -688,8 +691,15 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             my $line_string = join ',', @$_;
             print $F $line_string."\n";
         }
-        foreach (@lines){
-            print $F $_."\n";
+
+        if (defined $plant_names) {
+            foreach (@plant_lines){
+                print $F $_."\n";
+            }
+        } else {
+            foreach (@plot_lines){
+                print $F $_."\n";
+            }
         }
     close($F);
     print STDERR Dumper $file_path2;
