@@ -62,7 +62,14 @@ sub validate {
         print STDERR "Columns not correct\n";
         return \%parse_result;
     }
-    my @fixed_columns = qw | observationunit_name |;
+
+    if ($worksheet->get_cell(0,1)->value() ne 'lims_id' ) {
+        $parse_result{'error'} = "Second column must be 'lims_id'. It may help to recreate your spreadsheet from the website.";
+        print STDERR "Columns not correct\n";
+        return \%parse_result;
+    }
+
+    my @fixed_columns = qw | observationunit_name lims_id |;
     my $num_fixed_col = scalar(@fixed_columns);
 
     for (my $row=1; $row<$row_max; $row++) {
@@ -124,14 +131,16 @@ sub parse {
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
 
-    my @fixed_columns = qw | observationunit_name |;
+    my @fixed_columns = qw | observationunit_name lims_id|;
     my $num_fixed_col = scalar(@fixed_columns);
 
     for my $row ( 1 .. $row_max ) {
         my $observationunit_name;
+        my $lims_id;
 
         if ($worksheet->get_cell($row,0)) {
             $observationunit_name = $worksheet->get_cell($row,0)->value();
+            $lims_id = $worksheet->get_cell($row,1)->value();
             if (defined($observationunit_name)){
                 if ($observationunit_name ne ''){
                     $observationunits_seen{$observationunit_name} = 1;

@@ -38,6 +38,7 @@ my ($stored_phenotype_error, $stored_Phenotype_success) = $store_phenotypes->sto
  Naama Menda (nm249@cornell.edu)
  Nicolas Morales (nm529@cornell.edu)
  Bryan Ellerbrock (bje24@cornell.edu)
+ Chris Simoes (ccs263@cornell.edu)
 
 =cut
 
@@ -473,7 +474,7 @@ sub store {
         }
     );
     while (my $s = $rs->next()) {
-        $data{$s->get_column('uniquename')} = [$s->get_column('stock_id'), $s->get_column('nd_geolocation_id'), $s->get_column('project_id') ];
+        $data{$s->get_column('uniquename')} = [$s->get_column('stock_id'), $s->get_column('nd_geolocation_id'), $s->get_column('project_id'), $s->get_column('lims_id') ];
     }
 
     # print STDERR "DATA: ".Dumper(\%data);
@@ -487,6 +488,7 @@ sub store {
             my $stock_id = $data{$plot_name}[0];
             my $location_id = $data{$plot_name}[1];
             my $project_id = $data{$plot_name}[2];
+            my $lims_id = $data{$plot_name}[3];
 
             # create plot-wide nd_experiment entry
 
@@ -500,6 +502,11 @@ sub store {
 
             $experiment_ids{$experiment->nd_experiment_id()}=1;
 
+            #check if there is lab identifiers. If so add using dedicated function
+            my $lims_data = $plot_trait_value{$plot_name}->{'lims_id'};
+            if (defined $lims_data) {
+                $self->store_lims_id($lims_data, $experiment->nd_experiment_id());
+            }
             # Check if there is a note for this plot, If so add it using dedicated function
             my $note_array = $plot_trait_value{$plot_name}->{'notes'};
             if (defined $note_array) {
@@ -685,6 +692,14 @@ sub store_stock_note {
     $note = $note ." (Operator: $operator, Time: $timestamp)";
     my $stock = $self->bcs_schema()->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
     $stock->create_stockprops( { 'notes' => $note } );
+}
+
+sub store_lims_id {
+    my $self = shift;
+    my $lims_id = shift;
+    print STDERR "Lims hashref is " . Dumper($lims_id);
+    print "+++++++++++++++++++++++++++++++++++++++++++++\nThe lims new is $lims_id\n";
+
 }
 
 sub store_nirs_data {
