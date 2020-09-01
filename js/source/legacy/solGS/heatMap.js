@@ -12,9 +12,8 @@ solGS.heatmap = {
     plot: function (data, heatmapCanvasDiv, heatmapPlotDiv, downloadLinks) {
 
 	data = JSON.parse(data);
-
-	var labels = data.labels.splice(0,20);
-	//var labels = data.labels;
+	
+	var labels = data.labels;
 	var values = data.values;
 	var nLabels = labels.length;
 
@@ -23,25 +22,21 @@ solGS.heatmap = {
 	
         for (var i=0;  i<values.length; i++) {
 
-	    if (i < 20) {
 	    var rw = values[i];
-	    
+	 
 	    for (var j = 0; j<nLabels; j++) {
 		var clNm = labels[j];
 		
 		var rwVl = rw[clNm];
 		
 		if (rwVl === undefined) {rwVl = 'NA';}
-
-		if (j < 20) {
 		
 		corr.push({"row": i, "col": j, "value": rwVl});
 
 		if (rwVl != 'NA') {
 		    coefs.push(rwVl);
 		}			
-		}		
-	}
+	
 	    }
 	}
 
@@ -55,15 +50,27 @@ solGS.heatmap = {
 
 	var heatmapCanvas = heatmapCanvasDiv; 
 
-	var height = 400;
-	var width  = 400;
-
-	if (nLabels < 8) {
+	var fs = 10;
+	
+	if (nLabels >= 100) {
+	    height = 600;
+	    width  = 600;
+	    fs = 10 * .85;
+	} else {
+	    height = 500;
+	    width  = 500;
+	    fs = 10 * 1.2; 
+	}
+	
+	if (nLabels < 20) {
             height = height * 0.5;
             width  = width  * 0.5;
+	    fs = 10 * 1.3;
 	}
 
-	var pad    = {left:70, top:30, right:100, bottom: 90};
+	fs = fs + 'px';
+
+	var pad    = {left:80, top:30, right:100, bottom: 90};
 	var totalH = height + pad.top + pad.bottom;
 	var totalW = width + pad.left + pad.right;
 
@@ -127,24 +134,24 @@ solGS.heatmap = {
             .attr("class", "x axis")
             .attr("transform", "translate(0," + height +")")
             .call(xAxis)
-            .selectAll("text")
-            .attr("y", 0)
+            .selectAll("text")           
             .attr("x", 10)
-            .attr("dy", ".1em")         
+	    .attr("y", 0)
+	    .attr("dy", ".1em")  
             .attr("transform", "rotate(90)")
             .attr("fill", "#523CB5")
-            .style({"text-anchor":"start", "fill": "#523CB5"});
+            .style({"text-anchor":"start", "fill": "#523CB5", "font-size":fs});
         
 	corrplot.append("g")
             .attr("class", "y axis")
             .attr("transform", "translate(0,0)")
             .call(yAxis)
-            .selectAll("text")
-            .attr("y", 0)
+            .selectAll("text")         
             .attr("x", -10)
+	    .attr("y", 0)
             .attr("dy", ".1em")  
             .attr("fill", "#523CB5")
-            .style("fill", "#523CB5");
+            .style({"fill": "#523CB5", "font-size":fs});
         
 
 	var cell = corrplot.selectAll("rect")
