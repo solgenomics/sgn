@@ -228,7 +228,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $compute_from_parents = $c->req->param('compute_from_parents') eq 'yes' ? 1 : 0;
     my $protocol_id = $c->req->param('protocol_id');
     my $tolparinv = $c->req->param('tolparinv');
-    my $legendre_order_number = $c->req->param('legendre_order_number') || scalar(@$trait_id_list) - 1;
+    # my $legendre_order_number = $c->req->param('legendre_order_number') || scalar(@$trait_id_list) - 1;
+    my $legendre_order_number = scalar(@$trait_id_list) - 1;
 
     my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
     my $tmp_stats_dir = $shared_cluster_dir_config."/tmp_drone_statistics";
@@ -1254,34 +1255,34 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 'NUMBER_OF_TRAITS',
                 '1',
                 'NUMBER_OF_EFFECTS',
-                scalar(@sorted_trait_names)*2 + 1,
+                ($legendre_order_number + 1)*2 + 1,
                 'OBSERVATION(S)',
-                $legendre_order_number + 6 + 1,
+                $legendre_order_number + 1 + 6 + 1,
                 'WEIGHT(S)',
                 '',
                 'EFFECTS: POSITION_IN_DATAFILE NUMBER_OF_LEVELS TYPE_OF_EFFECT',
                 '5 '.$effect_1_levels.' cross',
             );
             my $p_counter = 1;
-            foreach (@sorted_trait_names) {
+            foreach (0 .. $legendre_order_number) {
                 push @param_file_rows, 6+$p_counter.' '.$effect_grm_levels.' cov 1';
                 $p_counter++;
             }
             my $p2_counter = 1;
-            foreach (@sorted_trait_names) {
+            foreach (0 .. $legendre_order_number) {
                 push @param_file_rows, 6+$p2_counter.' '.$effect_pe_levels.' cov 6';
                 $p2_counter++;
             }
             my @random_group1;
-            foreach (1..scalar(@sorted_trait_names)) {
+            foreach (1..$legendre_order_number+1) {
                 push @random_group1, 1+$_;
             }
             my $random_group_string1 = join ' ', @random_group1;
             my @random_group2;
             my @hetres_group;
-            foreach (1..scalar(@sorted_trait_names)) {
+            foreach (1..$legendre_order_number+1) {
                 push @random_group2, 1+scalar(@random_group1)+$_;
-                push @hetres_group, 1+scalar(@random_group1)+$_+1;
+                push @hetres_group, 1+scalar(@random_group1)+$_;
             }
             my $random_group_string2 = join ' ', @random_group2;
             my $hetres_group_string = join ' ', @hetres_group;
@@ -1360,7 +1361,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 }
             close($fh_yhat_res);
             $model_sum_square_residual = $sum_square_res;
-            unlink($yhat_residual_tempfile);
+            # unlink($yhat_residual_tempfile);
 
             my %fixed_effects;
             my $solutions_tempfile = $tmp_stats_dir."/solutions";
@@ -1384,7 +1385,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     if ($solution_file_counter < $effect_1_levels) {
                         $fixed_effects{$solution_file_counter}->{$level} = $value;
                     }
-                    elsif ($solution_file_counter < $effect_1_levels + $effect_grm_levels*scalar(@sorted_trait_names)) {
+                    elsif ($solution_file_counter < $effect_1_levels + $effect_grm_levels*($legendre_order_number+1)) {
                         my $accession_name = $accession_id_factor_map_reverse{$level};
                         my $trait = $seen_times{$sorted_trait_names[$grm_sol_trait_counter]};
                         if ($grm_sol_counter < $effect_grm_levels-1) {

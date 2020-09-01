@@ -1353,7 +1353,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     </div>
                     <div id="drone_imagery_calculate_statistics_legendre_polynomial_div" style="display:none">
                         <hr>
-                        <form class="form-horizontal">
+                        <!--form class="form-horizontal">
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">Legendre Polynomial Order: </label>
                                 <div class="col-sm-9" >
@@ -1370,7 +1370,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                                     </select>
                                 </div>
                             </div>
-                        </form>
+                        </form-->
                     </div>
 
                     <div id="drone_imagery_calculate_statistics_marss_div" style="display:none">
@@ -4325,7 +4325,7 @@ jQuery(document).ready(function() {
                 'protocol_id':jQuery('#drone_image_calculate_statistics_genotyping_protocol_select').val(),
                 'compute_from_parents':jQuery('#drone_image_calculate_statistics_genotyping_protocol_compute_from_parents_select').val(),
                 'tolparinv':jQuery('#drone_image_calculate_statistics_tolparinv_select').val(),
-                'legendre_order_number':jQuery('#drone_image_calculate_statistics_legendre_order_number_select').val()
+                //'legendre_order_number':jQuery('#drone_image_calculate_statistics_legendre_order_number_select').val()
             },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
