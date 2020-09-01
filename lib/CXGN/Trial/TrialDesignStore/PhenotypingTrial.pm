@@ -137,15 +137,22 @@ sub validate_design {
 #        @source_stock_types = ($accession_type_id, $plot_type_id, $plant_type_id, $tissue_type_id);
 #    } else {
     my @source_stock_types = @{$self->get_source_stock_types()};
-#    }
-    my $rs = $chado_schema->resultset('Stock::Stock')->search({
-        'is_obsolete' => { '!=' => 't' },
-        'type_id' => {-in=>\@source_stock_types},
-        'uniquename' => {-in=>\@accession_names}
-    });
+
+    print STDERR "Source Stock types = ".join(", ",@source_stock_types)."\n";
+    print STDERR "Accession names = ".join(", ", @accession_names)."\n";
+    #    }
+
     my %found_data;
-    while (my $s = $rs->next()) {
-        $found_data{$s->uniquename} = 1;
+    foreach my $a (@accession_names) { 
+	my $rs = $chado_schema->resultset('Stock::Stock')->search({
+	    'is_obsolete' => { '!=' => 't' },
+	    'type_id' => { -in => \@source_stock_types },
+	    'uniquename' => { ilike => $a } });
+	
+	while (my $s = $rs->next()) {
+	    print STDERR "FOUND ".$s->uniquename()."\n";
+	    $found_data{$s->uniquename} = 1;
+	}
     }
     foreach (@accession_names){
         if (!$found_data{$_}){

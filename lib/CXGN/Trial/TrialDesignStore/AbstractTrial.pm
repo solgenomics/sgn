@@ -594,22 +594,22 @@ sub store {
                 $stock_lookup->set_stock_name($stock_name);
                 #$parent_stock = $stock_lookup->get_stock($self->get_accession_cvterm_id);
 
-		if ($self->get_trial_stock_type() eq 'cross') {
-                    $parent_stock = $stock_lookup->get_stock($self->get_cross_cvterm_id());
-                    if (!$parent_stock) {
-                        die ("Error while saving trial layout: no cross found matching $stock_name");
-                    }
-                } elsif ($self->get_trial_stock_type() eq 'family_name') {
-                    $parent_stock = $stock_lookup->get_stock($self->get_family_name_cvterm_id());
-                    if (!$parent_stock) {
-                        die ("Error while saving trial layout: no family name found matching $stock_name");
-                    }
-                } else {
+		# if ($self->get_trial_stock_type() eq 'cross') {
+                #     $parent_stock = $stock_lookup->get_stock($self->get_cross_cvterm_id());
+                #     if (!$parent_stock) {
+                #         die ("Error while saving trial layout: no cross found matching $stock_name");
+                #     }
+                # } elsif ($self->get_trial_stock_type() eq 'family_name') {
+                #     $parent_stock = $stock_lookup->get_stock($self->get_family_name_cvterm_id());
+                #     if (!$parent_stock) {
+                #         die ("Error while saving trial layout: no family name found matching $stock_name");
+                #     }
+                # } else {
                     $parent_stock = $stock_lookup->get_stock($self->get_accession_cvterm_id());
                     if (!$parent_stock) {
                         die ("Error while saving trial layout: no accession found matching $stock_name");
                     }
-                }
+#                }
 
                 #if (!$parent_stock) {
                 #    die ("Error while saving trial layout: no stocks found matching $stock_name");
