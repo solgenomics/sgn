@@ -30,55 +30,6 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
     );
 
-
-sub extract_trait_data :Path('/ajax/Nirs/getdata') Args(0) {
-    my $self = shift;
-    my $c = shift;
-
-    my $file = $c->req->param("file"); # where is this in the html form?
-    my $trait = $c->req->param("trait");
-
-    $file = basename($file);
-
-    my $temppath = File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/nirs_files/".$file);
-    print STDERR Dumper($temppath);
-
-    my $F;
-    if (! open($F, "<", $temppath)) {
-	$c->stash->{rest} = { error => "Can't find data." };
-	return;
-    }
-
-    my $header = <$F>;
-    chomp($header);
-    print STDERR Dumper($header);
-    my @keys = split("\t", $header);
-    print STDERR Dumper($keys[1]);
-    for(my $n=0; $n <@keys; $n++) {
-        if ($keys[$n] =~ /\|CO\_/) {
-        $keys[$n] =~ s/\|CO\_.*//;
-        }
-    }
-    my @data = ();
-
-    while (<$F>) {
-	chomp;
-
-	my @fields = split "\t";
-	my %line = {};
-	for(my $n=0; $n <@keys; $n++) {
-	    if (exists($fields[$n]) && defined($fields[$n])) {
-		$line{$keys[$n]}=$fields[$n];
-	    }
-	}
-    print STDERR Dumper(\%line);
-	push @data, \%line;
-    }
-
-    $c->stash->{rest} = { data => \@data, trait => $trait};
-
-}
-
 sub generate_results : Path('/ajax/Nirs/generate_results') : ActionClass('REST') { }
 sub generate_results_POST : Args(0) {
     my $self = shift;
