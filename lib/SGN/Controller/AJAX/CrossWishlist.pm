@@ -437,7 +437,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             my $seedlot_transaction_operator = $value->{seed_transaction_operator} || '';
             my $seedlot_num_seed_per_plot = $value->{num_seed_per_plot} || '';
 
-            print STDERR "PLANT NAMES =".Dumper($plant_names)."\n";
+            print STDERR "GERMPLASM PLANT NAMES =".Dumper($plant_names)."\n";
             my $plant_number = 1;
             my $plant_index = 0;
             if (defined $plant_names){
@@ -554,50 +554,12 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             my $block_number = $female->{block_number} || '';
             my $rep_number = $female->{rep_number} || '';
             my $num_males = 0;
-
-            if ($previous_file_lookup{$female_plot_id}){
-                $num_males = $previous_file_lookup{$female_plot_id}->[17];
-                $num_males =~ s/"//g;
-                my %seen_males_ids;
-                foreach my $i (18..scalar(@{$previous_file_lookup{$female_plot_id}})-1){
-                    my $previous_male_id = $previous_file_lookup{$female_plot_id}->[$i];
-                    $previous_male_id =~ s/"//g;
-                    $seen_males_ids{$previous_male_id}++;
-                }
-                foreach my $male_id (@$male_ids){
-                    if (!$seen_males_ids{$male_id}){
-                        push @{$previous_file_lookup{$female_plot_id}}, '"'.$male_id.'"';
-                        $num_males++;
-                    }
-                }
-                $previous_file_lookup{$female_plot_id}->[17] = '"'.$num_males.'"';
-            } else {
-                my $t = time;
-                my $entry_timestamp = strftime '%F %T', localtime $t;
-                $entry_timestamp .= sprintf ".%03d", ($t-int($t))*1000;
-                my $line = '"plot","'.$plot_name.'","'.$plot_id.'","'.$plot_id.'","'.$plot_name.'","'.$accession_name.'","'.$accession_id.'","'.$plot_number.'","'.$accession_name.'_'.$plot_number.'","'.$block_number.'","'.$rep_number.'","","","","","'.$entry_timestamp.'","'.$user_name.'","';
-
-                my @male_segments;
-                foreach my $male_id (@$male_ids){
-                    push @male_segments, ',"'.$male_id.'"';
-                    $num_males++;
-                }
-                $line .= $num_males.'"';
-                foreach (@male_segments){
-                    $line .= $_;
-                }
-                push @plot_lines, $line;
-            }
-
-            if ($num_males > $max_male_num){
-                $max_male_num = $num_males;
-            }
-
             my $plant_names = $female->{plant_names};
-            print STDERR "PLANT NAMES =".Dumper($plant_names)."\n";
             my $plant_ids = $female->{plant_ids};
             my $plant_number = 1;
             my $plant_index = 0;
+
+            print STDERR "WISHLIST PLANT NAMES =".Dumper($plant_names)."\n";
             if (defined $plant_names) {
                 foreach (@$plant_names){
                     $num_males = 0;
@@ -633,7 +595,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                         foreach (@male_segments){
                             $line .= $_;
                         }
-                        push @plant_lines, $line;
+                        push @lines, $line;
                     }
                     $plant_number++;
                     $plant_index++;
@@ -641,6 +603,44 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                     if ($num_males > $max_male_num){
                         $max_male_num = $num_males;
                     }
+                }
+            } elsif (!defined $plant_names){
+                if ($previous_file_lookup{$female_plot_id}){
+                    $num_males = $previous_file_lookup{$female_plot_id}->[17];
+                    $num_males =~ s/"//g;
+                    my %seen_males_ids;
+                    foreach my $i (18..scalar(@{$previous_file_lookup{$female_plot_id}})-1){
+                        my $previous_male_id = $previous_file_lookup{$female_plot_id}->[$i];
+                        $previous_male_id =~ s/"//g;
+                        $seen_males_ids{$previous_male_id}++;
+                    }
+                    foreach my $male_id (@$male_ids){
+                        if (!$seen_males_ids{$male_id}){
+                            push @{$previous_file_lookup{$female_plot_id}}, '"'.$male_id.'"';
+                            $num_males++;
+                        }
+                    }
+                    $previous_file_lookup{$female_plot_id}->[17] = '"'.$num_males.'"';
+                } else {
+                    my $t = time;
+                    my $entry_timestamp = strftime '%F %T', localtime $t;
+                    $entry_timestamp .= sprintf ".%03d", ($t-int($t))*1000;
+                    my $line = '"plot","'.$plot_name.'","'.$plot_id.'","'.$plot_id.'","'.$plot_name.'","'.$accession_name.'","'.$accession_id.'","'.$plot_number.'","'.$accession_name.'_'.$plot_number.'","'.$block_number.'","'.$rep_number.'","","","","","'.$entry_timestamp.'","'.$user_name.'","';
+
+                    my @male_segments;
+                    foreach my $male_id (@$male_ids){
+                        push @male_segments, ',"'.$male_id.'"';
+                        $num_males++;
+                    }
+                    $line .= $num_males.'"';
+                    foreach (@male_segments){
+                        $line .= $_;
+                    }
+                    push @lines, $line;
+                }
+
+                if ($num_males > $max_male_num){
+                    $max_male_num = $num_males;
                 }
             }
         }
@@ -694,18 +694,8 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             my $line_string = join ',', @$_;
             print $F $line_string."\n";
         }
-
-        print STDERR "PLANT LINES =".Dumper(\@plant_lines)."\n";
-        print STDERR "PLOT LINES =".Dumper(\@plot_lines)."\n";
-
-        if (defined @plant_lines) {
-            foreach (@plant_lines){
-                print $F $_."\n";
-            }
-        } else {
-            foreach (@plot_lines){
-                print $F $_."\n";
-            }
+        foreach (@lines){
+            print $F $_."\n";
         }
     close($F);
     print STDERR Dumper $file_path2;
