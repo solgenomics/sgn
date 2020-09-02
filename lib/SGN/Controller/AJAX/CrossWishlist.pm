@@ -437,10 +437,12 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             my $seedlot_transaction_operator = $value->{seed_transaction_operator} || '';
             my $seedlot_num_seed_per_plot = $value->{num_seed_per_plot} || '';
 
-            print STDERR "GERMPLASM PLANT NAMES =".Dumper($plant_names)."\n";
+#            print STDERR "GERMPLASM PLANT NAMES =".Dumper($plant_names)."\n";
             my $plant_number = 1;
             my $plant_index = 0;
-            if (defined $plant_names){
+            my $plant_num = @$plant_names;
+#            print STDERR "GERMPLASM PLANT NUMBER =".Dumper($plant_num)."\n";
+            if ($plant_num != 0){
                 foreach (@$plant_names){
                     my $plant_id = $plant_ids->[$plant_index];
                     if (!exists($seen_info_obs_units{$plant_id})){
@@ -487,7 +489,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                     $plant_number++;
                     $plant_index++;
                 }
-            } elsif (!defined $plant_names) {
+            } elsif ($plant_num == 0) {
                 if (!exists($seen_info_obs_units{$plot_id})){
                     my $accession_stock = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$accession_id});
                     my $accession_info = $accession_info_hash{$accession_id};
@@ -559,8 +561,11 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             my $plant_number = 1;
             my $plant_index = 0;
 
-            print STDERR "WISHLIST PLANT NAMES =".Dumper($plant_names)."\n";
-            if (defined $plant_names) {
+#            print STDERR "WISHLIST PLANT NAMES =".Dumper($plant_names)."\n";
+            my $plant_num = @$plant_names;
+#            print STDERR "WISHLIST PLANT NUMBER =".Dumper($plant_num)."\n";
+
+            if ($plant_num != 0) {
                 foreach (@$plant_names){
                     $num_males = 0;
                     my $plant_id = $plant_ids->[$plant_index];
@@ -604,7 +609,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                         $max_male_num = $num_males;
                     }
                 }
-            } elsif (!defined $plant_names){
+            } elsif ($plant_num == 0){
                 if ($previous_file_lookup{$female_plot_id}){
                     $num_males = $previous_file_lookup{$female_plot_id}->[17];
                     $num_males =~ s/"//g;
@@ -655,8 +660,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     }
     my @new_header_row = split ',', $header;
     #print STDERR Dumper \%priority_order_hash;
-    #print STDERR Dumper \@plot_lines;
-    #print STDERR Dumper \@plant_lines;
+    #print STDERR Dumper \@lines;
     #print STDERR Dumper \@germaplasm_info_lines;
 
     if (scalar(@old_header_row_array)>scalar(@new_header_row)){
