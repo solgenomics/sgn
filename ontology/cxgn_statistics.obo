@@ -70,3 +70,24 @@ is_a: SGNSTAT:0000000
 id: SGNSTAT:0000013
 name: Univariate linear mixed model spatial BLUPs using genetic relationship matrix and separable Ar1xAr1 row and column effect computed using ASReml
 is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000014
+name: Partial least squares regression (PLSR) as implemented with the pls package in R
+is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000015
+name: Random Forest Regression (RF)  as implemented with the RandomForest package in R
+is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000016
+name: Support vector machine (SVM) with linear kernel as implemented with the kernLab package in R
+is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000017
+name: Support vector machine (SVM) with radial kernel as implemented with the kernLab package in R
+is_a: SGNSTAT:0000000
+

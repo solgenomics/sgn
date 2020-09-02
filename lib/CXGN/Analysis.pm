@@ -73,6 +73,7 @@ use CXGN::Dataset;
 use CXGN::AnalysisModel::SaveModel;
 use CXGN::People::Person;
 use CXGN::AnalysisModel::GetModel;
+use JSON::XS;
 
 =head2 bcs_schema()
 
@@ -276,19 +277,30 @@ sub retrieve_analyses_by_user {
     my $metadata_schema = shift;
     my $phenome_schema = shift;
     my $user_id = shift;
+    my $analyses_type = shift;
 
     my $user_info_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'project_sp_person_id', 'project_property')->cvterm_id();
     my $analysis_info_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'analysis_metadata_json', 'project_property')->cvterm_id();
 
-    my $q = "SELECT userinfo.project_id FROM projectprop AS userinfo JOIN projectprop AS analysisinfo on (userinfo.project_id=analysisinfo.project_id) WHERE userinfo.type_id=? AND analysisinfo.type_id=? AND userinfo.value=?";
+    my $q = "SELECT userinfo.project_id, analysisinfo.value FROM projectprop AS userinfo
+        JOIN projectprop AS analysisinfo on (userinfo.project_id=analysisinfo.project_id)
+        WHERE userinfo.type_id=? AND analysisinfo.type_id=? AND userinfo.value=?";
 
     my $h = $bcs_schema->storage()->dbh()->prepare($q);
     $h->execute($user_info_type_id, $analysis_info_type_id, $user_id);
 
     my @analyses = ();
-    while (my ($project_id) = $h->fetchrow_array()) {
+    while (my ($project_id, $analysis_info) = $h->fetchrow_array()) {
         print STDERR "Instantiating analysis project for project ID $project_id...\n";
-        push @analyses, CXGN::Analysis->new( { bcs_schema => $bcs_schema, people_schema => $people_schema, metadata_schema => $metadata_schema, phenome_schema => $phenome_schema, trial_id=> $project_id });
+        my $info = decode_json $analysis_info;
+        if ($analyses_type) {
+            if ($info->{analysis_model_type} eq $analyses_type) {
+                push @analyses, CXGN::Analysis->new( { bcs_schema => $bcs_schema, people_schema => $people_schema, metadata_schema => $metadata_schema, phenome_schema => $phenome_schema, trial_id=> $project_id });
+            }
+        }
+        else {
+            push @analyses, CXGN::Analysis->new( { bcs_schema => $bcs_schema, people_schema => $people_schema, metadata_schema => $metadata_schema, phenome_schema => $phenome_schema, trial_id=> $project_id });
+        }
     }
 
     return @analyses;
