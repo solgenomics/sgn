@@ -29,7 +29,7 @@ outputFiles <- scan(grep("output_files", allArgs, value = TRUE),
 inputFiles  <- scan(grep("input_files", allArgs, value = TRUE),
                     what = "character")
 
-
+#Preparing the phenodata
 phenoDataFile      <- grep("\\/phenotype_data", inputFiles, value=TRUE)
 formattedPhenoFile <- grep("formatted_phenotype_data", inputFiles, fixed = FALSE, value = TRUE)
 metadataFile       <-  grep("metadata", inputFiles, value=TRUE)
