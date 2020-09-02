@@ -81,7 +81,7 @@ jQuery(document).ready(function(){
     jQuery('#trial_detail_page_analysis_time_series_accessions_workflow').click( function(){
         jQuery('#trial_analysis_time_series_accessions_workflow_dialog').modal('show');
 
-        get_select_box('traits', 'trial_analysis_time_series_accessions_workflow_traits_div', { 'name' : 'trial_analysis_time_series_accessions_workflow_trait_ids', 'id' : 'trial_analysis_time_series_accessions_workflow_trait_ids', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':<% $trial_id %>, 'stock_type':'analysis_instance', 'contains_composable_cv_type':'time_ontology', 'select_format':'component_table_select', 'select_all':1 });
+        get_select_box('traits', 'trial_analysis_time_series_accessions_workflow_traits_div', { 'name' : 'trial_analysis_time_series_accessions_workflow_trait_ids', 'id' : 'trial_analysis_time_series_accessions_workflow_trait_ids', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':<% $trial_id %>, 'stock_type':'analysis_instance', 'contains_composable_cv_type':'time_ontology', 'select_format':'component_table_select', 'select_all':0 });
 
         get_select_box('stocks', 'trial_analysis_time_series_accessions_workflow_accessions_div', { 'name' : 'trial_analysis_time_series_accessions_workflow_accessions_ids', 'id' : 'trial_analysis_time_series_accessions_workflow_accessions_ids', 'empty':1, 'multiple':1, 'size': 20, 'trial_id_list':<% $trial_id %>, 'stock_type_name':'accession' });
     });
