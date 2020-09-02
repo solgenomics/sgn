@@ -273,6 +273,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $field_trial_design;
     my $pe_genetic_blup_trait;
     my $model_sum_square_residual;
+    my %trait_composing_info;
 
     foreach my $field_trial_id (@$field_trial_id_list) {
         my $field_trial_design_full = CXGN::Trial->new({bcs_schema => $schema, trial_id=>$field_trial_id})->get_layout()->get_design();
@@ -606,6 +607,9 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 return;
             }
 
+            my $q_time = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
+            my $h_time = $schema->storage->dbh()->prepare($q_time);
+
             my %seen_plots;
             my %seen_plot_names;
             foreach my $obs_unit (@$data){
@@ -622,23 +626,42 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 foreach (@$observations){
                     my $related_time_terms_json = decode_json $_->{associated_image_project_time_json};
                     my $time;
+                    my $time_term_string = '';
                     if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups') {
                         $time = $related_time_terms_json->{gdd_average_temp} + 0;
+
+                        my $gdd_term_string = "GDD $time";
+                        $h_time->execute($gdd_term_string, 'cxgn_time_ontology');
+                        my ($gdd_cvterm_id) = $h_time->fetchrow_array();
+
+                        if (!$gdd_cvterm_id) {
+                            my $new_gdd_term = $schema->resultset("Cv::Cvterm")->create_with({
+                               name => $gdd_term_string,
+                               cv => 'cxgn_time_ontology'
+                            });
+                            $gdd_cvterm_id = $new_gdd_term->cvterm_id();
+                        }
+                        $time_term_string = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $gdd_cvterm_id, 'extended');
                     }
                     elsif ($statistics_select eq 'blupf90_grm_random_regression_dap_blups') {
                         my $time_days_cvterm = $related_time_terms_json->{day};
+                        $time_term_string = $time_days_cvterm;
                         my $time_days = (split '\|', $time_days_cvterm)[0];
                         $time = int((split ' ', $time_days)[1]) + 0;
                     }
                     $phenotype_data{$obs_unit->{observationunit_uniquename}}->{$time} = $_->{value};
                     $seen_times{$time} = $_->{trait_name};
-                    $seen_trait_names{$_->{trait_name}}++;
+                    $seen_trait_names{$_->{trait_name}} = $time_term_string;
                 }
             }
             @unique_accession_names = sort keys %unique_accessions;
             @sorted_trait_names = sort {$a <=> $b} keys %seen_times;
             @unique_plot_names = sort keys %seen_plot_names;
             print STDERR Dumper \@sorted_trait_names;
+
+            while ( my ($trait_name, $time_term) = each %seen_trait_names) {
+                push @{$trait_composing_info{$trait_name}}, $time_term;
+            }
 
             my $time_min = 100000000;
             my $time_max = 0;
@@ -1654,7 +1677,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         application_version => "V1.01",
         analysis_model_training_data_file_type => $analysis_model_training_data_file_type,
         field_trial_design => $field_trial_design,
-        sum_square_residual => $model_sum_square_residual
+        sum_square_residual => $model_sum_square_residual,
+        trait_composing_info => \%trait_composing_info
     };
 }
 

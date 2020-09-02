@@ -51,6 +51,7 @@ sub store_analysis_json_POST {
     my $analysis_result_values = $c->req->param("analysis_result_values") ? decode_json $c->req->param("analysis_result_values") : {};
     my $analysis_result_values_type = $c->req->param("analysis_result_values_type");
     my $analysis_result_summary = $c->req->param("analysis_result_summary") ? decode_json $c->req->param("analysis_result_summary") : {};
+    my $analysis_result_trait_compose_info = $c->req->param("analysis_result_trait_compose_info") ? decode_json $c->req->param("analysis_result_trait_compose_info") : {};
     my $analysis_model_id = $c->req->param("analysis_model_id") ? $c->req->param("analysis_model_id") : undef;
     my $analysis_model_name = $c->req->param("analysis_model_name");
     my $analysis_model_description = $c->req->param("analysis_model_description");
@@ -75,7 +76,7 @@ sub store_analysis_json_POST {
 
     $self->store_data($c,
         $analysis_to_save_boolean,
-        $analysis_name, $analysis_description, $analysis_year, $analysis_breeding_program_id, $analysis_protocol, $analysis_dataset_id, $analysis_accession_names, $analysis_trait_names, $analysis_statistical_ontology_term, $analysis_precomputed_design_optional, $analysis_result_values, $analysis_result_values_type, $analysis_result_summary,
+        $analysis_name, $analysis_description, $analysis_year, $analysis_breeding_program_id, $analysis_protocol, $analysis_dataset_id, $analysis_accession_names, $analysis_trait_names, $analysis_statistical_ontology_term, $analysis_precomputed_design_optional, $analysis_result_values, $analysis_result_values_type, $analysis_result_summary, $analysis_result_trait_compose_info,
         $analysis_model_id, $analysis_model_name, $analysis_model_description, $analysis_model_is_public, $analysis_model_language, $analysis_model_type, $analysis_model_properties, $analysis_model_application_name, $analysis_model_application_version, $analysis_model_file, $analysis_model_file_type, $analysis_model_training_data_file, $analysis_model_training_data_file_type, $analysis_model_auxiliary_files,
         $user_id, $user_name, $user_role
     );
@@ -103,6 +104,7 @@ sub store_analysis_spreadsheet_POST {
     # my $analysis_result_values = $c->req->param("analysis_result_values") ? decode_json $c->req->param("analysis_result_values") : {};
     my $analysis_result_values_type = $c->req->param("upload_new_analysis_result_values_type");
     my $analysis_result_summary_string = $c->req->param("upload_new_analysis_result_summary_string");
+    my $analysis_result_trait_compose_info_string = $c->req->param("upload_new_analysis_result_trait_compose_info_string");
     my $analysis_model_id = $c->req->param("upload_new_analysis_model_id") ? $c->req->param("upload_new_analysis_model_id") : undef;
     my $analysis_model_name = $c->req->param("upload_new_analysis_model_name");
     my $analysis_model_description = $c->req->param("upload_new_analysis_model_description");
@@ -284,6 +286,13 @@ sub store_analysis_spreadsheet_POST {
         $analysis_result_summary->{$key} = $value;
     }
 
+    my @analysis_result_trait_compose_info_array = split ',', $analysis_result_trait_compose_info_string;
+    my $analysis_result_trait_compose_info;
+    foreach (@analysis_result_trait_compose_info_array) {
+        my ($key, $value) = split '\|\|\|\|', $_;
+        $analysis_result_trait_compose_info->{$key} = $value;
+    }
+
     my @analysis_model_properties_array = split ',', $analysis_model_properties_string;
     my $analysis_model_properties;
     foreach (@analysis_model_properties_array) {
@@ -396,7 +405,7 @@ sub store_analysis_spreadsheet_POST {
 
     $self->store_data($c,
         $analysis_to_save_boolean,
-        $analysis_name, $analysis_description, $analysis_year, $analysis_breeding_program_id, $analysis_protocol, $analysis_dataset_id, $analysis_accession_names, $analysis_trait_names, $analysis_statistical_ontology_term, $analysis_precomputed_design_optional, $analysis_result_values, $analysis_result_values_type, $analysis_result_summary,
+        $analysis_name, $analysis_description, $analysis_year, $analysis_breeding_program_id, $analysis_protocol, $analysis_dataset_id, $analysis_accession_names, $analysis_trait_names, $analysis_statistical_ontology_term, $analysis_precomputed_design_optional, $analysis_result_values, $analysis_result_values_type, $analysis_result_summary, $analysis_result_trait_compose_info,
         $analysis_model_id, $analysis_model_name, $analysis_model_description, $analysis_model_is_public, $analysis_model_language, $analysis_model_type, $analysis_model_properties, $analysis_model_application_name, $analysis_model_application_version, $analysis_model_file, $analysis_model_file_type, $analysis_model_training_data_file, $analysis_model_training_data_file_type, $analysis_model_auxiliary_files,
         $user_id, $user_name, $user_role
     );
@@ -520,7 +529,7 @@ sub store_analysis_spreadsheet_POST {
 
 sub store_data {
     my $self = shift;
-    my ($c, $analysis_to_save_boolean, $analysis_name, $analysis_description, $analysis_year, $analysis_breeding_program_id, $analysis_protocol, $analysis_dataset_id, $analysis_accession_names, $analysis_trait_names, $analysis_statistical_ontology_term, $analysis_precomputed_design_optional, $analysis_result_values, $analysis_result_values_type, $analysis_result_summary, $analysis_model_id, $analysis_model_name, $analysis_model_description, $analysis_model_is_public, $analysis_model_language, $analysis_model_type, $analysis_model_properties, $analysis_model_application_name, $analysis_model_application_version, $analysis_model_file, $analysis_model_file_type, $analysis_model_training_data_file, $analysis_model_training_data_file_type, $analysis_model_auxiliary_files, $user_id, $user_name, $user_role) = @_;
+    my ($c, $analysis_to_save_boolean, $analysis_name, $analysis_description, $analysis_year, $analysis_breeding_program_id, $analysis_protocol, $analysis_dataset_id, $analysis_accession_names, $analysis_trait_names, $analysis_statistical_ontology_term, $analysis_precomputed_design_optional, $analysis_result_values, $analysis_result_values_type, $analysis_result_summary, $analysis_result_trait_compose_info, $analysis_model_id, $analysis_model_name, $analysis_model_description, $analysis_model_is_public, $analysis_model_language, $analysis_model_type, $analysis_model_properties, $analysis_model_application_name, $analysis_model_application_version, $analysis_model_file, $analysis_model_file_type, $analysis_model_training_data_file, $analysis_model_training_data_file_type, $analysis_model_auxiliary_files, $user_id, $user_name, $user_role) = @_;
     
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');;
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
@@ -560,6 +569,7 @@ sub store_data {
         analysis_result_values=>$analysis_result_values,
         analysis_result_values_type=>$analysis_result_values_type,
         analysis_result_summary=>$analysis_result_summary,
+        analysis_result_trait_compose_info_time=>$analysis_result_trait_compose_info,
         analysis_model_id=>$analysis_model_id,
         analysis_model_name=>$analysis_model_name,
         analysis_model_description=>$analysis_model_description,

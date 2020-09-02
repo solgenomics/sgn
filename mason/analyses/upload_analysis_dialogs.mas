@@ -92,6 +92,12 @@
                                         <input class="form-control" id="upload_new_analysis_result_summary_string" name="upload_new_analysis_result_summary_string" type="text" />
                                     </div>
                                 </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-3 control-label">Compose Trait Info With Time Term (optional) (key||||value comma separated. e.g. harvest info|CO_323:0000101||||day 10|TIME:0002020): </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="upload_new_analysis_result_trait_compose_info_string" name="upload_new_analysis_result_trait_compose_info_string" type="text" disabled/>
+                                    </div>
+                                </div>
 
                                 <br/><br/>
                                 <center>
