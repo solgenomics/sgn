@@ -392,7 +392,7 @@ $locations => undef
 % if ($info_section_id eq 'analysis_page_analysis_tools'){
                                 <& /breeders_toolbox/trial/correlation_workflow.mas, trial_id => $trial_id, is_analysis => 1 &>
 
-                                <& /breeders_toolbox/trial/time_series_accessions_workflow.mas, trial_id => $trial_id &>
+                                <& /breeders_toolbox/trial/time_series_accessions_workflow.mas, trial_id => $trial_id, data_level=>'analysis_instance' &>
 % }
 % if ($info_section_id eq 'model_details'){
                                 <& /analyses/model_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, analysis_metadata=>$analysis_metadata &>
