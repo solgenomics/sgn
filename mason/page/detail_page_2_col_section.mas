@@ -410,6 +410,11 @@ $locations => undef
 % if ($info_section_id eq 'model_analyses'){
                                 <& /analyses/model_detail_page_analyses_section.mas, model_id => $model_id &>
 % } #End model_analyses
+% if ($info_section_id eq 'model_deletion_section'){
+                                <&| /page/info_section.mas, title=>'Delete model', subtitle=>'<font color="red" role="">Deletion cannot be undone</font>', collapsed=>1, collapsible=>1 &>
+                                    <& /analyses/model_deletion.mas, model_id => $model_id  &>
+                                </&>
+% } #End model_deletion_section
 % if ($info_section_id eq 'manage_file_share_dump'){
                                 <& /breeders_toolbox/file_share/file_dump_share_files.mas &>
 % } #End manage_file_share_dump

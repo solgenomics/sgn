@@ -244,6 +244,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my ($stats_prep_factor_tempfile_fh, $stats_prep_factor_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_prep2_tempfile_fh, $stats_prep2_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($parameter_tempfile_fh, $parameter_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    $parameter_tempfile .= '.f90';
     my ($stats_out_tempfile_fh, $stats_out_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_param_tempfile_fh, $stats_out_param_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_tempfile_row_fh, $stats_out_tempfile_row) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
@@ -1352,7 +1353,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             close($Fp);
 
             my $parameter_tempfile_basename = basename($parameter_tempfile);
-            my $cmd = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_basename.' | blupf90 > '.$stats_out_tempfile;
+            my $cmd = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_basename.' | airemlf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd;
             my $status = system($cmd);
 
@@ -6960,7 +6961,7 @@ sub drone_imagery_remove_image_GET : Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $image_id = $c->req->param('image_id');
-    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+    my ($user_id, $user_name, $user_role) = _check_user_login($c, 'curator');
 
     my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
     my $resp = $image->delete(); #Sets to obsolete
@@ -7945,7 +7946,7 @@ sub drone_imagery_obsolete_image_change_GET : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $image_id = $c->req->param('image_id');
-    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+    my ($user_id, $user_name, $user_role) = _check_user_login($c, 'curator');
 
     my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
     $image->delete(); #makes obsolete
@@ -10224,7 +10225,7 @@ sub drone_imagery_delete_drone_run_GET : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $drone_run_project_id = $c->req->param('drone_run_project_id');
-    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+    my ($user_id, $user_name, $user_role) = _check_user_login($c, 'curator');
     print STDERR "DELETING DRONE RUN\n";
 
     my $images_search = CXGN::DroneImagery::ImagesSearch->new({
@@ -10706,6 +10707,7 @@ sub drone_imagery_predict_mask_rcnn_GET : Args(0) {
 
 sub _check_user_login {
     my $c = shift;
+    my $role_check = shift;
     my $user_id;
     my $user_name;
     my $user_role;
@@ -10730,6 +10732,10 @@ sub _check_user_login {
         $user_id = $c->user()->get_object()->get_sp_person_id();
         $user_name = $c->user()->get_object()->get_username();
         $user_role = $c->user->get_object->get_user_type();
+    }
+    if ($role_check && $user_role ne $role_check) {
+        $c->stash->{rest} = {error=>'You must have permission to do this! Please contact us!'};
+        $c->detach();
     }
     return ($user_id, $user_name, $user_role);
 }

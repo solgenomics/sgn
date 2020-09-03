@@ -304,21 +304,32 @@ The trait names will be post-composed with the analysis_statistical_ontology_ter
 
                             <p>This step may be pre-populated if you are using a model that is already saved in the database. If there is no input enabled, move to the next step.</p>
 
+                            <div class="form-horizontal" id="generic_save_analysis_model_select_form">
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-3 control-label">Select a Model (If Not A New Model): </label>
+                                    <div class="col-sm-9">
+                                        <div id="save_new_analysis_model_select_div"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr>
+
                             <form class="form-horizontal" id="generic_save_analysis_model_form">
                                 <div class="form-group form-group-sm" id="generic_save_analysis_model_name_div">
-                                    <label class="col-sm-3 control-label">Model Name (must be unique): </label>
+                                    <label class="col-sm-3 control-label">New Model Name (must be unique): </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_model_name" name="generic_save_analysis_model_name" type="text" />
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm" id="generic_save_analysis_model_description_div">
-                                    <label class="col-sm-3 control-label">Model Description: </label>
+                                    <label class="col-sm-3 control-label">New Model Description: </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_model_description" name="generic_save_analysis_model_description" type="text" />
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm" id="generic_save_analysis_model_is_public_div">
-                                    <label class="col-sm-3 control-label">Model Is Public: </label>
+                                    <label class="col-sm-3 control-label">New Model Is Public: </label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="generic_save_analysis_model_is_public" name="generic_save_analysis_model_is_public" >
                                             <option value="yes">Yes</option>
@@ -423,6 +434,7 @@ jQuery(document).ready(function() {
 
     get_select_box('years', 'generic_save_analysis_analysis_year_div', {'auto_generate': 1, 'id':'generic_save_analysis_analysis_year', 'name':'generic_save_analysis_analysis_year'});
     get_select_box('breeding_programs', 'generic_save_analysis_breeding_program_div', { 'name' : 'generic_save_analysis_breeding_program_id', 'id' : 'generic_save_analysis_breeding_program_id' });
+    get_select_box('models', 'save_new_analysis_model_select_div', { 'id':'save_new_analysis_model_id', 'name':'save_new_analysis_model_id', 'empty':1 });
 
     jQuery('#generic_save_analysis_next').click(function(){
         Workflow.complete("#generic_save_analysis_next");
@@ -458,6 +470,7 @@ jQuery(document).ready(function() {
         var generic_save_analysis_result_summary_values = jQuery('#generic_save_analysis_result_summary_values').val();
         var generic_save_analysis_result_compose_trait_info = jQuery('#generic_save_analysis_result_compose_trait_info').val();
 
+        var generic_save_analysis_select_model_id = jQuery('#save_new_analysis_model_id').val();
         var generic_save_analysis_model_id = jQuery('#generic_save_analysis_model_id').val();
         var generic_save_analysis_model_name = jQuery('#generic_save_analysis_model_name').val();
         var generic_save_analysis_model_description = jQuery('#generic_save_analysis_model_description').val();
@@ -519,54 +532,51 @@ jQuery(document).ready(function() {
                 return false;
             }
         }
-        if (generic_save_analysis_model_id != '' && generic_save_analysis_model_name != '') {
-            alert('If Model ID is populated, then you should not be able to give a model name!');
+        if ( (generic_save_analysis_model_id != '' || generic_save_analysis_select_model_id != '') && generic_save_analysis_model_name != '') {
+            alert('If Model ID is given, then you should not give a new model name!');
             return false;
         }
-        if (generic_save_analysis_model_id != '' && generic_save_analysis_model_description != '') {
-            alert('If Model ID is populated, then you should not be able to give a model description!');
+        if ( (generic_save_analysis_model_id != '' || generic_save_analysis_select_model_id != '') && generic_save_analysis_model_description != '') {
+            alert('If Model ID is given, then you should not give a new model description!');
             return false;
         }
-        if (generic_save_analysis_model_id == '' && generic_save_analysis_model_name == '') {
+        if ( (generic_save_analysis_model_id == '' && generic_save_analysis_select_model_id == '') && generic_save_analysis_model_name == '') {
             alert('Please give a model name');
             return false;
         }
-        if (generic_save_analysis_model_id == '' && generic_save_analysis_model_description == '') {
+        if ( (generic_save_analysis_model_id == '' && generic_save_analysis_select_model_id == '') && generic_save_analysis_model_description == '') {
             alert('Please give a model description');
             return false;
         }
-        if (generic_save_analysis_model_id == '' && generic_save_analysis_model_is_public == '') {
+        if ( (generic_save_analysis_model_id == '' && generic_save_analysis_select_model_id == '') && generic_save_analysis_model_is_public == '') {
             alert('Please tell if a model is public');
             return false;
         }
-        if (generic_save_analysis_model_id == '' && generic_save_analysis_model_language == '') {
+        if ( (generic_save_analysis_model_id == '' && generic_save_analysis_select_model_id == '') && generic_save_analysis_model_language == '') {
             alert('Please give a model language');
             return false;
         }
-        if (generic_save_analysis_model_id == '' && generic_save_analysis_model_type == '') {
+        if ( (generic_save_analysis_model_id == '' && generic_save_analysis_select_model_id == '') && generic_save_analysis_model_type == '') {
             alert('Please give a model type');
             return false;
         }
-        if (generic_save_analysis_model_id == '' && generic_save_analysis_model_properties == '') {
+        if ( (generic_save_analysis_model_id == '' && generic_save_analysis_select_model_id == '') && generic_save_analysis_model_properties == '') {
             alert('Please give a model properties JSON object');
             return false;
         }
-        if (generic_save_analysis_model_id == '' && generic_save_analysis_model_application_name == '') {
+        if ( (generic_save_analysis_model_id == '' && generic_save_analysis_select_model_id == '') && generic_save_analysis_model_application_name == '') {
             alert('Please give a model application name');
             return false;
         }
-        if (generic_save_analysis_model_id == '' && generic_save_analysis_model_application_version == '') {
+        if ( (generic_save_analysis_model_id == '' && generic_save_analysis_select_model_id == '') && generic_save_analysis_model_application_version == '') {
             alert('Please give a model application version');
             return false;
         }
-        //if (generic_save_analysis_model_file == '') {
-        //    alert('Please give a model file');
-        //    return false;
-        //}
-        //if (generic_save_analysis_model_archived_model_file_type == '') {
-        //    alert('Please give a model file type');
-        //    return false;
-        //}
+
+        var analysis_model_id = generic_save_analysis_model_id;
+        if (analysis_model_id == '') {
+            analysis_model_id = generic_save_analysis_select_model_id;
+        }
 
         jQuery.ajax({
             type: 'POST',
@@ -587,7 +597,7 @@ jQuery(document).ready(function() {
                 'analysis_result_values_type':generic_save_analysis_result_values_type,
                 'analysis_result_summary':generic_save_analysis_result_summary_values,
                 'analysis_result_trait_compose_info':generic_save_analysis_result_compose_trait_info,
-                'analysis_model_id':generic_save_analysis_model_id,
+                'analysis_model_id':analysis_model_id,
                 'analysis_model_name':generic_save_analysis_model_name,
                 'analysis_model_description':generic_save_analysis_model_description,
                 'analysis_model_is_public':generic_save_analysis_model_is_public,

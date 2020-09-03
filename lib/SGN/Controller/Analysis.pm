@@ -79,7 +79,7 @@ sub analysis_model_detail :Path('/analyses_model') Args(1) {
     my $saved_model_object = $m->get_model();
     #print STDERR Dumper $saved_model_object;
 
-    if (!$saved_model_object) {
+    if (!$saved_model_object->{model_id}) {
         $c->stash->{template} = '/generic_message.mas';
         $c->stash->{message} = 'The requested model ID does not exist in the database.';
         return;
