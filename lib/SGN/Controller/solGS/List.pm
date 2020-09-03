@@ -627,13 +627,13 @@ sub genotypes_list_genotype_query_job {
 
     my $list_id = $c->stash->{list_id};
     my $dataset_id = $c->stash->{dataset_id};
-    my $selection_pop_id = $c->stash->{selection_pop_id};
+   # my $selection_pop_id = $c->stash->{selection_pop_id};
     my $protocol_id = $c->stash->{genotyping_protocol_id};
    
-    my $pop_id = $c->stash->{pop_id} || $c->stash->{model_id} || $c->stash->{training_pop_id};
+    my $pop_id;## = $c->stash->{pop_id} || $c->stash->{model_id} || $c->stash->{training_pop_id};
     my $data_dir;
     my $pop_type;
-    
+  
     if ($list_id)
     {       
 	$self->get_genotypes_list_details($c);
@@ -648,12 +648,11 @@ sub genotypes_list_genotype_query_job {
 	$pop_type = 'dataset';
     }
       
-    my $genotypes_list = $c->stash->{genotypes_list};
     my $genotypes_ids = $c->stash->{genotypes_ids};
-   
-    my $files = $self->create_list_pop_data_files($c, $data_dir, $pop_id);
-    my $geno_file = $files->{geno_file};
     
+    $c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
+    my $geno_file = $c->stash->{genotype_file_name};
+ 
     my $args = {	 
 	'genotypes_ids'  => $genotypes_ids,
 	'data_dir'  => $data_dir,
@@ -670,7 +669,7 @@ sub genotypes_list_genotype_query_job {
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $background_job = $c->stash->{background_job};
 
-    my $report_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, 'geno-data-query-report-args');
+    my $report_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, "geno-data-query-report-args-${pop_id}");
     $c->stash->{report_file} = $report_file;
 
      my $config_args = {
@@ -682,11 +681,10 @@ sub genotypes_list_genotype_query_job {
     
     my $config = $c->controller('solGS::solGS')->create_cluster_config($c, $config_args);
     
-    my $args_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, 'geno-data-query-report-args');
-    $c->stash->{report_file} = $args_file;
+    my $args_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, "geno-data-query-job-args-file-${pop_id}");
 
     nstore $args, $args_file 
-		or croak "data query script: $! serializing model details to $args_file ";
+		or croak "data query script: $! serializing genotype lists genotype query details to $args_file ";
 	
     my $cmd = 'mx-run solGS::queryJobs ' 
     	. ' --data_type genotype '
@@ -701,7 +699,7 @@ sub genotypes_list_genotype_query_job {
     };
     
     $c->stash->{genotypes_list_genotype_query_job} = $job_args;
-    $c->stash->{genotype_file_name} = $geno_file;
+  
 }
 
 
