@@ -63,8 +63,8 @@ sub patch {
     my $terms = {
 	    'stock_relationship' => [
             'cross_member_of',
-            'family_female_of',
-            'family_male_of'],
+            'family_female_parent_of',
+            'family_male_parent_of'],
 	  };
 
 	foreach my $t (keys %$terms){

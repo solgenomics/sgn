@@ -61,12 +61,15 @@ sub add_family_name {
     my $owner_sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $owner_name); #add person id as an option.
 
 
-    #add all family names in a single transaction
+    #add crosses as family members in a single transaction
     my $coderef = sub {
 
         my $family_name_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'family_name', 'stock_type')->cvterm_id();
-
         my $cross_member_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross_member_of', 'stock_relationship')->cvterm_id();
+		my $female_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'female_parent', 'stock_relationship');
+        my $male_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema,  'male_parent', 'stock_relationship');
+		my $family_female_parent_of_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema,  'family_female_parent_of', 'stock_relationship');
+		my $family_male_parent_of_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema,  'family_male_parent_of', 'stock_relationship');
 
        #Get stock of type cross matching cross name
         $cross_stock = $self->_get_cross($self->get_cross_name());
@@ -74,6 +77,19 @@ sub add_family_name {
             print STDERR "Cross could not be found\n";
             return;
         }
+
+		$cross_female_parent = $chado_schema->resultset("Stock::StockRelationship")
+            ->find ({
+                object_id => $cross_stock->stock_id(),
+                type_id => $female_parent_cvterm->cvterm_id(),
+            });
+
+        $cross_male_parent = $chado_schema->resultset("Stock::StockRelationship")
+            ->find ({
+                object_id => $cross_stock->stock_id(),
+                type_id => $male_parent_cvterm->cvterm_id(),
+            });
+
 
         #Get organism id from cross
         $organism_id = $cross_stock->organism_id();
@@ -105,6 +121,20 @@ sub add_family_name {
                 type_id => $cross_member_of_cvterm_id,
                 object_id => $new_family_name_rs->stock_id(),
                 subject_id => $cross_stock->stock_id(),
+            });
+
+			#create relationship between new family_name and female parent name
+            $new_family_name_rs->find_or_create_related('stock_relationship_objects', {
+                type_id => $family_female_parent_of_cvterm_id,
+                object_id => $new_family_name_rs->stock_id(),
+                subject_id => $cross_female_parent->stock_id(),
+            });
+
+			#create relationship between new family_name and male parent name
+            $new_family_name_rs->find_or_create_related('stock_relationship_objects', {
+                type_id => $family_male_parent_of_cvterm_id,
+                object_id => $new_family_name_rs->stock_id(),
+                subject_id => $cross_male_parent->stock_id(),
             });
 
             #add new stock_id to an array for phenome schema
