@@ -165,6 +165,20 @@ else {
 	}
 	Catalyst::ScriptRunner->run('SGN', 'Server');
 
+	if (!$nocleanup) {
+	    print STDERR "# Removing test database ($dbname)... ";
+	    
+	    if ($noserver) {
+		print STDERR "# [ --noserver option: No logfile to remove]\n";
+	    }
+	    else {
+		print STDERR "# Delete server logfile... ";
+		close($logfile);
+		unlink $logfile;
+		print STDERR "Done.\n";
+
+	    }
+	}
 	exit;
     }
     print STDERR  "# Starting web server (PID=$server_pid)... ";
@@ -203,8 +217,11 @@ unless( $prove_pid ) {
     # now run the tests against it
     #
     my $app = App::Prove->new;
+
+    my $v = $verbose ? 'v' : '';
+    
     $app->process_args(
-        '-lr',
+        '-lr'.$v,
         ( map { -I => $_ } @INC ),
         @prove_args
         );
@@ -233,10 +250,10 @@ if (!$nocleanup) {
 	print STDERR "# [ --noserver option: No logfile to remove]\n";
     }
     else {
-	print STDERR "# Delete server logfile... ";
-	close($logfile);
-	unlink $logfile;
-	print STDERR "Done.\n";
+	# print STDERR "# Delete server logfile... ";
+	# close($logfile);
+	# unlink $logfile;
+	# print STDERR "Done.\n";
 
 	print STDERR "# Delete fixture conf file... ";
 	unlink "sgn_fixture.conf";

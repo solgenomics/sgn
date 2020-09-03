@@ -356,6 +356,7 @@ sub next_genotype {
             my @fvalues = split /:/, $scores[$i-1];
             my %value;
             @value{@format} = @fvalues;
+            my $gt_dosage_val = 'NA';
             my $gt_dosage = 0;
             if (exists($value{'GT'})) {
                 my $gt = $value{'GT'};
@@ -373,7 +374,9 @@ sub next_genotype {
                 my @alt_calls;
                 foreach (@alleles) {
                     if (looks_like_number($_)) {
-                        $gt_dosage = $gt_dosage + $_;
+                        if ($_ eq '0' || $_ == 0) {
+                            $gt_dosage++;
+                        }
                         my $index = $_ + 0;
                         if ($index == 0) {
                             push @nucleotide_genotype, $self->refs()->[$i]; #Using Reference Allele
@@ -382,6 +385,7 @@ sub next_genotype {
                             push @nucleotide_genotype, $separated_alts[$index-1]; #Using Alternate Allele
                             push @alt_calls, $separated_alts[$index-1];
                         }
+                        $gt_dosage_val = $gt_dosage;
                     } else {
                         push @nucleotide_genotype, $_;
                     }
@@ -393,7 +397,7 @@ sub next_genotype {
                 $value{'NT'} = join $separator, @nucleotide_genotype;
             }
             if (exists($value{'GT'}) && !looks_like_number($value{'DS'})) {
-                $value{'DS'} = $gt_dosage;
+                $value{'DS'} = $gt_dosage_val;
             }
             if (looks_like_number($value{'DS'})) {
                 my $rounded_ds = round($value{'DS'});

@@ -61,7 +61,7 @@ jQuery(document).ready(function ($) {
             alert("Please give a description");
         }
         else if (trial_stock_type === '') {
-            alert("Please select stock type used in trial");
+            alert("Please select stock type being evaluated in trial");
         }
         else if (design_type === '') {
             alert("Please give a design type");

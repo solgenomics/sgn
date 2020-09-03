@@ -55,6 +55,7 @@ sub search : Path('/ajax/search/traits') Args(0) {
 
     my $trait_search = CXGN::Trait::Search->new({
         bcs_schema=>$schema,
+	is_variable=>1,
         ontology_db_id_list => $ontology_db_ids,
         limit => $limit,
         offset => $offset,
@@ -74,6 +75,8 @@ sub search : Path('/ajax/search/traits') Args(0) {
                 "<a href=\"/cvterm/$_->{trait_id}/view\">$trait_accession</a>",
                 "<a href=\"/cvterm/$_->{trait_id}/view\">$_->{trait_name}</a>",
                 $_->{trait_definition},
+	        $_->{trait_name},
+                $trait_accession
             ];
     }
     #print STDERR Dumper \@result;

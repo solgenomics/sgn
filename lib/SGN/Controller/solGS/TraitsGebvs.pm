@@ -94,7 +94,7 @@ sub get_gebv_files_of_traits {
 	$valid_gebv_files = join("\t", @{$c->stash->{analyzed_valid_traits_files}}); 
     }
  
-    my $pred_file_suffix =  $selection_pop_id ? '_' . $selection_pop_id : 0;    
+    my $pred_file_suffix =   '_' . $selection_pop_id if $selection_pop_id;    
     my $name = "gebv_files_of_traits_${training_pop_id}${pred_file_suffix}";
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $file = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);
@@ -211,10 +211,12 @@ sub get_traits_selection_id :Path('/solgs/get/traits/selection/id') Args(0) {
 
 sub create_traits_selection_id {
     my ($self, $traits_ids) = @_;
+
+   
     
     if ($traits_ids)
     {
-	return  crc(join('', @$traits_ids));
+	return  crc(join('', sort(uniq(@$traits_ids))));
     }
     else
     {

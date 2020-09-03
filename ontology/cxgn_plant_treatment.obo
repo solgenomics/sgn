@@ -1,0 +1,68 @@
+format-version: 1.2
+default-namespace: cxgn_plant_treatment
+ontology: plant_treatment
+
+[Term]
+id: TREAT:0000001
+name: Plant treatment
+
+[Term]
+id: TREAT:0000003
+name: raw
+is_a: TREAT:0000001 ! Plant treatment
+
+[Term]
+id: TREAT:0000004
+name: boiled
+is_a: TREAT:0000001 ! Plant treatment
+
+[Term]
+id: TREAT:0000005
+name: fried
+is_a: TREAT:0000001 ! Plant treatment
+
+[Term]
+id: TREAT:0000006
+name: dried
+is_a: TREAT:0000001 ! Plant treatment
+
+[Term]
+id: TREAT:0000009
+name: grated boiled
+is_a: TREAT:0000001 ! Plant treatment
+
+[Term]
+id: TREAT:0000010
+name: grated dried
+is_a: TREAT:0000001 ! Plant treatment
+
+[Term]
+id: TREAT:0000011
+name: grated fried
+is_a: TREAT:0000001 ! Plant treatment
+
+[Term]
+id: TREAT:0000012
+name: mashed boiled
+is_a: TREAT:0000001 ! Plant treatment
+
+[Term]
+id: TREAT:0000013
+name: mashed dried
+is_a: TREAT:0000001 ! Plant treatment
+
+[Term]
+id: TREAT:0000014
+name: mashed fried
+is_a: TREAT:0000001 ! Plant treatment
+
+[Term]
+id: TREAT:0000015
+name: mashed raw
+is_a: TREAT:0000001 ! Plant treatment
+
+[Term]
+id: TREAT:0000016
+name: grated raw
+is_a: TREAT:0000001 ! Plant treatment
+

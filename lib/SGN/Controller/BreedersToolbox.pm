@@ -86,7 +86,14 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
     }
 
     #print STDERR "Breeding programs are ".Dumper(@breeding_programs);
+    my $field_management_factors = $c->config->{management_factor_types};
+    my @management_factor_types = split ',',$field_management_factors;
 
+    my $design_type_string = $c->config->{design_types};
+    my @design_types = split ',',$design_type_string;
+
+    $c->stash->{design_types} = \@design_types;
+    $c->stash->{management_factor_types} = \@management_factor_types;
     $c->stash->{editable_stock_props} = \%editable_stock_props;
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{timestamp} = localtime;
@@ -159,7 +166,10 @@ sub manage_tissue_samples : Path("/breeders/samples") Args(0) {
         $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         return;
     }
+    my $genotyping_facilities = $c->config->{genotyping_facilities};
+    my @facilities = split ',',$genotyping_facilities;
 
+    $c->stash->{facilities} = \@facilities;
     $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
     $c->stash->{template} = '/breeders_toolbox/manage_samples.mas';
 }
@@ -319,12 +329,38 @@ sub manage_upload :Path("/breeders/upload") Args(0) {
 
     my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
     my $breeding_programs = $projects->get_breeding_programs();
+
+    my $genotyping_facilities = $c->config->{genotyping_facilities};
+    my @facilities = split ',',$genotyping_facilities;
+
+    my $field_management_factors = $c->config->{management_factor_types};
+    my @management_factor_types = split ',',$field_management_factors;
+
+    my $design_type_string = $c->config->{design_types};
+    my @design_types = split ',',$design_type_string;
+
+    $c->stash->{design_types} = \@design_types;
+    $c->stash->{management_factor_types} = \@management_factor_types;
+    $c->stash->{facilities} = \@facilities;
     $c->stash->{geojson_locations} = decode_json($projects->get_all_locations_by_breeding_program());
     $c->stash->{locations} = $projects->get_all_locations();
     $c->stash->{breeding_programs} = $breeding_programs;
     $c->stash->{timestamp} = localtime;
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{template} = '/breeders_toolbox/manage_upload.mas';
+}
+
+sub manage_file_share_dump :Path("/breeders/file_share_dump") Args(0) {
+    my $self =shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
+    $c->stash->{template} = '/breeders_toolbox/file_share/manage_file_share_dump.mas';
 }
 
 sub manage_plot_phenotyping :Path("/breeders/plot_phenotyping") Args(0) {
@@ -739,11 +775,16 @@ sub manage_genotyping : Path("/breeders/genotyping") Args(0) {
 
     $genotyping_trials_by_breeding_project{'Other'} = $projects->get_genotyping_trials_by_breeding_program();
 
+    my $genotyping_facilities = $c->config->{genotyping_facilities};
+    my @facilities = split ',',$genotyping_facilities;
+
     $c->stash->{locations} = $projects->get_all_locations($c);
 
     $c->stash->{genotyping_trials_by_breeding_project} = \%genotyping_trials_by_breeding_project;
 
     $c->stash->{breeding_programs} = $breeding_programs;
+
+    $c->stash->{facilities} = \@facilities;
 
     $c->stash->{template} = '/breeders_toolbox/manage_genotyping.mas';
 }
@@ -760,20 +801,6 @@ sub manage_genotype_qc : Path("/breeders/genotype_qc") :Args(0) {
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
-    my $genotypes_search = CXGN::Genotype::Search->new({
-        bcs_schema=>$schema,
-        accession_list=>[45642, 45636],
-        # tissue_sample_list=>$tissue_sample_list,
-        # trial_list=>$trial_list,
-        # protocol_id_list=>$protocol_id_list,
-        # marker_name_list=>['S80_265728', 'S80_265723']
-        # marker_search_hash_list=>[{'S80_265728' => {'pos' => '265728', 'chrom' => '1'}}],
-        # marker_score_search_hash_list=>[{'S80_265728' => {'GT' => '0/0', 'GQ' => '99'}}],
-    });
-    my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
-    #print STDERR Dumper $genotypes;
-
-    $c->stash->{data} = 'my data';
     $c->stash->{template} = '/breeders_toolbox/manage_genotype_qc.mas';
 }
 

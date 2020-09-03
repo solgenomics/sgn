@@ -134,14 +134,14 @@ sub store_composed_term {
 
     #print STDERR "New term cvterm_id = " . $new_term->cvterm_id();
 
-        my $variable_rel = $schema->resultset('Cv::CvtermRelationship')->create({
+        my $variable_rel = $schema->resultset('Cv::CvtermRelationship')->find_or_create({
             subject_id => $new_term->cvterm_id(),
             object_id  => $parent_term->cvterm_id(),
             type_id    => $variable_relationship->cvterm_id()
         });
 
         foreach my $component_id (@component_ids) {
-            my $contains_rel = $schema->resultset('Cv::CvtermRelationship')->create({
+            my $contains_rel = $schema->resultset('Cv::CvtermRelationship')->find_or_create({
                 subject_id => $component_id,
                 object_id  => $new_term->cvterm_id(),
                 type_id    => $contains_relationship->cvterm_id()
@@ -223,7 +223,7 @@ sub store_ontology_identifier {
             new_term => [$cvterm_rs->cvterm_id(), $cvterm_rs->name()]
         };
     };
-    
+
     try {
         $schema->txn_do($coderef);
     } catch {
@@ -258,7 +258,7 @@ sub store_observation_variable_trait_method_scale {
 
     my $schema = $self->schema();
     my $dbh = $schema->storage->dbh;
-    my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
+    my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
 
     my $new_observation_variable_cvterm_check = $schema->resultset("Cv::Cvterm")->search({
         name => $new_observation_variable_name,
@@ -391,7 +391,7 @@ sub store_observation_variable_trait_method_scale {
                 dbxref_id => $new_term_method_dbxref->dbxref_id()
             });
             $selected_method_cvterm_id = $new_method_cvterm->cvterm_id();
-            
+
             my $method_rel = $schema->resultset('Cv::CvtermRelationship')->create({
                 subject_id => $new_method_cvterm->cvterm_id(),
                 object_id  => $parent_method_cvterm_id,
@@ -472,7 +472,7 @@ sub store_observation_variable_trait_method_scale {
             new_term => [$new_observation_variable_cvterm->cvterm_id(), $new_observation_variable_cvterm->name()]
         };
     };
-    
+
     try {
         $schema->txn_do($coderef);
     } catch {

@@ -248,41 +248,38 @@ $locations
                                         <div id="paternal_accession_list"></div>
                                     </div><br/><br/>
                                 </div>
-                                <br>
-                                <center>
-                                    <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
-                                </center>
-                            </&>
-                            <&| /util/workflow.mas:step, title=> "Track exact cross parents" &>
-                                <& /page/page_title.mas, title=>"Optional: If you choose to record exact cross parents, you can do so." &>
+                                <div class="form-group" id="exact_parents" style="display: none">
+                                    <& /page/page_title.mas, title=>"Optional: If you choose to record exact cross parents, you can do so." &>
 
-                                <div class="form-group">
-                                    <label class="col-sm-2 control-label">Field Trial: </label>
-                                    <div class="col-sm-10">
-                                        <div class="input-group">
-                                            <input type ="text" class ="form-control" id ="field_trial" placeholder="Enter trial name">
-                                            <div class ="input-group-btn">
-                                                <button class = "btn btn-info" id ="search_plots"></i>Search Plots</button>
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Field Trial: </label>
+                                        <div class="col-sm-10">
+                                            <div class="input-group">
+                                                <input type ="text" class ="form-control" id ="field_trial" placeholder="Enter trial name">
+                                                <div class ="input-group-btn">
+                                                    <button class = "btn btn-info" id ="search_plots"></i>Search Plots</button>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </div><br/><br/>
-                                <div class="form-group">
-                                    <label class="col-sm-2 control-label">Female Plot: </label>
-                                    <div class="col-sm-10">
-                                        <select class="form-control" id="female_plot" name="female_plot">
-                                            <option value="">Enter trial name first</option>
-                                        </select>
-                                    </div>
-                                </div><br/><br/>
-                                <div class="form-group">
-                                    <label class="col-sm-2 control-label">Male Plot: </label>
-                                    <div class="col-sm-10">
-                                        <select class="form-control" id="male_plot" name="male_plot">
-                                            <option value="">Enter trial name first</option>
-                                        </select>
-                                    </div>
-                                </div><br/><br/>
+                                    </div><br/><br/>
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Female Plot: </label>
+                                        <div class="col-sm-10">
+                                            <select class="form-control" id="female_plot" name="female_plot">
+                                                <option value="">Enter trial name first</option>
+                                            </select>
+                                        </div>
+                                    </div><br/><br/>
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Male Plot: </label>
+                                        <div class="col-sm-10">
+                                            <select class="form-control" id="male_plot" name="male_plot">
+                                                <option value="">Enter trial name first</option>
+                                            </select>
+                                        </div>
+                                    </div><br/><br/>
+                                </div>
+                                <br>
                                 <center>
                                     <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
                                 </center>

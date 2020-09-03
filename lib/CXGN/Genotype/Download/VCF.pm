@@ -12,6 +12,7 @@ PLEASE BE AWARE THAT THE DEFAULT OPTIONS FOR genotypeprop_hash_select, protocolp
 
 my $genotypes_search = CXGN::Genotype::Download::VCF->new({
     bcs_schema=>$schema,
+    people_schema=>$people_schema,
     accession_list=>$accession_list,
     tissue_sample_list=>$tissue_sample_list,
     trial_list=>$trial_list,
@@ -24,7 +25,9 @@ my $genotypes_search = CXGN::Genotype::Download::VCF->new({
     marker_name_list=>['S80_265728', 'S80_265723'],
     genotypeprop_hash_select=>['DS', 'GT', 'DP'], #THESE ARE THE KEYS IN THE GENOTYPEPROP OBJECT
     limit=>$limit,
-    offset=>$offset
+    offset=>$offset,
+    compute_from_parents=>0, #Whether to look at the pedigree to see if parents are genotyped and to calculate genotype from parents
+    forbid_cache=>0 #If you want to get a guaranteed fresh result not from the file cache
 });
 my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
 
@@ -50,6 +53,12 @@ use DateTime;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
+    is => 'rw',
+    required => 1,
+);
+
+has 'people_schema' => (
+    isa => 'CXGN::People::Schema',
     is => 'rw',
     required => 1,
 );
@@ -134,6 +143,18 @@ has 'return_only_first_genotypeprop_for_stock' => (
     default => 1
 );
 
+has 'compute_from_parents' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 0
+);
+
+has 'forbid_cache' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 0
+);
+
 has 'limit' => (
     isa => 'Int|Undef',
     is => 'rw',
@@ -146,8 +167,13 @@ has 'offset' => (
 
 sub download {
     my $self = shift;
-    my $c = shift;
+    my $cluster_shared_tempdir_config = shift;
+    my $backend_config = shift;
+    my $cluster_host_config = shift;
+    my $web_cluster_queue_config = shift;
+    my $basepath_config = shift;
     my $schema = $self->bcs_schema;
+    my $people_schema = $self->people_schema;
     my $cache_root_dir = $self->cache_root_dir,
     my $trial_list = $self->trial_list;
     my $genotype_data_project_list = $self->genotype_data_project_list;
@@ -165,9 +191,12 @@ sub download {
     my $chromosome_list = $self->chromosome_list;
     my $start_position = $self->start_position;
     my $end_position = $self->end_position;
+    my $forbid_cache = $self->forbid_cache;
+    my $compute_from_parents = $self->compute_from_parents;
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$schema,
+        people_schema=>$people_schema,
         cache_root=>$cache_root_dir,
         accession_list=>$accession_list,
         tissue_sample_list=>$tissue_sample_list,
@@ -184,15 +213,23 @@ sub download {
         start_position=>$start_position,
         end_position=>$end_position,
         limit=>$limit,
-        offset=>$offset
+        offset=>$offset,
+        forbid_cache=>$forbid_cache
     });
-    return $genotypes_search->get_cached_file_VCF(
-        $c->config->{cluster_shared_tempdir},
-        $c->config->{backend},
-        $c->config->{cluster_host},
-        $c->config->{'web_cluster_queue'},
-        $c->config->{basepath}
+    my @required_config = (
+        $cluster_shared_tempdir_config,
+        $backend_config,
+        $cluster_host_config,
+        $web_cluster_queue_config,
+        $basepath_config
     );
+    if ($compute_from_parents) {
+        print STDERR Dumper "Computing genotype dosages VCF From Parents......";
+        return $genotypes_search->get_cached_file_VCF_compute_from_parents(@required_config);
+    }
+    else {
+        return $genotypes_search->get_cached_file_VCF(@required_config);
+    }
 }
 
 1;

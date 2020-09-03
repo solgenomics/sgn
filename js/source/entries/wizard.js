@@ -139,7 +139,7 @@ export function WizardSetup(main_id){
     
     var load_lists = ()=>(new Promise((resolve,reject)=>{
       var private_lists = list.availableLists(initialtypes);
-      var public_lists = list.availableLists(initialtypes);
+      var public_lists = list.publicLists(initialtypes);
       if(public_lists.error) public_lists = [];
       if(private_lists.error) private_lists = [];
       resolve(private_lists.concat(public_lists))
@@ -172,7 +172,10 @@ export function WizardSetup(main_id){
     
     var down = new WizardDownloads(d3.select(main_id).select(".wizard-downloads").node(),wiz);
     var dat = new WizardDatasets(d3.select(main_id).select(".wizard-datasets").node(),wiz);
-    
+
+    var lo = new CXGN.List();
+    jQuery('#wizard-download-genotypes-marker-set-list-id').html(lo.listSelect('wizard-download-genotypes-marker-set-list-id', ['markers'], 'Select a marker set', 'refresh', undefined));
+
     return {
       wizard:wiz,
       reload_lists: load_lists

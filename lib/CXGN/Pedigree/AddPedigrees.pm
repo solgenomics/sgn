@@ -74,17 +74,6 @@ sub add_pedigrees {
         my $female_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'female_parent', 'stock_relationship');
         my $male_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'male_parent', 'stock_relationship');
 
-      ####These are probably not necessary:
-      #######################
-      #my $progeny_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'offspring_of', 'stock_relationship');
-
-      # get cvterm for cross_relationship
-      #my $cross_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'cross_relationship', 'stock_relationship');
-
-      # get cvterm for cross_type
-      #my $cross_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'cross_type', 'nd_experiment_property');
-      ##########################
-
         my ($accessions_hash_ref, $accessions_and_populations_hash_ref) = $self->_get_available_stocks();
         my %accessions_hash = %{$accessions_hash_ref};
         my %accessions_and_populations_hash = %{$accessions_and_populations_hash_ref};
@@ -92,7 +81,6 @@ sub add_pedigrees {
         foreach my $pedigree (@pedigrees) {
 
             #print STDERR Dumper($pedigree);
-            my $cross_stock;
             my $organism_id;
             my $female_parent_name;
             my $male_parent_name;
@@ -113,9 +101,7 @@ sub add_pedigrees {
                 $male_parent = $accessions_and_populations_hash{$male_parent_name};
             }
 
-            my $cross_name = $pedigree->get_name();
-
-            print STDERR "Creating pedigree $cross_type, $cross_name\n";
+            print STDERR "Creating pedigree $cross_type\n";
 
             my $progeny_accession = $accessions_hash{$pedigree->get_name()};
 
@@ -178,8 +164,8 @@ sub add_pedigrees {
     };
 
     if ($transaction_error) {
-        $return{error} = "Transaction error creating a cross: $transaction_error";
-        print STDERR "Transaction error creating a cross: $transaction_error\n";
+        $return{error} = "Transaction error creating pedigrees: $transaction_error";
+        print STDERR "Transaction error creating pedigrees: $transaction_error\n";
         return \%return;
     }
 

@@ -42,6 +42,7 @@ use CXGN::Pedigree::AddPopulations;
 use CXGN::Pedigree::ParseUpload;
 use CXGN::Trial::Folder;
 use CXGN::Trial::TrialLayout;
+use CXGN::Stock::StockLookup;
 use Carp;
 use File::Path qw(make_path);
 use File::Spec::Functions qw / catfile catdir/;
@@ -51,6 +52,7 @@ use Tie::UrlEncoder; our(%urlencode);
 use LWP::UserAgent;
 use HTML::Entities;
 use URI::Encode qw(uri_encode uri_decode);
+use Sort::Key::Natural qw(natsort);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -239,17 +241,17 @@ sub upload_cross_file_POST : Args(0) {
         }
     }
 
-    while (my $info_type = shift (@properties)){
-        if ($parsed_data->{$info_type}) {
-            print STDERR "Handling info type $info_type\n";
-            my %info_hash = %{$parsed_data->{$info_type}};
-            foreach my $cross_name_key (keys %info_hash) {
-                my $value = $info_hash{$cross_name_key};
-                my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name_key, key => $info_type, value => $value, } );
-                $cross_add_info->add_info();
-            }
-        }
-    }
+#    while (my $info_type = shift (@properties)){
+#        if ($parsed_data->{$info_type}) {
+#            print STDERR "Handling info type $info_type\n";
+#            my %info_hash = %{$parsed_data->{$info_type}};
+#            foreach my $cross_name_key (keys %info_hash) {
+#                my $value = $info_hash{$cross_name_key};
+#                my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name_key, key => $info_type, value => $value, } );
+#                $cross_add_info->add_info();
+#            }
+#        }
+#    }
 
     $c->stash->{rest} = {success => "1",};
 }
@@ -286,14 +288,14 @@ sub add_cross_POST :Args(0) {
         print STDERR "Handling a polycross\n";
         my @maternal_parents = split (',', $c->req->param('maternal_parents'));
         print STDERR "Maternal parents array:" . @maternal_parents . "\n Maternal parents with ref:" . \@maternal_parents . "\n Maternal parents with dumper:". Dumper(@maternal_parents) . "\n";
-        my $paternal = $cross_name . '_parents';
+        my $paternal = $cross_name . '_population';
         my $population_add = CXGN::Pedigree::AddPopulations->new({ schema => $chado_schema, name => $paternal, members =>  \@maternal_parents} );
         $population_add->add_population();
         $cross_type = 'polycross';
         print STDERR "Scalar maternatal paretns:" . scalar @maternal_parents;
         for (my $i = 0; $i < scalar @maternal_parents; $i++) {
             my $maternal = $maternal_parents[$i];
-            my $polycross_name = $cross_name . '_' . $maternal . '_polycross';
+            my $polycross_name = $cross_name . '_' . $maternal;
             print STDERR "First polycross to add is $polycross_name with amternal $maternal and paternal $paternal\n";
             my $success = $self->add_individual_cross($c, $chado_schema, $polycross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal);
             if (!$success) {
@@ -421,7 +423,6 @@ sub get_cross_parents :Path('/ajax/cross/accession_plot_plant_parents') Args(1) 
 }
 
 
-
 sub get_cross_properties :Path('/ajax/cross/properties') Args(1) {
     my $self = shift;
     my $c = shift;
@@ -452,6 +453,127 @@ sub get_cross_properties :Path('/ajax/cross/properties') Args(1) {
     push @props,\@row;
     $c->stash->{rest} = {data => \@props};
 
+}
+
+
+sub get_cross_tissue_culture_summary :Path('/ajax/cross/tissue_culture_summary') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $cross_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $cross_samples_obj = CXGN::Cross->new({schema=>$schema, cross_stock_id=>$cross_id});
+    my $cross_sample_data  = $cross_samples_obj->get_cross_tissue_culture_samples();
+
+    my $embryo_ids = $cross_sample_data->{'Embryo IDs'};
+    my $subculture_ids = $cross_sample_data->{'Subculture IDs'};
+    my $rooting_ids = $cross_sample_data->{'Rooting IDs'};
+    my $weaning1_ids = $cross_sample_data->{'Weaning1 IDs'};
+    my $weaning2_ids = $cross_sample_data->{'Weaning2 IDs'};
+    my $screenhouse_ids = $cross_sample_data->{'Screenhouse IDs'};
+    my $hardening_ids = $cross_sample_data->{'Hardening IDs'};
+    my $openfield_ids = $cross_sample_data->{'Openfield IDs'};
+
+    my @embryo_ids_array;
+    my @subculture_ids_array;
+    my @rooting_ids_array;
+    my @weaning1_ids_array;
+    my @weaning2_ids_array;
+    my @screenhouse_ids_array;
+    my @hardening_ids_array;
+    my @openfield_ids_array;
+
+    if (defined $embryo_ids) {
+        @embryo_ids_array = @$embryo_ids;
+    }
+
+    if (defined $subculture_ids) {
+        @subculture_ids_array = @$subculture_ids;
+    }
+
+    if (defined $rooting_ids) {
+        @rooting_ids_array = @$rooting_ids;
+    }
+
+    if (defined $weaning1_ids) {
+        @weaning1_ids_array = @$weaning1_ids;
+    }
+
+    if (defined $weaning2_ids) {
+        @weaning2_ids_array = @$weaning2_ids;
+    }
+
+    if (defined $screenhouse_ids) {
+        @screenhouse_ids_array = @$screenhouse_ids;
+    }
+
+    if (defined $hardening_ids) {
+        @hardening_ids_array = @$hardening_ids;
+    }
+
+    if (defined $openfield_ids) {
+        @openfield_ids_array = @$openfield_ids;
+    }
+
+    my @all_rows;
+    my @each_row;
+    my $checkmark = qq{<img src="/img/checkmark_green.jpg"/>};
+    my $x_mark = qq{<img src="/img/x_mark_red.jpg"/>};
+    my @sorted_embryo_ids = natsort @embryo_ids_array;
+
+    foreach my $embryo_id (@sorted_embryo_ids) {
+
+        if ($embryo_id) {
+            push @each_row, $embryo_id;
+        }
+
+        if ($embryo_id ~~ @subculture_ids_array) {
+            push @each_row, $checkmark;
+        } else {
+            push @each_row, $x_mark;
+        }
+
+        if ($embryo_id ~~ @rooting_ids_array) {
+            push @each_row, $checkmark;
+        } else {
+            push @each_row, $x_mark;
+        }
+
+        if ($embryo_id ~~ @weaning1_ids_array) {
+            push @each_row, $checkmark;
+        } else {
+            push @each_row, $x_mark;
+        }
+
+        if ($embryo_id ~~ @weaning2_ids_array) {
+            push @each_row, $checkmark;
+        } else {
+            push @each_row, $x_mark;
+        }
+
+        if ($embryo_id ~~ @screenhouse_ids_array) {
+            push @each_row, $checkmark;
+        } else {
+            push @each_row, $x_mark;
+        }
+
+        if ($embryo_id ~~ @hardening_ids_array) {
+            push @each_row, $checkmark;
+        } else {
+            push @each_row, $x_mark;
+        }
+
+        if ($embryo_id ~~ @openfield_ids_array) {
+            push @each_row, $checkmark;
+        } else {
+            push @each_row, $x_mark;
+        }
+
+        push @all_rows, [@each_row];
+        @each_row =();
+    }
+#    print STDERR "SORTED EMBRYO IDS =".Dumper(\@sorted_embryo_ids)."\n";
+    $c->stash->{rest} = { data => \@all_rows };
 }
 
 
@@ -831,18 +953,8 @@ sub upload_progenies_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
-    my $upload_new_accessions = $c->req->upload('progenies_new_upload_file');
-    my $upload_exist_accessions = $c->req->upload('progenies_exist_upload_file');
-    my $upload;
-    my $upload_type;
-    if ($upload_new_accessions) {
-        $upload = $upload_new_accessions;
-        $upload_type = 'ProgeniesExcel';
-    }
-    if ($upload_exist_accessions) {
-        $upload = $upload_exist_accessions;
-        $upload_type = 'ProgeniesExistingAccessionsExcel';
-    }
+    my $upload = $c->req->upload('progenies_new_upload_file');
+    my $upload_type = 'ProgeniesExcel';
     my $parser;
     my $parsed_data;
     my $upload_original_name = $upload->filename();
@@ -928,49 +1040,173 @@ sub upload_progenies_POST : Args(0) {
                 $return_error .= $error_string."<br>";
             }
         }
-        $c->stash->{rest} = {error_string => $return_error, missing_crosses => $parse_errors->{'missing_crosses'} };
+        $c->stash->{rest} = {error_string => $return_error};
         $c->detach();
     }
 
     #add the progeny
-    if ($parsed_data && $upload_new_accessions){
-        my %progeny_hash = %{$parsed_data};
-        foreach my $cross_name_key (keys %progeny_hash){
-            my $progenies_ref = $progeny_hash{$cross_name_key};
-            my @progenies = @{$progenies_ref};
-            my $progeny_add = CXGN::Pedigree::AddProgeny->new({
-                chado_schema => $chado_schema,
-                phenome_schema => $phenome_schema,
-                dbh => $dbh,
-                cross_name => $cross_name_key,
-                progeny_names => \@progenies,
-                owner_name => $user_name,
-            });
-            if (!$progeny_add->add_progeny()){
-                $c->stash->{rest} = {error_string => "Error adding progeny",};
-                return;
-            }
+    my %progeny_hash = %{$parsed_data};
+    foreach my $cross_name_key (keys %progeny_hash){
+        my $progenies_ref = $progeny_hash{$cross_name_key};
+        my @progenies = @{$progenies_ref};
+        my $progeny_add = CXGN::Pedigree::AddProgeny->new({
+            chado_schema => $chado_schema,
+            phenome_schema => $phenome_schema,
+            dbh => $dbh,
+            cross_name => $cross_name_key,
+            progeny_names => \@progenies,
+            owner_name => $user_name,
+        });
+        if (!$progeny_add->add_progeny()){
+            $c->stash->{rest} = {error_string => "Error adding progeny",};
+            return;
         }
     }
 
-    if ($parsed_data && $upload_exist_accessions){
+    $c->stash->{rest} = {success => "1",};
+
+}
+
+sub validate_upload_existing_progenies : Path('/ajax/cross/validate_upload_existing_progenies') : ActionClass('REST'){ }
+
+sub validate_upload_existing_progenies_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh;
+    my $upload = $c->req->upload('progenies_exist_upload_file');
+    my $upload_type = 'ValidateExistingProgeniesExcel';
+    my $parser;
+    my $parsed_data;
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $subdirectory = "cross_upload";
+    my $archived_filename_with_path;
+    my $md5;
+    my $validate_file;
+    my $parsed_file;
+    my $parse_errors;
+    my %parsed_data;
+    my %upload_metadata;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $user_role;
+    my $user_id;
+    my $user_name;
+    my $owner_name;
+#   my $upload_file_type = "crosses excel";#get from form when more options are added
+    my $session_id = $c->req->param("sgn_session_id");
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload progenies!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload progenies!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+
+    ## Store uploaded temporary file in arhive
+    $archived_filename_with_path = $uploader->archive();
+    $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        return;
+    }
+    unlink $upload_tempfile;
+    $upload_metadata{'archived_file'} = $archived_filename_with_path;
+    $upload_metadata{'archived_file_type'}="cross upload file";
+    $upload_metadata{'user_id'}=$user_id;
+    $upload_metadata{'date'}="$timestamp";
+
+    #parse uploaded file with appropriate plugin
+    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+    $parser->load_plugin($upload_type);
+    $parsed_data = $parser->parse();
+    #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
+
+        my $return_error = '';
+        my $existing_pedigree = '';
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+            #print STDERR Dumper $parse_errors;
+
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
+            }
+
+            foreach my $each_pedigree (@{$parse_errors->{'existing_pedigrees'}}){
+                $existing_pedigree .= $each_pedigree."<br>";
+            }
+
+        }
+        $c->stash->{rest} = {error_string => $return_error, existing_pedigrees => $existing_pedigree, archived_file_name => $archived_filename_with_path};
+}
+
+
+sub store_upload_existing_progenies : Path('/ajax/cross/store_upload_existing_progenies') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $archived_filename = $c->req->param('archived_file_name');
+    my $overwrite_pedigrees = $c->req->param('overwrite_pedigrees') ne 'false' ? $c->req->param('overwrite_pedigrees') : 0;
+    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $upload_type = 'StoreExistingProgeniesExcel';
+
+    my $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename);
+    $parser->load_plugin($upload_type);
+    my $parsed_data = $parser->parse();
+    if ($parsed_data){
         my %progeny_hash = %{$parsed_data};
         foreach my $cross_name_key (keys %progeny_hash){
             my $progenies_ref = $progeny_hash{$cross_name_key};
             my @progenies = @{$progenies_ref};
-            my $progeny_exist_add = CXGN::Pedigree::AddProgeniesExistingAccessions->new({
+            my $adding_progenies = CXGN::Pedigree::AddProgeniesExistingAccessions->new({
                 chado_schema => $chado_schema,
-                dbh => $dbh,
                 cross_name => $cross_name_key,
                 progeny_names => \@progenies,
             });
-            if (!$progeny_exist_add->add_progenies_existing_accessions()){
-                $c->stash->{rest} = {error_string => "Error adding progeny",};
-                return;
+
+            my $return = $adding_progenies->add_progenies_existing_accessions($overwrite_pedigrees);
+            my $error;
+            if (!$return){
+                $error = "The progenies were not stored";
+            }
+
+            if ($return->{error}){
+                $error = $return->{error};
+            }
+
+            if ($error){
+                $c->stash->{rest} = { error => $error };
+                $c->detach();
             }
         }
     }
-    $c->stash->{rest} = {success => "1",};
+    $c->stash->{rest} = { success => 1 };
 }
 
 sub upload_info : Path('/ajax/cross/upload_info') : ActionClass('REST'){ }

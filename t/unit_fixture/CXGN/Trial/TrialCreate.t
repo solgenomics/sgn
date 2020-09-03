@@ -6,6 +6,8 @@ use lib 't/lib';
 use SGN::Test::Fixture;
 use JSON::Any;
 use Data::Dumper;
+use Test::WWW::Mechanize;
+use JSON;
 
 my $fix = SGN::Test::Fixture->new();
 
@@ -218,7 +220,7 @@ $gd->set_design_type("genotyping_plate");
 $gd->calculate_design();
 my $geno_design = $gd->get_design();
 
-print STDERR Dumper $geno_design;
+#print STDERR Dumper $geno_design;
 is_deeply($geno_design, {
           'A09' => {
                      'row_number' => 'A',
@@ -353,8 +355,14 @@ foreach my $acc (@$genotyping_accession_names) {
     ok(exists($genotyping_stocks{$acc->{accession_name}}), "check existence of accession names $acc->{accession_name}");
 }
 
+my $mech = Test::WWW::Mechanize->new;
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$save->{'trial_id'}.'/design');
+my $response = decode_json $mech->content;
+print STDERR Dumper $response;
+is(scalar(keys %{$response->{design}}), 11);
+
 #create westcott trial design_type
-=begin
+
 my @stock_names_westcott;
 for (my $i = 1; $i <= 100; $i++) {
     push(@stock_names_westcott, "test_stock_for_westcott_trial".$i);
@@ -376,7 +384,7 @@ ok($trial_design->set_plot_number_increment(1), "set plot increment");
 ok($trial_design->set_westcott_check_1("test_stock_for_trial1"), "set check 1");
 ok($trial_design->set_westcott_check_2("test_stock_for_trial2"), "set check 2");
 ok($trial_design->set_westcott_col(20), "set column number");
-ok($trial_design->set_design_type("westcott"), "set design type");
+ok($trial_design->set_design_type("Westcott"), "set design type");
 ok($trial_design->calculate_design(), "calculate design");
 ok(my $design = $trial_design->get_design(), "retrieve design");
 
@@ -393,7 +401,7 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     trial_location => "test_location_for_trial",
     trial_name => "new_test_trial_name_westcott",
     trial_type=>$ayt_cvterm_id,
-    design_type => "westcott",
+    design_type => "Westcott",
     operator => "janedoe"
 						    }), "create trial object");
 
@@ -424,8 +432,6 @@ for (my $i=0; $i<scalar(@stock_names_westcott); $i++){
     }
 }
 ok(scalar(@accessions) == 100, "check accession names");
-=end
-=cut
 
 #create splitplot trial design_type
 
@@ -453,7 +459,7 @@ ok($trial_design->set_num_plants_per_plot(4), "set num plants per plot");
 ok($trial_design->calculate_design(), "calculate design");
 ok(my $design = $trial_design->get_design(), "retrieve design");
 
-print STDERR Dumper $design;
+#print STDERR Dumper $design;
 
 $ayt_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'Advanced Yield Trial', 'project_type')->cvterm_id();
 
@@ -475,6 +481,7 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
 						    }), "create trial object");
 
 $save = $trial_create->save_trial();
+print STDERR "TRIAL ID = ".$save->{trial_id}."\n";
 ok($save->{'trial_id'}, "save trial");
 
 ok(my $trial_lookup = CXGN::Trial::TrialLookup->new({
@@ -486,7 +493,7 @@ ok(my $trial_id = $trial->project_id());
 
 my $trial_obj = CXGN::Trial->new({bcs_schema=>$chado_schema, trial_id=>$trial_id});
 ok(my $trial_management_factors = $trial_obj->get_treatments());
-print STDERR Dumper $trial_management_factors;
+#print STDERR Dumper $trial_management_factors;
 is(scalar(@$trial_management_factors), 2);
 ok(my $trial_layout = CXGN::Trial::TrialLayout->new({
     schema => $chado_schema,

@@ -40,18 +40,53 @@ if (!$data_structure) {
    }
 }
 
+my $url = $c->req->path;
+
+
+my $title;
+if ($url =~ /pca\/analysis/) {
+$title = 'Select a list of accessions or trials or a dataset and run PCA';
+} else {
+$title = 'Select data type and run PCA';
+}
+
 </%perl>
 
+
+
+  
+% if ($url =~ /pca\/analysis/) {
+
+<& /page/page_title.mas, 
+   title => "Principal Component Analysis (PCA)" 
+  &>
+  
+%}
 
 <&| /page/info_section.mas, 
   collapsible => 1, 
   collapsed   => 0, 
-  title       => "Population Structure, PCA" 
+  title       => $title 
 &> 
 
-  <!-- <input id="run_pca" class="button" type="button" value="Run PCA" /> -->
- <& /solgs/pca/pca_options.mas &>
-  
+<div id='pca_div'>
+% if ($url =~ /pca\/analysis|breeders\/trial\//) {
+
+  <& /solgs/genotyping_protocol.mas &>
+
+%}
+<!-- <input id="run_pca" class="button" type="button" value="Run PCA" /> -->
+<!-- /breeders\/trial\/|solgs\/trait\/\d+\/population\/|solgs\/model\/combined\/populations\// -->
+% if ($url !~ /pca\/analysis/ ) {
+<& /solgs/pca/pca_options.mas &>
+
+%} else {
+
+   <& /solgs/pca/select_menu.mas &>
+       
+%}
+
+     
   <& /solgs/pca/plot.mas,
      pop_id => $pop_id,
     list_id => $list_id,
@@ -59,4 +94,7 @@ if (!$data_structure) {
     data_structure => $data_structure,
     &>
 
+    
+</div>
 </&>
+

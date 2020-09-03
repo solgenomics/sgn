@@ -1162,6 +1162,43 @@ sub pedigree_female_parent_autocomplete_GET : Args(0){
 }
 
 
+=head2 pedigree_male_parent_autocomplete
+
+Public Path: /ajax/stock/pedigree_male_parent_autocomplete
+
+Autocomplete a male parent associated with pedigree.
+
+=cut
+
+sub pedigree_male_parent_autocomplete: Local : ActionClass('REST'){}
+
+sub pedigree_male_parent_autocomplete_GET : Args(0){
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+    my @response_list;
+
+    my $q = "SELECT distinct (pedigree_male_parent.uniquename) FROM stock AS pedigree_male_parent
+    JOIN stock_relationship ON (stock_relationship.subject_id = pedigree_male_parent.stock_id)
+    JOIN cvterm AS cvterm1 ON (stock_relationship.type_id = cvterm1.cvterm_id) AND cvterm1.name = 'male_parent'
+    JOIN stock AS check_type ON (stock_relationship.object_id = check_type.stock_id)
+    JOIN cvterm AS cvterm2 ON (check_type.type_id = cvterm2.cvterm_id) AND cvterm2.name = 'accession'
+    WHERE pedigree_male_parent.uniquename ilike ? ORDER BY pedigree_male_parent.uniquename";
+
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my($pedigree_male_parent) = $sth->fetchrow_array){
+        push @response_list, $pedigree_male_parent;
+    }
+
+    $c->stash->{rest} = \@response_list;
+
+}
+
+
 =head2 cross_female_parent_autocomplete
 
 Public Path: /ajax/stock/cross_female_parent_autocomplete
@@ -1199,6 +1236,42 @@ sub cross_female_parent_autocomplete_GET : Args(0){
 
 }
 
+
+=head2 cross_male_parent_autocomplete
+
+Public Path: /ajax/stock/cross_male_parent_autocomplete
+
+Autocomplete a male parent associated with cross.
+
+=cut
+
+sub cross_male_parent_autocomplete: Local : ActionClass('REST'){}
+
+sub cross_male_parent_autocomplete_GET : Args(0){
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+    my @response_list;
+
+    my $q = "SELECT distinct (cross_male_parent.uniquename) FROM stock AS cross_male_parent
+    JOIN stock_relationship ON (stock_relationship.subject_id = cross_male_parent.stock_id)
+    JOIN cvterm AS cvterm1 ON (stock_relationship.type_id = cvterm1.cvterm_id) AND cvterm1.name = 'male_parent'
+    JOIN stock AS check_type ON (stock_relationship.object_id = check_type.stock_id)
+    JOIN cvterm AS cvterm2 ON (check_type.type_id = cvterm2.cvterm_id) AND cvterm2.name = 'cross'
+    WHERE cross_male_parent.uniquename ilike ? ORDER BY cross_male_parent.uniquename";
+
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my($cross_male_parent) = $sth->fetchrow_array){
+        push @response_list, $cross_male_parent;
+    }
+
+    $c->stash->{rest} = \@response_list;
+
+}
 
 
 sub parents : Local : ActionClass('REST') {}
@@ -1838,11 +1911,13 @@ sub get_stock_datatables_genotype_data_GET  {
     my $stock_id = $c->stash->{stock_row}->stock_id();
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $stock = CXGN::Stock->new({schema => $schema, stock_id => $stock_id});
     my $stock_type = $stock->type();
 
     my %genotype_search_params = (
         bcs_schema=>$schema,
+        people_schema=>$people_schema,
         cache_root=>$c->config->{cache_file_path},
         genotypeprop_hash_select=>[],
         protocolprop_top_key_select=>[],
@@ -1856,29 +1931,32 @@ sub get_stock_datatables_genotype_data_GET  {
     my $genotypes_search = CXGN::Genotype::Search->new(\%genotype_search_params);
     my $file_handle = $genotypes_search->get_cached_file_search_json($c->config->{cluster_shared_tempdir}, 1); #only gets metadata and not all genotype data!
 
-    open my $fh, "<&", $file_handle or die "Can't open output file: $!";
-    my $header_line = <$fh>;
-    my $marker_objects = decode_json $header_line;
-
-    my $start_index = $offset;
-    my $end_index = $offset + $limit;
-    # print STDERR Dumper [$start_index, $end_index];
-
     my @result;
     my $counter = 0;
-    while (my $gt_line = <$fh>) {
-        if ($counter >= $start_index && $counter < $end_index) {
-            my $g = decode_json $gt_line;
-            
-            push @result, [
-                '<a href = "/breeders_toolbox/trial/'.$g->{genotypingDataProjectDbId}.'">'.$g->{genotypingDataProjectName}.'</a>',
-                $g->{genotypingDataProjectDescription},
-                $g->{analysisMethod},
-                $g->{genotypeDescription},
-                '<a href="/stock/'.$stock_id.'/genotypes?genotypeprop_id='.$g->{markerProfileDbId}.'">Download</a>'
-            ];
+
+    open my $fh, "<&", $file_handle or die "Can't open output file: $!";
+    my $header_line = <$fh>;
+    if ($header_line) {
+        my $marker_objects = decode_json $header_line;
+
+        my $start_index = $offset;
+        my $end_index = $offset + $limit;
+        # print STDERR Dumper [$start_index, $end_index];
+
+        while (my $gt_line = <$fh>) {
+            if ($counter >= $start_index && $counter < $end_index) {
+                my $g = decode_json $gt_line;
+
+                push @result, [
+                    '<a href = "/breeders_toolbox/trial/'.$g->{genotypingDataProjectDbId}.'">'.$g->{genotypingDataProjectName}.'</a>',
+                    $g->{genotypingDataProjectDescription},
+                    $g->{analysisMethod},
+                    $g->{genotypeDescription},
+                    '<a href="/stock/'.$stock_id.'/genotypes?genotypeprop_id='.$g->{markerProfileDbId}.'">Download</a>'
+                ];
+            }
+            $counter++;
         }
-        $counter++;
     }
 
     my $draw = $c->req->param('draw');

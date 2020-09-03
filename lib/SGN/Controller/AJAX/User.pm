@@ -151,7 +151,7 @@ This message is sent to confirm the email address for community user
 Please click (or cut and paste into your browser) the following link to
 confirm your account and email address:
 
-$host/solpeople/account-confirm.pl?username=$username&confirm=$confirm_code
+$host/user/confirm?username=$username&confirm_code=$confirm_code
 
 Thank you,
 $project_name Team
@@ -362,9 +362,11 @@ sub process_reset_password_form :Path('/ajax/user/process_reset_password') Args(
     }
 
     eval {
-        my $sp_person_id = CXGN::People::Login->get_login_by_token($c->dbc->dbh, $token);
-
-        my $login = CXGN::People::Login->new($c->dbc->dbh(), $sp_person_id);
+        my $q = "SELECT sp_person_id FROM sgn_people.sp_person WHERE confirm_code=?;";
+        my $h = $c->dbc->dbh()->prepare($q);
+        $h->execute($token);
+        my ($person_id) = $h->fetchrow_array();
+        my $login = CXGN::People::Login->new($c->dbc->dbh(), $person_id);
         $login->update_password($new_password);
         $login->update_confirm_code("");
     };
@@ -497,7 +499,7 @@ HTML
 	    print STDERR "ERROR: $@\n";
 	    $c->stash->{rest} = { error => $@ };
 	}
-	return $c->stash->{rest} = { html => $html };
+	return $c->stash->{rest} = { html => $html, logged_in => $c->user_exists };
     }
 }
 
@@ -578,7 +580,7 @@ ername.";}
 	$c->stash->{rest} = { html => "An error occurred. $@" };
     }
     else {
-	$c->stash->{rest} = { html => "<center><h4>Account successfully created for $first_name $last_name</h4><a href=\"/user/quick_create_account\">Create another account" };
+	$c->stash->{rest} = { html => "<center><h4>Account successfully created for $first_name $last_name</h4><a href=\"/user/admin/quick_create_account\">Create another account" };
     }
 }
 

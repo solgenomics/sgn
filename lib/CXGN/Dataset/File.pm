@@ -16,56 +16,73 @@ has 'file_name' => ( isa => 'Str',
     );
 
 override('retrieve_genotypes',
-	 sub {
-	     my $self = shift;
-	     my $protocol_id = shift;
-	     my $file = shift || $self->file_name()."_genotype.txt";
+	sub {
+	    my $self = shift;
+	    my $protocol_id = shift;
+	    my $file = shift || $self->file_name()."_genotype.txt";
+		my $cache_root_dir = shift;
+		my $cluster_shared_tempdir_config = shift;
+		my $backend_config = shift;
+		my $cluster_host_config = shift;
+		my $web_cluster_queue_config = shift;
+		my $basepath_config	= shift;
+		my $forbid_cache = shift;
 
-		 my $accessions_list_ref = $self->accessions();
-		 my $genotypeprop_hash_select = shift || ['DS'];
-		 my $protocolprop_top_key_select = shift || [];
-		 my $protocolprop_marker_hash_select = shift || [];
-		 my $return_only_first_genotypeprop_for_stock = shift || 1;
+		my $accessions_list_ref = $self->accessions();
+		my $genotypeprop_hash_select = shift || ['DS'];
+		my $protocolprop_top_key_select = shift || [];
+		my $protocolprop_marker_hash_select = shift || [];
+		my $return_only_first_genotypeprop_for_stock = shift || 1;
 
 #		 my $accessions_list_ref = ['38884','38889','38890','38891','38893'];
-		 my @accessions_list = @$accessions_list_ref;
-		 my $genotypes_search = CXGN::Genotype::Search->new(
+		my @accessions_list = @$accessions_list_ref;
+		my $genotypes_search = CXGN::Genotype::Search->new(
 			bcs_schema => $self->schema(),
+            people_schema => $self->people_schema(),
+        	cache_root=>$cache_root_dir,
 			accession_list => $accessions_list_ref,
 			trial_list => $self->trials(),
 			protocol_id_list => [$protocol_id],
 			genotypeprop_hash_select=>$genotypeprop_hash_select, #THESE ARE THE KEYS IN THE GENOTYPEPROP OBJECT
 			protocolprop_top_key_select=>$protocolprop_top_key_select, #THESE ARE THE KEYS AT THE TOP LEVEL OF THE PROTOCOLPROP OBJECT
 			protocolprop_marker_hash_select=>$protocolprop_marker_hash_select, #THESE ARE THE KEYS IN THE MARKERS OBJECT IN THE PROTOCOLPROP OBJECT
-			return_only_first_genotypeprop_for_stock=>$return_only_first_genotypeprop_for_stock #FOR MEMORY REASONS TO LIMIT DATA
+			return_only_first_genotypeprop_for_stock=>$return_only_first_genotypeprop_for_stock, #FOR MEMORY REASONS TO LIMIT DATA
+			forbid_cache=>$forbid_cache
 		);
-		$genotypes_search->init_genotype_iterator();
-		my $counter = 0;
-		while(my $geno = $genotypes_search->get_next_genotype_info) {
- 			my $genotype_string = "";
- 		    my $genotype_example = $geno;
- 			if($counter == 0) {
- 				foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
- 					$genotype_string .= $key."\t";
- 		    	}
- 		    	$genotype_string .= "\n";
- 		 	}
+		my @required_config = (
+			$cluster_shared_tempdir_config,
+			$backend_config,
+			$cluster_host_config,
+			$web_cluster_queue_config,
+			$basepath_config
+		);
+#		$genotypes_search->init_genotype_iterator();
+#		my $counter = 0;
+#		while(my $geno = $genotypes_search->get_next_genotype_info) {
+ #			my $genotype_string = "";
+ #		    my $genotype_example = $geno;
+ #			if($counter == 0) {
+ #				foreach my $key (sort keys %{$genotype_example->{selected_genotype_hash}}) {
+ #					$genotype_string .= $key."\t";
+ #		    	}
+ #		    	$genotype_string .= "\n";
+ #		 	}
 #		    foreach my $element (@$genotypes) {
 # 			my $element = $genotype_example;
- 			my $genotype_id = $geno->{germplasmDbId};
-			my $genotype_data_string = "";
-			foreach my $key (sort keys %{$geno->{selected_genotype_hash}}) {
-				my $value = $geno->{selected_genotype_hash}->{$key}->{DS};
-				my $current_genotype = $value;
-				$genotype_data_string .= $current_genotype."\t";
-			}
-			my $s = join "\t", $genotype_id;
-			$genotype_string .= $s."\t".$genotype_data_string."\n";
+ #			my $genotype_id = $geno->{germplasmDbId};
+#			my $genotype_data_string = "";
+#			foreach my $key (sort keys %{$geno->{selected_genotype_hash}}) {
+#				my $value = $geno->{selected_genotype_hash}->{$key}->{DS};
+#				my $current_genotype = $value;
+#				$genotype_data_string .= $current_genotype."\t";
+#			}
+#			my $s = join "\t", $genotype_id;
+#			$genotype_string .= $s."\t".$genotype_data_string."\n";
 #		    }
-			write_file($file, {append => 1}, $genotype_string);
-			$counter++;
+#			write_file($file, {append => 1}, $genotype_string);
+#			$counter++;
 
-	 	}
+	 	#}
 
 #		     my $genotypes = $self->SUPER::retrieve_genotypes($protocol_id, @accessions_list);
 # 		     my $genotype_string = "";
@@ -92,7 +109,7 @@ override('retrieve_genotypes',
 
 #	     my $genotype_json = JSON::Any->encode($genotypes);
 #	     write_file($file, $genotype_json);
-	     return;
+	     return $genotypes_search->get_cached_file_dosage_matrix(@required_config);
 	 });
 
 override('retrieve_phenotypes',

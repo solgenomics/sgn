@@ -1,5 +1,0 @@
-Acronym	Trait name
-DMCP	dry matter content percentage
-FRW	fresh root weight
-HIV	harvest index variable
-FSWMIK	fresh shoot weight measurement in kg

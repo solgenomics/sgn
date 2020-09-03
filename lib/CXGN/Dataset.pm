@@ -368,6 +368,31 @@ sub exists_dataset_name {
 
 =head1 METHODS
 
+
+=head2 to_hashref() 
+
+
+=cut
+ 
+sub to_hashref { 
+    my $self = shift;
+
+    my $dataref = $self->get_dataset_data();
+
+    my $json = JSON::Any->encode($dataref);
+    
+    my $data = { 
+	name => $self->name(),
+	description => $self->description(),
+	sp_person_id => $self->sp_person_id(),
+	dataset => $json,
+    };
+
+    return $data;
+
+
+}
+
 =head2 store()
 
 =cut
@@ -375,22 +400,12 @@ sub exists_dataset_name {
 sub store {
     my $self = shift;
 
-    my $dataref = $self->get_dataset_data();
-
-    my $json = JSON::Any->encode($dataref);
-
-    my $data = { name => $self->name(),
-		 description => $self->description(),
-		 sp_person_id => $self->sp_person_id(),
-		 dataset => $json,
-	};
-
-
+ 
 
     print STDERR "dataset_id = ".$self->sp_dataset_id()."\n";
     if (!$self->has_sp_dataset_id()) {
 	print STDERR "Creating new dataset row... ".$self->sp_dataset_id()."\n";
-	my $row = $self->people_schema()->resultset("SpDataset")->create($data);
+	my $row = $self->people_schema()->resultset("SpDataset")->create($self->to_hashref());
 	$self->sp_dataset_id($row->sp_dataset_id());
 	return $row->sp_dataset_id();
     }
@@ -400,7 +415,7 @@ sub store {
 	if ($row) {
 	    $row->name($self->name());
 	    $row->description($self->description());
-	    $row->dataset($json);
+	    $row->dataset(JSON::Any->encode($self->to_hashref()));
 	    $row->sp_person_id($self->sp_person_id());
 	    $row->update();
 	    return $row->sp_dataset_id();
@@ -471,12 +486,21 @@ sub retrieve_genotypes {
     my $protocolprop_top_key_select = shift || [];
     my $protocolprop_marker_hash_select = shift || [];
     my $return_only_first_genotypeprop_for_stock = shift || 1;
+    my $chromosome_list = shift || [];
+    my $start_position = shift;
+    my $end_position = shift;
+    my $marker_name_list = shift || [];
 
     my $genotypes_search = CXGN::Genotype::Search->new(
         bcs_schema => $self->schema(),
+        people_schema=>$self->people_schema,
         accession_list => $self->accessions(),
         trial_list => $self->trials(),
         protocol_id_list => [$protocol_id],
+        chromosome_list => $chromosome_list,
+        start_position => $start_position,
+        end_position => $end_position,
+        marker_name_list => $marker_name_list,
         genotypeprop_hash_select=>$genotypeprop_hash_select, #THESE ARE THE KEYS IN THE GENOTYPEPROP OBJECT
         protocolprop_top_key_select=>$protocolprop_top_key_select, #THESE ARE THE KEYS AT THE TOP LEVEL OF THE PROTOCOLPROP OBJECT
         protocolprop_marker_hash_select=>$protocolprop_marker_hash_select, #THESE ARE THE KEYS IN THE MARKERS OBJECT IN THE PROTOCOLPROP OBJECT
@@ -505,6 +529,31 @@ sub retrieve_phenotypes {
 	);
 	my @data = $phenotypes_search->get_phenotype_matrix();
     return \@data;
+}
+
+=head2 retrieve_phenotypes_ref()
+
+retrieves phenotypes as a hashref representation
+
+=cut
+
+sub retrieve_phenotypes_ref {
+    my $self = shift;
+
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        'MaterializedViewTable',
+        {
+            bcs_schema=>$self->schema(),
+            data_level=>$self->data_level(),
+            trait_list=>$self->traits(),
+            trial_list=>$self->trials(),
+            accession_list=>$self->accessions(),
+            exclude_phenotype_outlier=>$self->exclude_phenotype_outlier
+        }
+    );
+    my ($data, $unique_traits) = $phenotypes_search->search();
+
+    return ($data, $unique_traits);
 }
 
 =head2 retrieve_accessions()

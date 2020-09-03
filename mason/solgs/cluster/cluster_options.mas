@@ -16,7 +16,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <%args>
 </%args>
 
-
+<div class="container">
 <div id="cluster_options"   style="display:none;">
   <div style="padding-right:1px; padding-left:1px;"
        class="form-group  col-sm-2"
@@ -30,13 +30,6 @@ Isaak Y Tecle (iyt2@cornell.edu)
        value="">
   </div>
 
-  <div style="padding-right:1px; padding-left:1px;"
-       class="form-group col-sm-1">
-    <input class="form-control"
-	   type="text"
-	   placeholder="K No.?"
-	   id="k_number"/>
-  </div>
   <div id = "selection_proportion_div" style="display:none;padding-right: 1px; padding-left:1px;"
        class="form-group  col-sm-2">
     <input class="form-control"
@@ -44,7 +37,15 @@ Isaak Y Tecle (iyt2@cornell.edu)
     	   placeholder="selection %?"
     	   id="selection_proportion"/>
   </div>
-
+  
+  <div style="padding-right:1px; padding-left:1px;"
+       class="form-group col-sm-1">
+    <input class="form-control"
+	   type="text"
+	   placeholder="K No.?"
+	   id="k_number"/>
+  </div>
+  
    <div style="padding-right:1px; padding-left:1px;"
 	class=" form-group  col-sm-1">
     <input class="btn btn-success"
@@ -55,7 +56,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 </div>
 
-
+</div>
  
 
   

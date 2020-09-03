@@ -128,10 +128,14 @@ subtype 'DesignType',
 
 has 'design_type' => (isa => 'DesignType', is => 'rw', predicate => 'has_design_type', clearer => 'clear_design_type');
 
+has 'replicated_accession_no' => (isa => 'Int', is => 'rw', predicate => 'has_replicated_accession_no' );
+
+has 'unreplicated_accession_no' => (isa => 'Maybe[Int]', is => 'rw', predicate => 'has_unreplicated_accession_no');
+
 
 sub get_design {
     my $self = shift;
-    print STDERR Dumper $self->{design};
+    #print STDERR Dumper $self->{design};
      return $self->{design};
 }
 
@@ -165,13 +169,14 @@ sub isint{
 
 
 sub validate_field_colNumber {
-  my $colNum = shift;
-  if (isint($colNum)){
-    return $colNum;
-  } else {
-      die "Choose a different row number for field map generation. The product of number of stocks and rep when divided by row number should give an integer\n";
-      return;
-  }
+    my $colNum = shift;
+    if (isint($colNum)){
+	
+	return $colNum;
+    } else {
+	die "Choose a different row number for field map generation. The product of number of stocks and rep when divided by row number should give an integer\n";
+	return;
+    }
 
 }
 
@@ -184,42 +189,53 @@ sub _convert_plot_numbers {
   my @rep_numbers = @{$rep_numbers_ref};
   my $total_plot_count = scalar(@plot_numbers);
   my $rep_plot_count = $total_plot_count / $number_of_reps;
+  my $first_plot_number = $self->get_plot_start_number();
+  my $increment = int($first_plot_number/100)*100;
+  my $round = 1;
+  my $p = 1;
+
   for (my $i = 0; $i < scalar(@plot_numbers); $i++) {
     my $plot_number;
-    my $first_plot_number;
-    if($self->has_plot_start_number || $self->has_plot_number_increment){
-        if ($self->has_plot_start_number()){
-          $first_plot_number = $self->get_plot_start_number();
-        } else {
-          $first_plot_number = 1;
-        }
-        if ($self->has_plot_number_increment()){
-          $plot_number = $first_plot_number + ($i * $self->get_plot_number_increment());
-        }
+    my $first_plot_number = $self->get_plot_start_number();
 
-        my $cheking = ($rep_numbers[$i] * $rep_plot_count) / $rep_plot_count;
-        #print STDERR Dumper($cheking);
-        my $new_plot;
-        if ($cheking != 1){
-            if (length($first_plot_number) == 3 ){
-                $new_plot = $cheking * 100;
-                $plot_number = ($i * $self->get_plot_number_increment()) + $new_plot - (($cheking -1) * $rep_plot_count) + 1;
-            }
-            #print STDERR Dumper($new_plot);
-            if (length($first_plot_number) == 4 ){
-                $new_plot = $cheking * 1000;
-                $plot_number = ($i * $self->get_plot_number_increment()) + $new_plot - (($cheking -1) * $rep_plot_count) + 1;
-            }
-        }
+    if ($first_plot_number > 90){
+      if (!(($i) % scalar($rep_plot_count))){
+        $round++;
+        $p = 1;
+      }
 
+      if($self->has_plot_start_number || $self->has_plot_number_increment){
+          if ($self->has_plot_start_number()){
+            $first_plot_number = $self->get_plot_start_number();
+          } else {
+            $first_plot_number = 1;
+          }
+          if ($self->has_plot_number_increment()){
+            $plot_number = $first_plot_number + (($p-1) * $self->get_plot_number_increment()) + ($rep_numbers[$i]-1) * $increment;
+          }
+          else {
+            $plot_number = $first_plot_number + $i;
+          }
+      }
+      else {
+          $plot_number = $plot_numbers[$i];
+      }
 
-        else {
-          $plot_number = $first_plot_number + $i;
-        }
-    }
-    else {
-        $plot_number = $plot_numbers[$i];
-    }
+    }else{
+
+      $first_plot_number = 1;
+
+          if ($self->has_plot_number_increment()){
+            $plot_number = $first_plot_number + ($i * $self->get_plot_number_increment()) + ($rep_numbers[$i]-1) * $increment;
+          }
+          else {
+            $plot_number = $first_plot_number + $i;
+          }
+
+          $plot_number = $plot_numbers[$i];
+      }
+
+    $p++;
     $plot_numbers[$i] = $plot_number;
   }
   return \@plot_numbers;

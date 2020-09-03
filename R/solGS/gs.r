@@ -49,21 +49,22 @@ if (length(datasetInfoFile) != 0 ) {
     datasetInfo <- c('single population')  
   }
 
-validationTrait <- paste("validation", trait, sep = "_")
-validationFile  <- grep(validationTrait, outputFiles, value = TRUE)
+#validationTrait <- paste("validation", trait, sep = "_")
+validationFile  <- grep('validation', outputFiles, value = TRUE)
 
 if (is.null(validationFile)) {
   stop("Validation output file is missing.")
 }
 
-kinshipTrait <- paste("rrblup_training_gebvs", trait, sep = "_")
-blupFile     <- grep(kinshipTrait, outputFiles, value = TRUE)
+#kinshipTrait <- paste("rrblup_training_gebvs", trait, sep = "_")
+blupFile     <- grep('rrblup_training_gebvs', outputFiles, value = TRUE)
 
 if (is.null(blupFile)) {
   stop("GEBVs file is missing.")
 }
-markerTrait <- paste("marker_effects", trait, sep = "_")
-markerFile  <- grep(markerTrait, outputFiles, value = TRUE)
+
+#markerTrait <- paste("marker_effects", trait, sep = "_")
+markerFile  <- grep('marker_effects', outputFiles, value = TRUE)
 
 traitPhenoFile <- paste("phenotype_data", trait, sep = "_")
 traitPhenoFile <- grep(traitPhenoFile, outputFiles, value = TRUE)
@@ -71,9 +72,6 @@ traitPhenoFile <- grep(traitPhenoFile, outputFiles, value = TRUE)
 varianceComponentsFile <- grep("variance_components", outputFiles, value = TRUE)
 filteredGenoFile       <- grep("filtered_genotype_data", outputFiles, value = TRUE)
 formattedPhenoFile     <- grep("formatted_phenotype_data", inputFiles, value = TRUE)
-
-formattedPhenoData <- c()
-phenoData          <- c()
 
 genoFile <- grep("genotype_data_", inputFiles, value = TRUE)
 
@@ -87,20 +85,45 @@ if (file.info(genoFile)$size == 0) {
 
 readFilteredGenoData <- c()
 filteredGenoData <- c()
+formattedPhenoData <- c()
+phenoData          <- c()
+genoData           <- c()
+
 if (length(filteredGenoFile) != 0 && file.info(filteredGenoFile)$size != 0) {
-  filteredGenoData     <- fread(filteredGenoFile, na.strings = c("NA", "", "--", "-"),  header = TRUE)
-  readFilteredGenoData <- 1
+    filteredGenoData     <- fread(filteredGenoFile,
+                                  na.strings = c("NA", "", "--", "-"),
+                                  header = TRUE)
+
+    genoData <-  data.frame(filteredGenoData)
+    genoData <- column_to_rownames(genoData, 'V1') 
+    readFilteredGenoData <- 1
 }
 
-genoData <- c()
+
 if (is.null(filteredGenoData)) {
-  genoData <- fread(genoFile, na.strings = c("NA", "", "--", "-"),  header = TRUE)
-  genoData <- unique(genoData, by='V1')
+    genoData <- fread(genoFile,
+                      na.strings = c("NA", "", "--", "-"),
+                      header = TRUE)
+    
+    genoData <- unique(genoData, by='V1')
+    genoData <- data.frame(genoData)
+    genoData <- column_to_rownames(genoData, 'V1')    
+   
+  #genoDataFilter::filterGenoData
+    genoData <- convertToNumeric(genoData)
+    genoData <- filterGenoData(genoData, maf=0.01)
+    genoData <- roundAlleleDosage(genoData)
+    
+    filteredGenoData   <- genoData
+    
 }
+
+genoData <- genoData[order(row.names(genoData)), ]
 
 if (length(formattedPhenoFile) != 0 && file.info(formattedPhenoFile)$size != 0) {
-  formattedPhenoData <- as.data.frame(fread(formattedPhenoFile,
-                                            na.strings = c("NA", "", "--", "-", ".")
+    formattedPhenoData <- data.frame(fread(formattedPhenoFile,
+                                           header = TRUE,
+                                           na.strings = c("NA", "", "--", "-", ".")
                                             ))
 
 } else {
@@ -114,8 +137,10 @@ if (length(formattedPhenoFile) != 0 && file.info(formattedPhenoFile)$size != 0) 
     stop("phenotype data file is empty.")
   }
 
-  phenoData <- fread(phenoFile, sep="\t", na.strings = c("NA", "", "--", "-", "."), header = TRUE)
-  phenoData <- data.frame(phenoData)
+  phenoData <- data.frame(fread(phenoFile,
+                     sep="\t",
+                     na.strings = c("NA", "", "--", "-", "."),
+                     header = TRUE))
 }
 
 phenoTrait <- c()
@@ -150,34 +175,15 @@ if (datasetInfo == 'combined populations') {
          phenoTrait <- averageTrait(phenoData, trait)
          
      } else {
-
+        
          phenoTrait <- getAdjMeans(phenoData,
                                    traitName=trait,
                                    calcAverages=TRUE)
-
      }
 }
 
-colnames(phenoTrait)  <- c('genotypes', trait)
-
-if (is.null(filteredGenoData)) {
- 
-  #genoDataFilter::filterGenoData
-  genoData <- filterGenoData(genoData, maf=0.01)
-  genoData <- roundAlleleDosage(genoData)
-
-  genoData <- as.data.frame(genoData)
-  rownames(genoData) <- genoData[, 1]
-  genoData[, 1]      <- NULL
-  filteredGenoData   <- genoData
-  
-} else {
-  genoData           <- as.data.frame(filteredGenoData)
-  rownames(genoData) <- genoData[, 1]
-  genoData[, 1]      <- NULL
-}
-
-genoData <- genoData[order(row.names(genoData)), ]
+meanType <- names(phenoTrait)[2]
+names(phenoTrait)  <- c('genotypes', trait)
 
 selectionTempFile <- grep("selection_population", inputFiles, value = TRUE)
 
@@ -210,16 +216,19 @@ filteredPredGenoData     <- c()
 ## } else
 if (length(selectionFile) != 0) {
     
-  selectionData <- fread(selectionFile, na.strings = c("NA", "", "--", "-"),)
-  selectionData <- unique(selectionData, by='V1')
-  
-  selectionData <- filterGenoData(selectionData, maf=0.01)
-  selectionData <- roundAlleleDosage(selectionData)
-  
-  selectionData  <- data.frame(selectionData)
-  rownames(selectionData) <- selectionData[, 1]
-  selectionData[, 1]      <- NULL
-  filteredPredGenoData <- selectionData
+    selectionData <- fread(selectionFile,
+                           header = TRUE,
+                           na.strings = c("NA", "", "--", "-"))
+
+    selectionData <- unique(selectionData, by='V1')
+    selectionData <- data.frame(selectionData)
+    selectionData <- column_to_rownames(selectionData, 'V1')      
+   
+    selectionData <- convertToNumeric(selectionData)
+    selectionData <- filterGenoData(selectionData, maf=0.01)
+    selectionData <- roundAlleleDosage(selectionData)  
+
+    filteredPredGenoData <- selectionData
 }
 
 
@@ -230,7 +239,7 @@ if (sum(is.na(genoData)) > 0) {
   genoDataMissing<- c('yes')
 
   genoData <- na.roughfix(genoData)
-  genoData <- data.matrix(genoData)
+  genoData <- data.frame(genoData)
 }
 
 #create phenotype and genotype datasets with
@@ -262,7 +271,8 @@ if (length(selectionData) != 0) {
   
   if (sum(is.na(selectionData)) > 0) {
     selectionDataMissing <- c('yes')
-    selectionData <- data.matrix(na.roughfix(selectionData))    
+    selectionData <- na.roughfix(selectionData)
+    selectionData <- data.frame(selectionData)
   }
 }
 
@@ -295,7 +305,8 @@ relationshipMatrixFile <- grep("relationship_matrix", outputFiles, value = TRUE)
 
 if (length(relationshipMatrixFile) != 0) {
   if (file.info(relationshipMatrixFile)$size > 0 ) {
-    relationshipMatrix <- as.data.frame(fread(relationshipMatrixFile))
+      relationshipMatrix <- data.frame(fread(relationshipMatrixFile,
+                                             header = TRUE))
 
     rownames(relationshipMatrix) <- relationshipMatrix[, 1]
     relationshipMatrix[, 1]      <- NULL
@@ -311,6 +322,7 @@ if (length(relationshipMatrixFile) != 0) {
 relationshipMatrixFiltered <- relationshipMatrix[(rownames(relationshipMatrix) %in% rownames(commonObs)), ]
 relationshipMatrixFiltered <- relationshipMatrixFiltered[, (colnames(relationshipMatrixFiltered) %in% rownames(commonObs))]
 relationshipMatrix         <- data.frame(relationshipMatrix)
+relationshipMatrix         <- round(relationshipMatrix, 3)
 
 nCores <- detectCores()
 
@@ -373,9 +385,9 @@ if (length(selectionData) == 0) {
   heritability  <- round((trModel$Vg/(trModel$Ve + trModel$Vg)), 2)
 
   cat("\n", file = varianceComponentsFile,  append = FALSE)
-  cat('Error variance', trModel$Ve, file = varianceComponentsFile, sep = "\t", append = TRUE)
-  cat("\n", file = varianceComponentsFile,  append = TRUE)
   cat('Additive genetic variance',  trModel$Vg, file = varianceComponentsFile, sep = '\t', append = TRUE)
+  cat("\n", file = varianceComponentsFile,  append = TRUE)
+  cat('Error variance', trModel$Ve, file = varianceComponentsFile, sep = "\t", append = TRUE)
   cat("\n", file = varianceComponentsFile,  append = TRUE)
   cat('SNP heritability (h)', heritability, file = varianceComponentsFile, sep = '\t', append = TRUE)
 
@@ -384,7 +396,8 @@ if (length(selectionData) == 0) {
   if (length(combinedGebvsFile) != 0) {
       fileSize <- file.info(combinedGebvsFile)$size
       if (fileSize != 0 ) {
-          combinedGebvs <- data.frame(fread(combinedGebvsFile))
+          combinedGebvs <- data.frame(fread(combinedGebvsFile,
+                                            header = TRUE))
 
         rownames(combinedGebvs) <- combinedGebvs[,1]
           combinedGebvs[,1]       <- NULL
@@ -402,91 +415,81 @@ if (length(selectionData) == 0) {
 #cross-validation
 
   if (is.null(selectionFile)) {
-    genoNum <- nrow(phenoTrait)
-    if (genoNum < 20 ) {
-      warning(genoNum, " is too small number of genotypes.")
+      genoNum <- nrow(phenoTrait)
+
+      if (genoNum < 20 ) {
+          warning(genoNum, " is too small number of genotypes.")
+      }
+
+      set.seed(4567)
+      
+      k <- 10
+      times <- 2
+      cvFolds <- createMultiFolds(phenoTrait[, 2], k=k, times=times)
+
+      for ( r in 1:times) {
+          re <- paste0('Rep', r)
+          
+          for (i in 1:k) {
+              fo <- ifelse(i < 10, 'Fold0', 'Fold')
+              
+              trFoRe <- paste0(fo, i, '.', re)
+              trG <- cvFolds[[trFoRe]]
+              slG <- as.numeric(rownames(phenoTrait[-trG,]))
+              
+              kblup <- paste("rKblup", i, sep = ".")
+
+              result <- kin.blup(data  = phenoTrait[trG,],
+                                 geno  = 'genotypes',
+                                 pheno = trait,
+                                 K     = relationshipMatrixFiltered,
+                                 n.core = nCores,
+                                 PEV    = TRUE
+                                 )
+              
+              assign(kblup, result)
+              
+                                        #calculate cross-validation accuracy
+              valBlups   <- result$g
+              
+              valBlups   <- data.frame(valBlups)
+              
+              slG <- slG[which(slG <= nrow(phenoTrait))]   
+              
+              slGDf <- phenoTrait[(rownames(phenoTrait) %in% slG),]
+              rownames(slGDf) <- slGDf[, 1]     
+              slGDf[, 1] <- NULL
+              
+              valBlups <-  rownames_to_column(valBlups, var="genotypes")
+              slGDf    <-  rownames_to_column(slGDf, var="genotypes")
+              
+              valCorData <- inner_join(slGDf, valBlups, by="genotypes")    
+              valCorData$genotypes <- NULL
+              
+              accuracy   <- try(cor(valCorData))  
+              validation <- paste("validation", trFoRe, sep = ".")
+              cvTest <- paste("CV", trFoRe, sep = " ")
+
+              if ( class(accuracy) != "try-error")
+              {
+                  accuracy <- round(accuracy[1,2], digits = 3)
+                  accuracy <- data.matrix(accuracy)
+                  
+                  colnames(accuracy) <- c("correlation")
+                  rownames(accuracy) <- cvTest
+
+                  assign(validation, accuracy)
+                  
+                  if (!is.na(accuracy[1,1])) {
+                      validationAll <- rbind(validationAll, accuracy)
+                  }    
+              }
+          }
+      }    
+
+      validationAll <- data.frame(validationAll[order(-validationAll[, 1]), ])
+      colnames(validationAll) <- c('Correlation')     
   }
-
-    set.seed(4567)
-   
-    k <- 10
-    times <- 2
-    cvFolds <- createMultiFolds(phenoTrait[, 2], k=k, times=times)
-
-    for ( r in 1:times) {
-      re <- paste0('Rep', r)
-         
-      for (i in 1:k) {
-        fo <- ifelse(i < 10, 'Fold0', 'Fold')
-       
-        trFoRe <- paste0(fo, i, '.', re)
-        trG <- cvFolds[[trFoRe]]
-        slG <- as.numeric(rownames(phenoTrait[-trG,]))
-      
-        kblup <- paste("rKblup", i, sep = ".")
-
-        result <- kin.blup(data  = phenoTrait[trG,],
-                           geno  = 'genotypes',
-                           pheno = trait,
-                           K     = relationshipMatrixFiltered,
-                           n.core = nCores,
-                           PEV    = TRUE
-                           )
-        
-        assign(kblup, result)
- 
-        #calculate cross-validation accuracy
-        valBlups   <- result$g
-      
-        valBlups   <- data.frame(valBlups)
-       
-        slG <- slG[which(slG <= nrow(phenoTrait))]   
-      
-        slGDf <- phenoTrait[(rownames(phenoTrait) %in% slG),]
-        rownames(slGDf) <- slGDf[, 1]     
-        slGDf[, 1] <- NULL
-        
-        valBlups <-  rownames_to_column(valBlups, var="genotypes")
-        slGDf    <-  rownames_to_column(slGDf, var="genotypes")
-                       
-        valCorData <- inner_join(slGDf, valBlups, by="genotypes")    
-        valCorData$genotypes <- NULL
-            
-        accuracy   <- try(cor(valCorData))  
-        validation <- paste("validation", trFoRe, sep = ".")
-        cvTest <- paste("CV", trFoRe, sep = " ")
-
-        if ( class(accuracy) != "try-error")
-          {
-            accuracy <- round(accuracy[1,2], digits = 3)
-            accuracy <- data.matrix(accuracy)
-    
-            colnames(accuracy) <- c("correlation")
-            rownames(accuracy) <- cvTest
-
-            assign(validation, accuracy)
-      
-            if (!is.na(accuracy[1,1])) {
-              validationAll <- rbind(validationAll, accuracy)
-            }    
-        }
-    }
-  }    
-   
-    validationAll <- data.matrix(validationAll[order(-validationAll[, 1]), ])
-    
-    if (!is.null(validationAll)) {
-      validationMean <- data.matrix(round(colMeans(validationAll), digits = 2))
-      
-      rownames(validationMean) <- c("Average")
-     
-      validationAll <- rbind(validationAll, validationMean)
-      colnames(validationAll) <- c("Correlation")
-  }
-
-    validationAll <- data.frame(validationAll)
-    
-}
 }
 
 selectionPopResult <- c()
@@ -589,6 +592,11 @@ if (length(combinedGebvsFile) != 0 ) {
 
 
 if (!is.null(traitPhenoData) & length(traitPhenoFile) != 0) {
+
+    if (!is.null(meanType)) {
+        colnames(traitPhenoData) <- meanType
+    }
+ 
     fwrite(traitPhenoData,
            file  = traitPhenoFile,
            row.names = TRUE,

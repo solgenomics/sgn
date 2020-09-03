@@ -1,0 +1,374 @@
+
+
+<!--button class="btn btn-success" id="nirs_analysis_training_dialog_show">Train NIRS Model</button-->
+
+<div class="modal fade" id="nirs_analysis_training_dialog" name="nirs_analysis_training_dialog" tabindex="-1" role="dialog" aria-labelledby="nirsAnalysisTrainingDialog" data-backdrop="static">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="nirsAnalysisTrainingDialog">Train Spectral Model</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <&| /util/workflow.mas, id=> "nirs_analysis_training_workflow" &>
+                <&| /util/workflow.mas:step, title=> "Intro" &>
+                    <& /page/page_title.mas, title=>"This workflow will guide you through the training of a model using spectra and phenotypes in the database." &>
+                    <br/><br/>
+                    <center>
+                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Train Dataset" &>
+                    <& /page/page_title.mas, title=>"Select the dataset you are interested in training (the accessions or plots or tissues samples in the dataset need to have spectra uploaded)" &>
+                    <br/><br/>
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Dataset: </label>
+                            <div class="col-sm-11" >
+                                <div id="nirs_analysis_training_dataset_train_select_div"></div>
+                            </div>
+                        </div>
+                    </form>
+                    <br/><br/>
+                    <center>
+                    <button class="btn btn-primary" id="nirs_analysis_training_dataset_train_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Test Dataset" &>
+                    <& /page/page_title.mas, title=>"Select the dataset you are interested in testing (optional)" &>
+                    <br/><br/>
+
+                    <div class="form-horizontal" >
+                        <div class="form-group">
+                            <label class="col-sm-7 control-label">Select Custom Dataset for Testing? If No, the training and test set will be partitioned from the training dataset you already selected: </label>
+                            <div class="col-sm-5" >
+                                <select class="form-control" id="nirs_analysis_training_dataset_test_select_option">
+                                    <option value="No">No</option>
+                                    <option value="Yes">Yes</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <center>
+                    <button class="btn btn-primary" id="nirs_analysis_training_dataset_test_select_step">Go to Next Step</button>
+                    </center>
+                    <br/><br/>
+
+                    <div class="form-horizontal" id="nirs_analysis_training_dataset_test_div" style="display:none">
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Dataset (Optional) (the accessions or plots or tissues samples in the dataset need to have spectra uploaded): </label>
+                            <div class="col-sm-11" >
+                                <div id="nirs_analysis_training_dataset_test_select_div"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </&>
+                <&| /util/workflow.mas:step, title=> "Trait" &>
+                    <& /page/page_title.mas, title=>"Select the trait you are interested in. If there are no available options, the training and test datasets you selected do not share any traits in common!" &>
+                    <br/><br/>
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Trait: </label>
+                            <div class="col-sm-11" >
+                                <div id="nirs_analysis_training_trait_select_div"></div>
+                            </div>
+                        </div>
+                    </form>
+                    <br/><br/>
+                    <center>
+                    <button class="btn btn-primary" id="nirs_analysis_training_trait_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Model Settings" &>
+                    <& /page/page_title.mas, title=>"Select parameters for spectral modeling" &>
+
+                    <center>
+                    <button class="btn btn-info" id="nirs_analysis_training_dataset_info">More Info</button>
+                    </center>
+                    <hr>
+
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Spectrometer format: </label>
+                            <div class="col-sm-9" >
+
+                                <select class="form-control input-sm" id="nirs_analysis_training_format_select">
+                                    <option value="">Select spectrometer format</option>
+                                    <option selected value="SCIO">SCiO</option>
+                                    <option value="QST">QualitySpec Trek</option>
+                                    <option value="FOSS6500">FOSS 6500</option>
+                                    <option value="BUCHIN500">Buchi N500</option>
+                                    <option value="LinkSquare">LinkSquare</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Cross-validation methods: </label>
+                            <div class="col-sm-9" >
+
+                                <select class="form-control input-sm" id="nirs_analysis_training_cv_select">
+                                    <option value="">Select cross-validation</option>
+                                    <option selected value="random">Random</option>
+                                    <option value="stratified">Stratified</option>
+                                    <option value="CV1">CV1</option>
+                                    <option value="CV2">CV2</option>
+                                    <option value="CV0">CV0</option>
+                                    <option value="CV00">CV00</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Algorithm: </label>
+                            <div class="col-sm-9" >
+                                <select class="form-control" id="nirs_analysis_training_nirs_model_algorithm">
+                                    <option value="pls">PLSR</option>
+                                    <option value="rf">Random Forest</option>
+                                    <option value="svmLinear">SVM with Linear Kernel</option>
+                                    <option value="svmRadial">SVM with Radial Kernel</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Number of sampling iterations: </label>
+                            <div class="col-sm-9" >
+                                <input class="form-control" type="number" id="nirs_analysis_training_niter_select" name="niter_select" min="1" max="100" step="1" value="10">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Tuning length: </label>
+                            <div class="col-sm-9" >
+                                <input class="form-control" type="number" id="nirs_analysis_training_tuneLength_select" name="tuneLength_select" min="1" max="30" step="1" value="10">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Include preprocessing?: </label>
+                            <div class="col-sm-9" >
+                                <input type="checkbox" id="nirs_analysis_training_preprocessing_select" name="preprocessing_select" >
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Show random forest variable importance? (Note this may take a long time to run): </label>
+                            <div class="col-sm-9" >
+                                <input type="checkbox" id="nirs_analysis_training_rf_var_imp_select" name="rf_var_imp_select" >
+                            </div>
+                        </div>
+                    </div>
+
+                    <br/><br/>
+                    <center>
+                    <button class="btn btn-primary" id="nir_analysis_training_model_step">Train the Model</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Summary" &>
+                    <& /page/page_title.mas, title=>"Summary of the parameters selected for model creation" &>
+
+                    <div id="nir_analysis_training_model_performance_results"></div>
+
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Do you want to save the model for future predictions?: </label>
+                            <div class="col-sm-9" >
+                                <button class="btn btn-primary" id="nir_analysis_training_model_save_step">Save the Model</button>
+                            </div>
+                        </div>
+                    </div>
+
+                </&>
+            </&>
+
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="nirs_analysis_training_dialog_info" name="nirs_analysis_training_dialog_info" tabindex="-1" role="dialog" aria-labelledby="nirsAnalysisTrainingInfoDialog" data-backdrop="static">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="nirsAnalysisTrainingInfoDialog">Train Spectral Model</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <h1>More </h1>
+            <ul>
+              <li>"CV1": untested lines in tested environments</li>
+              <li>"CV2": tested lines in tested environments</li>
+              <li>"CV0": tested lines in untested environments</li>
+              <li>"CV00": untested lines in untested environments</li>
+            </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+jQuery(document).ready(function(){
+
+    jQuery('#nirs_analysis_training_dataset_info').click(function(){
+        jQuery('#nirs_analysis_training_dialog_info').modal('show');
+    });
+
+    jQuery('#nirs_analysis_training_dialog_show').click(function(){
+        jQuery('#nirs_analysis_training_dialog').modal('show');
+
+        get_select_box('datasets','nirs_analysis_training_dataset_train_select_div', {'checkbox_name':'nirs_analysis_training_dataset_train_select_id'});
+        get_select_box('datasets','nirs_analysis_training_dataset_test_select_div', {'checkbox_name':'nirs_analysis_training_dataset_test_select_id'});
+    });
+
+    var nirs_analysis_training_dataset_train_id;
+    jQuery('#nirs_analysis_training_dataset_train_select_step').click(function(){
+        var selected_train = [];
+        jQuery('input[name="nirs_analysis_training_dataset_train_select_id"]:checked').each(function() {
+            selected_train.push(jQuery(this).val());
+        });
+
+        if(selected_train.length > 1 || selected_train.length == 0) {
+            alert('Please select one dataset!');
+            return false;
+        }
+        else {
+            nirs_analysis_training_dataset_train_id = selected_train[0];
+            Workflow.complete("#nirs_analysis_training_dataset_train_select_step");
+            Workflow.focus('#nirs_analysis_training_workflow', 2);
+        }
+    });
+
+    jQuery('#nirs_analysis_training_dataset_test_select_option').change(function(){
+        var opt = jQuery(this).val();
+        if (opt == 'Yes') {
+            jQuery('#nirs_analysis_training_dataset_test_div').show();
+        }
+        else {
+            jQuery('#nirs_analysis_training_dataset_test_div').hide();
+        }
+    });
+
+    var nirs_analysis_training_dataset_test_id;
+    jQuery('#nirs_analysis_training_dataset_test_select_step').click(function(){
+
+        var selected_test = [];
+        jQuery('input[name="nirs_analysis_training_dataset_test_select_id"]:checked').each(function() {
+            selected_test.push(jQuery(this).val());
+        });
+
+        if(selected_test.length > 1) {
+            alert('Please select one dataset!');
+            return false;
+        }
+        else {
+            nirs_analysis_training_dataset_test_id = selected_test[0];
+
+            get_select_box('datasets_intersect', 'nirs_analysis_training_trait_select_div', {'name':'nirs_analysis_training_trait_select_id', 'id':'nirs_analysis_training_trait_select_id', 'param':'traits', 'dataset_ids':JSON.stringify([nirs_analysis_training_dataset_train_id,nirs_analysis_training_dataset_test_id]) });
+
+            Workflow.complete("#nirs_analysis_training_dataset_test_select_step");
+            Workflow.focus('#nirs_analysis_training_workflow', 3);
+        }
+    });
+
+    var nirs_analysis_training_trait_id;
+    jQuery('#nirs_analysis_training_trait_select_step').click(function(){
+        nirs_analysis_training_trait_id = jQuery('#nirs_analysis_training_trait_select_id').val();
+        console.log(nirs_analysis_training_trait_id);
+
+        Workflow.complete("#nirs_analysis_training_trait_select_step");
+        Workflow.focus('#nirs_analysis_training_workflow', 4);
+    });
+
+    var nirs_analysis_training_format_select;
+    var nirs_analysis_training_cv_select;
+    var nirs_analysis_training_nirs_model_algorithm;
+    var nirs_analysis_training_tuneLength_select;
+    var nirs_analysis_training_preprocessing_select;
+    var nirs_analysis_training_niter_select;
+    var nirs_analysis_training_rf_var_imp_select;
+    var nirs_analysis_training_response;
+
+    jQuery('#nir_analysis_training_model_step').click(function(){
+        nirs_analysis_training_format_select = jQuery('#nirs_analysis_training_format_select').val();
+        nirs_analysis_training_cv_select = jQuery('#nirs_analysis_training_cv_select').val();
+        nirs_analysis_training_nirs_model_algorithm = jQuery('#nirs_analysis_training_nirs_model_algorithm').val();
+        nirs_analysis_training_tuneLength_select = jQuery('#nirs_analysis_training_tuneLength_select').val();
+        nirs_analysis_training_preprocessing_select = 0;
+        if (jQuery('#nirs_analysis_training_preprocessing_select').is(":checked")) {
+            nirs_analysis_training_preprocessing_select = 1;
+        }
+        nirs_analysis_training_niter_select = jQuery('#nirs_analysis_training_niter_select').val();
+        nirs_analysis_training_rf_var_imp_select = 0;
+        if (jQuery('#nirs_analysis_training_rf_var_imp_select').is(":checked")) {
+            nirs_analysis_training_rf_var_imp_select = 1;
+        }
+
+        jQuery.ajax({
+            url : '/ajax/Nirs/generate_results',
+            type : 'POST',
+            data : {
+                'train_dataset_id' : nirs_analysis_training_dataset_train_id,
+                'test_dataset_id' : nirs_analysis_training_dataset_test_id,
+                'trait_id' : nirs_analysis_training_trait_id,
+                'format' : nirs_analysis_training_format_select,
+                'cv' : nirs_analysis_training_cv_select,
+                'algorithm' : nirs_analysis_training_nirs_model_algorithm,
+                'niter' : nirs_analysis_training_niter_select,
+                'tune' : nirs_analysis_training_tuneLength_select,
+                'preprocessing' : nirs_analysis_training_preprocessing_select,
+                'rf' : nirs_analysis_training_rf_var_imp_select
+            },
+            beforeSend: function(){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response){
+                console.log(response);
+                if (response.error) {
+                    alert(response.error);
+                }
+                nirs_analysis_training_response = response;
+
+                jQuery('#working_modal').modal('hide');
+
+                jQuery('#nir_analysis_training_model_performance_results').html("<div class='well'>"+response.performance_output+"</div>");
+
+                Workflow.complete("#nir_analysis_training_model_step");
+                Workflow.focus('#nirs_analysis_training_workflow', 5);
+            },
+            error: function(response){
+                alert('Error training NIRS!');
+                jQuery('#working_modal').modal('hide');
+            }
+        });
+    });
+
+
+    jQuery('#nir_analysis_training_model_save_step').click(function(){
+        jQuery('#generic_save_analysis_analysis_to_save').prop('disabled', 'disabled');
+        jQuery('#generic_save_analysis_model_language').val('R');
+        jQuery('#generic_save_analysis_model_type').val('waves_nirs_spectral_predictions');
+        jQuery('#generic_save_analysis_model_properties').val(JSON.stringify(nirs_analysis_training_response.model_properties));
+        jQuery('#generic_save_analysis_model_application_name').val("Jenna's Waves R Package NIRs Analysis");
+        jQuery('#generic_save_analysis_model_application_version').val("V1.01");
+        jQuery('#generic_save_analysis_model_file').val(nirs_analysis_training_response.model_file);
+        jQuery('#generic_save_analysis_model_archived_model_file_type').val(nirs_analysis_training_response.model_file_type);
+        jQuery('#generic_save_analysis_model_training_data_file').val(nirs_analysis_training_response.training_data_file);
+        jQuery('#generic_save_analysis_model_archived_training_data_file_type').val(nirs_analysis_training_response.training_data_file_type);
+        jQuery('#generic_save_analysis_model_auxiliary_files').val(JSON.stringify(nirs_analysis_training_response.model_aux_files));
+        jQuery('#generic_save_analysis_dataset_id').val(nirs_analysis_training_dataset_train_id);
+
+        jQuery('#generic_save_analysis_dialog').modal('show');
+    });
+
+});
+</script>

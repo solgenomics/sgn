@@ -104,7 +104,7 @@
           <br>
         </td>
       </tr>
-      <tr>
+      <!-- tr>
       	<td>
           <label class="blast_select_label" for="matrix">Substitution Matrix</label>
       	</td>
@@ -117,7 +117,7 @@
               <option value="PAM70">PAM70</option>
               </select>
           </td>
-      </tr>
+      </tr -->
       <tr>
       	<td>
         <label class="blast_select_label" for="evalue">e value</label>
@@ -126,6 +126,15 @@
           	<input class="blast_select_box form-control" type="text" size="10" value="10" name="evalue" />
           </td>
       </tr>
+            <tr>
+      	<td>
+        <label class="blast_select_label" for="word_size">word_size</label>
+      	</td>
+          <td >
+          	<input class="blast_select_box form-control" type="text" size="10" value="7" name="word_size" />
+          </td>
+      </tr>
+
       <tr>
         <td>
           <label class="blast_select_label" for="filterq">Filter low complexity</label>

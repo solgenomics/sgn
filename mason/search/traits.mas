@@ -52,11 +52,11 @@
                     <table id="trait_search_results" width="100%" class="table table-hover table-striped">
                     <thead>
                       <tr>
-                        <th></th>
+                        <th>Select</th>
                         <th>Trait ID</th>
                         <th>Trait Name</th>
                         <th>Definition</th>
-                    </tr>
+                      </tr>
                     </thead>
                     </table>
 
@@ -106,7 +106,9 @@
 
 jQuery(document).ready(function () {
 
-    get_select_box('trait_variable_ontologies', 'trait_search_ontology_select', { 'name' : 'trait_search_ontology_select_id', 'cvprop_type_name':JSON.stringify(['trait_ontology','method_ontology','unit_ontology','composed_trait_ontology','object_ontology','attribute_ontology','time_ontology']) });
+    get_select_box('trait_variable_ontologies', 'trait_search_ontology_select', { 'name' : 'trait_search_ontology_select_id', 'cvprop_type_name':JSON.stringify(['trait_ontology','composed_trait_ontology']) });
+
+    jQuery('[data-toggle="tooltip"]').tooltip();
 
     var lo = new CXGN.List();
     jQuery('#trait_search_list_select').html(lo.listSelect('trait_search_list_select', [ 'traits' ], 'Leave blank to see all traits', undefined, undefined));
@@ -174,13 +176,16 @@ jQuery(document).ready(function () {
    var selection_changed = function () {
      var selected_rows = trait_table.rows({'selected':true});
      jQuery("#trait_result_count").text(selected_rows.count());
+     //console.log(selected_rows.data());
+
      var name_links = selected_rows.data().map(function(row){
-       return [row[2], row[1]];
+         return [row[4], row[5]];
+         trait_table.rows().deselect();
      });
 
      var names = [];
      for (var i = 0; i < name_links.length; i++) { //extract and combine trait name and id from anchor tags
-       names.push(name_links[i][0].match(/<a [^>]+>([^<]+)<\/a>/)[1] + '|' + name_links[i][1].match(/<a [^>]+>([^<]+)<\/a>/)[1] + '\n');
+       names.push(name_links[i][0] + '|' + name_links[i][1] + '\n');
      }
 
      jQuery('#trait_result_names').html(names);

@@ -286,6 +286,44 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
         );
 }
 
+
+=head2 view_by_organism_name
+
+Public Path: /stock/view_by_organism/$organism/$name
+Path Params:
+    organism = organism name (abbreviation, genus, species, common name)
+    name = stock unique name
+
+Search for stock(s) matching the organism query and the stock unique name.
+If 1 match is found, display the stock detail page.  Display an error for 
+0 matches and a list of matches when multiple stocks are found.
+
+=cut
+
+sub view_by_organism_name : Path('/stock/view_by_organism') Args(2) {
+    my ($self, $c, $organism_query, $stock_query) = @_;
+    $self->search_stock($c, $organism_query, $stock_query);
+}
+
+
+=head2 view_by_name 
+
+Public Path: /stock/view_by_name/$name
+Path Params:
+    name = stock unique name
+
+Search for stock(s) matching the stock unique name.
+If 1 match is found, display the stock detail page.  Display an error for 
+0 matches and a list of matches when multiple stocks are found.
+
+=cut
+
+sub view_by_name : Path('/stock/view_by_name') Args(1) {
+    my ($self, $c, $stock_query) = @_;
+    $self->search_stock($c, undef, $stock_query);
+}
+
+
 =head1 PRIVATE ACTIONS
 
 =head2 download_phenotypes
@@ -336,6 +374,7 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
     my $stock_name = $stock_row->uniquename;
     my $genotypeprop_id = $c->req->param('genotypeprop_id') ? [$c->req->param('genotypeprop_id')] : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $dl_token = $c->req->param("gbs_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
 
@@ -345,6 +384,7 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
     if ($stock_id) {
         my %genotype_download_factory = (
             bcs_schema=>$schema,
+            people_schema=>$people_schema,
             cache_root_dir=>$c->config->{cache_file_path},
             markerprofile_id_list=>$genotypeprop_id,
             #genotype_data_project_list=>$genotype_data_project_list,
@@ -364,7 +404,13 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
             'VCF',    #can be either 'VCF' or 'GenotypeMatrix'
             \%genotype_download_factory
         );
-        my $file_handle = $geno->download($c);
+        my $file_handle = $geno->download(
+            $c->config->{cluster_shared_tempdir},
+            $c->config->{backend},
+            $c->config->{cluster_host},
+            $c->config->{'web_cluster_queue'},
+            $c->config->{basepath}
+        );
 
         $c->res->content_type("application/text");
         $c->res->cookies->{$dl_cookie} = {
@@ -418,6 +464,75 @@ sub get_stock : Chained('/')  PathPart('stock')  CaptureArgs(1) {
     $c->stash->{stock}     = CXGN::Chado::Stock->new($self->schema, $stock_id);
     $c->stash->{stock_row} = $self->schema->resultset('Stock::Stock')
                                   ->find({ stock_id => $stock_id });
+}
+
+# Search for stock by organism name (optional) and uniquename
+# Display stock detail page for 1 match, error messages for 0 or multiple matches
+sub search_stock : Private {
+    my ( $self, $c, $organism_query, $stock_query ) = @_;
+    my $rs = $self->schema->resultset('Stock::Stock');
+    
+    my $matches;
+    my $count = 0;
+
+    # Search by name and organism
+    if ( defined($organism_query) && defined($stock_query) ) {
+        $matches = $rs->search({
+                'UPPER(uniquename)' => uc($stock_query),
+                -or => [
+                    'UPPER(organism.abbreviation)' => uc($organism_query),
+                    'UPPER(organism.genus)' => uc($organism_query),
+                    'UPPER(organism.species)' => uc($organism_query),
+                    'UPPER(organism.common_name)' => {'like', '%' . uc($organism_query) .'%'}
+                ],
+                is_obsolete => 'false'
+            },
+            {join => 'organism'}
+        );
+        $count = $matches->count;
+    }
+
+    # Search by name
+    elsif ( defined($stock_query) ) {
+        $matches = $rs->search({
+                'UPPER(uniquename)' => uc($stock_query), 
+                is_obsolete => 'false'
+            }, 
+            {join => 'organism'}
+        );
+        $count = $matches->count;
+    }
+
+
+    # NO MATCH FOUND
+    if ( $count == 0 ) {
+        $c->stash->{template} = "generic_message.mas";
+        $c->stash->{message} = "<strong>No Matching Stock Found</strong> ($stock_query $organism_query)<br />You can view and search for stocks from the <a href='/search/stocks'>Stock Search Page</a>";
+    }
+    
+    # MULTIPLE MATCHES FOUND
+    elsif ( $count > 1 ) {
+        my $list = "<ul>";
+        while (my $stock = $matches->next) {
+            my $stock_id = $stock->stock_id;
+            my $stock_name = $stock->uniquename;
+            my $species_name = $stock->organism->species;
+            my $url = "/stock/$stock_id/view";
+            $list.="<li><a href='$url'>$stock_name ($species_name)</li>";
+        }
+        $list.="</ul>";
+        $c->stash->{template} = "generic_message.mas";
+        $c->stash->{message} = "<strong>Multiple Stocks Found</strong><br />" . $list;
+    }
+
+    # 1 MATCH FOUND - FORWARD TO VIEW STOCK
+    else {
+        my $stock_id = $matches->first->stock_id;
+        $c->stash->{stock}     = CXGN::Chado::Stock->new($self->schema, $stock_id);
+        $c->stash->{stock_row} = $self->schema->resultset('Stock::Stock')
+                                  ->find({ stock_id => $stock_id });
+        $c->forward('view_stock');
+    }
 }
 
 #add the stockcvterms to the stash. Props are a hashref of lists.
