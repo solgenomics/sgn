@@ -29,6 +29,7 @@ sub analysis_detail :Path('/analyses') Args(1) {
     my $c = shift;
     my $analysis_id = shift;
     my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $user = $c->user();
 
     print STDERR "Viewing analysis with id $analysis_id\n";
 
@@ -57,6 +58,7 @@ sub analysis_detail :Path('/analyses') Args(1) {
     $c->stash->{has_col_and_row_numbers} = $a->has_col_and_row_numbers();
     $c->stash->{identifier_prefix} = $c->config->{identifier_prefix};
     $c->stash->{analysis_metadata} = $a->metadata();
+    $c->stash->{user_can_modify} = $user->check_roles("submitter") || $user->check_roles("curator");
     $c->stash->{template} = '/analyses/detail.mas';
 }
 
