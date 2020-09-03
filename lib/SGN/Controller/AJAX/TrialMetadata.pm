@@ -2886,7 +2886,10 @@ sub trial_plot_time_series_accessions : Chained('trial') PathPart('plot_time_ser
         geom_line(aes(color = germplasmName), size = 1) +
         scale_fill_manual(values = c(\''.$color_string.'\')) + 
         theme_minimal();
-    ggsave(\''.$pheno_figure_tempfile.'\', sp, device=\'png\', width=6, height=3, units=\'in\');
+    sp <- sp + guides(shape = guide_legend(override.aes = list(size = 0.5)));
+    sp <- sp + guides(color = guide_legend(override.aes = list(size = 0.5)));
+    sp <- sp + theme(legend.title = element_text(size = 3), legend.text = element_text(size = 3));
+    ggsave(\''.$pheno_figure_tempfile.'\', sp, device=\'png\', width=12, height=6, units=\'in\');
     dev.off();"';
     print STDERR Dumper $cmd;
     my $status = system($cmd);
