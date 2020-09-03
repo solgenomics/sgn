@@ -2893,7 +2893,7 @@ sub trial_plot_time_series_accessions : Chained('trial') PathPart('plot_time_ser
     if (scalar(@sorted_germplasm_names) > 100) {
         $cmd .= 'sp <- sp + theme(legend.position = \'none\');';
     }
-    $cmd .= 'ggsave(\''.$pheno_figure_tempfile.'\', sp, device=\'png\', width=24, height=12, units=\'in\');
+    $cmd .= 'ggsave(\''.$pheno_figure_tempfile.'\', sp, device=\'png\', width=12, height=6, units=\'in\');
     dev.off();"';
     print STDERR Dumper $cmd;
     my $status = system($cmd);
