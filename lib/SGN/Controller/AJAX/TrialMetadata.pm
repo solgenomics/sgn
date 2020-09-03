@@ -2865,18 +2865,26 @@ sub trial_plot_time_series_accessions : Chained('trial') PathPart('plot_time_ser
         }
     close($F);
 
+    my @set = ('0' ..'9', 'A' .. 'F');
+    my @colors;
+    for (1..scalar(@sorted_germplasm_names)) {
+        my $str = join '' => map $set[rand @set], 1 .. 6;
+        push @colors, '#'.$str;
+    }
+    my $color_string = join '\',\'', @colors;
+
     my $dir = $c->tempfiles_subdir('/trial_analysis_accession_time_series_plot_dir');
     my $pheno_figure_tempfile_string = $c->tempfile( TEMPLATE => 'trial_analysis_accession_time_series_plot_dir/figureXXXX');
     my $pheno_figure_tempfile = $c->config->{basepath}."/".$pheno_figure_tempfile_string;
 
-    my $cmd = 'R -e "library(data.table); library(ggplot2); library(wesanderson);
+    my $cmd = 'R -e "library(data.table); library(ggplot2);
     mat <- fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\');
     mat\$time <- as.numeric(as.character(mat\$time));
     options(device=\'png\');
     par();
     sp <- ggplot(mat, aes(x = time, y = value)) + 
         geom_line(aes(color = germplasmName), size = 1) +
-        scale_fill_manual(values = wes_palette(\'Darjeeling1\', n='.scalar(@sorted_germplasm_names).')) + 
+        scale_fill_manual(values = c(\''.$color_string.'\')) + 
         theme_minimal();
     ggsave(\''.$pheno_figure_tempfile.'\', sp, device=\'png\', width=6, height=3, units=\'in\');
     dev.off();"';
