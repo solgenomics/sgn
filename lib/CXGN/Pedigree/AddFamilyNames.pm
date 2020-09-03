@@ -61,7 +61,7 @@ sub add_family_name {
     my $owner_sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $owner_name); #add person id as an option.
 
 
-    #add crosses as family members in a single transaction
+    #add family name and associate with cross
     my $coderef = sub {
 
         my $family_name_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'family_name', 'stock_type')->cvterm_id();
@@ -101,12 +101,29 @@ sub add_family_name {
         });
 
         if ($family_name_rs){
-            #create relationship between family_name and cross
-            $family_name_rs->find_or_create_related('stock_relationship_objects', {
-                type_id => $cross_member_of_cvterm_id,
+			$family_female_parent = $chado_schema->resultset("Stock::StockRelationship")->find ({
                 object_id => $family_name_rs->stock_id(),
-                subject_id => $cross_stock->stock_id(),
+                type_id => $family_female_parent_cvterm->cvterm_id(),
             });
+
+            $family_male_parent = $chado_schema->resultset("Stock::StockRelationship")->find ({
+                object_id => $family_name_rs->stock_id(),
+                type_id => $family_male_parent_cvterm->cvterm_id(),
+            });
+
+            if (($family_female_parent->stock_id()) != ($cross_female_parent->stock_id())) {
+				print STDERR "Cross female parent is not the same as family female parent\n";
+	            return;
+            } elsif (($family_male_parent->stock_id()) != ($cross_male_parent->stock_id())) {
+				print STDERR "Cross male parent is not the same as family male parent\n";
+	            return;
+            } else {
+				$family_name_rs->find_or_create_related('stock_relationship_objects', {
+	                type_id => $cross_member_of_cvterm_id,
+	                object_id => $family_name_rs->stock_id(),
+	                subject_id => $cross_stock->stock_id(),
+	            });
+            }
         } else {
             my $new_family_name_rs;
             $new_family_name_rs = $chado_schema->resultset("Stock::Stock")->create({

@@ -1431,7 +1431,7 @@ sub upload_family_names_POST : Args(0) {
         $c->detach();
     }
 
-    #add the progeny
+    #add family name and associate with cross
     if ($parsed_data){
         my %family_name_hash = %{$parsed_data};
         foreach my $cross_name(keys %family_name_hash){
