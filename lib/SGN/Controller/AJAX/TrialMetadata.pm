@@ -2875,6 +2875,7 @@ sub trial_plot_time_series_accessions : Chained('trial') PathPart('plot_time_ser
 
     my $dir = $c->tempfiles_subdir('/trial_analysis_accession_time_series_plot_dir');
     my $pheno_figure_tempfile_string = $c->tempfile( TEMPLATE => 'trial_analysis_accession_time_series_plot_dir/figureXXXX');
+    $pheno_figure_tempfile_string .= '.png';
     my $pheno_figure_tempfile = $c->config->{basepath}."/".$pheno_figure_tempfile_string;
 
     my $cmd = 'R -e "library(data.table); library(ggplot2);
@@ -2886,10 +2887,10 @@ sub trial_plot_time_series_accessions : Chained('trial') PathPart('plot_time_ser
         geom_line(aes(color = germplasmName), size = 1) +
         scale_fill_manual(values = c(\''.$color_string.'\')) + 
         theme_minimal();
-    sp <- sp + guides(shape = guide_legend(override.aes = list(size = 0.5)));
-    sp <- sp + guides(color = guide_legend(override.aes = list(size = 0.5)));
-    sp <- sp + theme(legend.title = element_text(size = 3), legend.text = element_text(size = 3));
-    ggsave(\''.$pheno_figure_tempfile.'\', sp, device=\'png\', width=12, height=6, units=\'in\');
+    sp <- sp + guides(shape = guide_legend(override.aes = list(size = 0.1)));
+    sp <- sp + guides(color = guide_legend(override.aes = list(size = 0.1)));
+    sp <- sp + theme(legend.title = element_text(size = 2), legend.text = element_text(size = 2));
+    ggsave(\''.$pheno_figure_tempfile.'\', sp, device=\'png\', width=24, height=12, units=\'in\');
     dev.off();"';
     print STDERR Dumper $cmd;
     my $status = system($cmd);
