@@ -25,6 +25,8 @@ use Moose::Util::TypeConstraints;
 use Try::Tiny;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
+use Data::Dumper;
+
 
 has 'chado_schema' => (
 		 is       => 'rw',
@@ -90,10 +92,10 @@ sub add_family_name {
                 type_id => $male_parent_cvterm->cvterm_id(),
             });
 
-        my $cross_female_name = $cross_female_parent->uniquename();
-		my $cross_male_name = $cross_male_parent->uniquename();
-        print STDERR "CROSS FEMALE PARENT =".Dumper($cross_female_name)."\n";
-		print STDERR "CROSS MALE PARENT =".Dumper($cross_male_name)."\n";
+        my $cross_female_id = $cross_female_parent->subject_id();
+		my $cross_male_id = $cross_male_parent->subject_id();
+        print STDERR "CROSS FEMALE PARENT =".Dumper($cross_female_id)."\n";
+		print STDERR "CROSS MALE PARENT =".Dumper($cross_male_id)."\n";
 
         #Get organism id from cross
         $organism_id = $cross_stock->organism_id();
@@ -115,12 +117,12 @@ sub add_family_name {
                 type_id => $family_male_parent_cvterm->cvterm_id(),
             });
 
-			my $family_female_name = $family_female_parent->uniquename();
-			my $family_male_name = $family_male_parent->uniquename();
+			my $family_female_id = $family_female_parent->subject_id();
+			my $family_male_id = $family_male_parent->subject_id();
 
-            if ($cross_female_name ne $family_female_name ) {
+            if ($cross_female_id ne $family_female_id ) {
 				print STDERR "Parents of cross: $cross_name are not the same as parents of family: $family_name\n";
-            } elsif ($cross_male_name ne $family_male_name) {
+            } elsif ($cross_male_id ne $family_male_id) {
 				print STDERR "Parents of cross: $cross_name are not the same as parents of family: $family_name\n";
             } else {
 				$family_name_rs->find_or_create_related('stock_relationship_objects', {
@@ -149,14 +151,14 @@ sub add_family_name {
             $new_family_name_rs->find_or_create_related('stock_relationship_objects', {
 				type_id => $family_female_parent_cvterm->cvterm_id(),
                 object_id => $new_family_name_rs->stock_id(),
-                subject_id => $cross_female_parent->stock_id(),
+                subject_id => $cross_female_parent->subject_id(),
             });
 
 			#create relationship between new family_name and male parent name
             $new_family_name_rs->find_or_create_related('stock_relationship_objects', {
 				type_id => $family_male_parent_cvterm->cvterm_id(),
                 object_id => $new_family_name_rs->stock_id(),
-                subject_id => $cross_male_parent->stock_id(),
+                subject_id => $cross_male_parent->subject_id(),
             });
 
             #add new stock_id to an array for phenome schema
