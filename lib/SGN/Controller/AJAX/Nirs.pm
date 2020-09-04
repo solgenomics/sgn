@@ -139,7 +139,7 @@ sub nirs_upload_verify_POST : Args(0) {
     my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
     my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
 
-    my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
         basepath=>$c->config->{basepath},
         dbhost=>$c->config->{dbhost},
         dbname=>$c->config->{dbname},
@@ -155,7 +155,7 @@ sub nirs_upload_verify_POST : Args(0) {
         values_hash=>\%parsed_data,
         has_timestamps=>0,
         metadata_hash=>\%phenotype_metadata
-    );
+    });
 
     my $warning_status;
     my ($verified_warning, $verified_error) = $store_phenotypes->verify();
@@ -197,9 +197,9 @@ sub nirs_upload_verify_POST : Args(0) {
         print $F $filter_data_input_json;
     close($F);
 
-    my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirs_upload_filter_aggregate.R '$filter_json_filepath' ";
-    print STDERR $cmd_s;
-    my $cmd_status = system($cmd_s);
+    # my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirs_upload_filter_aggregate.R '$filter_json_filepath' ";
+    # print STDERR $cmd_s;
+    # my $cmd_status = system($cmd_s);
 
     $c->stash->{rest} = {success => \@success_status, warning => \@warning_status, error => \@error_status};
 }
@@ -311,38 +311,6 @@ sub nirs_upload_store_POST : Args(0) {
         }
     }
 
-    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
-    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
-
-    my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
-        basepath=>$c->config->{basepath},
-        dbhost=>$c->config->{dbhost},
-        dbname=>$c->config->{dbname},
-        dbuser=>$c->config->{dbuser},
-        dbpass=>$c->config->{dbpass},
-        temp_file_nd_experiment_id=>$temp_file_nd_experiment_id,
-        bcs_schema=>$schema,
-        metadata_schema=>$metadata_schema,
-        phenome_schema=>$phenome_schema,
-        user_id=>$user_id,
-        stock_list=>\@plots,
-        trait_list=>\@traits,
-        values_hash=>\%parsed_data,
-        has_timestamps=>0,
-        metadata_hash=>\%phenotype_metadata
-    );
-
-    # my ($verified_warning, $verified_error) = $store_phenotypes->verify();
-    # if ($verified_error) {
-    #     push @error_status, $verified_error;
-    #     $c->stash->{rest} = {success => \@success_status, error => \@error_status };
-    #     $c->detach();
-    # }
-    # if ($verified_warning) {
-    #     push @warning_status, $verified_warning;
-    # }
-    push @success_status, "File data verified. Plot names and trait names are valid.";
-
     my @filter_input;
     while (my ($stock_name, $o) = each %parsed_data) {
         my $spectras = $o->{nirs}->{spectra};
@@ -371,10 +339,49 @@ sub nirs_upload_store_POST : Args(0) {
         print $F $filter_data_input_json;
     close($F);
 
-    my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirs_upload_filter_aggregate.R '$filter_json_filepath' ";
-    print STDERR $cmd_s;
-    my $cmd_status = system($cmd_s);
-    
+    # my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirs_upload_filter_aggregate.R '$filter_json_filepath' ";
+    # print STDERR $cmd_s;
+    # my $cmd_status = system($cmd_s);
+
+    my %parsed_data_filtered;
+    while (my ($stock_name, $o) = each %parsed_data) {
+        my $spectras = $o->{nirs}->{spectra};
+        $parsed_data_filtered{$stock_name}->{nirs}->{device_type} = $o->{nirs}->{device_type};
+        $parsed_data_filtered{$stock_name}->{nirs}->{spectra} = $spectras->[0];
+    }
+
+    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+
+    my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
+        basepath=>$c->config->{basepath},
+        dbhost=>$c->config->{dbhost},
+        dbname=>$c->config->{dbname},
+        dbuser=>$c->config->{dbuser},
+        dbpass=>$c->config->{dbpass},
+        temp_file_nd_experiment_id=>$temp_file_nd_experiment_id,
+        bcs_schema=>$schema,
+        metadata_schema=>$metadata_schema,
+        phenome_schema=>$phenome_schema,
+        user_id=>$user_id,
+        stock_list=>\@plots,
+        trait_list=>\@traits,
+        values_hash=>\%parsed_data_filtered,
+        has_timestamps=>0,
+        metadata_hash=>\%phenotype_metadata
+    });
+
+    # my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+    # if ($verified_error) {
+    #     push @error_status, $verified_error;
+    #     $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+    #     $c->detach();
+    # }
+    # if ($verified_warning) {
+    #     push @warning_status, $verified_warning;
+    # }
+    push @success_status, "File data verified. Plot names and trait names are valid.";
+
     my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
     if ($stored_phenotype_error) {
         push @error_status, $stored_phenotype_error;
