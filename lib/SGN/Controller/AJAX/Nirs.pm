@@ -175,7 +175,8 @@ sub nirs_upload_verify_POST : Args(0) {
         foreach my $spectra (@$spectras) {
             push @filter_input, {
                 "observationUnitId" => $stock_name,
-                "nirs_spectra" => $spectra
+                "nirs_spectra" => $spectra,
+                "device_type" => $o->{nirs}->{device_type}
             };
         }
     }
