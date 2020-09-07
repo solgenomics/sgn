@@ -449,6 +449,10 @@ sub structure_output_details {
     {	
 	$output_details = $self->structure_selection_prediction_output($c);
     }
+      elsif ( $analysis_page =~ m/kinship\/analysis/ ) 
+    {	
+	$output_details = $self->structure_kinship_analysis_output($c);
+    }
      
     $self->analysis_log_file($c);
     my $log_file = $c->stash->{analysis_log_file};
@@ -463,6 +467,36 @@ sub structure_output_details {
     $c->stash->{bg_job_output_details} = $output_details;
 
 }
+
+sub structure_kinship_analysis_output {
+    my ($self, $c) = @_;
+
+    my $pop_id        = $c->stash->{kinship_pop_id}; 
+    my $protocol_id   = $c->stash->{genotyping_protocol_id};
+    
+    my $base = $c->req->base; 
+    $base =~ s/:\d+//;
+    
+    my $kinship_page = $base . "kinship/analysis/$pop_id/gp/$protocol_id";
+
+    my %output_details = ();
+    
+    $c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);	    
+    my $geno_file  = $c->stash->{genotype_file_name};
+
+    my $coef_files = $c->controller('solGS::Kinship')->get_kinship_coef_files($c, $pop_id, $protocol_id);	 
+    my $matrix_file = $coef_files->{matrix_file};
+    
+    $output_details{'kinship_' . $pop_id} = {
+	'output_page' => $kinship_page,
+	'kinship_pop_id'   => $pop_id,
+	'genotype_file'   => $geno_file,  
+	'matrix_file'   => $matrix_file,
+    };
+    
+   return \%output_details;  
+}
+
 
 sub structure_training_modeling_output {
     my ($self, $c) = @_;
