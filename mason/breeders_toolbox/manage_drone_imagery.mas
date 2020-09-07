@@ -4522,7 +4522,8 @@ jQuery(document).ready(function() {
                     {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_param_file, auxiliary_model_file_archive_type:'remlf90_grm_temporal_leg_random_regression_GDD_genetic_blups_param_file'},
                     {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.stats_out_tempfile, auxiliary_model_file_archive_type:'remlf90_grm_temporal_leg_random_regression_GDD_genetic_blups_log_file'},
                     {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_genetic_coefficients, auxiliary_model_file_archive_type:'remlf90_grm_temporal_leg_random_regression_GDD_genetic_blups_genetic_coefficients_file'},
-                    {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_pe_coefficients, auxiliary_model_file_archive_type:'remlf90_grm_temporal_leg_random_regression_GDD_genetic_blups_permanent_environment_coefficients_file'}
+                    {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_pe_coefficients, auxiliary_model_file_archive_type:'remlf90_grm_temporal_leg_random_regression_GDD_genetic_blups_permanent_environment_coefficients_file'},
+                    {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_solutions, auxiliary_model_file_archive_type:'remlf90_grm_temporal_leg_random_regression_GDD_blups_solutions_file'}
                 ];
             }
             else if (manage_drone_imagery_calculate_statistics_select == 'blupf90_grm_random_regression_dap_blups') {
@@ -4533,7 +4534,8 @@ jQuery(document).ready(function() {
                     {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_param_file, auxiliary_model_file_archive_type:'remlf90_grm_temporal_leg_random_regression_DAP_genetic_blups_param_file'},
                     {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.stats_out_tempfile, auxiliary_model_file_archive_type:'remlf90_grm_temporal_leg_random_regression_GDD_genetic_blups_log_file'},
                     {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_genetic_coefficients, auxiliary_model_file_archive_type:'remlf90_grm_temporal_leg_random_regression_GDD_genetic_blups_genetic_coefficients_file'},
-                    {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_pe_coefficients, auxiliary_model_file_archive_type:'remlf90_grm_temporal_leg_random_regression_GDD_genetic_blups_permanent_environment_coefficients_file'}
+                    {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_pe_coefficients, auxiliary_model_file_archive_type:'remlf90_grm_temporal_leg_random_regression_GDD_genetic_blups_permanent_environment_coefficients_file'},
+                    {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_solutions, auxiliary_model_file_archive_type:'remlf90_grm_temporal_leg_random_regression_GDD_blups_solutions_file'}
                 ];
             }
 
@@ -4663,7 +4665,8 @@ jQuery(document).ready(function() {
                 {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_param_file, auxiliary_model_file_archive_type:'remlf90_grm_temporal_leg_random_regression_GDD_permanent_environment_blups_param_file'},
                 {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.stats_out_tempfile, auxiliary_model_file_archive_type:'remlf90_grm_temporal_leg_random_regression_GDD_permanent_environment_blups_log_file'},
                 {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_genetic_coefficients, auxiliary_model_file_archive_type:'remlf90_grm_temporal_leg_random_regression_GDD_permanent_environment_blups_genetic_coefficients_file'},
-                {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_pe_coefficients, auxiliary_model_file_archive_type:'remlf90_grm_temporal_leg_random_regression_GDD_permanent_environment_blups_permanent_environment_coefficients_file'}
+                {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_pe_coefficients, auxiliary_model_file_archive_type:'remlf90_grm_temporal_leg_random_regression_GDD_permanent_environment_blups_permanent_environment_coefficients_file'},
+                {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_solutions, auxiliary_model_file_archive_type:'remlf90_grm_temporal_leg_random_regression_GDD_blups_solutions_file'}
             ];
         }
         else if (manage_drone_imagery_calculate_statistics_select == 'blupf90_grm_random_regression_dap_blups') {
@@ -4674,7 +4677,8 @@ jQuery(document).ready(function() {
                 {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_param_file, auxiliary_model_file_archive_type:'remlf90_grm_temporal_leg_random_regression_DAP_permanent_environment_blups_param_file'},
                 {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.stats_out_tempfile, auxiliary_model_file_archive_type:'remlf90_grm_temporal_leg_random_regression_GDD_permanent_environment_blups_log_file'},
                 {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_genetic_coefficients, auxiliary_model_file_archive_type:'remlf90_grm_temporal_leg_random_regression_GDD_permanent_environment_blups_genetic_coefficients_file'},
-                {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_pe_coefficients, auxiliary_model_file_archive_type:'remlf90_grm_temporal_leg_random_regression_GDD_permanent_environment_blups_permanent_environment_coefficients_file'}
+                {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_pe_coefficients, auxiliary_model_file_archive_type:'remlf90_grm_temporal_leg_random_regression_GDD_permanent_environment_blups_permanent_environment_coefficients_file'},
+                {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_solutions, auxiliary_model_file_archive_type:'remlf90_grm_temporal_leg_random_regression_GDD_blups_solutions_file'}
             ];
         }
 

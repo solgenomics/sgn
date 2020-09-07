@@ -254,6 +254,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my ($stats_out_tempfile_col_fh, $stats_out_tempfile_col) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_tempfile_2dspl_fh, $stats_out_tempfile_2dspl) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_tempfile_permanent_environment_fh, $stats_out_tempfile_permanent_environment) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    my $airemlf90_solutions_tempfile;
     my $grm_file;
 
     my @results;
@@ -1396,10 +1397,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             my %fixed_effects;
             my %rr_genetic_coefficients;
             my %rr_temporal_coefficients;
-            my $solutions_tempfile = $tmp_stats_dir."/solutions";
-            open(my $fh_sol, '<', $solutions_tempfile)
-                or die "Could not open file '$solutions_tempfile' $!";
-                print STDERR "Opened $solutions_tempfile\n";
+            $airemlf90_solutions_tempfile = $tmp_stats_dir."/solutions";
+            open(my $fh_sol, '<', $airemlf90_solutions_tempfile)
+                or die "Could not open file '$airemlf90_solutions_tempfile' $!";
+                print STDERR "Opened $airemlf90_solutions_tempfile\n";
 
                 my $head = <$fh_sol>;
                 print STDERR $head;
@@ -1478,7 +1479,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     my $coeff_counter = 0;
                     foreach my $b (@$coeffs) {
                         my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                        print STDERR Dumper $eval_string, $b, $time;
+                        # print STDERR Dumper [$eval_string, $b, $time];
                         $value += eval $eval_string;
                         $coeff_counter++;
                     }
@@ -1523,7 +1524,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     my $coeff_counter = 0;
                     foreach my $b (@$coeffs) {
                         my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                        print STDERR Dumper $eval_string, $b, $time;
+                        # print STDERR Dumper [$eval_string, $b, $time];
                         $value += eval $eval_string;
                         $coeff_counter++;
                     }
@@ -1784,6 +1785,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         blupf90_training_file => $stats_tempfile_2,
         blupf90_genetic_coefficients => $coeff_genetic_tempfile,
         blupf90_pe_coefficients => $coeff_pe_tempfile,
+        blupf90_solutions => $airemlf90_solutions_tempfile,
         stats_out_tempfile => $stats_out_tempfile,
         stats_out_tempfile_col => $stats_out_tempfile_col,
         stats_out_tempfile_row => $stats_out_tempfile_row,
