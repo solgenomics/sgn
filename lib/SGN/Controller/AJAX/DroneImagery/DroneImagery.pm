@@ -1304,8 +1304,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 $p_counter++;
             }
             my $p2_counter = 1;
+            my @hetres_group;
             foreach (0 .. $legendre_order_number) {
                 push @param_file_rows, 6+$p2_counter.' '.$effect_pe_levels.' cov 6';
+                push @hetres_group, 6+$p2_counter;
                 $p2_counter++;
             }
             my @random_group1;
@@ -1314,10 +1316,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             }
             my $random_group_string1 = join ' ', @random_group1;
             my @random_group2;
-            my @hetres_group;
             foreach (1..$legendre_order_number+1) {
                 push @random_group2, 1+scalar(@random_group1)+$_;
-                push @hetres_group, 1+scalar(@random_group1)+$_;
             }
             my $random_group_string2 = join ' ', @random_group2;
             my $hetres_group_string = join ' ', @hetres_group;
@@ -1354,7 +1354,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 'OPTION hetres_pos '.$hetres_group_string,
                 'OPTION hetres_pol '.$hetres_pol_string,
                 'OPTION conv_crit '.$tolparinv,
-                'OPTION residual'
+                'OPTION residual',
             );
 
             open(my $Fp, ">", $parameter_tempfile) || die "Can't open file ".$parameter_tempfile;
@@ -1365,7 +1365,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
             my $parameter_tempfile_basename = basename($parameter_tempfile);
             $stats_out_tempfile .= '.log';
-            my $cmd = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_basename.' | airemlf90 > '.$stats_out_tempfile;
+            my $cmd = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_basename.' | blupf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd;
             my $status = system($cmd);
 
@@ -1505,10 +1505,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                         });
                         $time_cvterm_id = $new_time_term->cvterm_id();
                     }
-                    my $time_term_string = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $time_cvterm_id, 'extended');
-                    $rr_unique_traits{$time_term_string}++;
+                    my $time_term_string_blup = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $time_cvterm_id, 'extended');
+                    $rr_unique_traits{$time_term_string_blup}++;
 
-                    $result_blup_data->{$accession_name}->{$time_term_string} = [$value, $timestamp, $user_name, '', ''];
+                    $result_blup_data->{$accession_name}->{$time_term_string_blup} = [$value, $timestamp, $user_name, '', ''];
                 }
             }
             close($Fgc);
@@ -1550,10 +1550,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                         });
                         $time_cvterm_id = $new_time_term->cvterm_id();
                     }
-                    my $time_term_string = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $time_cvterm_id, 'extended');
-                    $rr_unique_traits{$time_term_string}++;
+                    my $time_term_string_pe = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $time_cvterm_id, 'extended');
+                    $rr_unique_traits{$time_term_string_pe}++;
 
-                    $result_blup_pe_data->{$plot_name}->{$time_term_string} = [$value, $timestamp, $user_name, '', ''];
+                    $result_blup_pe_data->{$plot_name}->{$time_term_string_pe} = [$value, $timestamp, $user_name, '', ''];
                 }
             }
             close($Fpc);
