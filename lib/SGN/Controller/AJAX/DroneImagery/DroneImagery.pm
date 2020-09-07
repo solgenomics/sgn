@@ -244,6 +244,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my ($stats_prep2_tempfile_fh, $stats_prep2_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($parameter_tempfile_fh, $parameter_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     $parameter_tempfile .= '.f90';
+    my ($coeff_genetic_tempfile_fh, $coeff_genetic_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    my ($coeff_pe_tempfile_fh, $coeff_pe_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_tempfile_fh, $stats_out_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_param_tempfile_fh, $stats_out_param_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_tempfile_row_fh, $stats_out_tempfile_row) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
@@ -461,7 +463,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     my $related_time_terms_json = decode_json $_->{associated_image_project_time_json};
                     my $time_days_cvterm = $related_time_terms_json->{day};
                     my $time_days = (split '\|', $time_days_cvterm)[0];
-                    my $days = int((split ' ', $time_days)[1]);
+                    my $days = (split ' ', $time_days)[1];
                     $phenotype_data{$obs_unit->{observationunit_uniquename}}->{$days} = $_->{value};
                     $seen_times{$days} = $_->{trait_name};
                 }
@@ -649,7 +651,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                         my $time_days_cvterm = $related_time_terms_json->{day};
                         $time_term_string = $time_days_cvterm;
                         my $time_days = (split '\|', $time_days_cvterm)[0];
-                        $time = int((split ' ', $time_days)[1]) + 0;
+                        $time = (split ' ', $time_days)[1] + 0;
                     }
                     $phenotype_data{$obs_unit->{observationunit_uniquename}}->{$time} = $_->{value};
                     $seen_times{$time} = $_->{trait_name};
@@ -1355,6 +1357,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             close($Fp);
 
             my $parameter_tempfile_basename = basename($parameter_tempfile);
+            $stats_out_tempfile .= '.log';
             my $cmd = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_basename.' | airemlf90 > '.$stats_out_tempfile;
             print STDERR Dumper $cmd;
             my $status = system($cmd);
@@ -1457,7 +1460,14 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             my $h_time = $schema->storage->dbh()->prepare($q_time);
 
             my %rr_unique_traits;
+
+            open(my $Fgc, ">", $coeff_genetic_tempfile) || die "Can't open file ".$coeff_genetic_tempfile;
+
             while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients) {
+                my @line = ($accession_name, @$coeffs);
+                my $line_string = join ',', @line;
+                print $Fgc "$line_string\n";
+
                 foreach my $t_i (0..20) {
                     my $time = $t_i*5/100;
                     my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
@@ -1466,7 +1476,6 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     my $coeff_counter = 0;
                     foreach my $b (@$coeffs) {
                         my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                        print STDERR $eval_string;
                         $value += eval $eval_string;
                         $coeff_counter++;
                     }
@@ -1494,8 +1503,15 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     $result_blup_data->{$accession_name}->{$time_term_string} = [$value, $timestamp, $user_name, '', ''];
                 }
             }
+            close($Fgc);
+
+            open(my $Fpc, ">", $coeff_pe_tempfile) || die "Can't open file ".$coeff_pe_tempfile;
 
             while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients) {
+                my @line = ($plot_name, @$coeffs);
+                my $line_string = join ',', @line;
+                print $Fpc "$line_string\n";
+
                 foreach my $t_i (0..20) {
                     my $time = $t_i*5/100;
                     my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
@@ -1530,6 +1546,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     $result_blup_pe_data->{$plot_name}->{$time_term_string} = [$value, $timestamp, $user_name, '', ''];
                 }
             }
+            close($Fpc);
 
             # print STDERR Dumper \%fixed_effects;
             # print STDERR Dumper $result_blup_data;
@@ -1760,6 +1777,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         blupf90_grm_file => $grm_rename_tempfile,
         blupf90_param_file => $parameter_tempfile,
         blupf90_training_file => $stats_tempfile_2,
+        blupf90_genetic_coefficients => $coeff_genetic_tempfile,
+        blupf90_pe_coefficients => $coeff_pe_tempfile,
         stats_out_tempfile => $stats_out_tempfile,
         stats_out_tempfile_col => $stats_out_tempfile_col,
         stats_out_tempfile_row => $stats_out_tempfile_row,
@@ -8678,7 +8697,7 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
         my $image_fullpath = $image->get_filename('original_converted', 'full');
         my $time_days_cvterm = $_->{drone_run_related_time_cvterm_json}->{day};
         my $time_days = (split '\|', $time_days_cvterm)[0];
-        my $days = int((split ' ', $time_days)[1]);
+        my $days = (split ' ', $time_days)[1];
         $data_hash{$field_trial_id}->{$stock_id}->{$project_image_type_id}->{$days} = {
             image => $image_fullpath,
             drone_run_project_id => $drone_run_project_id
@@ -9314,7 +9333,7 @@ sub _perform_keras_cnn_predict {
         my $image_fullpath = $image->get_filename('original_converted', 'full');
         my $time_days_cvterm = $_->{drone_run_related_time_cvterm_json}->{day};
         my $time_days = (split '\|', $time_days_cvterm)[0];
-        my $days = int((split ' ', $time_days)[1]);
+        my $days = (split ' ', $time_days)[1];
         $data_hash{$field_trial_id}->{$stock_id}->{$project_image_type_id}->{$days} = {
             image => $image_fullpath,
             drone_run_project_id => $drone_run_project_id
@@ -10050,7 +10069,7 @@ sub _perform_autoencoder_keras_cnn_vi {
         my $image_fullpath = $image->get_filename('original_converted', 'full');
         my $time_days_cvterm = $_->{drone_run_related_time_cvterm_json}->{day};
         my $time_days = (split '\|', $time_days_cvterm)[0];
-        my $days = int((split ' ', $time_days)[1]);
+        my $days = (split ' ', $time_days)[1];
         push @{$data_hash{$field_trial_id}->{$stock_id}->{$project_image_type_id}->{$days}}, {
             image => $image_fullpath,
             drone_run_project_id => $drone_run_project_id

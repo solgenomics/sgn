@@ -14,13 +14,12 @@ sub view_analyses :Path('/analyses') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $user_id;
     if ($c->user()) {
-	$user_id = $c->user->get_object()->get_sp_person_id();
+        $user_id = $c->user->get_object()->get_sp_person_id();
     }
     if (!$user_id) {
-	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
     }
 
-    
     $c->stash->{template} = '/analyses/index.mas';
 }
 
@@ -30,6 +29,15 @@ sub analysis_detail :Path('/analyses') Args(1) {
     my $analysis_id = shift;
     my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
     my $user = $c->user();
+
+    my $user_id;
+    if ($c->user()) {
+        $user_id = $c->user->get_object()->get_sp_person_id();
+    }
+    if (!$user_id) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        $c->detach();
+    }
 
     print STDERR "Viewing analysis with id $analysis_id\n";
 
@@ -67,6 +75,15 @@ sub analysis_model_detail :Path('/analyses_model') Args(1) {
     my $c = shift;
     my $model_id = shift;
     my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $user_id;
+    if ($c->user()) {
+        $user_id = $c->user->get_object()->get_sp_person_id();
+    }
+    if (!$user_id) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        $c->detach();
+    }
 
     print STDERR "Viewing analysis model with id $model_id\n";
 
