@@ -1454,8 +1454,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 '1 * $b',
                 '$time * $b',
                 '(1/2*(3*$time**2 - 1)*$b)',
-                '(1/3*(5*$time*(1/2*(3*$time**2 - 1)*$b) - 2*$time)*$b)',
-                '(1/4*(7*$time*(1/3*(5*$time*(1/2*(3*$time**2 - 1)*$b) - 2*$time)*$b) - 3*(1/2*(3*$time**2 - 1)*$b) )*$b)'
+                '(1/3*(5*$time*(1/2*(3*$time**2 - 1)) - 2*$time)*$b)',
+                '(1/4*(7*$time*(1/3*(5*$time*(1/2*(3*$time**2 - 1)) - 2*$time)) - 3*(1/2*(3*$time**2 - 1)) )*$b)'
             );
 
             my $q_time = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
@@ -1478,6 +1478,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     my $coeff_counter = 0;
                     foreach my $b (@$coeffs) {
                         my $eval_string = $legendre_coeff_exec[$coeff_counter];
+                        print STDERR Dumper $eval_string, $b, $time;
                         $value += eval $eval_string;
                         $coeff_counter++;
                     }
@@ -1521,7 +1522,9 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     my $value = 0;
                     my $coeff_counter = 0;
                     foreach my $b (@$coeffs) {
-                        $value += eval $legendre_coeff_exec[$coeff_counter];
+                        my $eval_string = $legendre_coeff_exec[$coeff_counter];
+                        print STDERR Dumper $eval_string, $b, $time;
+                        $value += eval $eval_string;
                         $coeff_counter++;
                     }
 
