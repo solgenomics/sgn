@@ -282,6 +282,14 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $time_max;
     my $time_min;
 
+    my @legendre_coeff_exec = (
+        '1 * $b',
+        '$time * $b',
+        '(1/2*(3*$time**2 - 1)*$b)',
+        '(1/3*(5*$time*(1/2*(3*$time**2 - 1)) - 2*$time)*$b)',
+        '(1/4*(7*$time*(1/3*(5*$time*(1/2*(3*$time**2 - 1)) - 2*$time)) - 3*(1/2*(3*$time**2 - 1)) )*$b)'
+    );
+
     foreach my $field_trial_id (@$field_trial_id_list) {
         my $field_trial_design_full = CXGN::Trial->new({bcs_schema => $schema, trial_id=>$field_trial_id})->get_layout()->get_design();
         while (my($plot_number, $plot_obj) = each %$field_trial_design_full) {
@@ -758,7 +766,6 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
                 print STDERR "Opened $stats_prep_factor_tempfile\n";
                 $header = <$fh_factor>;
-                @header_cols;
                 if ($csv->parse($header)) {
                     @header_cols = $csv->fields();
                 }
@@ -1153,9 +1160,6 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_sommer_grm_temporal_leg_random_regression_GDD_genetic_blups_phenotype_file";
             }
 
-            my $number_traits = scalar(@sorted_trait_names);
-            my $number_traits_order = $number_traits - 1;
-
             my $cmd = 'R -e "library(sommer); library(data.table); library(reshape2); library(orthopolynom);
             mat <- fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\', check.names = FALSE);
             geno_mat_3col <- data.frame(fread(\''.$grm_file.'\', header=FALSE, sep=\'\t\'));
@@ -1163,12 +1167,12 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             geno_mat[is.na(geno_mat)] <- 0;
             mat_long <- melt(mat, id.vars=c(\'replicate\', \'block\', \'id\', \'plot_id\', \'rowNumber\', \'colNumber\', \'rowNumberFactor\', \'colNumberFactor\'), variable.name=\'time\', value.name=\'value\');
             mat_long\$time <- as.numeric(as.character(mat_long\$time));
-            mat_long <- mat_long[order(time),]
+            mat_long <- mat_long[order(time),];
             mat\$rowNumber <- as.numeric(mat\$rowNumber);
             mat\$colNumber <- as.numeric(mat\$colNumber);
             mat\$rowNumberFactor <- as.factor(mat\$rowNumberFactor);
             mat\$colNumberFactor <- as.factor(mat\$colNumberFactor);
-            mix <- mmer(value~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(leg(time,'.$number_traits_order.'), id), rcov=~vs(units), data=mat_long, tolparinv='.$tolparinv.');
+            mix <- mmer(value~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(leg(time,'.$legendre_order_number.', intercept=TRUE), id), rcov=~vs(units), data=mat_long, tolparinv='.$tolparinv.');
             write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             write.table(mix\$U, file=\''.$stats_out_tempfile_permanent_environment.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"
             ';
@@ -1179,6 +1183,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
             my %unique_accessions_seen;
             my @new_sorted_trait_names;
+            my %sommer_rr_genetic_coeff;
             open(my $fh, '<', $stats_out_tempfile_permanent_environment)
                 or die "Could not open file '$stats_out_tempfile_permanent_environment' $!";
             
@@ -1201,18 +1206,77 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     $unique_accessions_seen{$stock_name}++;
 
                     my $col_counter = 0;
-                    foreach my $time (@sorted_trait_names) {
-                        my $trait = $seen_times{$time};
+                    foreach (0..$legendre_order_number) {
                         my $value = $columns[$col_counter+2];
-                        $result_blup_data->{$stock_name}->{$trait} = [$value, $timestamp, $user_name, '', ''];
+                        push @{$sommer_rr_genetic_coeff{$stock_name}}, $value;
                         $col_counter++;
                     }
                 }
             close($fh);
+
+            $time_min = 100000000;
+            $time_max = 0;
             foreach (@sorted_trait_names) {
-                push @new_sorted_trait_names, $seen_times{$_};
+                if ($_ < $time_min) {
+                    $time_min = $_;
+                }
+                if ($_ > $time_max) {
+                    $time_max = $_;
+                }
             }
-            @sorted_trait_names = ($pe_genetic_blup_trait, @new_sorted_trait_names);
+            print STDERR Dumper [$time_min, $time_max];
+
+            my $q_time = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
+            my $h_time = $schema->storage->dbh()->prepare($q_time);
+
+            my %rr_unique_traits;
+
+            open(my $Fgc, ">", $coeff_genetic_tempfile) || die "Can't open file ".$coeff_genetic_tempfile;
+
+            while ( my ($accession_name, $coeffs) = each %sommer_rr_genetic_coeff) {
+                my @line = ($accession_name, @$coeffs);
+                my $line_string = join ',', @line;
+                print $Fgc "$line_string\n";
+
+                foreach my $t_i (0..20) {
+                    my $time = $t_i*5/100;
+                    my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
+
+                    my $value = 0;
+                    my $coeff_counter = 0;
+                    foreach my $b (@$coeffs) {
+                        my $eval_string = $legendre_coeff_exec[$coeff_counter];
+                        # print STDERR Dumper [$eval_string, $b, $time];
+                        $value += eval $eval_string;
+                        $coeff_counter++;
+                    }
+
+                    my $time_term_string = '';
+                    if ($statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups') {
+                        $time_term_string = "GDD $time_rescaled";
+                    }
+                    elsif ($statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups') {
+                        $time_term_string = "day $time_rescaled"
+                    }
+                    $h_time->execute($time_term_string, 'cxgn_time_ontology');
+                    my ($time_cvterm_id) = $h_time->fetchrow_array();
+
+                    if (!$time_cvterm_id) {
+                        my $new_time_term = $schema->resultset("Cv::Cvterm")->create_with({
+                           name => $time_term_string,
+                           cv => 'cxgn_time_ontology'
+                        });
+                        $time_cvterm_id = $new_time_term->cvterm_id();
+                    }
+                    my $time_term_string_blup = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $time_cvterm_id, 'extended');
+                    $rr_unique_traits{$time_term_string_blup}++;
+
+                    $result_blup_data->{$accession_name}->{$time_term_string_blup} = [$value, $timestamp, $user_name, '', ''];
+                }
+            }
+            close($Fgc);
+
+            @sorted_trait_names = sort keys %rr_unique_traits;
         }
         elsif ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups') {
             $statistical_ontology_term = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using Sommer R|SGNSTAT:0000004"; #In the JS this is set to either the genetic of permanent environment BLUP term (Multivariate linear mixed model permanent environment BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using Sommer R|SGNSTAT:0000005) when saving results
@@ -1456,14 +1520,6 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
             # print STDERR Dumper \%rr_genetic_coefficients;
             # print STDERR Dumper \%rr_temporal_coefficients;
-
-            my @legendre_coeff_exec = (
-                '1 * $b',
-                '$time * $b',
-                '(1/2*(3*$time**2 - 1)*$b)',
-                '(1/3*(5*$time*(1/2*(3*$time**2 - 1)) - 2*$time)*$b)',
-                '(1/4*(7*$time*(1/3*(5*$time*(1/2*(3*$time**2 - 1)) - 2*$time)) - 3*(1/2*(3*$time**2 - 1)) )*$b)'
-            );
 
             my $q_time = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
             my $h_time = $schema->storage->dbh()->prepare($q_time);
@@ -1789,7 +1845,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         blupf90_grm_file => $grm_rename_tempfile,
         blupf90_param_file => $parameter_tempfile,
         blupf90_training_file => $stats_tempfile_2,
-        blupf90_genetic_coefficients => $coeff_genetic_tempfile,
+        rr_genetic_coefficients => $coeff_genetic_tempfile,
         blupf90_pe_coefficients => $coeff_pe_tempfile,
         blupf90_solutions => $blupf90_solutions_tempfile,
         stats_out_tempfile => $stats_out_tempfile,
