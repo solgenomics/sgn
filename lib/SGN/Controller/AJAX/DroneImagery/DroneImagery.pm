@@ -377,6 +377,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 return;
             }
 
+            my %seen_trait_names;
             foreach my $obs_unit (@$data){
                 my $germplasm_name = $obs_unit->{germplasm_uniquename};
                 my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
@@ -387,6 +388,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 my $observations = $obs_unit->{observations};
                 foreach (@$observations){
                     $phenotype_data{$obs_unit->{observationunit_uniquename}}->{$_->{trait_name}} = $_->{value};
+                    $seen_trait_names{$_->{trait_name}}++;
                 }
             }
             @unique_accession_names = sort keys %unique_accessions;
@@ -400,6 +402,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 }
             }
 
+            my %seen_trial_ids;
             foreach (@$data) {
                 my $germplasm_name = $_->{germplasm_uniquename};
                 my $germplasm_stock_id = $_->{germplasm_stock_id};
@@ -414,6 +417,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 };
                 $plot_id_map{$obsunit_stock_id} = $obsunit_stock_uniquename;
                 $seen_plot_names{$obsunit_stock_uniquename}++;
+                $seen_trial_ids{$_->{trial_id}}++;
                 foreach my $t (@sorted_trait_names) {
                     if (defined($phenotype_data{$obsunit_stock_uniquename}->{$t})) {
                         push @row, $phenotype_data{$obsunit_stock_uniquename}->{$t} + 0;
@@ -423,6 +427,23 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     }
                 }
                 push @data_matrix, \@row;
+            }
+
+            my %unique_traits_ids;
+            foreach (keys %seen_trial_ids){
+                my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$_});
+                my $traits_assayed = $trial->get_traits_assayed('plot', undef, 'time_ontology');
+                foreach (@$traits_assayed) {
+                    $unique_traits_ids{$_->[0]} = $_;
+                }
+            }
+            foreach (values %unique_traits_ids) {
+                foreach my $component (@{$_->[2]}) {
+                    if (exists($seen_trait_names{$_->[1]}) && $component->{cv_type} && $component->{cv_type} eq 'time_ontology') {
+                        my $time_term_string = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $component->{cvterm_id}, 'extended');
+                        push @{$trait_composing_info{$_->[1]}}, $time_term_string;
+                    }
+                }
             }
 
             my @phenotype_header = ("replicate", "block", "id", "plot_id", "rowNumber", "colNumber", "rowNumberFactor", "colNumberFactor");
@@ -440,8 +461,13 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 }
             close($F);
         }
-        elsif ($statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups') {
-            $pe_genetic_blup_trait = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using Sommer R|SGNSTAT:0000004";
+        elsif ($statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups') {
+            if ($statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups') {
+                $pe_genetic_blup_trait = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using Sommer R|SGNSTAT:0000004";
+            }
+            if ($statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups') {
+                $pe_genetic_blup_trait = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on growing degree days computed using Sommer R|SGNSTAT:0000006";
+            }
 
             my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
                 'MaterializedViewTable',
@@ -462,6 +488,9 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 return;
             }
 
+            my $q_time = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
+            my $h_time = $schema->storage->dbh()->prepare($q_time);
+
             foreach my $obs_unit (@$data){
                 my $germplasm_name = $obs_unit->{germplasm_uniquename};
                 my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
@@ -472,93 +501,42 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 my $observations = $obs_unit->{observations};
                 foreach (@$observations){
                     my $related_time_terms_json = decode_json $_->{associated_image_project_time_json};
-                    my $time_days_cvterm = $related_time_terms_json->{day};
-                    my $time_days = (split '\|', $time_days_cvterm)[0];
-                    my $days = (split ' ', $time_days)[1];
-                    $phenotype_data{$obs_unit->{observationunit_uniquename}}->{$days} = $_->{value};
-                    $seen_times{$days} = $_->{trait_name};
-                }
-            }
-            @unique_accession_names = sort keys %unique_accessions;
-            @sorted_trait_names = sort keys %seen_times;
 
-            foreach (@$data) {
-                my $germplasm_name = $_->{germplasm_uniquename};
-                my $germplasm_stock_id = $_->{germplasm_stock_id};
-                my $obsunit_stock_id = $_->{observationunit_stock_id};
-                my $obsunit_stock_uniquename = $_->{observationunit_uniquename};
-                my $row_number = $_->{obsunit_row_number};
-                my $col_number = $_->{obsunit_col_number};
-                my @row = ($_->{obsunit_rep}, $_->{obsunit_block}, "S".$germplasm_stock_id, $obsunit_stock_id, $row_number, $col_number, $row_number, $col_number);
-                $obsunit_row_col{$row_number}->{$col_number} = {
-                    stock_id => $obsunit_stock_id,
-                    stock_uniquename => $obsunit_stock_uniquename
-                };
-                $plot_id_map{$obsunit_stock_id} = $obsunit_stock_uniquename;
-                $seen_plot_names{$obsunit_stock_uniquename}++;
-                foreach my $t (@sorted_trait_names) {
-                    if (defined($phenotype_data{$obsunit_stock_uniquename}->{$t})) {
-                        push @row, $phenotype_data{$obsunit_stock_uniquename}->{$t} + 0;
-                    } else {
-                        print STDERR $obsunit_stock_uniquename." : $t : $germplasm_name : NA \n";
-                        push @row, 'NA';
+                    my $time_value;
+                    my $time_term_string;
+                    if ($statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups') {
+                        my $time_days_cvterm = $related_time_terms_json->{day};
+                        $time_term_string = $time_days_cvterm;
+                        my $time_days = (split '\|', $time_days_cvterm)[0];
+                        $time_value = (split ' ', $time_days)[1];
                     }
-                }
-                push @data_matrix, \@row;
-            }
+                    elsif ($statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups') {
+                        $time_value = $related_time_terms_json->{gdd_average_temp} + 0;
 
-            my @phenotype_header = ("replicate", "block", "id", "plot_id", "rowNumber", "colNumber", "rowNumberFactor", "colNumberFactor");
-            my $num_col_before_traits = scalar(@phenotype_header);
-            push @phenotype_header, @sorted_trait_names;
-            my $header_string = join ',', @phenotype_header;
+                        my $gdd_term_string = "GDD $time_value";
+                        $h_time->execute($gdd_term_string, 'cxgn_time_ontology');
+                        my ($gdd_cvterm_id) = $h_time->fetchrow_array();
 
-            open(my $F, ">", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
-                print $F $header_string."\n";
-                foreach (@data_matrix) {
-                    my $line = join ',', @$_;
-                    print $F "$line\n";
-                }
-            close($F);
-        }
-        elsif ($statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups') {
-            $pe_genetic_blup_trait = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on growing degree days computed using Sommer R|SGNSTAT:0000006";
-
-            my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
-                'MaterializedViewTable',
-                {
-                    bcs_schema=>$schema,
-                    data_level=>'plot',
-                    trait_list=>$trait_id_list,
-                    trial_list=>$field_trial_id_list,
-                    include_timestamp=>0,
-                    exclude_phenotype_outlier=>0
-                }
-            );
-            my ($data, $unique_traits) = $phenotypes_search->search();
-            @sorted_trait_names = sort keys %$unique_traits;
-
-            if (scalar(@$data) == 0) {
-                $c->stash->{rest} = { error => "There are no phenotypes for the trials and traits you have selected!"};
-                return;
-            }
-
-            foreach my $obs_unit (@$data){
-                my $germplasm_name = $obs_unit->{germplasm_uniquename};
-                my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
-                $unique_accessions{$germplasm_name}++;
-                $stock_info{"S".$germplasm_stock_id} = {
-                    uniquename => $germplasm_name
-                };
-                my $observations = $obs_unit->{observations};
-                foreach (@$observations){
-                    my $related_time_terms_json = decode_json $_->{associated_image_project_time_json};
-                    my $gdd_time = $related_time_terms_json->{gdd_average_temp} + 0;
-                    $phenotype_data{$obs_unit->{observationunit_uniquename}}->{$gdd_time} = $_->{value};
-                    $seen_times{$gdd_time} = $_->{trait_name};
+                        if (!$gdd_cvterm_id) {
+                            my $new_gdd_term = $schema->resultset("Cv::Cvterm")->create_with({
+                               name => $gdd_term_string,
+                               cv => 'cxgn_time_ontology'
+                            });
+                            $gdd_cvterm_id = $new_gdd_term->cvterm_id();
+                        }
+                        $time_term_string = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $gdd_cvterm_id, 'extended');
+                    }
+                    $phenotype_data{$obs_unit->{observationunit_uniquename}}->{$time_value} = $_->{value};
+                    $seen_times{$time_value} = $_->{trait_name};
+                    $seen_trait_names{$_->{trait_name}} = $time_term_string;
                 }
             }
             @unique_accession_names = sort keys %unique_accessions;
             @sorted_trait_names = sort keys %seen_times;
+
+            while ( my ($trait_name, $time_term) = each %seen_trait_names) {
+                push @{$trait_composing_info{$trait_name}}, $time_term;
+            }
 
             foreach (@$data) {
                 my $germplasm_name = $_->{germplasm_uniquename};
@@ -672,7 +650,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             @unique_accession_names = sort keys %unique_accessions;
             @sorted_trait_names = sort {$a <=> $b} keys %seen_times;
             @unique_plot_names = sort keys %seen_plot_names;
-            print STDERR Dumper \@sorted_trait_names;
+            # print STDERR Dumper \@sorted_trait_names;
 
             while ( my ($trait_name, $time_term) = each %seen_trait_names) {
                 push @{$trait_composing_info{$trait_name}}, $time_term;
