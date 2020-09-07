@@ -1006,8 +1006,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             my $trait_index = 1;
             foreach my $enc_trait_name (@encoded_traits) {
                 $cmd .= '
-                    blups'.$trait_index.' <- mix\$U\$\`u:rowNumber\`\$'.$enc_trait_name.';
-                    spatial_blup_results\$'.$enc_trait_name.' <- X %*% blups'.$trait_index.';
+            blups'.$trait_index.' <- mix\$U\$\`u:rowNumber\`\$'.$enc_trait_name.';
+            spatial_blup_results\$'.$enc_trait_name.' <- data.matrix(X) %*% data.matrix(blups'.$trait_index.');
                 ';
                 $trait_index++;
             }
