@@ -297,8 +297,8 @@ protocol_type	sommer_grm_temporal_random_regression_dap_genetic_blups	An nd_prot
 protocol_type	lmer_germplasmname_replicate	An nd_protocol for analysis using R LMER for univariate genetic blups using replicate and germplasm name	6/11/2020	nm529	00125
 protocol_type	waves_nirs_spectral_predictions	A protocol type for NIRs spectral prediction models using the R waves (Jenna Hershberger) package	7/29/2020	nm529	00127
 protocol_type	uploaded_generic_analysis_model	An nd_protocol for analysis for uploaded user results	8/19/2020	nm529	00128
-protocol_type	blupf90_grm_random_regression_gdd_blups	An nd_protocol for analysis using AIREMLf90 temporal random regression with legendre polynomials on growing degree days to calculate genetic and permanent environment blups using replicate, genetic relationship matrix, and growing degree days	8/27/2020	nm529	00128
-protocol_type	blupf90_grm_random_regression_dap_blups	An nd_protocol for analysis using AIREMLf90 temporal random regression with legendre polynomials on days after planting to calculate genetic and permanent environment blups using replicate, genetic relationship matrix, and days after planting	8/27/2020	nm529	00128
+protocol_type	blupf90_grm_random_regression_gdd_blups	An nd_protocol for analysis using BLUPf90 temporal random regression with legendre polynomials on growing degree days to calculate genetic and permanent environment blups using replicate, genetic relationship matrix, and growing degree days	8/27/2020	nm529	00128
+protocol_type	blupf90_grm_random_regression_dap_blups	An nd_protocol for analysis using BLUPf90 temporal random regression with legendre polynomials on days after planting to calculate genetic and permanent environment blups using replicate, genetic relationship matrix, and days after planting	8/27/2020	nm529	00128
 composable_cvtypes	trait_ontology		05/01/2017		00073
 composable_cvtypes	composed_trait_ontology		05/01/2017		00073
 composable_cvtypes	object_ontology		05/01/2017		00073
