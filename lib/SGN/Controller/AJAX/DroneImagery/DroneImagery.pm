@@ -683,12 +683,16 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             print STDERR Dumper [$time_min, $time_max];
 
             my @sorted_trait_names_scaled;
+            my $leg_pos_counter = 0;
             foreach (@sorted_trait_names) {
                 # my $scaled_time = 2*(($_ - $time_min)/($time_max - $time_min)) - 1;
                 my $scaled_time = ($_ - $time_min)/($time_max - $time_min);
                 print STDERR Dumper $scaled_time;
                 push @sorted_trait_names_scaled, $scaled_time;
-                push @sorted_scaled_ln_times, log($scaled_time+0.0001);
+                if ($leg_pos_counter < $legendre_order_number+1) {
+                    push @sorted_scaled_ln_times, log($scaled_time+0.0001);
+                }
+                $leg_pos_counter++;
             }
             my $sorted_trait_names_scaled_string = join ',', @sorted_trait_names_scaled;
 
