@@ -91,6 +91,10 @@ sub check_success {
 	    $output_details = $self->check_selection_prediction($output_details);
 	}
     }
+    elsif ( $analysis_profile->{analysis_type} =~ /kinship/ ) 
+    {	
+	$output_details = $self->check_kinship_analysis($output_details);
+    }
     
     return $output_details;  
 }
@@ -468,6 +472,57 @@ sub check_population_download {
 }
 
 
+sub check_kinship_analysis {
+    my ($self, $output_details) = @_;
+  			  
+    foreach my $k (keys %{$output_details})
+    {
+	my $kinship_file;
+	if ($k =~ /kinship/)
+	{
+	   
+	    $kinship_file = $output_details->{$k}->{kinship_matrix_file};
+	    
+
+	    if ($kinship_file) 
+	    {
+		while (1) 
+		{
+		    sleep 30;
+		    if (-s $kinship_file) 
+		    {
+			$output_details->{$k}->{success} = 1;
+			$output_details->{status} = 'Done';
+			last;		
+		    }
+		    else
+		    {
+			my $end_process = $self->end_status_check();
+			if ($end_process) 
+			{
+			    if (!-s $output_details->{$k}->{kinship_geno_file})
+			    {
+				$output_details->{$k}->{failure_reason} = 'No genotype data was found for this kinship analysis.';
+			    } 
+			    else 
+			    {
+				$output_details->{$k}->{failure_reason} = 'The kinship analysis failed.';	
+			    }
+			    
+			    $output_details->{$k}->{success} = 0;
+			    $output_details->{status} = 'Failed';
+			    last;
+			}
+		    }	    
+		}	   	    
+	    } 
+	}
+    }
+
+    return $output_details;
+}
+
+
 sub get_file {
     my ($self, $dir, $exp) = @_;
 
@@ -484,6 +539,8 @@ sub get_file {
 
     return $file;
 }
+
+
 
 
 sub report_status {
@@ -518,6 +575,10 @@ sub report_status {
     elsif ($analysis_type =~ /selection prediction/  ) 
     {
     	$analysis_result = $self->selection_prediction_message($output_details);
+    }
+      elsif ($analysis_type =~ /kinship/  ) 
+    {
+    	$analysis_result = $self->kinship_analysis_message($output_details);
     }
    
     my $closing = "If you have any remarks, please contact us:\n"
@@ -785,6 +846,36 @@ sub combine_populations_message {
 	$message .= "Your combined training population is ready for analysis." 
 	    ." You can view it here:\n\n$combined_pops_page\n\n";
     } 
+ 
+    return  $message;
+}
+
+
+sub kinship_analysis_message {
+    my ($self, $output_details) = @_;
+   
+    
+    my $message;
+    my $output_page;
+ 
+    if ($output_details->{kinship}) {
+	if ($output_details->{kinship}->{success}) 
+	{
+	    $output_page = $output_details->{kinship}->{kinship_output_page};
+	    $message = 'Your kinship analysis is done. You can access the result here:' 
+		. "\n\n$output_page\n\n";
+	}
+	else 
+	{
+	    no warnings 'uninitialized';
+	    my $fail_message  = $output_details->{kinship}->{failure_reason};
+
+	    $message  = "The kinship analysis failed.\n";
+	    $message .= "\nPossible causes are:\n$fail_message\n";
+	    $message .= 'Refering page: ' . $output_page . "\n\n";
+	    $message .= "We will troubleshoot the cause and contact you when we find out more.\n\n";	
+	}
+    }
  
     return  $message;
 }
