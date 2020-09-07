@@ -245,7 +245,9 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my ($parameter_tempfile_fh, $parameter_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     $parameter_tempfile .= '.f90';
     my ($coeff_genetic_tempfile_fh, $coeff_genetic_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    $coeff_genetic_tempfile .= '_genetic_coefficients.csv';
     my ($coeff_pe_tempfile_fh, $coeff_pe_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    $coeff_pe_tempfile .= '_permanent_environment_coefficients.csv';
     my ($stats_out_tempfile_fh, $stats_out_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_param_tempfile_fh, $stats_out_param_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_tempfile_row_fh, $stats_out_tempfile_row) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
@@ -682,10 +684,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             my @sorted_trait_names_scaled;
             foreach (@sorted_trait_names) {
                 # my $scaled_time = 2*(($_ - $time_min)/($time_max - $time_min)) - 1;
-                my $scaled_time = ($_ - $time_min)/($time_max - $time_min) + 0.0001;
+                my $scaled_time = ($_ - $time_min)/($time_max - $time_min);
                 print STDERR Dumper $scaled_time;
                 push @sorted_trait_names_scaled, $scaled_time;
-                push @sorted_scaled_ln_times, log($scaled_time);
+                push @sorted_scaled_ln_times, log($scaled_time+0.0001);
             }
             my $sorted_trait_names_scaled_string = join ',', @sorted_trait_names_scaled;
 
