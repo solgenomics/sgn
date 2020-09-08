@@ -482,8 +482,10 @@ sub structure_output_details {
 sub structure_kinship_analysis_output {
     my ($self, $c) = @_;
 
-    my $pop_id        = $c->stash->{kinship_pop_id}; 
     my $protocol_id   = $c->stash->{genotyping_protocol_id};
+    
+    $c->controller('solGS::Kinship')->stash_data_str_kinship_pop_id($c);
+    my $pop_id = $c->stash->{kinship_pop_id};
     
     my $base = $c->req->base; 
     $base =~ s/:\d+//;

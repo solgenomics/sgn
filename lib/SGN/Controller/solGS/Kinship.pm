@@ -65,7 +65,6 @@ sub kinship_run_analysis :Path('/kinship/run/analysis') Args() {
 	$c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};	
     }
 
-    $c->stash->{trait_id}      = $trait_id;
     if ($trait_id)
     {
 	$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
@@ -130,6 +129,9 @@ sub kinship_result :Path('/solgs/kinship/result/') Args() {
 sub stash_data_str_kinship_pop_id {
     my ($self, $c, $pop_id, $data_str) = @_;
 
+    $pop_id = $c->stash->{kinship_pop_id} if !$pop_id;
+    $data_str = $c->stash->{data_structure} if !$data_str;
+    
     if ($data_str =~ /dataset/)
     {   
 	$c->stash->{dataset_id} = $pop_id;
