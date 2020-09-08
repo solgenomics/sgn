@@ -4469,7 +4469,7 @@ jQuery(document).ready(function() {
             var drone_imagery_stats_tolparinv_param = jQuery('#drone_image_calculate_statistics_tolparinv_select').val();
             var drone_imagery_stats_numbers_traits = manage_drone_imagery_calculate_statistics_response.unique_traits.length - 2;
 
-            drone_imagery_stats_protocol = 'mmer(value~1+replicate, random=~vs(id, Gu=geno_mat) +vs(leg(time_DAP, '+drone_imagery_stats_numbers_traits+'), id), rcov=~vs(units), data=mat_long_format, tolparinv='+drone_imagery_stats_tolparinv_param+');';
+            drone_imagery_stats_protocol = 'mmer(value~1+replicate, random=~vs(id, Gu=geno_mat) +vs(leg(time_DAP, '+jQuery('#drone_image_calculate_statistics_legendre_order_number_select').val()+'), id), rcov=~vs(units), data=mat_long_format, tolparinv='+drone_imagery_stats_tolparinv_param+');';
 
             drone_imagery_stats_parameters = {
                 'tolparinv':drone_imagery_stats_tolparinv_param,
@@ -4489,7 +4489,7 @@ jQuery(document).ready(function() {
             var drone_imagery_stats_tolparinv_param = jQuery('#drone_image_calculate_statistics_tolparinv_select').val();
             var drone_imagery_stats_numbers_traits = manage_drone_imagery_calculate_statistics_response.unique_traits.length - 2;
 
-            drone_imagery_stats_protocol = 'mmer(value~1+replicate, random=~vs(id, Gu=geno_mat) +vs(leg(time_GDD, '+drone_imagery_stats_numbers_traits+'), id), rcov=~vs(units), data=mat_long_format, tolparinv='+drone_imagery_stats_tolparinv_param+');';
+            drone_imagery_stats_protocol = 'mmer(value~1+replicate, random=~vs(id, Gu=geno_mat) +vs(leg(time_GDD, '+jQuery('#drone_image_calculate_statistics_legendre_order_number_select').val()+'), id), rcov=~vs(units), data=mat_long_format, tolparinv='+drone_imagery_stats_tolparinv_param+');';
 
             drone_imagery_stats_parameters = {
                 'tolparinv':drone_imagery_stats_tolparinv_param,

@@ -1150,7 +1150,12 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             mat\$colNumber <- as.numeric(mat\$colNumber);
             mat\$rowNumberFactor <- as.factor(mat\$rowNumberFactor);
             mat\$colNumberFactor <- as.factor(mat\$colNumberFactor);
-            mix <- mmer(value~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(leg(time,'.$legendre_order_number.', intercept=TRUE), id), rcov=~vs(units), data=mat_long, tolparinv='.$tolparinv.');
+            mix <- mmer(
+                value~1 + replicate,
+                random=~vs(id, Gu=geno_mat) +vs(leg(time,'.$legendre_order_number.', intercept=TRUE), id),
+                rcov=~vs(leg(time,'.$legendre_order_number.', intercept=TRUE), units),
+                data=mat_long, tolparinv='.$tolparinv.'
+            );
             write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             write.table(mix\$U, file=\''.$stats_out_tempfile_permanent_environment.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"
             ';
