@@ -404,6 +404,16 @@ sub parse_arguments {
 	  {
 	      $c->stash->{data_set_type} =  $arguments->{$k};
 	  }
+	    
+	  if ($k eq 'data_structure') 
+	  {
+	      $c->stash->{data_structure} =  $arguments->{$k};
+	  }
+	  
+	  if ($k eq 'kinship_pop_id') 
+	  {
+	      $c->stash->{kinship_pop_id} =  $arguments->{$k};
+	  }
 
 	  if ($k eq 'genotyping_protocol_id') 
 	  {
@@ -468,6 +478,7 @@ sub structure_output_details {
 
 }
 
+
 sub structure_kinship_analysis_output {
     my ($self, $c) = @_;
 
@@ -488,10 +499,10 @@ sub structure_kinship_analysis_output {
     my $matrix_file = $coef_files->{matrix_file};
     
     $output_details{'kinship_' . $pop_id} = {
-	'output_page' => $kinship_page,
-	'kinship_pop_id'   => $pop_id,
-	'genotype_file'   => $geno_file,  
-	'matrix_file'   => $matrix_file,
+	'output_page'    => $kinship_page,
+	'kinship_pop_id' => $pop_id,
+	'genotype_file'  => $geno_file,  
+	'matrix_file'    => $matrix_file,
     };
     
    return \%output_details;  
