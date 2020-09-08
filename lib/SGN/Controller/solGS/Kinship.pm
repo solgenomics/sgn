@@ -42,48 +42,30 @@ sub kinship_run_analysis :Path('/kinship/run/analysis') Args() {
     my $data_str      = $c->req->param('data_structure');
 
     $c->stash->{data_structure} = $data_str;
+
+    $self->stash_data_str_kinship_pop_id($c, $pop_id, $data_str);
+    my $kinship_pop_id = $c->stash->{kinship_pop_id};
     
-    if ($data_str =~ /dataset/)
-    {   
-	$c->stash->{dataset_id} = $pop_id;
-    }
-    elsif ($data_str =~ /list/)
-    {
-	$c->stash->{list_id}    = $pop_id;
-    }
-
-    my $kinship_pop_id;
-    if ($data_str =~ /dataset|list/)
-    {
-	$kinship_pop_id = $data_str . '_' . $pop_id;
-    }
-
-    my $file_id = $c->controller('solGS::Files')->create_file_id($c);
+    my $file_id = $c->controller('solGS::Files')->create_file_id($c);   
     $c->stash->{file_id} = $file_id;
 
     my $list_id = $c->stash->{list_id};
     if ($list_id)
     {
 	$c->controller('solGS::List')->create_list_population_metadata_file($c, $file_id);
-	my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
-	$c->stash->{list_type} =  $list->type;
-	$c->stash->{list_name} =  $list->name;	
+	$c->controller('solGS::List')->stash_list_metadata($c, $list_id);
     }
-    
-   
-    $c->stash->{kinship_pop_id} = $kinship_pop_id || $pop_id;
-    
+        
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);    
        
-    $c->stash->{combo_pops_id} = $combo_pops_id;
-    $c->stash->{trait_id}      = $trait_id;
-
     if ($combo_pops_id)
     {
+	$c->stash->{combo_pops_id} = $combo_pops_id;
 	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
 	$c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};	
     }
 
+    $c->stash->{trait_id}      = $trait_id;
     if ($trait_id)
     {
 	$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
@@ -142,6 +124,27 @@ sub kinship_result :Path('/solgs/kinship/result/') Args() {
 
     $res = to_json($res);
     $c->res->body($res);
+}
+
+
+sub stash_data_str_kinship_pop_id {
+    my ($self, $c, $pop_id, $data_str) = @_;
+
+    if ($data_str =~ /dataset/)
+    {   
+	$c->stash->{dataset_id} = $pop_id;
+    }
+    elsif ($data_str =~ /list/)
+    {
+	$c->stash->{list_id} = $pop_id;
+    }
+
+    if ($data_str =~ /dataset|list/)
+    {
+	$pop_id = $data_str . '_' . $pop_id;
+    }
+ 
+    $c->stash->{kinship_pop_id} = $pop_id;
 }
 
 
