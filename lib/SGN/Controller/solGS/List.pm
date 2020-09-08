@@ -232,16 +232,17 @@ sub transform_uniqueids_genotypes{
 sub get_genotypes_list_details {
     my ($self, $c) = @_;
 
-    my $list_id = $c->stash->{list_id};
-
-    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
-    my $list_type = $list->type;
+  #  my $list_id = $c->stash->{list_id};
+    
+    $self->stash_list_metadata($c);
+    my $list_type = $c->stash->{list_type};
+     
     my $genotypes_names;
 
-    if ($list->type =~ /accessions/) {
+    if ($list_type =~ /accessions/) {
 	$self->get_list_elements_names($c);
 	$genotypes_names = $c->stash->{list_elements_names};
-    } elsif ($list->type =~ /plots/) {
+    } elsif ($list_type =~ /plots/) {
 	$self->transform_plots_genotypes_names($c);
 	$genotypes_names = $c->stash->{genotypes_list};
     }
@@ -285,6 +286,20 @@ sub create_list_pop_data_files {
 
 }
 
+
+sub stash_list_metadata {
+    my ($self, $c, $list_id) = @_;
+
+    $list_id = $c->stash->{list_id} if !$list_id;
+    $list_id =~ s/\w+_//g;
+    
+    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
+    $c->stash->{list_id}   = $list_id;
+    $c->stash->{list_type} =  $list->type;
+    $c->stash->{list_name} =  $list->name;
+    $c->stash->{list_owner} = $list->owner;
+    
+}
 
 sub create_list_population_metadata {
     my ($self, $c) = @_;
@@ -830,14 +845,14 @@ sub create_list_geno_data_query_jobs {
 }
 
 
-
 sub list_phenotype_data {
     my ($self, $c) = @_;
 
-    my $list_id = $c->stash->{list_id};
-    $list_id =~ s/\w+_//g;
-    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
-    my $list_type =  $list->type();
+    #my $list_id = $c->stash->{list_id};
+    #$list_id =~ s/\w+_//g;
+    
+    $self->stash_list_metadata($c);
+    my $list_type = $c->stash->{list_type};
 
     if ($list_type eq 'plots')
     {
@@ -894,8 +909,9 @@ sub submit_list_training_data_query {
     my ($self, $c) = @_;
 
     my $list_id = $c->stash->{list_id};
-    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
-    my $list_type = $list->type;
+     
+    $self->stash_list_metadata($c);
+    my $list_type = $c->stash->{list_type};
 
     my $protocol_id = $c->stash->{genotyping_protocol_id};
     
@@ -927,10 +943,10 @@ sub list_population_summary {
     my $tmp_dir = $c->stash->{solgs_lists_dir};
     my $protocol_id = $c->stash->{genotyping_protocol_id};
     
-    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
-    my $list_name = $list->name;
-    my $owner_id = $list->owner;
-
+    $self->stash_list_metadata($c);
+    my $list_name = $c->stash->{list_name};
+    my $owner_id = $c->stash->{list_owner};
+    
     my $person = CXGN::People::Person->new($c->dbc()->dbh(), $owner_id);
     my $owner = $person->get_first_name() . ' ' . $person->get_last_name();
 
