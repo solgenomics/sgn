@@ -481,7 +481,7 @@ sub check_kinship_analysis {
 	if ($k =~ /kinship/)
 	{
 	   
-	    $kinship_file = $output_details->{$k}->{kinship_matrix_file};
+	    $kinship_file = $output_details->{$k}->{matrix_file};
 	    
 
 	    if ($kinship_file) 
