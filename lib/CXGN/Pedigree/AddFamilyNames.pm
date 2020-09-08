@@ -176,10 +176,12 @@ sub add_family_name {
     }
 
 	#add the owner for this family name
-	$phenome_schema->resultset("StockOwner")->find_or_create({
-		stock_id     => $new_family_name_id,
-		sp_person_id =>  $owner_sp_person_id,
-	});
+    if (defined $new_family_name_id){
+	    $phenome_schema->resultset("StockOwner")->find_or_create({
+		    stock_id     => $new_family_name_id,
+		    sp_person_id =>  $owner_sp_person_id,
+	    });
+    }
 
 	return \%return;
 
