@@ -1446,11 +1446,17 @@ sub upload_family_names_POST : Args(0) {
                 owner_name => $user_name,
             });
 
-            $family_name_add->add_family_name();
-
-            if (!$family_name_add->add_family_name()){
-                $c->stash->{rest} = {error_string => "Error adding family name",};
-                return;
+            my $return = $family_name_add->add_family_name();
+            my $error;
+            if (!$return){
+                $error = "Error adding family name";
+            }
+            if ($return->{error}){
+                $error = $return->{error};
+            }
+            if ($error){
+                $c->stash->{rest} = {error_string => $error };
+                $c->detach();
             }
         }
     }

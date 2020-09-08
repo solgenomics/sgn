@@ -54,8 +54,9 @@ sub add_family_name {
     my $cross_stock;
     my $organism_id;
     my $family_name_id;
+    my $new_family_name_id;
     my $transaction_error;
-    my @added_family_name_ids;
+    my %return;
 
     #lookup user by name
     my $owner_name = $self->get_owner_name();;
@@ -76,8 +77,7 @@ sub add_family_name {
        #Get stock of type cross matching cross name
         $cross_stock = $self->_get_cross($cross_name);
         if (!$cross_stock) {
-            print STDERR "Cross could not be found\n";
-            return;
+			push @{$return{error}},"Cross: $cross_name are not in database";
         }
 
 		my $cross_female_parent = $chado_schema->resultset("Stock::StockRelationship")
@@ -94,8 +94,8 @@ sub add_family_name {
 
         my $cross_female_id = $cross_female_parent->subject_id();
 		my $cross_male_id = $cross_male_parent->subject_id();
-        print STDERR "CROSS FEMALE PARENT =".Dumper($cross_female_id)."\n";
-		print STDERR "CROSS MALE PARENT =".Dumper($cross_male_id)."\n";
+#        print STDERR "CROSS FEMALE PARENT =".Dumper($cross_female_id)."\n";
+#		print STDERR "CROSS MALE PARENT =".Dumper($cross_male_id)."\n";
 
         #Get organism id from cross
         $organism_id = $cross_stock->organism_id();
@@ -120,10 +120,8 @@ sub add_family_name {
 			my $family_female_id = $family_female_parent->subject_id();
 			my $family_male_id = $family_male_parent->subject_id();
 
-            if ($cross_female_id ne $family_female_id ) {
-				print STDERR "Parents of cross: $cross_name are not the same as parents of family: $family_name\n";
-            } elsif ($cross_male_id ne $family_male_id) {
-				print STDERR "Parents of cross: $cross_name are not the same as parents of family: $family_name\n";
+            if (($cross_female_id != $family_female_id) || ($cross_male_id != $family_male_id)) {
+				push @{$return{error}},"Parents of cross: $cross_name are not the same as parents of family: $family_name";
             } else {
 				$family_name_rs->find_or_create_related('stock_relationship_objects', {
 	                type_id => $cross_member_of_cvterm_id,
@@ -161,9 +159,7 @@ sub add_family_name {
                 subject_id => $cross_male_parent->subject_id(),
             });
 
-            #add new stock_id to an array for phenome schema
-            my $new_family_name_id = $new_family_name_rs->stock_id();
-            push @added_family_name_ids, $new_family_name_id;
+			$new_family_name_id = $new_family_name_rs->stock_id();
         }
     };
 
@@ -175,19 +171,18 @@ sub add_family_name {
     };
 
     if ($transaction_error) {
-        print STDERR "Transaction1 error creating a family_name: $transaction_error\n";
-        return;
+		$return{error} = "Error creating family $family_name: $transaction_error";
+		return \%return;
     }
 
-    foreach my $stock_id (@added_family_name_ids) {
-        #add the owner for this stock
-        $phenome_schema->resultset("StockOwner")->find_or_create({
-            stock_id     => $stock_id,
-			sp_person_id =>  $owner_sp_person_id,
-        });
-    }
+	#add the owner for this family name
+	$phenome_schema->resultset("StockOwner")->find_or_create({
+		stock_id     => $new_family_name_id,
+		sp_person_id =>  $owner_sp_person_id,
+	});
 
-	return 1;
+	return \%return;
+
 }
 
 
