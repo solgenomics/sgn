@@ -10,6 +10,7 @@ use List::MoreUtils qw /any /;
 use CXGN::People::Person;
 use CXGN::Login;
 use CXGN::Genotype::Protocol;
+use CXGN::Genotype::CreatePlateOrder;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -532,6 +533,43 @@ sub get_genotyping_data_protocols_GET : Args(0) {
     #print STDERR Dumper \@result;
 
     $c->stash->{rest} = { data => \@result };
+}
+
+sub create_plate_order : Path('/ajax/breeders/createplateorder') ActionClass('REST') {}
+sub create_plate_order_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+        
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $plate_info = decode_json $c->req->param("order_info");
+
+    my $plate_id = $plate_info->{plate_id};
+    my $client_id = $plate_info->{client_id};
+    my $service_id_list = $plate_info->{service_ids};
+    my $facility_id = $plate_info->{facility_id};
+    my $extract_dna = $plate_info->{extract_dna};
+
+    print STDERR Dumper $plate_info;
+
+    my $submit_samples = CXGN::Genotype::CreatePlateOrder->new({
+        bcs_schema=>$schema,
+        client_id=>$client_id,
+        extract_dna=>$extract_dna,
+        service_id_list=>$service_id_list,
+        plate_id => $plate_id,
+        facility_id => $facility_id,
+    });
+    # my $errors = $submit_samples->validate();
+    my $order = $submit_samples->send();
+
+    print Dumper $order;
+
+    $c->stash->{rest} = {
+        message => "Successfully order created.",
+        trial_id => $plate_id,
+        plate_data => $order
+    };
+
 }
 
 1;

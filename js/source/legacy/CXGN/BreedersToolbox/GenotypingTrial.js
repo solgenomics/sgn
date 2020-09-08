@@ -185,7 +185,8 @@ jQuery(document).ready(function ($) {
             alert("Sending genotyping experiment entry to genotyping facility...");
 
             $.ajax( {
-                url: auth_data.host+'/brapi/v2/plate-register',
+                // url: auth_data.host+'/brapi/v2/plate-register',
+                url: auth_data.host+'/brapi/v2/vendor/orders',
                 method: 'POST',
                 data: {
                     token: auth_data.token,
@@ -199,7 +200,7 @@ jQuery(document).ready(function ($) {
                         alert(response.metadata.status);
                     }
                     else {
-                        alert("Successfully submitted the plate to GDF.");
+                        alert("Successfully submitted the plate to facility.");
                     }
                 }
             });
@@ -481,6 +482,61 @@ jQuery(document).ready(function ($) {
         }
     });
 
+    jQuery('#submit_plate_btn').click(function () {
+        var order_info = new Object();
+
+        order_info.plate_id = jQuery('#plate_id').html();
+        order_info.client_id = jQuery('#client_id').val();
+        order_info.service_ids = jQuery('#service_id_select').val();
+        order_info.extract_dna = jQuery('#extract_dna_select').val();
+        order_info.facility_id = jQuery('#genotyping_trial_facility_select').val();
+
+        if (order_info.plate_id == '') {
+            alert("A plate id is required and it should be unique in the database. Please try again.");
+            return;
+        }
+        // If data has been changed in form needs to be saved here
+        submit_samples_facilities(order_info);
+
+    });
+
+   function submit_samples_facilities(order_info) {
+        //console.log(plate_data);
+        var brapi_plate_data = new Object();
+
+        jQuery.ajax({
+            url: '/ajax/breeders/createplateorder',
+            method: 'POST',
+            beforeSend: function(){
+                jQuery("#working_modal").modal('show');
+            },
+            data: {
+                'order_info': JSON.stringify(order_info)
+            },
+            success : function(response) {
+                jQuery("#working_modal").modal('hide');
+                if (response.error) {
+                    alert(response.error);
+                }
+                else {
+                    alert(response.message);
+                    brapi_order = response.order;
+                    // if (plate_data.genotyping_facility_submit == 'yes'){
+                    //     submit_plate_to_gdf(brapi_plate_data);
+                    // } else {
+                    //     Workflow.complete('#add_geno_trial_submit');
+                    //     Workflow.focus("#genotyping_trial_create_workflow", -1); //Go to success page
+                    //     Workflow.check_complete("#genotyping_trial_create_workflow");
+                    // }
+                }
+            },
+            error: function(response) {
+                alert('An error occurred trying to submit the order.');
+                jQuery("#working_modal").modal('hide');
+            }
+        });
+        return brapi_plate_data;
+    }
 });
 
 function edit_genotyping_trial_details(){

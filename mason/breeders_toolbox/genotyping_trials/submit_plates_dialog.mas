@@ -15,7 +15,7 @@ $facilities
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="submit_plate_form" name="submit_plate_form" action="/ajax/breeders/submitsamples">
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="submit_plate_form" name="submit_plate_form">
 
                         <&| /util/workflow.mas, id=> "plates_to_facilities_workflow" &>
                             <&| /util/workflow.mas:step, title=> "Plate info" &>
@@ -117,7 +117,7 @@ $facilities
             </div>
             <div class="modal-footer">
                 <button id="submit_plate_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="submit_plate" id="submit_plate">Send genotyping plate</button>
+                <button type="button" class="btn btn-primary" name="submit_plate_btn" id="submit_plate_btn">Submit genotyping plate</button>
             </div>
         </div>
     </div>
