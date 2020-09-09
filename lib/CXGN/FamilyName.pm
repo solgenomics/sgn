@@ -60,17 +60,19 @@ sub get_family_parents {
     my $schema = $self->schema();
     my $family_stock_id = $self->family_stock_id();
     my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_name", "stock_type")->cvterm_id();
-    my $family_female_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_female_of", "stock_relationship")->cvterm_id();
-    my $family_male_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_male_of", "stock_relationship")->cvterm_id();
+    my $family_female_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_female_parent_of", "stock_relationship")->cvterm_id();
+    my $family_male_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_male_parent_of", "stock_relationship")->cvterm_id();
 
     my $family_female;
     my $family_male;
 
-    my $q = "SELECT female_parent.stock_id, female_parent.uniquename, male_parent.stock_id, male_parent.uniquename
-        FROM stock AS female parent
-        JOIN stock_relationship AS stock_relationship1 ON (female_parent.stock_id = stock_relationship.subject_id) and stock_relationship1.type_id = ?
+    my $q = "SELECT female_parent.stock_id, female_parent.uniquename, cvterm1.name, male_parent.stock_id, male_parent.uniquename, cvterm2.name
+        FROM stock AS female_parent
+        JOIN cvterm AS cvterm1 ON (female_parent.type_id = cvterm1.cvterm_id)
+        JOIN stock_relationship AS stock_relationship1 ON (female_parent.stock_id = stock_relationship1.subject_id) and stock_relationship1.type_id = ?
         LEFT JOIN stock_relationship AS stock_relationship2 ON (stock_relationship1.object_id = stock_relationship2.object_id) and stock_relationship2.type_id = ?
         LEFT JOIN stock as male_parent ON (male_parent.stock_id = stock_relationship2.subject_id)
+        LEFT JOIN cvterm AS cvterm2 ON (male_parent.type_id = cvterm2.cvterm_id)
         WHERE stock_relationship1.object_id = ?";
 
     my $h = $schema->storage->dbh()->prepare($q);
@@ -78,8 +80,8 @@ sub get_family_parents {
     $h->execute($family_female_type_id, $family_male_type_id, $family_stock_id);
 
     my @family_parents = ();
-    while (my ($female_parent_id,  $female_parent_name, $male_parent_id, $male_parent_name) = $h->fetchrow_array()){
-        push @family_parents, [$female_parent_id,  $female_parent_name, $male_parent_id, $male_parent_name]
+    while (my ($female_parent_id,  $female_parent_name, $female_stock_type, $male_parent_id, $male_parent_name, $male_stock_type) = $h->fetchrow_array()){
+        push @family_parents, [$female_parent_id,  $female_parent_name, $female_stock_type, $male_parent_id, $male_parent_name, $male_stock_type]
     }
     print STDERR Dumper(\@family_parents);
     return \@family_parents;

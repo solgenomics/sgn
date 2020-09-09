@@ -7,7 +7,7 @@ $user_id => undef
 $identifier_prefix => ''
 </%args>
 
-<& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Phenome.Tools", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List", "CXGN.BreederSearch", "CXGN.BreedersToolbox.CrossDetailPage" ] &>
+<& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Phenome.Tools", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List"] &>
 
 <& /page/page_title.mas, title => "Details for family '$family_name'" &>
 
@@ -41,3 +41,44 @@ $identifier_prefix => ''
 </div>
 
 </&>
+
+<& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<&| /page/info_section.mas, title => 'Parents', collapsible=>1, collapsed=>0 &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <table id = "family_parent_information" class="table table-hover table-striped">
+                    <thead>
+                        <tr>
+                            <th>Female Parent</th>
+                            <th>Female Stock Type</th>
+                            <th>Male Parent</th>
+                            <th>Male Stock Type</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</&>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    var family_id = "<% $family_id %>";
+
+    var family_parent_table = jQuery('#family_parent_information').DataTable({
+            'ajax': '/ajax/family/parents/'+family_id,
+            'paging' : false,
+            'searching' : false,
+            'destroy' : true,
+        });
+
+});
+
+
+</script>
