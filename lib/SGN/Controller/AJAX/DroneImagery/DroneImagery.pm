@@ -1173,6 +1173,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
             my $csv = Text::CSV->new({ sep_char => "\t" });
 
+            no warnings 'unintialized';
+
             my %unique_accessions_seen;
             my %unique_plots_seen;
             my @new_sorted_trait_names;
