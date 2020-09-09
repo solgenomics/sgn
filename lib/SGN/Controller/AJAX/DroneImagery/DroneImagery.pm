@@ -254,6 +254,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my ($stats_out_tempfile_col_fh, $stats_out_tempfile_col) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_tempfile_2dspl_fh, $stats_out_tempfile_2dspl) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_tempfile_residual_fh, $stats_out_tempfile_residual) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    my ($stats_out_tempfile_genetic_fh, $stats_out_tempfile_genetic) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_tempfile_permanent_environment_fh, $stats_out_tempfile_permanent_environment) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my $blupf90_solutions_tempfile;
     my $grm_file;
@@ -1163,10 +1164,17 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 data=mat_long, tolparinv='.$tolparinv.'
             );
             write.table(data.frame(plot_id = mix\$data\$plot_id, time = mix\$data\$time, residuals = mix\$residuals, fitted = mix\$fitted), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-            mix\$U\$id <- mat\$id;
-            mix\$U\$plot_id <- mat\$plot_id;
             write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
-            write.table(mix\$U, file=\''.$stats_out_tempfile_permanent_environment.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"
+            genetic_coeff <- data.frame(id = mix\$data\$id);
+            pe_coeff <- data.frame(plot_id = mix\$data\$plot_id);';
+            for my $leg_num (0..$legendre_order_number) {
+                $cmd .= 'genetic_coeff\$leg_'.$leg_num.' <- mix\$U\$\`leg'.$leg_num.':id\`\$value;';
+            }
+            for my $leg_num (0..$legendre_order_number) {
+                $cmd .= 'pe_coeff\$leg_'.$leg_num.' <- mix\$U\$\`leg'.$leg_num.':plot_id\`\$value;';
+            }
+            $cmd .= 'write.table(genetic_coeff, file=\''.$stats_out_tempfile_genetic.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+                write.table(pe_coeff, file=\''.$stats_out_tempfile_permanent_environment.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');"
             ';
             print STDERR Dumper $cmd;
             my $status = system($cmd);
@@ -1180,6 +1188,35 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             my @new_sorted_trait_names;
             my %sommer_rr_genetic_coeff;
             my %sommer_rr_temporal_coeff;
+            open(my $fh_genetic, '<', $stats_out_tempfile_genetic)
+                or die "Could not open file '$stats_out_tempfile_genetic' $!";
+
+                print STDERR "Opened $stats_out_tempfile_genetic\n";
+                my $header = <$fh_genetic>;
+                my @header_cols;
+                if ($csv->parse($header)) {
+                    @header_cols = $csv->fields();
+                }
+
+                while (my $row = <$fh_genetic>) {
+                    my @columns;
+                    if ($csv->parse($row)) {
+                        @columns = $csv->fields();
+                    }
+
+                    my $accession_id = $columns[0];
+                    my $accession_name = $stock_info{$accession_id}->{uniquename};
+                    $unique_accessions_seen{$accession_name}++;
+
+                    my $col_counter = 1;
+                    foreach (0..$legendre_order_number) {
+                        my $value = $columns[$col_counter];
+                        push @{$sommer_rr_genetic_coeff{$accession_name}}, $value;
+                        $col_counter++;
+                    }
+                }
+            close($fh_genetic);
+
             open(my $fh, '<', $stats_out_tempfile_permanent_environment)
                 or die "Could not open file '$stats_out_tempfile_permanent_environment' $!";
             
@@ -1197,25 +1234,11 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                         @columns = $csv->fields();
                     }
 
-                    my $dummy = $columns[0];
-                    my $rep_eff = $columns[1];
-                    my $accession_id = $columns[1+2*($legendre_order_number+1)+1];
-                    my $plot_id = $columns[1+2*($legendre_order_number+1)+2];
-
-                    my $accession_name = $stock_info{$accession_id}->{uniquename};
-                    $unique_accessions_seen{$accession_name}++;
+                    my $plot_id = $columns[0];
                     my $plot_name = $plot_id_map{$plot_id};
                     $unique_plots_seen{$plot_name}++;
 
-                    my $col_counter = 2;
-                    if ($row_counter < scalar(keys %stock_info)) {
-                        foreach (0..$legendre_order_number) {
-                            my $value = $columns[$col_counter];
-                            push @{$sommer_rr_genetic_coeff{$accession_name}}, $value;
-                            $col_counter++;
-                        }
-                    }
-                    $col_counter = 2 + $legendre_order_number+1;
+                    my $col_counter = 1;
                     foreach (0..$legendre_order_number) {
                         my $value = $columns[$col_counter];
                         push @{$sommer_rr_temporal_coeff{$plot_name}}, $value;
