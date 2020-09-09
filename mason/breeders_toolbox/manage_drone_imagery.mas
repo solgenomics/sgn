@@ -1346,6 +1346,9 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                                         <option value="0.0001">0.0001</option>
                                         <option value="0.001">0.001</option>
                                         <option value="0.01">0.01</option>
+                                        <option value="0.1">0.1</option>
+                                        <option value="0.2">0.2</option>
+                                        <option value="0.5">0.5</option>
                                     </select>
                                 </div>
                             </div>
