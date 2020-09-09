@@ -253,6 +253,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my ($stats_out_tempfile_row_fh, $stats_out_tempfile_row) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_tempfile_col_fh, $stats_out_tempfile_col) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_tempfile_2dspl_fh, $stats_out_tempfile_2dspl) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    my ($stats_out_tempfile_residual_fh, $stats_out_tempfile_residual) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_tempfile_permanent_environment_fh, $stats_out_tempfile_permanent_environment) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my $blupf90_solutions_tempfile;
     my $grm_file;
@@ -261,6 +262,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $result_blup_data;
     my $result_blup_spatial_data;
     my $result_blup_pe_data;
+    my $result_residual_data;
+    my $result_fitted_data;
     my @sorted_trait_names;
     my %seen_trait_names;
     my @sorted_scaled_ln_times;
@@ -1156,6 +1159,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 rcov=~vs(leg(time,'.$legendre_order_number.', intercept=TRUE), units),
                 data=mat_long, tolparinv='.$tolparinv.'
             );
+            write.table(data.frame(plot_id = mix\$data\$plot_id, time = mix\$data\$time, residuals = mix\$residuals, fitted = mix\$fitted), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
             write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             write.table(mix\$U, file=\''.$stats_out_tempfile_permanent_environment.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"
             ';
@@ -1196,6 +1200,32 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     }
                 }
             close($fh);
+
+            open(my $fh_residual, '<', $stats_out_tempfile_residual)
+                or die "Could not open file '$stats_out_tempfile_residual' $!";
+            
+                print STDERR "Opened $stats_out_tempfile_residual\n";
+                my $header_residual = <$fh_residual>;
+                my @header_cols_residual;
+                if ($csv->parse($header_residual)) {
+                    @header_cols_residual = $csv->fields();
+                }
+            
+                while (my $row = <$fh_residual>) {
+                    my @columns;
+                    if ($csv->parse($row)) {
+                        @columns = $csv->fields();
+                    }
+
+                    my $stock_id = $columns[0];
+                    my $time = $columns[1];
+                    my $residual = $columns[2];
+                    my $fitted = $columns[3];
+                    my $stock_name = $plot_id_map{$stock_id};
+                    $result_residual_data->{$stock_name}->{$seen_times{$time}} = [$residual, $timestamp, $user_name, '', ''];
+                    $result_fitted_data->{$stock_name}->{$seen_times{$time}} = [$fitted, $timestamp, $user_name, '', ''];
+                }
+            close($fh_residual);
 
             $time_min = 100000000;
             $time_max = 0;
@@ -1819,6 +1849,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         result_blup_genetic_data => $result_blup_data,
         result_blup_spatial_data => $result_blup_spatial_data,
         result_blup_pe_data => $result_blup_pe_data,
+        result_residual_data => $result_residual_data,
+        result_fitted_data => $result_fitted_data,
         unique_traits => \@sorted_trait_names,
         unique_accessions => \@unique_accession_names,
         unique_plots => \@unique_plot_names,
