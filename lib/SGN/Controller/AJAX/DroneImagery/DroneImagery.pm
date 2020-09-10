@@ -1165,8 +1165,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             );
             write.table(data.frame(plot_id = mix\$data\$plot_id, time = mix\$data\$time, residuals = mix\$residuals, fitted = mix\$fitted), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
             write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
-            genetic_coeff <- data.frame(id = mix\$data\$id);
-            pe_coeff <- data.frame(plot_id = mix\$data\$plot_id);';
+            genetic_coeff <- data.frame(id = names(mix\$U\$\`leg0:id\`\$value));
+            pe_coeff <- data.frame(plot_id = names(mix\$U\$\`leg0:plot_id\`\$value));';
             for my $leg_num (0..$legendre_order_number) {
                 $cmd .= 'genetic_coeff\$leg_'.$leg_num.' <- mix\$U\$\`leg'.$leg_num.':id\`\$value;';
             }
