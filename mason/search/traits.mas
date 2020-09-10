@@ -52,12 +52,11 @@
                     <table id="trait_search_results" width="100%" class="table table-hover table-striped">
                     <thead>
                       <tr>
-                        <th>Select <a href="#" data-toggle="tooltip" data-placement="top" title="Only observation variables can be used for collecting phenotypes. For this reason, only observation variables can be selected below. More technically, these terms have VARIABLE_OF relationships in the database."><span class="glyphicon glyphicon-info-sign"></span></a></th>
+                        <th>Select</th>
                         <th>Trait ID</th>
                         <th>Trait Name</th>
                         <th>Definition</th>
-                        <th>Type</th>
-                    </tr>
+                      </tr>
                     </thead>
                     </table>
 
@@ -107,7 +106,7 @@
 
 jQuery(document).ready(function () {
 
-    get_select_box('trait_variable_ontologies', 'trait_search_ontology_select', { 'name' : 'trait_search_ontology_select_id', 'cvprop_type_name':JSON.stringify(['trait_ontology','method_ontology','unit_ontology','composed_trait_ontology','object_ontology','attribute_ontology','time_ontology']) });
+    get_select_box('trait_variable_ontologies', 'trait_search_ontology_select', { 'name' : 'trait_search_ontology_select_id', 'cvprop_type_name':JSON.stringify(['trait_ontology','composed_trait_ontology']) });
 
     jQuery('[data-toggle="tooltip"]').tooltip();
 
@@ -180,13 +179,8 @@ jQuery(document).ready(function () {
      //console.log(selected_rows.data());
 
      var name_links = selected_rows.data().map(function(row){
-        if (row[4] == 'VARIABLE_OF') {
-            return [row[5], row[6]];
-        }
-        else {
-            alert(row[5]+' is not an observation variable! Do no try to collect phenotypes for terms which are not observation variables! More technically, your term needs to have a VARIABLE_OF relationship!');
-            trait_table.rows().deselect();
-        }
+         return [row[4], row[5]];
+         trait_table.rows().deselect();
      });
 
      var names = [];

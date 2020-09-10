@@ -111,12 +111,15 @@ sub store_analysis_model_files {
 
     my $model_experiment_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_experiment', 'experiment_type')->cvterm_id();
     my $location_id = $schema->resultset("NaturalDiversity::NdGeolocation")->search({description=>'[Computation]'})->first->nd_geolocation_id();
-	my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create({
+    my $nd_experiment_params = {
         nd_geolocation_id => $location_id,
         type_id => $model_experiment_type_cvterm_id,
-        nd_experiment_protocols => [{nd_protocol_id => $nd_protocol_id}],
-        nd_experiment_projects => [{project_id => $analysis_project_id}]
-    });
+        nd_experiment_protocols => [{nd_protocol_id => $nd_protocol_id}]
+    };
+    if ($analysis_project_id) {
+        $nd_experiment_params->{nd_experiment_projects} = [{project_id => $analysis_project_id}];
+    }
+	my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create($nd_experiment_params);
     my $nd_experiment_id = $experiment->nd_experiment_id();
 
     my $time = DateTime->now();
@@ -239,8 +242,15 @@ sub store_analysis_model_files {
 sub get_models_by_user {
     my $schema = shift;
     my $sp_person_id = shift;
+    my $analysis_model_type = shift;
 
     my $analysis_model_experiment_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_experiment', 'experiment_type')->cvterm_id();
+
+    my $where = '';
+    if ($analysis_model_type) {
+        my $model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $analysis_model_type, 'protocol_type')->cvterm_id();
+        $where = ' AND nd_protocol.type_id='.$model_type_cvterm_id;
+    }
 
     my $model_q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, basename, dirname, md.file_id, md.filetype, nd_protocol.type_id, nd_experiment.type_id, property.type_id, property.value
         FROM metadata.md_files AS md
@@ -251,7 +261,8 @@ sub get_models_by_user {
         JOIN nd_experiment_protocol using(nd_experiment_id)
         JOIN nd_protocol using(nd_protocol_id)
         JOIN nd_protocolprop AS property ON(nd_protocol.nd_protocol_id=property.nd_protocol_id)
-        WHERE sp.sp_person_id=? AND nd_experiment.type_id=$analysis_model_experiment_id;";
+        WHERE sp.sp_person_id=? AND nd_experiment.type_id=$analysis_model_experiment_id
+        $where;";
     my $model_h = $schema->storage->dbh()->prepare($model_q);
     $model_h->execute($sp_person_id);
     my %result;
