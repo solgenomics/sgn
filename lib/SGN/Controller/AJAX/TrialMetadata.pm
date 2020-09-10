@@ -2955,7 +2955,10 @@ sub trial_accessions_rank : Chained('trial') PathPart('accessions_rank') Args(0)
         }
     }
 
-    $c->stash->{rest} = {success => 1, results => \%accession_sum};
+    my @sorted_accessions = sort { $accession_sum{$b} <=> $accession_sum{$a} } keys(%accession_sum);
+    my @sorted_values = @accession_sum{@sorted_accessions};
+
+    $c->stash->{rest} = {success => 1, results => \%accession_sum, sorted_accessions => \@sorted_accessions, sorted_values => \@sorted_values};
 }
 
 1;
