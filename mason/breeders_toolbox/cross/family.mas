@@ -74,10 +74,10 @@ $identifier_prefix => ''
                 </div>
                 <div class="panel panel-default">
                     <div class="panel-body">
-                        <&| /page/info_section.mas, title => 'Add Crosses to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Adding crosses in this family to a new or exisiting list</i>'&>
+                        <&| /page/info_section.mas, title => 'Add Crosses to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Adding crosses in this family to a new or exisiting list</i>'&>
                             <br>
-                            <div id="crosses_to_new_list" style="display:none"></div>
-                            <div id="crosses_add_to_list"></div>
+                            <div id="members_to_new_list" style="display:none"></div>
+                            <div id="members_add_to_list"></div>
                         </&>
                     </div>
                 </div>
@@ -109,6 +109,22 @@ jQuery(document).ready(function(){
             { title: "Number of Progenies", "data": "progeny_number" },
             { title: "Crossing Experiment", "data": null, "render": function ( data, type, row ) { return "<a href='/breeders/trial/"+row.crossing_experiment_id+"'>"+row.crossing_experiment_name+"</a>"; } },
         ],
+        "fnInitComplete": function(oSettings, json) {
+            //console.log(json);
+            if (!isLoggedIn()) {
+                jQuery('#members_add_to_list').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+            } else {
+                var html = "";
+                for(var i=0; i<json.data.length; i++){
+                    html += json.data[i].cross_name+"\n";
+                }
+                jQuery("#members_to_new_list").html(html);
+                addToListMenu("members_add_to_list", "members_to_new_list", {
+                    selectText: true,
+                    listType: 'crosses',
+                });
+            }
+        }
     });
 
 });
