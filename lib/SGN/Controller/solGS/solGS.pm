@@ -3348,7 +3348,7 @@ sub run_async {
     my $background_job     = $c->stash->{background_job};
     my $dependent_jobs     = $c->stash->{dependent_jobs};
     
-    my $temp_dir            = $c->stash->{solgs_tempfiles_dir};
+    my $temp_dir            = $c->stash->{analysis_tempfiles_dir} || $c->stash->{solgs_tempfiles_dir};
       
     $c->stash->{r_temp_file} = 'run-async';
     $self->create_cluster_accesible_tmp_files($c);
@@ -3723,7 +3723,7 @@ sub submit_job_cluster {
     my ($self, $c, $args) = @_;
 
     my $job;
- 
+
     eval 
     {	
 	$job = CXGN::Tools::Run->new($args->{config});
