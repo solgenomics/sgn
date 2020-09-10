@@ -89,4 +89,50 @@ sub get_family_parents {
 }
 
 
+sub get_family_members {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $family_stock_id = $self->family_stock_id();
+    my $cross_member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_member_of", "stock_relationship")->cvterm_id();
+    my $offspring_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "offspring_of", "stock_relationship")->cvterm_id();
+    my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
+    my $cross_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_experiment", "experiment_type")->cvterm_id();
+
+
+    my $q = "SELECT cross_table.cross_id, cross_table.cross_name, cross_table.cross_type, cross_table.crossing_experiment_id, cross_table.crossing_experiment_name, progeny_count_table.progeny_number
+        FROM
+        (SELECT stock.stock_id AS cross_id, stock.uniquename AS cross_name, stock_relationship1.value AS cross_type, project.project_id AS crossing_experiment_id, project.name AS crossing_experiment_name
+        FROM stock JOIN stock_relationship on (stock.stock_id = stock_relationship.subject_id) AND stock_relationship.type_id = ?
+        JOIN stock_relationship AS stock_relationship1 ON (stock_relationship.subject_id = stock_relationship1.object_id) AND stock_relationship1.type_id = ?
+        JOIN nd_experiment_stock ON (nd_experiment_stock.stock_id = stock_relationship1.object_id)
+        JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id = nd_experiment.nd_experiment_id) AND nd_experiment.type_id = ?
+        JOIN nd_experiment_project ON (nd_experiment_stock.nd_experiment_id = nd_experiment_project.nd_experiment_id)
+        JOIN project ON (nd_experiment_project.project_id = project.project_id) WHERE stock_relationship.object_id = ?) AS cross_table
+        LEFT JOIN
+        (SELECT DISTINCT stock.stock_id AS cross_id, COUNT (stock_relationship1.subject_id) AS progeny_number
+        FROM stock JOIN stock_relationship on (stock.stock_id = stock_relationship.subject_id) AND stock_relationship.type_id = ?
+        LEFT JOIN stock_relationship AS stock_relationship1 ON (stock_relationship.subject_id = stock_relationship1.object_id) AND stock_relationship1.type_id = ?
+        WHERE stock_relationship.object_id = ? GROUP BY cross_id) AS progeny_count_table
+        ON (cross_table.cross_id = progeny_count_table.cross_id)";
+
+        my $h = $schema->storage->dbh()->prepare($q);
+
+        $h->execute($cross_member_of_type_id, $female_parent_type_id, $cross_experiment_type_id, $family_stock_id, $cross_member_of_type_id, $offspring_of_type_id, $family_stock_id);
+
+        my @data =();
+        while(my($cross_id, $cross_name, $cross_type, $crossing_experiment_id, $crossing_experiment_name, $progeny_number) = $h->fetchrow_array()){
+            push @data, [$cross_id, $cross_name, $cross_type, $crossing_experiment_id, $crossing_experiment_name, $progeny_number]
+        }
+
+        print STDERR "CROSS MEMBERS =".Dumper(\@data);
+        return \@data;
+
+
+}
+
+
+
+###
 1;
+###

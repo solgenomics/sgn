@@ -70,3 +70,38 @@ sub get_family_parents :Path('/ajax/family/parents') :Args(1) {
     $c->stash->{rest} = { data => \@family_parents };
 
 }
+
+
+sub get_family_members :Path('/ajax/family/members') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $family_id = shift;
+#    print STDERR "FAMILY ID =".Dumper($family_id)."\n";
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $family = CXGN::FamilyName->new({schema=>$schema, family_stock_id=>$family_id});
+
+    my $result = $family->get_family_members();
+
+    my @crosses;
+    foreach my $r (@$result){
+        my ($cross_id, $cross_name, $cross_type, $crossing_experiment_id, $crossing_experiment_name, $progeny_number) =@$r;
+        push @crosses, {
+            cross_id => $cross_id,
+            cross_name => $cross_name,
+            cross_type => $cross_type,
+            crossing_experiment_id => $crossing_experiment_id,
+            crossing_experiment_name => $crossing_experiment_name,
+            progeny_number => $progeny_number
+        };
+    }
+
+    $c->stash->{rest} = { data => \@crosses };
+
+}
+
+
+
+###
+1;
+###
