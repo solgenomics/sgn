@@ -280,7 +280,6 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $analysis_model_language = "R";
     my $analysis_model_training_data_file_type;
     my $field_trial_design;
-    my $pe_genetic_blup_trait;
     my $model_sum_square_residual;
     my %trait_composing_info;
     my $time_max;
@@ -311,7 +310,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         }
     }
 
-    if ($statistics_select eq 'marss_germplasmname_block' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups') {
+    if ($statistics_select eq 'marss_germplasmname_block' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
 
         my $drone_run_related_time_cvterms_json_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_related_time_cvterms_json', 'project_property')->cvterm_id();
         my $drone_run_field_trial_project_relationship_type_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
@@ -346,7 +345,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         }
     }
 
-    if ($statistics_select eq 'lmer_germplasmname_replicate' || $statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups') {
+    if ($statistics_select eq 'lmer_germplasmname_replicate' || $statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
 
         my %trait_name_encoder;
         my %trait_name_encoder_rev;
@@ -466,12 +465,6 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             close($F);
         }
         elsif ($statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups') {
-            if ($statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups') {
-                $pe_genetic_blup_trait = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using Sommer R|SGNSTAT:0000004";
-            }
-            if ($statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups') {
-                $pe_genetic_blup_trait = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on growing degree days computed using Sommer R|SGNSTAT:0000006";
-            }
 
             my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
                 'MaterializedViewTable',
@@ -583,8 +576,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 }
             close($F);
         }
-        elsif ($statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups') {
-            $pe_genetic_blup_trait = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on growing degree days computed using Sommer R|SGNSTAT:0000006";
+        elsif ($statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
 
             $analysis_model_language = "F90";
 
@@ -627,7 +619,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     my $related_time_terms_json = decode_json $_->{associated_image_project_time_json};
                     my $time;
                     my $time_term_string = '';
-                    if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups') {
+                    if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
                         $time = $related_time_terms_json->{gdd_average_temp} + 0;
 
                         my $gdd_term_string = "GDD $time";
@@ -643,7 +635,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                         }
                         $time_term_string = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $gdd_cvterm_id, 'extended');
                     }
-                    elsif ($statistics_select eq 'blupf90_grm_random_regression_dap_blups') {
+                    elsif ($statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
                         my $time_days_cvterm = $related_time_terms_json->{day};
                         $time_term_string = $time_days_cvterm;
                         my $time_days = (split '\|', $time_days_cvterm)[0];
@@ -859,7 +851,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             close($F2);
         }
 
-        if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups') {
+        if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
 
             my %seen_accession_stock_ids;
             foreach my $trial_id (@$field_trial_id_list) {
@@ -894,7 +886,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 # individuals_filter=>$individuals_filter
             };
 
-            if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups') {
+            if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
                 $grm_search_params->{download_format} = 'three_column_stock_id_integer';
             }
             else {
@@ -1386,16 +1378,23 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
             @sorted_trait_names = sort keys %rr_unique_traits;
         }
-        elsif ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups') {
+        elsif ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+
             $statistical_ontology_term = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using Sommer R|SGNSTAT:0000004"; #In the JS this is set to either the genetic of permanent environment BLUP term (Multivariate linear mixed model permanent environment BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using Sommer R|SGNSTAT:0000005) when saving results
         
             $analysis_result_values_type = "analysis_result_values_match_accession_names";
 
             if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups') {
-                $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_remlf90_grm_temporal_leg_random_regression_GDD_genetic_blups_phenotype_file";
+                $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_blupf90_grm_temporal_leg_random_regression_GDD_genetic_blups_phenotype_file";
             }
             elsif ($statistics_select eq 'blupf90_grm_random_regression_dap_blups') {
-                $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_remlf90_grm_temporal_leg_random_regression_DAP_genetic_blups_phenotype_file";
+                $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_blupf90_grm_temporal_leg_random_regression_DAP_genetic_blups_phenotype_file";
+            }
+            elsif ($statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
+                $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_airemlf90_grm_temporal_leg_random_regression_GDD_genetic_blups_phenotype_file";
+            }
+            elsif ($statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+                $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_airemlf90_grm_temporal_leg_random_regression_DAP_genetic_blups_phenotype_file";
             }
 
             my $pheno_var_pos = $legendre_order_number+1;
@@ -1537,9 +1536,17 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 }
             close($Fp);
 
+            my $command_name = '';
+            if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups') {
+                $command_name = 'blupf90';
+            }
+            elsif ($statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+                $command_name = 'airemlf90';
+            }
+
             my $parameter_tempfile_basename = basename($parameter_tempfile);
             $stats_out_tempfile .= '.log';
-            my $cmd = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_basename.' | blupf90 > '.$stats_out_tempfile;
+            my $cmd = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd;
             my $status = system($cmd);
 
@@ -1655,10 +1662,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     }
 
                     my $time_term_string = '';
-                    if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups') {
+                    if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
                         $time_term_string = "GDD $time_rescaled";
                     }
-                    elsif ($statistics_select eq 'blupf90_grm_random_regression_dap_blups') {
+                    elsif ($statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
                         $time_term_string = "day $time_rescaled"
                     }
                     $h_time->execute($time_term_string, 'cxgn_time_ontology');
@@ -1700,10 +1707,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     }
 
                     my $time_term_string = '';
-                    if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups') {
+                    if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
                         $time_term_string = "GDD $time_rescaled";
                     }
-                    elsif ($statistics_select eq 'blupf90_grm_random_regression_dap_blups') {
+                    elsif ($statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
                         $time_term_string = "day $time_rescaled"
                     }
                     $h_time->execute($time_term_string, 'cxgn_time_ontology');
