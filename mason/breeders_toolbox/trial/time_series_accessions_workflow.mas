@@ -22,7 +22,7 @@ $data_level => undef
                 <&| /util/workflow.mas, id=> "trial_analysis_time_series_accessions_workflow_dialog_workflow" &>
                     <&| /util/workflow.mas:step, title=> "Traits" &>
                         <& /page/page_title.mas, title=>"Select the input measurements to use in time series" &>
-                
+
                         <div class="container-fluid">
                             <div class="form-horizontal">
 
@@ -42,7 +42,7 @@ $data_level => undef
                     </&>
                     <&| /util/workflow.mas:step, title=> "Accessions" &>
                         <& /page/page_title.mas, title=>"Select the accessions to plot" &>
-                
+
                         <div class="container-fluid">
                             <div class="form-horizontal">
 

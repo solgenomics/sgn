@@ -2901,4 +2901,61 @@ sub trial_plot_time_series_accessions : Chained('trial') PathPart('plot_time_ser
     $c->stash->{rest} = {success => 1, figure => $pheno_figure_tempfile_string};
 }
 
+sub trial_accessions_rank : Chained('trial') PathPart('accessions_rank') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $trait_ids = decode_json $c->req->param('trait_ids');
+    my $accession_ids = $c->req->param('accession_ids') ne 'null' ? decode_json $c->req->param('accession_ids') : [];
+    my $trait_format = $c->req->param('trait_format');
+    my $data_level = $c->req->param('data_level');
+
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        'MaterializedViewTable',
+        {
+            bcs_schema=>$schema,
+            data_level=>$data_level,
+            trait_list=>$trait_ids,
+            trial_list=>[$c->stash->{trial_id}],
+            accession_list=>$accession_ids,
+            include_timestamp=>0,
+            exclude_phenotype_outlier=>0
+        }
+    );
+    my ($data, $unique_traits) = $phenotypes_search->search();
+    my @sorted_trait_names = sort keys %$unique_traits;
+
+    if (scalar(@$data) == 0) {
+        $c->stash->{rest} = { error => "There are no phenotypes for the trials and traits you have selected!"};
+        return;
+    }
+
+    my %phenotype_data;
+    my %trait_hash;
+    my %seen_germplasm_names;
+    foreach my $obs_unit (@$data){
+        my $obsunit_id = $obs_unit->{observationunit_stock_id};
+        my $observations = $obs_unit->{observations};
+        my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
+        my $germplasm_uniquename = $obs_unit->{germplasm_uniquename};
+        foreach (@$observations){
+            push @{$phenotype_data{$germplasm_uniquename}->{$_->{trait_id}}}, $_->{value};
+            $trait_hash{$_->{trait_id}} = $_->{trait_name};
+        }
+        $seen_germplasm_names{$germplasm_uniquename}++;
+    }
+    my @sorted_germplasm_names = sort keys %seen_germplasm_names;
+
+    my %accession_sum;
+    foreach my $s (@sorted_germplasm_names) {
+        foreach my $t (@$trait_ids) {
+            my $vals = $phenotype_data{$s}->{$t};
+            my $average_val = sum(@$vals)/scalar(@$vals);
+            $accession_sum{$s} += $average_val;
+        }
+    }
+
+    $c->stash->{rest} = {success => 1, results => \%accession_sum};
+}
+
 1;

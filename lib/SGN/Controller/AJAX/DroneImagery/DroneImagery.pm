@@ -6377,21 +6377,30 @@ sub drone_imagery_get_vehicle_GET : Args(0) {
     my $q = "SELECT stock.stock_id, stock.uniquename, stock.description, stockprop.value
         FROM stock
         JOIN stockprop ON(stock.stock_id=stockprop.stock_id AND stockprop.type_id=$imaging_vehicle_properties_cvterm_id)
-        WHERE stock.type_id=$imaging_vehicle_cvterm_id and stock.stock_id=?;";
+        WHERE stock.type_id=$imaging_vehicle_cvterm_id";
+    if ($vehicle_id) {
+        $q .= " AND stock.stock_id=?"
+    }
+    $q .= ";";
     my $h = $bcs_schema->storage->dbh()->prepare($q);
-    $h->execute($vehicle_id);
-    my %vehicle;
+    if ($vehicle_id) {
+        $h->execute($vehicle_id);
+    }
+    else {
+        $h->execute();
+    }
+    my @vehicles;
     while (my ($stock_id, $name, $description, $prop) = $h->fetchrow_array()) {
         my $prop_hash = decode_json $prop;
-        %vehicle = (
+        push @vehicles, {
             vehicle_id => $stock_id,
             name => $name,
             description => $description,
             properties => $prop_hash
-        );
+        };
     }
 
-    $c->stash->{rest} = { vehicle => \%vehicle, success => 1 };
+    $c->stash->{rest} = { vehicles => \@vehicles, success => 1 };
 }
 
 sub drone_imagery_get_vehicles : Path('/api/drone_imagery/imaging_vehicles') : ActionClass('REST') { }
