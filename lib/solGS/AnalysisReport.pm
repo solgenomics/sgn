@@ -477,13 +477,11 @@ sub check_kinship_analysis {
   			  
     foreach my $k (keys %{$output_details})
     {
-	my $kinship_file;
 	if ($k =~ /kinship/)
 	{
 	   
-	    $kinship_file = $output_details->{$k}->{matrix_file};
+	    my $kinship_file = $output_details->{$k}->{matrix_file};
 	    
-
 	    if ($kinship_file) 
 	    {
 		while (1) 
@@ -853,30 +851,34 @@ sub combine_populations_message {
 
 sub kinship_analysis_message {
     my ($self, $output_details) = @_;
-   
-    
-    my $message;
-    my $output_page;
- 
-    if ($output_details->{kinship}) {
-	if ($output_details->{kinship}->{success}) 
-	{
-	    $output_page = $output_details->{kinship}->{kinship_output_page};
-	    $message = 'Your kinship analysis is done. You can access the result here:' 
-		. "\n\n$output_page\n\n";
-	}
-	else 
-	{
-	    no warnings 'uninitialized';
-	    my $fail_message  = $output_details->{kinship}->{failure_reason};
 
-	    $message  = "The kinship analysis failed.\n";
-	    $message .= "\nPossible causes are:\n$fail_message\n";
-	    $message .= 'Refering page: ' . $output_page . "\n\n";
-	    $message .= "We will troubleshoot the cause and contact you when we find out more.\n\n";	
+    my $message;
+ 
+    foreach my $k (keys %{$output_details}) 
+    {
+	if ($k =~ /kinship/) {
+	 
+	    my $output_page;
+	    
+	    if ($output_details->{$k}->{success}) 
+	    {
+		$output_page = $output_details->{$k}->{output_page};		
+		$message = 'Your kinship analysis is done. You can access the result here:' 
+		    . "\n\n$output_page\n\n";
+	    }
+	    else 
+	    {
+		no warnings 'uninitialized';
+		my $fail_message  = $output_details->{$k}->{failure_reason};
+      
+		$message  = "The kinship analysis failed.\n";
+		$message .= "\nPossible causes are:\n$fail_message\n";
+		$message .= 'Refering page: ' . $output_page . "\n\n";
+		$message .= "We will troubleshoot the cause and contact you when we find out more.\n\n";	
+	    }
 	}
     }
- 
+    
     return  $message;
 }
 
