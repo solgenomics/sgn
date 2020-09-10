@@ -982,22 +982,17 @@ sub run_kinship_analysis {
   
     if ($analysis_page = ~/kinship\/analysis/)
     {
-	my $file_id = $c->controller('solGS::Files')->create_file_id($c);   
-	$c->stash->{file_id} = $file_id;
-
-	my $pop_id = $c->stash->{kinship_pop_id};
-	my $data_str = $c->stash->{data_structure};
-
-	# $c->controller('solGS::Kinship')->stash_data_str_kinship_pop_id($c, $pop_id, $data_str);
-	#my $kinship_pop_id = $c->stash->{kinship_pop_id};
-    
 	my $list_id = $c->stash->{list_id};
 
 	if ($list_id)
 	{
+	    my $file_id = $c->controller('solGS::Files')->create_file_id($c);   
+	    $c->stash->{file_id} = $file_id;
+	    
 	    $c->controller('solGS::List')->create_list_population_metadata_file($c, $file_id);
 	    $c->controller('solGS::List')->stash_list_metadata($c, $list_id);
 	}
+	
 	$c->controller('solGS::Kinship')->run_kinship($c);
     }
 
