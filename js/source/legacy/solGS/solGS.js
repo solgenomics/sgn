@@ -16,7 +16,7 @@ solGS.waitPage = function (page, args) {
   
     var host = window.location.protocol + '//'  + window.location.host;
     page = page.replace(host, '');
-     
+  
     var matchItems = 'solgs/population/'
 	+ '|solgs/populations/combined/' 
 	+ '|solgs/trait/' 
@@ -25,7 +25,8 @@ solGS.waitPage = function (page, args) {
 	+ '|solgs/model/\\w+_\\d+/prediction/'
 	+ '|solgs/model/\\d+/prediction/'
 	+ '|solgs/models/combined/trials/'
-     	+ '|solgs/traits/all/population/';
+     	+ '|solgs/traits/all/population/'
+    	+ '|kinship/analysis';
   		    
     if (page.match(matchItems)) {
 
@@ -44,7 +45,7 @@ solGS.waitPage = function (page, args) {
 	}
     }
     else {
-    	goTPage(page, args);
+    	goToPage(page, args);
     }
 
     function checkCachedResult(page, args) {
@@ -75,20 +76,27 @@ solGS.waitPage = function (page, args) {
 		    goToPage(page, args);
 		   
 		} else {
-		    if (document.URL.match(/solgs\/search\//)) {
+
+		    if (document.URL.match(/solgs\/population\/|solgs\/populations\/combined\//)) {
+			checkTrainingPopRequirement(page, args);
+		    } else {
 			args = JSON.parse(args);
 			askUser(page, args);
-			
-		    } else {
-
-			if (page.match(/solgs\/population\/|solgs\/populations\/combined\//)) {
-			    args = JSON.parse(args);
-			    askUser(page, args);
-
-			} else {
-			    checkTrainingPopRequirement(page, args);
-			}
 		    }
+		    // if (document.URL.match(/solgs\/search\//)) {
+		    // 	args = JSON.parse(args);
+		    // 	askUser(page, args);
+			
+		    // } else if () {
+			
+		    // 	if (page.match(/solgs\/population\/|solgs\/populations\/combined\//)) {
+		    // 	    args = JSON.parse(args);
+		    // 	    askUser(page, args);
+
+		    // 	} else {
+		    // 	    checkTrainingPopRequirement(page, args);
+		    // 	}
+		    // }
 		}
 		
 	    },
