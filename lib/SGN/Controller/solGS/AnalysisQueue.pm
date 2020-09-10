@@ -857,6 +857,10 @@ sub run_analysis {
 	{
 	    $self->predict_selection_traits($c);
 	}
+	elsif ($analysis_page =~ /kinship\/analysis/)
+	{
+	    $self->run_kinship_analysis($c);
+	}
 	else 
 	{
 	    $c->stash->{status} = 'Error';
@@ -968,6 +972,35 @@ sub predict_selection_traits {
 	$c->controller('solGS::combinedTrials')->predict_selection_pop_combined_pops_model($c);	
     }	    
     
+}
+
+
+sub run_kinship_analysis {
+    my ($self, $c) = @_;
+
+    my $analysis_page = $c->stash->{analysis_page};
+  
+    if ($analysis_page = ~/kinship\/analysis/)
+    {
+	my $file_id = $c->controller('solGS::Files')->create_file_id($c);   
+	$c->stash->{file_id} = $file_id;
+
+	my $pop_id = $c->stash->{kinship_pop_id};
+	my $data_str = $c->stash->{data_structure};
+
+	# $c->controller('solGS::Kinship')->stash_data_str_kinship_pop_id($c, $pop_id, $data_str);
+	#my $kinship_pop_id = $c->stash->{kinship_pop_id};
+    
+	my $list_id = $c->stash->{list_id};
+
+	if ($list_id)
+	{
+	    $c->controller('solGS::List')->create_list_population_metadata_file($c, $file_id);
+	    $c->controller('solGS::List')->stash_list_metadata($c, $list_id);
+	}
+	$c->controller('solGS::Kinship')->run_kinship($c);
+    }
+
 }
 
 
