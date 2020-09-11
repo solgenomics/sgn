@@ -268,7 +268,7 @@ sub kinship_r_jobs_file {
 sub kinship_r_jobs {
     my ($self, $c) = @_;
 
-    my $file_id = $c->stash->{file_id};
+    my $file_id = $c->stash->{kinship_pop_id};
     
     $self->kinship_output_files($c);
     my $output_file = $c->stash->{kinship_output_files};
@@ -328,14 +328,22 @@ sub kinship_query_jobs {
     $c->stash->{kinship_query_jobs} = $jobs;
 }
 
+
 sub create_kinship_genotype_data_query_jobs {
     my ($self, $c) = @_;
 
     my $data_str = $c->stash->{data_structure};
-    my $protocol_id = $c->stash->{genotyping_protocol_id};
-
+   
     if ($data_str =~ /list/)
     {
+	my $list_id = $c->stash->{list_id};
+
+	my $file_id = $c->controller('solGS::Files')->create_file_id($c);   
+	$c->stash->{file_id} = $file_id;
+	    
+	$c->controller('solGS::List')->create_list_population_metadata_file($c, $file_id);
+	$c->controller('solGS::List')->stash_list_metadata($c, $list_id);
+	
 	$c->controller('solGS::List')->create_list_geno_data_query_jobs($c);
 	$c->stash->{kinship_geno_query_jobs} = $c->stash->{list_geno_data_query_jobs};
     } 
@@ -352,7 +360,8 @@ sub create_kinship_genotype_data_query_jobs {
 	}
 
 	my $trials = $c->stash->{pops_ids_list} || [$c->stash->{training_pop_id}] || [$c->stash->{selection_pop_id}];
-
+	my $protocol_id = $c->stash->{genotyping_protocol_id};
+	
 	$c->controller('solGS::solGS')->get_cluster_genotype_query_job_args($c, $trials, $protocol_id);
 	$c->stash->{kinship_geno_query_jobs} = $c->stash->{cluster_genotype_query_job_args};
     }

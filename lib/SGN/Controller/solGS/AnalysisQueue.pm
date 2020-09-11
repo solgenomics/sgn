@@ -982,17 +982,6 @@ sub run_kinship_analysis {
   
     if ($analysis_page = ~/kinship\/analysis/)
     {
-	my $list_id = $c->stash->{list_id};
-
-	if ($list_id)
-	{
-	    my $file_id = $c->controller('solGS::Files')->create_file_id($c);   
-	    $c->stash->{file_id} = $file_id;
-	    
-	    $c->controller('solGS::List')->create_list_population_metadata_file($c, $file_id);
-	    $c->controller('solGS::List')->stash_list_metadata($c, $list_id);
-	}
-	
 	$c->controller('solGS::Kinship')->run_kinship($c);
     }
 
