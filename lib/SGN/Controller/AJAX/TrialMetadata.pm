@@ -3124,7 +3124,7 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
     mkdir $tmp_stats_dir if ! -d $tmp_stats_dir;
     my ($stats_tempfile_fh, $stats_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
 
-    my $header_string = 'Rank,Genotype,Position,Count';
+    my $header_string = 'Rank,Genotype,Marker,Count';
 
     open(my $F, ">", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
         print $F $header_string."\n";
@@ -3152,11 +3152,11 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
 
     my $cmd = 'R -e "library(data.table); library(ggplot2);
     mat <- fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\');
-    mat\$Position <- as.numeric(as.character(mat\$Position));
+    mat\$Marker <- as.numeric(as.character(mat\$Marker));
     mat\$Genotype <- as.character(mat\$Genotype);
     options(device=\'png\');
     par();
-    sp <- ggplot(mat, aes(x = Position, y = Count)) + 
+    sp <- ggplot(mat, aes(x = Marker, y = Count)) + 
         geom_line(aes(color = Genotype)) +
         scale_fill_manual(values = c(\''.$color_string.'\')) + 
         theme_minimal();
