@@ -3058,8 +3058,7 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
         print STDERR Dumper $acc_counter;
         if ($acc_counter > $sort_increment) {
             $rank_counter++;
-        } else {
-            $acc_counter = 1;
+            $acc_counter = 0;
         }
         my $stock_id = $seen_germplasm_names{$_};
         push @{$rank_hash{$rank_counter}}, $stock_id;
