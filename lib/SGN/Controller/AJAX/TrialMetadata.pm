@@ -3043,7 +3043,7 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
 
     my @sorted_accessions = sort { $accession_sum{$b} <=> $accession_sum{$a} } keys(%accession_sum);
     my @sorted_values = @accession_sum{@sorted_accessions};
-    my $sort_increment = ceil(scalar(@sorted_accessions)/10);
+    my $sort_increment = ceil(scalar(@sorted_accessions)/10)+0;
     print STDERR Dumper $sort_increment;
 
     my $percentile_inc = $sort_increment/scalar(@sorted_accessions);
