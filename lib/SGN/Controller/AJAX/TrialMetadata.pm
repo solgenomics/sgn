@@ -28,6 +28,8 @@ use CXGN::Page::FormattingHelpers qw / html_optional_show /;
 use SGN::Image;
 use CXGN::Trial::TrialLayoutDownload;
 use List::Util qw(sum);
+use CXGN::Genotype::DownloadFactory;
+use POSIX;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -2967,6 +2969,199 @@ sub trial_accessions_rank : Chained('trial') PathPart('accessions_rank') Args(0)
     my @sorted_values = @accession_sum{@sorted_accessions};
 
     $c->stash->{rest} = {success => 1, results => \%accession_sum, sorted_accessions => \@sorted_accessions, sorted_values => \@sorted_values};
+}
+
+sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    print STDERR Dumper $c->req->params();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $trait_ids = decode_json $c->req->param('trait_ids');
+    my $trait_weights = decode_json $c->req->param('trait_weights');
+    my $accession_ids = $c->req->param('accession_ids') ne 'null' ? decode_json $c->req->param('accession_ids') : [];
+    my $trait_format = $c->req->param('trait_format');
+    my $nd_protocol_id = $c->req->param('nd_protocol_id');
+    my $data_level = $c->req->param('data_level');
+    my $compute_from_parents = $c->req->param('compute_from_parents') eq 'yes' ? 1 : 0;
+
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        'MaterializedViewTable',
+        {
+            bcs_schema=>$schema,
+            data_level=>$data_level,
+            trait_list=>$trait_ids,
+            trial_list=>[$c->stash->{trial_id}],
+            accession_list=>$accession_ids,
+            include_timestamp=>0,
+            exclude_phenotype_outlier=>0
+        }
+    );
+    my ($data, $unique_traits) = $phenotypes_search->search();
+    my @sorted_trait_names = sort keys %$unique_traits;
+
+    if (scalar(@$data) == 0) {
+        $c->stash->{rest} = { error => "There are no phenotypes for the trials and traits you have selected!"};
+        return;
+    }
+
+    my %trait_weight_map;
+    foreach (@$trait_weights) {
+        $trait_weight_map{$_->[0]} = $_->[1];
+    }
+    # print STDERR Dumper \%trait_weight_map;
+
+    my %phenotype_data;
+    my %trait_hash;
+    my %seen_germplasm_names;
+    my %seen_germplasm_ids;
+    foreach my $obs_unit (@$data){
+        my $obsunit_id = $obs_unit->{observationunit_stock_id};
+        my $observations = $obs_unit->{observations};
+        my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
+        my $germplasm_uniquename = $obs_unit->{germplasm_uniquename};
+        foreach (@$observations){
+            push @{$phenotype_data{$germplasm_uniquename}->{$_->{trait_id}}}, $_->{value};
+            $trait_hash{$_->{trait_id}} = $_->{trait_name};
+        }
+        $seen_germplasm_names{$germplasm_uniquename} = $germplasm_stock_id;
+        $seen_germplasm_ids{$germplasm_stock_id}++;
+    }
+    my @sorted_germplasm_names = sort keys %seen_germplasm_names;
+    my @sorted_germplasm_ids = sort keys %seen_germplasm_ids;
+
+    my %accession_sum;
+    foreach my $s (@sorted_germplasm_names) {
+        foreach my $t (@$trait_ids) {
+            my $vals = $phenotype_data{$s}->{$t};
+            my $average_val = sum(@$vals)/scalar(@$vals);
+            my $average_val_weighted = $average_val*$trait_weight_map{$t};
+            $accession_sum{$s} += $average_val_weighted;
+        }
+    }
+
+    my @sorted_accessions = sort { $accession_sum{$b} <=> $accession_sum{$a} } keys(%accession_sum);
+    my @sorted_values = @accession_sum{@sorted_accessions};
+    my $sort_increment = ceil(scalar(@sorted_accessions)/10);
+
+    my $acc_counter = 1;
+    my $rank_counter = 1;
+    my %rank_hash;
+    my %rank_lookup;
+    foreach (@sorted_accessions) {
+        if ($acc_counter > $sort_increment) {
+            $rank_counter++;
+        } else {
+            $acc_counter = 1;
+        }
+        my $stock_id = $seen_germplasm_names{$_};
+        push @{$rank_hash{$rank_counter}}, $stock_id;
+        $rank_lookup{$stock_id} = $rank_counter;
+        $acc_counter++;
+    }
+    # print STDERR Dumper \%rank_hash;
+    # print STDERR Dumper \%rank_lookup;
+
+    my $geno = CXGN::Genotype::DownloadFactory->instantiate(
+        'DosageMatrix',    #can be either 'VCF' or 'DosageMatrix'
+        {
+            bcs_schema=>$schema,
+            people_schema=>$people_schema,
+            cache_root_dir=>$c->config->{cache_file_path},
+            accession_list=>\@sorted_germplasm_ids,
+            trial_list=>[$c->stash->{trial_id}],
+            protocol_id_list=>[$nd_protocol_id],
+            compute_from_parents=>$compute_from_parents,
+        }
+    );
+    my $file_handle = $geno->download(
+        $c->config->{cluster_shared_tempdir},
+        $c->config->{backend},
+        $c->config->{cluster_host},
+        $c->config->{'web_cluster_queue'},
+        $c->config->{basepath}
+    );
+
+    my %geno_rank_counter;
+    my %geno_rank_seen_scores;
+    my @marker_names;
+    open my $geno_fh, "<&", $file_handle or die "Can't open output file: $!";
+        my $header = <$geno_fh>;
+        chomp($header);
+        # print STDERR Dumper $header;
+        my @header = split "\t", $header;
+        my $header_dummy = shift @header;
+
+        my $position = 0;
+        while (my $row = <$geno_fh>) {
+            chomp($row);
+            if ($row) {
+                # print STDERR Dumper $row;
+                my @line = split "\t", $row;
+                my $marker_name = shift @line;
+                push @marker_names, $marker_name;
+                my $counter = 0;
+                foreach (@line) {
+                    my $rank = $rank_lookup{$header[$counter]};
+                    $geno_rank_counter{$rank}->{$position}->{$_}++;
+                    $geno_rank_seen_scores{$_}++;
+                    $counter++;
+                }
+                $position++;
+            }
+        }
+    close($geno_fh);
+    # print STDERR Dumper \%geno_rank_counter;
+    my @sorted_seen_scores = sort keys %geno_rank_seen_scores;
+
+    my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
+    my $tmp_stats_dir = $shared_cluster_dir_config."/tmp_trial_correlation";
+    mkdir $tmp_stats_dir if ! -d $tmp_stats_dir;
+    my ($stats_tempfile_fh, $stats_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+
+    my $header_string = 'Rank,Genotype,Position,Count';
+
+    open(my $F, ">", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
+        print $F $header_string."\n";
+        while (my ($rank, $pos_o) = each %geno_rank_counter) {
+            while (my ($position, $score_o) = each %$pos_o) {
+                while (my ($score, $count) = each %$score_o) {
+                    print $F "$rank,$score,$position,$count\n";
+                }
+            }
+        }
+    close($F);
+
+    my @set = ('0' ..'9', 'A' .. 'F');
+    my @colors;
+    for (1..scalar(@sorted_seen_scores)) {
+        my $str = join '' => map $set[rand @set], 1 .. 6;
+        push @colors, '#'.$str;
+    }
+    my $color_string = join '\',\'', @colors;
+
+    my $dir = $c->tempfiles_subdir('/trial_analysis_genotype_comparision_plot_dir');
+    my $pheno_figure_tempfile_string = $c->tempfile( TEMPLATE => 'trial_analysis_genotype_comparision_plot_dir/figureXXXX');
+    $pheno_figure_tempfile_string .= '.png';
+    my $pheno_figure_tempfile = $c->config->{basepath}."/".$pheno_figure_tempfile_string;
+
+    my $cmd = 'R -e "library(data.table); library(ggplot2);
+    mat <- fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\');
+    mat\$Position <- as.numeric(as.character(mat\$Position));
+    mat\$Genotype <- as.character(mat\$Genotype);
+    options(device=\'png\');
+    par();
+    sp <- ggplot(mat, aes(x = Position, y = Count)) + 
+        geom_line(aes(color = Genotype), size = 1) +
+        scale_fill_manual(values = c(\''.$color_string.'\')) + 
+        theme_minimal();
+    sp <- sp + facet_grid(Rank ~ .);';
+    $cmd .= 'ggsave(\''.$pheno_figure_tempfile.'\', sp, device=\'png\', width=12, height=6, units=\'in\');
+    dev.off();"';
+    print STDERR Dumper $cmd;
+    my $status = system($cmd);
+
+    $c->stash->{rest} = {success => 1, results => \%accession_sum, sorted_accessions => \@sorted_accessions, sorted_values => \@sorted_values, figure => $pheno_figure_tempfile_string};
 }
 
 1;
