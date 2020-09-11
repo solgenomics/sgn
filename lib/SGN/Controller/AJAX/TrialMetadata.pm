@@ -3044,10 +3044,13 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
     my @sorted_values = @accession_sum{@sorted_accessions};
     my $sort_increment = ceil(scalar(@sorted_accessions)/10);
 
+    my $percentile_inc = $sort_increment/scalar(@sorted_accessions);
+
     my $acc_counter = 1;
     my $rank_counter = 1;
     my %rank_hash;
     my %rank_lookup;
+    my %rank_percentile;
     foreach (@sorted_accessions) {
         if ($acc_counter > $sort_increment) {
             $rank_counter++;
@@ -3057,6 +3060,8 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
         my $stock_id = $seen_germplasm_names{$_};
         push @{$rank_hash{$rank_counter}}, $stock_id;
         $rank_lookup{$stock_id} = $rank_counter;
+        my $percentile = $rank_counter*$percentile_inc;
+        $rank_percentile{$rank_counter} = "Rank ".$rank_counter;
         $acc_counter++;
     }
     # print STDERR Dumper \%rank_hash;
@@ -3126,7 +3131,7 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
         while (my ($rank, $pos_o) = each %geno_rank_counter) {
             while (my ($position, $score_o) = each %$pos_o) {
                 while (my ($score, $count) = each %$score_o) {
-                    print $F "$rank,$score,$position,$count\n";
+                    print $F $rank_percentile{$rank}.",$score,$position,$count\n";
                 }
             }
         }
@@ -3152,11 +3157,11 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
     options(device=\'png\');
     par();
     sp <- ggplot(mat, aes(x = Position, y = Count)) + 
-        geom_line(aes(color = Genotype), size = 1) +
+        geom_line(aes(color = Genotype)) +
         scale_fill_manual(values = c(\''.$color_string.'\')) + 
         theme_minimal();
     sp <- sp + facet_grid(Rank ~ .);';
-    $cmd .= 'ggsave(\''.$pheno_figure_tempfile.'\', sp, device=\'png\', width=12, height=6, units=\'in\');
+    $cmd .= 'ggsave(\''.$pheno_figure_tempfile.'\', sp, device=\'png\', width=12, height=12, units=\'in\');
     dev.off();"';
     print STDERR Dumper $cmd;
     my $status = system($cmd);
