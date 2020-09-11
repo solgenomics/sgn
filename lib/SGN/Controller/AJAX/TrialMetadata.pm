@@ -3044,6 +3044,7 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
     my @sorted_accessions = sort { $accession_sum{$b} <=> $accession_sum{$a} } keys(%accession_sum);
     my @sorted_values = @accession_sum{@sorted_accessions};
     my $sort_increment = ceil(scalar(@sorted_accessions)/10);
+    print STDERR Dumper $sort_increment;
 
     my $percentile_inc = $sort_increment/scalar(@sorted_accessions);
 
@@ -3072,7 +3073,7 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
         push @sorted_rank_groups, $rank_lookup{$stock_id};
     }
     my @sorted_ranks = (1..scalar(@sorted_accessions));
-    # print STDERR Dumper \%rank_hash;
+    print STDERR Dumper \%rank_hash;
     # print STDERR Dumper \%rank_lookup;
 
     my $geno = CXGN::Genotype::DownloadFactory->instantiate(
