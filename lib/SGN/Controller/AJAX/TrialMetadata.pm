@@ -3054,6 +3054,7 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
     my %rank_lookup;
     my %rank_percentile;
     foreach (@sorted_accessions) {
+        print STDERR Dumper $acc_counter;
         if ($acc_counter > $sort_increment) {
             $rank_counter++;
         } else {
