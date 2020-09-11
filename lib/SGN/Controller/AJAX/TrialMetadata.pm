@@ -3120,7 +3120,7 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
     my @sorted_seen_scores = sort keys %geno_rank_seen_scores;
 
     my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
-    my $tmp_stats_dir = $shared_cluster_dir_config."/tmp_trial_correlation";
+    my $tmp_stats_dir = $shared_cluster_dir_config."/tmp_trial_genotype_comparision";
     mkdir $tmp_stats_dir if ! -d $tmp_stats_dir;
     my ($stats_tempfile_fh, $stats_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
 
