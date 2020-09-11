@@ -3006,76 +3006,20 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
         return;
     }
 
+    my %seen_germplasm_ids_1;
+    foreach my $obs_unit (@$data){
+        my $obsunit_id = $obs_unit->{observationunit_stock_id};
+        my $observations = $obs_unit->{observations};
+        my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
+        $seen_germplasm_ids_1{$germplasm_stock_id}++;
+    }
+    my @accession_ids_1 = sort keys %seen_germplasm_ids_1;
+
     my %trait_weight_map;
     foreach (@$trait_weights) {
         $trait_weight_map{$_->[0]} = $_->[1];
     }
     # print STDERR Dumper \%trait_weight_map;
-
-    my %phenotype_data;
-    my %trait_hash;
-    my %seen_germplasm_names;
-    my %seen_germplasm_ids;
-    foreach my $obs_unit (@$data){
-        my $obsunit_id = $obs_unit->{observationunit_stock_id};
-        my $observations = $obs_unit->{observations};
-        my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
-        my $germplasm_uniquename = $obs_unit->{germplasm_uniquename};
-        foreach (@$observations){
-            push @{$phenotype_data{$germplasm_uniquename}->{$_->{trait_id}}}, $_->{value};
-            $trait_hash{$_->{trait_id}} = $_->{trait_name};
-        }
-        $seen_germplasm_names{$germplasm_uniquename} = $germplasm_stock_id;
-        $seen_germplasm_ids{$germplasm_stock_id}++;
-    }
-    my @sorted_germplasm_names = sort keys %seen_germplasm_names;
-    my @sorted_germplasm_ids = sort keys %seen_germplasm_ids;
-
-    my %accession_sum;
-    foreach my $s (@sorted_germplasm_names) {
-        foreach my $t (@$trait_ids) {
-            my $vals = $phenotype_data{$s}->{$t};
-            my $average_val = sum(@$vals)/scalar(@$vals);
-            my $average_val_weighted = $average_val*$trait_weight_map{$t};
-            $accession_sum{$s} += $average_val_weighted;
-        }
-    }
-
-    my @sorted_accessions = sort { $accession_sum{$b} <=> $accession_sum{$a} } keys(%accession_sum);
-    my @sorted_values = @accession_sum{@sorted_accessions};
-    my $sort_increment = ceil(scalar(@sorted_accessions)/10)+0;
-    print STDERR Dumper $sort_increment;
-
-    my $percentile_inc = $sort_increment/scalar(@sorted_accessions);
-
-    my $acc_counter = 1;
-    my $rank_counter = 1;
-    my %rank_hash;
-    my %rank_lookup;
-    my %rank_percentile;
-    print STDERR Dumper \@sorted_accessions;
-    foreach (@sorted_accessions) {
-        print STDERR Dumper $acc_counter;
-        if ($acc_counter >= $sort_increment) {
-            $rank_counter++;
-            $acc_counter = 0;
-        }
-        my $stock_id = $seen_germplasm_names{$_};
-        push @{$rank_hash{$rank_counter}}, $stock_id;
-        $rank_lookup{$stock_id} = $rank_counter;
-        my $percentile = $rank_counter*$percentile_inc;
-        $rank_percentile{$rank_counter} = "Rank ".$rank_counter;
-        $acc_counter++;
-    }
-
-    my @sorted_rank_groups;
-    foreach (@sorted_accessions) {
-        my $stock_id = $seen_germplasm_names{$_};
-        push @sorted_rank_groups, $rank_lookup{$stock_id};
-    }
-    my @sorted_ranks = (1..scalar(@sorted_accessions));
-    print STDERR Dumper \%rank_hash;
-    # print STDERR Dumper \%rank_lookup;
 
     my $geno = CXGN::Genotype::DownloadFactory->instantiate(
         'DosageMatrix',    #can be either 'VCF' or 'DosageMatrix'
@@ -3083,7 +3027,7 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
             bcs_schema=>$schema,
             people_schema=>$people_schema,
             cache_root_dir=>$c->config->{cache_file_path},
-            accession_list=>\@sorted_germplasm_ids,
+            accession_list=>\@accession_ids_1,
             trial_list=>[$c->stash->{trial_id}],
             protocol_id_list=>[$nd_protocol_id],
             compute_from_parents=>$compute_from_parents,
@@ -3100,6 +3044,7 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
     my %geno_rank_counter;
     my %geno_rank_seen_scores;
     my @marker_names;
+    my %geno_stock_ids;
     open my $geno_fh, "<&", $file_handle or die "Can't open output file: $!";
         my $header = <$geno_fh>;
         chomp($header);
@@ -3118,8 +3063,9 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
                 my $counter = 0;
                 foreach (@line) {
                     if ($_ ne 'NA') {
-                        my $rank = $rank_lookup{$header[$counter]};
-                        $geno_rank_counter{$rank}->{$position}->{$_}++;
+                        my $stock_id = $header[$counter];
+                        $geno_stock_ids{$stock_id}++;
+                        $geno_rank_counter{$stock_id}->{$position}->{$_}++;
                         $geno_rank_seen_scores{$_}++;
                     }
                     $counter++;
@@ -3128,8 +3074,71 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
             }
         }
     close($geno_fh);
-    # print STDERR Dumper \%geno_rank_counter;
     my @sorted_seen_scores = sort keys %geno_rank_seen_scores;
+
+    my %phenotype_data;
+    my %trait_hash;
+    my %seen_germplasm_names;
+    my %seen_germplasm_ids;
+    foreach my $obs_unit (@$data){
+        my $obsunit_id = $obs_unit->{observationunit_stock_id};
+        my $observations = $obs_unit->{observations};
+        my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
+        my $germplasm_uniquename = $obs_unit->{germplasm_uniquename};
+        if (exists($geno_stock_ids{$germplasm_stock_id})) {
+            foreach (@$observations){
+                push @{$phenotype_data{$germplasm_uniquename}->{$_->{trait_id}}}, $_->{value};
+                $trait_hash{$_->{trait_id}} = $_->{trait_name};
+            }
+            $seen_germplasm_names{$germplasm_uniquename} = $germplasm_stock_id;
+            $seen_germplasm_ids{$germplasm_stock_id}++;
+        }
+    }
+    my @sorted_germplasm_names = sort keys %seen_germplasm_names;
+    my @sorted_germplasm_ids = sort keys %seen_germplasm_ids;
+
+    my %accession_sum;
+    foreach my $s (@sorted_germplasm_names) {
+        foreach my $t (@$trait_ids) {
+            my $vals = $phenotype_data{$s}->{$t};
+            my $average_val = sum(@$vals)/scalar(@$vals);
+            my $average_val_weighted = $average_val*$trait_weight_map{$t};
+            $accession_sum{$s} += $average_val_weighted;
+        }
+    }
+
+    my @sorted_accessions = sort { $accession_sum{$b} <=> $accession_sum{$a} } keys(%accession_sum);
+    my @sorted_values = @accession_sum{@sorted_accessions};
+    my $sort_increment = ceil(scalar(@sorted_accessions)/10)+0;
+
+    my $percentile_inc = $sort_increment/scalar(@sorted_accessions);
+
+    my $acc_counter = 1;
+    my $rank_counter = 1;
+    my %rank_hash;
+    my %rank_lookup;
+    my %rank_percentile;
+    foreach (@sorted_accessions) {
+        if ($acc_counter >= $sort_increment) {
+            $rank_counter++;
+            $acc_counter = 0;
+        }
+        my $stock_id = $seen_germplasm_names{$_};
+        push @{$rank_hash{$rank_counter}}, $stock_id;
+        $rank_lookup{$stock_id} = $rank_counter;
+        my $percentile = $rank_counter*$percentile_inc;
+        $rank_percentile{$rank_counter} = "Rank ".$rank_counter;
+        $acc_counter++;
+    }
+
+    my @sorted_rank_groups;
+    foreach (@sorted_accessions) {
+        my $stock_id = $seen_germplasm_names{$_};
+        push @sorted_rank_groups, $rank_lookup{$stock_id};
+    }
+    my @sorted_ranks = (1..scalar(@sorted_accessions));
+    # print STDERR Dumper \%rank_hash;
+    # print STDERR Dumper \%rank_lookup;
 
     my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
     my $tmp_stats_dir = $shared_cluster_dir_config."/tmp_trial_genotype_comparision";
@@ -3140,10 +3149,13 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
 
     open(my $F, ">", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
         print $F $header_string."\n";
-        while (my ($rank, $pos_o) = each %geno_rank_counter) {
+        while (my ($stock_id, $pos_o) = each %geno_rank_counter) {
             while (my ($position, $score_o) = each %$pos_o) {
                 while (my ($score, $count) = each %$score_o) {
-                    print $F $rank_percentile{$rank}.",$score,$position,$count\n";
+                    my $rank = $rank_lookup{$stock_id};
+                    if (defined($score) && defined($count) && defined($rank) && defined($position)) {
+                        print $F $rank_percentile{$rank}.",$score,$position,$count\n";
+                    }
                 }
             }
         }
