@@ -2967,8 +2967,9 @@ sub trial_accessions_rank : Chained('trial') PathPart('accessions_rank') Args(0)
 
     my @sorted_accessions = sort { $accession_sum{$b} <=> $accession_sum{$a} } keys(%accession_sum);
     my @sorted_values = @accession_sum{@sorted_accessions};
+    my @sorted_rank = (1..scalar(@sorted_accessions));
 
-    $c->stash->{rest} = {success => 1, results => \%accession_sum, sorted_accessions => \@sorted_accessions, sorted_values => \@sorted_values};
+    $c->stash->{rest} = {success => 1, results => \%accession_sum, sorted_accessions => \@sorted_accessions, sorted_values => \@sorted_values, sorted_ranks => \@sorted_rank};
 }
 
 sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison') Args(0) {
@@ -3063,6 +3064,12 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
         my $percentile = $rank_counter*$percentile_inc;
         $rank_percentile{$rank_counter} = "Rank ".$rank_counter;
         $acc_counter++;
+    }
+
+    my @sorted_rank_groups;
+    foreach (@sorted_accessions) {
+        my $stock_id = $seen_germplasm_names{$_};
+        push @sorted_rank_groups, $rank_lookup{$stock_id};
     }
     # print STDERR Dumper \%rank_hash;
     # print STDERR Dumper \%rank_lookup;
@@ -3166,7 +3173,7 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
-    $c->stash->{rest} = {success => 1, results => \%accession_sum, sorted_accessions => \@sorted_accessions, sorted_values => \@sorted_values, figure => $pheno_figure_tempfile_string};
+    $c->stash->{rest} = {success => 1, results => \%accession_sum, sorted_accessions => \@sorted_accessions, sorted_values => \@sorted_values, sorted_rank_groups => \@sorted_rank_groups, figure => $pheno_figure_tempfile_string};
 }
 
 1;
