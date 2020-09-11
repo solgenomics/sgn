@@ -3056,7 +3056,7 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
     print STDERR Dumper \@sorted_accessions;
     foreach (@sorted_accessions) {
         print STDERR Dumper $acc_counter;
-        if ($acc_counter > $sort_increment) {
+        if ($acc_counter >= $sort_increment) {
             $rank_counter++;
             $acc_counter = 0;
         }
