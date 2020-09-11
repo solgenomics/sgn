@@ -55,7 +55,6 @@ sub get_family_parents :Path('/ajax/family/parents') :Args(1) {
     my $self = shift;
     my $c = shift;
     my $family_id = shift;
-#    print STDERR "FAMILY ID =".Dumper($family_id)."\n";
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $family = CXGN::FamilyName->new({schema=>$schema, family_stock_id=>$family_id});
@@ -76,7 +75,6 @@ sub get_family_members :Path('/ajax/family/members') :Args(1) {
     my $self = shift;
     my $c = shift;
     my $family_id = shift;
-#    print STDERR "FAMILY ID =".Dumper($family_id)."\n";
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $family = CXGN::FamilyName->new({schema=>$schema, family_stock_id=>$family_id});
@@ -100,6 +98,31 @@ sub get_family_members :Path('/ajax/family/members') :Args(1) {
 
 }
 
+
+sub get_all_progenies :Path('/ajax/family/all_progenies') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $family_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $family = CXGN::FamilyName->new({schema=>$schema, family_stock_id=>$family_id});
+
+    my $result = $family->get_all_progenies();
+
+    my @progenies;
+    foreach my $r (@$result){
+        my ($progeny_id, $progeny_name, $cross_id, $cross_name) =@$r;
+        push @progenies, {
+            progeny_id => $progeny_id,
+            progeny_name => $progeny_name,
+            cross_id => $cross_id,
+            cross_name => $cross_name,
+        };
+    }
+
+    $c->stash->{rest} = { data => \@progenies };
+
+}
 
 
 ###

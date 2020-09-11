@@ -48,8 +48,8 @@ sub BUILD {
 
     if ($family_rs) {
         my $family_uniquename = $family_rs->uniquename();
-     	 $self->family_name($family_uniquename);
-     	 $self->family_stock_id($family_id);
+        $self->family_name($family_uniquename);
+        $self->family_stock_id($family_id);
     }
 
 }
@@ -62,9 +62,6 @@ sub get_family_parents {
     my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_name", "stock_type")->cvterm_id();
     my $family_female_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_female_parent_of", "stock_relationship")->cvterm_id();
     my $family_male_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_male_parent_of", "stock_relationship")->cvterm_id();
-
-    my $family_female;
-    my $family_male;
 
     my $q = "SELECT female_parent.stock_id, female_parent.uniquename, cvterm1.name, male_parent.stock_id, male_parent.uniquename, cvterm2.name
         FROM stock AS female_parent
@@ -83,7 +80,7 @@ sub get_family_parents {
     while (my ($female_parent_id,  $female_parent_name, $female_stock_type, $male_parent_id, $male_parent_name, $male_stock_type) = $h->fetchrow_array()){
         push @family_parents, [$female_parent_id,  $female_parent_name, $female_stock_type, $male_parent_id, $male_parent_name, $male_stock_type]
     }
-    print STDERR Dumper(\@family_parents);
+#    print STDERR Dumper(\@family_parents);
     return \@family_parents;
 
 }
@@ -96,9 +93,7 @@ sub get_family_members {
     my $cross_member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_member_of", "stock_relationship")->cvterm_id();
     my $offspring_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "offspring_of", "stock_relationship")->cvterm_id();
     my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
-    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
     my $cross_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_experiment", "experiment_type")->cvterm_id();
-
 
     my $q = "SELECT cross_table.cross_id, cross_table.cross_name, cross_table.cross_type, cross_table.crossing_experiment_id, cross_table.crossing_experiment_name, progeny_count_table.progeny_number
         FROM
@@ -125,12 +120,38 @@ sub get_family_members {
             push @data, [$cross_id, $cross_name, $cross_type, $crossing_experiment_id, $crossing_experiment_name, $progeny_number]
         }
 
-        print STDERR "CROSS MEMBERS =".Dumper(\@data);
+#        print STDERR "CROSS MEMBERS =".Dumper(\@data);
         return \@data;
-
-
 }
 
+
+sub get_all_progenies {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $family_stock_id = $self->family_stock_id();
+
+    my $cross_member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_member_of", "stock_relationship")->cvterm_id();
+    my $offspring_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "offspring_of", "stock_relationship")->cvterm_id();
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
+
+    my $q = "SELECT progeny.stock_id, progeny.uniquename, stock.stock_id, stock.uniquename
+        FROM stock_relationship JOIN stock_relationship AS stock_relationship1 ON (stock_relationship.subject_id = stock_relationship1.object_id) AND stock_relationship.type_id = ?
+        JOIN stock AS progeny ON (stock_relationship1.subject_id = progeny.stock_id) AND stock_relationship1.type_id = ?
+        JOIN stock ON (stock_relationship1.object_id = stock.stock_id) AND stock.type_id = ?
+        WHERE stock_relationship.object_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+
+    $h->execute($cross_member_of_type_id, $offspring_of_type_id, $cross_type_id, $family_stock_id);
+
+    my @progenies = ();
+    while (my ($progeny_id,  $progeny_name, $cross_id, $cross_name) = $h->fetchrow_array()){
+        push @progenies, [$progeny_id, $progeny_name, $cross_id, $cross_name]
+    }
+    print STDERR Dumper(\@progenies);
+    return \@progenies;
+
+}
 
 
 ###

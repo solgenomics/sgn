@@ -16,7 +16,7 @@ $identifier_prefix => ''
 <div class="panel panel-default">
     <div class="panel-body">
         <div class="row">
-            <div class="col-sm-6">
+            <div class="col-sm-6">`
                 <& /page/form.mas,
                     object_type=>'family_name',
                     object_id=> $family_id,
@@ -86,6 +86,27 @@ $identifier_prefix => ''
     </div>
 </&>
 
+<&| /page/info_section.mas, title => 'Progenies', collapsible=>1, collapsed=>0 &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <div style="overflow:scroll">
+                    <table class="table table-hover table-bordered" id="all_progenies">
+                    </table>
+                </div>
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <&| /page/info_section.mas, title => 'Add progenies to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Adding progenies of this family to a new or exisiting list</i>'&>
+                            <br>
+                            <div id="progenies_to_new_list" style="display:none"></div>
+                            <div id="progenies_add_to_list"></div>
+                        </&>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</&>
 
 <script>
 
@@ -122,6 +143,31 @@ jQuery(document).ready(function(){
                 addToListMenu("members_add_to_list", "members_to_new_list", {
                     selectText: true,
                     listType: 'crosses',
+                });
+            }
+        }
+    });
+
+    var progenies = jQuery('#all_progenies').DataTable({
+        'ajax': '/ajax/family/all_progenies/'+family_id,
+        'destroy': true,
+        columns: [
+            { title: "Progeny Name", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.progeny_id+"/view'>"+row.progeny_name+"</a>"; } },
+            { title: "Cross Unique ID", "data": null, "render": function ( data, type, row ) { return "<a href='/cross/"+row.cross_id+"'>"+row.cross_name+"</a>"; } },
+        ],
+        "fnInitComplete": function(oSettings, json) {
+            //console.log(json);
+            if (!isLoggedIn()) {
+                jQuery('#progenies_add_to_list').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+            } else {
+                var html = "";
+                for(var i=0; i<json.data.length; i++){
+                    html += json.data[i].progeny_name+"\n";
+                }
+                jQuery("#progenies_to_new_list").html(html);
+                addToListMenu("progenies_add_to_list", "progenies_to_new_list", {
+                    selectText: true,
+                    listType: 'accessions',
                 });
             }
         }
