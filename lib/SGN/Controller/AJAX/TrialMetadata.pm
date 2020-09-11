@@ -3071,6 +3071,7 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
         my $stock_id = $seen_germplasm_names{$_};
         push @sorted_rank_groups, $rank_lookup{$stock_id};
     }
+    my @sorted_ranks = (1..scalar(@sorted_accessions));
     # print STDERR Dumper \%rank_hash;
     # print STDERR Dumper \%rank_lookup;
 
@@ -3173,7 +3174,7 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
-    $c->stash->{rest} = {success => 1, results => \%accession_sum, sorted_accessions => \@sorted_accessions, sorted_values => \@sorted_values, sorted_rank_groups => \@sorted_rank_groups, figure => $pheno_figure_tempfile_string};
+    $c->stash->{rest} = {success => 1, results => \%accession_sum, sorted_accessions => \@sorted_accessions, sorted_values => \@sorted_values, sorted_ranks => \@sorted_ranks, sorted_rank_groups => \@sorted_rank_groups, figure => $pheno_figure_tempfile_string};
 }
 
 1;
