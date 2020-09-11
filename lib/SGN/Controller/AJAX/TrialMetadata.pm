@@ -2906,6 +2906,7 @@ sub trial_accessions_rank : Chained('trial') PathPart('accessions_rank') Args(0)
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $trait_ids = decode_json $c->req->param('trait_ids');
+    my $trait_weights = decode_json $c->req->param('trait_weights');
     my $accession_ids = $c->req->param('accession_ids') ne 'null' ? decode_json $c->req->param('accession_ids') : [];
     my $trait_format = $c->req->param('trait_format');
     my $data_level = $c->req->param('data_level');
@@ -2930,6 +2931,12 @@ sub trial_accessions_rank : Chained('trial') PathPart('accessions_rank') Args(0)
         return;
     }
 
+    my %trait_weight_map;
+    foreach (@$trait_weights) {
+        $trait_weight_map{$_->[0]} = $_->[1];
+    }
+    print STDERR Dumper \%trait_weight_map;
+
     my %phenotype_data;
     my %trait_hash;
     my %seen_germplasm_names;
@@ -2951,7 +2958,8 @@ sub trial_accessions_rank : Chained('trial') PathPart('accessions_rank') Args(0)
         foreach my $t (@$trait_ids) {
             my $vals = $phenotype_data{$s}->{$t};
             my $average_val = sum(@$vals)/scalar(@$vals);
-            $accession_sum{$s} += $average_val;
+            my $average_val_weighted = $average_val*$trait_weight_map{$t};
+            $accession_sum{$s} += $average_val_weighted;
         }
     }
 

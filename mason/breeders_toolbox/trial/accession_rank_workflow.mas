@@ -56,6 +56,18 @@ $data_level => undef
                             </div>
 
                             <center>
+                                <button type="button" class="btn btn-primary" name="trial_analysis_accessions_rank_accessions_submit" id="trial_analysis_accessions_rank_accessions_submit" >Next Step</button>
+                            </center>
+                        </div>
+                    </&>
+                    <&| /util/workflow.mas:step, title=> "Trait Weightings" &>
+                        <& /page/page_title.mas, title=>"Give weightings for traits" &>
+
+                        <div class="container-fluid">
+
+                            <div id="trial_analysis_accessions_rank_trait_weights_div"></div>
+
+                            <center>
                                 <button type="button" class="btn btn-primary" name="trial_analysis_accessions_rank_workflow_submit" id="trial_analysis_accessions_rank_workflow_submit" title="Submit">Submit</button>
                             </center>
                         </div>
@@ -86,20 +98,48 @@ jQuery(document).ready(function(){
         get_select_box('stocks', 'trial_analysis_accessions_rank_workflow_accessions_div', { 'name' : 'trial_analysis_accessions_rank_workflow_accessions_ids', 'id' : 'trial_analysis_accessions_rank_workflow_accessions_ids', 'empty':1, 'multiple':1, 'size': 20, 'trial_id_list':<% $trial_id %>, 'stock_type_name':'accession' });
     });
 
-    jQuery('#trial_analysis_accessions_rank_workflow_submit').click(function() {
-        var selected_trait_ids = jQuery('#trial_analysis_accessions_rank_workflow_trait_ids').val();
-        console.log(selected_trait_ids);
+    var trial_analysis_accessions_rank_workflow_trait_ids = [];
+    var trial_analysis_accessions_rank_workflow_accessions_ids = [];
+    jQuery('#trial_analysis_accessions_rank_accessions_submit').click(function() {
+        trial_analysis_accessions_rank_workflow_trait_ids = jQuery('#trial_analysis_accessions_rank_workflow_trait_ids').val();
+        console.log(trial_analysis_accessions_rank_workflow_trait_ids);
 
-        var selected_accession_ids = jQuery('#trial_analysis_accessions_rank_workflow_accessions_ids').val();
-        console.log(selected_accession_ids);
+        trial_analysis_accessions_rank_workflow_accessions_ids = jQuery('#trial_analysis_accessions_rank_workflow_accessions_ids').val();
+        console.log(trial_analysis_accessions_rank_workflow_accessions_ids);
 
-        if (!selected_trait_ids || selected_trait_ids.length < 1) {
+        if ( !trial_analysis_accessions_rank_workflow_trait_ids || trial_analysis_accessions_rank_workflow_trait_ids.length < 1) {
             alert('Please select at least one trait!');
             return false;
         }
         else {
+            var html = '<table class="table table-bordered table-hover"><thead><tr><th>Trait</th><th>Weighting</th></tr></thead><tbody>';
+            for (var i=0; i<trial_analysis_accessions_rank_workflow_trait_ids.length; i++) {
+                html = html + '<tr><td>'+trial_analysis_accessions_rank_workflow_trait_ids[i]+'</td><td><input type="text" name="trial_analysis_accessions_rank_workflow_trait_weights" data-trait_id="'+trial_analysis_accessions_rank_workflow_trait_ids[i]+'" class="form-control" value="1"></td></tr>';
+            }
+            html = html + '</tbody></table>';
+            jQuery('#trial_analysis_accessions_rank_trait_weights_div').html(html);
+
+            Workflow.complete("#trial_analysis_accessions_rank_accessions_submit");
+            Workflow.focus('#trial_analysis_accessions_rank_workflow_dialog_workflow', 2);
+        }
+    });
+
+    jQuery('#trial_analysis_accessions_rank_workflow_submit').click(function() {
+        var trial_analysis_accessions_rank_workflow_trait_weights_values = [];
+        jQuery('input[name="trial_analysis_accessions_rank_workflow_trait_weights"]').each(function() {
+            if (jQuery(this).val() == '') {
+                alert('Please give weights!');
+                return false;
+            }
+            trial_analysis_accessions_rank_workflow_trait_weights_values.push([jQuery(this).data('trait_id'), jQuery(this).val()]);
+        });
+        if (trial_analysis_accessions_rank_workflow_trait_weights_values.length != trial_analysis_accessions_rank_workflow_trait_ids.length) {
+            alert('Please give weights!');
+            return false;
+        }
+        else {
             jQuery.ajax({
-                url : '/ajax/breeders/trial/<% $trial_id %>/accessions_rank?trait_ids='+JSON.stringify(selected_trait_ids)+'&accession_ids='+JSON.stringify(selected_accession_ids)+'&data_level=<% $data_level %>',
+                url : '/ajax/breeders/trial/<% $trial_id %>/accessions_rank?trait_ids='+JSON.stringify(trial_analysis_accessions_rank_workflow_trait_ids)+'&accession_ids='+JSON.stringify(trial_analysis_accessions_rank_workflow_accessions_ids)+'&trait_weights='+JSON.stringify(trial_analysis_accessions_rank_workflow_trait_weights_values)+'&data_level=<% $data_level %>',
                 beforeSend: function() {
                     jQuery("#working_modal").modal("show");
                 },
@@ -120,7 +160,7 @@ jQuery(document).ready(function(){
                         jQuery('#trial_analysis_accessions_rank_workflow_results_div').html(html);
 
                         Workflow.complete("#trial_analysis_accessions_rank_workflow_submit");
-                        Workflow.focus('#trial_analysis_accessions_rank_workflow_dialog_workflow', 2);
+                        Workflow.focus('#trial_analysis_accessions_rank_workflow_dialog_workflow', 3);
                     }
                 },
                 error: function(response){
@@ -129,7 +169,6 @@ jQuery(document).ready(function(){
                 }
             });
         }
-        
     });
 
 });
