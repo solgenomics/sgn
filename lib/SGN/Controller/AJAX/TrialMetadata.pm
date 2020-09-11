@@ -3115,9 +3115,11 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
                 push @marker_names, $marker_name;
                 my $counter = 0;
                 foreach (@line) {
-                    my $rank = $rank_lookup{$header[$counter]};
-                    $geno_rank_counter{$rank}->{$position}->{$_}++;
-                    $geno_rank_seen_scores{$_}++;
+                    if ($_ ne 'NA') {
+                        my $rank = $rank_lookup{$header[$counter]};
+                        $geno_rank_counter{$rank}->{$position}->{$_}++;
+                        $geno_rank_seen_scores{$_}++;
+                    }
                     $counter++;
                 }
                 $position++;
@@ -3165,7 +3167,7 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
     options(device=\'png\');
     par();
     sp <- ggplot(mat, aes(x = Marker, y = Count)) + 
-        geom_line(aes(color = Genotype)) +
+        geom_line(aes(color = Genotype), size=0.2) +
         scale_fill_manual(values = c(\''.$color_string.'\')) + 
         theme_minimal();
     sp <- sp + facet_grid(Rank ~ .);';

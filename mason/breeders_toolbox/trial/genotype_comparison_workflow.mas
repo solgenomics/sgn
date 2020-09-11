@@ -6,7 +6,7 @@ $data_level => undef
 <& /util/import_javascript.mas, classes => [ ] &>
 
 <div class="well well-sm">
-    <button class="btn btn-primary" id="trial_detail_page_analysis_genotype_comparison_workflow">Compare Genotypes On Saved Measurements</button>
+    <button class="btn btn-primary" id="trial_detail_page_analysis_genotype_comparison_workflow">Compare Genotypic Marker Composition On Saved Measurements</button>
 </div>
 <hr>
 
