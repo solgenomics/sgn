@@ -3044,7 +3044,7 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
     my @sorted_accessions = sort { $accession_sum{$b} <=> $accession_sum{$a} } keys(%accession_sum);
     my @sorted_values = @accession_sum{@sorted_accessions};
     my $sort_increment = ceil(scalar(@sorted_accessions)/10)+0;
-    print STDERR Dumper $sort_increment;
+    # print STDERR Dumper $sort_increment;
 
     my $percentile_inc = $sort_increment/scalar(@sorted_accessions);
 
@@ -3053,7 +3053,6 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
     my %rank_hash;
     my %rank_lookup;
     my %rank_percentile;
-    print STDERR Dumper \@sorted_accessions;
     foreach (@sorted_accessions) {
         print STDERR Dumper $acc_counter;
         if ($acc_counter >= $sort_increment) {
@@ -3074,7 +3073,7 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
         push @sorted_rank_groups, $rank_lookup{$stock_id};
     }
     my @sorted_ranks = (1..scalar(@sorted_accessions));
-    print STDERR Dumper \%rank_hash;
+    # print STDERR Dumper \%rank_hash;
     # print STDERR Dumper \%rank_lookup;
 
     my $geno = CXGN::Genotype::DownloadFactory->instantiate(
@@ -3117,7 +3116,7 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
                 push @marker_names, $marker_name;
                 my $counter = 0;
                 foreach (@line) {
-                    if ($_ ne 'NA') {
+                    if ($_ && $_ ne 'NA') {
                         my $rank = $rank_lookup{$header[$counter]};
                         $geno_rank_counter{$rank}->{$position}->{$_}++;
                         $geno_rank_seen_scores{$_}++;
