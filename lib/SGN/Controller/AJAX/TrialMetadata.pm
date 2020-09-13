@@ -3116,7 +3116,7 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
                 push @marker_names, $marker_name;
                 my $counter = 0;
                 foreach (@line) {
-                    if ($_ && $_ ne 'NA') {
+                    if ( ($_ || $_ == 0) && $_ ne 'NA') {
                         my $rank = $rank_lookup{$header[$counter]};
                         $geno_rank_counter{$rank}->{$position}->{$_}++;
                         $geno_rank_seen_scores{$_}++;
