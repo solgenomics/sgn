@@ -289,8 +289,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         '1 * $b',
         '$time * $b',
         '(1/2*(3*$time**2 - 1)*$b)',
-        '(1/3*(5*$time*(1/2*(3*$time**2 - 1)) - 2*$time)*$b)',
-        '(1/4*(7*$time*(1/3*(5*$time*(1/2*(3*$time**2 - 1)) - 2*$time)) - 3*(1/2*(3*$time**2 - 1)) )*$b)'
+        '1/2*(5*$time**3 - 3*$time)*$b',
+        '1/8*(35*$time**4 - 30*$time**2 + 3)*$b',
+        '1/16*(63*$time**5 - 70*$time**2 + 15*$time)*$b',
+        '1/16*(231*$time**6 - 315*$time**4 + 105*$time**2 - 5)*$b'
     );
 
     foreach my $field_trial_id (@$field_trial_id_list) {
