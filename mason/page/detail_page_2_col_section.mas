@@ -99,6 +99,11 @@ $model_file_ids => {}
 $model_type_name => undef
 $model_files => {}
 
+#Specific to manage nirs page
+$nirs_files => undef
+$deleted_nirs_files => undef
+$locations => undef
+
 </%args>
 
 <& /util/import_javascript.mas,
@@ -177,6 +182,11 @@ $model_files => {}
                                     trial_id => $trial_id
                                 &>
 
+% if ($c->req->base =~ /sweetpotatobase/) {
+                                <& /tools/qualityControl/qualityControl.mas,
+                                    trial_id => $trial_id
+                                &>
+% }
 
 % if ($hidap_enabled) {
                                 <& /hidap/hidap_trial_link.mas, main_production_site_url=>$main_production_site_url, program => $breeding_program_name, folder => $folder_name, trial => $trial_name &>
@@ -357,6 +367,10 @@ $model_files => {}
 % if ($info_section_id eq 'cross_search_section'){
                                 <& /search/cross/cross_search_section.mas &>
 %} #End cross_search_section
+
+% if ($info_section_id eq 'manage_nirs_main'){
+                                <& /tools/nirs/manage_nirs_main.mas, nirs_files => $nirs_files, deleted_nirs_files => $deleted_nirs_files, locations => $locations &>
+% } #End manage_nirs_main
 
 % if ($info_section_id eq 'manage_drone_imagery_main'){
                                 <& /breeders_toolbox/drone_imagery/raw_image_section.mas &>
