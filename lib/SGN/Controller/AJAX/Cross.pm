@@ -59,7 +59,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON' },
 );
 
 sub upload_cross_file : Path('/ajax/cross/upload_crosses_file') : ActionClass('REST') { }
