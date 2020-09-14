@@ -459,7 +459,7 @@ sub structure_output_details {
     {	
 	$output_details = $self->structure_selection_prediction_output($c);
     }
-      elsif ( $analysis_page =~ m/kinship\/analysis/ ) 
+    elsif ( $analysis_page =~ m/kinship\/analysis/ ) 
     {	
 	$output_details = $self->structure_kinship_analysis_output($c);
     }
@@ -482,6 +482,9 @@ sub structure_output_details {
 sub structure_kinship_analysis_output {
     my ($self, $c) = @_;
 
+    my $analysis_data =  $c->stash->{analysis_profile};
+    my $analysis_page = $analysis_data->{analysis_page};  
+
     my $protocol_id   = $c->stash->{genotyping_protocol_id};
     
     $c->controller('solGS::Kinship')->stash_data_str_kinship_pop_id($c);
@@ -489,9 +492,10 @@ sub structure_kinship_analysis_output {
     
     my $base = $c->req->base; 
     $base =~ s/:\d+//;
-    
-    my $kinship_page = $base . "kinship/analysis/$pop_id/gp/$protocol_id";
 
+    my $kinship_page = $base . $analysis_page;
+    $analysis_data->{analysis_page} = $kinship_page;
+    
     my %output_details = ();
     
     $c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);	    
@@ -1071,6 +1075,10 @@ sub confirm_request :Path('/solgs/confirm/request/') Args(0) {
     elsif ($referer =~ /solgs\/trait\/|solgs\/traits\/all\/|solgs\/model\/combined\/populations\//) 
     {
 	$job_type = 'Your GEBVs prediction is running.';
+    }
+    elsif ($referer =~ /kinship\/analysis/) 
+    {
+	$job_type = 'Your kinship analysis is running.';
     }
     else
     {
