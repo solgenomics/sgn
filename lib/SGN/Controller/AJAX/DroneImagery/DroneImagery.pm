@@ -10793,6 +10793,24 @@ sub drone_imagery_growing_degree_days_GET : Args(0) {
     $c->stash->{rest} = {success => 1};
 }
 
+sub drone_imagery_precipitation_sum : Path('/api/drone_imagery/precipitation_sum') : ActionClass('REST') { }
+sub drone_imagery_precipitation_sum_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $field_trial_id = $c->req->param('field_trial_id');
+    my $drone_run_project_id = $c->req->param('drone_run_project_id');
+    my $formula = $c->req->param('formula');
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+    my $precipitation_result = _perform_precipitation_sum_calculation_and_drone_run_time_saving($c, $schema, $field_trial_id, $drone_run_project_id, $c->config->{noaa_ncdc_access_token}, $formula);
+    print STDERR Dumper $precipitation_result;
+
+    $c->stash->{rest} = {success => 1};
+}
+
 sub _perform_gdd_calculation_and_drone_run_time_saving {
     my $c = shift;
     my $schema = shift;
@@ -10893,6 +10911,102 @@ sub _perform_gdd_calculation_and_drone_run_time_saving {
     }
 
     return \%related_cvterms;
+}
+
+sub _perform_precipitation_sum_calculation_and_drone_run_time_saving {
+    my $c = shift;
+    my $schema = shift;
+    my $field_trial_id = shift;
+    my $drone_run_project_id = shift;
+    my $noaa_ncdc_access_token = shift;
+    my $formula = shift;
+
+    my $field_trial = CXGN::Trial->new({
+        bcs_schema => $schema,
+        trial_id => $field_trial_id
+    });
+    my $planting_date = $field_trial->get_planting_date();
+    my $noaa_station_id = $field_trial->get_location_noaa_station_id();
+
+    my $drone_run_project = CXGN::Trial->new({
+        bcs_schema => $schema,
+        trial_id => $drone_run_project_id
+    });
+    my $project_start_date = $drone_run_project->get_project_start_date();
+    my $drone_run_bands = $drone_run_project->get_associated_image_band_projects();
+    my $related_cvterms = $drone_run_project->get_related_time_cvterms_json() ? decode_json $drone_run_project->get_related_time_cvterms_json() : {};
+
+    my $planting_date_time_object = Time::Piece->strptime($planting_date, "%Y-%B-%d");
+    my $planting_date_datetime = $planting_date_time_object->strftime("%Y-%m-%d");
+    my $project_start_date_time_object = Time::Piece->strptime($project_start_date, "%Y-%B-%d %H:%M:%S");
+    my $project_start_date_datetime = $project_start_date_time_object->strftime("%Y-%m-%d");
+
+    my $noaa = CXGN::NOAANCDC->new({
+        bcs_schema => $schema,
+        start_date => $planting_date_datetime, #YYYY-MM-DD
+        end_date => $project_start_date_datetime, #YYYY-MM-DD
+        noaa_station_id => $noaa_station_id,
+        noaa_ncdc_access_token => $noaa_ncdc_access_token
+    });
+    my $precipitation_result;
+    if ($formula eq 'average_daily_precipitation_sum') {
+        $precipitation_result = $noaa->get_averaged_precipitation();
+        $related_cvterms->{precipitation_averaged_sum} = $precipitation_result;
+
+        $drone_run_project->set_precipitation_averaged_sum_gdd($precipitation_result);
+
+        foreach (@$drone_run_bands) {
+            my $drone_run_band = CXGN::Trial->new({bcs_schema => $schema, trial_id => $_->[0]});
+            $drone_run_band->set_precipitation_averaged_sum_gdd($precipitation_result);
+        }
+    }
+
+    my $time_diff = $project_start_date_time_object - $planting_date_time_object;
+    my $time_diff_weeks = $time_diff->weeks;
+    my $time_diff_days = $time_diff->days;
+    my $rounded_time_diff_weeks = round($time_diff_weeks);
+
+    my $week_term_string = "week $rounded_time_diff_weeks";
+    my $q = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($week_term_string, 'cxgn_time_ontology');
+    my ($week_cvterm_id) = $h->fetchrow_array();
+
+    if (!$week_cvterm_id) {
+        my $new_week_term = $schema->resultset("Cv::Cvterm")->create_with({
+           name => $week_term_string,
+           cv => 'cxgn_time_ontology'
+        });
+        $week_cvterm_id = $new_week_term->cvterm_id();
+    }
+
+    my $day_term_string = "day $time_diff_days";
+    $h->execute($day_term_string, 'cxgn_time_ontology');
+    my ($day_cvterm_id) = $h->fetchrow_array();
+
+    if (!$day_cvterm_id) {
+        my $new_day_term = $schema->resultset("Cv::Cvterm")->create_with({
+           name => $day_term_string,
+           cv => 'cxgn_time_ontology'
+        });
+        $day_cvterm_id = $new_day_term->cvterm_id();
+    }
+
+    my $week_term = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $week_cvterm_id, 'extended');
+    my $day_term = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $day_cvterm_id, 'extended');
+
+    $related_cvterms->{week} = $week_term;
+    $related_cvterms->{day} = $day_term;
+    my $related_cvterms_result = encode_json $related_cvterms;
+
+    $drone_run_project->set_related_time_cvterms_json($related_cvterms_result);
+
+    foreach (@$drone_run_bands) {
+        my $drone_run_band = CXGN::Trial->new({bcs_schema => $schema, trial_id => $_->[0]});
+        $drone_run_band->set_related_time_cvterms_json($related_cvterms_result);
+    }
+
+    return $related_cvterms;
 }
 
 sub drone_imagery_retrain_mask_rcnn : Path('/api/drone_imagery/retrain_mask_rcnn') : ActionClass('REST') { }
