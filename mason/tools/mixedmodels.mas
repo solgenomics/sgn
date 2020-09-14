@@ -12,6 +12,7 @@
 
 <& /page/page_title.mas, title=>"Mixed Model Analysis" &>
 
+<& /analyses/store_new_analysis_values_and_model.mas &>
 
 <div id="mixedmodel_tool">
 </div>
@@ -102,7 +103,7 @@
 
 	      	<div class="model_bg" >
 			<div id="model_string" style="margin-top:10px;margin-bottom:10px;text-align:center;font-weight:bold">[model will appear here in lme4 format]</div>
-			<button id="store_model_formula" class="btn btn-default btn-sm">Save model</button>
+			<!--  button id="store_model_formula" class="btn btn-default btn-sm">Save model</button -->
 		</div>
 
 
@@ -184,7 +185,7 @@
 	<div id="mixed_models_varcomp_results_div">&nbsp;</div>
 	</td></tr -->
 	<tr><td>
-        Adjusted means 	     <button id="open_store_adjusted_means_dialog_button" class="btn btn-primary" data-toggle="modal" data-analysis_type="adjusted_means" data-target="#save_analysis_dialog">Save adjusted means</button>
+        Adjusted means 	     <button id="open_store_adjusted_means_dialog_button" class="btn btn-primary" data-toggle="modal" data-analysis_type="adjusted_means" data-target="#generic_save_analysis_dialog">Save adjusted means</button>
         <div id="mixed_models_adjusted_means_results_div">[loading...]</div>
 	</td></tr>
 	<tr>
