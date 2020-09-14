@@ -469,28 +469,26 @@ is($number_of_embryo_samples, 4);
 #test search crosses using female parent
 $mech->post_ok('http://localhost:3010/ajax/search/crosses',['female_parent' => 'TMEB419'] );
 $response = decode_json $mech->content;
-print STDERR $response;
-is_deeply($response, {'data' => [
-['<a href="/stock/41278/view">TMEB419</a>','<a href="/stock/41278/view">TMEB419</a>','<a href="/cross/44240">test_cross_upload6</a>','self','<a href="/stock//view"></a>','<a href="/breeders/trial/196">test_crossingtrial2</a>'],
-['<a href="/stock/41278/view">TMEB419</a>','<a href="/stock/41280/view">TMEB693</a>','<a href="/cross/44239">test_cross_upload5</a>','biparental','<a href="/stock//view"></a>','<a href="/breeders/trial/196">test_crossingtrial2</a>']
-]}, 'search crosses using female');
+my %data1 = %$response;
+my $result1 = $data1{data};
+my $number_of_result1 = @$result1;
+is($number_of_result1, 2);
 
 #test search crosses using both female and male parents
 $mech->post_ok('http://localhost:3010/ajax/search/crosses',['female_parent' => 'TMEB419', 'male_parent' => 'TMEB693'] );
 $response = decode_json $mech->content;
-print STDERR $response;
-is_deeply($response, {'data' => [
-['<a href="/stock/41278/view">TMEB419</a>','<a href="/stock/41280/view">TMEB693</a>','<a href="/cross/44239">test_cross_upload5</a>','biparental','<a href="/stock//view"></a>','<a href="/breeders/trial/196">test_crossingtrial2</a>']
-]}, 'search crosses using female and male parents');
+my %data2 = %$response;
+my $result2 = $data2{data};
+my $number_of_result2 = @$result2;
+is($number_of_result2, 1);
 
 #test search crosses using male parent
 $mech->post_ok('http://localhost:3010/ajax/search/crosses',['male_parent' => 'TMEB693'] );
 $response = decode_json $mech->content;
-print STDERR $response;
-is_deeply($response, {'data' => [
-['<a href="/stock/41278/view">TMEB419</a>','<a href="/stock/41280/view">TMEB693</a>','<a href="/cross/44239">test_cross_upload5</a>','biparental','<a href="/stock//view"></a>','<a href="/breeders/trial/196">test_crossingtrial2</a>']
-]}, 'search crosses using male parent');
-
+my %data3 = %$response;
+my $result3 = $data3{data};
+my $number_of_result3 = @$result3;
+is($number_of_result3, 1);
 
 #test deleting crossing
 my $before_deleting_crosses = $schema->resultset("Stock::Stock")->search({ type_id => $cross_type_id})->count();
