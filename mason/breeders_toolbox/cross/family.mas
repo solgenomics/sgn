@@ -2,17 +2,15 @@
 <%args>
 $family_id
 $family_name => ''
-$breeding_program => undef
 $user_id => undef
 $identifier_prefix => ''
 </%args>
 
-<& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Phenome.Tools", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List"] &>
+<& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List"] &>
 
 <& /page/page_title.mas, title => "Details for family '$family_name'" &>
 
 <&| /page/info_section.mas, title => "Family information" &>
-
 <div class="panel panel-default">
     <div class="panel-body">
         <div class="row">
@@ -39,7 +37,6 @@ $identifier_prefix => ''
         </div>
     </div>
 </div>
-
 </&>
 
 <& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
