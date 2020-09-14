@@ -12,12 +12,11 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 
 
 
-__PACKAGE__->config(
-    default   => 'application/json',
-    stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 
-		   'text/html' => 'JSON' },
-    );
+# __PACKAGE__->config(
+#     default   => 'application/json',
+#     stash_key => 'rest',
+#     map       => { 'application/json' => 'JSON' },
+#     );
 
 
 
@@ -35,10 +34,10 @@ sub download_validation :Path('/solgs/download/validation/pop') Args() {
   
     unless (!-s $validation_file) 
     {
-        my @validation =  map { [ split(/\t/) ] }  read_file($validation_file);
+        my @validation = read_file($validation_file, {binmode => ':utf8'});
     
         $c->res->content_type("text/plain");
-        $c->res->body(join "", map { $_->[0] . "\t" . $_->[1] }  @validation);  
+        $c->res->body(join("", @validation));  
     } 
 
 }
@@ -57,10 +56,9 @@ sub download_prediction_GEBVs :Path('/solgs/download/prediction/model') Args() {
     
     unless (!-s $selection_gebvs_file) 
     {
-        my @selection_gebvs =  map { [ split(/\t/) ] }  read_file($selection_gebvs_file);
-    
-        $c->res->content_type("text/plain");
-        $c->res->body(join "", map { $_->[0] . "\t" . $_->[1] }  @selection_gebvs);
+	my @selection_gebvs =  read_file($selection_gebvs_file, {binmode => ':utf8'});
+	$c->res->content_type("text/plain");
+	$c->res->body(join("", @selection_gebvs));	
     }
  
 }
@@ -88,10 +86,10 @@ sub download_blups :Path('/solgs/download/blups/pop') Args() {
 
     unless (!-s $training_gebvs_file) 
     {
-        my @training_gebvs =  map { [ split(/\t/) ] }  read_file($training_gebvs_file);
+        my @training_gebvs = read_file($training_gebvs_file, {binmode => ':utf8'});
 	
         $c->res->content_type("text/plain");
-        $c->res->body(join "", map { $_->[0] . "\t" . $_->[1] }  @training_gebvs);
+        $c->res->body(join("", @training_gebvs));
     } 
 
 }
@@ -112,10 +110,10 @@ sub download_marker_effects :Path('/solgs/download/marker/pop') Args() {
     
     unless (!-s $markers_file) 
     {
-        my @effects =  map { [ split(/\t/) ] }  read_file($markers_file);
+        my @effects = read_file($markers_file, {binmode => ':utf8'});
     
         $c->res->content_type("text/plain");
-        $c->res->body(join "", map { $_->[0] . "\t" . $_->[1] }  @effects);
+        $c->res->body(join("", @effects));
     } 
 
 }

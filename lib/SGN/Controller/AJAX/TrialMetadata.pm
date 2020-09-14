@@ -33,7 +33,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON' },
    );
 
 has 'schema' => (
@@ -2074,7 +2074,7 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
 
     my $error_string = '';
    # open file and remove return of line
-    open(my $F, "<", $archived_filename_with_path) || die "Can't open archive file $archived_filename_with_path";
+    open(my $F, "< :encoding(UTF-8)", $archived_filename_with_path) || die "Can't open archive file $archived_filename_with_path";
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $header = <$F>;
     while (<$F>) {

@@ -28,7 +28,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON'},
    );
 
 
@@ -111,7 +111,7 @@ sub search_document_POST : Args(0) {
     my @found_lines;
     my @list_elements;
     foreach my $f (@files){
-        open(my $fh, '<', $f)
+        open(my $fh, '< :encoding(UTF-8)', $f)
             or die "Could not open file '$f' $!";
 
         while (my $row = <$fh>) {

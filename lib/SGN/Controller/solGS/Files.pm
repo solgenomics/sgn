@@ -500,7 +500,7 @@ sub selection_population_file {
     $self->genotype_file_name($c, $pred_pop_id);
     $geno_files .= "\t" . $c->stash->{genotype_file_name};  
 
-    write_file($tempfile, $geno_files); 
+    write_file($tempfile, {binmode => ':utf8'}, $geno_files); 
 
     $c->stash->{selection_population_file} = $tempfile;
   
@@ -551,7 +551,7 @@ sub cache_file {
     {      
         $file = catfile($cache_dir, $cache_data->{file});
 
-        write_file($file);
+        write_file($file, {binmode => ':utf8'});
         $file_cache->set($cache_data->{key}, $file, '30 days');
     }
 
@@ -770,6 +770,8 @@ sub get_solgs_dirs {
     my $corre_temp      = catdir($tmp_dir, 'correlation', 'tempfiles');
     my $h2_cache        = catdir($tmp_dir, 'heritability', 'cache');
     my $h2_temp         = catdir($tmp_dir, 'heritability', 'tempfiles');
+    my $qc_cache        = catdir($tmp_dir, 'qualityControl', 'cache');
+    my $qc_temp         = catdir($tmp_dir, 'qualityControl', 'tempfiles');
     my $pca_cache       = catdir($tmp_dir, 'pca', 'cache');
     my $pca_temp        = catdir($tmp_dir, 'pca', 'tempfiles');
     my $cluster_cache   = catdir($tmp_dir, 'cluster', 'cache');
@@ -781,7 +783,7 @@ sub get_solgs_dirs {
 	[
 	 $solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_lists,  $solgs_datasets, 
 	 $pca_cache, $pca_temp, $histogram_cache, $histogram_temp, $log_dir, $corre_cache, $corre_temp,
-     $h2_temp, $h2_cache,$anova_temp,$anova_cache, $solqtl_cache, $solqtl_tempfiles,
+     $h2_temp, $h2_cache,$qc_cache, $qc_temp, $anova_temp,$anova_cache, $solqtl_cache, $solqtl_tempfiles,
 	 $cluster_cache, $cluster_temp, $sel_index_cache,  $sel_index_temp,
 	], 
 	0, 0755
@@ -791,25 +793,27 @@ sub get_solgs_dirs {
               solgs_cache_dir             => $solgs_cache, 
               solgs_tempfiles_dir         => $solgs_tempfiles,
               solgs_lists_dir             => $solgs_lists,
-	      solgs_datasets_dir          => $solgs_datasets,
-	      pca_cache_dir               => $pca_cache,
-	      pca_temp_dir                => $pca_temp,
-	      cluster_cache_dir           => $cluster_cache,
-	      cluster_temp_dir            => $cluster_temp,
-              correlation_cache_dir       => $corre_cache,
-	      correlation_temp_dir        => $corre_temp,
-          heritability_cache_dir      => $h2_cache,
-          heritability_temp_dir       => $h2_temp,
-	      histogram_cache_dir         => $histogram_cache,
-	      histogram_temp_dir          => $histogram_temp,
-	      analysis_log_dir            => $log_dir,
-              anova_cache_dir             => $anova_cache,
-	      anova_temp_dir              => $anova_temp,
-	      solqtl_cache_dir            => $solqtl_cache,
-              solqtl_tempfiles_dir        => $solqtl_tempfiles,
-	      cache_dir                   => $solgs_cache,
-	      selection_index_cache_dir   => $sel_index_cache,
-	      selection_index_temp_dir    => $sel_index_temp,
+		      solgs_datasets_dir          => $solgs_datasets,
+		      pca_cache_dir               => $pca_cache,
+		      pca_temp_dir                => $pca_temp,
+		      cluster_cache_dir           => $cluster_cache,
+		      cluster_temp_dir            => $cluster_temp,
+	          correlation_cache_dir       => $corre_cache,
+		      correlation_temp_dir        => $corre_temp,
+	          heritability_cache_dir      => $h2_cache,
+	          heritability_temp_dir       => $h2_temp,
+	          qualityControl_cache_dir    => $qc_cache,
+	          qualityControl_temp_dir     => $qc_temp,
+		      histogram_cache_dir         => $histogram_cache,
+		      histogram_temp_dir          => $histogram_temp,
+		      analysis_log_dir            => $log_dir,
+	          anova_cache_dir             => $anova_cache,
+		      anova_temp_dir              => $anova_temp,
+		      solqtl_cache_dir            => $solqtl_cache,
+	          solqtl_tempfiles_dir        => $solqtl_tempfiles,
+		      cache_dir                   => $solgs_cache,
+		      selection_index_cache_dir   => $sel_index_cache,
+		      selection_index_temp_dir    => $sel_index_temp,
 
         );
 
