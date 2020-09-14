@@ -100,7 +100,7 @@ solGS.kinship = {
     },
 
    
-    runKinship: function(selectId, selectName, dataStructure) {
+    runKinship: function(selectId, selectName, dataStr) {
 
 	var protocolId = jQuery('#genotyping_protocol #genotyping_protocol_id').val();
 	console.log('protocol id: ' + protocolId)
@@ -108,13 +108,19 @@ solGS.kinship = {
 	var kinshipArgs = {
 	    'kinship_pop_id' : selectId,
 	    'kinship_pop_name' : selectName,
-	    'data_structure' : dataStructure,
+	    'data_structure' : dataStr,
 	    'genotyping_protocol_id' : protocolId,
 	    'analysis_type': 'kinship analysis'
 	};
 
-
-	this.selectAnalysisOption('kinship/analysis', kinshipArgs);
+	var page;
+	if (dataStr) {
+	    page = '/kinship/analysis/' + dataStr + '_' + selectId + '/gp/' + protocolId; 
+	} else {
+	    page = '/kinship/analysis/' + selectId + '/gp/' + protocolId;
+	}
+	
+	this.selectAnalysisOption(page, kinshipArgs);
    
     },
     
