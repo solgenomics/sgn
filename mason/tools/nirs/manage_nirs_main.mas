@@ -4,7 +4,7 @@ $deleted_nirs_files => undef
 $locations => undef
 </%args>
 
-<& /breeders_toolbox/upload_nirs_spreadsheet_dialogs.mas &>
+<& /tools/nirs/upload_nirs_spreadsheet_dialogs.mas &>
 <& /tools/nirs/nirs_analysis_train_dialogs.mas &>
 <& /tools/nirs/nirs_analysis_predict_dialogs.mas &>
 

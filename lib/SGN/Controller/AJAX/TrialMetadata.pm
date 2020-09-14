@@ -27,6 +27,7 @@ use CXGN::BreederSearch;
 use CXGN::Page::FormattingHelpers qw / html_optional_show /;
 use SGN::Image;
 use CXGN::Trial::TrialLayoutDownload;
+use List::Util qw(sum);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -2774,6 +2775,130 @@ sub trial_correlate_traits : Chained('trial') PathPart('correlate_traits') Args(
     close($fh);
 
     $c->stash->{rest} = {success => 1, result => \@result};
+}
+
+sub trial_plot_time_series_accessions : Chained('trial') PathPart('plot_time_series_accessions') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $trait_ids = decode_json $c->req->param('trait_ids');
+    my $accession_ids = $c->req->param('accession_ids') ne 'null' ? decode_json $c->req->param('accession_ids') : [];
+    my $trait_format = $c->req->param('trait_format');
+    my $data_level = $c->req->param('data_level');
+
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        'MaterializedViewTable',
+        {
+            bcs_schema=>$schema,
+            data_level=>$data_level,
+            trait_list=>$trait_ids,
+            trial_list=>[$c->stash->{trial_id}],
+            accession_list=>$accession_ids,
+            include_timestamp=>0,
+            exclude_phenotype_outlier=>0
+        }
+    );
+    my ($data, $unique_traits) = $phenotypes_search->search();
+    my @sorted_trait_names = sort keys %$unique_traits;
+
+    if (scalar(@$data) == 0) {
+        $c->stash->{rest} = { error => "There are no phenotypes for the trials and traits you have selected!"};
+        return;
+    }
+
+    my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$c->stash->{trial_id}});
+    my $traits_assayed = $trial->get_traits_assayed($data_level, $trait_format, 'time_ontology');
+    my %unique_traits_ids;
+    foreach (@$traits_assayed) {
+        $unique_traits_ids{$_->[0]} = $_;
+    }
+    my %unique_components;
+    foreach (values %unique_traits_ids) {
+        foreach my $component (@{$_->[2]}) {
+            if ($component->{cv_type} && $component->{cv_type} eq 'time_ontology') {
+                $unique_components{$_->[0]} = $component->{name};
+            }
+        }
+    }
+
+    my %phenotype_data;
+    my %trait_hash;
+    my %seen_germplasm_names;
+    foreach my $obs_unit (@$data){
+        my $obsunit_id = $obs_unit->{observationunit_stock_id};
+        my $observations = $obs_unit->{observations};
+        my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
+        my $germplasm_uniquename = $obs_unit->{germplasm_uniquename};
+        foreach (@$observations){
+            push @{$phenotype_data{$germplasm_uniquename}->{$_->{trait_id}}}, $_->{value};
+            $trait_hash{$_->{trait_id}} = $_->{trait_name};
+        }
+        $seen_germplasm_names{$germplasm_uniquename}++;
+    }
+    my @sorted_germplasm_names = sort keys %seen_germplasm_names;
+
+    my $header_string = 'germplasmName,time,value';
+
+    my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
+    my $tmp_stats_dir = $shared_cluster_dir_config."/tmp_trial_correlation";
+    mkdir $tmp_stats_dir if ! -d $tmp_stats_dir;
+    my ($stats_tempfile_fh, $stats_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    my ($stats_out_tempfile_fh, $stats_out_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+
+    open(my $F, ">", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
+        print $F $header_string."\n";
+        foreach my $s (@sorted_germplasm_names) {
+            foreach my $t (@$trait_ids) {
+                my $time = $unique_components{$t};
+                my @time_split = split ' ', $time;
+                my $time_val = $time_split[1];
+                my $vals = $phenotype_data{$s}->{$t};
+                my $val;
+                if (!$vals || scalar(@$vals) == 0) {
+                    $val = 'NA';
+                }
+                else {
+                    $val = sum(@$vals)/scalar(@$vals);
+                }
+                print $F "$s,$time_val,$val\n";
+            }
+        }
+    close($F);
+
+    my @set = ('0' ..'9', 'A' .. 'F');
+    my @colors;
+    for (1..scalar(@sorted_germplasm_names)) {
+        my $str = join '' => map $set[rand @set], 1 .. 6;
+        push @colors, '#'.$str;
+    }
+    my $color_string = join '\',\'', @colors;
+
+    my $dir = $c->tempfiles_subdir('/trial_analysis_accession_time_series_plot_dir');
+    my $pheno_figure_tempfile_string = $c->tempfile( TEMPLATE => 'trial_analysis_accession_time_series_plot_dir/figureXXXX');
+    $pheno_figure_tempfile_string .= '.png';
+    my $pheno_figure_tempfile = $c->config->{basepath}."/".$pheno_figure_tempfile_string;
+
+    my $cmd = 'R -e "library(data.table); library(ggplot2);
+    mat <- fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\');
+    mat\$time <- as.numeric(as.character(mat\$time));
+    options(device=\'png\');
+    par();
+    sp <- ggplot(mat, aes(x = time, y = value)) + 
+        geom_line(aes(color = germplasmName), size = 1) +
+        scale_fill_manual(values = c(\''.$color_string.'\')) + 
+        theme_minimal();
+    sp <- sp + guides(shape = guide_legend(override.aes = list(size = 0.5)));
+    sp <- sp + guides(color = guide_legend(override.aes = list(size = 0.5)));
+    sp <- sp + theme(legend.title = element_text(size = 3), legend.text = element_text(size = 3));';
+    if (scalar(@sorted_germplasm_names) > 100) {
+        $cmd .= 'sp <- sp + theme(legend.position = \'none\');';
+    }
+    $cmd .= 'ggsave(\''.$pheno_figure_tempfile.'\', sp, device=\'png\', width=12, height=6, units=\'in\');
+    dev.off();"';
+    print STDERR Dumper $cmd;
+    my $status = system($cmd);
+
+    $c->stash->{rest} = {success => 1, figure => $pheno_figure_tempfile_string};
 }
 
 1;

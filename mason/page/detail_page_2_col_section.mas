@@ -158,6 +158,8 @@ $locations => undef
 
                                 <& /breeders_toolbox/trial/correlation_workflow.mas, trial_id => $trial_id &>
 
+                                <& /breeders_toolbox/trial/time_series_accessions_workflow.mas, trial_id => $trial_id, data_level=>'plot' &>
+
                                 <!-- Phenotypic correlation analysis -->
                                 <& /solgs/population/correlation.mas,
                                     trial_id => $trial_id
@@ -396,6 +398,8 @@ $locations => undef
 % } #End analysis_details
 % if ($info_section_id eq 'analysis_page_analysis_tools'){
                                 <& /breeders_toolbox/trial/correlation_workflow.mas, trial_id => $trial_id, is_analysis => 1 &>
+
+                                <& /breeders_toolbox/trial/time_series_accessions_workflow.mas, trial_id => $trial_id, data_level=>'analysis_instance' &>
 % }
 % if ($info_section_id eq 'model_details'){
                                 <& /analyses/model_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, analysis_metadata=>$analysis_metadata &>
@@ -406,6 +410,11 @@ $locations => undef
 % if ($info_section_id eq 'model_analyses'){
                                 <& /analyses/model_detail_page_analyses_section.mas, model_id => $model_id &>
 % } #End model_analyses
+% if ($info_section_id eq 'model_deletion_section'){
+                                <&| /page/info_section.mas, title=>'Delete model', subtitle=>'<font color="red" role="">Deletion cannot be undone</font>', collapsed=>1, collapsible=>1 &>
+                                    <& /analyses/model_deletion.mas, model_id => $model_id  &>
+                                </&>
+% } #End model_deletion_section
 % if ($info_section_id eq 'manage_file_share_dump'){
                                 <& /breeders_toolbox/file_share/file_dump_share_files.mas &>
 % } #End manage_file_share_dump

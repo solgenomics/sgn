@@ -1,0 +1,63 @@
+
+<%args>
+$model_id
+</%args>
+
+<button class="btn btn-default" id="delete_model_data_by_model_id" role="button">Delete</button><br/><br/>
+
+<div class="modal  fade" id="delete_model_data_dialog" name="delete_model_data_dialog" tabindex="-1" role="dialog" aria-labelledby="DeleteModelDataDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="DeleteModelDataDialog">Delete Model</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <center>
+                    <p3> Are you sure you want to delete this model? <br> Proceed with deletion below...</p3>
+                    </center></br>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_delete_model_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="delete_model_data_dialog_submit" id="delete_model_data_dialog_submit">Delete Model</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+jQuery(document).ready(function(){
+    jQuery('#delete_model_data_by_model_id').click(function(){
+        jQuery('#delete_model_data_dialog').modal('show');
+    });
+
+    jQuery('#delete_model_data_dialog_submit').click(function(){
+        jQuery.ajax({
+            type: 'GET',
+            url : '/ajax/analysis_model/delete?model_id=<% $model_id %>',
+            beforeSend: function() {
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response){
+                jQuery('#working_modal').modal('hide');
+                console.log(response);
+                if (response.error) {
+                    alert(response.error);
+                }
+                if  (response.success) {
+                    alert('DELETED MODEL!')
+                    location.reload();
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('Error deleting analysis model!');
+            }
+        });
+    });
+});
+</script>
