@@ -94,6 +94,15 @@ $data_level => undef
                                         </select>
                                     </div>
                                 </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Genotypes: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="trial_analysis_genotype_comparison_workflow_genotype_filter_div">
+                                            <option value="">All</option>
+                                            <option value="0,2">Only genotypes of dosage 0 or 2</option>
+                                        </select>
+                                    </div>
+                                </div>
 
                             </div>
 
@@ -176,10 +185,12 @@ jQuery(document).ready(function(){
 
     var trial_analysis_genotype_comparison_workflow_genotyping_protocol_id;
     var trial_analysis_genotype_comparison_workflow_genotyping_protocol_compute_from_parents;
+    var trial_analysis_genotype_comparison_workflow_genotyping_protocol_genotypes;
     jQuery('#trial_analysis_genotype_comparison_workflow_submit').click(function() {
 
         trial_analysis_genotype_comparison_workflow_genotyping_protocol_id = jQuery('#trial_analysis_genotype_comparison_workflow_genotyping_protocol_id').val();
         trial_analysis_genotype_comparison_workflow_genotyping_protocol_compute_from_parents = jQuery('#trial_analysis_genotype_comparison_workflow_compute_from_parents_div').val();
+        trial_analysis_genotype_comparison_workflow_genotyping_protocol_genotypes = jQuery('#trial_analysis_genotype_comparison_workflow_genotype_filter_div').val();
 
         if (!trial_analysis_genotype_comparison_workflow_genotyping_protocol_id) {
             alert('Please select a genotyping protocol!');
@@ -187,7 +198,7 @@ jQuery(document).ready(function(){
         }
         else {
             jQuery.ajax({
-                url : '/ajax/breeders/trial/<% $trial_id %>/genotype_comparison?trait_ids='+JSON.stringify(trial_analysis_genotype_comparison_workflow_trait_ids)+'&accession_ids='+JSON.stringify(trial_analysis_genotype_comparison_workflow_accessions_ids)+'&trait_weights='+JSON.stringify(trial_analysis_genotype_comparison_workflow_trait_weights_values)+'&nd_protocol_id='+trial_analysis_genotype_comparison_workflow_genotyping_protocol_id+'&data_level=<% $data_level %>&compute_from_parents='+trial_analysis_genotype_comparison_workflow_genotyping_protocol_compute_from_parents,
+                url : '/ajax/breeders/trial/<% $trial_id %>/genotype_comparison?trait_ids='+JSON.stringify(trial_analysis_genotype_comparison_workflow_trait_ids)+'&accession_ids='+JSON.stringify(trial_analysis_genotype_comparison_workflow_accessions_ids)+'&trait_weights='+JSON.stringify(trial_analysis_genotype_comparison_workflow_trait_weights_values)+'&nd_protocol_id='+trial_analysis_genotype_comparison_workflow_genotyping_protocol_id+'&data_level=<% $data_level %>&compute_from_parents='+trial_analysis_genotype_comparison_workflow_genotyping_protocol_compute_from_parents+'&genotype_filter='+trial_analysis_genotype_comparison_workflow_genotyping_protocol_genotypes,
                 beforeSend: function() {
                     jQuery("#working_modal").modal("show");
                 },

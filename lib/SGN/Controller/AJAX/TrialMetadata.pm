@@ -2984,6 +2984,7 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
     my $trait_format = $c->req->param('trait_format');
     my $nd_protocol_id = $c->req->param('nd_protocol_id');
     my $data_level = $c->req->param('data_level');
+    my $genotype_filter_string = $c->req->param('genotype_filter');
     my $compute_from_parents = $c->req->param('compute_from_parents') eq 'yes' ? 1 : 0;
 
     my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
@@ -3096,6 +3097,12 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
         $c->config->{basepath}
     );
 
+    my %genotype_filter;
+    if ($genotype_filter_string) {
+        my @genos = split ',', $genotype_filter_string;
+        %genotype_filter = map {$_ => 1} @genos;
+    }
+
     my %geno_rank_counter;
     my %geno_rank_seen_scores;
     my @marker_names;
@@ -3118,8 +3125,10 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
                 foreach (@line) {
                     if ( defined $_ && $_ ne '' && $_ ne 'NA') {
                         my $rank = $rank_lookup{$header[$counter]};
-                        $geno_rank_counter{$rank}->{$position}->{$_}++;
-                        $geno_rank_seen_scores{$_}++;
+                        if (!$genotype_filter_string || exists($genotype_filter{$_})) {
+                            $geno_rank_counter{$rank}->{$position}->{$_}++;
+                            $geno_rank_seen_scores{$_}++;
+                        }
                     }
                     $counter++;
                 }
