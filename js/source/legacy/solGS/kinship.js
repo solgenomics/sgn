@@ -9,7 +9,7 @@ var solGS = solGS || function solGS() {};
 
 solGS.kinship = {
 
-    getPopulationDetails: function () {
+    getPopulationDetails: function() {
 
 	var page = document.URL;
 	var popId;
@@ -71,7 +71,7 @@ solGS.kinship = {
 
     },
  
-    createTable: function () {
+    createTable: function() {
 	var kinshipTable ='<table id="kinship_pops_table" class="table table-striped"><tr>'
             + '<th>Population</th>'
             + '<th>Data structure type</th>'
@@ -100,7 +100,7 @@ solGS.kinship = {
     },
 
    
-    runKinship: function (selectId, selectName, dataStructure) {
+    runKinship: function(selectId, selectName, dataStructure) {
 
 	var protocolId = jQuery('#genotyping_protocol #genotyping_protocol_id').val();
 	console.log('protocol id: ' + protocolId)
@@ -110,55 +110,121 @@ solGS.kinship = {
 	    'kinship_pop_name' : selectName,
 	    'data_structure' : dataStructure,
 	    'genotyping_protocol_id' : protocolId,
+	    'analysis_type': 'kinship analysis'
 	};
-	
-	jQuery("#kinship_canvas .multi-spinner-container").show();
-	jQuery("#kinship_message")
-	    .html("Running kinship... please wait...it may take minutes")
-	    .show();
 
-	jQuery.ajax({
-	    type: 'POST',
-	    dataType: 'json',
-	    data: kinshipArgs,
-	    url: '/kinship/run/analysis/',
-	    success: function(res) {
-		if (res.result == 'success') {
-		    jQuery("#kinship_canvas .multi-spinner-container").hide();
-		    		    
-		    if (res.data) {
-			var links = solGS.kinship.addDowloandLinks(res);
-			solGS.kinship.plotKinship(res.data, links);
-		//	solGS.kinship.addDowloandLinks(res);
-		
-			jQuery("#kinship_message").empty();
-		    } else {
-			 jQuery("#kinship_message")
-			    .html('There is no kinship data to plot.')
-			    .show()
-			    .fadeOut(8400);
-		
-			jQuery("#kinship_canvas .multi-spinner-container").hide();
-		    }
 
-		} else {                
-		    jQuery("#kinship_message").html(res.result);
-		    jQuery("#kinship_canvas .multi-spinner-container").hide();
-		    jQuery("#run_kinship").show();		    
-		}
-	    },
-	    error: function(res) {
-		jQuery("#kinship_message")
-		    .html('Error occured running the kinship.')
-		    .show()
-		    .fadeOut(8400);
-		
-		jQuery("#kinship_canvas .multi-spinner-container").hide();
-	    }  
-	});
+	this.selectAnalysisOption('kinship/analysis', kinshipArgs);
    
     },
+    
 
+    selectAnalysisOption: function(page, args) {
+
+	var t = '<p>This analysis takes long time. ' 
+	    + 'Do you want to submit the analysis and get an email when it completes?</p>';
+	
+	jQuery('<div />')
+	    .html(t)
+	    .dialog({	    
+		height : 200,
+		width  : 400,
+		modal  : true,
+		title  : "Kinship job submission",
+ 		buttons: {	
+		    OK: {
+			text: 'Yes',
+			class: 'btn btn-success',
+                        id   : 'queue_job',
+			click: function() {
+			    jQuery(this).dialog("close");			  
+			    
+			    solGS.kinship.queueKinshipAnalysis(page, args);
+			},
+		    }, 
+		    
+		    No: { 
+		    	text: 'No, I will wait till it completes.',
+		    	class: 'btn btn-warning',
+                        id   : 'no_queue',
+		    	click: function() { 
+		    	    jQuery(this).dialog("close");
+			    
+		    	    solGS.kinship.analyzeNow(page, args);
+		    	},
+		    },
+		    
+		    Cancel: { 
+			text: 'Cancel',
+			class: 'btn btn-info',
+                        id   : 'cancel_queue_info',
+			click: function() { 
+			    jQuery(this).dialog("close");
+			},
+		    },
+		}
+	    });
+	
+    },
+
+    
+    queueKinshipAnalysis: function(page, args) {
+
+	solGS.submitJob.checkUserLogin(page, args);
+	
+    },
+
+    
+    analyzeNow: function(page, args) {
+		
+	jQuery("#kinship_canvas .multi-spinner-container").show();
+	
+    	jQuery("#kinship_message")
+    	    .html("Running kinship... please wait...it may take minutes")
+    	    .show();
+
+    	jQuery.ajax({
+    	    type: 'POST',
+    	    dataType: 'json',
+    	    data: args,
+    	    url: '/kinship/run/analysis/',
+    	    success: function(res) {
+    		if (res.result == 'success') {
+    		    jQuery("#kinship_canvas .multi-spinner-container").hide();
+		    		    
+    		    if (res.data) {
+    			var links = solGS.kinship.addDowloandLinks(res);
+    			solGS.kinship.plotKinship(res.data, links);
+    		//	solGS.kinship.addDowloandLinks(res);
+		
+    			jQuery("#kinship_message").empty();
+    		    } else {
+    			 jQuery("#kinship_message")
+    			    .html('There is no kinship data to plot.')
+    			    .show()
+    			    .fadeOut(8400);
+		
+    			jQuery("#kinship_canvas .multi-spinner-container").hide();
+    		    }
+
+    		} else {                
+    		    jQuery("#kinship_message").html(res.result);
+    		    jQuery("#kinship_canvas .multi-spinner-container").hide();
+    		    jQuery("#run_kinship").show();		    
+    		}
+    	    },
+    	    error: function(res) {
+    		jQuery("#kinship_message")
+    		    .html('Error occured running the kinship.')
+    		    .show()
+    		    .fadeOut(8400);
+		
+    		jQuery("#kinship_canvas .multi-spinner-container").hide();
+    	    }  
+    	});
+	
+    },
+    
     
     getKinshipResult: function(args) {
 	console.log(' kinshipresult args' + args)
@@ -189,7 +255,7 @@ solGS.kinship = {
 		    jQuery("#run_kinship").show();
                 }
             },
-            error: function (res) {
+            error: function(res) {
                 jQuery("#kinship_message")
                     .css({"padding-left": '0px'})
                     .html("Error occured preparing the kinship data.");
@@ -200,7 +266,7 @@ solGS.kinship = {
     },
 
 
-    plotKinship: function (data, links) {
+    plotKinship: function(data, links) {
 	console.log('plotkinship links ' + links)
         solGS.heatmap.plot(data, '#kinship_canvas', '#kinship_plot', links);
 		    
@@ -244,9 +310,9 @@ solGS.kinship = {
 
 
 
-jQuery(document).ready( function () { 
+jQuery(document).ready( function() { 
 
-    jQuery("#run_kinship").click(function () {
+    jQuery("#run_kinship").click(function() {
 	var url = document.URL;
     
 	if (url.match(/kinship\/analysis/)) {
