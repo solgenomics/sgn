@@ -16,7 +16,7 @@ BEGIN { extends 'Catalyst::Controller::REST'; }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON' },
    );
 
 
@@ -47,7 +47,7 @@ sub get_trials_with_folders : Path('/ajax/breeders/get_trials_with_folders') Arg
     my $dir = catdir($c->config->{static_content_path}, "folder");
     eval { make_path($dir) };
     if ($@) {
-        print "Couldn't create $dir: $@";
+        print STDERR "Couldn't create $dir: $@";
     }
     my $filename = $dir."/entire_jstree_html_$tree_type.txt";
 
@@ -69,7 +69,7 @@ sub get_trials_with_folders_cached : Path('/ajax/breeders/get_trials_with_folder
     }
     my $filename = $dir."/entire_jstree_html_$tree_type.txt";
     my $html = '';
-    open(my $fh, '<', $filename) or warn "cannot open file $filename";
+    open(my $fh, '< :encoding(UTF-8)', $filename) or warn "cannot open file $filename $!";
     {
         local $/;
         $html = <$fh>;
@@ -103,7 +103,7 @@ sub _write_cached_folder_tree {
     print STDERR "Finished get trials $tree_type at time ".localtime()."\n";
 
     my $OUTFILE;
-    open $OUTFILE, '>', $filename or die "Error opening $filename: $!";
+    open $OUTFILE, '> :encoding(UTF-8)', $filename or die "Error opening $filename: $!";
     print { $OUTFILE } $html or croak "Cannot write to $filename: $!";
     close $OUTFILE or croak "Cannot close $filename: $!";
 
