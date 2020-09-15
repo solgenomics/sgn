@@ -205,7 +205,7 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
 	$error = "The analysis could not be completed. The factors may not have sufficient numbers of levels to complete the analysis. Please choose other parameters."
     }
     else {
-	$lines = read_file($resultfile);
+	$lines = read_file($resultfile); # change this to return accession_name -> trait -> [ value, timestamp, operator, "", "" ]
     }
 
     my $blups;

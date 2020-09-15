@@ -222,6 +222,15 @@ export function init(main_div){
 	$('#analysis_type').val(analysis_type);
     });
 
+    $('#open_store_adjusted_means_dialog_button').click( function() {
+	$('#generic_save_analysis_dialog').modal("show");
+	$('#generic_save_analysis_protocol').val( $('#model_string').html() );
+	$('#generic_save_analysis_dataset_id').val( dataset_id );
+	$('#generic_save_analysis_accession_names').val();
+	
+
+    });
+    
     $('#save_blups_button').click( function() {
 	var name = $('#analysis_name').val();
 	var description = $('#description').val();
@@ -297,7 +306,7 @@ export function init(main_div){
                         }
 			
                         $('#tempfile').html(r.tempfile);
-			$('#workflow').
+			//$('#workflow').
 
                     }
                     $('#fixed_factors').droppable( {drop: function( event, ui ) {
