@@ -24,18 +24,16 @@ use JSON;
 
 extends 'CXGN::Stock';
 
-has 'family_stock_id' => (isa => "Maybe[Int]",
+has 'family_stock_id' => (isa => "Int",
     is => 'rw',
-    required => 0,
+    required => 1,
 );
 
 has 'family_name' => (isa => 'Maybe[Str]',
     is => 'rw',
 );
 
-
 sub BUILD {
-
     my $self = shift;
     my $args = shift;
 
@@ -51,7 +49,6 @@ sub BUILD {
         $self->family_name($family_uniquename);
         $self->family_stock_id($family_id);
     }
-
 }
 
 
@@ -82,7 +79,6 @@ sub get_family_parents {
     }
 #    print STDERR Dumper(\@family_parents);
     return \@family_parents;
-
 }
 
 
@@ -150,7 +146,6 @@ sub get_all_progenies {
     }
     print STDERR Dumper(\@progenies);
     return \@progenies;
-
 }
 
 
