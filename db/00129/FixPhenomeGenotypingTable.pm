@@ -38,7 +38,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-Description of this patch goes here
+Rename phenome.genotype table to phenome.phenome_genotype along with all genotype_id fields in the phenome schema
 
 has '+prereq' => (
     default => sub {
@@ -58,7 +58,10 @@ sub patch {
     $self->dbh->do(<<EOSQL);
 
 ALTER TABLE phenome.genotype RENAME TO phenome_genotype;
-
+ALTER TABLE phenome.phenome_genotype RENAME COLUMN genotype_id TO phenome_genotype_id;
+ALTER TABLE phenome.genotype_region RENAME COLUMN genotype_id TO phenome_genotype_id;    
+ALTER TABLE phenome.polymorphic_fragment RENAME COLUMN genotype_id TO phenome_genotype_id;    
+      
 EOSQL
 	
 
