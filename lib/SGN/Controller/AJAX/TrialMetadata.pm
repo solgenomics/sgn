@@ -3444,6 +3444,10 @@ sub trial_calculate_numerical_derivative : Chained('trial') PathPart('calculate_
             my $r2_val = $phenotype_data{$row_col_hash{$row+1}->{$col}}->{$t};
             my $c1_val = $phenotype_data{$row_col_hash{$row}->{$col-1}}->{$t};
             my $c2_val = $phenotype_data{$row_col_hash{$row}->{$col+1}}->{$t};
+            my $r1c1_val = $phenotype_data{$row_col_hash{$row-1}->{$col-1}}->{$t};
+            my $r2c1_val = $phenotype_data{$row_col_hash{$row+1}->{$col-1}}->{$t};
+            my $r1c2_val = $phenotype_data{$row_col_hash{$row-1}->{$col+1}}->{$t};
+            my $r2c2_val = $phenotype_data{$row_col_hash{$row+1}->{$col+1}}->{$t};
             if (defined($r1_val)) {
                 push @derivs, ($val - $r1_val);
             }
@@ -3455,6 +3459,18 @@ sub trial_calculate_numerical_derivative : Chained('trial') PathPart('calculate_
             }
             if (defined($c2_val)) {
                 push @derivs, ($val - $c2_val);
+            }
+            if (defined($r1c1_val)) {
+                push @derivs, ($val - $r1c1_val);
+            }
+            if (defined($r2c1_val)) {
+                push @derivs, ($val - $r2c1_val);
+            }
+            if (defined($r1c2_val)) {
+                push @derivs, ($val - $r1c2_val);
+            }
+            if (defined($r2c2_val)) {
+                push @derivs, ($val - $r2c2_val);
             }
             # print STDERR Dumper \@derivs;
             if (scalar(@derivs) > 0) {
