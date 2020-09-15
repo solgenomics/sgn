@@ -110,3 +110,13 @@ is_a: SGNSTAT:0000000
 id: SGNSTAT:0000021
 name: Multivariate linear mixed model permanent environment BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on growing degree days computed using AIREMLf90
 is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000022
+name: Two-dimension numerical first derivative across rows and columns
+is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000023
+name: Two-dimension numerical second derivative across rows and columns
+is_a: SGNSTAT:0000000

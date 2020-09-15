@@ -2680,6 +2680,32 @@ sub trial_correlate_traits : Chained('trial') PathPart('correlate_traits') Args(
     my $obsunit_level = $c->req->param('observation_unit_level');
     my $correlation_type = $c->req->param('correlation_type');
 
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to do this analysis!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to do this analysis!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
     my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         'MaterializedViewTable',
         {
@@ -2787,6 +2813,32 @@ sub trial_plot_time_series_accessions : Chained('trial') PathPart('plot_time_ser
     my $accession_ids = $c->req->param('accession_ids') ne 'null' ? decode_json $c->req->param('accession_ids') : [];
     my $trait_format = $c->req->param('trait_format');
     my $data_level = $c->req->param('data_level');
+
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to do this analysis!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to do this analysis!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
 
     my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         'MaterializedViewTable',
@@ -2913,6 +2965,32 @@ sub trial_accessions_rank : Chained('trial') PathPart('accessions_rank') Args(0)
     my $trait_format = $c->req->param('trait_format');
     my $data_level = $c->req->param('data_level');
 
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to do this analysis!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to do this analysis!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
     my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         'MaterializedViewTable',
         {
@@ -2986,6 +3064,32 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
     my $data_level = $c->req->param('data_level');
     my $genotype_filter_string = $c->req->param('genotype_filter');
     my $compute_from_parents = $c->req->param('compute_from_parents') eq 'yes' ? 1 : 0;
+
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to do this analysis!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to do this analysis!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
 
     my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         'MaterializedViewTable',
@@ -3187,6 +3291,221 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
     my $status = system($cmd);
 
     $c->stash->{rest} = {success => 1, results => \%accession_sum, sorted_accessions => \@sorted_accessions, sorted_values => \@sorted_values, sorted_ranks => \@sorted_ranks, sorted_rank_groups => \@sorted_rank_groups, figure => $pheno_figure_tempfile_string};
+}
+
+sub trial_calculate_numerical_derivative : Chained('trial') PathPart('calculate_numerical_derivative') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $trait_ids = decode_json $c->req->param('trait_ids');
+    my $derivative = $c->req->param('derivative');
+    my $data_level = $c->req->param('data_level');
+
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to do this analysis!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to do this analysis!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        'MaterializedViewTable',
+        {
+            bcs_schema=>$schema,
+            data_level=>$data_level,
+            trait_list=>$trait_ids,
+            trial_list=>[$c->stash->{trial_id}],
+            include_timestamp=>0,
+            exclude_phenotype_outlier=>0
+        }
+    );
+    my ($data, $unique_traits) = $phenotypes_search->search();
+    my @sorted_trait_names = sort keys %$unique_traits;
+
+    if (scalar(@$data) == 0) {
+        $c->stash->{rest} = { error => "There are no phenotypes for the trials and traits you have selected!"};
+        return;
+    }
+
+    my %phenotype_data;
+    my %seen_plot_names;
+    my %seen_rows;
+    my %seen_cols;
+    my %row_col_hash;
+    my %rev_row;
+    my %rev_col;
+    foreach my $obs_unit (@$data){
+        my $obsunit_id = $obs_unit->{observationunit_stock_id};
+        my $obsunit_name = $obs_unit->{observationunit_uniquename};
+        my $observations = $obs_unit->{observations};
+        my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
+        my $germplasm_uniquename = $obs_unit->{germplasm_uniquename};
+        my $row = $obs_unit->{obsunit_row_number};
+        my $col = $obs_unit->{obsunit_col_number};
+        foreach (@$observations){
+            $phenotype_data{$obsunit_name}->{$_->{trait_name}} = $_->{value};
+        }
+        $rev_row{$obsunit_name} = $row;
+        $rev_col{$obsunit_name} = $col;
+        $row_col_hash{$row}->{$col} = $obsunit_name;
+        $seen_plot_names{$obsunit_name}++;
+        $seen_rows{$row}++;
+        $seen_cols{$col}++;
+    }
+    my @sorted_plot_names = sort keys %seen_plot_names;
+    my @sorted_rows = sort { $a <=> $b } keys %seen_rows;
+    my @sorted_cols = sort { $a <=> $b } keys %seen_cols;
+
+    my @allowed_composed_cvs = split ',', $c->config->{composable_cvs};
+    my $composable_cvterm_delimiter = $c->config->{composable_cvterm_delimiter};
+    my $composable_cvterm_format = $c->config->{composable_cvterm_format};
+
+    my %trait_id_map;
+    foreach my $trait_name (@sorted_trait_names) {
+        my $trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name)->cvterm_id();
+        $trait_id_map{$trait_name} = $trait_cvterm_id;
+    }
+    my @trait_ids = values %trait_id_map;
+
+    my $analysis_statistical_ontology_term = 'Two-dimension numerical first derivative across rows and columns|SGNSTAT:0000022';
+    # my $analysis_statistical_ontology_term = 'Two-dimension numerical second derivative across rows and columns|SGNSTAT:0000023';
+    my $stat_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $analysis_statistical_ontology_term)->cvterm_id();
+
+    my $categories = {
+        object => [],
+        attribute => [$stat_cvterm_id],
+        method => [],
+        unit => [],
+        trait => \@trait_ids,
+        tod => [],
+        toy => [],
+        gen => [],
+    };
+
+    my %time_term_map;
+
+    my $traits = SGN::Model::Cvterm->get_traits_from_component_categories($schema, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, $categories);
+    my $existing_traits = $traits->{existing_traits};
+    my $new_traits = $traits->{new_traits};
+    # print STDERR Dumper $new_traits;
+    # print STDERR Dumper $existing_traits;
+    my %new_trait_names;
+    foreach (@$new_traits) {
+        my $components = $_->[0];
+        $new_trait_names{$_->[1]} = join ',', @$components;
+    }
+
+    my $onto = CXGN::Onto->new( { schema => $schema } );
+    my $new_terms = $onto->store_composed_term(\%new_trait_names);
+
+    my %composed_trait_map;
+    while (my($trait_name, $trait_id) = each %trait_id_map) {
+        my $components = [$trait_id, $stat_cvterm_id];
+        my $composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, $components);
+        my $composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $composed_cvterm_id, 'extended');
+        $composed_trait_map{$trait_name} = $composed_trait_name;
+    }
+    my @composed_trait_names = values %composed_trait_map;
+
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    my %derivative_results;
+    no warnings 'uninitialized';
+    foreach my $s (@sorted_plot_names) {
+        foreach my $t (@sorted_trait_names) {
+            my $trait = $composed_trait_map{$t};
+            my @derivs;
+            my $val = $phenotype_data{$s}->{$t};
+            my $row = $rev_row{$s};
+            my $col = $rev_col{$s};
+            my $r1_val = $phenotype_data{$row_col_hash{$row-1}->{$col}}->{$t};
+            my $r2_val = $phenotype_data{$row_col_hash{$row+1}->{$col}}->{$t};
+            my $c1_val = $phenotype_data{$row_col_hash{$row}->{$col-1}}->{$t};
+            my $c2_val = $phenotype_data{$row_col_hash{$row}->{$col+1}}->{$t};
+            if (defined($r1_val)) {
+                push @derivs, ($val - $r1_val);
+            }
+            if (defined($r2_val)) {
+                push @derivs, ($val - $r2_val);
+            }
+            if (defined($c1_val)) {
+                push @derivs, ($val - $c1_val);
+            }
+            if (defined($c2_val)) {
+                push @derivs, ($val - $c2_val);
+            }
+            # print STDERR Dumper \@derivs;
+            if (scalar(@derivs) > 0) {
+                my $d = sum(@derivs)/scalar(@derivs);
+                $derivative_results{$s}->{$trait} = [$d, $timestamp, $user_name, '', ''];
+            }
+        }
+    }
+    # print STDERR Dumper \%derivative_results;
+
+    if (scalar(keys %derivative_results) != scalar(@sorted_plot_names)) {
+        $c->stash->{rest} = { error => "Not all plots have rows and columns defined! Please make sure row and columns are saved for this field trial!"};
+        return;
+    }
+
+    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+
+    my %phenotype_metadata = (
+        'archived_file' => 'none',
+        'archived_file_type' => 'numerical_derivative_row_and_column_computation',
+        'operator' => $user_name,
+        'date' => $timestamp
+    );
+
+    my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+        basepath=>$c->config->{basepath},
+        dbhost=>$c->config->{dbhost},
+        dbname=>$c->config->{dbname},
+        dbuser=>$c->config->{dbuser},
+        dbpass=>$c->config->{dbpass},
+        temp_file_nd_experiment_id=>$temp_file_nd_experiment_id,
+        bcs_schema=>$schema,
+        metadata_schema=>$metadata_schema,
+        phenome_schema=>$phenome_schema,
+        user_id=>$user_id,
+        stock_list=>\@sorted_plot_names,
+        trait_list=>\@composed_trait_names,
+        values_hash=>\%derivative_results,
+        has_timestamps=>0,
+        overwrite_values=>0,
+        ignore_new_values=>1,
+        metadata_hash=>\%phenotype_metadata,
+    );
+    my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+    my ($stored_phenotype_error, $stored_Phenotype_success) = $store_phenotypes->store();
+
+    my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
+
+    $c->stash->{rest} = {success => 1};
 }
 
 1;

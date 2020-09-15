@@ -160,6 +160,8 @@ $locations => undef
 
                                 <& /breeders_toolbox/trial/time_series_accessions_workflow.mas, trial_id => $trial_id, data_level=>'plot' &>
 
+                                <& /breeders_toolbox/trial/numerical_derivatives_row_and_column_workflow.mas, trial_id => $trial_id, data_level=>'plot' &>
+
                                 <!-- Phenotypic correlation analysis -->
                                 <& /solgs/population/correlation.mas,
                                     trial_id => $trial_id
