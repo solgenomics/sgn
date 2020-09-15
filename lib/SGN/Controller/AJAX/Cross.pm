@@ -371,6 +371,35 @@ sub get_cross_relationships :Path('/cross/ajax/relationships') :Args(1) {
     };
 }
 
+
+sub get_membership :Path('/ajax/cross/membership') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $cross_id = shift;
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $cross = $schema->resultset("Stock::Stock")->find( { stock_id => $cross_id });
+
+    if ($cross && $cross->type()->name() ne "cross") {
+	    $c->stash->{rest} = { error => 'This entry is not of type cross and cannot be displayed using this page.' };
+	    return;
+    }
+
+    my $cross_obj = CXGN::Cross->new({schema=>$schema, cross_stock_id=>$cross_id});
+    my $result = $cross_obj->get_membership();
+    my @membership_info;
+
+    foreach my $r (@$result){
+        my ($crossing_experiment_id, $crossing_experiment_name, $description, $family_id, $family_name) =@$r;
+        push @membership_info, [qq{<a href="/breeders/trial/$crossing_experiment_id">$crossing_experiment_name</a>}, $description, qq{<a href = "/family/$family_id/">$family_name</a>}];
+    }
+
+    $c->stash->{rest} = { data => \@membership_info };
+
+}
+
+
 sub get_cross_parents :Path('/ajax/cross/accession_plot_plant_parents') Args(1) {
     my $self = shift;
     my $c = shift;

@@ -6,6 +6,8 @@ jQuery(document).ready(function() {
 
     get_properties(get_cross_id());
 
+    display_membership(get_cross_id());
+
     function get_cross_id() {
         var cross_id = jQuery('#cross_id').html();
         var regex = /\n|\r/g;
@@ -81,6 +83,15 @@ jQuery(document).ready(function() {
                 jQuery('#progeny_information_div').html('An error occurred. '+a +' '+ b);
             }
 	    });
+    }
+
+    function display_membership(cross_id){
+        var membership_table = jQuery('#membership_table').DataTable({
+            'ajax': '/ajax/cross/membership/'+cross_id,
+            'paging' : false,
+            'searching' : false,
+        });
+        return;
     }
 
     function display_parents(cross_id){
