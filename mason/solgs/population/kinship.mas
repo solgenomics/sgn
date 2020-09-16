@@ -25,34 +25,17 @@ $pop_id = $trial_id if $trial_id;
 
 </%perl>
 
-<style>
-/* kinship plot styling */
-.axis text {
-  font: 10px sans-serif;
-}
 
-.axis line,
-.axis path {
-  fill: none;
-  stroke: #000;
-  shape-rendering: crispEdges;
-}
-
-</style>
-
-
-<& /util/import_javascript.mas, classes => ["d3.d3Min",  "solGS.heatMap", "solGS.kinship"] &>
 <&| /page/info_section.mas, 
       collapsible => 1, 
       collapsed   => 1, 
-      title       => "Realized Genomic Kinship Matrix"
+      title       => "Kinship and inbreeding coefficients"
 &>
 
-
-<div id="kinship_canvas">
   <input id="run_kinship" class="button" type="button" value="Run kinship" /> 
-  <input type="hidden" id="kinship_pop_id" value="<% $pop_id %>" />
-  <div id="kinship_message"  style="font-weight:bold;text-align:center;color:#A7C942"></div>
-</div>
+
+  <& /solgs/kinship/plot.mas,
+     pop_id => $pop_id
+  &>
 
 </&>
