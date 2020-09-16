@@ -225,6 +225,8 @@ solGS.correlation = {
     runPhenoCorrelationAnalysis: function () {
 	var population = this.getPopulationDetails();
 	var popId     = population.population_id;
+
+	jQuery("#correlation_canvas .multi-spinner-container").show();
 	
 	jQuery.ajax({
             type: 'POST',
@@ -243,21 +245,26 @@ solGS.correlation = {
 		    if(document.URL.match('/breeders/trial/')) {
 			solGS.correlation.displayTraitAcronyms(response.acronyms);
 		    }
-		    
+
+		    jQuery("#correlation_canvas .multi-spinner-container").hide();
                     jQuery("#correlation_message").empty();
 		    jQuery("#run_pheno_correlation").hide();
 		} else {
+		    jQuery("#correlation_canvas .multi-spinner-container").hide();
                     jQuery("#correlation_message")
 			.css({"padding-left": '0px'})
-			.html("There is no correlation output for this dataset."); 
+			.html("There is no correlation output for this dataset.")
+			.fadeOut(8400); 
 		    
 		    jQuery("#run_pheno_correlation").show();
 		}
             },
-            error: function (response) {                          
+            error: function (response) {
+                jQuery("#correlation_canvas .multi-spinner-container").hide();
 		jQuery("#correlation_message")
                     .css({"padding-left": '0px'})
-                    .html("Error occured running the correlation analysis.");
+                    .html("Error occured running the correlation analysis.")
+		    .fadeOut(8400);
 	    	
 		jQuery("#run_pheno_correlation").show();
             }                
