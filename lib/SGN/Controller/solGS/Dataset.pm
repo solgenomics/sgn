@@ -331,9 +331,7 @@ sub dataset_population_summary {
 sub create_dataset_population_metadata {
     my ($self, $c) = @_;
 
-    my $dataset_id = $c->stash->{dataset_id};
-    
-    my $dataset_name = $c->model('solGS::solGS')->get_dataset_name($dataset_id);
+    my $dataset_name = $self->get_dataset_name($c);
     
     my $metadata = 'key' . "\t" . 'value';
     $metadata .= "\n" . 'user_id' . "\t" . $c->user->id;
@@ -344,7 +342,17 @@ sub create_dataset_population_metadata {
   
 }
 
+sub get_dataset_name {
+    my ($self, $c, $dataset_id) = @_;
+   
+    $dataset_id = $c->stash->{dataset_id} if !$dataset_id;
+    $dataset_id =~ s/\w+_//g;
+    
+    my $dataset_name = $c->model('solGS::solGS')->get_dataset_name($dataset_id);
+    return $dataset_name;
 
+    
+}
 sub create_dataset_population_metadata_file {
     my ($self, $c) = @_;
 
