@@ -40,6 +40,7 @@ sub kinship_run_analysis :Path('/kinship/run/analysis') Args() {
     my $trait_id      = $c->req->param('trait_id');
     my $combo_pops_id = $c->req->param('combo_pops_id');
     my $data_str      = $c->req->param('data_structure');
+    my $pop_name      = $c->req->param('kinship_pop_name');
 
     $c->stash->{data_structure} = $data_str;
 
@@ -50,6 +51,7 @@ sub kinship_run_analysis :Path('/kinship/run/analysis') Args() {
     $c->stash->{file_id} = $file_id;
 
     my $list_id = $c->stash->{list_id};
+    
     if ($list_id)
     {
 	$c->controller('solGS::List')->create_list_population_metadata_file($c, $file_id);
@@ -81,6 +83,7 @@ sub kinship_run_analysis :Path('/kinship/run/analysis') Args() {
     else
     {
 	$res->{result} = 'success';
+	$res->{kinship_pop_name} = $pop_name;
 
 	my $kinship_files = $self->get_kinship_coef_files($c, $kinship_pop_id, $protocol_id, $trait_id);
 	my $json_file = $kinship_files->{json_file};
@@ -101,9 +104,20 @@ sub kinship_result :Path('/solgs/kinship/result/') Args() {
     my ($self, $c) = @_;   
 
     my $pop_id = $c->req->param('kinship_pop_id');
-    my $protocol_id = $c->req->param('genotyping_protocol_id'); ;
+    my $protocol_id = $c->req->param('genotyping_protocol_id');
     my $trait_id = $c->req->param('trait_id');
+    my $pop_name; 
 
+    if ($pop_id =~ /dataset/)
+    {
+	$pop_name = $c->controller('solGS::Dataset')->get_dataset_name($c, $pop_id);
+    }
+    elsif ($pop_id =~ /list/)
+    {
+	$c->controller('solGS::List')->stash_list_metadata($c, $pop_id);
+	$pop_name = $c->stash->{list_name};
+    }
+    
     if ($trait_id)
     {
 	$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
@@ -112,11 +126,11 @@ sub kinship_result :Path('/solgs/kinship/result/') Args() {
     my $kinship_files = $self->get_kinship_coef_files($c, $pop_id, $protocol_id, $trait_id);
     my $json_file = $kinship_files->{json_file};
 
-    print STDERR "\njson_file: $json_file\n";
     my $res = {};
     
     if (-s $json_file)
     {
+	$res->{kinship_pop_name} = $pop_name;
 	$res->{data} = read_file($json_file);
 	$self->add_output_links($c, $res);	
     }
@@ -319,7 +333,6 @@ sub kinship_query_jobs {
     $self->create_kinship_genotype_data_query_jobs($c);
     my $jobs = $c->stash->{kinship_geno_query_jobs};
     
-
     if (reftype $jobs ne 'ARRAY') 
     {
 	$jobs = [$jobs];
