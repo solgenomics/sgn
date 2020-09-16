@@ -15,6 +15,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <%args>
 
 $pop_id => undef
+$trial_id => undef
 $list_id => undef
 $dataset_id => undef
 $data_set_type => undef
@@ -28,7 +29,7 @@ $list_id = $pop_id if $pop_id =~ /list/;
 
 
 $pop_id = undef if $list_id;
-
+$pop_id = $trial_id if $trial_id;
 </%perl>
 
 <& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.solGS", "solGS.heatMap", "solGS.kinship"] &>
