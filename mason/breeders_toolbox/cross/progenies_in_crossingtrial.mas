@@ -553,6 +553,10 @@ jQuery(document).ready(function(){
                 jQuery("#upload_family_name_error_display").modal("show");
                 return;
             }
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
             if (response.success) {
                 jQuery('#family_name_saved_dialog_message').modal("show");
             }

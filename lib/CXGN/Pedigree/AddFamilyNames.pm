@@ -93,9 +93,10 @@ sub add_family_name {
             });
 
         my $cross_female_id = $cross_female_parent->subject_id();
-		my $cross_male_id = $cross_male_parent->subject_id();
-#        print STDERR "CROSS FEMALE PARENT =".Dumper($cross_female_id)."\n";
-#		print STDERR "CROSS MALE PARENT =".Dumper($cross_male_id)."\n";
+        my $cross_male_id;
+        if ($cross_male_parent){
+		    $cross_male_id = $cross_male_parent->subject_id();
+        }
 
         #Get organism id from cross
         $organism_id = $cross_stock->organism_id();
@@ -117,18 +118,21 @@ sub add_family_name {
                 type_id => $family_male_parent_cvterm->cvterm_id(),
             });
 
-            my $family_female_id;
             my $family_male_id;
-            if ($family_female_parent){
-			    my $family_female_id = $family_female_parent->subject_id();
-            }
+			my $family_female_id = $family_female_parent->subject_id();
             if ($family_male_parent){
 			    my $family_male_id = $family_male_parent->subject_id();
             }
 
+			my $previous_linkage = $chado_schema->resultset("Stock::StockRelationship")->find ({
+                subject_id => $cross_stock->stock_id(),
+                object_id => $family_name_rs->stock_id(),
+	            type_id => $cross_member_of_cvterm_id->cvterm_id(),
+	        });
+
             if (($cross_female_id != $family_female_id) || ($cross_male_id != $family_male_id)) {
 				push @{$return{error}},"Parents of cross: $cross_name are not the same as parents of family: $family_name";
-            } else {
+            } elsif (!$previous_linkage) {
 				$family_name_rs->find_or_create_related('stock_relationship_objects', {
 	                type_id => $cross_member_of_cvterm_id,
 	                object_id => $family_name_rs->stock_id(),
