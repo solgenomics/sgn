@@ -65,7 +65,7 @@ use CXGN::People::Person;
 use CXGN::Contact;
 use CXGN::Feed;
 use JSON;
-use YAML;
+
 
 use base qw /CXGN::Debug/ ;
 =head2 new
@@ -931,10 +931,9 @@ sub print_json {
         CXGN::Contact::send_email('AjaxFormPage died',$results{"error"} );
     }
     my $json = JSON->new();
-    #$self->get_ajax_page()->send_http_header();
-    print "Content-type: application/json\n\n";
-    print STDERR YAML::Dump(\%results);
-    print encode_json(\%results);
+    $self->get_ajax_page()->send_http_header();
+
+    print $json->encode(\%results);
 }
 
 =head2 send_form_email

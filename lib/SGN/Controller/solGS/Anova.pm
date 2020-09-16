@@ -36,7 +36,8 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON'},
+    map       => { 'application/json' => 'JSON', 
+		   'text/html' => 'JSON' },
     );
 
 
@@ -186,7 +187,7 @@ sub get_traits_abbrs {
     $c->controller('solGS::Files')->all_traits_file($c, $trial_id);
     my $traits_file = $c->stash->{all_traits_file};
    
-    my @traits = read_file($traits_file, {binmode => ':utf8'});
+    my @traits = read_file($traits_file);
 
     my @traits_abbrs;
 
@@ -257,7 +258,7 @@ sub check_anova_output {
    
     if (-s $html_file) {
 	
-	my $html_table = read_file($html_file, {binmode => ':utf8'});
+	my $html_table = read_file($html_file);
 	
 	$self->prep_download_files($c);
 	my $anova_table_file = $c->stash->{download_anova};
@@ -277,7 +278,7 @@ sub check_anova_output {
 	$self->anova_error_file($c);
 	my $error_file = $c->stash->{anova_error_file};
 
-	my $error = read_file($error_file, {binmode => ':utf8'});
+	my $error = read_file($error_file);
 	$c->stash->{rest}{Error} = $error;
 	
 	return 0;
@@ -532,7 +533,7 @@ sub anova_input_files {
     my $tmp_dir = $c->stash->{anova_temp_dir};
     my $name = "anova_input_files_${trial_id}_${trait_id}"; 
     my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
-    write_file($tempfile, {binmode => ':utf8'}, $file_list);
+    write_file($tempfile, $file_list);
     
     $c->stash->{anova_input_files} = $tempfile;
 
@@ -556,7 +557,7 @@ sub anova_traits_file {
     my $tmp_dir = $c->stash->{anova_temp_dir};
     my $name    = "anova_traits_file_${trial_id}"; 
     my $traits_file =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
-    write_file($traits_file, {binmode => ':utf8'}, $traits);
+    write_file($traits_file, $traits);
 
     $c->stash->{anova_traits_file} = $traits_file;
     
@@ -589,7 +590,7 @@ sub anova_output_files {
     my $tmp_dir = $c->stash->{anova_temp_dir};
     my $name = "anova_output_files_${trial_id}_${trait_id}"; 
     my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
-    write_file($tempfile, {binmode => ':utf8'}, $file_list);
+    write_file($tempfile, $file_list);
     
     $c->stash->{anova_output_files} = $tempfile;
 

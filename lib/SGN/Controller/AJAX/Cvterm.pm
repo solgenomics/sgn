@@ -23,14 +23,13 @@ use Try::Tiny;
 use CXGN::Page::FormattingHelpers qw/ columnar_table_html commify_number /;
 use CXGN::Chado::Cvterm;
 use Data::Dumper;
-use JSON;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON' },
+    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
    );
 
 

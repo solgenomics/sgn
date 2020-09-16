@@ -46,7 +46,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON' },
+    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
 );
 
 sub image_analysis_submit : Path('/ajax/image_analysis/submit') : ActionClass('REST') { }

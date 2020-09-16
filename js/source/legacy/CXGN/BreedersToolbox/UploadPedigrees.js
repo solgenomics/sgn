@@ -38,7 +38,7 @@ jQuery(document).ready(function ($) {
 
     var archived_file_name;
     $('#upload_pedigrees_form').iframePostForm({
-        json: false,
+        json: true,
         post: function () {
             var uploadedPedigreesFile = $("#pedigrees_uploaded_file").val();
             $('#working_modal').modal("show");
@@ -47,15 +47,9 @@ jQuery(document).ready(function ($) {
                 alert("No file selected");
             }
         },
-        complete: function (r) {
-	    alert("RETRIEVED: "+r);
-    	    var clean_r = r.replace('<pre>', '');
-	    clean_r = clean_r.replace('</pre>', '');
-	    alert("NOW: "+clean_r);
-	    console.log(clean_r);
-	    var response = JSON.parse(clean_r);
+        complete: function (response) {
             $('#working_modal').modal("hide");
-
+            console.log(response);
             var html;
             archived_file_name = response.archived_file_name;
             if (response.error) {

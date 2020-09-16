@@ -62,8 +62,8 @@ jQuery(document).ready(function ($) {
                     alert(response.success);
                 }
             },
-            error: function (r) {
-                alert('An error occurred in adding population. sorry '+r.responseText);
+            error: function () {
+                alert('An error occurred in adding population. sorry');
             }
         });
     });
@@ -239,7 +239,7 @@ jQuery(document).ready(function ($) {
     });
 
     function add_accessions(full_info, species_names) {
-        console.log(full_info);
+        //console.log(full_info);
         $.ajax({
             type: 'POST',
             url: '/ajax/accession_list/add',
@@ -254,7 +254,6 @@ jQuery(document).ready(function ($) {
             },
             success: function (response) {
                 enable_ui();
-		//alert("ADD ACCESSIONS: "+JSON.stringify(response));
                 if (response.error) {
                     alert(response.error);
                 } else {
@@ -266,8 +265,8 @@ jQuery(document).ready(function ($) {
                     jQuery('#add_accessions_saved_message_modal').modal('show');
                 }
             },
-            error: function (response) {
-                alert('An error occurred in processing. sorry'+response.responseText);
+            error: function () {
+                alert('An error occurred in processing. sorry');
             }
         });
     }
@@ -290,8 +289,8 @@ jQuery(document).ready(function ($) {
                     validSpecies = 1;
                 }
             },
-            error: function (response) {
-                alert('An error occurred verifying species name. sorry'+response.responseText);
+            error: function () {
+                alert('An error occurred verifying species name. sorry');
                 validSpecies = 0;
             }
         });
@@ -353,19 +352,16 @@ jQuery(document).ready(function ($) {
     });
 
     jQuery('#upload_new_accessions_form').iframePostForm({
-        json: false,
+        json: true,
         post: function () {
             var uploadedSeedlotFile = jQuery("#new_accessions_upload_file").val();
             jQuery('#working_modal').modal("show");
             if (uploadedSeedlotFile === '') {
                 jQuery('#working_modal').modal("hide");
+                alert("No file selected");
             }
         },
-        complete: function (r) {
-	    //alert("DONE WITH UPLOAD "+r);
-	    var clean_r = r.replace('<pre>', '');
-	    clean_r = clean_r.replace('</pre>', '');
-	    response = JSON.parse(clean_r); //decodeURIComponent(clean_r));
+        complete: function (response) {
             console.log(response);
             jQuery('#working_modal').modal("hide");
 
@@ -419,7 +415,7 @@ jQuery(document).ready(function ($) {
 	});
 
     $('#review_fuzzy_matches_download').click(function(){
-        console.log(fuzzyResponse);
+        //console.log(fuzzyResponse);
         openWindowWithPost(JSON.stringify(fuzzyResponse));
         //window.open('/ajax/accession_list/fuzzy_download?fuzzy_response='+JSON.stringify(fuzzyResponse));
     });
@@ -441,7 +437,9 @@ function openWindowWithPost(fuzzyResponse) {
 function verify_accession_list(accession_list_id) {
     accession_list = JSON.stringify(list.getList(accession_list_id));
     doFuzzySearch = jQuery('#fuzzy_check').attr('checked');
-    
+    //alert("should be disabled");
+    //alert(accession_list);
+
     jQuery.ajax({
         type: 'POST',
         url: '/ajax/accession_list/verify',
@@ -462,11 +460,9 @@ function verify_accession_list(accession_list_id) {
             }
             review_verification_results(doFuzzySearch, response, accession_list_id);
         },
-        error: function (response) {
+        error: function () {
             enable_ui();
-	    console.log(response.responseText);
-
-            alert('An error occurred in processing. sorry'+response.responseText);
+            alert('An error occurred in processing. sorry');
         }
     });
 }
@@ -537,7 +533,6 @@ function review_verification_results(doFuzzySearch, verifyResponse, accession_li
     }
 
     jQuery('#review_found_matches_hide').click(function(){
-	
         if (verifyResponse.fuzzy.length > 0 && doFuzzySearch){
             jQuery('#review_fuzzy_matches_dialog').modal('show');
         } else {
@@ -631,7 +626,8 @@ function process_fuzzy_options(accession_list_id) {
             data[id]=row;
         }
     });
-    console.log(data);
+    //console.log(data);
+
     jQuery.ajax({
         type: 'POST',
         url: '/ajax/accession_list/fuzzy_options',
