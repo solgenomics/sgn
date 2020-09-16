@@ -3440,37 +3440,72 @@ sub trial_calculate_numerical_derivative : Chained('trial') PathPart('calculate_
             my $val = $phenotype_data{$s}->{$t};
             my $row = $rev_row{$s};
             my $col = $rev_col{$s};
-            my $r1_val = $phenotype_data{$row_col_hash{$row-1}->{$col}}->{$t};
-            my $r2_val = $phenotype_data{$row_col_hash{$row+1}->{$col}}->{$t};
-            my $c1_val = $phenotype_data{$row_col_hash{$row}->{$col-1}}->{$t};
-            my $c2_val = $phenotype_data{$row_col_hash{$row}->{$col+1}}->{$t};
-            my $r1c1_val = $phenotype_data{$row_col_hash{$row-1}->{$col-1}}->{$t};
-            my $r2c1_val = $phenotype_data{$row_col_hash{$row+1}->{$col-1}}->{$t};
-            my $r1c2_val = $phenotype_data{$row_col_hash{$row-1}->{$col+1}}->{$t};
-            my $r2c2_val = $phenotype_data{$row_col_hash{$row+1}->{$col+1}}->{$t};
-            if (defined($r1_val)) {
-                push @derivs, ($val - $r1_val);
-            }
-            if (defined($r2_val)) {
-                push @derivs, ($val - $r2_val);
-            }
-            if (defined($c1_val)) {
-                push @derivs, ($val - $c1_val);
-            }
-            if (defined($c2_val)) {
-                push @derivs, ($val - $c2_val);
-            }
-            if (defined($r1c1_val)) {
-                push @derivs, ($val - $r1c1_val);
-            }
-            if (defined($r2c1_val)) {
-                push @derivs, ($val - $r2c1_val);
-            }
-            if (defined($r1c2_val)) {
-                push @derivs, ($val - $r1c2_val);
-            }
-            if (defined($r2c2_val)) {
-                push @derivs, ($val - $r2c2_val);
+            my @values = (
+                $phenotype_data{$row_col_hash{$row-1}->{$col}}->{$t},
+                $phenotype_data{$row_col_hash{$row+1}->{$col}}->{$t},
+                $phenotype_data{$row_col_hash{$row}->{$col-1}}->{$t},
+                $phenotype_data{$row_col_hash{$row}->{$col+1}}->{$t},
+
+                $phenotype_data{$row_col_hash{$row-1}->{$col-1}}->{$t},
+                $phenotype_data{$row_col_hash{$row+1}->{$col-1}}->{$t},
+                $phenotype_data{$row_col_hash{$row-1}->{$col+1}}->{$t},
+                $phenotype_data{$row_col_hash{$row+1}->{$col+1}}->{$t},
+
+                $phenotype_data{$row_col_hash{$row-2}->{$col}}->{$t},
+                $phenotype_data{$row_col_hash{$row+2}->{$col}}->{$t},
+                $phenotype_data{$row_col_hash{$row}->{$col-2}}->{$t},
+                $phenotype_data{$row_col_hash{$row}->{$col+2}}->{$t},
+
+                $phenotype_data{$row_col_hash{$row-2}->{$col-2}}->{$t},
+                $phenotype_data{$row_col_hash{$row+2}->{$col-2}}->{$t},
+                $phenotype_data{$row_col_hash{$row-2}->{$col+2}}->{$t},
+                $phenotype_data{$row_col_hash{$row+2}->{$col+2}}->{$t},
+
+                $phenotype_data{$row_col_hash{$row-2}->{$col-1}}->{$t},
+                $phenotype_data{$row_col_hash{$row+2}->{$col-1}}->{$t},
+                $phenotype_data{$row_col_hash{$row-2}->{$col+1}}->{$t},
+                $phenotype_data{$row_col_hash{$row+2}->{$col+1}}->{$t},
+
+                $phenotype_data{$row_col_hash{$row-1}->{$col-2}}->{$t},
+                $phenotype_data{$row_col_hash{$row+1}->{$col-2}}->{$t},
+                $phenotype_data{$row_col_hash{$row-1}->{$col+2}}->{$t},
+                $phenotype_data{$row_col_hash{$row+1}->{$col+2}}->{$t},
+
+                $phenotype_data{$row_col_hash{$row-3}->{$col}}->{$t},
+                $phenotype_data{$row_col_hash{$row+3}->{$col}}->{$t},
+                $phenotype_data{$row_col_hash{$row}->{$col-3}}->{$t},
+                $phenotype_data{$row_col_hash{$row}->{$col+3}}->{$t},
+
+                $phenotype_data{$row_col_hash{$row-3}->{$col-3}}->{$t},
+                $phenotype_data{$row_col_hash{$row+3}->{$col-3}}->{$t},
+                $phenotype_data{$row_col_hash{$row-3}->{$col+3}}->{$t},
+                $phenotype_data{$row_col_hash{$row+3}->{$col+3}}->{$t},
+
+                $phenotype_data{$row_col_hash{$row-3}->{$col-1}}->{$t},
+                $phenotype_data{$row_col_hash{$row+3}->{$col-1}}->{$t},
+                $phenotype_data{$row_col_hash{$row-3}->{$col+1}}->{$t},
+                $phenotype_data{$row_col_hash{$row+3}->{$col+1}}->{$t},
+
+                $phenotype_data{$row_col_hash{$row-3}->{$col-2}}->{$t},
+                $phenotype_data{$row_col_hash{$row+3}->{$col-2}}->{$t},
+                $phenotype_data{$row_col_hash{$row-3}->{$col+2}}->{$t},
+                $phenotype_data{$row_col_hash{$row+3}->{$col+2}}->{$t},
+
+                $phenotype_data{$row_col_hash{$row-1}->{$col-3}}->{$t},
+                $phenotype_data{$row_col_hash{$row+1}->{$col-3}}->{$t},
+                $phenotype_data{$row_col_hash{$row-1}->{$col+3}}->{$t},
+                $phenotype_data{$row_col_hash{$row+1}->{$col+3}}->{$t},
+
+                $phenotype_data{$row_col_hash{$row-2}->{$col-3}}->{$t},
+                $phenotype_data{$row_col_hash{$row+2}->{$col-3}}->{$t},
+                $phenotype_data{$row_col_hash{$row-2}->{$col+3}}->{$t},
+                $phenotype_data{$row_col_hash{$row+2}->{$col+3}}->{$t}
+            );
+
+            foreach (@values) {
+                if (defined($_)) {
+                    push @derivs, ($val - $_);
+                }
             }
             # print STDERR Dumper \@derivs;
             if (scalar(@derivs) > 0) {
@@ -3511,8 +3546,8 @@ sub trial_calculate_numerical_derivative : Chained('trial') PathPart('calculate_
         trait_list=>\@composed_trait_names,
         values_hash=>\%derivative_results,
         has_timestamps=>0,
-        overwrite_values=>0,
-        ignore_new_values=>1,
+        overwrite_values=>1,
+        ignore_new_values=>0,
         metadata_hash=>\%phenotype_metadata,
     );
     my ($verified_warning, $verified_error) = $store_phenotypes->verify();
