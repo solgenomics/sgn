@@ -117,8 +117,14 @@ sub add_family_name {
                 type_id => $family_male_parent_cvterm->cvterm_id(),
             });
 
-			my $family_female_id = $family_female_parent->subject_id();
-			my $family_male_id = $family_male_parent->subject_id();
+            my $family_female_id;
+            my $family_male_id;
+            if ($family_female_parent){
+			    my $family_female_id = $family_female_parent->subject_id();
+            }
+            if ($family_male_parent){
+			    my $family_male_id = $family_male_parent->subject_id();
+            }
 
             if (($cross_female_id != $family_female_id) || ($cross_male_id != $family_male_id)) {
 				push @{$return{error}},"Parents of cross: $cross_name are not the same as parents of family: $family_name";
