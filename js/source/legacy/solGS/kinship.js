@@ -40,7 +40,7 @@ solGS.kinship = {
 	
 	return {
 	    'kinship_pop_id' : popId,
-	    'data_structure' : datasStr,
+	    'data_structure' : dataStr,
 	    'genotyping_protocol_id': protocolId,
 	    'trait_id': traitId,
 	};        
@@ -246,6 +246,7 @@ solGS.kinship = {
     		    jQuery("#kinship_canvas .multi-spinner-container").hide();
 		    		    
     		    if (res.data) {
+			jQuery("#kinship_message").html("Generating heatmap... please wait...");
     			var links = solGS.kinship.addDowloandLinks(res);
     			solGS.kinship.plotKinship(res.data, links);
     		//	solGS.kinship.addDowloandLinks(res);
@@ -273,7 +274,9 @@ solGS.kinship = {
     		    .fadeOut(8400);
 		
     		jQuery("#kinship_canvas .multi-spinner-container").hide();
-    	    }  
+    	    }
+
+	  
     	});
 	
     },
@@ -284,7 +287,8 @@ solGS.kinship = {
 	if (args == null) {
 	    args = this.getKinshipPopDetails();
 	}
-		
+
+	jQuery("#kinship_canvas .multi-spinner-container").show();
 	jQuery("#kinship_message").html("Retrieving kinship output... please wait...");
         
 	jQuery.ajax({
@@ -295,32 +299,40 @@ solGS.kinship = {
             success: function (res) {
 		
                 if (res.data) {
+		    
+		    jQuery("#kinship_message").html("Generating heatmap... please wait...");
 		    var links = solGS.kinship.addDowloandLinks(res);
                     solGS.kinship.plotKinship(res.data, links);		
 
+		    jQuery("#kinship_canvas .multi-spinner-container").hide();
 		    jQuery("#kinship_message").empty();
-                } else {
 		    
+                } else {
+
+		    jQuery("#kinship_canvas .multi-spinner-container").hide();
                     jQuery("#kinship_message")
                         .css({"padding-left": '0px'})
-                        .html("This population has no kinship data.");
-
+                        .html("This population has no kinship output data.")
+			.fadeOut(8400);;
+		    
 		    jQuery("#run_kinship").show();
                 }
             },
             error: function(res) {
-                jQuery("#kinship_message")
+		jQuery("#kinship_canvas .multi-spinner-container").hide();
+		jQuery("#kinship_message")
                     .css({"padding-left": '0px'})
-                    .html("Error occured retreiving the kinship output data.");
+                    .html("Error occured retreiving the kinship output data.")
+		    .fadeOut(8400);;
 
-		jQuery("#run_kinship").show();
-            }
+		jQuery("#run_kinship").show();		
+            }	   
 	});     
     },
 
 
     plotKinship: function(data, links) {
-
+	
         solGS.heatmap.plot(data, '#kinship_canvas', '#kinship_plot', links);
 		    
     },
@@ -345,8 +357,7 @@ solGS.kinship = {
 	    +  "\" download=" + fileNameAve + ">Average kinship</a>";
 	
 	inbreedingFile = "<a href=\"" + inbreedingFile
-	    +  "\" download=" + fileNameInbreeding + ">Inbreeding coefficients</a>";
-		
+	    +  "\" download=" + fileNameInbreeding + ">Inbreeding coefficients</a>";		
 
 	var links = '<strong>Download:</strong> ';
 
