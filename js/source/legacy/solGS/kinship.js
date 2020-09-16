@@ -56,46 +56,43 @@ solGS.kinship = {
 	    var args = urlArgs.split(/\/+/);
 	    var selectId = args[1];
 	    var protocolId = args[3];
-
+	    
 	    var dataStr;
+	    var reg = /\d+/;
+	    var popId = selectId.match(reg);
+	    
 	    if (selectId.match(/dataset/)) {
 		dataStr = 'dataset';
 	    } else if (selectId.match(/list/)) {
-		dataStr = 'list';
+		dataStr = 'list';		
 	    }
 
-	    var reg = /\d+/;
-	    selectId = selectId.match(reg);
-
 	    var args = {
-		'kinship_pop_id': selectId,
+		'kinship_pop_id': popId,
 		'data_structure': dataStr,
-		'genotyping_protocol_id': protocolId
+		'genotyping_protocol_id': protocolId,
 	    };
 	    
 	    return args;  
 	} else {
 	    return {};
 	}
-
 	
     },
 
     
    loadKinshipPops: function(selectId, selectName, dataStructure) {
-       console.log('loading kiship data') 
+     
 	if ( selectId.length === 0) {       
             alert('The list is empty. Please select a list with content.');
 	} else {
 	              
             var kinshipTable = jQuery("#kinship_pops_table").doesExist();
-            console.log('kinshiptable ' + kinshipTable)
 	    
             if (!kinshipTable) {
                 kinshipTable = this.createTable();
 		jQuery("#kinship_pops_section").append(kinshipTable).show();                           
             }
-
 	    
 	    var onClickVal =  '<button type="button" class="btn btn-success" onclick="solGS.kinship.runKinship('
                 + selectId + ",'" + selectName + "'" +  ",'" + dataStructure
@@ -154,7 +151,6 @@ solGS.kinship = {
     runKinship: function(selectId, selectName, dataStr) {
 
 	var protocolId = jQuery('#genotyping_protocol #genotyping_protocol_id').val();
-	console.log('protocol id: ' + protocolId)
 	
 	var kinshipArgs = {
 	    'kinship_pop_id' : selectId,
@@ -315,7 +311,7 @@ solGS.kinship = {
             error: function(res) {
                 jQuery("#kinship_message")
                     .css({"padding-left": '0px'})
-                    .html("Error occured preparing the kinship data.");
+                    .html("Error occured retreiving the kinship output data.");
 
 		jQuery("#run_kinship").show();
             }
@@ -324,15 +320,17 @@ solGS.kinship = {
 
 
     plotKinship: function(data, links) {
-	console.log('plotkinship links ' + links)
+
         solGS.heatmap.plot(data, '#kinship_canvas', '#kinship_plot', links);
 		    
     },
 
+    
     addDowloandLinks: function(res) {
 	
+	var popName = res.kinship_pop_name;
 	var kinshipFile = res.kinship_table_file;
-	console.log('kinshipFile ' + kinshipFile)
+
 	var aveFile = res.kinship_averages_file;
 	var inbreedingFile = res.inbreeding_file;
 
@@ -349,17 +347,18 @@ solGS.kinship = {
 	inbreedingFile = "<a href=\"" + inbreedingFile
 	    +  "\" download=" + fileNameInbreeding + ">Inbreeding coefficients</a>";
 		
-	// jQuery("#kinship_canvas")
-	//     .append('<br /> <strong>Download:</strong> '
-	// 	     + kinshipFile + ' | '
-	// 	     + aveFile + ' | '
-	// 	     + inbreedingFile)
-	//     .show();
 
-	return '<strong>Download:</strong> '
-		     + kinshipFile + ' | '
-		     + aveFile + ' | '
+	var links = '<strong>Download:</strong> ';
+
+	if (popName) {
+	    links = links + popName + ' ';
+	}
+	
+	links = links + kinshipFile + ' | '
+	    + aveFile + ' | '
 	    + inbreedingFile;
+	
+	return links;
     },
 
 ///////
@@ -422,7 +421,6 @@ jQuery(document).ready( function() {
     var url = document.URL;
     
     if (url.match(/kinship\/analysis/)) {
-
 	
         var selectId;
 	var selectName;
