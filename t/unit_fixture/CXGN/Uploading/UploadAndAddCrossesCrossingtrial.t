@@ -413,9 +413,16 @@ is_deeply($response, {'data'=> [
 
 # test uploading family names
 my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_name", "stock_type")->cvterm_id();
+my $cross_member_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_member_of', 'stock_relationship')->cvterm_id();
+my $family_female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'family_female_parent_of', 'stock_relationship')->cvterm_id();
+my $family_male_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'family_male_parent_of', 'stock_relationship')->cvterm_id();
 
 my $before_family_name_stocks = $schema->resultset("Stock::Stock")->search({})->count();
 my $before_add_family_name = $schema->resultset("Stock::Stock")->search({type_id => $family_name_type_id})->count();
+my $before_upload_family_relationship = $schema->resultset("Stock::StockRelationship")->search({})->count();
+my $before_upload_family_member = $schema->resultset("Stock::StockRelationship")->search({type_id => $cross_member_of_cvterm_id})->count();
+my $before_upload_family_female = $schema->resultset("Stock::StockRelationship")->search({type_id => $family_female_parent_cvterm_id})->count();
+my $before_upload_family_male = $schema->resultset("Stock::StockRelationship")->search({type_id => $family_male_parent_cvterm_id})->count();
 
 $file = $f->config->{basepath}."/t/data/cross/family_name_upload.xls";
 $ua = LWP::UserAgent->new;
@@ -434,9 +441,13 @@ is_deeply($message_hash, {'success' => 1});
 
 my $after_family_name_stocks = $schema->resultset("Stock::Stock")->search({})->count();
 my $after_add_family_name = $schema->resultset("Stock::Stock")->search({type_id => $family_name_type_id})->count();
+my $after_upload_family_relationship = $schema->resultset("Stock::StockRelationship")->search({})->count();
+my $after_upload_family_member = $schema->resultset("Stock::StockRelationship")->search({type_id => $cross_member_of_cvterm_id})->count();
+my $after_upload_family_female = $schema->resultset("Stock::StockRelationship")->search({type_id => $family_female_parent_cvterm_id})->count();
+my $after_upload_family_male = $schema->resultset("Stock::StockRelationship")->search({type_id => $family_male_parent_cvterm_id})->count();
 
-is($after_family_name_stocks, $before_family_name_stocks +4);
-is($after_add_family_name, $before_add_family_name + 4);
+is($after_family_name_stocks, $before_family_name_stocks +2);
+is($after_add_family_name, $before_add_family_name + 2);
 
 
 #test adding tissue culture samples
