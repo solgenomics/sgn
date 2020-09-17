@@ -252,6 +252,9 @@ stock_relationship  female_plot_of    00086
 stock_relationship  male_plot_of    00086
 stock_relationship  female_plant_of    00094
 stock_relationship  male_plant_of    00094
+stock_relationship  cross_member_of    00120
+stock_relationship  family_female_of    00120
+stock_relationship  family_male_of    00120
 stock_relationship	analysis_of	For saving results in analysis trials	06/04/2020	lam87nm529	00119
 stock_type	accession				00052
 stock_type	backcross population				00052
