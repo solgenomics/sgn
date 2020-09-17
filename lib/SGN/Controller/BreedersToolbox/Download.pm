@@ -182,8 +182,8 @@ sub _parse_list_from_json {
     #print STDERR Dumper $list_json;
     my $json = new JSON;
     if ($list_json) {
-        my $decoded_list = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
-        #my $decoded_list = decode_json($list_json);
+       # my $decoded_list = $json->allow_nonref->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
+        my $decoded_list = decode_json($list_json);
         my @array_of_list_items = @{$decoded_list};
         return \@array_of_list_items;
     } else {
@@ -564,7 +564,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
         if ($format eq ".csv") {
 
             #build csv with column names
-            open(CSV, ">", $tempfile) || die "Can't open file $tempfile\n";
+            open(CSV, "> :encoding(UTF-8)", $tempfile) || die "Can't open file $tempfile\n";
                 my @header = @{$data[0]};
                 my $num_col = scalar(@header);
                 for (my $line =0; $line< @data; $line++) {
@@ -645,7 +645,7 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
 
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "pedigree_download_XXXXX", UNLINK=> 0);
 
-    open my $FILE, '>', $tempfile or die "Cannot open tempfile $tempfile: $!";
+    open my $FILE, '> :encoding(UTF-8)', $tempfile or die "Cannot open tempfile $tempfile: $!";
 
 	print $FILE "Accession\tFemale_Parent\tMale_Parent\tCross_Type\n";
     my $pedigrees_found = 0;
@@ -991,7 +991,7 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "download_XXXXX", UNLINK=> 0);
 
 
-    open my $TEMP, '>', $tempfile or die "Cannot open output_test00.txt: $!";
+    open my $TEMP, '> :encoding(UTF-8)', $tempfile or die "Cannot open output_test00.txt: $!";
 
 
     $tempfile = File::Spec->catfile($tempfile);
@@ -1079,7 +1079,7 @@ sub trial_download_log {
     }
     if ($c->config->{trial_download_logfile}) {
       my $logfile = $c->config->{trial_download_logfile};
-      open (my $F, ">>", $logfile) || die "Can't open logfile $logfile\n";
+      open (my $F, ">> :encoding(UTF-8)", $logfile) || die "Can't open logfile $logfile\n";
       print $F join("\t", (
             $c->user->get_object->get_username(),
             $trial_id,

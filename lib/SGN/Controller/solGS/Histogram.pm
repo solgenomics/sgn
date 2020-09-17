@@ -150,7 +150,7 @@ sub histogram_input_files {
     my $tmp_dir = $c->stash->{histogram_temp_dir};
     my $name = "histogram_input_files_${pop_id}_${trait_id}"; 
     my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
-    write_file($tempfile, $file_list);
+    write_file($tempfile, {binmode => ':utf8'}, $file_list);
     
     $c->stash->{histogram_input_files} = $tempfile;
 
@@ -167,7 +167,7 @@ sub histogram_traits_file {
     my $tmp_dir = $c->stash->{histogram_temp_dir};
     my $name    = "histogram_traits_file_${pop_id}"; 
     my $traits_file =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
-    write_file($traits_file, $traits);
+    write_file($traits_file, {binmode => ':utf8'}, $traits);
 
     $c->stash->{histogram_traits_file} = $traits_file;
     

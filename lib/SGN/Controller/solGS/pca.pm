@@ -220,7 +220,7 @@ sub error_message {
     my $error_message;
 
     my @data_exists;
-    my @data_files = split(/\s/, read_file($files));
+    my @data_files = split(/\s/, read_file($files, {binmode => ':utf8'}));
        
     foreach my $file (@data_files)
     {
@@ -655,7 +655,7 @@ sub pca_output_files {
     my $tmp_dir = $c->stash->{pca_temp_dir};
     my $name = "pca_output_files_${file_id}"; 
     my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
-    write_file($tempfile, $file_list);
+    write_file($tempfile, {binmode => ':utf8'}, $file_list);
     
     $c->stash->{pca_output_files} = $tempfile;
 
@@ -698,7 +698,7 @@ sub pca_input_files {
 	$files = $c->stash->{pca_pheno_input_files};
     }
     
-    write_file($tempfile, $files);
+    write_file($tempfile, {binmode => ':utf8'}, $files);
     
     $c->stash->{pca_input_files} = $tempfile;
 
