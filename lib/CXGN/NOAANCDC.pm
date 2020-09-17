@@ -156,6 +156,7 @@ sub get_averaged_precipitation {
     $self->data_types(['PRCP']);
 
     my $message_hash = $self->get_noaa_data();
+    # print STDERR Dumper $message_hash;
 
     my %weather_hash;
     foreach (@{$message_hash->{results}}) {

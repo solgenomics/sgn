@@ -315,7 +315,7 @@ $design_types => ()
                             <&| /util/workflow.mas:step, title=> "Trial Linkage" &>
                                 <& /page/page_title.mas, title=>"Is your trial linked with other field trials, genotyping plates, or crossing experiments in the database? If you are unsure, you can skip this. This information can be added from the trial detail page after the trial is saved." &>
 
-                                <div class="well">
+                                <div class="well form-horizontal">
                                     <div class="form-group">
                                         <label class="col-sm-5 control-label">Is this trial following-up a previous field trial?: </label>
                                         <div class="col-sm-7">
@@ -336,7 +336,7 @@ $design_types => ()
 
                                 <p>If you go on to collect tissue samples for creating a 96 well plate for genotyping, when adding the genotyping plate (96 well plate layout) to the database you can use plot names or plant names or tissue sample names from this field trial. By doing so, we can create linkage between this field trial and the genotyping plate.</p>
 
-                                <div class="well">
+                                <div class="well form-horizontal">
                                     <div class="form-group">
                                         <label class="col-sm-5 control-label">Will this trial be genotyped?: </label>
                                         <div class="col-sm-7">
@@ -350,7 +350,7 @@ $design_types => ()
 
                                 <p>If you go on to perform crosses on this field trial, each cross can be linked to specific female and male plots. When you upload these crosses we can then automatically link this field trial to the crossing experiment in the database.</p>
 
-                                <div class="well">
+                                <div class="well form-horizontal">
                                     <div class="form-group">
                                         <label class="col-sm-5 control-label">Will crosses be done on this trial?: </label>
                                         <div class="col-sm-7">
@@ -365,7 +365,7 @@ $design_types => ()
                                 <br/>
                                 <center>
                                     <button type="button" class="btn btn-lg btn-primary" name="upload_trial_validate_form_button" id="upload_trial_validate_form_button">First validate the form</button>
-                                    <button type="button" class="btn btn-lg btn-primary" disabled name="upload_trial_submit" onclick="Workflow.complete(this, false); return false;" >Upload Trial</button>
+                                    <button type="button" class="btn btn-lg btn-primary" disabled name="upload_trial_submit_first" onclick="Workflow.complete(this, false); return false;" >Upload Trial</button>
                                 <center>
                             </&>
 
@@ -445,7 +445,7 @@ $design_types => ()
                                 <& /page/page_title.mas, title=>"Submit your trial again. You should have corrected all errors by now, but if not please take a look at the errors in the red box below. You can continue to modify your file and then click Upload until it works." &>
                                 <div id="trial_upload_show_repeat_upload_button">
                                     <center>
-                                    <button type="button" class="btn btn-lg btn-primary" name="upload_trial_submit" >Upload Trial</button><br/><br/>
+                                    <button type="button" class="btn btn-lg btn-primary" name="upload_trial_submit_second" >Upload Trial</button><br/><br/>
                                     </center>
                                 </div>
                                 <center>
@@ -478,9 +478,9 @@ $design_types => ()
                                     <li>You an add phenotypes for the plots or plants in this trial now.</li>
                                 </ul>
                                 <br/>
-                                <center>
+                                <!--center>
                                 <button class="btn btn-primary" id="upload_trial_success_complete_button">The trial was saved to the database with no errors! Congrats Click Here</button><br/><br/>
-                                </center>
+                                </center-->
                             </&>
                         </&>
                     </form>
@@ -507,91 +507,96 @@ $design_types => ()
                     (.xlsx format not supported)
                     <br />
                     <hr>
-                    <h4>Stock type being evaluated in this trial: accession</h4>
-                    <b>Single Trial Design:</b>
-                    <b>Header:</b>
-                    <br/>
-                    The first row (header) must contain the following:
-                    <br />
-                    <table class="table table-hover table-bordered table-condensed" >
-                        <thead></thead>
-                        <tbody>
-                            <tr>
-                                <td>plot_name</td>
-                                <td>accession_name</td>
-                                <td>plot_number</td>
-                                <td>block_number</td>
-                                <td>is_a_control</td>
-                                <td>rep_number</td>
-                                <td>range_number</td>
-                                <td>row_number</td>
-                                <td>col_number</td>
-                                <td>seedlot_name</td>
-                                <td>num_seed_per_plot</td>
-                                <td>weight_gram_seed_per_plot</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <b>Header as a string:</b><br/>
-                    <p>plot_name,accession_name,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot</p>
-                    <br />
-                    <h4>Stock type being evaluated in this trial: cross unique id</h4>
-                    <b>Single Trial Design:</b>
-                    <b>Header:</b>
-                    <br/>
-                    The first row (header) must contain the following:
-                    <br />
-                    <table class="table table-hover table-bordered table-condensed" >
-                        <thead></thead>
-                        <tbody>
-                            <tr>
-                                <td>plot_name</td>
-                                <td>cross_unique_id</td>
-                                <td>plot_number</td>
-                                <td>block_number</td>
-                                <td>is_a_control</td>
-                                <td>rep_number</td>
-                                <td>range_number</td>
-                                <td>row_number</td>
-                                <td>col_number</td>
-                                <td>seedlot_name</td>
-                                <td>num_seed_per_plot</td>
-                                <td>weight_gram_seed_per_plot</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <b>Header as a string:</b><br/>
-                    <p>plot_name,cross_unique_id,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot</p>
-                    <br />
-                    <h4>Stock type being evaluated in this trial: family name</h4>
-                    <b>Single Trial Design:</b>
-                    <b>Header:</b>
-                    <br/>
-                    The first row (header) must contain the following:
-                    <br />
-                    <table class="table table-hover table-bordered table-condensed" >
-                        <thead></thead>
-                        <tbody>
-                            <tr>
-                                <td>plot_name</td>
-                                <td>family_name</td>
-                                <td>plot_number</td>
-                                <td>block_number</td>
-                                <td>is_a_control</td>
-                                <td>rep_number</td>
-                                <td>range_number</td>
-                                <td>row_number</td>
-                                <td>col_number</td>
-                                <td>seedlot_name</td>
-                                <td>num_seed_per_plot</td>
-                                <td>weight_gram_seed_per_plot</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <b>Header as a string:</b><br/>
-                    <p>plot_name,family_name,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot</p>
-                    <br />
-                    <hr>
+                    <&| /page/info_section.mas, title=>"Stock type being evaluated in this trial: accession", collapsible=>1, collapsed=>1 &>
+                        <div class="well well-sm">
+                            <b>Header:</b>
+                            <br/>
+                            The first row (header) must contain the following:
+                            <br />
+                            <table class="table table-hover table-bordered table-condensed" >
+                                <thead></thead>
+                                <tbody>
+                                    <tr>
+                                        <td>plot_name</td>
+                                        <td>accession_name</td>
+                                        <td>plot_number</td>
+                                        <td>block_number</td>
+                                        <td>is_a_control</td>
+                                        <td>rep_number</td>
+                                        <td>range_number</td>
+                                        <td>row_number</td>
+                                        <td>col_number</td>
+                                        <td>seedlot_name</td>
+                                        <td>num_seed_per_plot</td>
+                                        <td>weight_gram_seed_per_plot</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <b>Header as a string:</b><br/>
+                            <p>plot_name,accession_name,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot</p>
+                        </div>
+                    </&>
+
+                    <&| /page/info_section.mas, title=>"Stock type being evaluated in this trial: cross unique id", collapsible=>1, collapsed=>1 &>
+                        <div class="well well-sm">
+                            <b>Header:</b>
+                            <br/>
+                            The first row (header) must contain the following:
+                            <br />
+                            <table class="table table-hover table-bordered table-condensed" >
+                                <thead></thead>
+                                <tbody>
+                                    <tr>
+                                        <td>plot_name</td>
+                                        <td>cross_unique_id</td>
+                                        <td>plot_number</td>
+                                        <td>block_number</td>
+                                        <td>is_a_control</td>
+                                        <td>rep_number</td>
+                                        <td>range_number</td>
+                                        <td>row_number</td>
+                                        <td>col_number</td>
+                                        <td>seedlot_name</td>
+                                        <td>num_seed_per_plot</td>
+                                        <td>weight_gram_seed_per_plot</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <b>Header as a string:</b><br/>
+                            <p>plot_name,cross_unique_id,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot</p>
+                        </div>
+                    </&>
+
+                    <&| /page/info_section.mas, title=>"Stock type being evaluated in this trial: family name", collapsible=>1, collapsed=>1 &>
+                        <div class="well well-sm">
+                            <b>Header:</b>
+                            <br/>
+                            The first row (header) must contain the following:
+                            <br />
+                            <table class="table table-hover table-bordered table-condensed" >
+                                <thead></thead>
+                                <tbody>
+                                    <tr>
+                                        <td>plot_name</td>
+                                        <td>family_name</td>
+                                        <td>plot_number</td>
+                                        <td>block_number</td>
+                                        <td>is_a_control</td>
+                                        <td>rep_number</td>
+                                        <td>range_number</td>
+                                        <td>row_number</td>
+                                        <td>col_number</td>
+                                        <td>seedlot_name</td>
+                                        <td>num_seed_per_plot</td>
+                                        <td>weight_gram_seed_per_plot</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <b>Header as a string:</b><br/>
+                            <p>plot_name,family_name,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot</p>
+                        </div>
+                    </&>
+
                     <b>Required fields:</b>
                     <ul>
                     <li>plot_name (must be unique across entire database. this is often a concatenation of the trial name and the plot number.)</li>

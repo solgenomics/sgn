@@ -53,7 +53,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON' },
+    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON'  },
    );
 
 has 'schema' => (
@@ -830,8 +830,12 @@ sub upload_trial_file : Path('/ajax/trial/upload_trial_file') : ActionClass('RES
 sub upload_trial_file_POST : Args(0) {
     my ($self, $c) = @_;
 
+    select(STDERR);
+    $| = 1;
+    
     print STDERR "Check 1: ".localtime()."\n";
 
+    
     #print STDERR Dumper $c->req->params();
     my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");

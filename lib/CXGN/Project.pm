@@ -1232,6 +1232,67 @@ sub get_temperature_averaged_gdd_cvterm_id {
     return SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'drone_run_averaged_temperature_growing_degree_days', 'project_property')->cvterm_id();
 }
 
+=head2 accessors get_precipitation_averaged_sum_gdd(), set_precipitation_averaged_sum_gdd()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_precipitation_averaged_sum_gdd {
+    my $self = shift;
+
+    my $precipitation_cvterm_id = $self->get_precipitation_averaged_sum_cvterm_id();
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find({
+        project_id => $self->get_trial_id(),
+        type_id => $precipitation_cvterm_id,
+    });
+
+    if ($row) {
+        return $row->value;
+    } else {
+        return;
+    }
+}
+
+sub set_precipitation_averaged_sum_gdd {
+    my $self = shift;
+    my $precipitation_averaged_sum = shift;
+
+    my $precipitation_cvterm_id = $self->get_precipitation_averaged_sum_cvterm_id();
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create({
+        project_id => $self->get_trial_id(),
+        type_id => $precipitation_cvterm_id,
+    });
+    $row->value($precipitation_averaged_sum);
+    $row->update();
+}
+
+sub remove_precipitation_averaged_sum {
+    my $self = shift;
+    my $precipitation = shift;
+
+    my $precipitation_cvterm_id = $self->get_precipitation_averaged_sum_cvterm_id();
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create({
+        project_id => $self->get_trial_id(),
+        type_id => $precipitation_cvterm_id,
+        value => $precipitation,
+    });
+    if ($row) {
+        print STDERR "Removing $precipitation from trial ".$self->get_trial_id()."\n";
+        $row->delete();
+    }
+}
+
+sub get_precipitation_averaged_sum_cvterm_id {
+    my $self = shift;
+    return SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'drone_run_averaged_precipitation_sum', 'project_property')->cvterm_id();
+}
+
 =head2 accessors get_related_time_cvterms_json(), set_related_time_cvterms_json()
 
  Usage:
@@ -1981,6 +2042,7 @@ sub _delete_field_layout_experiment {
 
     my $field_layout_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'field_layout', 'experiment_type')->cvterm_id();
     my $genotyping_layout_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'genotyping_layout', 'experiment_type')->cvterm_id();
+    my $analysis_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'analysis_experiment', 'experiment_type')->cvterm_id();
 
     my $layout_design = $self->get_layout->get_design;
     my @all_stock_ids;
@@ -2027,7 +2089,7 @@ sub _delete_field_layout_experiment {
         $has_cached_layout_prop->delete();
     }
 
-    my $nde_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperiment")->search({ 'me.type_id'=>[$field_layout_type_id, $genotyping_layout_type_id], 'project.project_id'=>$trial_id }, {'join'=>{'nd_experiment_projects'=>'project'}});
+    my $nde_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperiment")->search({ 'me.type_id'=>[$field_layout_type_id, $genotyping_layout_type_id, $analysis_experiment_type_id], 'project.project_id'=>$trial_id }, {'join'=>{'nd_experiment_projects'=>'project'}});
     if ($nde_rs->count != 1){
         die "Project $trial_id does not have exactly one ndexperiment of type field_layout or genotyping_layout!"
     }
