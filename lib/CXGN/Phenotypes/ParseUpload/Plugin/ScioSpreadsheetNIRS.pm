@@ -195,14 +195,16 @@ sub parse {
             $observation_units_seen{$observationunit_name} = 1;
             # print "The plots are $observationunit_name\n";
             $data{$observationunit_name}->{'nirs'}->{'device_type'} = 'SCIO';
+            my %spectra;
             foreach my $col (0..$num_cols-1){
                 my $column_name = $header[$col];
                 if ($column_name ne '' && $column_name =~ /^[+]?\d+\.?\d*$/){
                     my $wavelength = "X".$column_name;
                     my $nir_value = $columns[$col];
-                    $data{$observationunit_name}->{'nirs'}->{'spectra'}->{$wavelength} = $nir_value;
+                    $spectra{$wavelength} = $nir_value;
                 }
             }
+            push @{$data{$observationunit_name}->{'nirs'}->{'spectra'}}, \%spectra;
         }
         $row_number++;
     }

@@ -626,9 +626,9 @@ jQuery(document).ready(function() {
                 console.log(response);
                 if (response.success) {
                     var html = "<select class='form-control' name='drone_run_imaging_vehicle_battery_name' id='drone_run_imaging_vehicle_battery_name'>";
-                    for (var name in response.vehicle.properties.batteries) {
-                        if (response.vehicle.properties.batteries.hasOwnProperty(name)) {
-                            if (response.vehicle.properties.batteries[name]['obsolete'] == 0) {
+                    for (var name in response.vehicles[0].properties.batteries) {
+                        if (response.vehicles[0].properties.batteries.hasOwnProperty(name)) {
+                            if (response.vehicles[0].properties.batteries[name]['obsolete'] == 0) {
                                 html = html + "<option value='"+name+"'>"+name+"</option>";
                             }
                         }
@@ -671,13 +671,16 @@ jQuery(document).ready(function() {
             url : '/api/drone_imagery/new_imaging_vehicle?vehicle_name='+vehicle_name+'&vehicle_description='+vehicle_desc+'&battery_names='+vehicle_batteries,
             success: function(response){
                 console.log(response);
-                if (response.success) {
-                    alert('Vehicle added!');
-                    get_select_box('imaging_event_vehicles', 'drone_run_imaging_vehicle_div', {'id':'drone_run_imaging_vehicle_id', 'name':'drone_run_imaging_vehicle_id'});
-                }
-                else if (response.error) {
+                if (response.error) {
                     alert(response.error);
                 }
+                else if (response.success) {
+                    alert('Vehicle added!');
+                    get_select_box('imaging_event_vehicles', 'drone_run_imaging_vehicle_div', {'id':'drone_run_imaging_vehicle_id', 'name':'drone_run_imaging_vehicle_id'});
+                    upload_drone_imagery_vehicle_id = response.new_vehicle_id;
+                    _show_vehicle_battery_select();
+                }
+
                 return false;
             },
             error: function(response){

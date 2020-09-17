@@ -20,7 +20,6 @@ $trial_id
                     <p3> Are you sure you want to delete assayed traits data for this trial? <br> Proceed with deletion below...</p3>
                     </center></br>
 
-                    </form>
                 </div>
             </div>
             <div class="modal-footer">
