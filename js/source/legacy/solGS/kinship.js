@@ -313,7 +313,7 @@ solGS.kinship = {
                     jQuery("#kinship_message")
                         .css({"padding-left": '0px'})
                         .html("This population has no kinship output data.")
-			.fadeOut(8400);;
+			.fadeOut(8400);
 		    
 		    jQuery("#run_kinship").show();
                 }
