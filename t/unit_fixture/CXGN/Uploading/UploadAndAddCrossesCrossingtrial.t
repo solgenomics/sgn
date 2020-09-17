@@ -448,7 +448,28 @@ my $after_upload_family_male = $schema->resultset("Stock::StockRelationship")->s
 
 is($after_family_name_stocks, $before_family_name_stocks +2);
 is($after_add_family_name, $before_add_family_name + 2);
+is($after_upload_family_relationship, $before_upload_family_relationship + 8);
+is($after_upload_family_member, $before_upload_family_member + 4);
+is($after_upload_family_female, $before_upload_family_female + 2);
+is($after_upload_family_male, $before_upload_family_male + 2);
 
+#test retrieving family name info
+my $family_stock_rs = $schema->resultset("Stock::Stock")->find({name => 'family1x2', type_id => $family_name_type_id});
+my $family_stock_id = $family_stock_rs->stock_id();
+print STDERR "FAMILY ID =".Dumper($family_stock_id)."\n";
+$mech->post_ok('http://localhost:3010/ajax/family/members/'.$family_stock_id);
+$response = decode_json $mech->content;
+my %data = %$response;
+my $members = $data{data};
+my $number_of_members = @$members;
+is($number_of_members, 2);
+
+$mech->post_ok('http://localhost:3010/ajax/family/all_progenies/'.$family_stock_id);
+$response = decode_json $mech->content;
+my %data = %$response;
+my $progenies = $data{data};
+my $number_of_progenies = @$progenies;
+is($number_of_progenies, 2);
 
 #test adding tissue culture samples
 my $before_adding_samples_stockprop = $schema->resultset("Stock::Stockprop")->search({})->count();
@@ -568,8 +589,8 @@ is($after_delete_all_crosses_in_experiment, $before_adding_cross_in_experiment +
 # nd_experiment_stock has 38 more rows after adding plants for testing uploading crosses with plant info
 is($after_delete_all_crosses_in_experiment_stock, $before_adding_cross_in_experiment_stock + 39);
 
-# stock table has 42 more rows after adding 4 family names and 38 plants, one cross with two new accessions cannot be deleted
-is($stocks_after_delete_all_crosses, $before_adding_stocks + 45);
+# stock table has 42 more rows after adding 2 family names and 38 plants, one cross with two new accessions cannot be deleted
+is($stocks_after_delete_all_crosses, $before_adding_stocks + 43);
 
 # remove added crossing trials after test so that they don't affect downstream tests
 $crossing_trial_rs->delete();
