@@ -49,8 +49,11 @@ sub define_object {
     }
     $self->set_json_hash(%json_hash);
     $self->set_primary_key("stock_id");
-    my $owners = $self->get_object->owners();
-    $self->set_owners( @$owners );
+    my @owners;
+    #my @owners = $self->get_object()->search_related("stockprops", {
+    #type_id => $sp_person_cvterm_id } );
+
+    $self->set_owners( @owners );
 
     $self->print_json() if $json_hash{error};
 }

@@ -4,7 +4,7 @@ use Moose;
 use namespace::autoclean;
 use File::Path qw / mkpath  /;
 use File::Spec::Functions qw / catfile catdir/;
-use File::Slurp qw /write_file read_file :edit prepend_file/;
+use File::Slurp qw /write_file read_file/;
 use JSON;
 use CXGN::Tools::Run;
 use Try::Tiny;
@@ -83,7 +83,7 @@ sub save_profile {
     $self->format_log_entry($c);
     my $log_entry = $c->stash->{formatted_log_entry};
     
-    write_file($log_file, {append => 1}, $log_entry);
+    write_file($log_file, {binmode => ':utf8', append => 1}, $log_entry);
    
 }
 
@@ -94,7 +94,7 @@ sub add_log_headers {
   $self->analysis_log_file($c);
   my $log_file = $c->stash->{analysis_log_file};
 
-  my $headers = read_file($log_file);
+  my $headers = read_file($log_file, {binmode => ':utf8'});
   
   unless ($headers) 
   {  
@@ -107,7 +107,7 @@ sub add_log_headers {
 	  "\t" . "Arguments" .
 	  "\n";
 
-      write_file($log_file, $headers);
+      write_file($log_file, {binmode => ':utf8'}, $headers);
   }
   
 }
@@ -121,7 +121,7 @@ sub index_log_file_headers {
    $self->analysis_log_file($c);
    my $log_file = $c->stash->{analysis_log_file};
    
-   my @headers = split(/\t/, (read_file($log_file))[0]);
+   my @headers = split(/\t/, (read_file($log_file, {binmode => ':utf8'}))[0]);
    
    my $header_index = {};
    my $cnt = 0;
@@ -933,13 +933,13 @@ sub update_analysis_progress {
     $self->analysis_log_file($c);
     my $log_file = $c->stash->{analysis_log_file};
   
-    my @contents = read_file($log_file);
+    my @contents = read_file($log_file, {binmode => ':utf8'});
    
     map{ $contents[$_] =~ m/\t$analysis_name\t/
 	     ? $contents[$_] =~ s/error|submitted/$status/ig 
 	     : $contents[$_] } 0..$#contents; 
    
-    write_file($log_file, @contents);
+    write_file($log_file, {binmode => ':utf8'}, @contents);
 
 }
 
@@ -1024,7 +1024,7 @@ sub solgs_analysis_status_log {
     if ($log_file)
     {    
 	my @user_analyses = grep{$_ !~ /User_name\s+/i }
-	                    read_file($log_file);
+	                    read_file($log_file, {binmode => ':utf8'});
 
 	$self->index_log_file_headers($c);
 	my $header_index = $c->stash->{header_index};

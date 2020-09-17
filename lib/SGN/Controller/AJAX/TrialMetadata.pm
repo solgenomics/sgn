@@ -27,13 +27,16 @@ use CXGN::BreederSearch;
 use CXGN::Page::FormattingHelpers qw / html_optional_show /;
 use SGN::Image;
 use CXGN::Trial::TrialLayoutDownload;
+use List::Util qw(sum);
+use CXGN::Genotype::DownloadFactory;
+use POSIX;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON'  },
    );
 
 has 'schema' => (
@@ -2074,7 +2077,7 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
 
     my $error_string = '';
    # open file and remove return of line
-    open(my $F, "<", $archived_filename_with_path) || die "Can't open archive file $archived_filename_with_path";
+    open(my $F, "< :encoding(UTF-8)", $archived_filename_with_path) || die "Can't open archive file $archived_filename_with_path";
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $header = <$F>;
     while (<$F>) {
@@ -2204,7 +2207,7 @@ sub cross_progenies_trial : Chained('trial') PathPart('cross_progenies_trial') A
     my @crosses;
     foreach my $r (@$result){
         my ($cross_id, $cross_name, $cross_combination, $family_id, $family_name, $progeny_number) =@$r;
-        push @crosses, [qq{<a href = "/cross/$cross_id">$cross_name</a>}, $cross_combination, $progeny_number, qq{<a href = "/stock/$family_id/view">$family_name</a>}];
+        push @crosses, [qq{<a href = "/cross/$cross_id">$cross_name</a>}, $cross_combination, $progeny_number, qq{<a href = "/family/$family_id/">$family_name</a>}];
     }
 
     $c->stash->{rest} = { data => \@crosses };
@@ -2677,6 +2680,32 @@ sub trial_correlate_traits : Chained('trial') PathPart('correlate_traits') Args(
     my $obsunit_level = $c->req->param('observation_unit_level');
     my $correlation_type = $c->req->param('correlation_type');
 
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to do this analysis!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to do this analysis!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
     my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         'MaterializedViewTable',
         {
@@ -2774,6 +2803,760 @@ sub trial_correlate_traits : Chained('trial') PathPart('correlate_traits') Args(
     close($fh);
 
     $c->stash->{rest} = {success => 1, result => \@result};
+}
+
+sub trial_plot_time_series_accessions : Chained('trial') PathPart('plot_time_series_accessions') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $trait_ids = decode_json $c->req->param('trait_ids');
+    my $accession_ids = $c->req->param('accession_ids') ne 'null' ? decode_json $c->req->param('accession_ids') : [];
+    my $trait_format = $c->req->param('trait_format');
+    my $data_level = $c->req->param('data_level');
+
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to do this analysis!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to do this analysis!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        'MaterializedViewTable',
+        {
+            bcs_schema=>$schema,
+            data_level=>$data_level,
+            trait_list=>$trait_ids,
+            trial_list=>[$c->stash->{trial_id}],
+            accession_list=>$accession_ids,
+            include_timestamp=>0,
+            exclude_phenotype_outlier=>0
+        }
+    );
+    my ($data, $unique_traits) = $phenotypes_search->search();
+    my @sorted_trait_names = sort keys %$unique_traits;
+
+    if (scalar(@$data) == 0) {
+        $c->stash->{rest} = { error => "There are no phenotypes for the trials and traits you have selected!"};
+        return;
+    }
+
+    my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$c->stash->{trial_id}});
+    my $traits_assayed = $trial->get_traits_assayed($data_level, $trait_format, 'time_ontology');
+    my %unique_traits_ids;
+    foreach (@$traits_assayed) {
+        $unique_traits_ids{$_->[0]} = $_;
+    }
+    my %unique_components;
+    foreach (values %unique_traits_ids) {
+        foreach my $component (@{$_->[2]}) {
+            if ($component->{cv_type} && $component->{cv_type} eq 'time_ontology') {
+                $unique_components{$_->[0]} = $component->{name};
+            }
+        }
+    }
+
+    my %phenotype_data;
+    my %trait_hash;
+    my %seen_germplasm_names;
+    foreach my $obs_unit (@$data){
+        my $obsunit_id = $obs_unit->{observationunit_stock_id};
+        my $observations = $obs_unit->{observations};
+        my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
+        my $germplasm_uniquename = $obs_unit->{germplasm_uniquename};
+        foreach (@$observations){
+            push @{$phenotype_data{$germplasm_uniquename}->{$_->{trait_id}}}, $_->{value};
+            $trait_hash{$_->{trait_id}} = $_->{trait_name};
+        }
+        $seen_germplasm_names{$germplasm_uniquename}++;
+    }
+    my @sorted_germplasm_names = sort keys %seen_germplasm_names;
+
+    my $header_string = 'germplasmName,time,value';
+
+    my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
+    my $tmp_stats_dir = $shared_cluster_dir_config."/tmp_trial_correlation";
+    mkdir $tmp_stats_dir if ! -d $tmp_stats_dir;
+    my ($stats_tempfile_fh, $stats_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    my ($stats_out_tempfile_fh, $stats_out_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+
+    open(my $F, ">", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
+        print $F $header_string."\n";
+        foreach my $s (@sorted_germplasm_names) {
+            foreach my $t (@$trait_ids) {
+                my $time = $unique_components{$t};
+                my @time_split = split ' ', $time;
+                my $time_val = $time_split[1];
+                my $vals = $phenotype_data{$s}->{$t};
+                my $val;
+                if (!$vals || scalar(@$vals) == 0) {
+                    $val = 'NA';
+                }
+                else {
+                    $val = sum(@$vals)/scalar(@$vals);
+                }
+                print $F "$s,$time_val,$val\n";
+            }
+        }
+    close($F);
+
+    my @set = ('0' ..'9', 'A' .. 'F');
+    my @colors;
+    for (1..scalar(@sorted_germplasm_names)) {
+        my $str = join '' => map $set[rand @set], 1 .. 6;
+        push @colors, '#'.$str;
+    }
+    my $color_string = join '\',\'', @colors;
+
+    my $dir = $c->tempfiles_subdir('/trial_analysis_accession_time_series_plot_dir');
+    my $pheno_figure_tempfile_string = $c->tempfile( TEMPLATE => 'trial_analysis_accession_time_series_plot_dir/figureXXXX');
+    $pheno_figure_tempfile_string .= '.png';
+    my $pheno_figure_tempfile = $c->config->{basepath}."/".$pheno_figure_tempfile_string;
+
+    my $cmd = 'R -e "library(data.table); library(ggplot2);
+    mat <- fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\');
+    mat\$time <- as.numeric(as.character(mat\$time));
+    options(device=\'png\');
+    par();
+    sp <- ggplot(mat, aes(x = time, y = value)) + 
+        geom_line(aes(color = germplasmName), size = 1) +
+        scale_fill_manual(values = c(\''.$color_string.'\')) + 
+        theme_minimal();
+    sp <- sp + guides(shape = guide_legend(override.aes = list(size = 0.5)));
+    sp <- sp + guides(color = guide_legend(override.aes = list(size = 0.5)));
+    sp <- sp + theme(legend.title = element_text(size = 3), legend.text = element_text(size = 3));';
+    if (scalar(@sorted_germplasm_names) > 100) {
+        $cmd .= 'sp <- sp + theme(legend.position = \'none\');';
+    }
+    $cmd .= 'ggsave(\''.$pheno_figure_tempfile.'\', sp, device=\'png\', width=12, height=6, units=\'in\');
+    dev.off();"';
+    print STDERR Dumper $cmd;
+    my $status = system($cmd);
+
+    $c->stash->{rest} = {success => 1, figure => $pheno_figure_tempfile_string};
+}
+
+sub trial_accessions_rank : Chained('trial') PathPart('accessions_rank') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $trait_ids = decode_json $c->req->param('trait_ids');
+    my $trait_weights = decode_json $c->req->param('trait_weights');
+    my $accession_ids = $c->req->param('accession_ids') ne 'null' ? decode_json $c->req->param('accession_ids') : [];
+    my $trait_format = $c->req->param('trait_format');
+    my $data_level = $c->req->param('data_level');
+
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to do this analysis!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to do this analysis!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        'MaterializedViewTable',
+        {
+            bcs_schema=>$schema,
+            data_level=>$data_level,
+            trait_list=>$trait_ids,
+            trial_list=>[$c->stash->{trial_id}],
+            accession_list=>$accession_ids,
+            include_timestamp=>0,
+            exclude_phenotype_outlier=>0
+        }
+    );
+    my ($data, $unique_traits) = $phenotypes_search->search();
+    my @sorted_trait_names = sort keys %$unique_traits;
+
+    if (scalar(@$data) == 0) {
+        $c->stash->{rest} = { error => "There are no phenotypes for the trials and traits you have selected!"};
+        return;
+    }
+
+    my %trait_weight_map;
+    foreach (@$trait_weights) {
+        $trait_weight_map{$_->[0]} = $_->[1];
+    }
+    print STDERR Dumper \%trait_weight_map;
+
+    my %phenotype_data;
+    my %trait_hash;
+    my %seen_germplasm_names;
+    foreach my $obs_unit (@$data){
+        my $obsunit_id = $obs_unit->{observationunit_stock_id};
+        my $observations = $obs_unit->{observations};
+        my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
+        my $germplasm_uniquename = $obs_unit->{germplasm_uniquename};
+        foreach (@$observations){
+            push @{$phenotype_data{$germplasm_uniquename}->{$_->{trait_id}}}, $_->{value};
+            $trait_hash{$_->{trait_id}} = $_->{trait_name};
+        }
+        $seen_germplasm_names{$germplasm_uniquename}++;
+    }
+    my @sorted_germplasm_names = sort keys %seen_germplasm_names;
+
+    my %accession_sum;
+    foreach my $s (@sorted_germplasm_names) {
+        foreach my $t (@$trait_ids) {
+            my $vals = $phenotype_data{$s}->{$t};
+            my $average_val = sum(@$vals)/scalar(@$vals);
+            my $average_val_weighted = $average_val*$trait_weight_map{$t};
+            $accession_sum{$s} += $average_val_weighted;
+        }
+    }
+
+    my @sorted_accessions = sort { $accession_sum{$b} <=> $accession_sum{$a} } keys(%accession_sum);
+    my @sorted_values = @accession_sum{@sorted_accessions};
+    my @sorted_rank = (1..scalar(@sorted_accessions));
+
+    $c->stash->{rest} = {success => 1, results => \%accession_sum, sorted_accessions => \@sorted_accessions, sorted_values => \@sorted_values, sorted_ranks => \@sorted_rank};
+}
+
+sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    print STDERR Dumper $c->req->params();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $trait_ids = decode_json $c->req->param('trait_ids');
+    my $trait_weights = decode_json $c->req->param('trait_weights');
+    my $accession_ids = $c->req->param('accession_ids') ne 'null' ? decode_json $c->req->param('accession_ids') : [];
+    my $trait_format = $c->req->param('trait_format');
+    my $nd_protocol_id = $c->req->param('nd_protocol_id');
+    my $data_level = $c->req->param('data_level');
+    my $genotype_filter_string = $c->req->param('genotype_filter');
+    my $compute_from_parents = $c->req->param('compute_from_parents') eq 'yes' ? 1 : 0;
+
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to do this analysis!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to do this analysis!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        'MaterializedViewTable',
+        {
+            bcs_schema=>$schema,
+            data_level=>$data_level,
+            trait_list=>$trait_ids,
+            trial_list=>[$c->stash->{trial_id}],
+            accession_list=>$accession_ids,
+            include_timestamp=>0,
+            exclude_phenotype_outlier=>0
+        }
+    );
+    my ($data, $unique_traits) = $phenotypes_search->search();
+    my @sorted_trait_names = sort keys %$unique_traits;
+
+    if (scalar(@$data) == 0) {
+        $c->stash->{rest} = { error => "There are no phenotypes for the trials and traits you have selected!"};
+        return;
+    }
+
+    my %trait_weight_map;
+    foreach (@$trait_weights) {
+        $trait_weight_map{$_->[0]} = $_->[1];
+    }
+    # print STDERR Dumper \%trait_weight_map;
+
+    my %phenotype_data;
+    my %trait_hash;
+    my %seen_germplasm_names;
+    my %seen_germplasm_ids;
+    foreach my $obs_unit (@$data){
+        my $obsunit_id = $obs_unit->{observationunit_stock_id};
+        my $observations = $obs_unit->{observations};
+        my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
+        my $germplasm_uniquename = $obs_unit->{germplasm_uniquename};
+        foreach (@$observations){
+            push @{$phenotype_data{$germplasm_uniquename}->{$_->{trait_id}}}, $_->{value};
+            $trait_hash{$_->{trait_id}} = $_->{trait_name};
+        }
+        $seen_germplasm_names{$germplasm_uniquename} = $germplasm_stock_id;
+        $seen_germplasm_ids{$germplasm_stock_id}++;
+    }
+    my @sorted_germplasm_names = sort keys %seen_germplasm_names;
+    my @sorted_germplasm_ids = sort keys %seen_germplasm_ids;
+
+    my %accession_sum;
+    foreach my $s (@sorted_germplasm_names) {
+        foreach my $t (@$trait_ids) {
+            my $vals = $phenotype_data{$s}->{$t};
+            my $average_val = sum(@$vals)/scalar(@$vals);
+            my $average_val_weighted = $average_val*$trait_weight_map{$t};
+            $accession_sum{$s} += $average_val_weighted;
+        }
+    }
+
+    my @sorted_accessions = sort { $accession_sum{$b} <=> $accession_sum{$a} } keys(%accession_sum);
+    my @sorted_values = @accession_sum{@sorted_accessions};
+    my $sort_increment = ceil(scalar(@sorted_accessions)/10)+0;
+    # print STDERR Dumper $sort_increment;
+
+    my $percentile_inc = $sort_increment/scalar(@sorted_accessions);
+
+    my $acc_counter = 1;
+    my $rank_counter = 1;
+    my %rank_hash;
+    my %rank_lookup;
+    my %rank_percentile;
+    foreach (@sorted_accessions) {
+        print STDERR Dumper $acc_counter;
+        if ($acc_counter >= $sort_increment) {
+            $rank_counter++;
+            $acc_counter = 0;
+        }
+        my $stock_id = $seen_germplasm_names{$_};
+        push @{$rank_hash{$rank_counter}}, $stock_id;
+        $rank_lookup{$stock_id} = $rank_counter;
+        my $percentile = $rank_counter*$percentile_inc;
+        $rank_percentile{$rank_counter} = "Rank ".$rank_counter;
+        $acc_counter++;
+    }
+
+    my @sorted_rank_groups;
+    foreach (@sorted_accessions) {
+        my $stock_id = $seen_germplasm_names{$_};
+        push @sorted_rank_groups, $rank_lookup{$stock_id};
+    }
+    my @sorted_ranks = (1..scalar(@sorted_accessions));
+    # print STDERR Dumper \%rank_hash;
+    # print STDERR Dumper \%rank_lookup;
+
+    my $geno = CXGN::Genotype::DownloadFactory->instantiate(
+        'DosageMatrix',    #can be either 'VCF' or 'DosageMatrix'
+        {
+            bcs_schema=>$schema,
+            people_schema=>$people_schema,
+            cache_root_dir=>$c->config->{cache_file_path},
+            accession_list=>\@sorted_germplasm_ids,
+            trial_list=>[$c->stash->{trial_id}],
+            protocol_id_list=>[$nd_protocol_id],
+            compute_from_parents=>$compute_from_parents,
+        }
+    );
+    my $file_handle = $geno->download(
+        $c->config->{cluster_shared_tempdir},
+        $c->config->{backend},
+        $c->config->{cluster_host},
+        $c->config->{'web_cluster_queue'},
+        $c->config->{basepath}
+    );
+
+    my %genotype_filter;
+    if ($genotype_filter_string) {
+        my @genos = split ',', $genotype_filter_string;
+        %genotype_filter = map {$_ => 1} @genos;
+    }
+
+    my %geno_rank_counter;
+    my %geno_rank_seen_scores;
+    my @marker_names;
+    open my $geno_fh, "<&", $file_handle or die "Can't open output file: $!";
+        my $header = <$geno_fh>;
+        chomp($header);
+        # print STDERR Dumper $header;
+        my @header = split "\t", $header;
+        my $header_dummy = shift @header;
+
+        my $position = 0;
+        while (my $row = <$geno_fh>) {
+            chomp($row);
+            if ($row) {
+                # print STDERR Dumper $row;
+                my @line = split "\t", $row;
+                my $marker_name = shift @line;
+                push @marker_names, $marker_name;
+                my $counter = 0;
+                foreach (@line) {
+                    if ( defined $_ && $_ ne '' && $_ ne 'NA') {
+                        my $rank = $rank_lookup{$header[$counter]};
+                        if (!$genotype_filter_string || exists($genotype_filter{$_})) {
+                            $geno_rank_counter{$rank}->{$position}->{$_}++;
+                            $geno_rank_seen_scores{$_}++;
+                        }
+                    }
+                    $counter++;
+                }
+                $position++;
+            }
+        }
+    close($geno_fh);
+    # print STDERR Dumper \%geno_rank_counter;
+    my @sorted_seen_scores = sort keys %geno_rank_seen_scores;
+
+    my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
+    my $tmp_stats_dir = $shared_cluster_dir_config."/tmp_trial_genotype_comparision";
+    mkdir $tmp_stats_dir if ! -d $tmp_stats_dir;
+    my ($stats_tempfile_fh, $stats_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+
+    my $header_string = 'Rank,Genotype,Marker,Count';
+
+    open(my $F, ">", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
+        print $F $header_string."\n";
+        while (my ($rank, $pos_o) = each %geno_rank_counter) {
+            while (my ($position, $score_o) = each %$pos_o) {
+                while (my ($score, $count) = each %$score_o) {
+                    print $F $rank_percentile{$rank}.",$score,$position,$count\n";
+                }
+            }
+        }
+    close($F);
+
+    my @set = ('0' ..'9', 'A' .. 'F');
+    my @colors;
+    for (1..scalar(@sorted_seen_scores)) {
+        my $str = join '' => map $set[rand @set], 1 .. 6;
+        push @colors, '#'.$str;
+    }
+    my $color_string = join '\',\'', @colors;
+
+    my $dir = $c->tempfiles_subdir('/trial_analysis_genotype_comparision_plot_dir');
+    my $pheno_figure_tempfile_string = $c->tempfile( TEMPLATE => 'trial_analysis_genotype_comparision_plot_dir/figureXXXX');
+    $pheno_figure_tempfile_string .= '.png';
+    my $pheno_figure_tempfile = $c->config->{basepath}."/".$pheno_figure_tempfile_string;
+
+    my $cmd = 'R -e "library(data.table); library(ggplot2);
+    mat <- fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\');
+    mat\$Marker <- as.numeric(as.character(mat\$Marker));
+    mat\$Genotype <- as.character(mat\$Genotype);
+    options(device=\'png\');
+    par();
+    sp <- ggplot(mat, aes(x = Marker, y = Count)) + 
+        geom_line(aes(color = Genotype), size=0.2) +
+        scale_fill_manual(values = c(\''.$color_string.'\')) + 
+        theme_minimal();
+    sp <- sp + facet_grid(Rank ~ .);';
+    $cmd .= 'ggsave(\''.$pheno_figure_tempfile.'\', sp, device=\'png\', width=12, height=12, units=\'in\');
+    dev.off();"';
+    print STDERR Dumper $cmd;
+    my $status = system($cmd);
+
+    $c->stash->{rest} = {success => 1, results => \%accession_sum, sorted_accessions => \@sorted_accessions, sorted_values => \@sorted_values, sorted_ranks => \@sorted_ranks, sorted_rank_groups => \@sorted_rank_groups, figure => $pheno_figure_tempfile_string};
+}
+
+sub trial_calculate_numerical_derivative : Chained('trial') PathPart('calculate_numerical_derivative') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $trait_ids = decode_json $c->req->param('trait_ids');
+    my $derivative = $c->req->param('derivative');
+    my $data_level = $c->req->param('data_level');
+
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to do this analysis!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to do this analysis!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        'MaterializedViewTable',
+        {
+            bcs_schema=>$schema,
+            data_level=>$data_level,
+            trait_list=>$trait_ids,
+            trial_list=>[$c->stash->{trial_id}],
+            include_timestamp=>0,
+            exclude_phenotype_outlier=>0
+        }
+    );
+    my ($data, $unique_traits) = $phenotypes_search->search();
+    my @sorted_trait_names = sort keys %$unique_traits;
+
+    if (scalar(@$data) == 0) {
+        $c->stash->{rest} = { error => "There are no phenotypes for the trials and traits you have selected!"};
+        return;
+    }
+
+    my %phenotype_data;
+    my %seen_plot_names;
+    my %seen_rows;
+    my %seen_cols;
+    my %row_col_hash;
+    my %rev_row;
+    my %rev_col;
+    foreach my $obs_unit (@$data){
+        my $obsunit_id = $obs_unit->{observationunit_stock_id};
+        my $obsunit_name = $obs_unit->{observationunit_uniquename};
+        my $observations = $obs_unit->{observations};
+        my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
+        my $germplasm_uniquename = $obs_unit->{germplasm_uniquename};
+        my $row = $obs_unit->{obsunit_row_number};
+        my $col = $obs_unit->{obsunit_col_number};
+        foreach (@$observations){
+            $phenotype_data{$obsunit_name}->{$_->{trait_name}} = $_->{value};
+        }
+        $rev_row{$obsunit_name} = $row;
+        $rev_col{$obsunit_name} = $col;
+        $row_col_hash{$row}->{$col} = $obsunit_name;
+        $seen_plot_names{$obsunit_name}++;
+        $seen_rows{$row}++;
+        $seen_cols{$col}++;
+    }
+    my @sorted_plot_names = sort keys %seen_plot_names;
+    my @sorted_rows = sort { $a <=> $b } keys %seen_rows;
+    my @sorted_cols = sort { $a <=> $b } keys %seen_cols;
+
+    my @allowed_composed_cvs = split ',', $c->config->{composable_cvs};
+    my $composable_cvterm_delimiter = $c->config->{composable_cvterm_delimiter};
+    my $composable_cvterm_format = $c->config->{composable_cvterm_format};
+
+    my %trait_id_map;
+    foreach my $trait_name (@sorted_trait_names) {
+        my $trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name)->cvterm_id();
+        $trait_id_map{$trait_name} = $trait_cvterm_id;
+    }
+    my @trait_ids = values %trait_id_map;
+
+    my $analysis_statistical_ontology_term = 'Two-dimension numerical first derivative across rows and columns|SGNSTAT:0000022';
+    # my $analysis_statistical_ontology_term = 'Two-dimension numerical second derivative across rows and columns|SGNSTAT:0000023';
+    my $stat_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $analysis_statistical_ontology_term)->cvterm_id();
+
+    my $categories = {
+        object => [],
+        attribute => [$stat_cvterm_id],
+        method => [],
+        unit => [],
+        trait => \@trait_ids,
+        tod => [],
+        toy => [],
+        gen => [],
+    };
+
+    my %time_term_map;
+
+    my $traits = SGN::Model::Cvterm->get_traits_from_component_categories($schema, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, $categories);
+    my $existing_traits = $traits->{existing_traits};
+    my $new_traits = $traits->{new_traits};
+    # print STDERR Dumper $new_traits;
+    # print STDERR Dumper $existing_traits;
+    my %new_trait_names;
+    foreach (@$new_traits) {
+        my $components = $_->[0];
+        $new_trait_names{$_->[1]} = join ',', @$components;
+    }
+
+    my $onto = CXGN::Onto->new( { schema => $schema } );
+    my $new_terms = $onto->store_composed_term(\%new_trait_names);
+
+    my %composed_trait_map;
+    while (my($trait_name, $trait_id) = each %trait_id_map) {
+        my $components = [$trait_id, $stat_cvterm_id];
+        my $composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, $components);
+        my $composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $composed_cvterm_id, 'extended');
+        $composed_trait_map{$trait_name} = $composed_trait_name;
+    }
+    my @composed_trait_names = values %composed_trait_map;
+
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    my %derivative_results;
+    no warnings 'uninitialized';
+    foreach my $s (@sorted_plot_names) {
+        foreach my $t (@sorted_trait_names) {
+            my $trait = $composed_trait_map{$t};
+            my @derivs;
+            my $val = $phenotype_data{$s}->{$t};
+            my $row = $rev_row{$s};
+            my $col = $rev_col{$s};
+            my @values = (
+                $phenotype_data{$row_col_hash{$row-1}->{$col}}->{$t},
+                $phenotype_data{$row_col_hash{$row+1}->{$col}}->{$t},
+                $phenotype_data{$row_col_hash{$row}->{$col-1}}->{$t},
+                $phenotype_data{$row_col_hash{$row}->{$col+1}}->{$t},
+
+                $phenotype_data{$row_col_hash{$row-1}->{$col-1}}->{$t},
+                $phenotype_data{$row_col_hash{$row+1}->{$col-1}}->{$t},
+                $phenotype_data{$row_col_hash{$row-1}->{$col+1}}->{$t},
+                $phenotype_data{$row_col_hash{$row+1}->{$col+1}}->{$t},
+
+                $phenotype_data{$row_col_hash{$row-2}->{$col}}->{$t},
+                $phenotype_data{$row_col_hash{$row+2}->{$col}}->{$t},
+                $phenotype_data{$row_col_hash{$row}->{$col-2}}->{$t},
+                $phenotype_data{$row_col_hash{$row}->{$col+2}}->{$t},
+
+                $phenotype_data{$row_col_hash{$row-2}->{$col-2}}->{$t},
+                $phenotype_data{$row_col_hash{$row+2}->{$col-2}}->{$t},
+                $phenotype_data{$row_col_hash{$row-2}->{$col+2}}->{$t},
+                $phenotype_data{$row_col_hash{$row+2}->{$col+2}}->{$t},
+
+                $phenotype_data{$row_col_hash{$row-2}->{$col-1}}->{$t},
+                $phenotype_data{$row_col_hash{$row+2}->{$col-1}}->{$t},
+                $phenotype_data{$row_col_hash{$row-2}->{$col+1}}->{$t},
+                $phenotype_data{$row_col_hash{$row+2}->{$col+1}}->{$t},
+
+                $phenotype_data{$row_col_hash{$row-1}->{$col-2}}->{$t},
+                $phenotype_data{$row_col_hash{$row+1}->{$col-2}}->{$t},
+                $phenotype_data{$row_col_hash{$row-1}->{$col+2}}->{$t},
+                $phenotype_data{$row_col_hash{$row+1}->{$col+2}}->{$t},
+
+                $phenotype_data{$row_col_hash{$row-3}->{$col}}->{$t},
+                $phenotype_data{$row_col_hash{$row+3}->{$col}}->{$t},
+                $phenotype_data{$row_col_hash{$row}->{$col-3}}->{$t},
+                $phenotype_data{$row_col_hash{$row}->{$col+3}}->{$t},
+
+                $phenotype_data{$row_col_hash{$row-3}->{$col-3}}->{$t},
+                $phenotype_data{$row_col_hash{$row+3}->{$col-3}}->{$t},
+                $phenotype_data{$row_col_hash{$row-3}->{$col+3}}->{$t},
+                $phenotype_data{$row_col_hash{$row+3}->{$col+3}}->{$t},
+
+                $phenotype_data{$row_col_hash{$row-3}->{$col-1}}->{$t},
+                $phenotype_data{$row_col_hash{$row+3}->{$col-1}}->{$t},
+                $phenotype_data{$row_col_hash{$row-3}->{$col+1}}->{$t},
+                $phenotype_data{$row_col_hash{$row+3}->{$col+1}}->{$t},
+
+                $phenotype_data{$row_col_hash{$row-3}->{$col-2}}->{$t},
+                $phenotype_data{$row_col_hash{$row+3}->{$col-2}}->{$t},
+                $phenotype_data{$row_col_hash{$row-3}->{$col+2}}->{$t},
+                $phenotype_data{$row_col_hash{$row+3}->{$col+2}}->{$t},
+
+                $phenotype_data{$row_col_hash{$row-1}->{$col-3}}->{$t},
+                $phenotype_data{$row_col_hash{$row+1}->{$col-3}}->{$t},
+                $phenotype_data{$row_col_hash{$row-1}->{$col+3}}->{$t},
+                $phenotype_data{$row_col_hash{$row+1}->{$col+3}}->{$t},
+
+                $phenotype_data{$row_col_hash{$row-2}->{$col-3}}->{$t},
+                $phenotype_data{$row_col_hash{$row+2}->{$col-3}}->{$t},
+                $phenotype_data{$row_col_hash{$row-2}->{$col+3}}->{$t},
+                $phenotype_data{$row_col_hash{$row+2}->{$col+3}}->{$t}
+            );
+
+            foreach (@values) {
+                if (defined($_)) {
+                    push @derivs, ($val - $_);
+                }
+            }
+            # print STDERR Dumper \@derivs;
+            if (scalar(@derivs) > 0) {
+                my $d = sum(@derivs)/scalar(@derivs);
+                $derivative_results{$s}->{$trait} = [$d, $timestamp, $user_name, '', ''];
+            }
+        }
+    }
+    # print STDERR Dumper \%derivative_results;
+
+    if (scalar(keys %derivative_results) != scalar(@sorted_plot_names)) {
+        $c->stash->{rest} = { error => "Not all plots have rows and columns defined! Please make sure row and columns are saved for this field trial!"};
+        return;
+    }
+
+    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+
+    my %phenotype_metadata = (
+        'archived_file' => 'none',
+        'archived_file_type' => 'numerical_derivative_row_and_column_computation',
+        'operator' => $user_name,
+        'date' => $timestamp
+    );
+
+    my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+        basepath=>$c->config->{basepath},
+        dbhost=>$c->config->{dbhost},
+        dbname=>$c->config->{dbname},
+        dbuser=>$c->config->{dbuser},
+        dbpass=>$c->config->{dbpass},
+        temp_file_nd_experiment_id=>$temp_file_nd_experiment_id,
+        bcs_schema=>$schema,
+        metadata_schema=>$metadata_schema,
+        phenome_schema=>$phenome_schema,
+        user_id=>$user_id,
+        stock_list=>\@sorted_plot_names,
+        trait_list=>\@composed_trait_names,
+        values_hash=>\%derivative_results,
+        has_timestamps=>0,
+        overwrite_values=>1,
+        ignore_new_values=>0,
+        metadata_hash=>\%phenotype_metadata,
+    );
+    my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+    my ($stored_phenotype_error, $stored_Phenotype_success) = $store_phenotypes->store();
+
+    my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
+
+    $c->stash->{rest} = {success => 1};
 }
 
 1;

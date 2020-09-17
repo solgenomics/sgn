@@ -12,7 +12,7 @@ use CXGN::Stock::Search;
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON' },
    );
 
 
@@ -110,6 +110,8 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
             my @return_row;
             if ($type eq "cross"){
                 @return_row = ( "<a href=\"/cross/$stock_id\">$uniquename</a>", $type, $organism, $synonym_string, $owners_string );
+            }  elsif ($type eq "family_name"){
+                @return_row = ( "<a href=\"/family/$stock_id\">$uniquename</a>", $type, $organism, $synonym_string, $owners_string );
             } elsif ($type eq "seedlot"){
                 @return_row = ( "<a href=\"/breeders/seedlot/$stock_id\">$uniquename</a>", $type, $organism, $synonym_string, $owners_string );
             } else {

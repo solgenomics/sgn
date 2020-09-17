@@ -126,7 +126,7 @@ sub download_selection_index :Path('/solgs/download/selection/index') Args(1) {
    
     if (-s $sindex_file) 
     {
-        my @sindex =  map { [ split(/\t/) ] }  read_file($sindex_file);
+        my @sindex =  map { [ split(/\t/) ] }  read_file($sindex_file, {binmode => ':utf8'});
     
         $c->res->content_type("text/plain");
         $c->res->body(join "", map { $_->[0] . "\t" . $_->[1] }  @sindex);
@@ -158,11 +158,11 @@ sub calc_selection_index {
     my $out_name = "output_files_selection_index_${file_id}";
     my $temp_dir = $c->stash->{selection_index_temp_dir};
     my $output_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, $out_name);
-    write_file($output_file, $output_files);
+    write_file($output_file, {binmode => ':utf8'}, $output_files);
        
     my $in_name = "input_files_selection_index_${file_id}";
     my $input_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, $in_name);
-    write_file($input_file, $input_files);
+    write_file($input_file, {binmode => ':utf8'}, $input_files);
 
     $c->stash->{analysis_tempfiles_dir} = $c->stash->{selection_index_temp_dir};
     $c->stash->{output_files} = $output_file;
@@ -218,7 +218,7 @@ sub gebv_rel_weights {
 
     $self->rel_weights_file($c);
     my $file = $c->stash->{rel_weights_file};
-    write_file($file, $rel_wts_txt);
+    write_file($file, {binmode => ':utf8'}, $rel_wts_txt);
     
 }
 

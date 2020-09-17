@@ -36,6 +36,8 @@ $identifier_prefix
 
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Analyses Results</h4>", info_section_subtitle => 'View analyses derived from this model.', buttons_html => '', icon_class => "glyphicon glyphicon-option-horizontal", info_section_id => "model_analyses", model_id => $model_id &>
 
+<& /page/detail_page_2_col_section.mas, model_id => $model_id, info_section_title => "<h4 style='display:inline'>Delete Model</h4>", info_section_subtitle => 'Delete model from the database.', icon_class => "glyphicon glyphicon-trash", info_section_id => "model_deletion_section" &>
+
 <script>
 jQuery(document).ready(function(){
 

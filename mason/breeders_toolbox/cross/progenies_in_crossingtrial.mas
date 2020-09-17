@@ -352,11 +352,10 @@ $trial_id
                         </tbody>
                     </table>
                     <b>Required columns:</b>
-                    <br>
-                    <b>-cross_unique_id</b> (must exist in the database)
-                    <br>
-                    <b>-family_name</b>
-                    <br>
+                    <ul>
+                        <li>cross_unique_id (must exist in the database)</li>
+                        <li>family_name (may be new family name or family name already stored in the database. Crosses in the same family must have the same parental genotypes. If you would like to use family name previously stored in the database, please check the name carefully)</li>
+                    </ul>
                 </div>
             </div>
             <div class="modal-footer">

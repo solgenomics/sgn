@@ -65,7 +65,7 @@ use CXGN::People::Person;
 use CXGN::Contact;
 use CXGN::Feed;
 use JSON;
-
+use YAML;
 
 use base qw /CXGN::Debug/ ;
 =head2 new
@@ -188,23 +188,18 @@ sub check_modify_privileges {
     #
     my ($person_id, $user_type)=$self->get_login()->has_session();
     $user_type ||= '';
-    my @owners = $self->get_owners();
-    my $is_owner = 0;
-    if ((@owners) && ((grep { $_ =~ /^$person_id$/ } @owners) )) {
-	$self->set_is_owner(1);
-	$is_owner = 1;
-    }
-    if ($user_type eq 'curator' || $is_owner == 1) {
+
+    if ($user_type eq 'curator') {
 	return 0;
     }
     if (!$person_id) { $json_hash{login} = 1 ;  }
-    if ($user_type !~ /curator/) { 
+    if ($user_type !~ /submitter|sequencer|curator/) { 
         if (!$json_hash{error} ) {
-	    $json_hash{error} = "You must have an account of type curator or be the owner of this object to be able to edit. Please contact SGN for further help"; }
+	    $json_hash{error} = "You must have an account of type submitter to be able to submit data. Please contact SGN to change your account type."; }
 	$self->set_json_hash(%json_hash);
 	return 0;
     }
-    
+    my @owners = $self->get_owners();
 
     if ((@owners) && (!(grep { $_ =~ /^$person_id$/ } @owners) )) {
 	# check the owner only if the action is not new
@@ -628,8 +623,8 @@ sub set_object_name {
 =cut
 
 sub get_owners {
-    my $self=shift;
-    return @{$self->{owners}};
+  my $self=shift;
+  return @{$self->{owners}};
   
 }
 
@@ -931,9 +926,10 @@ sub print_json {
         CXGN::Contact::send_email('AjaxFormPage died',$results{"error"} );
     }
     my $json = JSON->new();
-    $self->get_ajax_page()->send_http_header();
-
-    print $json->encode(\%results);
+    #$self->get_ajax_page()->send_http_header();
+    print "Content-type: application/json\n\n";
+    print STDERR YAML::Dump(\%results);
+    print encode_json(\%results);
 }
 
 =head2 send_form_email

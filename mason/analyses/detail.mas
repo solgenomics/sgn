@@ -23,6 +23,7 @@ Lukas Mueller <lam87@cornell.edu>
 $analysis_id
 $analysis_name
 $analysis_description
+$user_can_modify => undef
 $breeding_program_name
 $breeding_program_id
 $year
@@ -33,7 +34,7 @@ $analysis_metadata
 $has_col_and_row_numbers
 </%args>
 
-<& /util/import_javascript.mas, entries => ['analyses'], classes => [ 'jquery', 'jquery.dataTables' ],  &>
+<& /util/import_javascript.mas, entries => ['analyses'], classes => [ 'jquery', 'jquery.dataTables', 'CXGN.Trial' ],  &>
 
 <& /page/page_title.mas, title => "Analysis <span id=\"analyis_name_title\">$analysis_name</span>" &>
 
@@ -57,6 +58,13 @@ $has_col_and_row_numbers
 
 <& /page/detail_page_2_col_section.mas, trial_id => $analysis_id, info_section_title => "<h4 style='display:inline'>Upload Data Files</h4>", info_section_subtitle => 'Also upload any additional files for this analysis.', icon_class => "glyphicon glyphicon-cloud-upload", info_section_id => "trial_upload_files", trial_stock_type => $trial_stock_type, for_analysis_page => 1, data_level => 'analysis_instance' &>
 
+<& /page/detail_page_2_col_section.mas, trial_id => $analysis_id, info_section_title => "<h4 style='display:inline'>Delete Experiment Data</h4>", info_section_subtitle => 'Delete phenotypes, layout, and/or the entire experiment from the database.', icon_class => "glyphicon glyphicon-trash", info_section_id => "trial_deletion_section" &>
+
+% my $data_agreement_link = '<button class="btn btn-sm btn-primary" disabled style="margin:3px">Add/edit data agreement</button>';
+% if ($user_can_modify) { $data_agreement_link = '<button class="btn btn-sm btn-primary" style="margin:3px" id="add_data_agreement">Add/edit data agreement</button>'; }
+
+<& /page/detail_page_2_col_section.mas, trial_id => $analysis_id, info_section_title => "<h4 style='display:inline'>Data Agreement License</h4>", info_section_subtitle => 'View and edit the public data agreement on this experiment.', icon_class => "glyphicon glyphicon-inbox", info_section_id => "trial_data_agreement_section", buttons_html => $data_agreement_link &>
+
 <& /breeders_toolbox/trial/download_phenotypes_dialog.mas, trial_ids => $analysis_id, dialog_name => $analysis_name, dialog_type => 'Analysis' &>
 
 <& /breeders_toolbox/upload_phenotype_spreadsheet.mas &>
@@ -64,8 +72,16 @@ $has_col_and_row_numbers
 <& /breeders_toolbox/trial/create_spreadsheet_dialog.mas, trial_id => $analysis_id, trial_name => $analysis_name, trial_stock_type => $trial_stock_type &>
 <& /breeders_toolbox/trial/set_phenotypes_fully_uploaded.mas, trial_id => $analysis_id &>
 
+<& /breeders_toolbox/add_data_agreement_dialogs.mas, trial_id => $analysis_id &>
+
+<div id="trialIDDiv" class="trialIDDivClass" style="display:none;">
+% print $analysis_id;
+</div>
+
 <script>
 jQuery(document).ready(function(){
+
+    trial_detail_page_setup_dialogs();
 
     //jQuery.ajax({
     //    type: 'GET',

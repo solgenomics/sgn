@@ -22,7 +22,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON' },
    );
 
    sub retrieve_longest_fields :Path('/tools/label_designer/retrieve_longest_fields') {
@@ -112,7 +112,8 @@ __PACKAGE__->config(
        my $design_json = $c->req->param("design_json");
        # decode json
        my $json = new JSON;
-       my $design_params = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($design_json);
+       #my $design_params = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($design_json);
+       my $design_params = decode_json($design_json);
        my $labels_to_download = $design_params->{'labels_to_download'} || undef;
        my $start_number = $design_params->{'start_number'} || undef;
        my $end_number = $design_params->{'end_number'} || undef;
@@ -488,7 +489,8 @@ sub get_data {
         my $list_data = SGN::Controller::AJAX::List->retrieve_list($c, $id);
         my @list_data = @{$list_data};
         my $json = new JSON;
-        my $identifier_object = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_data[0][1]);
+        #my $identifier_object = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_data[0][1]);
+	my $identifier_object = decode_json($list_data[0][1]);
         my $records = $identifier_object->{'records'};
         foreach my $record (@{$records}) {
             my $next_number = $record->{'next_number'};

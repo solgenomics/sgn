@@ -45,7 +45,7 @@ BEGIN { extends 'Catalyst::Controller::REST' };
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON' },
    );
 
 
@@ -900,6 +900,7 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $multiple = $c->req->param('multiple');
     my $empty = $c->req->param('empty');
+    my $select_all = $c->req->param('select_all');
 
     my $id = $c->req->param("id") || "html_trial_select";
     my $name = $c->req->param("name") || "html_trial_select";
@@ -969,7 +970,11 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
             while (my ($k, $v) = each %separated_components) {
                 $html .= "<tr><td>".$k."</td><td>";
                 foreach (@$v) {
-                    $html .= "<input type='checkbox' name = '".$name."' value ='".$_->[0]."'>&nbsp;".$_->[1]." (".$_->[2]." Phenotypes";
+                    $html .= "<input type='checkbox' name = '".$name."' value ='".$_->[0]."'";
+                    if ($select_all) {
+                        $html .= "checked";
+                    }
+                    $html .= ">&nbsp;".$_->[1]." (".$_->[2]." Phenotypes";
                     if ($_->[3] && $_->[4]) {
                         $html .= " From ".$_->[4];
                     }
