@@ -121,7 +121,7 @@ my $pop_link = qq | <a href="/solgs/population/$pop_id/gp/$genotyping_protocol_i
 &>
 
 
-<& /solgs/population/kinship.mas, 
+<& /solgs/kinship/analysis.mas, 
    pop_id  => $pop_id,
   &>
   
