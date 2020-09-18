@@ -299,7 +299,6 @@ solGS.kinship = {
             success: function (res) {
 		
                 if (res.data) {
-		    
 		    jQuery("#kinship_message").html("Generating heatmap... please wait...");
 		    var links = solGS.kinship.addDowloandLinks(res);
                     solGS.kinship.plotKinship(res.data, links);		
@@ -384,6 +383,12 @@ jQuery(document).ready( function() {
     
 	if (url.match(/kinship\/analysis/)) {
 	    solGS.kinship.runKinship();
+	} else if (url.match(/breeders\/trial\//)) {
+	    var trialId = jQuery("#trial_id").val();
+	    var trialName = jQuery("#trial_name").val();
+	    solGS.kinship.runKinship(trialId, trialName);
+
+	    console.log('trial page: ' + trialId + ' ' + trialName)
 	} else {
             solGS.kinship.getKinshipResult();
 	}
