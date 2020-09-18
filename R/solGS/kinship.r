@@ -131,7 +131,7 @@ relationshipMatrixList <- list(labels = names(relationshipMatrixJson),
 relationshipMatrixJson <- jsonlite::toJSON(relationshipMatrixList)
 
 
-if (file.info(relationshipMatrixFile)$size == 0) {
+#if (file.info(relationshipMatrixFile)$size == 0) {
   
   fwrite(relationshipMatrix,
          file  = relationshipMatrixFile,
@@ -139,20 +139,20 @@ if (file.info(relationshipMatrixFile)$size == 0) {
          sep   = "\t",
          quote = FALSE,
          )   
-}
+#}
 
-if (file.info(relationshipMatrixJsonFile)$size == 0) {
+#if (file.info(relationshipMatrixJsonFile)$size == 0) {
  
     write(relationshipMatrixJson,
-                    file  = relationshipMatrixJsonFile,
-                    )
-}
+          file  = relationshipMatrixJsonFile,
+          )
+#}
 
 
 message('inbreedingfile ', inbreedingFile)
 message('ave file', aveKinshipFile)
 message('kinshipfile ', relationshipMatrixFile)
-if (file.info(inbreedingFile)$size == 0) {
+#if (file.info(inbreedingFile)$size == 0) {
   
   fwrite(inbreeding,
          file  = inbreedingFile,
@@ -160,10 +160,10 @@ if (file.info(inbreedingFile)$size == 0) {
          sep   = "\t",
          quote = FALSE,
          )
-}
+#}
 
 
-if (file.info(aveKinshipFile)$size == 0) {
+#if (file.info(aveKinshipFile)$size == 0) {
      
     fwrite(aveKinship,
            file  = aveKinshipFile,
@@ -171,7 +171,7 @@ if (file.info(aveKinshipFile)$size == 0) {
            sep   = "\t",
            quote = FALSE,
            )
-}
+#}
 
 
 message("Done.")
