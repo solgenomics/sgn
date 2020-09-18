@@ -152,7 +152,7 @@ sub detail {
             	type=>'Point'
             },
             type=>'Feature'
-        };print Dumper $_;
+        };
 		push @data, {
 			locationDbId => qq|$_->[0]|,
 			locationType=> $_->[8],

@@ -53,7 +53,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON'  },
 );
 
 sub create_cross_wishlist : Path('/ajax/cross/create_cross_wishlist') : ActionClass('REST') { }
@@ -363,8 +363,8 @@ sub create_cross_wishlist_submit_POST : Args(0) {
         }
     }
 
-    my $plot_info_file_header = '"ObservationUnitType","ObservationUnitName","ObservationUnitID","PlotName","PlotID","PlotBlockNumber","PlotNumber","PlotRepNumber","PlotRowNumber","PlotColNumber","PlotTier","PlotIsAControl","PlotSourceSeedlotName","PlotSourceSeedlotTransactionOperator","PlotSourceSeedlotNumSeedPerPlot","PlantName","PlantID","PlantNumber","TrialYear","TrialName","TrialID","LocationName","LocationID","PlantingDate","AccessionName","AccessionID","AccessionNameAndPlotNumber","AccessionNameAndPlotNumberAndPlantNumber","AccessionSynonyms","AccessionPedigree","AccessionGenus","AccessionSpecies","AccessionPloidyLevel","AccessionGenomeStructure","AccessionVariety","AccessionDonors","AccessionCountryOfOrigin","AccessionState","AccessionInstituteCode","AccessionInstituteName","AccessionBiologicalStatusOfAccessionCode","AccessionNotes","AccessionNumber","AccessionPUI","AccessionSeedSource","AccessionTypeOfGermplasmStorageCode","AccessionAcquisitionDate","AccessionOrganization","AccessionPopulationName","AccessionProgenyAccessionNames","PlotImageFileNames","AccessionImageFileNames","CrossWishlistTimestamp","CrossWishlistCreatedByUsername"';
-    my @plot_info_lines;
+    my $germplasm_info_file_header = '"ObservationUnitType","ObservationUnitName","ObservationUnitID","PlotName","PlotID","PlotBlockNumber","PlotNumber","PlotRepNumber","PlotRowNumber","PlotColNumber","PlotTier","PlotIsAControl","PlotSourceSeedlotName","PlotSourceSeedlotTransactionOperator","PlotSourceSeedlotNumSeedPerPlot","PlantName","PlantID","PlantNumber","TrialYear","TrialName","TrialID","LocationName","LocationID","PlantingDate","AccessionName","AccessionID","AccessionNameAndPlotNumber","AccessionNameAndPlotNumberAndPlantNumber","AccessionSynonyms","AccessionPedigree","AccessionGenus","AccessionSpecies","AccessionPloidyLevel","AccessionGenomeStructure","AccessionVariety","AccessionDonors","AccessionCountryOfOrigin","AccessionState","AccessionInstituteCode","AccessionInstituteName","AccessionBiologicalStatusOfAccessionCode","AccessionNotes","AccessionNumber","AccessionPUI","AccessionSeedSource","AccessionTypeOfGermplasmStorageCode","AccessionAcquisitionDate","AccessionOrganization","AccessionPopulationName","AccessionProgenyAccessionNames","PlotImageFileNames","AccessionImageFileNames","CrossWishlistTimestamp","CrossWishlistCreatedByUsername"';
+    my @germplasm_info_lines;
 
     my %accession_id_hash;
     my %female_and_male_trials;
@@ -437,53 +437,60 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             my $seedlot_transaction_operator = $value->{seed_transaction_operator} || '';
             my $seedlot_num_seed_per_plot = $value->{num_seed_per_plot} || '';
 
-            if (!exists($seen_info_obs_units{$plot_id})){
-                my $accession_stock = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$accession_id});
-                my $accession_info = $accession_info_hash{$accession_id};
-                my $synonyms = join(',',@{$accession_info->{synonyms}});
-                #my $pedigree = $accession_stock->get_pedigree_string("Parents");
-                my $pedigree = "NA";
-                my $genus = $accession_stock->get_genus || '';
-                my $species = $accession_stock->get_species || '';
-                my $variety = $accession_info->{variety};
-                #my $donors = encode_json($accession_stock->donors);
-                my $donors = "NA";
-                my $countryoforigin = $accession_info->{'country of origin'};
-                my $state = $accession_info->{'state'};
-                my $institute_code = $accession_info->{'institute code'};
-                my $institute_name = $accession_info->{'institute name'};
-                my $bio = $accession_info->{'biological status of accession code'};
-                my $notes = $accession_info->{notes};
-                my $accession_number = $accession_info->{'accession number'};
-                my $pui = $accession_info->{'PUI'};
-                my $ploidy_level = $accession_info->{'ploidy_level'};
-                my $genome_structure = $accession_info->{'genome_structure'};
-                my $seedsource = $accession_info->{'seed source'};
-                my $storage_code = $accession_info->{'type of germplasm storage code'};
-                my $acquisition_date = $accession_info->{'acquisition date'};
-                my $organization = $accession_info->{organization};
-                my $population = $accession_stock->population_name || '';
-                #my $stock_descendant_hash = $accession_stock->get_descendant_hash();
-                #my $descendants = $stock_descendant_hash->{descendants};
-                #my @descendents_array;
-                #while (my($k,$v) = each %$descendants){
-                #    push @descendents_array, $v->{name};
-                #}
-                #my $descendents_string = join ',', @descendents_array;
-                my $descendents_string = "NA";
-                my $t = time;
-                my $entry_timestamp = strftime '%F %T', localtime $t;
-                $entry_timestamp .= sprintf ".%03d", ($t-int($t))*1000;
-                push @plot_info_lines, '"plot","'.$plot_name.'","'.$plot_id.'","'.$plot_name.'","'.$plot_id.'","'.$block_number.'","'.$plot_number.'","'.$rep_number.'","'.$row_number.'","'.$col_number.'","'.$tier.'","'.$is_a_control.'","'.$seedlot_name.'","'.$seedlot_transaction_operator.'","'.$seedlot_num_seed_per_plot.'","","","","'.$trial_year.'","'.$trial_name.'","'.$trial_id.'","'.$location_name.'","'.$location_id.'","'.$planting_date.'","'.$accession_name.'","'.$accession_id.'","'.$accession_name.'_'.$plot_number.'","","'.$synonyms.'","'.$pedigree.'","'.$genus.'","'.$species.'","'.$ploidy_level.'","'.$genome_structure.'","'.$variety.'","'.$donors.'","'.$countryoforigin.'","'.$state.'","'.$institute_code.'","'.$institute_name.'","'.$bio.'","'.$notes.'","'.$accession_number.'","'.$pui.'","'.$seedsource.'","'.$storage_code.'","'.$acquisition_date.'","'.$organization.'","'.$population.'","'.$descendents_string.'","NA","NA","'.$entry_timestamp.'","'.$user_name.'"';
-
-                $seen_info_obs_units{$plot_id}++;
-            }
-
+#            print STDERR "GERMPLASM PLANT NAMES =".Dumper($plant_names)."\n";
             my $plant_number = 1;
             my $plant_index = 0;
-            foreach (@$plant_names){
-                my $plant_id = $plant_ids->[$plant_index];
-                if (!exists($seen_info_obs_units{$plant_id})){
+            my $plant_num = @$plant_names;
+#            print STDERR "GERMPLASM PLANT NUMBER =".Dumper($plant_num)."\n";
+            if ($plant_num != 0){
+                foreach (@$plant_names){
+                    my $plant_id = $plant_ids->[$plant_index];
+                    if (!exists($seen_info_obs_units{$plant_id})){
+                        my $accession_stock = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$accession_id});
+                        my $accession_info = $accession_info_hash{$accession_id};
+                        my $synonyms = join(',',@{$accession_info->{synonyms}});
+                        #my $pedigree = $accession_stock->get_pedigree_string("Parents");
+                        my $pedigree = "NA";
+                        my $genus = $accession_stock->get_genus || '';
+                        my $species = $accession_stock->get_species || '';
+                        my $variety = $accession_info->{variety};
+                        #my $donors = encode_json($accession_stock->donors);
+                        my $donors = "NA";
+                        my $countryoforigin = $accession_info->{'country of origin'};
+                        my $state = $accession_info->{'state'};
+                        my $institute_code = $accession_info->{'institute code'};
+                        my $institute_name = $accession_info->{'institute name'};
+                        my $bio = $accession_info->{'biological status of accession code'};
+                        my $notes = $accession_info->{notes};
+                        my $accession_number = $accession_info->{'accession number'};
+                        my $pui = $accession_info->{'PUI'};
+                        my $ploidy_level = $accession_info->{'ploidy_level'};
+                        my $genome_structure = $accession_info->{'genome_structure'};
+                        my $seedsource = $accession_info->{'seed source'};
+                        my $storage_code = $accession_info->{'type of germplasm storage code'};
+                        my $acquisition_date = $accession_info->{'acquisition date'};
+                        my $organization = $accession_info->{organization};
+                        my $population = $accession_stock->population_name || '';
+                        #my $stock_descendant_hash = $accession_stock->get_descendant_hash();
+                        #my $descendants = $stock_descendant_hash->{descendants};
+                        #my @descendents_array;
+                        #while (my($k,$v) = each %$descendants){
+                        #    push @descendents_array, $v->{name};
+                        #}
+                        #my $descendents_string = join ',', @descendents_array;
+                        my $descendents_string = "NA";
+                        my $t = time;
+                        my $entry_timestamp = strftime '%F %T', localtime $t;
+                        $entry_timestamp .= sprintf ".%03d", ($t-int($t))*1000;
+                        push @germplasm_info_lines, '"plant","'.$_.'","'.$plant_id.'","'.$plot_name.'","'.$plot_id.'","'.$block_number.'","'.$plot_number.'","'.$rep_number.'","'.$row_number.'","'.$col_number.'","'.$tier.'","'.$is_a_control.'","'.$seedlot_name.'","'.$seedlot_transaction_operator.'","'.$seedlot_num_seed_per_plot.'","'.$_.'","'.$plant_id.'","'.$plant_number.'","'.$trial_year.'","'.$trial_name.'","'.$trial_id.'","'.$location_name.'","'.$location_id.'","'.$planting_date.'","'.$accession_name.'","'.$accession_id.'","'.$accession_name.'_'.$plot_number.'","'.$accession_name.'_'.$plot_number.'_'.$plant_number.'","'.$synonyms.'","'.$pedigree.'","'.$genus.'","'.$species.'","'.$ploidy_level.'","'.$genome_structure.'","'.$variety.'","'.$donors.'","'.$countryoforigin.'","'.$state.'","'.$institute_code.'","'.$institute_name.'","'.$bio.'","'.$notes.'","'.$accession_number.'","'.$pui.'","'.$seedsource.'","'.$storage_code.'","'.$acquisition_date.'","'.$organization.'","'.$population.'","'.$descendents_string.'","NA","NA","'.$entry_timestamp.'","'.$user_name.'"';
+
+                        $seen_info_obs_units{$plant_id}++;
+                    }
+                    $plant_number++;
+                    $plant_index++;
+                }
+            } elsif ($plant_num == 0) {
+                if (!exists($seen_info_obs_units{$plot_id})){
                     my $accession_stock = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$accession_id});
                     my $accession_info = $accession_info_hash{$accession_id};
                     my $synonyms = join(',',@{$accession_info->{synonyms}});
@@ -520,12 +527,10 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                     my $t = time;
                     my $entry_timestamp = strftime '%F %T', localtime $t;
                     $entry_timestamp .= sprintf ".%03d", ($t-int($t))*1000;
-                    push @plot_info_lines, '"plant","'.$_.'","'.$plant_id.'","'.$plot_name.'","'.$plot_id.'","'.$block_number.'","'.$plot_number.'","'.$rep_number.'","'.$row_number.'","'.$col_number.'","'.$tier.'","'.$is_a_control.'","'.$seedlot_name.'","'.$seedlot_transaction_operator.'","'.$seedlot_num_seed_per_plot.'","'.$_.'","'.$plant_id.'","'.$plant_number.'","'.$trial_year.'","'.$trial_name.'","'.$trial_id.'","'.$location_name.'","'.$location_id.'","'.$planting_date.'","'.$accession_name.'","'.$accession_id.'","'.$accession_name.'_'.$plot_number.'","'.$accession_name.'_'.$plot_number.'_'.$plant_number.'","'.$synonyms.'","'.$pedigree.'","'.$genus.'","'.$species.'","'.$ploidy_level.'","'.$genome_structure.'","'.$variety.'","'.$donors.'","'.$countryoforigin.'","'.$state.'","'.$institute_code.'","'.$institute_name.'","'.$bio.'","'.$notes.'","'.$accession_number.'","'.$pui.'","'.$seedsource.'","'.$storage_code.'","'.$acquisition_date.'","'.$organization.'","'.$population.'","'.$descendents_string.'","NA","NA","'.$entry_timestamp.'","'.$user_name.'"';
+                    push @germplasm_info_lines, '"plot","'.$plot_name.'","'.$plot_id.'","'.$plot_name.'","'.$plot_id.'","'.$block_number.'","'.$plot_number.'","'.$rep_number.'","'.$row_number.'","'.$col_number.'","'.$tier.'","'.$is_a_control.'","'.$seedlot_name.'","'.$seedlot_transaction_operator.'","'.$seedlot_num_seed_per_plot.'","","","","'.$trial_year.'","'.$trial_name.'","'.$trial_id.'","'.$location_name.'","'.$location_id.'","'.$planting_date.'","'.$accession_name.'","'.$accession_id.'","'.$accession_name.'_'.$plot_number.'","","'.$synonyms.'","'.$pedigree.'","'.$genus.'","'.$species.'","'.$ploidy_level.'","'.$genome_structure.'","'.$variety.'","'.$donors.'","'.$countryoforigin.'","'.$state.'","'.$institute_code.'","'.$institute_name.'","'.$bio.'","'.$notes.'","'.$accession_number.'","'.$pui.'","'.$seedsource.'","'.$storage_code.'","'.$acquisition_date.'","'.$organization.'","'.$population.'","'.$descendents_string.'","NA","NA","'.$entry_timestamp.'","'.$user_name.'"';
 
-                    $seen_info_obs_units{$plant_id}++;
+                    $seen_info_obs_units{$plot_id}++;
                 }
-                $plant_number++;
-                $plant_index++;
             }
         }
     }
@@ -551,73 +556,81 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             my $block_number = $female->{block_number} || '';
             my $rep_number = $female->{rep_number} || '';
             my $num_males = 0;
-
-            if ($previous_file_lookup{$female_plot_id}){
-                $num_males = $previous_file_lookup{$female_plot_id}->[17];
-                $num_males =~ s/"//g;
-                my %seen_males_ids;
-                foreach my $i (18..scalar(@{$previous_file_lookup{$female_plot_id}})-1){
-                    my $previous_male_id = $previous_file_lookup{$female_plot_id}->[$i];
-                    $previous_male_id =~ s/"//g;
-                    $seen_males_ids{$previous_male_id}++;
-                }
-                foreach my $male_id (@$male_ids){
-                    if (!$seen_males_ids{$male_id}){
-                        push @{$previous_file_lookup{$female_plot_id}}, '"'.$male_id.'"';
-                        $num_males++;
-                    }
-                }
-                $previous_file_lookup{$female_plot_id}->[17] = '"'.$num_males.'"';
-            } else {
-                my $t = time;
-                my $entry_timestamp = strftime '%F %T', localtime $t;
-                $entry_timestamp .= sprintf ".%03d", ($t-int($t))*1000;
-                my $line = '"plot","'.$plot_name.'","'.$plot_id.'","'.$plot_id.'","'.$plot_name.'","'.$accession_name.'","'.$accession_id.'","'.$plot_number.'","'.$accession_name.'_'.$plot_number.'","'.$block_number.'","'.$rep_number.'","","","","","'.$entry_timestamp.'","'.$user_name.'","';
-
-                my @male_segments;
-                foreach my $male_id (@$male_ids){
-                    push @male_segments, ',"'.$male_id.'"';
-                    $num_males++;
-                }
-                $line .= $num_males.'"';
-                foreach (@male_segments){
-                    $line .= $_;
-                }
-                push @lines, $line;
-            }
-
-            if ($num_males > $max_male_num){
-                $max_male_num = $num_males;
-            }
-
             my $plant_names = $female->{plant_names};
             my $plant_ids = $female->{plant_ids};
             my $plant_number = 1;
             my $plant_index = 0;
-            foreach (@$plant_names){
-                $num_males = 0;
-                my $plant_id = $plant_ids->[$plant_index];
-                if ($previous_file_lookup{$plant_id}){
-                    $num_males = $previous_file_lookup{$plant_id}->[17];
+
+#            print STDERR "WISHLIST PLANT NAMES =".Dumper($plant_names)."\n";
+            my $plant_num = @$plant_names;
+#            print STDERR "WISHLIST PLANT NUMBER =".Dumper($plant_num)."\n";
+
+            if ($plant_num != 0) {
+                foreach (@$plant_names){
+                    $num_males = 0;
+                    my $plant_id = $plant_ids->[$plant_index];
+                    if ($previous_file_lookup{$plant_id}){
+                        $num_males = $previous_file_lookup{$plant_id}->[17];
+                        $num_males =~ s/"//g;
+                        my %seen_males_ids;
+                        foreach my $i (18..scalar(@{$previous_file_lookup{$plant_id}})-1){
+                            my $previous_male_id = $previous_file_lookup{$plant_id}->[$i];
+                            $previous_male_id =~ s/"//g;
+                            $seen_males_ids{$previous_male_id}++;
+                        }
+                        foreach my $male_id (@$male_ids){
+                            if (!$seen_males_ids{$male_id}){
+                                push @{$previous_file_lookup{$plant_id}}, '"'.$male_id.'"';
+                                $num_males++;
+                            }
+                        }
+                        $previous_file_lookup{$plant_id}->[17] = '"'.$num_males.'"';
+                    } else {
+                        my $t = time;
+                        my $entry_timestamp = strftime '%F %T', localtime $t;
+                        $entry_timestamp .= sprintf ".%03d", ($t-int($t))*1000;
+                        my $line = '"plant","'.$_.'","'.$plant_id.'","'.$plot_id.'","'.$plot_name.'","'.$accession_name.'","'.$accession_id.'","'.$plot_number.'","'.$accession_name.'_'.$plot_number.'","'.$block_number.'","'.$rep_number.'","'.$_.'","'.$plant_id.'","'.$plant_number.'","'.$accession_name.'_'.$plot_number.'_'.$plant_number.'","'.$entry_timestamp.'","'.$user_name.'","';
+
+                        my @male_segments;
+                        foreach my $male_id (@$male_ids){
+                            push @male_segments, ',"'.$male_id.'"';
+                            $num_males++;
+                        }
+                        $line .= $num_males.'"';
+                        foreach (@male_segments){
+                            $line .= $_;
+                        }
+                        push @lines, $line;
+                    }
+                    $plant_number++;
+                    $plant_index++;
+
+                    if ($num_males > $max_male_num){
+                        $max_male_num = $num_males;
+                    }
+                }
+            } elsif ($plant_num == 0){
+                if ($previous_file_lookup{$female_plot_id}){
+                    $num_males = $previous_file_lookup{$female_plot_id}->[17];
                     $num_males =~ s/"//g;
                     my %seen_males_ids;
-                    foreach my $i (18..scalar(@{$previous_file_lookup{$plant_id}})-1){
-                        my $previous_male_id = $previous_file_lookup{$plant_id}->[$i];
+                    foreach my $i (18..scalar(@{$previous_file_lookup{$female_plot_id}})-1){
+                        my $previous_male_id = $previous_file_lookup{$female_plot_id}->[$i];
                         $previous_male_id =~ s/"//g;
                         $seen_males_ids{$previous_male_id}++;
                     }
                     foreach my $male_id (@$male_ids){
                         if (!$seen_males_ids{$male_id}){
-                            push @{$previous_file_lookup{$plant_id}}, '"'.$male_id.'"';
+                            push @{$previous_file_lookup{$female_plot_id}}, '"'.$male_id.'"';
                             $num_males++;
                         }
                     }
-                    $previous_file_lookup{$plant_id}->[17] = '"'.$num_males.'"';
+                    $previous_file_lookup{$female_plot_id}->[17] = '"'.$num_males.'"';
                 } else {
                     my $t = time;
                     my $entry_timestamp = strftime '%F %T', localtime $t;
                     $entry_timestamp .= sprintf ".%03d", ($t-int($t))*1000;
-                    my $line = '"plant","'.$_.'","'.$plant_id.'","'.$plot_id.'","'.$plot_name.'","'.$accession_name.'","'.$accession_id.'","'.$plot_number.'","'.$accession_name.'_'.$plot_number.'","'.$block_number.'","'.$rep_number.'","'.$_.'","'.$plant_id.'","'.$plant_number.'","'.$accession_name.'_'.$plot_number.'_'.$plant_number.'","'.$entry_timestamp.'","'.$user_name.'","';
+                    my $line = '"plot","'.$plot_name.'","'.$plot_id.'","'.$plot_id.'","'.$plot_name.'","'.$accession_name.'","'.$accession_id.'","'.$plot_number.'","'.$accession_name.'_'.$plot_number.'","'.$block_number.'","'.$rep_number.'","","","","","'.$entry_timestamp.'","'.$user_name.'","';
 
                     my @male_segments;
                     foreach my $male_id (@$male_ids){
@@ -630,14 +643,11 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                     }
                     push @lines, $line;
                 }
-                $plant_number++;
-                $plant_index++;
 
                 if ($num_males > $max_male_num){
                     $max_male_num = $num_males;
                 }
             }
-
         }
     }
     for (1 .. $max_male_num){
@@ -651,7 +661,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my @new_header_row = split ',', $header;
     #print STDERR Dumper \%priority_order_hash;
     #print STDERR Dumper \@lines;
-    #print STDERR Dumper \@plot_info_lines;
+    #print STDERR Dumper \@germaplasm_info_lines;
 
     if (scalar(@old_header_row_array)>scalar(@new_header_row)){
         chomp $old_header_row;
@@ -724,11 +734,11 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     $file_path3 .= '.csv';
     $uri3 .= '.csv';
     open(my $F3, ">", $file_path3) || die "Can't open file ".$file_path3;
-        print $F3 $plot_info_file_header."\n";
+        print $F3 $germplasm_info_file_header."\n";
         foreach (@previous_germplasm_info_lines){
             print $F3 $_."\n";
         }
-        foreach (@plot_info_lines){
+        foreach (@germplasm_info_lines){
             print $F3 $_."\n";
         }
     close($F3);

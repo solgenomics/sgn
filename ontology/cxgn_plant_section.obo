@@ -1,0 +1,79 @@
+format-version: 1.2
+default-namespace: cxgn_plant_section
+ontology: plant_section
+
+
+[Term]
+id: SECTION:0000001
+name: Plant sub-section
+
+[Term]
+id: SECTION:0000002
+name: Root section
+is_a: SECTION:0000001 ! Plant sub-section
+
+[Term]
+id: SECTION:0000003
+name: Stem area
+is_a: SECTION:0000001 ! Plant sub-section
+
+[Term]
+id: SECTION:0000004
+name: Leaf
+is_a: SECTION:0000001 ! Plant sub-section
+
+[Term]
+id: SECTION:0000005
+name: proximal root section
+is_a: SECTION:0000002 ! Root section
+
+[Term]
+id: SECTION:0000006
+name: axial root section
+is_a: SECTION:0000002 ! Root section
+
+[Term]
+id: SECTION:0000007
+name: distal root section
+is_a: SECTION:0000002 ! Root section
+
+[Term]
+id: SECTION:0000008
+name: hardwood (lower woody stem portion)
+is_a: SECTION:0000003 ! Stem area
+
+[Term]
+id: SECTION:0000009
+name: semi-hardwood (mid part)
+is_a: SECTION:0000003 ! Stem area
+
+[Term]
+id: SECTION:0000010
+name: green shoot
+is_a: SECTION:0000003 ! Stem area
+
+[Term]
+id: SECTION:0000011
+name: tip shoot
+is_a: SECTION:0000003 ! Stem area
+
+[Term]
+id: SECTION:0000012
+name: leaf from hardwood area (lower woody stem portion)
+is_a: SECTION:0000004 ! Leaf
+
+[Term]
+id: SECTION:0000013
+name: leaf from semi-hardwood area (mid part)
+is_a: SECTION:0000004 ! Leaf
+
+[Term]
+id: SECTION:0000014
+name: leaf from green shoot
+is_a: SECTION:0000004 ! Leaf
+
+[Term]
+id: SECTION:0000015
+name: leaf from tip shoot
+is_a: SECTION:0000004 ! Leaf
+

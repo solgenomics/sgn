@@ -31,7 +31,7 @@ my $f = SGN::Test::Fixture->new();
     my $remote_filename = $t->driver()->upload_file($filename);
     $upload_input->send_keys($filename);
     sleep(1);
-    $t->find_element_ok("upload_trial_submit", "name", "submit upload trial file ")->click();
+    $t->find_element_ok("upload_trial_submit_first", "name", "submit upload trial file ")->click();
     sleep(5);
 
     $t->find_element_ok("close_trial_upload_success_dialog", "id", "success msg")->click();

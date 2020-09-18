@@ -166,7 +166,7 @@ sub store {
 		my $data = $params->{data} || undef;
 
 		#verify if list exists
-		my $check_list_id = CXGN::List::exists_list($dbh, $list_name, $owner_id);print Dumper $check_list_id;
+		my $check_list_id = CXGN::List::exists_list($dbh, $list_name, $owner_id);
 		if ($check_list_id->{list_id}){
         	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('List name %s already exist in the database!',$list_name));		
 		}

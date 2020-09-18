@@ -74,7 +74,9 @@ sub get_cvterm_row_from_trait_name {
     my $full_accession = substr $trait_name, rindex( $trait_name, $delim ) + length($delim);
     my $full_accession_length = length($full_accession) + length($delim);
     my $full_cvterm_name = substr($trait_name, 0, -$full_accession_length);
-    my ( $db_name , $accession ) = split (/:/ , $full_accession);
+    my @db_comps = split (/:/ , $full_accession);
+    my $db_name = shift @db_comps;
+    my $accession = join ':', @db_comps;
 
     #check if the trait name string does have
     $accession =~ s/\s+$//;

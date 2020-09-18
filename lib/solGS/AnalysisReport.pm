@@ -800,13 +800,13 @@ sub log_analysis_status {
     
     my $status = $output_details->{status};
    
-    my @contents = read_file($log_file);
+    my @contents = read_file($log_file, {binmode => ':utf8'});
    
     map{ $contents[$_] =~ m/\t$analysis_name\t/ 
 	     ? $contents[$_] =~ s/error|submitted/$status/ig 
 	     : $contents[$_] } 0..$#contents; 
    
-    write_file($log_file, @contents);
+    write_file($log_file, {binmode => ':utf8'}, @contents);
 
 }
 

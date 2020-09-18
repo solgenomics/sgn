@@ -18,13 +18,15 @@ $odk_phenotyping_data_service_url => undef
 
 <div class="well">
 <h4>What is ODK?</h4>
-<ul><li>ODK is an application that allows mobile data collection using user defined forms on Android or IOS devices. Data collected on the device can be instantaneously synched to the ODK server. To find out more go to the <a href="https://opendatakit.org/">ODK site</a>. Many services have developed web interfaces to better streamline the ODK experience. These services assist in creating forms, deploying forms to your mobile application, and visualizing data uploaded back from the mobile device. Currently we are working with <a href="http://www.smap.com.au">SMAP</a> and <a href="https://ona.io/home/">ONA</a> as two ODK services.</li></ul>
+<ul><li>ODK is an application that allows mobile data collection using user defined forms on Android or IOS devices. Data collected on the device can be instantaneously synched to the ODK server. To find out more go to the <a href="https://opendatakit.org/">ODK site</a>. Many services have developed web interfaces to better streamline the ODK experience. These services assist in creating forms, deploying forms to your mobile application, and visualizing data uploaded back from the mobile device. Currently we are working with <a href="https://ona.io/home/">ONA</a> as an ODK service.</li></ul>
 <h4>What do I do from this page?</h4>
 <ul>
 <li>ONA is currently being used for collecting crossing information. This requires exporting a crossing plan from here to the ONA server. The crossing plan guides collection of cross information and this data is synched with ONA using ODK. From here, we run a script twice a day, which pulls data on ONA into our database.
 </li>
+<!--
 <li>SMAP is currently being used for collecting phenotype information. The user collects phenotypes using a form they previously created. The questions in the form map directly to terms in the ontology. As they collect data on the mobile device, the data is synched to SMAP. From here, we run a script twice a day, which pulls data on SMAP into our database.
 </li>
+-->
 </ul>
 </div>
 
@@ -116,7 +118,7 @@ $odk_phenotyping_data_service_url => undef
         </div>
     </div>
 </div>
-
+<!--
 <div class="panel panel-default">
     <div class="panel-body">
         <h3>Summary of Received Cross Data</h3>
@@ -150,7 +152,7 @@ $odk_phenotyping_data_service_url => undef
         </div>
     </div>
 </div>
-
+-->
 </&>
 
 
@@ -159,7 +161,7 @@ $odk_phenotyping_data_service_url => undef
 </div>
 
 <!--
-SMAP ODK NOT IMPLEMENTED 
+SMAP ODK NOT IMPLEMENTED
 <div class="well">
 
 <&| /page/info_section.mas, title=>'Phenotype Data: SMAP ODK Application', collapsible=>1, collapsed=>0, is_subsection=>1, subtitle=>'[<a id="upload_fieldbook_phenotypes_link" >Upload Fieldbook Database File</a>]' &>
@@ -190,7 +192,7 @@ jQuery(document).ready(function () {
                 alert(response.error);
             }
             if (response.success){
-            
+
                 jQuery.ajax ({
                     url : '/ajax/odk/get_crossing_saved_ona_forms',
                     success: function(response_forms){
@@ -376,7 +378,7 @@ jQuery(document).ready(function () {
                         alert("Error retrieving saved ODK ONA forms");
                     }
                 });
-            
+
             }
         },
         error: function(response){
@@ -440,7 +442,7 @@ jQuery(document).ready(function () {
             }
         });
     });
-    
+
     jQuery('#import_odk_cross_data').click( function(){
         jQuery.ajax ( {
             url : '/ajax/odk/get_crossing_data?form_id='+jQuery('#availabe_odk_crossing_forms').val(),

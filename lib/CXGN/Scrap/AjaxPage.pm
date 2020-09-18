@@ -34,7 +34,7 @@ use strict;
 sub new {
     my $class = shift;
     my $self  = $class->SUPER::new();
-    $self->{content_type} = shift || 'text/html';
+    $self->{content_type} = shift || 'application/json';
     return $self;
 }
 
@@ -48,24 +48,24 @@ sub header {
     $self->{doc_header_called} = 1;
     my $extra_head = shift;
     my $caller     = $self->caller();
-    if ($caller) {
-        $extra_head = "<caller>$caller</caller>\n" . $extra_head;
-    }
-    chomp $extra_head;
-    my $header = <<XML;
-<?xml version="1.0" encoding="UTF-8"?>
-<scrap>
-$extra_head
-XML
-    return $header;
+#    if ($caller) {
+#        $extra_head = "<caller>$caller</caller>\n" . $extra_head;
+#    }
+#    chomp $extra_head;
+#    my $header = <<XML;
+#<?xml version="1.0" encoding="UTF-8"?>
+#<scrap>
+#$extra_head
+#XML
+    return undef;
 }
 
 sub footer {
     my $self = shift;
     $self->{doc_footer_called} = 1;
     my $extra_foot = shift;
-    chomp $extra_foot;
-    return "$extra_foot\n</scrap>";
+#    chomp $extra_foot;
+#    return "$extra_foot\n</scrap>";
 }
 
 sub caller {

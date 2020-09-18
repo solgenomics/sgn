@@ -139,7 +139,7 @@ export function WizardSetup(main_id){
     
     var load_lists = ()=>(new Promise((resolve,reject)=>{
       var private_lists = list.availableLists(initialtypes);
-      var public_lists = list.availableLists(initialtypes);
+      var public_lists = list.publicLists(initialtypes);
       if(public_lists.error) public_lists = [];
       if(private_lists.error) private_lists = [];
       resolve(private_lists.concat(public_lists))
