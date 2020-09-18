@@ -22,6 +22,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <%args>
 
 $trial_id => undef
+$pop_id   => undef
 $list_id => undef
 $dataset_id => undef
 $data_structure => undef
@@ -30,7 +31,7 @@ $data_structure => undef
 
 <%perl>
 
-my $pop_id = $trial_id if $trial_id;
+$pop_id = $trial_id if $trial_id;
 
 if (!$data_structure) {
    if ($dataset_id) {
@@ -48,31 +49,53 @@ my $collapsed = 0;
 if ($url =~ /kinship\/analysis/) {
 $title = 'Select a list of accessions or trials or a dataset and run kinship';
 } else {
-$title = 'Select data type and run PCA';
+$title = 'Kinship and inbreeding coefficients';
 $collapsed = 1;
 }
 
 </%perl>
 
 
-  
 % if ($url =~ /kinship\/analysis/) {
 
 <& /page/page_title.mas, 
-   title => "Kinship and inbreeding analysis" 
+   title => 'Kinship and Inbreeding Analysis',
+   collapsed => $collapsed
   &>
-  
+ 
 %}
-
   
+<&| /page/info_section.mas, 
+  collapsible => 1, 
+  collapsed   => $collapsed, 
+  title       => $title 
+&>
+    
+  
+<div id='kinship_div'>
+
 % if ($url =~ /kinship\/analysis|breeders\/trial\//) {
 
-<& /solgs/genotyping_protocol.mas &>
+  <& /solgs/genotyping_protocol.mas &>
 
 %}
+  
+
+% if ($url =~ /kinship\/analysis/) {
 
 <& /solgs/kinship/select_menu.mas &>
-      
+
+%}
+ 
+
+
+% if ($url =~ /solgs\/|breeders\/trial\//) {
+
+    <input id="run_kinship" class="button" type="button" value="Run kinship" /> 
+ 
+
+%}
+  
 <& /solgs/kinship/plot.mas,
      pop_id => $pop_id,
     list_id => $list_id,
@@ -80,5 +103,6 @@ $collapsed = 1;
     data_structure => $data_structure,
 &>
 
+</div>
 
-
+</&>
