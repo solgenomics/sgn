@@ -48,7 +48,7 @@ my $collapsed = 0;
 if ($url =~ /pca\/analysis/) {
 $title = 'Select a list of accessions or trials or a dataset and run PCA';
 } else {
-$title = 'Select data type and run PCA';
+$title = 'Population structure (PCA)';
 $collapsed = 1;
 }
 
@@ -87,7 +87,6 @@ $collapsed = 1;
    <& /solgs/pca/select_menu.mas &>
        
 %}
-
      
   <& /solgs/pca/plot.mas,
      pop_id => $pop_id,
