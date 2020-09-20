@@ -1311,6 +1311,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <select class="form-control" id="drone_imagery_calculate_statistics_select_input">
                         <option value="">Select A Model</option>
                         <option value="lmer_germplasmname_replicate">LMER BLUPs y~replicate+1|Germplasm. Univariate genetic effects</option>
+                        <option value="sommer_grm_genetic_blups">Sommer GBLUPs Y~replicate+GRM. Multivariate genetic effects using GRM</option>
                         <option value="sommer_grm_spatial_genetic_blups">Sommer Spatial GBLUPs Y~replicate+GRM+spatial. Multivariate genetic + 2Dspl spatial effects</option>
                         <option value="blupf90_grm_random_regression_dap_blups">BLUPf90 GBLUPs Y~replicate+GRM+temporal random regression using days after planting. Multivariate genetic + permanent environment effects</option>
                         <option value="blupf90_grm_random_regression_gdd_blups">BLUPf90 GBLUPs Y~replicate+GRM+temporal random regression using growing degree days. Multivariate genetic + permanent environment effects</option>
@@ -4358,6 +4359,16 @@ jQuery(document).ready(function() {
             jQuery('#drone_imagery_calculate_statistics_analysis_save_fitted').hide();
             jQuery('#drone_imagery_calculate_statistics_legendre_polynomial_div').show();
         }
+        else if (manage_drone_imagery_calculate_statistics_select == 'sommer_grm_genetic_blups') {
+            jQuery('#drone_imagery_calculate_statistics_marss_div').hide();
+            jQuery('#drone_imagery_calculate_statistics_genotyping_protocol_div').show();
+            jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_genetic').show();
+            jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_spatial').hide();
+            jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_pe').hide();
+            jQuery('#drone_imagery_calculate_statistics_analysis_save_residuals').hide();
+            jQuery('#drone_imagery_calculate_statistics_analysis_save_fitted').hide();
+            jQuery('#drone_imagery_calculate_statistics_legendre_polynomial_div').hide();
+        }
         else {
             jQuery('#drone_imagery_calculate_statistics_marss_div').hide();
             jQuery('#drone_imagery_calculate_statistics_genotyping_protocol_div').hide();
@@ -4522,7 +4533,7 @@ jQuery(document).ready(function() {
             }
             var drone_imagery_stats_mv_traits_string = drone_imagery_stats_mv_traits.join();
 
-            drone_imagery_stats_protocol = 'mmer('+drone_imagery_stats_mv_traits_string+'~1+replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('+drone_imagery_stats_numbers_traits+')) +vs(rowNumberFactor, Gtc=diag('+drone_imagery_stats_numbers_traits+')) +vs(colNumberFactor, Gtc=diag('+drone_imagery_stats_numbers_traits+')) +vs(spl2D(rowNumber, colNumber), rcov=~vs(units, Gtc=unsm('+drone_imagery_stats_numbers_traits+')), data=mat, tolparinv='+drone_imagery_stats_tolparinv_param+');';
+            drone_imagery_stats_protocol = 'mmer('+drone_imagery_stats_mv_traits_string+'~1+replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('+drone_imagery_stats_numbers_traits+')) +vs(rowNumberFactor, Gtc=diag('+drone_imagery_stats_numbers_traits+')) +vs(colNumberFactor, Gtc=diag('+drone_imagery_stats_numbers_traits+')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('+drone_imagery_stats_numbers_traits+')), rcov=~vs(units, Gtc=unsm('+drone_imagery_stats_numbers_traits+')), data=mat, tolparinv='+drone_imagery_stats_tolparinv_param+');';
 
             drone_imagery_stats_parameters = {
                 'tolparinv':drone_imagery_stats_tolparinv_param,

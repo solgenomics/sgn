@@ -120,3 +120,8 @@ is_a: SGNSTAT:0000000
 id: SGNSTAT:0000023
 name: Two-dimension numerical second derivative across rows and columns
 is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000024
+name: Multivariate genetic BLUPs using genetic relationship matrix computed using Sommer R
+is_a: SGNSTAT:0000000
