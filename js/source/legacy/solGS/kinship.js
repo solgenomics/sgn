@@ -24,7 +24,7 @@ solGS.kinship = {
 	    
 	} else if (page.match(/kinship\/analysis/)) {
 	    
-	    kinshipUrlArgs = this.getKisnhipArgsFromUrl();
+	    kinshipUrlArgs = this.getKinshipArgsFromUrl();
 	    popId = kinshipUrlArgs.kinship_pop_id;
 	    dataStr = kinshipUrlArgs.data_structure;
 	    protocolId = kinshipUrlArgs.genotyping_protocol_id;
@@ -47,7 +47,7 @@ solGS.kinship = {
     },
 
 
-    getKisnhipArgsFromUrl: function() {
+    getKinshipArgsFromUrl: function() {
 	
 	var page = location.pathname;
 	var urlArgs = page.replace("/kinship/analysis", "")
@@ -59,8 +59,8 @@ solGS.kinship = {
 	    
 	    var dataStr;
 	    var reg = /\d+/;
-	    var popId = selectId.match(reg);
-	    
+	    var popId = selectId.match(reg)[0];
+	    console.log('popId ' + popId)
 	    if (selectId.match(/dataset/)) {
 		dataStr = 'dataset';
 	    } else if (selectId.match(/list/)) {
@@ -233,7 +233,7 @@ solGS.kinship = {
 	jQuery("#kinship_canvas .multi-spinner-container").show();
 	
     	jQuery("#kinship_message")
-    	    .html("Running kinship... please wait...it may take minutes")
+    	    .text("Running kinship... please wait...it may take minutes.")
     	    .show();
 
     	jQuery.ajax({
@@ -242,28 +242,26 @@ solGS.kinship = {
     	    data: args,
     	    url: '/kinship/run/analysis/',
     	    success: function(res) {
-    		if (res.result == 'success') {
+    		if (res.data) {
+		  
+		    jQuery("#kinship_message")
+			.text("Got the data... generating the heatmap... please wait...")
+			.show();
+		    
+    		    var links = solGS.kinship.addDowloandLinks(res);
+    		    solGS.kinship.plotKinship(res.data, links);
+    		    //	solGS.kinship.addDowloandLinks(res);
+		    jQuery("#kinship_canvas .multi-spinner-container").hide();
+    		    jQuery("#kinship_message").empty();
+    	
+    		} else {
+		    jQuery("#kinship_message")
+    			.html('There is no kinship data to plot.')
+    			.show()
+    			.fadeOut(8400);
+		    
     		    jQuery("#kinship_canvas .multi-spinner-container").hide();
-		    		    
-    		    if (res.data) {
-			jQuery("#kinship_message").html("Generating heatmap... please wait...");
-    			var links = solGS.kinship.addDowloandLinks(res);
-    			solGS.kinship.plotKinship(res.data, links);
-    		//	solGS.kinship.addDowloandLinks(res);
-		
-    			jQuery("#kinship_message").empty();
-    		    } else {
-    			 jQuery("#kinship_message")
-    			    .html('There is no kinship data to plot.')
-    			    .show()
-    			    .fadeOut(8400);
-		
-    			jQuery("#kinship_canvas .multi-spinner-container").hide();
-    		    }
-
-    		} else {                
-    		    jQuery("#kinship_message").html(res.result);
-    		    jQuery("#kinship_canvas .multi-spinner-container").hide();
+    		    
     		    jQuery("#run_kinship").show();		    
     		}
     	    },
@@ -299,7 +297,10 @@ solGS.kinship = {
             success: function (res) {
 		
                 if (res.data) {
-		    jQuery("#kinship_message").html("Generating heatmap... please wait...");
+		    jQuery("#kinship_message")
+			.html("Generating heatmap... please wait...")
+			.show();
+		    
 		    var links = solGS.kinship.addDowloandLinks(res);
                     solGS.kinship.plotKinship(res.data, links);		
 
@@ -416,18 +417,21 @@ jQuery(document).ready( function() {
 	    jQuery("#kinship_pops_list_select").append(dMenu);
 
         } else {            
-            jQuery("#kinship_pops_list").html("<select><option>no lists found - Log in</option></select>");
+            jQuery("#kinship_pops_list")
+		.html("<select><option>no lists found - Log in</option></select>");
         }
 	
-	var args = solGS.kinship.getKisnhipArgsFromUrl();
+	var args = solGS.kinship.getKinshipArgsFromUrl();
 
 	if (args.kinship_pop_id) {
-	    console.log('kinship pop id ' + args.kinship_pop_id)
-	    args['kinship_pop_id'] = args.data_structure + '_' + args.kinship_pop_id;   	    
+
+	    if (args.data_structure) {		
+		args['kinship_pop_id'] = args.data_structure + '_' + args.kinship_pop_id;
+ 	    }
+	    
 	    solGS.kinship.getKinshipResult(args);
 	}
     }
-
     
 });
 
