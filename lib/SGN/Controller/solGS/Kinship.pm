@@ -71,7 +71,7 @@ sub kinship_run_analysis :Path('/kinship/run/analysis') Args() {
     {
 	$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
     }
-    
+
     $self->run_kinship($c);	  
     
     my $res = {};
@@ -82,13 +82,10 @@ sub kinship_run_analysis :Path('/kinship/run/analysis') Args() {
     }
     else
     {
-	$res->{result} = 'success';
 	$res->{kinship_pop_name} = $pop_name;
 
 	my $kinship_files = $self->get_kinship_coef_files($c, $kinship_pop_id, $protocol_id, $trait_id);
-	my $json_file = $kinship_files->{json_file};
-
-	print STDERR "\nrun analysis json_file: $json_file\n";
+	my $json_file = $kinship_files->{json_file_adj};
   
 	$res->{data} = read_file($json_file);
 	$self->add_output_links($c, $res);	
@@ -124,7 +121,7 @@ sub kinship_result :Path('/solgs/kinship/result/') Args() {
     }
     
     my $kinship_files = $self->get_kinship_coef_files($c, $pop_id, $protocol_id, $trait_id);
-    my $json_file = $kinship_files->{json_file};
+    my $json_file = $kinship_files->{json_file_adj};
 
     my $res = {};
     
@@ -169,27 +166,25 @@ sub get_kinship_coef_files {
 
     $c->stash->{pop_id} = $pop_id;
     $c->stash->{genotyping_protocol_id} = $protocol_id;
-    
-    my $matrix_file;
-    my $json_file;
- 
+     
     if ($trait_id)
     {
 	$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
-	$c->controller('solGS::Files')->relationship_matrix_adjusted_file($c);
-	
-	$json_file = $c->stash->{relationship_matrix_adjusted_json_file};
-	$matrix_file = $c->stash->{relationship_matrix_adjusted_table_file};
     }
-    else
-    {
-	$c->controller('solGS::Files')->relationship_matrix_file($c);
-	$matrix_file = $c->stash->{relationship_matrix_table_file};
-	$json_file = $c->stash->{relationship_matrix_json_file};
-    }
-
-    return {'json_file' => $json_file, 
-	    'matrix_file' => $matrix_file
+    
+    $c->controller('solGS::Files')->relationship_matrix_adjusted_file($c);
+    my $json_file_adj = $c->stash->{relationship_matrix_adjusted_json_file};
+    my $matrix_file_adj = $c->stash->{relationship_matrix_adjusted_table_file};
+ 
+    $c->controller('solGS::Files')->relationship_matrix_file($c);
+    my $matrix_file_raw = $c->stash->{relationship_matrix_table_file};
+    my $json_file_raw = $c->stash->{relationship_matrix_json_file};
+ 
+    return {'json_file_raw' => $json_file_raw, 
+	    'matrix_file_raw' => $matrix_file_raw,
+	    'json_file_adj' => $json_file_adj, 
+	    'matrix_file_adj' => $matrix_file_adj,
+	    
     };
 }
 
@@ -211,8 +206,10 @@ sub kinship_output_files {
     my $coef_files = $self->get_kinship_coef_files($c, $pop_id, $protocol_id);
    
     my $file_list = join ("\t",
-                          $coef_files->{json_file},
-			  $coef_files->{matrix_file},
+                          $coef_files->{json_file_raw},
+			  $coef_files->{matrix_file_raw},
+			  $coef_files->{json_file_adj},
+			  $coef_files->{matrix_file_adj},
 			  $inbreeding_file,
 			  $ave_kinship_file
 	);
@@ -372,7 +369,7 @@ sub create_kinship_genotype_data_query_jobs {
 	    $c->stash->{pops_ids_list} = [$c->stash->{training_pop_id}, $c->stash->{selection_pop_id}];
 	}
 
-	my $trials = $c->stash->{pops_ids_list} || [$c->stash->{training_pop_id}] || [$c->stash->{selection_pop_id}];
+	my $trials = $c->stash->{pops_ids_list} || [$c->stash->{kinship_pop_id}];
 	my $protocol_id = $c->stash->{genotyping_protocol_id};
 	
 	$c->controller('solGS::solGS')->get_cluster_genotype_query_job_args($c, $trials, $protocol_id);
@@ -402,20 +399,9 @@ sub prep_download_kinship_files {
    
   mkpath ([$base_tmp_dir], 0, 0755);  
 
-  my $kinship_txt_file;
-  if ($c->stash->{trait_id})
-  {
-      $c->controller('solGS::Files')->relationship_matrix_adjusted_file($c);  
-      $kinship_txt_file  = $c->stash->{relationship_matrix_adjusted_table_file};
-  }
-  else
-  {
-      $c->controller('solGS::Files')->relationship_matrix_file($c);  
-      $kinship_txt_file  = $c->stash->{relationship_matrix_table_file};  
-  }
-  
-  #my $kinship_json_file = $c->stash->{relationship_matrix_json_file};
-
+  $c->controller('solGS::Files')->relationship_matrix_adjusted_file($c);  
+  my $kinship_txt_file  = $c->stash->{relationship_matrix_adjusted_table_file};
+ 
   $c->controller('solGS::Files')->inbreeding_coefficients_file($c); 
   my $inbreeding_file = $c->stash->{inbreeding_coefficients_file};
 
