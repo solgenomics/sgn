@@ -1052,21 +1052,30 @@ sub analysis_log_file {
 sub confirm_request :Path('/solgs/confirm/request/') Args(0) {
     my ($self, $c) = @_;
 
-    # my $analysis_profile = $c->req->params;
-    # $c->stash->{analysis_profile} = $analysis_profile;
-   
-    # my $analysis_page = $analysis_profile->{analysis_page};
-    # $c->stash->{analysis_page} = $analysis_page;
-    
-    my $referer = $c->req->referer;
+    my $job_type = $self->get_confirm_msg($c);
     my $user_id = $c->user()->get_object()->get_sp_person_id();
-
     my $referer = $c->req->referer;
-    my $job_type;
+    
+    $c->stash->{message} = "<p>$job_type</p>
+                            <p>You will receive an email when it is completed. " . 
+			    "You can also check the status of the job on " . 
+			    "<a href=\"/solpeople/profile/$user_id\">your profile page</a>.</p>
+                            <p><a href=\"$referer\">[ Go back ]</a></p>";
+
+    $c->stash->{template} = "/generic_message.mas";
+
+}
+
+
+sub get_confirm_msg {
+    my ($self, $c) = @_;
+   
+    my $referer = $c->req->referer;
+    my $job_type;  
 
     if ($referer =~ /solgs\/search/) 
     {
-	$job_type = 'Your query for a training dataset is running.';
+	$job_type = 'Your training dataset is being created.';
     } 
     elsif ($referer =~ /solgs\/population\/|solgs\/populations\/combined\//) 
     {
@@ -1084,15 +1093,9 @@ sub confirm_request :Path('/solgs/confirm/request/') Args(0) {
     {
 	$job_type = 'Your job submission is being processed.';	
     }
-  
-   $c->stash->{message} = "<p>$job_type</p>
-                            <p>You will receive an email when it is completed. " . 
-			    "You can also check the status of the job in " . 
-			    "<a href=\"/solpeople/profile/$user_id\">your profile page</a>.</p>
-                            <p><a href=\"$referer\">[ Go back ]</a></p>";
 
-    $c->stash->{template} = "/generic_message.mas";
-
+    return $job_type;
+    
 }
 
 
