@@ -56,10 +56,9 @@ has 'client_id' => (
 );
 
 
-has 'extract_dna' => (
-    isa => 'Bool',
+has 'requeriments' => (
+    isa => 'Array',
     is => 'ro',
-    default => 0,
     required => 0,
 );
 
@@ -125,7 +124,7 @@ sub send {
     my $plate_id = $self->plate_id;
     my $facility_id = $self->facility_id;
     my $client_id = $self->client_id;
-    my $extract_dna = $self->extract_dna;
+    my $requeriments = $self->requeriments;
     my $service_id_list = $self->service_id_list;
     
     my $genotyping_trial;
@@ -134,9 +133,6 @@ sub send {
     };
 
     my $sample_type = $genotyping_trial->get_genotyping_plate_sample_type;
-    my $genus = 'genus';
-    my $species = 'species';
-    my $volume = 5;
 
     my $plate_format = 'PLATE_96' if ($genotyping_trial->get_genotyping_plate_format eq 96);
 
@@ -153,12 +149,7 @@ sub send {
                 clientId=>$client_id,
                 numberOfSamples=>scalar @$samples,
                 plates=>$plate,         
-                requiredServiceInfo => {
-                    extractDNA=>$extract_dna,
-                    genus=>$genus,
-                    species=>$species,
-                    volumePerWell=>$volume,
-                },
+                requiredServiceInfo => $requeriments,
                 sampleType=>$sample_type,
                 serviceIds=>$service_id_list,
             };

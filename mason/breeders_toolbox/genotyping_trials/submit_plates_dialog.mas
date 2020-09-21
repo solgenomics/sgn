@@ -1,7 +1,7 @@
 
 <%args>
-$trial_name
-$facilities
+$trial_id
+$genotyping_facility
 
 </%args>
 
@@ -45,24 +45,17 @@ $facilities
                         </center>
                     </&>
                     <&| /util/workflow.mas:step, title=> "Facility" &>
-<& /page/page_title.mas, title=>"Facility information" &>
+                    <& /page/page_title.mas, title=>"Facility information" &>
 
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Genotyping Facility: </label>
-                            <div class="col-sm-9">
-                                <select class="form-control" id="genotyping_trial_facility_select">
-<!-- % foreach my $facility(@$facilities){ -->
-<option value="<%$facilities%>"><%$facilities%></option>
-<option value="<%$facilities%>"><%$trial_name%></option>
-<!-- %} -->
-                                </select>
+                            <div class="col-sm-9" id="genotyping_facility">
                             </div>
                         </div>
                       <div class="form-group">
                         <label class="col-sm-3 control-label">Facility Service ID: </label>
                         <div class="col-sm-9">
-                            <select class="form-control" id="service_id_select">
-                                <option value="<%$facilities%>"><%$facilities%></option>
+                            <select class="form-control" id="service_id_select">                               
                             </select>
                         </div>
                       </div>
@@ -77,39 +70,28 @@ $facilities
                         <div class="col-sm-9" id="sample_type">
                         </div>
                       </div> 
-                      <div class="form-group">
-                        <div class="col-sm-9">
-                            <label class="col-sm-6 control-label">Required Service Info: </label>
-                        </div>
-                        <div class="col-sm-9">
-                            <label class="col-sm-5 control-label">Extract DNA: </label>
-                            <div class="col-sm-7">
-                                <select class="form-control" id="extract_dna_select">
-                                    <option value="1">True</option>
-                                    <option value="0">False</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-sm-9">
-                            <label class="col-sm-5 control-label">Genus: </label>
-                            <div class="col-sm-7" id="genus">
-                            </div>
-                        </div>
-                        <div class="col-sm-9">
-                            <label class="col-sm-5 control-label">Species: </label>
-                            <div class="col-sm-7" id="species">
-                            </div>
-                        </div>
-                        <div class="col-sm-9">
-                            <label class="col-sm-5 control-label">Volume per Well: </label>
-                            <div class="col-sm-7" id="volume_well"></input>
-                            </div>
-                        </div>
-                      </div>                    
+                      <div class="form-group" id="required_services"> 
+                        <label class="col-sm-4 control-label">Required Service Info: </label>
+                      </div>
+                      <center>
+                            <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                      </center>           
                       <br/><br/>
                        </&>
-                       <&| /util/workflow.mas:step, title=> "Facility" &>
-                        <& /page/page_title.mas, title=>"Facility information" &>
+                       <&| /util/workflow.mas:step, title=> "Confirm" &>
+                        <& /page/page_title.mas, title=>"Confirm order" &>
+
+                <!--         <div class="well well-sm">
+                            <& /breeders_toolbox/genotyping_trials/format/as_list.mas, trial_id => '167', trial_name => 'trial_name', breeding_program_name => 'breeding_program_name', breeding_program_id => 'breeding_program_id', genotyping_plate_format => '96', table_only=>1 &>
+                            <br/> -->
+
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    <& /breeders_toolbox/genotyping_trials/layout_as_list.mas, trial_id => $trial_id, genotyping_plate_format => '96' &>
+                                </div>
+                            </div>
+                        <!-- </div> -->
+
 
                     </&></&>
                     </form>

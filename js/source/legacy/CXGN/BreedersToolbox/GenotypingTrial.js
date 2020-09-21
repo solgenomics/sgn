@@ -482,19 +482,29 @@ jQuery(document).ready(function ($) {
         }
     });
 
+
     jQuery('#submit_plate_btn').click(function () {
         var order_info = new Object();
 
         order_info.plate_id = jQuery('#plate_id').html();
         order_info.client_id = jQuery('#client_id').val();
         order_info.service_ids = jQuery('#service_id_select').val();
-        order_info.extract_dna = jQuery('#extract_dna_select').val();
-        order_info.facility_id = jQuery('#genotyping_trial_facility_select').val();
-
+        order_info.facility_id = jQuery('#genotyping_trial_facilities_select').val();
+        
         if (order_info.plate_id == '') {
             alert("A plate id is required and it should be unique in the database. Please try again.");
             return;
         }
+
+        var requeriments = {};
+
+        $("input[id^=req-").each(function(){
+            let idd = $(this).attr('id');
+            requeriments[idd.replace("req-", "")] = $(this).val();
+        });
+
+        order_info.requeriments = requeriments;
+
         // If data has been changed in form needs to be saved here
         submit_samples_facilities(order_info);
 
@@ -652,6 +662,58 @@ function save_replace_well_accession () {
             error: function () {
               jQuery('#working_modal').modal("hide");
               alert('An error occurred replacing plot accession');
+            }
+        });
+    }
+}
+
+function get_facility_services_id(){
+    var facility = jQuery('#genotyping_facility').val();
+    var url;
+
+    // if (facility == 'Cornell IGD'){
+        url = 'https://testserver.brapi.org/brapi/v2/vendor/specifications';
+        // url = 'http://192.168.33.11:3010/brapi/v2/serverinfo/';
+    // }
+
+    if (url){
+        
+        jQuery.ajax({
+            url: url,
+            type: 'GET',
+            headers: {"Authorization": 'Bearer ' + 'YYYY' },
+            success: function(response) {
+                console.log(response);
+                var options = response.result.services;
+                jQuery('#service_id_select').empty();
+            
+
+  
+                options.forEach(function(object) {
+                    object.specificRequirements.forEach(function(object2) {
+                        console.log(object2.key);                        
+                        let type = document.createElement('label'); 
+                        type.setAttribute("class","col-sm-3 control-label");
+                        type.appendChild(document.createTextNode(object2.key)); 
+                        document.getElementById("required_services").appendChild(type);
+
+                        let input = document.createElement("input");
+                        input.type = "text";
+                        input.name = object2.key;
+                        input.setAttribute("id", "req-" + object2.key);
+                        input.setAttribute("class", "form-control");
+
+                        let div_input = document.createElement('div');
+                        div_input.setAttribute("class", "col-sm-9");
+                        div_input.appendChild(input);
+
+                        let div = document.createElement('div');
+                        div.setAttribute("class", "col-sm-12");
+                        div.appendChild(type);
+                        div.appendChild(div_input);
+                        document.getElementById("required_services").appendChild(div);
+                    });
+                });
             }
         });
     }

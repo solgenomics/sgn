@@ -43,9 +43,9 @@ $raw_data_link => undef
                     <tr><td><b>Plate Format</b></td><td><% $genotyping_plate_format %></td></tr>
                     <tr><td><b>Plate Sample Type</b></td><td><% $genotyping_plate_sample_type %></td></tr>
                     <tr><td><b>Genotyping Facility</b></td><td><% $genotyping_facility %></td></tr>
-                    <tr><td><b>Submitted to Genotyping Facility</b></td><td><% $genotyping_facility_submitted %></td></tr>
+                    <!-- <tr><td><b>Submitted to Genotyping Facility</b></td><td><% $genotyping_facility_submitted %></td></tr>
                     <tr><td><b>Genotyping Facility Status</b></td><td><% $genotyping_facility_status %></td></tr>
-                    <tr><td><b>Raw Data Link</b></td><td><a href='<% $raw_data_link %>'><% $raw_data_link %></td></tr>
+                    <tr><td><b>Raw Data Link</b></td><td><a href='<% $raw_data_link %>'><% $raw_data_link %></td></tr> -->
                     </tbody>
                     </table>
                 </div>
@@ -57,7 +57,7 @@ $raw_data_link => undef
                 </div>
             </div>
 
-            <div class="panel panel-default">
+<!--             <div class="panel panel-default">
                 <div class="panel-body">
                     <table class="table table-bordered table-hover">
                     <tbody>
@@ -66,7 +66,7 @@ $raw_data_link => undef
                     </tbody>
                     </table>
                 </div>
-            </div>
+            </div> -->
 
             <a href="/breeders/trial/<% $trial_id %>/download/layout?format=csv&dataLevel=plate" class="btn btn-default">Download Breedbase Formatted File</a>
             <a href="/breeders/trial/<% $trial_id %>/download/layout?format=intertekxls&dataLevel=plate" class="btn btn-default">Download Intertek Formatted File</a>
@@ -85,26 +85,35 @@ $raw_data_link => undef
     <div class="col-sm-12">
         <div class="well">
             <div class="row">
-                <div class="col-sm-2">
+                <div class="col-sm-1">
                     <span style="font-size:3.5em;" class="glyphicon glyphicon-qrcode"></span>
                 </div>
-                <div class="col-sm-7">
+<!--                 <div class="col-sm-7">
                     <h4 style='display:inline'>Facilities.</h4>
+                </div> -->
+                <div class="col-sm-11">
+                <&| /page/info_section.mas, title => "<h4 style='display:inline'>Genotyping plate status</h4>", subtitle=> "Submit genotyping plates to facilities.", id => 'genotyping_facilities_section', collapsible => 1, collapsed => 1 &>
+                    <div class="col-sm-9"></div>
+                    <div class="col-sm-3">
+                        <& /breeders_toolbox/trial/generate_genotrial_barcode.mas, trial_name => $trial_name, trial_id => $trial_id, identifier => $identifier_prefix, plate_id=> $plate_id &>
+                        <button class="btn btn-primary btn-sm" id="submit_plate_link" style="margin:3px">Submit plates</button>
+                    </div>
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <table class="table table-bordered table-hover">
+                            <tbody>
+                                <tr><td><b>Genotyping Facility</b></td><td><% $genotyping_facility %></td></tr>
+                                <tr><td><b>Submitted to Genotyping Facility</b></td><td><% $genotyping_facility_submitted %></td></tr>
+                                <!-- <tr><td><b>Genotyping Facility Status</b></td><td><% $genotyping_facility_status %></td></tr> -->
+                                <tr><td><b>Live Status From Genotyping Facility</b></td><td><div id="genotyping_trial_status_info"></div></td></tr>
+                                <tr><td><b>Download PDF</b></td><td><div id="download_trial_pdf"></div></td></tr>
+                                <tr><td><b>Raw Data Link</b></td><td><a href='<% $raw_data_link %>'><% $raw_data_link %></td></tr>
+                            </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-sm-3">
-                    <& /breeders_toolbox/trial/generate_genotrial_barcode.mas, trial_name => $trial_name, trial_id => $trial_id, identifier => $identifier_prefix, plate_id=> $plate_id &>
-                    <button class="btn btn-primary btn-sm" id="submit_plate_link" style="margin:3px">Send</button>
-                </div>
-            </div>
-            <div class="panel panel-default">
-                <div class="panel-body">
-                    <table class="table table-bordered table-hover">
-                    <tbody>
-                    <tr><td><b>Live Status From Genotyping Facility</b></td><td><div id="genotyping_trial_status_info"></div></td></tr>
-                    <tr><td><b>Download PDF</b></td><td><div id="download_trial_pdf"></div></td></tr>
-                    </tbody>
-                    </table>
-                </div>
+                </&>
             </div>
         </div>
     </div>
@@ -277,8 +286,8 @@ trial_name => $trial_name
 &>
 
 <& /breeders_toolbox/genotyping_trials/submit_plates_dialog.mas,
-trial_name => $trial_name,
-facilities => $genotyping_facility
+trial_id => $trial_id,
+genotyping_facility => $genotyping_facility
 &>
 
 <script>
@@ -329,7 +338,9 @@ facilities => $genotyping_facility
         jQuery('#plate_format').html("<% $genotyping_plate_format %>");
         jQuery('#number_samples').html("<% $genotyping_plate_format %>");
         jQuery('#sample_type').html("<% $genotyping_plate_sample_type %>");
+        jQuery('#genotyping_facility').html("<% $genotyping_facility %>");
         jQuery('#submit_plate_dialog').modal("show");
+        get_facility_services_id();
     });
 
     jQuery('#close_message_dialog').click(function(){
