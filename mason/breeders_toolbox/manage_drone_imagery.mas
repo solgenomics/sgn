@@ -5240,6 +5240,10 @@ jQuery(document).ready(function() {
             alert('Please give a model type, name, and description!');
             return false;
         }
+        else if (manage_drone_imagery_train_keras_plot_polygon_type_ids.length / manage_drone_imagery_train_keras_drone_run_ids.length != 4) {
+            alert('This only works for Micasense 5-band camera currently, where plot images are extracted for blue, green, red, NIR, and red-edge bands, and the standard process has been completed! So only select imaging events that meet this criteria!');
+            return false;
+        }
         else {
             jQuery.ajax({
                 url : '/api/drone_imagery/train_keras_model',

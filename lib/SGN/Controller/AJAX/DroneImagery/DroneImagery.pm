@@ -9641,9 +9641,26 @@ sub _perform_save_trained_keras_cnn_model {
         archive_path=>$c->config->{archive_path},
         model_name=>$model_name,
         model_description=>$model_description,
+        model_language=>'Python',
         model_type_cvterm_id=>$keras_cnn_cvterm_id,
-        model_experiment_type_cvterm_id=>$keras_cnn_experiment_cvterm_id,
         model_properties=>{variable_name => $trait_name, variable_id => $trait_id, aux_trait_ids => $aux_trait_ids, model_type=>$model_type, image_type=>'standard_4_montage', nd_protocol_id => $geno_protocol_id, use_parents_grm => $use_parents_grm},
+        application_name=>'KerasCNNModels',
+        application_version=>'V1.01',
+        is_public=>1,
+        user_id=>$user_id,
+        user_role=>$user_role
+    });
+    my $saved_model = $m->save_model();
+    my $saved_model_id = $saved_model->{nd_protocol_id};
+
+    my $analysis_model = CXGN::AnalysisModel::GetModel->new({
+        bcs_schema=>$schema,
+        metadata_schema=>$metadata_schema,
+        phenome_schema=>$phenome_schema,
+        nd_protocol_id=>$saved_model_id
+    });
+    $analysis_model->store_analysis_model_files({
+        # project_id => $saved_analysis_id,
         archived_model_file_type=>'trained_keras_cnn_model',
         model_file=>$model_file,
         archived_training_data_file_type=>'trained_keras_cnn_model_input_data_file',
@@ -9652,10 +9669,10 @@ sub _perform_save_trained_keras_cnn_model {
             {auxiliary_model_file => $archive_temp_autoencoder_output_model_file, auxiliary_model_file_archive_type => 'trained_keras_cnn_autoencoder_model'},
             {auxiliary_model_file => $model_input_aux_file, auxiliary_model_file_archive_type => 'trained_keras_cnn_model_input_aux_data_file'}
         ],
+        archive_path=>$c->config->{archive_path},
         user_id=>$user_id,
         user_role=>$user_role
     });
-    my $saved_model = $m->save_model();
 
     $c->stash->{rest} = $saved_model;
 }
@@ -11249,9 +11266,26 @@ sub drone_imagery_retrain_mask_rcnn_GET : Args(0) {
         archive_path=>$c->config->{archive_path},
         model_name=>$model_name,
         model_description=>$model_description,
+        model_language=>'Python',
         model_type_cvterm_id=>$keras_mask_r_cnn_cvterm_id,
-        model_experiment_type_cvterm_id=>$keras_cnn_experiment_cvterm_id,
         model_properties=>{model_type=>$model_type, image_type=>'all_annotated_plot_images'},
+        application_name=>'MaskRCNNModel',
+        application_version=>'V1.1',
+        is_public=>1,
+        user_id=>$user_id,
+        user_role=>$user_role
+    });
+    my $saved_model = $m->save_model();
+    my $saved_model_id = $saved_model->{nd_protocol_id};
+
+    my $analysis_model = CXGN::AnalysisModel::GetModel->new({
+        bcs_schema=>$schema,
+        metadata_schema=>$metadata_schema,
+        phenome_schema=>$phenome_schema,
+        nd_protocol_id=>$saved_model_id
+    });
+    $analysis_model->store_analysis_model_files({
+        # project_id => $saved_analysis_id,
         archived_model_file_type=>'trained_keras_mask_r_cnn_model',
         model_file=>$temp_output_model_file,
         archived_training_data_file_type=>'trained_keras_mask_r_cnn_model_input_data_file',
@@ -11260,10 +11294,10 @@ sub drone_imagery_retrain_mask_rcnn_GET : Args(0) {
         #     {auxiliary_model_file => $archive_temp_autoencoder_output_model_file, auxiliary_model_file_archive_type => 'trained_keras_cnn_autoencoder_model'},
         #     {auxiliary_model_file => $model_input_aux_file, auxiliary_model_file_archive_type => 'trained_keras_cnn_model_input_aux_data_file'}
         # ],
+        archive_path=>$c->config->{archive_path},
         user_id=>$user_id,
         user_role=>$user_role
     });
-    my $saved_model = $m->save_model();
 
     $c->stash->{rest} = {success => 1};
 }
