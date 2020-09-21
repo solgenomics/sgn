@@ -252,7 +252,7 @@ sub relationship_matrix_file {
     my $data_set_type = $c->stash->{data_set_type};
     my $protocol_id = $c->stash->{genotyping_protocol_id};    
    
-    my $file_id = $pop_id . '-GP-' . $protocol_id;
+    my $file_id = $pop_id . '_GP_' . $protocol_id;
 
     no warnings 'uninitialized';
         
@@ -281,9 +281,9 @@ sub relationship_matrix_adjusted_file {
     my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
     my $data_set_type = $c->stash->{data_set_type};
     my $protocol_id = $c->stash->{genotyping_protocol_id}; 
-    my $trait_abbr = $c->stash->{trait_abbr};
+    my $trait_abbr = $c->stash->{trait_abbr} || $pop_id;
    
-    my $file_id = $pop_id ."-${trait_abbr}-GP-${protocol_id}";
+    my $file_id = $pop_id ."_${trait_abbr}_GP_${protocol_id}";
 
     no warnings 'uninitialized';
         
@@ -311,9 +311,9 @@ sub average_kinship_file {
 
     my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
     my $protocol_id = $c->stash->{genotyping_protocol_id};    
-    my $trait_abbr = $c->stash->{trait_abbr};
+    my $trait_abbr = $c->stash->{trait_abbr} || $pop_id;
     
-    my $file_id =  $trait_abbr ? "${pop_id}-${trait_abbr}-GP-${protocol_id}" : "${pop_id}-GP-${protocol_id}";
+    my $file_id =  $trait_abbr ? "${pop_id}_${trait_abbr}_GP_${protocol_id}" : "${pop_id}_GP_${protocol_id}";
    
     no warnings 'uninitialized';
         
@@ -334,7 +334,7 @@ sub inbreeding_coefficients_file {
     my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
     my $protocol_id = $c->stash->{genotyping_protocol_id};    
    
-    my $file_id = "${pop_id}-GP-${protocol_id}";
+    my $file_id = "${pop_id}_GP_${protocol_id}";
 
     no warnings 'uninitialized';
         
