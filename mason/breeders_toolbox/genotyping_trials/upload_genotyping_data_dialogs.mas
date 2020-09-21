@@ -370,7 +370,7 @@
                 <div class="container-fluid">
                     <b>This is for uploading VCF genotype data.</b>
                     <br/>
-                    <b>VCF is a tab separated format</b>
+                    <b>VCF is a tab separated format. If your VCF is very large (greater than 10GB), please consider converting it to an HDF5 (.h5) file using Tassel, and uploading the HDF5 formatted file instead.</b>
                     <br />
                     <b>Header:</b>
                     <br>
@@ -532,6 +532,8 @@
                     <b>This is for uploading Tassel HDF5 genotype data.</b>
                     <br/>
                     <b>Please use HDF5 (.h5) formatted files that work with Tassel</b>
+                    <br/>
+                    <b>Uploading an HDF5 file is important when the size of the VCF grows greater than 10GB</b>
                     <br/>
                 </div>
             </div>
