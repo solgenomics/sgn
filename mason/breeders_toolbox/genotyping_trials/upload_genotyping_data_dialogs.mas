@@ -199,6 +199,15 @@
                                         </select>
                                     </div>
                                 </div>
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Ignore any possible warnings and upload genotypes?: </label>
+                                    <div class="col-sm-7">
+                                        <select class="form-control" id="upload_genotype_accept_warnings" name="upload_genotype_accept_warnings">
+                                            <option value="">No</option>
+                                            <option value="1">Yes</option>
+                                        </select>
+                                    </div>
+                                </div>
 
                                 <div class="well well-sm" id="upload_genotype_data_format_vcf">
                                     <div class="row">
@@ -320,17 +329,6 @@
                                 <div id="upload_genotypes_warnings_div" style="display:none">
                                     <div id="upload_genotypes_warnings_html">
                                     </div>
-
-                                    <hr>
-                                    <div class="form-group">
-                                        <label class="col-sm-5 control-label">Ignore warnings and upload genotypes?: </label>
-                                        <div class="col-sm-7">
-                                            <select class="form-control" id="upload_genotype_accept_warnings" name="upload_genotype_accept_warnings">
-                                                <option value="">No</option>
-                                                <option value="1">Yes</option>
-                                            </select>
-                                        </div>
-                                    </div>
                                 </div>
 
                                 <center>
@@ -370,7 +368,7 @@
                 <div class="container-fluid">
                     <b>This is for uploading VCF genotype data.</b>
                     <br/>
-                    <b>VCF is a tab separated format</b>
+                    <b>VCF is a tab separated format. If your VCF is very large (greater than 10GB), please consider converting it to an HDF5 (.h5) file using Tassel, and uploading the HDF5 formatted file instead.</b>
                     <br />
                     <b>Header:</b>
                     <br>
@@ -532,6 +530,8 @@
                     <b>This is for uploading Tassel HDF5 genotype data.</b>
                     <br/>
                     <b>Please use HDF5 (.h5) formatted files that work with Tassel</b>
+                    <br/>
+                    <b>Uploading an HDF5 file is important when the size of the VCF grows greater than 10GB</b>
                     <br/>
                 </div>
             </div>
