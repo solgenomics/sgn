@@ -62,7 +62,7 @@ sub patch {
 
     my $terms = {
         'protocol_type' => [
-            'sommer_grm_spatial_genetic_blups'
+            'sommer_grm_genetic_blups'
         ],
     };
 
