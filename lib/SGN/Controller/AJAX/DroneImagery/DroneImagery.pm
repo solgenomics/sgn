@@ -9864,13 +9864,14 @@ sub _perform_keras_cnn_predict {
         nd_protocol_id=>$model_id
     });
     my $saved_model_object = $m->get_model();
-    my $trait_id = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{variable_id};
-    my $trained_trait_name = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{variable_name};
-    my $aux_trait_ids_previous = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{aux_trait_ids};
-    my $model_type = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{model_type};
-    my $nd_protocol_id = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{nd_protocol_id};
-    my $use_parents_grm = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{use_parents_grm};
-    my $trained_image_type = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{image_type};
+    print STDERR Dumper $saved_model_object;
+    my $trait_id = $saved_model_object->{model_properties}->{variable_id};
+    my $trained_trait_name = $saved_model_object->{model_properties}->{variable_name};
+    my $aux_trait_ids_previous = $saved_model_object->{model_properties}->{aux_trait_ids};
+    my $model_type = $saved_model_object->{model_properties}->{model_type};
+    my $nd_protocol_id = $saved_model_object->{model_properties}->{nd_protocol_id};
+    my $use_parents_grm = $saved_model_object->{model_properties}->{use_parents_grm};
+    my $trained_image_type = $saved_model_object->{model_properties}->{image_type};
     my $model_file = $saved_model_object->{model_files}->{trained_keras_cnn_model};
     my $training_autoencoder_model_file = $saved_model_object->{model_files}->{trained_keras_cnn_autoencoder_model};
     my $training_input_data_file = $saved_model_object->{model_files}->{trained_keras_cnn_model_input_data_file};
@@ -11327,8 +11328,9 @@ sub drone_imagery_predict_mask_rcnn_GET : Args(0) {
         nd_protocol_id=>$model_id
     });
     my $saved_model_object = $m->get_model();
-    my $model_type = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{model_type};
-    my $trained_image_type = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{image_type};
+    print STDERR Dumper $saved_model_object;
+    my $model_type = $saved_model_object->{model_properties}->{model_type};
+    my $trained_image_type = $saved_model_object->{model_properties}->{image_type};
     my $model_file = $saved_model_object->{model_files}->{trained_keras_mask_r_cnn_model};
     my $training_input_data_file = $saved_model_object->{model_files}->{trained_keras_mask_r_cnn_model_input_data_file};
 
