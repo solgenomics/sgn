@@ -6,14 +6,14 @@ import "../legacy/CXGN/Dataset.js";
  *
  * @class
  * @classdesc links to a wizard and manages loading/saving datasets
- * @param  {type} main_id div to draw within 
- * @param  {type} wizard wizard to link to 
+ * @param  {type} main_id div to draw within
+ * @param  {type} wizard wizard to link to
  * @returns {Object}
- */ 
+ */
 export function WizardDatasets(main_id,wizard){
   var main = d3.select(main_id);
   var datasets = new CXGN.Dataset();
-    
+
   var catagories = [];
   var selections = {};
   var operations = {};
@@ -22,7 +22,7 @@ export function WizardDatasets(main_id,wizard){
     selections = s;
     operations = o;
   });
-  
+
   main.select(".wizard-dataset-load").on("click",function(){
     var val = main.select(".wizard-dataset-select").node().value;
     if(val!=""){
@@ -41,7 +41,7 @@ export function WizardDatasets(main_id,wizard){
         }),1);
     }
   });
-  
+
   main.select(".wizard-dataset-create").on("click",function(){
     var name = main.select(".wizard-dataset-name").node().value;
     if(name!=""){
@@ -67,7 +67,7 @@ export function WizardDatasets(main_id,wizard){
       })
     }
   });
-  
+
   ;(new Promise((resolve,reject)=>{
     resolve(datasets.getDatasets());
   })).then(datasets_data=>{

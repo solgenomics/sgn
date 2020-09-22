@@ -14,22 +14,22 @@ export function WizardDownloads(main_id,wizard){
   var main = d3.select(main_id);
   var datasets = new CXGN.Dataset();
   
-  var catagories = [];
+  var categories = [];
   var selections = {};
   var operations = {};
   wizard.on_change((c,s,o)=>{
-    catagories = c;
+    categories = c;
     selections = s;
     operations = o;
     
     // Genotype downloads
-    var accessions = catagories.indexOf("accessions")!=-1?
+    var accessions = categories.indexOf("accessions")!=-1?
       selections["accessions"]:
       [];
-    var traits = catagories.indexOf("traits")!=-1?
+    var traits = categories.indexOf("traits")!=-1?
       selections["traits"]:
       [];
-    var protocols = catagories.indexOf("genotyping_protocols")!=-1?
+    var protocols = categories.indexOf("genotyping_protocols")!=-1?
       selections["genotyping_protocols"]:
       [];
     main.select(".wizard-download-genotypes-info")
@@ -86,7 +86,7 @@ export function WizardDownloads(main_id,wizard){
           window.open(url,'_blank');
       });
     // Download Trial Metadata
-    var trials = catagories.indexOf("trials")!=-1 ? selections["trials"] : [];
+    var trials = categories.indexOf("trials")!=-1 ? selections["trials"] : [];
     main.selectAll(".wizard-download-tmetadata-info")
       .attr("value",`${trials.length||"Too few"} trials`);
     main.selectAll(".wizard-download-tmetadata")
@@ -99,13 +99,13 @@ export function WizardDownloads(main_id,wizard){
       });
       
     // Download Trial Phenotypes
-    var trials = catagories.indexOf("trials")!=-1 ? selections["trials"] : [];
-    var traits = catagories.indexOf("traits")!=-1 ? selections["traits"] : [];
-    var comps = catagories.indexOf("trait_components")!=-1 ? selections["trait_components"] : [];
-    var plots = catagories.indexOf("plots")!=-1 ? selections["plots"] : [];
-    var plants = catagories.indexOf("plants")!=-1 ? selections["plants"] : [];
-    var locations = catagories.indexOf("locations")!=-1 ? selections["locations"] : [];
-    var years = catagories.indexOf("years")!=-1 ? selections["years"] : [];
+    var trials = categories.indexOf("trials")!=-1 ? selections["trials"] : [];
+    var traits = categories.indexOf("traits")!=-1 ? selections["traits"] : [];
+    var comps = categories.indexOf("trait_components")!=-1 ? selections["trait_components"] : [];
+    var plots = categories.indexOf("plots")!=-1 ? selections["plots"] : [];
+    var plants = categories.indexOf("plants")!=-1 ? selections["plants"] : [];
+    var locations = categories.indexOf("locations")!=-1 ? selections["locations"] : [];
+    var years = categories.indexOf("years")!=-1 ? selections["years"] : [];
     
     
     main.selectAll(".wizard-download-phenotypes-info")

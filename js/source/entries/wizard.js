@@ -92,15 +92,15 @@ export function WizardSetup(main_id){
         })
     })
     // Function which returns column contents for a given target type
-    // and list of constraints spedified by catagories order (["type",...])
+    // and list of constraints spedified by categories order (["type",...])
     // selections ({"type":[id1,id2,id3],...}) and 
     // operations ({"type":intersect?1:0,...})
     // Returns list of of unique names or objects with a "name" key 
     // ["name","name",...]|["name","name",...]|[{"name":"example"},...]
-    .load_selection((target,catagories,selections,operations)=>{
-      if(catagories.some(c=>selections[c].length<1)) return []
+    .load_selection((target,categories,selections,operations)=>{
+      if(categories.some(c=>selections[c].length<1)) return []
       var formData = new FormData();
-      catagories.forEach((c,i)=>{
+      categories.forEach((c,i)=>{
         formData.append('categories[]', c);
         formData.append('querytypes[]', operations[c]?1:0);
         (selections[c]||[]).forEach(s=>{
