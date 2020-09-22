@@ -74,12 +74,13 @@ export function WizardDatasets(main_id,wizard){
             details+= `\n    ${c.items.filter(d=>d.selected).length} ${c.type}`;
           })
         alert(`Dataset ${name} created with\: ${details}`);
+        load_datasets();
         d3.select(this).attr("disabled",null);
       })
     }
   });
 
-  ;(new Promise((resolve,reject)=>{
+  var load_datasets = ()=>(new Promise((resolve,reject)=>{
     resolve(datasets.getDatasets());
   })).then(datasets_data=>{
     if(datasets_data.error){
@@ -102,4 +103,7 @@ export function WizardDatasets(main_id,wizard){
         .text(d=>d[1]);
     }
   })
+
+  load_datasets();
+
 }
