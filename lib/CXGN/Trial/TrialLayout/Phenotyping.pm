@@ -14,8 +14,8 @@ sub BUILD {
 
     print STDERR "BUILD CXGN::Trial::TrialLayout::Phenotyping...\n";
     $self->set_source_stock_types([ 'accession', 'cross', 'family_name', 'subplot', 'plant', 'grafted_accession' ] );
-    $self->set_relationship_types([ 'plot_of', 'member_of', 'plant_of_subplot', 'tissue_sample_of', 'plant_of' ]);
-    $self->set_target_stock_types( [ 'plot', 'plant', 'subplot'] );
+    $self->set_relationship_types([ 'plot_of', 'member_of', 'plant_of_subplot', 'tissue_sample_of']);
+    $self->set_target_stock_types( [ 'plot'] );
 
     #print STDERR "Set source stock types to ".join(", ", @{$self->get_source_stock_types()});
         # probably better to lazy load the action design...
