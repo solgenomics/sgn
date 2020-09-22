@@ -50,8 +50,14 @@ export function WizardDatasets(main_id,wizard){
       var first_irrelevant_col = cols.findIndex(c=>{
         return !c.type || c.items.filter(d=>d.selected).length<1
       });
-      if(first_irrelevant_col==0) return;
-      if(first_irrelevant_col==-1) first_irrelevant_col = cols.length; // retain all columns if no irrelevant ones are found
+      if(first_irrelevant_col==0) {
+          alert(`Dataset creation failed. No data is selected.`);
+          d3.select(this).attr("disabled",null);
+          return;
+      }
+      if(first_irrelevant_col==-1) {
+          first_irrelevant_col = cols.length; // retain all columns if no irrelevant ones are found
+      }
       cols = cols.slice(0, first_irrelevant_col);
       var order = cols.map(c=>c.type);
       var params = `?name=${name}&category_order=${JSON.stringify(order)}`
@@ -63,6 +69,11 @@ export function WizardDatasets(main_id,wizard){
         method:'post',
         credentials: 'include'
       }).then(()=>{
+          var details = '';
+          cols.forEach(c=>{
+            details+= `\n    ${c.items.filter(d=>d.selected).length} ${c.type}`;
+          })
+        alert(`Dataset ${name} created with\: ${details}`);
         d3.select(this).attr("disabled",null);
       })
     }
