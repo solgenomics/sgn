@@ -47,12 +47,12 @@ export function WizardDatasets(main_id,wizard){
     if(name!=""){
       d3.select(this).attr("disabled",true);
       var cols = wizard.getColumns();
-      var last_relevant = cols.findIndex(c=>{
+      var first_irrelevant_col = cols.findIndex(c=>{
         return !c.type || c.items.filter(d=>d.selected).length<1
       });
-      console.log(last_relevant);
-      if(last_relevant==0) return;
-      cols = cols.slice(0,last_relevant,cols.length-1);
+      if(first_irrelevant_col==0) return;
+      if(first_irrelevant_col==-1) first_irrelevant_col = cols.length; // retain all columns if no irrelevant ones are found
+      cols = cols.slice(0, first_irrelevant_col);
       var order = cols.map(c=>c.type);
       var params = `?name=${name}&category_order=${JSON.stringify(order)}`
       cols.forEach(c=>{
