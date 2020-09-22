@@ -14,7 +14,7 @@ use CXGN::Trial::Download;
 use CXGN::List::Transform;
 use CXGN::List::Validate;
 use CXGN::List;
-use JSON;
+use JSON::XS;
 use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller'; }
@@ -163,7 +163,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     elsif ($trial_type_name eq "crossing_trial"){
         print STDERR "It's a crossing trial!\n\n";
         my $program_name = $breeding_program_data->[0]->[1];
-        my $locations = decode_json $program_object->get_all_locations_by_breeding_program();
+        my $locations = JSON::XS->new->decode($program_object->get_all_locations_by_breeding_program());
         my @locations_by_program;
         foreach my $location_hashref (@$locations) {
             my $properties = $location_hashref->{'properties'};
@@ -262,7 +262,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         }
     }
 
-    my $selected_cols = $c->req->param('selected_columns') ? decode_json $c->req->param('selected_columns') : {};
+    my $selected_cols = $c->req->param('selected_columns') ? JSON::XS->new()->decode( $c->req->param('selected_columns') ) : {};
     if ($data_level eq 'plate'){
         $selected_cols = {'trial_name'=>1, 'acquisition_date'=>1, 'plot_name'=>1, 'plot_number'=>1, 'row_number'=>1, 'col_number'=>1, 'source_observation_unit_name'=>1, 'accession_name'=>1, 'synonyms'=>1, 'dna_person'=>1, 'notes'=>1, 'tissue_type'=>1, 'extraction'=>1, 'concentration'=>1, 'volume'=>1, 'is_blank'=>1};
     }
@@ -371,7 +371,7 @@ sub trials_download_layouts : Path('/breeders/trials/download/layout') Args(0) {
     my $genotyping_trial_id = $c->req->param("genotyping_trial_id");
     my @genotyping_trial_id_list = $c->req->param("genotyping_trial_id_list") ? split ',', $c->req->param("genotyping_trial_id_list") : ();
 
-    my $selected_cols = $c->req->param('selected_columns') ? decode_json $c->req->param('selected_columns') : {};
+    my $selected_cols = $c->req->param('selected_columns') ? JSON::XS->new()->decode( $c->req->param('selected_columns') ) : {};
     if ($data_level eq 'plate'){
         $selected_cols = {'trial_name'=>1, 'acquisition_date'=>1, 'plot_name'=>1, 'plot_number'=>1, 'row_number'=>1, 'col_number'=>1, 'source_observation_unit_name'=>1,
         'accession_name'=>1, 'synonyms'=>1, 'dna_person'=>1, 'notes'=>1, 'tissue_type'=>1, 'extraction'=>1, 'concentration'=>1, 'volume'=>1, 'is_blank'=>1};
@@ -426,10 +426,10 @@ sub trials_download_layouts : Path('/breeders/trials/download/layout') Args(0) {
 
 sub _parse_list_from_json {
     my $list_json = shift;
-    my $json = new JSON;
+
     if ($list_json) {
 	#my $decoded_list = $json->allow_nonref->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
-	my $decoded_list = decode_json($list_json);
+	my $decoded_list = JSON::XS->new()->decode($list_json);
 	my @array_of_list_items = @{$decoded_list};
 	return \@array_of_list_items;
     }
