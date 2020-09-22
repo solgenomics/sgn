@@ -51,13 +51,10 @@ if ($url =~ /cluster\/analysis/) {
 $title = 'Select a list of accessions or trials and run cluster analysis using k-means method';
 } else {
 $title = 'Clustering';
-$collapsed = 1;
+$collapsed = 1 if $url =~ /breeders\/trial/;
 }
 
 </%perl>
-
-
-
 
 
 % if ($url =~ /cluster\/analysis/) {
