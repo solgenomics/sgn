@@ -303,7 +303,11 @@ sub next_genotype {
         }
         else {
             chomp($line);
-            LABEL: if ($line =~ m/^\#/) { print STDERR "Skipping header line: $line\n"; $line = <$F>; goto LABEL; }
+            LABEL: if ($line =~ m/^\#/) {
+                #print STDERR "Skipping header line: $line\n";
+                $line = <$F>;
+                goto LABEL;
+            }
 
             my @fields = split /\t/, $line;
             my @marker_info = @fields[ 0..8 ];
