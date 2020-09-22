@@ -3505,11 +3505,13 @@ sub trial_calculate_numerical_derivative : Chained('trial') PathPart('calculate_
             foreach (@values) {
                 if (defined($_)) {
                     push @derivs, ($val - $_);
-                }
-            }
-            foreach (@values) {
-                if (defined($_)) {
+                    push @derivs, ( (($val + $_)/8) - $_);
+                    push @derivs, ( (($val + $_)/4) - $_);
+                    push @derivs, ( (($val + $_)*3/8) - $_);
                     push @derivs, ( (($val + $_)/2) - $_);
+                    push @derivs, ( (($val + $_)*5/8) - $_);
+                    push @derivs, ( (($val + $_)*3/4) - $_);
+                    push @derivs, ( (($val + $_)*7/8) - $_);
                 }
             }
             # print STDERR Dumper \@derivs;
