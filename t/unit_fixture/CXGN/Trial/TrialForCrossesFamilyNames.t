@@ -68,6 +68,8 @@ foreach my $family_name (@family_names) {
 	});
 };
 
+#add accession stock type for testing mixed types
+push(@cross_ids, 'UG120001');
 
 # create trial with cross stock type
 ok(my $cross_trial_design = CXGN::Trial::TrialDesign->new(), "create trial design object");
@@ -152,6 +154,8 @@ foreach my $cross_plot_num (keys %$cross_trial_design) {
 #    ], "check cross plot numbers");
 
 is_deeply(\@crosses, [
+        'UG120001',
+        'UG120001',
         'cross_for_trial1',
         'cross_for_trial1',
         'cross_for_trial2',
@@ -170,6 +174,8 @@ is_deeply(\@cross_block_nums, [
         '1',
         '1',
         '1',
+        '1',
+        '2',
         '2',
         '2',
         '2',
@@ -177,13 +183,14 @@ is_deeply(\@cross_block_nums, [
         '2'
     ], "check cross block numbers");
 
-is(scalar@cross_plot_names, 10);
+is(scalar@cross_plot_names, 12);
 
 my $cross_trial_type = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $cross_trial_id });
 my $cross_trial_stock_type = $cross_trial_type->get_trial_stock_type();
 is($cross_trial_stock_type, 'cross');
 
-
+#add accession for testing mixed stock types
+push (@family_names, 'UG120001');
 # create trial with family_name stock type
 my $fam_trial_design;
 ok($fam_trial_design = CXGN::Trial::TrialDesign->new(), "create trial design object");
@@ -264,6 +271,8 @@ foreach my $fam_plot_num (keys %$fam_trial_design) {
 #    ], "check family_name plot numbers");
 
 is_deeply(\@family_names, [
+        'UG120001',
+        'UG120001',
         'family_name_for_trial1',
         'family_name_for_trial1',
         'family_name_for_trial2',
@@ -282,6 +291,8 @@ is_deeply(\@fam_rep_nums, [
         '1',
         '1',
         '1',
+        '1',
+        '2',
         '2',
         '2',
         '2',
@@ -289,7 +300,7 @@ is_deeply(\@fam_rep_nums, [
         '2'
     ], "check fam rep numbers");
 
-is(scalar@fam_plot_names, 10);
+is(scalar@fam_plot_names, 12);
 
 my $fam_trial_type = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $fam_trial_id });
 my $fam_trial_stock_type = $fam_trial_type->get_trial_stock_type();
