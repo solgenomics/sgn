@@ -201,6 +201,8 @@ solGS.correlation = {
  
 	var population = this.getPopulationDetails();
 
+	jQuery("#run_pheno_correlation").hide();
+	jQuery("#correlation_canvas .multi-spinner-container").show();
 	jQuery("#correlation_message").html("Running correlation... please wait...");
         	
 	jQuery.ajax({
@@ -234,8 +236,6 @@ solGS.correlation = {
     runPhenoCorrelationAnalysis: function () {
 	var population = this.getPopulationDetails();
 	var popId     = population.population_id;
-
-	jQuery("#correlation_canvas .multi-spinner-container").show();
 	
 	jQuery.ajax({
             type: 'POST',
@@ -243,7 +243,7 @@ solGS.correlation = {
             data: {'population_id': popId },
             url: '/phenotypic/correlation/analysis/output',
             success: function (response) {
-		if (response.status== 'success') {
+		if (response.data) {
                     solGS.correlation.plotCorrelation(response.data, '#correlation_canvas');
 		    
 		    var corrDownload = "<a href=\"/download/phenotypic/correlation/population/" 
@@ -251,7 +251,7 @@ solGS.correlation = {
 
 		    jQuery("#correlation_canvas").append("<br />[ " + corrDownload + " ]").show();
 		    
-		    if(document.URL.match('/breeders/trial/')) {
+		    if(document.URL.match('/breeders\/trial/')) {
 			solGS.correlation.displayTraitAcronyms(response.acronyms);
 		    }
 
@@ -369,7 +369,7 @@ solGS.correlation = {
 
 
     displayTraitAcronyms: function (acronyms) {
-	
+
 	if (acronyms) {
 	    var tableId = 'traits_acronyms';	
 	    var table = this.createAcronymsTable(tableId);
