@@ -11,6 +11,10 @@ solGS.heatmap = {
 
     plot: function (data, heatmapCanvasDiv, heatmapPlotDiv, downloadLinks) {
 
+	if (heatmapCanvasDiv == null) {
+	    alert("The div element where the heatmap to draw is missing.");
+	}
+	
 	data = JSON.parse(data);
 	
 	var labels = data.labels;
