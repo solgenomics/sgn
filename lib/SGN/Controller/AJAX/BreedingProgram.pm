@@ -416,16 +416,16 @@ sub get_product_profiles :Chained('ajax_breeding_program') PathPart('product_pro
 sub create_product_profile_template : Path('/ajax/program/create_profile_template') : ActionClass('REST') { }
 
 sub create_product_profile_template_POST : Args(0) {
-  my ($self, $c) = @_;
+    my ($self, $c) = @_;
 
-  if (!$c->user()) {
-    $c->stash->{rest} = {error => "You need to be logged in to create a field book" };
-    return;
-  }
-  if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-    $c->stash->{rest} = {error =>  "You have insufficient privileges to create a field book." };
-    return;
-  }
+    if (!$c->user()) {
+        $c->stash->{rest} = {error => "You need to be logged in to create a field book" };
+        return;
+    }
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+        $c->stash->{rest} = {error =>  "You have insufficient privileges to create a template." };
+        return;
+    }
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
 
     my $template_file_name = $c->req->param('template_file_name');
@@ -441,10 +441,7 @@ sub create_product_profile_template_POST : Args(0) {
     my @trait_ids;
 
     my @trait_list = @{_parse_list_from_json($c->req->param('trait_list_json'))};
-    print STDERR "TRAIT LIST =".Dumper(\@trait_list)."\n";
-
-    my @template_rows = ("Trait");
-    push @template_rows, @trait_list;
+#    print STDERR "TRAIT LIST =".Dumper(\@trait_list)."\n";
 
     my %errors;
     my @error_messages;
@@ -458,12 +455,18 @@ sub create_product_profile_template_POST : Args(0) {
 
     my $ws = $wb->add_worksheet();
 
-    my $row_num = 0;
-    foreach my $r (@template_rows){
-        my $col_num = 0;
-        $ws->write($row_num, $col_num, $r);
-        $row_num++;
+    my @headers = ('Trait', 'Priority', 'Target Value', 'Benchmark Variety', 'Performance (=, <, >)');
+
+    for(my $n=0; $n<scalar(@headers); $n++) {
+        $ws->write(0, $n, $headers[$n]);
     }
+
+    my $line = 1;
+    foreach my $trait (@trait_list) {
+        $ws->write($line, 0, $trait);
+        $line++;
+    }
+
     $wb->close();
 
     open(my $F, "<", $tempfile) || die "Can't open file ".$self->tempfile();
