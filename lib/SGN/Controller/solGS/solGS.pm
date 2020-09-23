@@ -2424,12 +2424,11 @@ sub get_all_traits {
     
     $c->controller('solGS::Files')->traits_list_file($c, $pop_id);
     my $traits_file = $c->stash->{traits_list_file};
-    
+
     if (!-s $traits_file)
     {
 	my $page = $c->req->path;
-	
-	if ($page =~ /solgs\/population\/|anova\// && $pop_id !~ /\D+/)
+	if ($page =~ /solgs\/population\/|anova\/|correlation\// && $pop_id !~ /\D+/)
 	{
 	    $self->save_single_trial_traits($c, $pop_id);
 	}
