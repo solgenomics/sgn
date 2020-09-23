@@ -8,6 +8,7 @@ use File::Slurp;
 use File::Spec qw | catfile |;
 use JSON::Any;
 use File::Basename qw | basename |;
+use DateTime;
 use CXGN::Dataset::File;
 use CXGN::Phenotypes::File;
 use CXGN::MixedModels;
@@ -146,6 +147,7 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
 
     print STDERR Dumper($params);
 
+
     my $tempfile = $params->{tempfile};
     my $dependent_variables = $params->{'dependent_variables[]'};
     if (!ref($dependent_variables)) {
@@ -200,53 +202,99 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     my $varcompfile = $temppath.".varcomp";
     my $error;
     my $lines;
+    
+    my $accession_names;
 
+    my $adjusted_means_html;
+    my $adjusted_means_data;
     if (! -e $resultfile) {
 	$error = "The analysis could not be completed. The factors may not have sufficient numbers of levels to complete the analysis. Please choose other parameters."
     }
     else {
-	$lines = read_file($resultfile); # change this to return accession_name -> trait -> [ value, timestamp, operator, "", "" ]
+	($adjusted_means_data, $adjusted_means_html, $accession_names) = $self->result_file_to_hash($c, $resultfile);
     }
 
-    my $blups;
-    if (-e $blupfile) {     
-	$blups = read_file($blupfile);
+    my $blups_html;
+    my $blups_data;
+    if (-e $blupfile) {
+	($blups_data, $blups_html, $accession_names) = $self->result_file_to_hash($c, $blupfile);
     }
 
-    my $blues;
+    my $blues_html;
+    my $blues_data;
     if (-e $bluefile) {
-	$blues = read_file($bluefile);
+	($blues_data, $blues_html, $accession_names) = $self->result_file_to_hash($c, $bluefile);
+	
     }
 
-    my $anova;
+    my $anova_html;
+    my $anova_data;
     if (-e $anovafile) {
-	$anova = read_file($anovafile);
+	($anova_data, $anova_html, $accession_names) = $self->result_file_to_hash($c, $anovafile);
     }
 
-    my $varcomp;
+    my $varcomp_html;
+    my $varcomp_data;
     if (-e $varcompfile) {
-	$varcomp = read_file($varcompfile);
+	($varcomp_data, $varcomp_html, $accession_names) = $self->result_file_to_hash($c, $varcompfile);
     }
 
-    my $figure1file_response;
-    my $figure2file_response;
-    my $figure3file_response;
-    my $figure4file_response;
 
+    
     $c->stash->{rest} = {
 	error => $error,
-#        figure1 => $figure1file_response,
-#        figure2 => $figure2file_response,
-#        figure3 => $figure3file_response,
-#        figure4 => $figure4file_response,
-        adjusted_means_html =>  $lines,
-	
-	blups_html => $blups,
-	blues_html => $blues,
-	varcomp_html => $varcomp,
-	anova_html => $anova,
+	accession_names => $accession_names,
+	adjusted_means_data => $adjusted_means_data,
+        adjusted_means_html => $adjusted_means_html,
+	blups_data => $blups_data,
+	blups_html => $blups_html,
+	blues_data => $blues_data,
+	blues_html => $blues_html,
+	varcomp_data => $varcomp_data,
+	varcomp_html => $varcomp_html,
+	anova_data => $anova_data,
+	anova_html => $anova_html,
+	traits => 
     };
 }
+
+sub result_file_to_hash {
+    my $self = shift;
+    my $c = shift;
+    my $file = shift;
+
+    print STDERR "result_file_to_hash(): Processing file $file...\n";
+    my @lines = read_file($file);
+
+    my $header_line = shift(@lines);
+    my ($accession_header, @trait_cols) = split /\t/, $header_line;
+    
+    my $now = DateTime->now();
+    my $timestamp = $now->ymd()."T".$now->hms();
+
+    my $operator = $c->user()->get_object()->get_first_name()." ".$c->user()->get_object()->get_last_name();
+    
+    my @fields;
+    my @accession_names;
+    my %analysis_data;
+
+    my $html = qq | <style> th, td { padding: 10px;} </style> \n <table cellpadding="20" cellspacing="20"> |;
+    
+    foreach my $line (@lines) {
+	my ($accession_name, @values) = split /\t/, $line;
+	push @accession_names, $accession_name;
+	$html .= "<tr><td>".join("</td><td>", $accession_name, @values)."</td></tr>\n";
+	for(my $n=0; $n<@values; $n++) { 
+	    $analysis_data{$accession_name}->{$trait_cols[$n]} = [ $values[$n], $timestamp, $operator, "", "" ];
+
+	    
+	}
+	
+    }
+    $html .= "</table>";
+    return (\%analysis_data, $html, \@accession_names);
+}
+
 
 sub extract_trait_data :Path('/ajax/mixedmodels/grabdata') Args(0) {
     my $self = shift;
