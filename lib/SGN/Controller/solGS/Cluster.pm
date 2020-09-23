@@ -22,8 +22,7 @@ BEGIN { extends 'Catalyst::Controller' }
 # __PACKAGE__->config(
 #     default   => 'application/json',
 #     stash_key => 'rest',
-#     map       => { 'application/json' => 'JSON', 
-# 		   'text/html' => 'JSON' },
+#     map       => { 'application/json' => 'JSON'},
 #     );
 
 
@@ -656,7 +655,7 @@ sub cluster_output_files {
     my $tmp_dir = $c->stash->{cluster_temp_dir};
     my $name = "cluster_output_files_${file_id}"; 
     my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
-    write_file($tempfile, $file_list);
+    write_file($tempfile, {binmode => ':utf8'}, $file_list);
     
     $c->stash->{cluster_output_files} = $tempfile;
 
@@ -694,8 +693,9 @@ sub cluster_pheno_input_files {
     if ($data_type =~ /phenotype/i)
     {	    
 	$files = $c->stash->{phenotype_files_list} 
-	|| $c->stash->{phenotype_file} 
 	|| $c->stash->{phenotype_file_name};
+#	$c->controller('solGS::Files')->trait_phenodata_file($c);
+#	$files = $c->stash->{trait_phenodata_file};
 	
 	$c->controller('solGS::Files')->phenotype_metadata_file($c);
 	my $metadata_file = $c->stash->{phenotype_metadata_file};
@@ -773,7 +773,7 @@ sub cluster_input_files {
 
     $files .= "\t" . $cluster_opts_file;
     
-    write_file($tempfile, $files);
+    write_file($tempfile, {binmode => ':utf8'}, $files);
     
     $c->stash->{cluster_input_files} = $tempfile;
 
@@ -790,15 +790,31 @@ sub save_cluster_opts {
     my $data_type = $c->stash->{data_type};
     my $k_number  = $c->stash->{k_number};
     my $selection_prop = $c->stash->{selection_proportion};
- 
-    my $opts_data = 'Params' . "\t" . 'Value' . "\n";
-    $opts_data   .= 'data type' . "\t" . $data_type . "\n";
-    $opts_data   .= 'k numbers' . "\t" . $k_number  . "\n";
-    $opts_data   .= 'cluster type' . "\t" . $cluster_type  . "\n";
-    $opts_data   .= 'selection proportion' . "\t" . $selection_prop  . "\n" if $selection_prop;
-
+    my $traits_ids = $c->stash->{training_traits_ids};
+   
+    my @traits_abbrs;
+    my $predicted_traits;
     
-    write_file($opts_file, $opts_data);
+    if ($traits_ids) 
+    {
+	foreach my $trait_id (@$traits_ids)
+	{
+	    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+	    push @traits_abbrs, $c->stash->{trait_abbr};
+	}
+
+	$predicted_traits = join(',', @traits_abbrs);
+    }
+    
+    my $opts_data = 'Params' . "\t" . 'Value' . "\n";
+    $opts_data   .= 'data_type' . "\t" . $data_type . "\n";
+    $opts_data   .= 'k_numbers' . "\t" . $k_number  . "\n";
+    $opts_data   .= 'cluster_type' . "\t" . $cluster_type  . "\n";
+    $opts_data   .= 'selection_proportion' . "\t" . $selection_prop  . "\n" if $selection_prop;
+    $opts_data   .= 'predicted_traits' . "\t" . $predicted_traits . "\n" if $predicted_traits;
+    
+    write_file($opts_file, {binmode => ':utf8'}, $opts_data);
+    
     
 }
 
@@ -820,6 +836,13 @@ sub create_cluster_phenotype_data_query_jobs {
     }
     else
     {
+	my $combo_pops_id = $c->stash->{combo_pops_id};
+	if ($combo_pops_id) 
+	{
+	    $c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id); 
+	    $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
+	}
+	
 	my $trials = $c->stash->{pops_ids_list} || [$c->stash->{training_pop_id}] || [$c->stash->{selection_pop_id}];
 	$c->controller('solGS::solGS')->get_cluster_phenotype_query_job_args($c, $trials);
 	$c->stash->{cluster_pheno_query_jobs} = $c->stash->{cluster_phenotype_query_job_args};

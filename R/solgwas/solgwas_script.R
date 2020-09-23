@@ -103,19 +103,21 @@ print("Filtering out stock IDs not in geno matrix...")
 dim(pheno_mod)
 pheno_mod$germplasmName<-factor(as.character(pheno_mod$germplasmName), levels=rownames(geno.gwas)) #to ensure same levels on both files
 pheno_mod <- pheno_mod[order(pheno_mod$germplasmName),]
-##Creating file for GWAS function from rrBLUP package
-pheno_mod$locationDbId<- as.factor(pheno_mod$locationDbId)
-# Check the number of levels in the pheno_mod$locationDbId
-location_levels <- nlevels(pheno_mod$locationDbId)
-print("Number of Levels:")
-location_levels
-# Check model.matrix
-# Set model.matrix to include locationDbId in the model, but not if this factor has only one level...
-if (nlevels(pheno_mod$locationDbId) > 1) {
-X<-model.matrix(~-1+locationDbId, data=pheno_mod)
-} else {
+
+####
+###Creating file for GWAS function from rrBLUP package
+#pheno_mod$locationDbId<- as.factor(pheno_mod$locationDbId)
+## Check the number of levels in the pheno_mod$locationDbId
+#location_levels <- nlevels(pheno_mod$locationDbId)
+#print("Number of Levels:")
+#location_levels
+## Check model.matrix
+## Set model.matrix to include locationDbId in the model, but not if this factor has only one level...
+#if (nlevels(pheno_mod$locationDbId) > 1) {
+#X<-model.matrix(~-1+locationDbId, data=pheno_mod)
+#} else {
 X<-model.matrix(~-1, data=pheno_mod)
-}
+#}
 pheno.gwas <- data.frame(GID=pheno_mod$germplasmName,X,PHENO=pheno_mod$pheno_vector)
 pheno.gwas[1:5,1:2]
 geno.gwas <- geno.gwas[rownames(geno.gwas)%in%pheno.gwas$GID,]

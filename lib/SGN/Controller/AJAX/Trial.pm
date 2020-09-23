@@ -18,6 +18,7 @@ Jeremy Edwards <jde22@cornell.edu>
 package SGN::Controller::AJAX::Trial;
 
 use Moose;
+use utf8;
 use Try::Tiny;
 use Scalar::Util qw(looks_like_number);
 use DateTime;
@@ -31,7 +32,6 @@ use Data::Dumper;
 use CXGN::Trial;
 use CXGN::Trial::TrialDesign;
 use CXGN::Trial::TrialCreate;
-use JSON -support_by_pp;
 use SGN::View::Trial qw/design_layout_view design_info_view design_layout_map_view/;
 use CXGN::Location::LocationLookup;
 use CXGN::Stock::StockLookup;
@@ -43,16 +43,17 @@ use CXGN::Trial::ParseUpload;
 use CXGN::List::Transform;
 use CXGN::List::Validate;
 use SGN::Model::Cvterm;
-use JSON;
+use JSON::XS;
 use CXGN::BreedersToolbox::Accessions;
 use CXGN::BreederSearch;
+use YAML;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON'  },
    );
 
 has 'schema' => (
@@ -80,7 +81,7 @@ sub generate_experimental_design_POST : Args(0) {
     my $design_info_view_html;
     my $design_map_view;
     if ($c->req->param('stock_list')) {
-        @stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
+	@stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
     }
     my $seedlot_hash_json = $c->req->param('seedlot_hash');
     my @control_names;
@@ -179,7 +180,6 @@ sub generate_experimental_design_POST : Args(0) {
     }
     my $number_of_unreplicated_stocks = scalar(@unreplicated_stocks);
 
-
     my $greenhouse_num_plants = $c->req->param('greenhouse_num_plants');
     my $use_same_layout = $c->req->param('use_same_layout');
     my $number_of_checks = scalar(@control_names_crbd);
@@ -199,7 +199,6 @@ sub generate_experimental_design_POST : Args(0) {
     if($design_type eq "p-rep"){
         @stock_names = (@replicated_stocks, @unreplicated_stocks);
     #}
-    #print STDERR Dumper(\@stock_names);
 
         $number_of_prep_stocks = scalar(@stock_names);
         $p_rep_total_plots = $row_in_design_number * $col_in_design_number;
@@ -211,9 +210,9 @@ sub generate_experimental_design_POST : Args(0) {
     my @locations;
 
     try {
-        my $multi_location = decode_json($trial_location);
+	my $json = JSON::XS->new();
+        my $multi_location = $json->decode($trial_location);
         foreach my $loc (@$multi_location) {
-            print STDERR "One location is $loc\n";
             push @locations, $loc;
         }
     }
@@ -222,8 +221,6 @@ sub generate_experimental_design_POST : Args(0) {
     };
 
     my $location_number = scalar(@locations);
-
-    #print STDERR Dumper(@locations);
 
     if (!$c->user()) {
         $c->stash->{rest} = {error => "You need to be logged in to add a trial" };
@@ -242,20 +239,17 @@ sub generate_experimental_design_POST : Args(0) {
 
     my @design_array;
     my @design_layout_view_html_array;
-
+    my $json = JSON::XS->new();
+    
     foreach my $location (@locations) {
-
-        #print STDERR "Working on location $location\n";
-
         my $trial_name = $c->req->param('project_name');
         my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema => $schema);
-
+	
         $geolocation_lookup->set_location_name($location);
         if (!$geolocation_lookup->get_geolocation()){
             $c->stash->{rest} = { error => "Trial location not found" };
             return;
         }
-        #print STDERR Dumper(\$geolocation_lookup);
 
         if ($location_number > 1) {
 
@@ -267,14 +261,12 @@ sub generate_experimental_design_POST : Args(0) {
             });
 
             my $abbreviation = $location_object->abbreviation();
-            #print STDERR "Abbreviation is $abbreviation\n";
 
             if ($abbreviation) {
                 $trial_name = $trial_name.$abbreviation;
             } else {
                 $trial_name = $trial_name.$location;
             }
-            #print STDERR "Trial name after addition is $trial_name\n";
         }
 
         #strip name of any invalid filename characters
@@ -298,7 +290,6 @@ sub generate_experimental_design_POST : Args(0) {
             return;
         }
         if ($seedlot_hash_json){
-            my $json = JSON->new();
             $trial_design->set_seedlot_hash($json->decode($seedlot_hash_json));
         }
         if ($num_seed_per_plot){
@@ -350,7 +341,7 @@ sub generate_experimental_design_POST : Args(0) {
             $trial_design->set_maximum_block_size($max_block_size);
         }
         if ($greenhouse_num_plants) {
-            my $json = JSON->new();
+            my $json = JSON::XS->new();
             $trial_design->set_greenhouse_num_plants($json->decode($greenhouse_num_plants));
         }
         if ($westcott_check_1){
@@ -442,7 +433,7 @@ sub generate_experimental_design_POST : Args(0) {
         $design_layout_view_html = design_layout_view(\%design, \%design_info, $design_type, $trial_stock_type);
         $design_map_view = design_layout_map_view(\%design, $design_type);
         $design_info_view_html = design_info_view(\%design, \%design_info, $trial_stock_type);
-        my $design_json = encode_json(\%design);
+        my $design_json = $json->encode(\%design);
         push @design_array,  $design_json;
         push @design_layout_view_html_array, $design_layout_view_html;
     }
@@ -450,7 +441,7 @@ sub generate_experimental_design_POST : Args(0) {
     my $warning_message;
     #check if field size can fit the design_json
     if ($field_size && $plot_width && $plot_length){
-        my $num_plots = scalar( keys %{decode_json $design_array[0]} );
+        my $num_plots = scalar( keys %{$json->decode($design_array[0])} );
         my $total_area = $plot_width * $plot_length * $num_plots; #sq meters. 1 ha = 10000m2
         my $field_size_m = $field_size * 10000;
         if ($field_size_m < $total_area){
@@ -462,10 +453,10 @@ sub generate_experimental_design_POST : Args(0) {
 
     $c->stash->{rest} = {
         success => "1",
-        design_layout_view_html => encode_json(\@design_layout_view_html_array),
+        design_layout_view_html => $json->encode(\@design_layout_view_html_array),
         design_info_view_html => $design_info_view_html,
         design_map_view => $design_map_view,
-        design_json =>  encode_json(\@design_array),
+        design_json =>  $json->encode(\@design_array),
         warning_message => $warning_message
     };
 }
@@ -482,7 +473,6 @@ sub save_experimental_design_POST : Args(0) {
     my $dbh = $c->dbc->dbh;
 
     print STDERR "Saving trial... :-)\n";
-
 
     if (!$c->user()) {
         $c->stash->{rest} = {error => "You need to be logged in to add a trial" };
@@ -524,8 +514,9 @@ sub save_experimental_design_POST : Args(0) {
     my $folder;
     my $new_trial_id;
 
+    my $json = JSON::XS->new();
     try {
-        $multi_location = decode_json($locations);
+        $multi_location = $json->decode($locations);
         foreach my $loc (@$multi_location) {
             push @locations, $loc;
         }
@@ -568,24 +559,18 @@ sub save_experimental_design_POST : Args(0) {
                 nd_geolocation_id => $location_id,
             });
             my $abbreviation = $location_object->abbreviation();
-            #print STDERR "Abbreviation is $abbreviation\n";
-
-            #print STDERR "Trial name before change is $trial_name\n";
 
             if ($abbreviation) {
                 $trial_name = $trial_name.$abbreviation;
             } else {
                 $trial_name = $trial_name.$trial_location;
             }
-            #print STDERR "Trial name after addition is $trial_name\n";
         }
 
         #strip name of any invalid filename characters
         $trial_name =~ s/[\\\/\s:,"*?<>|]+//;
-        #print STDERR "Trial name after strip is $trial_name\n";
 
-        my $trial_location_design = decode_json($design->[$design_index]);
-        #print STDERR Dumper $trial_location_design;
+        my $trial_location_design = $json->decode($design->[$design_index]);
 
         my %trial_info_hash = (
             chado_schema => $chado_schema,
@@ -812,10 +797,10 @@ sub verify_seedlot_list_POST : Args(0) {
 
 sub _parse_list_from_json {
     my $list_json = shift;
-    my $json = new JSON;
+    my $json = JSON::XS->new();
     if ($list_json) {
-        my $decoded_list = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
-        #my $decoded_list = decode_json($list_json);
+        #my $decoded_list = $json->allow_nonref->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
+        my $decoded_list = $json->decode($list_json);
         my @array_of_list_items = @{$decoded_list};
         return \@array_of_list_items;
     }
@@ -826,10 +811,10 @@ sub _parse_list_from_json {
 
 sub _parse_design_from_json {
     my $design_json = shift;
-    my $json = new JSON;
+    my $json = JSON::XS->new();
     if ($design_json) {
-        my $decoded_json = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($design_json);
-        #my $decoded_json = decode_json($design_json);
+        #my $decoded_json = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($design_json);
+        my $decoded_json = $json->decode($design_json);
         #my %design = %{$decoded_json};
         return $decoded_json;
     }
@@ -845,8 +830,12 @@ sub upload_trial_file : Path('/ajax/trial/upload_trial_file') : ActionClass('RES
 sub upload_trial_file_POST : Args(0) {
     my ($self, $c) = @_;
 
+    select(STDERR);
+    $| = 1;
+    
     print STDERR "Check 1: ".localtime()."\n";
 
+    
     #print STDERR Dumper $c->req->params();
     my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");

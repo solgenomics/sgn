@@ -171,7 +171,7 @@ sub detail {
         # offset=>$page_size*$page,
         # limit=>$page_size
     });
-    my $file_handle = $genotype_search->get_cached_file_search_json($c, 1); #Metadata only returned
+    my $file_handle = $genotype_search->get_cached_file_search_json($c->config->{cluster_shared_tempdir}, 1); #Metadata only returned
 
     my @data;
     my %variant_sets;
@@ -263,7 +263,7 @@ sub callsets {
         # offset=>$page_size*$page,
         # limit=>$page_size
     });
-    my $file_handle = $genotypes_search->get_cached_file_search_json($c, 1); #Metadata only returned
+    my $file_handle = $genotypes_search->get_cached_file_search_json($c->config->{cluster_shared_tempdir}, 1); #Metadata only returned
     my @data;
 
     my $start_index = $page*$page_size;
@@ -277,18 +277,17 @@ sub callsets {
         if ($counter >= $start_index && $counter <= $end_index) {
             my $gt = decode_json $_;
             my @analysis;
-            my @additionalInfo = {};
             my @availableFormats;
             
             push @data, {
-                additionalInfo=>\@additionalInfo,
+                additionalInfo=>{},
                 callSetDbId=> qq|$gt->{stock_id}|,
                 callSetName=> qq|$gt->{stock_name}|,
                 created=>undef,
                 sampleDbId=>qq|$gt->{stock_id}|,
                 studyDbId=>qq|$gt->{genotypingDataProjectDbId}|, 
                 updated=>undef,
-                variantSetIds => [ $gt->{genotypingDataProjectDbId}. "p". $gt->{analysisMethodDbId} ],
+                variantSetDbIds => [ $gt->{genotypingDataProjectDbId}. "p". $gt->{analysisMethodDbId} ],
             };
         }
         $counter++;
@@ -340,7 +339,7 @@ sub calls {
         protocolprop_top_key_select=>[],
         protocolprop_marker_hash_select=>[],
     });
-    my $file_handle = $genotypes_search->get_cached_file_search_json($c, 0);
+    my $file_handle = $genotypes_search->get_cached_file_search_json($c->config->{cluster_shared_tempdir}, 0);
 
     my $start_index = $page*$page_size;
     my $end_index = $page*$page_size + $page_size - 1;
@@ -371,7 +370,7 @@ sub calls {
                     $geno = $genotype->{$m}->{'DS'};
                 }
                 push @data, {
-                    additionalInfo=>undef,
+                    additionalInfo=>{},
                     variantName=>qq|$m|,
                     variantDbId=>qq|$m|,
                     callSetDbId=>qq|$gt->{stock_id}|,

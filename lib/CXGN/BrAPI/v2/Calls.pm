@@ -72,7 +72,7 @@ sub search {
         limit=>$limit,
         offset=>$offset,
     });
-    my $file_handle = $genotypes_search->get_cached_file_search_json($c, 0);
+    my $file_handle = $genotypes_search->get_cached_file_search_json($c->config->{cluster_shared_tempdir}, 0);
     
     my $start_index = $page*$page_size;
     my $end_index = $page*$page_size + $page_size - 1;
@@ -126,7 +126,7 @@ sub search {
                 unknownString=>undef);
 
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'VariantSets result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Calls result constructed');
 }
 
 1;

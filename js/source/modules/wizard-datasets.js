@@ -6,14 +6,14 @@ import "../legacy/CXGN/Dataset.js";
  *
  * @class
  * @classdesc links to a wizard and manages loading/saving datasets
- * @param  {type} main_id div to draw within 
- * @param  {type} wizard wizard to link to 
+ * @param  {type} main_id div to draw within
+ * @param  {type} wizard wizard to link to
  * @returns {Object}
- */ 
+ */
 export function WizardDatasets(main_id,wizard){
   var main = d3.select(main_id);
   var datasets = new CXGN.Dataset();
-    
+
   var catagories = [];
   var selections = {};
   var operations = {};
@@ -22,7 +22,7 @@ export function WizardDatasets(main_id,wizard){
     selections = s;
     operations = o;
   });
-  
+
   main.select(".wizard-dataset-load").on("click",function(){
     var val = main.select(".wizard-dataset-select").node().value;
     if(val!=""){
@@ -41,18 +41,24 @@ export function WizardDatasets(main_id,wizard){
         }),1);
     }
   });
-  
+
   main.select(".wizard-dataset-create").on("click",function(){
     var name = main.select(".wizard-dataset-name").node().value;
     if(name!=""){
       d3.select(this).attr("disabled",true);
       var cols = wizard.getColumns();
-      var last_relevant = cols.findIndex(c=>{
+      var first_irrelevant_col = cols.findIndex(c=>{
         return !c.type || c.items.filter(d=>d.selected).length<1
       });
-      console.log(last_relevant);
-      if(last_relevant==0) return;
-      cols = cols.slice(0,last_relevant,cols.length-1);
+      if(first_irrelevant_col==0) {
+          alert(`Dataset creation failed. No data is selected.`);
+          d3.select(this).attr("disabled",null);
+          return;
+      }
+      if(first_irrelevant_col==-1) {
+          first_irrelevant_col = cols.length; // retain all columns if no irrelevant ones are found
+      }
+      cols = cols.slice(0, first_irrelevant_col);
       var order = cols.map(c=>c.type);
       var params = `?name=${name}&category_order=${JSON.stringify(order)}`
       cols.forEach(c=>{
@@ -63,12 +69,18 @@ export function WizardDatasets(main_id,wizard){
         method:'post',
         credentials: 'include'
       }).then(()=>{
+          var details = '';
+          cols.forEach(c=>{
+            details+= `\n    ${c.items.filter(d=>d.selected).length} ${c.type}`;
+          })
+        alert(`Dataset ${name} created with\: ${details}`);
+        load_datasets();
         d3.select(this).attr("disabled",null);
       })
     }
   });
-  
-  ;(new Promise((resolve,reject)=>{
+
+  var load_datasets = ()=>(new Promise((resolve,reject)=>{
     resolve(datasets.getDatasets());
   })).then(datasets_data=>{
     if(datasets_data.error){
@@ -91,4 +103,7 @@ export function WizardDatasets(main_id,wizard){
         .text(d=>d[1]);
     }
   })
+
+  load_datasets();
+
 }

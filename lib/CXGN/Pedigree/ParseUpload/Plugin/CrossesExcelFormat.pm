@@ -11,7 +11,7 @@ sub _validate_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
-    my $cross_properties = $self->get_cross_properties();
+#    my $cross_properties = $self->get_cross_properties();
     my @error_messages;
     my %errors;
     my %supported_cross_types;
@@ -105,19 +105,19 @@ sub _validate_with_plugin {
         push @error_messages, "Cell G1: male_plot or male_plant is missing from the header";
     }
 
-    my %valid_properties;
-    my @properties = @{$cross_properties};
-    foreach my $property(@properties){
-        $valid_properties{$property} = 1;
-    }
+#    my %valid_properties;
+#    my @properties = @{$cross_properties};
+#    foreach my $property(@properties){
+#        $valid_properties{$property} = 1;
+#    }
 
-    for my $column ( 7 .. $col_max ) {
-        my $header_string = $worksheet->get_cell(0,$column)->value();
+#    for my $column ( 7 .. $col_max ) {
+#        my $header_string = $worksheet->get_cell(0,$column)->value();
 
-        if (!$valid_properties{$header_string}){
-            push @error_messages, "Invalid info type: $header_string";
-        }
-    }
+#        if (!$valid_properties{$header_string}){
+#            push @error_messages, "Invalid info type: $header_string";
+#        }
+#    }
 
     my %seen_cross_names;
     my %seen_accession_names;
@@ -166,18 +166,18 @@ sub _validate_with_plugin {
             $male_plot_plant_name =  $worksheet->get_cell($row,6)->value();
         }
 
-        for my $column ( 7 .. $col_max ) {
-            if ($worksheet->get_cell($row,$column)) {
-                my $info_value = $worksheet->get_cell($row,$column)->value();
-                my $info_type = $worksheet->get_cell(0,$column)->value();
-                if ( ($info_type =~ m/days/  || $info_type =~ m/number/) && !($info_value =~ /^\d+?$/) ) {
-                    push @error_messages, "Cell $info_type:$row_name: is not a positive integer: $info_value";
-                }
-                elsif ( $info_type =~ m/date/ && !($info_value =~ m/(\d{4})\/(\d{2})\/(\d{2})/) ) {
-                    push @error_messages, "Cell $info_type:$row_name: is not a valid date: $info_value. Dates need to be of form YYYY/MM/DD";
-                }
-            }
-        }
+#        for my $column ( 7 .. $col_max ) {
+#            if ($worksheet->get_cell($row,$column)) {
+#                my $info_value = $worksheet->get_cell($row,$column)->value();
+#                my $info_type = $worksheet->get_cell(0,$column)->value();
+#                if ( ($info_type =~ m/days/  || $info_type =~ m/number/) && !($info_value =~ /^\d+?$/) ) {
+#                    push @error_messages, "Cell $info_type:$row_name: is not a positive integer: $info_value";
+#                }
+#                elsif ( $info_type =~ m/date/ && !($info_value =~ m/(\d{4})\/(\d{2})\/(\d{2})/) ) {
+#                    push @error_messages, "Cell $info_type:$row_name: is not a valid date: $info_value. Dates need to be of form YYYY/MM/DD";
+#                }
+#            }
+#        }
 
         #cross name must not be blank
         if (!$cross_name || $cross_name eq '') {
@@ -296,8 +296,8 @@ sub _parse_with_plugin {
     my $excel_obj;
     my $worksheet;
     my @pedigrees;
-    my %additional_properties;
-    my %properties_columns;
+#    my %additional_properties;
+#    my %properties_columns;
     my %parsed_result;
 
     $excel_obj = $parser->parse($filename);
@@ -312,12 +312,12 @@ sub _parse_with_plugin {
     my $female_plot_plant_header  = $worksheet->get_cell(0,5)->value();
     my $male_plot_plant_header  = $worksheet->get_cell(0,6)->value();
 
-    for my $column ( 7 .. $col_max ) {
-        my $header_string = $worksheet->get_cell(0,$column)->value();
+#    for my $column ( 7 .. $col_max ) {
+#        my $header_string = $worksheet->get_cell(0,$column)->value();
 
-        $properties_columns{$column} = $header_string;
-        $additional_properties{$header_string} = ();
-    }
+#        $properties_columns{$column} = $header_string;
+#        $additional_properties{$header_string} = ();
+#    }
 
     for my $row ( 1 .. $row_max ) {
         my $cross_name;
@@ -378,14 +378,14 @@ sub _parse_with_plugin {
             }
         }
 
-        for my $column ( 7 .. $col_max ) {
-            if ($worksheet->get_cell($row,$column)) {
-                my $column_property = $properties_columns{$column};
-                $additional_properties{$column_property}{$cross_name} = $worksheet->get_cell($row,$column)->value();
-                my $info_type = $worksheet->get_cell(0,$column)->value();
-                $parsed_result{$info_type} = $additional_properties{$column_property};
-            }
-        }
+#        for my $column ( 7 .. $col_max ) {
+#            if ($worksheet->get_cell($row,$column)) {
+#                my $column_property = $properties_columns{$column};
+#                $additional_properties{$column_property}{$cross_name} = $worksheet->get_cell($row,$column)->value();
+#                my $info_type = $worksheet->get_cell(0,$column)->value();
+#                $parsed_result{$info_type} = $additional_properties{$column_property};
+#            }
+#        }
 
         my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name=>$cross_name, cross_combination=>$cross_combination, cross_type=>$cross_type);
         if ($female_parent) {

@@ -36,8 +36,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 
-		   'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON'},
     );
 
 
@@ -97,31 +96,30 @@ sub create_anova_phenodata_file {
     my ($self, $c)  = @_;
         
     $c->stash->{pop_id} = $c->stash->{trial_id};
-    #$c->controller('solGS::solGS')->phenotype_file($c);
-
-
-    $self->anova_query_jobs_file($c);
-    my $queries =$c->stash->{anova_query_jobs_file};
-   
-    $c->stash->{dependent_jobs} = $queries;
-    $c->controller('solGS::solGS')->run_async($c);
-    
-    # foreach my $job (@$queries)
-    # {
-    # 	$c->controller('solGS::solGS')->submit_job_cluster($c, $job);
-    # }
-     
+        
     $c->controller('solGS::Files')->phenotype_file_name($c, $c->stash->{pop_id});
     my $pheno_file = $c->stash->{phenotype_file_name};
-    #my $pheno_file =  $c->stash->{phenotype_file};
-      
-    if (!-s $pheno_file) {
+  
+    if (!-s $pheno_file)
+    {
+	$self->anova_query_jobs_file($c);
+	my $queries =$c->stash->{anova_query_jobs_file};
+   
+	$c->stash->{dependent_jobs} = $queries;
+	$c->controller('solGS::solGS')->run_async($c);
+    }
+    
+    if (!-s $pheno_file) 
+    {
 	$c->stash->{rest}{'Error'} = 'There is no phenotype data for this  trial.';
-    } else {
+    } 
+    else 
+    {
 	$c->stash->{rest}{'success'} = 'Success.';	
     }
 
-    if (@{$c->error}) {
+    if (@{$c->error}) 
+    {
 	$c->stash->{rest}{'Error'} = 'There was error querying for the phenotype data.';
     }
         
@@ -136,10 +134,8 @@ sub check_trial_design {
     my $trial = CXGN::Trial->new({bcs_schema => $self->schema($c), 
 				 trial_id => $trial_id});
 
-    my $design    = $trial->get_design_type();
- 
-    my $supported;
-    $supported = $self->check_support($design) if $design;
+    my $design = $trial->get_design_type();
+    my $supported = $self->check_support($design) if $design;
 
     if (!$design) 
     {
@@ -186,11 +182,11 @@ sub get_traits_abbrs {
     my $traits_ids = $c->stash->{traits_ids};
   
     $c->stash->{pop_id} = $trial_id;  
-    $c->controller('solGS::solGS')->get_all_traits($c);
-    $c->controller('solGS::Files')->all_traits_file($c);
+    $c->controller('solGS::solGS')->get_all_traits($c, $trial_id);
+    $c->controller('solGS::Files')->all_traits_file($c, $trial_id);
     my $traits_file = $c->stash->{all_traits_file};
    
-    my @traits = read_file($traits_file);
+    my @traits = read_file($traits_file, {binmode => ':utf8'});
 
     my @traits_abbrs;
 
@@ -223,8 +219,25 @@ sub anova_analyis :Path('/anova/analysis/') Args(0) {
 	foreach my $k (keys %$tr) 
 	{
 	    $c->stash->{$k} = $tr->{$k};	   
-	}
+	
 
+	    # my $tr_test = $tr->{$k};
+	    # my $trait_id = $c->stash->{trait_id};
+	    # print STDERR "\nanova_analysis k $k -- tr test: $tr_test -- trait_id: $trait_id\n";
+	    # if ($k =~ /trait_abbr/)
+	    # {
+	    # 	#$tr->{$k} = undef;
+	    # 	if (!$tr->{$k})
+	    # 	{
+		  
+	    # 	    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+	    # 	    my $trait_abbr = $c->stash->{trait_abbr};
+	    # 	    print STDERR "\nanova analysis : trait id: $trait_id -- tr abbr: $trait_abbr\n";
+	    # 	}
+	    # }
+
+	}
+	
 	my $anova_result = $self->check_anova_output($c);
 	
 	unless ($anova_result) 
@@ -244,7 +257,7 @@ sub check_anova_output {
    
     if (-s $html_file) {
 	
-	my $html_table = read_file($html_file);
+	my $html_table = read_file($html_file, {binmode => ':utf8'});
 	
 	$self->prep_download_files($c);
 	my $anova_table_file = $c->stash->{download_anova};
@@ -264,7 +277,7 @@ sub check_anova_output {
 	$self->anova_error_file($c);
 	my $error_file = $c->stash->{anova_error_file};
 
-	my $error = read_file($error_file);
+	my $error = read_file($error_file, {binmode => ':utf8'});
 	$c->stash->{rest}{Error} = $error;
 	
 	return 0;
@@ -444,14 +457,17 @@ sub anova_query_jobs_file {
 
     $self->anova_query_jobs($c);
     my $jobs = $c->stash->{anova_query_jobs};
-  
-    my $temp_dir = $c->stash->{anova_temp_dir};
-    my $jobs_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'anova-query-jobs-file');	   
-   
-    nstore $jobs, $jobs_file
-	or croak "anova query jobs : $! serializing anova query jobs to $jobs_file";
 
-    $c->stash->{anova_query_jobs_file} = $jobs_file;
+    if ($jobs->[0])
+    {
+	my $temp_dir = $c->stash->{anova_temp_dir};
+	my $jobs_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'anova-query-jobs-file');	   
+	
+	nstore $jobs, $jobs_file
+	    or croak "anova query jobs : $! serializing anova query jobs to $jobs_file";
+
+	$c->stash->{anova_query_jobs_file} = $jobs_file;
+    }
     
 }
 
@@ -498,7 +514,7 @@ sub anova_input_files {
     my $trial_id = $c->stash->{trial_id};
     my $trait_id = $c->stash->{trait_id};   
     
-    $self->anova_pheno_file($c);
+    $c->controller('solGS::Files')->phenotype_file_name($c, $trial_id);
     my $pheno_file = $c->stash->{phenotype_file_name};
 
     $self->anova_traits_file($c);   
@@ -516,19 +532,19 @@ sub anova_input_files {
     my $tmp_dir = $c->stash->{anova_temp_dir};
     my $name = "anova_input_files_${trial_id}_${trait_id}"; 
     my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
-    write_file($tempfile, $file_list);
+    write_file($tempfile, {binmode => ':utf8'}, $file_list);
     
     $c->stash->{anova_input_files} = $tempfile;
 
 }
 
 
-sub anova_pheno_file {
-    my ($self, $c) = @_;
+# sub anova_pheno_file {
+#     my ($self, $c) = @_;
     
-    $self->create_anova_phenodata_file($c);
-   #$c->
-}
+#     $self->create_anova_phenodata_file($c);
+  
+# }
 
 
 sub anova_traits_file {
@@ -540,7 +556,7 @@ sub anova_traits_file {
     my $tmp_dir = $c->stash->{anova_temp_dir};
     my $name    = "anova_traits_file_${trial_id}"; 
     my $traits_file =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
-    write_file($traits_file, $traits);
+    write_file($traits_file, {binmode => ':utf8'}, $traits);
 
     $c->stash->{anova_traits_file} = $traits_file;
     
@@ -573,7 +589,7 @@ sub anova_output_files {
     my $tmp_dir = $c->stash->{anova_temp_dir};
     my $name = "anova_output_files_${trial_id}_${trait_id}"; 
     my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
-    write_file($tempfile, $file_list);
+    write_file($tempfile, {binmode => ':utf8'}, $file_list);
     
     $c->stash->{anova_output_files} = $tempfile;
 

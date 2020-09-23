@@ -45,7 +45,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON' },
    );
 
 
@@ -216,9 +216,9 @@ sub create_trait_file_for_field_book_POST : Args(0) {
     mkdir (catfile($archive_path, $user_id, $subdirectory_name));
   }
   print STDERR Dumper($file_destination);
-  open FILE, ">$file_destination" or die $!;
+  open(my $FILE, "> :encoding(UTF-8)", $file_destination) or die $!;
   my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-  print FILE "trait,format,defaultValue,minimum,maximum,details,categories,isVisible,realPosition\n";
+  print $FILE "trait,format,defaultValue,minimum,maximum,details,categories,isVisible,realPosition\n";
   my $order = 0;
 
   foreach my $term (@trait_list) {
@@ -253,16 +253,16 @@ sub create_trait_file_for_field_book_POST : Args(0) {
       #print line with trait info
       #print FILE "$trait_name:$db_name:$accession,text,,,,,,TRUE,$order\n";
       #print STDERR " Adding line \"$name\t\t\t|$db_name:$accession\",$trait_info_string,\"TRUE\",\"$order\" to trait file\n";
-      print FILE "\"$name\t\t\t|$db_name:$accession\",$trait_info_string,\"TRUE\",\"$order\"\n";
+      print $FILE "\"$name\t\t\t|$db_name:$accession\",$trait_info_string,\"TRUE\",\"$order\"\n";
   }
 
   if ($include_notes eq 'true') {
       $order++;
       #print STDERR " Adding notes line \"notes\",\"text\",\"\",\"\",\"\",\"Additional observations for future reference\",\"\",\"TRUE\",\"$order\"\n";
-      print FILE "\"notes\",\"text\",\"\",\"\",\"\",\"Additional observations for future reference\",\"\",\"TRUE\",\"$order\"\n";
+      print $FILE "\"notes\",\"text\",\"\",\"\",\"\",\"Additional observations for future reference\",\"\",\"TRUE\",\"$order\"\n";
   }
 
-  close FILE;
+  close $FILE;
 
   open(my $F, "<", $file_destination) || die "Can't open file ";
   binmode $F;
@@ -297,8 +297,8 @@ sub _parse_list_from_json {
   my $list_json = shift;
   my $json = new JSON;
   if ($list_json) {
-    my $decoded_list = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
-    #my $decoded_list = decode_json($list_json);
+      #my $decoded_list = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
+     my $decoded_list = decode_json($list_json);
     my @array_of_list_items = @{$decoded_list};
     return \@array_of_list_items;
   }

@@ -64,6 +64,26 @@ $identifier_prefix => ''
 <& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
+<&| /page/info_section.mas, title => 'Member of', collapsible=>1, collapsed=>0 &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <div style="overflow:scroll">
+                    <table id = "membership_table" class="table table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th>Crossing Experiment</th>
+                                <th>Description</th>
+                                <th>Family Name</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+ </&>
+
 <&| /page/info_section.mas, title => 'Parents', collapsible=>1, collapsed=>0 &>
     <div class = "well well-sm">
         <div class = "panel panel-default">

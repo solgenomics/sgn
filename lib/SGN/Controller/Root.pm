@@ -8,7 +8,7 @@ use CatalystX::GlobalContext ();
 use CXGN::Login;
 use CXGN::People::Person;
 use List::MoreUtils 'uniq';
-use JSON;
+use JSON::XS;
 
 
 BEGIN { extends 'Catalyst::Controller' }
@@ -59,7 +59,7 @@ sub index :Path :Args(0) {
 
     my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
     my $breeding_programs = $projects->get_breeding_programs();
-    $c->stash->{locations} = decode_json $projects->get_location_geojson();
+    $c->stash->{locations} = JSON::XS->new()->decode($projects->get_location_geojson());
     $c->stash->{breeding_programs} = $breeding_programs;
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{timestamp} = localtime;

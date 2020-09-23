@@ -87,7 +87,6 @@ sub _validate_with_plugin {
 
     if (scalar(@crosses_missing) > 0){
         push @error_messages, "The following cross unique ids are not in the database as uniquenames or synonyms: ".join(',',@crosses_missing);
-        $errors{'missing_crosses'} = \@crosses_missing;
     }
 
     #store any errors found in the parsed file to parse_errors accessor

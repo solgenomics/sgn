@@ -124,6 +124,7 @@ my $build = SGN::Build->new(
         'Mail::Sendmail'                           => 0,
 	'Math::Base36'                             => 0,
         'Math::Round::Var'                         => 0,
+        'Math::Polygon'                         => 0,
         'Memoize'                                  => 0,
         'Modern::Perl'                             => 0,
         'Module::Build'                            => '0.36',

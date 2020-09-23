@@ -1,0 +1,102 @@
+
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form' ] &>
+
+<div class="modal fade" id="trial_design_change_accessions_dialog" name="trial_design_change_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="trialDesignChangeAccessionsDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="trialDesignChangeAccessionsDialog">Change Accessions</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <div class="well well-sm">
+                        <b>Upload a CSV file (.csv)</b>
+                        <br/><br/>
+
+                        <div class="panel panel-default">
+                            <div class="panel-body">
+                                <b>Header:</b><br>
+                                The first row (header) must contain the following:
+
+                                <table class="table table-bordered table-hover">
+                                  <tbody>
+                                  <tr>
+                                    <td>plot_name</td>
+                                    <td>accession_name</td>
+                                  </tr>
+                                  </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <b>Required columns:</b><br>
+                        <b>plot_name:</b> name of plot to change the accession for<br>
+                        <b>accession_name:</b> name of the accession that the plot should be connected to.<br>
+                    </div>
+
+                    <form class="form-horizontal" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="trial_design_change_accessions_form" name="trial_design_change_accessions_form">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Upload File (.csv): </label>
+                            <div class="col-sm-9" >
+                                <input type="file" name="trial_design_change_accessions_file" id="trial_design_change_accessions_file" encoding="multipart/form-data" />
+                            </div>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="trial_design_change_accessions_submit" >Submit</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#trial_detail_page_change_accessions').click(function(){
+        jQuery('#trial_design_change_accessions_dialog').modal('show');
+    });
+
+    jQuery('#trial_design_change_accessions_submit').click( function() {
+        var uploadFile = jQuery("#trial_design_change_accessions_file").val();
+        jQuery('#trial_design_change_accessions_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/change_plot_accessions_using_file");
+        if (uploadFile === '') {
+            alert("Please select a file");
+            return;
+        }
+        jQuery("#trial_design_change_accessions_form").submit();
+    });
+
+    jQuery('#trial_design_change_accessions_form').iframePostForm({
+        json: true,
+        post: function () {
+            jQuery('#working_modal').modal("show");
+        },
+        complete: function (response) {
+            jQuery('#working_modal').modal("hide");
+            console.log(response);
+            if (response.error) {
+                alert(response.error);
+            }
+            else {
+                location.reload();
+            }
+        },
+        error: function(response) {
+            jQuery('#working_modal').modal("hide");
+            alert("An error occurred changing plot accessions");
+        }
+    });
+
+});
+
+</script>

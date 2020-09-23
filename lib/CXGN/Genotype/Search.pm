@@ -234,6 +234,16 @@ has '_tissue_sample_cvterm_id' => (
     is => 'rw'
 );
 
+has '_plot_cvterm_id' => (
+    isa => 'Int',
+    is => 'rw'
+);
+
+has '_plant_cvterm_id' => (
+    isa => 'Int',
+    is => 'rw'
+);
+
 has '_tissue_sample_of_cvterm_id' => (
     isa => 'Int',
     is => 'rw'
@@ -359,6 +369,8 @@ sub get_genotype_info {
     my $igd_genotypeprop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'igd number', 'genotype_property')->cvterm_id();
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
     my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample', 'stock_type')->cvterm_id();
+    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plot', 'stock_type')->cvterm_id();
+    my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plant', 'stock_type')->cvterm_id();
     my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
 
     my @trials_accessions;
@@ -388,31 +400,14 @@ sub get_genotype_info {
         my $sql = join ("," , @$genotype_data_project_list);
         push @where_clause, "project.project_id in ($sql)";
     }
-    my $stock_obs_type = 'accession';
     if ($protocol_id_list && scalar(@$protocol_id_list)>0) {
         my $protocol_sql = join ("," , @$protocol_id_list);
         push @where_clause, "nd_protocol.nd_protocol_id in ($protocol_sql)";
-
-        foreach (@$protocol_id_list) {
-            my $protocol = CXGN::Genotype::Protocol->new({
-                bcs_schema => $schema,
-                nd_protocol_id => $_
-            });
-            if ($protocol->sample_observation_unit_type_name eq 'tissue_sample' ) {
-                $stock_obs_type = 'tissue_sample';
-            }
-        }
     }
     if ($accession_list && scalar(@$accession_list)>0) {
         my $accession_sql = join ("," , @$accession_list);
-        if ($stock_obs_type eq 'accession') {
-            push @where_clause, "stock.stock_id in ($accession_sql)";
-            push @where_clause, "stock.type_id = $accession_cvterm_id";
-        }
-        elsif ($stock_obs_type eq 'tissue_sample') {
-            push @where_clause, "accession_of_tissue_sample.stock_id in ($accession_sql)";
-            push @where_clause, "accession_of_tissue_sample.type_id = $accession_cvterm_id";
-        }
+        push @where_clause, " ( stock.stock_id in ($accession_sql) OR (accession_of_tissue_sample.stock_id in ($accession_sql) AND accession_of_tissue_sample.type_id = $accession_cvterm_id) ) ";
+        push @where_clause, "stock.type_id in ($accession_cvterm_id, $tissue_sample_cvterm_id)";
     }
     if ($tissue_sample_list && scalar(@$tissue_sample_list)>0) {
         my $stock_sql = join ("," , @$tissue_sample_list);
@@ -718,6 +713,10 @@ sub init_genotype_iterator {
     $self->_accession_cvterm_id($accession_cvterm_id);
     my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample', 'stock_type')->cvterm_id();
     $self->_tissue_sample_cvterm_id($tissue_sample_cvterm_id);
+    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plot', 'stock_type')->cvterm_id();
+    $self->_plot_cvterm_id($plot_cvterm_id);
+    my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plant', 'stock_type')->cvterm_id();
+    $self->_plant_cvterm_id($plant_cvterm_id);
     my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
     $self->_tissue_sample_of_cvterm_id($tissue_sample_of_cvterm_id);
 
@@ -748,31 +747,14 @@ sub init_genotype_iterator {
         my $sql = join ("," , @$genotype_data_project_list);
         push @where_clause, "project.project_id in ($sql)";
     }
-    my $stock_obs_type = 'accession';
     if ($protocol_id_list && scalar(@$protocol_id_list)>0) {
         my $protocol_sql = join ("," , @$protocol_id_list);
         push @where_clause, "nd_protocol.nd_protocol_id in ($protocol_sql)";
-
-        foreach (@$protocol_id_list) {
-            my $protocol = CXGN::Genotype::Protocol->new({
-                bcs_schema => $schema,
-                nd_protocol_id => $_
-            });
-            if ($protocol->sample_observation_unit_type_name eq 'tissue_sample' ) {
-                $stock_obs_type = 'tissue_sample';
-            }
-        }
     }
     if ($accession_list && scalar(@$accession_list)>0) {
         my $accession_sql = join ("," , @$accession_list);
-        if ($stock_obs_type eq 'accession') {
-            push @where_clause, "stock.stock_id in ($accession_sql)";
-            push @where_clause, "stock.type_id = $accession_cvterm_id";
-        }
-        elsif ($stock_obs_type eq 'tissue_sample') {
-            push @where_clause, "accession_of_tissue_sample.stock_id in ($accession_sql)";
-            push @where_clause, "accession_of_tissue_sample.type_id = $accession_cvterm_id";
-        }
+        push @where_clause, " ( stock.stock_id in ($accession_sql) OR (accession_of_tissue_sample.stock_id in ($accession_sql) AND accession_of_tissue_sample.type_id = $accession_cvterm_id) ) ";
+        push @where_clause, "stock.type_id in ($accession_cvterm_id, $tissue_sample_cvterm_id)";
     }
     if ($tissue_sample_list && scalar(@$tissue_sample_list)>0) {
         my $stock_sql = join ("," , @$tissue_sample_list);
@@ -1140,7 +1122,7 @@ sub get_cached_file_search_json {
     my $protocol_ids = $self->protocol_id_list;
 
     my $metadata_only_string = $metadata_only ? "metadata_only" : "all_data";
-    my $key = $self->key("get_cached_file_search_json_".$metadata_only_string);
+    my $key = $self->key("get_cached_file_search_json_v02_".$metadata_only_string);
     $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
 
     my $file_handle;
@@ -1245,7 +1227,7 @@ sub get_cached_file_dosage_matrix {
     my $basepath_config = shift;
     my $protocol_ids = $self->protocol_id_list;
 
-    my $key = $self->key("get_cached_file_dosage_matrix");
+    my $key = $self->key("get_cached_file_dosage_matrix_v02");
     $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
 
     my $file_handle;
@@ -1390,7 +1372,7 @@ sub get_cached_file_dosage_matrix_compute_from_parents {
     }
     my $protocol_id = $protocol_ids->[0];
 
-    my $key = $self->key("get_cached_file_dosage_matrix_compute_from_parents_v01");
+    my $key = $self->key("get_cached_file_dosage_matrix_compute_from_parents_v02");
     $self->cache( Cache::File->new( cache_root => $cache_root_dir ));
 
     my $file_handle;
@@ -1552,7 +1534,7 @@ sub get_cached_file_VCF {
     my $web_cluster_queue_config = shift;
     my $basepath_config = shift;
 
-    my $key = $self->key("get_cached_file_VCF");
+    my $key = $self->key("get_cached_file_VCF_v02");
     $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
     my $protocol_ids = $self->protocol_id_list;
 
@@ -1821,7 +1803,7 @@ sub get_cached_file_VCF_compute_from_parents {
     }
     my $protocol_id = $protocol_ids->[0];
 
-    my $key = $self->key("get_cached_file_VCF_compute_from_parents_v01");
+    my $key = $self->key("get_cached_file_VCF_compute_from_parents_v02");
     $self->cache( Cache::File->new( cache_root => $cache_root_dir ));
 
     my $file_handle;

@@ -9,6 +9,7 @@ use CXGN::Analysis::AnalysisCreate;
 use CXGN::AnalysisModel::GetModel;
 use JSON;
 use Test::WWW::Mechanize;
+use File::Basename;
 
 print STDERR "Starting test...\n";
 my $t = SGN::Test::Fixture->new();
@@ -189,6 +190,60 @@ my $a = CXGN::Analysis->new({
 my $stored_analysis_phenotypes = $a->get_phenotype_matrix();
 print STDERR Dumper $stored_analysis_phenotypes;
 is(scalar(@$stored_analysis_phenotypes), 7);
+
+my $analysis_result_file = $t->config->{basepath}."/t/data/analysis/analysis_results_accessions.csv";
+my $analysis_training_data_file_dummy = $t->config->{basepath}."/t/data/trial/upload_phenotypin_spreadsheet.xls";
+my $ua = LWP::UserAgent->new;
+my $response_upload_analysis = $ua->post(
+        'http://localhost:3010/ajax/analysis/store/spreadsheet',
+        Content_Type => 'form-data',
+        Content => [
+            "sgn_session_id"=>$sgn_session_id,
+            "upload_new_analysis_name"=>"upload_analysis_01",
+            "upload_new_analysis_description"=>"analysis description",
+            "upload_new_analysis_year"=>"2020",
+            "upload_new_analysis_breeding_program_id"=>$analysis_breeding_program_id,
+            "upload_new_analysis_protocol"=>"lm(t1 ~ some formula to describe analysis)",
+            "upload_new_analysis_dataset_id"=>"",
+            upload_new_analysis_file => [ $analysis_result_file, basename($analysis_result_file) ],
+            "upload_new_analysis_statistical_ontology_term"=>"Univariate linear mixed model genetic BLUPs using germplasmName computed using LMER R|SGNSTAT:0000002",
+            "upload_new_analysis_result_values_type"=>"analysis_result_values_match_accession_names",
+            "upload_new_analysis_result_summary_string"=>"variance:0.9,total:1.0",
+            "upload_new_analysis_model_name"=>"upload_analysis_model_1",
+            "upload_new_analysis_model_description"=>"upload_analysis_model_1 description",
+            "upload_new_analysis_model_is_public"=>"yes",
+            "upload_new_analysis_model_language"=>"R",
+            "upload_new_analysis_model_properties_string"=>"arbitraryprop:1,protocol_id:1",
+            "upload_new_analysis_model_application_name"=>"myPipeline",
+            "upload_new_analysis_model_application_version"=>"v1",
+            upload_new_analysis_model_training_data_file => [ $analysis_training_data_file_dummy, basename($analysis_training_data_file_dummy) ],
+            "upload_new_analysis_model_training_data_file_type"=>"myPipelinev1_training_pheno_file",
+            upload_new_analysis_model_auxiliary_file_1 => [ $analysis_training_data_file_dummy, basename($analysis_training_data_file_dummy) ],
+            "upload_new_analysis_model_auxiliary_file_type_1"=>"myPipelinev1_log_file",
+            upload_new_analysis_model_auxiliary_file_2 => [ $analysis_training_data_file_dummy, basename($analysis_training_data_file_dummy) ],
+            "upload_new_analysis_model_auxiliary_file_type_2"=>"myPipelinev1_grm_file",
+            upload_new_analysis_model_file => [ $analysis_training_data_file_dummy, basename($analysis_training_data_file_dummy) ],
+            "upload_new_analysis_model_file_type"=>"myPipelinev1_model_weights_file",
+        ]
+    );
+
+ok($response_upload_analysis->is_success);
+my $message_uploaded_analysis = $response_upload_analysis->decoded_content;
+my $message_hash_uploaded_analysis = decode_json $message_uploaded_analysis;
+print STDERR Dumper $message_hash_uploaded_analysis;
+ok($message_hash_uploaded_analysis->{analysis_id});
+
+sleep(5);
+my $a = CXGN::Analysis->new({
+    bcs_schema => $schema,
+    people_schema => $people_schema,
+    metadata_schema => $metadata_schema,
+    phenome_schema => $phenome_schema,
+    trial_id => $message_hash_uploaded_analysis->{analysis_id}
+});
+my $stored_analysis_phenotypes = $a->get_phenotype_matrix();
+print STDERR Dumper $stored_analysis_phenotypes;
+is(scalar(@$stored_analysis_phenotypes), 6);
 
 print STDERR "Rolling back...\n";
 $dbh->rollback();

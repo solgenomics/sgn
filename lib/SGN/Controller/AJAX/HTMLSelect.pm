@@ -38,13 +38,14 @@ use JSON;
 use Image::Size;
 use Math::Round;
 use URI::Encode qw(uri_encode uri_decode);
+use Array::Utils qw(:all);
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON' },
    );
 
 
@@ -699,6 +700,44 @@ sub get_ontologies : Path('/ajax/html/select/trait_variable_ontologies') Args(0)
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_trained_nirs_models : Path('/ajax/html/select/trained_nirs_models') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $checkbox_name = $c->req->param('checkbox_name');
+
+    my $nirs_model_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'waves_nirs_spectral_predictions', 'protocol_type')->cvterm_id();
+    my $model_properties_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_properties', 'protocol_property')->cvterm_id();
+
+    my $model_q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, model_type.value
+        FROM nd_protocol
+        JOIN nd_protocolprop AS model_type ON(nd_protocol.nd_protocol_id=model_type.nd_protocol_id AND model_type.type_id=$model_properties_cvterm_id)
+        WHERE nd_protocol.type_id=$nirs_model_cvterm_id;";
+    my $model_h = $schema->storage->dbh()->prepare($model_q);
+    $model_h->execute();
+
+    my $html = '<table class="table table-bordered table-hover" id="html-select-nirsmodel-table"><thead><tr><th>Select</th><th>Model Name</th><th>Description</th><th>Format</th><th>Trait</th><th>Algorithm</th></tr></thead><tbody>';
+
+    while (my ($nd_protocol_id, $name, $description, $model_type) = $model_h->fetchrow_array()) {
+        my $model_type_hash = decode_json $model_type;
+        my $selected_trait_name = $model_type_hash->{trait_name};
+        my $preprocessing_boolean = $model_type_hash->{preprocessing_boolean};
+        my $niter = $model_type_hash->{niter};
+        my $algorithm = $model_type_hash->{algorithm};
+        my $tune = $model_type_hash->{tune};
+        my $random_forest_importance = $model_type_hash->{random_forest_importance};
+        my $cross_validation = $model_type_hash->{cross_validation};
+        my $format = $model_type_hash->{format};
+
+        $html .= '<tr><td><input type="checkbox" name="'.$checkbox_name.'" value="'.$nd_protocol_id.'"></td><td>'.$name.'</td><td>'.$description.'</td><td>'.$format.'</td><td>'.$selected_trait_name.'</td><td>'.$algorithm.'</td></tr>';
+    }
+    $html .= "</tbody></table>";
+
+    $html .= "<script>jQuery(document).ready(function() { jQuery('#html-select-nirsmodel-table').DataTable({ }); } );</script>";
+
+    $c->stash->{rest} = { select => $html };
+}
+
 sub get_trained_keras_cnn_models : Path('/ajax/html/select/trained_keras_cnn_models') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -780,6 +819,74 @@ sub get_trained_keras_mask_r_cnn_models : Path('/ajax/html/select/trained_keras_
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_analysis_models : Path('/ajax/html/select/models') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $model_properties_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_properties', 'protocol_property')->cvterm_id();
+
+    my $model_q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, model_type.value
+        FROM nd_protocol
+        JOIN nd_protocolprop AS model_type ON(nd_protocol.nd_protocol_id=model_type.nd_protocol_id AND model_type.type_id=$model_properties_cvterm_id);";
+    my $model_h = $schema->storage->dbh()->prepare($model_q);
+    $model_h->execute();
+    my @models;
+    while (my ($nd_protocol_id, $name, $description, $model_type) = $model_h->fetchrow_array()) {
+        my $model_type_hash = decode_json $model_type;
+
+        push @models, [$nd_protocol_id, $name];
+    }
+
+    my $id = $c->req->param("id") || "html_model_select";
+    my $name = $c->req->param("name") || "html_model_select";
+    my $empty = $c->req->param("empty");
+
+    @models = sort { $a->[1] cmp $b->[1] } @models;
+    if ($empty) { unshift @models, [ "", "Please select a model" ]; }
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@models
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+sub get_imaging_event_vehicles : Path('/ajax/html/select/imaging_event_vehicles') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $imaging_vehicle_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'imaging_event_vehicle', 'stock_type')->cvterm_id();
+    my $imaging_vehicle_properties_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'imaging_event_vehicle_json', 'stock_property')->cvterm_id();
+
+    my $q = "SELECT stock.stock_id, stock.uniquename, stock.description, stockprop.value
+        FROM stock
+        JOIN stockprop ON(stock.stock_id=stockprop.stock_id AND stockprop.type_id=$imaging_vehicle_properties_cvterm_id)
+        WHERE stock.type_id=$imaging_vehicle_cvterm_id;";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute();
+    my @imaging_vehicles;
+    while (my ($stock_id, $name, $description, $prop) = $h->fetchrow_array()) {
+        my $prop_hash = decode_json $prop;
+
+        push @imaging_vehicles, [$stock_id, $name];
+    }
+
+    my $id = $c->req->param("id") || "html_imaging_vehicle_select";
+    my $name = $c->req->param("name") || "html_imaging_vehicle_select";
+
+    @imaging_vehicles = sort { $a->[1] cmp $b->[1] } @imaging_vehicles;
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@imaging_vehicles
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
 sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -792,6 +899,8 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     my $select_format = $c->req->param('select_format') || 'html_select'; #html_select or component_table_select
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $multiple = $c->req->param('multiple');
+    my $empty = $c->req->param('empty');
+    my $select_all = $c->req->param('select_all');
 
     my $id = $c->req->param("id") || "html_trial_select";
     my $name = $c->req->param("name") || "html_trial_select";
@@ -861,7 +970,11 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
             while (my ($k, $v) = each %separated_components) {
                 $html .= "<tr><td>".$k."</td><td>";
                 foreach (@$v) {
-                    $html .= "<input type='checkbox' name = '".$name."' value ='".$_->[0]."'>&nbsp;".$_->[1]." (".$_->[2]." Phenotypes";
+                    $html .= "<input type='checkbox' name = '".$name."' value ='".$_->[0]."'";
+                    if ($select_all) {
+                        $html .= "checked";
+                    }
+                    $html .= ">&nbsp;".$_->[1]." (".$_->[2]." Phenotypes";
                     if ($_->[3] && $_->[4]) {
                         $html .= " From ".$_->[4];
                     }
@@ -889,6 +1002,7 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     }
 
     @traits = sort { $a->[1] cmp $b->[1] } @traits;
+    if ($empty) { unshift @traits, [ "", "Please select a trait" ]; }
 
     my $html = simple_selectbox_html(
       multiple => $multiple,
@@ -1165,6 +1279,7 @@ sub get_datasets_select :Path('/ajax/html/select/datasets') Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
 
+    my $num = int(rand(1000));
     my $user_id;
     my @datasets;
     if ($c->user()) {
@@ -1214,7 +1329,7 @@ sub get_datasets_select :Path('/ajax/html/select/datasets') Args(0) {
         'genotyping_protocols' => 'nd_protocol_ids_2_protocols'
     );
 
-    my $html = '<table class="table table-bordered table-hover" id="html-select-dataset-table"><thead><tr><th>Select</th><th>Dataset Name</th><th>Contents</th></tr></thead><tbody>';
+    my $html = '<table class="table table-bordered table-hover" id="html-select-dataset-table-'.$num.'"><thead><tr><th>Select</th><th>Dataset Name</th><th>Contents</th></tr></thead><tbody>';
     foreach my $ds (@datasets) {
         $html .= '<tr><td><input type="checkbox" name="'.$checkbox_name.'" value="'.$ds->{id}.'"></td><td>'.$ds->{name}.'</td><td>';
 
@@ -1251,8 +1366,78 @@ sub get_datasets_select :Path('/ajax/html/select/datasets') Args(0) {
 
     $html .= "</tbody></table>";
 
-    $html .= "<script>jQuery(document).ready(function() { jQuery('#html-select-dataset-table').DataTable({ 'lengthMenu': [[2, 4, 6, 8, 10, 25, 50, -1], [2, 4, 6, 8, 10, 25, 50, 'All']] }); } );</script>";
+    $html .= "<script>jQuery(document).ready(function() { jQuery('#html-select-dataset-table-".$num."').DataTable({ 'lengthMenu': [[2, 4, 6, 8, 10, 25, 50, -1], [2, 4, 6, 8, 10, 25, 50, 'All']] }); } );</script>";
 
+    $c->stash->{rest} = { select => $html };
+}
+
+sub get_datasets_intersect_select : Path('/ajax/html/select/datasets_intersect') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+
+    my $name = $c->req->param("name");
+    my $id = $c->req->param("id");
+    my $names_as_values = $c->req->param("names_as_values");
+    my $empty = $c->req->param("empty") || "";
+
+    my $dataset_param = $c->req->param("param");
+    my $dataset_ids = decode_json $c->req->param("dataset_ids");
+
+    my $first_dataset_id = shift @$dataset_ids;
+    my $dataset_info = CXGN::Dataset->new({people_schema => $people_schema, schema => $schema, sp_dataset_id => $first_dataset_id})->get_dataset_data();
+    my $i = $dataset_info->{categories}->{$dataset_param} || [];
+
+    my @intersect = @$i;
+    foreach my $dataset_id (@$dataset_ids) {
+        if ($dataset_id) {
+            my $dataset_info = CXGN::Dataset->new({people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id})->get_dataset_data();
+            my $j = $dataset_info->{categories}->{$dataset_param} || [];
+            @intersect = intersect (@intersect, @$j);
+        }
+    }
+    # print STDERR Dumper @intersect;
+
+    my $lt = CXGN::List::Transform->new();
+    my %transform_dict = (
+        'plots' => 'stock_ids_2_stocks',
+        'accessions' => 'stock_ids_2_stocks',
+        'traits' => 'trait_ids_2_trait_names',
+        'locations' => 'locations_ids_2_location',
+        'plants' => 'stock_ids_2_stocks',
+        'trials' => 'project_ids_2_projects',
+        'trial_types' => 'cvterm_ids_2_cvterms',
+        'breeding_programs' => 'project_ids_2_projects',
+        'genotyping_protocols' => 'nd_protocol_ids_2_protocols'
+    );
+
+    my @items;
+    if (exists($transform_dict{$dataset_param})) {
+        my $transform = $lt->transform($schema, $transform_dict{$dataset_param}, \@intersect);
+        @items = @{$transform->{transform}};
+    }
+
+    my @result;
+    my $counter = 0;
+    foreach (@intersect) {
+        if (!$names_as_values) {
+            push @result, [$_, $items[$counter]];
+        } else {
+            push @result, [$items[$counter], $items[$counter]];
+        }
+        $counter++;
+    }
+
+    if ($empty) {
+        unshift @result, ['', "Select one"];
+    }
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@result,
+    );
     $c->stash->{rest} = { select => $html };
 }
 
@@ -1272,8 +1457,15 @@ sub get_drone_imagery_parameter_select : Path('/ajax/html/select/drone_imagery_p
     if ($drone_run_parameter eq 'plot_polygons') {
         $parameter_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_plot_polygons', 'project_property')->cvterm_id();
     }
-    if ($drone_run_parameter eq 'image_cropping') {
+    elsif ($drone_run_parameter eq 'plot_polygons_separated') {
+        $parameter_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_plot_polygons_separated', 'project_property')->cvterm_id();
+    }
+    elsif ($drone_run_parameter eq 'image_cropping') {
         $parameter_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_cropped_polygon', 'project_property')->cvterm_id();
+    }
+    else {
+        $c->stash->{rest} = { error => "Parameter not supported!" };
+        $c->detach();
     }
 
     my $project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
@@ -1288,6 +1480,47 @@ sub get_drone_imagery_parameter_select : Path('/ajax/html/select/drone_imagery_p
     my @result;
     while (my $r = $drone_imagery_plot_polygons_rs->next) {
         push @result, [$r->projectprop_id, $r->get_column('project_name')];
+    }
+
+    if ($empty) {
+        unshift @result, ['', "Select one"];
+    }
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@result,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+sub get_drone_imagery_drone_runs_with_gcps : Path('/ajax/html/select/drone_runs_with_gcps') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $id = $c->req->param("id") || "drone_imagery_drone_run_gcp_select";
+    my $name = $c->req->param("name") || "drone_imagery_drone_run_gcp_select";
+    my $empty = $c->req->param("empty") || "";
+
+    my $field_trial_id = $c->req->param('field_trial_id');
+
+    my $drone_run_field_trial_project_relationship_type_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
+    my $drone_run_ground_control_points_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_ground_control_points', 'project_property')->cvterm_id();
+    my $processed_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_standard_process_completed', 'project_property')->cvterm_id();
+
+    my $q = "SELECT project.project_id, project.name
+        FROM project
+        JOIN projectprop AS gcps ON(project.project_id = gcps.project_id AND gcps.type_id=$drone_run_ground_control_points_type_id)
+        JOIN projectprop AS processed ON(project.project_id = processed.project_id AND processed.type_id=$processed_cvterm_id)
+        JOIN project_relationship ON(project.project_id=project_relationship.subject_project_id AND project_relationship.type_id=$drone_run_field_trial_project_relationship_type_id_cvterm_id)
+        WHERE project_relationship.object_project_id=?;";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($field_trial_id);
+
+    my @result;
+    while( my ($project_id, $name) = $h->fetchrow_array()) {
+        push @result, [$project_id, $name];
     }
 
     if ($empty) {

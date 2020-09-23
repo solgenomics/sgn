@@ -310,7 +310,7 @@ sub create_list_population_metadata_file {
     $self->create_list_population_metadata($c);
     my $metadata = $c->stash->{list_metadata};
     
-    write_file($file, $metadata);
+    write_file($file, {binmode => ':utf8'}, $metadata);
  
     $c->stash->{list_metadata_file} = $file;
  
@@ -960,7 +960,7 @@ sub list_population_summary {
 	{
 	    $c->controller('solGS::Files')->population_metadata_file($c, $tmp_dir, $file_id);   
 	    my $metadata_file = $c->stash->{population_metadata_file};     
-	    my @metadata = read_file($metadata_file);
+	    my @metadata = read_file($metadata_file, {binmode => ':utf8'});
 	    
 	    my ($key, $desc);
      

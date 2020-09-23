@@ -36,7 +36,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON'  },
    );
 
 
@@ -202,12 +202,6 @@ sub _prep_upload {
             $validate_type = "phenotype spreadsheet";
         } elsif ($spreadsheet_format eq 'simple'){
             $validate_type = "phenotype spreadsheet simple";
-        } elsif ($spreadsheet_format eq 'nirs'){
-            $validate_type = "phenotype spreadsheet nirs";
-            $metadata_file_type = "nirs spreadsheet";
-        } elsif ($spreadsheet_format eq 'scio'){
-            $validate_type = "scio spreadsheet nirs";
-            $metadata_file_type = "nirs spreadsheet";
         } elsif ($spreadsheet_format eq 'associated_images'){
             $validate_type = "phenotype spreadsheet associated_images";
         } else {

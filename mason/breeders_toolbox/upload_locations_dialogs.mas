@@ -96,11 +96,15 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#upload_locations_form').iframePostForm({
-        json: true,
+        json: false,
         post: function () {
             jQuery('#working_modal').modal("show");
         },
-        complete: function (response) {
+        complete: function (r) {
+            r = r.replace('<pre>', '');
+            r = r.replace('</pre>', '');
+            var response = JSON.parse(r);
+
             jQuery('#working_modal').modal("hide");
             //console.log(response);
             if (response.error) {
