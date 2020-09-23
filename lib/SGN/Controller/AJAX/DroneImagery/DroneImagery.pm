@@ -347,7 +347,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         }
     }
 
-    if ($statistics_select eq 'lmer_germplasmname_replicate' || $statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
+    if ($statistics_select eq 'lmer_germplasmname_replicate' || $statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'sommer_grm_genetic_blups') {
 
         my %trait_name_encoder;
         my %trait_name_encoder_rev;
@@ -361,7 +361,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         my %seen_plot_names;
         my %plot_id_map;
 
-        if ($statistics_select eq 'lmer_germplasmname_replicate' || $statistics_select eq 'sommer_grm_spatial_genetic_blups') {
+        if ($statistics_select eq 'lmer_germplasmname_replicate' || $statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_blups') {
 
             my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
                 'MaterializedViewTable',
@@ -853,7 +853,9 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             close($F2);
         }
 
-        if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+        if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups'
+            || $statistics_select eq 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups'
+            || $statistics_select eq 'sommer_grm_genetic_blups') {
 
             my %seen_accession_stock_ids;
             foreach my $trial_id (@$field_trial_id_list) {
@@ -952,6 +954,62 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     }
                 close($fh);
             }
+        }
+        elsif ($statistics_select eq 'sommer_grm_genetic_blups') {
+            $statistical_ontology_term = "Multivariate genetic BLUPs using genetic relationship matrix computed using Sommer R|SGNSTAT:0000024";
+
+            $analysis_result_values_type = "analysis_result_values_match_accession_names";
+            $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_sommer_grm_genetic_blups_phenotype_file";
+
+            @unique_plot_names = sort keys %seen_plot_names;
+
+            my @encoded_traits = values %trait_name_encoder;
+            my $encoded_trait_string = join ',', @encoded_traits;
+            my $number_traits = scalar(@encoded_traits);
+
+            my $cmd = 'R -e "library(sommer); library(data.table); library(reshape2);
+            mat <- data.frame(fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\'));
+            geno_mat_3col <- data.frame(fread(\''.$grm_file.'\', header=FALSE, sep=\'\t\'));
+            geno_mat <- acast(geno_mat_3col, V1~V2, value.var=\'V3\');
+            geno_mat[is.na(geno_mat)] <- 0;
+            mix <- mmer(cbind('.$encoded_trait_string.')~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
+            write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
+            "';
+            print STDERR Dumper $cmd;
+            my $status = system($cmd);
+
+            my $csv = Text::CSV->new({ sep_char => "\t" });
+
+            my %unique_accessions_seen;
+            open(my $fh, '<', $stats_out_tempfile)
+                or die "Could not open file '$stats_out_tempfile' $!";
+
+                print STDERR "Opened $stats_out_tempfile\n";
+                my $header = <$fh>;
+                my @header_cols;
+                if ($csv->parse($header)) {
+                    @header_cols = $csv->fields();
+                }
+
+                while (my $row = <$fh>) {
+                    my @columns;
+                    if ($csv->parse($row)) {
+                        @columns = $csv->fields();
+                    }
+                    my $col_counter = 0;
+                    foreach my $encoded_trait (@header_cols) {
+                        my $trait = $trait_name_encoder_rev{$encoded_trait};
+                        my $stock_id = $columns[0];
+
+                        my $stock_name = $stock_info{$stock_id}->{uniquename};
+                        my $value = $columns[$col_counter+1];
+                        $result_blup_data->{$stock_name}->{$trait} = [$value, $timestamp, $user_name, '', ''];
+                        $col_counter++;
+                        $unique_accessions_seen{$stock_name}++;
+                    }
+                }
+            close($fh);
+            @unique_accession_names = keys %unique_accessions_seen;
         }
         elsif ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
             $statistical_ontology_term = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and row and column spatial effects computed using Sommer R|SGNSTAT:0000001"; #In the JS this is set to either the genetic or spatial BLUP term (Multivariate linear mixed model 2D spline spatial BLUPs using genetic relationship matrix and row and column spatial effects computed using Sommer R|SGNSTAT:0000003) when saving analysis results
@@ -9583,9 +9641,26 @@ sub _perform_save_trained_keras_cnn_model {
         archive_path=>$c->config->{archive_path},
         model_name=>$model_name,
         model_description=>$model_description,
+        model_language=>'Python',
         model_type_cvterm_id=>$keras_cnn_cvterm_id,
-        model_experiment_type_cvterm_id=>$keras_cnn_experiment_cvterm_id,
         model_properties=>{variable_name => $trait_name, variable_id => $trait_id, aux_trait_ids => $aux_trait_ids, model_type=>$model_type, image_type=>'standard_4_montage', nd_protocol_id => $geno_protocol_id, use_parents_grm => $use_parents_grm},
+        application_name=>'KerasCNNModels',
+        application_version=>'V1.01',
+        is_public=>1,
+        user_id=>$user_id,
+        user_role=>$user_role
+    });
+    my $saved_model = $m->save_model();
+    my $saved_model_id = $saved_model->{nd_protocol_id};
+
+    my $analysis_model = CXGN::AnalysisModel::GetModel->new({
+        bcs_schema=>$schema,
+        metadata_schema=>$metadata_schema,
+        phenome_schema=>$phenome_schema,
+        nd_protocol_id=>$saved_model_id
+    });
+    $analysis_model->store_analysis_model_files({
+        # project_id => $saved_analysis_id,
         archived_model_file_type=>'trained_keras_cnn_model',
         model_file=>$model_file,
         archived_training_data_file_type=>'trained_keras_cnn_model_input_data_file',
@@ -9594,10 +9669,10 @@ sub _perform_save_trained_keras_cnn_model {
             {auxiliary_model_file => $archive_temp_autoencoder_output_model_file, auxiliary_model_file_archive_type => 'trained_keras_cnn_autoencoder_model'},
             {auxiliary_model_file => $model_input_aux_file, auxiliary_model_file_archive_type => 'trained_keras_cnn_model_input_aux_data_file'}
         ],
+        archive_path=>$c->config->{archive_path},
         user_id=>$user_id,
         user_role=>$user_role
     });
-    my $saved_model = $m->save_model();
 
     $c->stash->{rest} = $saved_model;
 }
@@ -9789,13 +9864,14 @@ sub _perform_keras_cnn_predict {
         nd_protocol_id=>$model_id
     });
     my $saved_model_object = $m->get_model();
-    my $trait_id = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{variable_id};
-    my $trained_trait_name = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{variable_name};
-    my $aux_trait_ids_previous = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{aux_trait_ids};
-    my $model_type = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{model_type};
-    my $nd_protocol_id = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{nd_protocol_id};
-    my $use_parents_grm = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{use_parents_grm};
-    my $trained_image_type = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{image_type};
+    print STDERR Dumper $saved_model_object;
+    my $trait_id = $saved_model_object->{model_properties}->{variable_id};
+    my $trained_trait_name = $saved_model_object->{model_properties}->{variable_name};
+    my $aux_trait_ids_previous = $saved_model_object->{model_properties}->{aux_trait_ids};
+    my $model_type = $saved_model_object->{model_properties}->{model_type};
+    my $nd_protocol_id = $saved_model_object->{model_properties}->{nd_protocol_id};
+    my $use_parents_grm = $saved_model_object->{model_properties}->{use_parents_grm};
+    my $trained_image_type = $saved_model_object->{model_properties}->{image_type};
     my $model_file = $saved_model_object->{model_files}->{trained_keras_cnn_model};
     my $training_autoencoder_model_file = $saved_model_object->{model_files}->{trained_keras_cnn_autoencoder_model};
     my $training_input_data_file = $saved_model_object->{model_files}->{trained_keras_cnn_model_input_data_file};
@@ -11191,9 +11267,26 @@ sub drone_imagery_retrain_mask_rcnn_GET : Args(0) {
         archive_path=>$c->config->{archive_path},
         model_name=>$model_name,
         model_description=>$model_description,
+        model_language=>'Python',
         model_type_cvterm_id=>$keras_mask_r_cnn_cvterm_id,
-        model_experiment_type_cvterm_id=>$keras_cnn_experiment_cvterm_id,
         model_properties=>{model_type=>$model_type, image_type=>'all_annotated_plot_images'},
+        application_name=>'MaskRCNNModel',
+        application_version=>'V1.1',
+        is_public=>1,
+        user_id=>$user_id,
+        user_role=>$user_role
+    });
+    my $saved_model = $m->save_model();
+    my $saved_model_id = $saved_model->{nd_protocol_id};
+
+    my $analysis_model = CXGN::AnalysisModel::GetModel->new({
+        bcs_schema=>$schema,
+        metadata_schema=>$metadata_schema,
+        phenome_schema=>$phenome_schema,
+        nd_protocol_id=>$saved_model_id
+    });
+    $analysis_model->store_analysis_model_files({
+        # project_id => $saved_analysis_id,
         archived_model_file_type=>'trained_keras_mask_r_cnn_model',
         model_file=>$temp_output_model_file,
         archived_training_data_file_type=>'trained_keras_mask_r_cnn_model_input_data_file',
@@ -11202,10 +11295,10 @@ sub drone_imagery_retrain_mask_rcnn_GET : Args(0) {
         #     {auxiliary_model_file => $archive_temp_autoencoder_output_model_file, auxiliary_model_file_archive_type => 'trained_keras_cnn_autoencoder_model'},
         #     {auxiliary_model_file => $model_input_aux_file, auxiliary_model_file_archive_type => 'trained_keras_cnn_model_input_aux_data_file'}
         # ],
+        archive_path=>$c->config->{archive_path},
         user_id=>$user_id,
         user_role=>$user_role
     });
-    my $saved_model = $m->save_model();
 
     $c->stash->{rest} = {success => 1};
 }
@@ -11235,8 +11328,9 @@ sub drone_imagery_predict_mask_rcnn_GET : Args(0) {
         nd_protocol_id=>$model_id
     });
     my $saved_model_object = $m->get_model();
-    my $model_type = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{model_type};
-    my $trained_image_type = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{image_type};
+    print STDERR Dumper $saved_model_object;
+    my $model_type = $saved_model_object->{model_properties}->{model_type};
+    my $trained_image_type = $saved_model_object->{model_properties}->{image_type};
     my $model_file = $saved_model_object->{model_files}->{trained_keras_mask_r_cnn_model};
     my $training_input_data_file = $saved_model_object->{model_files}->{trained_keras_mask_r_cnn_model_input_data_file};
 
