@@ -17,13 +17,14 @@ my $program_id   = $program->get_program_id;
 
 <& /page/page_title.mas, title=>"Breeding Program $program_name" &>
 
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, program_id => $program_id, program_name => $program_name, info_section_title => "<h4 style='display:inline'>Product Profiles</h4>", info_section_subtitle => 'View product profiles and benchmarks',buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="download_template_button">Download Template</button>', icon_class => "glyphicon glyphicon-signal", info_section_id => "program_product_profile_section" &>
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, program_id => $program_id, program_name => $program_name, info_section_title => "<h4 style='display:inline'>Product Profiles</h4>", info_section_subtitle => 'View product profiles and benchmarks',buttons_html => '<button class="btn btn-sm btn-default" style="margin:3px" id="download_template_button">Download Template</button><button class="btn btn-sm btn-primary" style="margin:3px" id="upload_profile_button">Upload Profile</button>', icon_class => "glyphicon glyphicon-signal", info_section_id => "program_product_profile_section" &>
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, program_id => $program_id, info_section_title => "<h4 style='display:inline'>Locations</h4>", info_section_subtitle => 'View locations related to this breeding program', icon_class => "glyphicon glyphicon-pushpin", info_section_id => "program_location_section" &>
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, program_id => $program_id, info_section_title => "<h4 style='display:inline'>Projects</h4>", info_section_subtitle => 'View field trials, genotyping experiments, crossing experiments', icon_class => "glyphicon glyphicon-th", info_section_id => "program_project_section" &>
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, program_id => $program_id, info_section_title => "<h4 style='display:inline'>Stocks</h4>", info_section_subtitle => 'View accessions, crosses, seedlots', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "program_stock_section" &>
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, program_id => $program_id, info_section_title => "<h4 style='display:inline'>Phenotype Summary</h4>", info_section_subtitle => 'View phenotype summary and histogram', icon_class => "glyphicon glyphicon-equalizer", info_section_id => "program_phenotype_section" &>
 
 <& /breeders_toolbox/program/create_profile_template_dialog.mas &>
+<& /breeders_toolbox/program/upload_profile_dialog.mas &>
 
 <!--
 
@@ -51,6 +52,12 @@ jQuery(document).ready(function () {
         jQuery('#select_list_div').html(trait_lists);
 
         jQuery('#create_profile_template_dialog').modal("show");
+
+    })
+
+    jQuery('#upload_profile_button').click(function(){
+
+        jQuery('#upload_profile_dialog').modal("show");
 
     })
 
