@@ -819,10 +819,9 @@ sub selection_trait :Path('/solgs/selection/') Args() {
 	    $self->get_project_owners($c, $selection_pop_id);       
 	    $c->stash->{selection_pop_owner} = $c->stash->{project_owners};            
 	}
-	
-	my $tr_pop_mr_cnt = $self->get_markers_count($c, {'training_pop' => 1, 'training_pop_id' => $training_pop_id});
-	my $sel_pop_mr_cnt = $self->get_markers_count($c, {'selection_pop' => 1, 'selection_pop_id' => $selection_pop_id});
 
+	my $ma_args = {'selection_pop' => 1, 'selection_pop_id' => $selection_pop_id};
+	$c->stash->{selection_markers_cnt} = $self->get_markers_count($c, $ma_args);
 	my $protocol_url = $c->controller('solGS::genotypingProtocol')->create_protocol_url($c, $protocol_id);
 	$c->stash->{protocol_url} = $protocol_url;
 	
