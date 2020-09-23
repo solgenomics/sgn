@@ -40,6 +40,7 @@ sub nirs_upload_verify_POST : Args(0) {
     my @error_status;
     my @warning_status;
 
+
     my $user = $c->user();
     if (!$user) {
         push @error_status, 'Must be logged in to upload phenotypes!';
