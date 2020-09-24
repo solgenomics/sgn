@@ -3507,6 +3507,11 @@ sub trial_calculate_numerical_derivative : Chained('trial') PathPart('calculate_
                     push @derivs, ($val - $_);
                 }
             }
+            foreach (@values) {
+                if (defined($_)) {
+                    push @derivs, ( (($val + $_)/2) - $_);
+                }
+            }
             # print STDERR Dumper \@derivs;
             if (scalar(@derivs) > 0) {
                 my $d = sum(@derivs)/scalar(@derivs);
