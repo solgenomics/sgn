@@ -1,10 +1,12 @@
 <%args>
 
+$program_id
+$program_name
+
 </%args>
 
-
 <div class="modal fade" id="upload_profile_dialog" name="upload_profile_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadProfileDialog">
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -12,27 +14,81 @@
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <&| /page/explanation.mas, title=>'Template Information' &>
-                        <p>
-                            <b>File Format Information</b>
-                            <br>
-                            <a id="upload_profile_spreadsheet_format">Spreadsheet Format</a>
-                            <br>
-                        </p>
-                    </&>
-                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_profile_form" name="upload_profile_form">
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label">Upload File: </label>
-                                <div class="col-sm-10">
-                                    <input type="file" name="profile_upload_file" id="profile_upload_file" encoding="multipart/form-data" />
+                    <&| /util/workflow.mas, id=> "upload_profile_workflow" &>
+                        <&| /util/workflow.mas:step, title=> "Intro" &>
+                            <& /page/page_title.mas, title=>"Profile" &>
+                            <ul>
+                                <li>..........</li>
+                                <li>..........</li>
+                            </ul>
+                            <br/><br/>
+                            <center>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                            </center>
+                        </&>
+                        <&| /util/workflow.mas:step, title=> "File format" &>
+                            <& /page/page_title.mas, title=>"Make sure your file matches the correct file format" &>
+                            <center>
+                                <&| /page/explanation.mas, title=>'Template Information' &>
+                                    <p>
+                                        <b>File Format Information</b>
+                                        <br>
+                                        <a id="upload_profile_spreadsheet_format">Spreadsheet Format</a>
+                                        <br>
+                                    </p>
+                                </&>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Once you think your file matches, go to Next Step</button>
+                            </center>
+                        </&>
+                        <&| /util/workflow.mas:step, title=> "Upload Profile" &>
+                            <& /page/page_title.mas, title=>"Provide basic information about the profile and upload your file" &>
+                            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_profile_form" name="upload_profile_form">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Breeding Program: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" name="profile_program_name" id="profile_program_name" disabled value="<% $program_name %>">
+                                        <input name="profile_program_id" id="profile_program_id" type="hidden" value="<% $program_id %>">
+                                    </div>
                                 </div>
-                        </div>
-                    </form>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Product Profile Name: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="new_product_profile_name" name="new_product_profile_name" type="text"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Scope: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="new_product_profile_scope" name="new_product_profile_scope" type="text"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Upload File (.xls): </label>
+                                    <div class="col-sm-9" >
+                                        <input type="file" name="profile_upload_file" id="profile_upload_file" encoding="multipart/form-data" />
+                                    </div>
+                                </div>
+                            </form>
+                            <center>
+                                <button type="button" class="btn btn-lg btn-primary" onclick="Workflow.complete(this, false);" id ="upload_profile_button" name="upload_profile_button" >Upload Profile</button><br/><br/>
+                            </center>
+                        </&>
+                        <&| /util/workflow.mas:complete, title=> "Complete" &>
+                            <& /page/page_title.mas, title=>"Finished! Your profile is now in the database" &>
+                            <p>
+                                <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                                The profile file was uploaded successfully
+                            </p>
+                            <br/>
+                            <center>
+                                <button class="btn btn-primary" name="upload_profile_success_complete_button">The profile was saved to the database with no errors! Congrats Click Here</button><br/><br/>
+                            </center>
+                        </&>
+                    </&>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="upload_profile_submit" id="upload_profile_submit">Upload File</button>
+                <button id="close_profile_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -69,7 +125,7 @@
             <div class="modal-body">
                 <div class="container-fluid">
                     <b>
-                        Cross info of existing crosses may be uploaded in an Excel file (.xls)
+                        Profile may be uploaded in an Excel file (.xls)
                     </b>
                     <br>
                         (.xlsx format not supported)
@@ -84,8 +140,8 @@
                     <table class="table table-bordered table-hover">
                         <tbody>
                             <tr>
-                                <td>cross_unique_id</td>
-                                <td>At least one column of cross info listed below (please use exact column header as shown)</td>
+                                <td>........</td>
+                                <td>........</td>
                             </tr>
                         </tbody>
                     </table>
@@ -93,35 +149,13 @@
                         Required columns:
                     </b>
                     <ul>
-                        <li><b>cross_unique_id:</b> Must exist in the database, must not have duplicate cross unique id in the same upload file.
-                        <li><b>At least one of the following columns:</b> You can upload different types of cross info by selecting corresponding column headers. All of cross info of the same cross unique id must be in a single row. Dates must be in the <b>YYYY/MM/DD</b> format.</li>
+                        <li><b>.....</b></li>
+                        <li><b>.....</b></li>
                     </ul>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="profile_saved_dialog_message" name="profile_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="profileSavedDialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="profileSavedDialog">Success</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <p>
-                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The profile was saved successfully.
-                    </p>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="dismiss_profile_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
             </div>
         </div>
     </div>
