@@ -182,13 +182,14 @@ sub nirs_upload_verify_POST : Args(0) {
     }
 
     my $dir = $c->tempfiles_subdir('/nirs_files');
-    my $tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'nirs_files/fileXXXX');
+    my $tempfile_string = $c->tempfile( TEMPLATE => 'nirs_files/fileXXXX');
+    my $filter_json_filepath = $c->config->{basepath}."/".$tempfile_string."_filter_json";
+    my $output_json_filepath = $c->config->{basepath}."/".$tempfile_string."_output_json";
+    my $output_raw_json_filepath = $c->config->{basepath}."/".$tempfile_string."_output_raw_json";
+    my $output_outliers_filepath = $c->config->{basepath}."/".$tempfile_string."_output_outliers.csv";
 
-    my $filter_json_filepath = $tempfile."_filter_json";
-    my $output_json_filepath = $tempfile."_output_json";
-    my $output_raw_json_filepath = $tempfile."_output_raw_json";
-    my $output_plot_filepath = $tempfile."_output_plot.png";
-    my $output_outliers_filepath = $tempfile."_output_outliers.csv";
+    my $output_plot_filepath_string = $tempfile_string."_output_plot.png";
+    my $output_plot_filepath = $c->config->{basepath}."/".$output_plot_filepath_string;
 
     my $json = JSON->new->utf8->canonical();
     my $filter_data_input_json = $json->encode(\@filter_input);
@@ -201,7 +202,7 @@ sub nirs_upload_verify_POST : Args(0) {
     print STDERR $cmd_s;
     my $cmd_status = system($cmd_s);
 
-    $c->stash->{rest} = {success => \@success_status, warning => \@warning_status, error => \@error_status};
+    $c->stash->{rest} = {success => \@success_status, warning => \@warning_status, error => \@error_status, figure => $output_plot_filepath_string};
 }
 
 sub nirs_upload_store : Path('/ajax/Nirs/upload_store') : ActionClass('REST') { }
@@ -317,20 +318,20 @@ sub nirs_upload_store_POST : Args(0) {
         foreach my $spectra (@$spectras) {
             push @filter_input, {
                 "observationUnitId" => $stock_name,
+                "device_type" => $o->{nirs}->{device_type},
                 "nirs_spectra" => $spectra
             };
         }
     }
 
-    $c->tempfiles_subdir("nirs_files");
-    my $nirs_tmp_output = $c->config->{cluster_shared_tempdir}."/nirs_files";
-    mkdir $nirs_tmp_output if ! -d $nirs_tmp_output;
-    my ($tmp_fh, $tempfile) = tempfile(
-        "nirs_download_XXXXX",
-        DIR=> $nirs_tmp_output,
-    );
+    my $dir = $c->tempfiles_subdir('/nirs_files');
+    my $tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'nirs_files/fileXXXX');
 
     my $filter_json_filepath = $tempfile."_filter_json";
+    my $output_json_filepath = $tempfile."_output_json";
+    my $output_raw_json_filepath = $tempfile."_output_raw_json";
+    my $output_plot_filepath = $tempfile."_output_plot.png";
+    my $output_outliers_filepath = $tempfile."_output_outliers.csv";
 
     my $json = JSON->new->utf8->canonical();
     my $filter_data_input_json = $json->encode(\@filter_input);
@@ -339,15 +340,27 @@ sub nirs_upload_store_POST : Args(0) {
         print $F $filter_data_input_json;
     close($F);
 
-    # my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirs_upload_filter_aggregate.R '$filter_json_filepath' ";
-    # print STDERR $cmd_s;
-    # my $cmd_status = system($cmd_s);
+    my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirs_upload_filter_aggregate.R '$filter_json_filepath' '$output_json_filepath' '$output_raw_json_filepath' '$output_plot_filepath' '$output_outliers_filepath' ";
+    print STDERR $cmd_s;
+    my $cmd_status = system($cmd_s);
+
+    open(my $F_output, '<', $output_json_filepath);
+    my $output_json_filtered = decode_json <$F_output>;
+    close($F_output);
 
     my %parsed_data_filtered;
-    while (my ($stock_name, $o) = each %parsed_data) {
-        my $spectras = $o->{nirs}->{spectra};
-        $parsed_data_filtered{$stock_name}->{nirs}->{device_type} = $o->{nirs}->{device_type};
-        $parsed_data_filtered{$stock_name}->{nirs}->{spectra} = $spectras->[0];
+
+    # Just use one of the spectra:
+    # while (my ($stock_name, $o) = each %parsed_data) {
+    #     my $spectras = $o->{nirs}->{spectra};
+    #     $parsed_data_filtered{$stock_name}->{nirs}->{device_type} = $o->{nirs}->{device_type};
+    #     $parsed_data_filtered{$stock_name}->{nirs}->{spectra} = $spectras->[0];
+    # }
+
+    # Using aggregated spectra:
+    foreach (@$output_json_filtered) {
+        $parsed_data_filtered{$_->{observationUnitId}}->{nirs}->{device_type} = $_->{device_type};
+        $parsed_data_filtered{$_->{observationUnitId}}->{nirs}->{spectra} = $_->{nirs_spectra};
     }
 
     my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
