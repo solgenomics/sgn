@@ -137,6 +137,37 @@ sub get_cross_relationships {
     return ($maternal_parent, $paternal_parent, \@progeny);
 }
 
+
+sub get_membership {
+    my $self = shift;
+    my $schema = $self->schema;
+    my $cross_id = $self->cross_stock_id;
+
+    my $cross_member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_member_of", "stock_relationship")->cvterm_id();
+    my $cross_experiment_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_experiment', 'experiment_type')->cvterm_id();
+    my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_name", "stock_type")->cvterm_id();
+
+    my $q = "SELECT project.project_id, project.name, project.description, stock.stock_id, stock.uniquename
+        FROM nd_experiment_stock
+        JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id = nd_experiment.nd_experiment_id) AND nd_experiment.type_id = ?
+        JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id = nd_experiment.nd_experiment_id)
+        JOIN project ON (nd_experiment_project.project_id = project.project_id)
+        LEFT JOIN stock_relationship ON (nd_experiment_stock.stock_id = stock_relationship.subject_id) AND stock_relationship.type_id = ?
+        LEFT JOIN stock ON (stock_relationship.object_id = stock.stock_id) AND stock.type_id = ?
+        WHERE nd_experiment_stock.stock_id = ?";
+
+     my $h = $schema->storage->dbh()->prepare($q);
+     $h->execute($cross_experiment_type_id, $cross_member_of_type_id, $family_name_type_id, $cross_id);
+
+     my @membership_info = ();
+     while (my ($crossing_experiment_id, $crossing_experiment_name, $description, $family_id, $family_name) = $h->fetchrow_array()){
+         push @membership_info, [$crossing_experiment_id, $crossing_experiment_name, $description, $family_id, $family_name]
+     }
+
+     return \@membership_info;
+}
+
+
 =head2 get_cross_details
 
  Usage:         CXGN::Cross->get_cross_details( $schema, $female_parent, $male_parent);
@@ -710,7 +741,7 @@ sub get_cross_progenies_trial {
     my $cross_combination_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_combination", "stock_property")->cvterm_id();
     my $offspring_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "offspring_of", "stock_relationship")->cvterm_id();
     my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_name", "stock_type")->cvterm_id();
-    my $member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "member_of", "stock_relationship")->cvterm_id();
+    my $cross_member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_member_of", "stock_relationship")->cvterm_id();
 
     my $q = "SELECT cross_table.cross_id, cross_table.cross_name, cross_table.cross_combination, cross_table.family_id, cross_table.family_name, progeny_count_table.progeny_number
         FROM
@@ -731,7 +762,7 @@ sub get_cross_progenies_trial {
 
     my $h = $schema->storage->dbh()->prepare($q);
 
-    $h->execute($cross_combination_type_id, $member_of_type_id, $family_name_type_id, $trial_id, $offspring_of_type_id, $trial_id);
+    $h->execute($cross_combination_type_id, $cross_member_of_type_id, $family_name_type_id, $trial_id, $offspring_of_type_id, $trial_id);
 
     my @data =();
     while(my($cross_id, $cross_name, $cross_combination, $family_id, $family_name, $progeny_number) = $h->fetchrow_array()){

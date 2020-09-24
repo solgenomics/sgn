@@ -118,7 +118,7 @@ sub validate {
           my $number2 = 9;
           while ($number2 < $size){
             # if (not exists $types{$fields[5]}){
-              print "$fields[5]\n";
+              #print "$fields[5]\n";
               if (not grep {/$fields[5]/i} keys %types){
                 $parse_result{'error'}= "Wrong device type '$fields[5]'. Please, check names allowed in File Format Information.";
                 return \%parse_result;
@@ -130,7 +130,7 @@ sub validate {
             if (not $fields[2] eq ''){
               if (not $fields[2] =~/(\d{4})-(\d{2})-(\d{2})/) {
                   $parse_result{'error'} = "Sampling date needs to be of form YYYY-MM-DD";
-                  print STDERR "value: $fields[2]\n";
+                 # print STDERR "value: $fields[2]\n";
                   return \%parse_result;
               }
             }
@@ -145,8 +145,6 @@ sub validate {
 
     return 1;
 }
-
-  
 
 sub parse {
     my $self = shift;
@@ -172,13 +170,10 @@ sub parse {
     my %metadata_hash;
     my $row_number = 0;
     my $col_number=0;
-    my $observation_column_index;
-    my $seen_spectra = 0;
     my $number=0;
     my $size;
     my $count;
-
-    
+    my $num_cols;
 
     open(my $fh, '<', $filename)
         or die "Could not open file '$filename' $!";
@@ -189,47 +184,32 @@ sub parse {
         return \%parse_result;
     }
 
-    
     while (my $row = $csv->getline ($fh)) {
         # print STDERR "Row is ".Dumper($row)."\n";
         if ( $row_number == 0 ) {
             @header = @{$row};
-            for my $i ( 0 .. scalar(@header)-1 ) {
-                if ($header[$i] eq 'User_input_id') {
-                    $observation_column_index = $i;
-                    last;
+            $num_cols = scalar(@header);
+        } elsif ( $row_number > 0 ) {# get data
+            my @columns = @{$row};
+            my $observationunit_name = $columns[3];
+            $observation_units_seen{$observationunit_name} = 1;
+            # print "The plots are $observationunit_name\n";
+            $data{$observationunit_name}->{'nirs'}->{'device_type'} = 'SCIO';
+            my %spectra;
+            foreach my $col (0..$num_cols-1){
+                my $column_name = $header[$col];
+                if ($column_name ne '' && $column_name =~ /^[+]?\d+\.?\d*$/){
+                    my $wavelength = "X".$column_name;
+                    my $nir_value = $columns[$col];
+                    $spectra{$wavelength} = $nir_value;
                 }
             }
-        }elsif ( $row_number > 0 )   {# get data
-          my @columns = @{$row};
-          my $num_cols = scalar(@columns);
-          my $observationunit_name = $columns[3];
-                    $observation_units_seen{$observationunit_name} = 1;
-                    # print "The plots are $observationunit_name\n";
-                          foreach my $col (0..$num_cols-1){
-                              my $column_name = $header[$col];
-                              if ($column_name ne '' && $column_name !~ /^[+]?\d+\.?\d*$/){
-                                if ($seen_spectra) {
-                                   last;
-                                }
-                                my $metadata_value = '';
-                                $metadata_value = $columns[$col];
-                                $data{$observationunit_name}->{'nirs'}->{$column_name} = $metadata_value;
-                                # print "The pot is $observationunit_name and data is $metadata_value\n";
-                              }
-
-                              if ($column_name ne '' && $column_name =~ /^[+]?\d+\.?\d*$/){
-                                my $wavelength = "X".$column_name;
-                                my $nir_value = '';
-                                $nir_value = $columns[$col];
-                                $data{$observationunit_name}->{'nirs'}->{'spectra'}->{$wavelength} = $nir_value;
-                              }
-
-                          }
-
+            push @{$data{$observationunit_name}->{'nirs'}->{'spectra'}}, \%spectra;
         }
-      $row_number++;
+        $row_number++;
     }
+    close($fh);
+
     foreach my $obs (sort keys %observation_units_seen) {
         push @observation_units, $obs;
     }
@@ -242,8 +222,6 @@ sub parse {
     $parse_result{'variables'} = \@traits;
     return \%parse_result;
     # print STDERR Dumper \%parse_result;
-
 }
-    
+
 1;
-  

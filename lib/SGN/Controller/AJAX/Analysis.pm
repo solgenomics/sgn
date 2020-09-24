@@ -8,6 +8,7 @@ use CXGN::Phenotypes::ParseUpload;
 use CXGN::Phenotypes::StorePhenotypes;
 use CXGN::Trial::TrialDesign;
 use CXGN::Analysis::AnalysisCreate;
+use CXGN::AnalysisModel::GetModel;
 use URI::FromHash 'uri';
 use JSON;
 use CXGN::BreederSearch;
@@ -17,7 +18,7 @@ BEGIN { extends 'Catalyst::Controller::REST' };
 __PACKAGE__->config(
     default => 'application/json',
     stash_key => 'rest',
-    map => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map => { 'application/json' => 'JSON', 'text/html' => 'JSON'  },
     );
 
 
@@ -51,6 +52,7 @@ sub store_analysis_json_POST {
     my $analysis_result_values = $c->req->param("analysis_result_values") ? decode_json $c->req->param("analysis_result_values") : {};
     my $analysis_result_values_type = $c->req->param("analysis_result_values_type");
     my $analysis_result_summary = $c->req->param("analysis_result_summary") ? decode_json $c->req->param("analysis_result_summary") : {};
+    my $analysis_result_trait_compose_info = $c->req->param("analysis_result_trait_compose_info") ? decode_json $c->req->param("analysis_result_trait_compose_info") : {};
     my $analysis_model_id = $c->req->param("analysis_model_id") ? $c->req->param("analysis_model_id") : undef;
     my $analysis_model_name = $c->req->param("analysis_model_name");
     my $analysis_model_description = $c->req->param("analysis_model_description");
@@ -75,7 +77,7 @@ sub store_analysis_json_POST {
 
     $self->store_data($c,
         $analysis_to_save_boolean,
-        $analysis_name, $analysis_description, $analysis_year, $analysis_breeding_program_id, $analysis_protocol, $analysis_dataset_id, $analysis_accession_names, $analysis_trait_names, $analysis_statistical_ontology_term, $analysis_precomputed_design_optional, $analysis_result_values, $analysis_result_values_type, $analysis_result_summary,
+        $analysis_name, $analysis_description, $analysis_year, $analysis_breeding_program_id, $analysis_protocol, $analysis_dataset_id, $analysis_accession_names, $analysis_trait_names, $analysis_statistical_ontology_term, $analysis_precomputed_design_optional, $analysis_result_values, $analysis_result_values_type, $analysis_result_summary, $analysis_result_trait_compose_info,
         $analysis_model_id, $analysis_model_name, $analysis_model_description, $analysis_model_is_public, $analysis_model_language, $analysis_model_type, $analysis_model_properties, $analysis_model_application_name, $analysis_model_application_version, $analysis_model_file, $analysis_model_file_type, $analysis_model_training_data_file, $analysis_model_training_data_file_type, $analysis_model_auxiliary_files,
         $user_id, $user_name, $user_role
     );
@@ -103,6 +105,7 @@ sub store_analysis_spreadsheet_POST {
     # my $analysis_result_values = $c->req->param("analysis_result_values") ? decode_json $c->req->param("analysis_result_values") : {};
     my $analysis_result_values_type = $c->req->param("upload_new_analysis_result_values_type");
     my $analysis_result_summary_string = $c->req->param("upload_new_analysis_result_summary_string");
+    my $analysis_result_trait_compose_info_string = $c->req->param("upload_new_analysis_result_trait_compose_info_string");
     my $analysis_model_id = $c->req->param("upload_new_analysis_model_id") ? $c->req->param("upload_new_analysis_model_id") : undef;
     my $analysis_model_name = $c->req->param("upload_new_analysis_model_name");
     my $analysis_model_description = $c->req->param("upload_new_analysis_model_description");
@@ -284,6 +287,13 @@ sub store_analysis_spreadsheet_POST {
         $analysis_result_summary->{$key} = $value;
     }
 
+    my @analysis_result_trait_compose_info_array = split ',', $analysis_result_trait_compose_info_string;
+    my $analysis_result_trait_compose_info;
+    foreach (@analysis_result_trait_compose_info_array) {
+        my ($key, $value) = split '\|\|\|\|', $_;
+        $analysis_result_trait_compose_info->{$key} = [$value];
+    }
+
     my @analysis_model_properties_array = split ',', $analysis_model_properties_string;
     my $analysis_model_properties;
     foreach (@analysis_model_properties_array) {
@@ -396,131 +406,15 @@ sub store_analysis_spreadsheet_POST {
 
     $self->store_data($c,
         $analysis_to_save_boolean,
-        $analysis_name, $analysis_description, $analysis_year, $analysis_breeding_program_id, $analysis_protocol, $analysis_dataset_id, $analysis_accession_names, $analysis_trait_names, $analysis_statistical_ontology_term, $analysis_precomputed_design_optional, $analysis_result_values, $analysis_result_values_type, $analysis_result_summary,
+        $analysis_name, $analysis_description, $analysis_year, $analysis_breeding_program_id, $analysis_protocol, $analysis_dataset_id, $analysis_accession_names, $analysis_trait_names, $analysis_statistical_ontology_term, $analysis_precomputed_design_optional, $analysis_result_values, $analysis_result_values_type, $analysis_result_summary, $analysis_result_trait_compose_info,
         $analysis_model_id, $analysis_model_name, $analysis_model_description, $analysis_model_is_public, $analysis_model_language, $analysis_model_type, $analysis_model_properties, $analysis_model_application_name, $analysis_model_application_version, $analysis_model_file, $analysis_model_file_type, $analysis_model_training_data_file, $analysis_model_training_data_file_type, $analysis_model_auxiliary_files,
         $user_id, $user_name, $user_role
     );
 }
 
-# sub store_analysis_file : Path('/ajax/analysis/store/file') ActionClass("REST") Args(0) {}
-# 
-# sub store_analysis_file_POST {
-#     my $self = shift;
-#     my $c = shift;
-#     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-# 
-#     my $file = $c->req->param("file");
-#     my $dir = $c->req->param("dir"); # the dir under tempfiles/
-# 
-#     my $params = $c->req->params();
-#     my $analysis_name = $c->req->param("analysis_name");
-#     my $analysis_type = $c->req->param("analysis_type");
-#     my $dataset_id = $c->req->param("dataset_id");
-#     my $description = $c->req->param("description");
-#     my $breeding_program = $c->req->param("breeding_program");
-#     my ($user_id, $user_name, $user_role) = _check_user_login($c);
-# 
-#     my $check_name = $schema->resultset("Project::Project")->find({ name => $analysis_name });
-#     if ($check_name) {
-#         $c->stash->{rest} = {error => "An analysis with name $analysis_name already exists in the database. Please choose another name."};
-#         return;
-#     }
-# 
-#     if (! defined($breeding_program)) {  
-# 	my @roles = $c->user->get_object()->get_roles();
-# 	print STDERR "ROLES = ".join(", ", @roles)."\n";
-# 	# get breeding program, which are roles that are not user,submitter, sequencer or curator
-# 
-# 	foreach my $r (@roles) {
-# 	    if ($r !~ m/curator|user|submitter|sequencer/) {
-# 		$breeding_program = $r;
-# 	    }
-# 	}
-#     }
-#     print STDERR "Using breeding program $breeding_program\n";
-# 
-#     if (! $breeding_program) {
-# 	$c->stash->{rest} = { error => "You do not have a breeding program associated with your account, which is required to store an analysis!" };
-# 	return;
-#     }
-# 
-#     print STDERR "Storing analysis file: $dir / $file...\n";
-#     print STDERR <<INFO;
-#     Analysis name: $analysis_name
-#     Analysis type: $analysis_type
-#     Description:   $description
-# INFO
-# 
-#     print STDERR "Retrieving cvterms...\n";
-#     my $analysis_type_row = SGN::Model::Cvterm->get_cvterm_row($schema, $params->{analysis_type}, 'experiment_type');
-#     if (! $analysis_type_row) {
-# 	my $error = "Provided analysis type ($params->{analysis_type}) does not exist in the database. Exiting.";
-# 	print STDERR $error."\n";
-# 	$c->stash->{rest} = { error =>  $error };
-# 	return;
-#     }
-# 
-#     my @plots;
-#     my @stocks;
-#     my %value_hash;
-# 
-#     my $analysis_type_id = $analysis_type_row->cvterm_id();    
-# 
-#     my $fullpath = $c->tempfiles_base()."/".$dir."/".$file;
-# 
-#     print STDERR "Reading analysis file path $fullpath...\n";
-# 
-#     my @lines = read_file($fullpath);
-# 
-#     my $header = shift(@lines);
-#     chomp($header);
-# 
-#     my ($accession, @traits) = split /\t/, $header;
-# 
-#     my %good_terms = ();
-# 
-#     # remove illegal trait columns
-#     #
-#     my @good_traits;
-#     foreach my $t (@traits) {
-# 	my ($human_readable, $accession) = split /\|/, $t; #/
-# 
-# 	print "Checking term $t ($human_readable, $accession)...\n";
-# 	my $term = CXGN::Cvterm->new( { schema => $schema, accession => $accession });
-# 
-# 	if ($term->cvterm_id()) {
-# 	    $good_terms{$t} = 1;
-# 	    push @good_traits, $t;
-# 	}
-# 	else {
-# 	    $good_terms{$t} = 0; 
-# 	}
-#     }
-# 
-#     foreach my $line (@lines) {
-# 	my ($acc, @values) = split /\t/, $line;
-# 	$acc =~ s/\"//g;
-# 	#print STDERR "Reading data for $acc with value ".join(",", @values)."...\n";
-# 	my $plot_name = $analysis_name."_".$acc;
-# 	push @plots, $plot_name;
-# 	push @stocks, $acc;
-# 	for(my $i=0; $i<@traits; $i++) {
-# 	    if ($good_terms{$traits[$i]}) {  # only save good terms
-# 		#print STDERR "Building hash with trait $traits[$i] and value $values[$i]...\n";
-# 		if ($values[$i] eq 'NA') { $values[$i] = undef; }
-# 		push @{$value_hash{$plot_name}->{$traits[$i]}}, $values[$i];
-# 	    }
-# 	}
-#     }
-# 
-#     print STDERR "Storing data...\n";
-#     return $self->store_data($c, $params->{analysis_name}, $params->{analysis_description}, $params->{dataset_id}, $params->{analysis_protocol}, \%value_hash, \@stocks, \@plots, \@good_traits, $user_id, $user_name, $user_role);
-# }
-
-
 sub store_data {
     my $self = shift;
-    my ($c, $analysis_to_save_boolean, $analysis_name, $analysis_description, $analysis_year, $analysis_breeding_program_id, $analysis_protocol, $analysis_dataset_id, $analysis_accession_names, $analysis_trait_names, $analysis_statistical_ontology_term, $analysis_precomputed_design_optional, $analysis_result_values, $analysis_result_values_type, $analysis_result_summary, $analysis_model_id, $analysis_model_name, $analysis_model_description, $analysis_model_is_public, $analysis_model_language, $analysis_model_type, $analysis_model_properties, $analysis_model_application_name, $analysis_model_application_version, $analysis_model_file, $analysis_model_file_type, $analysis_model_training_data_file, $analysis_model_training_data_file_type, $analysis_model_auxiliary_files, $user_id, $user_name, $user_role) = @_;
+    my ($c, $analysis_to_save_boolean, $analysis_name, $analysis_description, $analysis_year, $analysis_breeding_program_id, $analysis_protocol, $analysis_dataset_id, $analysis_accession_names, $analysis_trait_names, $analysis_statistical_ontology_term, $analysis_precomputed_design_optional, $analysis_result_values, $analysis_result_values_type, $analysis_result_summary, $analysis_result_trait_compose_info, $analysis_model_id, $analysis_model_name, $analysis_model_description, $analysis_model_is_public, $analysis_model_language, $analysis_model_type, $analysis_model_properties, $analysis_model_application_name, $analysis_model_application_version, $analysis_model_file, $analysis_model_file_type, $analysis_model_training_data_file, $analysis_model_training_data_file_type, $analysis_model_auxiliary_files, $user_id, $user_name, $user_role) = @_;
     
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');;
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
@@ -560,6 +454,7 @@ sub store_data {
         analysis_result_values=>$analysis_result_values,
         analysis_result_values_type=>$analysis_result_values_type,
         analysis_result_summary=>$analysis_result_summary,
+        analysis_result_trait_compose_info_time=>$analysis_result_trait_compose_info,
         analysis_model_id=>$analysis_model_id,
         analysis_model_name=>$analysis_model_name,
         analysis_model_description=>$analysis_model_description,
@@ -595,8 +490,9 @@ sub list_analyses_by_user_table :Path('/ajax/analyses/by_user') Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
+    my $analysis_model_type = $c->req->param('analysis_model_type');
 
-    my @analyses = CXGN::Analysis->retrieve_analyses_by_user($schema, $people_schema, $metadata_schema, $phenome_schema, $user_id);
+    my @analyses = CXGN::Analysis->retrieve_analyses_by_user($schema, $people_schema, $metadata_schema, $phenome_schema, $user_id, $analysis_model_type);
 
     my @table;
     foreach my $a (@analyses) {
@@ -629,8 +525,9 @@ sub list_analyses_models_by_user_table :Path('/ajax/analyses/models/by_user') Ar
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
+    my $analysis_model_type = $c->req->param('analysis_model_type');
 
-    my $analysis_models_by_user = CXGN::AnalysisModel::GetModel::get_models_by_user($schema, $user_id);
+    my $analysis_models_by_user = CXGN::AnalysisModel::GetModel::get_models_by_user($schema, $user_id, $analysis_model_type);
     #print STDERR Dumper $analysis_models_by_user;
 
     my @table;
@@ -759,8 +656,47 @@ sub retrieve_analysis_data :Chained("ajax_analysis") PathPart('retrieve') :Args(
     $c->stash->{rest} = $resultref;
 }
 
+sub analysis_model_delete :Path('/ajax/analysis_model/delete') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my ($user_id, $user_name, $user_role) = _check_user_login($c, 'curator');
+
+    my $model_id = $c->req->param('model_id');
+    my $analysis_by_model = CXGN::AnalysisModel::GetModel::get_analyses_by_model($schema, $model_id);
+    if (scalar(@$analysis_by_model) > 0) {
+        $c->stash->{rest} = {error=>'This model still has analyses associated! Please delete the analyses before deleting this model!'};
+        $c->detach();
+    }
+
+    my $m = CXGN::AnalysisModel::GetModel->new({
+        bcs_schema=>$schema,
+        metadata_schema=>$metadata_schema,
+        phenome_schema=>$phenome_schema,
+        nd_protocol_id=>$model_id
+    });
+    my $saved_model_object = $m->get_model();
+    my $nd_experiment_id = $saved_model_object->{model_experiment_id};
+    my $file_ids = $saved_model_object->{model_file_ids};
+
+    my $q1 = "DELETE FROM nd_experiment WHERE nd_experiment_id=?;";
+    my $h1 = $schema->storage->dbh()->prepare($q1);
+    $h1->execute($nd_experiment_id);
+
+    my $q2 = "DELETE FROM nd_protocol WHERE nd_protocol_id=?;";
+    my $h2 = $schema->storage->dbh()->prepare($q2);
+    $h2->execute($model_id);
+
+    $c->stash->{rest} = { success => 1 };
+}
+
 sub _check_user_login {
     my $c = shift;
+    my $role_check = shift;
     my $user_id;
     my $user_name;
     my $user_role;
@@ -785,6 +721,10 @@ sub _check_user_login {
         $user_id = $c->user()->get_object()->get_sp_person_id();
         $user_name = $c->user()->get_object()->get_username();
         $user_role = $c->user->get_object->get_user_type();
+    }
+    if ($role_check && $user_role ne $role_check) {
+        $c->stash->{rest} = {error=>'You must have permission to do this! Please contact us!'};
+        $c->detach();
     }
     return ($user_id, $user_name, $user_role);
 }

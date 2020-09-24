@@ -85,7 +85,9 @@ jQuery(document).ready(function(){
                 var model_files_string = '';
                 for (var key in response.model_info.model_file_ids) {
                     if (response.model_info.model_file_ids.hasOwnProperty(key)) {
-                        model_files_string = model_files_string + response.model_info.model_file_ids[key] + " : <a href='/breeders/phenotyping/download/" + key + "'>Download</a><br/>";
+                        if (key) {
+                            model_files_string = model_files_string + response.model_info.model_file_ids[key] + " : <a href='/breeders/phenotyping/download/" + key + "'>Download</a><br/>";
+                        }
                     }
                 }
                 jQuery('#model_files').html(model_files_string);

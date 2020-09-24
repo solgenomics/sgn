@@ -14,7 +14,7 @@ CXGN::Trial::TrialDesignStore - Module to validate and store a trial's design (f
     design => $design_hash,
     is_genotyping => 0,
     is_analysis => 0,
-    operator = "janedoe" 
+    operator = "janedoe"
  });
 
  my $validate_error = $design_store->validate_design();
@@ -22,7 +22,7 @@ CXGN::Trial::TrialDesignStore - Module to validate and store a trial's design (f
 
  if ($validate_error) {
     print STDERR "VALIDATE ERROR: $validate_error\n";
- } 
+ }
  else {
     try {
         $store error = $design_store->store();
@@ -144,12 +144,12 @@ store() will do the following for FIELD LAYOUT trials:
 
 Search for a trial's associated nd_experiment. There should only be one nd_experiment of type = field_layout.
 
-=item 2) 
+=item 2)
 
 Foreach plot in the design hash, searches for the accession's stock_name.
 # TO BE IMPLEMENTED: A boolean option to allow stock_names to be added to the database on the fly. Normally this would be set to 0, but for certain loading scripts this could be set to 1.
 
-=item 3) 
+=item 3)
 
 Finds or creates a stock entry for each plot_name in the design hash.
 #TO BE IMPLEMENTED: Associate an owner to the plot
@@ -158,58 +158,58 @@ Finds or creates a stock entry for each plot_name in the design hash.
 
 Creates stockprops (block, rep, plot_number, etc) for plots.
 
-=item 5) 
+=item 5)
 
 For each plot, creates a stock relationship between the plot and accession if not already present.
 
-=item 6) 
+=item 6)
 
 If seedlot given: for each plot, creates a seed transaction stock relationship between the plot and seedlot
 
-=item 7) 
+=item 7)
 
 For each plot, creates an nd_experiment_stock entry if not already present. They are all linked to the same nd_experiment entry found in step 1.
 
-=item 8) 
+=item 8)
 
 Finds or creates a stock entry for each plant_names in the design hash.
 #TO BE IMPLEMENTED: Associate an owner to the plant
 
-=item 9) 
+=item 9)
 
 Creates stockprops (block, rep, plot_number, plant_index_number, etc) for plants.
-=item 10) 
+=item 10)
 
 For each plant, creates a stock_relationship between the plant and accession if not already present.
 
-=item 11) 
+=item 11)
 
 For each plant, creates a stock_relationship between the plant and plot if not already present.
 
-=item 12) 
+=item 12)
 
 For each plant creates an nd_experiment_stock entry if not already present. They are all linked to the same nd_experiment entry found in step 1.
 
 If there are subplot entries (currently for splitplot design)
 
-=item 13) 
+=item 13)
 
 Finds or creates a stock entry for each subplot_names in the design hash.
 #TO BE IMPLEMENTED: Associate an owner to the subplot
 
-=item 14) 
+=item 14)
 
 Creates stockprops (block, rep, plot_number, plant_index_number, etc) for subplots.
 
-=item 15) 
+=item 15)
 
 For each subplot, creates a stock_relationship between the subplot and accession if not already present.
 
-=item 16) 
+=item 16)
 
 For each subplot, creates a stock_relationship between the subplot and plot if not already present.
 
-=item 17) 
+=item 17)
 
 For each subplot, creates a stock_relationship between the subplot and plant if not already present.
 
@@ -221,42 +221,42 @@ For each subplot creates an nd_experiment_stock entry if not already present. Th
 
 store() will do the following for GENOTYPING LAYOUT trials:
 
-=over 5 
+=over 5
 
 
 =item 1)
 
 Search for a trial's associated nd_experiment. There should only be one nd_experiment of type = genotyping_layout.
-=item 2) 
+=item 2)
 
 
 Foreach tissue_sample in the design hash, searches for the source_observation_unit's stock_name. The source_observation_unit can be in order of descending desireability: tissue_sample, plant, plot, or accession
 
-=item 3) 
+=item 3)
 
 Finds or creates a stock entry for each tissue in the design hash.
 
-=item 4) 
+=item 4)
 
 Creates stockprops (col_number, row_number, plot_number, notes, dna_person, etc) for tissue_sample.
 
-=item 5) 
+=item 5)
 
 For each tissue_sample, creates a stock relationship between the tissue_sample and source_observation_unit if not already present.
 
-=item 6) 
+=item 6)
 
 If the source_observation_unit is a tissue_sample, it will create stock relationships to the tissue_sample's parent plant, plot, and accession if they exist.
 
-=item 7) 
+=item 7)
 
 If the source_observation_unit is a plant, it will create stock relationships to the plant's parent plot and accession if they exist.
 
-=item 8) 
+=item 8)
 
 If the source_observation_unit is a plot, it will create stock relationships to the plot's parent accession if it exists.
 
-=item 9) 
+=item 9)
 
 For each tissue_sample, creates an nd_experiment_stock entry if not already present. They are all linked to the same nd_experiment entry found in step 1.
 
@@ -275,7 +275,6 @@ use CXGN::Trial::TrialDesignStore::PhenotypingTrial;
 use CXGN::Trial::TrialDesignStore::GenotypingTrial;
 use CXGN::Trial::TrialDesignStore::Analysis;
 use CXGN::Trial::TrialDesignStore::CrossingTrial;
-use CXGN::Trial::TrialDesignStore::FamilyTrial;
 
 sub new {
     my $class = shift;
@@ -283,11 +282,11 @@ sub new {
 
     my $type;
 
-    if (($args->{is_genotyping} == 1) && ($args->{is_analysis} == 1)) { 
+    if (($args->{is_genotyping} == 1) && ($args->{is_analysis} == 1)) {
 	die "Trial design can't have is_genotyping and is_analysis set at the same time.\n";
     }
-    
-    if ($args->{is_genotyping} == 1) { 
+
+    if ($args->{is_genotyping} == 1) {
 	$type = "genotyping_trial";
     }
 
@@ -295,18 +294,10 @@ sub new {
 	$type = "analysis";
     }
 
-    if( (! $args->{is_genotyping}) && (! $args->{is_analysis}) ) { 
+    if( (! $args->{is_genotyping}) && (! $args->{is_analysis}) ) {
 	$type = "phenotyping_trial";
     }
 
-    if ($type eq "phenotyping_trial" && $args->{trial_stock_type} eq "cross") {
-	$type = "cross";
-    }
-
-    if ($type eq "phenotyping_trial" && $args->{trial_stock_type} eq "family_name") {
-	$type = "family";
-    }
-    
     my $object;
     if ($type eq "genotyping_trial") {
 	print STDERR "Generating GENOTYPING TRIAL\n";
@@ -325,11 +316,6 @@ sub new {
 	$object = CXGN::Trial::TrialDesignStore::CrossingTrial->new($args);
     }
 
-    if ($type eq "family") {
-	print STDERR "Generating FAMILY TRIAL...\n";
-	$object = CXGN::Trial::TrialDesignStore::FamilyTrial->new($args);
-    }
-
     return $object;
 }
 
@@ -344,7 +330,7 @@ sub new {
 #     my $self = shift;
 #     my $chado_schema = $self->get_bcs_schema;
 #     my $design_type = $self->get_design_type;
-#     my %design = %{$self->get_design}; 
+#     my %design = %{$self->get_design};
 #     my $error = '';
 
 #     if ($self->get_is_genotyping && $design_type ne 'genotyping_plate') {
@@ -503,7 +489,7 @@ sub new {
 # Stores the design.
 
 # =cut
-    
+
 # sub store {
 #     print STDERR "Saving design ".localtime()."\n";
 #     my $self = shift;
