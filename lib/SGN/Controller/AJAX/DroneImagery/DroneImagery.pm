@@ -6658,11 +6658,11 @@ sub drone_imagery_save_single_plot_image_POST : Args(0) {
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my %expected_types = (
-        'observation_unit_polygon_blue_imagery',
-        'observation_unit_polygon_green_imagery',
-        'observation_unit_polygon_red_imagery',
-        'observation_unit_polygon_nir_imagery',
-        'observation_unit_polygon_red_edge_imagery'
+        'observation_unit_polygon_blue_imagery' => 1,
+        'observation_unit_polygon_green_imagery' => 1,
+        'observation_unit_polygon_red_imagery' => 1,
+        'observation_unit_polygon_nir_imagery' => 1,
+        'observation_unit_polygon_red_edge_imagery' => 1
     );
 
     my $drone_run_band_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_band_project_type', 'project_property')->cvterm_id();
