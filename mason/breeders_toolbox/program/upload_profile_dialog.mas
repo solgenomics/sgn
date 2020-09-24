@@ -53,13 +53,13 @@ $program_name
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Product Profile Name: </label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="new_product_profile_name" name="new_product_profile_name" type="text"/>
+                                        <input class="form-control" id="new_profile_name" name="new_profile_name" type="text"/>
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Scope: </label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="new_product_profile_scope" name="new_product_profile_scope" type="text"/>
+                                        <input class="form-control" id="new_profile_scope" name="new_profile_scope" type="text"/>
                                     </div>
                                 </div>
                                 <div class="form-group">
@@ -70,7 +70,7 @@ $program_name
                                 </div>
                             </form>
                             <center>
-                                <button type="button" class="btn btn-lg btn-primary" onclick="Workflow.complete(this, false);" id ="upload_profile_button" name="upload_profile_button" >Upload Profile</button><br/><br/>
+                                <button type="button" class="btn btn-lg btn-primary" onclick="Workflow.complete(this, false);" id ="upload_profile_submit" name="upload_profile_submit" >Upload Profile</button><br/><br/>
                             </center>
                         </&>
                         <&| /util/workflow.mas:complete, title=> "Complete" &>
@@ -165,6 +165,68 @@ $program_name
 
 jQuery(document).ready(function(){
 
+    jQuery('#upload_profile_submit').click(function () {
+        upload_profile();
+    });
+
+    function upload_profile() {
+        var profile_upload_file = jQuery("#profile_upload_file").val();
+        var program_id = jQuery('#profile_program_id').val();
+        var new_profile_name = jQuery('#new_profile_name').val();
+        var new_profile_scope = jQuery('#new_profile_scope').val();
+
+        jQuery('#upload_profile_form').attr("action", '/ajax/breeders/program/upload_profile');
+
+        if (program_id === '') {
+            alert("Please choose a breeding program");
+            return;
+        }
+        if (new_profile_name === '') {
+            alert("Please enter a profile name");
+            return;
+        }
+        if (new_profile_scope == '') {
+            alert("Please enter a scope");
+            return;
+        }
+        jQuery("#upload_profile_form").submit();
+    }
+
+//    jQuery('#upload_profile_form').iframePostForm({
+//        json: true,
+//        post: function () {
+//        var profile_upload_file = jQuery("#profile_upload_file").val();
+//            jQuery('#working_modal').modal("show");
+//            if (profile_upload_file == '') {
+//                jQuery('#working_modal').modal("hide");
+//                alert("No file selected");
+//            }
+//        },
+//        complete: function(response) {
+//            jQuery("#working_modal").modal("hide");
+//            if (response.error_string) {
+//                jQuery('#upload_profile_error_display').modal("show");
+//                jQuery('#upload_profile_error_display tbody').html('');
+//                jQuery('#upload_profile_error_display tbody').append(response.error_string);
+//                return;
+//            }
+//            if (response.error) {
+//                alert(response.error);
+//                return;
+//            }
+//            if (response.success) {
+//                Workflow.focus("#upload_profile_workflow", -1); //Go to success page
+//                Workflow.check_complete("#upload_profile_workflow");
+
+//            }
+//        }
+//    });
+
+    jQuery(document).on('click', '[name="upload_profile_success_complete_button"]', function(){
+        alert('Profile was saved in the database');
+        jQuery('#upload_profile_dialog').modal('hide');
+        //location.reload();
+    });
 
 
 });
