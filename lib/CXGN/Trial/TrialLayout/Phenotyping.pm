@@ -14,10 +14,9 @@ sub BUILD {
 
     print STDERR "BUILD CXGN::Trial::TrialLayout::Phenotyping...\n";
     $self->set_source_stock_types([ 'accession', 'cross', 'family_name', 'subplot', 'plant', 'grafted_accession' ] );
-    $self->set_relationship_types([ 'plot_of', 'member_of', 'plant_of_subplot', 'tissue_sample_of' ]);
+    $self->set_relationship_types([ 'plot_of', 'member_of', 'plant_of_subplot', 'tissue_sample_of']);
+    $self->set_target_stock_types( [ 'plot'] );
 
-    $self->set_target_stock_types( [ 'plot','cross', 'family_name' ] );
-    
     #print STDERR "Set source stock types to ".join(", ", @{$self->get_source_stock_types()});
         # probably better to lazy load the action design...
     #
@@ -55,7 +54,7 @@ sub _get_plot_dimensions_from_trial {
     if (!$project) {
 	return;
     }
-    
+
     my $schema = $self->get_schema();
     my $plot_width = '';
     my $plot_width_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_width', 'project_property')->cvterm_id();
@@ -63,14 +62,14 @@ sub _get_plot_dimensions_from_trial {
     if ($plot_width_row) {
         $plot_width = $plot_width_row->value();
     }
-    
+
     my $plot_length = '';
     my $plot_length_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_length', 'project_property')->cvterm_id();
     my $plot_length_row = $schema->resultset('Project::Projectprop')->find({project_id => $self->get_trial_id(), type_id => $plot_length_cvterm_id});
     if ($plot_length_row) {
         $plot_length = $plot_length_row->value();
     }
-    
+
     my $plants_per_plot = '';
     my $plants_per_plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_has_plant_entries', 'project_property')->cvterm_id();
     my $plants_per_plot_row = $schema->resultset('Project::Projectprop')->find({project_id => $self->get_trial_id(), type_id => $plants_per_plot_cvterm_id});

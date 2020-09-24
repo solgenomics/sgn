@@ -592,34 +592,16 @@ sub store {
                 my $parent_stock;
                 my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
                 $stock_lookup->set_stock_name($stock_name);
-                #$parent_stock = $stock_lookup->get_stock($self->get_accession_cvterm_id);
-
-		if ($self->get_trial_stock_type() eq 'cross') {
-                    $parent_stock = $stock_lookup->get_stock($self->get_cross_cvterm_id());
-                    if (!$parent_stock) {
-                        die ("Error while saving trial layout: no cross found matching $stock_name");
-                    }
-                } elsif ($self->get_trial_stock_type() eq 'family_name') {
-                    $parent_stock = $stock_lookup->get_stock($self->get_family_name_cvterm_id());
-                    if (!$parent_stock) {
-                        die ("Error while saving trial layout: no family name found matching $stock_name");
-                    }
-                } else {
-                    $parent_stock = $stock_lookup->get_stock($self->get_accession_cvterm_id());
-                    if (!$parent_stock) {
-                        die ("Error while saving trial layout: no accession found matching $stock_name");
-                    }
+                $parent_stock = $stock_lookup->get_stock($self->get_accession_cvterm_id());
+                if (!$parent_stock) {
+                    die ("Error while saving trial layout: no accession found matching $stock_name");
                 }
-
-                #if (!$parent_stock) {
-                #    die ("Error while saving trial layout: no stocks found matching $stock_name");
-                #}
 
                 $stock_id_checked = $parent_stock->stock_id();
                 $stock_name_checked = $parent_stock->uniquename;
                 $stock_type_checked = $parent_stock->type_id;
                 $organism_id_checked = $parent_stock->organism_id();
-	    }
+            }
 
             #create the plot, if plot given
             my $new_plot_id;
