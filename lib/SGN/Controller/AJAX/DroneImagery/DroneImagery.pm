@@ -226,6 +226,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $field_trial_id_list_string = join ',', @$field_trial_id_list;
     my $trait_id_list = $c->req->param('observation_variable_id_list') ? decode_json $c->req->param('observation_variable_id_list') : [];
     my $compute_from_parents = $c->req->param('compute_from_parents') eq 'yes' ? 1 : 0;
+    my $include_pedgiree_info_if_compute_from_parents = $c->req->param('include_pedgiree_info_if_compute_from_parents') eq 'yes' ? 1 : 0;
     my $protocol_id = $c->req->param('protocol_id');
     my $tolparinv = $c->req->param('tolparinv');
     my $legendre_order_number = $c->req->param('legendre_order_number');
@@ -867,50 +868,55 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             }
             my @accession_ids = keys %seen_accession_stock_ids;
 
-            my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
-            my $tmp_grm_dir = $shared_cluster_dir_config."/tmp_genotype_download_grm";
-            mkdir $tmp_grm_dir if ! -d $tmp_grm_dir;
-            my ($grm_tempfile_fh, $grm_tempfile) = tempfile("wizard_download_grm_XXXXX", DIR=> $tmp_grm_dir);
-            my ($grm_out_tempfile_fh, $grm_out_tempfile) = tempfile("wizard_download_grm_XXXXX", DIR=> $tmp_grm_dir);
-
-            if (!$protocol_id) {
-                $protocol_id = undef;
-            }
-
-            my $grm_search_params = {
-                bcs_schema=>$schema,
-                grm_temp_file=>$grm_tempfile,
-                people_schema=>$people_schema,
-                cache_root=>$c->config->{cache_file_path},
-                accession_id_list=>\@accession_ids,
-                protocol_id=>$protocol_id,
-                get_grm_for_parental_accessions=>$compute_from_parents,
-                # minor_allele_frequency=>$minor_allele_frequency,
-                # marker_filter=>$marker_filter,
-                # individuals_filter=>$individuals_filter
-            };
-
-            if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
-                $grm_search_params->{download_format} = 'three_column_stock_id_integer';
+            if ($include_pedgiree_info_if_compute_from_parents) {
+                
             }
             else {
-                $grm_search_params->{download_format} = 'three_column_reciprocal';
+                my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
+                my $tmp_grm_dir = $shared_cluster_dir_config."/tmp_genotype_download_grm";
+                mkdir $tmp_grm_dir if ! -d $tmp_grm_dir;
+                my ($grm_tempfile_fh, $grm_tempfile) = tempfile("wizard_download_grm_XXXXX", DIR=> $tmp_grm_dir);
+                my ($grm_out_tempfile_fh, $grm_out_tempfile) = tempfile("wizard_download_grm_XXXXX", DIR=> $tmp_grm_dir);
+
+                if (!$protocol_id) {
+                    $protocol_id = undef;
+                }
+
+                my $grm_search_params = {
+                    bcs_schema=>$schema,
+                    grm_temp_file=>$grm_tempfile,
+                    people_schema=>$people_schema,
+                    cache_root=>$c->config->{cache_file_path},
+                    accession_id_list=>\@accession_ids,
+                    protocol_id=>$protocol_id,
+                    get_grm_for_parental_accessions=>$compute_from_parents,
+                    # minor_allele_frequency=>$minor_allele_frequency,
+                    # marker_filter=>$marker_filter,
+                    # individuals_filter=>$individuals_filter
+                };
+
+                if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+                    $grm_search_params->{download_format} = 'three_column_stock_id_integer';
+                }
+                else {
+                    $grm_search_params->{download_format} = 'three_column_reciprocal';
+                }
+
+                my $geno = CXGN::Genotype::GRM->new($grm_search_params);
+                my $grm_data = $geno->download_grm(
+                    'data',
+                    $shared_cluster_dir_config,
+                    $c->config->{backend},
+                    $c->config->{cluster_host},
+                    $c->config->{'web_cluster_queue'},
+                    $c->config->{basepath}
+                );
+
+                open(my $F2, ">", $grm_out_tempfile) || die "Can't open file ".$grm_out_tempfile;
+                    print $F2 $grm_data;
+                close($F2);
+                $grm_file = $grm_out_tempfile;
             }
-
-            my $geno = CXGN::Genotype::GRM->new($grm_search_params);
-            my $grm_data = $geno->download_grm(
-                'data',
-                $shared_cluster_dir_config,
-                $c->config->{backend},
-                $c->config->{cluster_host},
-                $c->config->{'web_cluster_queue'},
-                $c->config->{basepath}
-            );
-
-            open(my $F2, ">", $grm_out_tempfile) || die "Can't open file ".$grm_out_tempfile;
-                print $F2 $grm_data;
-            close($F2);
-            $grm_file = $grm_out_tempfile;
         }
 
         my $time = DateTime->now();
