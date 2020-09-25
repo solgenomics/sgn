@@ -316,10 +316,10 @@ export function init(main_div){
 		else{
 		    alert(r.adjusted_means_html);
 		    $('#mixed_models_adjusted_means_results_div').html(r.adjusted_means_html);
-		    $('#mixed_models_blup_results_div').html( r.blups_html );
-		    $('#mixed_models_blue_results_div').html(r.blues_html);
-		    $('#mixed_models_anova_results_div').html(r.anova_html);
-		    $('#mixed_models_varcomp_results_div').html(r.varcomp_html);
+		    $('#mixed_models_blups_results_div').html( r.blups_html );
+		    //$('#mixed_models_blues_results_div').html(r.blues_html);
+		    //$('#mixed_models_anova_results_div').html(r.anova_html);
+		    //$('#mixed_models_varcomp_results_div').html(r.varcomp_html);
 		    
 		    accession_names = r.accession_names;
 		    adjusted_means_data = r.adjusted_means_data;

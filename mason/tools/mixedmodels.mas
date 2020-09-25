@@ -180,9 +180,9 @@
     <ul class="nav nav-tabs">
       <li class="active"><a data-toggle="tab" href="#adjusted_means_tab">Adjusted means</a></li>
       <li><a data-toggle="tab" href="#blups_tab">BLUPs</a></li>
-      <li><a data-toggle="tab" href="#blues_tab">BLUEs</a></li>
+      <!-- li><a data-toggle="tab" href="#blues_tab">BLUEs</a></li 
       <li><a data-toggle="tab" href="#anova_tab">ANOVA</a></li>
-      <li><a data-toggle="tab" href="#varcomp_tab">Varcomp</a></li>
+      <li><a data-toggle="tab" href="#varcomp_tab">Varcomp</a></li -->
     </ul>
     <div class="tab-content">
       <div id="adjusted_means_tab" class="tab-pane fade in active">
