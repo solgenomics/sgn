@@ -413,9 +413,9 @@ sub get_product_profiles :Chained('ajax_breeding_program') PathPart('product_pro
 }
 
 
-sub create_product_profile_template : Path('/ajax/program/create_profile_template') : ActionClass('REST') { }
+sub create_profile_template : Path('/ajax/program/create_profile_template') : ActionClass('REST') { }
 
-sub create_product_profile_template_POST : Args(0) {
+sub create_profile_template_POST : Args(0) {
     my ($self, $c) = @_;
 
     if (!$c->user()) {
@@ -516,6 +516,107 @@ sub create_product_profile_template_POST : Args(0) {
         file => $file_destination,
         file_id => $file_id,
     };
+
+}
+
+
+sub upload_profile : Path('/ajax/breeders/program/upload_profile') : ActionClass('REST') { }
+sub upload_profile_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload profile!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload profile!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $program_id = $c->req->param('program_id');
+    my $new_profile_name = $c->req->param('new_profile_name');
+    my $new_profile_scope = $c->req->param('new_profile_scope');
+    my $upload = $c->req->upload('profile_uploaded_file');
+    my $subdirectory = "profile_upload";
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    ## Store uploaded temporary file in archive
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+    my $archived_filename_with_path = $uploader->archive();
+    my $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->detach();
+    }
+    unlink $upload_tempfile;
+    my $parser = CXGN::Stock::Seedlot::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
+    $parser->load_plugin('ProfileXLS');
+    my $parsed_data = $parser->parse();
+    #print STDERR Dumper $parsed_data;
+
+    if (!$parsed_data) {
+        my $return_error = '';
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+            #print STDERR Dumper $parse_errors;
+
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
+            }
+        }
+        $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'} };
+        $c->detach();
+    }
+
+    my $profile = CXGN::BreedersToolbox::ProductProfile->new({ bcs_schema => $schema });
+    $profile->product_profile_name($new_profile_name);
+    $profile->product_profile_scope($new_profile_scope);
+    $profile->product_profile_details($profile_detail_string);
+    $profile->parent_id($program_id);
+	my $project_prop_id = $product_profile->store_by_rank();
+
+    if ($@) {
+        $c->stash->{rest} = { error => $@ };
+        print STDERR "An error condition occurred, was not able to upload profile. ($@).\n";
+        $c->detach();
+    }
+
+    my $dbh = $c->dbc->dbh();
+
+    $c->stash->{rest} = { success => 1 };
 
 }
 

@@ -65,7 +65,7 @@ $program_name
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Upload File (.xls): </label>
                                     <div class="col-sm-9" >
-                                        <input type="file" name="profile_upload_file" id="profile_upload_file" encoding="multipart/form-data" />
+                                        <input type="file" name="profile_uploaded_file" id="profile_uploaded_file" encoding="multipart/form-data" />
                                     </div>
                                 </div>
                             </form>
@@ -170,7 +170,7 @@ jQuery(document).ready(function(){
     });
 
     function upload_profile() {
-        var profile_upload_file = jQuery("#profile_upload_file").val();
+        var profile_uploaded_file = jQuery("#profile_uploaded_file").val();
         var program_id = jQuery('#profile_program_id').val();
         var new_profile_name = jQuery('#new_profile_name').val();
         var new_profile_scope = jQuery('#new_profile_scope').val();
@@ -195,9 +195,9 @@ jQuery(document).ready(function(){
 //    jQuery('#upload_profile_form').iframePostForm({
 //        json: true,
 //        post: function () {
-//        var profile_upload_file = jQuery("#profile_upload_file").val();
+//        var profile_uploaded_file = jQuery("#profile_uploaded_file").val();
 //            jQuery('#working_modal').modal("show");
-//            if (profile_upload_file == '') {
+//            if (profile_uploaded_file == '') {
 //                jQuery('#working_modal').modal("hide");
 //                alert("No file selected");
 //            }
