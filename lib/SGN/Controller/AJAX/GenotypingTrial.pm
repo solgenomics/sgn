@@ -554,20 +554,45 @@ sub create_plate_order_POST : Args(0) {
     my $submit_samples = CXGN::Genotype::CreatePlateOrder->new({
         bcs_schema=>$schema,
         client_id=>$client_id,
-        extract_dna=>$extract_dna,
         service_id_list=>$service_id_list,
         plate_id => $plate_id,
         facility_id => $facility_id,
     });
     # my $errors = $submit_samples->validate();
-    my $order = $submit_samples->send();
+    my $order = $submit_samples->create();
 
     print Dumper $order;
 
     $c->stash->{rest} = {
         message => "Successfully order created.",
         trial_id => $plate_id,
-        plate_data => $order
+        order => $order
+    };
+}
+
+sub store_plate_order : Path('/ajax/breeders/storeplateorder') ActionClass('REST') {}
+sub store_plate_order_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+        
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $order_info = decode_json $c->req->param("order");
+
+    my $plate_id = $c->req->param("plate_id");
+    my $order_id = $order_info->{order_id};
+
+    print STDERR Dumper $order_info;
+
+    my $genotyping_trial;
+    my $message;
+    # eval {
+        $genotyping_trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $plate_id });
+        $genotyping_trial->set_genotyping_vendor_order_id($order_id);
+        $message = "Successfully order stored.";
+    # };
+
+    $c->stash->{rest} = {
+        message => $message
     };
 
 }

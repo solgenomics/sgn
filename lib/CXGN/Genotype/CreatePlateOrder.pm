@@ -57,13 +57,13 @@ has 'client_id' => (
 
 
 has 'requeriments' => (
-    isa => 'Array',
-    is => 'ro',
+    isa => 'ArrayRef[Str]|Undef',
+    is => 'rw',
     required => 0,
 );
 
 has 'service_id_list' => (
-    isa => 'Str',
+    isa => 'ArrayRef[Str]|Undef',
     is => 'ro',
     required => 1,
 );
@@ -115,7 +115,7 @@ my $errors = $submit_samples->submit();
 
 =cut
 
-sub send {
+sub create {
     my $self = shift;
     my $c = shift;
 

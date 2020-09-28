@@ -17,6 +17,7 @@ $identifier_prefix => 'SGN'
 $genotyping_facility => undef
 $genotyping_facility_status => undef
 $genotyping_facility_submitted => undef
+$genotyping_vendor_order_id => undef
 $genotyping_plate_format => '96'
 $genotyping_plate_sample_type => undef
 $raw_data_link => undef
@@ -294,7 +295,8 @@ genotyping_facility => $genotyping_facility
 
     jQuery(document).ready(function(){
         load_breeding_program_info(<% $trial_id %>);
-        //load_genotyping_status_info(<% $plate_id %>);
+        // load_genotyping_status_info(<% $genotyping_facility %>,'vo1');
+        console.log('<% $genotyping_vendor_order_id %>');
     });
 
     jQuery('#edit_genotyping_trial_details').click(function(){
@@ -340,7 +342,6 @@ genotyping_facility => $genotyping_facility
         jQuery('#sample_type').html("<% $genotyping_plate_sample_type %>");
         jQuery('#genotyping_facility').html("<% $genotyping_facility %>");
         jQuery('#submit_plate_dialog').modal("show");
-        get_facility_services_id();
     });
 
     jQuery('#close_message_dialog').click(function(){
