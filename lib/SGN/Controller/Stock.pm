@@ -853,11 +853,6 @@ sub _stock_members_phenotypes {
     return unless $bcs_stock;
     my %phenotypes;
     my ($has_members_genotypes) = $bcs_stock->result_source->schema->storage->dbh->selectrow_array( <<'', undef, $bcs_stock->stock_id );
-SELECT COUNT( DISTINCT genotype_id )
-  FROM phenome.genotype
-  JOIN stock subj using(stock_id)
-  JOIN stock_relationship sr ON( sr.subject_id = subj.stock_id )
- WHERE sr.object_id = ?
 
     # now we have rs of stock_relationship objects. We need to find
     # the phenotypes of their related subjects
@@ -896,17 +891,6 @@ sub _stock_project_genotypes {
         my @gen = map $_->genotype, $exp->nd_experiment_genotypes;
         $project_desc = $project_descriptions{ $exp->nd_experiment_id };
 	#or die "no project found for exp ".$exp->nd_experiment_id;
-
-    #my @values;
-	#foreach my $genotype (@gen) {
-	    #my $genotype_id = $genotype->genotype_id;
-	    #my $vals = $self->schema->storage->dbh->selectcol_arrayref
-	    #	("SELECT value  FROM genotypeprop  WHERE genotype_id = ? ",
-	    #	 undef,
-	    #	 $genotype_id
-	    #	);
-	    #push @values, $vals->[0];
-	#}
 	push @{ $genotypes{ $project_desc }}, @gen if scalar(@gen);
     }
     return \%genotypes;
