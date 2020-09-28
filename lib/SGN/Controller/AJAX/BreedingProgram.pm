@@ -455,13 +455,18 @@ sub create_profile_template_POST : Args(0) {
 
     my $ws = $wb->add_worksheet();
 
-    my @headers = ('Trait', 'Priority', 'Target Value', 'Benchmark Variety', 'Performance (=, <, >)');
+    my @headers = ('Trait Name', 'Target Value', 'Benchmark Variety', 'Performance', 'Weight', 'Trait Type');
+    my @colume_info = ('Note:', '', 'must be in database', '(=, <, >)', '', 'basic trait or value-added trait');
 
     for(my $n=0; $n<scalar(@headers); $n++) {
         $ws->write(0, $n, $headers[$n]);
     }
 
-    my $line = 1;
+    for(my $n=0; $n<scalar(@colume_info); $n++) {
+        $ws->write(1, $n, $colume_info[$n]);
+    }
+
+    my $line = 2;
     foreach my $trait (@trait_list) {
         $ws->write($line, 0, $trait);
         $line++;
@@ -579,7 +584,7 @@ sub upload_profile_POST : Args(0) {
         $c->detach();
     }
     unlink $upload_tempfile;
-    my $parser = CXGN::Stock::Seedlot::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
+    my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
     $parser->load_plugin('ProfileXLS');
     my $parsed_data = $parser->parse();
     #print STDERR Dumper $parsed_data;
@@ -601,12 +606,13 @@ sub upload_profile_POST : Args(0) {
         $c->detach();
     }
 
+    my $profile_detail_string;
     my $profile = CXGN::BreedersToolbox::ProductProfile->new({ bcs_schema => $schema });
     $profile->product_profile_name($new_profile_name);
     $profile->product_profile_scope($new_profile_scope);
     $profile->product_profile_details($profile_detail_string);
     $profile->parent_id($program_id);
-	my $project_prop_id = $product_profile->store_by_rank();
+	my $project_prop_id = $profile->store_by_rank();
 
     if ($@) {
         $c->stash->{rest} = { error => $@ };
