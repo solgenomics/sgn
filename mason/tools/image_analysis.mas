@@ -24,12 +24,12 @@
 
 <&| /page/info_section.mas, title=>"Image Search Criteria",  collapsible => 1, collapsed=>0, subtitle => "All images may not have names, descriptions, or tags associated with them."&>
 
-    <div id="necrosis_image_search_form" class="well well-sm">
+    <div id="image_search_form" class="well well-sm">
         <div class="form-horizontal" >
             <div class="form-group">
                 <label class="col-sm-3 control-label">Select a Field Trial: </label>
                 <div class="col-sm-9" >
-                    <div id ="necrosis_image_analysis_trial_select">
+                    <div id ="image_analysis_trial_select">
                     </div>
                 </div>
             </div>
@@ -60,7 +60,7 @@
         </div>
 
         <center>
-        <button class="btn btn-primary" id="necrosis_image_search_submit" >Search</button>
+        <button class="btn btn-primary" id="image_search_submit" >Search</button>
         </center>
     </div>
 </&>
@@ -69,7 +69,7 @@
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
-                <table id="necrosis_image_analysis_image_search_results" class="table table-hover table-striped">
+                <table id="image_analysis_image_search_results" class="table table-hover table-striped">
                 <thead>
                   <tr>
                     <th>Select</th>
@@ -94,7 +94,7 @@
                 <div class="form-group">
                     <label class="col-sm-6 control-label">Image Analysis Service: </label>
                     <div class="col-sm-6" >
-                        <select class="form-control" id="necrosis_image_analysis_service_select" name="necrosis_image_analysis_service_select">
+                        <select class="form-control" id="image_analysis_service_select" name="image_analysis_service_select">
                             <option value="necrosis">Necrosis(Makerere AIR Lab)</option>
                             <option value="largest_contour_percent">Necrosis Largest Contour Mask Percent</option>
                             <option value="count_contours">Count Contours</option>
@@ -107,10 +107,10 @@
 
                 <hr>
                 <center>
-                <button class="btn btn-primary" id="necrosis_image_analysis_submit">Submit</button>
+                <button class="btn btn-primary" id="image_analysis_submit">Submit</button>
                 </center>
                 <hr>
-                <div id="necrosis_image_analysis_result">
+                <div id="image_analysis_result">
                 </div>
             </div>
         </div>
@@ -120,43 +120,43 @@
 <script>
 
 jQuery(document).ready(function(){
-    get_select_box('trials', 'necrosis_image_analysis_trial_select', { 'name' : 'html_necrosis_image_analysis_trial_select', 'id' : 'html_necrosis_image_analysis_trial_select', 'multiple':0, 'size':10, 'trial_name_values':1 });
+    get_select_box('trials', 'image_analysis_trial_select', { 'name' : 'html_image_analysis_trial_select', 'id' : 'html_image_analysis_trial_select', 'multiple':0, 'size':10, 'trial_name_values':1 });
 
-    _load_necrosis_image_search_results();
+    _load_image_search_results();
 
-    jQuery('#necrosis_image_search_submit').click(function(){
-        if (jQuery('#html_necrosis_image_analysis_trial_select').val() == '') {
+    jQuery('#image_search_submit').click(function(){
+        if (jQuery('#html_image_analysis_trial_select').val() == '') {
             alert("Please select a Field Trial first!");
             return false;
         }
-        _load_necrosis_image_search_results();
+        _load_image_search_results();
     });
 
     jQuery("#image_submitter").autocomplete({
         source: '/ajax/people/autocomplete'
     });
 
-    jQuery('#necrosis_image_search_form').keypress( function( e ) {
+    jQuery('#image_search_form').keypress( function( e ) {
         var code = e.keyCode || e.which;
         if( code == 13 ) {
-            jQuery('#necrosis_image_search_submit').click();
+            jQuery('#image_search_submit').click();
         }
     });
 
-    jQuery('#necrosis_image_analysis_image_search_results').on( 'draw.dt', function () {
+    jQuery('#image_analysis_image_search_results').on( 'draw.dt', function () {
         jQuery('a.image_search_group').colorbox();
     });
 
-    jQuery('#necrosis_image_analysis_submit').click(function(){
+    jQuery('#image_analysis_submit').click(function(){
         var selected_image_ids = [];
-        jQuery('input[name="necrosis_image_analysis_select"]').each(function() {
+        jQuery('input[name="image_analysis_select"]').each(function() {
             if (this.checked){
                 selected_image_ids.push(this.value);
             }
         });
 
         if (selected_image_ids.length < 1) {
-            alert('Please select atleast one image first!');
+            alert('Please select at least one image first!');
             return false;
         }
 
@@ -165,7 +165,7 @@ jQuery(document).ready(function(){
             method: 'POST',
             data: {
                 'selected_image_ids': JSON.stringify(selected_image_ids),
-                'service': jQuery('#necrosis_image_analysis_service_select').val()
+                'service': jQuery('#image_analysis_service_select').val()
             },
             dataType:'json',
             beforeSend: function() {
@@ -187,8 +187,8 @@ jQuery(document).ready(function(){
                     html = html + '</tr>';
                 }
                 html = html + '</tbody></table>';
-                html = html + '<hr><button class="btn btn-primary" id="necrosis_image_analysis_image_search_results_save">Store New Analysis Phenotypes and Images</button>';
-                jQuery('#necrosis_image_analysis_result').html(html);
+                html = html + '<hr><button class="btn btn-primary" id="image_analysis_image_search_results_save">Store New Analysis Phenotypes and Images</button>';
+                jQuery('#image_analysis_result').html(html);
             },
             error: function(response) {
                 jQuery('#working_msg').html('');
@@ -198,14 +198,21 @@ jQuery(document).ready(function(){
         });
     });
 
-    jQuery(document).on("click", "#necrosis_image_analysis_image_search_results_save", function() {
-        alert("Need to implement!");
+    jQuery(document).on("click", "#image_analysis_image_search_results_save", function() {
+        // alert("Need to implement!");
+
+        #Retrieve observation unit names and scores
+
+        #Calculate avgs where there are multiple scores per observation unit
+
+        #Save phenotypes via Brapi observations put call
+
     });
 
 });
 
-function _load_necrosis_image_search_results() {
-    images_table = jQuery('#necrosis_image_analysis_image_search_results').DataTable({
+function _load_image_search_results() {
+    images_table = jQuery('#image_analysis_image_search_results').DataTable({
         'destroy' : true,
         'searching' : false,
         'ordering'  : false,
@@ -215,12 +222,12 @@ function _load_necrosis_image_search_results() {
         'lengthMenu': [10,20,50,100,1000,5000],
         'ajax': { 'url':  '/ajax/search/images',
             'data': function(d) {
-              d.html_select_box = "necrosis_image_analysis_select";
+              d.html_select_box = "image_analysis_select";
               d.image_description_filename_composite = jQuery('#image_description_filename_composite').val();
               d.image_person = jQuery('#image_submitter').val();
               d.image_tag = jQuery('#image_tag').val();
               d.image_stock_uniquename = jQuery('#image_stock_uniquename').val();
-              d.image_project_name = jQuery('#html_necrosis_image_analysis_trial_select').val();
+              d.image_project_name = jQuery('#html_image_analysis_trial_select').val();
             }
         }
     });
