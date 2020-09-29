@@ -66,8 +66,8 @@ sub _validate_with_plugin {
     if ($worksheet->get_cell(0,4)) {
         $weight_header  = $worksheet->get_cell(0,4)->value();
     }
-    if ($worksheet->get_cell(0,4)) {
-        $trait_type_header  = $worksheet->get_cell(0,4)->value();
+    if ($worksheet->get_cell(0,5)) {
+        $trait_type_header  = $worksheet->get_cell(0,5)->value();
     }
 
     if (!$trait_name_header || $trait_name_header ne 'Trait Name' ) {
@@ -79,11 +79,14 @@ sub _validate_with_plugin {
     if (!$benchmark_variety_header || $benchmark_variety_header ne 'Benchmark Variety') {
         push @error_messages, "Cell C1: Benchmark Variety is missing from the header";
     }
+    if (!$performance_header || $performance_header ne 'Performance (=,<,>)') {
+        push @error_messages, "Cell D1: Performance is missing from the header";
+    }
     if (!$weight_header || $weight_header ne 'Weight') {
-        push @error_messages, "Cell D1: Weight is missing from the header";
+        push @error_messages, "Cell E1: Weight is missing from the header";
     }
     if (!$trait_type_header || $trait_type_header ne 'Trait Type') {
-        push @error_messages, "Cell E1: Trait Type is missing from the header";
+        push @error_messages, "Cell F1: Trait Type is missing from the header";
     }
 
     my %seen_trait_names;
@@ -159,10 +162,10 @@ sub _validate_with_plugin {
     my $accession_validator = CXGN::List::Validate->new();
     my @accession_names_missing = @{$accession_validator->validate($schema,'accessions',\@accession_names)->{'missing'}};
 
-    if (scalar(@accession_names_missing) > 0){
-        push @error_messages, "The following benchmark varieties are not in the database: ".join(',',@accession_names_missing);
-        $errors{'missing_accessions'} = \@accession_names_missing;
-    }
+#    if (scalar(@accession_names_missing) > 0){
+#        push @error_messages, "The following benchmark varieties are not in the database: ".join(',',@accession_names_missing);
+#        $errors{'missing_accessions'} = \@accession_names_missing;
+#    }
 
     #store any errors found in the parsed file to parse_errors accessor
     if (scalar(@error_messages) >= 1) {

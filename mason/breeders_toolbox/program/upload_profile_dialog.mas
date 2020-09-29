@@ -190,6 +190,7 @@ jQuery(document).ready(function(){
             return;
         }
         jQuery("#upload_profile_form").submit();
+
     }
 
 //    jQuery('#upload_profile_form').iframePostForm({

@@ -10,7 +10,7 @@ SGN::Controller::AJAX::BreedingProgram
 =head1 AUTHOR
 
 Naama Menda <nm249@cornell.edu>
-
+Titima Tantikanjana <tt15@cornell.edu>
 
 =cut
 
@@ -455,18 +455,13 @@ sub create_profile_template_POST : Args(0) {
 
     my $ws = $wb->add_worksheet();
 
-    my @headers = ('Trait Name', 'Target Value', 'Benchmark Variety', 'Performance', 'Weight', 'Trait Type');
-    my @colume_info = ('Note:', '', 'must be in database', '(=, <, >)', '', 'basic trait or value-added trait');
+    my @headers = ('Trait Name','Target Value','Benchmark Variety','Performance (=,<,>)','Weight','Trait Type');
 
     for(my $n=0; $n<scalar(@headers); $n++) {
         $ws->write(0, $n, $headers[$n]);
     }
 
-    for(my $n=0; $n<scalar(@colume_info); $n++) {
-        $ws->write(1, $n, $colume_info[$n]);
-    }
-
-    my $line = 2;
+    my $line = 1;
     foreach my $trait (@trait_list) {
         $ws->write($line, 0, $trait);
         $line++;
@@ -557,7 +552,7 @@ sub upload_profile_POST : Args(0) {
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-    my $program_id = $c->req->param('program_id');
+    my $program_id = $c->req->param('profile_program_id');
     my $new_profile_name = $c->req->param('new_profile_name');
     my $new_profile_scope = $c->req->param('new_profile_scope');
     my $upload = $c->req->upload('profile_uploaded_file');
@@ -566,6 +561,10 @@ sub upload_profile_POST : Args(0) {
     my $upload_tempfile = $upload->tempname;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
+
+    print STDERR "PROGRAM ID =".Dumper($program_id)."\n";
+    print STDERR "PROFILE NAME =".Dumper($new_profile_name)."\n";
+    print STDERR "PROFILE SCOPE =".Dumper($new_profile_scope)."\n";
 
     ## Store uploaded temporary file in archive
     my $uploader = CXGN::UploadFile->new({
@@ -587,7 +586,12 @@ sub upload_profile_POST : Args(0) {
     my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
     $parser->load_plugin('ProfileXLS');
     my $parsed_data = $parser->parse();
-    #print STDERR Dumper $parsed_data;
+    print STDERR "PARSED DATA =".Dumper($parsed_data)."\n";
+
+    my $profile_detail_string;
+    if ($parsed_data){
+        $profile_detail_string = encode_json $parsed_data;
+    }
 
     if (!$parsed_data) {
         my $return_error = '';
@@ -606,7 +610,6 @@ sub upload_profile_POST : Args(0) {
         $c->detach();
     }
 
-    my $profile_detail_string;
     my $profile = CXGN::BreedersToolbox::ProductProfile->new({ bcs_schema => $schema });
     $profile->product_profile_name($new_profile_name);
     $profile->product_profile_scope($new_profile_scope);
