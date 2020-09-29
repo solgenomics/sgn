@@ -42,7 +42,7 @@ use DateTime;
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON' },
+    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON'  },
     );
 
 
@@ -68,8 +68,6 @@ sub ajax_breeding_program : Chained('/')  PathPart('ajax/breeders/program')  Cap
     $c->stash->{program} = $program;
 
 }
-
-
 
 
 sub program_trials :Chained('ajax_breeding_program') PathPart('trials') Args(0) {
@@ -405,10 +403,31 @@ sub get_product_profiles :Chained('ajax_breeding_program') PathPart('product_pro
     my $program_id = $program->get_program_id;
     my $schema = $c->stash->{schema};
 
-    my $product_profile_obj = CXGN::BreedersToolbox::ProductProfile->new({ bcs_schema => $schema, parent_id => $program_id });
-    my $product_profiles = $product_profile_obj->get_product_profile_info();
-#    print STDERR "PRODUCT PROFILE RESULTS =".Dumper($product_profiles)."\n";
-    $c->stash->{rest} = {data => $product_profiles};
+    my $profile_obj = CXGN::BreedersToolbox::ProductProfile->new({ bcs_schema => $schema, parent_id => $program_id });
+    my $profiles = $profile_obj->get_product_profile_info();
+#    print STDERR "PRODUCT PROFILE RESULTS =".Dumper($profiles)."\n";
+    my @profile_summary;
+    foreach my $profile(@$profiles){
+        my @trait_list;
+        my @profile_info = @$profile;
+        my $trait_info = $profile_info[2];
+        my $trait_info_ref = decode_json $trait_info;
+        my %trait_info_hash = %{$trait_info_ref};
+        my @traits = keys %trait_info_hash;
+        foreach my $trait(@traits){
+            my @trait_name = ();
+            @trait_name = split '\|', $trait;
+            pop @trait_name;
+            push @trait_list, @trait_name
+        }
+        my $trait_string = join("   \/   ", @trait_list);
+        pop @profile_info;
+        push @profile_info, $trait_string;
+        push @profile_summary, [@profile_info];
+    }
+#    print STDERR "TRAIT LIST =".Dumper(\@profile_summary)."\n";
+
+    $c->stash->{rest} = {data => \@profile_summary};
 
 }
 

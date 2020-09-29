@@ -5,6 +5,8 @@ $program_name
 
 </%args>
 
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form'] &>
+
 <div class="modal fade" id="upload_profile_dialog" name="upload_profile_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadProfileDialog">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
@@ -189,39 +191,39 @@ jQuery(document).ready(function(){
             alert("Please enter a scope");
             return;
         }
-        jQuery("#upload_profile_form").submit();
+        jQuery('#upload_profile_form').submit();
 
     }
 
-//    jQuery('#upload_profile_form').iframePostForm({
-//        json: true,
-//        post: function () {
-//        var profile_uploaded_file = jQuery("#profile_uploaded_file").val();
-//            jQuery('#working_modal').modal("show");
-//            if (profile_uploaded_file == '') {
-//                jQuery('#working_modal').modal("hide");
-//                alert("No file selected");
-//            }
-//        },
-//        complete: function(response) {
-//            jQuery("#working_modal").modal("hide");
-//            if (response.error_string) {
-//                jQuery('#upload_profile_error_display').modal("show");
-//                jQuery('#upload_profile_error_display tbody').html('');
-//                jQuery('#upload_profile_error_display tbody').append(response.error_string);
-//                return;
-//            }
-//            if (response.error) {
-//                alert(response.error);
-//                return;
-//            }
-//            if (response.success) {
-//                Workflow.focus("#upload_profile_workflow", -1); //Go to success page
-//                Workflow.check_complete("#upload_profile_workflow");
+    jQuery('#upload_profile_form').iframePostForm({
+        json: true,
+        post: function () {
+        var profile_uploaded_file = jQuery("#profile_uploaded_file").val();
+            jQuery('#working_modal').modal("show");
+            if (profile_uploaded_file == '') {
+                jQuery('#working_modal').modal("hide");
+                alert("No file selected");
+            }
+        },
+        complete: function(response) {
+            jQuery("#working_modal").modal("hide");
+            if (response.error_string) {
+                jQuery('#upload_profile_error_display').modal("show");
+                jQuery('#upload_profile_error_display tbody').html('');
+                jQuery('#upload_profile_error_display tbody').append(response.error_string);
+                return;
+            }
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            if (response.success) {
+                Workflow.focus("#upload_profile_workflow", -1); //Go to success page
+                Workflow.check_complete("#upload_profile_workflow");
 
-//            }
-//        }
-//    });
+            }
+        }
+    });
 
     jQuery(document).on('click', '[name="upload_profile_success_complete_button"]', function(){
         alert('Profile was saved in the database');
