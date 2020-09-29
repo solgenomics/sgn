@@ -579,9 +579,10 @@ sub store_plate_order_POST : Args(0) {
     my $order_info = decode_json $c->req->param("order");
 
     my $plate_id = $c->req->param("plate_id");
-    my $order_id = $order_info->{order_id};
+    my $order_id = $order_info->{orderId};
+    my $shipment = $order_info->{shipmentForms};
 
-    print STDERR Dumper $order_info;
+    print STDERR Dumper $order_id;
 
     my $genotyping_trial;
     my $message;
