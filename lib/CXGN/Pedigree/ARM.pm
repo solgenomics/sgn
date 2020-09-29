@@ -123,7 +123,6 @@ sub get_arm {
     my $cache_root_dir = $self->cache_root();
     my $accession_list = $self->accession_id_list();
     my $plot_list = $self->plot_id_list();
-    my $arm_tempfile = $self->arm_temp_file();
 
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
@@ -135,13 +134,11 @@ sub get_arm {
     chomp($number_system_cores);
     print STDERR "NUMCORES $number_system_cores\n";
 
-    my $tmp_output_dir = $shared_cluster_dir_config."/tmp_pedigree_download_arm";
-    mkdir $tmp_output_dir if ! -d $tmp_output_dir;
-    my ($arm_tempfile_out_fh, $arm_tempfile_out) = tempfile("download_arm_out_XXXXX", DIR=> $tmp_output_dir);
-    my ($temp_out_file_fh, $temp_out_file) = tempfile("download_arm_tmp_XXXXX", DIR=> $tmp_output_dir);
-
     my @individuals_stock_ids;
     my @all_individual_accessions_stock_ids;
+    my %parent_hash;
+    my %seen_female_parents;
+    my %seen_male_parents;
 
     if ($plot_list && scalar(@$plot_list)>0) {
         print STDERR "COMPUTING ARM FROM PARENTS FOR PLOTS\n";
@@ -150,10 +147,10 @@ sub get_arm {
             FROM stock AS plot
             JOIN stock_relationship AS plot_acc_rel ON(plot_acc_rel.subject_id=plot.stock_id AND plot_acc_rel.type_id=$plot_of_cvterm_id)
             JOIN stock AS accession ON(plot_acc_rel.object_id=accession.stock_id AND accession.type_id=$accession_cvterm_id)
-            JOIN stock_relationship AS female_parent_rel ON(accession.stock_id=female_parent_rel.object_id AND female_parent_rel.type_id=$female_parent_cvterm_id)
-            JOIN stock AS female_parent ON(female_parent_rel.subject_id = female_parent.stock_id AND female_parent.type_id=$accession_cvterm_id)
-            JOIN stock_relationship AS male_parent_rel ON(accession.stock_id=male_parent_rel.object_id AND male_parent_rel.type_id=$male_parent_cvterm_id)
-            JOIN stock AS male_parent ON(male_parent_rel.subject_id = male_parent.stock_id AND male_parent.type_id=$accession_cvterm_id)
+            LEFT JOIN stock_relationship AS female_parent_rel ON(accession.stock_id=female_parent_rel.object_id AND female_parent_rel.type_id=$female_parent_cvterm_id)
+            LEFT JOIN stock AS female_parent ON(female_parent_rel.subject_id = female_parent.stock_id AND female_parent.type_id=$accession_cvterm_id)
+            LEFT JOIN stock_relationship AS male_parent_rel ON(accession.stock_id=male_parent_rel.object_id AND male_parent_rel.type_id=$male_parent_cvterm_id)
+            LEFT JOIN stock AS male_parent ON(male_parent_rel.subject_id = male_parent.stock_id AND male_parent.type_id=$accession_cvterm_id)
             WHERE plot.type_id=$plot_cvterm_id AND plot.stock_id IN ($plot_list_string);";
         my $h = $schema->storage->dbh()->prepare($q);
         $h->execute();
@@ -169,6 +166,7 @@ sub get_arm {
         }
 
         @all_individual_accessions_stock_ids = @plot_accession_stock_ids_found;
+        @individuals_stock_ids = @plot_stock_ids_found;
 
         # print STDERR Dumper \@plot_stock_ids_found;
         # print STDERR Dumper \@plot_female_stock_ids_found;
@@ -179,18 +177,16 @@ sub get_arm {
             my $male_stock_id = $plot_male_stock_ids_found[$i];
             my $plot_stock_id = $plot_stock_ids_found[$i];
 
-            my $genotype_string = "";
-            my $geno = CXGN::Genotype::ComputeHybridGenotype->new({
-                parental_genotypes=>$genotypes,
-                marker_objects=>\@all_marker_objects
-            });
-            my $progeny_genotype = $geno->get_hybrid_genotype();
-
-            push @individuals_stock_ids, $plot_stock_id;
-            my $genotype_string_scores = join "\t", @$progeny_genotype;
-            $genotype_string .= $genotype_string_scores . "\n";
-            write_file($grm_tempfile, {append => 1}, $genotype_string);
-            undef $progeny_genotype;
+            my $val = {};
+            if ($female_stock_id) {
+                $seen_female_parents{$female_stock_id}++;
+                $val->{female_stock_id} = $female_stock_id;
+            }
+            if ($male_stock_id) {
+                $seen_male_parents{$male_stock_id}++;
+                $val->{male_stock_id} = $male_stock_id;
+            }
+            $parent_hash{$plot_stock_id} = $val;
         }
     }
     elsif ($accession_list && scalar(@$accession_list)>0) {
@@ -198,10 +194,10 @@ sub get_arm {
         my $accession_list_string = join ',', @$accession_list;
         my $q = "SELECT accession.stock_id, female_parent.stock_id, male_parent.stock_id
             FROM stock AS accession
-            JOIN stock_relationship AS female_parent_rel ON(accession.stock_id=female_parent_rel.object_id AND female_parent_rel.type_id=$female_parent_cvterm_id)
-            JOIN stock AS female_parent ON(female_parent_rel.subject_id = female_parent.stock_id AND female_parent.type_id=$accession_cvterm_id)
-            JOIN stock_relationship AS male_parent_rel ON(accession.stock_id=male_parent_rel.object_id AND male_parent_rel.type_id=$male_parent_cvterm_id)
-            JOIN stock AS male_parent ON(male_parent_rel.subject_id = male_parent.stock_id AND male_parent.type_id=$accession_cvterm_id)
+            LEFT JOIN stock_relationship AS female_parent_rel ON(accession.stock_id=female_parent_rel.object_id AND female_parent_rel.type_id=$female_parent_cvterm_id)
+            LEFT JOIN stock AS female_parent ON(female_parent_rel.subject_id = female_parent.stock_id AND female_parent.type_id=$accession_cvterm_id)
+            LEFT JOIN stock_relationship AS male_parent_rel ON(accession.stock_id=male_parent_rel.object_id AND male_parent_rel.type_id=$male_parent_cvterm_id)
+            LEFT JOIN stock AS male_parent ON(male_parent_rel.subject_id = male_parent.stock_id AND male_parent.type_id=$accession_cvterm_id)
             WHERE accession.type_id=$accession_cvterm_id AND accession.stock_id IN ($accession_list_string);";
         my $h = $schema->storage->dbh()->prepare($q);
         $h->execute();
@@ -219,35 +215,30 @@ sub get_arm {
         # print STDERR Dumper \@male_stock_ids_found;
 
         @all_individual_accessions_stock_ids = @$accession_list;
+        @individuals_stock_ids = @$accession_list;
 
         for my $i (0..scalar(@accession_stock_ids_found)-1) {
             my $female_stock_id = $female_stock_ids_found[$i];
             my $male_stock_id = $male_stock_ids_found[$i];
             my $accession_stock_id = $accession_stock_ids_found[$i];
 
-            my $genotype_string = "";
-            my $geno = CXGN::Genotype::ComputeHybridGenotype->new({
-                parental_genotypes=>$genotypes,
-                marker_objects=>\@all_marker_objects
-            });
-            my $progeny_genotype = $geno->get_hybrid_genotype();
-
-            push @individuals_stock_ids, $accession_stock_id;
-            my $genotype_string_scores = join "\t", @$progeny_genotype;
-            $genotype_string .= $genotype_string_scores . "\n";
-            write_file($grm_tempfile, {append => 1}, $genotype_string);
-            undef $progeny_genotype;
+            my $val = {};
+            if ($female_stock_id) {
+                $seen_female_parents{$female_stock_id}++;
+                $val->{female_stock_id} = $female_stock_id;
+            }
+            if ($male_stock_id) {
+                $seen_male_parents{$male_stock_id}++;
+                $val->{male_stock_id} = $male_stock_id;
+            }
+            $parent_hash{$accession_stock_id} = $val;
         }
     }
 
-    # print STDERR Dumper \@all_marker_names;
-    # print STDERR Dumper \@individuals_stock_ids;
-    # print STDERR Dumper \@dosage_matrix;
+    my @female_stock_ids = keys %seen_female_parents;
+    my @male_stock_ids = keys %seen_male_parents;
 
-    #$cmd .= 'write.table(A, file=\''.$grm_tempfile_out.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
-    #print STDERR Dumper $cmd;
-
-    return ($arm_tempfile_out, \@individuals_stock_ids, \@all_individual_accessions_stock_ids);
+    return (\%parent_hash, \@individuals_stock_ids, \@all_individual_accessions_stock_ids, \@female_stock_ids, \@male_stock_ids);
 }
 
 sub arm_cache_key {
@@ -291,15 +282,9 @@ sub download_arm {
         }
     }
     else {
-        my ($arm_tempfile_out, $stock_ids, $all_accession_stock_ids) = $self->get_arm($shared_cluster_dir_config, $backend_config, $cluster_host_config, $web_cluster_queue_config, $basepath_config);
+        my ($parent_hash, $stock_ids, $all_accession_stock_ids, $female_stock_ids, $male_stock_ids) = $self->get_arm($shared_cluster_dir_config, $backend_config, $cluster_host_config, $web_cluster_queue_config, $basepath_config);
 
         my @grm;
-        open(my $fh, "<", $arm_tempfile_out) or die "Can't open < $arm_tempfile_out: $!";
-        while (my $row = <$fh>) {
-            chomp($row);
-            my @vals = split "\t", $row;
-            push @grm, \@vals;
-        }
 
         my $data = '';
         if ($download_format eq 'matrix') {
@@ -311,17 +296,24 @@ sub download_arm {
             my $header_line = join "\t", @header;
             $data = "$header_line\n";
 
-            my $row_num = 0;
             foreach my $s (@$stock_ids) {
                 my @row = ("S".$s);
-                my $col_num = 0;
                 foreach my $c (@$stock_ids) {
-                    push @row, $grm[$row_num]->[$col_num];
-                    $col_num++;
+                    my $s1_female_parent = $parent_hash->{$s}->{female_stock_id};
+                    my $s1_male_parent = $parent_hash->{$s}->{male_stock_id};
+                    my $s2_female_parent = $parent_hash->{$c}->{female_stock_id};
+                    my $s2_male_parent = $parent_hash->{$c}->{male_stock_id};
+                    my $rel = 0;
+                    if ($s1_female_parent == $s2_female_parent) {
+                        $rel += 0.5;
+                    }
+                    if ($s1_male_parent == $s2_male_parent) {
+                        $rel += 0.5;
+                    }
+                    push @row, $rel;
                 }
                 my $line = join "\t", @row;
                 $data .= "$line\n";
-                $row_num++;
             }
 
             $self->cache()->set($key, $data);
@@ -338,19 +330,24 @@ sub download_arm {
             my %seen_stock_ids;
             # print STDERR Dumper \@grm;
             foreach my $s (@$stock_ids) {
-                my $col_num = 0;
                 foreach my $c (@$stock_ids) {
                     if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
-                        my $val = $grm[$row_num]->[$col_num];
-                        if (defined $val and length $val) {
-                            $result_hash{$s}->{$c} = $val;
-                            $seen_stock_ids{$s}++;
-                            $seen_stock_ids{$c}++;
+                        my $s1_female_parent = $parent_hash->{$s}->{female_stock_id};
+                        my $s1_male_parent = $parent_hash->{$s}->{male_stock_id};
+                        my $s2_female_parent = $parent_hash->{$c}->{female_stock_id};
+                        my $s2_male_parent = $parent_hash->{$c}->{male_stock_id};
+                        my $rel = 0;
+                        if ($s1_female_parent == $s2_female_parent) {
+                            $rel += 0.5;
                         }
+                        if ($s1_male_parent == $s2_male_parent) {
+                            $rel += 0.5;
+                        }
+                        $result_hash{$s}->{$c} = $rel;
+                        $seen_stock_ids{$s}++;
+                        $seen_stock_ids{$c}++;
                     }
-                    $col_num++;
                 }
-                $row_num++;
             }
 
             foreach my $r (sort keys %result_hash) {
@@ -381,19 +378,24 @@ sub download_arm {
             my $row_num = 0;
             my %seen_stock_ids;
             foreach my $s (@$stock_ids) {
-                my $col_num = 0;
                 foreach my $c (@$stock_ids) {
                     if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
-                        my $val = $grm[$row_num]->[$col_num];
-                        if (defined $val and length $val) {
-                            $result_hash{$s}->{$c} = $val;
-                            $seen_stock_ids{$s}++;
-                            $seen_stock_ids{$c}++;
+                        my $s1_female_parent = $parent_hash->{$s}->{female_stock_id};
+                        my $s1_male_parent = $parent_hash->{$s}->{male_stock_id};
+                        my $s2_female_parent = $parent_hash->{$c}->{female_stock_id};
+                        my $s2_male_parent = $parent_hash->{$c}->{male_stock_id};
+                        my $rel = 0;
+                        if ($s1_female_parent == $s2_female_parent) {
+                            $rel += 0.5;
                         }
+                        if ($s1_male_parent == $s2_male_parent) {
+                            $rel += 0.5;
+                        }
+                        $result_hash{$s}->{$c} = $rel;
+                        $seen_stock_ids{$s}++;
+                        $seen_stock_ids{$c}++;
                     }
-                    $col_num++;
                 }
-                $row_num++;
             }
 
             foreach my $r (sort keys %result_hash) {
@@ -425,19 +427,24 @@ sub download_arm {
             my %seen_stock_ids;
             # print STDERR Dumper \@grm;
             foreach my $s (@$stock_ids) {
-                my $col_num = 0;
                 foreach my $c (@$stock_ids) {
                     if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
-                        my $val = $grm[$row_num]->[$col_num];
-                        if (defined $val and length $val) {
-                            $result_hash{$s}->{$c} = $val;
-                            $seen_stock_ids{$s}++;
-                            $seen_stock_ids{$c}++;
+                        my $s1_female_parent = $parent_hash->{$s}->{female_stock_id};
+                        my $s1_male_parent = $parent_hash->{$s}->{male_stock_id};
+                        my $s2_female_parent = $parent_hash->{$c}->{female_stock_id};
+                        my $s2_male_parent = $parent_hash->{$c}->{male_stock_id};
+                        my $rel = 0;
+                        if ($s1_female_parent == $s2_female_parent) {
+                            $rel += 0.5;
                         }
+                        if ($s1_male_parent == $s2_male_parent) {
+                            $rel += 0.5;
+                        }
+                        $result_hash{$s}->{$c} = $rel;
+                        $seen_stock_ids{$s}++;
+                        $seen_stock_ids{$c}++;
                     }
-                    $col_num++;
                 }
-                $row_num++;
             }
 
             foreach my $r (sort keys %result_hash) {
@@ -472,19 +479,24 @@ sub download_arm {
             my %seen_stock_ids;
             # print STDERR Dumper \@grm;
             foreach my $s (@$stock_ids) {
-                my $col_num = 0;
                 foreach my $c (@$stock_ids) {
                     if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
-                        my $val = $grm[$row_num]->[$col_num];
-                        if (defined $val and length $val) {
-                            $result_hash{$s}->{$c} = $val;
-                            $seen_stock_ids{$s}++;
-                            $seen_stock_ids{$c}++;
+                        my $s1_female_parent = $parent_hash->{$s}->{female_stock_id};
+                        my $s1_male_parent = $parent_hash->{$s}->{male_stock_id};
+                        my $s2_female_parent = $parent_hash->{$c}->{female_stock_id};
+                        my $s2_male_parent = $parent_hash->{$c}->{male_stock_id};
+                        my $rel = 0;
+                        if ($s1_female_parent == $s2_female_parent) {
+                            $rel += 0.5;
                         }
+                        if ($s1_male_parent == $s2_male_parent) {
+                            $rel += 0.5;
+                        }
+                        $result_hash{$s}->{$c} = $rel;
+                        $seen_stock_ids{$s}++;
+                        $seen_stock_ids{$c}++;
                     }
-                    $col_num++;
                 }
-                $row_num++;
             }
 
             foreach my $r (sort keys %result_hash) {
@@ -519,19 +531,24 @@ sub download_arm {
             my %seen_stock_ids;
             foreach my $s (@$stock_ids) {
                 my @row = ($s);
-                my $col_num = 0;
                 foreach my $c (@$stock_ids) {
                     if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
-                        my $val = $grm[$row_num]->[$col_num];
-                        if ($val || $val == 0) {
-                            $result_hash{$s}->{$c} = $val;
-                            $seen_stock_ids{$s}++;
-                            $seen_stock_ids{$c}++;
+                        my $s1_female_parent = $parent_hash->{$s}->{female_stock_id};
+                        my $s1_male_parent = $parent_hash->{$s}->{male_stock_id};
+                        my $s2_female_parent = $parent_hash->{$c}->{female_stock_id};
+                        my $s2_male_parent = $parent_hash->{$c}->{male_stock_id};
+                        my $rel = 0;
+                        if ($s1_female_parent == $s2_female_parent) {
+                            $rel += 0.5;
                         }
+                        if ($s1_male_parent == $s2_male_parent) {
+                            $rel += 0.5;
+                        }
+                        $result_hash{$s}->{$c} = $rel;
+                        $seen_stock_ids{$s}++;
+                        $seen_stock_ids{$c}++;
                     }
-                    $col_num++;
                 }
-                $row_num++;
             }
 
             foreach my $r (sort keys %result_hash) {
@@ -547,20 +564,20 @@ sub download_arm {
                 }
             }
 
-            open(my $heatmap_fh, '>', $grm_tempfile) or die $!;
+            open(my $heatmap_fh, '>', $arm_tempfile) or die $!;
                 print $heatmap_fh $data;
             close($heatmap_fh);
 
-            my $grm_tempfile_out = $grm_tempfile . "_plot_out";
+            my $arm_tempfile_out = $arm_tempfile . "_plot_out";
             my $heatmap_cmd = 'R -e "library(ggplot2); library(data.table);
-            mat <- fread(\''.$grm_tempfile.'\', header=FALSE, sep=\'\t\', stringsAsFactors=FALSE);
-            pdf( \''.$grm_tempfile_out.'\', width = 8.5, height = 11);
+            mat <- fread(\''.$arm_tempfile.'\', header=FALSE, sep=\'\t\', stringsAsFactors=FALSE);
+            pdf( \''.$arm_tempfile_out.'\', width = 8.5, height = 11);
             ggplot(data = mat, aes(x=V1, y=V2, fill=V3)) + geom_tile();
             dev.off();
             "';
             print STDERR Dumper $heatmap_cmd;
 
-            my $tmp_output_dir = $shared_cluster_dir_config."/tmp_genotype_download_grm_heatmap";
+            my $tmp_output_dir = $shared_cluster_dir_config."/tmp_download_arm_heatmap";
             mkdir $tmp_output_dir if ! -d $tmp_output_dir;
 
             # Do the GRM on the cluster
@@ -571,7 +588,7 @@ sub download_arm {
                     temp_base => $tmp_output_dir,
                     queue => $web_cluster_queue_config,
                     do_cleanup => 0,
-                    out_file => $grm_tempfile_out,
+                    out_file => $arm_tempfile_out,
                     # don't block and wait if the cluster looks full
                     max_cluster_jobs => 1_000_000_000,
                 }
@@ -582,7 +599,7 @@ sub download_arm {
             $plot_cmd->wait;
 
             if ($return_type eq 'filehandle') {
-                open my $out_copy, '<', $grm_tempfile_out or die "Can't open output file: $!";
+                open my $out_copy, '<', $arm_tempfile_out or die "Can't open output file: $!";
 
                 $self->cache()->set($key, '');
                 my $file_handle = $self->cache()->handle($key);
@@ -592,7 +609,7 @@ sub download_arm {
                 $return = $self->cache()->handle($key);
             }
             elsif ($return_type eq 'data') {
-                die "Can only return the filehandle for GRM heatmap!\n";
+                die "Can only return the filehandle for ARM heatmap!\n";
             }
         }
     }
