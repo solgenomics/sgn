@@ -874,8 +874,9 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 my $tmp_arm_dir = $shared_cluster_dir_config."/tmp_download_arm";
                 mkdir $tmp_arm_dir if ! -d $tmp_arm_dir;
                 my ($arm_tempfile_fh, $arm_tempfile) = tempfile("drone_stats_download_arm_XXXXX", DIR=> $tmp_arm_dir);
+                my ($arm_tempfile_fh, $arm_tempfile) = tempfile("drone_stats_download_arm_XXXXX", DIR=> $tmp_arm_dir);
                 my ($grm1_tempfile_fh, $grm1_tempfile) = tempfile("drone_stats_download_grm1_XXXXX", DIR=> $tmp_arm_dir);
-                my ($grm2_tempfile_fh, $grm2_tempfile) = tempfile("drone_stats_download_grm2_XXXXX", DIR=> $tmp_arm_dir);
+                my ($grm_out_tempfile_fh, $grm_out_tempfile) = tempfile("drone_stats_download_grm_out_XXXXX", DIR=> $tmp_arm_dir);
 
                 if (!$protocol_id) {
                     $protocol_id = undef;
@@ -897,7 +898,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     $c->config->{'web_cluster_queue'},
                     $c->config->{basepath}
                 );
-                print STDERR Dumper $parent_hash;
+                # print STDERR Dumper $parent_hash;
 
                 my $female_geno = CXGN::Genotype::GRM->new({
                     bcs_schema=>$schema,
@@ -926,7 +927,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     my @l = split '\t', $_;
                     $female_parent_grm{$l[0]}->{$l[1]} = $l[2];
                 }
-                print STDERR Dumper \%female_parent_grm;
+                # print STDERR Dumper \%female_parent_grm;
 
                 my $male_geno = CXGN::Genotype::GRM->new({
                     bcs_schema=>$schema,
@@ -955,9 +956,9 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     my @l = split '\t', $_;
                     $male_parent_grm{$l[0]}->{$l[1]} = $l[2];
                 }
-                print STDERR Dumper \%male_parent_grm;
+                # print STDERR Dumper \%male_parent_grm;
 
-                my @rel_result;
+                my %rel_result_hash;
                 foreach my $a1 (@accession_ids) {
                     foreach my $a2 (@accession_ids) {
                         my $female_parent1 = $parent_hash->{$a1}->{female_stock_id};
@@ -986,14 +987,44 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                         elsif ($a1 == $a2) {
                             $male_rel = 1;
                         }
+                        # print STDERR "$a1 $a2 $female_rel $male_rel\n";
 
                         my $rel = 0.5*($female_rel + $male_rel);
-                        push @rel_result, [$a1, $a2, $rel];
+                        $rel_result_hash{$a1}->{$a2} = $rel;
                     }
                 }
-                print STDERR Dumper \@rel_result;
+                # print STDERR Dumper \%rel_result_hash;
 
-                die;
+                my $data = '';
+                if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+                    foreach my $r (sort keys %rel_result_hash) {
+                        foreach my $s (sort keys %{$rel_result_hash{$r}}) {
+                            my $val = $rel_result_hash{$r}->{$s};
+                            if (defined $val and length $val) {
+                                $data .= "S$r\tS$s\t$val\n";
+                            }
+                        }
+                    }
+                }
+                else {
+                    #Recicprocal
+                    foreach my $r (sort keys %rel_result_hash) {
+                        foreach my $s (sort keys %{$rel_result_hash{$r}}) {
+                            my $val = $rel_result_hash{$r}->{$s};
+                            if (defined $val and length $val) {
+                                $data .= "S$r\tS$s\t$val\n";
+                                if ($s != $r) {
+                                    $data .= "S$s\tS$r\t$val\n";
+                                }
+                            }
+                        }
+                    }
+                }
+
+                open(my $F2, ">", $grm_out_tempfile) || die "Can't open file ".$grm_out_tempfile;
+                    print $F2 $data;
+                close($F2);
+                $grm_file = $grm_out_tempfile;
             }
             else {
                 my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
