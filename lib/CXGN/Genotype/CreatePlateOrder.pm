@@ -124,8 +124,9 @@ sub create {
     my $plate_id = $self->plate_id;
     my $facility_id = $self->facility_id;
     my $client_id = $self->client_id;
-    my $requeriments = $self->requeriments;
+    my $get_requeriments = $self->requeriments;
     my $service_id_list = $self->service_id_list;
+    my $requeriments = $get_requeriments ? $get_requeriments : {};
     
     my $genotyping_trial;
     eval {
@@ -138,7 +139,8 @@ sub create {
 
     my $samples = _formated_samples($schema,$plate_id);
 
-    my $plate = {
+    my $plate;
+    push @$plate, {
         clientPlateBarcode=> $genotyping_trial->get_name(),
         clientPlateId=> $plate_id,
         sampleSubmissionFormat=> $plate_format,
@@ -146,7 +148,7 @@ sub create {
     };
 
     my $order =  {
-                clientId=>$client_id,
+                clientId=>qq|$client_id|,
                 numberOfSamples=>scalar @$samples,
                 plates=>$plate,         
                 requiredServiceInfo => $requeriments,
@@ -177,22 +179,22 @@ sub _formated_samples {
          if ($result->{germplasmName} ne 'BLANK'){
             push @samples, {
                         clientSampleBarCode=> $result->{sampleName},
-                        clientSampleId=> $result->{sampleDbId},
-                        column=> $result->{col_number},
+                        clientSampleId=> qq|$result->{sampleDbId}|,
+                        column=> $result->{col_number} + 0,
                         row=> $result->{row_number},
                         comments=> $result->{notes},
                         concentration=> {
                             units=> $concent_unit,
-                            value=> $result->{concentration},
+                            value=> $result->{concentration} eq 'NA' ? 0 : $result->{concentration},
                         },
                         tissueType=> $result->{tissue_type},
                         volume=> {
                             units=> $volume_unit,
-                            value=>$result->{volume},
+                            value=> $result->{volume} eq 'NA' ? 0 : $result->{volume},
                         },
                         well=> $result->{well} ? $result->{well} : $result->{row_number} . $result->{col_number},
-                        organismName=> 'Aspergillus fructus',
-                        speciesName=> 'Aspergillus fructus',
+                        organismName=> 'Solanum lycopersicum',
+                        speciesName=> 'Solanum lycopersicum',
                         taxonomyOntologyReference=> {},
                         tissueTypeOntologyReference=> {},
                     };

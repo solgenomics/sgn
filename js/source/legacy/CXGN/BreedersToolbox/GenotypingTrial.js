@@ -162,10 +162,11 @@ jQuery(document).ready(function ($) {
         return access_token;
     }
 
-    function submit_plate_to_gdf(brapi_plate_data) {
-        console.log(brapi_plate_data);
+    function submit_plate_to_gdf(brapi_plate_data,facility) {
+
         var auth_data = new Object();
         auth_data = get_genotyping_server_credentials();
+        var order;
 
         if (auth_data.error) {
             alert("Genotyping server credentials are not available. Stop.");
@@ -182,36 +183,39 @@ jQuery(document).ready(function ($) {
         if (access_token) {
             auth_data.token = access_token;
 
+            var facility_url = get_facility_url(facility);
             alert("Sending genotyping experiment entry to genotyping facility...");
+            var response = { "@context": null, "metadata": {   "datafiles": [], "status": [],   "pagination": {     "pageSize": 0, "totalCount": 0, "totalPages": 0, "currentPage": 0 } }, "result": {   "orderId": "c6b65661-5216-48e6-9260-a5f61006341447",   "shipmentForms": null }};
 
-            $.ajax( {
-                // url: auth_data.host+'/brapi/v2/plate-register',
-                url: auth_data.host+'/brapi/v2/vendor/orders',
-                method: 'POST',
-                data: {
-                    token: auth_data.token,
-                    plates: [
-                        brapi_plate_data
-                    ]
-                },
-                success: function(response) {
-                    console.log(response);
-                    if (response.metadata.status) {
-                        alert(response.metadata.status);
-                    }
-                    else {
+            // $.ajax( {
+            //     url: facility_url +'/brapi/v2/vendor/orders',
+            //     method: 'POST',
+            //     headers: {"Authorization": 'Bearer ' + 'YYYY', "Content-type":"application/json"},
+            //     data: JSON.stringify(brapi_plate_data),
+            //     success: function(response) {
+            //         console.log(response);
+            //         if (response.result.orderId) {
+                        order = response.result;
                         alert("Successfully submitted the plate to facility.");
-                    }
-                }
-            });
+            //         }
+            //         else {
+            //             alert(response.metadata.status);
+            //             return;
+            //         }
+            //     }
+            // });
         }
+        return order;
     }
 
-    function load_genotyping_status_info(auth_data, plate_id) {
+    function load_genotyping_status_info(facility, order_id) {
+        var facility_url = get_facility_url(facility);
         $.ajax({
-            url: auth_data.host+'/brapi/v1/plate/'+plate_id,
+            // url: auth_data.host+'/brapi/v1/plate/'+plate_id,
+            url: facility_url +'/brapi/v2/vendor/orders/'+ order_id + '/status',
             success: function(response) {
-
+                var status = response.result.status;
+                jQuery('#genotyping_trial_status_info').html(status);
             }
         });
     }
@@ -489,7 +493,7 @@ jQuery(document).ready(function ($) {
         order_info.plate_id = jQuery('#plate_id').html();
         order_info.client_id = jQuery('#client_id').val();
         order_info.service_ids = jQuery('#service_id_select').val();
-        order_info.facility_id = jQuery('#genotyping_trial_facilities_select').val();
+        order_info.facility_id = jQuery('#genotyping_facility').html();
         
         if (order_info.plate_id == '') {
             alert("A plate id is required and it should be unique in the database. Please try again.");
@@ -505,15 +509,16 @@ jQuery(document).ready(function ($) {
 
         order_info.requeriments = requeriments;
 
-        // If data has been changed in form needs to be saved here
         submit_samples_facilities(order_info);
 
     });
 
    function submit_samples_facilities(order_info) {
         //console.log(plate_data);
-        var brapi_plate_data = new Object();
+        var brapi_order = new Object();
+        var gdf_order_retrieved = new Object();
 
+        // Submit samples
         jQuery.ajax({
             url: '/ajax/breeders/createplateorder',
             method: 'POST',
@@ -529,10 +534,17 @@ jQuery(document).ready(function ($) {
                     alert(response.error);
                 }
                 else {
-                    alert(response.message);
+                    
                     brapi_order = response.order;
                     // if (plate_data.genotyping_facility_submit == 'yes'){
-                    //     submit_plate_to_gdf(brapi_plate_data);
+                    gdf_order_retrieved = submit_plate_to_gdf(brapi_order,order_info.facility_id);
+ 
+                    if (gdf_order_retrieved){
+                        store_gdf_order(gdf_order_retrieved,parseInt(order_info.plate_id));
+                    } else {
+                        alert('An error occurred trying to submit the order.');
+                    }
+
                     // } else {
                     //     Workflow.complete('#add_geno_trial_submit');
                     //     Workflow.focus("#genotyping_trial_create_workflow", -1); //Go to success page
@@ -545,8 +557,133 @@ jQuery(document).ready(function ($) {
                 jQuery("#working_modal").modal('hide');
             }
         });
-        return brapi_plate_data;
     }
+
+   function store_gdf_order(gdf_order,plate_id) {
+
+        // Submit samples
+        jQuery.ajax({
+            url: '/ajax/breeders/storeplateorder',
+            method: 'POST',
+            data: {
+                'order': JSON.stringify(gdf_order),
+                'plate_id': JSON.stringify(plate_id)
+            },
+            success : function(response) {
+                if (response.error) {
+                    alert(response.error);
+                } else {
+                    alert('Order stored successfully.');
+                }
+            },
+            error: function(response) {
+                alert('An error occurred trying to store the order.');
+                jQuery("#working_modal").modal('hide');
+            }
+        });
+    }
+
+    function get_facility_services_id(){
+        var facility = document.getElementById('genotyping_facility').innerHTML;
+
+        var auth_data = new Object();
+        auth_data = get_genotyping_server_credentials();
+
+        if (auth_data.error) {
+            alert("Genotyping server credentials are not available. Stop.");
+            return;
+        }
+
+        var access_token;
+        if (auth_data.token){
+            access_token = auth_data.token;
+        } else {
+            access_token = genotyping_facility_login(auth_data);
+        }
+
+        var facility_url = get_facility_url(facility);        
+
+        if (facility_url){
+            var url = facility_url + '/brapi/v2/vendor/specifications';
+
+            auth_data.token = access_token;
+
+            jQuery.ajax({
+                url: url,
+                type: 'GET',
+                headers: {"Authorization": 'Bearer ' + 'YYYY' },
+                //token: auth_data.token,
+                success: function(response) {
+                    console.log(response);
+                    var options = response.result.services;
+                    jQuery('#service_id_select').empty();
+                
+                    jQuery.each(options, function(i, p) {
+                        console.log(p.specificRequirements);
+                        jQuery('#service_id_select').append(jQuery('<option></option>').val(p.serviceId).html(p.serviceName));
+                    });
+                },
+                error: function(response) {
+                    var options = JSON.parse('[{"serviceId":"2","serviceName":"service2","specificRequirements":[ {"description": "The genus of the samples","key": "genus" }]},{"serviceId":"5","serviceName":"service3", "specificRequirements":[ {"description": "The species of the samples","key": "species" }] }]');
+                    // alert('An error occurred getting services for GDF.');
+      
+                    options.forEach(function(p) {
+                        jQuery('#service_id_select').append(jQuery('<option></option>').val(p.serviceId).html(p.serviceName));
+                        p.specificRequirements.forEach(function(object2) {
+                            console.log(object2.key);                        
+                            let type = document.createElement('label'); 
+                            type.setAttribute("class","col-sm-3 control-label");
+                            type.appendChild(document.createTextNode(object2.key)); 
+                            document.getElementById("required_services").appendChild(type);
+
+                            let input = document.createElement("input");
+                            input.type = "text";
+                            input.name = object2.key;
+                            input.setAttribute("id", "req-" + object2.key);
+                            input.setAttribute("class", "form-control");
+
+                            let div_input = document.createElement('div');
+                            div_input.setAttribute("class", "col-sm-9");
+                            div_input.appendChild(input);
+
+                            let div = document.createElement('div');
+                            div.setAttribute("class", "col-sm-12");
+                            div.appendChild(type);
+                            div.appendChild(div_input);
+                            document.getElementById("required_services").appendChild(div);
+                        });
+                    });
+                }
+            });
+        }
+    }
+
+    function get_facility_url(name){
+
+        if (name == 'Cornell IGD'){
+            return 'https://test-server.brapi.org';
+        } else if (name == 'dart'){
+            return 'https://test-server.brapi.org';
+        } else if (name == 'BGI'){
+            return 'https://test-server.brapi.org';
+        } else if (name == 'Intertek'){
+            return 'https://test-server.brapi.org';
+        } else {
+            alert("Invalid genotyping facility.");
+            return;
+        }
+    }
+
+    jQuery('#facility_info_link').click(function () {
+        get_facility_services_id(); 
+    });
+
+    jQuery('#genotyping_trial_facility_submit_select').on('change', function() {
+         
+        jQuery("#submit_plate_btn").prop("disabled", this.value == 1);
+    });
+
+
 });
 
 function edit_genotyping_trial_details(){
@@ -667,57 +804,7 @@ function save_replace_well_accession () {
     }
 }
 
-function get_facility_services_id(){
-    var facility = jQuery('#genotyping_facility').val();
-    var url;
 
-    // if (facility == 'Cornell IGD'){
-        url = 'https://testserver.brapi.org/brapi/v2/vendor/specifications';
-        // url = 'http://192.168.33.11:3010/brapi/v2/serverinfo/';
-    // }
-
-    if (url){
-        
-        jQuery.ajax({
-            url: url,
-            type: 'GET',
-            headers: {"Authorization": 'Bearer ' + 'YYYY' },
-            success: function(response) {
-                console.log(response);
-                var options = response.result.services;
-                jQuery('#service_id_select').empty();
-            
-
-  
-                options.forEach(function(object) {
-                    object.specificRequirements.forEach(function(object2) {
-                        console.log(object2.key);                        
-                        let type = document.createElement('label'); 
-                        type.setAttribute("class","col-sm-3 control-label");
-                        type.appendChild(document.createTextNode(object2.key)); 
-                        document.getElementById("required_services").appendChild(type);
-
-                        let input = document.createElement("input");
-                        input.type = "text";
-                        input.name = object2.key;
-                        input.setAttribute("id", "req-" + object2.key);
-                        input.setAttribute("class", "form-control");
-
-                        let div_input = document.createElement('div');
-                        div_input.setAttribute("class", "col-sm-9");
-                        div_input.appendChild(input);
-
-                        let div = document.createElement('div');
-                        div.setAttribute("class", "col-sm-12");
-                        div.appendChild(type);
-                        div.appendChild(div_input);
-                        document.getElementById("required_services").appendChild(div);
-                    });
-                });
-            }
-        });
-    }
-}
 
 function close_message_dialog () {
     location.reload();
