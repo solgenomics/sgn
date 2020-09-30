@@ -181,6 +181,9 @@ sub image_analysis_submit_POST : Args(0) {
             }
             else {
                 print STDERR Dumper $resp;
+                my $error_message_hash;
+                $error_message_hash->{original_image} = $image_urls[$it];
+                $result->[$it]->{result} = $error_message_hash;
             }
             $it++;
         }

@@ -178,7 +178,11 @@ jQuery(document).ready(function(){
 
                 var html = '<table class="table table-hover"><thead><tr><th>Original Image</th><th>Analyzed Image</th><th>Analysis</th><th>Previously Saved Image-Associated Phenotype(s)</th><th>Observation Unit</th></tr></thead><tbody>';
                 for (var i=0; i<response.results.length; i++) {
-                    html = html + '<tr><td><img src="'+response.results[i].result.original_image+'"></td><td><img src="'+response.results[i].result.image_link+'"></td><td>'+response.results[i].result.trait_name+': '+response.results[i].result.trait_value+'</td><td>';
+                    if (response.results[i].result.image_link) {
+                        html = html + '<tr><td><img src="'+response.results[i].result.original_image+'"></td><td><img src="'+response.results[i].result.image_link+'"></td><td>'+response.results[i].result.trait_name+': '+response.results[i].result.trait_value+'</td><td>';
+                    } else {
+                        html = html + '<tr><td><img src="'+response.results[i].result.original_image+'"></td><td>Error: no analysis returned for this image.</td><td></td><td>';
+                    }
                     for (var j=0; j<response.results[i].observations_array.length; j++) {
                         html = html + response.results[i].observations_array[j].observationvariable_name + ": " + response.results[i].observations_array[j].value;
                     }
@@ -201,11 +205,11 @@ jQuery(document).ready(function(){
     jQuery(document).on("click", "#image_analysis_image_search_results_save", function() {
         // alert("Need to implement!");
 
-        #Retrieve observation unit names and scores
+        // Retrieve observation unit names and scores
 
-        #Calculate avgs where there are multiple scores per observation unit
+        // Calculate avgs where there are multiple scores per observation unit
 
-        #Save phenotypes via Brapi observations put call
+        // Save phenotypes via Brapi observations put call
 
     });
 
