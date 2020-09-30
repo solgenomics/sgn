@@ -228,6 +228,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $trait_id_list = $c->req->param('observation_variable_id_list') ? decode_json $c->req->param('observation_variable_id_list') : [];
     my $compute_from_parents = $c->req->param('compute_from_parents') eq 'yes' ? 1 : 0;
     my $include_pedgiree_info_if_compute_from_parents = $c->req->param('include_pedgiree_info_if_compute_from_parents') eq 'yes' ? 1 : 0;
+    my $use_area_under_curve = $c->req->param('use_area_under_curve') eq 'yes' ? 1 : 0;
     my $protocol_id = $c->req->param('protocol_id');
     my $tolparinv = $c->req->param('tolparinv');
     my $legendre_order_number = $c->req->param('legendre_order_number');
@@ -805,6 +806,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 $plot_id_map{$obsunit_stock_id} = $obsunit_stock_uniquename;
                 $seen_plot_names{$obsunit_stock_uniquename}++;
                 my @data_matrix_phenotypes_row;
+                my $current_trait_index = 0;
                 foreach my $t (@sorted_trait_names) {
                     my @row = (
                         $accession_id_factor_map{$germplasm_stock_id},
@@ -820,8 +822,15 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     push @row, @$polys;
 
                     if (defined($phenotype_data{$obsunit_stock_uniquename}->{$t})) {
-                        push @row, $phenotype_data{$obsunit_stock_uniquename}->{$t} + 0;
-                        push @data_matrix_phenotypes_row, $phenotype_data{$obsunit_stock_uniquename}->{$t} + 0;
+                        if ($use_area_under_curve) {
+                            my $val = 0;
+                            push @row, $val;
+                            push @data_matrix_phenotypes_row, $val;
+                        }
+                        else {
+                            push @row, $phenotype_data{$obsunit_stock_uniquename}->{$t} + 0;
+                            push @data_matrix_phenotypes_row, $phenotype_data{$obsunit_stock_uniquename}->{$t} + 0;
+                        }
                     } else {
                         print STDERR $obsunit_stock_uniquename." : $t : $germplasm_name : NA \n";
                         push @row, '';
@@ -830,6 +839,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
                     push @data_matrix, \@row;
                     push @data_matrix_phenotypes, \@data_matrix_phenotypes_row;
+
+                    $current_trait_index++;
                 }
             }
             # print STDERR Dumper \@data_matrix;
