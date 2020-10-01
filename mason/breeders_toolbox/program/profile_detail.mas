@@ -1,10 +1,10 @@
 <%args>
+$user_id => undef
 $profile_id
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
-
 
 <table id="profile_detail_table" class="display">
     <thead>
@@ -18,14 +18,11 @@ $profile_id
         </tr>
     </thead>
 </table>
+
 <script>
 
 jQuery(document).ready(function () {
 
-    jQuery('#profile_detail_table').DataTable( {
-        'autoWidth': false,
-        'order': false,
-    });
 
 });
 
