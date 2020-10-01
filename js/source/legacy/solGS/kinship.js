@@ -34,7 +34,7 @@ solGS.kinship = {
 	    popId = jQuery("#selection_pop_id").val();
 	    protocolId = jQuery("#genotyping_protocol_id").val() ;
 	    
-	} else if (page.match(/solgs\/traits\/all\/population\//)) {
+	} else if (page.match(/solgs\/traits\/all\/population\/|models\/combined\/trials\//)) {
 	    popId = jQuery("#training_pop_id").val();
 	    protocolId = jQuery("#genotyping_protocol_id").val() ;
 	}
@@ -153,7 +153,7 @@ solGS.kinship = {
    
     runKinship: function(selectId, selectName, dataStr) {
 
-	var protocolId = jQuery('#genotyping_protocol #genotyping_protocol_id').val();
+	var protocolId = jQuery('#genotyping_protocol_id').val();
 	
 	var kinshipArgs = {
 	    'kinship_pop_id' : selectId,
@@ -393,7 +393,13 @@ jQuery(document).ready( function() {
 	    solGS.kinship.runKinship(trialId, trialName);
 
 	    console.log('trial page: ' + trialId + ' ' + trialName)
-	} else {
+	} else if (url.match(/solgs\/models\/combined\/trials/)){
+	    var popId = jQuery("#training_pop_id").val();
+	    var popName = jQuery("#training_pop_name").val();
+
+	    
+	    solGS.kinship.runKinship(popId, popName);
+	}else {
             solGS.kinship.getKinshipResult();
 	}
 	
