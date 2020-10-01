@@ -557,13 +557,40 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 };
                 $plot_id_map{"P".$obsunit_stock_id} = $obsunit_stock_uniquename;
                 $seen_plot_names{$obsunit_stock_uniquename}++;
+                my $current_trait_index = 0;
                 foreach my $t (@sorted_trait_names) {
                     if (defined($phenotype_data{$obsunit_stock_uniquename}->{$t})) {
-                        push @row, $phenotype_data{$obsunit_stock_uniquename}->{$t} + 0;
+                        if ($use_area_under_curve) {
+                            my $val = 0;
+                            foreach my $counter (0..$current_trait_index) {
+                                if ($counter == 0) {
+                                    $val = $val + $phenotype_data{$obsunit_stock_uniquename}->{$sorted_trait_names[$counter]} + 0;
+                                }
+                                else {
+                                    my $t1 = $sorted_trait_names[$counter-1];
+                                    my $t2 = $sorted_trait_names[$counter];
+                                    my $p1 = $phenotype_data{$obsunit_stock_uniquename}->{$t1} + 0;
+                                    my $p2 = $phenotype_data{$obsunit_stock_uniquename}->{$t2} + 0;
+                                    my $neg = 1;
+                                    my $min_val = $p1;
+                                    if ($p2 < $p1) {
+                                        $neg = -1;
+                                        $min_val = $p2;
+                                    }
+                                    my $area = (($neg*($p2-$p1)*($t2-$t1))/2)+($t2-$t1)*$min_val;
+                                    $val = $val + $area;
+                                }
+                            }
+                            push @row, $val;
+                        }
+                        else {
+                            push @row, $phenotype_data{$obsunit_stock_uniquename}->{$t} + 0;
+                        }
                     } else {
                         print STDERR $obsunit_stock_uniquename." : $t : $germplasm_name : NA \n";
                         push @row, 'NA';
                     }
+                    $current_trait_index++;
                 }
                 push @data_matrix, \@row;
             }
@@ -824,6 +851,24 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     if (defined($phenotype_data{$obsunit_stock_uniquename}->{$t})) {
                         if ($use_area_under_curve) {
                             my $val = 0;
+                            foreach my $counter (0..$current_trait_index) {
+                                if ($counter == 0) {
+                                    $val = $val + $phenotype_data{$obsunit_stock_uniquename}->{$sorted_trait_names[$counter]} + 0;
+                                }
+                                else {
+                                    my $t1 = $sorted_trait_names[$counter-1];
+                                    my $t2 = $sorted_trait_names[$counter];
+                                    my $p1 = $phenotype_data{$obsunit_stock_uniquename}->{$t1} + 0;
+                                    my $p2 = $phenotype_data{$obsunit_stock_uniquename}->{$t2} + 0;
+                                    my $neg = 1;
+                                    my $min_val = $p1;
+                                    if ($p2 < $p1) {
+                                        $neg = -1;
+                                        $min_val = $p2;
+                                    }
+                                    $val = $val + (($neg*($p2-$p1)*($t2-$t1))/2)+($t2-$t1)*$min_val;
+                                }
+                            }
                             push @row, $val;
                             push @data_matrix_phenotypes_row, $val;
                         }
