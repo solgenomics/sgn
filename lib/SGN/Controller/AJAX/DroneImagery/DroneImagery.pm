@@ -536,7 +536,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 }
             }
             @unique_accession_names = sort keys %unique_accessions;
-            @sorted_trait_names = sort keys %seen_times;
+            @sorted_trait_names = sort {$a <=> $b} keys %seen_times;
             @unique_plot_names = sort keys %seen_plot_names;
 
             while ( my ($trait_name, $time_term) = each %seen_trait_names) {
