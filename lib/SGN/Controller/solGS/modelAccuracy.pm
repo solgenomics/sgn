@@ -151,9 +151,6 @@ sub cross_validation_stat {
 sub create_model_summary {
     my ($self, $c, $model_id, $trait_id) = @_;
  
-    $trait_id =  $c->stash->{trait_id} if !$trait_id;
-    $model_id =  $c->stash->{model_id} if !$model_id;
-  
     my $protocol_id = $c->stash->{genotyping_protocol_id};
     
     $c->controller("solGS::solGS")->get_trait_details($c, $trait_id);
@@ -174,8 +171,7 @@ sub create_model_summary {
     $self->get_model_accuracy_value($c, $model_id, $tr_abbr);
     my $accuracy_value = $c->stash->{accuracy_value};
      
-    $c->controller("solGS::Heritability")->get_heritability($c);
-    my $heritability = $c->stash->{heritability};
+    my $heritability = $c->controller("solGS::Heritability")->get_heritability($c, $model_id, $trait_id);
    	    	    
     my $model_summary = [$trait_page, $accuracy_value, $heritability];	        
 
