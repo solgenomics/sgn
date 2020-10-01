@@ -57,7 +57,7 @@ has 'client_id' => (
 
 
 has 'requeriments' => (
-    isa => 'ArrayRef[Str]|Undef',
+    isa => 'HashRef|Undef',
     is => 'rw',
     required => 0,
 );

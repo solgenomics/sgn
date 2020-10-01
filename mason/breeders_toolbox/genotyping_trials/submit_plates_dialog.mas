@@ -74,7 +74,7 @@ $genotyping_facility
                         <label class="col-sm-4 control-label">Required Service Info: </label>
                       </div>
                       <center>
-                            <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                            <button class="btn btn-primary" id="review_order_link" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
                       </center>           
                       <br/><br/>
                        </&>
@@ -104,14 +104,14 @@ $genotyping_facility
                         </div>
                         <hr>
                         <center>
-                            <button type="button" class="btn btn-primary" name="submit_plate_btn" id="submit_plate_btn" disabled>Submit genotyping plate</button>
+                            <button type="button" class="btn btn-primary" onclick="Workflow.complete(this, false);" name="submit_plate_btn" id="submit_plate_btn" disabled>Submit genotyping plate</button>
                         </center>
                     </&>
                     <&| /util/workflow.mas:complete, title=> "Complete" &>
-                        <& /page/page_title.mas, title=>"Complete! Your genotyping plate was submitted to the facility." &>
+                        <& /page/page_title.mas, title=>"Complete!" &>
                         <p>
                             <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                            Genotyping plate was submit successfully
+                            Your genotyping plate was submitted successfully to the facility.
                         </p>
                         <ul>
                             <li>You may want to proceed to the genotyping plate detail page to check submission status.</li>
@@ -135,7 +135,7 @@ $genotyping_facility
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="HmDialog"><b>Send genotyping plate</b></h4>
+                <h4 class="modal-title" id="HmDialog"><b>Submit genotyping plate</b></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
