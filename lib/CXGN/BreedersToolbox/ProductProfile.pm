@@ -66,6 +66,8 @@ sub get_product_profile_info {
     my @profile_list;
     while (my $r = $profile_rs->next()){
         my @each_row = ();
+        my $profile_id = $r->projectprop_id();
+        push @each_row, $profile_id;
         my $profile_json = $r->value();
         my $profile_hash = JSON::Any->jsonToObj($profile_json);
         foreach my $field (@fields){
@@ -73,7 +75,7 @@ sub get_product_profile_info {
         }
         push @profile_list, [@each_row];
     }
-    print STDERR "PROFILE LIST =".Dumper(\@profile_list)."\n";
+#    print STDERR "PROFILE LIST =".Dumper(\@profile_list)."\n";
 
     return \@profile_list;
 }

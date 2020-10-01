@@ -410,6 +410,9 @@ sub get_product_profiles :Chained('ajax_breeding_program') PathPart('product_pro
     foreach my $profile(@$profiles){
         my @trait_list;
         my @profile_info = @$profile;
+        my $projectprop_id = shift(@profile_info);
+        my $profile_name = shift(@profile_info);
+        unshift (@profile_info, qq{<a href = "/breeders_toolbox/program/profile_detail/$projectprop_id">$profile_name</a>} );
         my $trait_info = $profile_info[2];
         my $trait_info_ref = decode_json $trait_info;
         my %trait_info_hash = %{$trait_info_ref};
