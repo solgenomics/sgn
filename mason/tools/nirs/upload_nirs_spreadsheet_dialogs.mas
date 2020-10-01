@@ -253,6 +253,10 @@ jQuery(document).ready(function() {
 
                 },
             });
+        },
+        error: function(){
+            jQuery('#working_msg').html("");
+            jQuery('#working_modal').modal("hide");
         }
     });
 

@@ -72,7 +72,7 @@ agg.spectra <- spectra.tagged %>%
 
 #### Output filtered and aggregated JSON ####
 agg.spectra %>%
-  group_by(observationUnitId:outlier)
+  group_by(observationUnitId:outlier) %>%
   nest(nirs_spectra = starts_with("X")) %>%
   jsonlite::toJSON() %>%
   jsonlite::write_json(x = ., path = args[2])
