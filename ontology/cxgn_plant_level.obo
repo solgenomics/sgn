@@ -1,0 +1,464 @@
+format-version: 1.2
+data-version: 1
+date: 05:11:2017 03:00
+saved-by: sgn
+default-namespace: cxgn_plant_level_ontology
+remark: none
+ontology: cxgn_plant_level
+
+[Term]
+id: PLANT_LEVEL:0000000
+name: Plant_level
+
+[Term]
+id: PLANT_LEVEL:0000001
+name: generation
+def: "Categorical plant generations." []
+is_a: PLANT_LEVEL:0000000 ! Plant_level
+
+[Term]
+id: PLANT_LEVEL:0000005
+name: leaf level
+def: "Categorical leaf levels." []
+is_a: PLANT_LEVEL:0000000 ! Plant_level
+
+[Term]
+id: PLANT_LEVEL:0000006
+name: leaf rank 01
+def: "First standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
+synonym: "LFRK01" EXACT []
+is_a: PLANT_LEVEL:0000005 ! leaf level
+
+[Term]
+id: PLANT_LEVEL:0000007
+name: leaf rank 02
+def: "Second standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
+synonym: "LFRK02" EXACT []
+is_a: PLANT_LEVEL:0000005 ! leaf level
+
+[Term]
+id: PLANT_LEVEL:0000008
+name: leaf rank 03
+def: "Third standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
+synonym: "LFRK03" EXACT []
+is_a: PLANT_LEVEL:0000005 ! leaf level
+
+[Term]
+id: PLANT_LEVEL:0000009
+name: leaf rank 04
+def: "Fourth standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
+synonym: "LFRK04" EXACT []
+is_a: PLANT_LEVEL:0000005 ! leaf level
+
+[Term]
+id: PLANT_LEVEL:0000010
+name: leaf rank 05
+def: "Fifth standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
+synonym: "LFRK05" EXACT []
+is_a: PLANT_LEVEL:0000005 ! leaf level
+
+[Term]
+id: PLANT_LEVEL:0000011
+name: leaf rank 06
+def: "Sixth standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
+synonym: "LFRK06" EXACT []
+is_a: PLANT_LEVEL:0000005 ! leaf level
+
+[Term]
+id: PLANT_LEVEL:0000012
+name: leaf rank 07
+def: "Seventh standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
+synonym: "LFRK07" EXACT []
+is_a: PLANT_LEVEL:0000005 ! leaf level
+
+[Term]
+id: PLANT_LEVEL:0000013
+name: leaf rank 08
+def: "First standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
+synonym: "LFRK08" EXACT []
+is_a: PLANT_LEVEL:0000005 ! leaf level
+
+[Term]
+id: PLANT_LEVEL:0000014
+name: leaf rank 09
+def: "Ninth standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
+synonym: "LFRK09" EXACT []
+is_a: PLANT_LEVEL:0000005 ! leaf level
+
+[Term]
+id: PLANT_LEVEL:0000015
+name: leaf rank 10
+def: "Tenth standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
+synonym: "LFRK10" EXACT []
+is_a: PLANT_LEVEL:0000005 ! leaf level
+
+[Term]
+id: PLANT_LEVEL:0000016
+name: leaf rank 11
+def: "Eleventh standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
+synonym: "LFRK11" EXACT []
+is_a: PLANT_LEVEL:0000005 ! leaf level
+
+[Term]
+id: PLANT_LEVEL:0000017
+name: leaf rank 12
+def: "Twelfth standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
+synonym: "LFRK12" EXACT []
+is_a: PLANT_LEVEL:0000005 ! leaf level
+
+[Term]
+id: PLANT_LEVEL:0000018
+name: leaf rank 13
+def: "Thirteenth standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
+synonym: "LFRK13" EXACT []
+is_a: PLANT_LEVEL:0000005 ! leaf level
+
+[Term]
+id: PLANT_LEVEL:0000019
+name: leaf rank 14
+def: "Fourteenth standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
+synonym: "LFRK14" EXACT []
+is_a: PLANT_LEVEL:0000005 ! leaf level
+
+[Term]
+id: PLANT_LEVEL:0000020
+name: leaf rank 15
+def: "Fifteenth standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
+synonym: "LFRK15" EXACT []
+is_a: PLANT_LEVEL:0000005 ! leaf level
+
+[Term]
+id: PLANT_LEVEL:0000021
+name: leaf rank 16
+def: "Sixteenth standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
+synonym: "LFRK16" EXACT []
+is_a: PLANT_LEVEL:0000005 ! leaf level
+
+[Term]
+id: PLANT_LEVEL:0000022
+name: leaf rank 17
+def: "First standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
+synonym: "LFRK17" EXACT []
+is_a: PLANT_LEVEL:0000005 ! leaf level
+
+[Term]
+id: PLANT_LEVEL:0000023
+name: leaf rank 18
+def: "Eighteenth standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
+synonym: "LFRK18" EXACT []
+is_a: PLANT_LEVEL:0000005 ! leaf level
+
+[Term]
+id: PLANT_LEVEL:0000024
+name: leaf rank 19
+def: "Nineteenth standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
+synonym: "LFRK19" EXACT []
+is_a: PLANT_LEVEL:0000005 ! leaf level
+
+[Term]
+id: PLANT_LEVEL:0000025
+name: leaf rank 20
+def: "First standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
+synonym: "LFRK20" EXACT []
+is_a: PLANT_LEVEL:0000005 ! leaf level
+
+[Term]
+id: PLANT_LEVEL:0000026
+name: leaf rank 21
+def: "Twenty first standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
+synonym: "LFRK21" EXACT []
+is_a: PLANT_LEVEL:0000005 ! leaf level
+
+[Term]
+id: PLANT_LEVEL:0000027
+name: leaf rank 22
+def: "Twenty second standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
+synonym: "LFRK22" EXACT []
+is_a: PLANT_LEVEL:0000005 ! leaf level
+
+[Term]
+id: PLANT_LEVEL:0000028
+name: leaf rank 23
+def: "Twenty third standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
+synonym: "LFRK23" EXACT []
+is_a: PLANT_LEVEL:0000005 ! leaf level
+
+[Term]
+id: PLANT_LEVEL:0000029
+name: leaf rank 24
+def: "Twenty fourth standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
+synonym: "LFRK24" EXACT []
+is_a: PLANT_LEVEL:0000005 ! leaf level
+
+[Term]
+id: PLANT_LEVEL:0000030
+name: leaf rank 25
+def: "Twenty fifth standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
+synonym: "LFRK25" EXACT []
+is_a: PLANT_LEVEL:0000005 ! leaf level
+
+[Term]
+id: PLANT_LEVEL:0000031
+name: leaf rank 26
+def: "Twenty fourth standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
+synonym: "LFRK26" EXACT []
+is_a: PLANT_LEVEL:0000005 ! leaf level
+
+[Term]
+id: PLANT_LEVEL:0000032
+name: leaf rank 27
+def: "Twenty seventh standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
+synonym: "LFRK27" EXACT []
+is_a: PLANT_LEVEL:0000005 ! leaf level
+
+[Term]
+id: PLANT_LEVEL:0000033
+name: leaf rank 28
+def: "Twenty eighth standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
+synonym: "LFRK28" EXACT []
+is_a: PLANT_LEVEL:0000005 ! leaf level
+
+[Term]
+id: PLANT_LEVEL:0000034
+name: leaf rank 29
+def: "Twenty ninth standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
+synonym: "LFRK29" EXACT []
+is_a: PLANT_LEVEL:0000005 ! leaf level
+
+[Term]
+id: PLANT_LEVEL:0000035
+name: leaf rank 30
+def: "Thirtiest standing leaf, counting the rank by starting with youngest completly unrolled leaf as 1 and moving downwards." []
+synonym: "LFRK30" EXACT []
+is_a: PLANT_LEVEL:0000005 ! leaf level
+
+[Term]
+id: PLANT_LEVEL:0000036
+name: hand rank
+def: "Record the rank (order) of a hand in the bunch, starting with the hand at the proximal end (closest to the pseudostem) of the bunch as 1 and continuing to the hand at the most distal end (closest to the male bud)." []
+is_a: PLANT_LEVEL:0000000 ! Plant_level
+
+[Term]
+id: PLANT_LEVEL:0000037
+name: hand rank 01
+def: "Record the first rank hand " []
+synonym: "HDRK01" EXACT []
+is_a: PLANT_LEVEL:0000036 ! hand rank
+
+[Term]
+id: PLANT_LEVEL:0000038
+name: hand rank 02
+def: "Record the second rank hand " []
+synonym: "HDRK02" EXACT []
+is_a: PLANT_LEVEL:0000036 ! hand rank
+
+[Term]
+id: PLANT_LEVEL:0000039
+name: hand rank 03
+def: "Record the third rank hand " []
+synonym: "HDRK03" EXACT []
+is_a: PLANT_LEVEL:0000036 ! hand rank
+
+[Term]
+id: PLANT_LEVEL:0000040
+name: hand rank 04
+def: "Record the fourth rank hand " []
+synonym: "HDRK04" EXACT []
+is_a: PLANT_LEVEL:0000036 ! hand rank
+
+[Term]
+id: PLANT_LEVEL:0000041
+name: hand rank 05
+def: "Record the fifth rank hand " []
+synonym: "HDRK05" EXACT []
+is_a: PLANT_LEVEL:0000036 ! hand rank
+
+[Term]
+id: PLANT_LEVEL:0000042
+name: hand rank 06
+def: "Record the sixth rank hand " []
+synonym: "HDRK06" EXACT []
+is_a: PLANT_LEVEL:0000036 ! hand rank
+
+[Term]
+id: PLANT_LEVEL:0000043
+name: hand rank 07
+def: "Record the seventh rank hand " []
+synonym: "HDRK07" EXACT []
+is_a: PLANT_LEVEL:0000036 ! hand rank
+
+[Term]
+id: PLANT_LEVEL:0000044
+name: hand rank 08
+def: "Record the height rank hand " []
+synonym: "HDRK08" EXACT []
+is_a: PLANT_LEVEL:0000036 ! hand rank
+
+[Term]
+id: PLANT_LEVEL:0000045
+name: hand rank 09
+def: "Record the ninth rank hand " []
+synonym: "HDRK09" EXACT []
+is_a: PLANT_LEVEL:0000036 ! hand rank
+
+[Term]
+id: PLANT_LEVEL:0000046
+name: hand rank 10
+def: "Record the tenth rank hand " []
+synonym: "HDRK10" EXACT []
+is_a: PLANT_LEVEL:0000036 ! hand rank
+
+[Term]
+id: PLANT_LEVEL:0000047
+name: hand rank 11
+def: "Record the eleventh rank hand " []
+synonym: "HDRK11" EXACT []
+is_a: PLANT_LEVEL:0000036 ! hand rank
+
+[Term]
+id: PLANT_LEVEL:0000048
+name: hand rank 12
+def: "Record the twelfth rank hand " []
+synonym: "HDRK12" EXACT []
+is_a: PLANT_LEVEL:0000036 ! hand rank
+
+[Term]
+id: PLANT_LEVEL:0000049
+name: hand rank 13
+def: "Record the thirteenth rank hand " []
+synonym: "HDRK13" EXACT []
+is_a: PLANT_LEVEL:0000036 ! hand rank
+
+[Term]
+id: PLANT_LEVEL:0000050
+name: hand rank 14
+def: "Record the fourteenth rank hand " []
+synonym: "HDRK14" EXACT []
+is_a: PLANT_LEVEL:0000036 ! hand rank
+
+[Term]
+id: PLANT_LEVEL:0000051
+name: hand rank 15
+def: "Record the fifteenth rank hand " []
+synonym: "HDRK15" EXACT []
+is_a: PLANT_LEVEL:0000036 ! hand rank
+
+[Term]
+id: PLANT_LEVEL:0000052
+name: hand rank 16
+def: "Record the sixteenth rank hand " []
+synonym: "HDRK16" EXACT []
+is_a: PLANT_LEVEL:0000036 ! hand rank
+
+[Term]
+id: PLANT_LEVEL:0000053
+name: hand rank 17
+def: "Record the seventeenth rank hand " []
+synonym: "HDRK17" EXACT []
+is_a: PLANT_LEVEL:0000036 ! hand rank
+
+[Term]
+id: PLANT_LEVEL:0000054
+name: hand rank 18
+def: "Record the eighteenth rank hand " []
+synonym: "HDRK18" EXACT []
+is_a: PLANT_LEVEL:0000036 ! hand rank
+
+[Term]
+id: PLANT_LEVEL:0000055
+name: hand rank 19
+def: "Record the nineteenth rank hand " []
+synonym: "HDRK19" EXACT []
+is_a: PLANT_LEVEL:0000036 ! hand rank
+
+[Term]
+id: PLANT_LEVEL:0000056
+name: hand rank 20
+def: "Record the twentieth rank hand " []
+synonym: "HDRK01" EXACT []
+is_a: PLANT_LEVEL:0000036 ! hand rank
+
+[Term]
+id: PLANT_LEVEL:0000057
+name: hand rank 21
+def: "Record the twenty first rank hand " []
+synonym: "HDRK21" EXACT []
+is_a: PLANT_LEVEL:0000036 ! hand rank
+
+[Term]
+id: PLANT_LEVEL:0000058
+name: hand rank 22
+def: "Record the twenty second rank hand " []
+synonym: "HDRK22" EXACT []
+is_a: PLANT_LEVEL:0000036 ! hand rank
+
+[Term]
+id: PLANT_LEVEL:0000059
+name: hand rank 23
+def: "Record the twenty third rank hand " []
+synonym: "HDRK23" EXACT []
+is_a: PLANT_LEVEL:0000036 ! hand rank
+
+[Term]
+id: PLANT_LEVEL:0000060
+name: hand rank 24
+def: "Record the twenty fourth rank hand " []
+synonym: "HDRK24" EXACT []
+is_a: PLANT_LEVEL:0000036 ! hand rank
+
+[Term]
+id: PLANT_LEVEL:0000061
+name: hand rank 25
+def: "Record the twenty fifth rank hand " []
+synonym: "HDRK25" EXACT []
+is_a: PLANT_LEVEL:0000036 ! hand rank
+
+[Term]
+id: PLANT_LEVEL:0000062
+name: hand rank 26
+def: "Record the twenty sixth rank hand " []
+synonym: "HDRK26" EXACT []
+is_a: PLANT_LEVEL:0000036 ! hand rank
+
+[Term]
+id: PLANT_LEVEL:0000063
+name: hand rank 27
+def: "Record the twenty seventh rank hand " []
+synonym: "HDRK27" EXACT []
+is_a: PLANT_LEVEL:0000036 ! hand rank
+
+[Term]
+id: PLANT_LEVEL:0000064
+name: hand rank 28
+def: "Record the twenty eighth rank hand " []
+synonym: "HDRK28" EXACT []
+is_a: PLANT_LEVEL:0000036 ! hand rank
+
+[Term]
+id: PLANT_LEVEL:0000065
+name: hand rank 29
+def: "Record the twenty ninth rank hand " []
+synonym: "HDRK29" EXACT []
+is_a: PLANT_LEVEL:0000036 ! hand rank
+
+[Term]
+id: PLANT_LEVEL:0000066
+name: hand rank 30
+def: "Record the thirtieth rank hand " []
+synonym: "HDRK30" EXACT []
+is_a: PLANT_LEVEL:0000036 ! hand rank
+
+[Term]
+id: PLANT_LEVEL:0000067
+name: 1st most distal hand rank
+def: "Record the most distal hand rand " []
+synonym: "DistHDRK01" EXACT []
+is_a: PLANT_LEVEL:0000036 ! hand rank
+
+[Term]
+id: PLANT_LEVEL:0000068
+name: 2nd distal hand rank
+def: "Record the second most distal hand rand " []
+synonym: "DistHDRK02" EXACT []
+is_a: PLANT_LEVEL:0000036 ! hand rank
+

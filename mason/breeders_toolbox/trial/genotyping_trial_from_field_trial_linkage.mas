@@ -1,0 +1,50 @@
+
+<%args>
+$trial_id
+$trial_type
+</%args>
+
+<& /util/import_javascript.mas, classes => [  ] &>
+
+
+<div id="genotyping_trial_to_field_trial_html">
+</div>
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#genotyping_trial_from_field_trial_section_onswitch').one("click",  function() {
+        jQuery.ajax ({
+            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/genotyping_trial_from_field_trial',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                jQuery("#working_modal").modal("hide");
+                var html1 = '';
+% if ($trial_type eq 'field_trial'){
+                html1 = '<table class="table table-hover table-bordered"><thead><tr><th>Genotyping Plates(s) From This Field Trial</th></tr></thead><tbody>';
+                for (var i=0; i<response.genotyping_trials_from_field_trial.length; i++){
+                    html1 = html1 + '<tr><td><a href="/breeders/trial/'+response.genotyping_trials_from_field_trial[i][0]+'">'+response.genotyping_trials_from_field_trial[i][1]+'</a></td></tr>';
+                }
+% }
+% if ($trial_type eq 'genotyping_trial'){
+                html1 = '<table class="table table-hover table-bordered"><thead><tr><th>Field Trial(s) That Are Source of This Genotyping Plate</th></tr></thead><tbody>';
+                for (var i=0; i<response.field_trials_source_of_genotyping_trial.length; i++){
+                    html1 = html1 + '<tr><td><a href="/breeders/trial/'+response.field_trials_source_of_genotyping_trial[i][0]+'">'+response.field_trials_source_of_genotyping_trial[i][1]+'</a></td></tr>';
+                }
+% }
+                html1 = html1 + '</tbody></table>';
+                jQuery('#genotyping_trial_to_field_trial_html').html(html1);
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert("Error retrieving genotyping plate to field trial linkage.");
+            }
+        });
+    });
+
+});
+
+</script>

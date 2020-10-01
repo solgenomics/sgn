@@ -1,0 +1,35 @@
+<%doc>
+
+=head1 NAME
+
+/solgs/genetic_gain/single_trait_genetic_gain.mas  -- a template for graphic viz of single trait gebvs of training and selection populations (genetic gain).
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$trait_id => ''
+$training_pop_id => ''
+$selection_pop_id => ''
+
+</%args>
+
+
+  
+<& /util/import_javascript.mas, classes => ["solGS.linePlot", "solGS.normalDistribution",
+   "statistics.simple_statistics"] &>
+
+
+<input id="check_genetic_gain" class="button" type="button" value="Check Genetic Gain" />
+
+<input type="hidden"  id="trait_id" value="<% $trait_id %>" />
+<input type="hidden"  id="training_pop_id" value="<% $training_pop_id %>" /> 
+<input type="hidden"  id="selection_pop_id" value="<% $selection_pop_id %>" />
+
+

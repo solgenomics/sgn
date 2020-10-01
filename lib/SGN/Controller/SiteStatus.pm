@@ -11,7 +11,7 @@ sub login_status :Path('/about/status/logins') Args(0) {
     my $c = shift;
     
     if (! ($c->user())) { 
-	$c->res->redirect('/solpeople/login.pl');
+	$c->res->redirect('/user/login');
 	return;
     }
     if (!$c->user()->check_roles("curator")) { 

@@ -1,33 +1,137 @@
 <%args>
-  $maximum_export_size
+ $organisms         => undef
+ $feature_types     => undef
 </%args>
 
-<& /util/import_extjs.mas &>
 <& /util/import_javascript.mas, classes => 'SGN.Search.Feature' &>
 
-<div class="page_introduction">
-   Search for many types of genomic sequences and annotations.
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+
+<div class="container-fluid">
+
+<& /page/page_title.mas, title=>'Search genomic sequences and annotations' &>
+
+<%perl>
+
+use CXGN::Page::FormattingHelpers qw / simple_selectbox_html/;
+
+my $f_type_select = simple_selectbox_html(
+  choices   => $feature_types,
+  id        => "feature_type_select",
+);
+
+my $organism_select = simple_selectbox_html(
+  choices  =>  $organisms   ,
+  id       => "organism_select",
+);
+
+</%perl>
+
+<&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0 &>
+  <div id="feature_search_form" class="form-horizontal well">
+    <div class="row">
+      <div class="col-sm-6">
+	<div class="form-group form-group-sm">
+	  <label class="col-sm-3 control-label">Organism: </label>
+	  <div class="col-sm-9" >
+            <% $organism_select %>
+	  </div>
+	</div>
+      </div>
+      <div class="col-sm-6">
+	<div class="form-group form-group-sm">
+	  <label class="col-sm-3 control-label">Type: </label>
+	  <div class="col-sm-9" >
+            <% $f_type_select %>
+	  </div>
+	</div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-6">
+	<div class="form-group form-group-sm">
+	  <label class="col-sm-3 control-label">Name: </label>
+	  <div class="col-sm-9" >
+            <input type="text" class="form-control" id="name" />
+	  </div>
+	</div>
+      </div>
+      <div class="col-sm-6">
+	<div class="form-group form-group-sm">
+	  <label class="col-sm-3 control-label">Description: </label>
+	  <div class="col-sm-9" >
+            <input type="text" class="form-control" id="description" />
+	  </div>
+	</div>
+      </div>
+    </div>
+ <button style="float:right" class="btn btn-primary" id="submit_feature_search" />Search</button>
+    <br/><br/>
+  </div>
+  
+</&>
+
+
+<&| /page/info_section.mas, title => 'Search Results', collapsible=>1, collapsed=>0 &>
+
+
+<div class="well">
+<table id="feature_search_results" class="display">
+<thead>
+  <tr>
+    <th>Organism</th>
+    <th>Type</th>
+    <th>Name</th>
+    <th>Description</th>
+    <th>Location</th>
+  </tr>
+</thead>
+</table>
 </div>
 
-<style type="text/css">
-  #search_form       { margin: 1em auto; width: 452px; }
-  #search_form label { font-weight: bold; padding: 0.3em }
-  a.fs_export { float: right; padding: 3px }
-</style>
-
-<&| /page/info_section.mas, title => 'Matching features' &>
-   <div id="search_grid" style="margin: 1em auto 1em auto; width: 700px"> </div>
 </&>
 
-<&| /page/info_section.mas, title => 'Filter by' &>
-    <div id="search_form"></div>
-</&>
+<script>
+  
+jQuery(document).ready(function () {
 
-<script type="text/javascript">
+   var table = jQuery('#feature_search_results').DataTable( { 
+   
+     'searching' : false,
+     'ordering'  : false,
+     'processing': true,
+     'serverSide': true,
+     'ajax': { 'url':  '/ajax/search/features',
+               'data': function(d) { 
+                  d.organism    = jQuery('#organism_select').val();
+                  d.type_id     = jQuery('#feature_type_select').val();
+                  d.name        = jQuery('#name').val(); 
+                  d.description = jQuery('#description').val(); 
+                  
+             }
+         }
+     });
 
-    SGN.Search.Feature.set_up_feature_search( {
-        maximum_export_size: <% $maximum_export_size %>
-    });
 
+   jQuery('#submit_feature_search').click( function() { 
+        var organism    = jQuery('#organism_select').val();
+        var type_id     = jQuery('#feature_type_select').val();
+        var name        = jQuery('#name').val(); 
+        var description = jQuery('#description').val(); 
+       
+        table.search("feature_search_results").draw();
+   });
+  
+   jQuery('#feature_search_form').keypress( function( e ) {
+           var code = e.keyCode || e.which;
+           if( code == 13 ) {
+                jQuery('#submit_feature_search').click();
+           }
+    } );
+
+
+    
+});
+  
 </script>
-

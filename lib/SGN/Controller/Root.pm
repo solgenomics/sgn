@@ -7,6 +7,9 @@ use CatalystX::GlobalContext ();
 
 use CXGN::Login;
 use CXGN::People::Person;
+use List::MoreUtils 'uniq';
+use JSON::XS;
+
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -34,12 +37,12 @@ The root page (/)
 
 sub index :Path :Args(0) {
     my ( $self, $c ) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     if ($c->config->{homepage_display_phenotype_uploads}){
         my @file_array;
         my %file_info;
-        my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-        my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype, project_id, project.name FROM nd_experiment_project JOIN project USING(project_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenome.nd_experiment_md_files ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_md_files.nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata as m using(metadata_id) LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id) WHERE m.obsolete = 0";
+        my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype, project_id, project.name FROM nd_experiment_project JOIN project USING(project_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenome.nd_experiment_md_files ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_md_files.nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata as m using(metadata_id) LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id) WHERE m.obsolete = 0 and NOT (metadata.md_files.filetype='generated from plot from plant phenotypes') and NOT (metadata.md_files.filetype='direct phenotyping')";
         my $h = $schema->storage()->dbh()->prepare($q);
         $h->execute();
 
@@ -54,7 +57,29 @@ sub index :Path :Args(0) {
         $c->stash->{phenotype_files} = \@file_array;
     }
 
-    # Hello World
+    my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
+    my $breeding_programs = $projects->get_breeding_programs();
+    $c->stash->{locations} = JSON::XS->new()->decode($projects->get_location_geojson());
+    $c->stash->{breeding_programs} = $breeding_programs;
+    $c->stash->{preferred_species} = $c->config->{preferred_species};
+    $c->stash->{timestamp} = localtime;
+
+    my @editable_stock_props = split ',', $c->config->{editable_stock_props};
+    my %editable_stock_props = map { $_=>1 } @editable_stock_props;
+    $c->stash->{editable_stock_props} = \%editable_stock_props;
+
+    my $genotyping_facilities = $c->config->{genotyping_facilities};
+    my @facilities = split ',',$genotyping_facilities;
+    $c->stash->{facilities} = \@facilities;
+
+    my $field_management_factors = $c->config->{management_factor_types};
+    my @management_factor_types = split ',',$field_management_factors;
+    $c->stash->{management_factor_types} = \@management_factor_types;
+
+    my $design_type_string = $c->config->{design_types};
+    my @design_types = split ',',$design_type_string;
+    $c->stash->{design_types} = \@design_types;
+
     $c->stash->{template} = '/index.mas';
     $c->stash->{schema}   = $c->dbic_schema('SGN::Schema');
     $c->stash->{static_content_path} = $c->config->{static_content_path};
@@ -134,6 +159,7 @@ sub insert_collected_html :Private {
     my ( $self, $c ) = @_;
 
     $c->forward('/js/resolve_javascript_classes');
+    $c->forward('resolve_css_paths');
 
     my $b = $c->res->body;
     my $inserted_head_pre  = $b && $b =~ s{<!-- \s* INSERT_HEAD_PRE_HTML \s* --> }{ $self->_make_head_pre_html( $c )  }ex;
@@ -152,7 +178,13 @@ sub insert_collected_html :Private {
 
 sub _make_head_pre_html {
     my ( $self, $c ) = @_;
-    return join "\n", @{ $c->stash->{head_pre_html} || [] };
+    return join "\n", (
+        @{ $c->stash->{head_pre_html} || [] },
+        ( map {
+            qq{<link rel="stylesheet" type="text/css" href="$_" />}
+          } @{ $c->stash->{css_uris} || [] }
+        ),
+    );
 }
 
 sub _make_head_post_html {
@@ -160,10 +192,6 @@ sub _make_head_post_html {
 
     my $head_post_html = join "\n", (
         @{ $c->stash->{add_head_html} || [] },
-        ( map {
-            qq{<link rel="stylesheet" type="text/css" href="$_" />}
-          } @{ $c->stash->{css_uris} || [] }
-        ),
         ( map {
             qq{<script src="$_" type="text/javascript"></script>}
           } @{ $c->stash->{js_uris} || [] }
@@ -203,6 +231,27 @@ sub auto : Private {
     return 1;
 }
 
+
+=head2 resolve_css_paths
+
+    Compiles list of CSS files added by mason/import_css.mas
+
+=cut
+
+sub resolve_css_paths :Private {
+    my ( $self, $c ) = @_;
+
+    my $files = $c->stash->{css_paths}
+        or return;
+
+    my @files = uniq @{$files}; #< do not sort, load order might be important
+    # assume paths are relative to /static/css/ if they are not absolute paths or urls
+    for (@files) {
+        s!^([^/])!/static/css/$1! if !(/^(.*?:\/)/);
+    }
+
+    $c->stash->{css_uris} = \@files;
+}
 
 
 ############# helper methods ##########

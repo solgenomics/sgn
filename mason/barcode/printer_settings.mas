@@ -9,30 +9,30 @@
   <tbody>
     <tr>
       <td>Number of Label Rows:</td>
-      <td><input type="text" class="form-control" name="label_rows" value="10" /></td>
+      <td><input type="number" class="form-control" id="label_rows" name="label_rows" value="10" /></td>
       <td>Number of Label Columns Per Page:</td>
-      <td><input type="text" class="form-control" name="label_cols" value="3" /></td>
+      <td><input type="text" class="form-control" id="label_cols" name="label_cols" value="3" /></td>
     </tr>
     <tr>
       <td>Page Format:</td>
-      <td><select class="form-control" name="page_format">
+      <td><select class="form-control" id="page_format" name="page_format">
           <option value="letter" selected="1">Letter</option>
-  	  <option value="A4">A4</option>
+  	      <option value="A4">A4</option>
 	  </select>
       </td>
-      <td>Add text to label, e.g. location:  </td><td><input type="text" class="form-control" name="text_margin"  ></td>
+      <td>Add text to label, e.g. location:  </td><td><input type="text" class="form-control" id="text_margin" name="text_margin"  ></td>
     </tr>
     <tr>
       <td>Top Margin (mm):</td>
-      <td><input type="text" class="form-control" name="top_margin" value="12" /></td>
+      <td><input type="number" class="form-control" id="tops_margin" name="tops_margin" value="12" /></td>
       <td>Left Margin (mm):</td>
-      <td><input type="text" class="form-control" name="left_margin" value="70" /></td>
+      <td><input type="number" class="form-control" id="left_margin" name="left_margin" value="70" /></td>
     </tr>
     <tr>
       <td>Bottom Margin (mm):</td>
-      <td><input type="text" class="form-control" name="bottom_margin" value="12" /></td>
+      <td><input type="number" class="form-control" id="bottom_margin" name="bottom_margin" value="12" /></td>
       <td>Right Margin (mm):</td>
-      <td><input type="text" class="form-control" name="right_margin" value="20" /></td>
+      <td><input type="number" class="form-control" id="right_margin" name="right_margin" value="20" /></td>
     </tr>
   </tbody>
 </table>

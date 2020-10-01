@@ -68,7 +68,7 @@ $t->while_logged_in_as("submitter", sub {
     
     my $edit_event_type_select = $t->find_element_ok("edit_event_type_select", "id", "find edit event type select");
 
-    $edit_event_type_select->send_keys('harvest_date');
+    $edit_event_type_select->send_keys('project_harvest_date');
     
     $t->find_element_ok("edit_event_start", "id", "find edit event start")->click();
 
@@ -140,7 +140,7 @@ $t->while_logged_in_as("submitter", sub {
     
     my $event_type_select = $t->find_element_ok("event_type_select", "id", "find event type select");
 
-    $event_type_select->send_keys('harvest_date');
+    $event_type_select->send_keys('project_harvest_date');
     
     $t->find_element_ok("event_start", "id", "find event start")->click();
 

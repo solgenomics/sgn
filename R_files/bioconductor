@@ -1,0 +1,9 @@
+Package: sgn
+Title: The SGN websites R packages from bioconductor
+Version: 1.9
+Date: 2017-06-22
+Author: Isaak Y Tecle <iyt2@cornell.edu>
+Maintainer: Isaak Y Tecle <iyt2@cornell.edu> 
+Description: The Bioconductor R code behind the SGN websites 
+Depends: R (>= 3.2.5),  SNPRelate (>= 1.8.0)
+License: Artistic-3

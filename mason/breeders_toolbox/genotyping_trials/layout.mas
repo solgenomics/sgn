@@ -2,6 +2,7 @@
 
 <%args>
 $trial_id
+$genotyping_plate_format => '96'
 </%args>
 
 <& /util/import_javascript.mas, classes => [  ] &>
@@ -17,40 +18,54 @@ $trial_id
 
 jQuery(document).ready(function () {
 
-    jQuery('#trial_plate_layout_onswitch').one("click", function() {
-	jQuery.ajax ( {
-            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/design',
-	    beforeSend: function() {
-		jQuery("#working_modal").modal("show");
-	    },
-	    success: function(response){
-	        //console.log(response);
-		jQuery("#working_modal").modal("hide");
-		var trial_plate_layout_html = "<table class='table table-hover table-condensed table-bordered' id='trial_plate_layout_table'><thead><tr><th>Well</th><th>Accession Name</th></tr></thead><tbody>";
+    jQuery.ajax ({
+        url : '/ajax/breeders/trial/'+<% $trial_id %>+'/design',
+        beforeSend: function() {
+            jQuery("#working_modal").modal("show");
+        },
+        success: function(response){
+            //console.log(response);
+            jQuery("#working_modal").modal("hide");
+            var trial_plate_layout_html = "<table class='table table-hover table-condensed table-bordered' id='trial_plate_layout_table'><thead><tr><th>Well</th><th>Accession Name</th></tr></thead><tbody>";
 
-		var rows = "ABCDEFGH".split("");
-		jQuery.each(rows, function(row) {
-		    for (col=1; col<13; col++) {
-		        var formatted_col = (col < 10 ? '0' : '') + col;
-			var well = rows[row] + formatted_col;
-			if (response.design[well]) {
-			if (response.design[well].accession_name) {
-			   var accession_name = response.design[well].accession_name;
-			   trial_plate_layout_html = trial_plate_layout_html + "<tr><td>" + well + "</td><td>" + accession_name + "</td></tr>";
-			}
-			}
-		    }
-		});
+            var col_max = 1;
+            if (<% $genotyping_plate_format %> == '96'){
+                col_max = 13;
+            }
+            if (<% $genotyping_plate_format %> == '384'){
+                col_max = 25;
+            }
 
-		trial_plate_layout_html = trial_plate_layout_html + "</tbody></table>";
-		jQuery('#trial_plate_layout_html').empty();
-		jQuery('#trial_plate_layout_html').html(trial_plate_layout_html);
-	    },
-	    error: function(response){
-	        jQuery("#working_modal").modal("hide");
-		alert("Error retrieving plate layout.");
-	    }
-	});
+            var rows;
+            if (<% $genotyping_plate_format %> == '96'){
+                rows = "ABCDEFGH".split("");
+            }
+            if (<% $genotyping_plate_format %> == '384'){
+                rows = "ABCDEFGHIJKLMNOP".split("");
+            }
+
+            jQuery.each(rows, function(row) {
+                for (col=1; col<col_max; col++) {
+                    var formatted_col = (col < 10 ? '0' : '') + col;
+                    var well = rows[row] + formatted_col;
+                    if (response.design[well]) {
+                        if (response.design[well].accession_name) {
+                            var accession_name = response.design[well].accession_name;
+                            trial_plate_layout_html = trial_plate_layout_html + "<tr><td>" + well + "</td><td>" + accession_name + "</td></tr>";
+                        }
+                    }
+                }
+            });
+
+            trial_plate_layout_html = trial_plate_layout_html + "</tbody></table>";
+            jQuery('#trial_plate_layout_html').empty();
+            jQuery('#trial_plate_layout_html').html(trial_plate_layout_html);
+            jQuery('#trial_plate_layout_table').DataTable();
+        },
+        error: function(response){
+            jQuery("#working_modal").modal("hide");
+            alert("Error retrieving plate layout.");
+        }
     });
 
 });

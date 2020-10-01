@@ -26,7 +26,7 @@
                      'Bulk Datasets (via FTP)' =>
                      '<a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/inbred_lines/gh13/">Consensus sequence</a>',
                      BLAST => '<a href="/tools/blast/?db_id=214">Genomic sequence</a>',
-                     'Genome browser' => '<a href="/gbrowse/bin/gbrowse/Tomato_inbreds/">Gbrowse</a>'
+                     'Genome browser' => '<a href="/jbrowse_solgenomics/?data=data/json/SL2.40&tracks=DNA,bti87_snps,gene_models">Jbrowse</a>'
                     )
   %>
 </&>
@@ -42,10 +42,26 @@
     'Bulk Datasets (via FTP)' =>
     '<a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/inbred_lines/bti87/">Consensus sequence</a>',
     BLAST => '<a href="/tools/blast/?db_id=215">Genomic sequence</a>',
-    'Genome browser' => '<a href="/gbrowse/bin/gbrowse/Tomato_inbreds/">Gbrowse</a>'
+    'Genome browser' => '<a href="/jbrowse_solgenomics/?data=data/json/SL2.40&tracks=DNA,gh13_snps,gene_models">Jbrowse</a>'
     )
     %>
 </&>
+
+<&| /page/info_section.mas, title => 'Fla630 genome' &>
+  Fla630 is a  Fusarium Wilt Race 3 resistant tomato inbred line carrying the <a href="/locus/718/view"><i>I-3</i></a> gene.
+   The I-3 gene was introgressed from <a href="/organism/19/view"><i>S. pennellii</i> and confers resistance to race 3. Although I-3 provides effective control, it is negatively associated with several horticultural traits, including increased sensitivity to bacterial spot disease (Xanthomonas spp.)<br />
+
+    <% info_table_html(
+       __border   => 0,
+    __multicol => 2,
+    'Bulk Datasets (via FTP)' =>
+    '<a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/inbred_lines/Fla630/">Consensus sequence</a>',
+    BLAST => '<a href="/tools/blast/?db_id=300">Genomic sequence</a>',
+    'Genome browser' => '<a href="/jbrowse_solgenomics/?data=data/json/SL2.50&tracks=DNA,630_snps,gene_models">Jbrowse</a>'
+    )
+    %>
+</&>
+
 
 <%init>
   use CXGN::Page::FormattingHelpers qw/info_table_html/;

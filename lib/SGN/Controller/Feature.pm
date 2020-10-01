@@ -9,12 +9,29 @@ Chado (i.e. Bio::Chado::Schema) features
 
 use Moose;
 use namespace::autoclean;
-
+use SGN::View::Feature qw / feature_types feature_organisms /  ;
+ 
 BEGIN { extends 'Catalyst::Controller' }
+
+has 'schema' => (
+    is       => 'rw',
+    isa      => 'DBIx::Class::Schema',
+    lazy_build => 1,
+);
+sub _build_schema {
+    shift->_app->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' )
+}
+
+has 'default_page_size' => (
+    is      => 'ro',
+    default => 20,
+);
+
 
 =head1 PUBLIC ACTIONS
 
 =cut
+
 
 # deprecated old paths are now redirects
 sub view_by_name :Path('/feature/view/name') Path('/feature/view/id') Args(1) {
@@ -110,5 +127,6 @@ sub get_type_specific_data :Private {
 
     return 1;
 }
+
 
 1;

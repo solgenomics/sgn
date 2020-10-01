@@ -42,7 +42,7 @@ use CXGN::Chado::Pubauthor;
 use GD;
 #use GD::Image;
 use GD::Graph::bars;
-BEGIN { local $SIG{__WARN__} = sub {}; require GD::Graph::Map }
+#BEGIN { local $SIG{__WARN__} = sub {}; require GD::Graph::Map }
 use Statistics::Descriptive;
 use CXGN::Scrap::AjaxPage;
 use CXGN::Contact;

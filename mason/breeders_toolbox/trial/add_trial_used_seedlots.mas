@@ -1,0 +1,146 @@
+<%args>
+$trial_id
+</%args>
+
+<div class="modal fade" id="trial_upload_used_seedlot_dialog" name="trial_upload_used_seedlot_dialog" tabindex="-1" role="dialog" aria-labelledby="upload_trial_used_seedlot_dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="upload_trial_used_seedlot_dialog">Upload Used Seedlots in Trial</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <&| /page/explanation.mas, title=>'Template information' &>
+                        <p>
+                            <b>File format information</b>
+                            <br>
+                            <a id="trial_seedlot_used_upload_spreadsheet_info_format">Spreadsheet format</a>
+                        </p>
+                    </&>
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="trial_upload_used_seedlot_form" name="trial_upload_used_seedlot_form">
+
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Upload File (.xls): </label>
+                            <div class="col-sm-8" >
+                                <input type="file" name="trial_upload_used_seedlot_file" id="trial_upload_used_seedlot_file" encoding="multipart/form-data" />
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="trial_upload_used_seedlot_submit" type="button" class="btn btn-default" >Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="trial_seedlot_used_upload_spreadsheet_info_dialog" name="trial_seedlot_used_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="trialUploadUsedSeedlotInfoDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="trialUploadUsedSeedlotInfoDialog">Upload Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>This is for recording which seedlots were planted in which plots in this trial.</b>
+                    <br/>
+                    <b>Seedlots may be uploaded in an Excel file (.xls)</b>
+                    <br />
+                    (.xlsx format not supported)
+                    <br /><br />
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) should contain the following:
+                    <br />
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>seedlot_name</td>
+                                <td>plot_name</td>
+                                <td>num_seed_per_plot</td>
+                                <td>weight_gram_seed_per_plot</td>
+                                <td>description</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <b>Required fields:</b>
+                    <ul>
+                    <li>seedlot_name (must exist in the database. the seedlot that was planted in the plot)</li>
+                    <li>plot_name (must exist in the database. the plot that the seedlot was planted in)</li>
+                    <li>
+                        num_seed_per_plot (number of seeds transferred from seedlot to the plot)
+                        <br/><b>AND/OR</b></br>
+                        weight_gram_seed_per_plot (weight in grams of seed transferred from seedlot to the plot)
+                    </li>
+                    </ul>
+                    <b>Optional fields:</b>
+                    <ul>
+                    <li>description (any additional information)</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_seedlot_info_trial_upload_used_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#trial_upload_seedlot_button').click( function(){
+        jQuery('#trial_upload_used_seedlot_dialog').modal('show');
+    });
+
+    jQuery('#trial_upload_used_seedlot_submit').click(function () {
+        trial_upload_used_seedlot_submit();
+    });
+    function trial_upload_used_seedlot_submit() {
+        var uploadFile = jQuery("#trial_upload_used_seedlot_file").val();
+        jQuery('#trial_upload_used_seedlot_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/upload_used_seedlots");
+        if (uploadFile === '') {
+            alert("Please select a file");
+            return;
+        }
+        jQuery("#trial_upload_used_seedlot_form").submit();
+    }
+
+    jQuery('#trial_upload_used_seedlot_form').iframePostForm({
+        json: true,
+        post: function () {
+            var uploadedSeedlotFile = jQuery("#trial_upload_used_seedlot_file").val();
+            jQuery('#working_modal').modal("show");
+            if (uploadedSeedlotFile === '') {
+                jQuery('#working_modal').modal("hide");
+                alert("No file selected");
+            }
+        },
+        complete: function (response) {
+            console.log(response);
+            jQuery('#working_modal').modal("hide");
+
+            if (response.error_string) {
+                alert(response.error_string);
+                return;
+            }
+            if (response.success) {
+                alert("File uploaded successfully");
+            }
+        }
+    });
+
+});
+
+</script>

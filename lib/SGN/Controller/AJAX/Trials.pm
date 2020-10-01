@@ -16,7 +16,7 @@ BEGIN { extends 'Catalyst::Controller::REST'; }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON' },
    );
 
 
@@ -41,33 +41,17 @@ sub get_trials : Path('/ajax/breeders/get_trials') Args(0) {
 sub get_trials_with_folders : Path('/ajax/breeders/get_trials_with_folders') Args(0) {
     my $self = shift;
     my $c = shift;
-
+    my $tree_type = $c->req->param('type') || 'trial'; #can be 'trial' or 'genotyping_trial', 'cross'
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $schema  } );
 
-    my $projects = $p->get_breeding_programs();
-
-    my $html = "";
-    my $folder_obj = CXGN::Trial::Folder->new( { bcs_schema => $schema, folder_id => @$projects[0]->[0] });
-    
-    print STDERR "Starting get trials at time ".localtime()."\n";
-    foreach my $project (@$projects) {
-        my %project = ( "id" => $project->[0], "name" => $project->[1]);
-        $html .= $folder_obj->get_jstree_html(\%project, $schema, 'breeding_program', 'trial');
-    }
-    print STDERR "Finished get trials at time ".localtime()."\n";
-
-    my $dir = catdir($c->site_cluster_shared_dir, "folder");
+    my $dir = catdir($c->config->{static_content_path}, "folder");
     eval { make_path($dir) };
     if ($@) {
-        print "Couldn't create $dir: $@";
+        print STDERR "Couldn't create $dir: $@";
     }
-    my $filename = $dir."/entire_jstree_html.txt";
+    my $filename = $dir."/entire_jstree_html_$tree_type.txt";
 
-    my $OUTFILE;
-    open $OUTFILE, '>', $filename or die "Error opening $filename: $!";
-    print { $OUTFILE } $html or croak "Cannot write to $filename: $!";
-    close $OUTFILE or croak "Cannot close $filename: $!";
+    _write_cached_folder_tree($schema, $tree_type, $filename);
 
     $c->stash->{rest} = { status => 1 };
 }
@@ -75,19 +59,55 @@ sub get_trials_with_folders : Path('/ajax/breeders/get_trials_with_folders') Arg
 sub get_trials_with_folders_cached : Path('/ajax/breeders/get_trials_with_folders_cached') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $tree_type = $c->req->param('type') || 'trial'; #can be 'trial' or 'genotyping_trial', 'cross'
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $dir = catdir($c->site_cluster_shared_dir, "folder");
-    my $filename = $dir."/entire_jstree_html.txt";
+    my $dir = catdir($c->config->{static_content_path}, "folder");
+    eval { make_path($dir) };
+    if ($@) {
+        print "Couldn't create $dir: $@";
+    }
+    my $filename = $dir."/entire_jstree_html_$tree_type.txt";
     my $html = '';
-    open(my $fh, '<', $filename) or die "cannot open file $filename";
+    open(my $fh, '< :encoding(UTF-8)', $filename) or warn "cannot open file $filename $!";
     {
         local $/;
         $html = <$fh>;
     }
     close($fh);
 
+    if (!$html) {
+        $html = _write_cached_folder_tree($schema, $tree_type, $filename);
+    }
+
     #print STDERR $html;
     $c->stash->{rest} = { html => $html };
+}
+
+sub _write_cached_folder_tree {
+    my $schema = shift;
+    my $tree_type = shift;
+    my $filename = shift;
+    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $schema  } );
+
+    my $projects = $p->get_breeding_programs();
+
+    my $html = "";
+    my $folder_obj = CXGN::Trial::Folder->new( { bcs_schema => $schema, folder_id => @$projects[0]->[0] });
+
+    print STDERR "Starting get trials $tree_type at time ".localtime()."\n";
+    foreach my $project (@$projects) {
+        my %project = ( "id" => $project->[0], "name" => $project->[1]);
+        $html .= $folder_obj->get_jstree_html(\%project, $schema, 'breeding_program', $tree_type);
+    }
+    print STDERR "Finished get trials $tree_type at time ".localtime()."\n";
+
+    my $OUTFILE;
+    open $OUTFILE, '> :encoding(UTF-8)', $filename or die "Error opening $filename: $!";
+    print { $OUTFILE } $html or croak "Cannot write to $filename: $!";
+    close $OUTFILE or croak "Cannot close $filename: $!";
+
+    return $html;
 }
 
 sub trial_autocomplete : Local : ActionClass('REST') { }
@@ -109,7 +129,7 @@ sub trial_autocomplete_GET :Args(0) {
     while (my ($project_name) = $sth->fetchrow_array) {
         push @response_list, $project_name;
     }
-    print STDERR Dumper \@response_list;
+    #print STDERR Dumper \@response_list;
 
     print STDERR "Returning...\n";
     $c->stash->{rest} = \@response_list;

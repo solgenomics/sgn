@@ -1,0 +1,107 @@
+<%args>
+    $feature
+    $blast_url => undef
+</%args>
+<%once>
+    use SGN::View::Feature 'mrna_cds_protein_sequence';
+</%once>
+<%perl>
+    my @mrnas       = grep $_->type->name eq 'mRNA', $feature->child_features;
+</%perl>
+
+
+<&| /page/info_section.mas,
+        title       => 'Genomic sequence',
+        subtitle    => 'unprocessed genomic sequence region underlying this gene',
+        empty_message => 'Not available',
+        collapsible => 1,
+        collapsed   => 1,
+&>
+
+   <& /feature/region_sequence.mas,
+       feature   => $feature,
+       blast_url => $blast_url,
+   &>
+
+</&>
+
+% for my $mrna ( @mrnas ) {
+
+  <&| /page/info_section.mas,
+          title       => 'mRNA '. $mrna->name,
+          collapsible => 1,
+  &>
+
+    <&| /page/info_section.mas,
+       title => 'Ontology terms',
+       subtitle => 'terms associated with this mRNA',
+       collapsible => 1,
+       is_subsection => 1,
+    &>
+
+      <& /feature/feature_cvterms.mas,
+          feature   => $mrna,
+      &>
+
+    </&>
+
+%   my ( $mrna_sequence, $cds_sequence, $protein_sequence ) = @{(mrna_cds_protein_sequence( $mrna ))[0] || [] };
+
+    <&| /page/info_section.mas,
+            title         => 'cDNA sequence',
+            is_subsection => 1,
+            subtitle      => 'spliced cDNA sequence, including UTRs',
+            empty_message => 'Not available',
+            collapsible   => 1,
+            collapsed     => 1,
+    &>
+
+%  if( $mrna_sequence ) {
+
+     <div style="margin-left: 3em">
+       <& /sequence/with_markup.mas,
+          seq       => $mrna_sequence,
+          width     => 80,
+          subdiv    => 10,
+          blast_url => $blast_url,
+        &>
+     </div>
+     <div style="margin-top: 1em">
+        <& /feature/sequence_download.mas,
+             feature => $mrna,
+         &>
+     </div>
+% }
+
+    </&>
+
+    <&| /page/info_section.mas,
+            title         => 'Protein sequence',
+            is_subsection => 1,
+            subtitle      => 'translated polypeptide sequence',
+            empty_message => 'Not available',
+            collapsible   => 1,
+            collapsed     => 1,
+    &>
+
+%  if( $protein_sequence ) {
+
+     <div style="margin-left: 3em">
+       <& /sequence/with_markup.mas,
+          seq       => $protein_sequence,
+          width     => 80,
+          subdiv    => 10,
+          blast_url => $blast_url,
+        &>
+     </div>
+%    if( $protein_sequence->can('feature_id') ) {
+     <div style="margin-top: 1em">
+        <& /feature/sequence_download.mas,
+             feature => $protein_sequence,
+         &>
+     </div>
+%    }
+%  }
+    </&>
+  </&>
+%}

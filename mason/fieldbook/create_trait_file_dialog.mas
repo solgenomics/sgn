@@ -26,6 +26,12 @@
               </div>
             </div>
             <div class="form-group">
+                <label class="col-sm-3 control-label">Include Notes Trait </label>
+                <div class="col-sm-9" >
+                    <input type="checkbox" id="include_notes_trait" name="include_notes_trait" />
+                </div>
+            </div>
+            <div class="form-group">
               <label class="col-sm-3 control-label" for="trait_file_name">File name:</label>
               <div class="col-sm-9">
                 <input id="trait_file_name" type="text" class="form-control" placeholder="Type name here">

@@ -16,14 +16,16 @@ $trait_id
 $combo_pops_id
 $trait_combo_pops
 $descriptive_stat
-$download_prediction => ''
+$selection_prediction_download => ''
 $prediction_pop_id => ''
 $list_of_prediction_pops =>''
 $prediction_pop_name => ''
 $analyzed_traits =>''
 $owner =>''
-$protocol
+$protocol_url => ''
+$genotyping_protocol_id => ''
 $model_parameters
+$model_link
 
 </%args>
 
@@ -31,14 +33,14 @@ $model_parameters
 
 </%perl>
 
-<& /util/import_javascript.mas, classes => [ "solGS.phenotypeDataFlot", "solGS.traitGebvFlot", 
+<& /util/import_javascript.mas, classes => [ "solGS.phenotypeDataFlot", "solGS.histogram",
 					     "flot.flot", "flot.categories", 
 					     "flot.tooltip", "flot.selection", "flot.navigate", 
 					     "flot.axisLabels", "statistics/simple_statistics"
 					   ] 
 &>
 
-<link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
+<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 
 <& /page/page_title.mas, 
    title => "Genomic selection model for $trait_name ($trait_abbr) in $project_name"
@@ -50,15 +52,15 @@ $model_parameters
   title       => "Training population summary",
 &>
 
-% $project_name = "<a href=\"/solgs/populations/combined/$combo_pops_id\">$project_name</a>";
 
 <& summary.mas,
-    project_name => $project_name,
+    project_name => $model_link,
     project_desc => $project_desc,
     stocks_no    => $stocks_no,
     markers_no   => $markers_no,
     owner        => $owner,
-    protocol     => $protocol,
+    protocol_url => $protocol_url,
+ 
 &>
 
 </&>
@@ -77,7 +79,8 @@ $model_parameters
 
 </&>
 
-<& /solgs/model/pca.mas &>
+<& /solgs/pca/analysis.mas &>
+<& /solgs/cluster/analysis.mas &>  
 
 <& /solgs/model/accuracy.mas, 
    accuracy_report        => $accuracy_report,
@@ -88,18 +91,25 @@ $model_parameters
    model_parameters => $model_parameters,
 &>
 
-<& /solgs/model/top_blups.mas, 
+
+  <& /solgs/model/gebvs.mas, 
    top_blups          => $top_blups,
    blups_download_url => $blups_download_url,
-&>
+   pop_id             => $combo_pops_id,
+  trait_id            => $trait_id
+  &>
 
+ <& /solgs/population/gebv_pheno_regression.mas,
+       trait_id      => $trait_id,
+       combo_pops_id => $combo_pops_id,
+&>
 <& /solgs/model/marker_effects.mas, 
    top_marker_effects          => $top_marker_effects,
    marker_effects_download_url => $marker_effects_download_url
 &>
 
 <& /solgs/population/selection_populations.mas, 
-   download_prediction     => $download_prediction,
+   selection_prediction_download => $selection_prediction_download,
    analyzed_traits         => $analyzed_traits,
    pop_id                  => $combo_pops_id,
    prediction_pop_id       => $prediction_pop_id,
@@ -108,3 +118,10 @@ $model_parameters
    project_name            => $project_name,
 &>
 
+
+<input type="hidden" id="model_id" value="<% $combo_pops_id %>" /> 
+<input type="hidden" id="population_id" value="<% $combo_pops_id %>" />
+<input type="hidden" id="population_name" value="<% $project_name %>" /> 
+<input type="hidden" id="combo_pops_id" value="<% $combo_pops_id %>" /> 
+<input type="hidden" id="trait_id" value="<% $trait_id %>" />
+<input type="hidden" id="genotyping_protocol_id" value="<% $genotyping_protocol_id %>" />

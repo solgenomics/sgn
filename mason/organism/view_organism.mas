@@ -26,7 +26,7 @@ $user_id => undef
 $privileged_user => undef
 $form => undef;
 $static_data => undef;
-@image_objects => ()
+$images => []
 </%args>
 
 <%perl>
@@ -49,7 +49,7 @@ my $image_subtitle =
 <& /organism/taxonomy.mas, taxonomy=>$taxonomy &>
 
 <&| /page/info_section.mas, title=>"Images" , subtitle=>$image_subtitle &>
-<& /image/print_images.mas, image_objects => \@image_objects &>
+<& /image/print_images.mas, images => $images &>
 </&>
 
 

@@ -5,6 +5,8 @@ use Moose;
 use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::People::Roles;
+use JSON;
+use Encode;
 
 has 'schema' => (
 		 is       => 'rw',
@@ -46,8 +48,12 @@ sub get_breeding_programs_by_trial {
     my $trial_id = shift;
 
     my $breeding_program_cvterm_id = $self->get_breeding_program_cvterm_id();
+    my $breeding_program_rel_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'breeding_program_trial_relationship', 'project_relationship')->cvterm_id();
 
-    my $trial_rs= $self->schema->resultset('Project::ProjectRelationship')->search( { 'subject_project_id' => $trial_id } );
+    my $trial_rs= $self->schema->resultset('Project::ProjectRelationship')->search({
+        'subject_project_id' => $trial_id,
+        'type_id' => $breeding_program_rel_cvterm_id
+    });
 
     my $trial_row = $trial_rs -> first();
     my $rs;
@@ -70,7 +76,8 @@ sub get_breeding_program_by_name {
   my $program_name = shift;
   my $breeding_program_cvterm_id = $self->get_breeding_program_cvterm_id();
 
-  my $rs = $self->schema->resultset('Project::Project')->find( { 'name'=>$program_name, 'projectprops.type_id'=>$breeding_program_cvterm_id }, { join => 'projectprops' }  );
+  my $prs = $self->schema->resultset('Project::Project')->search( { 'name'=>$program_name, 'projectprops.type_id'=>$breeding_program_cvterm_id }, { join => 'projectprops' }  );
+  my $rs = $prs->first;
 
   if (!$rs) {
     return;
@@ -112,62 +119,95 @@ sub _get_all_trials_by_breeding_program {
 sub get_trials_by_breeding_program {
     my $self = shift;
     my $breeding_project_id = shift;
+
     my $field_trials;
     my $cross_trials;
     my $genotyping_trials;
+    my $genotyping_data_projects;
+    my $field_management_factor_projects;
+    my $drone_run_projects;
+    my $drone_run_band_projects;
+    my $analyses_projects;
+
     my $h = $self->_get_all_trials_by_breeding_program($breeding_project_id);
-    my $cross_cvterm_id = $self->get_cross_cvterm_id();
+    my $crossing_trial_cvterm_id = $self->get_crossing_trial_cvterm_id();
     my $project_year_cvterm_id = $self->get_project_year_cvterm_id();
+    my $analysis_metadata_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'analysis_metadata_json', 'project_property')->cvterm_id();
 
     my %projects_that_are_crosses;
     my %project_year;
     my %project_name;
     my %project_description;
     my %projects_that_are_genotyping_trials;
+    my %projects_that_are_treatment_trials; #Field Management Factors
+    my %projects_that_are_genotyping_data_projects;
+    my %projects_that_are_drone_run_projects;
+    my %projects_that_are_drone_run_band_projects;
+    my %projects_that_are_analyses;
 
     while (my ($id, $name, $desc, $prop, $propvalue) = $h->fetchrow_array()) {
-	#print STDERR "PROP: $prop, $propvalue \n";
-	#push @$trials, [ $id, $name, $desc ];
-      if ($name) {
-	$project_name{$id} = $name;
-      }
-      if ($desc) {
-	$project_description{$id} = $desc;
-      }
-      if ($prop) {
-	if ($prop == $cross_cvterm_id) {
-	  $projects_that_are_crosses{$id} = 1;
-	  $project_year{$id} = '';
-	  #print STDERR Dumper "Cross Trial: ".$name;
-	}
-	if ($prop == $project_year_cvterm_id) {
-	  $project_year{$id} = $propvalue;
-	}
-	if ($propvalue) {
-	if ($propvalue eq "genotyping_plate") {
-	    #print STDERR "$id IS GENOTYPING TRIAL\n";
-	    $projects_that_are_genotyping_trials{$id} =1;
-		#print STDERR Dumper "Genotyping Trial: ".$name;
-	}
-	}
-      }
-
+        #print STDERR "PROP: $prop, $propvalue \n";
+        #push @$trials, [ $id, $name, $desc ];
+        if ($name) {
+            $project_name{$id} = $name;
+        }
+        if ($desc) {
+            $project_description{$id} = $desc;
+        }
+        if ($prop) {
+            if ($prop == $crossing_trial_cvterm_id) {
+                $projects_that_are_crosses{$id} = 1;
+                $project_year{$id} = '';
+            }
+            if ($prop == $project_year_cvterm_id && $propvalue) {
+                $project_year{$id} = $propvalue;
+            }
+            if ($prop == $analysis_metadata_cvterm_id) {
+                $projects_that_are_analyses{$id} = 1;
+            }
+            if ($propvalue) {
+                if ($propvalue eq "genotyping_plate") {
+                    $projects_that_are_genotyping_trials{$id} = 1;
+                }
+                if ($propvalue eq "treatment") {
+                    $projects_that_are_treatment_trials{$id} = 1;
+                }
+                if ($propvalue eq "genotype_data_project") {
+                    $projects_that_are_genotyping_data_projects{$id} = 1;
+                }
+                if ($propvalue eq "drone_run") {
+                    $projects_that_are_drone_run_projects{$id} = 1;
+                }
+                if ($propvalue eq "drone_run_band") {
+                    $projects_that_are_drone_run_band_projects{$id} = 1;
+                }
+            }
+        }
     }
 
     my @sorted_by_year_keys = sort { $project_year{$a} cmp $project_year{$b} } keys(%project_year);
 
     foreach my $id_key (@sorted_by_year_keys) {
-		if (!$projects_that_are_crosses{$id_key} && !$projects_that_are_genotyping_trials{$id_key}) {
-			#print STDERR "$id_key RETAINED.\n";
-			push @$field_trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
-		} elsif ($projects_that_are_crosses{$id_key} == 1) {
-			push @$cross_trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
-		} elsif ($projects_that_are_genotyping_trials{$id_key} == 1) {
-			push @$genotyping_trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
-		}
+        if (!$projects_that_are_crosses{$id_key} && !$projects_that_are_genotyping_trials{$id_key} && !$projects_that_are_genotyping_trials{$id_key} && !$projects_that_are_treatment_trials{$id_key} && !$projects_that_are_genotyping_data_projects{$id_key} && !$projects_that_are_drone_run_projects{$id_key} && !$projects_that_are_drone_run_band_projects{$id_key} && !$projects_that_are_analyses{$id_key}) {
+            push @$field_trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
+        } elsif ($projects_that_are_crosses{$id_key}) {
+            push @$cross_trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
+        } elsif ($projects_that_are_genotyping_trials{$id_key}) {
+            push @$genotyping_trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
+        } elsif ($projects_that_are_genotyping_data_projects{$id_key}) {
+            push @$genotyping_data_projects, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
+        } elsif ($projects_that_are_treatment_trials{$id_key}) {
+            push @$field_management_factor_projects, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
+        } elsif ($projects_that_are_drone_run_projects{$id_key}) {
+            push @$drone_run_projects, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
+        } elsif ($projects_that_are_drone_run_band_projects{$id_key}) {
+            push @$drone_run_band_projects, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
+        } elsif ($projects_that_are_analyses{$id_key}) {
+            push @$analyses_projects, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
+        }
     }
 
-    return ($field_trials, $cross_trials, $genotyping_trials);
+    return ($field_trials, $cross_trials, $genotyping_trials, $genotyping_data_projects, $field_management_factor_projects, $drone_run_projects, $drone_run_band_projects, $analyses_projects);
 }
 
 sub get_genotyping_trials_by_breeding_program {
@@ -220,52 +260,127 @@ sub get_genotyping_trials_by_breeding_program {
 
 }
 
-sub get_locations_by_breeding_program {
-    my $self = shift;
-    my $breeding_program_id = shift;
+sub get_all_locations {
+     my $self = shift;
+     my $c = shift;
 
-    my $h;
+     my $rs = $self->schema() -> resultset("NaturalDiversity::NdGeolocation")->search( {}, { order_by => 'description' } );
+     my @locations = ();
 
-    my $type_id = $self->schema->resultset('Cv::Cvterm')->search( { 'name'=>'plot' })->first->cvterm_id;
+     foreach my $loc ($rs->all()) {
+         push @locations, [ $loc->nd_geolocation_id(), $loc->description() ];
+     }
 
-    my $project_location_type_id = $self ->schema->resultset('Cv::Cvterm')->search( { 'name' => 'project location' })->first->cvterm_id();
+     return \@locations;
 
-    if ($breeding_program_id) {
-	#my $q = "SELECT distinct(nd_geolocation_id), nd_geolocation.description, count(distinct(stock.stock_id)) FROM project JOIN project_relationship on (project_id=object_project_id) JOIN project as trial ON (subject_project_id=trial.project_id) JOIN nd_experiment_project ON (trial.project_id=nd_experiment_project.project_id) JOIN nd_experiment USING (nd_experiment_id) JOIN nd_experiment_stock ON (nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id) JOIN stock ON (nd_experiment_stock.stock_id=stock.stock_id) JOIN nd_geolocation USING (nd_geolocation_id) WHERE project.project_id=? and stock.type_id=? GROUP BY nd_geolocation.nd_geolocation_id, nd_experiment.nd_geolocation_id, nd_geolocation.description";
-
-	my $q = "SELECT distinct(nd_geolocation_id), nd_geolocation.description, count(distinct(trial.project_id)) FROM project JOIN project_relationship on (project_id=object_project_id) JOIN project as trial ON (subject_project_id=trial.project_id) LEFT JOIN projectprop ON (trial.project_id=projectprop.project_id) LEFT JOIN nd_geolocation ON (projectprop.value::INT = nd_geolocation.nd_geolocation_id) WHERE project.project_id =? AND projectprop.type_id=$project_location_type_id  GROUP BY nd_geolocation.nd_geolocation_id,  nd_geolocation.description";
+ }
 
 
-	$h = $self->schema()->storage()->dbh()->prepare($q);
-	$h->execute($breeding_program_id);
+ sub get_all_locations_by_breeding_program {
+     my $self = shift;
 
-    }
-    else {
-	my $q = "SELECT distinct(nd_geolocation_id), nd_geolocation.description FROM nd_geolocation LEFT JOIN nd_experiment USING(nd_geolocation_id) where nd_experiment_id IS NULL";
+    my $q = "SELECT geo.description,
+    breeding_program.name
+    FROM nd_geolocation AS geo
+    LEFT JOIN nd_geolocationprop AS breeding_program_id ON (geo.nd_geolocation_id = breeding_program_id.nd_geolocation_id AND breeding_program_id.type_id = (SELECT cvterm_id from cvterm where name = 'breeding_program') )
+    LEFT JOIN project breeding_program ON (breeding_program.project_id=breeding_program_id.value::INT)
+    GROUP BY 1,2 ORDER BY 1";
 
-	$h = $self->schema()->storage()->dbh()->prepare($q);
-	$h->execute();
-    }
-
+    my $h = $self->schema()->storage()->dbh()->prepare($q);
+    $h->execute();
     my @locations;
-    while (my ($id, $name, $plot_count) = $h->fetchrow_array()) {
-	push @locations, [ $id, $name, $plot_count ];
-    }
-    return \@locations;
+
+    while (my @location_data = $h->fetchrow_array()) {
+        #foreach my $d (@location_data) {     ### NOT NECESSARY - it's already UTF8
+        #    $d = Encode::encode_utf8($d);
+        #}
+     	my ($name, $prog) = @location_data;
+         push(@locations, {
+             properties => {
+                 Name => $name,
+                 Program => $prog
+             }
+         });
+     }
+     
+     my $json = JSON->new();
+     $json->canonical(); # output sorted JSON
+     return $json->encode(\@locations);
 }
 
-sub get_all_locations {
+
+sub get_location_geojson {
     my $self = shift;
-    my $c = shift;
 
-    my $rs = $self->schema() -> resultset("NaturalDiversity::NdGeolocation")->search( {}, { order_by => 'description' } );
+    my $project_location_type_id = $self ->schema->resultset('Cv::Cvterm')->search( { 'name' => 'project location' })->first->cvterm_id();
+    my $noaa_station_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'noaa_station_id', 'geolocation_property')->cvterm_id();
 
-    my @locations = ();
-    foreach my $loc ($rs->all()) {
-        push @locations, [ $loc->nd_geolocation_id(), $loc->description() ];
+    my $q = "SELECT A,B,C,D,E,string_agg(F, ' & '),G,H,I,J,K,L
+        FROM
+            (SELECT geo.nd_geolocation_id as A,
+                geo.description AS B,
+                abbreviation.value AS C,
+                country_name.value AS D,
+                country_code.value AS E,
+                breeding_program.name AS F,
+                location_type.value AS G,
+                noaa_station_id.value AS L,
+                latitude AS H,
+                longitude AS I,
+                altitude AS J,
+                count(distinct(projectprop.project_id)) AS K
+            FROM nd_geolocation AS geo
+            LEFT JOIN nd_geolocationprop AS abbreviation ON (geo.nd_geolocation_id = abbreviation.nd_geolocation_id AND abbreviation.type_id = (SELECT cvterm_id from cvterm where name = 'abbreviation') )
+            LEFT JOIN nd_geolocationprop AS country_name ON (geo.nd_geolocation_id = country_name.nd_geolocation_id AND country_name.type_id = (SELECT cvterm_id from cvterm where name = 'country_name') )
+            LEFT JOIN nd_geolocationprop AS country_code ON (geo.nd_geolocation_id = country_code.nd_geolocation_id AND country_code.type_id = (SELECT cvterm_id from cvterm where name = 'country_code') )
+            LEFT JOIN nd_geolocationprop AS location_type ON (geo.nd_geolocation_id = location_type.nd_geolocation_id AND location_type.type_id = (SELECT cvterm_id from cvterm where name = 'location_type') )
+            LEFT JOIN nd_geolocationprop AS noaa_station_id ON (geo.nd_geolocation_id = noaa_station_id.nd_geolocation_id AND noaa_station_id.type_id = $noaa_station_id_cvterm_id )
+            LEFT JOIN nd_geolocationprop AS breeding_program_id ON (geo.nd_geolocation_id = breeding_program_id.nd_geolocation_id AND breeding_program_id.type_id = (SELECT cvterm_id from cvterm where name = 'breeding_program') )
+            LEFT JOIN project breeding_program ON (breeding_program.project_id=breeding_program_id.value::INT)
+            LEFT JOIN projectprop ON (projectprop.value::INT = geo.nd_geolocation_id AND projectprop.type_id=?)
+            GROUP BY 1,2,3,4,5,6,7,8
+            ORDER BY 2)
+        AS T1
+        GROUP BY 1,2,3,4,5,7,8,9,10,11,12";
+
+
+	my $h = $self->schema()->storage()->dbh()->prepare($q);
+	$h->execute($project_location_type_id);
+    my @locations;
+    while (my @location_data = $h->fetchrow_array()) {
+	foreach my $d (@location_data) {
+	    ###$d = Encode::encode_utf8($d);   ## not necessary, it's already utf8
+	}
+	my ($id, $name, $abbrev, $country_name, $country_code, $prog, $type, $latitude, $longitude, $altitude, $trial_count, $noaa_station_id) = @location_data;
+
+        my $lat = $latitude ? $latitude + 0 : undef;
+        my $long = $longitude ? $longitude + 0 : undef;
+        my $alt = $altitude ? $altitude + 0 : undef;
+        push(@locations, {
+            type => "Feature",
+            properties => {
+                Id => $id,
+                Name => $name,
+                Abbreviation => $abbrev,
+                Country => $country_name,
+                Code => $country_code,
+                Program => $prog,
+                Type => $type,
+                Latitude => $lat,
+                Longitude => $long,
+                Altitude => $alt,
+                Trials => '<a href="/search/trials?location_id='.$id.'">'.$trial_count.' trials</a>',
+                NOAAStationID => $noaa_station_id
+            },
+            geometry => {
+                type => "Point",
+                coordinates => [$long, $lat]
+            }
+        });
     }
-    return \@locations;
-
+    my $json = JSON->new();
+    $json->canonical(); # output sorted JSON
+    return $json->encode(\@locations);
 }
 
 sub get_locations {
@@ -330,9 +445,10 @@ sub new_breeding_program {
 	    name => $name,
 	});
     if ($rs->count() > 0) {
-	return "A breeding program with name '$name' already exists.";
-    }
+	return { error => "A breeding program with name '$name' already exists." };
 
+    }
+    my $project_id;
     eval {
 
 		my $role = CXGN::People::Roles->new({bcs_schema=>$self->schema});
@@ -348,6 +464,7 @@ sub new_breeding_program {
 	    });
 
 	$row->insert();
+    $project_id = $row->project_id();
 
 	my $prop_row = $self->schema()->resultset("Project::Projectprop")->create(
 	    {
@@ -358,8 +475,14 @@ sub new_breeding_program {
 	$prop_row->insert();
 
     };
+
+
+
     if ($@) {
-	return "An error occurred while generating a new breeding program. ($@)";
+        return { error => "An error occurred while generating a new breeding program. ($@)" };
+    } else {
+        print STDERR "The new breeding program $name was created with id $project_id\n";
+        return { success => "The new breeding program $name was created.", id => $project_id };
     }
 
 }
@@ -419,6 +542,21 @@ sub get_breeding_program_with_trial {
     return $breeding_projects;
 }
 
+sub get_crossing_trials {
+    my $self = shift;
+
+    my $crossing_trial_cvterm_id = $self->get_crossing_trial_cvterm_id();
+
+    my $rs = $self->schema->resultset('Project::Project')->search( { 'projectprops.type_id'=>$crossing_trial_cvterm_id }, { join => 'projectprops' }  );
+
+    my @crossing_trials;
+    while (my $row = $rs->next()) {
+	push @crossing_trials, [ $row->project_id, $row->name, $row->description ];
+    }
+
+    return \@crossing_trials;
+}
+
 sub get_breeding_program_cvterm_id {
     my $self = shift;
 
@@ -453,6 +591,13 @@ sub get_cross_cvterm_id {
     return $cross_cvterm->cvterm_id();
 }
 
+sub get_crossing_trial_cvterm_id {
+  my $self = shift;
+
+  my $crossing_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'crossing_trial',  'project_type');
+  return $crossing_trial_cvterm_id->cvterm_id();
+}
+
 sub _get_design_trial_cvterm_id {
     my $self = shift;
      my $cvterm = $self->schema->resultset("Cv::Cvterm")
@@ -471,7 +616,8 @@ sub get_project_year_cvterm_id {
 
 sub get_gt_protocols {
     my $self = shift;
-    my $rs = $self->schema->resultset("NaturalDiversity::NdProtocol")->search( { } );
+    my $genotyping_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
+    my $rs = $self->schema->resultset("NaturalDiversity::NdProtocol")->search( { type_id => $genotyping_protocol_cvterm_id} );
     #print STDERR "NdProtocol resultset rows:\n";
     my @protocols;
     while (my $row = $rs->next()) {
@@ -482,5 +628,6 @@ sub get_gt_protocols {
     }
     return \@protocols;
 }
+
 
 1;

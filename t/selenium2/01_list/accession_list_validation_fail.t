@@ -49,11 +49,11 @@ $d->find_element_ok("type_select", "id", "validate list select")->send_keys("acc
 
 sleep(2);
 
-my $add_list_input = $d->find_element_ok("validate_stock_missing_accessions_new_list_name", "id", "find add list input test");
+my $add_list_input = $d->find_element_ok("validate_stock_add_missing_accessions_for_list_new_list_name", "id", "find add list input test");
    
 $add_list_input->send_keys("missing_accessions_list");
 
-$d->find_element_ok("validate_stock_missing_accessions_add_to_new_list", "id", "find add list button test")->click();
+$d->find_element_ok("validate_stock_add_missing_accessions_for_list_add_to_new_list", "id", "find add list button test")->click();
 
 sleep(1);
 $d->accept_alert_ok();

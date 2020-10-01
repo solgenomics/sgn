@@ -1,5 +1,6 @@
 ## A test for adding stocks
 ## Jeremy D. Edwards (jde22@cornell.edu) 2015
+##CXGN::Stock::AddStocks is DEPRECATED. Please use CXGN::Stock::Accession->store, which inherits from CXGN::Stock
 
 use strict;
 use warnings;

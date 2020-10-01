@@ -526,7 +526,7 @@ sub as_table_string {
     
     my $has_required_field=0;
     $string .= $self->get_form_start();
-    $string .=  qq {  <br/><div class="panel panel-info"><table class="table"> };
+    $string .=  qq {  <br/><div class="panel panel-defaut"><table class="table"> };
     foreach my $f ($self->get_fields()) { 
 	my $error = "";
 	if (exists($error_hash{$f->get_field_name()})) { 

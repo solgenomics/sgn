@@ -2,8 +2,8 @@
 <%args>
 $locations
 $programs
+$crossing_trials
 $roles
-$cross_populations
 $user_id
 </%args>
 
@@ -12,9 +12,9 @@ $user_id
 
 <div class="container-fluid">
 
-<&| /page/info_section.mas, title=>"Crosses" , collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_cross_wishlist" >Create Cross Wishlist</a>] [<a id="create_cross_link" >Create New Crosses</a>] [<a id="upload_crosses_link" >Upload Crosses File</a>]' &>
+<&| /page/info_section.mas, title=>"Crosses" , collapsible=>1, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" name="create_crossingtrial_link">Add Crossing Experiment</button> <button class="btn btn-sm btn-primary" style="margin:3px" name="create_cross_link">Add Cross</button> <button class="btn btn-sm btn-primary" style="margin:3px" name="upload_crosses_link">Upload Crosses</button> <button class="btn btn-sm btn-primary" style="margin:3px" id="create_cross_wishlist">Add Cross Wishlist</button>' &>
 
-<& /breeders_toolbox/crosses.mas, cross_populations=>$cross_populations, user_id=>$user_id, locations=>$locations, programs=>$programs, roles=>$roles  &>
+<& /breeders_toolbox/crosses.mas, user_id=>$user_id, locations=>$locations, programs=>$programs, roles=>$roles  &>
 
 </&>
 

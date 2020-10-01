@@ -1,0 +1,17 @@
+<%args>
+$trial_id
+</%args>
+
+<div class="well well-sm">
+
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <&| /page/info_section.mas, title=>"Uploaded Additional Files", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" id="trial_upload_additional_files_link">Upload Additional Files</button>' &>
+
+            <& /breeders_toolbox/trial/upload_additional_file.mas, trial_id => $trial_id &>
+
+            </&><!-- closes uploaded additional file section -->
+        </div>
+    </div>
+
+</div><!-- closes well -->

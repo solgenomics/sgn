@@ -1,0 +1,46 @@
+
+<%args>
+   $goto_url
+</%args>
+
+<style>
+.textlabel {
+  width: 200px;
+  white-space: nowrap;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  float:left;     
+}
+
+.input { 
+  width: 200px;
+  white-space:nowrap;
+}
+
+.form-control { 
+  width: 300px;
+}
+
+</style>
+
+<& /page/page_title.mas, title=>"Login" &>
+
+<div>
+<center>
+<a href="javascript:history.back();"><button class="btn btn-primary">Go back</button></a>
+</center>
+</div>
+
+<script>
+
+  jQuery(document).ready( function() {  
+    
+    jQuery('#goto_url').val('<% $goto_url %>');
+
+
+    jQuery('#site_login_dialog').modal('show'); 
+
+  });
+ 
+</script>

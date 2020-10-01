@@ -9,34 +9,27 @@
 
 options(echo = FALSE)
 
-library(gplots)
 library(ltm)
-library(plyr)
-library(rjson)
+#library(rjson)
+library(jsonlite)
+library(methods)
+library(dplyr)
+library(tibble)
 
+allArgs <- commandArgs()
 
-allargs<-commandArgs()
+outputFiles <- scan(grep("output_files", allArgs, value = TRUE),
+                    what = "character")
 
-geneticDataFile <- grep("combined_gebvs",
-                        allargs,
-                        ignore.case=TRUE,
-                        perl=TRUE,
-                        value=TRUE
-                      )
+inputFiles  <- scan(grep("input_files", allArgs, value = TRUE),
+                    what = "character")
 
-correTableFile <- grep("genetic_corre_table",
-                       allargs,
-                       ignore.case=TRUE,
-                       perl=TRUE,
-                       value=TRUE
-                       )
+correTableFile <- grep("genetic_corre_table", outputFiles, value=TRUE)
+correJsonFile  <- grep("genetic_corre_json", outputFiles, value=TRUE)
 
-correJsonFile <- grep("genetic_corre_json",
-                      allargs,
-                      ignore.case=TRUE,
-                      perl=TRUE,
-                      value=TRUE
-                      )
+geneticDataFile <- grep("combined_gebvs", inputFiles, value=TRUE)
+
+selectionIndexFile <- grep("selection_index", inputFiles, value=TRUE)
 
 geneticData <- read.table(geneticDataFile,
                           header = TRUE,
@@ -46,11 +39,40 @@ geneticData <- read.table(geneticDataFile,
                           dec = "."
                           )
 
-coefpvalues <- rcor.test(geneticData,
+indexData <- c()
+
+if (length(selectionIndexFile) != 0
+    && file.info(selectionIndexFile)$size != 0) {
+    indexData <- read.table(selectionIndexFile,
+                            header = TRUE,
+                            row.names = 1,
+                            sep = "\t",
+                            na.strings = c("NA"),
+                            dec = "."
+                            )
+}
+
+corrData <- c()
+
+if (!is.null(indexData)) {
+    geneticData <- rownames_to_column(geneticData, var="genotypes")    
+    indexData   <- rownames_to_column(indexData, var="genotypes")
+   
+    geneticData <- geneticData %>% arrange(genotypes)
+    indexData   <- indexData %>% arrange(genotypes)
+    
+    corrData <- full_join(geneticData, indexData)      
+    corrData <- column_to_rownames(corrData, var="genotypes")
+  
+} else {
+    corrData <- geneticData
+}
+
+
+coefpvalues <- rcor.test(corrData,
                          method="pearson",
                          use="pairwise"
                          )
-
 
 coefficients <- coefpvalues$cor.mat
 allcordata   <- coefpvalues$cor.mat
@@ -72,47 +94,29 @@ allcordata <- round(allcordata,
                     )
 
 #remove rows and columns that are all "NA"
-if ( apply(coefficients,
-           1,
-           function(x)any(is.na(x))
-           )
-    ||
-    apply(coefficients,
-          2,
-          function(x)any(is.na(x))
-          )
-    )
-  {
-                                                            
-    coefficients<-coefficients[-which(apply(coefficients,
-                                            1,
-                                            function(x)all(is.na(x)))
-                                      ),
-                               -which(apply(coefficients,
-                                            2,
-                                            function(x)all(is.na(x)))
-                                      )
-                               ]
-  }
+if (apply(coefficients, 1, function(x) any(is.na(x))) ||
+    apply(coefficients, 2, function(x) any(is.na(x)))) {
+    
+    coefficients <- coefficients[-which(apply(coefficients, 1, function(x) all(is.na(x)))),
+                                 -which(apply(coefficients, 2, function(x) all(is.na(x))))]
+}
 
 
 pvalues[upper.tri(pvalues)]           <- NA
 coefficients[upper.tri(coefficients)] <- NA
+coefficients <- data.frame(coefficients)
 
-coefficients2json <- function(mat){
-    mat <- as.list(as.data.frame(t(mat)))
-    names(mat) <- NULL
-    toJSON(mat)
-}
+coefficients2json <- coefficients
+names(coefficients2json) <- NULL
 
 traits <- colnames(coefficients)
 
 correlationList <- list(
-                   "traits"=toJSON(traits),
-                   "coefficients"=coefficients2json(coefficients)
-                   )
+    labels = traits,
+    values  = coefficients
+)
 
-correlationJson <- paste("{",paste("\"", names(correlationList), "\":", correlationList, collapse=","), "}")
+correlationJson <- jsonlite::toJSON(correlationList)
 
 write.table(coefficients,
       file=correTableFile,
@@ -122,10 +126,8 @@ write.table(coefficients,
       dec="."
       )
 
-write.table(correlationJson,
-      file=correJsonFile,
-      col.names=FALSE,
-      row.names=FALSE,
-      )
+write(correlationJson,
+       file = correJsonFile)
+
 
 q(save = "no", runLast = FALSE)

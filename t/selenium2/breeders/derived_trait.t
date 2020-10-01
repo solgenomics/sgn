@@ -11,10 +11,10 @@ my $t = SGN::Test::WWW::WebDriver->new();
 $t->while_logged_in_as("submitter", sub { 
 
     $t->get_ok('/breeders/trials');
-    $t->find_element_ok("refresh_jstree_html", "id", "click on upload_trial_link ")->click();
+    $t->find_element_ok("refresh_jstree_html", "name", "click on upload_trial_link ")->click();
     sleep(10);
 
-    $t->find_element_ok("upload_trial_link", "id", "click on upload_trial_link ")->click();
+    $t->find_element_ok("upload_trial_link", "name", "click on upload_trial_link ")->click();
 
     sleep(2);
 
@@ -52,7 +52,7 @@ $t->while_logged_in_as("submitter", sub {
 
     sleep(1);
 
-    $t->find_element_ok("upload_trial_submit", "id", "submit upload trial file ")->click();
+    $t->find_element_ok("upload_trial_submit_first", "name", "submit upload trial file ")->click();
 
     sleep(5);
 
@@ -86,7 +86,7 @@ $t->while_logged_in_as("submitter", sub {
 
     sleep(2);
 
-    $t->find_element_ok("refresh_jstree_html", "id", "click on upload_trial_link ")->click();
+    $t->find_element_ok("refresh_jstree_html", "name", "click on upload_trial_link ")->click();
     sleep(10);
 
     $t->find_element_ok("test", "partial_link_text", "check program in tree")->click();
@@ -113,7 +113,7 @@ $t->find_element_ok("derived_button", "id", "click on compute trait link button"
 
     my $trait_select = $t->find_element_ok("derived_trait_select", "id", "find trait select dialog");
 
-    $trait_select->send_keys('sprouting|CO:0000008');
+    $trait_select->send_keys('sprouting|CO_334:0000008');
 
    # $t->find_element_ok("button", "id", "submit compute trait ")->click();
 
@@ -137,7 +137,7 @@ $t->find_element_ok("derived_button", "id", "click on compute trait link button"
 
     my $trait_select = $t->find_element_ok("derived_trait_select", "id", "find trait select dialog");
 
-    $trait_select->send_keys('specific gravity|CO:0000163');
+    $trait_select->send_keys('specific gravity|CO_334:0000163');
 
 
     $t->find_element_ok("create_derived_trait_submit_button", "id", "submit compute trait ")->click();
@@ -154,7 +154,7 @@ $t->find_element_ok("derived_button", "id", "click on compute trait link button"
 
     my $trait_select = $t->find_element_ok("derived_trait_select", "id", "find trait select dialog");
 
-    $trait_select->send_keys('starch content|CO:0000071');
+    $trait_select->send_keys('starch content|CO_334:0000071');
 
     $t->find_element_ok("create_derived_trait_submit_button", "id", "submit compute trait ")->click();
 
@@ -170,7 +170,7 @@ $t->find_element_ok("derived_button", "id", "click on compute trait link button"
 
     my $trait_select = $t->find_element_ok("derived_trait_select", "id", "find trait select dialog");
 
-    $trait_select->send_keys('dry matter content by specific gravity method|CO:0000160');
+    $trait_select->send_keys('dry matter content by specific gravity method|CO_334:0000160');
 
     $t->find_element_ok("create_derived_trait_submit_button", "id", "submit compute trait ")->click();
 

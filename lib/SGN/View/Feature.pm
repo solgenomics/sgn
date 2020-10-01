@@ -27,7 +27,47 @@ our @EXPORT_OK = qw/
     location_string
     location_string_html
     type_name
+    feature_types
+    feature_organisms
 /;
+
+
+
+sub feature_organisms {
+    my ($schema) = @_;
+    return [
+        [ 0, '' ],
+        map [ $_->organism_id, $_->species ],
+        $schema
+             ->resultset('Sequence::Feature')
+             ->search_related('organism' , {}, {
+                 select   => [qw[ organism.organism_id species ]],
+                 distinct => 1,
+                 order_by => 'species',
+               })
+    ];
+}
+
+sub feature_types {
+    my ($schema) = @_;
+
+    my $ref = [
+        map [$_->cvterm_id,$_->name],
+        $schema
+    ->resultset('Sequence::Feature')
+    ->search_related(
+        'type',
+        {},
+        { select => [qw[ cvterm_id type.name ]],
+          group_by => [qw[ cvterm_id type.name ]],
+          order_by => 'type.name',
+        },
+    )
+    ];
+    # add an empty option
+    unshift @$ref , ['0', ''];
+    return $ref;
+}
 
 sub type_name {
     cvterm_name( shift->type, @_ );
@@ -105,7 +145,7 @@ sub location_string {
 }
 
 sub location_list_html {
-    my ($feature, $featurelocs) = @_;   
+    my ($feature, $featurelocs) = @_;
     my @coords = map { location_string_html($_) }
         (  #$featurelocs ? $featurelocs->all
           #             : $feature->featureloc_features->all );
@@ -346,14 +386,18 @@ sub mrna_cds_protein_sequence {
     if( $trim_from_left || $trim_from_right ) {
         $cds_seq = $cds_seq->trunc( 1+$trim_from_left, $mrna_seq->length - $trim_from_right );
     }
-    ##my $protein_seq = $cds_seq->translate;
+
     ##Get the protein sequence from the peptide object (stored in the database in the residues field of the feature table)
-    ## No need to try to translade the CDS
     my $protein_seq  = Bio::PrimarySeq->new(
         -id   => $mrna_seq->display_name,
         -desc => $description,
         -seq  => $peptide->residues,
      );
+
+    #Get the protein seq from translated CDS if no residues are found for polypeptide in the DB
+    if ( !$protein_seq->seq ) {
+      $protein_seq = $cds_seq->translate;
+    }
 
     return [ $mrna_seq, $cds_seq, $protein_seq ];
 }

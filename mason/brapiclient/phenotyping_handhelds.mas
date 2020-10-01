@@ -1,0 +1,160 @@
+<%args>
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'brapi.Table' ] &>
+
+<& /page/page_title.mas, title=>"Phenotyping Handhelds" &>
+
+<h4>Database Select</h4>
+<select name="brapi_phenotyping_handhelds_url_select" id="brapi_phenotyping_handhelds_url_select" class="form-control" />
+    <option value="">local</option>
+    <option value="https://cassbase.org">cassbase.org</option>
+    <option value="https://cassavabase.org">cassavabase.org</option>
+    <option value="https://musabase.org">musabase.org</option>
+    <option value="https://sweetpotatobase.org">sweetpotatobase.org</option>
+    <option value="https://yambase.org">yambase.org</option>
+    <option value="https://fernbase.org">fernbase.org</option>
+    <option value="https://solgenomics.net">solgenomics.net</option>
+    <option value="https://www.crop-diversity.org/mgis">crop-diversity.org</option>
+</select>
+
+<br/><br/>
+
+<div id="brapi_phenotyping_handhelds_layout_div" class="well">
+
+    <h3>Get Trial Layout(s)</h3>
+
+    <select name="brapi_phenotyping_handhelds_layout_format" id="brapi_phenotyping_handhelds_layout_format" class="form-control" />
+        <option value="json">JSON</option>
+        <option value="csv">CSV</option>
+        <option value="tsv">TSV</option>
+        <option value="xls">Excel (xls)</option>
+    </select>
+
+    <div id="brapi_phenotyping_handhelds_studies_div">
+    </div>
+
+    <div id="brapi_phenotyping_handhelds_layout_results_div">
+    </div>
+
+</div>
+
+<div id="brapi_phenotyping_handhelds_traits_div" class="well">
+
+    <h3>Get Observation Variables</h3>
+
+    <div id="brapi_phenotyping_handhelds_traits_div">
+    </div>
+
+    <div id="brapi_phenotyping_handhelds_traits_results_div">
+    </div>
+
+</div>
+
+<div id="brapi_phenotyping_handhelds_upload_div" class="well">
+
+    <h3>Upload Phenotypes Using POST brapi/v1/studies/studyId/observationunits?observationLevel=observationLevel</h3>
+
+    <h4>Not yet implemented</h4>
+
+    <h3>Upload Phenotypes Using POST brapi/v1/studies/studyId/table</h3>
+
+    <h4>Not yet implemented</h4>
+
+</div>
+
+<script>
+
+var selected_results = [];
+var studies_return_url;
+var traits_return_url;
+
+jQuery(document).ready(function() {
+
+    brapi_phenotyping_handhelds_get_studies(jQuery('#brapi_phenotyping_handhelds_url_select').val());
+    brapi_phenotyping_handhelds_get_traits(jQuery('#brapi_phenotyping_handhelds_url_select').val());
+
+    jQuery('#brapi_phenotyping_handhelds_url_select').change(function(){
+        brapi_phenotyping_handhelds_get_studies(jQuery('#brapi_phenotyping_handhelds_url_select').val());
+        brapi_phenotyping_handhelds_get_traits(jQuery('#brapi_phenotyping_handhelds_url_select').val());
+    });
+
+    jQuery(document).on('click', '#brapi_table_select_submit_brapi_phenotyping_handhelds_studies_div', function(){
+        jQuery.each(jQuery('input[name="brapi_table_select_'+studies_return_url+'"]:checked'), function(){
+            if (jQuery.inArray(jQuery(this).val(), selected_results) == -1){
+                selected_results.push(jQuery(this).val());
+            }
+        });
+        console.log(selected_results);
+        var format = jQuery('#brapi_phenotyping_handhelds_layout_format').val();
+        var url = jQuery('#brapi_phenotyping_handhelds_url_select').val();
+
+        for (var i=0; i<selected_results.length; i++){
+            var return_url = url+'/brapi/v1/studies/'+selected_results[i]+'/layout?format='+format;
+            jQuery.ajax( {
+                'url': return_url,
+                'beforeSend': function(){
+                    jQuery('#working_modal').modal('show');
+                },
+                'success': function(response) {
+                    //console.log(response);
+                    if (response.metadata.datafiles.length > 0){
+                        var html = "<h4>Download Layout File(s) From Here: <br/>";
+                        for (var j=0; j<response.metadata.datafiles.length; j++){
+                            html = html + "<a href='"+response.metadata.datafiles[j]+"'>"+response.metadata.datafiles[j]+"</a><br/>";
+                        }
+                        jQuery('#brapi_phenotyping_handhelds_layout_results_div').html(html);
+                    } else {
+                        brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_phenotyping_handhelds_layout_results_div', return_url, undefined, {}, ['observationUnitName','replicate','germplasmName','blockNumber', 'X', 'Y', 'entryType', 'additionalInfo'], 'observationUnitName', []);
+                    }
+                    jQuery('#working_modal').modal('hide');
+                },
+                error: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    alert('An error occurred');
+                }
+            });
+        }
+    });
+
+});
+
+function brapi_phenotyping_handhelds_get_studies(url) {
+    studies_return_url = url+'/brapi/v1/studies-search';
+    jQuery.ajax( {
+        'url': url+'/brapi/v1/studies-search',
+        'beforeSend': function(){
+            jQuery('#working_modal').modal('show');
+        },
+        'success': function(response) {
+            //console.log(response);
+            brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_phenotyping_handhelds_studies_div', studies_return_url, undefined, {}, ['studyName','trialName','programName','locationName'], 'studyDbId', []);
+            jQuery('#working_modal').modal('hide');
+        },
+        error: function(response) {
+            jQuery('#working_modal').modal('hide');
+            alert('An error occurred');
+        }
+    });
+}
+
+function brapi_phenotyping_handhelds_get_traits(url) {
+    traits_return_url = url+'/brapi/v1/variables';
+    jQuery.ajax( {
+        'url': url+'/brapi/v1/variables',
+        'beforeSend': function(){
+            jQuery('#working_modal').modal('show');
+        },
+        'success': function(response) {
+            //console.log(response);
+            brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_phenotyping_handhelds_traits_div', traits_return_url, undefined, {}, ['observationVariableDbId','name','ontologyName','trait','method','scale'], 'name', []);
+            jQuery('#working_modal').modal('hide');
+        },
+        error: function(response) {
+            jQuery('#working_modal').modal('hide');
+            alert('An error occurred');
+        }
+    });
+}
+
+</script>

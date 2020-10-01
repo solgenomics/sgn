@@ -28,7 +28,7 @@ sub document_browser :Path('/tools/documents/') :Args(0) {
 
     my $user = $c->user();
     if (!$user) {
-        $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         return;
     }
 

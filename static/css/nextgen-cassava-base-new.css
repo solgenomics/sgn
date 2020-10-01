@@ -1332,7 +1332,7 @@ h4 {font-size: 14px; }
 h5 {font-size: 12px; }		
 h6 {font-size: 11px; color: #999999; text-transform: uppercase; }
 
-a.btn {
+a.btn_purple {
   background: none;
   display: inline-block;
   *display: inline;

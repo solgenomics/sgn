@@ -19,6 +19,10 @@ use Try::Tiny;
 use File::Basename qw | basename dirname|;
 use File::Spec::Functions;
 use CXGN::People::Roles;
+use CXGN::Trial::TrialLayout;
+use CXGN::Genotype::Search;
+use JSON::XS;
+use CXGN::Trial;
 
 
 BEGIN { extends 'Catalyst::Controller'; }
@@ -30,7 +34,7 @@ sub manage_breeding_programs : Path("/breeders/manage_programs") :Args(0) {
     if (!$c->user()) {
 
 	# redirect to login page
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
 
@@ -55,7 +59,7 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
     if (!$c->user()) {
 
 	# redirect to login page
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
 
@@ -63,13 +67,45 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
 
     my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
 
+    my @editable_stock_props = split ',', $c->config->{editable_stock_props};
+    my %editable_stock_props = map { $_=>1 } @editable_stock_props;
+
     my $breeding_programs = $projects->get_breeding_programs();
+    my @breeding_programs = @$breeding_programs;
+    my @roles = $c->user->roles();
 
-    # use get_all_locations, as other calls for locations can be slow
-    #
-    $c->stash->{locations} = $projects->get_all_locations();
+    #Add true false field to breeding program array indicating whether program is linked to current user
+    foreach my $role (@roles) {
+        for (my $i=0; $i < scalar @breeding_programs; $i++) {
+            if ($role eq $breeding_programs[$i][1]){
+                $breeding_programs[$i][3] = 1;
+            } else {
+                $breeding_programs[$i][3] = 0;
+            }
+        }
+    }
 
-    $c->stash->{breeding_programs} = $breeding_programs;
+    #print STDERR "Breeding programs are ".Dumper(@breeding_programs);
+    my $field_management_factors = $c->config->{management_factor_types};
+    my @management_factor_types = split ',',$field_management_factors;
+
+    my $design_type_string = $c->config->{design_types};
+    my @design_types = split ',',$design_type_string;
+
+    $c->stash->{design_types} = \@design_types;
+    $c->stash->{management_factor_types} = \@management_factor_types;
+    $c->stash->{editable_stock_props} = \%editable_stock_props;
+    $c->stash->{preferred_species} = $c->config->{preferred_species};
+    $c->stash->{timestamp} = localtime;
+
+    my $json = JSON::XS->new();
+    my $locations = $json->decode($projects->get_all_locations_by_breeding_program());
+
+    #print STDERR "Locations are ".Dumper($locations)."\n";
+
+    $c->stash->{locations} = $locations;
+
+    $c->stash->{breeding_programs} = \@breeding_programs;
 
     $c->stash->{template} = '/breeders_toolbox/manage_projects.mas';
 }
@@ -83,7 +119,7 @@ sub manage_accessions : Path("/breeders/accessions") Args(0) {
     if (!$c->user()) {
 	# redirect to login page
 	#
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
 
@@ -92,12 +128,15 @@ sub manage_accessions : Path("/breeders/accessions") Args(0) {
     my $accessions = $ac->get_all_accessions($c);
     # my $populations = $ac->get_all_populations($c);
 
+    my @editable_stock_props = split ',', $c->config->{editable_stock_props};
+    my %editable_stock_props = map { $_=>1 } @editable_stock_props;
+
     $c->stash->{accessions} = $accessions;
     $c->stash->{list_id} = $list_id;
     #$c->stash->{population_groups} = $populations;
     $c->stash->{preferred_species} = $c->config->{preferred_species};
+    $c->stash->{editable_stock_props} = \%editable_stock_props;
     $c->stash->{template} = '/breeders_toolbox/manage_accessions.mas';
-
 }
 
 sub manage_roles : Path("/breeders/manage_roles") Args(0) {
@@ -105,7 +144,7 @@ sub manage_roles : Path("/breeders/manage_roles") Args(0) {
     my $c = shift;
 
     if (!$c->user()) {
-        $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         return;
     }
 
@@ -113,10 +152,27 @@ sub manage_roles : Path("/breeders/manage_roles") Args(0) {
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $person_roles = CXGN::People::Roles->new({ bcs_schema=>$schema });
-    my $breeding_programs = $person_roles->get_breeding_program_roles();
+    my $ascii_chars = 1;
+    my $breeding_programs = $person_roles->get_breeding_program_roles($ascii_chars);
 
     $c->stash->{roles} = $breeding_programs;
     $c->stash->{template} = '/breeders_toolbox/manage_roles.mas';
+}
+
+sub manage_tissue_samples : Path("/breeders/samples") Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+    my $genotyping_facilities = $c->config->{genotyping_facilities};
+    my @facilities = split ',',$genotyping_facilities;
+
+    $c->stash->{facilities} = \@facilities;
+    $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
+    $c->stash->{template} = '/breeders_toolbox/manage_samples.mas';
 }
 
 
@@ -128,24 +184,11 @@ sub manage_locations : Path("/breeders/locations") Args(0) {
 
 	# redirect to login page
 	#
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
 
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $bp = CXGN::BreedersToolbox::Projects->new( { schema=>$schema });
-    my $breeding_programs = $bp->get_breeding_programs();
-    my $locations = {};
-    foreach my $b (@$breeding_programs) {
-	$locations->{$b->[1]} = $bp->get_locations_by_breeding_program($b->[0]);
-    }
-    $locations->{'Other'} = $bp->get_locations_by_breeding_program();
-
     $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
-
-    print STDERR "Locations: " . Dumper($locations);
-
-    $c->stash->{locations} = $locations;
 
     $c->stash->{template} = '/breeders_toolbox/manage_locations.mas';
 }
@@ -158,7 +201,7 @@ sub manage_nurseries : Path("/breeders/nurseries") Args(0) {
 
 	# redirect to login page
 	#
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
@@ -189,24 +232,46 @@ sub manage_crosses : Path("/breeders/crosses") Args(0) {
 
 	# redirect to login page
 	#
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $bp = CXGN::BreedersToolbox::Projects->new( { schema=>$schema });
     my $breeding_programs = $bp->get_breeding_programs();
 
+    my $crossingtrial = CXGN::BreedersToolbox::Projects->new( { schema=>$schema });
+    my $crossing_trials = $crossingtrial->get_crossing_trials();
+
     $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
 
-    $c->stash->{locations} = $bp->get_all_locations($c);
 
-    #$c->stash->{projects} = $self->get_projects($c);
+    my @breeding_programs = @$breeding_programs;
+    my @roles = $c->user->roles();
 
-    $c->stash->{programs} = $breeding_programs;
+    foreach my $role (@roles) {
+        for (my $i=0; $i < scalar @breeding_programs; $i++) {
+            if ($role eq $breeding_programs[$i][1]){
+                $breeding_programs[$i][3] = 1;
+            } else {
+                $breeding_programs[$i][3] = 0;
+            }
+        }
+    }
+
+    my $json = JSON::XS->new();
+    my $locations = $json->decode($crossingtrial->get_all_locations_by_breeding_program());
+
+    $c->stash->{locations} = $locations;
+
+    $c->stash->{programs} = \@breeding_programs;
+
+    #$c->stash->{locations} = $bp->get_all_locations($c);
+
+    #$c->stash->{programs} = $breeding_programs;
+
+    $c->stash->{crossing_trials} = $crossing_trials;
 
     $c->stash->{roles} = $c->user()->roles();
-
-    $c->stash->{cross_populations} = $self->get_crosses($c);
 
     $c->stash->{template} = '/breeders_toolbox/manage_crosses.mas';
 
@@ -217,17 +282,89 @@ sub manage_phenotyping :Path("/breeders/phenotyping") Args(0) {
     my $c = shift;
 
     if (!$c->user()) {
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
 
-    my $data = $self->get_phenotyping_data($c);
+    my @file_types = [ 'spreadsheet phenotype file', 'direct phenotyping', 'trial_additional_file_upload', 'brapi observations', 'tablet phenotype file' ];
+    my $data = $self->get_file_data($c, \@file_types);
 
-    $c->stash->{phenotype_files} = $data->{phenotype_files};
-    $c->stash->{deleted_phenotype_files} = $data->{deleted_phenotype_files};
+    $c->stash->{phenotype_files} = $data->{files};
+    $c->stash->{deleted_phenotype_files} = $data->{deleted_files};
 
     $c->stash->{template} = '/breeders_toolbox/manage_phenotyping.mas';
 
+}
+
+sub manage_nirs :Path("/breeders/nirs") Args(0) {
+    my $self =shift;
+    my $c = shift;
+
+    if (!$c->user()) {
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	return;
+    }
+
+    my @file_types = [ 'nirs spreadsheet' ];
+    my $data = $self->get_file_data($c, \@file_types);
+
+    $c->stash->{nirs_files} = $data->{files};
+    $c->stash->{deleted_nirs_files} = $data->{deleted_files};
+
+    $c->stash->{template} = '/breeders_toolbox/manage_nirs.mas';
+
+}
+
+sub manage_upload :Path("/breeders/upload") Args(0) {
+    my $self =shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
+    my @editable_stock_props = split ',', $c->config->{editable_stock_props};
+    my %editable_stock_props = map { $_=>1 } @editable_stock_props;
+    $c->stash->{editable_stock_props} = \%editable_stock_props;
+
+    my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
+    my $breeding_programs = $projects->get_breeding_programs();
+
+    my $genotyping_facilities = $c->config->{genotyping_facilities};
+    my @facilities = split ',',$genotyping_facilities;
+
+    my $json = JSON::XS->new();
+
+    my $field_management_factors = $c->config->{management_factor_types};
+    my @management_factor_types = split ',',$field_management_factors;
+
+    my $design_type_string = $c->config->{design_types};
+    my @design_types = split ',',$design_type_string;
+
+    $c->stash->{design_types} = \@design_types;
+    $c->stash->{management_factor_types} = \@management_factor_types;
+    $c->stash->{facilities} = \@facilities;
+    $c->stash->{geojson_locations} = $json->decode($projects->get_all_locations_by_breeding_program());
+    $c->stash->{locations} = $projects->get_all_locations();
+    $c->stash->{breeding_programs} = $breeding_programs;
+    $c->stash->{timestamp} = localtime;
+    $c->stash->{preferred_species} = $c->config->{preferred_species};
+    $c->stash->{template} = '/breeders_toolbox/manage_upload.mas';
+}
+
+sub manage_file_share_dump :Path("/breeders/file_share_dump") Args(0) {
+    my $self =shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
+    $c->stash->{template} = '/breeders_toolbox/file_share/manage_file_share_dump.mas';
 }
 
 sub manage_plot_phenotyping :Path("/breeders/plot_phenotyping") Args(0) {
@@ -237,7 +374,7 @@ sub manage_plot_phenotyping :Path("/breeders/plot_phenotyping") Args(0) {
     my $stock_id = $c->req->param('stock_id');
 
     if (!$c->user()) {
-	     $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	     $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	      return;
     }
     my $stock = $schema->resultset("Stock::Stock")->find( { stock_id=>$stock_id })->uniquename();
@@ -247,6 +384,57 @@ sub manage_plot_phenotyping :Path("/breeders/plot_phenotyping") Args(0) {
     $c->stash->{template} = '/breeders_toolbox/manage_plot_phenotyping.mas';
 
 }
+
+sub manage_trial_phenotyping :Path("/breeders/trial_phenotyping") Args(0) {
+    my $self =shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $trial_id = $c->req->param('trial_id');
+
+    if (!$c->user()) {
+	     $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	      return;
+    }
+    my $project_name = $schema->resultset("Project::Project")->find( { project_id=>$trial_id })->name();
+
+    my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
+
+    $c->stash->{trial_stock_type} = $trial->get_trial_stock_type();
+    $c->stash->{trial_name} = $project_name;
+    $c->stash->{trial_id} = $trial_id;
+    $c->stash->{template} = '/breeders_toolbox/manage_trial_phenotyping.mas';
+}
+
+sub manage_odk_data_collection :Path("/breeders/odk") Args(0) {
+    my $self =shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+    $c->stash->{odk_crossing_data_service_name} = $c->config->{odk_crossing_data_service_name};
+    $c->stash->{odk_crossing_data_service_url} = $c->config->{odk_crossing_data_service_url};
+    $c->stash->{odk_crossing_data_test_form_name} = $c->config->{odk_crossing_data_test_form_name};
+    $c->stash->{odk_phenotyping_data_service_name} = $c->config->{odk_phenotyping_data_service_name};
+    $c->stash->{odk_phenotyping_data_service_url} = $c->config->{odk_phenotyping_data_service_url};
+    $c->stash->{template} = '/breeders_toolbox/manage_odk_data_collection.mas';
+}
+
+
+sub manage_identifier_generation :Path("/breeders/identifier_generation") Args(0) {
+    my $self =shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+    $c->stash->{template} = '/breeders_toolbox/identifier_generation/manage_identifier_generation.mas';
+}
+
 
 sub manage_phenotyping_download : Path("/breeders/phenotyping/download") Args(1) {
     my $self =shift;
@@ -302,7 +490,7 @@ sub make_cross_form :Path("/stock/cross/new") :Args(0) {
 
     }
     else {
-      $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+      $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
       return;
     }
 }
@@ -325,7 +513,7 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
     my $visible_to_role = $c->req->param('visible_to_role');
 
     if (! $c->user()) { # redirect
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
 
@@ -444,7 +632,7 @@ sub selection_index : Path("/selection/index") :Args(0) {
     if (!$c->user()) {
 
 	# redirect to login page
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
 
@@ -470,7 +658,7 @@ sub breeder_home :Path("/breeders/home") Args(0) {
     if (!$c->user()) {
 
 	# redirect to login page
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
 
@@ -494,8 +682,6 @@ sub breeder_home :Path("/breeders/home") Args(0) {
     # my @roles = $c->user->roles();
     # $c->stash->{roles}=\@roles;
 
-    # $c->stash->{cross_populations} = $self->get_crosses($c);
-
     # $c->stash->{stockrelationships} = $self->get_stock_relationships($c);
 
     # my $locations = $bp->get_locations($c);
@@ -504,7 +690,7 @@ sub breeder_home :Path("/breeders/home") Args(0) {
     # # get uploaded phenotype files
     # #
 
-    # my $data = $self->get_phenotyping_data($c);
+    # my $data = $self->get_file_data($c, \@file_types);
 
     # $c->stash->{phenotype_files} = $data->{file_info};
     # $c->stash->{deleted_phenotype_files} = $data->{deleted_file_info};
@@ -513,91 +699,61 @@ sub breeder_home :Path("/breeders/home") Args(0) {
     $c->stash->{template} = '/breeders_toolbox/home.mas';
 }
 
-
 sub breeder_search : Path('/breeders/search/') :Args(0) {
     my ($self, $c) = @_;
-
     $c->stash->{template} = '/breeders_toolbox/breeder_search_page.mas';
 
 }
-
-
-sub get_crosses : Private {
+sub get_file_data : Private {
     my $self = shift;
     my $c = shift;
-
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-
-    # get crosses
-    #
-    my $stock_type_cv = $schema->resultset("Cv::Cv")->find( {name=>'stock_type'});
-    my $cross_cvterm = $schema->resultset("Cv::Cvterm")->find(
-	{ name   => 'cross',
-	  cv_id => $stock_type_cv->cv_id(),
-	});
-    my @cross_populations = ();
-
-    if ($cross_cvterm) {
-
-      my @cross_population_stocks = $schema->resultset("Stock::Stock")->search(
-									       { type_id => $cross_cvterm->cvterm_id, is_obsolete => 'f'
-									       } );
-      foreach my $cross_pop (@cross_population_stocks) {
-	push @cross_populations, [$cross_pop->name,$cross_pop->stock_id];
-      }
-    }
-    return  \@cross_populations;
-}
-
-
-
-sub get_phenotyping_data : Private {
-    my $self = shift;
-    my $c = shift;
+    my $file_types = shift;
+    my @file_types = @{$file_types};
 
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
 
     my $file_info = [];
     my $deleted_file_info = [];
 
-     my $metadata_rs = $metadata_schema->resultset("MdMetadata")->search( { create_person_id => $c->user()->get_object->get_sp_person_id() }, { order_by => 'create_date' } );
+    my $metadata_rs = $metadata_schema->resultset("MdMetadata")->search( { create_person_id => $c->user()->get_object->get_sp_person_id() }, { order_by => 'create_date' } );
 
     print STDERR "RETRIEVED ".$metadata_rs->count()." METADATA ENTRIES...\n";
 
     while (my $md_row = ($metadata_rs->next())) {
-	my $file_rs = $metadata_schema->resultset("MdFiles")->search( { metadata_id => $md_row->metadata_id(), filetype => {'!=' => 'document_browser'} } );
+        my $file_rs = $metadata_schema->resultset("MdFiles")->search( { metadata_id => $md_row->metadata_id(), filetype => {'in' => @file_types } } );
 
-	if (!$md_row->obsolete) {
-	    while (my $file_row = $file_rs->next()) {
-		push @$file_info, { file_id => $file_row->file_id(),
-				    basename => $file_row->basename,
-				    dirname  => $file_row->dirname,
-				    file_type => $file_row->filetype,
-				    md5checksum => $file_row->md5checksum,
-				    create_date => $md_row->create_date,
-		};
-	    }
-	}
-	else {
-	    while (my $file_row = $file_rs->next()) {
-		push @$deleted_file_info, { file_id => $file_row->file_id(),
-					    basename => $file_row->basename,
-					    dirname => $file_row->dirname,
-					    file_type => $file_row->filetype,
-					    md5checksum => $file_row->md5checksum,
-					    create_date => $md_row->create_date,
-		};
-	    }
-	}
+        if (!$md_row->obsolete) {
+            while (my $file_row = $file_rs->next()) {
+                push @$file_info, { file_id => $file_row->file_id(),
+                basename => $file_row->basename,
+                dirname  => $file_row->dirname,
+                file_type => $file_row->filetype,
+                md5checksum => $file_row->md5checksum,
+                create_date => $md_row->create_date,
+            };
+        }
     }
+    else {
+        while (my $file_row = $file_rs->next()) {
+            push @$deleted_file_info, { file_id => $file_row->file_id(),
+            basename => $file_row->basename,
+            dirname => $file_row->dirname,
+            file_type => $file_row->filetype,
+            md5checksum => $file_row->md5checksum,
+            create_date => $md_row->create_date,
+        };
+    }
+}
+}
 
-    my $data = { phenotype_files => $file_info,
-		 deleted_phenotype_files => $deleted_file_info,
-    };
-    return $data;
+my $data = { files => $file_info,
+deleted_files => $deleted_file_info,
+};
+return $data;
 
 
 }
+
 
 sub manage_genotyping : Path("/breeders/genotyping") Args(0) {
     my $self = shift;
@@ -605,7 +761,7 @@ sub manage_genotyping : Path("/breeders/genotyping") Args(0) {
 
     if (!$c->user()) {
 	# redirect to login page
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
 
@@ -623,15 +779,55 @@ sub manage_genotyping : Path("/breeders/genotyping") Args(0) {
 
     $genotyping_trials_by_breeding_project{'Other'} = $projects->get_genotyping_trials_by_breeding_program();
 
+    my $genotyping_facilities = $c->config->{genotyping_facilities};
+    my @facilities = split ',',$genotyping_facilities;
+
     $c->stash->{locations} = $projects->get_all_locations($c);
 
     $c->stash->{genotyping_trials_by_breeding_project} = \%genotyping_trials_by_breeding_project;
 
     $c->stash->{breeding_programs} = $breeding_programs;
 
+    $c->stash->{facilities} = \@facilities;
 
     $c->stash->{template} = '/breeders_toolbox/manage_genotyping.mas';
 }
 
+sub manage_genotype_qc : Path("/breeders/genotype_qc") :Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()) {
+        # redirect to login page
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    $c->stash->{template} = '/breeders_toolbox/manage_genotype_qc.mas';
+}
+
+
+sub manage_markers : Path("/breeders/markers") Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{template} = '/breeders_toolbox/markers/manage_markers.mas';
+}
+
+sub manage_drone_imagery : Path("/breeders/drone_imagery") Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()) {
+        # redirect to login page
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    $c->stash->{template} = '/breeders_toolbox/manage_drone_imagery.mas';
+}
 
 1;

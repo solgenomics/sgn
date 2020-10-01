@@ -17,11 +17,12 @@ if ( !$sp ) {
     confirm_failure($page, "Username \"$username\" was not found.");
 }
 
+if ( !$sp->get_confirm_code() ) {
+    confirm_failure($page, "No confirmation is required for user <b>$username</b>. This account has already been confirmed. <p><a href='/user/login?goto_url=%2F'>[Login Page]</a></p>");
+}
+
 if ( $sp->get_confirm_code() ne $confirm_code ) {
     confirm_failure($page, "Confirmation code is not valid!\n");
-}
-if ( !$sp->get_confirm_code() ) {
-    confirm_failure($page, "No confirmation is required for user <b>$username</b>");
 }
 
 $sp->set_disabled(undef);
@@ -36,7 +37,7 @@ print <<EOF;
 
 <p>Confirmation successful for username <b>$username</b>.</p>
 
-<p><a href="login.pl">[Login Page]</a></p>
+<p><a href="/user/login?goto_url=%2F">[Login Page]</a></p>
 <br />
 
 EOF

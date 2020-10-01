@@ -6,7 +6,6 @@ use Moose;
 use Bio::SeqIO;
 use Config::Any;
 use Data::Dumper;
-use Storable qw | nstore retrieve |;
 use Try::Tiny;
 use Tie::UrlEncoder; our %urlencode;
 use File::Temp qw | tempfile |;
@@ -31,7 +30,7 @@ BEGIN { extends 'Catalyst::Controller::REST'; };
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON' },
    );
 
 sub run : Path('/tools/blast/run') Args(0) {
@@ -82,7 +81,7 @@ sub run : Path('/tools/blast/run') Args(0) {
 	}
 
     my $seq_count = 1;
-    my $blast_tmp_output = $c->config->{cluster_shared_tempdir}."/blast";
+    my $blast_tmp_output = $c->config->{cluster_shared_tempdir}."/cluster";
     mkdir $blast_tmp_output if ! -d $blast_tmp_output;
     if ($params->{sequence} =~ /\>/) {
     	$seq_count= $params->{sequence} =~ tr/\>/\>/;
@@ -94,9 +93,9 @@ sub run : Path('/tools/blast/run') Args(0) {
       DIR=> $blast_tmp_output,
     );
 
-    my $jobid = basename($seqfile);
+#    my $jobid = basename($seqfile);
 
-    print STDERR "JOB ID CREATED: $jobid\n";
+#    print STDERR "JOB ID CREATED: $jobid\n";
 
     my $schema = $c->dbic_schema("SGN::Schema");
 
@@ -131,7 +130,7 @@ sub run : Path('/tools/blast/run') Args(0) {
 		     -format   => 'fasta',
 		     -file       => $seqfile,
 		     );
-
+		 
 		 try {
 		     while ( my $s = $i->next_seq ) {
 			 $s->length or $c->throw(
@@ -152,51 +151,57 @@ sub run : Path('/tools/blast/run') Args(0) {
 				developer_message => $full_error,
 			 );
 		 };
-
+		 
 		 $seq_count >= 1 or $c->throw( message => 'no sequence submitted, cannot run BLAST',
 					       is_error => 0,
 					       developer_message => Data::Dumper::Dumper({
 						   '$seq_count' => $seq_count,
 						   '$seq_filename' => $seqfile,
-							}),
-		);
-
-		return -i => $seqfile;
+											 }),
+		     );
+		 
+		 return -query => $seqfile;
+		 
 	      }
-	 },
-
-	 matrix =>
-	 sub {
-	     my $m = $params->{matrix};
-	     $m =~ /^(BLOSUM|PAM)\d+$/
-		 or $c->throw( is_error => 0, message => "invalid matrix '$m'" );
-	     return -M => $m;
 	 },
 
 
 	 expect =>
 	 sub {
 	     $params->{evalue} =~ s/[^\d\.e\-\+]//gi; #can only be these characters
-	     return -e =>  $params->{evalue} ? $params->{evalue} : 1;
+	     return -evalue =>  $params->{evalue} ? $params->{evalue} : 1;
+	 },
+
+	 word_size =>
+	 sub {
+	     print STDERR "WORD SIZE = $params->{word_size}\n";
+	     $params->{word_size} =~ s/[^\d]//gi; # filter numbers only
+	     return -word_size => $params->{word_size} ? $params->{word_size} : 11;
 	 },
 
 	 maxhits =>
 	 sub {
 	     my $h = $params->{maxhits} || 20;
 	     $h =~ s/\D//g; #only digits allowed
-	     return -b => $h;
+	     return -max_hsps => $h;
 	 },
 
-	 hits_list =>
-	 sub {
-	     my $h = $params->{maxhits} || 20;
-	     $h =~ s/\D//g; #only digits allowed
-	     return -v => $h;
-	 },
+	 # hits_list =>
+	 # sub {
+	 #     my $h = $params->{maxhits} || 20;
+	 #     $h =~ s/\D//g; #only digits allowed
+	 #     return -v => $h;
+	 # },
 
 	 filterq =>
 	 sub {
-	     return -F => $params->{filterq} ? 'T' : 'F';
+	     if ($params->{program} eq "blastn") { 
+		 return -dust  => $params->{filterq} ? 'yes' : 'no';
+	     }
+	     else { 
+		 return ""; 
+	     }
+	     
 	 },
 
 	 # outformat =>
@@ -215,22 +220,32 @@ sub run : Path('/tools/blast/run') Args(0) {
 	     #returns '/data/shared/blast/databases/genbank/nr'
 	     #remember the ID of the blast db the user just blasted with
 
-	     return -d => $basename;
+	     return -db => $basename;
 	 },
 
-	 program =>
-	 sub {
-	     $params->{program} =~ s/[^a-z]//g; #only lower-case letters
-	     return -p => $params->{program};
-	 },
+	 # program =>
+	 # sub {
+	 #     $params->{program} =~ s/[^a-z]//g; #only lower-case letters
+	 #     return -p => $params->{program};
+	 # },
 	);
 
+
+    if (! $params->{program} eq "blastn") { 
+	$arg_handlers{matrix} = sub {
+	    my $m = $params->{matrix};
+	    $m =~ /^(BLOSUM|PAM)\d+$/
+		or $c->throw( is_error => 0, message => "invalid matrix '$m'" );
+	    return -M => $m;
+	};
+    }
+    
     print STDERR "BUILDING COMMAND...\n";
 
 
     # build our command with our arg handlers
     #
-    my @command = ('blastall');
+    my @command = ($params->{program});
     foreach my $k (keys %arg_handlers) {
 
       print STDERR "evaluating $k...";
@@ -241,8 +256,8 @@ sub run : Path('/tools/blast/run') Args(0) {
     }
 
     # To get the proper format for gi sequences (CitrusGreening.org case)
-    push(@command, '-I');
-    push(@command, 'T');
+    push(@command, '-show_gis');
+#    push(@command, 'T');  # show_gis is a flag, no parameter needed
 
     print STDERR "COMMAND: ".join(" ", @command);
     print STDERR "\n";
@@ -255,54 +270,49 @@ sub run : Path('/tools/blast/run') Args(0) {
 
 
     my $job;
+    my $jobid;
     eval {
-      $job = CXGN::Tools::Run->run_cluster(
-        @command,
-        {
-          temp_base => $blast_tmp_output,
-          queue => $c->config->{'web_cluster_queue'},
-          working_dir => $blast_tmp_output,
-        
-          # temp_base => $c->config->{'cluster_shared_tempdir'},
-          # queue => $c->config->{'web_cluster_queue'},
-          # working_dir => $c->config->{'cluster_shared_tempdir'},
-
-  		    # don't block and wait if the cluster looks full
-  		    max_cluster_jobs => 1_000_000_000,
-  	    }
-  	  );
+	my $config = { 
+	    backend => $c->config->{backend},
+	    submit_host => $c->config->{cluster_host},
+	    temp_base => $blast_tmp_output,
+	    queue => $c->config->{'web_cluster_queue'},
+	    do_cleanup => 0,
+	    # don't block and wait if the cluster looks full
+	    max_cluster_jobs => 1_000_000_000,
+	    
+	};
+	    
+	$job = CXGN::Tools::Run->new($config);
+	$job->do_not_cleanup(1);
+	$job->run_cluster(@command);
    
-      print STDERR "Saving job state to $seqfile.job for id ".$job->job_id()."\n";
+	
 
-      $job->do_not_cleanup(1);
-
-      nstore( $job, $seqfile.".job" ) or die 'could not serialize job object';
-
+   
     };
 
-
-
     if ($@) {
-      print STDERR "An error occurred! $@\n";
-      $c->stash->{rest} = { error => $@ };
+	print STDERR "An error occurred! $@\n";
+	$c->stash->{rest} = { error => $@ };
     }
     else {
-  		# write data in blast.log
-  		my $blast_log_path = $c->config->{blast_log};
-  		my $blast_log_fh;
-  		if (-e $blast_log_path) {
-  			open($blast_log_fh, ">>", $blast_log_path) || print STDERR "cannot create $blast_log_path\n";
-  		} else {
-  			open($blast_log_fh, ">", $blast_log_path) || print STDERR "cannot open $blast_log_path\n";
-  			print $blast_log_fh "Seq_num\tDB_id\tProgram\teval\tMaxHits\tMatrix\tDate\n";
-  		}
-  		print $blast_log_fh "$seq_count\t".$params->{database}."\t".$params->{program}."\t".$params->{evalue}."\t".$params->{maxhits}."\t".$params->{matrix}."\t".localtime()."\n";
-
-
-  		print STDERR "Passing jobid code ".(basename($jobid))."\n";
-  		$c->stash->{rest} = { jobid =>  basename($jobid),
+	# write data in blast.log
+	my $blast_log_path = $c->config->{blast_log};
+	my $blast_log_fh;
+	if (-e $blast_log_path) {
+	    open($blast_log_fh, ">>", $blast_log_path) || print STDERR "cannot create $blast_log_path\n";
+	} else {
+	    open($blast_log_fh, ">", $blast_log_path) || print STDERR "cannot open $blast_log_path\n";
+	    print $blast_log_fh "Seq_num\tDB_id\tProgram\teval\tMaxHits\tMatrix\tDate\n";
+	}
+	print $blast_log_fh "$seq_count\t".$params->{database}."\t".$params->{program}."\t".$params->{evalue}."\t".$params->{maxhits}."\t".$params->{matrix}."\t".localtime()."\n";
+	
+	
+	print STDERR "Passing jobid code ".$job->jobid()."\n";
+	$c->stash->{rest} = { jobid => $job->jobid(),
   	                      seq_count => $seq_count,
-  		};
+	};
     }
 }
 
@@ -314,11 +324,19 @@ sub check : Path('/tools/blast/check') Args(1) {
 
     # my $t0 = [gettimeofday]; #-------------------------- TIME CHECK
 
-    my $blast_tmp_output = $c->get_conf('cluster_shared_tempdir')."/blast";
+    my $cluster_tmp_dir = $c->get_conf('cluster_shared_tempdir')."/cluster";
 
     #my $jobid =~ s/\.\.//g; # prevent hacks
-    my $job = retrieve($blast_tmp_output."/".$jobid.".job");
-    if ( $job->alive ){
+    my $job_file = File::Spec->catfile($cluster_tmp_dir, $jobid, "job");
+
+    my $job = CXGN::Tools::Run->new( 
+	{ 
+	    job_file => $job_file, 
+	    submit_host => $c->config->{cluster_host},
+	    backend => $c->config->{backend},
+	});
+
+    if ( $job->alive()) {
       # my $t1 = [gettimeofday]; #-------------------------- TIME CHECK
 
       sleep(1);
@@ -341,6 +359,8 @@ sub check : Path('/tools/blast/check') Args(1) {
       my $result_file = $self->jobid_to_file($c, $jobid.".out");
 
       my $job_out_file = $job->out_file();
+
+      print STDERR "Job out file = $job_out_file...\n";
       for( 1..10 ) {
   	    uncache($job_out_file);
   	    last if -f $job_out_file;
@@ -366,12 +386,13 @@ sub check : Path('/tools/blast/check') Args(1) {
       # my $t7 = [gettimeofday]; #-------------------------- TIME CHECK
 
       # system("ls $c->{config}->{cluster_shared_tempdir} 2>&1 >/dev/null");
+      print STDERR "Copying result file to website tempdir...\n";
       copy($job_out_file, $result_file) or die "Can't copy result file '$job_out_file' to $result_file ($!)";
 
       # my $t8 = [gettimeofday]; #-------------------------- TIME CHECK
 
     	#clean up the job tempfiles
-    	$job->cleanup();
+      #	CXGN::Tools::Run->cleanup($jobid);
 
       # my $t9 = [gettimeofday]; #-------------------------- TIME CHECK
 
@@ -425,7 +446,7 @@ sub get_result : Path('/tools/blast/result') Args(1) {
     my $db_id = $c->req->param('db_id');
 
     my $result_file = $self->jobid_to_file($c, $jobid.".out");
-    my $blast_tmp_output = $c->get_conf('cluster_shared_tempdir')."/blast";
+    my $blast_tmp_output = $c->get_conf('cluster_shared_tempdir')."/cluster";
 
     # system("ls $blast_tmp_output 2>&1 >/dev/null");
     # system("ls ".($c->config->{cluster_shared_tempdir})." 2>&1 >/dev/null");
@@ -453,7 +474,7 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
     my $db_id = $c->req->param('db_id');
 
     my $file = $self->jobid_to_file($c, $jobid.".out");
-    my $blast_tmp_output = $c->get_conf('cluster_shared_tempdir')."/blast";
+    my $blast_tmp_output = $c->get_conf('cluster_shared_tempdir')."/cluster";
 
     my $schema = $c->dbic_schema("SGN::Schema");
     my $bdb = $schema->resultset("BlastDb")->find($db_id);
@@ -497,14 +518,18 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
     while (my $line = <$blast_fh>) {
       chomp($line);
 
+      $line =~ s/lcl\|//g;
+      
       if ($line =~ /Query\=\s*(\S+)/) {
         $query = $1;
         unshift(@res_html, "<center><h3>".$query." vs ".$bdb->title()."</h3></center>");
         $query_line_on = 1;
       }
 
-      if ($query_line_on && $line =~ /\((\d+)\s+letters/) {
-        $query_length = $1;
+      if ($query_line_on && $line =~ /Length=(\d+)/) {
+	  $query_length = $1;
+	  print STDERR "Query length = $query_length\n";
+
       }
 
       if ($append_desc) {
@@ -521,12 +546,13 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
       if ($line =~ /^>/) {
         $start_aln = 1;
         $append_desc = 1;
-
+	$query_line_on = 0;
+	
         if ($subject) {
           my $jbrowse_url = _build_jbrowse_url($jbr_src,$subject,$sstart,$send,$jbrowse_path);
           ($sstart,$send) = _check_coordinates($sstart,$send);
 
-          push(@res_html, "<tr><td><a id=\"$subject\" class=\"blast_match_ident\" href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$jbrowse_url', '/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
+          push(@res_html, "<tr><td><a id=\"$subject\" class=\"blast_match_ident\" href=\"/tools/blast/match/show?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$jbrowse_url', '/tools/blast/match/show?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
 
           if (length($desc) > 150) {
             $desc = substr($desc,0,150)." ...";
@@ -540,6 +566,7 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
           $description_hash{"description"} = $desc;
           $description_hash{"qstart"} = $qstart;
           $description_hash{"qend"} = $qend;
+	  print STDERR "HSPS: ".Dumper(\%description_hash);
           push(@json_array, \%description_hash);
 
         }
@@ -558,7 +585,6 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
         if ($line =~ /^>(\S+)\s*(.*)/) {
           $subject = $1;
           $desc = $2;
-
           # print STDERR "subject: $subject\n";
         }
       }
@@ -568,7 +594,7 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
         my $jbrowse_url = _build_jbrowse_url($jbr_src,$subject,$sstart,$send,$jbrowse_path);
         ($sstart,$send) = _check_coordinates($sstart,$send);
 
-        push(@res_html, "<tr><td><a id=\"$subject\" class=\"blast_match_ident\" href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$jbrowse_url', '/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
+        push(@res_html, "<tr><td><a id=\"$subject\" class=\"blast_match_ident\" href=\"/tools/blast/match/show?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$jbrowse_url', '/tools/blast/match/show?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
 
         if (length($desc) > 150) {
           $desc = substr($desc,0,150)." ...";
@@ -582,6 +608,9 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
         $description_hash{"description"} = $desc;
         $description_hash{"qstart"} = $qstart;
         $description_hash{"qend"} = $qend;
+
+	print STDERR "FOUND HSP: ".Dumper(\%description_hash);
+	
         push(@json_array, \%description_hash);
 
         $id = 0.0;
@@ -612,17 +641,17 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
         $id = sprintf("%.2f", $aln_matched*100/$aln_total);
       }
 
-      if (($line =~ /^Query:\s+(\d+)/) && ($qstart == 0)) {
+      if (($line =~ /^Query\:?\s+(\d+)/) && ($qstart == 0)) {
         $qstart = $1;
       }
-      if (($line =~ /^Sbjct:\s+(\d+)/) && ($sstart == 0)) {
+      if (($line =~ /^Sbjct\:?\s+(\d+)/) && ($sstart == 0)) {
         $sstart = $1;
       }
 
-      if (($line =~ /^Query:/) && ($line =~ /(\d+)\s*$/)) {
+      if (($line =~ /^Query\:?/) && ($line =~ /(\d+)\s*$/)) {
         $qend = $1;
       }
-      if (($line =~ /^Sbjct:/) && ($line =~ /(\d+)\s*$/)) {
+      if (($line =~ /^Sbjct\:?/) && ($line =~ /(\d+)\s*$/)) {
         $send = $1;
       }
 
@@ -637,7 +666,8 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
     my $jbrowse_url = _build_jbrowse_url($jbr_src,$subject,$sstart,$send,$jbrowse_path);
     ($sstart,$send) = _check_coordinates($sstart,$send);
 
-    push(@res_html, "<tr><td><a id=\"$subject\" class=\"blast_match_ident\" href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$jbrowse_url', '/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
+    push(@res_html, "<tr><td><a id=\"$subject\" class=\"blast_match_ident\" href=\"/tools/blast/match/show?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$jbrowse_url', '/tools/blast/match/show?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
+
     push(@res_html, "</table>");
 
 
@@ -775,15 +805,6 @@ sub _check_coordinates {
 
 
 
-
-
-
-
-
-
-
-
-
 sub jobid_to_file {
     my $self = shift;
     my $c = shift;
@@ -798,7 +819,7 @@ sub search_gene_ids {
 	my @ids = @{$ids_array};
 	my @output_seqs;
 
-	my $fs = Bio::BLAST::Database->open(full_file_basename => "$blastdb_path",);
+	my $fs = Bio::BLAST2::Database->open(full_file_basename => "$blastdb_path",);
 
 	foreach my $input_string (@ids) {
 
@@ -845,5 +866,6 @@ sub search_desc : Path('/tools/blast/desc_search/') Args(0) {
     }
     $c->stash->{rest} = {output_seq => "$output_seqs"};
 }
+
 
 1;

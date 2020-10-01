@@ -16,11 +16,15 @@ use List::Compare;
 use File::Temp qw / tempfile /;
 use File::Slurp;
 use JSON::Any;
+use JSON;
 
 use CXGN::Chado::Stock;
 use SGN::View::Stock qw/stock_link stock_organisms stock_types breeding_programs /;
 use Bio::Chado::NaturalDiversity::Reports;
 use SGN::Model::Cvterm;
+use Data::Dumper;
+use CXGN::Chado::Publication;
+use CXGN::Genotype::DownloadFactory;
 
 BEGIN { extends 'Catalyst::Controller' }
 with 'Catalyst::Component::ApplicationAttribute';
@@ -224,12 +228,14 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     ####################
     my $is_owner;
     my $owner_ids = $c->stash->{owner_ids} || [] ;
+    my $editor_info = $self->_stock_editor_info($stock);
     if ( $stock && ($curator || $person_id && ( grep /^$person_id$/, @$owner_ids ) ) ) {
         $is_owner = 1;
     }
     my $dbxrefs = $self->_dbxrefs($stock);
     my $pubs = $self->_stock_pubs($stock);
     my $image_ids = $self->_stock_images($stock, $type);
+    my $related_image_ids = $self->_related_stock_images($stock, $type);
     my $cview_tmp_dir = $c->tempfiles_subdir('cview');
 
     my $barcode_tempuri  = $c->tempfiles_subdir('image');
@@ -253,16 +259,17 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
             dbh       => $dbh,
             is_owner  => $is_owner,
             owners    => $owner_ids,
+            editor_info => $editor_info,
             props     => $props,
             dbxrefs   => $dbxrefs,
             pubs      => $pubs,
             members_phenotypes => $c->stash->{members_phenotypes},
             direct_phenotypes  => $c->stash->{direct_phenotypes},
-            direct_genotypes   => $c->stash->{direct_genotypes},
             has_qtl_data   => $c->stash->{has_qtl_data},
             cview_tmp_dir  => $cview_tmp_dir,
             cview_basepath => $c->get_conf('basepath'),
             image_ids      => $image_ids,
+            related_image_ids => $related_image_ids,
             allele_count   => $c->stash->{allele_count},
             ontology_count => $c->stash->{ontology_count},
 	    has_pedigree => $c->stash->{has_pedigree},
@@ -278,6 +285,44 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 	identifier_prefix => $c->config->{identifier_prefix},
         );
 }
+
+
+=head2 view_by_organism_name
+
+Public Path: /stock/view_by_organism/$organism/$name
+Path Params:
+    organism = organism name (abbreviation, genus, species, common name)
+    name = stock unique name
+
+Search for stock(s) matching the organism query and the stock unique name.
+If 1 match is found, display the stock detail page.  Display an error for 
+0 matches and a list of matches when multiple stocks are found.
+
+=cut
+
+sub view_by_organism_name : Path('/stock/view_by_organism') Args(2) {
+    my ($self, $c, $organism_query, $stock_query) = @_;
+    $self->search_stock($c, $organism_query, $stock_query);
+}
+
+
+=head2 view_by_name 
+
+Public Path: /stock/view_by_name/$name
+Path Params:
+    name = stock unique name
+
+Search for stock(s) matching the stock unique name.
+If 1 match is found, display the stock detail page.  Display an error for 
+0 matches and a list of matches when multiple stocks are found.
+
+=cut
+
+sub view_by_name : Path('/stock/view_by_name') Args(1) {
+    my ($self, $c, $stock_query) = @_;
+    $self->search_stock($c, undef, $stock_query);
+}
+
 
 =head1 PRIVATE ACTIONS
 
@@ -324,63 +369,61 @@ sub download_phenotypes : Chained('get_stock') PathPart('phenotypes') Args(0) {
 
 sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
     my ($self, $c) = @_;
-    my $stock = $c->stash->{stock_row};
-    my $stock_id = $stock->stock_id;
-    my $stock_name = $stock->uniquename;
+    my $stock_row = $c->stash->{stock_row};
+    my $stock_id = $stock_row->stock_id;
+    my $stock_name = $stock_row->uniquename;
+    my $genotypeprop_id = $c->req->param('genotypeprop_id') ? [$c->req->param('genotypeprop_id')] : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $dl_token = $c->req->param("gbs_download_token") || "no_token";
+    my $dl_cookie = "download".$dl_token;
+
+    my $stock = CXGN::Stock->new({schema => $schema, stock_id => $stock_id});
+    my $stock_type = $stock->type();
+
     if ($stock_id) {
+        my %genotype_download_factory = (
+            bcs_schema=>$schema,
+            people_schema=>$people_schema,
+            cache_root_dir=>$c->config->{cache_file_path},
+            markerprofile_id_list=>$genotypeprop_id,
+            #genotype_data_project_list=>$genotype_data_project_list,
+            #marker_name_list=>['S80_265728', 'S80_265723'],
+            #limit=>$limit,
+            #offset=>$offset
+        );
 
-	print STDERR "Exporting genotype file...\n";
-        my $tmp_dir = $c->get_conf('basepath') . "/" . $c->get_conf('stock_tempfiles');
-        my $file_cache = Cache::File->new( cache_root => $tmp_dir  );
-        $file_cache->purge();
-        my $key = "stock_" . $stock_id . "_genotype_data";
-        my $gen_file = $file_cache->get($key);
-        my $filename = $tmp_dir . "/stock_" . $stock_id . "_genotypes.csv";
-        unless ( $gen_file && -e $gen_file) {
-            my $gen_hashref; #hashref of hashes for the phenotype data
-            my %cvterms ; #hash for unique cvterms
-            ##############
-            my $genotypes =  $self->_stock_project_genotypes( $stock );
-            write_file($filename, ("project\tmarker\t$stock_name\n") );
-            foreach my $project (keys %$genotypes ) {
-		foreach my $geno (@ { $genotypes->{$project} } ) {
-		    my $genotypeprop_rs = $geno->search_related('genotypeprops' ); # , {
-		    #just check if the value type is JSON
-		    #this is the current genotype we have , add more here as necessary
-			#'type.name' => 'infinium array' } , {
-			#    join => 'type' } );
-		    while (my $prop = $genotypeprop_rs->next) {
-			my $json_text = $prop->value ;
-			my $genotype_values = JSON::Any->decode($json_text);
-			my $count = 0;
-			my @lines = ();
-			foreach my $marker_name (keys %$genotype_values) {
-			    $count++;
-			    #if ($count % 1000 == 0) { print STDERR "Processing $count     \r"; }
-			    my $read = $genotype_values->{$marker_name};
-			    push @lines, (join "\t", ($project, $marker_name, $read))."\n";
-			}
-			my @sorted_lines = sort chr_sort @lines;
-			write_file($filename, { append=> 1 }, @sorted_lines);
-		    }
-		}
-	    }
-            $file_cache->set( $key, $filename, '30 days' );
-            $gen_file = $file_cache->get($key);
+        if ($stock_type eq 'accession') {
+            $genotype_download_factory{accession_list} = [$stock_id];
         }
-        my @data;
+        elsif ($stock_type eq 'tissue_sample') {
+            $genotype_download_factory{tissue_sample_list} = [$stock_id];
+        }
 
-        foreach ( read_file($filename) ) {
-	    chomp;
-            push @data, [ split(/\t/) ];
-        }
-        #$c->stash->{'csv'}={ data => \@data};
-	$c->stash->{'csv'} = \@data;
-        $c->forward("View::Download::CSV");
+        my $geno = CXGN::Genotype::DownloadFactory->instantiate(
+            'VCF',    #can be either 'VCF' or 'GenotypeMatrix'
+            \%genotype_download_factory
+        );
+        my $file_handle = $geno->download(
+            $c->config->{cluster_shared_tempdir},
+            $c->config->{backend},
+            $c->config->{cluster_host},
+            $c->config->{'web_cluster_queue'},
+            $c->config->{basepath}
+        );
+
+        $c->res->content_type("application/text");
+        $c->res->cookies->{$dl_cookie} = {
+            value => $dl_token,
+            expires => '+1m',
+        };
+        $c->res->header('Content-Disposition', qq[attachment; filename="BreedBaseGenotypesDownload.vcf"]);
+        $c->res->body($file_handle);
     }
 }
 
 sub chr_sort {
+    no warnings 'uninitialized';
     my @a = split "\t", $a;
     my @b = split "\t", $b;
 
@@ -421,6 +464,75 @@ sub get_stock : Chained('/')  PathPart('stock')  CaptureArgs(1) {
     $c->stash->{stock}     = CXGN::Chado::Stock->new($self->schema, $stock_id);
     $c->stash->{stock_row} = $self->schema->resultset('Stock::Stock')
                                   ->find({ stock_id => $stock_id });
+}
+
+# Search for stock by organism name (optional) and uniquename
+# Display stock detail page for 1 match, error messages for 0 or multiple matches
+sub search_stock : Private {
+    my ( $self, $c, $organism_query, $stock_query ) = @_;
+    my $rs = $self->schema->resultset('Stock::Stock');
+    
+    my $matches;
+    my $count = 0;
+
+    # Search by name and organism
+    if ( defined($organism_query) && defined($stock_query) ) {
+        $matches = $rs->search({
+                'UPPER(uniquename)' => uc($stock_query),
+                -or => [
+                    'UPPER(organism.abbreviation)' => uc($organism_query),
+                    'UPPER(organism.genus)' => uc($organism_query),
+                    'UPPER(organism.species)' => uc($organism_query),
+                    'UPPER(organism.common_name)' => {'like', '%' . uc($organism_query) .'%'}
+                ],
+                is_obsolete => 'false'
+            },
+            {join => 'organism'}
+        );
+        $count = $matches->count;
+    }
+
+    # Search by name
+    elsif ( defined($stock_query) ) {
+        $matches = $rs->search({
+                'UPPER(uniquename)' => uc($stock_query), 
+                is_obsolete => 'false'
+            }, 
+            {join => 'organism'}
+        );
+        $count = $matches->count;
+    }
+
+
+    # NO MATCH FOUND
+    if ( $count == 0 ) {
+        $c->stash->{template} = "generic_message.mas";
+        $c->stash->{message} = "<strong>No Matching Stock Found</strong> ($stock_query $organism_query)<br />You can view and search for stocks from the <a href='/search/stocks'>Stock Search Page</a>";
+    }
+    
+    # MULTIPLE MATCHES FOUND
+    elsif ( $count > 1 ) {
+        my $list = "<ul>";
+        while (my $stock = $matches->next) {
+            my $stock_id = $stock->stock_id;
+            my $stock_name = $stock->uniquename;
+            my $species_name = $stock->organism->species;
+            my $url = "/stock/$stock_id/view";
+            $list.="<li><a href='$url'>$stock_name ($species_name)</li>";
+        }
+        $list.="</ul>";
+        $c->stash->{template} = "generic_message.mas";
+        $c->stash->{message} = "<strong>Multiple Stocks Found</strong><br />" . $list;
+    }
+
+    # 1 MATCH FOUND - FORWARD TO VIEW STOCK
+    else {
+        my $stock_id = $matches->first->stock_id;
+        $c->stash->{stock}     = CXGN::Chado::Stock->new($self->schema, $stock_id);
+        $c->stash->{stock_row} = $self->schema->resultset('Stock::Stock')
+                                  ->find({ stock_id => $stock_id });
+        $c->forward('view_stock');
+    }
 }
 
 #add the stockcvterms to the stash. Props are a hashref of lists.
@@ -497,13 +609,9 @@ sub get_stock_extended_info : Private {
     my ($members_phenotypes, $has_members_genotypes)  = (undef, undef); #$stock ? $self->_stock_members_phenotypes( $c->stash->{stock_row} ) : undef;
     $c->stash->{members_phenotypes} = $members_phenotypes;
 
-    my $direct_genotypes  = $stock ? $self->_stock_project_genotypes( $c->stash->{stock_row} ) : undef;
-    $c->stash->{direct_genotypes} = $direct_genotypes;
-
     my $stock_type;
     $stock_type = $stock->get_object_row->type->name if $stock->get_object_row;
     if ( ( grep { /^$stock_type/ } ('f2 population', 'backcross population') ) &&  $members_phenotypes && $has_members_genotypes ) { $c->stash->{has_qtl_data} = 1 ; }
-
 }
 
 ############## HELPER METHODS ######################3
@@ -745,11 +853,6 @@ sub _stock_members_phenotypes {
     return unless $bcs_stock;
     my %phenotypes;
     my ($has_members_genotypes) = $bcs_stock->result_source->schema->storage->dbh->selectrow_array( <<'', undef, $bcs_stock->stock_id );
-SELECT COUNT( DISTINCT genotype_id )
-  FROM phenome.genotype
-  JOIN stock subj using(stock_id)
-  JOIN stock_relationship sr ON( sr.subject_id = subj.stock_id )
- WHERE sr.object_id = ?
 
     # now we have rs of stock_relationship objects. We need to find
     # the phenotypes of their related subjects
@@ -788,17 +891,6 @@ sub _stock_project_genotypes {
         my @gen = map $_->genotype, $exp->nd_experiment_genotypes;
         $project_desc = $project_descriptions{ $exp->nd_experiment_id };
 	#or die "no project found for exp ".$exp->nd_experiment_id;
-
-    #my @values;
-	#foreach my $genotype (@gen) {
-	    #my $genotype_id = $genotype->genotype_id;
-	    #my $vals = $self->schema->storage->dbh->selectcol_arrayref
-	    #	("SELECT value  FROM genotypeprop  WHERE genotype_id = ? ",
-	    #	 undef,
-	    #	 $genotype_id
-	    #	);
-	    #push @values, $vals->[0];
-	#}
 	push @{ $genotypes{ $project_desc }}, @gen if scalar(@gen);
     }
     return \%genotypes;
@@ -841,33 +933,41 @@ sub _stock_cvterms {
 sub _stock_pubs {
     my ($self, $stock) = @_;
     my $bcs_stock = $stock->get_object_row;
-    my $pubs ;
+    my @pubs ;
     if ($bcs_stock) {
         my $stock_pubs = $bcs_stock->search_related("stock_pubs");
         while (my $spub = $stock_pubs->next ) {
-            my $pub = $spub->pub;
-            my $pub_dbxrefs = $pub->pub_dbxrefs;
-            while (my $pub_dbxref = $pub_dbxrefs->next ) {
-                $pubs->{$pub_dbxref->dbxref->db->name . ":" .  $pub_dbxref->dbxref->accession } = $pub ;
-            }
-        }
+            my $pub_id = $spub->pub_id;
+	    my $cxgn_pub = CXGN::Chado::Publication->new( $self->schema->storage->dbh(), $pub_id);
+	    push @pubs, $cxgn_pub;
+	}
     }
-    return $pubs;
+    return \@pubs;
 }
 
-# get all images. Includes those of subject stocks
 sub _stock_images {
     my ($self, $stock) = @_;
-    my $query = "select distinct image_id FROM phenome.stock_image WHERE stock_id = ? OR stock_id IN (SELECT subject_id FROM stock_relationship WHERE object_id = ? )";
-    my $ids = $stock->get_schema->storage->dbh->selectcol_arrayref
-        ( $query,
-          undef,
-          $stock->get_stock_id,
-          $stock->get_stock_id,
-        );
-    return $ids;
+    my @ids;
+    my $q = "select distinct image_id, cvterm.name, stock_image.display_order FROM phenome.stock_image JOIN stock USING(stock_id) JOIN cvterm ON(type_id=cvterm_id) WHERE stock_id = ? ORDER BY stock_image.display_order ASC";
+    my $h = $self->schema->storage->dbh()->prepare($q);
+    $h->execute($stock->get_stock_id);
+    while (my ($image_id, $stock_type) = $h->fetchrow_array()){
+        push @ids, [$image_id, $stock_type];
+    }
+    return \@ids;
 }
 
+sub _related_stock_images {
+    my ($self, $stock) = @_;
+    my @ids;
+    my $q = "select distinct image_id, cvterm.name FROM phenome.stock_image JOIN stock USING(stock_id) JOIN cvterm ON(type_id=cvterm_id) WHERE stock_id IN (SELECT subject_id FROM stock_relationship WHERE object_id = ? ) OR stock_id IN (SELECT object_id FROM stock_relationship WHERE subject_id = ? )";
+    my $h = $self->schema->storage->dbh()->prepare($q);
+    $h->execute($stock->get_stock_id, $stock->get_stock_id);
+    while (my ($image_id, $stock_type) = $h->fetchrow_array()){
+        push @ids, [$image_id, $stock_type];
+    }
+    return \@ids;
+}
 
 sub _stock_allele_ids {
     my ($self, $stock) = @_;
@@ -887,6 +987,18 @@ sub _stock_owner_ids {
          $stock->get_stock_id
         );
     return $ids;
+}
+
+sub _stock_editor_info {
+    my ($self,$stock) = @_;
+    my @owner_info;
+    my $q = "SELECT sp_person_id, md_metadata.create_date, md_metadata.modification_note FROM phenome.stock_owner JOIN metadata.md_metadata USING(metadata_id) WHERE stock_id = ? ";
+    my $h = $stock->get_schema->storage->dbh()->prepare($q);
+    $h->execute($stock->get_stock_id);
+    while (my ($sp_person_id, $timestamp, $modification_note) = $h->fetchrow_array){
+        push @owner_info, [$sp_person_id, $timestamp, $modification_note];
+    }
+    return \@owner_info;
 }
 
 sub _stock_has_pedigree {

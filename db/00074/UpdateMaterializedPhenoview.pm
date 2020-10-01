@@ -122,7 +122,7 @@ SELECT trial.project_id AS trial_id,
    JOIN project_relationship ON(breeding_program.project_id = object_project_id AND project_relationship.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'breeding_program_trial_relationship'))
    JOIN project trial ON(subject_project_id = trial.project_id)
    JOIN projectprop on(trial.project_id = projectprop.project_id)
-   WHERE projectprop.type_id IS DISTINCT FROM (SELECT cvterm_id FROM cvterm WHERE name = 'cross')
+   WHERE projectprop.type_id NOT IN (SELECT cvterm.cvterm_id FROM cvterm WHERE cvterm.name::text = 'cross'::text OR cvterm.name::text = 'trial_folder'::text OR cvterm.name::text = 'folder_for_trials'::text OR cvterm.name::text = 'folder_for_crosses'::text)
    GROUP BY trial.project_id, trial.name
 WITH DATA;
 CREATE UNIQUE INDEX trials_idx ON public.trials(trial_id) WITH (fillfactor=100);

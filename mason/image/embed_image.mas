@@ -1,0 +1,26 @@
+
+<%args>
+$image_id
+$size => "large"
+$dbh
+</%args>
+
+<%perl>
+
+  my $url = "";
+  eval { 
+    my $image = SGN::Image->new( $dbh, $image_id );
+    $url = $image->get_image_url($size);
+};
+if ($@) { 
+    print "Sorry. Could not get image # $image_id\n"; 
+}
+</%perl>
+
+<img src="<% $url %>" />
+
+
+
+
+   
+    

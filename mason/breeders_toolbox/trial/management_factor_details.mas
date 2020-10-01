@@ -1,0 +1,59 @@
+<%args>
+$trial_id
+$trial_name
+$year => undef
+$management_factor_date => undef
+$management_factor_type => undef
+</%args>
+
+<table class="table table-hover table-bordered" >
+    <tr>
+    <td><b>Field Management Factor Name</b></td>
+    <td>
+        <div id="management_factor_name">
+% if ($trial_name) {
+%   print "$trial_name";
+% } else {
+%   print "[No Name]";
+% }
+        </div>
+    </td>
+    </tr>
+    <tr>
+    <td><b>Field Management Factor Type</b></td>
+    <td>
+        <div id="management_factor_type">
+% if ($management_factor_type) {
+%   print "$management_factor_type";
+% } else {
+%   print "[No Type]";
+% }
+        </div>
+    </td>
+    </tr>
+    <tr>
+    <td><b>Field Management Factor Year</b></td>
+    <td>
+        <div id="management_factor_year">
+% if ($year) {
+%   print "$year";
+% } else {
+%   print "[No Year]";
+% }
+        </div>
+    </td>
+    </tr>
+    </tr>
+    <tr>
+    <td><b>Field Management Factor Date</b></td>
+    <td>
+        <div id="management_factor_date">
+% if ($management_factor_date) {
+%   print "$management_factor_date";
+% } else {
+%   print "[No Date]";
+% }
+        </div>
+    </td>
+    </tr>
+</table>

@@ -1,0 +1,240 @@
+@charset "UTF-8";
+
+.brush .selection, .brush-out-indicator {
+  stroke: #22BBEE;
+  stroke-width: 1px;
+  fill: #78D4F3;
+  fill-opacity: 0.1;
+}
+
+.filter-negated>.filter-panel .brush .selection,
+.filter-negated>.filter-panel .brush-out-indicator {
+  stroke: #EE0022;
+  fill: #F65E73;
+}
+
+.select_container{
+  margin-top: 0.5em;
+}
+
+#filter_div .dropdown-menu > li > a {
+  color: #2e6da4;
+  line-height: 2em !important;
+}
+
+.brush-out-indicator {
+    stroke-width: 4px;
+    stroke-dasharray: 4 2;
+}
+
+.bar text {
+  font-family: inherit;
+}
+
+.x-axis {
+  font-family: inherit;
+}
+
+#filter_div {
+  font-size: 16px;
+}
+
+.filter-panel-range .tick text{
+  text-anchor: center;
+}
+.filter-panel-range .tick:first-of-type text{
+  text-anchor: start;
+}
+.filter-panel-range .tick:last-of-type text{
+  text-anchor: end;
+}
+
+.filter-item{
+  display: inline-block;
+  vertical-align: middle;
+  border-color: rgba(100, 100, 100, 1);
+  min-height: 2.5em;
+  overflow:visible;
+  padding: 0.25em 0.25em 0.25em 0.25em;
+  text-align: left;
+}
+
+.filter-remove{
+  width:1em;
+  height:1em;
+  top:-0.25em;
+  right:-0.25em;
+  background:#b55;
+  border-radius:0.5em;
+  position:absolute;
+}
+
+.filter-range-form{
+  padding:0;
+}
+
+.filter-operator {
+    font-weight: bold;
+    vertical-align: middle;
+    text-align: center;
+    display: inline-block;
+    box-sizing: border-box;
+    font-size: 0.8em;
+    margin: 0px -1px -1px 4px;
+    height: 2em;
+    border-radius: 0;
+    border: solid;
+    border-width: thin;
+    border-color: #999;
+    overflow: hidden;
+    min-width: 6em;
+}
+
+.filter-wrapper .filter-operator-init{
+  visibility: hidden;
+}
+
+.filter-item:first-child:nth-last-child(2)
+>.filter-operator-init,
+.filter-item:first-child:nth-last-child(1)
+>.filter-operator-init {
+  width:0;
+  min-width: 0;
+}
+
+.filter-operator::before {
+  display: inline-block;
+  height: 2em;
+  margin: 0 0 0 0.25em;
+  padding: 0.35em 0.3em 0 0.1em;
+}
+.filter-operator-and, .filter-operator-init{
+  background: #f5f5f5;
+  color: rgba(100, 100, 100, 1);
+}
+.filter-operator-and::before{
+  content: "AND";
+}
+.filter-operator-or{
+  color: #f5f5f5;
+  background: rgba(100, 100, 100, 1);
+}
+.filter-operator-or::before{
+  content: "OR";
+}
+.filter-operator-init::before{
+  content:"WHERE";
+}
+.filter-operator-not::after {
+    background: #A6E5FA;
+    color: rgba(100, 100, 100, 1);
+    content: "NOT";
+    display: block;
+    float: right;
+    height: 2em;
+    margin: 0 0 0 -0.05em;
+    padding: 0.35em 0.3em 0 0.3em;
+}
+.filter-negated>.filter-operator-not::after{
+  background: #FCB1BB;
+}
+
+.filter-wrapper {
+  position: relative;
+  display: inline-block;
+  vertical-align: middle;
+  overflow:visible;
+  background: rgba(221, 221, 221, 0.1);
+  border: solid;
+  border-color: #999;
+  border-width: thin;
+  border-radius: 3px;
+  padding: 0.4em;
+  min-height: 2.6em;
+  text-align: left;
+}
+#filter_div > .filter-wrapper{
+  min-width: 100%;
+}
+.filter-wrapper::-webkit-scrollbar {
+    width: 0.75em;
+    height: 0.75em;
+    background: #ccc;
+    border-radius: 3px;
+    -webkit-box-shadow: inset 0 0 6px rgba(255,255,255,0.3);
+}
+.filter-wrapper::-webkit-scrollbar-thumb {
+  background-color: #999;
+  border-radius: 3px;
+}
+
+
+.filter-panel {
+  width: 20em;
+  display: inline-block;
+  vertical-align: middle;
+  position: relative;
+  border-color: #999;
+  margin: 0;
+}
+
+.filter-panel .panel-heading {
+  padding: 0.5em;
+  border-radius: 3px;
+}
+
+.filter-panel .panel-heading select {
+  width: 100%;
+}
+
+.filter-panel .panel-body {
+  padding: 0;
+}
+
+.filter-range-form {
+    padding: 0.1em;
+    display: block;
+    text-align: center;
+    font-size: 0.8em;
+    width:6em;
+    margin: 0.5em;
+}
+.filter-range-form:first-of-type{
+  float: left;
+  clear:left;
+}
+.filter-range-form:last-of-type{
+  float: right;
+  clear:right;
+}
+.filter-panel .filter-status{
+  display: block;
+  font-size: 0.8em;
+  width:100%;
+  text-align: center;
+  padding-top: 0.6rem;
+}
+
+.filter-wrapper .dropdown{
+  display: inline-block;
+  width: 2.5em;
+}
+.filter-wrapper .dropdown button{
+  padding: 0.5em;
+  width: 2.5em;
+  height: 2.5em;
+}
+.filter-wrapper .dropdown button::before {
+    content: "+";
+    font-size: 2em;
+    line-height: 0.3em;
+}
+
+#filtered_results_wrap {
+  margin-top: 1em;
+}
+
+#new-list-form input[name="name"]{
+  display: inline-block;
+  width:10em;
+}

@@ -15,7 +15,7 @@ $t->while_logged_in_as(
 
     sub { 
 	$t->get_ok('/breeders/trials');
-    my $refresh_tree = $t->find_element_ok("refresh_jstree_html", "id", "refresh tree")->click();
+    my $refresh_tree = $t->find_element_ok("refresh_jstree_html", "name", "refresh tree")->click();
     sleep(3);
 	my $add_project_link = $t->find_element_ok('add_project_link', 'id', "find add trial link");
 

@@ -26,7 +26,7 @@ sub BUILD {
     my $plugin = CXGN::GenotypeIOmain->new();
 
     if ($args->{format} eq "vcf") { 
-	$plugin->load_plugin("VCF");
+        $plugin->load_plugin("VCF");
     }
     elsif ($args->{format} eq "dosage") { 
 	$plugin->load_plugin("Dosage");
@@ -71,10 +71,26 @@ sub accessions {
     return $self->plugin()->accessions();
 }
 
+sub observation_unit_names { 
+    my $self = shift;
+    return $self->plugin()->observation_unit_names();
+}
+
+sub header_information_lines { 
+    my $self = shift;
+    return $self->plugin()->header_information_lines();
+}
+
 sub markers { 
     my $self = shift;
     #print STDERR "Markers now: ".Dumper($self->plugin()->markers())."\n";
     return $self->plugin()->markers();
+}
+
+sub header { 
+    my $self = shift;
+    #print STDERR "Markers now: ".Dumper($self->plugin()->markers())."\n";
+    return $self->plugin()->header();
 }
 
 sub close { 

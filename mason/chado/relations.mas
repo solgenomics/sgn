@@ -5,9 +5,14 @@
   $list_component
 </%args>
 
+%# This file is deprecated.
+
+
 <& /util/import_javascript.mas, classes => [ 'CXGN.List' ] &>
 
 <%init>
+
+
   use JSON::Any;
 
     # make a hash of relationship_type => {
@@ -73,7 +78,7 @@
 
 <script>
 
-  jQuery(document).ready( function() { 
+  jQuery(document).ready( function() {
     var items = eval(<% $item_json_array %>);
     var arrayLength = items.length;
 
@@ -86,14 +91,14 @@
  	var current_item = eval(items[i]).join("\n");
         jQuery(item_list_div).hide();
       	jQuery(item_list_div).html(current_item);
-      
+
 	addToListMenu(item_list_menu, item_list, 'div');
       }
-      else { 
+      else {
       	jQuery(item_list_menu_div).html('Log in to use lists.');
       }
     }
-    
+
   });
 
 </script>

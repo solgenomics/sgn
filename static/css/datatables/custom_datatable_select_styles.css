@@ -1,0 +1,29 @@
+table.dataTable tbody .select-checkbox{
+  position: relative;
+  text-align: center;
+  vertical-align: middle;
+}
+.dataTables_info .select-info{
+  margin-left: 1em;
+  font-weight:bold;
+}
+table.dataTable tbody .select-checkbox::before{
+  content: ' ';
+  color: #555;
+  background-color: white;
+  font-size: 1.5em;
+  width: 0.75em;
+  height: 0.75em;
+  line-height: 0.4em;
+  margin-left: -6px;
+  border: 1px solid #555;
+  border-radius: 3px;
+  display: inline-block;
+  box-sizing: border-box;
+}
+table.dataTable tbody tr.selected {
+  background-color: #d1e7ff;
+}
+tbody tr.selected .select-checkbox::before{
+  content: '\2713';
+}

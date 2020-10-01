@@ -38,8 +38,8 @@ jQuery(document).ready(function() {
           'data': { 
             'programDbIds' :  jQuery("#brapi_studies_programDbId").val(),
             'programNames' :  jQuery("#brapi_studies_programName").val(),
-            'studyLocationDbIds' : jQuery("#brapi_studies_locationDbId").val(),
-            'studyLocationNames' : jQuery("#brapi_studies_locationName").val(),
+            'locationDbId' : jQuery("#brapi_studies_locationDbId").val(),
+            'locationNames' : jQuery("#brapi_studies_locationName").val(),
             'studyTypeName' : jQuery("#brapi_studies_studyTypeName").val(),
             'studyDbIds' : jQuery("#brapi_studies_studyDbId").val(),
             'studyNames' : jQuery("#brapi_studies_studyName").val(),

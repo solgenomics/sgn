@@ -1,0 +1,33 @@
+
+<%args>
+$stock_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [  ] &>
+
+<button class="btn btn-primary" id="stock_detail_page_obsolete_stock">Obsolete This Stock</button>
+
+<script>
+
+    jQuery(document).ready(function () {
+        jQuery('#stock_detail_page_obsolete_stock').click(function(){
+            jQuery.ajax ({
+                url : '/stock/obsolete?stock_id=<% $stock_id %>&is_obsolete=1',
+                beforeSend : function() {
+                    jQuery('#working_modal').modal('show');
+                },
+                success: function(response){
+                    console.log(response);
+                    jQuery('#working_modal').modal('hide');
+                    alert('Successfully obsoleted!');
+                    location.reload();
+                },
+                error: function(response){
+                    jQuery('#working_modal').modal('hide');
+                    alert("Error obsoleting stock.");
+                }
+            });
+        });
+    });
+
+</script>

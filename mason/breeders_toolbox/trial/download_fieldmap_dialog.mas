@@ -1,0 +1,8 @@
+
+<%args>
+$trial_id
+$trial_name => undef
+</%args>
+
+
+<& /breeders_toolbox/trial/download_layout_interface_dialog.mas, trial_id => $trial_id, trial_name => $trial_name, download_type=>'TrialFieldMapLayout' &>

@@ -1,0 +1,102 @@
+<%args>
+$trial_id
+$trial_name
+$breeding_program_name
+$breeding_program_id
+$location_name
+$year
+$trial_description
+$identifier_prefix
+$genotyping_facility
+</%args>
+
+<div class="row">
+    <div class="col-sm-8">
+
+        <table class="table table-hover table-bordered" >
+
+            <tr>
+                <td><b>Genotyping Data Project Name</b></td>
+                <td>
+                    <div id="trial_name">
+% if ($trial_name) {
+%   print "$trial_name";
+% } else {
+%   print "<span class='text-danger'>[No Trial Name]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Breeding Program </b></td>
+                <td>
+                    <span id="breeding_program">
+% if ($breeding_program_name) {
+        <a href="/breeders/program/<% $breeding_program_id %>"><% $breeding_program_name %></a>
+% }
+% else {
+%  print "<span class='text-danger'>[No Breeding Program]</span>";
+% }
+                    </span>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Trial Location</b></td>
+                <td>
+                    <div id="trial_location">
+% if ($location_name) {
+%  print "$location_name";
+% } else {
+%  print "<span class='text-danger'>[No Location]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Year</b></td>
+                <td>
+                    <div id="trial_year">
+% if ($year) {
+%  print "$year";
+% } else {
+%  print "<span class='text-danger'>[No Year]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr><td><b>Description</b></td>
+                <td>
+                    <div id="trial_description">
+% if ($trial_description) {
+%  print "$trial_description";
+% } else {
+%  print "<span class='text-danger'>[No Description]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr><td><b>Genotyping Facility</b></td>
+                <td>
+                    <div id="trial_genotyping_facility">
+% if ($genotyping_facility) {
+%  print "$genotyping_facility";
+% } else {
+%  print "<span class='text-danger'>[No Genotyping Facility]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+    </div>
+    <div class="col-sm-4">
+        <div class="well well-sm">
+            <& /util/barcode.mas, identifier => "$identifier_prefix"."$trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
+        </div>
+    </div>
+</div>

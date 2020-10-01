@@ -102,5 +102,5 @@ END_HTML
 }
 else
 {
-    $page->client_redirect('/solpeople/login.pl');
+    $page->client_redirect('/user/login');
 }

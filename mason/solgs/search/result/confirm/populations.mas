@@ -13,7 +13,7 @@ $trait_id
 
 
 <& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.combinePopulations", "jquery.cookie"] &>
-<link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
+<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 
 
 <& /page/page_title.mas,
@@ -29,7 +29,3 @@ $trait_id
   <input class="button" type="button" id="confirm" name="confirm" value="Confirm" onclick="confirmSelections();"/>
   <input type="hidden" id="trait_id" name="trait_id" value= "<% $trait_id %>" />
 </div>
-
-
-
-

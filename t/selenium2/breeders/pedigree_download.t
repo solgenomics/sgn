@@ -52,7 +52,7 @@ $t->get_ok('/breeders/accessions');
 
 sleep(1);
 
-my $add_accessions_link = $t->find_element_ok("add_accessions_link", "id", "find element add accessions link as submitter");
+my $add_accessions_link = $t->find_element_ok("add_accessions_link", "name", "find element add accessions link as submitter");
 
   $add_accessions_link->click();
  
