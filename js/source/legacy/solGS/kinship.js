@@ -34,6 +34,9 @@ solGS.kinship = {
 	    popId = jQuery("#selection_pop_id").val();
 	    protocolId = jQuery("#genotyping_protocol_id").val() ;
 	    
+	} else if (page.match(/solgs\/traits\/all\/population\//)) {
+	    popId = jQuery("#training_pop_id").val();
+	    protocolId = jQuery("#genotyping_protocol_id").val() ;
 	}
 
 	var traitId = jQuery("#trait_id").val();
