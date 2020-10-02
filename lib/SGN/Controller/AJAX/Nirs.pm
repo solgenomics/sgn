@@ -26,8 +26,8 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON' },
-    );
+    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+);
 
 sub nirs_upload_verify : Path('/ajax/Nirs/upload_verify') : ActionClass('REST') { }
 sub nirs_upload_verify_POST : Args(0) {
@@ -212,7 +212,7 @@ sub nirs_upload_verify_POST : Args(0) {
     print STDERR Dumper \@warning_status;
     print STDERR Dumper \@error_status;
     print STDERR Dumper $output_plot_filepath_string;
-    $c->stash->{rest} = {success => \@success_status, warning => \@warning_status, error => \@error_status, figure => $output_plot_filepath};
+    $c->stash->{rest} = {success => \@success_status, warning => \@warning_status, error => \@error_status, figure => $output_plot_filepath_string};
 }
 
 sub nirs_upload_store : Path('/ajax/Nirs/upload_store') : ActionClass('REST') { }
