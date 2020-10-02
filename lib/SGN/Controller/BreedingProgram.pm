@@ -13,6 +13,7 @@ use Data::Dumper;
 use CXGN::BreedingProgram ; # the BP object
 use SGN::Model::Cvterm; # maybe need this for the projectprop.type_id breeding_program
 use URI::FromHash 'uri';
+use JSON;
 
 ##use CXGN::People::Roles;
 
@@ -79,7 +80,13 @@ sub profile_detail : Path('/profile') Args(1) {
         $c->stash->{message} = 'The requested profile does not exist.';
     }
 
-#    $c->stash->{profile_name} = $profile_name;
+    my $profile_row = $profile_rs->next();
+    my $profile_detail_string = $profile_row->value();
+
+    my $profile_detail_hash = decode_json $profile_detail_string;
+    my $profile_name = $profile_detail_hash->{'product_profile_name'};
+
+    $c->stash->{profile_name} = $profile_name;
     $c->stash->{user_id} = $c->user ? $c->user->get_object()->get_sp_person_id() : undef;
     $c->stash->{profile_id} = $profile_id;
     $c->stash->{template} = '/breeders_toolbox/program/profile_detail.mas';
