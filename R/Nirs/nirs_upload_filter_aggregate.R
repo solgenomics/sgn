@@ -10,8 +10,8 @@ library(jsonlite)
 #### Read in raw JSON ####
 # args:
 # 1. Input JSON filepath
-# 2. Output filepath for aggregated JSON
-# 3. Output filepath for raw JSON with outliers tagged
+# 2. Output filepath for aggregated spectra CSV
+# 3. Output filepath for raw spectra with outliers tagged (CSV)
 # 4. Output filepath for .png plot of spectra
 # 5. Output filepath for csv of outliers to display to user along with plot
 
@@ -64,11 +64,16 @@ spectra.tagged <- raw.spectra %>%
 
 #### Output raw JSON with added outlier tags ####
 spectra.tagged %>%
+  mutate(id = NA,
+    sample_id = NA,
+    sampling_date = NA,
+    device_id = NA,
+    comments = NA) %>%
+  rename(observationunit_name = observationUnitId) %>%
+  dplyr::select(id, sample_id, sampling_date, observationunit_name, device_id,
+    device_type, comments, starts_with("nirs_spectra")) %>%
   rename_at(vars(starts_with("nirs_spectra")), ~str_replace(., "nirs_spectra.", "")) %>%
-  group_by(observationUnitId) %>%
-  nest(nirs_spectra = starts_with("X")) %>%
-  jsonlite::toJSON() %>%
-  jsonlite::write_json(x = ., path = args[3])
+  write.csv(x = ., file = args[3])
 
 #### Aggregate on observationUnitName basis ####
 agg.function <- function(x) suppressWarnings(mean(as.numeric(as.character(x)), na.rm= T))
@@ -81,9 +86,13 @@ agg.spectra <- agg.spectra %>%
 
 #### Output filtered and aggregated JSON ####
 agg.spectra %>%
+  mutate(id = NA,
+    sample_id = NA,
+    sampling_date = NA,
+    device_id = NA,
+    comments = NA) %>%
+  rename(observationunit_name = observationUnitId) %>%
+  dplyr::select(id, sample_id, sampling_date, observationunit_name, device_id,
+    device_type, comments, starts_with("nirs_spectra")) %>%
   rename_at(vars(starts_with("nirs_spectra")), ~str_replace(., "nirs_spectra.", "")) %>%
-  group_by(observationUnitId) %>%
-  nest(nirs_spectra = starts_with("X")) %>%
-  ungroup() %>%
-  jsonlite::toJSON() %>%
-  jsonlite::write_json(x = ., path = args[2])
+  write.csv(x = ., file = args[2])
