@@ -435,44 +435,6 @@ sub get_product_profiles :Chained('ajax_breeding_program') PathPart('product_pro
 }
 
 
-sub get_profile_detail :Path('/ajax/breeders/program/profile_detail') :Args(1) {
-    my $self = shift;
-    my $c = shift;
-    my $profile_id = shift;
-
-    my $profile_json_type_id = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema"), 'product_profile_json', 'project_property')->cvterm_id();
-    my $profile_rs = $schema->resultset("Project::Projectprop")->search({ projectprop_id => $profile_id, type_id => $profile_json_type_id });
-
-    my $profile_row = $profile_rs->next();
-    my $profile_detail_string = $profile_row->value();
-
-    my $profile_detail_hash = decode_json $profile_detail_string;
-    my $profile_detail_ref = $profile_detail_hash->{'product_profile_details'};
-
-    my @all_details;
-    my %profile_detail_hash = %{$profile_detail_ref};
-    my @traits = keys %profile_detail_hash;
-    foreach my $trait_name(@traits){
-        my @trait_row = ();
-        push @trait_row, $trait_name;
-        my $target_value = $profile_detail_hash{$trait_name}{'Target Value'};
-        push @trait_row, $target_value;
-        my $benchmark_variety = $profile_detail_hash{$trait_name}{'Benchmark Variety'};
-        push @trait_row, $benchmark_variety;
-        my $performance = $profile_detail_hash{$trait_name}{'Performance'};
-        push @trait_row, $performance;
-        my $weight = $profile_detail_hash{$trait_name}{'Weight'};
-        push @trait_row, $weight;
-        my $trait_type = $profile_detail_hash{$trait_name}{'Trait Type'};
-        push @trait_row, $trait_type;
-        push @all_details, [@trait_row];
-    }
-    print STDERR "ALL DETAILS =".Dumper(\@all_details)."\n";
-    $c->stash->{rest} = {data => \@all_details};
-
-}
-
-
 sub create_profile_template : Path('/ajax/program/create_profile_template') : ActionClass('REST') { }
 
 sub create_profile_template_POST : Args(0) {
