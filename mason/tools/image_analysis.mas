@@ -175,20 +175,41 @@ jQuery(document).ready(function(){
                 console.log(response);
                 jQuery('#working_msg').html('');
                 jQuery('#working_modal').modal('hide');
-
-                var html = '<table class="table table-hover"><thead><tr><th>Original Image</th><th>Analyzed Image</th><th>Analysis</th><th>Previously Saved Image-Associated Phenotype(s)</th><th>Observation Unit</th></tr></thead><tbody>';
+                var aggregated_values = {};
+                for (var i=0; i<response.results.length; i++) {
+                    if(typeof(aggregated_values[response.results[i].stock_id]) !== "undefined"){
+                        aggregated_values[response.results[i].stock_id].push(parseFloat(response.results[i].result.trait_value));
+                    }else{
+                        aggregated_values[response.results[i].stock_id] = [];
+                        aggregated_values[response.results[i].stock_id].push(parseFloat(response.results[i].result.trait_value));
+                    }
+                }
+                console.log(aggregated_values);
+                var latest_stock_id = '';
+                var avg_score_html;
+                let average = (array) => array.reduce((a, b) => a + b) / array.length;
+                var html = '<table class="table table-hover"><thead><tr><th>Original Image</th><th>Analyzed Image</th><th>Image Phenotype</th><th>Previously Saved Image-Associated Phenotype(s)</th><th>Observation Unit</th><th>Observation Unit Average Phenotype</th></tr></thead><tbody>';
                 for (var i=0; i<response.results.length; i++) {
                     if (response.results[i].result.image_link) {
-                        html = html + '<tr><td><img src="'+response.results[i].result.original_image+'"></td><td><img src="'+response.results[i].result.image_link+'"></td><td>'+response.results[i].result.trait_name+': '+response.results[i].result.trait_value+'</td><td>';
+                        html = html + '<tr><td><img src="'+response.results[i].result.original_image+'"></td><td><img src="'+response.results[i].result.image_link+'"></td><td>'+response.results[i].result.trait_name+': '+response.results[i].result.trait_value+'</td>';
+                        if (response.results[i].stock_id != latest_stock_id) {
+                            console.log(average(aggregated_values[response.results[i].stock_id]));
+                            avg_score_html = '<td rowspan="'+aggregated_values[response.results[i].stock_id].length+'">'+average(aggregated_values[response.results[i].stock_id])+'</td>';
+                        } else {
+                            avg_score_html = '';
+                        }
                     } else {
-                        html = html + '<tr><td><img src="'+response.results[i].result.original_image+'"></td><td>Error: no analysis returned for this image.</td><td></td><td>';
+                        html = html + '<tr><td><img src="'+response.results[i].result.original_image+'"></td><td>Error: no analysis returned for this image.</td><td></td>';
                     }
+                    html = html + "<td>";
                     for (var j=0; j<response.results[i].observations_array.length; j++) {
                         html = html + response.results[i].observations_array[j].observationvariable_name + ": " + response.results[i].observations_array[j].value;
                     }
                     html = html + "</td>";
                     html = html + "<td><a href='/stock/"+response.results[i].stock_id+"/view'>"+response.results[i].stock_uniquename+"</a></td>";
+                    html = html + avg_score_html;
                     html = html + '</tr>';
+                    latest_stock_id = response.results[i].stock_id;
                 }
                 html = html + '</tbody></table>';
                 html = html + '<hr><button class="btn btn-primary" id="image_analysis_image_search_results_save">Store New Analysis Phenotypes and Images</button>';
@@ -203,13 +224,10 @@ jQuery(document).ready(function(){
     });
 
     jQuery(document).on("click", "#image_analysis_image_search_results_save", function() {
-        // alert("Need to implement!");
 
-        // Retrieve observation unit names and scores
+        // Retrieve observation units and linked analysis images and scores
 
-        // Calculate avgs where there are multiple scores per observation unit
-
-        // Save phenotypes via Brapi observations put call
+        // Save in db inclucing multiple image relationships
 
     });
 
