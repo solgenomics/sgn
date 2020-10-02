@@ -183,9 +183,9 @@ sub nirs_upload_verify_POST : Args(0) {
 
     my $dir = $c->tempfiles_subdir('/nirs_files');
     my $tempfile_string = $c->tempfile( TEMPLATE => 'nirs_files/fileXXXX');
-    my $filter_json_filepath = $c->config->{basepath}."/".$tempfile_string."_filter_json";
-    my $output_json_filepath = $c->config->{basepath}."/".$tempfile_string."_output_json";
-    my $output_raw_json_filepath = $c->config->{basepath}."/".$tempfile_string."_output_raw_json";
+    my $filter_json_filepath = $c->config->{basepath}."/".$tempfile_string."_input_json";
+    my $output_csv_filepath = $c->config->{basepath}."/".$tempfile_string."_output.csv";
+    my $output_raw_csv_filepath = $c->config->{basepath}."/".$tempfile_string."_output_raw.csv";
     my $output_outliers_filepath = $c->config->{basepath}."/".$tempfile_string."_output_outliers.csv";
 
     my $output_plot_filepath_string = $tempfile_string."_output_plot.png";
@@ -198,11 +198,21 @@ sub nirs_upload_verify_POST : Args(0) {
         print $F $filter_data_input_json;
     close($F);
 
-    my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirs_upload_filter_aggregate.R '$filter_json_filepath' '$output_json_filepath' '$output_raw_json_filepath' '$output_plot_filepath' '$output_outliers_filepath' ";
+    my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirs_upload_filter_aggregate.R '$filter_json_filepath' '$output_csv_filepath' '$output_raw_csv_filepath' '$output_plot_filepath' '$output_outliers_filepath' ";
     print STDERR $cmd_s;
     my $cmd_status = system($cmd_s);
 
-    $c->stash->{rest} = {success => \@success_status, warning => \@warning_status, error => \@error_status, figure => $output_plot_filepath_string};
+    #open(my $F2, '<', $output_raw_json_filepath);
+    #    my $output_json = <$F2>;
+        #my $output = decode_json $output_json;
+        #print STDERR Dumper $output;
+    #close($F2);
+
+    print STDERR Dumper \@success_status;
+    print STDERR Dumper \@warning_status;
+    print STDERR Dumper \@error_status;
+    print STDERR Dumper $output_plot_filepath_string;
+    $c->stash->{rest} = {success => \@success_status, warning => \@warning_status, error => \@error_status, figure => $output_plot_filepath};
 }
 
 sub nirs_upload_store : Path('/ajax/Nirs/upload_store') : ActionClass('REST') { }
