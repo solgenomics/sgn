@@ -435,6 +435,73 @@ sub get_product_profiles :Chained('ajax_breeding_program') PathPart('product_pro
 }
 
 
+sub get_profile_detail :Path('/ajax/breeders/program/profile_detail') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $profile_id = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $profile_json_type_id = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema"), 'product_profile_json', 'project_property')->cvterm_id();
+    my $profile_rs = $schema->resultset("Project::Projectprop")->search({ projectprop_id => $profile_id, type_id => $profile_json_type_id });
+
+    my $profile_row = $profile_rs->next();
+    my $profile_detail_string = $profile_row->value();
+
+    my $profile_detail_hash = decode_json $profile_detail_string;
+    my $trait_info_string = $profile_detail_hash->{'product_profile_details'};
+
+    my $trait_info_hash_ref = decode_json $trait_info_string;
+    my @all_details;
+    my %trait_info_hash = %{$trait_info_hash_ref};
+    my @traits = keys %trait_info_hash;
+
+    foreach my $trait_name(@traits){
+        my @trait_row = ();
+        push @trait_row, $trait_name;
+
+        my $target_value = $trait_info_hash{$trait_name}{'target_value'};
+        if (defined $target_value){
+            push @trait_row, $target_value;
+        } else {
+            push @trait_row, 'N/A';
+        }
+
+        my $benchmark_variety = $trait_info_hash{$trait_name}{'benchmark_variety'};
+        if (defined $benchmark_variety){
+            push @trait_row, $benchmark_variety;
+        } else {
+            push @trait_row, 'N/A';
+        }
+
+        my $performance = $trait_info_hash{$trait_name}{'performance'};
+        if (defined $performance){
+            push @trait_row, $performance;
+        } else {
+            push @trait_row, 'N/A';
+        }
+
+        my $weight = $trait_info_hash{$trait_name}{'weight'};
+        if (defined $weight) {
+            push @trait_row, $weight;
+        } else {
+            push @trait_row, 'N/A';
+        }
+
+        my $trait_type = $trait_info_hash{$trait_name}{'trait_type'};
+        if (defined $trait_type) {
+            push @trait_row, $trait_type;
+        } else {
+            push @trait_row, 'N/A';
+        }
+
+        push @all_details, [@trait_row];
+    }
+#    print STDERR "ALL DETAILS =".Dumper(\@all_details)."\n";
+    $c->stash->{rest} = {data => \@all_details};
+
+}
+
+
 sub create_profile_template : Path('/ajax/program/create_profile_template') : ActionClass('REST') { }
 
 sub create_profile_template_POST : Args(0) {
