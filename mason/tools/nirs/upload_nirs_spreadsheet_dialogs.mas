@@ -125,7 +125,7 @@
 <script>
 jQuery(document).ready(function() {
 
-    jQuery('#upload_spreadsheet_phenotypes_link').click( function() {
+    jQuery('#upload_spreadsheet_nirs_link').click( function() {
         jQuery('#upload_nirs_spreadsheet_dialog').modal("show");
     });
 
