@@ -423,7 +423,8 @@ sub get_product_profiles :Chained('ajax_breeding_program') PathPart('product_pro
             pop @trait_name;
             push @trait_list, @trait_name
         }
-        my $trait_string = join("   \/   ", @trait_list);
+        my @sort_trait_list = sort @trait_list;
+        my $trait_string = join("<br>", @sort_trait_list);
         pop @profile_info;
         push @profile_info, $trait_string;
         push @profile_summary, [@profile_info];

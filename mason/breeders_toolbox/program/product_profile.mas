@@ -11,7 +11,7 @@ $program_id
         <tr>
             <th>Profile Name</th>
             <th>Scope</th>
-            <th>Details</th>
+            <th>Trait</th>
         </tr>
     </thead>
 </table>
