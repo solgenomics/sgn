@@ -64,7 +64,6 @@ sub nirs_upload_verify_POST : Args(0) {
 
     my $upload_original_name = $upload->filename();
     my $upload_tempfile = $upload->tempname;
-    my %phenotype_metadata;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
 
@@ -181,7 +180,7 @@ sub nirs_upload_verify_POST : Args(0) {
         }
     }
 
-    my $dir = $c->tempfiles_subdir('/nirs_files');
+    my $nirs_dir = $c->tempfiles_subdir('/nirs_files');
     my $tempfile_string = $c->tempfile( TEMPLATE => 'nirs_files/fileXXXX');
     my $filter_json_filepath = $c->config->{basepath}."/".$tempfile_string."_input_json";
     my $output_csv_filepath = $c->config->{basepath}."/".$tempfile_string."_output.csv";
@@ -250,7 +249,6 @@ sub nirs_upload_store_POST : Args(0) {
 
     my $upload_original_name = $upload->filename();
     my $upload_tempfile = $upload->tempname;
-    my %phenotype_metadata;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
 
@@ -350,30 +348,30 @@ sub nirs_upload_store_POST : Args(0) {
         print $F $filter_data_input_json;
     close($F);
 
-    my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirs_upload_filter_aggregate.R '$filter_json_filepath' '$output_json_filepath' '$output_raw_json_filepath' '$output_plot_filepath' '$output_outliers_filepath' ";
-    print STDERR $cmd_s;
-    my $cmd_status = system($cmd_s);
+    # my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirs_upload_filter_aggregate.R '$filter_json_filepath' '$output_json_filepath' '$output_raw_json_filepath' '$output_plot_filepath' '$output_outliers_filepath' ";
+    # print STDERR $cmd_s;
+    # my $cmd_status = system($cmd_s);
 
-    open(my $F_output, '<', $output_json_filepath);
-    my $output_json_filtered = decode_json <$F_output>;
-    close($F_output);
+    # open(my $F_output, '<', $output_json_filepath);
+    # my $output_json_filtered = decode_json <$F_output>;
+    # close($F_output);
 
     my %parsed_data_filtered;
 
     # Just use one of the spectra:
-    # while (my ($stock_name, $o) = each %parsed_data) {
-    #     my $spectras = $o->{nirs}->{spectra};
-    #     $parsed_data_filtered{$stock_name}->{nirs}->{device_type} = $o->{nirs}->{device_type};
-    #     $parsed_data_filtered{$stock_name}->{nirs}->{spectra} = $spectras->[0];
-    # }
-
-    # Using aggregated spectra:
-    foreach (@$output_json_filtered) {
-        $parsed_data_filtered{$_->{observationUnitId}}->{nirs}->{device_type} = $_->{device_type};
-        $parsed_data_filtered{$_->{observationUnitId}}->{nirs}->{spectra} = $_->{nirs_spectra};
+    while (my ($stock_name, $o) = each %parsed_data) {
+        my $spectras = $o->{nirs}->{spectra};
+        $parsed_data_filtered{$stock_name}->{nirs}->{device_type} = $o->{nirs}->{device_type};
+        $parsed_data_filtered{$stock_name}->{nirs}->{spectra} = $spectras->[0];
     }
 
-    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+    # Using aggregated spectra:
+    # foreach (@$output_json_filtered) {
+    #     $parsed_data_filtered{$_->{observationUnitId}}->{nirs}->{device_type} = $_->{device_type};
+    #     $parsed_data_filtered{$_->{observationUnitId}}->{nirs}->{spectra} = $_->{nirs_spectra};
+    # }
+
+    my $pheno_dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
     my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
 
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
@@ -420,6 +418,152 @@ sub nirs_upload_store_POST : Args(0) {
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
 
     $c->stash->{rest} = {success => \@success_status, error => \@error_status};
+}
+
+sub generate_spectral_plot : Path('/ajax/Nirs/generate_spectral_plot') : ActionClass('REST') { }
+sub generate_spectral_plot_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $dbh = $c->dbc->dbh();
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+    my $dataset_id = $c->req->param('dataset_id');
+    my $format_id = $c->req->param('device_type');
+    my $query_associated_stocks = $c->req->param('query_associated_stocks') eq 'yes' ? 1 : 0;
+
+    my $ds = CXGN::Dataset->new({
+        people_schema => $people_schema,
+        schema => $schema,
+        sp_dataset_id => $dataset_id
+    });
+    my $accession_ids = $ds->accessions();
+    my $plot_ids = $ds->plots();
+    my $plant_ids = $ds->plants();
+
+    my @all_stock_ids;
+    if ($query_associated_stocks) {
+        if ($accession_ids && scalar(@$accession_ids) > 0) {
+            push @all_stock_ids, @$accession_ids;
+        }
+        if ($plot_ids && scalar(@$plot_ids) > 0) {
+            push @all_stock_ids, @$plot_ids;
+        }
+        if ($plant_ids && scalar(@$plant_ids) > 0) {
+            push @all_stock_ids, @$plant_ids;
+        }
+
+        my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+        my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+        my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
+        my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
+
+        my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+        my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
+        my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
+
+        if ($accession_ids && scalar(@$accession_ids) > 0) {
+            my $accession_ids_sql = join ',', @$accession_ids;
+            my $accession_q = "SELECT subject_id FROM stock_relationship WHERE object_id IN ($accession_ids_sql) AND type_id IN ($plot_of_cvterm_id, $plant_of_cvterm_id, $tissue_sample_of_cvterm_id);";
+            my $accession_h = $dbh->prepare($accession_q);
+            $accession_h->execute();
+            while (my ($stock_id) = $accession_h->fetchrow_array()) {
+                push @all_stock_ids, $stock_id;
+            }
+        }
+        if ( ($plot_ids && scalar(@$plot_ids) > 0) || ($plant_ids && scalar(@$plant_ids) > 0) ) {
+            my @plot_plant_ids;
+            if ($plot_ids && scalar(@$plot_ids) > 0) {
+                push @plot_plant_ids, @$plot_ids;
+            }
+            if ($plant_ids && scalar(@$plant_ids) > 0) {
+                push @plot_plant_ids, @$plant_ids;
+            }
+            my $plot_ids_sql = join ',', @plot_plant_ids;
+            my $plot_q = "SELECT object_id FROM stock_relationship WHERE subject_id IN ($plot_ids_sql) AND type_id IN ($plot_of_cvterm_id, $plant_of_cvterm_id, $tissue_sample_of_cvterm_id);";
+            my $plot_h = $dbh->prepare($plot_q);
+            $plot_h->execute();
+            while (my ($stock_id) = $plot_h->fetchrow_array()) {
+                push @all_stock_ids, $stock_id;
+            }
+
+            my $accession_ids_sql = join ',', @all_stock_ids;
+            my $accession_q = "SELECT subject_id FROM stock_relationship WHERE object_id IN ($accession_ids_sql) AND type_id IN ($plot_of_cvterm_id, $plant_of_cvterm_id, $tissue_sample_of_cvterm_id);";
+            my $accession_h = $dbh->prepare($accession_q);
+            $accession_h->execute();
+            while (my ($stock_id) = $accession_h->fetchrow_array()) {
+                push @all_stock_ids, $stock_id;
+            }
+        }
+    }
+    else {
+        if ($accession_ids && scalar(@$accession_ids) > 0) {
+            push @all_stock_ids, @$accession_ids;
+        }
+        if ($plot_ids && scalar(@$plot_ids) > 0) {
+            push @all_stock_ids, @$plot_ids;
+        }
+        if ($plant_ids && scalar(@$plant_ids) > 0) {
+            push @all_stock_ids, @$plant_ids;
+        }
+    }
+
+    my $stock_ids_sql = join ',', @all_stock_ids;
+    my $nirs_training_q = "SELECT stock.uniquename, stock.stock_id, metadata.md_json.json->>'spectra', metadata.md_json.json->>'device_type'
+        FROM stock
+        JOIN nd_experiment_stock USING(stock_id)
+        JOIN nd_experiment USING(nd_experiment_id)
+        JOIN phenome.nd_experiment_md_json USING(nd_experiment_id)
+        JOIN metadata.md_json USING(json_id)
+        WHERE stock.stock_id IN ($stock_ids_sql) AND metadata.md_json.json_type = 'nirs_spectra' AND metadata.md_json.json->>'device_type' = ?;";
+    print STDERR Dumper $nirs_training_q;
+    my $nirs_training_h = $dbh->prepare($nirs_training_q);
+    $nirs_training_h->execute($format_id);
+    my %training_pheno_data;
+    while (my ($stock_uniquename, $stock_id, $spectra, $device_type) = $nirs_training_h->fetchrow_array()) {
+        $spectra = decode_json $spectra;
+        $training_pheno_data{$stock_id}->{spectra} = $spectra;
+        $training_pheno_data{$stock_id}->{device_type} = $device_type;
+    }
+    # print STDERR Dumper \%training_pheno_data;
+
+    my @training_data_input;
+    while ( my ($stock_id, $o) = each %training_pheno_data) {
+        my $spectra = $o->{spectra};
+        if ($spectra) {
+            push @training_data_input, {
+                "observationUnitId" => $stock_id,
+                "nirs_spectra" => $spectra,
+                "device_type" => $o->{device_type}
+            };
+        }
+    }
+    # print STDERR Dumper \@training_data_input;
+
+    if (scalar(@training_data_input) < 10) {
+        $c->stash->{rest} = { error => "Not enough data! Need atleast 10 samples with a phenotype and spectra!"};
+        $c->detach();
+    }
+
+    my $nirs_dir = $c->tempfiles_subdir('/nirs_files');
+    my $tempfile_string = $c->tempfile( TEMPLATE => 'nirs_files/fileXXXX');
+    my $filter_json_filepath = $c->config->{basepath}."/".$tempfile_string."_input_json";
+
+    my $output_plot_filepath_string = $tempfile_string."_output_plot.png";
+    my $output_plot_filepath = $c->config->{basepath}."/".$output_plot_filepath_string;
+
+    my $json = JSON->new->utf8->canonical();
+    my $training_data_input_json = $json->encode(\@training_data_input);
+    open(my $train_json_outfile, '>', $filter_json_filepath);
+        print STDERR Dumper $filter_json_filepath;
+        print $train_json_outfile $training_data_input_json;
+    close($train_json_outfile);
+
+    my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirs_visualize_spectra.R '$filter_json_filepath' '$output_plot_filepath' ";
+    print STDERR $cmd_s;
+    my $cmd_status = system($cmd_s);
+
+    $c->stash->{rest} = {figure => $output_plot_filepath_string};
 }
 
 sub generate_results : Path('/ajax/Nirs/generate_results') : ActionClass('REST') { }
