@@ -12,13 +12,13 @@ $program_name
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadProfileDialog">Upload Profile</h4>
+                <h4 class="modal-title" id="uploadProfileDialog">Upload Product Profile</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <&| /util/workflow.mas, id=> "upload_profile_workflow" &>
                         <&| /util/workflow.mas:step, title=> "Intro" &>
-                            <& /page/page_title.mas, title=>"Profile" &>
+                            <& /page/page_title.mas, title=>"Product Profile" &>
                             <ul>
                                 <li>..........</li>
                                 <li>..........</li>
@@ -42,8 +42,8 @@ $program_name
                                 <button class="btn btn-primary" onclick="Workflow.complete(this);">Once you think your file matches, go to Next Step</button>
                             </center>
                         </&>
-                        <&| /util/workflow.mas:step, title=> "Upload Profile" &>
-                            <& /page/page_title.mas, title=>"Provide basic information about the profile and upload your file" &>
+                        <&| /util/workflow.mas:step, title=> "Upload Product Profile" &>
+                            <& /page/page_title.mas, title=>"Provide basic information about the product profile and upload your file" &>
                             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_profile_form" name="upload_profile_form">
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Breeding Program: </label>

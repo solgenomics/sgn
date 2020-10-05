@@ -9,7 +9,7 @@ $program_id
 <table id="product_profile_table" class="display">
     <thead>
         <tr>
-            <th>Profile Name</th>
+            <th>Product Profile Name</th>
             <th>Scope</th>
             <th>Trait</th>
         </tr>
