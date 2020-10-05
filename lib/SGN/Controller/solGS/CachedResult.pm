@@ -4,7 +4,7 @@ Isaak Y Tecle <iyt2@cornell.edu>
 
 =head1 Name
 
-SGN::Controller::solGS::CachedResult - a controller related to cached result.
+SGN::Controller::solGS::CachedResult - checks for cached output.
  
 =cut
 
@@ -121,7 +121,14 @@ sub _check_cached_output {
 	$c->stash->{data_set_type} = $args->{data_set_type};
 	
 	$self->_check_combined_trials_model_all_traits_output($c, $tr_pop_id, $traits);
-    } 
+    }
+    elsif ($req_page = ~ /kinship\/analysis/) {
+	my $kinship_pop_id  = $args->{kinship_pop_id};
+	my $protocol_id = $args->{genotyping_protocol_id};
+	my $trait_id     = $args->{trait_id};
+
+	$self->_check_kinship_output($c, $kinship_pop_id, $protocol_id, $trait_id);
+    }
  
 }
 
@@ -305,6 +312,12 @@ sub _check_combined_trials_model_selection_output {
    
 }
 
+sub _check_kinship_output {
+    my ($self, $kinship_pop_id, $protocol_id, $trait_id) = @_;
+
+    $c->stash->{rest}{cached} = $self->check_kinship_output($c, $kinship_pop_id, $protocol_id, $trait_id);
+}
+
 
 sub check_single_trial_training_data {
     my ($self, $c, $pop_id, $protocol_id) = @_;
@@ -466,6 +479,27 @@ sub check_multi_trials_training_data {
 
     return $cached;
         
+}
+
+
+sub check_kinship_output {
+    my ($self, $c, $pop_id, $protocol_id, $trait_id) = @_;
+    
+    my $files = $c->controller('solGS::Kinship')->get_kinship_coef_files($c, $pop_id, $protocol_id, $trait_id);  
+  
+    my $cached;
+    
+    if ($trait_id)
+    {
+	$cached = 1 if -s $files->{'json_file_adj'} && -s $files->{'matrix_file_adj'};
+    }
+    else
+    { 
+	$cached = 1  if -s $files->{'json_file_raw'} && -s $files->{'matrix_file_raw'};
+    }
+
+    return $cached;
+   
 }
 
 
