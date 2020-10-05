@@ -47,7 +47,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-5 control-label">Query related stocks (e.g. if you have accessions in the dataset, the query will search for spectra on associated plots, plants, etc.): </label>
+                            <label class="col-sm-5 control-label">Query related stocks (e.g. if you have accessions in the dataset, the query will search for spectra on associated plots, plants, etc. and vice versa): </label>
                             <div class="col-sm-7" >
                                 <select class="form-control" id="nirs_analysis_plot_spectra_associated_stock_select_id" name="nirs_analysis_plot_spectra_associated_stock_select_id">
                                     <option value="yes">Yes</option>
