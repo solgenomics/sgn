@@ -36,24 +36,11 @@ sub nirs_upload_verify_POST : Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my ($user_id, $user_name, $user_type) = _check_user_login($c);
     my @success_status;
     my @error_status;
     my @warning_status;
 
-    my $user = $c->user();
-    if (!$user) {
-        push @error_status, 'Must be logged in to upload phenotypes!';
-        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
-        $c->detach();
-    }
-    my $user_type = $user->get_object->get_user_type();
-    if ($user_type ne 'submitter' && $user_type ne 'curator') {
-        push @error_status, 'Must have submitter privileges to upload phenotypes! Please contact us!';
-        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
-        $c->detach();
-    }
-
-    my $user_id = $c->can('user_exists') ? $c->user->get_object->get_sp_person_id : $c->sp_person_id;
     my $parser = CXGN::Phenotypes::ParseUpload->new();
     my $validate_type = "scio spreadsheet nirs";
     my $metadata_file_type = "nirs spreadsheet";
@@ -108,8 +95,7 @@ sub nirs_upload_verify_POST : Args(0) {
     my %phenotype_metadata;
     $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
     $phenotype_metadata{'archived_file_type'} = $metadata_file_type;
-    my $operator = $user->get_object()->get_username();
-    $phenotype_metadata{'operator'} = $operator;
+    $phenotype_metadata{'operator'} = $user_name;
     $phenotype_metadata{'date'} = $timestamp;
 
     my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id);
@@ -134,39 +120,6 @@ sub nirs_upload_verify_POST : Args(0) {
             push @success_status, "File data successfully parsed.";
         }
     }
-
-    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
-    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
-
-    my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
-        basepath=>$c->config->{basepath},
-        dbhost=>$c->config->{dbhost},
-        dbname=>$c->config->{dbname},
-        dbuser=>$c->config->{dbuser},
-        dbpass=>$c->config->{dbpass},
-        temp_file_nd_experiment_id=>$temp_file_nd_experiment_id,
-        bcs_schema=>$schema,
-        metadata_schema=>$metadata_schema,
-        phenome_schema=>$phenome_schema,
-        user_id=>$user_id,
-        stock_list=>\@plots,
-        trait_list=>\@traits,
-        values_hash=>\%parsed_data,
-        has_timestamps=>0,
-        metadata_hash=>\%phenotype_metadata
-    });
-
-    my $warning_status;
-    my ($verified_warning, $verified_error) = $store_phenotypes->verify();
-    if ($verified_error) {
-        push @error_status, $verified_error;
-        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
-        $c->detach();
-    }
-    if ($verified_warning) {
-        push @warning_status, $verified_warning;
-    }
-    push @success_status, "File data verified. Plot names and trait names are valid.";
 
     my @filter_input;
     while (my ($stock_name, $o) = each %parsed_data) {
@@ -201,16 +154,73 @@ sub nirs_upload_verify_POST : Args(0) {
     print STDERR $cmd_s;
     my $cmd_status = system($cmd_s);
 
-    #open(my $F2, '<', $output_raw_json_filepath);
-    #    my $output_json = <$F2>;
-        #my $output = decode_json $output_json;
-        #print STDERR Dumper $output;
-    #close($F2);
+    my $parsed_file_agg = $parser->parse($validate_type, $output_csv_filepath, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id);
+    if (!$parsed_file_agg) {
+        push @error_status, "Error parsing aggregated file.";
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    }
+    if ($parsed_file_agg->{'error'}) {
+        push @error_status, $parsed_file_agg->{'error'};
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    }
+    my %parsed_data_agg;
+    my @plots_agg;
+    my @traits_agg;
+    if (scalar(@error_status) == 0) {
+        if ($parsed_file_agg && !$parsed_file_agg->{'error'}) {
+            %parsed_data_agg = %{$parsed_file_agg->{'data'}};
+            @plots_agg = @{$parsed_file_agg->{'units'}};
+            @traits_agg = @{$parsed_file_agg->{'variables'}};
+            push @success_status, "Aggregated file data successfully parsed.";
+        }
+    }
 
-    print STDERR Dumper \@success_status;
-    print STDERR Dumper \@warning_status;
-    print STDERR Dumper \@error_status;
-    print STDERR Dumper $output_plot_filepath_string;
+    my %parsed_data_agg_coalesced;
+    while (my ($stock_name, $o) = each %parsed_data) {
+       my $spectras = $o->{nirs}->{spectra};
+       $parsed_data_agg_coalesced{$stock_name}->{nirs}->{device_type} = $o->{nirs}->{device_type};
+       $parsed_data_agg_coalesced{$stock_name}->{nirs}->{spectra} = $spectras->[0];
+    }
+
+    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+
+    my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
+        basepath=>$c->config->{basepath},
+        dbhost=>$c->config->{dbhost},
+        dbname=>$c->config->{dbname},
+        dbuser=>$c->config->{dbuser},
+        dbpass=>$c->config->{dbpass},
+        temp_file_nd_experiment_id=>$temp_file_nd_experiment_id,
+        bcs_schema=>$schema,
+        metadata_schema=>$metadata_schema,
+        phenome_schema=>$phenome_schema,
+        user_id=>$user_id,
+        stock_list=>\@plots_agg,
+        trait_list=>\@traits_agg,
+        values_hash=>\%parsed_data_agg_coalesced,
+        has_timestamps=>0,
+        metadata_hash=>\%phenotype_metadata
+    });
+
+    my $warning_status;
+    my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+    if ($verified_error) {
+        push @error_status, $verified_error;
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    }
+    if ($verified_warning) {
+        push @warning_status, $verified_warning;
+    }
+    push @success_status, "Aggregated file data verified. Plot names and trait names are valid.";
+
+    # print STDERR Dumper \@success_status;
+    # print STDERR Dumper \@warning_status;
+    # print STDERR Dumper \@error_status;
+    # print STDERR Dumper $output_plot_filepath_string;
     $c->stash->{rest} = {success => \@success_status, warning => \@warning_status, error => \@error_status, figure => $output_plot_filepath_string};
 }
 
@@ -221,24 +231,11 @@ sub nirs_upload_store_POST : Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my ($user_id, $user_name, $user_type) = _check_user_login($c);
     my @success_status;
     my @error_status;
     my @warning_status;
 
-    my $user = $c->user();
-    if (!$user) {
-        push @error_status, 'Must be logged in to upload phenotypes!';
-        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
-        $c->detach();
-    }
-    my $user_type = $user->get_object->get_user_type();
-    if ($user_type ne 'submitter' && $user_type ne 'curator') {
-        push @error_status, 'Must have submitter privileges to upload phenotypes! Please contact us!';
-        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
-        $c->detach();
-    }
-
-    my $user_id = $c->can('user_exists') ? $c->user->get_object->get_sp_person_id : $c->sp_person_id;
     my $parser = CXGN::Phenotypes::ParseUpload->new();
     my $validate_type = "scio spreadsheet nirs";
     my $metadata_file_type = "nirs spreadsheet";
@@ -288,14 +285,6 @@ sub nirs_upload_store_POST : Args(0) {
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
-
-    ## Set metadata
-    my %phenotype_metadata;
-    $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
-    $phenotype_metadata{'archived_file_type'} = $metadata_file_type;
-    my $operator = $user->get_object()->get_username();
-    $phenotype_metadata{'operator'} = $operator;
-    $phenotype_metadata{'date'} = $timestamp;
 
     my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id);
     if (!$parsed_file) {
@@ -335,11 +324,14 @@ sub nirs_upload_store_POST : Args(0) {
     my $dir = $c->tempfiles_subdir('/nirs_files');
     my $tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'nirs_files/fileXXXX');
 
-    my $filter_json_filepath = $tempfile."_filter_json";
-    my $output_json_filepath = $tempfile."_output_json";
-    my $output_raw_json_filepath = $tempfile."_output_raw_json";
-    my $output_plot_filepath = $tempfile."_output_plot.png";
+    my $filter_json_filepath = $tempfile."_input_json";
+    my $output_csv_filepath = $tempfile."_output.csv";
+    my $output_raw_csv_filepath = $tempfile."_output_raw.csv";
     my $output_outliers_filepath = $tempfile."_output_outliers.csv";
+
+    my $tempfile_string = $c->tempfile( TEMPLATE => 'nirs_files/fileXXXX');
+    my $output_plot_filepath_string = $tempfile_string."_output_plot.png";
+    my $output_plot_filepath = $c->config->{basepath}."/".$output_plot_filepath_string;
 
     my $json = JSON->new->utf8->canonical();
     my $filter_data_input_json = $json->encode(\@filter_input);
@@ -348,28 +340,77 @@ sub nirs_upload_store_POST : Args(0) {
         print $F $filter_data_input_json;
     close($F);
 
-    # my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirs_upload_filter_aggregate.R '$filter_json_filepath' '$output_json_filepath' '$output_raw_json_filepath' '$output_plot_filepath' '$output_outliers_filepath' ";
-    # print STDERR $cmd_s;
-    # my $cmd_status = system($cmd_s);
+    my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirs_upload_filter_aggregate.R '$filter_json_filepath' '$output_csv_filepath' '$output_raw_csv_filepath' '$output_plot_filepath' '$output_outliers_filepath' ";
+    print STDERR $cmd_s;
+    my $cmd_status = system($cmd_s);
 
-    # open(my $F_output, '<', $output_json_filepath);
-    # my $output_json_filtered = decode_json <$F_output>;
-    # close($F_output);
-
-    my %parsed_data_filtered;
+    my %parsed_data_agg;
 
     # Just use one of the spectra:
-    while (my ($stock_name, $o) = each %parsed_data) {
-        my $spectras = $o->{nirs}->{spectra};
-        $parsed_data_filtered{$stock_name}->{nirs}->{device_type} = $o->{nirs}->{device_type};
-        $parsed_data_filtered{$stock_name}->{nirs}->{spectra} = $spectras->[0];
+    #while (my ($stock_name, $o) = each %parsed_data) {
+    #    my $spectras = $o->{nirs}->{spectra};
+    #    $parsed_data_agg{$stock_name}->{nirs}->{device_type} = $o->{nirs}->{device_type};
+    #    $parsed_data_agg{$stock_name}->{nirs}->{spectra} = $spectras->[0];
+    #}
+
+    my $agg_file_name =  basename($output_csv_filepath);
+
+    my $uploader_agg = CXGN::UploadFile->new({
+        tempfile => $output_csv_filepath,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $agg_file_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_type
+    });
+    my $archived_agg_filename_with_path = $uploader->archive();
+    my $md5_agg = $uploader_agg->get_md5($archived_agg_filename_with_path);
+    if (!$archived_agg_filename_with_path) {
+        push @error_status, "Could not save file $agg_file_name in archive.";
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    } else {
+        push @success_status, "File $agg_file_name saved in archive.";
     }
+    unlink $output_csv_filepath;
 
     # Using aggregated spectra:
-    # foreach (@$output_json_filtered) {
-    #     $parsed_data_filtered{$_->{observationUnitId}}->{nirs}->{device_type} = $_->{device_type};
-    #     $parsed_data_filtered{$_->{observationUnitId}}->{nirs}->{spectra} = $_->{nirs_spectra};
-    # }
+    my $parsed_file_agg = $parser->parse($validate_type, $archived_agg_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id);
+    if (!$parsed_file_agg) {
+        push @error_status, "Error parsing aggregated file.";
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    }
+    if ($parsed_file_agg->{'error'}) {
+        push @error_status, $parsed_file_agg->{'error'};
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    }
+    my @plots_agg;
+    my @traits_agg;
+    if (scalar(@error_status) == 0) {
+        if ($parsed_file_agg && !$parsed_file_agg->{'error'}) {
+            %parsed_data_agg = %{$parsed_file_agg->{'data'}};
+            @plots_agg = @{$parsed_file_agg->{'units'}};
+            @traits_agg = @{$parsed_file_agg->{'variables'}};
+            push @success_status, "Aggregated file data successfully parsed.";
+        }
+    }
+
+    my %parsed_data_agg_coalesced;
+    while (my ($stock_name, $o) = each %parsed_data) {
+       my $spectras = $o->{nirs}->{spectra};
+       $parsed_data_agg_coalesced{$stock_name}->{nirs}->{device_type} = $o->{nirs}->{device_type};
+       $parsed_data_agg_coalesced{$stock_name}->{nirs}->{spectra} = $spectras->[0];
+    }
+
+    ## Set metadata
+    my %phenotype_metadata;
+    $phenotype_metadata{'archived_file'} = $archived_agg_filename_with_path;
+    $phenotype_metadata{'archived_file_type'} = $metadata_file_type;
+    $phenotype_metadata{'operator'} = $user_name;
+    $phenotype_metadata{'date'} = $timestamp;
 
     my $pheno_dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
     my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
@@ -385,23 +426,24 @@ sub nirs_upload_store_POST : Args(0) {
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
         user_id=>$user_id,
-        stock_list=>\@plots,
-        trait_list=>\@traits,
-        values_hash=>\%parsed_data_filtered,
+        stock_list=>\@plots_agg,
+        trait_list=>\@traits_agg,
+        values_hash=>\%parsed_data_agg_coalesced,
         has_timestamps=>0,
         metadata_hash=>\%phenotype_metadata
     });
 
-    # my ($verified_warning, $verified_error) = $store_phenotypes->verify();
-    # if ($verified_error) {
-    #     push @error_status, $verified_error;
-    #     $c->stash->{rest} = {success => \@success_status, error => \@error_status };
-    #     $c->detach();
-    # }
-    # if ($verified_warning) {
-    #     push @warning_status, $verified_warning;
-    # }
-    push @success_status, "File data verified. Plot names and trait names are valid.";
+    my $warning_status;
+    my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+    if ($verified_error) {
+        push @error_status, $verified_error;
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    }
+    if ($verified_warning) {
+        push @warning_status, $verified_warning;
+    }
+    push @success_status, "Aggregated file data verified. Plot names and trait names are valid.";
 
     my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
     if ($stored_phenotype_error) {
@@ -417,7 +459,7 @@ sub nirs_upload_store_POST : Args(0) {
     my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
 
-    $c->stash->{rest} = {success => \@success_status, error => \@error_status};
+    $c->stash->{rest} = {success => \@success_status, error => \@error_status, figure => $output_plot_filepath_string};
 }
 
 sub generate_spectral_plot : Path('/ajax/Nirs/generate_spectral_plot') : ActionClass('REST') { }
@@ -440,6 +482,11 @@ sub generate_spectral_plot_POST : Args(0) {
     my $accession_ids = $ds->accessions();
     my $plot_ids = $ds->plots();
     my $plant_ids = $ds->plants();
+
+    if (!$accession_ids && !$plot_ids && !$plant_ids) {
+        $c->stash->{rest} = { error => "No accessions or plots or plants in your selected dataset!"};
+        $c->detach();
+    }
 
     my @all_stock_ids;
     if ($query_associated_stocks) {
@@ -1094,6 +1141,10 @@ sub _check_user_login {
         $user_id = $c->user()->get_object()->get_sp_person_id();
         $user_name = $c->user()->get_object()->get_username();
         $user_role = $c->user->get_object->get_user_type();
+    }
+    if ($user_role ne 'submitter' && $user_role ne 'curator') {
+        $c->stash->{rest} = {error=>'You do not have permission in the database to do this! Please contact us.'};
+        $c->detach();
     }
     return ($user_id, $user_name, $user_role);
 }
