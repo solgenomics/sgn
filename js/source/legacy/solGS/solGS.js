@@ -10,45 +10,49 @@ JSAN.use('jquery.blockUI');
 JSAN.use('jquery.form');
 
 
-var solGS = solGS || function solGS () {};
+var solGS = solGS || function solGS() {};
 
-solGS.waitPage = function (page, args) {
-  
-    var host = window.location.protocol + '//'  + window.location.host;
-    page = page.replace(host, '');
-  
-    var matchItems = 'solgs/population/'
-	+ '|solgs/populations/combined/' 
-	+ '|solgs/trait/' 
-	+ '|solgs/model/combined/trials/'
-	+ '|solgs/search/trials/trait/'
-	+ '|solgs/model/\\w+_\\d+/prediction/'
-	+ '|solgs/model/\\d+/prediction/'
-	+ '|solgs/models/combined/trials/'
-     	+ '|solgs/traits/all/population/'
-    	+ '|kinship/analysis';
-  		    
-    if (page.match(matchItems)) {
-
-	var multiTraitsUrls = 'solgs/traits/all/population/'
-	    + '|solgs/models/combined/trials/';
-
-	if (page.match(multiTraitsUrls)) {	  
-	    getTraitsSelectionId(page, args);	    
-	} else {
-	    //if (page.match(/list_/)) {
-	//	askUser(page, args)
-	    // } else {
+solGS.submitJob = {
+    
+    waitPage: function(page, args) {
 	
-	    checkCachedResult(page, args);
-	   // }
-	}
-    }
-    else {
-    	goToPage(page, args);
-    }
+	var host = window.location.protocol + '//'  + window.location.host;
+	page = page.replace(host, '');
+	
+	var matchItems = 'solgs/population/'
+	    + '|solgs/populations/combined/' 
+	    + '|solgs/trait/' 
+	    + '|solgs/model/combined/trials/'
+	    + '|solgs/search/trials/trait/'
+	    + '|solgs/model/\\w+_\\d+/prediction/'
+	    + '|solgs/model/\\d+/prediction/'
+	    + '|solgs/models/combined/trials/'
+     	    + '|solgs/traits/all/population/'
+    	    + '|kinship/analysis';
+  	
+	if (page.match(matchItems)) {
 
-    function checkCachedResult(page, args) {
+	    var multiTraitsUrls = 'solgs/traits/all/population/'
+		+ '|solgs/models/combined/trials/';
+
+	    if (page.match(multiTraitsUrls)) {	  
+		this.getTraitsSelectionId(page, args);	    
+	    } else {
+		//if (page.match(/list_/)) {
+		//	askUser(page, args)
+		// } else {
+		
+		this.checkCachedResult(page, args);
+		// }
+	    }
+	}
+	else {
+    	    this.goToPage(page, args);
+	}
+    },
+    
+
+    checkCachedResult: function(page, args) {
 
 	var trainingTraitsIds = jQuery('#training_traits_ids').val();
 
@@ -62,7 +66,7 @@ solGS.waitPage = function (page, args) {
 	    }
 	}
 
-	args = getArgsFromUrl(page, args);
+	args = this.getArgsFromUrl(page, args);
 	args = JSON.stringify(args);
 
 	jQuery.ajax({
@@ -73,22 +77,22 @@ solGS.waitPage = function (page, args) {
 	    success : function(response) {
 		if (response.cached) {		     
 		    args = JSON.parse(args);
-		    goToPage(page, args);
-		   
+		    solGS.submitJob.goToPage(page, args);
+		    
 		} else {
 
 		    if (document.URL.match(/solgs\/population\/|solgs\/populations\/combined\//)) {
-			checkTrainingPopRequirement(page, args);
+			solGS.submitJob.checkTrainingPopRequirement(page, args);
 		    } else {
 			args = JSON.parse(args);
-			askUser(page, args);
+			solGS.submitJob.askUser(page, args);
 		    }
 		    // if (document.URL.match(/solgs\/search\//)) {
 		    // 	args = JSON.parse(args);
 		    // 	askUser(page, args);
-			
+		    
 		    // } else if () {
-			
+		    
 		    // 	if (page.match(/solgs\/population\/|solgs\/populations\/combined\//)) {
 		    // 	    args = JSON.parse(args);
 		    // 	    askUser(page, args);
@@ -103,12 +107,12 @@ solGS.waitPage = function (page, args) {
 	    error: function() {
 		alert('Error occured checking for cached output.')		
 	    }
-	   	    
+	    
 	})
-    }
+    },
 
 
-    function checkTrainingPopRequirement (page, args) {
+    checkTrainingPopRequirement: function(page, args) {
 	args = JSON.parse(args);
 	var popId = args.training_pop_id[0];
 	var dataSetType = args.data_set_type;
@@ -122,7 +126,7 @@ solGS.waitPage = function (page, args) {
 		success : function (res) {
 		    var trainingPopSize = res.member_count;
 		    if (trainingPopSize >= 20) {	   
-			askUser(page, args);		
+			solGS.submitJob.askUser(page, args);		
 		    } else {
 			var msg = 'The training population size ('
 			    + trainingPopSize + ') is too small. Minimum required is 20.';
@@ -133,13 +137,14 @@ solGS.waitPage = function (page, args) {
 		},	    
 	    });
 	}
-    }
+    },
 
 
-    function  askUser(page, args) {
+    askUser: function(page, args) {
 	
 	var t = '<p>This analysis takes long time. ' 
-	    + 'You can request the analysis and you will be emailed when it completes.</p>';
+	    + 'Do you want to submit the analysis and get an email when it completes?</p>';
+
 	
 	jQuery('<div />')
 	    .html(t)
@@ -150,26 +155,29 @@ solGS.waitPage = function (page, args) {
 		title  : "Analysis job submission",
  		buttons: {	
 		    OK: {
-			text: 'OK',
+			text: 'Yes',
 			class: 'btn btn-success',
                         id   : 'queue_job',
 			click: function() {
 			    jQuery(this).dialog("close");			  
 			    
-			    checkUserLogin(page, args);
+			    solGS.submitJob.checkUserLogin(page, args);
 			},
 		    }, 
 		    
+		    
+
 		    // No: { 
-		    // 	text: 'No, I will wait...',
-		    // 	class: 'btn btn-primary',
-                    //     id   : 'no_queue',
-		    // 	click: function() { 
-		    // 	    jQuery(this).dialog("close");
-			    
-		    // 	    displayAnalysisNow(page, args);
-		    // 	},
+		    //     text: 'No, I will wait...',
+		    //     class: 'btn btn-primary',
+		    //     id   : 'no_queue',
+		    //     click: function() { 
+		    // 	jQuery(this).dialog("close");
+		    
+		    // 	analyzeNow(page, args);
+		    //     },
 		    // },
+		    
 		    
 		    Cancel: { 
 			text: 'Cancel',
@@ -182,10 +190,10 @@ solGS.waitPage = function (page, args) {
 		}
 	    });
 	
-    }
+    },
 
 
-    function checkUserLogin (page, args) {
+    checkUserLogin: function(page, args) {
 	
 	if (args === undefined) {	
 	    args = {};
@@ -202,18 +210,18 @@ solGS.waitPage = function (page, args) {
 		    args['user_name']  = contact.name;
 		    args['user_email'] = contact.email;
 
-		    getProfileDialog(page, args);
+		    solGS.submitJob.getProfileDialog(page, args);
 
 		} else {
-		    loginAlert();
+		    solGS.submitJob.loginAlert();
 		}
 	    }
 	});
 
-    }
+    },
 
 
-    function loginAlert () {
+    loginAlert: function() {
 	
 	jQuery('<div />')
 	    .html('To use this feature, you need to log in and start over the process.')
@@ -226,7 +234,7 @@ solGS.waitPage = function (page, args) {
 		    OK: {
 			click: function () {
 			    jQuery(this).dialog('close');		
-			    loginUser();
+			    solGS.submitJob.loginUser();
 			},
 			class: 'btn btn-success',
 			text : 'OK',
@@ -242,17 +250,17 @@ solGS.waitPage = function (page, args) {
 		}			
 	    });	    
 
-    }
+    },
     
 
-    function loginUser () {
+    loginUser: function() {
 
 	window.location = '/user/login?goto_url=' + window.location.pathname;
 	
-    }
+    },
 
 
-    function getTraitsSelectionId (page, args) {
+    getTraitsSelectionId: function(page, args) {
 
 	var traitIds = args.training_traits_ids;
 	var protocolId = jQuery('#genotyping_protocol_id').val();
@@ -269,18 +277,18 @@ solGS.waitPage = function (page, args) {
 		//if (page.match(/list_/)) {
 		//    askUser(page, args)
 		//} else {	    
-		    checkCachedResult(page, args);
+		solGS.submitJob.checkCachedResult(page, args);
 		//}		
 	    },
 	    error: function (res, st, error) {
 		alert('error: ' + error)
 	    },
-			
+	    
 	});
 	
-    }
+    },
 
-    function goToPage (page, args) { 
+    goToPage: function(page, args) { 
 
 	jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
 	jQuery.blockUI({message: 'Please wait..'});
@@ -300,8 +308,8 @@ solGS.waitPage = function (page, args) {
 	    // 	var listId = args.list_id;
 	    // 	loadPlotListTypeTrainingPop(listId);  
 	    // } else {
-		window.location = page;
-	   // }	   
+	    window.location = page;
+	    // }	   
 	} else if (page.match(/solgs\/model\//)) {	    
 	    if (page.match(/solgs\/model\/\d+\/prediction\/\w+_|solgs\/model\/\w+_\d+\/prediction\/\w+_/)) {	
 		loadGenotypesListTypeSelectionPop(args);
@@ -312,10 +320,10 @@ solGS.waitPage = function (page, args) {
 	else {
 	    window.location = window.location.href;
 	}	
-    }
+    },
 
 
-    function submitTraitSelections (page, args) {
+    submitTraitSelections: function(page, args) {
 	
 	wrapTraitsForm();
 
@@ -326,10 +334,10 @@ solGS.waitPage = function (page, args) {
 	    jQuery('#traits_selection_form').ajaxSubmit();
 	    jQuery('#traits_selection_form').resetForm();
 	}
-    }
+    },
 
 
-    function wrapTraitsForm () {
+    wrapTraitsForm: function() {
 	
 	var popId  = jQuery('#population_id').val();
 	var protocolId = jQuery('#genotyping_protocol_id').val();
@@ -358,10 +366,10 @@ solGS.waitPage = function (page, args) {
 
 	jQuery('#population_traits_list').wrap(traitsForm);
 
-    }
+    },
 
 
-    function getProfileDialog (page, args) {
+    getProfileDialog: function(page, args) {
 	
 	var matchItems = '/solgs/population/'
 	    + '|solgs/trait/' 
@@ -371,10 +379,10 @@ solGS.waitPage = function (page, args) {
 
 	if (page.match(matchItems) ) {
 
-	    args = getArgsFromUrl(page, args);
+	    args = this.getArgsFromUrl(page, args);
 	}
 	
-	var form = getProfileForm(args);
+	var form = this.getProfileForm(args);
 	
 	jQuery('<div />', {id: 'email-form'})
 	    .html(form)
@@ -410,7 +418,7 @@ solGS.waitPage = function (page, args) {
 			    
 			    jQuery(this).dialog('close');
 			    
-			    saveAnalysisProfile(analysisProfile);
+			    solGS.submitJob.saveAnalysisProfile(analysisProfile);
 			},
 			id   :'submit_job',
 			class: 'btn btn-success',
@@ -427,10 +435,10 @@ solGS.waitPage = function (page, args) {
 		}
 	    });
 
-    }
+    },
 
 
-    function getArgsFromUrl (url, args) {
+    getArgsFromUrl: function(url, args) {
 
 	var referer = document.URL;
 
@@ -440,7 +448,7 @@ solGS.waitPage = function (page, args) {
 	    trainingTraitsIds = trainingTraitsIds.split(','); 
 	    args['training_traits_ids'] = trainingTraitsIds;	   
 	}
-		
+	
 	if (window.Prototype) {
 	    delete Array.prototype.toJSON;
 	}
@@ -448,9 +456,9 @@ solGS.waitPage = function (page, args) {
 	if (url.match(/solgs\/trait\//)) {
 	    
 	    var urlStr = url.split(/\/+/);
-	
+	    
 	    if (args === undefined) {
-	
+		
 		args = {'trait_id'      : [ urlStr[3] ], 
 			'training_pop_id' : [ urlStr[5] ], 
 			'analysis_type' : 'single model',
@@ -506,7 +514,7 @@ solGS.waitPage = function (page, args) {
 	    
 	    var urlStr = url.split(/\/+/);
 	    var gpr = urlStr[5];
-	   
+	    
 	    if (args === undefined) {
 		args = { 
 		    'training_pop_id' : [ urlStr[3] ], 
@@ -525,7 +533,7 @@ solGS.waitPage = function (page, args) {
 	    var traitId = jQuery('#trait_id').val();
 	    var modelId = jQuery('#model_id').val();
 	    var urlStr  = url.split(/\/+/);
-	   
+	    
 	    var dataSetType;
 	    
 	    if (referer.match(/solgs\/model\/combined\/populations\/|solgs\/models\/combined\//)) {
@@ -563,10 +571,10 @@ solGS.waitPage = function (page, args) {
 	
 	return args;
 
-    }
+    },
 
 
-    function getProfileForm (args) {
+    getProfileForm: function(args) {
 
 	var email = '';
 	if (args.user_email) {
@@ -598,10 +606,10 @@ solGS.waitPage = function (page, args) {
 	
 	return emailForm;
 
-    }
+    },
 
 
-    function saveAnalysisProfile (profile) {
+    saveAnalysisProfile: function(profile) {
 	
 	jQuery.ajax({
 	    type    : 'POST',
@@ -610,7 +618,7 @@ solGS.waitPage = function (page, args) {
 	    url     : '/solgs/save/analysis/profile/',
 	    success : function(response) {
 		if (response.result) {
-		    runAnalysis(profile);
+		    solGS.submitJob.runAnalysis(profile);
 		    
 		} else {
 		    var message = 'Failed saving your analysis profile.';
@@ -623,10 +631,10 @@ solGS.waitPage = function (page, args) {
 	    }
 	});
 
-    }
+    },
 
 
-    function runAnalysis (profile) {
+    runAnalysis: function(profile) {
 	
 	jQuery.ajax({
 	    dataType: 'json',
@@ -635,7 +643,7 @@ solGS.waitPage = function (page, args) {
 	    url     : '/solgs/run/saved/analysis/',
 	    success : function(response) {
 		if (response.result.match(/Submitted/)) {
-		    confirmRequest();
+		    solGS.submitJob.confirmRequest();
 		} else {
 		    var message = 'Error occured submitting the job. Please contact the developers.'
 			+ "\n\nHint: " + response.result;
@@ -649,29 +657,29 @@ solGS.waitPage = function (page, args) {
 	    }
 	});
 	
-    }
+    },
 
 
-    function confirmRequest () {
+    confirmRequest: function() {
 	
-	goToPage('/solgs/confirm/request');
+	solGS.submitJob.goToPage('/solgs/confirm/request');
 	
-    }
+    },
 
-}
+    // },
 
 
-function selectTraitMessage () {
-    
-    var message = '<p style="text-align:justify;">Please select one or more traits to build prediction models.</p>';
+    selectTraitMessage: function() {
+	
+	var message = '<p style="text-align:justify;">Please select one or more traits to build prediction models.</p>';
 
-    jQuery('<div />')
-	.html(message)
-	.dialog({	    
-	    height : 200,
-	    width  : 400,
-	    modal  : true,
-	    title  : "Prediction Modeling Message",
+	jQuery('<div />')
+	    .html(message)
+	    .dialog({	    
+		height : 200,
+		width  : 400,
+		modal  : true,
+		title  : "Prediction Modeling Message",
  		buttons: {	
 		    Yes: {
 			text: 'OK',
@@ -684,10 +692,16 @@ function selectTraitMessage () {
 		}
 	    });
 
+    },
 }
 
 
-jQuery(document).ready(function (){
+solGS.waitPage = function(page, args) {
+    
+    solGS.submitJob.waitPage(page,args);
+}
+
+jQuery(document).ready(function() {
  
      jQuery('#runGS').on('click',  function() {
 	 if (window.Prototype) {
@@ -760,10 +774,10 @@ jQuery(document).ready(function (){
 			};
 
 	  
-	     solGS.waitPage(page, args);
+	     solGS.submitJob.waitPage(page, args);
 	     
 	 } else {
-	     selectTraitMessage();
+	     solGS.submitJob.selectTraitMessage();
 	 }
 
      });
@@ -771,7 +785,7 @@ jQuery(document).ready(function (){
 });
 
 
-solGS.alertMessage = function (msg, msgTitle, divId) {
+solGS.alertMessage = function(msg, msgTitle, divId) {
 
     if (!msgTitle) { 
 	msgTitle = 'Message';
@@ -798,7 +812,7 @@ solGS.alertMessage = function (msg, msgTitle, divId) {
 }
 
 
-solGS.getTraitDetails = function (traitId) {
+solGS.getTraitDetails = function(traitId) {
   
     if (!traitId) {
 	traitId = jQuery("#trait_id").val();
@@ -824,7 +838,7 @@ solGS.getTraitDetails = function (traitId) {
 }
 
 
-solGS.getPopulationDetails = function () {
+solGS.getPopulationDetails = function() {
 
     var trainingPopId   = jQuery("#population_id").val();
     var trainingPopName = jQuery("#population_name").val();
@@ -865,12 +879,14 @@ solGS.getPopulationDetails = function () {
 }
 
 
-solGS.showMessage = function (divId, msg) {
+solGS.showMessage = function(divId, msg) {
      jQuery("#" + divId)
         .css({"padding-left": '0px'})
         .html(msg);
     
 }
+
+
 
 //executes two functions alternately
 jQuery.fn.alternateFunctions = function(a, b) {
@@ -889,7 +905,7 @@ jQuery.fn.alternateFunctions = function(a, b) {
     });
 };
 
-jQuery.fn.doesExist = function(){
+jQuery.fn.doesExist = function() {
 
         return jQuery(this).length > 0;
 
