@@ -304,7 +304,7 @@ sub _check_combined_trials_model_selection_output {
 }
 
 sub _check_kinship_output {
-    my ($self, $kinship_pop_id, $protocol_id, $trait_id) = @_;
+    my ($self, $c, $kinship_pop_id, $protocol_id, $trait_id) = @_;
 
     $c->stash->{rest}{cached} = $self->check_kinship_output($c, $kinship_pop_id, $protocol_id, $trait_id);
 }
