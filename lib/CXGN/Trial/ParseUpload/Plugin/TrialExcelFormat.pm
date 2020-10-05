@@ -23,10 +23,9 @@ sub _validate_with_plugin {
   my $excel_obj;
   my $worksheet;
   my %seen_plot_names;
-  my %seen_accession_names;
   my %seen_seedlot_names;
-  my %seen_cross_unique_ids;
-  my %seen_family_names;
+  my %seen_entry_names;
+
 
   #try to open the excel file and report any errors
   $excel_obj = $parser->parse($filename);
@@ -246,27 +245,11 @@ sub _validate_with_plugin {
       #print STDERR "Check 03 ".localtime();
 
     #stock_name must not be blank and must exist in the database
-    if ($trial_stock_type eq 'family_name') {
-        if (!$stock_name || $stock_name eq '') {
-            push @error_messages, "Cell B$row_name: family name missing";
-        } else {
-            $stock_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
-            $seen_family_names{$stock_name}++;
-        }
-    } elsif ($trial_stock_type eq 'cross') {
-        if (!$stock_name || $stock_name eq '') {
-            push @error_messages, "Cell B$row_name: cross unique id missing";
-        } else {
-            $stock_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
-            $seen_cross_unique_ids{$stock_name}++;
-        }
+    if (!$stock_name || $stock_name eq '') {
+        push @error_messages, "Cell B$row_name: entry name missing";
     } else {
-        if (!$stock_name || $stock_name eq '') {
-          push @error_messages, "Cell B$row_name: accession name missing";
-        } else {
-          $stock_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
-          $seen_accession_names{$stock_name}++;
-        }
+        $stock_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+        $seen_entry_names{$stock_name}++;
     }
 
       #print STDERR "Check 04 ".localtime();
@@ -338,33 +321,13 @@ sub _validate_with_plugin {
 
   }
 
-    if ($trial_stock_type eq 'family_name') {
-        my @family_names = keys %seen_family_names;
-        my $family_name_validator = CXGN::List::Validate->new();
-        my @family_names_missing = @{$family_name_validator->validate($schema,'accessions_or_family_names',\@family_names)->{'missing'}};
+    my @entry_names = keys %seen_entry_names;
+    my $entry_name_validator = CXGN::List::Validate->new();
+    my @entry_names_missing = @{$entry_name_validator->validate($schema,'accessions_or_crosses_or_familynames',\@entry_names)->{'missing'}};
 
-        if (scalar(@family_names_missing) > 0) {
-            $errors{'missing_stocks'} = \@family_names_missing;
-            push @error_messages, "The following family names or accessions are not in the database as uniquenames or synonyms: ".join(',',@family_names_missing);
-        }
-    } elsif ($trial_stock_type eq 'cross') {
-        my @cross_unique_ids = keys %seen_cross_unique_ids;
-        my $cross_unique_id_validator = CXGN::List::Validate->new();
-        my @crosses_missing = @{$cross_unique_id_validator->validate($schema,'accessions_or_crosses',\@cross_unique_ids)->{'missing'}};
-
-        if (scalar(@crosses_missing) > 0) {
-            $errors{'missing_stocks'} = \@crosses_missing;
-            push @error_messages, "The following cross unique ids or accessions are not in the database as uniquenames or synonyms: ".join(',',@crosses_missing);
-        }
-    } else {
-        my @accessions = keys %seen_accession_names;
-        my $accession_validator = CXGN::List::Validate->new();
-        my @accessions_missing = @{$accession_validator->validate($schema,'accessions',\@accessions)->{'missing'}};
-
-        if (scalar(@accessions_missing) > 0) {
-            $errors{'missing_stocks'} = \@accessions_missing;
-            push @error_messages, "The following accessions are not in the database as uniquenames or synonyms: ".join(',',@accessions_missing);
-        }
+    if (scalar(@entry_names_missing) > 0) {
+        $errors{'missing_stocks'} = \@entry_names_missing;
+        push @error_messages, "The following entry names are not in the database as uniquenames or synonyms: ".join(',',@entry_names_missing);
     }
 
 

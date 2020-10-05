@@ -81,13 +81,16 @@ jQuery(document).ready(function ($) {
                 jQuery("#working_modal").modal("show");
             },
             success: function(response) {
+                console.log(response);
                 jQuery("#working_modal").modal("hide");
                 if (response.error){
                     alert(response.error);
-                    jQuery('[name="upload_trial_submit"]').attr('disabled', true);
+                    jQuery('[name="upload_trial_submit_first"]').attr('disabled', true);
+                    jQuery('[name="upload_trial_submit_second"]').attr('disabled', true);
                 }
                 else {
-                    jQuery('[name="upload_trial_submit"]').attr('disabled', false);
+                    jQuery('[name="upload_trial_submit_first"]').attr('disabled', false);
+                    jQuery('[name="upload_trial_submit_second"]').attr('disabled', false);
                 }
             },
             error: function(response) {
@@ -137,7 +140,11 @@ jQuery(document).ready(function ($) {
         upload_trial_validate_form();
     });
 
-    $('[name="upload_trial_submit"]').click(function () {
+    $('[name="upload_trial_submit_first"]').click(function () {
+        upload_trial_file();
+    });
+
+    $('[name="upload_trial_submit_second"]').click(function () {
         upload_trial_file();
     });
 
@@ -206,7 +213,7 @@ jQuery(document).ready(function ($) {
                 }
 
                 $("#upload_trial_error_display tbody").html(response.error_string);
-                $("#upload_trial_error_display_seedlot tbody").html(response.error_string);
+                //$("#upload_trial_error_display_seedlot tbody").html(response.error_string);
                 $("#upload_trial_error_display_second_try").show();
                 $("#upload_trial_error_display_second_try tbody").html(response.error_string);
             }
@@ -287,7 +294,7 @@ jQuery(document).ready(function ($) {
         location.reload();
     });
 
-    jQuery(document).on('click', '[name="upload_trial_success_complete_button"]', function(){
+    jQuery(document).on('click', 'button[name="upload_trial_success_complete_button"]', function(){
         //alert('Trial was saved in the database');
         jQuery('#upload_trial_dialog').modal('hide');
         location.reload();

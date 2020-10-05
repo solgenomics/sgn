@@ -35,7 +35,7 @@ sub count_cores {
 sub read_file_data {
     my ($self, $file) = @_;
  
-    my @lines = read_file($file);
+    my @lines = read_file($file, {binmode => ':utf8'});
     shift(@lines); 
   
     my @data;
@@ -53,7 +53,7 @@ sub structure_downloadable_data {
     if (-s $file) 
     {
 	my $count = 1;
-	foreach my $row (read_file($file) )
+	foreach my $row (read_file($file, {binmode => ':utf8'}) )
 	{
 	    $row_name = "\t" if !$row_name;
 	    $row = $row_name . $row  if $count == 1;	              
@@ -74,17 +74,19 @@ sub top_10 {
       
     my $lines = $self->read_file_data($file);
     my @top_10;
-    
+  
+  
     if (scalar(@$lines) > 10) 
     {
-	@top_10 = @$lines[0..9];
+    	@top_10 = @$lines[0..9];
     }
     else 
     {
-	@top_10 = @$lines;
+    	@top_10 = @$lines;
     }
 
     return \@top_10;
+  
 }
 
 
@@ -237,7 +239,7 @@ sub save_metadata {
     if (!-s $metadata_file)
     {
 	my $metadata   = $c->model('solGS::solGS')->trial_metadata();   
-	write_file($metadata_file, join("\t", @$metadata));
+	write_file($metadata_file, {binmode => ':utf8'}, join("\t", @$metadata));
     }
     
 }

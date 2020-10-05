@@ -291,9 +291,9 @@ sub get_all_locations {
     my @locations;
 
     while (my @location_data = $h->fetchrow_array()) {
-        foreach my $d (@location_data) {
-            $d = Encode::encode_utf8($d);
-        }
+        #foreach my $d (@location_data) {     ### NOT NECESSARY - it's already UTF8
+        #    $d = Encode::encode_utf8($d);
+        #}
      	my ($name, $prog) = @location_data;
          push(@locations, {
              properties => {
@@ -349,7 +349,7 @@ sub get_location_geojson {
     my @locations;
     while (my @location_data = $h->fetchrow_array()) {
 	foreach my $d (@location_data) {
-	    $d = Encode::encode_utf8($d);
+	    ###$d = Encode::encode_utf8($d);   ## not necessary, it's already utf8
 	}
 	my ($id, $name, $abbrev, $country_name, $country_code, $prog, $type, $latitude, $longitude, $altitude, $trial_count, $noaa_station_id) = @location_data;
 

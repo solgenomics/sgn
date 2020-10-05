@@ -161,7 +161,7 @@ sub store_analysis_model_files {
         });
 
         $model_file_md_file_id = $file_row->file_id();
-        unlink($model_file);
+        # unlink($model_file);
     }
 
     #SAVING TRAINING DATA FILE (Main phenotype file)
@@ -237,7 +237,7 @@ sub store_analysis_model_files {
                 file_id => $file_row_aux->file_id()
             });
 
-            unlink($auxiliary_model_file);
+            # unlink($auxiliary_model_file);
         }
     }
 }

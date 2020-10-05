@@ -2006,6 +2006,42 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
   </div>
 </div>
 
+<div class="modal fade" id="drone_imagery_calculate_precipitation_dialog" name="drone_imagery_calculate_precipitation_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryCalculatePrecipitationDialog" data-backdrop="static">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="droneImageryCalculatePrecipitationDialog">Calculate Precipitation Sum</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <div class="well well-sm">
+                The average daily precipitation is fetched from the <a href="https://www.ncdc.noaa.gov/cdo-web/webservices/v2" target=_blank>NOAA NCDC</a>.
+            </div>
+
+            <div id="drone_imagery_calculate_precipitation_time_div"></div>
+
+            <div class="form-horizontal">
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Formula:</label>
+                    <div class="col-sm-9" >
+                        <select class="form-control" id="drone_imagery_calculate_precipitation_sum_formula_input">
+                            <option value="average_daily_precipitation_sum">Precipitation Sum = sum_over_days ( Average Daily Precipitation )</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="drone_imagery_upload_precipitation_sum_submit">Calculate</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal fade" id="drone_imagery_compare_images_dialog" name="drone_imagery_compare_images_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryCompareImagesDialog" data-backdrop="static">
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
@@ -4972,6 +5008,53 @@ jQuery(document).ready(function() {
             error: function(response){
                 jQuery('#working_modal').modal('hide');
                 alert('Error calculating growing degree days!');
+            }
+        });
+    });
+
+    //
+    // Precipitation Sum Calculation
+    //
+
+    var manage_drone_imagery_calculate_precipitation_field_trial_id;
+    var manage_drone_imagery_calculate_precipitation_drone_run_project_id;
+    var manage_drone_imagery_calculate_precipitation_phenotype_time;
+
+    jQuery(document).on('click', 'button[name=drone_imagery_drone_run_calculate_precipitation_sum]', function() {
+        manage_drone_imagery_calculate_precipitation_field_trial_id = jQuery(this).data('field_trial_id');
+        manage_drone_imagery_calculate_precipitation_drone_run_project_id = jQuery(this).data('drone_run_project_id');
+
+        jQuery.ajax({
+            url : '/api/drone_imagery/get_weeks_after_planting_date?drone_run_project_id='+manage_drone_imagery_calculate_precipitation_drone_run_project_id,
+            success: function(response){
+                console.log(response);
+                var html = "<center><b>Field Trial Planting Date</b>: "+response.planting_date+"<br/><b>Drone Run Date</b>: "+response.drone_run_date+"<br/><b>Number of Weeks</b>: "+response.rounded_time_difference_weeks+"<br/><b>Number of Weeks Ontology Term</b>: "+response.time_ontology_week_term+"<br/><b>Number of Days</b>:"+response.time_difference_days+"<br/><b>Number of Days Ontology Term</b>: "+response.time_ontology_day_term+"<br/><br/></center>";
+                jQuery('#drone_imagery_calculate_precipitation_time_div').html(html);
+                manage_drone_imagery_calculate_precipitation_phenotype_time = response.time_ontology_day_cvterm_id;
+
+                jQuery('#drone_imagery_calculate_precipitation_dialog').modal('show');
+            },
+            error: function(response){
+                alert('Error getting gdd!')
+            }
+        });
+    });
+
+    jQuery('#drone_imagery_upload_precipitation_sum_submit').click(function(){
+        var manage_drone_imagery_calculate_precipitation_sum_formula = jQuery('#drone_imagery_calculate_precipitation_sum_formula_input').val();
+        jQuery.ajax({
+            url : '/api/drone_imagery/precipitation_sum?drone_run_project_id='+manage_drone_imagery_calculate_precipitation_drone_run_project_id+'&formula='+manage_drone_imagery_calculate_precipitation_sum_formula+'&field_trial_id='+manage_drone_imagery_calculate_precipitation_field_trial_id,
+            beforeSend: function(){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response){
+                console.log(response);
+                jQuery('#working_modal').modal('hide');
+                location.reload();
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('Error calculating precipitation sum!');
             }
         });
     });
