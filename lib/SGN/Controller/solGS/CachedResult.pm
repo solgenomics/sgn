@@ -51,12 +51,8 @@ sub _check_cached_output {
     $c->stash->{rest}{cached} = undef;
     if ($req_page =~ /solgs\/population\//)
     { 
-	my $pop_id = $args->{training_pop_id}[0];
-	
-	#if ($pop_id !~ /list/)
-	#{
-	    $self->_check_single_trial_training_data($c, $pop_id);
-	#}
+	my $pop_id = $args->{training_pop_id}[0];    
+	$self->_check_single_trial_training_data($c, $pop_id);
     }
     elsif ($req_page =~ /solgs\/populations\/combined\//)
     {
@@ -142,7 +138,7 @@ sub _check_single_trial_training_data {
 
 
 sub _check_single_trial_model_output {
-    my ($self, $c, $pop_id, $trait_id) =@_;
+    my ($self, $c, $pop_id, $trait_id) = @_;
     
     my $cached_pop_data  = $self->check_single_trial_training_data($c, $pop_id);
     
@@ -154,7 +150,7 @@ sub _check_single_trial_model_output {
 
 
 sub _check_single_trial_model_all_traits_output {
-    my ($self, $c, $pop_id, $traits_ids) =@_;
+    my ($self, $c, $pop_id, $traits_ids) = @_;
     
     my $cached_pop_data  = $self->check_single_trial_training_data($c, $pop_id);
   
@@ -178,12 +174,9 @@ sub _check_single_trial_model_all_traits_output {
 
 
 sub _check_combined_trials_data {
-    my ($self, $c, $pop_id) =@_;
+    my ($self, $c, $pop_id) = @_;
 
     $c->stash->{combo_pops_id} = $pop_id;
-    #$c->controller('solGS::combinedTrials')->get_combined_pops_arrayref($c);
-    #my $trials = $c->stash->{arrayref_combined_pops_ids};
-
     $c->controller('solGS::combinedTrials')->get_combined_pops_list($c);
     my $trials = $c->stash->{combined_pops_list};
     
@@ -198,7 +191,7 @@ sub _check_combined_trials_data {
 
 
 sub _check_combined_trials_model_output {
-    my ($self, $c, $pop_id, $trait_id) =@_;
+    my ($self, $c, $pop_id, $trait_id) = @_;
     
     my $cached_pop_data  = $self->check_combined_trials_training_data($c, $pop_id, $trait_id);
     
@@ -234,10 +227,8 @@ sub _check_combined_trials_model_all_traits_output {
 
 
 sub _check_selection_pop_all_traits_output {
-    my ($self, $c, $tr_pop_id, $sel_pop_id) =@_;
-        
-    #$self->check_selection_pop_all_traits_output($c, $tr_pop_id, $sel_pop_id);
-    
+    my ($self, $c, $tr_pop_id, $sel_pop_id) = @_;
+       
     $c->controller('solGS::solGS')->prediction_pop_analyzed_traits($c, $tr_pop_id, $sel_pop_id);
     my $sel_traits_ids = $c->stash->{prediction_pop_analyzed_traits_ids}; 
 
@@ -331,8 +322,6 @@ sub check_single_trial_training_data {
   
     $c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
     my $cached_geno = -s $c->stash->{genotype_file_name};
-
-   # $c->model('solGS::solGS')->get_all_genotyping_protocols($pop_id);
     
     if ($cached_pheno && $cached_geno)
     { 
@@ -349,12 +338,6 @@ sub check_single_trial_training_data {
 sub check_single_trial_model_output {
     my ($self, $c, $pop_id, $trait_id, $protocol_id) = @_;
 
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
-    my $trait_abbr = $c->stash->{trait_abbr};
-
-    #$c->stash->{trait_abbr} = $trait_abbr;
-    #$c->stash->{pop_id}     = $pop_id;  
- 
     $c->controller('solGS::Files')->rrblup_training_gebvs_file($c, $pop_id, $trait_id, $protocol_id);
     my $cached_gebv = -s $c->stash->{rrblup_training_gebvs_file};
    
@@ -371,7 +354,7 @@ sub check_single_trial_model_output {
 
 
 sub check_single_trial_model_all_traits_output {
-    my ($self, $c, $pop_id, $traits_ids) =@_;
+    my ($self, $c, $pop_id, $traits_ids) = @_;
     
     my $cached_pop_data  = $self->check_single_trial_training_data($c, $pop_id);
   
@@ -387,7 +370,7 @@ sub check_single_trial_model_all_traits_output {
 
 
 sub check_combined_trials_model_all_traits_output {
-    my ($self, $c, $pop_id, $traits_ids) =@_;
+    my ($self, $c, $pop_id, $traits_ids) = @_;
      
     foreach my $tr (@$traits_ids)	    
     {
@@ -422,7 +405,7 @@ sub check_selection_pop_output {
 
 
 sub check_selection_pop_all_traits_output {
-    my ($self, $c, $tr_pop_id, $sel_pop_id) =@_;
+    my ($self, $c, $tr_pop_id, $sel_pop_id) = @_;
     
     $c->controller('solGS::solGS')->prediction_pop_analyzed_traits($c, $tr_pop_id, $sel_pop_id);
     my $traits_ids = $c->stash->{prediction_pop_analyzed_traits_ids};
