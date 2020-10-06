@@ -175,26 +175,18 @@ jQuery(document).ready(function(){
                 console.log(response);
                 jQuery('#working_msg').html('');
                 jQuery('#working_modal').modal('hide');
-                var aggregated_values = {};
-                for (var i=0; i<response.results.length; i++) {
-                    if(typeof(aggregated_values[response.results[i].stock_id]) !== "undefined"){
-                        aggregated_values[response.results[i].stock_id].push(parseFloat(response.results[i].result.trait_value));
-                    }else{
-                        aggregated_values[response.results[i].stock_id] = [];
-                        aggregated_values[response.results[i].stock_id].push(parseFloat(response.results[i].result.trait_value));
-                    }
-                }
-                console.log(aggregated_values);
+                var image_data = _group_image_data_by_stock(response.results);
+                console.log(image_data);
                 var latest_stock_id = '';
                 var avg_score_html;
-                let average = (array) => array.reduce((a, b) => a + b) / array.length;
                 var html = '<table class="table table-hover"><thead><tr><th>Original Image</th><th>Analyzed Image</th><th>Image Phenotype</th><th>Previously Saved Image-Associated Phenotype(s)</th><th>Observation Unit</th><th>Observation Unit Average Phenotype</th></tr></thead><tbody>';
                 for (var i=0; i<response.results.length; i++) {
                     if (response.results[i].result.image_link) {
                         html = html + '<tr><td><img src="'+response.results[i].result.original_image+'"></td><td><img src="'+response.results[i].result.image_link+'"></td><td>'+response.results[i].result.trait_name+': '+response.results[i].result.trait_value+'</td>';
                         if (response.results[i].stock_id != latest_stock_id) {
-                            console.log(average(aggregated_values[response.results[i].stock_id]));
-                            avg_score_html = '<td rowspan="'+aggregated_values[response.results[i].stock_id].length+'">'+average(aggregated_values[response.results[i].stock_id])+'</td>';
+                            var stock_data = image_data[response.results[i].stock_id];
+                            console.log(_average(stock_data.values()));
+                            avg_score_html = '<td rowspan="'+image_data[response.results[i].stock_id].length+'">'+_average(stock_data.values())+'</td>';
                         } else {
                             avg_score_html = '';
                         }
@@ -253,6 +245,25 @@ function _load_image_search_results() {
             }
         }
     });
+}
+
+function _group_image_data_by_stock(results) {
+    var image_data = {};
+    for (var i=0; i<results.length; i++) {
+        if (typeof(image_data[results[i].stock_id]) !== "undefined" && results[i].result.trait_value !== "undefined" && results[i].result.trait_value !== "undefined") {
+            image_data[results[i].stock_id][results[i].image_id] = results[i].result.trait_value;
+        }
+        else if (results[i].result.trait_value !== "undefined" && results[i].result.trait_value !== "undefined") {
+            image_data[results[i].stock_id] = {};
+            image_data[results[i].stock_id][results[i].image_id] = results[i].result.trait_value;
+        }
+        else {} // if no result returned for an image, skip it.
+    }
+    return image_data;
+}
+
+function _average(array) {
+    return array.reduce((a, b) => a + b) / array.length;
 }
 
 </script>
