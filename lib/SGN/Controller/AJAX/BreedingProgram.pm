@@ -510,11 +510,11 @@ sub create_profile_template_POST : Args(0) {
     my ($self, $c) = @_;
 
     if (!$c->user()) {
-        $c->stash->{rest} = {error => "You need to be logged in to create a field book" };
+        $c->stash->{rest} = {error => "You need to be logged in to create a product profile template" };
         return;
     }
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-        $c->stash->{rest} = {error =>  "You have insufficient privileges to create a template." };
+        $c->stash->{rest} = {error =>  "You have insufficient privileges to create a product profile template." };
         return;
     }
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
@@ -624,8 +624,8 @@ sub upload_profile_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload profile!'};
-            $c->detach();
+            $c->stash->{rest} = {error=>'You must be logged in to upload product profile!'};
+            return;
         }
         $user_id = $user_info[0];
         $user_role = $user_info[1];
@@ -633,12 +633,17 @@ sub upload_profile_POST : Args(0) {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload profile!'};
-            $c->detach();
+            $c->stash->{rest} = {error=>'You must be logged in to upload product profile!'};
+            return;
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
         $user_name = $c->user()->get_object()->get_username();
         $user_role = $c->user->get_object->get_user_type();
+    }
+
+    if (!any { $_ eq 'curator' || $_ eq 'submitter' } ($user_role)) {
+        $c->stash->{rest} = {error =>  'You have insufficient privileges to upload product profile.' };
+        return;
     }
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
