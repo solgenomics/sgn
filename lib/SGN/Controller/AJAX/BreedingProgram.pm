@@ -415,6 +415,7 @@ sub get_product_profiles :Chained('ajax_breeding_program') PathPart('product_pro
         my $profile_scope = $profile_info[2];
         my $profile_details = $profile_info[3];
         my $profile_submitter = $profile_info[4];
+        my $uploaded_date = $profile_info[5];
         my $profile_name_link = qq{<a href = "/profile/$projectprop_id">$profile_name</a>};
         my $trait_info_ref = decode_json $profile_details;
         my %trait_info_hash = %{$trait_info_ref};
@@ -428,7 +429,7 @@ sub get_product_profiles :Chained('ajax_breeding_program') PathPart('product_pro
         my @sort_trait_list = sort @trait_list;
         my $trait_string = join("<br>", @sort_trait_list);
 
-        push @profile_summary, [$profile_name_link, $profile_scope, $trait_string, $profile_submitter] ;
+        push @profile_summary, [$profile_name_link, $profile_scope, $trait_string, $profile_submitter, $uploaded_date] ;
     }
 #    print STDERR "TRAIT LIST =".Dumper(\@profile_summary)."\n";
 
@@ -530,7 +531,6 @@ sub create_profile_template_POST : Args(0) {
     my $file_destination =  catfile($archive_path, $archived_file_name);
     my $dbh = $c->dbc->dbh();
     my @trait_ids;
-
     my @trait_list = @{_parse_list_from_json($c->req->param('trait_list_json'))};
 #    print STDERR "TRAIT LIST =".Dumper(\@trait_list)."\n";
 
@@ -598,8 +598,8 @@ sub create_profile_template_POST : Args(0) {
 
     my $result = $file_row->file_id;
 
-    print STDERR "FILE =".Dumper($file_destination)."\n";
-    print STDERR "FILE ID =".Dumper($file_id)."\n";
+#    print STDERR "FILE =".Dumper($file_destination)."\n";
+#    print STDERR "FILE ID =".Dumper($file_id)."\n";
 
     $c->stash->{rest} = {
         success => 1,
@@ -657,7 +657,7 @@ sub upload_profile_POST : Args(0) {
     my $upload_tempfile = $upload->tempname;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
-
+    my $uploaded_date = $time->ymd();
 #    print STDERR "PROGRAM ID =".Dumper($program_id)."\n";
 #    print STDERR "PROFILE NAME =".Dumper($new_profile_name)."\n";
 #    print STDERR "PROFILE SCOPE =".Dumper($new_profile_scope)."\n";
@@ -711,6 +711,7 @@ sub upload_profile_POST : Args(0) {
     $profile->product_profile_scope($new_profile_scope);
     $profile->product_profile_details($profile_detail_string);
     $profile->product_profile_submitter($user_name);
+    $profile->product_profile_uploaded_date($uploaded_date);
     $profile->parent_id($program_id);
 	my $project_prop_id = $profile->store_by_rank();
 

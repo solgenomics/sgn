@@ -37,6 +37,9 @@ has 'product_profile_details' => (isa => 'Str', is => 'rw');
 
 has 'product_profile_submitter' => (isa => 'Str', is => 'rw');
 
+has 'product_profile_uploaded_date' => (isa => 'Str', is => 'rw');
+
+
 sub BUILD {
     my $self = shift;
     my $args = shift;
@@ -46,7 +49,7 @@ sub BUILD {
     $self->prop_primary_key('projectprop_id');
     $self->prop_type('product_profile_json');
     $self->cv_name('project_property');
-    $self->allowed_fields([ qw | product_profile_name product_profile_scope product_profile_details product_profile_submitter| ]);
+    $self->allowed_fields([ qw | product_profile_name product_profile_scope product_profile_details product_profile_submitter product_profile_uploaded_date | ]);
     $self->parent_table('project');
     $self->parent_primary_key('project_id');
 

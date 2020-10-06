@@ -13,6 +13,7 @@ $program_id
             <th>Scope</th>
             <th>Trait</th>
             <th>Submitter</th>
+            <th>Date (Y-M-D)</th>
         </tr>
     </thead>
 </table>
