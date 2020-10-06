@@ -226,9 +226,8 @@ jQuery(document).ready(function(){
     });
 
     jQuery(document).on('click', '[name="upload_profile_success_complete_button"]', function(){
-        alert('Profile was saved in the database');
         jQuery('#upload_profile_dialog').modal('hide');
-        //location.reload();
+        location.reload();
     });
 
 

@@ -12,6 +12,7 @@ $program_id
             <th>Product Profile Name</th>
             <th>Scope</th>
             <th>Trait</th>
+            <th>Submitter</th>
         </tr>
     </thead>
 </table>

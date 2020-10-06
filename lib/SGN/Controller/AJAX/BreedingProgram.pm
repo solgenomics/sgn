@@ -408,13 +408,15 @@ sub get_product_profiles :Chained('ajax_breeding_program') PathPart('product_pro
 #    print STDERR "PRODUCT PROFILE RESULTS =".Dumper($profiles)."\n";
     my @profile_summary;
     foreach my $profile(@$profiles){
-        my @trait_list;
+        my @trait_list = ();
         my @profile_info = @$profile;
-        my $projectprop_id = shift(@profile_info);
-        my $profile_name = shift(@profile_info);
-        unshift (@profile_info, qq{<a href = "/profile/$projectprop_id">$profile_name</a>} );
-        my $trait_info = $profile_info[2];
-        my $trait_info_ref = decode_json $trait_info;
+        my $projectprop_id = $profile_info[0];
+        my $profile_name = $profile_info[1];
+        my $profile_scope = $profile_info[2];
+        my $profile_details = $profile_info[3];
+        my $profile_submitter = $profile_info[4];
+        my $profile_name_link = qq{<a href = "/profile/$projectprop_id">$profile_name</a>};
+        my $trait_info_ref = decode_json $profile_details;
         my %trait_info_hash = %{$trait_info_ref};
         my @traits = keys %trait_info_hash;
         foreach my $trait(@traits){
@@ -425,9 +427,8 @@ sub get_product_profiles :Chained('ajax_breeding_program') PathPart('product_pro
         }
         my @sort_trait_list = sort @trait_list;
         my $trait_string = join("<br>", @sort_trait_list);
-        pop @profile_info;
-        push @profile_info, $trait_string;
-        push @profile_summary, [@profile_info];
+
+        push @profile_summary, [$profile_name_link, $profile_scope, $trait_string, $profile_submitter] ;
     }
 #    print STDERR "TRAIT LIST =".Dumper(\@profile_summary)."\n";
 
@@ -704,6 +705,7 @@ sub upload_profile_POST : Args(0) {
     $profile->product_profile_name($new_profile_name);
     $profile->product_profile_scope($new_profile_scope);
     $profile->product_profile_details($profile_detail_string);
+    $profile->product_profile_submitter($user_name);
     $profile->parent_id($program_id);
 	my $project_prop_id = $profile->store_by_rank();
 

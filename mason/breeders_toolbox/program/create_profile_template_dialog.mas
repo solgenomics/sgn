@@ -4,7 +4,7 @@
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="createProfileTemplateDialog">Create Product Profile Template</h4>
+                <h4 class="modal-title" id="createProfileTemplateDialog">To create product profile template, please provide file name and a list of traits </h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
