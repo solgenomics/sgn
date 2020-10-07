@@ -5792,6 +5792,9 @@ jQuery(document).ready(function() {
                 if (response.error) {
                     alert(response.error);
                 }
+                else {
+                    alert('Autoencoder phenotypes saved!');
+                }
                 var html = '';
                 jQuery('#drone_imagery_autoencoder_keras_vi_model_results_div').html(html);
             },
