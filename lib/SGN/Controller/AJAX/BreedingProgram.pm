@@ -651,6 +651,21 @@ sub upload_profile_POST : Args(0) {
     my $program_id = $c->req->param('profile_program_id');
     my $new_profile_name = $c->req->param('new_profile_name');
     my $new_profile_scope = $c->req->param('new_profile_scope');
+    $new_profile_name =~ s/^\s+|\s+$//g;
+
+    my $profile_obj = CXGN::BreedersToolbox::ProductProfile->new({ bcs_schema => $schema, parent_id => $program_id });
+    my $profiles = $profile_obj->get_product_profile_info();
+    my @db_profile_names;
+    foreach my $profile(@$profiles){
+        my @profile_info = @$profile;
+        my $stored_profile_name = $profile_info[1];
+        push @db_profile_names, $stored_profile_name;
+    }
+    if ($new_profile_name ~~ @db_profile_names){
+        $c->stash->{rest} = {error=>'Please use different product profile name. This name is already used for another product profile!'};
+        return;
+    }
+
     my $upload = $c->req->upload('profile_uploaded_file');
     my $subdirectory = "profile_upload";
     my $upload_original_name = $upload->filename();
