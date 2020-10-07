@@ -123,7 +123,7 @@ sub image_analysis_submit_POST : Args(0) {
                 my $message_hash = decode_json $message;
                 print STDERR Dumper $message_hash;
                 $message_hash->{original_image} = $image_urls[$it];
-                $result->[$it]->{result} = $message_hash;
+                # $result->[$it]->{result} = $message_hash;
 
                 my $project_id = $result->[$it]->{project_id};
                 my $stock_id = $result->[$it]->{stock_id};
@@ -178,6 +178,8 @@ sub image_analysis_submit_POST : Args(0) {
                     $image_id = $image->get_image_id();
                     my $added_image_tag_id = $image->add_tag($image_tag);
                 }
+                $message_hash->{analyzed_image_id} = $image_id;
+                $result->[$it]->{result} = $message_hash;
             }
             else {
                 print STDERR Dumper $resp;
@@ -285,6 +287,7 @@ sub image_analysis_submit_POST : Args(0) {
                 @columns = $csv->fields();
             }
             my $res = {
+                analyzed_image_id => $image_id,
                 trait_name => $trait_name,
                 trait_value => $columns[0],
                 image_link => $main_production_site_url.$image->get_image_url("original"),
