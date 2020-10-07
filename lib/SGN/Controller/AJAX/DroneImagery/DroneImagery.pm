@@ -10878,7 +10878,7 @@ sub _perform_autoencoder_keras_cnn_vi {
         print $F "stock_id\tred_image_string\tred_edge_image_string\tnir_image_string\n";
 
         foreach my $field_trial_id (sort keys %seen_field_trial_ids) {
-            foreach my $drone_run_project_id (sort keys %training_seen_drone_run_project_ids) {
+            foreach my $drone_run_project_id (sort keys %seen_drone_run_project_ids) {
                 foreach my $stock_id (sort keys %seen_stock_ids) {
                     print $F "$stock_id";
                     foreach my $image_type (@autoencoder_vi_image_type_ids) {
