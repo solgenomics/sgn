@@ -10747,7 +10747,7 @@ sub _perform_autoencoder_keras_cnn_vi {
         my $time_days_cvterm = $_->{drone_run_related_time_cvterm_json}->{day};
         my $time_days = (split '\|', $time_days_cvterm)[0];
         my $days = (split ' ', $time_days)[1];
-        push @{$training_data_hash{$field_trial_id}->{$stock_id}->{$project_image_type_id}->{$days}}, {
+        push @{$training_data_hash{$field_trial_id}->{$drone_run_project_id}->{$stock_id}->{$project_image_type_id}->{$days}}, {
             image => $image_fullpath,
             drone_run_project_id => $drone_run_project_id
         };
@@ -10782,7 +10782,7 @@ sub _perform_autoencoder_keras_cnn_vi {
         my $time_days_cvterm = $_->{drone_run_related_time_cvterm_json}->{day};
         my $time_days = (split '\|', $time_days_cvterm)[0];
         my $days = (split ' ', $time_days)[1];
-        push @{$data_hash{$field_trial_id}->{$stock_id}->{$project_image_type_id}->{$days}}, {
+        push @{$data_hash{$field_trial_id}->{$drone_run_project_id}->{$stock_id}->{$project_image_type_id}->{$days}}, {
             image => $image_fullpath,
             drone_run_project_id => $drone_run_project_id
         };
@@ -10854,20 +10854,22 @@ sub _perform_autoencoder_keras_cnn_vi {
         print $Fi "stock_id\tred_image_string\tred_edge_image_string\tnir_image_string\n";
 
         foreach my $field_trial_id (sort keys %training_seen_field_trial_ids) {
-            foreach my $stock_id (sort keys %training_seen_stock_ids) {
-                print $Fi "$stock_id";
-                foreach my $image_type (@autoencoder_vi_image_type_ids) {
-                    my @imgs;
-                    foreach my $day_time (sort { $a <=> $b } keys %training_seen_day_times) {
-                        my $images = $training_data_hash{$field_trial_id}->{$stock_id}->{$image_type}->{$day_time};
-                        foreach (@$images) {
-                            push @imgs, $_->{image};
+            foreach my $drone_run_project_id (sort keys %training_seen_drone_run_project_ids) {
+                foreach my $stock_id (sort keys %training_seen_stock_ids) {
+                    print $Fi "$stock_id";
+                    foreach my $image_type (@autoencoder_vi_image_type_ids) {
+                        my @imgs;
+                        foreach my $day_time (sort { $a <=> $b } keys %training_seen_day_times) {
+                            my $images = $training_data_hash{$field_trial_id}->{$drone_run_project_id}->{$stock_id}->{$image_type}->{$day_time};
+                            foreach (@$images) {
+                                push @imgs, $_->{image};
+                            }
                         }
+                        my $img_string = join ',', @imgs;
+                        print $Fi "\t$img_string";
                     }
-                    my $img_string = join ',', @imgs;
-                    print $Fi "\t$img_string";
+                    print $Fi "\n";
                 }
-                print $Fi "\n";
             }
         }
     close($Fi);
@@ -10876,20 +10878,22 @@ sub _perform_autoencoder_keras_cnn_vi {
         print $F "stock_id\tred_image_string\tred_edge_image_string\tnir_image_string\n";
 
         foreach my $field_trial_id (sort keys %seen_field_trial_ids) {
-            foreach my $stock_id (sort keys %seen_stock_ids) {
-                print $F "$stock_id";
-                foreach my $image_type (@autoencoder_vi_image_type_ids) {
-                    my @imgs;
-                    foreach my $day_time (sort { $a <=> $b } keys %seen_day_times) {
-                        my $images = $data_hash{$field_trial_id}->{$stock_id}->{$image_type}->{$day_time};
-                        foreach (@$images) {
-                            push @imgs, $_->{image};
+            foreach my $drone_run_project_id (sort keys %training_seen_drone_run_project_ids) {
+                foreach my $stock_id (sort keys %seen_stock_ids) {
+                    print $F "$stock_id";
+                    foreach my $image_type (@autoencoder_vi_image_type_ids) {
+                        my @imgs;
+                        foreach my $day_time (sort { $a <=> $b } keys %seen_day_times) {
+                            my $images = $data_hash{$field_trial_id}->{$drone_run_project_id}->{$stock_id}->{$image_type}->{$day_time};
+                            foreach (@$images) {
+                                push @imgs, $_->{image};
+                            }
                         }
+                        my $img_string = join ',', @imgs;
+                        print $F "\t$img_string";
                     }
-                    my $img_string = join ',', @imgs;
-                    print $F "\t$img_string";
+                    print $F "\n";
                 }
-                print $F "\n";
             }
         }
     close($F);
