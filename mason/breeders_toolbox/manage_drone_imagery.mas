@@ -5600,20 +5600,23 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#drone_imagery_keras_cnn_autoencoder_vegetation_indices_link').click(function(){
-        get_select_box('trials', 'drone_imagery_autoencoder_keras_cnn_vi_trial_training_select_div', { 'name' : 'drone_imagery_autoencoder_keras_cnn_vi_field_trial_id_training', 'id' : 'drone_imagery_autoencoder_keras_cnn_vi_field_trial_id_training', 'empty':1, 'multiple':0 });
+        get_select_box('trials', 'drone_imagery_autoencoder_keras_cnn_vi_trial_training_select_div', { 'name' : 'drone_imagery_autoencoder_keras_cnn_vi_field_trial_id_training', 'id' : 'drone_imagery_autoencoder_keras_cnn_vi_field_trial_id_training', 'empty':1, 'multiple':1 });
         get_select_box('trials', 'drone_imagery_autoencoder_keras_cnn_vi_trial_select_div', { 'name' : 'drone_imagery_autoencoder_keras_cnn_vi_field_trial_id', 'id' : 'drone_imagery_autoencoder_keras_cnn_vi_field_trial_id', 'empty':1, 'multiple':0 });
 
         jQuery('#drone_imagery_keras_cnn_autoencoder_vi_dialog').modal('show');
     });
 
     jQuery('#drone_imagery_autoencoder_keras_vi_model_field_trial_training_select_step').click(function(){
-        manage_drone_imagery_autoencoder_keras_vi_field_trial_id_training_array = [];
-        manage_drone_imagery_autoencoder_keras_vi_field_trial_id_training_string = '';
-        manage_drone_imagery_autoencoder_keras_vi_field_trial_id_training_string = jQuery('#drone_imagery_autoencoder_keras_cnn_vi_field_trial_id_training').val();
+        manage_drone_imagery_autoencoder_keras_vi_field_trial_id_training_array = jQuery('#drone_imagery_autoencoder_keras_cnn_vi_field_trial_id_training').val();
+        manage_drone_imagery_autoencoder_keras_vi_field_trial_id_training_string = manage_drone_imagery_autoencoder_keras_vi_field_trial_id_training_array.join();
 
-        if (manage_drone_imagery_autoencoder_keras_vi_field_trial_id_training_string == '') {
+        if (manage_drone_imagery_autoencoder_keras_vi_field_trial_id_training_array.length < 1) {
+            alert('Please select atleast one field trial!');
+        }
+        else if (manage_drone_imagery_autoencoder_keras_vi_field_trial_id_training_string == '') {
             alert('Please select a field trial first!');
-        } else {
+        }
+        else {
 
             jQuery('#drone_image_autoencoder_keras_vi_drone_runs_training_table').DataTable({
                 destroy : true,
@@ -5639,9 +5642,7 @@ jQuery(document).ready(function() {
             manage_drone_imagery_autoencoder_keras_vi_drone_run_ids_training.push(jQuery(this).val());
         });
         if (manage_drone_imagery_autoencoder_keras_vi_drone_run_ids_training.length < 1){
-            alert('Please select one drone run!');
-        } else if (manage_drone_imagery_autoencoder_keras_vi_drone_run_ids_training.length > 1){
-            alert('Please select only one drone run!');
+            alert('Please select atleast one drone run!');
         } else {
 
             jQuery('#drone_image_autoencoder_keras_vi_plot_polygon_image_type_training_table').DataTable({
