@@ -190,6 +190,24 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 }
 
 
+=head2 view_by_name 
+
+Public Path: /breeders/trial/view_by_name/$name
+Path Params:
+    name = trial unique name
+
+Search for the trial that matches the provided trial name.
+If 1 match is found, display the trial detail page.  Display an 
+error message if no matches are found.
+
+=cut
+
+sub view_trial_by_name :Path('/breeders/trial/view_by_name') CaptureArgs(1) {
+    my ($self, $c, $trial_query) = @_;
+    $self->search_trial($c, $trial_query);
+}
+
+
 sub trait_info :Path('/breeders/trial') Args(3) {
     my ($self, $c, $trial_id, $trait_txt, $trait_id) = @_;
 
@@ -435,6 +453,47 @@ sub _parse_list_from_json {
     }
     else {
 	return;
+    }
+}
+
+
+# Search for trial by trial name
+# Display trial detail page for 1 match, error messages for no matches
+sub search_trial : Private {
+    my ( $self, $c, $trial_query ) = @_;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $rs = $schema->resultset('Project::Project');
+    
+    my $matches;
+    my $count = 0;
+
+    # Search by name
+    if ( defined($trial_query) ) {
+        $matches = $rs->search({
+                'UPPER(name)' => uc($trial_query)
+            }
+        );
+        $count = $matches->count;
+    }
+
+    # NO MATCH FOUND
+    if ( $count != 1 ) {
+        $c->stash->{template} = "generic_message.mas";
+        $c->stash->{message} = "<strong>No Matching Trial Found</strong> ($trial_query)<br />You can view and search for trials from the <a href='/search/trials'>Trial Search Page</a>";
+    }
+
+    # 1 MATCH FOUND - FORWARD TO VIEW TRIAL
+    else {
+        my $trial_id = $matches->first->project_id;
+        $c->stash->{trial_id} = $trial_id;
+
+        my $schema = $c->dbic_schema("Bio::Chado::Schema");
+        $c->stash->{schema} = $schema;
+        
+        my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
+        $c->stash->{trial} = $trial;
+
+        $c->forward('trial_info');
     }
 }
 
