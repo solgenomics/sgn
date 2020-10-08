@@ -1827,7 +1827,70 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Field Trial" &>
+                <&| /util/workflow.mas:step, title=> "Field Trial Training" &>
+                    <& /page/page_title.mas, title=>"Select the field trial(s) you are interested in sourcing images from for training" &>
+                    <br/><br/>
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Field Trial: </label>
+                            <div class="col-sm-9" >
+                                <div id="drone_imagery_autoencoder_keras_cnn_vi_trial_training_select_div"></div>
+                            </div>
+                        </div>
+                    </form>
+                    <br/><br/>
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_autoencoder_keras_vi_model_field_trial_training_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Drone Run Training" &>
+                    <& /page/page_title.mas, title=>"Select the drone runs you are interested in sourcing images from for training" &>
+
+                    <table class="table table-bordered table-hover" id="drone_image_autoencoder_keras_vi_drone_runs_training_table">
+                        <thead>
+                            <tr>
+                                <th>Select <br/><input type="checkbox" id="drone_image_autoencoder_keras_vi_drone_runs_training_table_select_all" checked>Select All</th>
+                                <th>Drone Run Name</th>
+                                <th>Drone Run Type</th>
+                                <th>Drone Run Description</th>
+                                <th>Drone Run Date</th>
+                                <th>Drone Run GDD</th>
+                                <th>Camera Type</th>
+                                <th>Field Trial Name</th>
+                                <th>Field Trial Description</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                    <br/><br/>
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_autoencoder_keras_vi_model_drone_run_training_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Images Training" &>
+                    <& /page/page_title.mas, title=>"Select the types of images you are interested sourcing images from for training" &>
+
+                    <table class="table table-bordered table-hover" id="drone_image_autoencoder_keras_vi_plot_polygon_image_type_training_table">
+                        <thead>
+                            <tr>
+                                <!--th>Select <br/><input type="checkbox" id="drone_image_autoencoder_keras_vi_plot_polygon_image_type_training_table_select_all" checked>Select All</th-->
+                                <th>Select</th>
+                                <th>Field Trial</th>
+                                <th>Drone Run Name</th>
+                                <th>Drone Run Band Name</th>
+                                <th>Drone Run Band Type</th>
+                                <th>Plot Polygon Type</th>
+                                <th>Number of Images</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                    <br/><br/>
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_autoencoder_keras_vi_model_plot_polygon_type_training_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Field Trial Prediction" &>
                     <& /page/page_title.mas, title=>"Select the field trial(s) you are interested in sourcing images from for prediction" &>
                     <br/><br/>
                     <form class="form-horizontal">
@@ -1843,8 +1906,8 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <button class="btn btn-primary" id="drone_imagery_autoencoder_keras_vi_model_field_trial_select_step">Go to Next Step</button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Drone Run Selection" &>
-                    <& /page/page_title.mas, title=>"Select the drone runs you are interested in sourcing images from" &>
+                <&| /util/workflow.mas:step, title=> "Drone Run Prediction" &>
+                    <& /page/page_title.mas, title=>"Select the drone runs you are interested in sourcing images from for prediction" &>
 
                     <table class="table table-bordered table-hover" id="drone_image_autoencoder_keras_vi_drone_runs_table">
                         <thead>
@@ -1867,8 +1930,8 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     <button class="btn btn-primary" id="drone_imagery_autoencoder_keras_vi_model_drone_run_select_step">Go to Next Step</button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Images Selection" &>
-                    <& /page/page_title.mas, title=>"Select the types of images you are interested sourcing images from" &>
+                <&| /util/workflow.mas:step, title=> "Images Prediction" &>
+                    <& /page/page_title.mas, title=>"Select the types of images you are interested sourcing images from for prediction" &>
 
                     <table class="table table-bordered table-hover" id="drone_image_autoencoder_keras_vi_plot_polygon_image_type_table">
                         <thead>
@@ -5157,6 +5220,10 @@ jQuery(document).ready(function() {
     var manage_drone_imagery_predict_keras_model_id = '';
     var manage_drone_imagery_predict_keras_aux_trait_ids;
 
+    var manage_drone_imagery_autoencoder_keras_vi_field_trial_id_training_array = [];
+    var manage_drone_imagery_autoencoder_keras_vi_field_trial_id_training_string = '';
+    var manage_drone_imagery_autoencoder_keras_vi_drone_run_ids_training = [];
+    var manage_drone_imagery_autoencoder_keras_vi_plot_polygon_type_ids_training = [];
     var manage_drone_imagery_autoencoder_keras_vi_field_trial_id_array = [];
     var manage_drone_imagery_autoencoder_keras_vi_field_trial_id_string = '';
     var manage_drone_imagery_autoencoder_keras_vi_drone_run_ids = [];
@@ -5533,9 +5600,81 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#drone_imagery_keras_cnn_autoencoder_vegetation_indices_link').click(function(){
+        get_select_box('trials', 'drone_imagery_autoencoder_keras_cnn_vi_trial_training_select_div', { 'name' : 'drone_imagery_autoencoder_keras_cnn_vi_field_trial_id_training', 'id' : 'drone_imagery_autoencoder_keras_cnn_vi_field_trial_id_training', 'empty':1, 'multiple':1 });
         get_select_box('trials', 'drone_imagery_autoencoder_keras_cnn_vi_trial_select_div', { 'name' : 'drone_imagery_autoencoder_keras_cnn_vi_field_trial_id', 'id' : 'drone_imagery_autoencoder_keras_cnn_vi_field_trial_id', 'empty':1, 'multiple':0 });
 
         jQuery('#drone_imagery_keras_cnn_autoencoder_vi_dialog').modal('show');
+    });
+
+    jQuery('#drone_imagery_autoencoder_keras_vi_model_field_trial_training_select_step').click(function(){
+        manage_drone_imagery_autoencoder_keras_vi_field_trial_id_training_array = jQuery('#drone_imagery_autoencoder_keras_cnn_vi_field_trial_id_training').val();
+        manage_drone_imagery_autoencoder_keras_vi_field_trial_id_training_string = manage_drone_imagery_autoencoder_keras_vi_field_trial_id_training_array.join();
+
+        if (manage_drone_imagery_autoencoder_keras_vi_field_trial_id_training_array.length < 1) {
+            alert('Please select atleast one field trial!');
+        }
+        else if (manage_drone_imagery_autoencoder_keras_vi_field_trial_id_training_string == '') {
+            alert('Please select a field trial first!');
+        }
+        else {
+
+            jQuery('#drone_image_autoencoder_keras_vi_drone_runs_training_table').DataTable({
+                destroy : true,
+                paging : false,
+                ajax : '/api/drone_imagery/drone_runs?select_checkbox_name=autoencoder_keras_drone_imagery_drone_run_training_select&checkbox_select_all=1&field_trial_ids='+manage_drone_imagery_autoencoder_keras_vi_field_trial_id_training_string
+            });
+
+            Workflow.complete("#drone_imagery_autoencoder_keras_vi_model_field_trial_training_select_step");
+            Workflow.focus('#drone_imagery_autoencoder_keras_model_vi_workflow', 2);
+        }
+        return false;
+    });
+
+    jQuery('#drone_image_autoencoder_keras_vi_drone_runs_training_table_select_all').change(function(){
+        jQuery('input[name="autoencoder_keras_drone_imagery_drone_run_training_select"]').each(function() {
+            jQuery(this).prop('checked', jQuery('#drone_image_autoencoder_keras_vi_drone_runs_training_table_select_all').prop("checked"));
+        });
+    });
+
+    jQuery('#drone_imagery_autoencoder_keras_vi_model_drone_run_training_select_step').click(function(){
+        manage_drone_imagery_autoencoder_keras_vi_drone_run_ids_training = [];
+        jQuery('input[name="autoencoder_keras_drone_imagery_drone_run_training_select"]:checked').each(function() {
+            manage_drone_imagery_autoencoder_keras_vi_drone_run_ids_training.push(jQuery(this).val());
+        });
+        if (manage_drone_imagery_autoencoder_keras_vi_drone_run_ids_training.length < 1){
+            alert('Please select atleast one drone run!');
+        } else {
+
+            jQuery('#drone_image_autoencoder_keras_vi_plot_polygon_image_type_training_table').DataTable({
+                destroy : true,
+                paging : false,
+                ajax : '/api/drone_imagery/plot_polygon_types?checkbox_select_standard_ndvi_ndre=1&select_checkbox_name=autoencoder_keras_vi_drone_imagery_plot_polygon_type_training_select&field_trial_ids='+manage_drone_imagery_autoencoder_keras_vi_field_trial_id_training_string+'&drone_run_ids='+JSON.stringify(manage_drone_imagery_autoencoder_keras_vi_drone_run_ids_training)
+            });
+
+            Workflow.complete("#drone_imagery_autoencoder_keras_vi_model_drone_run_training_select_step");
+            Workflow.focus('#drone_imagery_autoencoder_keras_model_vi_workflow', 3);
+        }
+        return false;
+    });
+
+    jQuery('#drone_image_autoencoder_keras_vi_plot_polygon_image_type_training_table_select_all').change(function() {
+        jQuery('input[name="autoencoder_keras_vi_drone_imagery_plot_polygon_type_training_select"]').each(function() {
+            jQuery(this).prop('checked', jQuery('#drone_image_autoencoder_keras_vi_plot_polygon_image_type_training_table_select_all').prop("checked"));
+        });
+    });
+
+    jQuery('#drone_imagery_autoencoder_keras_vi_model_plot_polygon_type_training_select_step').click(function(){
+        manage_drone_imagery_autoencoder_keras_vi_plot_polygon_type_ids_training = [];
+        jQuery('input[name="autoencoder_keras_vi_drone_imagery_plot_polygon_type_training_select"]:checked').each(function() {
+            manage_drone_imagery_autoencoder_keras_vi_plot_polygon_type_ids_training.push(jQuery(this).val());
+        });
+        if (manage_drone_imagery_autoencoder_keras_vi_plot_polygon_type_ids_training.length < 1){
+            alert('Please select at least one plot polygon type!');
+        } else {
+            Workflow.complete("#drone_imagery_autoencoder_keras_vi_model_plot_polygon_type_training_select_step");
+            Workflow.focus('#drone_imagery_autoencoder_keras_model_vi_workflow', 4);
+        }
+        return false;
     });
 
     jQuery('#drone_imagery_autoencoder_keras_vi_model_field_trial_select_step').click(function(){
@@ -5554,7 +5693,7 @@ jQuery(document).ready(function() {
             });
 
             Workflow.complete("#drone_imagery_autoencoder_keras_vi_model_field_trial_select_step");
-            Workflow.focus('#drone_imagery_autoencoder_keras_model_vi_workflow', 2);
+            Workflow.focus('#drone_imagery_autoencoder_keras_model_vi_workflow', 5);
         }
         return false;
     });
@@ -5605,7 +5744,7 @@ jQuery(document).ready(function() {
             });
 
             Workflow.complete("#drone_imagery_autoencoder_keras_vi_model_drone_run_select_step");
-            Workflow.focus('#drone_imagery_autoencoder_keras_model_vi_workflow', 3);
+            Workflow.focus('#drone_imagery_autoencoder_keras_model_vi_workflow', 6);
         }
         return false;
     });
@@ -5625,7 +5764,7 @@ jQuery(document).ready(function() {
             alert('Please select at least one plot polygon type!');
         } else {
             Workflow.complete("#drone_imagery_autoencoder_keras_vi_model_plot_polygon_type_select_step");
-            Workflow.focus('#drone_imagery_autoencoder_keras_model_vi_workflow', 4);
+            Workflow.focus('#drone_imagery_autoencoder_keras_model_vi_workflow', 7);
         }
         return false;
     });
@@ -5635,6 +5774,9 @@ jQuery(document).ready(function() {
             url : '/api/drone_imagery/perform_autoencoder_vi',
             type: "POST",
             data: {
+                'training_field_trial_ids' : manage_drone_imagery_autoencoder_keras_vi_field_trial_id_training_string,
+                'training_drone_run_ids' : JSON.stringify(manage_drone_imagery_autoencoder_keras_vi_drone_run_ids_training),
+                'training_plot_polygon_type_ids' : JSON.stringify(manage_drone_imagery_autoencoder_keras_vi_plot_polygon_type_ids_training),
                 'field_trial_ids' : manage_drone_imagery_autoencoder_keras_vi_field_trial_id_string,
                 'drone_run_ids' : JSON.stringify(manage_drone_imagery_autoencoder_keras_vi_drone_run_ids),
                 'plot_polygon_type_ids' : JSON.stringify(manage_drone_imagery_autoencoder_keras_vi_plot_polygon_type_ids),
@@ -5649,6 +5791,9 @@ jQuery(document).ready(function() {
                 jQuery("#working_modal").modal("hide");
                 if (response.error) {
                     alert(response.error);
+                }
+                else {
+                    alert('Autoencoder phenotypes saved!');
                 }
                 var html = '';
                 jQuery('#drone_imagery_autoencoder_keras_vi_model_results_div').html(html);

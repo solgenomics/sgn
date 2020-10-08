@@ -10661,10 +10661,13 @@ sub drone_imagery_autoencoder_keras_vi_model_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my @training_field_trial_ids = split ',', $c->req->param('training_field_trial_ids');
     my @field_trial_ids = split ',', $c->req->param('field_trial_ids');
     my $autoencoder_model_type = $c->req->param('autoencoder_model_type');
     my $time_cvterm_id = $c->req->param('time_cvterm_id');
+    my $training_drone_run_ids = decode_json($c->req->param('training_drone_run_ids'));
     my $drone_run_ids = decode_json($c->req->param('drone_run_ids'));
+    my $training_plot_polygon_type_ids = decode_json($c->req->param('training_plot_polygon_type_ids'));
     my $plot_polygon_type_ids = decode_json($c->req->param('plot_polygon_type_ids'));
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
@@ -10672,7 +10675,7 @@ sub drone_imagery_autoencoder_keras_vi_model_POST : Args(0) {
     my $composable_cvterm_delimiter = $c->config->{composable_cvterm_delimiter};
     my $composable_cvterm_format = $c->config->{composable_cvterm_format};
 
-    my $return = _perform_autoencoder_keras_cnn_vi($c, $schema, $metadata_schema, $people_schema, $phenome_schema, \@field_trial_ids, $drone_run_ids, $plot_polygon_type_ids, $autoencoder_model_type, \@allowed_composed_cvs, $composable_cvterm_format, $composable_cvterm_delimiter, $time_cvterm_id, $user_id, $user_name, $user_role);
+    my $return = _perform_autoencoder_keras_cnn_vi($c, $schema, $metadata_schema, $people_schema, $phenome_schema, \@training_field_trial_ids, \@field_trial_ids, $training_drone_run_ids, $drone_run_ids, $training_plot_polygon_type_ids, $plot_polygon_type_ids, $autoencoder_model_type, \@allowed_composed_cvs, $composable_cvterm_format, $composable_cvterm_delimiter, $time_cvterm_id, $user_id, $user_name, $user_role);
 
     $c->stash->{rest} = $return;
 }
@@ -10683,8 +10686,11 @@ sub _perform_autoencoder_keras_cnn_vi {
     my $metadata_schema = shift;
     my $people_schema = shift;
     my $phenome_schema = shift;
+    my $training_field_trial_ids = shift;
     my $field_trial_ids = shift;
+    my $training_drone_run_ids = shift;
     my $drone_run_ids = shift;
+    my $training_plot_polygon_type_ids = shift;
     my $plot_polygon_type_ids = shift;
     my $autoencoder_model_type = shift;
     my $allowed_composed_cvs = shift;
@@ -10699,6 +10705,17 @@ sub _perform_autoencoder_keras_cnn_vi {
     my $keras_cnn_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model', 'protocol_type')->cvterm_id();
     my $keras_cnn_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_experiment', 'experiment_type')->cvterm_id();
 
+    my $training_images_search = CXGN::DroneImagery::ImagesSearch->new({
+        bcs_schema=>$schema,
+        drone_run_project_id_list=>$training_drone_run_ids,
+        project_image_type_id_list=>$training_plot_polygon_type_ids
+    });
+    my ($training_result, $training_total_count) = $training_images_search->search();
+
+    if ($training_total_count == 0) {
+        return {error => "No plot-polygon images for training!"};
+    }
+
     my $images_search = CXGN::DroneImagery::ImagesSearch->new({
         bcs_schema=>$schema,
         drone_run_project_id_list=>$drone_run_ids,
@@ -10707,8 +10724,43 @@ sub _perform_autoencoder_keras_cnn_vi {
     my ($result, $total_count) = $images_search->search();
 
     if ($total_count == 0) {
-        return {error => "No plot-polygon images!"};
+        return {error => "No plot-polygon images for predicting!"};
     }
+
+    my %training_data_hash;
+    my %training_seen_day_times;
+    my %training_seen_image_types;
+    my %training_seen_drone_run_band_project_ids;
+    my %training_seen_drone_run_project_ids;
+    my %training_seen_field_trial_ids;
+    my %training_seen_stock_ids;
+    foreach (@$training_result) {
+        my $image_id = $_->{image_id};
+        my $stock_id = $_->{stock_id};
+        my $field_trial_id = $_->{trial_id};
+        my $project_image_type_id = $_->{project_image_type_id};
+        my $drone_run_band_project_id = $_->{drone_run_band_project_id};
+        my $drone_run_project_id = $_->{drone_run_project_id};
+        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+        my $image_url = $image->get_image_url("original");
+        my $image_fullpath = $image->get_filename('original_converted', 'full');
+        my $time_days_cvterm = $_->{drone_run_related_time_cvterm_json}->{day};
+        my $time_days = (split '\|', $time_days_cvterm)[0];
+        my $days = (split ' ', $time_days)[1];
+        push @{$training_data_hash{$field_trial_id}->{$drone_run_project_id}->{$stock_id}->{$project_image_type_id}->{$days}}, {
+            image => $image_fullpath,
+            drone_run_project_id => $drone_run_project_id
+        };
+        $training_seen_day_times{$days}++;
+        $training_seen_image_types{$project_image_type_id}++;
+        $training_seen_drone_run_band_project_ids{$drone_run_band_project_id}++;
+        $training_seen_drone_run_project_ids{$drone_run_project_id}++;
+        $training_seen_field_trial_ids{$field_trial_id}++;
+        $training_seen_stock_ids{$stock_id}++;
+    }
+    print STDERR Dumper \%training_seen_day_times;
+    undef $training_result;
+    my @training_seen_plots = keys %training_seen_stock_ids;
 
     my %data_hash;
     my %seen_day_times;
@@ -10730,7 +10782,7 @@ sub _perform_autoencoder_keras_cnn_vi {
         my $time_days_cvterm = $_->{drone_run_related_time_cvterm_json}->{day};
         my $time_days = (split '\|', $time_days_cvterm)[0];
         my $days = (split ' ', $time_days)[1];
-        push @{$data_hash{$field_trial_id}->{$stock_id}->{$project_image_type_id}->{$days}}, {
+        push @{$data_hash{$field_trial_id}->{$drone_run_project_id}->{$stock_id}->{$project_image_type_id}->{$days}}, {
             image => $image_fullpath,
             drone_run_project_id => $drone_run_project_id
         };
@@ -10784,6 +10836,7 @@ sub _perform_autoencoder_keras_cnn_vi {
     my @unique_accession_names = keys %seen_accession_names;
 
     my $dir = $c->tempfiles_subdir('/drone_imagery_keras_cnn_autoencoder_dir');
+    my $archive_training_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_autoencoder_dir/inputtrainingfileXXXX');
     my $archive_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_autoencoder_dir/inputfileXXXX');
     my $archive_temp_output_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_autoencoder_dir/outputfileXXXX');
     my $archive_temp_output_images_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_autoencoder_dir/outputfileXXXX');
@@ -10797,24 +10850,50 @@ sub _perform_autoencoder_keras_cnn_vi {
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_nir_imagery', 'project_md_image')->cvterm_id()
     );
 
+    open(my $Fi, ">", $archive_training_temp_input_file) || die "Can't open file ".$archive_training_temp_input_file;
+        print $Fi "stock_id\tred_image_string\tred_edge_image_string\tnir_image_string\n";
+
+        foreach my $field_trial_id (sort keys %training_seen_field_trial_ids) {
+            foreach my $drone_run_project_id (sort keys %training_seen_drone_run_project_ids) {
+                foreach my $stock_id (sort keys %training_seen_stock_ids) {
+                    print $Fi "$stock_id";
+                    foreach my $image_type (@autoencoder_vi_image_type_ids) {
+                        my @imgs;
+                        foreach my $day_time (sort { $a <=> $b } keys %training_seen_day_times) {
+                            my $images = $training_data_hash{$field_trial_id}->{$drone_run_project_id}->{$stock_id}->{$image_type}->{$day_time};
+                            foreach (@$images) {
+                                push @imgs, $_->{image};
+                            }
+                        }
+                        my $img_string = join ',', @imgs;
+                        print $Fi "\t$img_string";
+                    }
+                    print $Fi "\n";
+                }
+            }
+        }
+    close($Fi);
+
     open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
         print $F "stock_id\tred_image_string\tred_edge_image_string\tnir_image_string\n";
 
         foreach my $field_trial_id (sort keys %seen_field_trial_ids) {
-            foreach my $stock_id (sort keys %seen_stock_ids) {
-                print $F "$stock_id";
-                foreach my $image_type (@autoencoder_vi_image_type_ids) {
-                    my @imgs;
-                    foreach my $day_time (sort { $a <=> $b } keys %seen_day_times) {
-                        my $images = $data_hash{$field_trial_id}->{$stock_id}->{$image_type}->{$day_time};
-                        foreach (@$images) {
-                            push @imgs, $_->{image};
+            foreach my $drone_run_project_id (sort keys %seen_drone_run_project_ids) {
+                foreach my $stock_id (sort keys %seen_stock_ids) {
+                    print $F "$stock_id";
+                    foreach my $image_type (@autoencoder_vi_image_type_ids) {
+                        my @imgs;
+                        foreach my $day_time (sort { $a <=> $b } keys %seen_day_times) {
+                            my $images = $data_hash{$field_trial_id}->{$drone_run_project_id}->{$stock_id}->{$image_type}->{$day_time};
+                            foreach (@$images) {
+                                push @imgs, $_->{image};
+                            }
                         }
+                        my $img_string = join ',', @imgs;
+                        print $F "\t$img_string";
                     }
-                    my $img_string = join ',', @imgs;
-                    print $F "\t$img_string";
+                    print $F "\n";
                 }
-                print $F "\n";
             }
         }
     close($F);
@@ -10846,13 +10925,13 @@ sub _perform_autoencoder_keras_cnn_vi {
         $log_file_path = ' --log_file_path \''.$c->config->{error_log}.'\'';
     }
 
-    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/CalculatePhenotypeAutoEncoderVegetationIndices.py --input_image_file \''.$archive_temp_input_file.'\' --output_encoded_images_file \''.$archive_temp_output_images_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --autoencoder_model_type \''.$autoencoder_model_type.'\' '.$log_file_path;
+    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/CalculatePhenotypeAutoEncoderVegetationIndices.py --input_training_image_file \''.$archive_training_temp_input_file.'\' --input_image_file \''.$archive_temp_input_file.'\' --output_encoded_images_file \''.$archive_temp_output_images_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --autoencoder_model_type \''.$autoencoder_model_type.'\' '.$log_file_path;
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
     my @saved_trained_image_urls;
     my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_keras_autoencoder_decoded', 'project_md_image')->cvterm_id();
-    foreach my $stock_id (keys %output_images){
+    foreach my $stock_id (keys %output_images) {
         my $autoencoded_images = $output_images{$stock_id};
         foreach my $image_file (@$autoencoded_images) {
             my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
