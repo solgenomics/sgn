@@ -44,19 +44,21 @@ sub name_var :Path('/test/') :Args(0) {
     my $fragmentation = $c->req->param("fragmentation");
     my $rev_complement = $c->req->param("rev_complement");
     my $weblogo_output = $c->config->{tmp_weblogo_path};
-    my $basePath = $c->config->{basepath};
-    my $cluster_shared_bindir = $c->config->{cluster_shared_bindir};
+    my $basePath = $c->config->{tempfiles_base_motifs_finder};
+    my $cluster_shared_bindir = $c->config->{cluster_motifs_finder};
 
   # validate the Nucleic Acid in sequence. To ensure the return of line is not seen as a space.
 	my @seq;
 	my @errors;
 
-	# to generate temporary file name for the analysis
-    my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/static/documents/tempfiles/");
+    # to generate temporary file name for the analysis
+    my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/static/documents/tempfiles/motifs_finder/");
+    #my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/motifs_finder/");
+    
     print STDERR Dumper($filename);
 	if ($sequence !~ /^>/ && $seq_file eq '')  {
 		push ( @errors , "Please, paste sequences or attach sequence file.<br/>Ensure your sequence conform with 'usage help' description.\n");
-    }
+	}
 
 	# To send error file to index.mas
 	if (scalar (@errors) > 0){
@@ -163,7 +165,8 @@ sub name_var :Path('/test/') :Args(0) {
             			}
             		    elsif ($line =~ m/^\s+\*+/ ) {
             				$logo = 0;
-            		     	my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/static/documents/tempfiles/");
+					my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/static/documents/tempfiles/motifs_finder/");
+					#my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/motifs_finder/");
             			}
             			if ($freq_tab == 1) {
             				$freq_tab_switch++;
@@ -177,7 +180,8 @@ sub name_var :Path('/test/') :Args(0) {
             			}
             			elsif ($line =~ m/^site\s+/ ) {
             				$freq_tab = 0;
-            				my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/static/documents/tempfiles/");
+            				my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/static/documents/tempfiles/motifs_finder/");
+					#my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/motifs_finder/");
             			}
             			if ($prob_tab == 1 && $line !~ m/^Background\sprobability\smodel/) {
             				$prob_tab_switch++;
@@ -189,8 +193,9 @@ sub name_var :Path('/test/') :Args(0) {
             				push @prob_tab, $prob_tab_file;
             			}
             			elsif ($line =~ m/^Background\sprobability\smodel/ ) {
-            				$prob_tab = 0;
-            				my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/static/documents/tempfiles/");
+				        $prob_tab = 0;
+					#my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/motifs_finder/");
+            				my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/static/documents/tempfiles/motifs_finder/");
             			}
             			if ($BGPM_tab == 1) {
             				$BGPM_tab_switch++;
@@ -203,7 +208,8 @@ sub name_var :Path('/test/') :Args(0) {
             			}
             			elsif ($line =~ m/^\s+\d\.\d+\s\d\.\d+\s/ ) {
             				$BGPM_tab = 0;
-            				my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/static/documents/tempfiles/");
+            				my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/static/documents/tempfiles/motifs_finder/");
+					#my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/motifs_finder/");
             			}
             			if ($sum_indv_tab == 1 ) {
             				$sum_indv_tab_switch++;
@@ -217,7 +223,8 @@ sub name_var :Path('/test/') :Args(0) {
             			}
             			elsif ($line =~ m/^Log\sFragmentation\sportion\sof\sMAP\sfor\smotif\s/ ) {
             				$sum_indv_tab = 0;
-            				my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/static/documents/tempfiles/");
+            				my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/static/documents/tempfiles/motifs_finder/");
+					#my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/motifs_finder/");
             			}
             	}
             	if ($line =~ m/^\s+MOTIF\s+([a-z])/){
