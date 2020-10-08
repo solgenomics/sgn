@@ -50,7 +50,7 @@ $sum => ""
 </style>
 
 <center>
-	<form action="/result" >
+	<form action="/result", method="POST" >
 
 		<input name="file_name" value="<% $outfile %>" style="display:none;">
 		<input name="output_file" value="<% $res %>" style="display:none;">
