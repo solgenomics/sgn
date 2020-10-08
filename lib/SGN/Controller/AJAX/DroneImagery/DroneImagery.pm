@@ -1027,7 +1027,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                             $female_rel = $female_parent_grm{'S'.$female_parent1}->{'S'.$female_parent2};
                         }
                         elsif ($female_parent1 && $female_parent2 && $female_parent1 == $female_parent2) {
-                            $female_rel = 0.5;
+                            $female_rel = 1;
                         }
                         elsif ($a1 == $a2) {
                             $female_rel = 1;
@@ -1038,7 +1038,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                             $male_rel = $male_parent_grm{'S'.$male_parent1}->{'S'.$male_parent2};
                         }
                         elsif ($male_parent1 && $male_parent2 && $male_parent1 == $male_parent2) {
-                            $male_rel = 0.5;
+                            $male_rel = 1;
                         }
                         elsif ($a1 == $a2) {
                             $male_rel = 1;
