@@ -306,10 +306,13 @@ sub manage_nirs :Path("/breeders/nirs") Args(0) {
     }
 
     my @file_types = [ 'nirs spreadsheet' ];
-    my $data = $self->get_file_data($c, \@file_types);
+    my $all_data = $self->get_file_data($c, \@file_types, 1);
+    my $data = $self->get_file_data($c, \@file_types, 0);
 
     $c->stash->{nirs_files} = $data->{files};
     $c->stash->{deleted_nirs_files} = $data->{deleted_files};
+    $c->stash->{all_nirs_files} = $all_data->{files};
+    $c->stash->{all_deleted_nirs_files} = $all_data->{deleted_files};
 
     $c->stash->{template} = '/breeders_toolbox/manage_nirs.mas';
 
@@ -708,6 +711,7 @@ sub get_file_data : Private {
     my $self = shift;
     my $c = shift;
     my $file_types = shift;
+    my $get_files_for_all_users = shift;
     my @file_types = @{$file_types};
 
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
@@ -715,7 +719,11 @@ sub get_file_data : Private {
     my $file_info = [];
     my $deleted_file_info = [];
 
-    my $metadata_rs = $metadata_schema->resultset("MdMetadata")->search( { create_person_id => $c->user()->get_object->get_sp_person_id() }, { order_by => 'create_date' } );
+    my %search_param;
+    if (!$get_files_for_all_users) {
+        $search_param{create_person_id} = $c->user()->get_object->get_sp_person_id();
+    }
+    my $metadata_rs = $metadata_schema->resultset("MdMetadata")->search( \%search_param, { order_by => 'create_date' } );
 
     print STDERR "RETRIEVED ".$metadata_rs->count()." METADATA ENTRIES...\n";
 
