@@ -239,6 +239,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     mkdir $tmp_stats_dir if ! -d $tmp_stats_dir;
     my ($grm_rename_tempfile_fh, $grm_rename_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     $grm_rename_tempfile .= '.grm';
+    my ($permanent_environment_structure_tempfile_fh, $permanent_environment_structure_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_tempfile_fh, $stats_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_tempfile_rename_fh, $stats_tempfile_rename) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_tempfile_2_fh, $stats_tempfile_2) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
@@ -819,6 +820,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             @ind_rep_factors = sort keys %seen_ind_reps;
 
             my @data_matrix_phenotypes;
+            my %stock_row_col;
+            my @stocks_ordered;
             foreach (@$data) {
                 my $germplasm_name = $_->{germplasm_uniquename};
                 my $germplasm_stock_id = $_->{germplasm_stock_id};
@@ -833,8 +836,13 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 };
                 $plot_id_map{$obsunit_stock_id} = $obsunit_stock_uniquename;
                 $seen_plot_names{$obsunit_stock_uniquename}++;
+                $stock_row_col{$obsunit_stock_id} = {
+                    row_number => $row_number,
+                    col_number => $col_number
+                };
                 my @data_matrix_phenotypes_row;
                 my $current_trait_index = 0;
+                push @stocks_ordered, $obsunit_stock_id;
                 foreach my $t (@sorted_trait_names) {
                     my @row = (
                         $accession_id_factor_map{$germplasm_stock_id},
@@ -910,6 +918,44 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     print $F2 "$line\n";
                 }
             close($F2);
+
+            if ($permanent_environment_structure eq 'euclidean_rows_and_columns') {
+                my $data = '';
+                my %euclidean_distance_hash;
+                foreach my $s (sort { $a <=> $b } @stocks_ordered) {
+                    foreach my $r (sort { $a <=> $b } @stocks_ordered) {
+                        my $s_factor = $plot_factor_map{$s}->{plot_id_factor};
+                        my $r_factor = $plot_factor_map{$r}->{plot_id_factor};
+                        if (!exists($euclidean_distance_hash{$s_factor}->{$r_factor}) && !exists($euclidean_distance_hash{$r_factor}->{$s_factor})) {
+                            my $row_1 = $stock_row_col{$s}->{row_number};
+                            my $col_1 = $stock_row_col{$s}->{col_number};
+                            my $row_2 = $stock_row_col{$r}->{row_number};
+                            my $col_2 = $stock_row_col{$r}->{col_number};
+                            my $dist = sqrt( ($row_2 - $row_1)**2 + ($col_2 - $col_1)**2 );
+                            if (defined $dist and length $dist) {
+                                $euclidean_distance_hash{$s_factor}->{$r_factor} = $dist;
+                            }
+                            else {
+                                $c->stash->{rest} = { error => "There are not rows and columns for all of the plots! Do not try to use a Euclidean distance between plots for the permanent environment structure"};
+                                return;
+                            }
+                        }
+                    }
+                }
+
+                foreach my $r (sort { $a <=> $b } keys %euclidean_distance_hash) {
+                    foreach my $s (sort { $a <=> $b } keys %{$euclidean_distance_hash{$r}}) {
+                        my $val = $euclidean_distance_hash{$r}->{$s};
+                        if (defined $val and length $val) {
+                            $data .= "$r\t$s\t$val\n";
+                        }
+                    }
+                }
+
+                open(my $F3, ">", $permanent_environment_structure_tempfile) || die "Can't open file ".$permanent_environment_structure_tempfile;
+                    print $F3 $data;
+                close($F3);
+            }
         }
 
         if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups'
@@ -930,7 +976,6 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
                 my $tmp_arm_dir = $shared_cluster_dir_config."/tmp_download_arm";
                 mkdir $tmp_arm_dir if ! -d $tmp_arm_dir;
-                my ($arm_tempfile_fh, $arm_tempfile) = tempfile("drone_stats_download_arm_XXXXX", DIR=> $tmp_arm_dir);
                 my ($arm_tempfile_fh, $arm_tempfile) = tempfile("drone_stats_download_arm_XXXXX", DIR=> $tmp_arm_dir);
                 my ($grm1_tempfile_fh, $grm1_tempfile) = tempfile("drone_stats_download_grm1_XXXXX", DIR=> $tmp_arm_dir);
                 my ($grm_out_tempfile_fh, $grm_out_tempfile) = tempfile("drone_stats_download_grm_out_XXXXX", DIR=> $tmp_arm_dir);
@@ -1899,6 +1944,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
             my $stats_tempfile_2_basename = basename($stats_tempfile_2);
             my $grm_file_basename = basename($grm_rename_tempfile);
+            my $permanent_environment_structure_file_basename = basename($permanent_environment_structure_tempfile);
             #my @phenotype_header = ("id", "plot_id", "replicate", "time", "replicate_time", "ind_replicate", @sorted_trait_names, "phenotype");
 
             my $effect_1_levels = scalar(@rep_time_factors);
@@ -1960,10 +2006,25 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             push @param_file_rows, (
                 'RANDOM_GROUP',
                 $random_group_string2,
-                'RANDOM_TYPE',
-                'diagonal',
-                'FILE',
-                '',
+                'RANDOM_TYPE'
+            );
+
+            if ($permanent_environment_structure eq 'identity') {
+                push @param_file_rows, (
+                    'diagonal',
+                    'FILE',
+                    ''
+                );
+            }
+            elsif ($permanent_environment_structure eq 'euclidean_rows_and_columns') {
+                push @param_file_rows, (
+                    'user_file',
+                    'FILE',
+                    $permanent_environment_structure_file_basename
+                );
+            }
+
+            push @param_file_rows, (
                 '(CO)VARIANCES'
             );
             foreach (@pheno_var) {
