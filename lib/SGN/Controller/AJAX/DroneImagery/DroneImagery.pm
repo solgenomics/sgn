@@ -232,6 +232,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $protocol_id = $c->req->param('protocol_id');
     my $tolparinv = $c->req->param('tolparinv');
     my $legendre_order_number = $c->req->param('legendre_order_number');
+    my $permanent_environment_structure = $c->req->param('permanent_environment_structure');
 
     my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
     my $tmp_stats_dir = $shared_cluster_dir_config."/tmp_drone_statistics";
@@ -10671,6 +10672,11 @@ sub drone_imagery_autoencoder_keras_vi_model_POST : Args(0) {
     my $plot_polygon_type_ids = decode_json($c->req->param('plot_polygon_type_ids'));
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
+    if (scalar(@$drone_run_ids) > 1) {
+        $c->stash->{rest} = {error => "Please select only one drone run to predict on!"};
+        $c->detach();
+    }
+
     my @allowed_composed_cvs = split ',', $c->config->{composable_cvs};
     my $composable_cvterm_delimiter = $c->config->{composable_cvterm_delimiter};
     my $composable_cvterm_format = $c->config->{composable_cvterm_format};
@@ -10903,14 +10909,12 @@ sub _perform_autoencoder_keras_cnn_vi {
 
         foreach my $field_trial_id (sort keys %seen_field_trial_ids) {
             foreach my $stock_id (sort keys %seen_stock_ids) {
-                my $archive_temp_output_red_image_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_autoencoder_dir/outputimagefileXXXX');
-                $archive_temp_output_red_image_file .= ".png";
-                my $archive_temp_output_rededge_image_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_autoencoder_dir/outputimagefileXXXX');
-                $archive_temp_output_rededge_image_file .= ".png";
-                my $archive_temp_output_nir_image_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_autoencoder_dir/outputimagefileXXXX');
-                $archive_temp_output_nir_image_file .= ".png";
+                my $archive_temp_output_ndvi_image_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_autoencoder_dir/outputimagefileXXXX');
+                $archive_temp_output_ndvi_image_file .= ".png";
+                my $archive_temp_output_ndre_image_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_autoencoder_dir/outputimagefileXXXX');
+                $archive_temp_output_ndre_image_file .= ".png";
 
-                my @autoencoded_image_files = ($archive_temp_output_red_image_file, $archive_temp_output_rededge_image_file, $archive_temp_output_nir_image_file);
+                my @autoencoded_image_files = ($archive_temp_output_ndvi_image_file, $archive_temp_output_ndre_image_file);
                 $output_images{$stock_id} = \@autoencoded_image_files;
                 my $img_string = join "\t", @autoencoded_image_files;
                 print $F2 "$stock_id\t$img_string\n";
@@ -10930,6 +10934,7 @@ sub _perform_autoencoder_keras_cnn_vi {
     my $status = system($cmd);
 
     my @saved_trained_image_urls;
+    my %output_image_ids;
     my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_keras_autoencoder_decoded', 'project_md_image')->cvterm_id();
     foreach my $stock_id (keys %output_images) {
         my $autoencoded_images = $output_images{$stock_id};
@@ -10942,6 +10947,7 @@ sub _perform_autoencoder_keras_cnn_vi {
             my $output_image_url = $image->get_image_url('original');
             my $output_image_id = $image->get_image_id();
             push @saved_trained_image_urls, $output_image_url;
+            push @{$output_image_ids{$stock_id}}, $output_image_id;
         }
     }
 
@@ -11008,13 +11014,14 @@ sub _perform_autoencoder_keras_cnn_vi {
 
             my $stock_id = $columns[0];
             my $stock_uniquename = $stock_info{$stock_id}->{stock_uniquename};
+            my $output_images = $output_image_ids{$stock_id};
 
             #print STDERR Dumper \@columns;
             $stock_info{$stock_id}->{result} = \@columns;
 
             $plots_seen{$stock_uniquename} = 1;
-            $autoencoder_vi_phenotype_data{$stock_uniquename}->{$autoencoder_ndvi_composed_trait_name} = [$columns[1], $timestamp, $user_name, '', undef];
-            $autoencoder_vi_phenotype_data{$stock_uniquename}->{$autoencoder_ndre_composed_trait_name} = [$columns[2], $timestamp, $user_name, '', undef];
+            $autoencoder_vi_phenotype_data{$stock_uniquename}->{$autoencoder_ndvi_composed_trait_name} = [$columns[1], $timestamp, $user_name, '', $output_images->[0]];
+            $autoencoder_vi_phenotype_data{$stock_uniquename}->{$autoencoder_ndre_composed_trait_name} = [$columns[2], $timestamp, $user_name, '', $output_images->[1]];
 
             $line++;
         }
