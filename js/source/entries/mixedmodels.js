@@ -314,19 +314,17 @@ export function init(main_div){
 		$('#working_modal').modal("hide");
 		if (r.error) { alert(r.error);}
 		else{
-		    alert(r.adjusted_means_html);
-		    $('#mixed_models_adjusted_means_results_div').html(r.adjusted_means_html);
+		    //alert(r.adjusted_means_html);
+		    $('#mixed_models_adjusted_blups_results_div').html(r.adjusted_blups_html);
+		    $('#mixed_models_adjusted_blues_results_div').html(r.adjusted_blues_html);
 		    $('#mixed_models_blups_results_div').html( r.blups_html );
-		    //$('#mixed_models_blues_results_div').html(r.blues_html);
-		    //$('#mixed_models_anova_results_div').html(r.anova_html);
-		    //$('#mixed_models_varcomp_results_div').html(r.varcomp_html);
+		    $('#mixed_models_blues_results_div').html(r.blues_html);
 		    
 		    accession_names = r.accession_names;
-		    adjusted_means_data = r.adjusted_means_data;
+		    adjusted_blups_data = r.adjusted_blups_data;
+		    adjusted_blues_data = r.adjusted_blues_data;
 		    blups_data = r.blups_data;
 		    blues_data = r.blues_data;
-		    
-		    
 		}
             },
             "error": function(r) {

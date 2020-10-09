@@ -195,9 +195,10 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     system($cmd);
     print STDERR "Done.\n";
 
-    my $resultfile = $temppath.".adjusted_means";
+    my $adjusted_blups_file = $temppath.".adjustedBLUPs";
     my $blupfile = $temppath.".BLUPs";
     my $bluefile = $temppath.".BLUEs";
+    my $adjusted_blues_file = $temppath.".adjustedBLUEs";
     my $anovafile = $temppath.".anova";
     my $varcompfile = $temppath.".varcomp";
     my $error;
@@ -205,56 +206,70 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     
     my $accession_names;
 
-    my $adjusted_means_html;
-    my $adjusted_means_data;
-    if (! -e $resultfile) {
-	$error = "The analysis could not be completed. The factors may not have sufficient numbers of levels to complete the analysis. Please choose other parameters."
+    my $adjusted_blups_html;
+    my $adjusted_blups_data;
+
+    my $adjusted_blues_html;
+    my $adjusted_blues_data;
+
+    my $traits;
+    
+    # we need either a blup or blue result file. Check for these and otherwise return an error!
+    #
+    if ( -e $adjusted_blups_file) {
+	($adjusted_blups_data, $adjusted_blups_html, $accession_names, $traits) = $self->result_file_to_hash($c, $adjusted_blups_file);
     }
-    else {
-	($adjusted_means_data, $adjusted_means_html, $accession_names) = $self->result_file_to_hash($c, $resultfile);
+    elsif (-e $adjusted_blues_file) {
+	($adjusted_blues_data, $adjusted_blues_html, $accession_names, $traits) = $self->result_file_to_hash($c, $adjusted_blues_file);
+    }
+    else { 
+	$error = "The analysis could not be completed. The factors may not have sufficient numbers of levels to complete the analysis. Please choose other parameters.";
+	$c->stash->{rest} = { error => $error };
+	return;
     }
 
+    # read other result files, if they exist and parse into data structures
+    #
     my $blups_html;
     my $blups_data;
     if (-e $blupfile) {
-	($blups_data, $blups_html, $accession_names) = $self->result_file_to_hash($c, $blupfile);
+	($blups_data, $blups_html, $accession_names, $traits) = $self->result_file_to_hash($c, $blupfile);
     }
 
     my $blues_html;
     my $blues_data;
     if (-e $bluefile) {
-	($blues_data, $blues_html, $accession_names) = $self->result_file_to_hash($c, $bluefile);
-	
+	($blues_data, $blues_html, $accession_names, $traits) = $self->result_file_to_hash($c, $bluefile);	
     }
 
-    my $anova_html;
-    my $anova_data;
-    if (-e $anovafile) {
-	($anova_data, $anova_html, $accession_names) = $self->result_file_to_hash($c, $anovafile);
-    }
+    # my $anova_html;
+    # my $anova_data;
+    # if (-e $anovafile) {
+    # 	($anova_data, $anova_html, $accession_names, $traits) = $self->result_file_to_hash($c, $anovafile);
+    # }
 
-    my $varcomp_html;
-    my $varcomp_data;
-    if (-e $varcompfile) {
-	($varcomp_data, $varcomp_html, $accession_names) = $self->result_file_to_hash($c, $varcompfile);
-    }
-
-
+    # my $varcomp_html;
+    # my $varcomp_data;
+    # if (-e $varcompfile) {
+    # 	($varcomp_data, $varcomp_html, $accession_names, $traits) = $self->result_file_to_hash($c, $varcompfile);
+    # }
     
     $c->stash->{rest} = {
 	error => $error,
 	accession_names => $accession_names,
-	adjusted_means_data => $adjusted_means_data,
-        adjusted_means_html => $adjusted_means_html,
+	adjusted_blups_data => $adjusted_blups_data,
+        adjusted_blups_html => $adjusted_blups_html,
+	adjusted_blues_data => $adjusted_blues_data,
+	adjusted_blues_html => $adjusted_blues_html,
 	blups_data => $blups_data,
 	blups_html => $blups_html,
 	blues_data => $blues_data,
 	blues_html => $blues_html,
-	varcomp_data => $varcomp_data,
-	varcomp_html => $varcomp_html,
-	anova_data => $anova_data,
-	anova_html => $anova_html,
-	traits => 
+	# varcomp_data => $varcomp_data,
+	# varcomp_html => $varcomp_html,
+	# anova_data => $anova_data,
+	# anova_html => $anova_html,
+	traits => $traits
     };
 }
 
@@ -277,7 +292,7 @@ sub result_file_to_hash {
     my @fields;
     my @accession_names;
     my %analysis_data;
-
+    
     my $html = qq | <style> th, td { padding: 10px;} </style> \n <table cellpadding="20" cellspacing="20"> |;
     
     foreach my $line (@lines) {
@@ -292,7 +307,7 @@ sub result_file_to_hash {
 	
     }
     $html .= "</table>";
-    return (\%analysis_data, $html, \@accession_names);
+    return (\%analysis_data, $html, \@accession_names, \@trait_cols);
 }
 
 

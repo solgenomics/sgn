@@ -178,20 +178,19 @@
     
   <div>
     <ul class="nav nav-tabs">
-      <li class="active"><a data-toggle="tab" href="#adjusted_means_tab">Adjusted means</a></li>
+      <li class="active"><a data-toggle="tab" href="#adjusted_blups_tab">Adjusted means (BLUPs)</a></li>
       <li><a data-toggle="tab" href="#blups_tab">BLUPs</a></li>
-      <!-- li><a data-toggle="tab" href="#blues_tab">BLUEs</a></li 
-      <li><a data-toggle="tab" href="#anova_tab">ANOVA</a></li>
-      <li><a data-toggle="tab" href="#varcomp_tab">Varcomp</a></li -->
+      <li><a data-toogle="tab" href="#adjusted_blues_tab">Adjusted means (BLUEs)</a></li>
+      <li><a data-toggle="tab" href="#blues_tab">BLUEs</a></li>
     </ul>
     <div class="tab-content">
-      <div id="adjusted_means_tab" class="tab-pane fade in active">
+      <div id="adjusted_blups_tab" class="tab-pane fade in active">
 	<br />
 	  <button id="open_store_adjusted_means_dialog_button" class="btn btn-primary" data-toggle="modal" data-analysis_type="adjusted_means">Save adjusted means</button>
 	  
 	  <button class="btn btn-primary">Download</button>
 	  <br />
-	  <div id="mixed_models_adjusted_means_results_div">[loading...]</div>
+	  <div id="mixed_models_adjusted_blups_results_div">[loading...]</div>
       </div>
       
       <div id="blups_tab" class="tab-pane fade">
@@ -199,22 +198,19 @@
 	<button id="open_store_blups_dialog_button" class="btn btn-primary" data-toggle="modal" data-analysis_type="blup" data-target="#generic_save_analysis_dialog">Save BLUPs</button>
 	<div id="mixed_models_blups_results_div">[not available]</div>
       </div>
-      
+
+      <div id="adjusted_blues_tab" class="tab-pane fade">
+	<br />
+	<button id="open_store_adjusted_blues_dialog_button" class="btn btn-primary" data-toggle="modal" data-analysis_type="blues">Save adjusted BLUEs</button>
+	
+	<div id="mixed_models_adjusted_blues_results_div">[loading...]</div>
+      </div>
+
       <div id="blues_tab" class="tab-pane fade">
 	<br />
-	<button id="open_store_blues_dialog_button" class="btn btn-primary" data-toggle="modal" data-analysis_type="blues">Save BLUPs</button>
+	<button id="open_store_blues_dialog_button" class="btn btn-primary" data-toggle="modal" data-analysis_type="blues">Save BLUEs</button>
 	
-	<div id="mixed_models_blues_results_div">[blablabla]</div>
-      </div>
-      
-      <div id="anova_tab" class="tab-pane fade">
-	<div id="mixed_models_anova_results_div">[not available]</div>
-      </div>
-      
-      <div id="varcomp_tab" class="tab-pane fade">
-	NOT YET
-	
-	<div id="mixed_models_varcomp_results_div">[maybe later?]</div>
+	<div id="mixed_models_blues_results_div">[loading...]</div>
       </div>
     </div> <!-- results_tab div -->
   </div>
@@ -222,7 +218,7 @@
 </&>
 
 
-<div id="save_analysis_dialog" class="modal fade">
+<!-- div id="save_analysis_dialog" class="modal fade">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -239,14 +235,14 @@
 	<input type="hidden" name="analysis_protocol" id="analysis_protocol" value="[not set]" />
 	<div name="analysis_type" id="analysis_type" value="?" style="display:none;"></div>
 	</div> <!-- form-group -->
-      </div> <!-- modal-body -->
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      <!-- /div> <!-- modal-body -->
+      <!-- div class="modal-footer">
+        <!-- button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
         <button type="button" id="save_blups_button" class="btn btn-primary">Save changes</button>
       </div>
     </div><!-- /.modal-content -->
-  </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
+  <!-- /div><!-- /.modal-dialog -->
+<!-- /div --><!-- /.modal -->
 
 
 
