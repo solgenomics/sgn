@@ -45,6 +45,7 @@ use CXGN::BreederSearch;
 use CXGN::Phenotypes::SearchFactory;
 use CXGN::BreedersToolbox::Accessions;
 use CXGN::Genotype::GRM;
+use CXGN::Pedigree::ARM;
 use CXGN::AnalysisModel::SaveModel;
 use CXGN::AnalysisModel::GetModel;
 use Math::Polygon;
@@ -226,6 +227,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $field_trial_id_list_string = join ',', @$field_trial_id_list;
     my $trait_id_list = $c->req->param('observation_variable_id_list') ? decode_json $c->req->param('observation_variable_id_list') : [];
     my $compute_from_parents = $c->req->param('compute_from_parents') eq 'yes' ? 1 : 0;
+    my $include_pedgiree_info_if_compute_from_parents = $c->req->param('include_pedgiree_info_if_compute_from_parents') eq 'yes' ? 1 : 0;
+    my $use_area_under_curve = $c->req->param('use_area_under_curve') eq 'yes' ? 1 : 0;
     my $protocol_id = $c->req->param('protocol_id');
     my $tolparinv = $c->req->param('tolparinv');
     my $legendre_order_number = $c->req->param('legendre_order_number');
@@ -347,7 +350,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         }
     }
 
-    if ($statistics_select eq 'lmer_germplasmname_replicate' || $statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
+    if ($statistics_select eq 'lmer_germplasmname_replicate' || $statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'sommer_grm_genetic_blups') {
 
         my %trait_name_encoder;
         my %trait_name_encoder_rev;
@@ -361,7 +364,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         my %seen_plot_names;
         my %plot_id_map;
 
-        if ($statistics_select eq 'lmer_germplasmname_replicate' || $statistics_select eq 'sommer_grm_spatial_genetic_blups') {
+        if ($statistics_select eq 'lmer_germplasmname_replicate' || $statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_blups') {
 
             my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
                 'MaterializedViewTable',
@@ -533,7 +536,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 }
             }
             @unique_accession_names = sort keys %unique_accessions;
-            @sorted_trait_names = sort keys %seen_times;
+            @sorted_trait_names = sort {$a <=> $b} keys %seen_times;
             @unique_plot_names = sort keys %seen_plot_names;
 
             while ( my ($trait_name, $time_term) = each %seen_trait_names) {
@@ -554,13 +557,40 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 };
                 $plot_id_map{"P".$obsunit_stock_id} = $obsunit_stock_uniquename;
                 $seen_plot_names{$obsunit_stock_uniquename}++;
+                my $current_trait_index = 0;
                 foreach my $t (@sorted_trait_names) {
                     if (defined($phenotype_data{$obsunit_stock_uniquename}->{$t})) {
-                        push @row, $phenotype_data{$obsunit_stock_uniquename}->{$t} + 0;
+                        if ($use_area_under_curve) {
+                            my $val = 0;
+                            foreach my $counter (0..$current_trait_index) {
+                                if ($counter == 0) {
+                                    $val = $val + $phenotype_data{$obsunit_stock_uniquename}->{$sorted_trait_names[$counter]} + 0;
+                                }
+                                else {
+                                    my $t1 = $sorted_trait_names[$counter-1];
+                                    my $t2 = $sorted_trait_names[$counter];
+                                    my $p1 = $phenotype_data{$obsunit_stock_uniquename}->{$t1} + 0;
+                                    my $p2 = $phenotype_data{$obsunit_stock_uniquename}->{$t2} + 0;
+                                    my $neg = 1;
+                                    my $min_val = $p1;
+                                    if ($p2 < $p1) {
+                                        $neg = -1;
+                                        $min_val = $p2;
+                                    }
+                                    my $area = (($neg*($p2-$p1)*($t2-$t1))/2)+($t2-$t1)*$min_val;
+                                    $val = $val + $area;
+                                }
+                            }
+                            push @row, $val;
+                        }
+                        else {
+                            push @row, $phenotype_data{$obsunit_stock_uniquename}->{$t} + 0;
+                        }
                     } else {
                         print STDERR $obsunit_stock_uniquename." : $t : $germplasm_name : NA \n";
                         push @row, 'NA';
                     }
+                    $current_trait_index++;
                 }
                 push @data_matrix, \@row;
             }
@@ -803,6 +833,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 $plot_id_map{$obsunit_stock_id} = $obsunit_stock_uniquename;
                 $seen_plot_names{$obsunit_stock_uniquename}++;
                 my @data_matrix_phenotypes_row;
+                my $current_trait_index = 0;
                 foreach my $t (@sorted_trait_names) {
                     my @row = (
                         $accession_id_factor_map{$germplasm_stock_id},
@@ -818,8 +849,33 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     push @row, @$polys;
 
                     if (defined($phenotype_data{$obsunit_stock_uniquename}->{$t})) {
-                        push @row, $phenotype_data{$obsunit_stock_uniquename}->{$t} + 0;
-                        push @data_matrix_phenotypes_row, $phenotype_data{$obsunit_stock_uniquename}->{$t} + 0;
+                        if ($use_area_under_curve) {
+                            my $val = 0;
+                            foreach my $counter (0..$current_trait_index) {
+                                if ($counter == 0) {
+                                    $val = $val + $phenotype_data{$obsunit_stock_uniquename}->{$sorted_trait_names[$counter]} + 0;
+                                }
+                                else {
+                                    my $t1 = $sorted_trait_names[$counter-1];
+                                    my $t2 = $sorted_trait_names[$counter];
+                                    my $p1 = $phenotype_data{$obsunit_stock_uniquename}->{$t1} + 0;
+                                    my $p2 = $phenotype_data{$obsunit_stock_uniquename}->{$t2} + 0;
+                                    my $neg = 1;
+                                    my $min_val = $p1;
+                                    if ($p2 < $p1) {
+                                        $neg = -1;
+                                        $min_val = $p2;
+                                    }
+                                    $val = $val + (($neg*($p2-$p1)*($t2-$t1))/2)+($t2-$t1)*$min_val;
+                                }
+                            }
+                            push @row, $val;
+                            push @data_matrix_phenotypes_row, $val;
+                        }
+                        else {
+                            push @row, $phenotype_data{$obsunit_stock_uniquename}->{$t} + 0;
+                            push @data_matrix_phenotypes_row, $phenotype_data{$obsunit_stock_uniquename}->{$t} + 0;
+                        }
                     } else {
                         print STDERR $obsunit_stock_uniquename." : $t : $germplasm_name : NA \n";
                         push @row, '';
@@ -828,6 +884,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
                     push @data_matrix, \@row;
                     push @data_matrix_phenotypes, \@data_matrix_phenotypes_row;
+
+                    $current_trait_index++;
                 }
             }
             # print STDERR Dumper \@data_matrix;
@@ -853,7 +911,9 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             close($F2);
         }
 
-        if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+        if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups'
+            || $statistics_select eq 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups'
+            || $statistics_select eq 'sommer_grm_genetic_blups') {
 
             my %seen_accession_stock_ids;
             foreach my $trial_id (@$field_trial_id_list) {
@@ -865,50 +925,209 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             }
             my @accession_ids = keys %seen_accession_stock_ids;
 
-            my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
-            my $tmp_grm_dir = $shared_cluster_dir_config."/tmp_genotype_download_grm";
-            mkdir $tmp_grm_dir if ! -d $tmp_grm_dir;
-            my ($grm_tempfile_fh, $grm_tempfile) = tempfile("wizard_download_grm_XXXXX", DIR=> $tmp_grm_dir);
-            my ($grm_out_tempfile_fh, $grm_out_tempfile) = tempfile("wizard_download_grm_XXXXX", DIR=> $tmp_grm_dir);
+            if ($include_pedgiree_info_if_compute_from_parents) {
+                my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
+                my $tmp_arm_dir = $shared_cluster_dir_config."/tmp_download_arm";
+                mkdir $tmp_arm_dir if ! -d $tmp_arm_dir;
+                my ($arm_tempfile_fh, $arm_tempfile) = tempfile("drone_stats_download_arm_XXXXX", DIR=> $tmp_arm_dir);
+                my ($arm_tempfile_fh, $arm_tempfile) = tempfile("drone_stats_download_arm_XXXXX", DIR=> $tmp_arm_dir);
+                my ($grm1_tempfile_fh, $grm1_tempfile) = tempfile("drone_stats_download_grm1_XXXXX", DIR=> $tmp_arm_dir);
+                my ($grm_out_tempfile_fh, $grm_out_tempfile) = tempfile("drone_stats_download_grm_out_XXXXX", DIR=> $tmp_arm_dir);
 
-            if (!$protocol_id) {
-                $protocol_id = undef;
-            }
+                if (!$protocol_id) {
+                    $protocol_id = undef;
+                }
 
-            my $grm_search_params = {
-                bcs_schema=>$schema,
-                grm_temp_file=>$grm_tempfile,
-                people_schema=>$people_schema,
-                cache_root=>$c->config->{cache_file_path},
-                accession_id_list=>\@accession_ids,
-                protocol_id=>$protocol_id,
-                get_grm_for_parental_accessions=>$compute_from_parents,
-                # minor_allele_frequency=>$minor_allele_frequency,
-                # marker_filter=>$marker_filter,
-                # individuals_filter=>$individuals_filter
-            };
+                my $pedigree_arm = CXGN::Pedigree::ARM->new({
+                    bcs_schema=>$schema,
+                    arm_temp_file=>$arm_tempfile,
+                    people_schema=>$people_schema,
+                    accession_id_list=>\@accession_ids,
+                    # plot_id_list=>\@plot_id_list,
+                    cache_root=>$c->config->{cache_file_path},
+                    download_format=>'matrix', #either 'matrix', 'three_column', or 'heatmap'
+                });
+                my ($parent_hash, $stock_ids, $all_accession_stock_ids, $female_stock_ids, $male_stock_ids) = $pedigree_arm->get_arm(
+                    $shared_cluster_dir_config,
+                    $c->config->{backend},
+                    $c->config->{cluster_host},
+                    $c->config->{'web_cluster_queue'},
+                    $c->config->{basepath}
+                );
+                # print STDERR Dumper $parent_hash;
 
-            if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
-                $grm_search_params->{download_format} = 'three_column_stock_id_integer';
+                my $female_geno = CXGN::Genotype::GRM->new({
+                    bcs_schema=>$schema,
+                    grm_temp_file=>$grm1_tempfile,
+                    people_schema=>$people_schema,
+                    cache_root=>$c->config->{cache_file_path},
+                    accession_id_list=>$female_stock_ids,
+                    protocol_id=>$protocol_id,
+                    get_grm_for_parental_accessions=>0,
+                    download_format=>'three_column_reciprocal'
+                    # minor_allele_frequency=>$minor_allele_frequency,
+                    # marker_filter=>$marker_filter,
+                    # individuals_filter=>$individuals_filter
+                });
+                my $female_grm_data = $female_geno->download_grm(
+                    'data',
+                    $shared_cluster_dir_config,
+                    $c->config->{backend},
+                    $c->config->{cluster_host},
+                    $c->config->{'web_cluster_queue'},
+                    $c->config->{basepath}
+                );
+                my @fl = split '\n', $female_grm_data;
+                my %female_parent_grm;
+                foreach (@fl) {
+                    my @l = split '\t', $_;
+                    $female_parent_grm{$l[0]}->{$l[1]} = $l[2];
+                }
+                # print STDERR Dumper \%female_parent_grm;
+
+                my $male_geno = CXGN::Genotype::GRM->new({
+                    bcs_schema=>$schema,
+                    grm_temp_file=>$grm1_tempfile,
+                    people_schema=>$people_schema,
+                    cache_root=>$c->config->{cache_file_path},
+                    accession_id_list=>$male_stock_ids,
+                    protocol_id=>$protocol_id,
+                    get_grm_for_parental_accessions=>0,
+                    download_format=>'three_column_reciprocal'
+                    # minor_allele_frequency=>$minor_allele_frequency,
+                    # marker_filter=>$marker_filter,
+                    # individuals_filter=>$individuals_filter
+                });
+                my $male_grm_data = $male_geno->download_grm(
+                    'data',
+                    $shared_cluster_dir_config,
+                    $c->config->{backend},
+                    $c->config->{cluster_host},
+                    $c->config->{'web_cluster_queue'},
+                    $c->config->{basepath}
+                );
+                my @ml = split '\n', $male_grm_data;
+                my %male_parent_grm;
+                foreach (@ml) {
+                    my @l = split '\t', $_;
+                    $male_parent_grm{$l[0]}->{$l[1]} = $l[2];
+                }
+                # print STDERR Dumper \%male_parent_grm;
+
+                my %rel_result_hash;
+                foreach my $a1 (@accession_ids) {
+                    foreach my $a2 (@accession_ids) {
+                        my $female_parent1 = $parent_hash->{$a1}->{female_stock_id};
+                        my $male_parent1 = $parent_hash->{$a1}->{male_stock_id};
+                        my $female_parent2 = $parent_hash->{$a2}->{female_stock_id};
+                        my $male_parent2 = $parent_hash->{$a2}->{male_stock_id};
+
+                        my $female_rel = 0;
+                        if ($female_parent1 && $female_parent2 && $female_parent_grm{'S'.$female_parent1}->{'S'.$female_parent2}) {
+                            $female_rel = $female_parent_grm{'S'.$female_parent1}->{'S'.$female_parent2};
+                        }
+                        elsif ($female_parent1 && $female_parent2 && $female_parent1 == $female_parent2) {
+                            $female_rel = 0.5;
+                        }
+                        elsif ($a1 == $a2) {
+                            $female_rel = 1;
+                        }
+
+                        my $male_rel = 0;
+                        if ($male_parent1 && $male_parent2 && $male_parent_grm{'S'.$male_parent1}->{'S'.$male_parent2}) {
+                            $male_rel = $male_parent_grm{'S'.$male_parent1}->{'S'.$male_parent2};
+                        }
+                        elsif ($male_parent1 && $male_parent2 && $male_parent1 == $male_parent2) {
+                            $male_rel = 0.5;
+                        }
+                        elsif ($a1 == $a2) {
+                            $male_rel = 1;
+                        }
+                        # print STDERR "$a1 $a2 $female_rel $male_rel\n";
+
+                        my $rel = 0.5*($female_rel + $male_rel);
+                        $rel_result_hash{$a1}->{$a2} = $rel;
+                    }
+                }
+                # print STDERR Dumper \%rel_result_hash;
+
+                my $data = '';
+                # if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+                    foreach my $r (sort keys %rel_result_hash) {
+                        foreach my $s (sort keys %{$rel_result_hash{$r}}) {
+                            my $val = $rel_result_hash{$r}->{$s};
+                            if (defined $val and length $val) {
+                                $data .= "S$r\tS$s\t$val\n";
+                            }
+                        }
+                    }
+                # }
+                # else {
+                #     #Recicprocal
+                #     foreach my $r (sort keys %rel_result_hash) {
+                #         foreach my $s (sort keys %{$rel_result_hash{$r}}) {
+                #             my $val = $rel_result_hash{$r}->{$s};
+                #             if (defined $val and length $val) {
+                #                 $data .= "S$r\tS$s\t$val\n";
+                #                 if ($s != $r) {
+                #                     $data .= "S$s\tS$r\t$val\n";
+                #                 }
+                #             }
+                #         }
+                #     }
+                # }
+
+                open(my $F2, ">", $grm_out_tempfile) || die "Can't open file ".$grm_out_tempfile;
+                    print $F2 $data;
+                close($F2);
+                $grm_file = $grm_out_tempfile;
             }
             else {
-                $grm_search_params->{download_format} = 'three_column_reciprocal';
+                my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
+                my $tmp_grm_dir = $shared_cluster_dir_config."/tmp_genotype_download_grm";
+                mkdir $tmp_grm_dir if ! -d $tmp_grm_dir;
+                my ($grm_tempfile_fh, $grm_tempfile) = tempfile("wizard_download_grm_XXXXX", DIR=> $tmp_grm_dir);
+                my ($grm_out_tempfile_fh, $grm_out_tempfile) = tempfile("wizard_download_grm_XXXXX", DIR=> $tmp_grm_dir);
+
+                if (!$protocol_id) {
+                    $protocol_id = undef;
+                }
+
+                my $grm_search_params = {
+                    bcs_schema=>$schema,
+                    grm_temp_file=>$grm_tempfile,
+                    people_schema=>$people_schema,
+                    cache_root=>$c->config->{cache_file_path},
+                    accession_id_list=>\@accession_ids,
+                    protocol_id=>$protocol_id,
+                    get_grm_for_parental_accessions=>$compute_from_parents,
+                    # minor_allele_frequency=>$minor_allele_frequency,
+                    # marker_filter=>$marker_filter,
+                    # individuals_filter=>$individuals_filter
+                };
+
+                if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+                    $grm_search_params->{download_format} = 'three_column_stock_id_integer';
+                }
+                else {
+                    $grm_search_params->{download_format} = 'three_column_reciprocal';
+                }
+
+                my $geno = CXGN::Genotype::GRM->new($grm_search_params);
+                my $grm_data = $geno->download_grm(
+                    'data',
+                    $shared_cluster_dir_config,
+                    $c->config->{backend},
+                    $c->config->{cluster_host},
+                    $c->config->{'web_cluster_queue'},
+                    $c->config->{basepath}
+                );
+
+                open(my $F2, ">", $grm_out_tempfile) || die "Can't open file ".$grm_out_tempfile;
+                    print $F2 $grm_data;
+                close($F2);
+                $grm_file = $grm_out_tempfile;
             }
-
-            my $geno = CXGN::Genotype::GRM->new($grm_search_params);
-            my $grm_data = $geno->download_grm(
-                'data',
-                $shared_cluster_dir_config,
-                $c->config->{backend},
-                $c->config->{cluster_host},
-                $c->config->{'web_cluster_queue'},
-                $c->config->{basepath}
-            );
-
-            open(my $F2, ">", $grm_out_tempfile) || die "Can't open file ".$grm_out_tempfile;
-                print $F2 $grm_data;
-            close($F2);
-            $grm_file = $grm_out_tempfile;
         }
 
         my $time = DateTime->now();
@@ -952,6 +1171,62 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     }
                 close($fh);
             }
+        }
+        elsif ($statistics_select eq 'sommer_grm_genetic_blups') {
+            $statistical_ontology_term = "Multivariate genetic BLUPs using genetic relationship matrix computed using Sommer R|SGNSTAT:0000024";
+
+            $analysis_result_values_type = "analysis_result_values_match_accession_names";
+            $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_sommer_grm_genetic_blups_phenotype_file";
+
+            @unique_plot_names = sort keys %seen_plot_names;
+
+            my @encoded_traits = values %trait_name_encoder;
+            my $encoded_trait_string = join ',', @encoded_traits;
+            my $number_traits = scalar(@encoded_traits);
+
+            my $cmd = 'R -e "library(sommer); library(data.table); library(reshape2);
+            mat <- data.frame(fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\'));
+            geno_mat_3col <- data.frame(fread(\''.$grm_file.'\', header=FALSE, sep=\'\t\'));
+            geno_mat <- acast(geno_mat_3col, V1~V2, value.var=\'V3\');
+            geno_mat[is.na(geno_mat)] <- 0;
+            mix <- mmer(cbind('.$encoded_trait_string.')~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
+            write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
+            "';
+            print STDERR Dumper $cmd;
+            my $status = system($cmd);
+
+            my $csv = Text::CSV->new({ sep_char => "\t" });
+
+            my %unique_accessions_seen;
+            open(my $fh, '<', $stats_out_tempfile)
+                or die "Could not open file '$stats_out_tempfile' $!";
+
+                print STDERR "Opened $stats_out_tempfile\n";
+                my $header = <$fh>;
+                my @header_cols;
+                if ($csv->parse($header)) {
+                    @header_cols = $csv->fields();
+                }
+
+                while (my $row = <$fh>) {
+                    my @columns;
+                    if ($csv->parse($row)) {
+                        @columns = $csv->fields();
+                    }
+                    my $col_counter = 0;
+                    foreach my $encoded_trait (@header_cols) {
+                        my $trait = $trait_name_encoder_rev{$encoded_trait};
+                        my $stock_id = $columns[0];
+
+                        my $stock_name = $stock_info{$stock_id}->{uniquename};
+                        my $value = $columns[$col_counter+1];
+                        $result_blup_data->{$stock_name}->{$trait} = [$value, $timestamp, $user_name, '', ''];
+                        $col_counter++;
+                        $unique_accessions_seen{$stock_name}++;
+                    }
+                }
+            close($fh);
+            @unique_accession_names = keys %unique_accessions_seen;
         }
         elsif ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
             $statistical_ontology_term = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and row and column spatial effects computed using Sommer R|SGNSTAT:0000001"; #In the JS this is set to either the genetic or spatial BLUP term (Multivariate linear mixed model 2D spline spatial BLUPs using genetic relationship matrix and row and column spatial effects computed using Sommer R|SGNSTAT:0000003) when saving analysis results
@@ -6594,11 +6869,11 @@ sub drone_imagery_save_single_plot_image_POST : Args(0) {
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my %expected_types = (
-        'observation_unit_polygon_blue_imagery',
-        'observation_unit_polygon_green_imagery',
-        'observation_unit_polygon_red_imagery',
-        'observation_unit_polygon_nir_imagery',
-        'observation_unit_polygon_red_edge_imagery'
+        'observation_unit_polygon_blue_imagery' => 1,
+        'observation_unit_polygon_green_imagery' => 1,
+        'observation_unit_polygon_red_imagery' => 1,
+        'observation_unit_polygon_nir_imagery' => 1,
+        'observation_unit_polygon_red_edge_imagery' => 1
     );
 
     my $drone_run_band_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_band_project_type', 'project_property')->cvterm_id();
@@ -9583,9 +9858,26 @@ sub _perform_save_trained_keras_cnn_model {
         archive_path=>$c->config->{archive_path},
         model_name=>$model_name,
         model_description=>$model_description,
+        model_language=>'Python',
         model_type_cvterm_id=>$keras_cnn_cvterm_id,
-        model_experiment_type_cvterm_id=>$keras_cnn_experiment_cvterm_id,
         model_properties=>{variable_name => $trait_name, variable_id => $trait_id, aux_trait_ids => $aux_trait_ids, model_type=>$model_type, image_type=>'standard_4_montage', nd_protocol_id => $geno_protocol_id, use_parents_grm => $use_parents_grm},
+        application_name=>'KerasCNNModels',
+        application_version=>'V1.01',
+        is_public=>1,
+        user_id=>$user_id,
+        user_role=>$user_role
+    });
+    my $saved_model = $m->save_model();
+    my $saved_model_id = $saved_model->{nd_protocol_id};
+
+    my $analysis_model = CXGN::AnalysisModel::GetModel->new({
+        bcs_schema=>$schema,
+        metadata_schema=>$metadata_schema,
+        phenome_schema=>$phenome_schema,
+        nd_protocol_id=>$saved_model_id
+    });
+    $analysis_model->store_analysis_model_files({
+        # project_id => $saved_analysis_id,
         archived_model_file_type=>'trained_keras_cnn_model',
         model_file=>$model_file,
         archived_training_data_file_type=>'trained_keras_cnn_model_input_data_file',
@@ -9594,10 +9886,10 @@ sub _perform_save_trained_keras_cnn_model {
             {auxiliary_model_file => $archive_temp_autoencoder_output_model_file, auxiliary_model_file_archive_type => 'trained_keras_cnn_autoencoder_model'},
             {auxiliary_model_file => $model_input_aux_file, auxiliary_model_file_archive_type => 'trained_keras_cnn_model_input_aux_data_file'}
         ],
+        archive_path=>$c->config->{archive_path},
         user_id=>$user_id,
         user_role=>$user_role
     });
-    my $saved_model = $m->save_model();
 
     $c->stash->{rest} = $saved_model;
 }
@@ -9789,13 +10081,14 @@ sub _perform_keras_cnn_predict {
         nd_protocol_id=>$model_id
     });
     my $saved_model_object = $m->get_model();
-    my $trait_id = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{variable_id};
-    my $trained_trait_name = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{variable_name};
-    my $aux_trait_ids_previous = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{aux_trait_ids};
-    my $model_type = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{model_type};
-    my $nd_protocol_id = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{nd_protocol_id};
-    my $use_parents_grm = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{use_parents_grm};
-    my $trained_image_type = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{image_type};
+    print STDERR Dumper $saved_model_object;
+    my $trait_id = $saved_model_object->{model_properties}->{variable_id};
+    my $trained_trait_name = $saved_model_object->{model_properties}->{variable_name};
+    my $aux_trait_ids_previous = $saved_model_object->{model_properties}->{aux_trait_ids};
+    my $model_type = $saved_model_object->{model_properties}->{model_type};
+    my $nd_protocol_id = $saved_model_object->{model_properties}->{nd_protocol_id};
+    my $use_parents_grm = $saved_model_object->{model_properties}->{use_parents_grm};
+    my $trained_image_type = $saved_model_object->{model_properties}->{image_type};
     my $model_file = $saved_model_object->{model_files}->{trained_keras_cnn_model};
     my $training_autoencoder_model_file = $saved_model_object->{model_files}->{trained_keras_cnn_autoencoder_model};
     my $training_input_data_file = $saved_model_object->{model_files}->{trained_keras_cnn_model_input_data_file};
@@ -10368,10 +10661,13 @@ sub drone_imagery_autoencoder_keras_vi_model_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my @training_field_trial_ids = split ',', $c->req->param('training_field_trial_ids');
     my @field_trial_ids = split ',', $c->req->param('field_trial_ids');
     my $autoencoder_model_type = $c->req->param('autoencoder_model_type');
     my $time_cvterm_id = $c->req->param('time_cvterm_id');
+    my $training_drone_run_ids = decode_json($c->req->param('training_drone_run_ids'));
     my $drone_run_ids = decode_json($c->req->param('drone_run_ids'));
+    my $training_plot_polygon_type_ids = decode_json($c->req->param('training_plot_polygon_type_ids'));
     my $plot_polygon_type_ids = decode_json($c->req->param('plot_polygon_type_ids'));
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
@@ -10379,7 +10675,7 @@ sub drone_imagery_autoencoder_keras_vi_model_POST : Args(0) {
     my $composable_cvterm_delimiter = $c->config->{composable_cvterm_delimiter};
     my $composable_cvterm_format = $c->config->{composable_cvterm_format};
 
-    my $return = _perform_autoencoder_keras_cnn_vi($c, $schema, $metadata_schema, $people_schema, $phenome_schema, \@field_trial_ids, $drone_run_ids, $plot_polygon_type_ids, $autoencoder_model_type, \@allowed_composed_cvs, $composable_cvterm_format, $composable_cvterm_delimiter, $time_cvterm_id, $user_id, $user_name, $user_role);
+    my $return = _perform_autoencoder_keras_cnn_vi($c, $schema, $metadata_schema, $people_schema, $phenome_schema, \@training_field_trial_ids, \@field_trial_ids, $training_drone_run_ids, $drone_run_ids, $training_plot_polygon_type_ids, $plot_polygon_type_ids, $autoencoder_model_type, \@allowed_composed_cvs, $composable_cvterm_format, $composable_cvterm_delimiter, $time_cvterm_id, $user_id, $user_name, $user_role);
 
     $c->stash->{rest} = $return;
 }
@@ -10390,8 +10686,11 @@ sub _perform_autoencoder_keras_cnn_vi {
     my $metadata_schema = shift;
     my $people_schema = shift;
     my $phenome_schema = shift;
+    my $training_field_trial_ids = shift;
     my $field_trial_ids = shift;
+    my $training_drone_run_ids = shift;
     my $drone_run_ids = shift;
+    my $training_plot_polygon_type_ids = shift;
     my $plot_polygon_type_ids = shift;
     my $autoencoder_model_type = shift;
     my $allowed_composed_cvs = shift;
@@ -10406,6 +10705,17 @@ sub _perform_autoencoder_keras_cnn_vi {
     my $keras_cnn_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_cnn_model', 'protocol_type')->cvterm_id();
     my $keras_cnn_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_experiment', 'experiment_type')->cvterm_id();
 
+    my $training_images_search = CXGN::DroneImagery::ImagesSearch->new({
+        bcs_schema=>$schema,
+        drone_run_project_id_list=>$training_drone_run_ids,
+        project_image_type_id_list=>$training_plot_polygon_type_ids
+    });
+    my ($training_result, $training_total_count) = $training_images_search->search();
+
+    if ($training_total_count == 0) {
+        return {error => "No plot-polygon images for training!"};
+    }
+
     my $images_search = CXGN::DroneImagery::ImagesSearch->new({
         bcs_schema=>$schema,
         drone_run_project_id_list=>$drone_run_ids,
@@ -10414,8 +10724,43 @@ sub _perform_autoencoder_keras_cnn_vi {
     my ($result, $total_count) = $images_search->search();
 
     if ($total_count == 0) {
-        return {error => "No plot-polygon images!"};
+        return {error => "No plot-polygon images for predicting!"};
     }
+
+    my %training_data_hash;
+    my %training_seen_day_times;
+    my %training_seen_image_types;
+    my %training_seen_drone_run_band_project_ids;
+    my %training_seen_drone_run_project_ids;
+    my %training_seen_field_trial_ids;
+    my %training_seen_stock_ids;
+    foreach (@$training_result) {
+        my $image_id = $_->{image_id};
+        my $stock_id = $_->{stock_id};
+        my $field_trial_id = $_->{trial_id};
+        my $project_image_type_id = $_->{project_image_type_id};
+        my $drone_run_band_project_id = $_->{drone_run_band_project_id};
+        my $drone_run_project_id = $_->{drone_run_project_id};
+        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+        my $image_url = $image->get_image_url("original");
+        my $image_fullpath = $image->get_filename('original_converted', 'full');
+        my $time_days_cvterm = $_->{drone_run_related_time_cvterm_json}->{day};
+        my $time_days = (split '\|', $time_days_cvterm)[0];
+        my $days = (split ' ', $time_days)[1];
+        push @{$training_data_hash{$field_trial_id}->{$drone_run_project_id}->{$stock_id}->{$project_image_type_id}->{$days}}, {
+            image => $image_fullpath,
+            drone_run_project_id => $drone_run_project_id
+        };
+        $training_seen_day_times{$days}++;
+        $training_seen_image_types{$project_image_type_id}++;
+        $training_seen_drone_run_band_project_ids{$drone_run_band_project_id}++;
+        $training_seen_drone_run_project_ids{$drone_run_project_id}++;
+        $training_seen_field_trial_ids{$field_trial_id}++;
+        $training_seen_stock_ids{$stock_id}++;
+    }
+    print STDERR Dumper \%training_seen_day_times;
+    undef $training_result;
+    my @training_seen_plots = keys %training_seen_stock_ids;
 
     my %data_hash;
     my %seen_day_times;
@@ -10437,7 +10782,7 @@ sub _perform_autoencoder_keras_cnn_vi {
         my $time_days_cvterm = $_->{drone_run_related_time_cvterm_json}->{day};
         my $time_days = (split '\|', $time_days_cvterm)[0];
         my $days = (split ' ', $time_days)[1];
-        push @{$data_hash{$field_trial_id}->{$stock_id}->{$project_image_type_id}->{$days}}, {
+        push @{$data_hash{$field_trial_id}->{$drone_run_project_id}->{$stock_id}->{$project_image_type_id}->{$days}}, {
             image => $image_fullpath,
             drone_run_project_id => $drone_run_project_id
         };
@@ -10491,6 +10836,7 @@ sub _perform_autoencoder_keras_cnn_vi {
     my @unique_accession_names = keys %seen_accession_names;
 
     my $dir = $c->tempfiles_subdir('/drone_imagery_keras_cnn_autoencoder_dir');
+    my $archive_training_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_autoencoder_dir/inputtrainingfileXXXX');
     my $archive_temp_input_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_autoencoder_dir/inputfileXXXX');
     my $archive_temp_output_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_autoencoder_dir/outputfileXXXX');
     my $archive_temp_output_images_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_autoencoder_dir/outputfileXXXX');
@@ -10504,24 +10850,50 @@ sub _perform_autoencoder_keras_cnn_vi {
         SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_nir_imagery', 'project_md_image')->cvterm_id()
     );
 
+    open(my $Fi, ">", $archive_training_temp_input_file) || die "Can't open file ".$archive_training_temp_input_file;
+        print $Fi "stock_id\tred_image_string\tred_edge_image_string\tnir_image_string\n";
+
+        foreach my $field_trial_id (sort keys %training_seen_field_trial_ids) {
+            foreach my $drone_run_project_id (sort keys %training_seen_drone_run_project_ids) {
+                foreach my $stock_id (sort keys %training_seen_stock_ids) {
+                    print $Fi "$stock_id";
+                    foreach my $image_type (@autoencoder_vi_image_type_ids) {
+                        my @imgs;
+                        foreach my $day_time (sort { $a <=> $b } keys %training_seen_day_times) {
+                            my $images = $training_data_hash{$field_trial_id}->{$drone_run_project_id}->{$stock_id}->{$image_type}->{$day_time};
+                            foreach (@$images) {
+                                push @imgs, $_->{image};
+                            }
+                        }
+                        my $img_string = join ',', @imgs;
+                        print $Fi "\t$img_string";
+                    }
+                    print $Fi "\n";
+                }
+            }
+        }
+    close($Fi);
+
     open(my $F, ">", $archive_temp_input_file) || die "Can't open file ".$archive_temp_input_file;
         print $F "stock_id\tred_image_string\tred_edge_image_string\tnir_image_string\n";
 
         foreach my $field_trial_id (sort keys %seen_field_trial_ids) {
-            foreach my $stock_id (sort keys %seen_stock_ids) {
-                print $F "$stock_id";
-                foreach my $image_type (@autoencoder_vi_image_type_ids) {
-                    my @imgs;
-                    foreach my $day_time (sort { $a <=> $b } keys %seen_day_times) {
-                        my $images = $data_hash{$field_trial_id}->{$stock_id}->{$image_type}->{$day_time};
-                        foreach (@$images) {
-                            push @imgs, $_->{image};
+            foreach my $drone_run_project_id (sort keys %seen_drone_run_project_ids) {
+                foreach my $stock_id (sort keys %seen_stock_ids) {
+                    print $F "$stock_id";
+                    foreach my $image_type (@autoencoder_vi_image_type_ids) {
+                        my @imgs;
+                        foreach my $day_time (sort { $a <=> $b } keys %seen_day_times) {
+                            my $images = $data_hash{$field_trial_id}->{$drone_run_project_id}->{$stock_id}->{$image_type}->{$day_time};
+                            foreach (@$images) {
+                                push @imgs, $_->{image};
+                            }
                         }
+                        my $img_string = join ',', @imgs;
+                        print $F "\t$img_string";
                     }
-                    my $img_string = join ',', @imgs;
-                    print $F "\t$img_string";
+                    print $F "\n";
                 }
-                print $F "\n";
             }
         }
     close($F);
@@ -10553,13 +10925,13 @@ sub _perform_autoencoder_keras_cnn_vi {
         $log_file_path = ' --log_file_path \''.$c->config->{error_log}.'\'';
     }
 
-    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/CalculatePhenotypeAutoEncoderVegetationIndices.py --input_image_file \''.$archive_temp_input_file.'\' --output_encoded_images_file \''.$archive_temp_output_images_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --autoencoder_model_type \''.$autoencoder_model_type.'\' '.$log_file_path;
+    my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/CalculatePhenotypeAutoEncoderVegetationIndices.py --input_training_image_file \''.$archive_training_temp_input_file.'\' --input_image_file \''.$archive_temp_input_file.'\' --output_encoded_images_file \''.$archive_temp_output_images_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --autoencoder_model_type \''.$autoencoder_model_type.'\' '.$log_file_path;
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
     my @saved_trained_image_urls;
     my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_keras_autoencoder_decoded', 'project_md_image')->cvterm_id();
-    foreach my $stock_id (keys %output_images){
+    foreach my $stock_id (keys %output_images) {
         my $autoencoded_images = $output_images{$stock_id};
         foreach my $image_file (@$autoencoded_images) {
             my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
@@ -11191,9 +11563,26 @@ sub drone_imagery_retrain_mask_rcnn_GET : Args(0) {
         archive_path=>$c->config->{archive_path},
         model_name=>$model_name,
         model_description=>$model_description,
+        model_language=>'Python',
         model_type_cvterm_id=>$keras_mask_r_cnn_cvterm_id,
-        model_experiment_type_cvterm_id=>$keras_cnn_experiment_cvterm_id,
         model_properties=>{model_type=>$model_type, image_type=>'all_annotated_plot_images'},
+        application_name=>'MaskRCNNModel',
+        application_version=>'V1.1',
+        is_public=>1,
+        user_id=>$user_id,
+        user_role=>$user_role
+    });
+    my $saved_model = $m->save_model();
+    my $saved_model_id = $saved_model->{nd_protocol_id};
+
+    my $analysis_model = CXGN::AnalysisModel::GetModel->new({
+        bcs_schema=>$schema,
+        metadata_schema=>$metadata_schema,
+        phenome_schema=>$phenome_schema,
+        nd_protocol_id=>$saved_model_id
+    });
+    $analysis_model->store_analysis_model_files({
+        # project_id => $saved_analysis_id,
         archived_model_file_type=>'trained_keras_mask_r_cnn_model',
         model_file=>$temp_output_model_file,
         archived_training_data_file_type=>'trained_keras_mask_r_cnn_model_input_data_file',
@@ -11202,10 +11591,10 @@ sub drone_imagery_retrain_mask_rcnn_GET : Args(0) {
         #     {auxiliary_model_file => $archive_temp_autoencoder_output_model_file, auxiliary_model_file_archive_type => 'trained_keras_cnn_autoencoder_model'},
         #     {auxiliary_model_file => $model_input_aux_file, auxiliary_model_file_archive_type => 'trained_keras_cnn_model_input_aux_data_file'}
         # ],
+        archive_path=>$c->config->{archive_path},
         user_id=>$user_id,
         user_role=>$user_role
     });
-    my $saved_model = $m->save_model();
 
     $c->stash->{rest} = {success => 1};
 }
@@ -11235,8 +11624,9 @@ sub drone_imagery_predict_mask_rcnn_GET : Args(0) {
         nd_protocol_id=>$model_id
     });
     my $saved_model_object = $m->get_model();
-    my $model_type = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{model_type};
-    my $trained_image_type = $saved_model_object->{model_properties}->{$model_properties_cvterm_id}->{image_type};
+    print STDERR Dumper $saved_model_object;
+    my $model_type = $saved_model_object->{model_properties}->{model_type};
+    my $trained_image_type = $saved_model_object->{model_properties}->{image_type};
     my $model_file = $saved_model_object->{model_files}->{trained_keras_mask_r_cnn_model};
     my $training_input_data_file = $saved_model_object->{model_files}->{trained_keras_mask_r_cnn_model_input_data_file};
 
