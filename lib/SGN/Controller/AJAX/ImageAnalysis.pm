@@ -71,6 +71,7 @@ sub image_analysis_submit_POST : Args(0) {
 
     my @image_urls;
     my @image_files;
+    my $trait_name;
     foreach (@$result) {
         my $image = SGN::Image->new($schema->storage->dbh, $_->{image_id}, $c);
         my $original_img = $main_production_site_url.$image->get_image_url("original");
@@ -81,7 +82,10 @@ sub image_analysis_submit_POST : Args(0) {
     print STDERR Dumper \@image_urls;
 
     my $ua = LWP::UserAgent->new(
-        ssl_opts => { verify_hostname => 0 }
+        ssl_opts => {
+                        verify_hostname => 0,
+                        timeout         => 60,
+                    }
     );
     if ($service eq 'necrosis' || $service eq 'whitefly_count') {
         my $server_endpoint;
@@ -89,6 +93,7 @@ sub image_analysis_submit_POST : Args(0) {
         if ($service eq 'necrosis') {
             $server_endpoint = "http://unet.mcrops.org/api/";
             $image_type_name = "image_analysis_necrosis_solomon_nsumba";
+            $trait_name = "rotten root percentage |CO_334:0000229";
         }
         if ($service eq 'whitefly_count') {
             $server_endpoint = "http://18.216.149.204/home/api2/";
@@ -122,8 +127,6 @@ sub image_analysis_submit_POST : Args(0) {
                 my $message_hash = decode_json $message;
                 print STDERR Dumper $message_hash;
                 $message_hash->{original_image} = $image_urls[$it];
-                # $result->[$it]->{result} = $message_hash;
-
                 my $project_id = $result->[$it]->{project_id};
                 my $stock_id = $result->[$it]->{stock_id};
 
@@ -178,12 +181,14 @@ sub image_analysis_submit_POST : Args(0) {
                     my $added_image_tag_id = $image->add_tag($image_tag);
                 }
                 $message_hash->{analyzed_image_id} = $image_id;
+                $message_hash->{trait_name} = $trait_name;
                 $result->[$it]->{result} = $message_hash;
             }
             else {
-                print STDERR Dumper $resp;
+                print STDERR Dumper $resp->status_line;
                 my $error_message_hash;
                 $error_message_hash->{original_image} = $image_urls[$it];
+                $error_message_hash->{error} = $resp->status_line;
                 $result->[$it]->{result} = $error_message_hash;
             }
             $it++;
@@ -298,6 +303,19 @@ sub image_analysis_submit_POST : Args(0) {
     }
 
     $c->stash->{rest} = { success => 1, results => $result };
+}
+
+sub image_analysis_store_phenotypes : Path('/ajax/image_analysis/store_phenotypes ') : ActionClass('REST') { }
+sub image_analysis_store_phenotypes_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $phenotypes = decode_json $c->req->param('phenotypes');
+    my $result = ''; # store phenotypes here
+    $c->stash->{rest} = { success => 1, results => $result };
+
 }
 
 sub _check_user_login {

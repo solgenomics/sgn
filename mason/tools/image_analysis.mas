@@ -179,10 +179,10 @@ jQuery(document).ready(function(){
                 console.log(image_data);
                 var latest_stock_id = '';
                 var avg_score_html;
-                var html = '<table class="table table-hover"><thead><tr><th>Original Image</th><th>Analyzed Image</th><th>Image Phenotype</th><th>Previously Saved Image-Associated Phenotype(s)</th><th>Observation Unit</th><th>Observation Unit Average Phenotype</th></tr></thead><tbody>';
+                var html = '<table class="table table-hover" style="overflow-x:auto;"><thead><tr><th>Analyzed Image</th><th>Image Phenotype</th><th>Previously Saved Image-Associated Phenotype(s)</th><th>Observation Unit</th><th>Observation Unit Average Phenotype</th></tr></thead><tbody>';
                 for (var i=0; i<response.results.length; i++) {
                     if (response.results[i].result.image_link) {
-                        html = html + '<tr><td><img src="'+response.results[i].result.original_image+'"></td><td><img src="'+response.results[i].result.image_link+'"></td><td>'+response.results[i].result.trait_name+': '+response.results[i].result.trait_value+'</td>';
+                        html = html + '<tr><td><img src="'+response.results[i].result.image_link+'"></td><td>'+response.results[i].result.trait_name+': '+response.results[i].result.trait_value+'</td>';
                         if (response.results[i].stock_id != latest_stock_id && typeof(image_data[response.results[i].stock_id]) !== "undefined") {
                             var stock_data = image_data[response.results[i].stock_id];
                             console.log("Stock data are: ");
@@ -193,7 +193,8 @@ jQuery(document).ready(function(){
                             avg_score_html = '';
                         }
                     } else {
-                        html = html + '<tr><td><img src="'+response.results[i].result.original_image+'"></td><td>Error: no analysis returned for this image.</td><td></td>';
+                        html = html + '<tr><td>Error: '+response.results[i].result.error+'. No analysis returned for image '+response.results[i].image_original_filename+response.results[i].image_file_ext+'</td><td></td>';
+                        avg_score_html = '';
                     }
                     html = html + "<td>";
                     for (var j=0; j<response.results[i].observations_array.length; j++) {
@@ -222,6 +223,19 @@ jQuery(document).ready(function(){
         // Retrieve observation units and linked analysis images and scores
 
         // Save in db inclucing multiple image relationships
+        jQuery.ajax({
+            url: '/ajax/image_analysis/store_phenotypes',
+            method: 'POST',
+            data: {
+                'phenotypes': image_data,
+            },
+            dataType:'json',
+            beforeSend: function() {
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {},
+            error: function(response) {}
+        });
 
     });
 
@@ -265,10 +279,9 @@ function _group_image_data_by_stock(results) {
 }
 
 function _average(array) {
-    var usable_values = array.filter(a => typeof a ==='number');
-    console.log("usable values are: ");
-    console.log(usable_values);
-    return usable_values.reduce((a, b) => a + b) / usable_values.length;
+    var usable_values = array.filter(value => !isNaN(value));
+    var avg = usable_values.reduce((a, b) => a + b) / usable_values.length;
+    return Math.round((avg + Number.EPSILON) * 100) / 100 // round to two decimal pts
 }
 
 </script>
