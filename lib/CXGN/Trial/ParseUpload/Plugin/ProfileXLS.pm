@@ -129,12 +129,12 @@ sub _validate_with_plugin {
             push @error_messages, "Cell B$row_name or C$row_name: You must indicate either Target Value or Benchmark Variety";
         }
 
-        if (!$performance || $performance eq '') {
-            push @error_messages, "Cell D$row_name: Performance parameter missing";
+        if (defined $target_value && defined $benchmark_variety) {
+            push @error_messages, "Cell B$row_name or C$row_name: You must indicate either Target Value or Benchmark Variety, not both";
         }
 
-        if (!$weight || $weight eq '') {
-            push @error_messages, "Cell E$row_name: Weight missing";
+        if (!$performance || $performance eq '') {
+            push @error_messages, "Cell D$row_name: Performance parameter missing";
         }
 
         if ($trait_name){
@@ -220,7 +220,11 @@ sub _parse_with_plugin {
         }
         if ($worksheet->get_cell($row,4)) {
             $weight =  $worksheet->get_cell($row,4)->value();
+            if (!$weight || $weight eq '') {
+                $weight = '1';
+            }
         }
+
         if ($worksheet->get_cell($row,5)) {
             $trait_type =  $worksheet->get_cell($row,5)->value();
         }
