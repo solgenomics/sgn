@@ -138,7 +138,9 @@ $program_name
                         <li>Please do not modify or delete any column header in the template.
                     </ul>
                     <br>
+                    <b>
                         Header:
+                    </b>
                     <br>
                     <table class="table table-bordered table-hover">
                         <tbody>
@@ -155,15 +157,15 @@ $program_name
                         Required columns:
                     </b>
                     <ul>
-                        <li><b>Trait Name:</b>The template already contains trait names based on your trait list</li>
-                        <li><b>Target Value or Benchmark Variety:</b>Please indicates either a target value or a benchmark variety for each targeted trait. Benchmark variety must exist in the database.</li>
+                        <li><b>Trait Name:</b> The template already contains trait names based on your trait list</li>
+                        <li><b>Target Value or Benchmark Variety:</b> Please indicates <b>either</b> a target value <b>or</b> a benchmark variety for each targeted trait. Benchmark variety must exist in the database.</li>
                         <li><b>Performance:</b> Please specifies the performance of each targeted trait (equal, smaller or larger) compared to the target value or benchmark variety </li>
                     </ul>
                     <b>
                         Optional columns:
                     </b>
-                    <li><b>Weight:</b>Default is 1</li>
-                    <li><b>Trait Type:</b>e.g. basic trait, value-added trait</li>
+                    <li><b>Weight:</b> Default is 1</li>
+                    <li><b>Trait Type:</b> e.g. basic trait, value-added trait</li>
                 </div>
             </div>
             <div class="modal-footer">
