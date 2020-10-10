@@ -546,7 +546,7 @@ sub create_profile_template_POST : Args(0) {
 
     my $ws = $wb->add_worksheet();
 
-    my @headers = ('Trait Name','Target Value','Benchmark Variety','Performance (=,<,>)','Weight','Trait Type');
+    my @headers = ('Trait Name','Target Value','Benchmark Variety','Performance (equal, smaller, larger)','Weight','Trait Type');
 
     for(my $n=0; $n<scalar(@headers); $n++) {
         $ws->write(0, $n, $headers[$n]);

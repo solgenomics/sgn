@@ -20,8 +20,11 @@ $program_name
                         <&| /util/workflow.mas:step, title=> "Intro" &>
                             <& /page/page_title.mas, title=>"Product Profile" &>
                             <ul>
-                                <li>..........</li>
-                                <li>..........</li>
+                                <li>Product profiles can be stored in the database for downstream variety selection process for each breeding program.</li>
+                                <li>To facilitate data curation, targeted trait names and trait IDs can be retrieved directly from the database.</li>
+                                <li>Please use the product profile template generated from our database to fill out product profile details.</l>
+                                <li>You can find the link for creating the template in the product profile section, simply provide a file name and a list of traits.</l>
+                                <li>Instructions for filling out the form are on the next page</l>
                             </ul>
                             <br/><br/>
                             <center>
@@ -31,11 +34,11 @@ $program_name
                         <&| /util/workflow.mas:step, title=> "File format" &>
                             <& /page/page_title.mas, title=>"Make sure your file matches the correct file format" &>
                             <center>
-                                <&| /page/explanation.mas, title=>'Template Information' &>
+                                <&| /page/explanation.mas, title=>'Product Profile Spreadsheet' &>
                                     <p>
-                                        <b>File Format Information</b>
                                         <br>
-                                        <a id="upload_profile_spreadsheet_format">Spreadsheet Format</a>
+                                        <a id="product_profile_instructions">Instructions for Product Profile Spreadsheet</a>
+                                        <br>
                                         <br>
                                     </p>
                                 </&>
@@ -117,43 +120,50 @@ $program_name
     </div>
 </div>
 
-<div class="modal fade" id="upload_profile_spreadsheet_info_dialog" name="upload_profile_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadProfileDialog">
+<div class="modal fade" id="product_profile_instruction_dialog" name="product_profile_instruction_dialog" tabindex="-1" role="dialog" aria-labelledby="profileInstructionDialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadProfileInfoDialog">Template Information</h4>
+                <h4 class="modal-title" id="profileInstructionDialog">Instructions for Product Profile Spreadsheet</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <b>
-                        Profile may be uploaded in an Excel file (.xls)
+                        Product Profile Template
                     </b>
+                    <ul>
+                        <li>Product profile template is an Excel file (.xls format)</li>
+                        <li>After filling out the product profile details, please also save the spreadsheet in the .xls format</li>
+                        <li>Please do not modify or delete any column header in the template.
+                    </ul>
                     <br>
-                        (.xlsx format not supported)
-                    <br><br>
-                    <b>
                         Header:
-                    </b>
                     <br>
-                        The first row (header) must contain the following:
-                    <br>
-
                     <table class="table table-bordered table-hover">
                         <tbody>
                             <tr>
-                                <td>........</td>
-                                <td>........</td>
-                            </tr>
+                                <td>Trait Name</td>
+                                <td>Target Value</td>
+                                <td>Benchmark Variety</td>
+                                <td>Performance (equal, smaller, larger)</td>
+                                <td>Weight</td>
+                                <td>Trait Type</tr>
                         </tbody>
                     </table>
                     <b>
                         Required columns:
                     </b>
                     <ul>
-                        <li><b>.....</b></li>
-                        <li><b>.....</b></li>
+                        <li><b>Trait Name:</b>The template already contains trait names based on your trait list</li>
+                        <li><b>Target Value or Benchmark Variety:</b>Please indicates either a target value or a benchmark variety for each targeted trait. Benchmark variety must exist in the database.</li>
+                        <li><b>Performance:</b> Please specifies the performance of each targeted trait (equal, smaller or larger) compared to the target value or benchmark variety </li>
                     </ul>
+                    <b>
+                        Optional columns:
+                    </b>
+                    <li><b>Weight:</b>Default is 1</li>
+                    <li><b>Trait Type:</b>e.g. basic trait, value-added trait</li>
                 </div>
             </div>
             <div class="modal-footer">
@@ -166,6 +176,10 @@ $program_name
 <script>
 
 jQuery(document).ready(function(){
+
+    jQuery('#product_profile_instructions').click(function(){
+        jQuery('#product_profile_instruction_dialog').modal("show");
+    });
 
     jQuery('#upload_profile_submit').click(function () {
         upload_profile();
