@@ -13,6 +13,7 @@ if(length(args)==0){
     paramfile=''
     fixed_factors<-c()
     random_factors<-c()
+    
 } else {
     for(i in 1:length(args)){
         print(paste("Processing arg ", args[[i]]));
@@ -20,11 +21,12 @@ if(length(args)==0){
     }
 }
 
+
 workdir = dirname(datafile);
 setwd(workdir);
 
 library(lme4)
-library(lmerTest)
+#library(lmerTest)
 library(emmeans)
 library(effects)
 library(stringr)
@@ -103,25 +105,36 @@ for(i in 1:length(trait)){
         
         mixmodel = lmer(as.formula(model_string), data=pd)
 
-        print(mixmodel)
+        # print(mixmodel)
         print("????")
-        # compute blues
-        #
-        feff <- (fixef(mixmodel)$germplasmName)
-        fixedeff <- feff%>%mutate("germplasmName" = rownames(feff))
-        names(fixedeff)[1]= trait[i]
-        fixedeff<- fixedeff[,c("germplasmName", trait[i])]
-        fixedeff<-as.data.frame(fixedeff);
-        BLUE = merge(x = BLUE, y = fef, by="germpalsmName", all=TRUE)
 
-        # compute adjusted blues
+		# compute adjusted blues
         #
         adj <- summary(lsmeans(mixmodel, "germplasmName"))
         blue <- adj[c("germplasmName", "lsmean")]
         colnames(blue)[2] = trait[i]
         blueadj = as.data.frame(blue)
-        
         adjustedBLUE =  merge(x = adjustedBLUE, y = blueadj, by ="germplasmName", all=TRUE)
+
+        #Computing fixed effects
+        #feff <- (fixef(mixmodel)$germplasmName)
+        feff<-data.frame(coef(summary(mixmodel))[ , "Estimate"])
+        rownames(feff) <- blue$germplasmName
+	    colnames(feff) <- trait[i]
+
+        fixedeff <- feff%>%mutate("germplasmName" = rownames(feff))
+	    fixedeff<- fixedeff[,c("germplasmName", trait[i])]
+	    fixedeff<-as.data.frame(fixedeff)
+
+	    #file with fixed effect
+	    print(fixedeff) 
+
+	    #file with blues
+	    print(blue)
+
+        #BLUE = merge(x = BLUE, y = feff, by="germpalsmName", all=TRUE)
+
+        
     }
 }
 
@@ -143,10 +156,10 @@ if (genotypeEffectType=="random") {
 } else {   #fixed
     outfile_blue = paste(datafile, ".BLUEs", sep="")
     sink(outfile_blue)
-    write.table(BLUE, quote=F , sep='\t', row.names=FALSE)
+    write.table(fixedeff, quote=F , sep='\t', row.names=FALSE)
     sink();
     outfile_adjblues = paste(datafile, ".adjustedBLUEs", sep="")
     sink(outfile_adjblues)
-    write.table(adjusteBLUE, quote=F , sep='\t', row.names=FALSE)
+    write.table(adjustedBLUE, quote=F , sep='\t', row.names=FALSE)
     sink();
 }
