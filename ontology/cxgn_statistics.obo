@@ -78,17 +78,17 @@ is_a: SGNSTAT:0000000
 
 [Term]
 id: SGNSTAT:0000015
-name: Random Forest Regression (RF)  as implemented with the RandomForest package in R
+name: Random Forest (RF) regression as implemented with the RandomForest package in R
 is_a: SGNSTAT:0000000
 
 [Term]
 id: SGNSTAT:0000016
-name: Support vector machine (SVM) with linear kernel as implemented with the kernLab package in R
+name: Support vector machine (SVM) regression with linear kernel as implemented with the kernLab package in R
 is_a: SGNSTAT:0000000
 
 [Term]
 id: SGNSTAT:0000017
-name: Support vector machine (SVM) with radial kernel as implemented with the kernLab package in R
+name: Support vector machine (SVM) regression with radial kernel as implemented with the kernLab package in R
 is_a: SGNSTAT:0000000
 
 [Term]
@@ -119,4 +119,14 @@ is_a: SGNSTAT:0000000
 [Term]
 id: SGNSTAT:0000023
 name: Two-dimension numerical second derivative across rows and columns
+is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000024
+name: Multivariate genetic BLUPs using genetic relationship matrix computed using Sommer R
+is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000025
+name: Adjusted means using LMER R
 is_a: SGNSTAT:0000000

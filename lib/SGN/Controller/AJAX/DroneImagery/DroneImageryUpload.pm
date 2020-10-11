@@ -41,6 +41,7 @@ sub upload_drone_imagery_check_drone_name : Path('/api/drone_imagery/upload_dron
 sub upload_drone_imagery_check_drone_name_GET : Args(0) {
     my $self = shift;
     my $c = shift;
+    $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
     my $drone_name = $c->req->param('drone_run_name');
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my ($user_id, $user_name, $user_role) = _check_user_login($c);

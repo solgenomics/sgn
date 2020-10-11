@@ -531,6 +531,8 @@ sub download_grm {
     }
     else {
         my ($grm_tempfile_out, $stock_ids, $all_accession_stock_ids) = $self->get_grm($shared_cluster_dir_config, $backend_config, $cluster_host_config, $web_cluster_queue_config, $basepath_config);
+        # print STDERR Dumper $stock_ids;
+        # print STDERR Dumper $all_accession_stock_ids;
 
         my @grm;
         open(my $fh, "<", $grm_tempfile_out) or die "Can't open < $grm_tempfile_out: $!";

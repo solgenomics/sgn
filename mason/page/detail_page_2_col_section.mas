@@ -105,6 +105,8 @@ $model_files => {}
 #Specific to manage nirs page
 $nirs_files => undef
 $deleted_nirs_files => undef
+$all_nirs_files => undef
+$all_deleted_nirs_files => undef
 $locations => undef
 
 </%args>
@@ -376,7 +378,7 @@ $locations => undef
 %} #End cross_search_section
 
 % if ($info_section_id eq 'manage_nirs_main'){
-                                <& /tools/nirs/manage_nirs_main.mas, nirs_files => $nirs_files, deleted_nirs_files => $deleted_nirs_files, locations => $locations &>
+                                <& /tools/nirs/manage_nirs_main.mas, nirs_files => $nirs_files, deleted_nirs_files => $deleted_nirs_files, all_nirs_files => $all_nirs_files, all_deleted_nirs_files => $all_deleted_nirs_files, locations => $locations &>
 % } #End manage_nirs_main
 
 % if ($info_section_id eq 'manage_drone_imagery_main'){
