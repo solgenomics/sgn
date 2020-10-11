@@ -79,7 +79,7 @@ sub _validate_with_plugin {
     if (!$benchmark_variety_header || $benchmark_variety_header ne 'Benchmark Variety') {
         push @error_messages, "Cell C1: Benchmark Variety is missing from the header";
     }
-    if (!$performance_header || $performance_header ne 'Performance (=,<,>)') {
+    if (!$performance_header || $performance_header ne 'Performance (equal, smaller, larger)') {
         push @error_messages, "Cell D1: Performance is missing from the header";
     }
     if (!$weight_header || $weight_header ne 'Weight') {
