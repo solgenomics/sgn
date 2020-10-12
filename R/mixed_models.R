@@ -101,14 +101,9 @@ for(i in 1:length(trait)){
 
     } else {
 
-        print("what's happening??")
-        
         mixmodel = lmer(as.formula(model_string), data=pd)
 
-        # print(mixmodel)
-        print("????")
-
-		# compute adjusted blues
+        # compute adjusted blues
         #
         adj <- summary(lsmeans(mixmodel, "germplasmName"))
         blue <- adj[c("germplasmName", "lsmean")]
@@ -120,19 +115,19 @@ for(i in 1:length(trait)){
         #feff <- (fixef(mixmodel)$germplasmName)
         feff<-data.frame(coef(summary(mixmodel))[ , "Estimate"])
         rownames(feff) <- blue$germplasmName
-	    colnames(feff) <- trait[i]
+        colnames(feff) <- trait[i]
 
         fixedeff <- feff%>%mutate("germplasmName" = rownames(feff))
-	    fixedeff<- fixedeff[,c("germplasmName", trait[i])]
-	    fixedeff<-as.data.frame(fixedeff)
+        fixedeff<- fixedeff[,c("germplasmName", trait[i])]
+        fixedeff<-as.data.frame(fixedeff)
 
-	    #file with fixed effect
-	    print(fixedeff) 
+        #file with fixed effect
+        print(fixedeff) 
+        
+        #file with blues
+        print(blue)
 
-	    #file with blues
-	    print(blue)
-
-        #BLUE = merge(x = BLUE, y = feff, by="germpalsmName", all=TRUE)
+        BLUE = merge(x = BLUE, y = fixedeff, by="germplasmName", all=TRUE)
 
         
     }
@@ -156,7 +151,7 @@ if (genotypeEffectType=="random") {
 } else {   #fixed
     outfile_blue = paste(datafile, ".BLUEs", sep="")
     sink(outfile_blue)
-    write.table(fixedeff, quote=F , sep='\t', row.names=FALSE)
+    write.table(BLUE, quote=F , sep='\t', row.names=FALSE)
     sink();
     outfile_adjblues = paste(datafile, ".adjustedBLUEs", sep="")
     sink(outfile_adjblues)
