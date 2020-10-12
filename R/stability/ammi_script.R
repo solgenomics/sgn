@@ -5,9 +5,11 @@ library("methods")
 library("dplyr")
 library("gridExtra")
 library("agricolae")
+library("gge")
 
 ##### Get data #####
 args = commandArgs(trailingOnly = TRUE)
+
 
 pheno <- read.table(args[1], sep = "\t", header = TRUE)
 study_trait <- args[2]
@@ -16,6 +18,7 @@ figure1_file_name <- args[3]
 figure2_file_name <- args[4]
 figure3_file_name <- args[5]
 AMMIFile <- args[6]
+method <- args[7]
 
 #Making names standard
 names <- colnames(pheno)
@@ -78,24 +81,44 @@ if (! length(locations)>1){
 	cat("Starting AMMI...","\n")
 }
 
+if(method=="ammi"){
+	model<- with(pheno,AMMI(env, gen, rep, pheno[,col], console=FALSE))
 
-model<- with(pheno,AMMI(env, gen, rep, pheno[,col], console=FALSE))
+	png(AMMIFile, height=130, width=800)
+	p<-tableGrob(anova)
+	grid.arrange(p)
+	dev.off()
+
+	# Biplot and Triplot 
+	png(figure1_file_name,height=400)
+	# par(mfrow=c(2,2))
+	plot(model, first=0,second=1, number=TRUE, xlab = study_trait)
+	dev.off()
+
+
+	}else if( method=="gge"){
+		dat1 <- pheno %>% group_by(germplasmName, locationName) %>%summarize(trait = mean(get(study_trait), na.rm = TRUE))
+		model <- gge(dat1, trait~germplasmName*locationName, scale=FALSE)
+		
+		name1 = paste(study_trait,"- GGE Biplot", sep=" ")
+		
+		png(AMMIFile, height=130, width=800)
+		biplot(model, main=name1, flip=c(1,0), origin=0, hull=TRUE)
+		dev.off()
+
+		model2 <- gge(dat1, trait~germplasmName*locationName, scale=TRUE)
+		png(figure1_file_name,height=400)
+		biplot(model2, main=name1, flip=c(1,1), origin=0)
+		dev.off()
+	}
+
+
 
 anova <-format(round(model$ANOVA, 3))
 analysis <- model$analysis
 anova
 analysis
 
-png(AMMIFile, height=130, width=800)
-p<-tableGrob(anova)
-grid.arrange(p)
-dev.off()
-
-# Biplot and Triplot 
-png(figure1_file_name,height=400)
-# par(mfrow=c(2,2))
-plot(model, first=0,second=1, number=TRUE, xlab = study_trait)
-dev.off()
 
 #Preparing Germplasm name to be printed
 tam <- nrow(model$analysis)
