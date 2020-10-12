@@ -220,9 +220,8 @@ sub _parse_with_plugin {
         }
         if ($worksheet->get_cell($row,4)) {
             $weight =  $worksheet->get_cell($row,4)->value();
-            if (!$weight || $weight eq '') {
-                $weight = '1';
-            }
+        } else {
+            $weight = 1;
         }
 
         if ($worksheet->get_cell($row,5)) {
