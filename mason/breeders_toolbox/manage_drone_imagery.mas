@@ -4651,7 +4651,6 @@ jQuery(document).ready(function() {
 
         var drone_imagery_stats_tolparinv_param = jQuery('#drone_image_calculate_statistics_tolparinv_select').val();
         var drone_imagery_stats_numbers_traits = manage_drone_imagery_calculate_statistics_response.unique_traits.length;
-        var drone_imagery_stats_tolparinv_param = jQuery('#drone_image_calculate_statistics_tolparinv_select').val();
         var drone_imagery_legendre_order = jQuery('#drone_image_calculate_statistics_legendre_order_number_select').val();
 
         if (manage_drone_imagery_calculate_statistics_select == 'sommer_grm_spatial_genetic_blups') {
@@ -5012,6 +5011,9 @@ jQuery(document).ready(function() {
                 {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.rr_pe_coefficients, auxiliary_model_file_archive_type:'blupf90_grm_temporal_leg_random_regression_GDD_permanent_environment_blups_permanent_environment_coefficients_file'},
                 {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_solutions, auxiliary_model_file_archive_type:'blupf90_grm_temporal_leg_random_regression_GDD_blups_solutions_file'}
             ];
+            if (drone_imagery_permanent_env_structure == 'euclidean_rows_and_columns') {
+                drone_imagery_stats_auxiliary_files.push({'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_permanent_environment_structure_file, auxiliary_model_file_archive_type:'blupf90_grm_temporal_leg_random_regression_GDD_blups_permanent_environment_structure_file'});
+            }
 
             drone_imagery_stats_training_data_file = manage_drone_imagery_calculate_statistics_response.blupf90_training_file;
         }
@@ -5028,6 +5030,9 @@ jQuery(document).ready(function() {
                 {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.rr_pe_coefficients, auxiliary_model_file_archive_type:'blupf90_grm_temporal_leg_random_regression_DAP_permanent_environment_blups_permanent_environment_coefficients_file'},
                 {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_solutions, auxiliary_model_file_archive_type:'blupf90_grm_temporal_leg_random_regression_DAP_blups_solutions_file'}
             ];
+            if (drone_imagery_permanent_env_structure == 'euclidean_rows_and_columns') {
+                drone_imagery_stats_auxiliary_files.push({'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_permanent_environment_structure_file, auxiliary_model_file_archive_type:'blupf90_grm_temporal_leg_random_regression_DAP_blups_permanent_environment_structure_file'});
+            }
 
             drone_imagery_stats_training_data_file = manage_drone_imagery_calculate_statistics_response.blupf90_training_file;
         }
@@ -5044,6 +5049,9 @@ jQuery(document).ready(function() {
                 {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.rr_pe_coefficients, auxiliary_model_file_archive_type:'airemlf90_grm_temporal_leg_random_regression_GDD_permanent_environment_blups_permanent_environment_coefficients_file'},
                 {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_solutions, auxiliary_model_file_archive_type:'airemlf90_grm_temporal_leg_random_regression_GDD_blups_solutions_file'}
             ];
+            if (drone_imagery_permanent_env_structure == 'euclidean_rows_and_columns') {
+                drone_imagery_stats_auxiliary_files.push({'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_permanent_environment_structure_file, auxiliary_model_file_archive_type:'airemlf90_grm_temporal_leg_random_regression_GDD_blups_permanent_environment_structure_file'});
+            }
 
             drone_imagery_stats_training_data_file = manage_drone_imagery_calculate_statistics_response.blupf90_training_file;
         }
@@ -5060,6 +5068,9 @@ jQuery(document).ready(function() {
                 {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.rr_pe_coefficients, auxiliary_model_file_archive_type:'airemlf90_grm_temporal_leg_random_regression_DAP_permanent_environment_blups_permanent_environment_coefficients_file'},
                 {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_solutions, auxiliary_model_file_archive_type:'airemlf90_grm_temporal_leg_random_regression_DAP_blups_solutions_file'}
             ];
+            if (drone_imagery_permanent_env_structure == 'euclidean_rows_and_columns') {
+                drone_imagery_stats_auxiliary_files.push({'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_permanent_environment_structure_file, auxiliary_model_file_archive_type:'airemlf90_grm_temporal_leg_random_regression_DAP_blups_permanent_environment_structure_file'});
+            }
 
             drone_imagery_stats_training_data_file = manage_drone_imagery_calculate_statistics_response.blupf90_training_file;
         }
