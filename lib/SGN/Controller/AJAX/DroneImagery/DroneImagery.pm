@@ -2471,6 +2471,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         blupf90_grm_file => $grm_rename_tempfile,
         blupf90_param_file => $parameter_tempfile,
         blupf90_training_file => $stats_tempfile_2,
+        blupf90_permanent_environment_structure_file => $permanent_environment_structure_tempfile,
         rr_genetic_coefficients => $coeff_genetic_tempfile,
         rr_pe_coefficients => $coeff_pe_tempfile,
         blupf90_solutions => $blupf90_solutions_tempfile,

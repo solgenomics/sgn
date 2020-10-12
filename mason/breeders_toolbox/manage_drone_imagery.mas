@@ -4813,6 +4813,9 @@ jQuery(document).ready(function() {
                     {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.rr_pe_coefficients, auxiliary_model_file_archive_type:'blupf90_grm_temporal_leg_random_regression_GDD_genetic_blups_permanent_environment_coefficients_file'},
                     {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_solutions, auxiliary_model_file_archive_type:'blupf90_grm_temporal_leg_random_regression_GDD_blups_solutions_file'}
                 ];
+                if (drone_imagery_permanent_env_structure == 'euclidean_rows_and_columns') {
+                    drone_imagery_stats_auxiliary_files.push({'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_permanent_environment_structure_file, auxiliary_model_file_archive_type:'blupf90_grm_temporal_leg_random_regression_GDD_blups_permanent_environment_structure_file'});
+                }
             }
             else if (manage_drone_imagery_calculate_statistics_select == 'blupf90_grm_random_regression_dap_blups') {
                 statistical_ontology_term = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using BLUPf90|SGNSTAT:0000008";
@@ -4825,6 +4828,9 @@ jQuery(document).ready(function() {
                     {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.rr_pe_coefficients, auxiliary_model_file_archive_type:'blupf90_grm_temporal_leg_random_regression_DAP_genetic_blups_permanent_environment_coefficients_file'},
                     {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_solutions, auxiliary_model_file_archive_type:'blupf90_grm_temporal_leg_random_regression_DAP_blups_solutions_file'}
                 ];
+                if (drone_imagery_permanent_env_structure == 'euclidean_rows_and_columns') {
+                    drone_imagery_stats_auxiliary_files.push({'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_permanent_environment_structure_file, auxiliary_model_file_archive_type:'blupf90_grm_temporal_leg_random_regression_DAP_blups_permanent_environment_structure_file'});
+                }
             }
             else if (manage_drone_imagery_calculate_statistics_select == 'airemlf90_grm_random_regression_dap_blups') {
                 statistical_ontology_term = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using AIREMLf90|SGNSTAT:0000018";
@@ -4837,6 +4843,9 @@ jQuery(document).ready(function() {
                     {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.rr_pe_coefficients, auxiliary_model_file_archive_type:'airemlf90_grm_temporal_leg_random_regression_DAP_genetic_blups_permanent_environment_coefficients_file'},
                     {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_solutions, auxiliary_model_file_archive_type:'airemlf90_grm_temporal_leg_random_regression_DAP_blups_solutions_file'}
                 ];
+                if (drone_imagery_permanent_env_structure == 'euclidean_rows_and_columns') {
+                    drone_imagery_stats_auxiliary_files.push({'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_permanent_environment_structure_file, auxiliary_model_file_archive_type:'airemlf90_grm_temporal_leg_random_regression_DAP_blups_permanent_environment_structure_file'});
+                }
             }
             else if (manage_drone_imagery_calculate_statistics_select == 'airemlf90_grm_random_regression_gdd_blups') {
                 statistical_ontology_term = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on growing degree days computed using AIREMLf90|SGNSTAT:0000020";
@@ -4849,6 +4858,9 @@ jQuery(document).ready(function() {
                     {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.rr_pe_coefficients, auxiliary_model_file_archive_type:'airemlf90_grm_temporal_leg_random_regression_GDD_genetic_blups_permanent_environment_coefficients_file'},
                     {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_solutions, auxiliary_model_file_archive_type:'airemlf90_grm_temporal_leg_random_regression_GDD_blups_solutions_file'}
                 ];
+                if (drone_imagery_permanent_env_structure == 'euclidean_rows_and_columns') {
+                    drone_imagery_stats_auxiliary_files.push({'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.blupf90_permanent_environment_structure_file, auxiliary_model_file_archive_type:'airemlf90_grm_temporal_leg_random_regression_GDD_blups_permanent_environment_structure_file'});
+                }
             }
 
             //jQuery('#generic_save_analysis_result_compose_trait_info').val(JSON.stringify(manage_drone_imagery_calculate_statistics_response.trait_composing_info));
