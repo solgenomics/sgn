@@ -1098,31 +1098,39 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 # print STDERR Dumper \%rel_result_hash;
 
                 my $data = '';
-                # if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
-                    foreach my $r (sort keys %rel_result_hash) {
-                        foreach my $s (sort keys %{$rel_result_hash{$r}}) {
-                            my $val = $rel_result_hash{$r}->{$s};
-                            if (defined $val and length $val) {
-                                $data .= "S$r\tS$s\t$val\n";
+                if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+                    my %result_hash;
+                    foreach my $s (sort @accession_ids) {
+                        foreach my $c (sort @accession_ids) {
+                            if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
+                                my $val = $rel_result_hash{$s}->{$c};
+                                if (defined $val and length $val) {
+                                    $result_hash{$s}->{$c} = $val;
+                                    $data .= "$s\t$c\t$val\n";
+                                }
                             }
                         }
                     }
-                # }
-                # else {
-                #     #Recicprocal
-                #     foreach my $r (sort keys %rel_result_hash) {
-                #         foreach my $s (sort keys %{$rel_result_hash{$r}}) {
-                #             my $val = $rel_result_hash{$r}->{$s};
-                #             if (defined $val and length $val) {
-                #                 $data .= "S$r\tS$s\t$val\n";
-                #                 if ($s != $r) {
-                #                     $data .= "S$s\tS$r\t$val\n";
-                #                 }
-                #             }
-                #         }
-                #     }
-                # }
+                }
+                else {
+                    my %result_hash;
+                    foreach my $s (sort @accession_ids) {
+                        foreach my $c (sort @accession_ids) {
+                            if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
+                                my $val = $rel_result_hash{$s}->{$c};
+                                if (defined $val and length $val) {
+                                    $result_hash{$s}->{$c} = $val;
+                                    $data .= "S$s\tS$c\t$val\n";
+                                    if ($s != $c) {
+                                        $data .= "S$s\tS$c\t$val\n";
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
 
+                # print STDERR Dumper $data;
                 open(my $F2, ">", $grm_out_tempfile) || die "Can't open file ".$grm_out_tempfile;
                     print $F2 $data;
                 close($F2);
