@@ -2026,7 +2026,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             }
             elsif ($permanent_environment_structure eq 'euclidean_rows_and_columns') {
                 push @param_file_rows, (
-                    'user_file',
+                    'user_file_inv',
                     'FILE',
                     $permanent_environment_structure_file_basename
                 );
