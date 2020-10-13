@@ -213,13 +213,17 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     my $adjusted_blues_data;
 
     my $traits;
+
+    my $method;
     
     # we need either a blup or blue result file. Check for these and otherwise return an error!
     #
     if ( -e $adjusted_blups_file) {
+	$method = "random";
 	($adjusted_blups_data, $adjusted_blups_html, $accession_names, $traits) = $self->result_file_to_hash($c, $adjusted_blups_file);
     }
     elsif (-e $adjusted_blues_file) {
+	$method = "fixed";
 	($adjusted_blues_data, $adjusted_blues_html, $accession_names, $traits) = $self->result_file_to_hash($c, $adjusted_blues_file);
     }
     else { 
@@ -265,6 +269,7 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
 	blups_html => $blups_html,
 	blues_data => $blues_data,
 	blues_html => $blues_html,
+	method => $method,
 	# varcomp_data => $varcomp_data,
 	# varcomp_html => $varcomp_html,
 	# anova_data => $anova_data,

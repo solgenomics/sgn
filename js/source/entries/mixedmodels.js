@@ -177,9 +177,13 @@ export function init(main_div){
 
     var factor_count;
     var accession_names;
-    var adjusted_means_data;
+    
+    var adjusted_blups_data;
     var blups_data;
+
+    var adjusted_blues_data;
     var blues_data;
+    
     var traits;
     
     function add_sub_div(collection_div, div_prefix, collection_name) {
@@ -313,18 +317,40 @@ export function init(main_div){
             "success": function(r) {
 		$('#working_modal').modal("hide");
 		if (r.error) { alert(r.error);}
-		else{
-		    //alert(r.adjusted_means_html);
-		    $('#mixed_models_adjusted_blups_results_div').html(r.adjusted_blups_html);
-		    $('#mixed_models_adjusted_blues_results_div').html(r.adjusted_blues_html);
-		    $('#mixed_models_blups_results_div').html( r.blups_html );
-		    $('#mixed_models_blues_results_div').html(r.blues_html);
+		else {
+		    if (r.method === 'random') {
+			$('#mixed_models_adjusted_blups_results_div').html(r.adjusted_blups_html);
+			$('#mixed_models_blups_results_div').html( r.blups_html );
+			
+			$('#adjusted_blups_tab_link').show();
+			$('#adjusted_blups_tab_link').addClass('active');
+			$('#blups_tab_link').show();
+
+			$('#adjusted_blues_tab_link').removeClass('active');
+			$('#adjusted_blues_tab_link').hide();
+			$('#blues_tab_link').hide();
+		    }
+		    else {
+	 		$('#mixed_models_adjusted_blues_results_div').html(r.adjusted_blues_html);
+			$('#mixed_models_blues_results_div').html(r.blues_html);
+		
+			
+			$('#adjusted_blups_tab_link').removeClass('active');
+			$('#adjusted_blups_tab_link').hide();
+			$('#blups_tab_link').hide();
+
+			
+			$('#adjusted_blues_tab_link').tab('show');
+			$('#adjusted_blues_tab_link').addClass('active');
+			$('#blues_tab_link').show();
+		    }
 		    
 		    accession_names = r.accession_names;
 		    adjusted_blups_data = r.adjusted_blups_data;
 		    adjusted_blues_data = r.adjusted_blues_data;
 		    blups_data = r.blups_data;
 		    blues_data = r.blues_data;
+		    traits = r.traits;
 		}
             },
             "error": function(r) {

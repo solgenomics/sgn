@@ -178,17 +178,17 @@
     
   <div>
     <ul class="nav nav-tabs">
-      <li class="active"><a data-toggle="tab" href="#adjusted_blups_tab">Adjusted means (BLUPs)</a></li>
-      <li><a data-toggle="tab" href="#blups_tab">BLUPs</a></li>
-      <li><a data-toogle="tab" href="#adjusted_blues_tab">Adjusted means (BLUEs)</a></li>
-      <li><a data-toggle="tab" href="#blues_tab">BLUEs</a></li>
+      <li class="active"><a data-toggle="tab" id="adjusted_blups_tab_link" href="#adjusted_blups_tab">Adjusted means (BLUPs)</a></li>
+      <li><a data-toggle="tab" id="blups_tab_link" href="#blups_tab">BLUPs</a></li>
+      <li><a data-toggle="tab" id="adjusted_blues_tab_link" href="#adjusted_blues_tab">Adjusted means (BLUEs)</a></li>
+      <li><a data-toggle="tab" id="blues_tab_link" href="#blues_tab">BLUEs</a></li>
     </ul>
     <div class="tab-content">
       <div id="adjusted_blups_tab" class="tab-pane fade in active">
 	<br />
 	  <button id="open_store_adjusted_means_dialog_button" class="btn btn-primary" data-toggle="modal" data-analysis_type="adjusted_means">Save adjusted means</button>
 	  
-	  <button class="btn btn-primary">Download</button>
+	  <!-- button class="btn btn-primary">Download</button -->
 	  <br />
 	  <div id="mixed_models_adjusted_blups_results_div">[loading...]</div>
       </div>
