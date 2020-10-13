@@ -156,7 +156,6 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     my $AMMIFile = $tempfile . "_" . "AMMIFile.png";
     my $figure1file = $tempfile . "_" . "figure1.png";
     my $figure2file = $tempfile . "_" . "figure2.png";
-    my $figure3file = $tempfile . "_" . "figure3.png";
 
 
     $trait_id =~ tr/ /./;
@@ -182,7 +181,6 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
             $trait_id,
             $figure1file,
             $figure2file,
-            $figure3file,
             $AMMIFile,
             $method
     );
@@ -204,7 +202,6 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     copy($AMMIFile, $figure_path);
     copy($figure1file, $figure_path);
     copy($figure2file, $figure_path);
-    copy($figure3file, $figure_path);
 
     my $AMMIFilebasename = basename($AMMIFile);
     my $AMMIFile_response = "/documents/tempfiles/stability_files/" . $AMMIFilebasename;
@@ -215,8 +212,6 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     my $figure2basename = basename($figure2file);
     my $figure2_response = "/documents/tempfiles/stability_files/" . $figure2basename;
 
-    my $figure3basename = basename($figure3file);
-    my $figure3_response = "/documents/tempfiles/stability_files/" . $figure3basename;
 
     print $AMMIFile_response;
         
@@ -224,7 +219,6 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
         AMMITable => $AMMIFile_response,
         figure1 => $figure1_response,
         figure2 => $figure2_response,
-        figure3 => $figure3_response,
         dummy_response => $dataset_id
         # dummy_response2 => $trait_id,
     };

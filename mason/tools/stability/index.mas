@@ -250,14 +250,12 @@ jQuery(document).ready(function() {
               var AMMIFile_response = response.AMMITable;
               var fig1_response = response.figure1;
               var fig2_response = response.figure2;
-              var fig3_response = response.figure3;
         //alert("Response ID: "+temp_response);
             //alert("Response ID: "+fig1_response);
               //setTimeout(function() {
               $('#stability_output').append("<img id='stability_Table' src='"+ AMMIFile_response + "'/>");
               $('#stability_output').append("<img id='stability_Figure1' src='"+ fig1_response + "'/>");
               $('#stability_output').append("<img id='stability_Figure2' src='"+ fig2_response + "'/>");
-              $('#stability_output').append("<img id='stability_Figure3' src='"+ fig3_response + "'/>");
               //},6000);
             }
           },
