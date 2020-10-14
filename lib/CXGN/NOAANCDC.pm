@@ -135,7 +135,7 @@ sub get_temperature_averaged_gdd {
         $weather_hash{$_->{date}}->{$_->{datatype}} = $_->{value};
     }
     foreach (values %weather_hash) {
-        if (defined($_->{TMIN}) & defined($_->{TMAX})) {
+        if (defined($_->{TMIN}) && defined($_->{TMAX})) {
             #TMAX and TMIN are in tenths of C
             my $tmax_f = (9/5)*($_->{TMAX}/10) + 32;
             my $tmin_f = (9/5)*($_->{TMIN}/10) + 32;
