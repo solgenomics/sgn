@@ -262,6 +262,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my ($stats_out_tempfile_genetic_fh, $stats_out_tempfile_genetic) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_tempfile_permanent_environment_fh, $stats_out_tempfile_permanent_environment) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my $blupf90_solutions_tempfile;
+    my $yhat_residual_tempfile;
     my $grm_file;
 
     my @results;
@@ -271,6 +272,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $result_residual_data;
     my $result_fitted_data;
     my @sorted_trait_names;
+    my @sorted_residual_trait_names;
     my %seen_trait_names;
     my @sorted_scaled_ln_times;
     my @rep_time_factors;
@@ -2088,9 +2090,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             my $h_time = $schema->storage->dbh()->prepare($q_time);
 
             my %rr_unique_traits;
+            my %rr_residual_unique_traits;
 
             my $sum_square_res = 0;
-            my $yhat_residual_tempfile = $tmp_stats_dir."/yhat_residual";
+            $yhat_residual_tempfile = $tmp_stats_dir."/yhat_residual";
             open(my $fh_yhat_res, '<', $yhat_residual_tempfile)
                 or die "Could not open file '$yhat_residual_tempfile' $!";
                 print STDERR "Opened $yhat_residual_tempfile\n";
@@ -2107,29 +2110,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     my $plot_name = $plot_id_count_map_reverse{$pred_res_counter};
                     my $time = $time_count_map_reverse{$pred_res_counter};
 
-                    my $time_term_string = '';
-                    if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
-                        $time_term_string = "GDD $time";
-                    }
-                    elsif ($statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
-                        $time_term_string = "day $time"
-                    }
-                    $h_time->execute($time_term_string, 'cxgn_time_ontology');
-                    my ($time_cvterm_id) = $h_time->fetchrow_array();
+                    $rr_residual_unique_traits{$seen_times{$time}}++;
 
-                    if (!$time_cvterm_id) {
-                        my $new_time_term = $schema->resultset("Cv::Cvterm")->create_with({
-                           name => $time_term_string,
-                           cv => 'cxgn_time_ontology'
-                        });
-                        $time_cvterm_id = $new_time_term->cvterm_id();
-                    }
-                    my $time_term_string_res = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $time_cvterm_id, 'extended');
-
-                    $rr_unique_traits{$time_term_string_res}++;
-
-                    $result_residual_data->{$plot_name}->{$time_term_string_res} = [$residual, $timestamp, $user_name, '', ''];
-                    $result_fitted_data->{$plot_name}->{$time_term_string_res} = [$pred, $timestamp, $user_name, '', ''];
+                    $result_residual_data->{$plot_name}->{$seen_times{$time}} = [$residual, $timestamp, $user_name, '', ''];
+                    $result_fitted_data->{$plot_name}->{$seen_times{$time}} = [$pred, $timestamp, $user_name, '', ''];
 
                     $pred_res_counter++;
                 }
@@ -2287,6 +2271,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             # print STDERR Dumper $result_blup_data;
             # print STDERR Dumper $result_blup_pe_data;
             @sorted_trait_names = sort keys %rr_unique_traits;
+            @sorted_residual_trait_names = sort keys %rr_residual_unique_traits;
         }
     }
     elsif ($statistics_select eq 'marss_germplasmname_block') {
@@ -2506,6 +2491,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         result_residual_data => $result_residual_data,
         result_fitted_data => $result_fitted_data,
         unique_traits => \@sorted_trait_names,
+        unique_residual_traits => \@sorted_residual_trait_names,
         unique_accessions => \@unique_accession_names,
         unique_plots => \@unique_plot_names,
         statistics_select => $statistics_select,
@@ -2515,6 +2501,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         blupf90_param_file => $parameter_tempfile,
         blupf90_training_file => $stats_tempfile_2,
         blupf90_permanent_environment_structure_file => $permanent_environment_structure_tempfile,
+        yhat_residual_tempfile => $yhat_residual_tempfile,
         rr_genetic_coefficients => $coeff_genetic_tempfile,
         rr_pe_coefficients => $coeff_pe_tempfile,
         blupf90_solutions => $blupf90_solutions_tempfile,
