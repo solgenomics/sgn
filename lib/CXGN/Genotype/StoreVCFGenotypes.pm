@@ -261,6 +261,7 @@ use SGN::Model::Cvterm;
 use JSON;
 use CXGN::Trial;
 use Text::CSV;
+use Hash::Case::Preserve;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -853,7 +854,7 @@ sub store_metadata {
     $self->tissue_sample_type_id($tissue_sample_type_id);
 
     print STDERR "Generating stock synonym lookup table...\n";
-    my %stock_lookup;
+    tie my (%stock_lookup), 'Hash::Case::Preserve';
     my %all_names;
     my $q = "SELECT stock.stock_id, stock.uniquename, stockprop.value, stockprop.type_id FROM stock LEFT JOIN stockprop USING(stock_id) WHERE stock.type_id IN (".$self->accession_type_id().",".$self->tissue_sample_type_id().") AND stock.is_obsolete = 'F';";
     my $h = $schema->storage->dbh()->prepare($q);
