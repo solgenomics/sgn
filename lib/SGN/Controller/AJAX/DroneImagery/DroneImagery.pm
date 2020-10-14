@@ -278,6 +278,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my %accession_id_factor_map;
     my %accession_id_factor_map_reverse;
     my %plot_id_factor_map_reverse;
+    my %plot_id_count_map_reverse;
+    my %time_count_map_reverse;
     my @unique_accession_names;
     my @unique_plot_names;
     my $statistical_ontology_term;
@@ -781,6 +783,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     @header_cols = $csv->fields();
                 }
 
+                my $line_factor_count = 0;
                 while (my $row = <$fh_factor>) {
                     my @columns;
                     if ($csv->parse($row)) {
@@ -813,6 +816,9 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     $accession_id_factor_map_reverse{$accession_id_factor} = $stock_info{$accession_id}->{uniquename};
                     # $plot_id_factor_map_reverse{$ind_rep} = $seen_plots{$plot_id};
                     $plot_id_factor_map_reverse{$plot_id_factor} = $seen_plots{$plot_id};
+                    $plot_id_count_map_reverse{$line_factor_count} = $seen_plots{$plot_id};
+                    $time_count_map_reverse{$line_factor_count} = $time;
+                    $line_factor_count++;
                 }
             close($fh_factor);
             # print STDERR Dumper \%plot_factor_map;
@@ -1544,8 +1550,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 or die "Could not open file '$stats_out_tempfile_permanent_environment' $!";
             
                 print STDERR "Opened $stats_out_tempfile_permanent_environment\n";
-                my $header = <$fh>;
-                my @header_cols;
+                $header = <$fh>;
+                @header_cols;
                 if ($csv->parse($header)) {
                     @header_cols = $csv->fields();
                 }
@@ -2078,6 +2084,11 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 }
             close($fh_log);
 
+            my $q_time = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
+            my $h_time = $schema->storage->dbh()->prepare($q_time);
+
+            my %rr_unique_traits;
+
             my $sum_square_res = 0;
             my $yhat_residual_tempfile = $tmp_stats_dir."/yhat_residual";
             open(my $fh_yhat_res, '<', $yhat_residual_tempfile)
@@ -2085,12 +2096,41 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 print STDERR "Opened $yhat_residual_tempfile\n";
 
                 my $pred_res_counter = 0;
+                my $trait_counter = 0;
                 while (my $row = <$fh_yhat_res>) {
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $sum_square_res = $sum_square_res + $residual*$residual;
+
+                    my $plot_name = $plot_id_count_map_reverse{$pred_res_counter};
+                    my $time = $time_count_map_reverse{$pred_res_counter};
+
+                    my $time_term_string = '';
+                    if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
+                        $time_term_string = "GDD $time";
+                    }
+                    elsif ($statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+                        $time_term_string = "day $time"
+                    }
+                    $h_time->execute($time_term_string, 'cxgn_time_ontology');
+                    my ($time_cvterm_id) = $h_time->fetchrow_array();
+
+                    if (!$time_cvterm_id) {
+                        my $new_time_term = $schema->resultset("Cv::Cvterm")->create_with({
+                           name => $time_term_string,
+                           cv => 'cxgn_time_ontology'
+                        });
+                        $time_cvterm_id = $new_time_term->cvterm_id();
+                    }
+                    my $time_term_string_res = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $time_cvterm_id, 'extended');
+
+                    $rr_unique_traits{$time_term_string_res}++;
+
+                    $result_residual_data->{$plot_name}->{$time_term_string_res} = [$residual, $timestamp, $user_name, '', ''];
+                    $result_fitted_data->{$plot_name}->{$time_term_string_res} = [$pred, $timestamp, $user_name, '', ''];
+
                     $pred_res_counter++;
                 }
             close($fh_yhat_res);
@@ -2152,11 +2192,6 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
             # print STDERR Dumper \%rr_genetic_coefficients;
             # print STDERR Dumper \%rr_temporal_coefficients;
-
-            my $q_time = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
-            my $h_time = $schema->storage->dbh()->prepare($q_time);
-
-            my %rr_unique_traits;
 
             open(my $Fgc, ">", $coeff_genetic_tempfile) || die "Can't open file ".$coeff_genetic_tempfile;
 
