@@ -1,4 +1,3 @@
-
 <%args>
 $program_id
 </%args>
@@ -7,11 +6,13 @@ $program_id
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 
-<table id="trial_summary_data_<% $program_id %>" class="display">
+<table id="program_cross_table" class="display">
     <thead>
         <tr>
-            <th>Trial name</th>
-            <th>Description</th>
+            <th>Cross Unique ID</th>
+            <th>Female Parent</th>
+            <th>Male Parent</th>
+            <th>Cross Type</th>
         </tr>
     </thead>
 </table>
@@ -20,11 +21,12 @@ $program_id
 
 jQuery(document).ready(function () {
 
-    jQuery('#trial_summary_data_<% $program_id %>').DataTable( {
+    jQuery('#program_cross_table').DataTable( {
         'autoWidth': false,
-        'ajax': '/ajax/breeders/program/'+ <% $program_id %> + '/field_trials',
+        'ajax': '/ajax/breeders/program/'+ <% $program_id %> + '/crosses',
     });
 
 });
+
 
 </script>
