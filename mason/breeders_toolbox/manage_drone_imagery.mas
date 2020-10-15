@@ -18,6 +18,10 @@
 
     <& /page/page_title.mas, title=>"Manage Drone Imagery" &>
 
+    <div class="well well-sm">
+        <center><h4>Please use the Google Chrome web-browser to use these image tools. In the future, other browsers may be supported.</h4></center>
+    </div>
+
 <%perl>
 #my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Imagery</button><button class='btn btn-default' style='margin:3px' id='download_phenotypes_drone_imagery_link'>Download Image-Phenotypes</button><button class='btn btn-success' style='margin:3px' id='keras_cnn_drone_imagery_link'>Keras CNN Models</button><button class='btn btn-success' style='margin:3px' id='drone_imagery_calculate_statistics_link'>Calculate Statistics</button><button class='btn btn-default' style='margin:3px' id='drone_imagery_compare_field_images_link'>Compare Aerial Field Images</button><button class='btn btn-default' style='margin:3px' id='drone_imagery_view_imaging_vehicles_link'>Imaging Vehicles</button>";
 
