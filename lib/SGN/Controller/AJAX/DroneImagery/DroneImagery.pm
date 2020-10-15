@@ -253,7 +253,11 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     $coeff_genetic_tempfile .= '_genetic_coefficients.csv';
     my ($coeff_pe_tempfile_fh, $coeff_pe_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     $coeff_pe_tempfile .= '_permanent_environment_coefficients.csv';
-    my ($stats_out_tempfile_fh, $stats_out_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+
+    my $dir = $c->tempfiles_subdir('/tmp_drone_statistics');
+    my $stats_out_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/drone_stats_XXXXX');
+    my $stats_out_tempfile = $c->config->{basepath}."/".$stats_out_tempfile_string;
+
     my ($stats_out_param_tempfile_fh, $stats_out_param_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_tempfile_row_fh, $stats_out_tempfile_row) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_tempfile_col_fh, $stats_out_tempfile_col) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
@@ -986,6 +990,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 mkdir $tmp_arm_dir if ! -d $tmp_arm_dir;
                 my ($arm_tempfile_fh, $arm_tempfile) = tempfile("drone_stats_download_arm_XXXXX", DIR=> $tmp_arm_dir);
                 my ($grm1_tempfile_fh, $grm1_tempfile) = tempfile("drone_stats_download_grm1_XXXXX", DIR=> $tmp_arm_dir);
+                my ($grm_out_temp_tempfile_fh, $grm_out_temp_tempfile) = tempfile("drone_stats_download_grm_temp_out_XXXXX", DIR=> $tmp_arm_dir);
                 my ($grm_out_tempfile_fh, $grm_out_tempfile) = tempfile("drone_stats_download_grm_out_XXXXX", DIR=> $tmp_arm_dir);
 
                 if (!$protocol_id) {
@@ -1114,7 +1119,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                                 my $val = $rel_result_hash{$s}->{$c};
                                 if (defined $val and length $val) {
                                     $result_hash{$s}->{$c} = $val;
-                                    $data .= "$s\t$c\t$val\n";
+                                    $data .= "S$s\tS$c\t$val\n";
                                 }
                             }
                         }
@@ -1139,17 +1144,46 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 }
 
                 # print STDERR Dumper $data;
-                open(my $F2, ">", $grm_out_tempfile) || die "Can't open file ".$grm_out_tempfile;
+                open(my $F2, ">", $grm_out_temp_tempfile) || die "Can't open file ".$grm_out_temp_tempfile;
                     print $F2 $data;
                 close($F2);
+
+                my $cmd = 'R -e "library(data.table); library(scales); library(tidyr); library(reshape2);
+                three_col <- fread(\''.$grm_out_temp_tempfile.'\', header=FALSE, sep=\'\t\');
+                A_wide <- dcast(three_col, V1~V2, value.var=\'V3\');
+                A <- A_wide[,-1];
+                A[is.na(A)] <- 0;
+                E = eigen(A);
+                ev = E\$values;
+                U = E\$vectors;
+                no = dim(A)[1];
+                nev = which(ev < 0);
+                wr = 0;
+                k=length(nev);
+                if(k > 0){
+                    p = ev[no - k];
+                    B = sum(ev[nev])*2.0;
+                    wr = (B*B*100.0)+1;
+                    val = ev[nev];
+                    ev[nev] = p*(B-val)*(B-val)/wr;
+                    A = U%*%diag(ev)%*%t(U);
+                }
+                A\$stock_id <- A_wide[,1];
+                A_threecol <- melt(A, id.vars = c(\'stock_id\'), measure.vars = A_wide[,1]);
+                A_threecol\$stock_id <- substring(A_threecol\$stock_id, 2);
+                A_threecol\$variable <- substring(A_threecol\$variable, 2);
+                write.table(data.frame(variable = A_threecol\$variable, stock_id = A_threecol\$stock_id, value = A_threecol\$value), file=\''.$grm_out_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
+                print STDERR $cmd."\n";
+                my $status = system($cmd);
+
                 $grm_file = $grm_out_tempfile;
             }
             else {
                 my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
                 my $tmp_grm_dir = $shared_cluster_dir_config."/tmp_genotype_download_grm";
                 mkdir $tmp_grm_dir if ! -d $tmp_grm_dir;
-                my ($grm_tempfile_fh, $grm_tempfile) = tempfile("wizard_download_grm_XXXXX", DIR=> $tmp_grm_dir);
-                my ($grm_out_tempfile_fh, $grm_out_tempfile) = tempfile("wizard_download_grm_XXXXX", DIR=> $tmp_grm_dir);
+                my ($grm_tempfile_fh, $grm_tempfile) = tempfile("drone_stats_download_grm_XXXXX", DIR=> $tmp_grm_dir);
+                my ($grm_out_tempfile_fh, $grm_out_tempfile) = tempfile("drone_stats_download_grm_XXXXX", DIR=> $tmp_grm_dir);
 
                 if (!$protocol_id) {
                     $protocol_id = undef;
@@ -1553,7 +1587,6 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             
                 print STDERR "Opened $stats_out_tempfile_permanent_environment\n";
                 $header = <$fh>;
-                @header_cols;
                 if ($csv->parse($header)) {
                     @header_cols = $csv->fields();
                 }
@@ -2506,6 +2539,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         rr_pe_coefficients => $coeff_pe_tempfile,
         blupf90_solutions => $blupf90_solutions_tempfile,
         stats_out_tempfile => $stats_out_tempfile,
+        stats_out_tempfile_string => $stats_out_tempfile_string,
         stats_out_tempfile_col => $stats_out_tempfile_col,
         stats_out_tempfile_row => $stats_out_tempfile_row,
         statistical_ontology_term => $statistical_ontology_term,

@@ -4627,6 +4627,9 @@ jQuery(document).ready(function() {
                         }
                         html = html + '</tbody></table>';
                     }
+
+                    html = html + '<hr><a href="'+response.stats_out_tempfile_string+'" target=_blank>Stats file or log</a>';
+
                     jQuery('#drone_imagery_calculate_statistics_result_div').html(html);
 
                     Workflow.complete("#drone_imagery_calculate_statistics_select_step");
