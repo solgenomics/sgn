@@ -1152,6 +1152,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     ev[nev] = p*(B-val)*(B-val)/wr;
                     A = U%*%diag(ev)%*%t(U);
                 }
+                A <- as.data.frame(A);
                 A\$stock_id <- A_wide[,1];
                 A_threecol <- melt(A, id.vars = c(\'stock_id\'), measure.vars = A_wide[,1]);
                 A_threecol\$stock_id <- substring(A_threecol\$stock_id, 2);
