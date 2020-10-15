@@ -76,25 +76,33 @@ sub get_matches {
         $lowercase_name_lookup{lc($_)} = $_;
     }
 
+    my @lowercased_synonyms;
+    my %lowercase_synonym_lookup;
+    foreach (@synonym_names){
+        push @lowercased_synonyms, lc($_);
+        $lowercase_synonym_lookup{lc($_)} = $_;
+    }
     print STDERR "FuzzySearch 2".localtime()."\n";
 
     foreach my $stock_name (@stock_list) {
-
-        if (exists($uniquename_hash{$stock_name})){
-            push @found_stocks, {matched_string => $stock_name, unique_name => $stock_name};
+	#lookup case insensitive stock names#
+	my $lc_name = lc($stock_name);
+	if (exists($lowercase_name_lookup{$lc_name})){
+	    my $uniquename = $lowercase_name_lookup{$lc_name};
+            push @found_stocks, {matched_string => $stock_name, unique_name => $uniquename}; 
             next;
         }
-
-        if (exists($synonym_uniquename_lookup{$stock_name})){
+	#lookup cases insensitive stock synonyms# 
+        if (exists($lowercase_synonym_lookup{$lc_name})){
             my %match_info;
-            if (scalar(@{$synonym_uniquename_lookup{$stock_name}}) > 1){
-                my $synonym_lookup_uniquename = join ',', @{$synonym_uniquename_lookup{$stock_name}};
+            if (scalar(@{$lowercase_synonym_lookup{$lc_name}}) > 1){
+                my $synonym_lookup_uniquename = join ',', @{$lowercase_synonym_lookup{$lc_name}};
                 $error .= "This synonym $stock_name has more than one uniquename $synonym_lookup_uniquename. This should not happen!";
                 next;
-            } elsif (scalar(@{$synonym_uniquename_lookup{$stock_name}}) == 1){
-                $match_info{matched_string} = $stock_name." (SYNONYM OF ".$synonym_uniquename_lookup{$stock_name}->[0].")";
+            } elsif (scalar(@{$lowercase_synonym_lookup{$lc_name}}) == 1){
+                $match_info{matched_string} = $stock_name." (SYNONYM OF ".$lowercase_synonym_lookup{$lc_name}->[0].")";
                 $match_info{is_synonym} = 1;
-                $match_info{unique_name} = $synonym_uniquename_lookup{$stock_name}->[0];
+                $match_info{unique_name} = $lowercase_synonym_lookup{$lc_name}->[0];
             }
             push @found_stocks, \%match_info;
             next;
