@@ -992,6 +992,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 my ($grm1_tempfile_fh, $grm1_tempfile) = tempfile("drone_stats_download_grm1_XXXXX", DIR=> $tmp_arm_dir);
                 my ($grm_out_temp_tempfile_fh, $grm_out_temp_tempfile) = tempfile("drone_stats_download_grm_temp_out_XXXXX", DIR=> $tmp_arm_dir);
                 my ($grm_out_tempfile_fh, $grm_out_tempfile) = tempfile("drone_stats_download_grm_out_XXXXX", DIR=> $tmp_arm_dir);
+                my ($grm_out_posdef_tempfile_fh, $grm_out_posdef_tempfile) = tempfile("drone_stats_download_grm_out_XXXXX", DIR=> $tmp_arm_dir);
 
                 if (!$protocol_id) {
                     $protocol_id = undef;
@@ -1111,33 +1112,14 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 # print STDERR Dumper \%rel_result_hash;
 
                 my $data = '';
-                if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
-                    my %result_hash;
-                    foreach my $s (sort @accession_ids) {
-                        foreach my $c (sort @accession_ids) {
-                            if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
-                                my $val = $rel_result_hash{$s}->{$c};
-                                if (defined $val and length $val) {
-                                    $result_hash{$s}->{$c} = $val;
-                                    $data .= "S$s\tS$c\t$val\n";
-                                }
-                            }
-                        }
-                    }
-                }
-                else {
-                    my %result_hash;
-                    foreach my $s (sort @accession_ids) {
-                        foreach my $c (sort @accession_ids) {
-                            if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
-                                my $val = $rel_result_hash{$s}->{$c};
-                                if (defined $val and length $val) {
-                                    $result_hash{$s}->{$c} = $val;
-                                    $data .= "S$s\tS$c\t$val\n";
-                                    if ($s != $c) {
-                                        $data .= "S$s\tS$c\t$val\n";
-                                    }
-                                }
+                my %result_hash;
+                foreach my $s (sort @accession_ids) {
+                    foreach my $c (sort @accession_ids) {
+                        if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
+                            my $val = $rel_result_hash{$s}->{$c};
+                            if (defined $val and length $val) {
+                                $result_hash{$s}->{$c} = $val;
+                                $data .= "S$s\tS$c\t$val\n";
                             }
                         }
                     }
@@ -1151,8 +1133,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 my $cmd = 'R -e "library(data.table); library(scales); library(tidyr); library(reshape2);
                 three_col <- fread(\''.$grm_out_temp_tempfile.'\', header=FALSE, sep=\'\t\');
                 A_wide <- dcast(three_col, V1~V2, value.var=\'V3\');
-                A <- A_wide[,-1];
-                A[is.na(A)] <- 0;
+                A_1 <- A_wide[,-1];
+                A_1[is.na(A_1)] <- 0;
+                A <- A_1 + t(A_1);
+                diag(A) <- diag(as.matrix(A_1));
                 E = eigen(A);
                 ev = E\$values;
                 U = E\$vectors;
@@ -1176,7 +1160,64 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 print STDERR $cmd."\n";
                 my $status = system($cmd);
 
-                $grm_file = $grm_out_tempfile;
+                my $csv = Text::CSV->new({ sep_char => "\t" });
+
+                my %rel_pos_def_result_hash;
+                open(my $F3, '<', $grm_out_tempfile)
+                    or die "Could not open file '$grm_out_tempfile' $!";
+
+                    print STDERR "Opened $grm_out_tempfile\n";
+
+                    while (my $row = <$F3>) {
+                        my @columns;
+                        if ($csv->parse($row)) {
+                            @columns = $csv->fields();
+                        }
+                        my $stock_id1 = $columns[0];
+                        my $stock_id2 = $columns[1];
+                        my $val = $columns[2];
+                        $rel_pos_def_result_hash{$stock_id1}->{$stock_id2} = $val;
+                    }
+                close($F3);
+
+                my $data_pos_def = '';
+                if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+                    my %result_hash;
+                    foreach my $s (sort @accession_ids) {
+                        foreach my $c (sort @accession_ids) {
+                            if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
+                                my $val = $rel_pos_def_result_hash{$s}->{$c};
+                                if (defined $val and length $val) {
+                                    $result_hash{$s}->{$c} = $val;
+                                    $data_pos_def .= "$s\t$c\t$val\n";
+                                }
+                            }
+                        }
+                    }
+                }
+                else {
+                    my %result_hash;
+                    foreach my $s (sort @accession_ids) {
+                        foreach my $c (sort @accession_ids) {
+                            if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
+                                my $val = $rel_pos_def_result_hash{$s}->{$c};
+                                if (defined $val and length $val) {
+                                    $result_hash{$s}->{$c} = $val;
+                                    $data_pos_def .= "S$s\tS$c\t$val\n";
+                                    if ($s != $c) {
+                                        $data_pos_def .= "S$s\tS$c\t$val\n";
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                open(my $F4, ">", $grm_out_posdef_tempfile) || die "Can't open file ".$grm_out_posdef_tempfile;
+                    print $F4 $data_pos_def;
+                close($F4);
+
+                $grm_file = $grm_out_posdef_tempfile;
             }
             else {
                 my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
