@@ -19,10 +19,19 @@ sub seedlots :Path('/breeders/seedlots') :Args(0) {
 
     my @editable_stock_props = split ',', $c->config->{editable_stock_props};
     my %editable_stock_props = map { $_=>1 } @editable_stock_props;
-    $c->stash->{editable_stock_props} = \%editable_stock_props;
+
+    my @editable_stock_props_definitions = split ',', $c->config->{editable_stock_props_definitions};
+    my %def_hash;
+    foreach (@editable_stock_props_definitions) {
+        my @term_def = split ':', $_;
+        $def_hash{$term_def[0]} = $term_def[1];
+    }
 
     my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
     my $breeding_programs = $projects->get_breeding_programs();
+
+    $c->stash->{editable_stock_props} = \%editable_stock_props;
+    $c->stash->{editable_stock_props_definitions} = \%def_hash;
     $c->stash->{crossing_trials} = $projects->get_crossing_trials();
     $c->stash->{locations} = JSON::XS->new->decode($projects->get_location_geojson());
     $c->stash->{programs} = $breeding_programs;
