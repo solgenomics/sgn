@@ -14,7 +14,6 @@ package SGN::Controller::AJAX::Search::GenotypingProtocol;
 
 use Moose;
 use Data::Dumper;
-use JSON;
 use CXGN::People::Login;
 use CXGN::Genotype::Protocol;
 use CXGN::Genotype::MarkersSearch;
@@ -25,7 +24,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON' },
    );
 
 sub genotyping_protocol_search : Path('/ajax/genotyping_protocol/search') : ActionClass('REST') { }

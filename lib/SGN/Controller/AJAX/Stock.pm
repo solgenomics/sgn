@@ -46,7 +46,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON' },
    );
 
 
@@ -1761,12 +1761,6 @@ sub get_phenotypes {
 
     my $bcs_stock = $bcs_stock_rs->first();
 
-# #    my ($has_members_genotypes) = $bcs_stock->result_source->schema->storage->dbh->selectrow_array( <<'', undef, $bcs_stock->stock_id );
-# SELECT COUNT( DISTINCT genotype_id )
-#   FROM phenome.genotype
-#   JOIN stock subj using(stock_id)
-#   JOIN stock_relationship sr ON( sr.subject_id = subj.stock_id )
-#  WHERE sr.object_id = ?
 
     # now we have rs of stock_relationship objects. We need to find
     # the phenotypes of their related subjects
@@ -1934,7 +1928,7 @@ sub get_stock_datatables_genotype_data_GET  {
     my @result;
     my $counter = 0;
 
-    open my $fh, "<&", $file_handle or die "Can't open output file: $!";
+    open my $fh, "<& :encoding(UTF-8)", $file_handle or die "Can't open output file: $!";
     my $header_line = <$fh>;
     if ($header_line) {
         my $marker_objects = decode_json $header_line;

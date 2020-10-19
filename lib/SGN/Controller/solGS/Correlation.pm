@@ -214,12 +214,12 @@ sub pheno_correlation_output_files {
     {         
         $corre_coefficients_file = catfile($corre_cache_dir, "corre_coefficients_table_${pop_id}");
 
-        write_file($corre_coefficients_file);
+        write_file($corre_coefficients_file, {binmode => ':utf8'});
         $file_cache->set($key_table, $corre_coefficients_file, '30 days');
 
         $corre_coefficients_json_file = catfile($corre_cache_dir, "corre_coefficients_json_${pop_id}");
 
-        write_file($corre_coefficients_json_file);
+        write_file($corre_coefficients_json_file, {binmode => ':utf8'});
         $file_cache->set($key_json, $corre_coefficients_json_file, '30 days');
     }
 
@@ -272,7 +272,7 @@ sub pheno_correlation_analysis_output :Path('/phenotypic/correlation/analysis/ou
     {
 	$ret->{acronyms} =  $self->trait_acronyms($c);
         $ret->{status}   = 'success';
-        $ret->{data}     = read_file($corre_json_file);	
+        $ret->{data}     = read_file($corre_json_file, {binmode => ':utf8'});	
     } 
         
     $ret = to_json($ret);
@@ -318,7 +318,7 @@ sub genetic_correlation_analysis_output :Path('/genetic/correlation/analysis/out
     if (-s $corre_json_file)
     { 
         $ret->{status}   = 'success';
-        $ret->{data}     = read_file($corre_json_file);
+        $ret->{data}     = read_file($corre_json_file, {binmode => ':utf8'});
     } 
     
     $ret = to_json($ret);
@@ -358,7 +358,7 @@ sub download_phenotypic_correlation : Path('/download/phenotypic/correlation/pop
 	my @corr_data;
 	my $count=1;
 
-	foreach my $row ( read_file($corr_file) )
+	foreach my $row ( read_file($corr_file, {binmode => ':utf8'}) )
 	{
 	    if ($count==1) {  $row = 'Traits,' . $row;}             
 	    $row =~ s/NA//g; 
@@ -389,7 +389,7 @@ sub temp_pheno_corre_output_file {
     my $tmp_dir = $c->stash->{correlation_temp_dir};
     my $name = "pheno_corre_output_files_${pop_id}"; 
     my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
-    write_file($tempfile, $files);
+    write_file($tempfile, {binmode => ':utf8'}, $files);
     
     $c->stash->{temp_pheno_corre_output_file} = $tempfile;
 
@@ -422,7 +422,7 @@ sub temp_pheno_corre_input_file {
     my $tmp_dir = $c->stash->{correlation_temp_dir};
     my $name = "pheno_corre_input_files_${pop_id}"; 
     my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
-    write_file($tempfile, $files);
+    write_file($tempfile, {binmode => ':utf8'}, $files);
     $c->stash->{temp_pheno_corre_input_file} = $tempfile;
 
 }
@@ -442,7 +442,7 @@ sub temp_geno_corre_output_file {
     my $tmp_dir = $c->stash->{correlation_temp_dir};
     my $name = "geno_corre_output_files_${pop_id}"; 
     my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
-    write_file($tempfile, $files);
+    write_file($tempfile, {binmode => ':utf8'}, $files);
     
     $c->stash->{temp_geno_corre_output_file} = $tempfile;
 
@@ -465,7 +465,7 @@ sub temp_geno_corre_input_file {
     my $tmp_dir = $c->stash->{correlation_temp_dir};
     my $name = "geno_corre_input_files_${pop_id}"; 
     my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
-    write_file($tempfile, $files);
+    write_file($tempfile, {binmode => ':utf8'}, $files);
     
     $c->stash->{temp_geno_corre_input_file} = $tempfile;
 

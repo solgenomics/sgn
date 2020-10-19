@@ -36,7 +36,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON'  },
    );
 
 
@@ -83,12 +83,21 @@ sub upload_genotype_verify_POST : Args(0) {
 
     #archive uploaded file
     my $upload_vcf = $c->req->upload('upload_genotype_vcf_file_input');
+    my $upload_tassel_hdf5 = $c->req->upload('upload_genotype_tassel_hdf5_file_input');
     my $upload_transposed_vcf = $c->req->upload('upload_genotype_transposed_vcf_file_input');
     my $upload_intertek_genotypes = $c->req->upload('upload_genotype_intertek_file_input');
     my $upload_inteterk_marker_info = $c->req->upload('upload_genotype_intertek_snp_file_input');
 
     if (defined($upload_vcf) && defined($upload_intertek_genotypes)) {
         $c->stash->{rest} = { error => 'Do not try to upload both VCF and Intertek at the same time!' };
+        $c->detach();
+    }
+    if (defined($upload_vcf) && defined($upload_tassel_hdf5)) {
+        $c->stash->{rest} = { error => 'Do not try to upload both VCF and Tassel HDF5 at the same time!' };
+        $c->detach();
+    }
+    if (defined($upload_intertek_genotypes) && defined($upload_tassel_hdf5)) {
+        $c->stash->{rest} = { error => 'Do not try to upload both Intertek and Tassel HDF5 at the same time!' };
         $c->detach();
     }
     if (defined($upload_intertek_genotypes) && !defined($upload_inteterk_marker_info)) {
@@ -150,7 +159,71 @@ sub upload_genotype_verify_POST : Args(0) {
     if ($upload_transposed_vcf) {
         $upload_original_name = $upload_transposed_vcf->filename();
         $upload_tempfile = $upload_transposed_vcf->tempname;
-        $subdirectory = "genotype_transpoed_vcf_upload";
+        $subdirectory = "genotype_transposed_vcf_upload";
+        $parser_plugin = 'transposedVCF';
+    }
+    if ($upload_tassel_hdf5) {
+        $upload_original_name = $upload_tassel_hdf5->filename();
+        $upload_tempfile = $upload_tassel_hdf5->tempname;
+        $subdirectory = "genotype_tassel_hdf5_upload";
+
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_role
+        });
+        my $archived_tassel_hdf5_file = $uploader->archive();
+        my $md5 = $uploader->get_md5($archived_tassel_hdf5_file);
+        if (!$archived_tassel_hdf5_file) {
+            $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
+            $c->detach();
+        }
+        unlink $upload_tempfile;
+
+        my $output_dir = $c->tempfiles_subdir('/genotype_upload_tassel_hdf5');
+        $upload_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'genotype_upload_tassel_hdf5/temp_vcf_XXXX').".vcf";
+        my $cmd = "perl ".$c->config->{rootpath}."/tassel-5-standalone/run_pipeline.pl -Xmx12g -h5 ".$archived_tassel_hdf5_file." -export ".$upload_tempfile." -exportType VCF";
+        print STDERR Dumper $cmd;
+        my $status = system($cmd);
+
+        my $temp_file_transposed = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'genotype_upload_tassel_hdf5/fileXXXX');
+
+        open (my $Fout, ">", $temp_file_transposed) || die "Can't open file $temp_file_transposed\n";
+        open (my $F, "<", $upload_tempfile) or die "Can't open file $upload_tempfile \n";
+        my @outline;
+        my $lastcol;
+        while (<$F>) {
+            if ($_ =~ m/^\##/) {
+                print $Fout $_;
+            } else {
+                chomp;
+                my @line = split /\t/;
+                my $oldlastcol = $lastcol;
+                $lastcol = $#line if $#line > $lastcol;
+                for (my $i=$oldlastcol; $i < $lastcol; $i++) {
+                    if ($oldlastcol) {
+                        $outline[$i] = "\t" x $oldlastcol;
+                    }
+                }
+                for (my $i=0; $i <=$lastcol; $i++) {
+                    $outline[$i] .= "$line[$i]\t"
+                }
+            }
+        }
+        for (my $i=0; $i <= $lastcol; $i++) {
+            $outline[$i] =~ s/\s*$//g;
+            print $Fout $outline[$i]."\n";
+        }
+        close($F);
+        close($Fout);
+        $upload_tempfile = $temp_file_transposed;
+        $upload_original_name = basename($temp_file_transposed);
+
+        $subdirectory = "genotype_transposed_vcf_upload";
         $parser_plugin = 'transposedVCF';
     }
 

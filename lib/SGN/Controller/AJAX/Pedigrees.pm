@@ -10,14 +10,14 @@ use Bio::GeneticRelationships::Pedigree;
 use CXGN::Pedigree::AddPedigrees;
 use CXGN::List::Validate;
 use SGN::Model::Cvterm;
-use JSON;
+use utf8;
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON'  },
    );
 
 has 'schema' => (
@@ -51,10 +51,6 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my $upload = $c->req->upload('pedigrees_uploaded_file');
     my $upload_tempfile  = $upload->tempname;
 
-#    my $temp_contents = read_file($upload_tempfile);
-#    $c->stash->{rest} = { error => $temp_contents };
-#    return;
-
     my $upload_original_name  = $upload->filename();
 
     # check file type by file name extension
@@ -65,16 +61,21 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     }
 
     my $md5;
-    print STDERR "TEMP FILE: $upload_tempfile\n";
-    my $uploader = CXGN::UploadFile->new({
-      tempfile => $upload_tempfile,
-      subdirectory => $subdirectory,
-      archive_path => $c->config->{archive_path},
-      archive_filename => $upload_original_name,
-      timestamp => $timestamp,
-      user_id => $user_id,
-      user_role => $c->user()->roles
-    });
+
+    my @user_roles = $c->user()->roles();
+    my $user_role = shift @user_roles;
+        
+    my $params = {
+	tempfile => $upload_tempfile,
+	subdirectory => $subdirectory,
+	archive_path => $c->config->{archive_path},
+	archive_filename => $upload_original_name,
+	timestamp => $timestamp,
+	user_id => $user_id,
+	user_role => $user_role,
+    };
+
+    my $uploader = CXGN::UploadFile->new( $params );
 
     my %upload_metadata;
     my $archived_filename_with_path = $uploader->archive();
@@ -89,7 +90,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
 
     # check if all accessions exist
     #
-    open(my $F, "<", $archived_filename_with_path) || die "Can't open archive file $archived_filename_with_path";
+    open(my $F, "< :encoding(UTF-8)", $archived_filename_with_path) || die "Can't open archive file $archived_filename_with_path";
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my %stocks;
 
@@ -188,7 +189,7 @@ sub _get_pedigrees_from_file {
     my $c = shift;
     my $archived_filename_with_path = shift;
 
-    open(my $F, "<", $archived_filename_with_path) || die "Can't open file $archived_filename_with_path";
+    open(my $F, "< :encoding(UTF-8)", $archived_filename_with_path) || die "Can't open file $archived_filename_with_path";
     my $header = <$F>;
     my @pedigrees;
     my $line_num = 2;

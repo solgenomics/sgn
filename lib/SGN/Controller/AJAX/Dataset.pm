@@ -13,7 +13,7 @@ use CXGN::Dataset;
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON' },
     );
 
 sub store_dataset :Path('/ajax/dataset/save') Args(0) {

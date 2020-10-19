@@ -1,27 +1,44 @@
 <%args>
 $nirs_files => undef
 $deleted_nirs_files => undef
+$all_nirs_files => undef
+$all_deleted_nirs_files => undef
 $locations => undef
 </%args>
 
-<& /breeders_toolbox/upload_nirs_spreadsheet_dialogs.mas &>
+<& /tools/nirs/upload_nirs_spreadsheet_dialogs.mas &>
 <& /tools/nirs/nirs_analysis_train_dialogs.mas &>
 <& /tools/nirs/nirs_analysis_predict_dialogs.mas &>
+<& /tools/nirs/nirs_analysis_plot_spectra_dialogs.mas &>
 
 <div class="well">
 <&| /page/info_section.mas, title=>'Uploaded NIRS Data', is_subsection=>1, collapsible=>1, collapsed=>1, subtitle=>'View and manage uploaded NIRS data files' &>
 
-    <&| /page/info_section.mas, title=>'Uploaded NIRS Data', is_subsection=>1, collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, title=>'Your Uploaded NIRS Data', is_subsection=>1, collapsible=>1, collapsed=>1 &>
         <div class="panel panel-default">
             <div class="panel-body">
-                <& /breeders_toolbox/file_list.mas, files=>$nirs_files, allow_delete=>1 &>
+                <& /breeders_toolbox/file_list.mas, files=>$nirs_files, allow_delete=>0 &>
             </div>
         </div>
     </&>
-    <&| /page/info_section.mas, title=>'Obsoleted NIRS Data', is_subsection=>1, collapsible=>1, collapsed=>1, subtitle=>'These are deleted NIRS files' &>
+    <&| /page/info_section.mas, title=>'Your Obsoleted NIRS Data', is_subsection=>1, collapsible=>1, collapsed=>1, subtitle=>'These are deleted NIRS files' &>
         <div class="panel panel-default">
             <div class="panel-body">
                 <& /breeders_toolbox/file_list.mas, files=>$deleted_nirs_files, allow_delete=>0 &>
+            </div>
+        </div>
+    </&>
+    <&| /page/info_section.mas, title=>'All Uploaded NIRS Data', is_subsection=>1, collapsible=>1, collapsed=>1 &>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <& /breeders_toolbox/file_list.mas, files=>$all_nirs_files, allow_delete=>0 &>
+            </div>
+        </div>
+    </&>
+    <&| /page/info_section.mas, title=>'All Obsoleted NIRS Data', is_subsection=>1, collapsible=>1, collapsed=>1, subtitle=>'These are deleted NIRS files' &>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <& /breeders_toolbox/file_list.mas, files=>$all_deleted_nirs_files, allow_delete=>0 &>
             </div>
         </div>
     </&>
