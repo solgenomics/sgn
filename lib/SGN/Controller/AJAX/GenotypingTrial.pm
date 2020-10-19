@@ -580,16 +580,14 @@ sub store_plate_order_POST : Args(0) {
     my $order_info = decode_json $c->req->param("order");
 
     my $plate_id = $c->req->param("plate_id");
-    my $order_id = $order_info->{orderId} ? $order_info->{orderId} : $order_info->{submissionId};
+    my $order_id = $order_info->{orderId};
     my $shipment = $order_info->{shipmentForms};
-
-    print STDERR Dumper $order_id;
 
     my $genotyping_trial;
     my $message;
     if ($plate_id && $order_id) {
         $genotyping_trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $plate_id });
-        $genotyping_trial->set_genotyping_vendor_order_id($order_id);
+        $genotyping_trial->set_genotyping_vendor_order_id(encode_json $order_info);
         $message = "Successfully order stored.";
     } else {
         my $error = "There was an error trying to store submission order";
@@ -599,7 +597,8 @@ sub store_plate_order_POST : Args(0) {
     }
 
     $c->stash->{rest} = {
-        message => $message
+        message => $message,
+        order_id => $order_id
     };
 
 }
