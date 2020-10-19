@@ -1,4 +1,5 @@
 <%args>
+$facilities
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.GenotypingTrial' ] &>
@@ -65,12 +66,9 @@
                                             <label class="col-sm-5 control-label">Genotyping Facility: </label>
                                             <div class="col-sm-7">
                                                 <select class="form-control" id="upload_genotype_vcf_facility_select" name="upload_genotype_vcf_facility_select">
-                                                    <option value="none">None</option>
-                                                    <option value="igd">Cornell IGD</option>
-                                                    <option value="intertek">Intertek</option>
-                                                    <option value="dart">Dart</option>
-                                                    <option value="bgi">BGI</option>
-                                                    <option value="IBRC_Japan">IBRC Japan</option>
+%  foreach my $facility (@$facilities) {
+                                                    <option value="<% $facility %>"><% $facility %></option>
+%  }
                                                 </select>
                                             </div>
                                         </div>
