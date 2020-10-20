@@ -40,14 +40,16 @@ use Bio::Chado::Schema;
 use CXGN::DB::InsertDBH;
 use Try::Tiny;
 
-our ($opt_H, $opt_D, $opt_i, $opt_c, $opt_t);
+our ($opt_H, $opt_D, $opt_i, $opt_c, $opt_t, $opt_a);
 
-getopts('H:D:i:c:t');
+getopts('H:D:i:c:ta');
+
 
 if (!$opt_H || !$opt_D || !$opt_i || !$opt_c) {
     pod2usage(-verbose => 2, -message => "Must provide options -H (hostname), -D (database name), -i (input file), -c CVNAME \n");
 }
 
+if ($opt_a) { print STDERR "Using accession instead of name\n"; }
 my $dbhost = $opt_H;
 my $dbname = $opt_D;
 my $parser   = Spreadsheet::ParseExcel->new();
@@ -73,11 +75,28 @@ my $coderef = sub {
 
     	my $db_cvterm_name = $worksheet->get_cell($row,0)->value();
 
-    	my $cvterm = $schema->resultset('Cv::Cvterm')->find({ name => $db_cvterm_name, cv_id => $cv->cv_id() });
+	my $cvterm;
+	
+	if ($opt_a) {
+	    my ($db, $acc) = split /\:/, $db_cvterm_name;
+	    my $db_row = $schema->resultset("General::Db")->find({ name => $db });
+	    my $dbxref = $schema->resultset("General::Dbxref")->find( { accession => $acc, db_id => $db_row->db_id() });
+	    if (!$dbxref) { 
+		print STDERR "Term $db_cvterm_name NOT found... Skipping...\n"; 
+		next();
+	    }
+	    $cvterm = $schema->resultset("Cv::Cvterm")->find( { dbxref_id => $dbxref->dbxref_id() });
+	}
+	else  {
+	    $cvterm = $schema->resultset('Cv::Cvterm')->find({ name => $db_cvterm_name, cv_id => $cv->cv_id() });
+	}
 
 	if (!$cvterm) { print STDERR "Cvterm $db_cvterm_name does not exit. SKIPPING!\n";
 			next;
 	}
+	print STDERR "FOUND CVTERM : ".$cvterm->name()."\n";
+	#print STDERR "Deleting $db_cvterm_name... ";
+	
 	my $phenotypes = $schema->resultset('Phenotype::Phenotype')->search( { cvalue_id => $cvterm->cvterm_id() });
 	if ($opt_t) { 
 	    
@@ -90,18 +109,17 @@ my $coderef = sub {
 		print STDERR "Not deleting term ".$cvterm->name()."  with ".$phenotypes->count()." associated phenotypes.\n";
 	    }
 	    else { 
-		my $dbxref = $schema->resultset('General::Dbxref')->find({ dbxref_id => $cvterm->dbxref_id() });
+		my $dbxref_row = $schema->resultset('General::Dbxref')->find({ dbxref_id => $cvterm->dbxref_id() });
+
+		my $name = $cvterm->name();
+		$cvterm->delete();
 		
+		print STDERR "DBXREF ROW : ".ref($dbxref_row)."\n";
 		# check if the dbxref is referenced by other cvterms, only delete
 		# if it's only referenced by this one term
 		#
-		my $dbxref_count_rs = $schema->resultset('Cv::Cvterm')->search( { dbxref_id=> $cvterm->dbxref_id() });
-		
-		if ($dbxref_count_rs->count() == 1) {
-		    $dbxref->delete();
-		}
-		my $name = $cvterm->name();
-		$cvterm->delete();
+		$dbxref_row->delete();
+	    
 		print STDERR "Deleted term $name.\n";
 	    }
 
