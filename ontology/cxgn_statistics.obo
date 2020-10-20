@@ -128,6 +128,20 @@ is_a: SGNSTAT:0000000
 
 [Term]
 id: SGNSTAT:0000025
-name: Adjusted means using LMER R
+name: Adjusted means from BLUPs using LMER R
 is_a: SGNSTAT:0000000
 
+[Term]
+id: SGNSTAT:0000026
+name: Phenotypic BLUPs using LMER R
+is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000027
+name: Adjusted means from BLUEs using LMER R
+is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000028
+name: Phenotypic BLUEs using LMER R
+is_a: SGNSTAT:0000000
