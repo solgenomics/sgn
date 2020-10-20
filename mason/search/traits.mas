@@ -56,6 +56,7 @@
                         <th>Trait ID</th>
                         <th>Trait Name</th>
                         <th>Definition</th>
+                        <th>Trait&nbsp;Usage</th>
                       </tr>
                     </thead>
                     </table>
