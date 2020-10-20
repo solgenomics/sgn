@@ -120,6 +120,9 @@
 <script>
 
 jQuery(document).ready(function(){
+
+    var grouped_phenotypes;
+
     get_select_box('trials', 'image_analysis_trial_select', { 'name' : 'html_image_analysis_trial_select', 'id' : 'html_image_analysis_trial_select', 'multiple':0, 'size':10, 'trial_name_values':1 });
 
     _load_image_search_results();
@@ -175,20 +178,20 @@ jQuery(document).ready(function(){
                 console.log(response);
                 jQuery('#working_msg').html('');
                 jQuery('#working_modal').modal('hide');
-                var image_data = _group_image_data_by_stock(response.results);
-                console.log(image_data);
-                var latest_stock_id = '';
+                grouped_phenotypes = _group_image_phenotypes_by_stock(response.results);
+                console.log(grouped_phenotypes);
+                var latest_stock = '';
                 var avg_score_html;
                 var html = '<table class="table table-hover" style="overflow-x:auto;"><thead><tr><th>Analyzed Image</th><th>Image Phenotype</th><th>Previously Saved Image-Associated Phenotype(s)</th><th>Observation Unit</th><th>Observation Unit Average Phenotype</th></tr></thead><tbody>';
                 for (var i=0; i<response.results.length; i++) {
                     if (response.results[i].result.image_link) {
                         html = html + '<tr><td><img src="'+response.results[i].result.image_link+'"></td><td>'+response.results[i].result.trait_name+': '+response.results[i].result.trait_value+'</td>';
-                        if (response.results[i].stock_id != latest_stock_id && typeof(image_data[response.results[i].stock_id]) !== "undefined") {
-                            var stock_data = image_data[response.results[i].stock_id];
+                        if (response.results[i].stock_uniquename != latest_stock && typeof(grouped_phenotypes[response.results[i].stock_uniquename]) !== "undefined") {
+                            var stock_data = grouped_phenotypes[response.results[i].stock_uniquename];
                             console.log("Stock data are: ");
                             console.log(stock_data);
                             console.log(_average(Object.values(stock_data)));
-                            avg_score_html = '<td rowspan="'+image_data[response.results[i].stock_id].length+'">'+_average(Object.values(stock_data))+'</td>';
+                            avg_score_html = '<td rowspan="'+grouped_phenotypes[response.results[i].stock_uniquename].length+'">'+_average(Object.values(stock_data))+'</td>';
                         } else {
                             avg_score_html = '';
                         }
@@ -204,7 +207,7 @@ jQuery(document).ready(function(){
                     html = html + "<td><a href='/stock/"+response.results[i].stock_id+"/view'>"+response.results[i].stock_uniquename+"</a></td>";
                     html = html + avg_score_html;
                     html = html + '</tr>';
-                    latest_stock_id = response.results[i].stock_id;
+                    latest_stock = response.results[i].stock_uniquename;
                 }
                 html = html + '</tbody></table>';
                 html = html + '<hr><button class="btn btn-primary" id="image_analysis_image_search_results_save">Store New Analysis Phenotypes and Images</button>';
@@ -227,7 +230,7 @@ jQuery(document).ready(function(){
             url: '/ajax/image_analysis/store_phenotypes',
             method: 'POST',
             data: {
-                'phenotypes': image_data,
+                'phenotypes': grouped_phenotypes,
             },
             dataType:'json',
             beforeSend: function() {
@@ -263,19 +266,19 @@ function _load_image_search_results() {
     });
 }
 
-function _group_image_data_by_stock(results) {
-    var image_data = {};
+function _group_image_phenotypes_by_stock(results) {
+    var grouped_phenos = {};
     for (var i=0; i<results.length; i++) {
-        if (typeof(image_data[results[i].stock_id]) !== "undefined" && results[i].result.analyzed_image_id !== "undefined" && results[i].result.trait_value !== "undefined") {
-            image_data[results[i].stock_id][results[i].result.analyzed_image_id] = parseFloat(results[i].result.trait_value);
+        if (typeof(grouped_phenos[results[i].stock_uniquename]) !== "undefined" && results[i].result.analyzed_image_id !== "undefined" && results[i].result.trait_value !== "undefined") {
+            grouped_phenos[results[i].stock_uniquename][results[i].result.analyzed_image_id] = parseFloat(results[i].result.trait_value);
         }
         else if (results[i].result.analyzed_image_id !== "undefined" && results[i].result.trait_value !== "undefined") {
-            image_data[results[i].stock_id] = {};
-            image_data[results[i].stock_id][results[i].result.analyzed_image_id] = parseFloat(results[i].result.trait_value);
+            grouped_phenos[results[i].stock_uniquename] = {};
+            grouped_phenos[results[i].stock_uniquename][results[i].result.analyzed_image_id] = parseFloat(results[i].result.trait_value);
         }
         else {} // if no result returned for an image, skip it.
     }
-    return image_data;
+    return grouped_phenos;
 }
 
 function _average(array) {
