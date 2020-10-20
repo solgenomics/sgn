@@ -28,19 +28,11 @@ sub model_string: Path('/ajax/mixedmodels/modelstring') Args(0) {
 
     my $params = $c->req->body_data();
 
-    print STDERR Dumper($params);
-
     my $fixed_factors = $params->{"fixed_factors"};
-
-    print STDERR "JSON received: $fixed_factors\n";
 
     my $fixed_factors_interaction = $params->{fixed_factors_interaction};
 
-    print STDERR "JSON for interaction: ".Dumper($fixed_factors_interaction)."\n";
-
     my $variable_slope_intersects = $params->{variable_slope_intersects};
-
-    print STDERR "JSON for variable slope intersect: ".Dumper($variable_slope_intersects)."\n";
 
     my $random_factors = $params->{random_factors};
     my $dependent_variables = $params->{dependent_variables};
@@ -63,8 +55,6 @@ sub model_string: Path('/ajax/mixedmodels/modelstring') Args(0) {
     }
 
     my ($model, $error) =  $mm->generate_model();
-
-    print STDERR "MODEL: $model\n";
 
     $c->stash->{rest} = {
 	error => $error,
@@ -145,9 +135,6 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
 
     my $params = $c->req()->params();
 
-    print STDERR Dumper($params);
-
-
     my $tempfile = $params->{tempfile};
     my $dependent_variables = $params->{'dependent_variables[]'};
     if (!ref($dependent_variables)) {
@@ -162,15 +149,10 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     if (!ref($fixed_factors)) {
 	$fixed_factors = [ $fixed_factors ];
     }
-    print STDERR "FIXED FACTOR = ".Dumper($fixed_factors);
-    print STDERR "RANDOM factors = ".Dumper($random_factors);
-    print STDERR "DEPENDENT VARS = ".Dumper($dependent_variables);
 
     my $random_factors = '"'.join('","', @$random_factors).'"';
     my $fixed_factors = '"'.join('","',@$fixed_factors).'"';
     my $dependent_variables = '"'.join('","',@$dependent_variables).'"';
-
-    print STDERR "DV: $dependent_variables Model: $model TF: $tempfile.\n";
 
     my $temppath = $c->config->{basepath}."/".$tempfile;
 
@@ -193,7 +175,6 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     print STDERR "running R command $temppath...\n";
 
     system($cmd);
-    print STDERR "Done.\n";
 
     my $adjusted_blups_file = $temppath.".adjustedBLUPs";
     my $blupfile = $temppath.".BLUPs";
@@ -257,8 +238,8 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     # if (-e $varcompfile) {
     # 	($varcomp_data, $varcomp_html, $accession_names, $traits) = $self->result_file_to_hash($c, $varcompfile);
     # }
-    
-    $c->stash->{rest} = {
+
+    my $response = {
 	error => $error,
 	accession_names => $accession_names,
 	adjusted_blups_data => $adjusted_blups_data,
@@ -276,6 +257,10 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
 	# anova_html => $anova_html,
 	traits => $traits
     };
+
+    #print STDERR "RESPONSE: ".Dumper($response);
+
+    $c->stash->{rest} = $response;
 }
 
 sub result_file_to_hash {
@@ -285,6 +270,7 @@ sub result_file_to_hash {
 
     print STDERR "result_file_to_hash(): Processing file $file...\n";
     my @lines = read_file($file);
+    chomp(@lines);
 
     my $header_line = shift(@lines);
     my ($accession_header, @trait_cols) = split /\t/, $header_line;
@@ -306,7 +292,6 @@ sub result_file_to_hash {
 	$html .= "<tr><td>".join("</td><td>", $accession_name, @values)."</td></tr>\n";
 	for(my $n=0; $n<@values; $n++) { 
 	    $analysis_data{$accession_name}->{$trait_cols[$n]} = [ $values[$n], $timestamp, $operator, "", "" ];
-
 	    
 	}
 	
