@@ -158,6 +158,8 @@ $editable_stock_props_definitions
 %  foreach my $editable_stockprop (sort keys %$editable_stock_props) {
 %    if (exists($editable_stock_props_definitions->{$editable_stockprop})) {
 %                   print "<li>$editable_stockprop (".$editable_stock_props_definitions->{$editable_stockprop}.")</li>";
+%    } else {
+%                   print "<li>$editable_stockprop (no definition available)</li>";
 %    }
 %  }
                     </ul>
