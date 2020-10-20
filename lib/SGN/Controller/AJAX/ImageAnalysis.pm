@@ -305,16 +305,71 @@ sub image_analysis_submit_POST : Args(0) {
     $c->stash->{rest} = { success => 1, results => $result };
 }
 
-sub image_analysis_store_phenotypes : Path('/ajax/image_analysis/store_phenotypes ') : ActionClass('REST') { }
+sub image_analysis_store_phenotypes : Path('/ajax/image_analysis/store_phenotypes') : ActionClass('REST') { }
 sub image_analysis_store_phenotypes_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $phenotypes = decode_json $c->req->param('phenotypes');
-    my $result = ''; # store phenotypes here
-    $c->stash->{rest} = { success => 1, results => $result };
+    my @traits;
+    foreach my $key (keys %{$phenotypes}) {
+        foreach my $trait (keys %{$key}) {
+            push @traits, $trait;
+        }
+    }
+    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+
+    print STDERR Dumper $phenotypes;
+    print STDERR "Storing image analysis values...\n";
+
+    my $dbh = $c->dbc->dbh;
+    my $user_id = $self->user_id();
+    my $p = CXGN::People::Person->new($dbh, $user_id);
+    my $operator = $p->get_username;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my %phenotype_metadata;
+    $phenotype_metadata{'archived_file'} = 'none';
+    $phenotype_metadata{'archived_file_type'} = 'analysis_values';
+    $phenotype_metadata{'operator'} = $operator;
+    $phenotype_metadata{'date'} = $timestamp;
+
+    my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+        basepath => $c->config->{basepath},
+        dbhost => $c->config->{dbhost},
+        dbname => $c->config->{dbname},
+        dbuser => $c->config->{dbuser},
+        dbpass => $c->config->{dbpass},
+        temp_file_nd_experiment_id => $temp_file_nd_experiment_id,
+        bcs_schema => $schema,
+        metadata_schema => $metadata_schema,
+        phenome_schema => $phenome_schema,
+        user_id => $user_id,
+        stock_list => keys %{$phenotypes},
+        trait_list => \@traits,
+        values_hash => $phenotypes,
+        has_timestamps => 0,
+        overwrite_values => 1,
+        metadata_hash => \%phenotype_metadata
+    );
+
+    my ($error, $success) = $store_phenotypes->store();
+
+    if ($error) {
+        print STDERR "An error occurred storing image analysis values ($error).\n";
+        $c->stash->{rest} = {
+            error => "An error occurred storing the image analysis values ($error).\n"
+        };
+        return;
+    }
+
+    my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
+
+    $c->stash->{rest} = { success => 1 };
 
 }
 
