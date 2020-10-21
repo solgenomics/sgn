@@ -794,9 +794,27 @@ sub delete {
     print STDERR "Delete cross ".$self->cross_name()."\n";
     my $dbh = $self->schema()->storage()->dbh();
     my $schema = $self->schema();
+    my $cross_id = $self->cross_stock_id();
 
     eval {
 	$dbh->begin_work();
+
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
+    my $cross_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_experiment", "experiment_type")->cvterm_id();
+    my $collection_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
+
+    my $q = "SELECT stock_relationship.type_id, stock.uniquename from stock_relationship join stock on (stock_relationship.object_id = stock.stock_id) where stock_relationship.subject_id = ?";
+
+    my $h = $self->schema->storage->dbh()->prepare($q);
+
+    $h->execute($cross_id);
+
+    while (my($type_id, $seedlot_name) = $h->fetchrow_array()) {
+	    if ($type_id == $collection_of_type_id) {
+            print STDERR "Cross has associated seedlot. Cannot delete.\n";
+	        die "Cross has associated seedlot: $seedlot_name. Cannot delete.\n";
+	    }
+    }
 
 	my $properties = $self->progeny_properties();
 
@@ -813,8 +831,6 @@ sub delete {
 	else {
 	    print STDERR "This cross has no associated data that would prevent deletion.";
 	}
-	my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
-    my $cross_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_experiment", "experiment_type")->cvterm_id();
 
 	# TO DO: check if this row is actually a cross
 
