@@ -802,8 +802,11 @@ sub delete {
     my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
     my $cross_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_experiment", "experiment_type")->cvterm_id();
     my $collection_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
+    my $field_layout_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_layout', 'experiment_type')->cvterm_id();
+    my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
 
-    my $q = "SELECT stock_relationship.type_id, stock.uniquename from stock_relationship join stock on (stock_relationship.object_id = stock.stock_id) where stock_relationship.subject_id = ?";
+    # checking if cross has associated seedlot
+    my $q = "SELECT stock_relationship.type_id, stock.uniquename FROM stock_relationship JOIN stock ON (stock_relationship.object_id = stock.stock_id) WHERE stock_relationship.subject_id = ?";
 
     my $h = $self->schema->storage->dbh()->prepare($q);
 
@@ -816,6 +819,23 @@ sub delete {
 	    }
     }
 
+    #checking if cross has associated trial
+    my $q2 = "SELECT nd_experiment_stock.type_id, project.name FROM stock_relationship JOIN nd_experiment_stock ON (stock_relationship.subject_id = nd_experiment_stock.stock_id) AND stock_relationship.type_id = ?
+        JOIN nd_experiment_project ON (nd_experiment_stock.nd_experiment_id = nd_experiment_project.nd_experiment_id)
+        JOIN project ON (nd_experiment_project.project_id = project.project_id) WHERE stock_relationship.object_id = ? ";
+
+    my $h2 = $self->schema->storage->dbh()->prepare($q2);
+
+    $h2->execute($plot_of_type_id, $cross_id);
+
+    while (my($type_id, $project_name) = $h2->fetchrow_array()) {
+        if ($type_id == $field_layout_type_id) {
+            print STDERR "Cross has associated trial. Cannot delete.\n";
+            die "Cross has associated trial: $project_name. Cannot delete.\n";
+        }
+    }
+
+    #checking if any progeny has associated data
 	my $properties = $self->progeny_properties();
 
 	my $can_delete =
