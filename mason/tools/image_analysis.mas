@@ -111,6 +111,8 @@
                 </center>
                 <hr>
                 <div id="image_analysis_result">
+                <table class="table table-hover" style="overflow-x:auto;" id="image_analysis_result_table">
+                </table>
                 </div>
             </div>
         </div>
@@ -121,7 +123,7 @@
 
 jQuery(document).ready(function(){
 
-    var grouped_phenotypes;
+    var values_hash;
 
     get_select_box('trials', 'image_analysis_trial_select', { 'name' : 'html_image_analysis_trial_select', 'id' : 'html_image_analysis_trial_select', 'multiple':0, 'size':10, 'trial_name_values':1 });
 
@@ -178,40 +180,97 @@ jQuery(document).ready(function(){
                 console.log(response);
                 jQuery('#working_msg').html('');
                 jQuery('#working_modal').modal('hide');
-                grouped_phenotypes = _group_image_phenotypes_by_stock(response.results);
-                console.log(grouped_phenotypes);
-                var latest_stock = '';
-                var avg_score_html;
-                var html = '<table class="table table-hover" style="overflow-x:auto;"><thead><tr><th>Analyzed Image</th><th>Image Phenotype</th><th>Previously Saved Image-Associated Phenotype(s)</th><th>Observation Unit</th><th>Observation Unit Average Phenotype</th></tr></thead><tbody>';
-                for (var i=0; i<response.results.length; i++) {
-                    if (response.results[i].result.image_link) {
-                        html = html + '<tr><td><img src="'+response.results[i].result.image_link+'"></td><td>'+response.results[i].result.trait_name+': '+response.results[i].result.trait_value+'</td>';
-                        if (response.results[i].stock_uniquename != latest_stock && typeof(grouped_phenotypes[response.results[i].stock_uniquename]) !== "undefined") {
-                            var stock_data = grouped_phenotypes[response.results[i].stock_uniquename];
-                            console.log("Stock data are: ");
-                            console.log(stock_data);
-                            console.log(_average(Object.values(stock_data)));
-                            avg_score_html = '<td rowspan="'+grouped_phenotypes[response.results[i].stock_uniquename].length+'">'+_average(Object.values(stock_data))+'</td>';
-                        } else {
-                            avg_score_html = '';
+                values_hash = _create_values_hash(response.results);
+                var table_data = _group_image_phenotypes_by_stock(values_hash);
+                console.log("values hash is:");
+                console.log(values_hash);
+                console.log("table data is:");
+                console.log(table_data);
+                var dt = jQuery('#image_analysis_result_table').DataTable( {
+                    "data": table_data,
+                    "columns": [
+                        {
+                            "class":          "details-control",
+                            "orderable":      false,
+                            "data":           null,
+                            "defaultContent": ""
+                        },
+                        { "data": "stock" },
+                        { "data": "trait" },
+                        { "data": "avg" }
+                    ],
+                    "order": [[1, 'asc']]
+                } );
+
+                // Array to track the ids of the details displayed rows
+                var detailRows = [];
+
+                jQuery('#image_analysis_result_table tbody').on( 'click', 'tr td.details-control', function () {
+                    var tr = jQuery(this).closest('tr');
+                    var row = dt.row( tr );
+                    var idx = jQuery.inArray( tr.attr('id'), detailRows );
+
+                    if ( row.child.isShown() ) {
+                        tr.removeClass( 'details' );
+                        row.child.hide();
+
+                        // Remove from the 'open' array
+                        detailRows.splice( idx, 1 );
+                    }
+                    else {
+                        tr.addClass( 'details' );
+                        row.child( format( row.data() ) ).show();
+
+                        // Add to the 'open' array
+                        if ( idx === -1 ) {
+                            detailRows.push( tr.attr('id') );
                         }
-                    } else {
-                        html = html + '<tr><td>Error: '+response.results[i].result.error+'. No analysis returned for image '+response.results[i].image_original_filename+response.results[i].image_file_ext+'</td><td></td>';
-                        avg_score_html = '';
                     }
-                    html = html + "<td>";
-                    for (var j=0; j<response.results[i].observations_array.length; j++) {
-                        html = html + response.results[i].observations_array[j].observationvariable_name + ": " + response.results[i].observations_array[j].value;
-                    }
-                    html = html + "</td>";
-                    html = html + "<td><a href='/stock/"+response.results[i].stock_id+"/view'>"+response.results[i].stock_uniquename+"</a></td>";
-                    html = html + avg_score_html;
-                    html = html + '</tr>';
-                    latest_stock = response.results[i].stock_uniquename;
-                }
-                html = html + '</tbody></table>';
-                html = html + '<hr><button class="btn btn-primary" id="image_analysis_image_search_results_save">Store New Analysis Phenotypes and Images</button>';
-                jQuery('#image_analysis_result').html(html);
+                } );
+
+                // On each draw, loop over the `detailRows` array and show any child rows
+                dt.on( 'draw', function () {
+                    jQuery.each( detailRows, function ( i, id ) {
+                        jQuery('#'+id+' td.details-control').trigger( 'click' );
+                    } );
+                } );
+
+
+
+                //
+                // console.log(grouped_phenotypes);
+                // var latest_stock = '';
+                // var avg_score_html;
+                // var html = '<table class="table table-hover" style="overflow-x:auto;"><thead><tr><th>Analyzed Image</th><th>Image Phenotype</th><th>Previously Saved Image-Associated Phenotype(s)</th><th>Observation Unit</th><th>Observation Unit Average Phenotype</th></tr></thead><tbody>';
+                // for (var i=0; i<response.results.length; i++) {
+                //     if (response.results[i].result.image_link) {
+                //             html = html + '<tr><td><img src="'+response.results[i].result.image_link+'"></td><td>'+response.results[i].result.trait_name+': '+response.results[i].result.trait_value+'</td>';
+                //         if (response.results[i].stock_uniquename != latest_stock && typeof(grouped_phenotypes[response.results[i].stock_uniquename]) !== "undefined") {
+                //             var stock_data = grouped_phenotypes[response.results[i].stock_uniquename];
+                //             console.log("Stock data are: ");
+                //             console.log(stock_data);
+                //             console.log(_average(Object.values(stock_data)));
+                //             avg_score_html = '<td rowspan="'+grouped_phenotypes[response.results[i].stock_uniquename].length+'">'+_average(Object.values(stock_data))+'</td>';
+                //         } else {
+                //             avg_score_html = '';
+                //         }
+                //     } else {
+                //         html = html + '<tr><td>Error: '+response.results[i].result.error+'. No analysis returned for image '+response.results[i].image_original_filename+response.results[i].image_file_ext+'</td><td></td>';
+                //         avg_score_html = '';
+                //     }
+                //     html = html + "<td>";
+                //     for (var j=0; j<response.results[i].observations_array.length; j++) {
+                //         html = html + response.results[i].observations_array[j].observationvariable_name + ": " + response.results[i].observations_array[j].value;
+                //     }
+                //     html = html + "</td>";
+                //     html = html + "<td><a href='/stock/"+response.results[i].stock_id+"/view'>"+response.results[i].stock_uniquename+"</a></td>";
+                //     html = html + avg_score_html;
+                //     html = html + '</tr>';
+                //     latest_stock = response.results[i].stock_uniquename;
+                // }
+                // html = html + '</tbody></table>';
+                // html = html + '<hr><button class="btn btn-primary" id="image_analysis_image_search_results_save">Store New Analysis Phenotypes and Images</button>';
+                // jQuery('#image_analysis_result').html(html);
             },
             error: function(response) {
                 jQuery('#working_msg').html('');
@@ -230,7 +289,7 @@ jQuery(document).ready(function(){
             url: '/ajax/image_analysis/store_phenotypes',
             method: 'POST',
             data: {
-                'phenotypes': grouped_phenotypes,
+                'phenotypes': values_hash,
             },
             dataType:'json',
             beforeSend: function() {
@@ -266,25 +325,95 @@ function _load_image_search_results() {
     });
 }
 
-function _group_image_phenotypes_by_stock(results) {
-    var grouped_phenos = {};
+function _create_values_hash (results) {
+    var uniquename, trait, image_id, value, new_uniquename;
+    var values_hash = {};
     for (var i=0; i<results.length; i++) {
-        if (typeof(grouped_phenos[results[i].stock_uniquename]) !== "undefined" && results[i].result.analyzed_image_id !== "undefined" && results[i].result.trait_value !== "undefined") {
-            grouped_phenos[results[i].stock_uniquename][results[i].result.analyzed_image_id] = parseFloat(results[i].result.trait_value);
+        // trait = results[i].result.trait_name;
+        image_id = results[i].result.analyzed_image_id;
+        value = results[i].result.trait_value;
+        if (values_hash[results[i].stock_uniquename] && typeof(values_hash[results[i].stock_uniquename][trait]) !== "undefined" && trait !== "undefined" && image_id !== "undefined" && value !== "undefined") {
+            uniquename = results[i].stock_uniquename;
+            trait = results[i].result.trait_name;
+            values_hash[uniquename][trait][5].push({
+                "id": image_id,
+                "link": results[i].result.image_link,
+                "name": results[i].image_original_filename+results[i].image_file_ext,
+                "value": parseFloat(value)
+            });
         }
-        else if (results[i].result.analyzed_image_id !== "undefined" && results[i].result.trait_value !== "undefined") {
-            grouped_phenos[results[i].stock_uniquename] = {};
-            grouped_phenos[results[i].stock_uniquename][results[i].result.analyzed_image_id] = parseFloat(results[i].result.trait_value);
+        else if (trait !== "undefined" && image_id !== "undefined" && value !== "undefined") {
+            new_uniquename = results[i].stock_uniquename;
+            new_trait = results[i].result.trait_name;
+            values_hash[new_uniquename] = {};
+            values_hash[new_uniquename][new_trait] = ['','','','','',[]];
+            values_hash[new_uniquename][new_trait][5].push({
+                "id": image_id,
+                "link": results[i].result.image_link,
+                "name": results[i].image_original_filename+results[i].image_file_ext,
+                "value": parseFloat(value)
+            });
+            if (typeof(uniquename) !== "undefined") { // save storable stock-level pheno data
+                console.log(values_hash);
+                console.log(uniquename);
+                console.log(trait);
+                var values = values_hash[uniquename][trait][5].map(({ value }) => value);
+                console.log("Values are:");
+                console.log(values);
+                values_hash[uniquename][trait][0] = _average(values);
+                values_hash[uniquename][trait][1] = Date.now();
+                values_hash[uniquename][trait][2] = results[i].result.username;
+                values_hash[uniquename][trait][4] = values_hash[uniquename][trait][5].map(({ id }) => id);
+            }
         }
         else {} // if no result returned for an image, skip it.
     }
-    return grouped_phenos;
+    return values_hash;
+}
+
+function _group_image_phenotypes_by_stock (values_hash) {
+    var data = [];
+    Object.keys(values_hash).forEach(function(stock) {
+        Object.keys(values_hash[stock]).forEach(function(trait) {
+            data.push({
+                "stock": stock,
+                "trait": trait,
+                "avg": values_hash[stock][trait][0],
+                "details": values_hash[stock][trait][5]
+            })
+        });
+    });
+    return data;
 }
 
 function _average(array) {
     var usable_values = array.filter(value => !isNaN(value));
-    var avg = usable_values.reduce((a, b) => a + b) / usable_values.length;
-    return Math.round((avg + Number.EPSILON) * 100) / 100 // round to two decimal pts
+    if (usable_values.length > 0) {
+        console.log(usable_values);
+        var avg = usable_values.reduce((a, b) => a + b) / usable_values.length;
+        return Math.round((avg + Number.EPSILON) * 100) / 100; // round to two decimal pts
+    } else {
+        return undefined;
+    }
+}
+
+function format ( d ) {
+return `<table class="table">
+            <thead>
+                <tr>
+                  <th scope="col">Image Name</th>
+                  <th scope="col">Analyzed Image</th>
+                  <th scope="col">Value</th>
+                </tr>
+             </thead>
+             <tbody>
+                <tr>
+                  <td>'+d.details.name+'</td>
+                  <td><img src="'+d.details.link+'"></td>
+                  <td>'+d.details.value+'</td>
+                </tr>
+            </tbody>
+        </table>`;
 }
 
 </script>
