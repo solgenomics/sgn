@@ -445,6 +445,7 @@ sub add_accession_list_POST : Args(0) {
                     introgression_chromosome=>$_->{introgression_chromosome},
                     introgression_start_position_bp=>$_->{introgression_start_position_bp},
                     introgression_end_position_bp=>$_->{introgression_end_position_bp},
+                    other_editable_stock_props=>$_->{other_editable_stock_props},
                     sp_person_id => $user_id,
                     user_name => $user_name,
                     modification_note => 'Bulk load of accession information'

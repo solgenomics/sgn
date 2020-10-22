@@ -241,6 +241,9 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     my $barcode_tempuri  = $c->tempfiles_subdir('image');
     my $barcode_tempdir = $c->get_conf('basepath')."/$barcode_tempuri";
 
+    my $editable_stockprops = $c->get_conf('editable_stock_props');
+    $editable_stockprops .= ",PUI,organization";
+
     print STDERR "Checkpoint 4: Elapsed ".(time() - $time)."\n";
 ################
     $c->stash(
@@ -275,7 +278,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 	    has_pedigree => $c->stash->{has_pedigree},
 	    has_descendants => $c->stash->{has_descendants},
             trait_ontology_db_name => $c->get_conf('trait_ontology_db_name'),
-	    editable_stock_props   => $c->get_conf('editable_stock_props'),
+	    editable_stock_props   => $editable_stockprops,
 
         },
         locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
