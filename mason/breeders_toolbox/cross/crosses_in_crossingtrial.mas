@@ -33,6 +33,7 @@ jQuery(document).ready(function(){
                 { title: "Cross Combination", "data": "cross_combination" },
                 { title: "Cross Type", "data": "cross_type" },
                 { title: "Female Parent", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.female_parent_id+"/view'>"+row.female_parent_name+"</a>"; } },
+                { title: "Female Ploidy", "data": "female_ploidy_level" },
                 { title: "Male Parent", "data": null, "render": function ( data, type, row ) {
                     if (row.male_parent_id === null){
                         return 'NA';
@@ -40,6 +41,7 @@ jQuery(document).ready(function(){
                         return "<a href='/stock/"+row.male_parent_id+"/view'>"+row.male_parent_name+"</a>";
                     }
                 }},
+                { title: "Male Ploidy", "data": "male_ploidy_level" },
                 { title: "Female Plot", "data": null, "render": function ( data, type, row ) {
                     if (row.female_plot_id === null){
                         return 'NA';

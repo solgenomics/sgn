@@ -2143,7 +2143,7 @@ sub crosses_and_details_in_trial : Chained('trial') PathPart('crosses_and_detail
     my $result = $trial->get_crosses_and_details_in_crossingtrial();
     my @crosses;
     foreach my $r (@$result){
-        my ($cross_id, $cross_name, $cross_combination, $cross_type, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name) =@$r;
+        my ($cross_id, $cross_name, $cross_combination, $cross_type, $female_parent_id, $female_parent_name, $female_ploidy, $male_parent_id, $male_parent_name, $male_ploidy, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name) =@$r;
         push @crosses, {
             cross_id => $cross_id,
             cross_name => $cross_name,
@@ -2151,8 +2151,10 @@ sub crosses_and_details_in_trial : Chained('trial') PathPart('crosses_and_detail
             cross_type => $cross_type,
             female_parent_id => $female_parent_id,
             female_parent_name => $female_parent_name,
+            female_ploidy_level => $female_ploidy,
             male_parent_id => $male_parent_id,
             male_parent_name => $male_parent_name,
+            male_ploidy_level => $male_ploidy,
             female_plot_id => $female_plot_id,
             female_plot_name => $female_plot_name,
             male_plot_id => $male_plot_id,
@@ -2937,9 +2939,9 @@ sub trial_plot_time_series_accessions : Chained('trial') PathPart('plot_time_ser
     mat\$time <- as.numeric(as.character(mat\$time));
     options(device=\'png\');
     par();
-    sp <- ggplot(mat, aes(x = time, y = value)) + 
+    sp <- ggplot(mat, aes(x = time, y = value)) +
         geom_line(aes(color = germplasmName), size = 1) +
-        scale_fill_manual(values = c(\''.$color_string.'\')) + 
+        scale_fill_manual(values = c(\''.$color_string.'\')) +
         theme_minimal();
     sp <- sp + guides(shape = guide_legend(override.aes = list(size = 0.5)));
     sp <- sp + guides(color = guide_legend(override.aes = list(size = 0.5)));
@@ -3280,9 +3282,9 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
     mat\$Genotype <- as.character(mat\$Genotype);
     options(device=\'png\');
     par();
-    sp <- ggplot(mat, aes(x = Marker, y = Count)) + 
+    sp <- ggplot(mat, aes(x = Marker, y = Count)) +
         geom_line(aes(color = Genotype), size=0.2) +
-        scale_fill_manual(values = c(\''.$color_string.'\')) + 
+        scale_fill_manual(values = c(\''.$color_string.'\')) +
         theme_minimal();
     sp <- sp + facet_grid(Rank ~ .);';
     $cmd .= 'ggsave(\''.$pheno_figure_tempfile.'\', sp, device=\'png\', width=12, height=12, units=\'in\');
