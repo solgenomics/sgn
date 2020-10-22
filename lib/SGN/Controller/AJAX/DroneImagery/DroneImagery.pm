@@ -232,12 +232,14 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $protocol_id = $c->req->param('protocol_id');
     my $tolparinv = $c->req->param('tolparinv');
     my $legendre_order_number = $c->req->param('legendre_order_number');
+    my $permanent_environment_structure = $c->req->param('permanent_environment_structure');
 
     my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
     my $tmp_stats_dir = $shared_cluster_dir_config."/tmp_drone_statistics";
     mkdir $tmp_stats_dir if ! -d $tmp_stats_dir;
     my ($grm_rename_tempfile_fh, $grm_rename_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     $grm_rename_tempfile .= '.grm';
+    my ($permanent_environment_structure_tempfile_fh, $permanent_environment_structure_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_tempfile_fh, $stats_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_tempfile_rename_fh, $stats_tempfile_rename) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_tempfile_2_fh, $stats_tempfile_2) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
@@ -251,7 +253,11 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     $coeff_genetic_tempfile .= '_genetic_coefficients.csv';
     my ($coeff_pe_tempfile_fh, $coeff_pe_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     $coeff_pe_tempfile .= '_permanent_environment_coefficients.csv';
-    my ($stats_out_tempfile_fh, $stats_out_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+
+    my $dir = $c->tempfiles_subdir('/tmp_drone_statistics');
+    my $stats_out_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/drone_stats_XXXXX');
+    my $stats_out_tempfile = $c->config->{basepath}."/".$stats_out_tempfile_string;
+
     my ($stats_out_param_tempfile_fh, $stats_out_param_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_tempfile_row_fh, $stats_out_tempfile_row) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_tempfile_col_fh, $stats_out_tempfile_col) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
@@ -260,6 +266,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my ($stats_out_tempfile_genetic_fh, $stats_out_tempfile_genetic) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_tempfile_permanent_environment_fh, $stats_out_tempfile_permanent_environment) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my $blupf90_solutions_tempfile;
+    my $yhat_residual_tempfile;
     my $grm_file;
 
     my @results;
@@ -269,6 +276,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $result_residual_data;
     my $result_fitted_data;
     my @sorted_trait_names;
+    my @sorted_residual_trait_names;
     my %seen_trait_names;
     my @sorted_scaled_ln_times;
     my @rep_time_factors;
@@ -276,6 +284,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my %accession_id_factor_map;
     my %accession_id_factor_map_reverse;
     my %plot_id_factor_map_reverse;
+    my %plot_id_count_map_reverse;
+    my %time_count_map_reverse;
     my @unique_accession_names;
     my @unique_plot_names;
     my $statistical_ontology_term;
@@ -779,6 +789,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     @header_cols = $csv->fields();
                 }
 
+                my $line_factor_count = 0;
                 while (my $row = <$fh_factor>) {
                     my @columns;
                     if ($csv->parse($row)) {
@@ -811,6 +822,9 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     $accession_id_factor_map_reverse{$accession_id_factor} = $stock_info{$accession_id}->{uniquename};
                     # $plot_id_factor_map_reverse{$ind_rep} = $seen_plots{$plot_id};
                     $plot_id_factor_map_reverse{$plot_id_factor} = $seen_plots{$plot_id};
+                    $plot_id_count_map_reverse{$line_factor_count} = $seen_plots{$plot_id};
+                    $time_count_map_reverse{$line_factor_count} = $time;
+                    $line_factor_count++;
                 }
             close($fh_factor);
             # print STDERR Dumper \%plot_factor_map;
@@ -818,6 +832,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             @ind_rep_factors = sort keys %seen_ind_reps;
 
             my @data_matrix_phenotypes;
+            my %stock_row_col;
+            my @stocks_ordered;
             foreach (@$data) {
                 my $germplasm_name = $_->{germplasm_uniquename};
                 my $germplasm_stock_id = $_->{germplasm_stock_id};
@@ -832,8 +848,13 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 };
                 $plot_id_map{$obsunit_stock_id} = $obsunit_stock_uniquename;
                 $seen_plot_names{$obsunit_stock_uniquename}++;
+                $stock_row_col{$obsunit_stock_id} = {
+                    row_number => $row_number,
+                    col_number => $col_number
+                };
                 my @data_matrix_phenotypes_row;
                 my $current_trait_index = 0;
+                push @stocks_ordered, $obsunit_stock_id;
                 foreach my $t (@sorted_trait_names) {
                     my @row = (
                         $accession_id_factor_map{$germplasm_stock_id},
@@ -909,6 +930,44 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     print $F2 "$line\n";
                 }
             close($F2);
+
+            if ($permanent_environment_structure eq 'euclidean_rows_and_columns') {
+                my $data = '';
+                my %euclidean_distance_hash;
+                foreach my $s (sort { $a <=> $b } @stocks_ordered) {
+                    foreach my $r (sort { $a <=> $b } @stocks_ordered) {
+                        my $s_factor = $plot_factor_map{$s}->{plot_id_factor};
+                        my $r_factor = $plot_factor_map{$r}->{plot_id_factor};
+                        if (!exists($euclidean_distance_hash{$s_factor}->{$r_factor}) && !exists($euclidean_distance_hash{$r_factor}->{$s_factor})) {
+                            my $row_1 = $stock_row_col{$s}->{row_number};
+                            my $col_1 = $stock_row_col{$s}->{col_number};
+                            my $row_2 = $stock_row_col{$r}->{row_number};
+                            my $col_2 = $stock_row_col{$r}->{col_number};
+                            my $dist = sqrt( ($row_2 - $row_1)**2 + ($col_2 - $col_1)**2 );
+                            if (defined $dist and length $dist) {
+                                $euclidean_distance_hash{$s_factor}->{$r_factor} = $dist;
+                            }
+                            else {
+                                $c->stash->{rest} = { error => "There are not rows and columns for all of the plots! Do not try to use a Euclidean distance between plots for the permanent environment structure"};
+                                return;
+                            }
+                        }
+                    }
+                }
+
+                foreach my $r (sort { $a <=> $b } keys %euclidean_distance_hash) {
+                    foreach my $s (sort { $a <=> $b } keys %{$euclidean_distance_hash{$r}}) {
+                        my $val = $euclidean_distance_hash{$r}->{$s};
+                        if (defined $val and length $val) {
+                            $data .= "$r\t$s\t$val\n";
+                        }
+                    }
+                }
+
+                open(my $F3, ">", $permanent_environment_structure_tempfile) || die "Can't open file ".$permanent_environment_structure_tempfile;
+                    print $F3 $data;
+                close($F3);
+            }
         }
 
         if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups'
@@ -930,9 +989,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 my $tmp_arm_dir = $shared_cluster_dir_config."/tmp_download_arm";
                 mkdir $tmp_arm_dir if ! -d $tmp_arm_dir;
                 my ($arm_tempfile_fh, $arm_tempfile) = tempfile("drone_stats_download_arm_XXXXX", DIR=> $tmp_arm_dir);
-                my ($arm_tempfile_fh, $arm_tempfile) = tempfile("drone_stats_download_arm_XXXXX", DIR=> $tmp_arm_dir);
                 my ($grm1_tempfile_fh, $grm1_tempfile) = tempfile("drone_stats_download_grm1_XXXXX", DIR=> $tmp_arm_dir);
+                my ($grm_out_temp_tempfile_fh, $grm_out_temp_tempfile) = tempfile("drone_stats_download_grm_temp_out_XXXXX", DIR=> $tmp_arm_dir);
                 my ($grm_out_tempfile_fh, $grm_out_tempfile) = tempfile("drone_stats_download_grm_out_XXXXX", DIR=> $tmp_arm_dir);
+                my ($grm_out_posdef_tempfile_fh, $grm_out_posdef_tempfile) = tempfile("drone_stats_download_grm_out_XXXXX", DIR=> $tmp_arm_dir);
 
                 if (!$protocol_id) {
                     $protocol_id = undef;
@@ -1027,7 +1087,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                             $female_rel = $female_parent_grm{'S'.$female_parent1}->{'S'.$female_parent2};
                         }
                         elsif ($female_parent1 && $female_parent2 && $female_parent1 == $female_parent2) {
-                            $female_rel = 0.5;
+                            $female_rel = 1;
                         }
                         elsif ($a1 == $a2) {
                             $female_rel = 1;
@@ -1038,7 +1098,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                             $male_rel = $male_parent_grm{'S'.$male_parent1}->{'S'.$male_parent2};
                         }
                         elsif ($male_parent1 && $male_parent2 && $male_parent1 == $male_parent2) {
-                            $male_rel = 0.5;
+                            $male_rel = 1;
                         }
                         elsif ($a1 == $a2) {
                             $male_rel = 1;
@@ -1052,42 +1112,121 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 # print STDERR Dumper \%rel_result_hash;
 
                 my $data = '';
-                # if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
-                    foreach my $r (sort keys %rel_result_hash) {
-                        foreach my $s (sort keys %{$rel_result_hash{$r}}) {
-                            my $val = $rel_result_hash{$r}->{$s};
+                my %result_hash;
+                foreach my $s (sort @accession_ids) {
+                    foreach my $c (sort @accession_ids) {
+                        if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
+                            my $val = $rel_result_hash{$s}->{$c};
                             if (defined $val and length $val) {
-                                $data .= "S$r\tS$s\t$val\n";
+                                $result_hash{$s}->{$c} = $val;
+                                $data .= "S$s\tS$c\t$val\n";
                             }
                         }
                     }
-                # }
-                # else {
-                #     #Recicprocal
-                #     foreach my $r (sort keys %rel_result_hash) {
-                #         foreach my $s (sort keys %{$rel_result_hash{$r}}) {
-                #             my $val = $rel_result_hash{$r}->{$s};
-                #             if (defined $val and length $val) {
-                #                 $data .= "S$r\tS$s\t$val\n";
-                #                 if ($s != $r) {
-                #                     $data .= "S$s\tS$r\t$val\n";
-                #                 }
-                #             }
-                #         }
-                #     }
-                # }
+                }
 
-                open(my $F2, ">", $grm_out_tempfile) || die "Can't open file ".$grm_out_tempfile;
+                # print STDERR Dumper $data;
+                open(my $F2, ">", $grm_out_temp_tempfile) || die "Can't open file ".$grm_out_temp_tempfile;
                     print $F2 $data;
                 close($F2);
-                $grm_file = $grm_out_tempfile;
+
+                my $cmd = 'R -e "library(data.table); library(scales); library(tidyr); library(reshape2);
+                three_col <- fread(\''.$grm_out_temp_tempfile.'\', header=FALSE, sep=\'\t\');
+                A_wide <- dcast(three_col, V1~V2, value.var=\'V3\');
+                A_1 <- A_wide[,-1];
+                A_1[is.na(A_1)] <- 0;
+                A <- A_1 + t(A_1);
+                diag(A) <- diag(as.matrix(A_1));
+                E = eigen(A);
+                ev = E\$values;
+                U = E\$vectors;
+                no = dim(A)[1];
+                nev = which(ev < 0);
+                wr = 0;
+                k=length(nev);
+                if(k > 0){
+                    p = ev[no - k];
+                    B = sum(ev[nev])*2.0;
+                    wr = (B*B*100.0)+1;
+                    val = ev[nev];
+                    ev[nev] = p*(B-val)*(B-val)/wr;
+                    A = U%*%diag(ev)%*%t(U);
+                }
+                A <- as.data.frame(A);
+                colnames(A) <- A_wide[,1];
+                A\$stock_id <- A_wide[,1];
+                A_threecol <- melt(A, id.vars = c(\'stock_id\'), measure.vars = A_wide[,1]);
+                A_threecol\$stock_id <- substring(A_threecol\$stock_id, 2);
+                A_threecol\$variable <- substring(A_threecol\$variable, 2);
+                write.table(data.frame(variable = A_threecol\$variable, stock_id = A_threecol\$stock_id, value = A_threecol\$value), file=\''.$grm_out_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
+                print STDERR $cmd."\n";
+                my $status = system($cmd);
+
+                my $csv = Text::CSV->new({ sep_char => "\t" });
+
+                my %rel_pos_def_result_hash;
+                open(my $F3, '<', $grm_out_tempfile)
+                    or die "Could not open file '$grm_out_tempfile' $!";
+
+                    print STDERR "Opened $grm_out_tempfile\n";
+
+                    while (my $row = <$F3>) {
+                        my @columns;
+                        if ($csv->parse($row)) {
+                            @columns = $csv->fields();
+                        }
+                        my $stock_id1 = $columns[0];
+                        my $stock_id2 = $columns[1];
+                        my $val = $columns[2];
+                        $rel_pos_def_result_hash{$stock_id1}->{$stock_id2} = $val;
+                    }
+                close($F3);
+
+                my $data_pos_def = '';
+                if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+                    my %result_hash;
+                    foreach my $s (sort @accession_ids) {
+                        foreach my $c (sort @accession_ids) {
+                            if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
+                                my $val = $rel_pos_def_result_hash{$s}->{$c};
+                                if (defined $val and length $val) {
+                                    $result_hash{$s}->{$c} = $val;
+                                    $data_pos_def .= "$s\t$c\t$val\n";
+                                }
+                            }
+                        }
+                    }
+                }
+                else {
+                    my %result_hash;
+                    foreach my $s (sort @accession_ids) {
+                        foreach my $c (sort @accession_ids) {
+                            if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
+                                my $val = $rel_pos_def_result_hash{$s}->{$c};
+                                if (defined $val and length $val) {
+                                    $result_hash{$s}->{$c} = $val;
+                                    $data_pos_def .= "S$s\tS$c\t$val\n";
+                                    if ($s != $c) {
+                                        $data_pos_def .= "S$s\tS$c\t$val\n";
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                open(my $F4, ">", $grm_out_posdef_tempfile) || die "Can't open file ".$grm_out_posdef_tempfile;
+                    print $F4 $data_pos_def;
+                close($F4);
+
+                $grm_file = $grm_out_posdef_tempfile;
             }
             else {
                 my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
                 my $tmp_grm_dir = $shared_cluster_dir_config."/tmp_genotype_download_grm";
                 mkdir $tmp_grm_dir if ! -d $tmp_grm_dir;
-                my ($grm_tempfile_fh, $grm_tempfile) = tempfile("wizard_download_grm_XXXXX", DIR=> $tmp_grm_dir);
-                my ($grm_out_tempfile_fh, $grm_out_tempfile) = tempfile("wizard_download_grm_XXXXX", DIR=> $tmp_grm_dir);
+                my ($grm_tempfile_fh, $grm_tempfile) = tempfile("drone_stats_download_grm_XXXXX", DIR=> $tmp_grm_dir);
+                my ($grm_out_tempfile_fh, $grm_out_tempfile) = tempfile("drone_stats_download_grm_XXXXX", DIR=> $tmp_grm_dir);
 
                 if (!$protocol_id) {
                     $protocol_id = undef;
@@ -1490,8 +1629,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 or die "Could not open file '$stats_out_tempfile_permanent_environment' $!";
             
                 print STDERR "Opened $stats_out_tempfile_permanent_environment\n";
-                my $header = <$fh>;
-                my @header_cols;
+                $header = <$fh>;
                 if ($csv->parse($header)) {
                     @header_cols = $csv->fields();
                 }
@@ -1898,6 +2036,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
             my $stats_tempfile_2_basename = basename($stats_tempfile_2);
             my $grm_file_basename = basename($grm_rename_tempfile);
+            my $permanent_environment_structure_file_basename = basename($permanent_environment_structure_tempfile);
             #my @phenotype_header = ("id", "plot_id", "replicate", "time", "replicate_time", "ind_replicate", @sorted_trait_names, "phenotype");
 
             my $effect_1_levels = scalar(@rep_time_factors);
@@ -1959,10 +2098,25 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             push @param_file_rows, (
                 'RANDOM_GROUP',
                 $random_group_string2,
-                'RANDOM_TYPE',
-                'diagonal',
-                'FILE',
-                '',
+                'RANDOM_TYPE'
+            );
+
+            if ($permanent_environment_structure eq 'identity') {
+                push @param_file_rows, (
+                    'diagonal',
+                    'FILE',
+                    ''
+                );
+            }
+            elsif ($permanent_environment_structure eq 'euclidean_rows_and_columns') {
+                push @param_file_rows, (
+                    'user_file_inv',
+                    'FILE',
+                    $permanent_environment_structure_file_basename
+                );
+            }
+
+            push @param_file_rows, (
                 '(CO)VARIANCES'
             );
             foreach (@pheno_var) {
@@ -2008,19 +2162,35 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 }
             close($fh_log);
 
+            my $q_time = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
+            my $h_time = $schema->storage->dbh()->prepare($q_time);
+
+            my %rr_unique_traits;
+            my %rr_residual_unique_traits;
+
             my $sum_square_res = 0;
-            my $yhat_residual_tempfile = $tmp_stats_dir."/yhat_residual";
+            $yhat_residual_tempfile = $tmp_stats_dir."/yhat_residual";
             open(my $fh_yhat_res, '<', $yhat_residual_tempfile)
                 or die "Could not open file '$yhat_residual_tempfile' $!";
                 print STDERR "Opened $yhat_residual_tempfile\n";
 
                 my $pred_res_counter = 0;
+                my $trait_counter = 0;
                 while (my $row = <$fh_yhat_res>) {
                     # print STDERR $row;
                     my @vals = split ' ', $row;
                     my $pred = $vals[0];
                     my $residual = $vals[1];
                     $sum_square_res = $sum_square_res + $residual*$residual;
+
+                    my $plot_name = $plot_id_count_map_reverse{$pred_res_counter};
+                    my $time = $time_count_map_reverse{$pred_res_counter};
+
+                    $rr_residual_unique_traits{$seen_times{$time}}++;
+
+                    $result_residual_data->{$plot_name}->{$seen_times{$time}} = [$residual, $timestamp, $user_name, '', ''];
+                    $result_fitted_data->{$plot_name}->{$seen_times{$time}} = [$pred, $timestamp, $user_name, '', ''];
+
                     $pred_res_counter++;
                 }
             close($fh_yhat_res);
@@ -2082,11 +2252,6 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
             # print STDERR Dumper \%rr_genetic_coefficients;
             # print STDERR Dumper \%rr_temporal_coefficients;
-
-            my $q_time = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
-            my $h_time = $schema->storage->dbh()->prepare($q_time);
-
-            my %rr_unique_traits;
 
             open(my $Fgc, ">", $coeff_genetic_tempfile) || die "Can't open file ".$coeff_genetic_tempfile;
 
@@ -2182,6 +2347,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             # print STDERR Dumper $result_blup_data;
             # print STDERR Dumper $result_blup_pe_data;
             @sorted_trait_names = sort keys %rr_unique_traits;
+            @sorted_residual_trait_names = sort keys %rr_residual_unique_traits;
         }
     }
     elsif ($statistics_select eq 'marss_germplasmname_block') {
@@ -2401,6 +2567,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         result_residual_data => $result_residual_data,
         result_fitted_data => $result_fitted_data,
         unique_traits => \@sorted_trait_names,
+        unique_residual_traits => \@sorted_residual_trait_names,
         unique_accessions => \@unique_accession_names,
         unique_plots => \@unique_plot_names,
         statistics_select => $statistics_select,
@@ -2409,10 +2576,13 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         blupf90_grm_file => $grm_rename_tempfile,
         blupf90_param_file => $parameter_tempfile,
         blupf90_training_file => $stats_tempfile_2,
+        blupf90_permanent_environment_structure_file => $permanent_environment_structure_tempfile,
+        yhat_residual_tempfile => $yhat_residual_tempfile,
         rr_genetic_coefficients => $coeff_genetic_tempfile,
         rr_pe_coefficients => $coeff_pe_tempfile,
         blupf90_solutions => $blupf90_solutions_tempfile,
         stats_out_tempfile => $stats_out_tempfile,
+        stats_out_tempfile_string => $stats_out_tempfile_string,
         stats_out_tempfile_col => $stats_out_tempfile_col,
         stats_out_tempfile_row => $stats_out_tempfile_row,
         statistical_ontology_term => $statistical_ontology_term,
@@ -10671,6 +10841,11 @@ sub drone_imagery_autoencoder_keras_vi_model_POST : Args(0) {
     my $plot_polygon_type_ids = decode_json($c->req->param('plot_polygon_type_ids'));
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
+    if (scalar(@$drone_run_ids) > 1) {
+        $c->stash->{rest} = {error => "Please select only one drone run to predict on!"};
+        $c->detach();
+    }
+
     my @allowed_composed_cvs = split ',', $c->config->{composable_cvs};
     my $composable_cvterm_delimiter = $c->config->{composable_cvterm_delimiter};
     my $composable_cvterm_format = $c->config->{composable_cvterm_format};
@@ -10903,14 +11078,12 @@ sub _perform_autoencoder_keras_cnn_vi {
 
         foreach my $field_trial_id (sort keys %seen_field_trial_ids) {
             foreach my $stock_id (sort keys %seen_stock_ids) {
-                my $archive_temp_output_red_image_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_autoencoder_dir/outputimagefileXXXX');
-                $archive_temp_output_red_image_file .= ".png";
-                my $archive_temp_output_rededge_image_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_autoencoder_dir/outputimagefileXXXX');
-                $archive_temp_output_rededge_image_file .= ".png";
-                my $archive_temp_output_nir_image_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_autoencoder_dir/outputimagefileXXXX');
-                $archive_temp_output_nir_image_file .= ".png";
+                my $archive_temp_output_ndvi_image_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_autoencoder_dir/outputimagefileXXXX');
+                $archive_temp_output_ndvi_image_file .= ".png";
+                my $archive_temp_output_ndre_image_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_keras_cnn_autoencoder_dir/outputimagefileXXXX');
+                $archive_temp_output_ndre_image_file .= ".png";
 
-                my @autoencoded_image_files = ($archive_temp_output_red_image_file, $archive_temp_output_rededge_image_file, $archive_temp_output_nir_image_file);
+                my @autoencoded_image_files = ($archive_temp_output_ndvi_image_file, $archive_temp_output_ndre_image_file);
                 $output_images{$stock_id} = \@autoencoded_image_files;
                 my $img_string = join "\t", @autoencoded_image_files;
                 print $F2 "$stock_id\t$img_string\n";
@@ -10930,6 +11103,7 @@ sub _perform_autoencoder_keras_cnn_vi {
     my $status = system($cmd);
 
     my @saved_trained_image_urls;
+    my %output_image_ids;
     my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_keras_autoencoder_decoded', 'project_md_image')->cvterm_id();
     foreach my $stock_id (keys %output_images) {
         my $autoencoded_images = $output_images{$stock_id};
@@ -10942,6 +11116,7 @@ sub _perform_autoencoder_keras_cnn_vi {
             my $output_image_url = $image->get_image_url('original');
             my $output_image_id = $image->get_image_id();
             push @saved_trained_image_urls, $output_image_url;
+            push @{$output_image_ids{$stock_id}}, $output_image_id;
         }
     }
 
@@ -11008,13 +11183,14 @@ sub _perform_autoencoder_keras_cnn_vi {
 
             my $stock_id = $columns[0];
             my $stock_uniquename = $stock_info{$stock_id}->{stock_uniquename};
+            my $output_images = $output_image_ids{$stock_id};
 
             #print STDERR Dumper \@columns;
             $stock_info{$stock_id}->{result} = \@columns;
 
             $plots_seen{$stock_uniquename} = 1;
-            $autoencoder_vi_phenotype_data{$stock_uniquename}->{$autoencoder_ndvi_composed_trait_name} = [$columns[1], $timestamp, $user_name, '', undef];
-            $autoencoder_vi_phenotype_data{$stock_uniquename}->{$autoencoder_ndre_composed_trait_name} = [$columns[2], $timestamp, $user_name, '', undef];
+            $autoencoder_vi_phenotype_data{$stock_uniquename}->{$autoencoder_ndvi_composed_trait_name} = [$columns[1], $timestamp, $user_name, '', $output_images->[0]];
+            $autoencoder_vi_phenotype_data{$stock_uniquename}->{$autoencoder_ndre_composed_trait_name} = [$columns[2], $timestamp, $user_name, '', $output_images->[1]];
 
             $line++;
         }
