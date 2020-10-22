@@ -794,10 +794,48 @@ sub delete {
     print STDERR "Delete cross ".$self->cross_name()."\n";
     my $dbh = $self->schema()->storage()->dbh();
     my $schema = $self->schema();
+    my $cross_id = $self->cross_stock_id();
 
     eval {
 	$dbh->begin_work();
 
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
+    my $cross_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_experiment", "experiment_type")->cvterm_id();
+    my $collection_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
+    my $field_layout_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_layout', 'experiment_type')->cvterm_id();
+    my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+
+    # checking if cross has associated seedlot
+    my $q = "SELECT stock_relationship.type_id, stock.uniquename FROM stock_relationship JOIN stock ON (stock_relationship.object_id = stock.stock_id) WHERE stock_relationship.subject_id = ?";
+
+    my $h = $self->schema->storage->dbh()->prepare($q);
+
+    $h->execute($cross_id);
+
+    while (my($type_id, $seedlot_name) = $h->fetchrow_array()) {
+	    if ($type_id == $collection_of_type_id) {
+            print STDERR "Cross has associated seedlot. Cannot delete.\n";
+	        die "Cross has associated seedlot: $seedlot_name. Cannot delete.\n";
+	    }
+    }
+
+    #checking if cross has associated trial
+    my $q2 = "SELECT nd_experiment_stock.type_id, project.name FROM stock_relationship JOIN nd_experiment_stock ON (stock_relationship.subject_id = nd_experiment_stock.stock_id) AND stock_relationship.type_id = ?
+        JOIN nd_experiment_project ON (nd_experiment_stock.nd_experiment_id = nd_experiment_project.nd_experiment_id)
+        JOIN project ON (nd_experiment_project.project_id = project.project_id) WHERE stock_relationship.object_id = ? ";
+
+    my $h2 = $self->schema->storage->dbh()->prepare($q2);
+
+    $h2->execute($plot_of_type_id, $cross_id);
+
+    while (my($type_id, $project_name) = $h2->fetchrow_array()) {
+        if ($type_id == $field_layout_type_id) {
+            print STDERR "Cross has associated trial. Cannot delete.\n";
+            die "Cross has associated trial: $project_name. Cannot delete.\n";
+        }
+    }
+
+    #checking if any progeny has associated data
 	my $properties = $self->progeny_properties();
 
 	my $can_delete =
@@ -813,8 +851,6 @@ sub delete {
 	else {
 	    print STDERR "This cross has no associated data that would prevent deletion.";
 	}
-	my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
-    my $cross_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_experiment", "experiment_type")->cvterm_id();
 
 	# TO DO: check if this row is actually a cross
 
