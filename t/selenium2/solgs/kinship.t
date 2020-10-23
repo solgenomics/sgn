@@ -28,7 +28,7 @@ $d->while_logged_in_as("submitter", sub {
     my $sel = $d->find_element('//div[@class="list_upload"]//*[contains(text(), "Select")]', 'xpath', 'scroll up');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, -1);", $sel);
     sleep(2);
-     $d->find_element_ok('//div[@id="kinship_div"]//*[contains(text(), "UG120232")]', 'xpath', 'check output')->click();
+    $d->find_element_ok('//div[@id="kinship_div"]//*[contains(text(), "UG120232")]', 'xpath', 'check output')->click();
     sleep(2);
     $d->find_element_ok('//div[@id="kinship_div"]//*[contains(text(), "Download")]', 'xpath', 'check output')->click();
     sleep(3);
@@ -60,6 +60,45 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//div[@id="kinship_div"]//*[contains(text(), "Download")]', 'xpath', 'check output')->click();
     sleep(3);
 
+    $d->get_ok('/kinship/analysis', 'kinship home page');     
+    sleep(5);
+    $d->find_element_ok('//select[@id="kinship_pops_list_select"]/option[text()="Dataset Kasese Clones"]', 'xpath', 'select clones list')->click();
+    sleep(2);
+    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
+    sleep(3);
+    $d->find_element_ok('run_kinship', 'id', 'run kinship')->click();
+    sleep(2);
+    $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
+    sleep(80);
+
+    $d->driver->refresh();
+    sleep(3);
+    $d->find_element_ok('//select[@id="kinship_pops_list_select"]/option[text()="Dataset Kasese Clones"]', 'xpath', 'select clones list')->click();
+    sleep(2);
+    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
+    sleep(3);
+    $d->find_element_ok('run_kinship', 'id', 'run kinship')->click();
+    sleep(2);
+    $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
+    sleep(3);
+    $d->find_element_ok('analysis_name', 'id', 'job queueing')->send_keys('kinship analysis');
+    sleep(2);
+    $d->find_element_ok('submit_job', 'id', 'submit')->click();
+    sleep(80);
+    $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
+    sleep(10);
+
+    $d->get_ok('/kinship/analysis/dataset_4/gp/1', 'cluster home page');     
+    sleep(20);
+    $d->find_element_ok('//div[@id="kinship_div"]//*[contains(text(), "UG120289")]', 'xpath', 'check output')->click();
+    sleep(2);
+    my $sel = $d->find_element('//div[@id="kinship_div"]//*[contains(text(), "Download")]', 'xpath', 'scroll up');
+    my $elem =$d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, -1);", $sel);
+    sleep(2);
+    $d->find_element_ok('//div[@id="kinship_div"]//*[contains(text(), "Download")]', 'xpath', 'check output')->click();
+    sleep(3);
+    
+    
     $d->get_ok('/breeders/trial/139', 'trial detail home page');     
     sleep(5);
     my $analysis_tools = $d->find_element('Analysis Tools', 'partial_link_text', 'toogle analysis tools');
