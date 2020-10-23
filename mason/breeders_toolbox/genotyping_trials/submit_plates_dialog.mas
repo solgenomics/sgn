@@ -120,8 +120,9 @@ $genotyping_facility
                         <& /page/page_title.mas, title=>"Complete!" &>
                         
                             <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                            <p>Order complete. Facility Order Id: <b><label id="order_lbl"></label></b><br><br></p>
-                            <li>You may want to proceed to the genotyping plate detail page to check submission status.</li>
+                            <p>Order complete.</p>
+                            <!-- Facility Order Id: <b><label id="order_lbl"></label></b><br><br> -->
+                            <li>You may want to proceed to the genotyping plate detail page to check order status.</li>
                        
                         <br/>
                     </&>
