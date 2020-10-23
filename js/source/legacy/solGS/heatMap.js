@@ -74,7 +74,7 @@ solGS.heatmap = {
 
 	fs = fs + 'px';
 
-	var pad    = {left:150, top:30, right:100, bottom: 90};
+	var pad    = {left:150, top:30, right:255, bottom: 90};
 	var totalH = height + pad.top + pad.bottom;
 	var totalW = width + pad.left + pad.right;
 
@@ -228,7 +228,10 @@ solGS.heatmap = {
 	} else {
             legendValues = [[0, d3.min(coefs)], [1, 0], [2, d3.max(coefs)]];
 	}
-	
+
+	if (heatmapCanvas.match(/kinship/)) {
+	    legendValues.push([3, 'Diagonals: inbreeding coefficients'], [4, 'Off-diagonals: kinship coefficients']);
+	}
 	var legend = corrplot.append("g")
             .attr("class", "cell")
             .attr("transform", "translate(" + (width + 10) + "," +  (height * 0.25) + ")")
@@ -274,6 +277,9 @@ solGS.heatmap = {
 		if (d[1] > 0) { return '> 0'; } 
 		else if (d[1] < 0) { return '< 0'; } 
 		else if (d[1] == 0 ){ return '0'; }
+		else {
+		    return d[1];
+		}
             })  
             .attr("dominant-baseline", "middle")
             .attr("text-anchor", "start");
