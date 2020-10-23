@@ -573,7 +573,7 @@ sub get_markers_count {
 	}
     }
 
-    return $markers_cnt;
+    return $markers_cnt - 1;
 
 }
 
