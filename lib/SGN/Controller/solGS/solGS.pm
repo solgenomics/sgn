@@ -667,29 +667,11 @@ sub predicted_lines_count {
 	$gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
     }
 
-    #my @geno_lines = read_file($gebvs_file) if -s $gebvs_file;
-    #my $count =  scalar(@geno_lines) - 1;
-
     my $geno = qx /wc -l $gebvs_file/;
     my ($geno_lines, $g_file) = split(" ", $geno);
     
     my $count = $geno_lines > 1 ? $geno_lines - 1 : 0;
-    
-    $c->controller("solGS::Files")->trait_phenodata_file($c);
-    my $trait_pheno_file  = $c->stash->{trait_phenodata_file};
-    my @trait_pheno_lines = read_file($trait_pheno_file, {binmode => ':utf8'}) if $trait_pheno_file;
-
-    my @geno_lines;
-    if (!@trait_pheno_lines) 
-    {
-	my $protocol_id = $c->stash->{genotyping_protocol_id};
-	$c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
-	my $geno_file  = $c->stash->{genotype_file_name};
-	@geno_lines = read_file($geno_file, {binmode => ':utf8'});
-    }
-  
-    my $count = @trait_pheno_lines ? scalar(@trait_pheno_lines) - 1 : scalar(@geno_lines) - 1;
-
+   
     return $count;
 }
 
