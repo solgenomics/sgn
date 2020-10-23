@@ -97,7 +97,7 @@ solGS.kinship = {
 		jQuery("#kinship_pops_section").append(kinshipTable).show();                           
             }
 	    
-	    var onClickVal =  '<button type="button" class="btn btn-success" onclick="solGS.kinship.runKinship('
+	    var onClickVal =  '<button type="button" id="run_kinship" class="btn btn-success" onclick="solGS.kinship.runKinship('
                 + selectId + ",'" + selectName + "'" +  ",'" + dataStructure
 	    	+ "'" + ')">Run Kinship</button>';
 
@@ -393,7 +393,7 @@ jQuery(document).ready( function() {
 	    solGS.kinship.runKinship(trialId, trialName);
 
 	    console.log('trial page: ' + trialId + ' ' + trialName)
-	} else if (url.match(/solgs\/models\/combined\/trials/)){
+	} else if (url.match(/solgs\/models\/combined\/trials\/|solgs\/traits\/all\/population\//)){
 	    var popId = jQuery("#training_pop_id").val();
 	    var popName = jQuery("#training_pop_name").val();
 
