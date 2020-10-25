@@ -51,7 +51,8 @@ BLUP = BLUE
 adjusted_means = BLUE
 
 for(i in 1:length(trait)){
-  
+
+    print(paste("processing trait", trait[i]))
     dependent_variables = trait[i]
     dependent_variables = gsub(" ", "\\.", dependent_variables) # replace space with "." in variable name
     dependent_variables = gsub("\\|", "\\.", dependent_variables) # replace | with .
@@ -94,9 +95,14 @@ for(i in 1:length(trait)){
         BLUP <- merge(x = BLUP, y = blup, by ="germplasmName", all=TRUE)
         
         adj = coef(mixmodel)$germplasmName
+
+        print(paste("adj", adj));
+
+        adj = adj[1]  # keep only one column
         adj_means = adj%>%mutate("germplasmName" = rownames(adj))
         names(adj_means)[1] = trait[i]
         adj_means = as.data.frame(adj_means)
+
         adjusted_means =  merge(x = adjusted_means, y = adj_means, by ="germplasmName", all=TRUE)
 
     } else {
