@@ -4066,6 +4066,18 @@ sub _perform_image_rotate {
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
+    my ($check_image_width, $check_image_height) = imgsize($archive_rotate_temp_image);
+    if ($check_image_width > 16384) {
+        my $cmd_resize = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/Resize.py --image_path \''.$archive_rotate_temp_image.'\' --outfile_path \''.$archive_rotate_temp_image.'\' --width 16384';
+        print STDERR Dumper $cmd_resize;
+        my $status_resize = system($cmd_resize);
+    }
+    elsif ($check_image_height > 16384) {
+        my $cmd_resize = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/Resize.py --image_path \''.$archive_rotate_temp_image.'\' --outfile_path \''.$archive_rotate_temp_image.'\' --height 16384';
+        print STDERR Dumper $cmd_resize;
+        my $status_resize = system($cmd_resize);
+    }
+
     my $linking_table_type_id;
     if ($view_only) {
         $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'rotated_stitched_temporary_drone_imagery', 'project_md_image')->cvterm_id();
