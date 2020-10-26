@@ -475,7 +475,7 @@ sub structure_output_details {
     $output_details->{analysis_log_file} = $log_file;
     $output_details->{host}              = qq | $base |;
     $output_details->{referer}           = qq | $referer |;
-    $output_details->{cluster_job_emails}= $mail_list;
+    $output_details->{cluster_job_email} = $mail_list;
     
     $c->stash->{bg_job_output_details} = $output_details;
 
