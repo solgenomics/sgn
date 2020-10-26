@@ -21,6 +21,9 @@ __PACKAGE__->config(
     map => { 'application/json' => 'JSON' },
    );
 
+	
+select(STDERR);
+$| = 1;
 
 sub model_string: Path('/ajax/mixedmodels/modelstring') Args(0) {
     my $self = shift;
@@ -251,6 +254,7 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
 	blues_data => $blues_data,
 	blues_html => $blues_html,
 	method => $method,
+	input_file => $temppath,
 	# varcomp_data => $varcomp_data,
 	# varcomp_html => $varcomp_html,
 	# anova_data => $anova_data,
@@ -274,7 +278,7 @@ sub result_file_to_hash {
 
     my $header_line = shift(@lines);
     my ($accession_header, @trait_cols) = split /\t/, $header_line;
-    
+
     my $now = DateTime->now();
     my $timestamp = $now->ymd()."T".$now->hms();
 
@@ -290,13 +294,17 @@ sub result_file_to_hash {
 	my ($accession_name, @values) = split /\t/, $line;
 	push @accession_names, $accession_name;
 	$html .= "<tr><td>".join("</td><td>", $accession_name, @values)."</td></tr>\n";
-	for(my $n=0; $n<@values; $n++) { 
+	for(my $n=0; $n<@values; $n++) {
+	    print STDERR "Building hash for accession $accession_name and trait $trait_cols[$n]\n";
 	    $analysis_data{$accession_name}->{$trait_cols[$n]} = [ $values[$n], $timestamp, $operator, "", "" ];
 	    
 	}
 	
     }
     $html .= "</table>";
+
+    print STDERR "Analysis data formatted: ".Dumper(\%analysis_data);
+    
     return (\%analysis_data, $html, \@accession_names, \@trait_cols);
 }
 

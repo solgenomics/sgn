@@ -30,8 +30,8 @@ export function init(main_div){
 	$('#generic_save_analysis_model_type').val('mixed_model_lmer');
 	$('#generic_save_analysis_result_values').val(adjusted_blups_data);
 	$('#generic_save_analysis_result_values_type').val('analysis_result_values_match_accession_names');
-	$('#generic_save_analysis_result_summary_values').val(adjusted_blups_data);
-	$('#generic_save_analysis_model_training_data_file').val($('#tempfile').html());
+	$('#generic_save_analysis_result_summary_values').val(result_summary);
+	$('#generic_save_analysis_model_training_data_file').val(input_file);
 	$('#generic_save_analysis_model_archived_training_data_file_type').val('mixed_model_input_data');
     });
 
@@ -50,8 +50,8 @@ export function init(main_div){
 	$('#generic_save_analysis_model_type').val('mixed_model_lmer');
 	$('#generic_save_analysis_result_values').val(blups_data);
 	$('#generic_save_analysis_result_values_type').val('analysis_result_values_match_accession_names');
-	$('#generic_save_analysis_result_summary_values').val(blups_data);
-	$('#generic_save_analysis_model_training_data_file').val($('#tempfile').html());
+	$('#generic_save_analysis_result_summary_values').val(result_summary);
+	$('#generic_save_analysis_model_training_data_file').val(input_file);
 	$('#generic_save_analysis_model_archived_training_data_file_type').val('mixed_model_input_data');
     });
 
@@ -68,10 +68,9 @@ export function init(main_div){
 	$('#generic_save_analysis_model_application_name').val('Breedbase Mixed Model Tool');
 	$('#generic_save_analysis_model_application_version').val( version );
 	$('#generic_save_analysis_model_type').val('mixed_model_lmer');
-	$('#generic_save_analysis_result_summary_values').val(adjusted_blues_data);
+	$('#generic_save_analysis_result_summary_values').val(result_summary);
 	$('#generic_save_analysis_result_values_type').val('analysis_result_values_match_accession_names');
-	$('#generic_save_analysis_result_summary_values').val(adjusted_blues_data);
-	$('#generic_save_analysis_model_training_data_file').val($('#tempfile').html());
+	$('#generic_save_analysis_model_training_data_file').val(input_file);
 	$('#generic_save_analysis_model_archived_training_data_file_type').val('mixed_model_input_data');
     });
 
@@ -88,10 +87,9 @@ export function init(main_div){
 	$('#generic_save_analysis_model_application_name').val('Breedbase Mixed Model Tool');
 	$('#generic_save_analysis_model_application_version').val( version );
 	$('#generic_save_analysis_model_type').val('mixed_model_lmer');
-	$('#generic_save_analysis_result_summary_values').val(blues_data);
 	$('#generic_save_analysis_result_values_type').val('analysis_result_values_match_accession_names');
-	$('#generic_save_analysis_result_summary_values').val(blues_data);
-	$('#generic_save_analysis_model_training_data_file').val($('#tempfile').html());
+	$('#generic_save_analysis_result_summary_values').val(result_summary);
+	$('#generic_save_analysis_model_training_data_file').val(input_file);
 	$('#generic_save_analysis_model_archived_training_data_file_type').val('mixed_model_input_data');
     });
     
@@ -193,6 +191,8 @@ export function init(main_div){
     var stat_ontology_term;
 
     var model_properties;
+    var result_summary;
+    var input_file;
 
     function add_sub_div(collection_div, div_prefix, collection_name) {
 
@@ -364,7 +364,9 @@ export function init(main_div){
 		    blups_data = JSON.stringify(r.blups_data);
 		    blues_data = JSON.stringify(r.blues_data);
 		    traits = JSON.stringify(r.traits);
-
+		    input_file = r.input_file;
+		    result_summary = '{ "method" : "Breedbase mixed model analysis tool" }';
+		    
 		    var model_properties_data = { "properties" : { "traits" : traits  } } ;
 		    model_properties = JSON.stringify(model_properties_data);
 		    
