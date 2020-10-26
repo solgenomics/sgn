@@ -466,14 +466,17 @@ sub structure_output_details {
      
     $self->analysis_log_file($c);
     my $log_file = $c->stash->{analysis_log_file};
-   
+
+    my $mail_list = $c->config->{cluster_job_email};
+    
     $output_details->{analysis_profile}  = $analysis_data;
     $output_details->{contact_page}      = $base . 'contact/form';
     $output_details->{data_set_type}     = $c->stash->{data_set_type};
     $output_details->{analysis_log_file} = $log_file;
     $output_details->{host}              = qq | $base |;
     $output_details->{referer}           = qq | $referer |;
- 
+    $output_details->{cluster_job_emails}= $mail_list;
+    
     $c->stash->{bg_job_output_details} = $output_details;
 
 }

@@ -594,14 +594,25 @@ sub report_status {
     if ($output_details->{host} =~ /localhost/) 
     {
 	my $uid = getpwuid($<);
-	$email_from = '"' . $uid .'" <' . $uid . '@localhost.localdomain>';
-	$email_to   = '"' . $uid .'" <' . $uid . '@localhost.localdomain>';
+	$email_from =  $uid . ' <' . $uid . '@localhost.localdomain>';
+	$email_to   =  $uid . ' <' . $uid . '@localhost.localdomain>';
     }
     else 
     {
-     	$email_from = '"solGS M Tool" <cluster-jobs@solgenomics.net>';
-     	$email_to   = "$user_name <$user_email>";   
-     	$email_cc   = 'solGS Job <cluster-jobs@solgenomics.net>';
+	my $mail_list = $output_details->{cluster_job_email};
+	
+	if ($mail_list)
+	{
+	    $email_from =  'solGS M Tool <' . $mail_list . '>';
+	    $email_cc   =  'solGS Job <' . $mail_list . '>'; 
+	}
+	else
+	{
+	    $email_from = 'solGS M Tool <cluster-jobs@solgenomics.net>'; 
+	    $email_cc   = 'solGS Job <cluster-jobs@solgenomics.net>';
+	}
+
+	$email_to   = "$user_name <$user_email>";  
     }
 
     my $email = Email::Simple->create(
