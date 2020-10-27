@@ -85,7 +85,15 @@ sub kinship_run_analysis :Path('/kinship/run/analysis') Args() {
 	$res->{kinship_pop_name} = $pop_name;
 
 	my $kinship_files = $self->get_kinship_coef_files($c, $kinship_pop_id, $protocol_id, $trait_id);
-	my $json_file = $kinship_files->{json_file_adj};
+	my $json_file;
+	if ($trait_id)
+	{
+	   $json_file = $kinship_files->{json_file_adj}; 
+	}
+	else
+	{
+	  $json_file = $kinship_files->{json_file_raw};
+	}
   
 	$res->{data} = read_file($json_file);
 	$self->add_output_links($c, $res);	
@@ -121,7 +129,16 @@ sub kinship_result :Path('/solgs/kinship/result/') Args() {
     }
     
     my $kinship_files = $self->get_kinship_coef_files($c, $pop_id, $protocol_id, $trait_id);
-    my $json_file = $kinship_files->{json_file_adj};
+    my $json_file;
+
+    if ($trait_id)
+    {
+	$json_file = $kinship_files->{json_file_adj}; 
+    }
+    else
+    {
+	$json_file = $kinship_files->{json_file_raw};
+    }
 
     my $res = {};
     
@@ -195,7 +212,7 @@ sub kinship_output_files {
     my $pop_id = $c->stash->{kinship_pop_id};
     my $protocol_id = $c->stash->{genotyping_protocol_id};
     my $data_str = $c->stash->{data_structure};
-     
+   
     $c->stash->{pop_id} = $pop_id;
     $c->controller('solGS::Files')->inbreeding_coefficients_file($c); 
     my $inbreeding_file = $c->stash->{inbreeding_coefficients_file};
@@ -208,8 +225,6 @@ sub kinship_output_files {
     my $file_list = join ("\t",
                           $coef_files->{json_file_raw},
 			  $coef_files->{matrix_file_raw},
-			  $coef_files->{json_file_adj},
-			  $coef_files->{matrix_file_adj},
 			  $inbreeding_file,
 			  $ave_kinship_file
 	);
