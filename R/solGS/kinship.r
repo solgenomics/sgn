@@ -78,8 +78,8 @@ if(length(genoTrCode) != 0) {
   genoData            <- genoData - 1
 }
 
-relationshipMatrixFile <- grep("relationship_matrix_adjusted_table", outputFiles, value = TRUE)
-relationshipMatrixJsonFile <- grep("relationship_matrix_adjusted_json", outputFiles, value = TRUE)
+relationshipMatrixFile <- grep("relationship_matrix_table", outputFiles, value = TRUE)
+relationshipMatrixJsonFile <- grep("relationship_matrix_json", outputFiles, value = TRUE)
 
 message('matrix file ', relationshipMatrixFile)
 message('json file ', relationshipMatrixJsonFile)
