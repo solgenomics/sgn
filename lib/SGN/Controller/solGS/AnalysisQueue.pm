@@ -500,12 +500,29 @@ sub structure_kinship_analysis_output {
     $analysis_data->{analysis_page} = $kinship_page;
     
     my %output_details = ();
+
+    my $trait_id = $c->stash->{trait_id};
     
     $c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);	    
     my $geno_file  = $c->stash->{genotype_file_name};
 
-    my $coef_files = $c->controller('solGS::Kinship')->get_kinship_coef_files($c, $pop_id, $protocol_id);	 
-    my $matrix_file = $coef_files->{matrix_file};
+    my $coef_files = $c->controller('solGS::Kinship')->get_kinship_coef_files($c, $pop_id, $protocol_id, $trait_id);	 
+    my $matrix_file;
+
+    my $raw_matrix = "kinship\/analysis"
+	. "|solgs\/traits\/all\/" 
+	. "|breeders\/trial" 
+	. "|solgs\/models\/combined\/trials\/";
+
+    my $referer = $c->req->referer;
+
+    if ($referer =~ /$raw_matrix/){
+	$matrix_file = $coef_files->{matrix_file_raw};
+    } 
+    else 
+    {
+	$matrix_file = $coef_files->{matrix_file_adj};	
+    }
     
     $output_details{'kinship_' . $pop_id} = {
 	'output_page'    => $kinship_page,
