@@ -110,13 +110,14 @@
 	  <ul>
         <li>progeny name (must exist in the database and can be accession uniquename or accession synonym)</li>
         <li>female parent accession (must exist in the database)</li>
-        <li>type (biparental, self, open, sib)</li>
+        <li>type (biparental, self, open, backcross, sib)</li>
             <ul class="a">
                 <li>cross type descriptions:</li>
                 <ul class="b">
                     <li>biparental: An individual plant pollinated by another individual plant.</li>
                     <li>self: A self pollinated individual plant.</li>
                     <li>open: An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members).</li>
+                    <li>backcross: An individual plant pollinated by one of its parents.</li>
                     <li>sib: Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.</li>
                     <li>polycross: Mating between individual female parent from a population and the corresponding male population.</li>
                 </ul>

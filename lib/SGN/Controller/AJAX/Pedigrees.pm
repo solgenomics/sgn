@@ -64,7 +64,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
 
     my @user_roles = $c->user()->roles();
     my $user_role = shift @user_roles;
-        
+
     my $params = {
 	tempfile => $upload_tempfile,
 	subdirectory => $subdirectory,
@@ -95,7 +95,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my %stocks;
 
     my $header = <$F>;
-    my %legal_cross_types = ( biparental => 1, open => 1, self => 1, sib => 1, polycross => 1);
+    my %legal_cross_types = ( biparental => 1, open => 1, self => 1, sib => 1, polycross => 1, backcross => 1);
     my %errors;
 
     while (<$F>) {
@@ -128,8 +128,10 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my @unique_stocks = keys(%stocks);
     my $accession_validator = CXGN::List::Validate->new();
     my @accessions_missing = @{$accession_validator->validate($schema,'accessions_or_populations',\@unique_stocks)->{'missing'}};
-    if (scalar(@accessions_missing)>0){
-        $errors{"The following accessions or populations are not in the database: ".(join ",", @accessions_missing)} = 1;
+    my $cross_validator = CXGN::List::Validate->new();
+    my @stocks_missing = @{$cross_validator->validate($schema,'crosses',\@accessions_missing)->{'missing'}};
+    if (scalar(@stocks_missing)>0){
+        $errors{"The following parents or progenies are not in the database: ".(join ",", @stocks_missing)} = 1;
     }
 
     if (%errors) {
