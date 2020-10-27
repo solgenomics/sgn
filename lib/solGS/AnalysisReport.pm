@@ -481,7 +481,7 @@ sub check_kinship_analysis {
 	{
 	   
 	    my $kinship_file = $output_details->{$k}->{matrix_file};
-	    
+	    print STDERR "\kinship file matrix: $kinship_file\n";
 	    if ($kinship_file) 
 	    {
 		while (1) 
@@ -498,7 +498,7 @@ sub check_kinship_analysis {
 			my $end_process = $self->end_status_check();
 			if ($end_process) 
 			{
-			    if (!-s $output_details->{$k}->{kinship_geno_file})
+			    if (!-s $output_details->{$k}->{genotype_file})
 			    {
 				$output_details->{$k}->{failure_reason} = 'No genotype data was found for this kinship analysis.';
 			    } 
