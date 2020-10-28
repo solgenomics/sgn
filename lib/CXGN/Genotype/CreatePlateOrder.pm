@@ -193,8 +193,8 @@ sub _formated_samples {
                             value=> $result->{volume} eq 'NA' ? 0 : $result->{volume},
                         },
                         well=> $result->{well} ? $result->{well} : $result->{row_number} . $result->{col_number},
-                        organismName=> 'Solanum lycopersicum',
-                        speciesName=> 'Solanum lycopersicum',
+                        organismName=> $result->{genus},
+                        speciesName=> $result->{species},
                         taxonomyOntologyReference=> {},
                         tissueTypeOntologyReference=> {},
                     };

@@ -35,11 +35,11 @@ $genotyping_facility
                         <div class="col-sm-9" id="plate_format">
                         </div>
                       </div>
-                      <div class="form-group">
+<!--                       <div class="form-group">
                         <label class="col-sm-3 control-label">Number of samples: </label>
                         <div class="col-sm-9" id="number_samples">
                         </div>
-                      </div>
+                      </div> -->
                         <center>
                             <button class="btn btn-primary" id="facility_info_link" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
                         </center>
@@ -132,7 +132,7 @@ $genotyping_facility
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="submit_plate_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="submit_plate_dialog" type="button" class="btn btn-default" data-dismiss="modal" onclick="location.reload();">Close</button>
             </div>
         </div>
     </div>
@@ -148,7 +148,7 @@ $genotyping_facility
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <p3> Genotyping plates was send successfully...</p3>
+                    <p3> Genotyping plates was submit successfully...</p3>
 
                 </div>
             </div>

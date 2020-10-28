@@ -24,9 +24,9 @@ jQuery(document).ready(function () {
             jQuery("#working_modal").modal("show");
         },
         success: function(response){
-            //console.log(response);
+            // console.log(response);
             jQuery("#working_modal").modal("hide");
-            var trial_plate_layout_html = "<table class='table table-hover table-condensed table-bordered' id='trial_plate_layout_table1'><thead><tr><th>Well</th><th>Accession Name</th><th>Sample Name</th><th>Volume</th><th>Concentration</th></tr></thead><tbody>";
+            var trial_plate_layout_html = "<table class='table table-hover table-condensed table-bordered' id='trial_plate_layout_table1'><thead><tr><th>Well</th><th>Accession Name</th><th>Sample Name</th><th>Volume (ul)</th><th>Concentration(ng)</th></tr></thead><tbody>";
 
             var col_max = 1;
             if (<% $genotyping_plate_format %> == '96'){
@@ -52,8 +52,9 @@ jQuery(document).ready(function () {
                         if (response.design[well].accession_name) {
                             var accession_name = response.design[well].accession_name;
                             var sample_nsame = response.design[well].plot_name;
-                            var volume = '50';
-                            trial_plate_layout_html = trial_plate_layout_html + "<tr><td>" + well + "</td><td>" + sample_nsame + "</td><td>" + accession_name + "</td><td>" + volume + "</td><td>" + volume + "</td></tr>";
+                            var volume = response.design[well].volume;
+                            var concentration = response.design[well].concentration;
+                            trial_plate_layout_html = trial_plate_layout_html + "<tr><td>" + well + "</td><td>" + sample_nsame + "</td><td>" + accession_name + "</td><td>" + volume + "</td><td>" + concentration + "</td></tr>";
                         }
                     }
                 }

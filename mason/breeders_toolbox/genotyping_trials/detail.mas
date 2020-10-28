@@ -299,12 +299,7 @@ genotyping_facility => $genotyping_facility
 
     jQuery(document).ready(function(){
         load_breeding_program_info(<% $trial_id %>);
-        // load_genotyping_status_info(<% $genotyping_facility %>,'vo1');
-        console.log('<% $genotyping_vendor_order_id %>');
-// jQuery('#genotyping_facilities_section').collapse("show");
-
-
-
+        //load_genotyping_status_info(<% $plate_id %>);
     });
 
     jQuery('#edit_genotyping_trial_details').click(function(){
@@ -346,7 +341,7 @@ genotyping_facility => $genotyping_facility
         jQuery('#plate_name').html("<% $trial_name %>");
         jQuery('#plate_id').html("<% $trial_id %>");
         jQuery('#plate_format').html("<% $genotyping_plate_format %>");
-        jQuery('#number_samples').html("<% $genotyping_plate_format %>");
+        // jQuery('#number_samples').html("<% $genotyping_plate_format %>");
         jQuery('#sample_type').html("<% $genotyping_plate_sample_type %>");
         jQuery('#genotyping_facility').html("<% $genotyping_facility %>");
         jQuery('#submit_plate_dialog').modal("show");

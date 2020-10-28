@@ -23,18 +23,39 @@ jQuery(document).ready(function ($) {
 
     var plate_data = new Object();
 
+    function genotyping_facility_login(auth_data) {
+        var access_token;
+        $.ajax({
+            url: auth_data.host+'/brapi/v1/token',
+            method: 'POST',
+            async: false,
+            data: {
+                username: auth_data.username,
+                password: auth_data.password,
+            },
+            success: function(response) {
+                if (response.metadata.status[0].message) {
+                    alert('Login failed. '+JSON.stringify(response.metadata.status[0].message));
+                }
+                else {
+                    alert("Success!"+ JSON.stringify(response)+" which is "+response.result.access_token);
+                    access_token = response.result.access_token;
+                }
+            },
+            error: function(response) {
+                alert("An error occurred trying to log into the sequencing facility server. Please try again later.");
+            }
+        });
+        return access_token;
+    }
+
     function get_facility_url(name){
 
-        if (name == 'Cornell IGD'){
-            return 'https://test-server.brapi.org';
-        } else if (name == 'DArT'){
-            return 'https://test-server.brapi.org';
-        } else if (name == 'BGI'){
-            return 'https://test-server.brapi.org';
-        } else if (name == 'Intertek'){
-            return 'https://test-server.brapi.org';
+        if (name == 'DArT'){
+            return 'https://ordering-testing.diversityarrays.com';
         } else {
-            alert("Invalid genotyping facility.");
+            alert("Service not available or invalid genotyping facility.");
+            jQuery("#review_order_link").prop("disabled", true);
             return;
         }
     }
@@ -121,7 +142,7 @@ jQuery(document).ready(function ($) {
 
             var facility_url = get_facility_url(facility);
             // alert("Sending genotyping experiment entry to genotyping facility...");
-            facility_url += '/brapi/v2/vendor/orders';
+            facility_url += '/brapi/1/vendor/orders';
 
             $.ajax( {
                 url: facility_url,
@@ -176,7 +197,7 @@ jQuery(document).ready(function ($) {
 
             var facility_url = get_facility_url(facility);
             // alert("Sending genotyping experiment entry to genotyping facility...");
-            var url = facility_url + '/brapi/v2/vendor/plates';
+            var url = facility_url + '/brapi/v1/vendor/plates';
 
             $.ajax( {
                 url: url,
@@ -260,7 +281,6 @@ jQuery(document).ready(function ($) {
             auth_data.token = access_token;
 
             $.ajax({
-                // url: "https://ordering-testing.diversityarrays.com/brapi/v1/vendor/specifications",
                 url: url,
                 method: 'GET',
                 headers: {"Authorization": 'Bearer ' + access_token },
@@ -329,7 +349,7 @@ jQuery(document).ready(function ($) {
             var facility_url = get_facility_url(facility);        
 
             if (facility_url){
-                var url = facility_url + '/brapi/v2/vendor/orders/' + order_id + '/status';
+                var url = facility_url + '/brapi/v1/vendor/orders/' + order_id + '/status';
 
                 jQuery.ajax({
                     url: url,
@@ -358,7 +378,7 @@ jQuery(document).ready(function ($) {
     function get_facility_vcf(order_id,facility_url,access_token){
 
             if (facility_url){
-                var url = facility_url + '/brapi/v2/vendor/orders/' + order_id + '/results';
+                var url = facility_url + '/brapi/v1/vendor/orders/' + order_id + '/results';
                 jQuery.ajax({
                     url: url,
                     type: 'GET',
@@ -408,7 +428,7 @@ jQuery(document).ready(function ($) {
         }
 
         if(submission_id){
-            var url = facility_url + '/brapi/v2/vendor/orders?submissionId=' + submission_id;
+            var url = facility_url + '/brapi/v1/vendor/orders?submissionId=' + submission_id;
 
             jQuery.ajax({
                 url: url,
@@ -439,8 +459,7 @@ jQuery(document).ready(function ($) {
         order_info.client_id = jQuery('#client_id').val();
         order_info.service_ids = jQuery('#service_id_select').val();
         order_info.facility_id = jQuery('#genotyping_facility').html();
-        order_info.full_order = order_info.facility_id == 'dart' ? false : true;
-        // order_info.full_order = order_info.facility_id == 'dart' ? true : false;
+        order_info.full_order = order_info.facility_id == 'DArT' ? false : true;
         
         if (order_info.plate_id == '' || order_info.client_id == '') {
             alert("A plate id, client facility id and service are required. Please try again.");
