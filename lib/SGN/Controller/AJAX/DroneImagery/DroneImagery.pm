@@ -5805,7 +5805,7 @@ sub standard_process_apply_POST : Args(0) {
         my $denoised_image_id = $denoise_return->{denoised_image_id};
 
         $drone_run_band_info{$drone_run_band_project_id} = {
-            original_denoised_image_id => $denoised_image_id,
+            denoised_image_id => $denoised_image_id,
             rotate_value => $rotate_value,
             cropping_value => $cropping_value,
             drone_run_band_type => $drone_run_band_type,
@@ -6472,7 +6472,7 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
         my $denoised_image_id = $denoise_return->{denoised_image_id};
 
         $drone_run_band_info{$drone_run_band_project_id} = {
-            original_denoised_image_id => $denoised_image_id,
+            denoised_image_id => $denoised_image_id,
             rotate_value => $rotate_value,
             cropping_value => $cropping_value,
             drone_run_band_type => $drone_run_band_type,
@@ -7240,7 +7240,7 @@ sub standard_process_minimal_vi_apply_POST : Args(0) {
             rotate_value => $rotate_value,
             plot_polygons_value => $plot_polygons_value,
             cropping_value => $cropping_value,
-            original_denoised_image_id => $denoised_image_id
+            denoised_image_id => $denoised_image_id
         };
     }
 
@@ -7363,6 +7363,7 @@ sub standard_process_extended_apply_GET : Args(0) {
         $selected_drone_run_band_types{$drone_run_band_type} = $drone_run_band_project_id;
         $drone_run_band_info{$drone_run_band_project_id} = {
             drone_run_project_name => $drone_run_project_name,
+            drone_run_project_id => $drone_run_project_id,
             drone_run_band_project_id => $drone_run_band_project_id,
             drone_run_band_project_name => $drone_run_band_project_name,
             drone_run_band_type => $drone_run_band_type,
@@ -7740,10 +7741,10 @@ sub _perform_minimal_vi_standard_process {
         }
         if (exists($selected_drone_run_band_types->{'RGB Color Image'})) {
             if (exists($vegetative_indices->{'TGI'})) {
-                _perform_standard_process_minimal_vi_calc($c, $bcs_schema, $metadata_schema, $drone_run_band_info->{$selected_drone_run_band_types->{'RGB Color Image'}}->{original_denoised_image_id}, $selected_drone_run_band_types->{'RGB Color Image'}, $user_id, $user_name, $user_role, $drone_run_band_info->{$selected_drone_run_band_types->{'RGB Color Image'}}->{plot_polygons_value}, 'TGI', 'BGR');
+                _perform_standard_process_minimal_vi_calc($c, $bcs_schema, $metadata_schema, $drone_run_band_info->{$selected_drone_run_band_types->{'RGB Color Image'}}->{denoised_image_id}, $selected_drone_run_band_types->{'RGB Color Image'}, $user_id, $user_name, $user_role, $drone_run_band_info->{$selected_drone_run_band_types->{'RGB Color Image'}}->{plot_polygons_value}, 'TGI', 'BGR');
             }
             if (exists($vegetative_indices->{'VARI'})) {
-                _perform_standard_process_minimal_vi_calc($c, $bcs_schema, $metadata_schema, $drone_run_band_info->{$selected_drone_run_band_types->{'RGB Color Image'}}->{original_denoised_image_id}, $selected_drone_run_band_types->{'RGB Color Image'}, $user_id, $user_name, $user_role, $drone_run_band_info->{$selected_drone_run_band_types->{'RGB Color Image'}}->{plot_polygons_value}, 'VARI', 'BGR');
+                _perform_standard_process_minimal_vi_calc($c, $bcs_schema, $metadata_schema, $drone_run_band_info->{$selected_drone_run_band_types->{'RGB Color Image'}}->{denoised_image_id}, $selected_drone_run_band_types->{'RGB Color Image'}, $user_id, $user_name, $user_role, $drone_run_band_info->{$selected_drone_run_band_types->{'RGB Color Image'}}->{plot_polygons_value}, 'VARI', 'BGR');
             }
         }
     }
