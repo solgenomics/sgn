@@ -94,9 +94,9 @@ $genotyping_facility
                         <& /page/page_title.mas, title=>"Submit your genotyping plate" &>
 
                         <div class="form-group">
-                            <label class="col-sm-5 control-label">I want to automatically submit to the Genotyping Facility: </label>
-                            <div class="col-sm-7">
-                                <select class="form-control" id="genotyping_trial_facility_submit_select">
+                            <label class="col-sm-12">I want to automatically submit to the Genotyping Facility: </label><label class="col-sm-12" id="facility_url_lbl"></label>
+                            <div class="col-sm-12" align="center">
+                                <select class="form-control" style="width: 200px" id="genotyping_trial_facility_submit_select">
                                     <option value="1" selected="">No</option>
                                     <option value="0">Yes</option>
                                 </select>

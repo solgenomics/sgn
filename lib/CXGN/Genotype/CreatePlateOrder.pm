@@ -185,16 +185,16 @@ sub _formated_samples {
                         comments=> $result->{notes},
                         concentration=> {
                             units=> $concent_unit,
-                            value=> $result->{concentration} eq 'NA' ? 0 : $result->{concentration},
+                            value=> $result->{concentration} eq 'NA' ? 0 : $result->{concentration} + 0,
                         },
                         tissueType=> $result->{tissue_type},
                         volume=> {
                             units=> $volume_unit,
-                            value=> $result->{volume} eq 'NA' ? 0 : $result->{volume},
+                            value=> $result->{volume} eq 'NA' ? 0 : $result->{volume} + 0,
                         },
                         well=> $result->{well} ? $result->{well} : $result->{row_number} . $result->{col_number},
-                        organismName=> $result->{genus},
-                        speciesName=> $result->{species},
+                        organismName=> $result->{genus} ? $result->{genus} : "",
+                        speciesName=> $result->{species} ? $result->{species} : "",
                         taxonomyOntologyReference=> {},
                         tissueTypeOntologyReference=> {},
                     };

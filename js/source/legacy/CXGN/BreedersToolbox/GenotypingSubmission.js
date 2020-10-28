@@ -49,34 +49,25 @@ jQuery(document).ready(function ($) {
         return access_token;
     }
 
-    function get_facility_url(name){
-
-        if (name == 'DArT'){
-            return 'https://ordering-testing.diversityarrays.com';
-        } else {
-            alert("Service not available or invalid genotyping facility.");
-            jQuery("#review_order_link").prop("disabled", true);
-            return;
-        }
-    }
-
     function get_genotyping_facility_credentials() {
         var auth_data;
         jQuery.ajax({
             url: '/ajax/breeders/genotyping_credentials',
             async: false,
             success: function(response) {
-                auth_data =  {
-                    host : response.host,
-                    username : response.username,
-                    password : response.password,
-                    token : response.token
-                };
+                if(response.host && response.host != 'NULL'){
+                    auth_data =  {
+                        host : response.host,
+                        username : response.username,
+                        password : response.password,
+                        token : response.token
+                    };
+                } else {
+                        return auth_data = { error : "An error occurred", };
+                }
             },
             error: function(response) {
-                return {
-                    error : "An error occurred",
-                };
+                return auth_data = { error : "An error occurred", };
             }
         });
         return auth_data;
@@ -140,9 +131,8 @@ jQuery(document).ready(function ($) {
         if (access_token) {
             auth_data.token = access_token;
 
-            var facility_url = get_facility_url(facility);
+            var facility_url = auth_data.host + '/brapi/v1/vendor/orders';
             // alert("Sending genotyping experiment entry to genotyping facility...");
-            facility_url += '/brapi/1/vendor/orders';
 
             $.ajax( {
                 url: facility_url,
@@ -194,10 +184,8 @@ jQuery(document).ready(function ($) {
         }
 
         if (access_token) {
-
-            var facility_url = get_facility_url(facility);
             // alert("Sending genotyping experiment entry to genotyping facility...");
-            var url = facility_url + '/brapi/v1/vendor/plates';
+            var url = auth_data.host +  '/brapi/v1/vendor/plates';
 
             $.ajax( {
                 url: url,
@@ -211,7 +199,7 @@ jQuery(document).ready(function ($) {
                         jQuery('#submission_lbl').html(submissionId);
                         alert("Successfully!. Plate submitted to facility.");
                         Workflow.complete('#submit_plate_btn');
-                        document.getElementById("facility_href").href = facility_url + "/order.pl"; 
+                        document.getElementById("facility_href").href = auth_data.host + "/order.pl"; 
                     }
                     else {
                         alert(response.metadata.status);
@@ -242,7 +230,6 @@ jQuery(document).ready(function ($) {
                 } else {
                     const orderId = response.order_id;
                     alert('Order stored successfully.');
-                    // jQuery('#order_lbl').html(orderId);
                      $('#order_lbl').text(orderId);
                     Workflow.focus("#plates_to_facilities_workflow", -1); //Go to success page
                     Workflow.check_complete("#plates_to_facilities_workflow");
@@ -263,6 +250,7 @@ jQuery(document).ready(function ($) {
 
         if (auth_data.error) {
             alert("Genotyping server credentials are not available. Stop.");
+            jQuery("#review_order_link").prop("disabled", true);
             return;
         }
 
@@ -272,11 +260,10 @@ jQuery(document).ready(function ($) {
         } else {
             access_token = genotyping_facility_login(auth_data);
         }
+        jQuery('#facility_url_lbl').html(auth_data.host);
 
-        var facility_url = get_facility_url(facility);        
-
-        if (facility_url){
-            var url = facility_url + '/brapi/v1/vendor/specifications';
+        if (access_token){
+            var url = auth_data.host + '/brapi/v1/vendor/specifications';
 
             auth_data.token = access_token;
 
@@ -346,10 +333,8 @@ jQuery(document).ready(function ($) {
                 access_token = genotyping_facility_login(auth_data);
             }
 
-            var facility_url = get_facility_url(facility);        
-
-            if (facility_url){
-                var url = facility_url + '/brapi/v1/vendor/orders/' + order_id + '/status';
+            if (access_token){
+                var url = auth_data.host + '/brapi/v1/vendor/orders/' + order_id + '/status';
 
                 jQuery.ajax({
                     url: url,
@@ -361,7 +346,7 @@ jQuery(document).ready(function ($) {
                         status = response.result.status;       
                         jQuery('#genotyping_trial_status_info').html(status);
                         if ( status == 'completed'){
-                            get_facility_vcf(order_id,facility_url,access_token);
+                            get_facility_vcf(order_id,auth_data.host,access_token);
                         }
                     },
                     error: function(response) {
@@ -423,12 +408,10 @@ jQuery(document).ready(function ($) {
 
         if (access_token) {
             auth_data.token = access_token;
-
-            var facility_url = get_facility_url(facility);
         }
 
         if(submission_id){
-            var url = facility_url + '/brapi/v1/vendor/orders?submissionId=' + submission_id;
+            var url = auth_data.host + '/brapi/v1/vendor/orders?submissionId=' + submission_id;
 
             jQuery.ajax({
                 url: url,
