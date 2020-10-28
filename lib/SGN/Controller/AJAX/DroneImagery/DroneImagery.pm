@@ -11316,9 +11316,16 @@ sub drone_imagery_delete_drone_run_GET : Args(0) {
 
     my $drone_run_band_project_ids_sql = join ",", @drone_run_band_ids;
     my $drone_run_band_image_ids_sql = join ",", @drone_run_image_ids;
-    my $q1 = "DELETE FROM phenome.project_md_image WHERE project_id in ($drone_run_band_project_ids_sql);";
-    my $q2 = "DELETE FROM project WHERE project_id in ($drone_run_band_project_ids_sql);";
+    my $q1 = "DELETE FROM phenome.project_md_image WHERE project_id IN ($drone_run_band_project_ids_sql);";
+    my $q2 = "DELETE FROM project WHERE project_id IN ($drone_run_band_project_ids_sql);";
     my $q3 = "DELETE FROM project WHERE project_id = $drone_run_project_id;";
+    my $q4 = "DELETE FROM phenome.stock_image WHERE image_id IN (SELECT image_id FROM phenome.project_md_image WHERE project_id IN ($drone_run_band_project_ids_sql));";
+    print STDERR $q4."\n";
+    print STDERR $q1."\n";
+    print STDERR $q2."\n";
+    print STDERR $q3."\n";
+    my $h4 = $schema->storage->dbh()->prepare($q4);
+    $h4->execute();
     my $h1 = $schema->storage->dbh()->prepare($q1);
     $h1->execute();
     my $h2 = $schema->storage->dbh()->prepare($q2);
