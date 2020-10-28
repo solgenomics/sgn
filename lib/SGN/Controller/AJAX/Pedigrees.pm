@@ -221,8 +221,8 @@ sub _get_pedigrees_from_file {
             $c->stash->{rest} = { error => "No cross type on line $line_num! Muse be one of these: biparental, open, self, sib, polycross." };
             $c->detach();
         }
-        if ($cross_type ne 'biparental' && $cross_type ne 'open' && $cross_type ne 'self' && $cross_type ne 'sib' && $cross_type ne 'polycross'){
-            $c->stash->{rest} = { error => "Invalid cross type on line $line_num! Must be one of these: biparental, open, self, sib, polycross." };
+        if ($cross_type ne 'biparental' && $cross_type ne 'open' && $cross_type ne 'self' && $cross_type ne 'sib' && $cross_type ne 'polycross' && $cross_type ne 'backcross'){
+            $c->stash->{rest} = { error => "Invalid cross type on line $line_num! Must be one of these: biparental, open, self, backcross,sib, polycross." };
             $c->detach();
         }
         if ($female eq $male) {
@@ -240,9 +240,17 @@ sub _get_pedigrees_from_file {
             $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
             $male_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
         }
-        elsif($cross_type eq "biparental") {
+        elsif($cross_type eq 'biparental') {
             if (!$male){
                 $c->stash->{rest} = { error => "For $progeny Cross Type is biparental, but no male parent given" };
+                $c->detach();
+            }
+            $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
+            $male_parent = Bio::GeneticRelationships::Individual->new( { name => $male });
+        }
+        elsif($cross_type eq 'backcross') {
+            if (!$male){
+                $c->stash->{rest} = { error => "For $progeny Cross Type is backcross, but no male parent given" };
                 $c->detach();
             }
             $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });

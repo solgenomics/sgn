@@ -48,10 +48,10 @@ jQuery(document).ready(function ($) {
             }
         },
         complete: function (r) {
-	    alert("RETRIEVED: "+r);
+//	    alert("RETRIEVED: "+r);
     	    var clean_r = r.replace('<pre>', '');
 	    clean_r = clean_r.replace('</pre>', '');
-	    alert("NOW: "+clean_r);
+//	    alert("NOW: "+clean_r);
 	    console.log(clean_r);
 	    var response = JSON.parse(clean_r);
             $('#working_modal').modal("hide");
