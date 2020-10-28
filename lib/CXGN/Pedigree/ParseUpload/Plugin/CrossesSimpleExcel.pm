@@ -193,9 +193,9 @@ sub _validate_with_plugin {
 
         if ($cross_type eq 'backcross') {
             $female_parent =~ s/^\s+|\s+$//g;
-            $seen_backcross_parents{$female_parent}++
+            $seen_backcross_parents{$female_parent}++;
             $male_parent =~ s/^\s+|\s+$//g;
-            $seen_backcross_parents{$male_parent}++
+            $seen_backcross_parents{$male_parent}++;
         } else {
             $female_parent =~ s/^\s+|\s+$//g;
             $seen_accession_names{$female_parent}++;

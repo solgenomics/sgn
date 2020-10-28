@@ -248,8 +248,8 @@ jQuery(document).ready(function($) {
     });
 
     jQuery(document).on('click', '[name="upload_crosses_success_complete_button"]', function(){
-        alert('Crosses saved in the database');
         jQuery('#upload_crosses_dialog').modal('hide');
+        location.reload();
     });
 
 
