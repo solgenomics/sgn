@@ -2481,7 +2481,7 @@ jQuery(document).ready(function() {
                     drone_imagery_plot_polygon_click_type = 'save_ground_control_point';
 
                     showManageDroneImagerySection('manage_drone_imagery_standard_process_div');
-                    
+
                     Workflow.complete("#manage_drone_imagery_standard_process_drone_run_band_step");
                     Workflow.focus('#manage_drone_imagery_standard_process_workflow', 2);
                 },

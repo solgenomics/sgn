@@ -5883,6 +5883,7 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
     my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
     my $field_trial_id = $c->req->param('field_trial_id');
     my $drone_run_project_id_input = $c->req->param('drone_run_project_id');
+    my $drone_run_band_project_id_input = $c->req->param('drone_run_band_project_id');
     my $gcp_drone_run_project_id_input = $c->req->param('gcp_drone_run_project_id');
     my $time_cvterm_id = $c->req->param('time_cvterm_id');
     my $is_test = $c->req->param('is_test');
@@ -5904,25 +5905,45 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
     }
 
     my $drone_run_band_drone_run_project_relationship_type_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
+    my $drone_run_band_drone_run_project_type = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_band_project_type', 'project_property')->cvterm_id();
 
-    my $gcp_drone_run_band_q = "SELECT project_id
+    my $project_image_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    my $rotated_image_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'rotated_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    my $cropped_image_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'cropped_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    my $denoised_project_image_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'denoised_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+
+    my $apply_drone_run_band_project_ids;
+    my %apply_drone_run_band_project_ids_type_hash;
+    my $drone_run_band_q = "SELECT project.project_id, project_md_image.type_id, projectprop.value
         FROM project
+        JOIN projectprop ON(project.project_id = projectprop.project_id)
         JOIN project_relationship ON(project.project_id=project_relationship.subject_project_id AND project_relationship.type_id=$drone_run_band_drone_run_project_relationship_type_id_cvterm_id)
-        WHERE project_relationship.object_project_id=?;";
+        JOIN phenome.project_md_image AS project_md_image ON(project.project_id = project_md_image.project_id)
+        WHERE project_relationship.object_project_id=?
+        AND project_md_image.type_id=?
+        AND projectprop.type_id=$drone_run_band_drone_run_project_type;";
+    my $drone_run_band_h = $bcs_schema->storage->dbh()->prepare($drone_run_band_q);
+    $drone_run_band_h->execute($drone_run_project_id_input, $project_image_type_id);
+    while (my ($drone_run_band_project_id, $drone_run_band_project_image_type_id, $drone_run_band_project_type) = $drone_run_band_h->fetchrow_array()) {
+        push @$apply_drone_run_band_project_ids, $drone_run_band_project_id;
+        $apply_drone_run_band_project_ids_type_hash{$drone_run_band_project_id} = {
+            image_type_id => $drone_run_band_project_image_type_id,
+            band_type => $drone_run_band_project_type
+        };
+    }
+    print STDERR Dumper \%apply_drone_run_band_project_ids_type_hash;
+    my $drone_run_band_project_type_current = $apply_drone_run_band_project_ids_type_hash{$drone_run_band_project_id_input}->{band_type};
+
+    my $gcp_drone_run_band_q = "SELECT project.project_id
+        FROM project
+        JOIN projectprop ON(project.project_id = projectprop.project_id)
+        JOIN project_relationship ON(project.project_id=project_relationship.subject_project_id AND project_relationship.type_id=$drone_run_band_drone_run_project_relationship_type_id_cvterm_id)
+        WHERE project_relationship.object_project_id=?
+        AND projectprop.type_id=$drone_run_band_drone_run_project_type
+        AND projectprop.value='$drone_run_band_project_type_current';";
     my $gcp_drone_run_band_h = $bcs_schema->storage->dbh()->prepare($gcp_drone_run_band_q);
     $gcp_drone_run_band_h->execute($gcp_drone_run_project_id_input);
     my ($gcp_drone_run_band_project_id) = $gcp_drone_run_band_h->fetchrow_array();
-
-    my $apply_drone_run_band_project_ids;
-    my $drone_run_band_q = "SELECT project_id
-        FROM project
-        JOIN project_relationship ON(project.project_id=project_relationship.subject_project_id AND project_relationship.type_id=$drone_run_band_drone_run_project_relationship_type_id_cvterm_id)
-        WHERE project_relationship.object_project_id=?;";
-    my $drone_run_band_h = $bcs_schema->storage->dbh()->prepare($drone_run_band_q);
-    $drone_run_band_h->execute($drone_run_project_id_input);
-    while (my ($drone_run_band_project_id) = $drone_run_band_h->fetchrow_array()) {
-        push @$apply_drone_run_band_project_ids, $drone_run_band_project_id;
-    }
 
     my $drone_run_gcp_type_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_ground_control_points', 'project_property')->cvterm_id();
 
@@ -6083,24 +6104,19 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
     my $rotate_rad_gcp = sum(@angle_diffs)/scalar(@angle_diffs);
     print STDERR "AVG ROTATION: $rotate_rad_gcp\n";
 
-    my $project_image_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
-    my $rotated_image_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'rotated_stitched_drone_imagery', 'project_md_image')->cvterm_id();
-    my $cropped_image_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'cropped_stitched_drone_imagery', 'project_md_image')->cvterm_id();
-    my $denoised_project_image_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'denoised_stitched_drone_imagery', 'project_md_image')->cvterm_id();
-
-    my $drone_run_band_type_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_band_project_type', 'project_property')->cvterm_id();
-    my $q2 = "SELECT project_md_image.image_id, drone_run_band_type.value, drone_run_band.project_id
+    my $q2 = "SELECT project_md_image.image_id, drone_run_band_type.value
         FROM project AS drone_run_band
-        JOIN projectprop AS drone_run_band_type ON(drone_run_band_type.project_id = drone_run_band.project_id AND drone_run_band_type.type_id = $drone_run_band_type_type_id)
+        JOIN projectprop AS drone_run_band_type ON(drone_run_band_type.project_id = drone_run_band.project_id AND drone_run_band_type.type_id = $drone_run_band_drone_run_project_type)
         JOIN phenome.project_md_image AS project_md_image ON(project_md_image.project_id = drone_run_band.project_id)
         JOIN metadata.md_image ON(project_md_image.image_id = metadata.md_image.image_id)
         WHERE project_md_image.type_id = ?
         AND drone_run_band.project_id = ?
-        AND metadata.md_image.obsolete = 'f';";
+        AND metadata.md_image.obsolete = 'f'
+        AND drone_run_band_type.value='$drone_run_band_project_type_current';";
 
     my $h2 = $bcs_schema->storage->dbh()->prepare($q2);
-    $h2->execute($project_image_type_id, $apply_drone_run_band_project_ids->[0]);
-    my ($check_image_id, $check_drone_run_band_type, $check_drone_run_band_project_id_q) = $h2->fetchrow_array();
+    $h2->execute($project_image_type_id, $drone_run_band_project_id_input);
+    my ($check_image_id, $check_drone_run_band_type) = $h2->fetchrow_array();
 
     my $check_image = SGN::Image->new( $bcs_schema->storage->dbh, $check_image_id, $c );
     my $check_image_url = $check_image->get_image_url("original");
@@ -6186,12 +6202,12 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
     my $dir = $c->tempfiles_subdir('/drone_imagery_rotate');
     my $archive_rotate_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_rotate/imageXXXX');
     $archive_rotate_temp_image .= '.png';
-    my $rotate_return = _perform_image_rotate($c, $bcs_schema, $metadata_schema, $check_drone_run_band_project_id_q, $check_image_id, $rotate_rad_gcp/$rad_conversion, 0, $user_id, $user_name, $user_role, $archive_rotate_temp_image, 0, 0);
+    my $rotate_return = _perform_image_rotate($c, $bcs_schema, $metadata_schema, $drone_run_band_project_id_input, $check_image_id, $rotate_rad_gcp/$rad_conversion, 0, $user_id, $user_name, $user_role, $archive_rotate_temp_image, 0, 0);
     my $rotated_image_id = $rotate_return->{rotated_image_id};
 
     my $h_rotate_check = $bcs_schema->storage->dbh()->prepare($q2);
     $h_rotate_check->execute($rotated_image_type_id, $gcp_drone_run_band_project_id);
-    my ($rotate_check_image_id, $rotate_check_drone_run_band_type, $rotate_check_drone_run_band_project_id_q) = $h_rotate_check->fetchrow_array();
+    my ($rotate_check_image_id, $rotate_check_drone_run_band_type) = $h_rotate_check->fetchrow_array();
 
     my $rotate_check_target_image = SGN::Image->new( $bcs_schema->storage->dbh, $rotated_image_id, $c );
     my $rotate_check_target_image_url = $rotate_check_target_image->get_image_url("original");
@@ -6307,7 +6323,7 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
     my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_cropped_image/imageXXXX');
     $archive_temp_image .= '.png';
 
-    my $check_cropping_return = _perform_image_cropping($c, $bcs_schema, $check_drone_run_band_project_id_q, $rotated_image_id, encode_json $image_crop, $user_id, $user_name, $user_role, $archive_temp_image);
+    my $check_cropping_return = _perform_image_cropping($c, $bcs_schema, $drone_run_band_project_id_input, $rotated_image_id, encode_json $image_crop, $user_id, $user_name, $user_role, $archive_temp_image);
     my $check_cropped_image_id = $check_cropping_return->{cropped_image_id};
 
     my $crop_check_target_image = SGN::Image->new( $bcs_schema->storage->dbh, $check_cropped_image_id, $c );
@@ -6417,12 +6433,21 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
 
     my %selected_drone_run_band_types;
 
+    my $q4 = "SELECT project_md_image.image_id, drone_run_band_type.value, drone_run_band.project_id
+        FROM project AS drone_run_band
+        JOIN projectprop AS drone_run_band_type ON(drone_run_band_type.project_id = drone_run_band.project_id AND drone_run_band_type.type_id = $drone_run_band_drone_run_project_type)
+        JOIN phenome.project_md_image AS project_md_image ON(project_md_image.project_id = drone_run_band.project_id)
+        JOIN metadata.md_image ON(project_md_image.image_id = metadata.md_image.image_id)
+        WHERE project_md_image.type_id = ?
+        AND drone_run_band.project_id = ?
+        AND metadata.md_image.obsolete = 'f';";
+    my $h4 = $bcs_schema->storage->dbh()->prepare($q4);
+
     my $term_map = CXGN::DroneImagery::ImageTypes::get_base_imagery_observation_unit_plot_polygon_term_map();
     my %drone_run_band_info;
     foreach my $apply_drone_run_band_project_id (@$apply_drone_run_band_project_ids) {
-        my $h2 = $bcs_schema->storage->dbh()->prepare($q2);
-        $h2->execute($project_image_type_id, $apply_drone_run_band_project_id);
-        my ($image_id, $drone_run_band_type, $drone_run_band_project_id) = $h2->fetchrow_array();
+        $h4->execute($project_image_type_id, $apply_drone_run_band_project_id);
+        my ($image_id, $drone_run_band_type, $drone_run_band_project_id) = $h4->fetchrow_array();
         $selected_drone_run_band_types{$drone_run_band_type} = $drone_run_band_project_id;
 
         my $dir = $c->tempfiles_subdir('/drone_imagery_rotate');
@@ -6451,7 +6476,7 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
             rotate_value => $rotate_value,
             cropping_value => $cropping_value,
             drone_run_band_type => $drone_run_band_type,
-            drone_run_project_id => $drone_run_project_id,
+            drone_run_project_id => $drone_run_project_id_input,
             drone_run_project_name => $drone_run_project_name,
             plot_polygons_value => $plot_polygons_value
         };
