@@ -35,8 +35,9 @@ $locations
                             <ul>
                                 <li>The Cross Tool can track any pollinations in a breeding program.</li>
                                 <li>Each cross has a globally unique cross id.</li>
-                                <li>Supported cross types are: biparental, self, open, sib, polycross, bulk, bulk_self, bulk_open, or doubled_haploid</li>
+                                <li>Supported cross types are: biparental, self, open, backcross, sib, polycross, bulk, bulk_self, bulk_open, or doubled_haploid</li>
                                 <li>For an open pollinated cross, the cross can be defined as between female accession A and male population P1 (populations in the database are defined strictly as groups of accessions). If the male parent is not known, it can be left blank.</li>
+                                <li>For backcross cross type, cross unique id can be used as one of the parents.</li>
                                 <li>An individual cross can be linked to the specific female plot or plant, as well as to the specific male plot or plant.</li>
                                 <li>A cross can have other data associated to it, such as number of flowers, pollination date, etc.</li>
                                 <li>Seed produced by a cross can be managed using a seedlot.</li>
@@ -133,6 +134,7 @@ $locations
                                             <option value="biparental">biparental</option>
                                             <option value="self">self</option>
                                             <option value="open">open pollinated</option>
+                                            <option value="backcross">backcross</option>
                                             <option value="sib">sib</option>
                                             <option value="bulk">bulk</option>
                                             <option value="bulk_self">bulk selfed</option>
@@ -446,6 +448,7 @@ $locations
                     <p><b>biparental:</b> An individual plant pollinated by another individual plant.<p>
                     <p><b>self:</b> A self pollinated individual plant.<p>
                     <p><b>open pollinated:</b> An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members).<p>
+                    <p><b>backcross:</b> An individual plant pollinated by one of its parents.<p>
                     <p><b>sib:</b> Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.<p>
                     <p><b>bulk:</b> A group of plants (usually a related family) pollinated by an individual plant.<p>
                     <p><b>bulk selfed:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).<p>
@@ -538,7 +541,7 @@ jQuery(document).ready(function($) {
             console.log(html);
 
             if(i ==''){
-            alert("No plot");
+            alert("No female plot");
             return;
             }
 
@@ -579,7 +582,7 @@ jQuery(document).ready(function($) {
             console.log(html);
 
             if(i ==''){
-            alert("No plot");
+            alert("No male plot");
             return;
             }
 

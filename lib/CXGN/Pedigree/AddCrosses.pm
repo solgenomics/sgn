@@ -133,12 +133,20 @@ sub add_crosses {
 
             if ($pedigree->has_female_parent()) {
                 $female_parent_name = $pedigree->get_female_parent()->get_name();
-                $female_parent = $self->_get_accession($female_parent_name);
+                if ($cross_type eq 'backcross') {
+                    $female_parent = $self->_get_accession_or_cross($female_parent_name);
+                } else {
+                    $female_parent = $self->_get_accession($female_parent_name);
+                }
             }
 
             if ($pedigree->has_male_parent()) {
                 $male_parent_name = $pedigree->get_male_parent()->get_name();
-                $male_parent = $self->_get_accession($male_parent_name);
+                if ($cross_type eq 'backcross') {
+                    $male_parent = $self->_get_accession_or_cross($male_parent_name);
+                } else {
+                    $male_parent = $self->_get_accession($male_parent_name);
+                }
             }
 
             if ($pedigree->has_female_plot()) {
@@ -374,7 +382,19 @@ sub _validate_cross {
             print STDERR "Parent $female_parent_name in pedigree is not a stock\n";
             return;
         }
-    }
+    } elsif ($cross_type eq 'backcross') {
+	        $female_parent_name = $pedigree->get_female_parent()->get_name();
+	        $male_parent_name = $pedigree->get_male_parent()->get_name();
+	        $female_parent = $self->_get_accession_or_cross($female_parent_name);
+	        $male_parent = $self->_get_accession_or_cross($male_parent_name);
+
+        if (!$female_parent || !$male_parent) {
+            print STDERR "Parent $female_parent_name or $male_parent_name in pedigree is not a stock\n";
+            return;
+	    }
+
+	}
+
     #add support for other cross types here
 
     #else {
@@ -460,6 +480,30 @@ sub _get_plant {
     return $stock;
 }
 
+sub _get_accession_or_cross {
+    my $self = shift;
+    my $parent_name = shift;
+    my $chado_schema = $self->get_chado_schema();
+    my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
+    my $stock;
+    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type');
+	my $cross_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross', 'stock_type');
+
+    $stock_lookup->set_stock_name($parent_name);
+    $stock = $stock_lookup->get_stock_exact();
+
+    if (!$stock) {
+        print STDERR "Parent name is not a stock\n";
+        return;
+    }
+
+    if (($stock->type_id() != $accession_cvterm->cvterm_id()) && ($stock->type_id() != $cross_cvterm->cvterm_id())) {
+        print STDERR "Parent name is not a stock of type accession or cross \n";
+        return;
+    }
+
+    return $stock;
+}
 
 #######
 1;

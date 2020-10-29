@@ -181,7 +181,7 @@ sub upload_cross_file_POST : Args(0) {
                 $return_error .= $error_string."<br>";
             }
         }
-        $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}, missing_plots => $parse_errors->{'missing_plots'}};
+        $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}, missing_plots => $parse_errors->{'missing_plots'}, missing_accessions_or_crosses => $parse_errors->{'missing_accessions_or_crosses'}};
         $c->detach();
     }
 
