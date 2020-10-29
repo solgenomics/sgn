@@ -1346,6 +1346,15 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                                     </select>
                                 </div>
                             </div>
+                            <div class="form-group" id="drone_image_calculate_statistics_genotyping_protocol_use_parental_grms_select_div" style="display:none">
+                                <label class="col-sm-3 control-label">Use Parental Relationship Matrices: </label>
+                                <div class="col-sm-9" >
+                                    <select class="form-control" id="drone_image_calculate_statistics_genotyping_protocol_use_parental_grms_select">
+                                        <option value="no">No</option>
+                                        <option value="yes">Yes</option>
+                                    </select>
+                                </div>
+                            </div>
                             <div class="form-group" id="drone_image_calculate_statistics_genotyping_protocol_include_pedigree_select_div" style="display:none">
                                 <label class="col-sm-3 control-label">Include Pedigree Info Into Relationship Matrix: </label>
                                 <div class="col-sm-9" >
@@ -4509,10 +4518,22 @@ jQuery(document).ready(function() {
     jQuery('#drone_image_calculate_statistics_genotyping_protocol_compute_from_parents_select').change(function(){
         if (jQuery(this).val() == 'yes') {
             jQuery('#drone_image_calculate_statistics_genotyping_protocol_include_pedigree_select_div').show();
+            jQuery('#drone_image_calculate_statistics_genotyping_protocol_use_parental_grms_select_div').show();
         }
         if (jQuery(this).val() == 'no') {
             jQuery('#drone_image_calculate_statistics_genotyping_protocol_include_pedigree_select_div').hide();
+            jQuery('#drone_image_calculate_statistics_genotyping_protocol_use_parental_grms_select_div').hide();
             jQuery('#drone_image_calculate_statistics_genotyping_protocol_include_pedigree_select option[value=no]').attr('selected','selected');
+        }
+    });
+
+    jQuery('#drone_image_calculate_statistics_genotyping_protocol_use_parental_grms_select').change(function(){
+        if (jQuery(this).val() == 'yes') {
+            jQuery('#drone_image_calculate_statistics_genotyping_protocol_include_pedigree_select option[value=no]').attr('selected','selected');
+            jQuery('#drone_image_calculate_statistics_genotyping_protocol_include_pedigree_select_div').hide();
+        }
+        if (jQuery(this).val() == 'no') {
+            jQuery('#drone_image_calculate_statistics_genotyping_protocol_include_pedigree_select_div').show();
         }
     });
 
@@ -4527,6 +4548,10 @@ jQuery(document).ready(function() {
             alert('You can only use pedigree info in the relationship matrix if you will compute the genotypes from the parents!');
             return false;
         }
+        if (jQuery('#drone_image_calculate_statistics_genotyping_protocol_use_parental_grms_select').val() == 'yes' && jQuery('#drone_image_calculate_statistics_genotyping_protocol_compute_from_parents_select').val() != 'yes') {
+            alert('You can only use parental relationship matrices if you will compute the genotypes from the parents!');
+            return false;
+        }
 
         jQuery.ajax({
             url : '/api/drone_imagery/calculate_statistics',
@@ -4538,6 +4563,7 @@ jQuery(document).ready(function() {
                 'statistics_select_marss_options':jQuery('#drone_imagery_calculate_statistics_select_marss').val(),
                 'protocol_id':jQuery('#drone_image_calculate_statistics_genotyping_protocol_select').val(),
                 'compute_from_parents':jQuery('#drone_image_calculate_statistics_genotyping_protocol_compute_from_parents_select').val(),
+                'use_parental_grms_if_compute_from_parents':jQuery('#drone_image_calculate_statistics_genotyping_protocol_use_parental_grms_select').val(),
                 'include_pedgiree_info_if_compute_from_parents':jQuery('#drone_image_calculate_statistics_genotyping_protocol_include_pedigree_select').val(),
                 'tolparinv':jQuery('#drone_image_calculate_statistics_tolparinv_select').val(),
                 'legendre_order_number':jQuery('#drone_image_calculate_statistics_legendre_order_number_select').val(),
