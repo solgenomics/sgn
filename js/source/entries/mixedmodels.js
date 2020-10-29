@@ -252,52 +252,49 @@ export function init(main_div){
        trait_selected.push($(this).val());
     });
 
-     if(trait_selected.length > 1 || trait_selected.length == 0){
-       jQuery('#trait_histogram').html('Please select only one trait at a time to see the histogram!');
-     //alert("Histogram can only be displayed for one trait");
-     //var trait = trait_selected;
-   }else{
-      //alert("trait selected is : " + trait_selected);
-      var trait = trait_selected[0];
+       if(trait_selected.length > 1 || trait_selected.length == 0){
+	   jQuery('#trait_histogram').html('Please select only one trait at a time to see the histogram!');
+       } else {
+	   
+	   var trait = trait_selected[0];
+	   
+	   
+	   $.ajax( {
+               url: '/ajax/mixedmodels/grabdata',
+               data: { 'file' : tempfile },
+               success: function(r) {
+		   var v = {
+		       "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
+		       "width": 200,
+		       "height": 100,
+		       "padding": 5,
+		       "data": { 'values': r.data },
+		       "mark": "bar",
+		       "encoding": {
+			   "x": {
+			       "bin": true,
+			       "field": trait,
+			       "type": "quantitative"
+			   },
+			   "y": {
+			       "aggregate": "count",
+			       "type": "quantitative"
+			   }
+		       }
+		   };
+		   
+		   vegaEmbed("#trait_histogram", v);
+               },
 
 
-      $.ajax( {
-         url: '/ajax/mixedmodels/grabdata',
-         data: { 'file' : tempfile },
-         success: function(r) {
-           var v = {
-             "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-             "width": 200,
-             "height": 100,
-             "padding": 5,
-             "data": { 'values': r.data },
-             "mark": "bar",
-             "encoding": {
-             "x": {
-               "bin": true,
-               "field": trait,
-               "type": "quantitative"
-             },
-             "y": {
-               "aggregate": "count",
-               "type": "quantitative"
-             }
-            }
-           };
-
-           vegaEmbed("#trait_histogram", v);
-         },
-
-
-       error: function(e) { alert('error!'); }
-     });
-
-  }
-
+	       error: function(e) { alert('error!'); }
+	   });
+	   
+       }
+       
    });
 
     $('#run_mixed_model_button').click( function() {
-	//alert("RUNNING!");
         var model = $('#model_string').text();
 	var fixed_factors = parse_simple_factors("fixed_factors");
 	var random_factors = parse_simple_factors("random_factors");;
@@ -311,7 +308,6 @@ export function init(main_div){
 	});
 	console.log(dependent_variables);
 	$('#working_modal').modal("show");
-	//alert(model + " "+tempfile+" "+ dependent_variable);
 	$.ajax( {
             "url": '/ajax/mixedmodels/run',
 	    "method": "POST",
@@ -355,11 +351,8 @@ export function init(main_div){
 		    
 		    accession_names = JSON.stringify(r.accession_names);
 
-		    alert("ACCESSION NAMES = "+accession_names);
 		    adjusted_blups_data = JSON.stringify(r.adjusted_blups_data);
 
-		    alert("DATA = "+r.adjusted_blups_data);
-		    
 		    adjusted_blues_data = JSON.stringify(r.adjusted_blues_data);
 		    blups_data = JSON.stringify(r.blups_data);
 		    blues_data = JSON.stringify(r.blues_data);
@@ -438,14 +431,11 @@ function extract_model_parameters() {
 }
 
 function parse_simple_factors(simple_div) {
-    //alert("parsing div "+simple_div);
-    //alert($('#'+simple_div).html());
     
     var factors = $('#'+simple_div).children();
     var factor_list = new Array();
     for(var n=0; n<factors.length; n++) {
 	var factor_string = $(factors[n]).text();
-	//alert("FACTOR = "+factor_string);
 	factor_string = factor_string.replace(/X /g, '');
 	
 	if (factor_string) {
@@ -471,25 +461,20 @@ function parse_factor_collection(collection_div) {
     //
     
     var collection_divs = $('#'+collection_div).children();
-    //alert("COLLECTION PANEL: "+collection_div+" content: "+$('#'+collection_div).html());
+
     var collection = new Array();
     var grouped_factors = new Array();
     
-    //alert("DIV COUNT = "+collection_divs.length);
     for (var i=1; i< collection_divs.length; i++) { // skip interaction_factors_collection panel header
 	
 	    var $div = $(collection_divs[i]);
 	
-	//alert("DIV = "+ $div.text()+" ID="+$div.attr('id'));
-	
 	var top_panels = $div.children();
 	
 	for (var n=0; n< top_panels.length; n++) {
-	    //alert('top_panel '+$(top_panels[n]).text()+ ' LEN:'+$(top_panels[n]).length +' ID: '+$(top_panels[n]).attr('id'));
 	    
 	    var panel_components = $(top_panels[n]).children();
 	    var $panel_body = $(panel_components[1]);
-	    //alert("parsing interaction body..."+$panel_body.text()+ " ID: " +$panel_body.attr('id'));
 	    
 	    var factors = $panel_body.children();
 	    
@@ -499,16 +484,12 @@ function parse_factor_collection(collection_div) {
 		
 		// remove X closing box
 		label = label.substr(2);
-		//alert("FACTOR"+label);
 		grouped_factors.push(label);
 	    }
 	    collection.push(grouped_factors);
 	    grouped_factors = new Array();
 	}
     }
-    
-    ///var fixed_factors_interaction_collection = interaction_collection.join('"],["');
-    //alert("finally: "+ JSON.stringify(collection));
     
     var fixed_factors_interaction_json;
     if (collection) {
