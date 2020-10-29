@@ -74,8 +74,11 @@
 	      
 	      <span style="width:240px" id="mixed_model_dataset_select">
 	      </span>
-	      <button class="btn btn-main" id="mixed_model_analysis_prepare_button" 	onclick="Workflow.complete(this);">Choose Dataset</button>
-	      
+	      <div>
+		<div style="float:right">
+		  <button class="btn btn-main" id="mixed_model_analysis_prepare_button" 	onclick="Workflow.complete(this);">Choose Dataset and continue</button>
+		</div>
+	      </div>
 	      <br />
 	      <br />
 	      
@@ -92,9 +95,11 @@
       [Histogram]
     </div>
 
-    <button class="btn btn-main" id="mixed_model_analysis_fishished_choose_variable" 	onclick="Workflow.complete(this);">Next step</button>	
-    
-    
+    <div>
+      <div style="float:right">
+	<button class="btn btn-main" id="mixed_model_analysis_fishished_choose_variable" 	onclick="Workflow.complete(this);">Next step</button>	
+      </div>
+    </div>
 </&>
 
 
@@ -166,8 +171,12 @@
     <br />
     <div id="tempfile" style="display:none" >
     </div>
-    
-    <button style="position:relative;" id="run_mixed_model_button" class="btn btn-main" 	onclick="Workflow.complete(this)" >Run analysis and go to next step</button>
+
+    <div>
+      <div style="float:right">
+	<button style="position:relative;" id="run_mixed_model_button" class="btn btn-main" 	onclick="Workflow.complete(this)" >Run analysis and go to next step</button>
+      </div>
+    </div>
     <hr />
     
 </&>
