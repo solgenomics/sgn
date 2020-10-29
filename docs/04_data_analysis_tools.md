@@ -417,3 +417,28 @@ De Maesschalck, R., D. Jouan-Rimbaud, and D.L. Massart. 2000. The Mahalanobis di
 * Vapnik, V.N. 2000. The Nature of Statistical Learning Theory. Springer New York, New York, NY.
 * Wold, S., A. Ruhe, H. Wold, and W.J. Dunn, III. 1984. The Collinearity Problem in Linear Regression. The Partial Least Squares (PLS) Approach to Generalized Inverses. SIAM J. Sci. Stat. Comput. 5(3): 735-743. doi: 10.1137/0905052.
 * Wold, S., M. Sjöström, and L. Eriksson. 2001. PLS-regression: a basic tool of chemometrics. Chemom. Intell. Lab. Syst. 58(2): 109-130. doi: 10.1016/S0169-7439(01)00155-1.
+
+
+4.12 General Mixed Model Tool
+
+--------------
+
+The general mixed model tool is available at <a href="/tools/mixedmodels">/tools/mixedmodels</a> and a link is provided from the Analyze menu.
+
+To use the mixed model tool, first create dataset using the Wizard containing the data that you would like to analyze.
+
+Select the Mixed Model tool from the Analyze menu.
+
+You are presented with a workflow. On the first step of the workflow, select the dataset that you wish to analyze, click on "Choose dataset" to continue.
+
+The second part of the workflow presents you with the traits in the dataset; you can select one or more traits from the lists using the select buttons. If you selected one trait, a bargraph of the trait distribution will be shown.  Click the "Next step" button to move to the next screen.
+
+<img src='{{"assets/images/mixedmodel_tool_model_build_step.png" | relative_url }}' width="522" />
+
+On the model build screen, all the factors are displayed that are contained within the dataset. The factors are presented as a list of blue buttons that can be dragged using the mouse to areas on the screen which build a mixed model equation. The areas correspond to fixed factors, random factors, and optionally to more complex factors, such as fixed factors with interaction and fixe factors with vriable slope/intersects. Drag the available factors to the corresponding area. To calculate BLUPs for germplasm, drag the germplasmName button to the "Random factors" area. To calculate BLUEs, drag it to the "Fixed factors" area. The factors need to have different levels contained within them, for example, if there is only one trial in the dataset, it cannot be used as one of the factors. Click on "Run analysis and got to next step" to run the mixed model and display the results.
+
+The result view contains two tabs, one with the raw data, either BLUPS or BLUEs, and the other the adjusted means from the raw data.
+
+The results can be stored in the database as an analysis, by clicking the button provided on the top of the data.
+
+

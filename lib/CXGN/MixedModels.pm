@@ -25,6 +25,7 @@ package CXGN::MixedModels;
 use Moose;
 use Data::Dumper;
 use File::Slurp qw| slurp |;
+use File::Basename;
 use CXGN::Tools::Run;
 use CXGN::Phenotypes::File;
 
@@ -183,37 +184,57 @@ sub generate_model {
     return $model;
 }
 
-=head2 run_models()
 
-runs the model along with the data provided in the phenotyping file
+
+=head2 run_model()
+
+runs the model along with the data provided in the phenotyping file.
+
+Produces two results files. If germplasm was a random factor, is will produce files
+with the tempfiles stem and the extensions .adjustedBLUPs and .BLUPs, if it was a
+fixed factor, the extension are .adjustedBLUEs and .BLUEs. The files have the
+accession identifiers in the first column, with the remaining columns being the 
+adjusted BLUEs, BLUEs, adjusted BLUPs or BLUPs for all the initially selected
+traits.
 
 =cut
 
 sub run_model {
     my $self = shift;
+    my $backend = shift || 'Slurm';
+    my $cluster_host = shift || "localhost";
 
-    my $tempfile = $self->tempfile();
+    my $random_factors = '"'.join('","', @{$self->random_factors()}).'"';
+    my $fixed_factors = '"'.join('","',@{$self->fixed_factors()}).'"';
+    my $dependent_variables = '"'.join('","',@{$self->dependent_variables()}).'"';
 
+    my $model = $self->generate_model();
+    
     # generate params_file
     #
-    my $param_file = $tempfile.".params";
+    my $param_file = $self->tempfile().".params";
     open(my $F, ">", $param_file) || die "Can't open $param_file for writing.";
-    my $model = $self->generate_model();
-    print $F $model;
+    print $F "dependent_variables <- c($dependent_variables)\n";
+    print $F "random_factors <- c($random_factors)\n";
+    print $F "fixed_factors <- c($fixed_factors)\n";
+
+    print $F "model <- \"$model\"\n";
     close($F);
 
     # run r script to create model
     #
-    my $cmd = "R CMD BATCH  '--args datafile=\"".$tempfile."\" paramfile=\"".$tempfile.".params\"' R/mixed_models.R $tempfile.out";
-
-    print STDERR Dumper($tempfile);
-
+    my $cmd = "R CMD BATCH  '--args datafile=\"".$self->tempfile()."\" paramfile=\"".$self->tempfile().".params\"' " .  " R/mixed_models.R ".$self->tempfile().".out";
     print STDERR "running R command $cmd...\n";
-    system($cmd);
-    print STDERR "Done.\n";
 
-    my $resultfile = $tempfile.".results";
+    print STDERR "running R command ".$self->tempfile()."...\n";
 
+    my $ctr = CXGN::Tools::Run->new( { backend => $backend, working_dir => dirname($self->tempfile()), backend => $backend, submit_host => $cluster_host } );
+
+    $ctr->run_cluster($cmd);
+
+    while ($ctr->alive()) {
+	sleep(1);
+    }
 }
 
 
