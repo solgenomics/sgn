@@ -1,0 +1,149 @@
+<%args>
+$program_id
+$program_name
+</%args>
+
+<div class="modal fade" id="add_product_profile_dialog" name="add_product_profile_dialog" tabindex="-1" role="dialog" aria-labelledby="addProductProfileDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addProductProfileDialog">Add Product Profile</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Breeding Program: </label>
+                            <div class="col-sm-9">
+                                <input class="form-control" name="profile_program_name" id="profile_program_name" disabled value="<% $program_name %>">
+                                <input name="profile_program_id" id="profile_program_id" type="hidden" value="<% $program_id %>">
+                            </div>
+                        </div><br/><br/>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Product Profile Name: </label>
+                            <div class="col-sm-9">
+                                <input class="form-control" id="new_product_profile_name" name="new_product_profile_name" type="text"/>
+                            </div>
+                        </div><br/><br/>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Scope: </label>
+                            <div class="col-sm-9">
+                                <input class="form-control" id="new_product_profile_scope" name="new_product_profile_scope" type="text"/>
+                            </div>
+                        </div><br/><br/>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="select_list_list_selectxx">Select a List of Traits: </label>
+                            <div class="col-sm-9">
+                                <span id="select_list_div"></span>
+                            </div>
+                        </div>
+                        <div class="form-group form-group-sm" id="target_value_section" style="display: none" >
+                            <hr>
+                            <center><h4>Add Target Value:</h4></center>
+                            <div id="target_value_for_trait" >
+                            </div>
+                        </div
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info" id="submit_new_profile" >Submit</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function () {
+
+
+    jQuery(document).on('change', '#select_list_list_select', function() {
+        var list = new CXGN.List();
+        var trait_list_id = jQuery('#select_list_list_select').val();
+        var trait_list = list.getList(trait_list_id);
+        var html = '<form class="form-horizontal">';
+        for (var i=0; i<trait_list.length; i++){
+            html = html + '<div class="form-group"><label class="col-sm-9 control-label">' + trait_list[i] + ': </label><div class="col-sm-3"><input class="form-control" id="target_value_input_' + i + '" type="text" value="" /></div></div>';
+        }
+        html = html + '</form>';
+        jQuery("#target_value_for_trait").empty().html(html);
+
+
+        jQuery("#target_value_section").show();
+
+    });
+
+    jQuery('#submit_new_profile').click(function(){
+
+        var list = new CXGN.List();
+        var profile_program_id = jQuery('#profile_program_id').val();
+        var product_profile_name = jQuery('#new_product_profile_name').val();
+        var product_profile_scope = jQuery('#new_product_profile_scope').val();
+        var trait_list_id = jQuery('#select_list_list_select').val();
+        var trait_list = list.getList(trait_list_id);
+        trait_list_json = JSON.stringify(trait_list);
+
+        if (product_profile_name === '') {
+            alert("Please supply a product profile name");
+            return;
+        }
+
+        if (product_profile_scope === '') {
+            alert("Please supply a product profile scope");
+            return;
+        }
+
+        if (trait_list_id === '') {
+            alert("Please select a trait list");
+            return;
+        }
+
+        var target_values = [];
+        for (var i=0; i<trait_list.length; i++) {
+            var target_value = jQuery("input#target_value_input_" + i).val();
+            target_values.push(target_value);
+        }
+
+        target_values_json = JSON.stringify(target_values);
+
+        jQuery.ajax({
+            url: '/ajax/breeders/program/add_product_profile',
+            timeout: 3000000,
+            dataType: "json",
+            type: 'POST',
+            data:{
+                'profile_program_id': profile_program_id,
+                'product_profile_name': product_profile_name,
+                'product_profile_scope': product_profile_scope,
+                'trait_list_json': trait_list_json,
+                'target_values_json': target_values_json,
+            },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            error: function(response) {
+                alert("An error occurred. Please try again later!" + JSON.stringify(response));
+            },
+            parseerror: function(response) {
+                alert("A parse error occurred. Please try again." + response);
+            },
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (response.error) {
+                    alert(response.error);
+                } else {
+                    alert('The product profile was saved successfully.');
+                }
+            },
+
+        });
+
+    });
+
+});
+
+
+</script>

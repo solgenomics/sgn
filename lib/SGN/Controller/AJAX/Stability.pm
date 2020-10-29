@@ -58,6 +58,16 @@ sub shared_phenotypes: Path('/ajax/stability/shared_phenotypes') : {
     };
 }
 
+my $method_id;
+sub get_method: Path('/ajax/Stability/get_method') : {
+    my $self = shift;
+    my $c = shift;
+    my $method_1 = $c->req->param('method_id');
+    print STDERR Dumper($method_1);
+    $method_id = $method_1;
+    print "The vairable method_id is $method_id \n";
+}
+
 
 sub extract_trait_data :Path('/ajax/stability/getdata') Args(0) {
     my $self = shift;
@@ -110,9 +120,13 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     my $self = shift;
     my $c = shift;
     my $dataset_id = $c->req->param('dataset_id');
+    my $method = $c->req->param('method_id');
     my $trait_id = $c->req->param('trait_id');
+    
     print STDERR $dataset_id;
     print STDERR $trait_id;
+    print STDERR Dumper $method;
+
     $c->tempfiles_subdir("stability_files");
     my $stability_tmp_output = $c->config->{cluster_shared_tempdir}."/stability_files";
     mkdir $stability_tmp_output if ! -d $stability_tmp_output;
@@ -142,7 +156,6 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     my $AMMIFile = $tempfile . "_" . "AMMIFile.png";
     my $figure1file = $tempfile . "_" . "figure1.png";
     my $figure2file = $tempfile . "_" . "figure2.png";
-    my $figure3file = $tempfile . "_" . "figure3.png";
 
 
     $trait_id =~ tr/ /./;
@@ -168,8 +181,8 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
             $trait_id,
             $figure1file,
             $figure2file,
-            $figure3file,
-            $AMMIFile
+            $AMMIFile,
+            $method
     );
     $cmd->alive;
     $cmd->is_cluster(1);
@@ -189,7 +202,6 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     copy($AMMIFile, $figure_path);
     copy($figure1file, $figure_path);
     copy($figure2file, $figure_path);
-    copy($figure3file, $figure_path);
 
     my $AMMIFilebasename = basename($AMMIFile);
     my $AMMIFile_response = "/documents/tempfiles/stability_files/" . $AMMIFilebasename;
@@ -200,8 +212,6 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     my $figure2basename = basename($figure2file);
     my $figure2_response = "/documents/tempfiles/stability_files/" . $figure2basename;
 
-    my $figure3basename = basename($figure3file);
-    my $figure3_response = "/documents/tempfiles/stability_files/" . $figure3basename;
 
     print $AMMIFile_response;
         
@@ -209,7 +219,6 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
         AMMITable => $AMMIFile_response,
         figure1 => $figure1_response,
         figure2 => $figure2_response,
-        figure3 => $figure3_response,
         dummy_response => $dataset_id
         # dummy_response2 => $trait_id,
     };

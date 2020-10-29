@@ -35,7 +35,19 @@
     <br>
 
     </div>
-
+      <div class = "form-group form-inline">
+       <label for = select_method>Available Methods: </label>
+       <select class="form-control input-sm" id="select_method">
+        <option selected value="ammi">AMMI</option>
+        <option value="gge">GGE</option>
+       </select>
+       <div id = "select_method">
+      </div>
+      <button class="btn btn-primary" id="method_btn" type="submit" name="method_btn" value="method_btn">Select Method</button>
+      <br>
+    
+    <br>
+    <br>    
 
       <div class="form-group form-inline">
         <label class="blast_select_label" for="pheno_select">Available&nbspTraits:&nbsp; </label>
@@ -67,7 +79,7 @@
         </div>
 
             <div style="text-align: center">
-              <button class="btn btn-primary" id="runAMMI" type="submit" name="runAMMI" value="runAMMI">Run AMMI</button>
+              <button class="btn btn-primary" id="runAMMI" type="submit" name="runAMMI" value="runAMMI">Run Stability</button>
             </div>
             <br />
 
@@ -156,6 +168,17 @@ jQuery(document).ready(function() {
   });
 
 
+  
+
+  jQuery('#method_btn').on('click', function() {
+    var method_id = jQuery('#select_method').val();
+    $.ajax({
+        url: '/ajax/Stability/get_method',
+        data: {'method_id': method_id  },
+      }); // end .ajax    // }; // end else statement 
+  });
+
+
   jQuery('#preview_trait_histogram_btn').on('click', function() {
     if (!jQuery('#pheno_select').val()) {
       alert("Please select a dataset and trait.")
@@ -210,9 +233,10 @@ jQuery(document).ready(function() {
       if ($('#pheno_select').val() != ""){
         var dataset_id = get_dataset_id();
         var trait_id = $('#pheno_select').val();
+        var method_id = $('#select_method').val();
         $.ajax({
           url: '/ajax/stability/generate_results',
-          data: {'dataset_id': dataset_id, 'trait_id': trait_id},
+          data: {'dataset_id': dataset_id, 'trait_id': trait_id, 'method_id':method_id},
           beforeSend: function() {
             jQuery("#working_modal").modal("show");
           },
@@ -226,14 +250,12 @@ jQuery(document).ready(function() {
               var AMMIFile_response = response.AMMITable;
               var fig1_response = response.figure1;
               var fig2_response = response.figure2;
-              var fig3_response = response.figure3;
         //alert("Response ID: "+temp_response);
             //alert("Response ID: "+fig1_response);
               //setTimeout(function() {
               $('#stability_output').append("<img id='stability_Table' src='"+ AMMIFile_response + "'/>");
               $('#stability_output').append("<img id='stability_Figure1' src='"+ fig1_response + "'/>");
               $('#stability_output').append("<img id='stability_Figure2' src='"+ fig2_response + "'/>");
-              $('#stability_output').append("<img id='stability_Figure3' src='"+ fig3_response + "'/>");
               //},6000);
             }
           },

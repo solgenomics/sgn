@@ -2,7 +2,8 @@
 <%args>
 $timestamp
 $preferred_species
-$editable_stock_props
+$editable_stock_props => {}
+$editable_stock_props_definitions => {}
 $programs
 $locations
 $crossing_trials
@@ -148,7 +149,7 @@ $crossing_trials
 <& /breeders_toolbox/upload_seedlots_inventory_dialogs.mas &>
 <& /breeders_toolbox/upload_seedlots_dialogs.mas &>
 <& /breeders_toolbox/add_seedlot_dialogs.mas, timestamp=>$timestamp &>
-<& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props &>
+<& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props, editable_stock_props_definitions=>$editable_stock_props_definitions &>
 <& /breeders_toolbox/upload_crosses_dialogs.mas, programs=>$programs, locations=>$locations, crossing_trials=>$crossing_trials &>
 <& /breeders_toolbox/add_cross_dialogs.mas, programs=>$programs, locations=>$locations, crossing_trials=>$crossing_trials &>
 <& /breeders_toolbox/add_crossing_trial_dialogs.mas, programs=>$programs, locations=>$locations &>

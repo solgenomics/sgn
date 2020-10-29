@@ -5,17 +5,19 @@ library("methods")
 library("dplyr")
 library("gridExtra")
 library("agricolae")
+library("gge")
 
 ##### Get data #####
 args = commandArgs(trailingOnly = TRUE)
+
 
 pheno <- read.table(args[1], sep = "\t", header = TRUE)
 study_trait <- args[2]
 cat("Study trait is ", study_trait[1])
 figure1_file_name <- args[3]
 figure2_file_name <- args[4]
-figure3_file_name <- args[5]
-AMMIFile <- args[6]
+AMMIFile <- args[5]
+method <- args[6]
 
 #Making names standard
 names <- colnames(pheno)
@@ -68,16 +70,9 @@ if (! length(locations)>1){
 	q<-tableGrob(sub2)
 	grid.arrange(q)
 	dev.off()
-
-	png(figure3_file_name, height=5, width=5)
-	y <- tableGrob(message2)
-	grid.arrange(y)
-	dev.off()
-
 } else {
-	cat("Starting AMMI...","\n")
+	cat("Starting stability analysis...","\n")
 }
-
 
 model<- with(pheno,AMMI(env, gen, rep, pheno[,col], console=FALSE))
 
@@ -91,37 +86,40 @@ p<-tableGrob(anova)
 grid.arrange(p)
 dev.off()
 
-# Biplot and Triplot 
-png(figure1_file_name,height=400)
-# par(mfrow=c(2,2))
-plot(model, first=0,second=1, number=TRUE, xlab = study_trait)
-dev.off()
 
-#Preparing Germplasm name to be printed
-tam <- nrow(model$analysis)
-if (tam >2){
-  png(figure2_file_name, height= 300)
-  plot(model, type=2, number=TRUE, xlab = study_trait)
-  dev.off()
-}else{
-  png(figure2_file_name, height=5, width=5)
-  y <- tableGrob(message2)
-  grid.arrange(y)
-  dev.off()
-}
+if(method=="ammi"){
+	
+	# Biplot and Triplot 
+	png(figure1_file_name,height=400)
+	plot(model, first=0,second=1, number=TRUE, xlab = study_trait)
+	dev.off()
 
+	tam <- nrow(model$analysis)
+	if (tam >2){
+	  png(figure2_file_name, height= 300)
+	  plot(model, type=2, number=TRUE, xlab = study_trait)
+	  dev.off()
+	}else{
+	  png(figure2_file_name, height=5, width=5)
+	  y <- tableGrob(message2)
+	  grid.arrange(y)
+	  dev.off()
+	}
 
-png(figure3_file_name, height=(21*length(acc)))
-q<-tableGrob(subGen)
-grid.arrange(q)
-dev.off()
+	}else if( method=="gge"){
+		dat1 <- pheno %>% select(germplasmName, locationName, trait=study_trait) 
+		head(dat1)
 
+		model1 <- gge(dat1, trait~germplasmName*locationName, scale=FALSE)
+		
+		name1 = paste(study_trait,"- GGE Biplot", sep=" ")
+		
+		png(figure1_file_name, height=400, width=500)
+		biplot(model1, main=name1, flip=c(1,0), origin=0, hull=TRUE)
+		dev.off()
 
-# model$analysis
-# cat("  ", "\n")
-#Averages
-#model$means
-#data for graphical analysis
-# model$biplot
-# sink()
-# dev.off()
+		model2 <- gge(dat1, trait~germplasmName*locationName, scale=TRUE)
+		png(figure2_file_name,height=400, width=500)
+		biplot(model2, main=name1, flip=c(1,1), origin=0)
+		dev.off()
+	}

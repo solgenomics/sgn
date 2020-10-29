@@ -967,7 +967,8 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
                 my $string_cv_types = join ',', @{$v->{cv_types}};
                 push @{$separated_components{$string_cv_types}}, [$k, $v->{contains_cv_type}, $v->{num_pheno}, $v->{imaging_project_id}, $v->{imaging_project_name}];
             }
-            while (my ($k, $v) = each %separated_components) {
+            foreach my $k (sort keys %separated_components) {
+                my $v = $separated_components{$k};
                 $html .= "<tr><td>".$k."</td><td>";
                 foreach (@$v) {
                     $html .= "<input type='checkbox' name = '".$name."' value ='".$_->[0]."'";

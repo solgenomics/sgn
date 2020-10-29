@@ -41,4 +41,3 @@ $facilities => ();
 
 </div>
 
-<& /breeders_toolbox/genotyping_trials/create_genotyping_trial_dialogs.mas, facilities=>$facilities &>

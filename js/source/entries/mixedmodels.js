@@ -23,7 +23,7 @@ export function init(main_div){
 	$('#generic_save_analysis_accession_names').val(accession_names);
 	$('#generic_save_analysis_dataset_id').val( get_dataset_id() );
 	$('#generic_save_analysis_trait_names').val( traits );
-	$('#generic_save_analysis_statistical_ontology_term').val('Adjusted means from BLUPs using LMER R|SGNSTAT:0000025');
+	$('#generic_save_analysis_statistical_ontology_term').val('Adjusted means from BLUPs using LMER R|SGNSTAT:0000034');
 	$('#generic_save_analysis_model_language').val('R');
 	$('#generic_save_analysis_model_application_name').val('Breedbase Mixed Model Tool');
 	$('#generic_save_analysis_model_application_version').val( version );
@@ -43,7 +43,7 @@ export function init(main_div){
 	$('#generic_save_analysis_accession_names').val(accession_names);
 	$('#generic_save_analysis_dataset_id').val( get_dataset_id() );
 	$('#generic_save_analysis_trait_names').val( traits );
-	$('#generic_save_analysis_statistical_ontology_term').val('Phenotypic BLUPs using LMER R|SGNSTAT:0000026');
+	$('#generic_save_analysis_statistical_ontology_term').val('Phenotypic BLUPs using LMER R|SGNSTAT:0000035');
 	$('#generic_save_analysis_model_language').val('R');
 	$('#generic_save_analysis_model_application_name').val('Breedbase Mixed Model Tool');
 	$('#generic_save_analysis_model_application_version').val( version );
@@ -63,7 +63,7 @@ export function init(main_div){
 	$('#generic_save_analysis_accession_names').val(accession_names);
 	$('#generic_save_analysis_dataset_id').val( get_dataset_id() );
 	$('#generic_save_analysis_trait_names').val( traits );
-	$('#generic_save_analysis_statistical_ontology_term').val('Adjusted means from BLUEs using LMER R|SGNSTAT:0000027');
+	$('#generic_save_analysis_statistical_ontology_term').val('Adjusted means from BLUEs using LMER R|SGNSTAT:0000036');
 	$('#generic_save_analysis_model_language').val('R');
 	$('#generic_save_analysis_model_application_name').val('Breedbase Mixed Model Tool');
 	$('#generic_save_analysis_model_application_version').val( version );
@@ -82,7 +82,7 @@ export function init(main_div){
 	$('#generic_save_analysis_accession_names').val(accession_names);
 	$('#generic_save_analysis_dataset_id').val( get_dataset_id() );
 	$('#generic_save_analysis_trait_names').val( traits );
-	$('#generic_save_analysis_statistical_ontology_term').val('Phenotypic BLUEs using LMER R|SGNSTAT:0000028');
+	$('#generic_save_analysis_statistical_ontology_term').val('Phenotypic BLUEs using LMER R|SGNSTAT:0000037');
 	$('#generic_save_analysis_model_language').val('R');
 	$('#generic_save_analysis_model_application_name').val('Breedbase Mixed Model Tool');
 	$('#generic_save_analysis_model_application_version').val( version );

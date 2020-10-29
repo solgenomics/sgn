@@ -68,6 +68,14 @@ sub index :Path :Args(0) {
     my %editable_stock_props = map { $_=>1 } @editable_stock_props;
     $c->stash->{editable_stock_props} = \%editable_stock_props;
 
+    my @editable_stock_props_definitions = split ',', $c->config->{editable_stock_props_definitions};
+    my %def_hash;
+    foreach (@editable_stock_props_definitions) {
+        my @term_def = split ':', $_;
+        $def_hash{$term_def[0]} = $term_def[1];
+    }
+    $c->stash->{editable_stock_props_definitions} = \%def_hash;
+
     my $genotyping_facilities = $c->config->{genotyping_facilities};
     my @facilities = split ',',$genotyping_facilities;
     $c->stash->{facilities} = \@facilities;

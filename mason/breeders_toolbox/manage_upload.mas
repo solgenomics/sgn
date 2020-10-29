@@ -5,6 +5,7 @@ $breeding_programs
 $timestamp
 $preferred_species => ""
 $editable_stock_props => {}
+$editable_stock_props_definitions => {}
 $facilities => ()
 $management_factor_types => ()
 $design_types => ()
@@ -136,7 +137,7 @@ $design_types => ()
 </tbody>
 </table>
 </div>
-<& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props &>
+<& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props, editable_stock_props_definitions=>$editable_stock_props_definitions &>
 
 <div class="well well-sm">
 <h1>Populations</h1><br/>

@@ -51,8 +51,10 @@ $identifier_prefix => ''
                         <tr>
                             <th>Female Parent</th>
                             <th>Female Stock Type</th>
+                            <th>Female Ploidy</th>
                             <th>Male Parent</th>
                             <th>Male Stock Type</th>
+                            <th>Male Ploidy</th>
                         </tr>
                     </thead>
                 </table>
