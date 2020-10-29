@@ -141,7 +141,7 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     my $tempfile = $params->{tempfile};
     my $dependent_variables = $params->{'dependent_variables[]'};
     if (!ref($dependent_variables)) {
-  $dependent_variables = [ $dependent_variables ];
+	$dependent_variables = [ $dependent_variables ];
     }
     my $model  = $params->{model};
     my $random_factors = $params->{'random_factors[]'}; #
@@ -152,32 +152,14 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     if (!ref($fixed_factors)) {
 	$fixed_factors = [ $fixed_factors ];
     }
+    
+    my $mm = CXGN::MixedModels->new( { tempfile => $c->config->{basepath}."/".$tempfile });
 
-    my $random_factors = '"'.join('","', @$random_factors).'"';
-    my $fixed_factors = '"'.join('","',@$fixed_factors).'"';
-    my $dependent_variables = '"'.join('","',@$dependent_variables).'"';
+    $mm->dependent_variables($dependent_variables);
+    $mm->random_factors($random_factors);
+    $mm->run_model($c->config->{backend}, $c->config->{cluster_host});
 
     my $temppath = $c->config->{basepath}."/".$tempfile;
-
-    # generate params_file
-    #
-    my $param_file = $temppath.".params";
-    open(my $F, ">", $param_file) || die "Can't open $param_file for writing.";
-    print $F "dependent_variables <- c($dependent_variables)\n";
-    print $F "random_factors <- c($random_factors)\n";
-    print $F "fixed_factors <- c($fixed_factors)\n";
-
-    print $F "model <- \"$model\"\n";
-    close($F);
-
-    # run r script to create model
-    #
-    my $cmd = "R CMD BATCH  '--args datafile=\"".$temppath."\" paramfile=\"".$temppath.".params\"' " . $c->config->{basepath} . "/R/mixed_models.R $temppath.out";
-    print STDERR "running R command $cmd...\n";
-
-    print STDERR "running R command $temppath...\n";
-
-    system($cmd);
 
     my $adjusted_blups_file = $temppath.".adjustedBLUPs";
     my $blupfile = $temppath.".BLUPs";
@@ -230,18 +212,6 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
 	($blues_data, $blues_html, $accession_names, $traits) = $self->result_file_to_hash($c, $bluefile);	
     }
 
-    # my $anova_html;
-    # my $anova_data;
-    # if (-e $anovafile) {
-    # 	($anova_data, $anova_html, $accession_names, $traits) = $self->result_file_to_hash($c, $anovafile);
-    # }
-
-    # my $varcomp_html;
-    # my $varcomp_data;
-    # if (-e $varcompfile) {
-    # 	($varcomp_data, $varcomp_html, $accession_names, $traits) = $self->result_file_to_hash($c, $varcompfile);
-    # }
-
     my $response = {
 	error => $error,
 	accession_names => $accession_names,
@@ -255,14 +225,8 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
 	blues_html => $blues_html,
 	method => $method,
 	input_file => $temppath,
-	# varcomp_data => $varcomp_data,
-	# varcomp_html => $varcomp_html,
-	# anova_data => $anova_data,
-	# anova_html => $anova_html,
 	traits => $traits
     };
-
-    #print STDERR "RESPONSE: ".Dumper($response);
 
     $c->stash->{rest} = $response;
 }
