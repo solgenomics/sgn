@@ -77,7 +77,7 @@ has 'plate_id' => (
 has 'facility_id' => (
     isa => 'Str',
     is => 'ro',
-    required => 1,
+    required => 0,
 );
 
 
@@ -180,7 +180,7 @@ sub _formated_samples {
             push @samples, {
                         clientSampleBarCode=> $result->{sampleName},
                         clientSampleId=> qq|$result->{sampleDbId}|,
-                        column=> $result->{col_number} + 0,
+                        column=> $result->{col_number},
                         row=> $result->{row_number},
                         comments=> $result->{notes},
                         concentration=> {
