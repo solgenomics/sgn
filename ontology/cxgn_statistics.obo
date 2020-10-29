@@ -127,6 +127,11 @@ name: Multivariate genetic BLUPs using genetic relationship matrix computed usin
 is_a: SGNSTAT:0000000
 
 [Term]
+id: SGNSTAT:0000025
+name: Adjusted means using LMER R
+is_a: SGNSTAT:0000000
+
+[Term]
 id: SGNSTAT:0000026
 name: Multivariate linear mixed model residual using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using AIREMLf90
 is_a: SGNSTAT:0000000
