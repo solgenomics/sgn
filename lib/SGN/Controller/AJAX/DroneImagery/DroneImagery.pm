@@ -228,6 +228,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $trait_id_list = $c->req->param('observation_variable_id_list') ? decode_json $c->req->param('observation_variable_id_list') : [];
     my $compute_from_parents = $c->req->param('compute_from_parents') eq 'yes' ? 1 : 0;
     my $include_pedgiree_info_if_compute_from_parents = $c->req->param('include_pedgiree_info_if_compute_from_parents') eq 'yes' ? 1 : 0;
+    my $use_parental_grms_if_compute_from_parents = $c->req->param('use_parental_grms_if_compute_from_parents') eq 'yes' ? 1 : 0;
     my $use_area_under_curve = $c->req->param('use_area_under_curve') eq 'yes' ? 1 : 0;
     my $protocol_id = $c->req->param('protocol_id');
     my $tolparinv = $c->req->param('tolparinv');
@@ -1099,6 +1100,237 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                         }
                         elsif ($male_parent1 && $male_parent2 && $male_parent1 == $male_parent2) {
                             $male_rel = 1;
+                        }
+                        elsif ($a1 == $a2) {
+                            $male_rel = 1;
+                        }
+                        # print STDERR "$a1 $a2 $female_rel $male_rel\n";
+
+                        my $rel = 0.5*($female_rel + $male_rel);
+                        $rel_result_hash{$a1}->{$a2} = $rel;
+                    }
+                }
+                # print STDERR Dumper \%rel_result_hash;
+
+                my $data = '';
+                my %result_hash;
+                foreach my $s (sort @accession_ids) {
+                    foreach my $c (sort @accession_ids) {
+                        if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
+                            my $val = $rel_result_hash{$s}->{$c};
+                            if (defined $val and length $val) {
+                                $result_hash{$s}->{$c} = $val;
+                                $data .= "S$s\tS$c\t$val\n";
+                            }
+                        }
+                    }
+                }
+
+                # print STDERR Dumper $data;
+                open(my $F2, ">", $grm_out_temp_tempfile) || die "Can't open file ".$grm_out_temp_tempfile;
+                    print $F2 $data;
+                close($F2);
+
+                my $cmd = 'R -e "library(data.table); library(scales); library(tidyr); library(reshape2);
+                three_col <- fread(\''.$grm_out_temp_tempfile.'\', header=FALSE, sep=\'\t\');
+                A_wide <- dcast(three_col, V1~V2, value.var=\'V3\');
+                A_1 <- A_wide[,-1];
+                A_1[is.na(A_1)] <- 0;
+                A <- A_1 + t(A_1);
+                diag(A) <- diag(as.matrix(A_1));
+                E = eigen(A);
+                ev = E\$values;
+                U = E\$vectors;
+                no = dim(A)[1];
+                nev = which(ev < 0);
+                wr = 0;
+                k=length(nev);
+                if(k > 0){
+                    p = ev[no - k];
+                    B = sum(ev[nev])*2.0;
+                    wr = (B*B*100.0)+1;
+                    val = ev[nev];
+                    ev[nev] = p*(B-val)*(B-val)/wr;
+                    A = U%*%diag(ev)%*%t(U);
+                }
+                A <- as.data.frame(A);
+                colnames(A) <- A_wide[,1];
+                A\$stock_id <- A_wide[,1];
+                A_threecol <- melt(A, id.vars = c(\'stock_id\'), measure.vars = A_wide[,1]);
+                A_threecol\$stock_id <- substring(A_threecol\$stock_id, 2);
+                A_threecol\$variable <- substring(A_threecol\$variable, 2);
+                write.table(data.frame(variable = A_threecol\$variable, stock_id = A_threecol\$stock_id, value = A_threecol\$value), file=\''.$grm_out_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
+                print STDERR $cmd."\n";
+                my $status = system($cmd);
+
+                my $csv = Text::CSV->new({ sep_char => "\t" });
+
+                my %rel_pos_def_result_hash;
+                open(my $F3, '<', $grm_out_tempfile)
+                    or die "Could not open file '$grm_out_tempfile' $!";
+
+                    print STDERR "Opened $grm_out_tempfile\n";
+
+                    while (my $row = <$F3>) {
+                        my @columns;
+                        if ($csv->parse($row)) {
+                            @columns = $csv->fields();
+                        }
+                        my $stock_id1 = $columns[0];
+                        my $stock_id2 = $columns[1];
+                        my $val = $columns[2];
+                        $rel_pos_def_result_hash{$stock_id1}->{$stock_id2} = $val;
+                    }
+                close($F3);
+
+                my $data_pos_def = '';
+                if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+                    my %result_hash;
+                    foreach my $s (sort @accession_ids) {
+                        foreach my $c (sort @accession_ids) {
+                            if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
+                                my $val = $rel_pos_def_result_hash{$s}->{$c};
+                                if (defined $val and length $val) {
+                                    $result_hash{$s}->{$c} = $val;
+                                    $data_pos_def .= "$s\t$c\t$val\n";
+                                }
+                            }
+                        }
+                    }
+                }
+                else {
+                    my %result_hash;
+                    foreach my $s (sort @accession_ids) {
+                        foreach my $c (sort @accession_ids) {
+                            if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
+                                my $val = $rel_pos_def_result_hash{$s}->{$c};
+                                if (defined $val and length $val) {
+                                    $result_hash{$s}->{$c} = $val;
+                                    $data_pos_def .= "S$s\tS$c\t$val\n";
+                                    if ($s != $c) {
+                                        $data_pos_def .= "S$s\tS$c\t$val\n";
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                open(my $F4, ">", $grm_out_posdef_tempfile) || die "Can't open file ".$grm_out_posdef_tempfile;
+                    print $F4 $data_pos_def;
+                close($F4);
+
+                $grm_file = $grm_out_posdef_tempfile;
+            }
+            elsif ($use_parental_grms_if_compute_from_parents) {
+                my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
+                my $tmp_arm_dir = $shared_cluster_dir_config."/tmp_download_arm";
+                mkdir $tmp_arm_dir if ! -d $tmp_arm_dir;
+                my ($arm_tempfile_fh, $arm_tempfile) = tempfile("drone_stats_download_arm_XXXXX", DIR=> $tmp_arm_dir);
+                my ($grm1_tempfile_fh, $grm1_tempfile) = tempfile("drone_stats_download_grm1_XXXXX", DIR=> $tmp_arm_dir);
+                my ($grm_out_temp_tempfile_fh, $grm_out_temp_tempfile) = tempfile("drone_stats_download_grm_temp_out_XXXXX", DIR=> $tmp_arm_dir);
+                my ($grm_out_tempfile_fh, $grm_out_tempfile) = tempfile("drone_stats_download_grm_out_XXXXX", DIR=> $tmp_arm_dir);
+                my ($grm_out_posdef_tempfile_fh, $grm_out_posdef_tempfile) = tempfile("drone_stats_download_grm_out_XXXXX", DIR=> $tmp_arm_dir);
+
+                if (!$protocol_id) {
+                    $protocol_id = undef;
+                }
+
+                my $pedigree_arm = CXGN::Pedigree::ARM->new({
+                    bcs_schema=>$schema,
+                    arm_temp_file=>$arm_tempfile,
+                    people_schema=>$people_schema,
+                    accession_id_list=>\@accession_ids,
+                    # plot_id_list=>\@plot_id_list,
+                    cache_root=>$c->config->{cache_file_path},
+                    download_format=>'matrix', #either 'matrix', 'three_column', or 'heatmap'
+                });
+                my ($parent_hash, $stock_ids, $all_accession_stock_ids, $female_stock_ids, $male_stock_ids) = $pedigree_arm->get_arm(
+                    $shared_cluster_dir_config,
+                    $c->config->{backend},
+                    $c->config->{cluster_host},
+                    $c->config->{'web_cluster_queue'},
+                    $c->config->{basepath}
+                );
+                # print STDERR Dumper $parent_hash;
+
+                my $female_geno = CXGN::Genotype::GRM->new({
+                    bcs_schema=>$schema,
+                    grm_temp_file=>$grm1_tempfile,
+                    people_schema=>$people_schema,
+                    cache_root=>$c->config->{cache_file_path},
+                    accession_id_list=>$female_stock_ids,
+                    protocol_id=>$protocol_id,
+                    get_grm_for_parental_accessions=>0,
+                    download_format=>'three_column_reciprocal'
+                    # minor_allele_frequency=>$minor_allele_frequency,
+                    # marker_filter=>$marker_filter,
+                    # individuals_filter=>$individuals_filter
+                });
+                my $female_grm_data = $female_geno->download_grm(
+                    'data',
+                    $shared_cluster_dir_config,
+                    $c->config->{backend},
+                    $c->config->{cluster_host},
+                    $c->config->{'web_cluster_queue'},
+                    $c->config->{basepath}
+                );
+                my @fl = split '\n', $female_grm_data;
+                my %female_parent_grm;
+                foreach (@fl) {
+                    my @l = split '\t', $_;
+                    $female_parent_grm{$l[0]}->{$l[1]} = $l[2];
+                }
+                # print STDERR Dumper \%female_parent_grm;
+
+                my $male_geno = CXGN::Genotype::GRM->new({
+                    bcs_schema=>$schema,
+                    grm_temp_file=>$grm1_tempfile,
+                    people_schema=>$people_schema,
+                    cache_root=>$c->config->{cache_file_path},
+                    accession_id_list=>$male_stock_ids,
+                    protocol_id=>$protocol_id,
+                    get_grm_for_parental_accessions=>0,
+                    download_format=>'three_column_reciprocal'
+                    # minor_allele_frequency=>$minor_allele_frequency,
+                    # marker_filter=>$marker_filter,
+                    # individuals_filter=>$individuals_filter
+                });
+                my $male_grm_data = $male_geno->download_grm(
+                    'data',
+                    $shared_cluster_dir_config,
+                    $c->config->{backend},
+                    $c->config->{cluster_host},
+                    $c->config->{'web_cluster_queue'},
+                    $c->config->{basepath}
+                );
+                my @ml = split '\n', $male_grm_data;
+                my %male_parent_grm;
+                foreach (@ml) {
+                    my @l = split '\t', $_;
+                    $male_parent_grm{$l[0]}->{$l[1]} = $l[2];
+                }
+                # print STDERR Dumper \%male_parent_grm;
+
+                my %rel_result_hash;
+                foreach my $a1 (@accession_ids) {
+                    foreach my $a2 (@accession_ids) {
+                        my $female_parent1 = $parent_hash->{$a1}->{female_stock_id};
+                        my $male_parent1 = $parent_hash->{$a1}->{male_stock_id};
+                        my $female_parent2 = $parent_hash->{$a2}->{female_stock_id};
+                        my $male_parent2 = $parent_hash->{$a2}->{male_stock_id};
+
+                        my $female_rel = 0;
+                        if ($female_parent1 && $female_parent2 && $female_parent_grm{'S'.$female_parent1}->{'S'.$female_parent2}) {
+                            $female_rel = $female_parent_grm{'S'.$female_parent1}->{'S'.$female_parent2};
+                        }
+                        elsif ($a1 == $a2) {
+                            $female_rel = 1;
+                        }
+
+                        my $male_rel = 0;
+                        if ($male_parent1 && $male_parent2 && $male_parent_grm{'S'.$male_parent1}->{'S'.$male_parent2}) {
+                            $male_rel = $male_parent_grm{'S'.$male_parent1}->{'S'.$male_parent2};
                         }
                         elsif ($a1 == $a2) {
                             $male_rel = 1;
@@ -4066,6 +4298,18 @@ sub _perform_image_rotate {
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
+    my ($check_image_width, $check_image_height) = imgsize($archive_rotate_temp_image);
+    if ($check_image_width > 16384) {
+        my $cmd_resize = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/Resize.py --image_path \''.$archive_rotate_temp_image.'\' --outfile_path \''.$archive_rotate_temp_image.'\' --width 16384';
+        print STDERR Dumper $cmd_resize;
+        my $status_resize = system($cmd_resize);
+    }
+    elsif ($check_image_height > 16384) {
+        my $cmd_resize = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/Resize.py --image_path \''.$archive_rotate_temp_image.'\' --outfile_path \''.$archive_rotate_temp_image.'\' --height 16384';
+        print STDERR Dumper $cmd_resize;
+        my $status_resize = system($cmd_resize);
+    }
+
     my $linking_table_type_id;
     if ($view_only) {
         $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'rotated_stitched_temporary_drone_imagery', 'project_md_image')->cvterm_id();
@@ -5793,7 +6037,7 @@ sub standard_process_apply_POST : Args(0) {
         my $denoised_image_id = $denoise_return->{denoised_image_id};
 
         $drone_run_band_info{$drone_run_band_project_id} = {
-            original_denoised_image_id => $denoised_image_id,
+            denoised_image_id => $denoised_image_id,
             rotate_value => $rotate_value,
             cropping_value => $cropping_value,
             drone_run_band_type => $drone_run_band_type,
@@ -5871,6 +6115,7 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
     my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
     my $field_trial_id = $c->req->param('field_trial_id');
     my $drone_run_project_id_input = $c->req->param('drone_run_project_id');
+    my $drone_run_band_project_id_input = $c->req->param('drone_run_band_project_id');
     my $gcp_drone_run_project_id_input = $c->req->param('gcp_drone_run_project_id');
     my $time_cvterm_id = $c->req->param('time_cvterm_id');
     my $is_test = $c->req->param('is_test');
@@ -5892,25 +6137,45 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
     }
 
     my $drone_run_band_drone_run_project_relationship_type_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
+    my $drone_run_band_drone_run_project_type = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_band_project_type', 'project_property')->cvterm_id();
 
-    my $gcp_drone_run_band_q = "SELECT project_id
+    my $project_image_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    my $rotated_image_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'rotated_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    my $cropped_image_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'cropped_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    my $denoised_project_image_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'denoised_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+
+    my $apply_drone_run_band_project_ids;
+    my %apply_drone_run_band_project_ids_type_hash;
+    my $drone_run_band_q = "SELECT project.project_id, project_md_image.type_id, projectprop.value
         FROM project
+        JOIN projectprop ON(project.project_id = projectprop.project_id)
         JOIN project_relationship ON(project.project_id=project_relationship.subject_project_id AND project_relationship.type_id=$drone_run_band_drone_run_project_relationship_type_id_cvterm_id)
-        WHERE project_relationship.object_project_id=?;";
+        JOIN phenome.project_md_image AS project_md_image ON(project.project_id = project_md_image.project_id)
+        WHERE project_relationship.object_project_id=?
+        AND project_md_image.type_id=?
+        AND projectprop.type_id=$drone_run_band_drone_run_project_type;";
+    my $drone_run_band_h = $bcs_schema->storage->dbh()->prepare($drone_run_band_q);
+    $drone_run_band_h->execute($drone_run_project_id_input, $project_image_type_id);
+    while (my ($drone_run_band_project_id, $drone_run_band_project_image_type_id, $drone_run_band_project_type) = $drone_run_band_h->fetchrow_array()) {
+        push @$apply_drone_run_band_project_ids, $drone_run_band_project_id;
+        $apply_drone_run_band_project_ids_type_hash{$drone_run_band_project_id} = {
+            image_type_id => $drone_run_band_project_image_type_id,
+            band_type => $drone_run_band_project_type
+        };
+    }
+    print STDERR Dumper \%apply_drone_run_band_project_ids_type_hash;
+    my $drone_run_band_project_type_current = $apply_drone_run_band_project_ids_type_hash{$drone_run_band_project_id_input}->{band_type};
+
+    my $gcp_drone_run_band_q = "SELECT project.project_id
+        FROM project
+        JOIN projectprop ON(project.project_id = projectprop.project_id)
+        JOIN project_relationship ON(project.project_id=project_relationship.subject_project_id AND project_relationship.type_id=$drone_run_band_drone_run_project_relationship_type_id_cvterm_id)
+        WHERE project_relationship.object_project_id=?
+        AND projectprop.type_id=$drone_run_band_drone_run_project_type
+        AND projectprop.value='$drone_run_band_project_type_current';";
     my $gcp_drone_run_band_h = $bcs_schema->storage->dbh()->prepare($gcp_drone_run_band_q);
     $gcp_drone_run_band_h->execute($gcp_drone_run_project_id_input);
     my ($gcp_drone_run_band_project_id) = $gcp_drone_run_band_h->fetchrow_array();
-
-    my $apply_drone_run_band_project_ids;
-    my $drone_run_band_q = "SELECT project_id
-        FROM project
-        JOIN project_relationship ON(project.project_id=project_relationship.subject_project_id AND project_relationship.type_id=$drone_run_band_drone_run_project_relationship_type_id_cvterm_id)
-        WHERE project_relationship.object_project_id=?;";
-    my $drone_run_band_h = $bcs_schema->storage->dbh()->prepare($drone_run_band_q);
-    $drone_run_band_h->execute($drone_run_project_id_input);
-    while (my ($drone_run_band_project_id) = $drone_run_band_h->fetchrow_array()) {
-        push @$apply_drone_run_band_project_ids, $drone_run_band_project_id;
-    }
 
     my $drone_run_gcp_type_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_ground_control_points', 'project_property')->cvterm_id();
 
@@ -6071,24 +6336,19 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
     my $rotate_rad_gcp = sum(@angle_diffs)/scalar(@angle_diffs);
     print STDERR "AVG ROTATION: $rotate_rad_gcp\n";
 
-    my $project_image_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
-    my $rotated_image_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'rotated_stitched_drone_imagery', 'project_md_image')->cvterm_id();
-    my $cropped_image_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'cropped_stitched_drone_imagery', 'project_md_image')->cvterm_id();
-    my $denoised_project_image_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'denoised_stitched_drone_imagery', 'project_md_image')->cvterm_id();
-
-    my $drone_run_band_type_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, 'drone_run_band_project_type', 'project_property')->cvterm_id();
-    my $q2 = "SELECT project_md_image.image_id, drone_run_band_type.value, drone_run_band.project_id
+    my $q2 = "SELECT project_md_image.image_id, drone_run_band_type.value
         FROM project AS drone_run_band
-        JOIN projectprop AS drone_run_band_type ON(drone_run_band_type.project_id = drone_run_band.project_id AND drone_run_band_type.type_id = $drone_run_band_type_type_id)
+        JOIN projectprop AS drone_run_band_type ON(drone_run_band_type.project_id = drone_run_band.project_id AND drone_run_band_type.type_id = $drone_run_band_drone_run_project_type)
         JOIN phenome.project_md_image AS project_md_image ON(project_md_image.project_id = drone_run_band.project_id)
         JOIN metadata.md_image ON(project_md_image.image_id = metadata.md_image.image_id)
         WHERE project_md_image.type_id = ?
         AND drone_run_band.project_id = ?
-        AND metadata.md_image.obsolete = 'f';";
+        AND metadata.md_image.obsolete = 'f'
+        AND drone_run_band_type.value='$drone_run_band_project_type_current';";
 
     my $h2 = $bcs_schema->storage->dbh()->prepare($q2);
-    $h2->execute($project_image_type_id, $apply_drone_run_band_project_ids->[0]);
-    my ($check_image_id, $check_drone_run_band_type, $check_drone_run_band_project_id_q) = $h2->fetchrow_array();
+    $h2->execute($project_image_type_id, $drone_run_band_project_id_input);
+    my ($check_image_id, $check_drone_run_band_type) = $h2->fetchrow_array();
 
     my $check_image = SGN::Image->new( $bcs_schema->storage->dbh, $check_image_id, $c );
     my $check_image_url = $check_image->get_image_url("original");
@@ -6174,12 +6434,12 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
     my $dir = $c->tempfiles_subdir('/drone_imagery_rotate');
     my $archive_rotate_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_rotate/imageXXXX');
     $archive_rotate_temp_image .= '.png';
-    my $rotate_return = _perform_image_rotate($c, $bcs_schema, $metadata_schema, $check_drone_run_band_project_id_q, $check_image_id, $rotate_rad_gcp/$rad_conversion, 0, $user_id, $user_name, $user_role, $archive_rotate_temp_image, 0, 0);
+    my $rotate_return = _perform_image_rotate($c, $bcs_schema, $metadata_schema, $drone_run_band_project_id_input, $check_image_id, $rotate_rad_gcp/$rad_conversion, 0, $user_id, $user_name, $user_role, $archive_rotate_temp_image, 0, 0);
     my $rotated_image_id = $rotate_return->{rotated_image_id};
 
     my $h_rotate_check = $bcs_schema->storage->dbh()->prepare($q2);
     $h_rotate_check->execute($rotated_image_type_id, $gcp_drone_run_band_project_id);
-    my ($rotate_check_image_id, $rotate_check_drone_run_band_type, $rotate_check_drone_run_band_project_id_q) = $h_rotate_check->fetchrow_array();
+    my ($rotate_check_image_id, $rotate_check_drone_run_band_type) = $h_rotate_check->fetchrow_array();
 
     my $rotate_check_target_image = SGN::Image->new( $bcs_schema->storage->dbh, $rotated_image_id, $c );
     my $rotate_check_target_image_url = $rotate_check_target_image->get_image_url("original");
@@ -6295,7 +6555,7 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
     my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_cropped_image/imageXXXX');
     $archive_temp_image .= '.png';
 
-    my $check_cropping_return = _perform_image_cropping($c, $bcs_schema, $check_drone_run_band_project_id_q, $rotated_image_id, encode_json $image_crop, $user_id, $user_name, $user_role, $archive_temp_image);
+    my $check_cropping_return = _perform_image_cropping($c, $bcs_schema, $drone_run_band_project_id_input, $rotated_image_id, encode_json $image_crop, $user_id, $user_name, $user_role, $archive_temp_image);
     my $check_cropped_image_id = $check_cropping_return->{cropped_image_id};
 
     my $crop_check_target_image = SGN::Image->new( $bcs_schema->storage->dbh, $check_cropped_image_id, $c );
@@ -6405,12 +6665,21 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
 
     my %selected_drone_run_band_types;
 
+    my $q4 = "SELECT project_md_image.image_id, drone_run_band_type.value, drone_run_band.project_id
+        FROM project AS drone_run_band
+        JOIN projectprop AS drone_run_band_type ON(drone_run_band_type.project_id = drone_run_band.project_id AND drone_run_band_type.type_id = $drone_run_band_drone_run_project_type)
+        JOIN phenome.project_md_image AS project_md_image ON(project_md_image.project_id = drone_run_band.project_id)
+        JOIN metadata.md_image ON(project_md_image.image_id = metadata.md_image.image_id)
+        WHERE project_md_image.type_id = ?
+        AND drone_run_band.project_id = ?
+        AND metadata.md_image.obsolete = 'f';";
+    my $h4 = $bcs_schema->storage->dbh()->prepare($q4);
+
     my $term_map = CXGN::DroneImagery::ImageTypes::get_base_imagery_observation_unit_plot_polygon_term_map();
     my %drone_run_band_info;
     foreach my $apply_drone_run_band_project_id (@$apply_drone_run_band_project_ids) {
-        my $h2 = $bcs_schema->storage->dbh()->prepare($q2);
-        $h2->execute($project_image_type_id, $apply_drone_run_band_project_id);
-        my ($image_id, $drone_run_band_type, $drone_run_band_project_id) = $h2->fetchrow_array();
+        $h4->execute($project_image_type_id, $apply_drone_run_band_project_id);
+        my ($image_id, $drone_run_band_type, $drone_run_band_project_id) = $h4->fetchrow_array();
         $selected_drone_run_band_types{$drone_run_band_type} = $drone_run_band_project_id;
 
         my $dir = $c->tempfiles_subdir('/drone_imagery_rotate');
@@ -6435,11 +6704,11 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
         my $denoised_image_id = $denoise_return->{denoised_image_id};
 
         $drone_run_band_info{$drone_run_band_project_id} = {
-            original_denoised_image_id => $denoised_image_id,
+            denoised_image_id => $denoised_image_id,
             rotate_value => $rotate_value,
             cropping_value => $cropping_value,
             drone_run_band_type => $drone_run_band_type,
-            drone_run_project_id => $drone_run_project_id,
+            drone_run_project_id => $drone_run_project_id_input,
             drone_run_project_name => $drone_run_project_name,
             plot_polygons_value => $plot_polygons_value
         };
@@ -7203,7 +7472,7 @@ sub standard_process_minimal_vi_apply_POST : Args(0) {
             rotate_value => $rotate_value,
             plot_polygons_value => $plot_polygons_value,
             cropping_value => $cropping_value,
-            original_denoised_image_id => $denoised_image_id
+            denoised_image_id => $denoised_image_id
         };
     }
 
@@ -7326,6 +7595,7 @@ sub standard_process_extended_apply_GET : Args(0) {
         $selected_drone_run_band_types{$drone_run_band_type} = $drone_run_band_project_id;
         $drone_run_band_info{$drone_run_band_project_id} = {
             drone_run_project_name => $drone_run_project_name,
+            drone_run_project_id => $drone_run_project_id,
             drone_run_band_project_id => $drone_run_band_project_id,
             drone_run_band_project_name => $drone_run_band_project_name,
             drone_run_band_type => $drone_run_band_type,
@@ -7703,10 +7973,10 @@ sub _perform_minimal_vi_standard_process {
         }
         if (exists($selected_drone_run_band_types->{'RGB Color Image'})) {
             if (exists($vegetative_indices->{'TGI'})) {
-                _perform_standard_process_minimal_vi_calc($c, $bcs_schema, $metadata_schema, $drone_run_band_info->{$selected_drone_run_band_types->{'RGB Color Image'}}->{original_denoised_image_id}, $selected_drone_run_band_types->{'RGB Color Image'}, $user_id, $user_name, $user_role, $drone_run_band_info->{$selected_drone_run_band_types->{'RGB Color Image'}}->{plot_polygons_value}, 'TGI', 'BGR');
+                _perform_standard_process_minimal_vi_calc($c, $bcs_schema, $metadata_schema, $drone_run_band_info->{$selected_drone_run_band_types->{'RGB Color Image'}}->{denoised_image_id}, $selected_drone_run_band_types->{'RGB Color Image'}, $user_id, $user_name, $user_role, $drone_run_band_info->{$selected_drone_run_band_types->{'RGB Color Image'}}->{plot_polygons_value}, 'TGI', 'BGR');
             }
             if (exists($vegetative_indices->{'VARI'})) {
-                _perform_standard_process_minimal_vi_calc($c, $bcs_schema, $metadata_schema, $drone_run_band_info->{$selected_drone_run_band_types->{'RGB Color Image'}}->{original_denoised_image_id}, $selected_drone_run_band_types->{'RGB Color Image'}, $user_id, $user_name, $user_role, $drone_run_band_info->{$selected_drone_run_band_types->{'RGB Color Image'}}->{plot_polygons_value}, 'VARI', 'BGR');
+                _perform_standard_process_minimal_vi_calc($c, $bcs_schema, $metadata_schema, $drone_run_band_info->{$selected_drone_run_band_types->{'RGB Color Image'}}->{denoised_image_id}, $selected_drone_run_band_types->{'RGB Color Image'}, $user_id, $user_name, $user_role, $drone_run_band_info->{$selected_drone_run_band_types->{'RGB Color Image'}}->{plot_polygons_value}, 'VARI', 'BGR');
             }
         }
     }
@@ -11278,9 +11548,16 @@ sub drone_imagery_delete_drone_run_GET : Args(0) {
 
     my $drone_run_band_project_ids_sql = join ",", @drone_run_band_ids;
     my $drone_run_band_image_ids_sql = join ",", @drone_run_image_ids;
-    my $q1 = "DELETE FROM phenome.project_md_image WHERE project_id in ($drone_run_band_project_ids_sql);";
-    my $q2 = "DELETE FROM project WHERE project_id in ($drone_run_band_project_ids_sql);";
+    my $q1 = "DELETE FROM phenome.project_md_image WHERE project_id IN ($drone_run_band_project_ids_sql);";
+    my $q2 = "DELETE FROM project WHERE project_id IN ($drone_run_band_project_ids_sql);";
     my $q3 = "DELETE FROM project WHERE project_id = $drone_run_project_id;";
+    my $q4 = "DELETE FROM phenome.stock_image WHERE image_id IN (SELECT image_id FROM phenome.project_md_image WHERE project_id IN ($drone_run_band_project_ids_sql));";
+    print STDERR $q4."\n";
+    print STDERR $q1."\n";
+    print STDERR $q2."\n";
+    print STDERR $q3."\n";
+    my $h4 = $schema->storage->dbh()->prepare($q4);
+    $h4->execute();
     my $h1 = $schema->storage->dbh()->prepare($q1);
     $h1->execute();
     my $h2 = $schema->storage->dbh()->prepare($q2);

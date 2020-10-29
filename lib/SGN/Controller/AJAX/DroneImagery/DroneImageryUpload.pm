@@ -373,6 +373,18 @@ sub upload_drone_imagery_POST : Args(0) {
             unlink $upload_tempfile;
             print STDERR "Archived Drone Image File: $archived_filename_with_path\n";
 
+            my ($check_image_width, $check_image_height) = imgsize($archived_filename_with_path);
+            if ($check_image_width > 16384) {
+                my $cmd_resize = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/Resize.py --image_path \''.$archived_filename_with_path.'\' --outfile_path \''.$archived_filename_with_path.'\' --width 16384';
+                print STDERR Dumper $cmd_resize;
+                my $status_resize = system($cmd_resize);
+            }
+            elsif ($check_image_height > 16384) {
+                my $cmd_resize = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/Resize.py --image_path \''.$archived_filename_with_path.'\' --outfile_path \''.$archived_filename_with_path.'\' --height 16384';
+                print STDERR Dumper $cmd_resize;
+                my $status_resize = system($cmd_resize);
+            }
+
             my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
             $image->set_sp_person_id($user_id);
             my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
