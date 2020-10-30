@@ -53,6 +53,9 @@ solGS.kinship = {
     getKinshipArgsFromUrl: function() {
 	
 	var page = location.pathname;
+	if (page == '/kinship/analysis/') {
+	    page = '/kinship/analysis';
+	}
 	var urlArgs = page.replace("/kinship/analysis", "")
 
 	if (urlArgs) {
@@ -170,10 +173,35 @@ solGS.kinship = {
 	    page = '/kinship/analysis/' + selectId + '/gp/' + protocolId;
 	}
 	
-	this.selectAnalysisOption(page, kinshipArgs);
+	//this.selectAnalysisOption(page, kinshipArgs);
+	this.checkCachedKinship(page, kinshipArgs);
    
     },
-    
+
+    checkCachedKinship: function(page, args) {
+
+	args = JSON.stringify(args);
+	
+	jQuery.ajax({
+	    type    : 'POST',
+	    dataType: 'json',
+	    data    : {'page': page, 'args': args },
+	    url     : '/solgs/check/cached/result/',
+	    success : function(response) {
+		args = JSON.parse(args);
+		if (response.cached) {		     
+		    // solGS.submitJob.goToPage(page, args);
+		    solGS.kinship.getKinshipResult(args);
+		} else {
+		    solGS.kinship.selectAnalysisOption(page, args);
+		}
+	    },
+	    error: function() {
+		alert('Error occured checking for cached output.')		
+	    }		
+	});
+    },
+		    
 
     selectAnalysisOption: function(page, args) {
 
