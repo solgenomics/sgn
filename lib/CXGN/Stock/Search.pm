@@ -696,7 +696,6 @@ sub _refresh_materialized_stockprop {
     my $self = shift;
     my $stockprop_view = shift;
     my $schema = $self->bcs_schema;
-    print STDERR Dumper '_refresh_materialized_stockprop';
 
     eval {
         my $stockprop_select_sql .= ', "' . join ('","', @$stockprop_view) . '"';
@@ -729,7 +728,7 @@ sub _refresh_materialized_stockprop {
         SELECT *
         FROM crosstab(
         'SELECT stockprop.stock_id, stock.uniquename, stock.type_id, stock_cvterm.name, stock.organism_id, stockprop.type_id, jsonb_object_agg(stockprop.value, ''RANK'' || stockprop.rank) FROM public.stockprop JOIN public.stock USING(stock_id) JOIN public.cvterm as stock_cvterm ON (stock_cvterm.cvterm_id=stock.type_id) GROUP BY (stockprop.stock_id, stock.uniquename, stock.type_id, stock_cvterm.name, stock.organism_id, stockprop.type_id) ORDER by stockprop.stock_id ASC',
-        'SELECT type_id FROM (VALUES";
+        'SELECT type_id FROM (VALUES ";
         my @stockprop_ids_sql;
         foreach (@stock_props) {
             push @stockprop_ids_sql, "(''".SGN::Model::Cvterm->get_cvterm_row($schema, $_, 'stock_property')->cvterm_id()."'')";
@@ -759,7 +758,7 @@ sub _refresh_materialized_stockprop {
         \"organism_id\" int,";
         my @stockprop_names_sql;
         foreach (@stock_props) {
-            push @stockprop_names_sql, "\"".$_."\" jsonb";
+            push @stockprop_names_sql, "\"$_\" jsonb";
         }
         my $stockprop_names_sql_joined = join ',', @stockprop_names_sql;
         $stockprop_refresh_q .= $stockprop_names_sql_joined;
