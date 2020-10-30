@@ -59,6 +59,7 @@ sub create_fieldbook_from_trial_POST : Args(0) {
   my $treatment_project_ids = $c->req->param('treatment_project_id') ? [$c->req->param('treatment_project_id')] : [];
   my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
   my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
+  print STDERR Dumper $c->req->params();
 
   chomp($trial_id);
   if (!$c->user()) {
