@@ -154,13 +154,14 @@ sub do_query_max_one_year {
     else {
         push @time_ranges, [$start_date, $end_date];
     }
+    print STDERR Dumper \@time_ranges;
 
     my %weather_hash;
     foreach (@time_ranges) {
         $self->start_date($_->[0]);
         $self->end_date($_->[1]);
         my $message_hash = $self->get_noaa_data();
-        print STDERR Dumper $message_hash;
+        # print STDERR Dumper $message_hash;
         if ($message_hash->{status} eq '400') {
             return {error => $message_hash->{message}};
         }
