@@ -36,13 +36,13 @@ You can then select a category from the second dropdown, and repeat this same se
 
 In addition to the basic search operations demonstrated above, users can take advantage of two more features:
 
-**Load Selection from List** <img src='{{"assets/images/wizard_select_list.png" | relative_url }}' alt="startfromlist.png" width="211" height="41" />
+**Load Selection from List** <img src='{{"assets/images/wizard_select_list.png" | relative_url }}' />
 
 -   Instead of picking a category in the first dropdown, users can instead populate the first selectbox from a list by scrolling down in the first dropdown to the "Load Selection from List" subheading and selecting a list. This is useful for starting queries with a list of plots, as this category is not among the options in the first dropdown.
 
-**ANY/ALL** Toggle <img src='{{"assets/images/wizard_any_all_toggle.png" | relative_url }}' alt="or.png" width="87" height="34" />
+**ANY/ALL** Toggle <img src='{{"assets/images/wizard_any_all_toggle.png" | relative_url }}' />
 
--   By default, the search wizard combines options within a category using an ANY query. In the example above, in the third panel the wizard retrieved accessions associated with the location ‘Ibadan’ in **ANY** of the years “2011 **OR** 2012”
+-   By default, the search wizard combines options within a category using an OR query. In the example above, in the third panel the wizard retrieved accessions associated with the location ‘Ibadan’ in **ANY** of the years “2011 **OR** 2012”
 
 -   -   If the user clicked the toggle below the second select box to change it to ALL before choosing accessions in the third dropdown, the wizard would instead retrieve accessions associated with the location ‘Ibadan’ in the years “2011 AND 2012”. This will be a smaller set of accessions, because any accessions used only in 2011, or only in 2012 will be excluded.
 
@@ -50,13 +50,13 @@ In addition to the basic search operations demonstrated above, users can take ad
 
 #### Getting more Info
 
-Any option in the wizard select boxes (except for years) can be double-clicked to open a page with more details. The new page is opened in a new tab.
+Any option in the wizard select boxes (except for years) can be clicked to open a page with more details. The new page is opened in a new tab.
 
 #### Saving to a list
 
 You can store the highlighted items in any selected box to lists. This is done using the inputs and buttons directly below the select box. **Don’t forget, you must be logged in to work with lists!**
 
-![]({{"assets/images/image273.png" | relative_url }})
+![]({{"assets/images/add_create_list.png" | relative_url }})
 
 -   To **add items to an existing list**, first pick an existing list using the "Add to List..." dropdown on the left. Then click the "Add" button. A popup window will confirm the action, and display the number of items added to your existing list.
 
@@ -64,37 +64,37 @@ You can store the highlighted items in any selected box to lists. This is done u
 
 #### Downloading Data
 
-You can download trial meta-data, phenotypes and genotypes associated with the highlighted items in the wizard select boxes. This is done using the buttons in the download section at the bottom of the page. **Don’t forget, you must be logged in to download data!**
+You can download trial metadata, phenotypes and genotypes associated with the highlighted items in the wizard select boxes. This is done using the buttons in the download section at the bottom of the page. **Don’t forget, you must be logged in to download data!**
 
-![]({{"assets/images/image321.png" | relative_url }})
+![]({{"assets/images/wizard_download_options.png" | relative_url }})
 
-##### meta-data
+##### Metadata
 
-Trial meta-data can be downloaded by selecting a subset of trials from the database or based on your search categories.  To download, click on "Download Meta-data", a dialog will appear. Select download format and click the "Submit" button to complete your download. 
+Trial metadata can be downloaded by selecting a subset of trials from the database or based on your search categories.  To download, click on "Related Trial Metadata", a dialog will appear. Select download format and click the "Metadata" button to complete your download. 
 
-![]({{"assets/images/wizard_metadata_download.png" | relative_url }})
+![]({{"assets/images/wizard_related_metadata_download.png" | relative_url }})
 
 ##### Phenotypes
 
-The phenotypes download is quite flexible, and can download a subset of all the trial data in the database based on whichever categories and options you currently have selected. Simply click on the “Download Phenotypes” button, review the popup, changing or adding any additional parameters you like, then click ‘Submit’. If you chose the ‘complete’ download option, the download may take awhile.
+The phenotypes download is quite flexible, and can download a subset of all the trial data in the database based on whichever categories and options you currently have selected. Simply click on the “Related Trial Phenotypes” link, review the options, changing or adding any additional parameters you like, then click ‘Download Phenotypes’.
 
-![]({{"assets/images/image189.png" | relative_url }})
+![]({{"assets/images/wizard_related_phenotypes_download.png" | relative_url }})
 
 ##### Genotypes
 
-The genotype download is more stringent. It requires a minimum of one accession and one genotyping protocol to be selected in the wizard select boxes. Text boxes on the right hand side of the page will help track what requirements have been selected. One clicked, the “Download Genotypes” button will download a simple genotype dosage file for each accession.
+The genotype download is more stringent. It requires a minimum of one accession and one genotyping protocol to be selected in the wizard select boxes. The text box in the download section of the page will help track what has been selected. Once clicked, the “Download Genotypes” button will download a genotype file for the selected accessions.
 
 #### Saving the wizard selections
 
-As discussed above, the selections of the individual select boxes in the wizard can be saved separately to a list. The lists can be used as inputs in other tools on the site. However, sometimes creating a selection is quite time consuming and restoring the selections from four different lists would be cumbersome too. Therefore, the selections can be saved together in a dataset, and named for later retrieval. This is done in the section "Save current selection" that is below the "Download" section. When the button named "Save current selection" is clicked, it brings up a dialog box that allows to name the selection. Clicking on "Save" in the dialog box saves the selection dataset, "Cancel" closes the dialog without saving. Next to the "Save current selection" button is a pull down menu which can be used to manage stored datasets. A particular dataset can be chosen, and the buttons beneath the pull down can be used to retrieve the dataset to be displayed on the wizard ("Show on wizard"), display some data about the dataset ("View metadata"), or to delete the dataset ("Delete").
+As discussed above, the selections of the individual select boxes in the wizard can be saved separately to a list. The lists can be used as inputs in other tools on the site. However, sometimes creating a selection is quite time consuming and restoring the selections from four different lists would be cumbersome too. Therefore, the selections can be saved together in a dataset, and named for later retrieval. This is done in the section "Load/Create Datasets" that is below the first two wizard select boxes. To select an existing dataset, one uses the "Load Dataset" dropdown. A particular dataset can be chosen, and the "Load" button can be clicked to retrieve and display the dataset in the wizard. To create a new dataset using items that are selected in the wizard, one can enter the name of the new dataset in the "Create New Dataset" text box. Once the dataset has been given a name, clicking the "Create" button will save the new dataset.
 
-![]({{"assets/images/wizard_save_current_selection.png" | relative_url }})
+![]({{"assets/images/wizard_load_create_dataset.png" | relative_url }})
 
 ### 2.1.3 Updating the Wizard
 
-The search wizard uses a copy of the database, or a cache, to return results quickly. If data appears to be missing, it usually means that the cache needs to be updated. Users with submitter privileges or above can do this using the ‘Update wizard’ link. 
+The search wizard uses a copy of the database, or a cache, to return results quickly. If data appears to be missing, it usually means that the cache needs to be updated. Users with submitter privileges or above can do this using the ‘Update Wizard’ button. One can also use the ‘Refresh Lists’ button to update the available lists.
 
-![]({{"assets/images/image92.png" | relative_url }})
+![]({{"assets/images/wizard_update_list_refresh.png" | relative_url }})
 
 This will take just a few seconds in small databases, but may take a few hours to complete in larger databases.
 
