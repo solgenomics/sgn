@@ -93,7 +93,7 @@ $trial_stock_type => undef
                         <div class="form-group">
                             <label class="col-sm-2 control-label">Include existing plot phenotypes: </label>
                             <div class="col-sm-1" >
-                                 <input id="create_fieldbook_include_measured_<% $download_type %>" type="checkbox" checked data-toggle="toggle">
+                                 <input id="create_fieldbook_include_measured_<% $download_type %>" type="checkbox" data-toggle="toggle">
                             </div>
                             <label class="col-sm-3 control-label">Include summary of overall accession performance (for a list of traits): </label>
                             <div class="col-sm-3" >
