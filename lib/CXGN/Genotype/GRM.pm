@@ -533,6 +533,8 @@ sub download_grm {
     else {
         print STDERR "DOWNLOAD GRM\n";
         my ($grm_tempfile_out, $stock_ids, $all_accession_stock_ids) = $self->get_grm($shared_cluster_dir_config, $backend_config, $cluster_host_config, $web_cluster_queue_config, $basepath_config);
+        # print STDERR Dumper $stock_ids;
+        # print STDERR Dumper $all_accession_stock_ids;
 
         my @grm;
         open(my $fh, "<", $grm_tempfile_out) or die "Can't open < $grm_tempfile_out: $!";
@@ -594,8 +596,8 @@ sub download_grm {
                 $row_num++;
             }
 
-            foreach my $r (sort keys %result_hash) {
-                foreach my $s (sort keys %{$result_hash{$r}}) {
+            foreach my $r (sort { $a <=> $b } keys %result_hash) {
+                foreach my $s (sort { $a <=> $b } keys %{$result_hash{$r}}) {
                     my $val = $result_hash{$r}->{$s};
                     if (defined $val and length $val) {
                         $data .= "S$r\tS$s\t$val\n";
@@ -637,8 +639,8 @@ sub download_grm {
                 $row_num++;
             }
 
-            foreach my $r (sort keys %result_hash) {
-                foreach my $s (sort keys %{$result_hash{$r}}) {
+            foreach my $r (sort { $a <=> $b } keys %result_hash) {
+                foreach my $s (sort { $a <=> $b } keys %{$result_hash{$r}}) {
                     my $val = $result_hash{$r}->{$s};
                     if (defined $val and length $val) {
                         $data .= "$r\t$s\t$val\n";
@@ -681,8 +683,8 @@ sub download_grm {
                 $row_num++;
             }
 
-            foreach my $r (sort keys %result_hash) {
-                foreach my $s (sort keys %{$result_hash{$r}}) {
+            foreach my $r (sort { $a <=> $b } keys %result_hash) {
+                foreach my $s (sort { $a <=> $b } keys %{$result_hash{$r}}) {
                     my $val = $result_hash{$r}->{$s};
                     if (defined $val and length $val) {
                         $data .= "S$r\tS$s\t$val\n";
@@ -728,8 +730,8 @@ sub download_grm {
                 $row_num++;
             }
 
-            foreach my $r (sort keys %result_hash) {
-                foreach my $s (sort keys %{$result_hash{$r}}) {
+            foreach my $r (sort { $a <=> $b } keys %result_hash) {
+                foreach my $s (sort { $a <=> $b } keys %{$result_hash{$r}}) {
                     my $val = $result_hash{$r}->{$s};
                     if (defined $val and length $val) {
                         $data .= "$r\t$s\t$val\n";
@@ -775,8 +777,8 @@ sub download_grm {
                 $row_num++;
             }
 
-            foreach my $r (sort keys %result_hash) {
-                foreach my $s (sort keys %{$result_hash{$r}}) {
+            foreach my $r (sort { $a <=> $b } keys %result_hash) {
+                foreach my $s (sort { $a <=> $b } keys %{$result_hash{$r}}) {
                     my $val = $result_hash{$r}->{$s};
                     $data .= "$r\t$s\t$val\n";
                 }

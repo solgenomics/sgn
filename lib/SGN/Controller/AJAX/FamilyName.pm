@@ -40,8 +40,8 @@ sub get_family_parents :Path('/ajax/family/parents') :Args(1) {
     my $result = $family->get_family_parents();
     my @family_parents;
     foreach my $r (@$result){
-        my ($female_parent_id, $female_parent_name, $female_stock_type, $male_parent_id, $male_parent_name, $male_stock_type) =@$r;
-        push @family_parents, [qq{<a href="/stock/$female_parent_id/view">$female_parent_name</a>}, $female_stock_type, qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a>}, $male_stock_type];
+        my ($female_parent_id, $female_parent_name, $female_stock_type, $female_ploidy, $male_parent_id, $male_parent_name, $male_stock_type, $male_ploidy) =@$r;
+        push @family_parents, [qq{<a href="/stock/$female_parent_id/view">$female_parent_name</a>}, $female_stock_type, $female_ploidy, qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a>}, $male_stock_type, $male_ploidy];
     }
 
     $c->stash->{rest} = { data => \@family_parents };

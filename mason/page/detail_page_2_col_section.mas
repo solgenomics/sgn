@@ -90,6 +90,9 @@ $analysis_metadata => undef
 $for_analysis_page => undef
 $data_level => undef
 
+$program_id => undef
+$program_name => undef
+
 #Specific to analysis model detail page
 $model_id => undef
 $model_name => undef
@@ -102,6 +105,8 @@ $model_files => {}
 #Specific to manage nirs page
 $nirs_files => undef
 $deleted_nirs_files => undef
+$all_nirs_files => undef
+$all_deleted_nirs_files => undef
 $locations => undef
 
 </%args>
@@ -373,7 +378,7 @@ $locations => undef
 %} #End cross_search_section
 
 % if ($info_section_id eq 'manage_nirs_main'){
-                                <& /tools/nirs/manage_nirs_main.mas, nirs_files => $nirs_files, deleted_nirs_files => $deleted_nirs_files, locations => $locations &>
+                                <& /tools/nirs/manage_nirs_main.mas, nirs_files => $nirs_files, deleted_nirs_files => $deleted_nirs_files, all_nirs_files => $all_nirs_files, all_deleted_nirs_files => $all_deleted_nirs_files, locations => $locations &>
 % } #End manage_nirs_main
 
 % if ($info_section_id eq 'manage_drone_imagery_main'){
@@ -424,6 +429,23 @@ $locations => undef
 % if ($info_section_id eq 'manage_file_share_dump'){
                                 <& /breeders_toolbox/file_share/file_dump_share_files.mas &>
 % } #End manage_file_share_dump
+
+% if ($info_section_id eq 'program_location_section'){
+                                <& /breeders_toolbox/program/program_locations.mas, program_id => $program_id &>
+% } #End program_location_section
+% if ($info_section_id eq 'program_project_section'){
+                                <& /breeders_toolbox/program/program_project_section.mas, program_id => $program_id &>
+% } #End program_project_section
+% if ($info_section_id eq 'program_stock_section'){
+                                <& /breeders_toolbox/program/program_stock_section.mas, program_id => $program_id &>
+% } #End program_stock_section
+% if ($info_section_id eq 'program_phenotype_section'){
+                                <& /breeders_toolbox/program/traits.mas, program_id => $program_id, collapse_phenotypes_section => 0 &>
+% } #End program_phenotype_section
+% if ($info_section_id eq 'program_product_profile_section'){
+                                <& /breeders_toolbox/program/product_profile.mas, program_id => $program_id, collapse_phenotypes_section => 0 &>
+% } #End program_product_profile_section
+
 % if (!$info_section_id){
                                 <p>No section specified! Main content goes here!</p>
 % }

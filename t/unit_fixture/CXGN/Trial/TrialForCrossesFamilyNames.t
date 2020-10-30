@@ -8,6 +8,10 @@ use JSON::Any;
 use Data::Dumper;
 use Spreadsheet::WriteExcel;
 use Spreadsheet::Read;
+use Test::WWW::Mechanize;
+use CXGN::Cross;
+use JSON;
+use LWP::UserAgent;
 
 my $fix = SGN::Test::Fixture->new();
 
@@ -473,6 +477,18 @@ for (my $i=0; $i<scalar(@cross_unique_ids_westcott); $i++){
 }
 ok(scalar(@crosses) == 100, "check cross unique id");
 
+my $mech = Test::WWW::Mechanize->new;
+$mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
+my $response = decode_json $mech->content;
+is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
+my $sgn_session_id = $response->{access_token};
+print STDERR $sgn_session_id."\n";
 
+#test deleting a cross using in trial
+my $cross_in_trial_id = $schema->resultset("Stock::Stock")->find({name=>'cross_for_trial1'})->stock_id;
+$mech->post_ok('http://localhost:3010/ajax/cross/delete', [ 'cross_id' => $cross_in_trial_id]);
+$response = decode_json $mech->content;
+is_deeply($response, {'error' => 'An error occurred attempting to delete a cross. (Cross has associated trial: cross_to_trial1. Cannot delete.
+)'});
 
 done_testing();

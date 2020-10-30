@@ -25,7 +25,7 @@ Example implementation of a subclass:
   sub BUILD {
       my $self = shift;
       my $args = shift;
-    
+
       $self->prop_table('projectprop');
       $self->prop_namespace('Project::Projectprop');
       $self->prop_primary_key('projectprop_id');
@@ -88,11 +88,11 @@ sub load {  # must be called from BUILD in subclass
     $self->_prop_type_id(SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $self->prop_type(), $self->cv_name())->cvterm_id());
 
     #print STDERR "LOAD PROP ID = ".$self->prop_id()."\n";
-    
+
     if ($self->prop_id()) {
 	my $rs = $self->bcs_schema()->resultset($self->prop_namespace())->search( { $self->prop_primary_key() => $self->prop_id() });
 	while (my $row = $rs->next()) {
-	    if ($row->type_id() == $self->_prop_type_id()) { 
+	    if ($row->type_id() == $self->_prop_type_id()) {
 		#print STDERR "ROW VALUE = ".$row->value().", TYPEID=".$row->type_id()." TYPE = ".$self->prop_type()."\n";
 		 my $parent_primary_key = $self->parent_primary_key();
 		my $parent_id = $row->$parent_primary_key;
@@ -102,9 +102,9 @@ sub load {  # must be called from BUILD in subclass
 	    else {
 		print STDERR "Skipping property unrelated to metadata...\n";
 	    }
-	   
+
 	}
-	
+
 
     }
 }
@@ -114,7 +114,7 @@ sub from_json {
     my $json = shift;
 
     my $data;
-    eval { 
+    eval {
 	$data = JSON::Any->decode($json);
     };
     if ($@) {
@@ -132,7 +132,7 @@ sub from_hash {
     my $allowed_fields = $self->allowed_fields();
 
     #print STDERR Dumper($hash);
-    
+
     foreach my $f (@$allowed_fields) {
 	if (exists($hash->{$f})) {
 	    #print STDERR "Processing $f ($hash->{$f})...\n";
@@ -143,14 +143,14 @@ sub from_hash {
 
 sub to_json {
     my $self = shift;
- 
+
     my $allowed_fields = $self->allowed_fields();
 
     #print STDERR Dumper($allowed_fields);
     my $data;
-    
+
     foreach my $f (@$allowed_fields) {
-	if (defined($self->$f())) { 
+	if (defined($self->$f())) {
 	    $data->{$f} = $self->$f();
 	}
     }
@@ -163,10 +163,10 @@ sub to_json {
 
 sub validate {   # override in subclass
     my $self = shift;
-    
+
     my @errors = ();
     my @warnings = ();
-    
+
     # check keys in the info hash...
 
     if (@errors) {
@@ -175,7 +175,7 @@ sub validate {   # override in subclass
 }
 
 =head2 Class methods
-   
+
 
 =head2 get_props($schema, $parent_object_id, $prop_type)
 
@@ -188,23 +188,23 @@ sub validate {   # override in subclass
 
 =cut
 
-sub get_props { 
+sub get_props {
     my $class = shift;
     my $schema = shift;
     my $parent_object_id = shift; # the id of the parent object, eg stock_id for a stockprop
     my $prop_type = shift;
-    
+
     my @props = _retrieve_stockprops($schema, $parent_object_id, $prop_type);
     #print STDERR "Props = ".Dumper(\@props);
     my @hashes = ();
-    foreach my $sp (@props) { 
+    foreach my $sp (@props) {
 	my $json = $sp->[1];
 	my $hash;
-	eval { 
+	eval {
 	    $hash = JSON::Any->jsonToObj($json);
 	};
-	if ($@) { 
-	    print STDERR "Warning: $json is not valid json in prop ".$sp->[0].".!\n"; 
+	if ($@) {
+	    print STDERR "Warning: $json is not valid json in prop ".$sp->[0].".!\n";
 	}
 	push @hashes, [ $sp->[0], $hash ];
     }
@@ -219,10 +219,10 @@ sub get_props {
 
  Usage:         $s->store();
  Desc:          creates a sequencing project info in the stockprop
- Ret:           
- Args:          
-                
-                
+ Ret:
+ Args:
+
+
  Side Effects:
  Example:
 
@@ -233,7 +233,7 @@ sub store {
 
     ## TO DO: need to check for rank
 
-    
+
     if ($self->prop_id()) {
 	# update
 	print STDERR "UPDATING JSONPROP ".$self->to_json()."\n";
@@ -243,16 +243,49 @@ sub store {
 	    $row->update();
 	}
     }
-    else { 
+    else {
 	# insert
 	print STDERR "INSERTING JSONPROP ".$self->to_json().", parent_id = ".$self->parent_id(),"\n";
 	my $row = $self->bcs_schema()->resultset($self->prop_namespace())->create( { $self->parent_primary_key()=> $self->parent_id(), value => $self->to_json(), type_id => $self->_prop_type_id() });
 	my $prop_primary_key = $self->prop_primary_key();
 	$self->prop_id($row->$prop_primary_key);
     }
-    
+
 }
-    
+
+
+=head2 method store_by_rank()
+
+Usage:         $prop->store_by_rank();
+Desc:          store multiple props with the same type_id
+Ret:
+Args:
+
+
+Side Effects:
+Example:
+
+=cut
+
+
+sub store_by_rank {
+    my $self = shift;
+
+    my $rs = $self->bcs_schema()->resultset($self->prop_namespace())->search( { $self->parent_primary_key() => $self->parent_id(), type_id => $self->_prop_type_id() });
+
+    my $rank;
+    if ($rs->count() > 0) {
+        $rank = $rs->get_column("rank")->max();
+    }
+    $rank++;
+
+	my $row = $self->bcs_schema()->resultset($self->prop_namespace())->create( { $self->parent_primary_key()=> $self->parent_id(), value => $self->to_json(), type_id => $self->_prop_type_id(), rank => $rank });
+	my $prop_primary_key = $self->prop_primary_key();
+	$self->prop_id($row->$prop_primary_key);
+
+}
+
+
 =head2 method delete()
 
  Usage:
@@ -293,7 +326,7 @@ sub delete {
 #     my $schema = shift;
 #     my $parent_object_id = shift;
 #     my $prop_type_id = shift;
-    
+
 #     my @results;
 
 #     try {

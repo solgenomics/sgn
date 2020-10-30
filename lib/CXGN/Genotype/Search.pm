@@ -1261,17 +1261,12 @@ sub get_cached_file_search_json {
 
         open my $out_copy, '<', $tempfile or die "Can't open output file: $!";
 
-        if (!$self->forbid_cache()) {
-            $self->cache()->set($key, '');
-            $file_handle = $self->cache()->handle($key);
-            copy($out_copy, $file_handle);
+        $self->cache()->set($key, '');
+        $file_handle = $self->cache()->handle($key);
+        copy($out_copy, $file_handle);
 
-            close $out_copy;
-            $file_handle = $self->cache()->handle($key);
-        }
-        else {
-            $file_handle = $out_copy;
-        }
+        close $out_copy;
+        $file_handle = $self->cache()->handle($key);
     }
     return $file_handle;
 }
@@ -1398,17 +1393,12 @@ sub get_cached_file_dosage_matrix {
             open $out_copy, '<', $transpose_tempfile or die "Can't open output file: $!";
         }
 
-        if (!$self->forbid_cache()) {
-            $self->cache()->set($key, '');
-            $file_handle = $self->cache()->handle($key);
-            copy($out_copy, $file_handle);
+        $self->cache()->set($key, '');
+        $file_handle = $self->cache()->handle($key);
+        copy($out_copy, $file_handle);
 
-            close $out_copy;
-            $file_handle = $self->cache()->handle($key);
-        }
-        else {
-            $file_handle = $out_copy;
-        }
+        close $out_copy;
+        $file_handle = $self->cache()->handle($key);
     }
     return $file_handle;
 }
@@ -1577,17 +1567,12 @@ sub get_cached_file_dosage_matrix_compute_from_parents {
             open $out_copy, '<', $transpose_tempfile or die "Can't open output file: $!";
         }
 
-        if (!$self->forbid_cache()) {
-            $self->cache()->set($key, '');
-            $file_handle = $self->cache()->handle($key);
-            copy($out_copy, $file_handle);
+        $self->cache()->set($key, '');
+        $file_handle = $self->cache()->handle($key);
+        copy($out_copy, $file_handle);
 
-            close $out_copy;
-            $file_handle = $self->cache()->handle($key);
-        }
-        else {
-            $file_handle = $out_copy;
-        }
+        close $out_copy;
+        $file_handle = $self->cache()->handle($key);
     }
     return $file_handle;
 }
@@ -1829,17 +1814,12 @@ sub get_cached_file_VCF {
 
         open my $out_copy, '<', $transpose_tempfile_hdr or die "Can't open output file: $!";
 
-        if (!$self->forbid_cache()) {
-            $self->cache()->set($key, '');
-            $file_handle = $self->cache()->handle($key);
-            copy($out_copy, $file_handle);
+        $self->cache()->set($key, '');
+        $file_handle = $self->cache()->handle($key);
+        copy($out_copy, $file_handle);
 
-            close $out_copy;
-            $file_handle = $self->cache()->handle($key);
-        }
-        else {
-            $file_handle = $out_copy;
-        }
+        close $out_copy;
+        $file_handle = $self->cache()->handle($key);
     }
     return $file_handle;
 }
@@ -2091,17 +2071,12 @@ sub get_cached_file_VCF_compute_from_parents {
 
         open my $out_copy, '<', $transpose_tempfile_hdr or die "Can't open output file: $!";
 
-        if (!$self->forbid_cache()) {
-            $self->cache()->set($key, '');
-            $file_handle = $self->cache()->handle($key);
-            copy($out_copy, $file_handle);
+        $self->cache()->set($key, '');
+        $file_handle = $self->cache()->handle($key);
+        copy($out_copy, $file_handle);
 
-            close $out_copy;
-            $file_handle = $self->cache()->handle($key);
-        }
-        else {
-            $file_handle = $out_copy;
-        }
+        close $out_copy;
+        $file_handle = $self->cache()->handle($key);
     }
     return $file_handle;
 }

@@ -95,7 +95,9 @@ $identifier_prefix => ''
                                 <th>Cross Combination</th>
                                 <th>Cross Type</th>
                                 <th>Female Accession</th>
+                                <th>Female Ploidy</th>
                                 <th>Male Accession</th>
+                                <th>Male Ploidy</th>
                                 <th>Female Plot</th>
                                 <th>Male Plot</th>
                                 <th>Female Plant</th>

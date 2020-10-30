@@ -428,6 +428,58 @@ The trait names will be post-composed with the analysis_statistical_ontology_ter
     </div>
 </div>
 
+<div class="modal fade" id="generic_save_analysis_template_dialog" name="generic_save_analysis_template_dialog" tabindex="-1" role="dialog" aria-labelledby="genericStoreAnalysisTemplateDialog" data-backdrop="static">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="genericStoreAnalysisTemplateDialog">Save Analysis Results</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" id="generic_save_analysis_template_analysis_form">
+                        <div class="form-group form-group-sm">
+                            <label class="col-sm-3 control-label">Analysis Name Template (must be unique): </label>
+                            <div class="col-sm-9">
+                                <input class="form-control" id="generic_save_analysis_template_analysis_name" name="generic_save_analysis_template_analysis_name" type="text" />
+                            </div>
+                        </div>
+                        <div class="form-group form-group-sm">
+                            <label class="col-sm-3 control-label">Analysis Description: </label>
+                            <div class="col-sm-9">
+                                <input class="form-control" id="generic_save_analysis_template_analysis_description" name="generic_save_analysis_template_analysis_description" type="text" />
+                            </div>
+                        </div>
+                        <div class="form-group form-group-sm">
+                            <label class="col-sm-3 control-label">Breeding Program: </label>
+                            <div class="col-sm-9">
+                                <div id="generic_save_analysis_template_breeding_program_div"></div>
+                            </div>
+                        </div>
+                        <div class="form-group form-group-sm">
+                            <label class="col-sm-3 control-label">Year: </label>
+                            <div class="col-sm-9">
+                                <div id="generic_save_analysis_template_analysis_year_div"></div>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div id="generic_save_analysis_template_response_div"></div>
+
+                    <hr>
+                    <center>
+                    <button class="btn btn-primary" id="generic_save_analysis_template_submit_button" onclick="return false;">Save Analysis Results And Model</button>
+                    </center>
+                    <br/><br/>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 
 jQuery(document).ready(function() {
@@ -435,6 +487,9 @@ jQuery(document).ready(function() {
     get_select_box('years', 'generic_save_analysis_analysis_year_div', {'auto_generate': 1, 'id':'generic_save_analysis_analysis_year', 'name':'generic_save_analysis_analysis_year'});
     get_select_box('breeding_programs', 'generic_save_analysis_breeding_program_div', { 'name' : 'generic_save_analysis_breeding_program_id', 'id' : 'generic_save_analysis_breeding_program_id' });
     get_select_box('models', 'save_new_analysis_model_select_div', { 'id':'save_new_analysis_model_id', 'name':'save_new_analysis_model_id', 'empty':1 });
+
+    get_select_box('years', 'generic_save_analysis_template_analysis_year_div', {'auto_generate': 1, 'id':'generic_save_analysis_template_analysis_year', 'name':'generic_save_analysis_template_analysis_year'});
+    get_select_box('breeding_programs', 'generic_save_analysis_template_breeding_program_div', { 'name' : 'generic_save_analysis_template_breeding_program_id', 'id' : 'generic_save_analysis_template_breeding_program_id' });
 
     jQuery('#generic_save_analysis_next').click(function(){
         Workflow.complete("#generic_save_analysis_next");

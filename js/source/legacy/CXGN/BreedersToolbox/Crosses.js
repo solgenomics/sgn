@@ -78,9 +78,9 @@ jQuery(document).ready(function($) {
         $("#create_cross").modal("show");
 
         $("#cross_type").change(function() { // show cross_type specific inputs depending on cross type selected
-            $("#get_maternal_parent").toggle($("#cross_type").val() == "biparental");
-            $("#get_paternal_parent").toggle($("#cross_type").val() == "biparental");
-            $("#exact_parents").toggle($("#cross_type").val() == "biparental");
+            $("#get_maternal_parent").toggle(($("#cross_type").val() == "biparental") || ($("#cross_type").val() == "backcross"));
+            $("#get_paternal_parent").toggle(($("#cross_type").val() == "biparental") || ($("#cross_type").val() == "backcross"));
+            $("#exact_parents").toggle(($("#cross_type").val() == "biparental") || ($("#cross_type").val() == "backcross"));
             $("#get_selfed_parent").toggle($("#cross_type").val() == "self");
             $("#get_open_maternal_parent").toggle($("#cross_type").val() == "open");
             $("#get_open_paternal_population").toggle($("#cross_type").val() == "open");
@@ -98,7 +98,7 @@ jQuery(document).ready(function($) {
         });
 
         $('input[id*="_parent"]').autocomplete({
-            source: '/ajax/stock/accession_autocomplete'
+            source: '/ajax/stock/accession_or_cross_autocomplete'
         });
 
         $('input[id*="_population"]').autocomplete({
@@ -248,8 +248,8 @@ jQuery(document).ready(function($) {
     });
 
     jQuery(document).on('click', '[name="upload_crosses_success_complete_button"]', function(){
-        alert('Crosses saved in the database');
         jQuery('#upload_crosses_dialog').modal('hide');
+        location.reload();
     });
 
 
@@ -315,6 +315,10 @@ jQuery(document).ready(function($) {
                 if (!Array.isArray(maternal_parents)) { alert(maternal_parents); return; }
                 paternal_parents = get_accession_names('paternal_accessions_list_select');
                 if (!Array.isArray(paternal_parents)) { alert(paternal_parents); return; }
+                break;
+            case 'backcross':
+                maternal = $("#maternal_parent").val();
+                paternal = $("#paternal_parent").val();
                 break;
         }
 

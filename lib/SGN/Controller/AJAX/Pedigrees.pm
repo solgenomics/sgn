@@ -64,7 +64,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
 
     my @user_roles = $c->user()->roles();
     my $user_role = shift @user_roles;
-        
+
     my $params = {
 	tempfile => $upload_tempfile,
 	subdirectory => $subdirectory,
@@ -95,7 +95,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my %stocks;
 
     my $header = <$F>;
-    my %legal_cross_types = ( biparental => 1, open => 1, self => 1, sib => 1, polycross => 1);
+    my %legal_cross_types = ( biparental => 1, open => 1, self => 1, sib => 1, polycross => 1, backcross => 1);
     my %errors;
 
     while (<$F>) {
@@ -128,8 +128,10 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my @unique_stocks = keys(%stocks);
     my $accession_validator = CXGN::List::Validate->new();
     my @accessions_missing = @{$accession_validator->validate($schema,'accessions_or_populations',\@unique_stocks)->{'missing'}};
-    if (scalar(@accessions_missing)>0){
-        $errors{"The following accessions or populations are not in the database: ".(join ",", @accessions_missing)} = 1;
+    my $cross_validator = CXGN::List::Validate->new();
+    my @stocks_missing = @{$cross_validator->validate($schema,'crosses',\@accessions_missing)->{'missing'}};
+    if (scalar(@stocks_missing)>0){
+        $errors{"The following parents or progenies are not in the database: ".(join ",", @stocks_missing)} = 1;
     }
 
     if (%errors) {
@@ -219,8 +221,8 @@ sub _get_pedigrees_from_file {
             $c->stash->{rest} = { error => "No cross type on line $line_num! Muse be one of these: biparental, open, self, sib, polycross." };
             $c->detach();
         }
-        if ($cross_type ne 'biparental' && $cross_type ne 'open' && $cross_type ne 'self' && $cross_type ne 'sib' && $cross_type ne 'polycross'){
-            $c->stash->{rest} = { error => "Invalid cross type on line $line_num! Must be one of these: biparental, open, self, sib, polycross." };
+        if ($cross_type ne 'biparental' && $cross_type ne 'open' && $cross_type ne 'self' && $cross_type ne 'sib' && $cross_type ne 'polycross' && $cross_type ne 'backcross'){
+            $c->stash->{rest} = { error => "Invalid cross type on line $line_num! Must be one of these: biparental, open, self, backcross,sib, polycross." };
             $c->detach();
         }
         if ($female eq $male) {
@@ -238,9 +240,17 @@ sub _get_pedigrees_from_file {
             $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
             $male_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
         }
-        elsif($cross_type eq "biparental") {
+        elsif($cross_type eq 'biparental') {
             if (!$male){
                 $c->stash->{rest} = { error => "For $progeny Cross Type is biparental, but no male parent given" };
+                $c->detach();
+            }
+            $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
+            $male_parent = Bio::GeneticRelationships::Individual->new( { name => $male });
+        }
+        elsif($cross_type eq 'backcross') {
+            if (!$male){
+                $c->stash->{rest} = { error => "For $progeny Cross Type is backcross, but no male parent given" };
                 $c->detach();
             }
             $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });

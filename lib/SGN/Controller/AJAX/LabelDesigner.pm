@@ -580,16 +580,16 @@ sub get_data {
                 $cross_combination = $cross->[2];
             }
 
-            if ($cross->[7] eq ''){
+            if ($cross->[8] eq ''){
                 $male_parent_name = 'No male parent available';
             } else {
-                $male_parent_name = $cross->[7];
+                $male_parent_name = $cross->[8];
             }
 
-            if ($cross->[6] eq ''){
+            if ($cross->[7] eq ''){
                 $male_parent_id = 'No male parent available';
             } else {
-                $male_parent_id = $cross->[6];
+                $male_parent_id = $cross->[7];
             }
 
             $all_design{$cross->[0]} = {'cross_name' => $cross->[1],

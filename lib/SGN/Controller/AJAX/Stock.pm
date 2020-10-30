@@ -1761,12 +1761,6 @@ sub get_phenotypes {
 
     my $bcs_stock = $bcs_stock_rs->first();
 
-# #    my ($has_members_genotypes) = $bcs_stock->result_source->schema->storage->dbh->selectrow_array( <<'', undef, $bcs_stock->stock_id );
-# SELECT COUNT( DISTINCT genotype_id )
-#   FROM phenome.genotype
-#   JOIN stock subj using(stock_id)
-#   JOIN stock_relationship sr ON( sr.subject_id = subj.stock_id )
-#  WHERE sr.object_id = ?
 
     # now we have rs of stock_relationship objects. We need to find
     # the phenotypes of their related subjects

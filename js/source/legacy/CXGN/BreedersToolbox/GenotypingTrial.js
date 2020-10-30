@@ -1,19 +1,12 @@
 /*jslint browser: true, devel: true */
 
 /**
-
 =head1 Trial.js
-
 Display for managing genotyping plates
-
-
 =head1 AUTHOR
-
 Jeremy D. Edwards <jde22@cornell.edu>
 Lukas Mueller <lam87@cornell.edu>
-
 =cut
-
 */
 
 

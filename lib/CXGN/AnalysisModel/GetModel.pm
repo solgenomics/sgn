@@ -86,8 +86,12 @@ sub get_model {
         $result{model_experiment_type_id} = $experiment_type_id;
         $result{model_experiment_id} = $nd_experiment_id;
         $result{model_properties} = decode_json $property_value;
-        $result{model_files}->{$filetype} = $filename."/".$basename;
-        $result{model_file_ids}->{$file_id} = $basename;
+        if ($filename && $basename) {
+            $result{model_files}->{$filetype} = $filename."/".$basename;
+        }
+        if ($basename) {
+            $result{model_file_ids}->{$file_id} = $basename;
+        }
     }
     return \%result;
 }

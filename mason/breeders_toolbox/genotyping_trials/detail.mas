@@ -17,6 +17,7 @@ $identifier_prefix => 'SGN'
 $genotyping_facility => undef
 $genotyping_facility_status => undef
 $genotyping_facility_submitted => undef
+$genotyping_vendor_order_id => undef
 $genotyping_plate_format => '96'
 $genotyping_plate_sample_type => undef
 $raw_data_link => undef
@@ -24,9 +25,17 @@ $raw_data_link => undef
 
 <div id="trialIDDiv" class="trialIDDivClass" style="display:none;"><% $trial_id %></div>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui' , 'jquery.iframe-post-form', 'CXGN.Trial', 'CXGN.BreedersToolbox.GenotypingTrial', 'CXGN.BreedersToolbox.HTMLSelect', 'jstree/dist/jstree' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui' , 'jquery.iframe-post-form', 'CXGN.Trial', 'CXGN.BreedersToolbox.GenotypingTrial', 'CXGN.BreedersToolbox.GenotypingSubmission', 'CXGN.BreedersToolbox.HTMLSelect', 'jstree/dist/jstree' ] &>
 
 <& /page/page_title.mas, title=>"Genotyping plate $trial_name" &>
+
+<%perl> 
+    my $order_id;
+    if($genotyping_vendor_order_id){
+        my $order_info = JSON->new->allow_nonref->decode($genotyping_vendor_order_id);
+        $order_id = $order_info->{orderId};
+    }
+ </%perl>
 
 <br/>
 
@@ -43,9 +52,9 @@ $raw_data_link => undef
                     <tr><td><b>Plate Format</b></td><td><% $genotyping_plate_format %></td></tr>
                     <tr><td><b>Plate Sample Type</b></td><td><% $genotyping_plate_sample_type %></td></tr>
                     <tr><td><b>Genotyping Facility</b></td><td><% $genotyping_facility %></td></tr>
-                    <tr><td><b>Submitted to Genotyping Facility</b></td><td><% $genotyping_facility_submitted %></td></tr>
+                    <!-- <tr><td><b>Submitted to Genotyping Facility</b></td><td><% $genotyping_facility_submitted %></td></tr>
                     <tr><td><b>Genotyping Facility Status</b></td><td><% $genotyping_facility_status %></td></tr>
-                    <tr><td><b>Raw Data Link</b></td><td><a href='<% $raw_data_link %>'><% $raw_data_link %></td></tr>
+                    <tr><td><b>Raw Data Link</b></td><td><a href='<% $raw_data_link %>'><% $raw_data_link %></td></tr> -->
                     </tbody>
                     </table>
                 </div>
@@ -57,7 +66,7 @@ $raw_data_link => undef
                 </div>
             </div>
 
-            <div class="panel panel-default">
+<!--             <div class="panel panel-default">
                 <div class="panel-body">
                     <table class="table table-bordered table-hover">
                     <tbody>
@@ -66,7 +75,7 @@ $raw_data_link => undef
                     </tbody>
                     </table>
                 </div>
-            </div>
+            </div> -->
 
             <a href="/breeders/trial/<% $trial_id %>/download/layout?format=csv&dataLevel=plate" class="btn btn-default">Download Breedbase Formatted File</a>
             <a href="/breeders/trial/<% $trial_id %>/download/layout?format=intertekxls&dataLevel=plate" class="btn btn-default">Download Intertek Formatted File</a>
@@ -81,6 +90,39 @@ $raw_data_link => undef
     </div>
 </div>
 
+<div class="row">
+    <div class="col-sm-12">
+        <div class="well">
+            <div class="row">
+                <div class="col-sm-1">
+                    <span style="font-size:3.5em;" class="glyphicon glyphicon-export"></span>
+                </div>
+                <div class="col-sm-11">
+                <&| /page/info_section.mas, title => "<h4 style='display:inline'>Genotyping plate submission status</h4>", subtitle=> "Submit genotyping plates to facilities.", id => 'genotyping_facilities_section', collapsible => 1, collapsed => 1 &>
+                    <div class="col-sm-9"></div>
+                    <div class="col-sm-3">                       
+                        <button class="btn btn-primary btn-sm" id="submit_plate_link" style="margin:3px">Submit plates</button>
+                    </div>
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <table class="table table-bordered table-hover">
+                            <tbody>
+                                <tr><td><b>Genotyping Facility</b></td><td><div id="genotyping_facility_tab"><% $genotyping_facility %></div></td></tr>
+                                <tr><td><b>Submitted to Genotyping Facility</b></td><td><div id="genotyping_facility_submitted_tab"></div></td></tr>
+                                <tr><td><b>Genotyping Facility Order ID </b></td><td><div id="genotyping_vendor_order_id_tab"><% $order_id %></div></td></tr>
+                                <tr><td><b>Live Status From Genotyping Facility</b></td><td><div id="genotyping_trial_status_info"></div></td></tr>
+                                <tr><td><b>Download PDF</b></td><td><div id="download_trial_pdf"></div></td></tr>
+                                <tr><td><b>Raw Data Link</b></td><td><div id="raw_data_tab"></div></td></tr>
+                            </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                </&>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!--
 DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
@@ -248,6 +290,11 @@ genotyping_raw_data_link => $raw_data_link
 trial_name => $trial_name
 &>
 
+<& /breeders_toolbox/genotyping_trials/submit_plates_dialog.mas,
+trial_id => $trial_id,
+genotyping_facility => $genotyping_facility
+&>
+
 <script>
 
     jQuery(document).ready(function(){
@@ -288,6 +335,16 @@ trial_name => $trial_name
 
     jQuery('#save_replace_well_accession').click(function(){
         save_replace_well_accession();
+    });
+
+    jQuery('#submit_plate_link').click(function () {
+        jQuery('#plate_name').html("<% $trial_name %>");
+        jQuery('#plate_id').html("<% $trial_id %>");
+        jQuery('#plate_format').html("<% $genotyping_plate_format %>");
+        // jQuery('#number_samples').html("<% $genotyping_plate_format %>");
+        jQuery('#sample_type').html("<% $genotyping_plate_sample_type %>");
+        jQuery('#genotyping_facility').html("<% $genotyping_facility %>");
+        jQuery('#submit_plate_dialog').modal("show");
     });
 
     jQuery('#close_message_dialog').click(function(){

@@ -181,7 +181,7 @@ sub upload_cross_file_POST : Args(0) {
                 $return_error .= $error_string."<br>";
             }
         }
-        $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}, missing_plots => $parse_errors->{'missing_plots'}};
+        $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}, missing_plots => $parse_errors->{'missing_plots'}, missing_accessions_or_crosses => $parse_errors->{'missing_accessions_or_crosses'}};
         $c->detach();
     }
 
@@ -406,48 +406,31 @@ sub get_cross_parents :Path('/ajax/cross/accession_plot_plant_parents') Args(1) 
     my $cross_id = shift;
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $female_accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
-    my $female_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_plot_of', 'stock_relationship')->cvterm_id();
-    my $male_accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
-    my $male_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_plot_of', 'stock_relationship')->cvterm_id();
-    my $female_plant_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_plant_of', 'stock_relationship')->cvterm_id();
-    my $male_plant_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_plant_of', 'stock_relationship')->cvterm_id();
-    my $cross_combination_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_combination', 'stock_property')->cvterm_id();
+    my $cross = $schema->resultset("Stock::Stock")->find( { stock_id => $cross_id });
 
+    if ($cross && $cross->type()->name() ne "cross") {
+	    $c->stash->{rest} = { error => 'This entry is not of type cross and cannot be displayed using this page.' };
+	    return;
+    }
 
-    my $q ="SELECT stock1.stock_id, stock1.uniquename, stock2.stock_id, stock2.uniquename, stock3.stock_id, stock3.uniquename, stock4.stock_id, stock4.uniquename, stock5.stock_id, stock5.uniquename, stock6.stock_id, stock6.uniquename, stock_relationship1.value, stockprop.value
-        FROM stock
-        JOIN stock_relationship AS stock_relationship1 ON (stock.stock_id = stock_relationship1.object_id) and stock_relationship1.type_id = ?
-        JOIN stock AS stock1 ON (stock_relationship1.subject_id = stock1.stock_id)
-        LEFT JOIN stock_relationship AS stock_relationship2 ON (stock.stock_id = stock_relationship2.object_id) AND stock_relationship2.type_id = ?
-        LEFT JOIN stock AS stock2 on (stock_relationship2.subject_id = stock2.stock_id)
-        LEFT JOIN stock_relationship AS stock_relationship3 ON (stock.stock_id = stock_relationship3.object_id) and stock_relationship3.type_id = ?
-        LEFT JOIN stock AS stock3 ON (stock_relationship3.subject_id = stock3.stock_id)
-        LEFT JOIN stock_relationship AS stock_relationship4 ON (stock.stock_id = stock_relationship4.object_id) AND stock_relationship4.type_id = ?
-        LEFT JOIN stock AS stock4 ON (stock_relationship4.subject_id =stock4.stock_id)
-        LEFT JOIN stock_relationship AS stock_relationship5 ON (stock.stock_id = stock_relationship5.object_id) AND stock_relationship5.type_id = ?
-        LEFT JOIN stock AS stock5 ON (stock_relationship5.subject_id =stock5.stock_id)
-        LEFT JOIN stock_relationship AS stock_relationship6 ON (stock.stock_id = stock_relationship6.object_id) AND stock_relationship6.type_id = ?
-        LEFT JOIN stock AS stock6 ON (stock_relationship6.subject_id =stock6.stock_id)
-        LEFT JOIN stockprop ON (stock.stock_id = stockprop.stock_id) AND stockprop.type_id =?
-        WHERE stock.stock_id = ?";
+    my $cross_obj = CXGN::Cross->new({schema=>$schema, cross_stock_id=>$cross_id});
+    my $result = $cross_obj->cross_parents();
+    my @cross_parent_info;
 
-
-    my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute($female_accession_cvterm, $female_plot_cvterm, $female_plant_cvterm, $male_accession_cvterm, $male_plot_cvterm, $male_plant_cvterm, $cross_combination_cvterm, $cross_id);
-
-    my @cross_parents = ();
-    while(my ($female_accession_id, $female_accession_name, $female_plot_id, $female_plot_name, $female_plant_id, $female_plant_name, $male_accession_id, $male_accession_name, $male_plot_id, $male_plot_name, $male_plant_id, $male_plant_name, $cross_type, $cross_combination) = $h->fetchrow_array()){
-        push @cross_parents, [$cross_combination, $cross_type,
+    foreach my $r (@$result){
+        my ($female_accession_id, $female_accession_name, $female_plot_id, $female_plot_name, $female_plant_id, $female_plant_name, $male_accession_id, $male_accession_name, $male_plot_id, $male_plot_name, $male_plant_id, $male_plant_name, $cross_type, $cross_combination, $female_ploidy, $male_ploidy) = @$r;
+        push @cross_parent_info, [$cross_combination, $cross_type,
             qq{<a href="/stock/$female_accession_id/view">$female_accession_name</a>},
+            $female_ploidy,
             qq{<a href="/stock/$male_accession_id/view">$male_accession_name</a>},
+            $male_ploidy,
             qq{<a href="/stock/$female_plot_id/view">$female_plot_name</a>},
             qq{<a href="/stock/$male_plot_id/view">$male_plot_name</a>},
             qq{<a href="/stock/$female_plant_id/view">$female_plant_name</a>},
             qq{<a href="/stock/$male_plant_id/view">$male_plant_name</a>}];
     }
 
-    $c->stash->{rest} = {data => \@cross_parents}
+    $c->stash->{rest} = {data => \@cross_parent_info}
 
 }
 
