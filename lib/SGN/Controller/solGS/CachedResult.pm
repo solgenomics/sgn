@@ -122,7 +122,13 @@ sub _check_cached_output {
 	my $kinship_pop_id  = $args->{kinship_pop_id};
 	my $protocol_id = $args->{genotyping_protocol_id};
 	my $trait_id     = $args->{trait_id};
-
+	my $data_str = $args->{data_structure};
+			
+	if ($data_str =~ /dataset|list/)
+	{
+	    $kinship_pop_id = $data_str . '_' . $kinship_pop_id;
+	}
+    
 	$self->_check_kinship_output($c, $kinship_pop_id, $protocol_id, $trait_id);
     }
  
@@ -469,18 +475,9 @@ sub check_kinship_output {
     my ($self, $c, $pop_id, $protocol_id, $trait_id) = @_;
     
     my $files = $c->controller('solGS::Kinship')->get_kinship_coef_files($c, $pop_id, $protocol_id, $trait_id);  
-  
-    my $cached;
-    
-    if ($trait_id)
-    {
-	$cached = 1 if -s $files->{'json_file_adj'} && -s $files->{'matrix_file_adj'};
-    }
-    else
-    { 
-	$cached = 1  if -s $files->{'json_file_raw'} && -s $files->{'matrix_file_raw'};
-    }
-
+ 
+    my $cached =  -s $files->{'json_file_adj'} && -s $files->{'matrix_file_adj'} ? 1 : 0;
+ 
     return $cached;
    
 }
