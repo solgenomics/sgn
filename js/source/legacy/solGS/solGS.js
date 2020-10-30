@@ -78,29 +78,14 @@ solGS.submitJob = {
 		if (response.cached) {		     
 		    args = JSON.parse(args);
 		    solGS.submitJob.goToPage(page, args);
-		    
 		} else {
-
+		   
 		    if (document.URL.match(/solgs\/population\/|solgs\/populations\/combined\//)) {
 			solGS.submitJob.checkTrainingPopRequirement(page, args);
-		    } else {
+		    }  else {
 			args = JSON.parse(args);
 			solGS.submitJob.askUser(page, args);
 		    }
-		    // if (document.URL.match(/solgs\/search\//)) {
-		    // 	args = JSON.parse(args);
-		    // 	askUser(page, args);
-		    
-		    // } else if () {
-		    
-		    // 	if (page.match(/solgs\/population\/|solgs\/populations\/combined\//)) {
-		    // 	    args = JSON.parse(args);
-		    // 	    askUser(page, args);
-
-		    // 	} else {
-		    // 	    checkTrainingPopRequirement(page, args);
-		    // 	}
-		    // }
 		}
 		
 	    },
@@ -163,10 +148,7 @@ solGS.submitJob = {
 			    
 			    solGS.submitJob.checkUserLogin(page, args);
 			},
-		    }, 
-		    
-		    
-
+		    }, 				    
 		    // No: { 
 		    //     text: 'No, I will wait...',
 		    //     class: 'btn btn-primary',
@@ -176,9 +158,7 @@ solGS.submitJob = {
 		    
 		    // 	analyzeNow(page, args);
 		    //     },
-		    // },
-		    
-		    
+		    // },		    		    
 		    Cancel: { 
 			text: 'Cancel',
 			class: 'btn btn-info',
@@ -297,8 +277,10 @@ solGS.submitJob = {
 	    + '|solgs/trait/'
 	    + '|solgs/traits/all/population/'
 	    + '|solgs/models/combined/trials/'
-	    + '|solgs/model/combined/trials/';
+	    + '|solgs/model/combined/trials/'
+	    + '|kinship/analysis';
 
+	console.log('gotopage '+page)
 	if (page.match(matchItems)) {
 	    window.location = page;
 	}  else if (page.match(/solgs\/populations\/combined\//)) {
@@ -666,12 +648,11 @@ solGS.submitJob = {
 	
     },
 
-    // },
-
-
+    
     selectTraitMessage: function() {
 	
-	var message = '<p style="text-align:justify;">Please select one or more traits to build prediction models.</p>';
+	var message = '<p style="text-align:justify;">'
+	+ 'Please select one or more traits to build prediction models.</p>';
 
 	jQuery('<div />')
 	    .html(message)
@@ -691,7 +672,6 @@ solGS.submitJob = {
 		    }, 
 		}
 	    });
-
     },
 }
 
@@ -716,12 +696,6 @@ jQuery(document).ready(function() {
 	     var page;
 	     var analysisType;
 	     var dataSetType;
-	 
-		 
-	     // var hostName = window.location.protocol 
-	     // 	 + '//' 
-	     // 	 + window.location.host;
-	     var hostName ='';
 	     
 	     var referer = window.location.href;
 	     
@@ -741,15 +715,13 @@ jQuery(document).ready(function() {
 		 
 		 if ( referer.match(/solgs\/populations\/combined\//) ) {
 		     
-		     page = hostName 
-			 + '/solgs/model/combined/trials/' + popId 
+		     page = '/solgs/model/combined/trials/' + popId 
 			 + '/trait/' + traitIds[0]
 			 + '/gp/' + protocolId;		 
 		     
 		 } else if ( referer.match(/solgs\/population\//)) {
 		     
-		     page = hostName 
-			 + '/solgs/trait/' + traitIds[0] 
+		     page = '/solgs/trait/' + traitIds[0] 
 			 + '/population/' + popId
 			 + '/gp/' + protocolId;		 
 		 }
@@ -759,10 +731,10 @@ jQuery(document).ready(function() {
 		 analysisType = 'multiple models';
 		 
 		 if ( referer.match(/solgs\/populations\/combined\//) ) {
-		     page = hostName + '/solgs/models/combined/trials/' + popId;
+		     page = '/solgs/models/combined/trials/' + popId;
 		     
 		 } else {		     
-		     page = hostName + '/solgs/traits/all/population/' + popId;
+		     page = '/solgs/traits/all/population/' + popId;
 		 }	    
 	     }
 	    
@@ -772,16 +744,13 @@ jQuery(document).ready(function() {
 			 'analysis_type'   : analysisType,
 			 'data_set_type'   : dataSetType,
 			};
-
 	  
 	     solGS.submitJob.waitPage(page, args);
 	     
 	 } else {
 	     solGS.submitJob.selectTraitMessage();
 	 }
-
-     });
-    
+     });    
 });
 
 
