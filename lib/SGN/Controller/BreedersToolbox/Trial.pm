@@ -233,6 +233,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $self = shift;
     my $c = shift;
     my $what = shift;
+    print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     my $user = $c->user();
@@ -245,6 +246,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $data_level = $c->req->param("dataLevel") || "plot";
     my $timestamp_option = $c->req->param("timestamp") || 0;
     my $trait_list = $c->req->param("trait_list");
+    my $include_measured = $c->req->param('include_measured') || '';
     my $search_type = $c->req->param("search_type") || 'fast';
 
     my $trial = $c->stash->{trial};
@@ -336,7 +338,8 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         search_type => $search_type,
         include_timestamp => $timestamp_option,
         treatment_project_ids => \@treatment_project_ids,
-        selected_columns => $selected_cols
+        selected_columns => $selected_cols,
+        include_measured => $include_measured
     });
 
     my $error = $download->download();

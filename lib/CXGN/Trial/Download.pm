@@ -203,6 +203,7 @@ has 'data_level' => (isa => 'Str | Undef', is => 'ro', default => 'plots');
 has 'sample_number' => (isa => 'Int | Undef', is => 'ro', default => 0);
 has 'predefined_columns' => (isa => 'ArrayRef[HashRef] | Undef', is => 'ro');
 has 'trait_list' => (isa => 'ArrayRef[Int|Str]|Undef', is => 'rw', predicate => 'has_trait_list' );
+has 'include_measured'=> (is => 'rw', isa => 'Str', default => 'false');
 has 'trait_component_list' => (isa => 'ArrayRef[Int]|Undef', is => 'rw' );
 has 'trial_list' => (isa => 'ArrayRef[Int]|Undef', is => 'rw' );
 has 'accession_list' => (isa => 'ArrayRef[Int]|Undef', is => 'rw' );
