@@ -148,7 +148,7 @@ sub do_query_max_one_year {
             }
 
             push @time_ranges, [$week_start->strftime("%Y-%m-%d"), $week_end->strftime("%Y-%m-%d")];
-            $week_start = $week_end + $week_end->add_years(1);;
+            $week_start = $week_end + ONE_YEAR;
         }
     }
     else {
