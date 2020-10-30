@@ -31,46 +31,60 @@ inputFiles  <- scan(grep("input_files", allArgs, value = TRUE),
 outputFiles <- scan(grep("output_files", allArgs, value = TRUE),
                     what = "character")
 
-
-
-genoFile <- grep("genotype_data_", inputFiles, value = TRUE)
-
-if (is.null(genoFile)) {
-  stop("genotype data file is missing.")
-}
-
-if (file.info(genoFile)$size == 0) {
-  stop("genotype data file is empty.")
-}
-
-
 genoData           <- c()
 
-genoData <- fread(genoFile,
-                  na.strings = c("NA", "", "--", "-"),
-                  header = TRUE)
+createGenoData <- function(inputFiles) {
 
-genoData <- unique(genoData, by='V1')
-genoData <- data.frame(genoData)
-genoData <- column_to_rownames(genoData, 'V1')    
-genoData <- convertToNumeric(genoData)
-genoData <- filterGenoData(genoData, maf=0.01)
-genoData <- roundAlleleDosage(genoData)
+    genoFiles <- grep("genotype_data", inputFiles,  value = TRUE)
 
+    genoMetaData <- c()
+    filteredGenoFile <- c()
 
-genoData <- genoData[order(row.names(genoData)), ]
+    if (length(genoFiles) > 1) {   
+        genoData <- combineGenoData(genoFiles)
+   
+        genoMetaData   <- genoData$trial
+        genoData$trial <- NULL
+        
+    } else {
+      
+        genoFile <- genoFiles
+        genoData <- fread(genoFile,
+                          header = TRUE,
+                          na.strings = c("NA", " ", "--", "-", "."))
+        
+        if (is.null(genoData)) { 
+            filteredGenoFile <- grep("filtered_genotype_data_",  genoFile, value = TRUE)
+            genoData <- fread(filteredGenoFile, header = TRUE)
+        }
 
-#impute genotype values for obs with missing values,
-genoDataMissing <- c()
+      
+        genoData <- unique(genoData, by = 'V1')
+        genoData <- data.frame(genoData)
+        genoData <- column_to_rownames(genoData, 'V1')               
+    }
+   
+    if (is.null(genoData)) {
+        stop("There is no genotype dataset.")
+        q("no", 1, FALSE)
+    } else {
 
-if (sum(is.na(genoData)) > 0) {
-  genoDataMissing<- c('yes')
+        ##genoDataFilter::filterGenoData
+       genoData <- convertToNumeric(genoData)
+       genoData <- filterGenoData(genoData, maf=0.01)
+       genoData <- roundAlleleDosage(genoData)
 
-  genoData <- na.roughfix(genoData)
-  genoData <- data.frame(genoData)
+        message("No. of geno missing values, ", sum(is.na(genoData)))
+        if (sum(is.na(genoData)) > 0) {
+            genoData <- na.roughfix(genoData)
+        }
+   
+        genoData <- data.frame(genoData)
+    } 
 }
 
-commonObs <- c()
+genoData <- createGenoData(inputFiles)  
+genoData <- genoData[order(row.names(genoData)), ]
 
 #change genotype coding to [-1, 0, 1], to use the A.mat ) if  [0, 1, 2]
 genoTrCode <- grep("2", genoData[1, ], value = TRUE)
@@ -78,8 +92,8 @@ if(length(genoTrCode) != 0) {
   genoData            <- genoData - 1
 }
 
-relationshipMatrixFile <- grep("relationship_matrix_table", outputFiles, value = TRUE)
-relationshipMatrixJsonFile <- grep("relationship_matrix_json", outputFiles, value = TRUE)
+relationshipMatrixFile <- grep("relationship_matrix_adjusted_table", outputFiles, value = TRUE)
+relationshipMatrixJsonFile <- grep("relationship_matrix_adjusted_json", outputFiles, value = TRUE)
 
 message('matrix file ', relationshipMatrixFile)
 message('json file ', relationshipMatrixJsonFile)
