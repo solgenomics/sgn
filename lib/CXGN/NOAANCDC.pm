@@ -136,19 +136,21 @@ sub do_query_max_one_year {
 
     my @time_ranges;
     if ($time_diff_days > 365) {
-        my $week_start = Time::Piece->strptime($start_date, "%Y-%m-%d") + 12 * ONE_HOUR;
-        my $month_end  = Time::Piece->strptime($end_date, "%Y-%m-%d");
-
+        my $day_start = Time::Piece->strptime($start_date, "%Y-%m-%d") + 12 * ONE_HOUR;
+        my $year_counter = 0;
         while (1) {
-            my $week_end = $week_start + ONE_DAY * ( 364 - $week_start->day_of_year );
+            my $day_end_year = $day_start + ONE_DAY * ( 364 - $day_start->day_of_year );
+            my $day_end_year_start = $day_end_year;
 
-            if ( $week_end > $month_end ) {
-                push @time_ranges, [$week_start->strftime("%Y-%m-%d"), $end_date_object->strftime("%Y-%m-%d")];
+            if ( $day_end_year > $end_date_object ) {
+                push @time_ranges, [$day_start->strftime("%Y-%m-%d"), $end_date_object->strftime("%Y-%m-%d")];
                 last;
             }
-
-            push @time_ranges, [$week_start->strftime("%Y-%m-%d"), $week_end->strftime("%Y-%m-%d")];
-            $week_start = $week_end + ONE_YEAR;
+            else {
+                push @time_ranges, [$day_start->strftime("%Y-%m-%d"), $day_end_year->strftime("%Y-%m-%d")];
+                $day_start = $day_end_year_start + ONE_YEAR * $year_counter;
+            }
+            $year_counter++;
         }
     }
     else {
