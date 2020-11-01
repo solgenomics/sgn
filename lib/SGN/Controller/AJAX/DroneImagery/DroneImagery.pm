@@ -343,13 +343,13 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         my $refresh_mat_views = 0;
         while( my ($drone_run_project_id, $field_trial_project_id, $related_time_terms_json) = $h->fetchrow_array()) {
             my $related_time_terms;
-            if (!$related_time_terms_json) {
+            #if (!$related_time_terms_json) {
                 $related_time_terms = _perform_gdd_calculation_and_drone_run_time_saving($c, $schema, $field_trial_project_id, $drone_run_project_id, $c->config->{noaa_ncdc_access_token}, 50, 'average_daily_temp_sum');
                 $refresh_mat_views = 1;
-            }
-            else {
+            #}
+            #else {
                 $related_time_terms = decode_json $related_time_terms_json;
-            }
+            #}
             if (!exists($related_time_terms->{gdd_average_temp})) {
                 $related_time_terms = _perform_gdd_calculation_and_drone_run_time_saving($c, $schema, $field_trial_project_id, $drone_run_project_id, $c->config->{noaa_ncdc_access_token}, 50, 'average_daily_temp_sum');
                 $refresh_mat_views = 1;
@@ -6165,7 +6165,6 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
         };
     }
     print STDERR Dumper \%apply_drone_run_band_project_ids_type_hash;
-    print STDERR Dumper $drone_run_band_project_id_input;
     my $drone_run_band_project_type_current = $apply_drone_run_band_project_ids_type_hash{$drone_run_band_project_id_input}->{band_type};
 
     my $gcp_drone_run_band_q = "SELECT project.project_id
