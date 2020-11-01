@@ -157,7 +157,6 @@ sub do_query_max_one_year {
         push @time_ranges, [$start_date, $end_date];
     }
     print STDERR Dumper \@time_ranges;
-    die;
 
     my %weather_hash;
     foreach (@time_ranges) {
