@@ -138,9 +138,10 @@ sub do_query_max_one_year {
     if ($time_diff_days > 365) {
         my $day_start = Time::Piece->strptime($start_date, "%Y-%m-%d") + 12 * ONE_HOUR;
         my $year_counter = 0;
+        my $day_end_year = $day_start + ONE_DAY * ( 364 - $day_start->day_of_year );
+        my $day_end_year_start = $day_end_year;
+
         while (1) {
-            my $day_end_year = $day_start + ONE_DAY * ( 364 - $day_start->day_of_year );
-            my $day_end_year_start = $day_end_year;
 
             if ( $day_end_year > $end_date_object ) {
                 push @time_ranges, [$day_start->strftime("%Y-%m-%d"), $end_date_object->strftime("%Y-%m-%d")];
