@@ -805,6 +805,8 @@ $d->while_logged_in_as("submitter", sub {
     sleep(60);
     $d->find_element_ok('//img[@id="k-means-plot-2804608595-70741-phenotype-k-4"]', 'xpath', 'check k-means plot')->click();  
     sleep(5);
+
+    
     
         
 });

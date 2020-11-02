@@ -28,8 +28,6 @@ $d->while_logged_in_as("submitter", sub {
     my $sel = $d->find_element('//div[@class="list_upload"]//*[contains(text(), "Select")]', 'xpath', 'scroll up');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, -50);", $sel);
     sleep(2);
-    #$d->find_element_ok('//div[@id="kinship_div"]//div[@id="kinship_div"]//*[contains(text(), "UG120232")]', 'xpath', 'check output')->click();
-    # sleep(2);
     $d->find_element_ok('//*[contains(text(), "Diagonals")]', 'xpath', 'check output')->click();
     sleep(4);
     $d->find_element_ok('//div[@id="kinship_div"]//*[contains(text(), "Download")]', 'xpath', 'check output')->click();
@@ -95,8 +93,6 @@ $d->while_logged_in_as("submitter", sub {
     my $sel = $d->find_element('//div[@id="kinship_div"]//*[contains(text(), "Download")]', 'xpath', 'scroll up');
     my $elem =$d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, -50);", $sel);
     sleep(2);
-    #$d->find_element_ok('//div[@id="kinship_div"]//*[contains(text(), "UG120232")]', 'xpath', 'check output')->click();
-    #sleep(2);
     $d->find_element_ok('//*[contains(text(), "Diagonals")]', 'xpath', 'check output')->click();
     sleep(4);
     $d->find_element_ok('//div[@id="kinship_div"]//*[contains(text(), "Download")]', 'xpath', 'check output')->click();
@@ -334,9 +330,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('done_selecting', 'id', 'done selecting')->click();
     sleep(2);
     $d->find_element_ok('combine_trait_trials', 'id', 'combine trials')->click();
-    sleep(15);
-
-    
+    sleep(15);   
     
     $d->find_element_ok('//table[@id="population_traits_list"]/tbody/tr[1]/td/input', 'xpath', 'select 1st trait')->click();
     sleep(1);
