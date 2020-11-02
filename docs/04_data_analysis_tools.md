@@ -336,7 +336,7 @@ Visible and near-infrared spectroscopy (vis-NIRS) can be related to reference ph
 <img src='{{"assets/images/waves_breedbase_schema.png" | relative_url }}' width="522" />
 
 ### Dataset selection
-In order to initiate an analysis, the user must select one or more datasets using the Breedbase [**Search Wizard**]({{site.baseurl}}{% link 02_searching_the_database%}#the-search-wizard). A dataset in Breedbase can contain observationUnit-level (plot-, plant-, or sample-level) trial metadata and phenotypic data from one or more trials. After navigating to the “NIRS” webpage under the “Manage” tab in Breedbase, the user can initiate an analysis and select one of these datasets as input for model training. An optional test dataset can be selected in the second step of the workflow.
+In order to initiate an analysis, the user must select one or more datasets using the Breedbase [**Search Wizard**]({{site.baseurl}}{% link 02_searching_the_database.md%}#the-search-wizard). A dataset in Breedbase can contain observationUnit-level (plot-, plant-, or sample-level) trial metadata and phenotypic data from one or more trials. After navigating to the “NIRS” webpage under the “Manage” tab in Breedbase, the user can initiate an analysis and select one of these datasets as input for model training. An optional test dataset can be selected in the second step of the workflow.
 
 <img src='{{"assets/images/manage_NIRS_prediction_workflow_intro.png" | relative_url }}' width="522" />
 
