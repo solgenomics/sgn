@@ -200,19 +200,19 @@ sub detail {
                 };
             }
 
-            my $phenotype_files = $t->get_phenotype_metadata();
-            foreach (@$additional_files){
-                push @data_links, {
-                    scientificType => 'Uploaded Phenotype File',
-                    name => $_->[4],
-                    url => $main_production_site_url.'/breeders/phenotyping/download/'.$_->[0],
-                    provenance => undef,
-                    dataFormat => undef,
-                    description => undef,
-                    fileFormat => undef,
-                    version => undef
-                };
-            }
+            # my $phenotype_files = $t->get_phenotype_metadata();
+            # foreach (@$phenotype_files){
+            #     push @data_links, {
+            #         scientificType => 'Uploaded Phenotype File',
+            #         name => $_->[4],
+            #         url => $main_production_site_url.'/breeders/phenotyping/download/'.$_->[0],
+            #         provenance => undef,
+            #         dataFormat => undef,
+            #         description => undef,
+            #         fileFormat => undef,
+            #         version => undef
+            #     };
+            # }
 
             my $data_agreement = $t->get_data_agreement() ? $t->get_data_agreement() : '';
             my $study_db_id = $t->get_trial_id();
@@ -626,19 +626,19 @@ sub _search {
             };
         }
 
-        my $phenotype_files = $t->get_phenotype_metadata();
-        foreach (@$additional_files){
-            push @data_links, {
-                scientificType => 'Uploaded Phenotype File',
-                name => $_->[4],
-                url => $main_production_site_url.'/breeders/phenotyping/download/'.$_->[0],
-                provenance => undef,
-                dataFormat => undef,
-                description => undef,
-                fileFormat => undef,
-                version => undef
-            };
-        }
+        # my $phenotype_files = $t->get_phenotype_metadata();
+        # foreach (@$phenotype_files){
+        #     push @data_links, {
+        #         scientificType => 'Uploaded Phenotype File',
+        #         name => $_->[4],
+        #         url => $main_production_site_url.'/breeders/phenotyping/download/'.$_->[0],
+        #         provenance => undef,
+        #         dataFormat => undef,
+        #         description => undef,
+        #         fileFormat => undef,
+        #         version => undef
+        #     };
+        # }
         my $data_agreement = $t->get_data_agreement() ? $t->get_data_agreement() : '';
 
 		my $folder_id = $t->get_folder()->id();	
