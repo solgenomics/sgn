@@ -36,11 +36,11 @@ You can then select a category from the second dropdown, and repeat this same se
 
 In addition to the basic search operations demonstrated above, users can take advantage of two more features:
 
-**Load Selection from List** <img src='{{"assets/images/wizard_select_list.png" | relative_url }}' />
+**Load Selection from List** <img src='{{"assets/images/wizard_select_list.png" | relative_url }}' alt="startfromlist.png" width="87" height="21" />
 
 -   Instead of picking a category in the first dropdown, users can instead populate the first selectbox from a list by scrolling down in the first dropdown to the "Load Selection from List" subheading and selecting a list. This is useful for starting queries with a list of plots, as this category is not among the options in the first dropdown.
 
-**ANY/ALL** Toggle <img src='{{"assets/images/wizard_any_all_toggle.png" | relative_url }}' />
+**ANY/ALL** Toggle <img src='{{"assets/images/wizard_any_all_toggle.png" | relative_url }}' alt="any_all.png" width="87" height="21" />
 
 -   By default, the search wizard combines options within a category using an OR query. In the example above, in the third panel the wizard retrieved accessions associated with the location ‘Ibadan’ in **ANY** of the years “2011 **OR** 2012”
 
@@ -56,7 +56,7 @@ Any option in the wizard select boxes (except for years) can be clicked to open 
 
 You can store the highlighted items in any selected box to lists. This is done using the inputs and buttons directly below the select box. **Don’t forget, you must be logged in to work with lists!**
 
-![]({{"assets/images/add_create_list.png" | relative_url }})
+<img src='{{"assets/images/add_create_list.png" | relative_url }}' alt="addcreatelist.png" height="81" />
 
 -   To **add items to an existing list**, first pick an existing list using the "Add to List..." dropdown on the left. Then click the "Add" button. A popup window will confirm the action, and display the number of items added to your existing list.
 
