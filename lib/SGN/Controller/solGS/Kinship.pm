@@ -85,15 +85,15 @@ sub kinship_run_analysis :Path('/kinship/run/analysis') Args() {
 	$res->{kinship_pop_name} = $pop_name;
 
 	my $kinship_files = $self->get_kinship_coef_files($c, $kinship_pop_id, $protocol_id, $trait_id);
-	my $json_file;
-	if ($trait_id)
-	{
-	   $json_file = $kinship_files->{json_file_adj}; 
-	}
-	else
-	{
-	  $json_file = $kinship_files->{json_file_raw};
-	}
+	#my $json_file;
+	#if ($trait_id)
+	#{
+	  my  $json_file = $kinship_files->{json_file_adj}; 
+#	}
+#	else
+#	{
+#	  $json_file = $kinship_files->{json_file_raw};
+#	}
   
 	$res->{data} = read_file($json_file);
 	$self->add_output_links($c, $res);	
@@ -108,18 +108,22 @@ sub kinship_run_analysis :Path('/kinship/run/analysis') Args() {
 sub kinship_result :Path('/solgs/kinship/result/') Args() {
     my ($self, $c) = @_;   
 
-    my $pop_id = $c->req->param('kinship_pop_id');
+    my $kinship_pop_id = $c->req->param('kinship_pop_id');
     my $protocol_id = $c->req->param('genotyping_protocol_id');
     my $trait_id = $c->req->param('trait_id');
-    my $pop_name; 
-
-    if ($pop_id =~ /dataset/)
+    my $data_str = $c->req->param('data_structure');
+    
+    $self->stash_data_str_kinship_pop_id($c, $kinship_pop_id, $data_str);
+    $kinship_pop_id = $c->stash->{kinship_pop_id};
+  
+    my $pop_name;
+    if ($kinship_pop_id =~ /dataset/)
     {
-	$pop_name = $c->controller('solGS::Dataset')->get_dataset_name($c, $pop_id);
+	$pop_name = $c->controller('solGS::Dataset')->get_dataset_name($c, $c->stash->{dataset_id});
     }
-    elsif ($pop_id =~ /list/)
+    elsif ($kinship_pop_id =~ /list/)
     {
-	$c->controller('solGS::List')->stash_list_metadata($c, $pop_id);
+	$c->controller('solGS::List')->stash_list_metadata($c, $c->stash->{dataset_id});
 	$pop_name = $c->stash->{list_name};
     }
     
@@ -128,18 +132,9 @@ sub kinship_result :Path('/solgs/kinship/result/') Args() {
 	$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
     }
     
-    my $kinship_files = $self->get_kinship_coef_files($c, $pop_id, $protocol_id, $trait_id);
-    my $json_file;
-
-    if ($trait_id)
-    {
-	$json_file = $kinship_files->{json_file_adj}; 
-    }
-    else
-    {
-	$json_file = $kinship_files->{json_file_raw};
-    }
-
+    my $kinship_files = $self->get_kinship_coef_files($c, $kinship_pop_id, $protocol_id, $trait_id); 
+    my $json_file = $kinship_files->{json_file_adj}; 
+ 
     my $res = {};
     
     if (-s $json_file)
@@ -159,6 +154,8 @@ sub stash_data_str_kinship_pop_id {
 
     $pop_id = $c->stash->{kinship_pop_id} if !$pop_id;
     $data_str = $c->stash->{data_structure} if !$data_str;
+
+    $pop_id =~ s/dataset_|list_//g;
     
     if ($data_str =~ /dataset/)
     {   
@@ -225,6 +222,8 @@ sub kinship_output_files {
     my $file_list = join ("\t",
                           $coef_files->{json_file_raw},
 			  $coef_files->{matrix_file_raw},
+			  $coef_files->{json_file_adj},
+			  $coef_files->{matrix_file_adj},
 			  $inbreeding_file,
 			  $ave_kinship_file
 	);
@@ -247,12 +246,17 @@ sub kinship_input_files {
     my $data_str = $c->stash->{data_structure};
 
     $c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
-    my $geno_file = $c->stash->{genotype_file_name};
-    
+    #my $geno_file = $c->stash->{genotype_file_name};
+
+    	my $files = $c->stash->{genotype_files_list} 
+	|| $c->stash->{genotype_file} 
+	|| $c->stash->{genotype_file_name};
+
+   
     my $tmp_dir = $c->stash->{kinship_temp_dir};
     my $name = "kinship_input_files_${pop_id}"; 
     my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
-    write_file($tempfile, $geno_file);
+    write_file($tempfile, $files);
     
     $c->stash->{kinship_input_files} = $tempfile;
     
@@ -362,7 +366,8 @@ sub create_kinship_genotype_data_query_jobs {
     if ($data_str =~ /list/)
     {
 	my $list_id = $c->stash->{list_id};
-
+#	$c->controller('solGS::List')->stash_list_metadata($c);
+    #my $list_type = $c->stash->{list_type};
 	my $file_id = $c->controller('solGS::Files')->create_file_id($c);   
 	$c->stash->{file_id} = $file_id;
 	    
