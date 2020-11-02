@@ -801,8 +801,9 @@ sub plots_list_phenotype_query_job {
 sub create_list_pheno_data_query_jobs {
     my ($self, $c) = @_;
 
+    $self->stash_list_metadata($c);
     my $list_type = $c->stash->{list_type};
-    
+   
     if ($list_type =~ /plots/)
     {
 	$self->plots_list_phenotype_query_job($c);
@@ -824,7 +825,9 @@ sub create_list_pheno_data_query_jobs {
 sub create_list_geno_data_query_jobs {
     my ($self, $c) = @_;
 
+    $self->stash_list_metadata($c);
     my $list_type = $c->stash->{list_type};
+ 
     my $protocol_id = $c->stash->{genotyping_protocol_id};
     
     if ($list_type =~ /accessions/)
