@@ -752,27 +752,11 @@ sub combined_pops_summary {
         }
     }
    
+    my $marker_args = {'training_pop' => 1, 'training_pop_id' => $combo_pops_id}; 
+    my $markers_no = $c->controller('solGS::solGS')->get_markers_count($c, $marker_args);
+    
     my $trait_abbr = $c->stash->{trait_abbr};
     my $trait_id   = $c->stash->{trait_id};
-  
-    $c->controller('solGS::Files')->filtered_training_genotype_file($c);
-    my $filtered_geno_file  = $c->stash->{filtered_training_genotype_file};
-
-    $self->cache_combined_pops_data($c);
-    my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
-    my @unfiltered_geno_rows = read_file($combined_pops_geno_file, {binmode => ':utf8'});
- 
-    my $markers_no;
-
-    if (-s $filtered_geno_file) {
-	my @rows = read_file($filtered_geno_file, {binmode => ':utf8'});
-	$markers_no = scalar(split('\t', $rows[0])) - 1;
-    } 
-    else 
-    {
-	$markers_no = scalar(split ('\t', $unfiltered_geno_rows[0]));	
-    }
-
     my $stocks_no    =  $self->count_combined_trials_lines_count($c, $combo_pops_id, $trait_id);
     my $training_pop = "Training population $combo_pops_id";
     my $model_link   = qq | <a href="/solgs/populations/combined/$combo_pops_id/gp/$protocol_id">$training_pop </a>|;

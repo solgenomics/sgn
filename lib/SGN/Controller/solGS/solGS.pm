@@ -608,27 +608,8 @@ sub project_description {
         $self->get_project_owners($c, $pr_id);       
         $c->stash->{owner} = $c->stash->{project_owners};
     } 
-    
-    $c->controller('solGS::Files')->filtered_training_genotype_file($c, $pr_id, $protocol_id);
-    my $filtered_geno_file  = $c->stash->{filtered_training_genotype_file};
 
-    my $markers_no;
-    my @geno_lines;
-
-    if (-s $filtered_geno_file) 
-    {	
-	@geno_lines = read_file($filtered_geno_file, {binmode => ':utf8'});
-	$markers_no = scalar(split('\t', $geno_lines[0]));
-    } 
-    else 
-    {
-	$c->controller('solGS::Files')->genotype_file_name($c, $pr_id, $protocol_id);
-	my $geno_file  = $c->stash->{genotype_file_name};
-
-	@geno_lines = read_file($geno_file, {binmode => ':utf8'});
-	$markers_no = scalar(split ('\t', $geno_lines[0]));	
-    }
-   
+    my $markers_no = $self->get_markers_count($c, {'training_pop' => 1, 'training_pop_id' => $pr_id});
     my $stocks_no = $self->training_pop_lines_count($c, $pr_id, $protocol_id);
 
     $c->controller('solGS::Files')->traits_acronym_file($c, $pr_id);
