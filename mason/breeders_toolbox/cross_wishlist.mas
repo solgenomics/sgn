@@ -129,7 +129,8 @@
 
                         <div id="upload_wishlist" class="tab-pane fade">
                             <hr>
-                            <form class="form-horizontal" >
+                            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_wishlist_form" name="upload_wishlist_form">
+
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Female's Trial Name: </label>
                                     <div class="col-sm-9" >
@@ -768,6 +769,60 @@ jQuery(document).ready(function($) {
     jQuery('#cross_wishlist_female_trial_select_upload_div').change(function(){
         jQuery('#wishlist_lists_footer').hide();
         jQuery('#wishlist_upload_footer').show();
+    });
+
+    jQuery('#wishlist_upload_submit').click(function() {
+        upload_wishlist_file();
+    });
+
+    function upload_wishlist_file() {
+        var female_trial_id = $('#cross_wishlist_upload_female_trial_id').val();
+        if (!female_trial_id) {
+            alert('A female trial is required');
+            return;
+        }
+
+        var male_trial_id = $('#cross_wishlist_upload_male_trial_id').val();
+        if (!male_trial_id) {
+            alert('A male trial is required');
+            return;
+        }
+
+        var uploadFile = $("#wishlist_file").val();
+        if (uploadFile === ''){
+            alert("Please select a file");
+            return;
+        }
+
+        jQuery('#upload_wishlist_form').attr("action", "/ajax/cross/upload_wishlist");
+
+        jQuery("#upload_wishlist_form").submit();
+
+    }
+
+    jQuery('#upload_wishlist_form').iframePostForm({
+        json: true,
+        post: function() {
+            var uploadFile = $("#wishlist_file").val();
+            if (uploadFile === '') {
+                alert("No file selected");
+            }
+            jQuery("#working_modal").modal("show");
+        },
+        complete: function(response) {
+            jQuery("#working_modal").modal("hide");
+            if (response.error_string) {
+
+                return;
+            }
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            if (response.success) {
+
+            }
+        }
     });
 
 });
