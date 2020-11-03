@@ -12,7 +12,6 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     dbname=>dbname,
     dbuser=>dbuser,
     dbpass=>dbpass,
-    temp_file_nd_experiment_id=>$temp_file_nd_experiment_id, #tempfile full name for deleting nd_experiment_ids asynchronously
     bcs_schema=>$schema,
     metadata_schema=>$metadata_schema,
     phenome_schema=>$phenome_schema,
@@ -101,12 +100,6 @@ has 'dbuser' => (
 );
 
 has 'dbpass' => (
-    isa => "Str",
-    is => 'rw',
-    required => 1
-);
-
-has 'temp_file_nd_experiment_id' => (
     isa => "Str",
     is => 'rw',
     required => 1
@@ -559,9 +552,6 @@ sub store {
                             observable_id => $trait_cvterm->cvterm_id,
                             phenotype_id => $observation,
                         });
-
-                        ## should check that unit and variable (also checked here) are conserved in parse step, if not reject before store
-                        ## should also update operator in nd_experimentprops
 
                         $phenotype->update({
                             value => $trait_value,

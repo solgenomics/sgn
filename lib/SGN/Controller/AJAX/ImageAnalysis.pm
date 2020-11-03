@@ -26,7 +26,6 @@ use URI::Encode qw(uri_encode uri_decode);
 use CXGN::Calendar;
 use Image::Size;
 use Text::CSV;
-use CXGN::Phenotypes::StorePhenotypes;
 use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::BrAPI::FileResponse;
 use CXGN::Onto;

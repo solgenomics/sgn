@@ -5,7 +5,6 @@ use Moose;
 use File::Slurp;
 use Data::Dumper;
 use CXGN::Phenotypes::ParseUpload;
-use CXGN::Phenotypes::StorePhenotypes;
 use CXGN::Trial::TrialDesign;
 use CXGN::Analysis::AnalysisCreate;
 use CXGN::AnalysisModel::GetModel;

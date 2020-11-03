@@ -10,7 +10,6 @@ use SGN::Image;
 use CXGN::Image::Search;
 use CXGN::Page;
 use CXGN::Tag;
-use CXGN::Phenotypes::StorePhenotypes;
 use Scalar::Util qw(looks_like_number);
 
 extends 'CXGN::BrAPI::v1::Common';

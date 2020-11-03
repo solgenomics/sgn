@@ -496,7 +496,6 @@ sub store_analysis_values {
         dbname => $dbname,
         dbuser => $dbuser,
         dbpass => $dbpass,
-        temp_file_nd_experiment_id => $tempfile_path,
         metadata_schema => $metadata_schema,
         phenome_schema => $phenome_schema,
         user_id => $self->user_id(),

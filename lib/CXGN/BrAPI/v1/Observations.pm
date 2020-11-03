@@ -123,7 +123,6 @@ sub observations_store {
         dbname=>$params->{dbname},
         dbuser=>$params->{dbuser},
         dbpass=>$params->{dbpass},
-        temp_file_nd_experiment_id=>$params->{temp_file_nd_experiment_id},
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,

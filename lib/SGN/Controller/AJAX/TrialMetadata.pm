@@ -30,6 +30,7 @@ use CXGN::Trial::TrialLayoutDownload;
 use List::Util qw(sum);
 use CXGN::Genotype::DownloadFactory;
 use POSIX;
+use CXGN::Phenotypes::StorePhenotypes;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -3530,9 +3531,6 @@ sub trial_calculate_numerical_derivative : Chained('trial') PathPart('calculate_
         return;
     }
 
-    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
-    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
-
     my %phenotype_metadata = (
         'archived_file' => 'none',
         'archived_file_type' => 'numerical_derivative_row_and_column_computation',
@@ -3546,7 +3544,6 @@ sub trial_calculate_numerical_derivative : Chained('trial') PathPart('calculate_
         dbname=>$c->config->{dbname},
         dbuser=>$c->config->{dbuser},
         dbpass=>$c->config->{dbpass},
-        temp_file_nd_experiment_id=>$temp_file_nd_experiment_id,
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
