@@ -127,7 +127,7 @@
                             </form>
                         </div>
 
-                        <div id="upload_wishlist" class="tab-pane fade in active">
+                        <div id="upload_wishlist" class="tab-pane fade">
                             <hr>
                             <form class="form-horizontal" >
                                 <div class="form-group">
@@ -186,10 +186,19 @@
                 </div>
             </div>
 
-            <div class="modal-footer">
-                <button class="btn btn-info" id="show_cross_wishlists_select_submits" name="show_cross_wishlists_select_submits">Available Cross Wishlist(s) for ODK Use</button>
-                <button class="btn btn-primary" id="cross_wishlist_submit" name="cross_wishlist_submits">Next</button>
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <div id="wishlist_lists_footer">
+                <div class="modal-footer">
+                    <button class="btn btn-info" id="show_cross_wishlists_select_submits" name="show_cross_wishlists_select_submits">Available Cross Wishlist(s) for ODK Use</button>
+                    <button class="btn btn-primary" id="cross_wishlist_submit" name="cross_wishlist_submits">Next</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+            <div id="wishlist_upload_footer" style="display:none">
+                <div class="modal-footer">
+                    <button class="btn btn-info" id="upload_show_cross_wishlists_select_submits" name="upload_show_cross_wishlists_select_submits">Available Cross Wishlist(s) for ODK Use</button>
+                    <button class="btn btn-primary" id="wishlist_upload_submit" name="wishlist_upload_submit">Upload File</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
             </div>
         </div>
     </div>
@@ -754,6 +763,11 @@ jQuery(document).ready(function($) {
                 alert("An error occurred creating cross wishlist");
             }
         });
+    });
+
+    jQuery('#cross_wishlist_female_trial_select_upload_div').change(function(){
+        jQuery('#wishlist_lists_footer').hide();
+        jQuery('#wishlist_upload_footer').show();
     });
 
 });
