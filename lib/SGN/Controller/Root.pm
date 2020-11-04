@@ -42,7 +42,15 @@ sub index :Path :Args(0) {
     if ($c->config->{homepage_display_phenotype_uploads}){
         my @file_array;
         my %file_info;
-        my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype, project_id, project.name FROM nd_experiment_project JOIN project USING(project_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenome.nd_experiment_md_files ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_md_files.nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata as m using(metadata_id) LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id) WHERE m.obsolete = 0 and NOT (metadata.md_files.filetype='generated from plot from plant phenotypes') and NOT (metadata.md_files.filetype='direct phenotyping')";
+        my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype, project_id, project.name
+            FROM project
+            JOIN nd_experiment_phenotype_bridge USING(project_id)
+            LEFT JOIN metadata.md_files using(file_id)
+            LEFT JOIN metadata.md_metadata as m using(metadata_id)
+            LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id)
+            WHERE m.obsolete = 0
+            AND NOT (metadata.md_files.filetype='generated from plot from plant phenotypes')
+            AND NOT (metadata.md_files.filetype='direct phenotyping')";
         my $h = $schema->storage()->dbh()->prepare($q);
         $h->execute();
 

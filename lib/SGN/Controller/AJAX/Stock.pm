@@ -708,7 +708,6 @@ sub trait_autocomplete_GET :Args(0) {
     $term =~ s/\s+/ /g;
     my @response_list;
     my $q = "SELECT DISTINCT cvterm.name FROM phenotype JOIN cvterm ON cvterm_id = observable_id WHERE cvterm.name ilike ? ORDER BY cvterm.name";
-    #my $q = "select distinct cvterm.name from stock join nd_experiment_stock using (stock_id) join nd_experiment_phenotype using (nd_experiment_id) join phenotype using (phenotype_id) join cvterm on cvterm_id = phenotype.observable_id WHERE cvterm.name ilike ?";
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute( '%'.$term.'%');
     while  (my ($term_name) = $sth->fetchrow_array ) {
