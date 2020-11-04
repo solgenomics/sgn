@@ -404,8 +404,12 @@ sub verify {
         $error_message = "No operaror provided in file upload metadata.";
         return ($warning_message, $error_message);
     }
-    if (!$phenotype_metadata{'date'} || $phenotype_metadata{'date'} eq "") {
-        $error_message = "No date provided in file upload metadata.";
+    if (!$phenotype_metadata{'date'} || $phenotype_metadata{'date'} eq "" || !$phenotype_metadata{'date'} =~ m/(\d{4})-(\d{2})-(\d{2})_(\d{2}):(\d{2}):(\d{2})/) {
+
+        #my $time = DateTime->now();
+        #my $timestamp = $time->ymd()."_".$time->hms();
+
+        $error_message = "No date provided in file upload metadata or date is not in form YYYY-MM-DD_HH:MM:SS.";
         return ($warning_message, $error_message);
     }
 

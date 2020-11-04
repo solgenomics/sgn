@@ -263,8 +263,7 @@ sub get_phenotyped_stocks :Chained('/cvterm/get_cvterm') :PathPart('datatables/p
               JOIN cvterm ON (cvtermpath.object_id = cvterm.cvterm_id
                             OR cvtermpath.subject_id = cvterm.cvterm_id )
                JOIN phenotype on cvterm.cvterm_id = phenotype.observable_id
-               JOIN nd_experiment_phenotype USING (phenotype_id)
-               JOIN nd_experiment_stock USING (nd_experiment_id)
+               JOIN nd_experiment_phenotype_bridge USING (phenotype_id)
                JOIN stock USING (stock_id)
                JOIN cvterm as type on type.cvterm_id = stock.type_id
 
@@ -293,9 +292,7 @@ sub get_direct_trials :Chained('/cvterm/get_cvterm') :PathPart('datatables/direc
     my $cvterm_id = $cvterm->cvterm_id;
     my $q = "SELECT DISTINCT project_id, project.name, project.description
              FROM public.project
-              JOIN nd_experiment_project USING (project_id)
-              JOIN nd_experiment_stock USING (nd_experiment_id)
-              JOIN nd_experiment_phenotype USING (nd_experiment_id)
+              JOIN nd_experiment_phenotype_bridge USING (project_id)
               JOIN phenotype USING (phenotype_id)
               JOIN cvterm on cvterm.cvterm_id = phenotype.observable_id
              WHERE observable_id = ?

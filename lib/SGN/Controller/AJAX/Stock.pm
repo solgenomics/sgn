@@ -694,7 +694,6 @@ Public Path: /ajax/stock/trait_autocomplete
 
 Autocomplete a trait name.  Takes a single GET param,
 C<term>, responds with a JSON array of completions for that term.
-Finds only traits that exist in nd_experiment_phenotype
 
 =cut
 

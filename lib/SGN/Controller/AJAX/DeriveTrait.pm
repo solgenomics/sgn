@@ -199,18 +199,15 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
 	else {
 
 		print Dumper (\@found_trait_cvterm_ids);
-		my $h2 = $dbh->prepare("SELECT object.uniquename AS stock_name, object.stock_id AS stock_id, me.uniquename AS plot_name, phenotype.value FROM stock me LEFT JOIN
-nd_experiment_stock nd_experiment_stocks ON nd_experiment_stocks.stock_id =
-me.stock_id LEFT JOIN nd_experiment nd_experiment ON nd_experiment.nd_experiment_id = nd_experiment_stocks.nd_experiment_id LEFT JOIN nd_experiment_phenotype nd_experiment_phenotypes ON nd_experiment_phenotypes.nd_experiment_id = nd_experiment.nd_experiment_id LEFT JOIN phenotype phenotype ON phenotype.phenotype_id =
-nd_experiment_phenotypes.phenotype_id LEFT JOIN cvterm observable ON
-observable.cvterm_id = phenotype.observable_id LEFT JOIN nd_experiment_project
-nd_experiment_projects ON nd_experiment_projects.nd_experiment_id =
-nd_experiment.nd_experiment_id LEFT JOIN project project ON project.project_id =
-nd_experiment_projects.project_id LEFT JOIN stock_relationship
-stock_relationship_subjects ON stock_relationship_subjects.subject_id =
-me.stock_id LEFT JOIN stock object ON object.stock_id =
-stock_relationship_subjects.object_id WHERE ( ( observable.cvterm_id =? AND
-project.project_id=? ) );");
+		my $h2 = $dbh->prepare("SELECT object.uniquename AS stock_name, object.stock_id AS stock_id, me.uniquename AS plot_name, phenotype.value
+            FROM stock me
+            LEFT JOIN nd_experiment_phenotype_bridge ON nd_experiment_phenotype_bridge.stock_id = me.stock_id
+            LEFT JOIN phenotype phenotype ON phenotype.phenotype_id = nd_experiment_phenotype_bridge.phenotype_id
+            LEFT JOIN cvterm observable ON observable.cvterm_id = phenotype.observable_id
+            LEFT JOIN project project ON project.project_id = nd_experiment_phenotype_bridge.project_id
+            LEFT JOIN stock_relationship stock_relationship_subjects ON stock_relationship_subjects.subject_id = me.stock_id
+            LEFT JOIN stock object ON object.stock_id = stock_relationship_subjects.object_id
+            WHERE ( ( observable.cvterm_id =? AND project.project_id=? ) );");
 
 		my %cvterm_hash;
 		my %plot_hash;

@@ -119,9 +119,7 @@ sub phenotype_summary : Chained('ajax_breeding_program') PathPart('phenotypes') 
 
         FROM cvterm
             JOIN phenotype ON (cvterm_id=cvalue_id)
-            JOIN nd_experiment_phenotype USING(phenotype_id)
-            JOIN nd_experiment_project USING(nd_experiment_id)
-            JOIN nd_experiment_stock USING(nd_experiment_id)
+            JOIN nd_experiment_phenotype_bridge USING(phenotype_id)
             JOIN stock as plot USING(stock_id)
             JOIN stock_relationship on (plot.stock_id = stock_relationship.subject_id)
             JOIN stock as accession on (accession.stock_id = stock_relationship.object_id)

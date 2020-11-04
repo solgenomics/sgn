@@ -11565,13 +11565,9 @@ sub drone_imagery_delete_drone_run_GET : Args(0) {
         CREATE TEMP TABLE temp_drone_image_pheno_deletion AS
         (SELECT phenotype_id, nd_experiment_id, image_id
         FROM phenotype
-        JOIN nd_experiment_phenotype using(phenotype_id)
-        JOIN phenome.nd_experiment_md_images AS nd_experiment_md_images using(nd_experiment_id)
-        WHERE nd_experiment_md_images.image_id IN ($drone_run_band_image_ids_sql) );
+        JOIN nd_experiment_phenotype_bridge using(phenotype_id)
+        WHERE nd_experiment_phenotype_bridge.image_id IN ($drone_run_band_image_ids_sql) );
         DELETE FROM phenotype WHERE phenotype_id IN (SELECT phenotype_id FROM temp_drone_image_pheno_deletion);
-        DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id IN (SELECT nd_experiment_id FROM temp_drone_image_pheno_deletion);
-        DELETE FROM phenome.nd_experiment_md_images WHERE nd_experiment_id IN (SELECT nd_experiment_id FROM temp_drone_image_pheno_deletion);
-        DELETE FROM nd_experiment WHERE nd_experiment_id IN (SELECT nd_experiment_id FROM temp_drone_image_pheno_deletion);
         DROP TABLE IF EXISTS temp_drone_image_pheno_deletion;
         ";
     my $h4 = $schema->storage->dbh()->prepare($q4);
