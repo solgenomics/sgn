@@ -57,8 +57,7 @@ sub search {
         JOIN nd_experiment_project USING(project_id)
         JOIN nd_experiment_stock AS all_stocks ON(nd_experiment_project.nd_experiment_id = all_stocks.nd_experiment_id)
         JOIN stock USING(stock_id)
-        JOIN nd_experiment_stock AS my_stocks ON(stock.stock_id = my_stocks.stock_id)
-        JOIN nd_experiment_phenotype ON(my_stocks.nd_experiment_id = nd_experiment_phenotype.nd_experiment_id)
+        JOIN nd_experiment_phenotype_bridge ON(stock.stock_id = nd_experiment_phenotype_bridge.stock_id)
         JOIN phenotype USING(phenotype_id)
         JOIN cvterm ON(phenotype.cvalue_id = cvterm.cvterm_id)
         JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id

@@ -309,16 +309,20 @@ sub detail {
     # Clear previously associated phenotypes
     $image->remove_associated_phenotypes();
 
+    my $nd_experiment_phenotype_bridge_q = "SELECT nd_experiment_phenotype_bridge_id FROM nd_experiment_phenotype_bridge WHERE phenotype_id = ?;";
+    my $nd_experiment_phenotype_bridge_h = $self->bcs_schema->storage->dbh()->prepare($nd_experiment_phenotype_bridge_q);
+
     # Associate the image with the observations specified
     foreach (@$observationDbIds_arrayref) {
 
-        my $nd_experiment_phenotype = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentPhenotype")->find({ phenotype_id => $_ });
+        $nd_experiment_phenotype_bridge_h->execute($_);
+        my ($nd_experiment_phenotype_bridge_id) = $nd_experiment_phenotype_bridge_h->fetchrow_array($nd_experiment_phenotype_bridge_h);
 
-        if ($nd_experiment_phenotype) {
-            my %image_hash = ($nd_experiment_phenotype->nd_experiment_id => $image_id);
+        if ($nd_experiment_phenotype_bridge_id) {
+            my %image_hash = ($nd_experiment_phenotype_bridge_id => $image_id);
             $image->associate_phenotype(\%image_hash);
         } else {
-            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Cannot find experiment associated with observation with id of %s, does not exist', $_));
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Cannot find nd_experiment_phenotype_bridge associated with observation with id of %s, does not exist', $_));
         }
     }
 

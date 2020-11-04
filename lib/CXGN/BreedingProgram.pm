@@ -188,24 +188,31 @@ sub get_traits_assayed {
     my $trials = $self->get_trials;
     my @trial_ids;
     while (my $trial = $trials->next() ) {
-	my $trial_id = $trial->project_id;
-	push @trial_ids , $trial_id;
+        my $trial_id = $trial->project_id;
+        push @trial_ids , $trial_id;
     }
     my $trial_ids = join ',', map { "?" } @trial_ids;
     my @traits_assayed;
 
     my $q;
     if ($trial_ids) {
-	$q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, count(phenotype.value) FROM cvterm JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id in ( $trial_ids )  and phenotype.value~? GROUP BY trait, cvterm.cvterm_id ORDER BY trait;";
+        $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, count(phenotype.value)
+            FROM cvterm
+            JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id
+            JOIN db ON dbxref.db_id = db.db_id
+            JOIN phenotype ON (cvterm_id=cvalue_id)
+            JOIN nd_experiment_phenotype_bridge USING(phenotype_id)
+            WHERE project_id in ( $trial_ids ) and phenotype.value~?
+            GROUP BY trait, cvterm.cvterm_id ORDER BY trait
+            ;";
 
+        my $traits_assayed_q = $dbh->prepare($q);
 
-	my $traits_assayed_q = $dbh->prepare($q);
-
-	my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
-	$traits_assayed_q->execute(@trial_ids, $numeric_regex );
-	while (my ($trait_name, $trait_id, $count) = $traits_assayed_q->fetchrow_array()) {
-	    push @traits_assayed, [$trait_id, $trait_name];
-	}
+        my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
+        $traits_assayed_q->execute(@trial_ids, $numeric_regex );
+        while (my ($trait_name, $trait_id, $count) = $traits_assayed_q->fetchrow_array()) {
+            push @traits_assayed, [$trait_id, $trait_name];
+        }
     }
     return \@traits_assayed;
 }

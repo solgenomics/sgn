@@ -43,8 +43,7 @@ sub check_unique_var_unit_time {
     my $q = "
     SELECT phenotype_id, value
     FROM phenotype
-    JOIN nd_experiment_phenotype USING (phenotype_id)
-    JOIN nd_experiment_stock USING (nd_experiment_id)
+    JOIN nd_experiment_phenotype_bridge USING (phenotype_id)
     WHERE observable_id = ? AND stock_id = ? AND collect_date = ?
     ";
 

@@ -438,9 +438,8 @@ sub search {
         LEFT JOIN phenome.project_md_image AS project_image ON(project_image.image_id=image.image_id)
         LEFT JOIN cvterm AS project_image_type ON(project_image.type_id=project_image_type.cvterm_id)
         LEFT JOIN project ON(project_image.project_id=project.project_id)
-        LEFT JOIN phenome.nd_experiment_md_images AS nd_experiment_md_images ON(image.image_id = nd_experiment_md_images.image_id)
-        LEFT JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id = nd_experiment_md_images.nd_experiment_id)
-        LEFT JOIN phenotype ON (nd_experiment_phenotype.phenotype_id = phenotype.phenotype_id)
+        LEFT JOIN nd_experiment_phenotype_bridge ON(image.image_id = nd_experiment_phenotype_bridge.image_id)
+        LEFT JOIN phenotype ON (nd_experiment_phenotype_bridge.phenotype_id = phenotype.phenotype_id)
         LEFT JOIN cvterm AS phenotype_variable ON (phenotype.cvalue_id=phenotype_variable.cvterm_id)
         $where_clause
         GROUP BY(image.image_id, image.name, image.description, image.original_filename, image.file_ext, image.sp_person_id, submitter.username, image.create_date, image.modified_date, image.obsolete, image.md5sum, stock.stock_id, stock.uniquename, stock_type.name, project.project_id, project.name, project_image.project_md_image_id, project_image_type.name)

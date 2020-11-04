@@ -1059,11 +1059,11 @@ sub associate_phenotype {
 
     # Copied from CXGN::Phenotypes:StorePhenotypes->save_archived_images_metadata because
     # the class required too many parameters to instantiate.
-    my $query = "INSERT into phenome.nd_experiment_md_images (nd_experiment_id, image_id) VALUES (?, ?);";
+    my $query = "UPDATE nd_experiment_phenotype_bridge SET image_id = ? WHERE nd_experiment_phenotype_bridge_id = ?;";
     my $sth = $self->get_dbh()->prepare($query);
 
-    while (my ($nd_experiment_id, $image_id) = each %$image_hash) {
-        $sth->execute($nd_experiment_id, $image_id);
+    while (my ($nd_experiment_phenotype_bridge_id, $image_id) = each %$image_hash) {
+        $sth->execute($image_id, $nd_experiment_phenotype_bridge_id);
     }
 
     return undef;
@@ -1074,7 +1074,7 @@ sub remove_associated_phenotypes {
     my $self = shift;
 
     # Find the information for creating our association row
-    my $query = "DELETE from phenome.nd_experiment_md_images where image_id = ?";
+    my $query = "UPDATE nd_experiment_phenotype_bridge SET image_id = NULL WHERE image_id = ?";
 
     my $sth = $self->get_dbh()->prepare($query);
     $sth->execute(

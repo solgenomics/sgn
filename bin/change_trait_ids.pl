@@ -60,7 +60,7 @@ $dbh = CXGN::DB::InsertDBH->new( { dbhost=>$dbhost,
 
 # prepare sql delete statements
 
-my $update_query = "Update dbxref set accession = ? where accession = ? and db_id = ((SELECT dbxref_1.db_id FROM stock JOIN nd_experiment_stock USING (stock_id) JOIN nd_experiment_phenotype USING (nd_experiment_id) JOIN phenotype USING (phenotype_id) JOIN cvterm cvterm_1 ON phenotype.cvalue_id = cvterm_1.cvterm_id JOIN dbxref dbxref_1 ON cvterm_1.dbxref_id = dbxref_1.dbxref_id LIMIT 1 ));";
+my $update_query = "Update dbxref set accession = ? where accession = ? and db_id = ((SELECT dbxref_1.db_id FROM stock JOIN nd_experiment_phenotype_bridge USING (stock_id) JOIN phenotype USING (phenotype_id) JOIN cvterm cvterm_1 ON phenotype.cvalue_id = cvterm_1.cvterm_id JOIN dbxref dbxref_1 ON cvterm_1.dbxref_id = dbxref_1.dbxref_id LIMIT 1 ));";
 my $update_handle = $dbh->prepare($update_query);
 
 try {
