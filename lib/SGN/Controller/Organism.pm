@@ -379,7 +379,11 @@ sub phenotype_data {
     my $pheno_count = $organism->get_phenotype_count();
     my $onto_count  = $schema->resultset("Stock::StockCvterm")->search_related('stock', {
         organism_id => $organism_id } )->count;
-    my $trait_count = $schema->resultset("NaturalDiversity::NdExperimentPhenotype")->search_related('nd_experiment')->search_related('nd_experiment_stocks')->search_related('stock', { organism_id => $organism_id } )->count;
+
+    my $q = "SELECT count(phenotype_id) FROM nd_experiment_phenotype_bridge JOIN stock USING(stock_id) WHERE organism_id = ?;";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($organism_id);
+    my ($trait_count) = $h->fetchrow_array();
 
     my $pheno_list =
         qq|<a href= "/search/stocks?organism=$organism_id">$pheno_count</a>|;

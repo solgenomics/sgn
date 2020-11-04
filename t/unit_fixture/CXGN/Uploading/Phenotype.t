@@ -42,8 +42,10 @@ my $pre_exp_stock_count = $exp_stock_rs->count();
 my $exp_proj_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({});
 my $pre_exp_proj_count = $exp_proj_rs->count();
 
-my $exp_pheno_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
-my $pre_exp_pheno_count = $exp_pheno_rs->count();
+my $exp_pheno_q = "SELECT count(phenotype_id) FROM nd_experiment_phenotype_bridge;";
+my $exp_pheno_h = $f->bcs_schema->storage->dbh()->prepare($exp_pheno_q);
+$exp_pheno_h->execute();
+my ($pre_exp_pheno_count) = $exp_pheno_h->fetchrow_array();
 
 my $md_rs = $f->metadata_schema->resultset('MdMetadata')->search({});
 my $pre_md_count = $md_rs->count();
@@ -199,8 +201,8 @@ my $post1_exp_stock_diff = $post1_exp_stock_count - $pre_exp_stock_count;
 print STDERR "Experimentstock count: ".$post1_exp_stock_diff."\n";
 ok($post1_exp_stock_diff == 15, "Check num rows in NdExperimentstock table after addition of phenotyping spreadsheet upload");
 
-$exp_pheno_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
-my $post1_exp_pheno_count = $exp_pheno_rs->count();
+$exp_pheno_h->execute();
+my ($post1_exp_pheno_count) = $exp_pheno_h->fetchrow_array();
 my $post1_exp_pheno_diff = $post1_exp_pheno_count - $pre_exp_pheno_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_pheno_diff."\n";
 ok($post1_exp_pheno_diff == 60, "Check num rows in NdExperimentphenotype table after addition of phenotyping spreadsheet upload");
@@ -329,8 +331,8 @@ my $post2_exp_stock_diff = $post2_exp_stock_count - $pre_exp_stock_count;
 print STDERR "Experimentstock count: ".$post2_exp_stock_diff."\n";
 ok($post2_exp_stock_diff == 30, "Check num rows in NdExperimentstock table after second addition of phenotyping spreadsheet upload");
 
-$exp_pheno_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
-my $post2_exp_pheno_count = $exp_pheno_rs->count();
+$exp_pheno_h->execute();
+my ($post2_exp_pheno_count) = $exp_pheno_h->fetchrow_array();
 my $post2_exp_pheno_diff = $post2_exp_pheno_count - $pre_exp_pheno_count;
 print STDERR "Experimentphenotype count: ".$post2_exp_pheno_diff."\n";
 ok($post2_exp_pheno_diff == 120, "Check num rows in NdExperimentphenotype table after second addition of phenotyping spreadsheet upload");
@@ -492,8 +494,8 @@ $post1_exp_stock_diff = $post1_exp_stock_count - $pre_exp_stock_count;
 print STDERR "Experimentstock count: ".$post1_exp_stock_diff."\n";
 ok($post1_exp_stock_diff == 45, "Check num rows in NdExperimentstock table after addition of fieldbook upload");
 
-$exp_pheno_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
-my $post1_exp_pheno_count = $exp_pheno_rs->count();
+$exp_pheno_h->execute();
+my ($post1_exp_pheno_count) = $exp_pheno_h->fetchrow_array();
 my $post1_exp_pheno_diff = $post1_exp_pheno_count - $pre_exp_pheno_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_pheno_diff."\n";
 ok($post1_exp_pheno_diff == 150, "Check num rows in NdExperimentphenotype table after addition of fieldbook upload");
@@ -958,8 +960,8 @@ $post1_exp_stock_diff = $post1_exp_stock_count - $pre_exp_stock_count;
 print STDERR "Experimentstock count: ".$post1_exp_stock_diff."\n";
 ok($post1_exp_stock_diff == 60, "Check num rows in NdExperimentstock table after addition of datacollector upload");
 
-$exp_pheno_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
-my $post1_exp_pheno_count = $exp_pheno_rs->count();
+$exp_pheno_h->execute();
+my ($post1_exp_pheno_count) = $exp_pheno_h->fetchrow_array();
 my $post1_exp_pheno_diff = $post1_exp_pheno_count - $pre_exp_pheno_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_pheno_diff."\n";
 ok($post1_exp_pheno_diff == 207, "Check num rows in NdExperimentphenotype table after addition of datacollector upload");
@@ -1724,8 +1726,8 @@ while (my $rs = $exp_stock_table_tail->next() ) {
 }
 #print STDERR Dumper \@exp_stock_table;
 
-$exp_pheno_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
-$post1_exp_pheno_count = $exp_pheno_rs->count();
+$exp_pheno_h->execute();
+my ($post1_exp_pheno_count) = $exp_pheno_h->fetchrow_array();
 $post1_exp_pheno_diff = $post1_exp_pheno_count - $pre_exp_pheno_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_pheno_diff."\n";
 ok($post1_exp_pheno_diff == 325, "Check num rows in NdExperimentphenotype table after addition of large phenotyping spreadsheet upload");
@@ -2398,8 +2400,8 @@ while (my $rs = $exp_stock_table_tail->next() ) {
 }
 #print STDERR Dumper \@exp_stock_table;
 
-$exp_pheno_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
-$post1_exp_pheno_count = $exp_pheno_rs->count();
+$exp_pheno_h->execute();
+my ($post1_exp_pheno_count) = $exp_pheno_h->fetchrow_array();
 $post1_exp_pheno_diff = $post1_exp_pheno_count - $pre_exp_pheno_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_pheno_diff."\n";
 ok($post1_exp_pheno_diff == 383, "Check num rows in NdExperimentphenotype table after addition of large phenotyping spreadsheet upload");
@@ -2651,8 +2653,8 @@ while (my $rs = $exp_stock_table_tail->next() ) {
 }
 #print STDERR Dumper \@exp_stock_table;
 
-$exp_pheno_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
-$post1_exp_pheno_count = $exp_pheno_rs->count();
+$exp_pheno_h->execute();
+my ($post1_exp_pheno_count) = $exp_pheno_h->fetchrow_array();
 $post1_exp_pheno_diff = $post1_exp_pheno_count - $pre_exp_pheno_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_pheno_diff."\n";
 ok($post1_exp_pheno_diff == 393, "Check num rows in NdExperimentphenotype table after addition of large phenotyping spreadsheet upload");

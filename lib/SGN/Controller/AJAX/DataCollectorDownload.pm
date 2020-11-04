@@ -25,7 +25,6 @@ use File::Copy;
 use File::Basename;
 use List::MoreUtils qw /any /;
 use SGN::View::ArrayElements qw/array_elements_simple_view/;
-use CXGN::Stock::StockTemplate;
 use JSON -support_by_pp;
 use CXGN::Phenotypes::DataCollectorSpreadsheet;
 use CXGN::Trial::Download;

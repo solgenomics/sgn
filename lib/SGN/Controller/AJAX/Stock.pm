@@ -1451,120 +1451,6 @@ sub generate_genotype_matrix : Path('/phenome/genotype/matrix/generate') :Args(1
 
 }
 
-
-=head2 add_phenotype
-
-
-L<Catalyst::Action::REST> action.
-
-Store a new phenotype and link with nd_experiment_stock
-
-=cut
-
-
-sub add_phenotype :PATH('/ajax/stock/add_phenotype') : ActionClass('REST') { }
-
-sub add_phenotype_GET :Args(0) {
-    my ($self, $c) = @_;
-    $c->stash->{rest} = { error => "Nothing here, it's a GET.." } ;
-}
-
-sub add_phenotype_POST {
-    my ( $self, $c ) = @_;
-    my $response;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    if (  any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
-        my $req = $c->req;
-
-        my $stock_id = $c->req->param('stock_id');
-        my $project_id = $c->req->param('project_id');
-        my $geolocation_id = $c->req->param('geolocation_id');
-        my $observable_id = $c->req->param('observable_id');
-        my $value = $c->req->param('value');
-        my $date = DateTime->now;
-        my $user =  $c->user->get_object->get_sp_person_id;
-        try {
-            # find the cvterm for a phenotyping experiment
-            my $pheno_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema,'phenotyping_experiment','experiment_type');
-
-
-            #create the new phenotype
-            my $phenotype = $schema->resultset("Phenotype::Phenotype")->find_or_create(
-	        {
-                    observable_id => $observable_id, #cvterm
-                    value => $value ,
-                    uniquename => "Stock: $stock_id, Observable id: $observable_id. Uploaded by web form by $user on $date" ,
-                });
-            #create a new nd_experiment
-            my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create(
-                {
-                    nd_geolocation_id => $geolocation_id,
-                    type_id => $pheno_cvterm->cvterm_id(),
-                } );
-            #link to the project
-            $experiment->find_or_create_related('nd_experiment_projects', {
-                project_id => $project_id,
-                                                } );
-            #link the experiment to the stock
-            $experiment->find_or_create_related('nd_experiment_stocks' , {
-                stock_id => $stock_id,
-                type_id  =>  $pheno_cvterm->cvterm_id(),
-                                                });
-            #link the phenotype with the nd_experiment
-            my $nd_experiment_phenotype = $experiment->find_or_create_related(
-                'nd_experiment_phenotypes', {
-                    phenotype_id => $phenotype->phenotype_id()
-                } );
-
-            $response = { message => "stock_id $stock_id and project_id $project_id associated with cvterm $observable_id , phenotype value $value (phenotype_id = " . $phenotype->phenotype_id . "\n" , }
-        } catch {
-            $response = { error => "Failed: $_" }
-        };
-    }  else {  $c->stash->{rest} = { error => 'user does not have a curator/sequencer/submitter account' };
-    }
-}
-
-=head2 action stock_members_phenotypes()
-
- Usage:        /stock/<stock_id>/datatables/traits
- Desc:         get all the phenotypic scores associated with the stock $stock_id
- Ret:          json of the form
-               { data => [  { db_name : 'A', observable: 'B', value : 'C' }, { ... }, ] }
- Args:
- Side Effects:
- Example:
-
-=cut
-
-sub stock_members_phenotypes :Chained('/stock/get_stock') PathPart('datatables/traits') Args(0) {
-    my $self = shift;
-    my $c = shift;
-    #my $trait_id = shift;
-
-
-    my $subject_phenotypes = $self->get_phenotypes($c);
-
-    # collect the data from the hashref...
-    #
-    my @stock_data;
-
-    foreach my $project (keys (%$subject_phenotypes)) {
-	foreach my $trait (@{$subject_phenotypes->{$project}}) {
-	    push @stock_data, [
-		$project,
-		$trait->get_column("db_name").":".$trait->get_column("accession"),
-		$trait->get_column("observable"),
-		$trait->get_column("value"),
-	    ];
-	}
-    }
-
-    $c->stash->{rest} = { data => \@stock_data,
-                          #has_members_genotypes => $has_members_genotypes
-    };
-
-}
-
 sub _stock_project_phenotypes {
     my ($self, $schema, $bcs_stock) = @_;
 
@@ -1729,9 +1615,22 @@ sub get_phenotypes_by_stock_and_trial :Chained('/stock/get_stock') PathPart('dat
 
     my $q;
     if ($stock_type eq 'accession'){
-        $q = "SELECT stock.stock_id, stock.uniquename, cvterm_id, cvterm.name, avg(phenotype.value::REAL), stddev(phenotype.value::REAL), count(phenotype.value::REAL) FROM stock JOIN stock_relationship ON (stock.stock_id=stock_relationship.object_id) JOIN  nd_experiment_stock ON (nd_experiment_stock.stock_id=stock_relationship.subject_id) JOIN nd_experiment_project ON (nd_experiment_stock.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN phenotype USING(phenotype_id) JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id) WHERE project_id=? AND stock.stock_id=? GROUP BY stock.stock_id, stock.uniquename, cvterm_id, cvterm.name";
+        $q = "SELECT stock.stock_id, stock.uniquename, cvterm_id, cvterm.name, avg(phenotype.value::REAL), stddev(phenotype.value::REAL), count(phenotype.value::REAL)
+            FROM stock
+            JOIN stock_relationship ON (stock.stock_id=stock_relationship.object_id)
+            JOIN nd_experiment_phenotype_bridge ON (nd_experiment_phenotype_bridge.stock_id=stock_relationship.subject_id)
+            JOIN phenotype USING(phenotype_id)
+            JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id)
+            WHERE project_id=? AND stock.stock_id=?
+            GROUP BY stock.stock_id, stock.uniquename, cvterm_id, cvterm.name";
     } else {
-        $q = "SELECT stock.stock_id, stock.uniquename, cvterm_id, cvterm.name, avg(phenotype.value::REAL), stddev(phenotype.value::REAL), count(phenotype.value::REAL) FROM stock JOIN nd_experiment_stock USING(stock_id) JOIN nd_experiment_project ON (nd_experiment_stock.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN phenotype USING(phenotype_id) JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id) WHERE project_id=? AND stock.stock_id=? GROUP BY stock.stock_id, stock.uniquename, cvterm_id, cvterm.name";
+        $q = "SELECT stock.stock_id, stock.uniquename, cvterm_id, cvterm.name, avg(phenotype.value::REAL), stddev(phenotype.value::REAL), count(phenotype.value::REAL)
+            FROM stock
+            JOIN nd_experiment_phenotype_bridge USING(stock_id)
+            JOIN phenotype USING(phenotype_id)
+            JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id)
+            WHERE project_id=? AND stock.stock_id=?
+            GROUP BY stock.stock_id, stock.uniquename, cvterm_id, cvterm.name";
     }
 
     my $h = $c->dbc->dbh->prepare($q);
@@ -1742,32 +1641,6 @@ sub get_phenotypes_by_stock_and_trial :Chained('/stock/get_stock') PathPart('dat
 	push @phenotypes, [ "<a href=\"/cvterm/$cvterm_id/view\">$cvterm_name</a>", sprintf("%.2f", $avg), sprintf("%.2f", $stddev), $count ];
     }
     $c->stash->{rest} = { data => \@phenotypes };
-}
-
-sub get_phenotypes {
-    my $self = shift;
-    my $c = shift;
-    shift;
-    my $trait_id = shift;
-
-    my $stock_id = $c->stash->{stock_row}->stock_id();
-
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $bcs_stock_rs = $schema->resultset("Stock::Stock")->search( { stock_id => $stock_id });
-
-    if (! $bcs_stock_rs) { die "The stock $stock_id does not exist in the database"; }
-
-    my $bcs_stock = $bcs_stock_rs->first();
-
-
-    # now we have rs of stock_relationship objects. We need to find
-    # the phenotypes of their related subjects
-    #
-    my $subjects = $bcs_stock->search_related('stock_relationship_objects')
-                             ->search_related('subject');
-    my $subject_phenotypes = $self->_stock_project_phenotypes($schema, $subjects );
-
-    return $subject_phenotypes;
 }
 
 sub get_pedigree_string :Chained('/stock/get_stock') PathPart('pedigree') Args(0) {

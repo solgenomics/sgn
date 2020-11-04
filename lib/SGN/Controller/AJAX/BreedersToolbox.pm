@@ -9,7 +9,6 @@ use File::Slurp "read_file";
 
 use CXGN::List;
 use CXGN::BreedersToolbox::Projects;
-use CXGN::BreedersToolbox::Delete;
 use CXGN::Trial::TrialDesign;
 use CXGN::Trial::TrialCreate;
 use CXGN::Stock::StockLookup;

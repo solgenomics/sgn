@@ -37,7 +37,6 @@ use CXGN::Location::LocationLookup;
 use CXGN::Stock::StockLookup;
 use CXGN::Trial::TrialLayout;
 use CXGN::BreedersToolbox::Projects;
-use CXGN::BreedersToolbox::Delete;
 use CXGN::UploadFile;
 use CXGN::Trial::ParseUpload;
 use CXGN::List::Transform;

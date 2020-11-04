@@ -402,9 +402,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         $select_clause_additional
         FROM cvterm
             JOIN phenotype ON (cvterm_id=cvalue_id)
-            JOIN nd_experiment_phenotype USING(phenotype_id)
-            JOIN nd_experiment_project USING(nd_experiment_id)
-            JOIN nd_experiment_stock USING(nd_experiment_id)
+            JOIN nd_experiment_phenotype_bridge USING(phenotype_id)
             JOIN stock as plot USING(stock_id)
             JOIN stock_relationship on (plot.stock_id = stock_relationship.subject_id)
             JOIN stock as accession on (accession.stock_id = stock_relationship.object_id)
@@ -1675,10 +1673,17 @@ sub trial_completion_phenotype_section : Chained('trial') PathPart('trial_comple
 
     my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
-    my $phenotyping_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
-    my $has_phenotype_check = $schema->resultset('Phenotype::Phenotype')->search({'stock.type_id'=> [$plot_type_id, $plant_type_id], 'nd_experiment.type_id'=>$phenotyping_experiment_type_id, 'me.value' => { '!=' => ''}, 'project.project_id'=>$c->stash->{trial_id}}, {join=>{'nd_experiment_phenotypes'=>{'nd_experiment'=>[{'nd_experiment_stocks'=>'stock' }, {'nd_experiment_projects'=>'project'}] } }, rows=>1 });
-    my $has_phenotypes = $has_phenotype_check->first ? 1 : 0;
 
+    my $q = "SELECT phenotype_id
+        FROM phenotype
+        JOIN nd_experiment_phenotype_bridge ON(phenotype_id)
+        JOIN stock USING(stock_id)
+        WHERE phenotype.value != '' AND stock.type_id IN ($plot_type_id, $plant_type_id) AND project_id = ?
+        LIMIT 1;";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($c->stash->{trial_id});
+    my ($phenotype_id) = $h->fetchrow_array();
+    my $has_phenotypes = $phenotype_id ? 1 : 0;
     $c->stash->{rest} = {has_phenotypes => $has_phenotypes};
 }
 
