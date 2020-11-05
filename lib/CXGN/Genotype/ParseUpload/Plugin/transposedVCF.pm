@@ -299,7 +299,7 @@ sub extract_protocol_data {
 	} else {
 	    $marker_name = $self->ids()->[$i];
 	}
-	
+	my $chrom_name = $self->chroms()->[$i];
 	my %marker = 
 	    (
 	     name => $self->ids()->[$i],
@@ -314,9 +314,9 @@ sub extract_protocol_data {
             );
 
             #print STDERR "Marker: ".Dumper(\%marker);
-            $protocolprop_info{'markers'}->{$marker_name} = \%marker;
-            push @{$protocolprop_info{'marker_names'}}, $marker_name;
-            push @{$protocolprop_info{'markers_array'}}, \%marker;
+            $protocolprop_info{'markers'}->{$chrom_name}->{$marker_name} = \%marker;
+	    push @{$protocolprop_info{'marker_names'}{$chrom_name}}, $marker_name;
+	    push @{$protocolprop_info{'markers_array'}{$chrom_name}}, \%marker;
     }
     my $stock_type = $self->get_observation_unit_type_name;
      $protocolprop_info{header_information_lines} = $self->header_info();
