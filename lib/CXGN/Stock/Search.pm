@@ -133,7 +133,7 @@ has 'crop_name_list' => (
 );
 
 has 'stock_id_list' => (
-    isa => 'ArrayRef[Str]|Undef',
+    isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
 );
 
@@ -273,8 +273,10 @@ sub search {
         $any_name =~ s/^\s+|\s+$//g;
     }
 
-    my ($or_conditions, $and_conditions);
-    $and_conditions->{'me.stock_id'} = { '>' => 0 };
+    my @sql_or_conditions;
+    my @sql_and_conditions;
+
+    push @sql_and_conditions, "stock.stock_id > 0";
 
     my $start = '%';
     my $end = '%';
@@ -290,39 +292,35 @@ sub search {
     my $stock_synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
 
     if ($any_name) {
-	$or_conditions = [
-	    { 'me.name'          => {'ilike' => $start.$any_name.$end} },
-	    { 'me.uniquename'    => {'ilike' => $start.$any_name.$end} },
-	    { 'me.description'   => {'ilike' => $start.$any_name.$end} },
-	    { -and => [
-		   'stockprops.value'  => {'ilike' => $start.$any_name.$end},
-		   'stockprops.type_id' => $stock_synonym_cvterm_id,
-		  ],},
-	    ];
+        push @sql_or_conditions, (
+            "stock.name ilike '".$start.$any_name.$end."'",
+            "stock.uniquename ilike '".$start.$any_name.$end."'",
+            "stock.description ilike '".$start.$any_name.$end."'",
+            "(stockprop.value ilike '".$start.$any_name.$end."' AND stockprop.type_id = $stock_synonym_cvterm_id)"
+        );
     } else {
-        $or_conditions = [ { 'me.uniquename' => { '!=' => undef } } ];
+        push @sql_or_conditions, "stock.uniquename != NULL";
     }
 
+    my @uniquename_array_filtered;
     foreach (@uniquename_array){
         if ($_){
             if ($matchtype eq 'contains'){ #for 'wildcard' matching it replaces * with % and ? with _
                 $_ =~ tr/*?/%_/;
             }
-            push @{$and_conditions->{'me.uniquename'}}, {'ilike' => $start.$_.$end };
+            push @uniquename_array_filtered, "stock.uniquename ilike '".$start.$_.$end."'";
         }
     }
+    if (scalar(@uniquename_array_filtered)>0) {
+        push @sql_and_conditions, "(".join(' OR ', @uniquename_array_filtered).")";
+    }
 
-    foreach (@stock_ids_array){
-        if ($_){
-            if ($matchtype eq 'contains'){ #for 'wildcard' matching it replaces * with % and ? with _
-                $_ =~ tr/*?/%_/;
-            }
-            push @{$and_conditions->{'me.stock_id::varchar(255)'}}, {'ilike' => $_ };
-        }
+    if (scalar(@stock_ids_array)>0) {
+        push @sql_and_conditions, "stock.stock_id in (".join(',', @stock_ids_array).")";
     }
 
     if ($organism_id) {
-        $and_conditions->{'me.organism_id'} = $organism_id;
+        push @sql_and_conditions, "stock.organism_id = $organism_id";
     }
 
     if ($stock_type_name){
@@ -331,7 +329,7 @@ sub search {
 
     my $stock_type_search = 0;
     if ($stock_type_id) {
-        $and_conditions->{'me.type_id'} = $stock_type_id;
+        push @sql_and_conditions, "stock.type_id = $stock_type_id";
         $stock_type_search = $stock_type_id;
     }
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
@@ -357,78 +355,120 @@ sub search {
         while ( my $o = $stock_owner_rs->next ) {
             push @stock_ids, $o->stock_id;
         }
-        $and_conditions->{'me.stock_id'} = { '-in' => \@stock_ids } ;
+        my $stock_ids_sql = join ',', @stock_ids;
+        push @sql_and_conditions, "stock.stock_id in ($stock_ids_sql)";
     }
 
-    my $stock_join;
-    my $nd_experiment_joins = [];
+    my $nd_experment_phenotype_join = '';
 
     if (scalar(@trait_name_array)>0 || $minimum_phenotype_value || $maximum_phenotype_value){
-        push @$nd_experiment_joins, {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }};
+
+        if ($stock_type_search == $accession_cvterm_id){
+            $nd_experment_phenotype_join = "JOIN nd_experiment_phenotype_bridge ON(plot.stock_id = nd_experiment_phenotype_bridge.stock_id)
+                JOIN phenotype ON(nd_experiment_phenotype_bridge.phenotype_id = phenotype.phenotype_id)
+                JOIN cvterm AS observable ON(observable.cvterm_id = phenotype.observable_id)";
+        }
+        else {
+            $nd_experment_phenotype_join = "JOIN nd_experiment_phenotype_bridge ON(stock.stock_id = nd_experiment_phenotype_bridge.stock_id)
+                JOIN phenotype ON(nd_experiment_phenotype_bridge.phenotype_id = phenotype.phenotype_id)
+                JOIN cvterm AS observable ON(observable.cvterm_id = phenotype.observable_id)";
+        }
+        my @trait_name_filtered;
         foreach (@trait_name_array){
             if ($_){
-                push @{$and_conditions->{ 'observable.name' }}, $_;
+                push @trait_name_filtered, "observable.name = $_";
             }
         }
+        if (scalar(@trait_name_filtered)>0) {
+            push @sql_and_conditions, "(".join(' OR ', @trait_name_filtered).")";
+        }
+
         if ($minimum_phenotype_value) {
-            $and_conditions->{ 'phenotype.value' }  = { '>' => $minimum_phenotype_value };
+            push @sql_and_conditions, "phenotype.value > $minimum_phenotype_value";
         }
         if ($maximum_phenotype_value) {
-            $and_conditions->{ 'phenotype.value' }  = { '<' => $maximum_phenotype_value };
+            push @sql_and_conditions, "phenotype.value < $maximum_phenotype_value";
         }
     }
 
     if (scalar(@location_name_array)>0){
-        push @$nd_experiment_joins, 'nd_geolocation';
+        my @location_name_filtered;
         foreach (@location_name_array){
             if ($_){
-                push @{$and_conditions->{ 'lower(nd_geolocation.description)' }}, { -like  => lc($_) };
+                push @location_name_filtered, "nd_geolocation.description ilike '$_'";
             }
+        }
+        if (scalar(@location_name_filtered)>0) {
+            push @sql_and_conditions, "(".join(' OR ', @location_name_filtered).")";
         }
     }
 
+    my $nd_experiment_project_join = '';
     if (scalar(@trial_name_array)>0 || scalar(@trial_id_array)>0 || scalar(@year_array)>0 || scalar(@program_id_array)>0){
-        push @$nd_experiment_joins, { 'nd_experiment_projects' => { 'project' => ['projectprops', 'project_relationship_subject_projects' ] } };
+        $nd_experiment_project_join = "JOIN nd_experiment_project ON(nd_experiment_project.nd_experiment_id = nd_experiment.nd_experiment_id)
+            JOIN project ON(nd_experiment_project.project_id = project.project_id)
+            JOIN projectprop ON (projectprop.project_id = project.project_id)
+            JOIN project_relationship ON (project.project_id = project_relationship.subject_project_id)";
+
+        my @filtered_name_array;
         foreach (@trial_name_array){
             if ($_){
-                push @{$and_conditions->{ 'lower(project.name)' }}, { -like  => lc($_) } ;
+                push @filtered_name_array, "project.name ilike '$_'";
             }
         }
-        foreach (@trial_id_array){
-            if ($_){
-                push @{$and_conditions->{ 'project.project_id' }}, $_ ;
-            }
+        if (scalar(@filtered_name_array)>0) {
+            push @sql_and_conditions, "(".join(' OR ', @filtered_name_array).")";
         }
+
+        if (scalar(@trial_id_array)>0) {
+            push @sql_and_conditions, "project.project_id in (".join(',', @trial_id_array).")";
+        }
+
         my $year_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project year', 'project_property')->cvterm_id;
+        my @year_array_filtered;
         foreach (@year_array){
             if ($_){
-                $and_conditions->{ 'projectprops.type_id'} = $year_type_id;
-                push @{$and_conditions->{ 'lower(projectprops.value)' }}, { -like  => lc($_) } ;
+                push @year_array_filtered, "projectprop.value ilike '$_'";
             }
         }
-        foreach (@program_id_array){
-            if ($_){
-                push @{$and_conditions->{ 'project_relationship_subject_projects.object_project_id' }}, $_ ;
-            }
+        if (scalar(@year_array_filtered)>0) {
+            push @sql_and_conditions, "(".join(' OR ', @year_array_filtered).")";
+            push @sql_and_conditions, "projectprop.type_id = $year_type_id";
+        }
+
+        if (scalar(@program_id_array)>0) {
+            push @sql_and_conditions, "project_relationship.object_project_id in (".join(',', @program_id_array).")";
         }
     }
 
+    my @genus_array_filtered;
     foreach (@genus_array){
         if ($_){
-            push @{$and_conditions->{ 'lower(organism.genus)' }}, { -like  => lc($_) } ;
+            push @genus_array_filtered, "organism.genus ilike '$_'";
         }
     }
+    if (scalar(@genus_array_filtered)>0) {
+        push @sql_and_conditions, "(".join(' OR ', @genus_array_filtered).")";
+    }
 
+    my @species_array_filtered;
     foreach (@species_array){
         if ($_){
-            push @{$and_conditions->{ 'lower(organism.species)' }}, { -like  => lc($_) } ;
+            push @species_array_filtered, "organism.species ilike '$_'";
         }
     }
+    if (scalar(@species_array_filtered)>0) {
+        push @sql_and_conditions, "(".join(' OR ', @species_array_filtered).")";
+    }
 
+    my @crop_name_array_filtered;
     foreach (@crop_name_array){
         if ($_){
-            push @{$and_conditions->{ 'lower(organism.common_name)' }}, { -like  => lc($_) } ;
+            push @crop_name_array_filtered, "organism.common_name ilike '$_'";
         }
+    }
+    if (scalar(@species_array_filtered)>0) {
+        push @sql_and_conditions, "(".join(' OR ', @species_array_filtered).")";
     }
 
     my @stockprop_filtered_stock_ids;
@@ -436,6 +476,10 @@ sub search {
     if ($self->stockprops_values && scalar(keys %{$self->stockprops_values})>0){
         $using_stockprop_filter = 1;
         #print STDERR Dumper $self->stockprops_values;
+
+        my @stockprop_terms = keys %{$self->stockprops_values}; 
+        $self->_refresh_materialized_stockprop(\@stockprop_terms);
+
         my @stockprop_wheres;
         foreach my $term_name (keys %{$self->stockprops_values}){
             my $property_term = SGN::Model::Cvterm->get_cvterm_row($schema, $term_name, 'stock_property');
@@ -480,40 +524,49 @@ sub search {
         }
     }
 
+    my $stock_join = '';
     if ($stock_type_search == $accession_cvterm_id){
-        $stock_join = { stock_relationship_objects => { subject => { nd_experiment_stocks => { nd_experiment => $nd_experiment_joins }}}};
+        $stock_join = "JOIN stock_relationship ON(stock.stock_id = stock_relationship.object_id)
+            JOIN stock AS plot ON(subject.stock_id = stock_relationship.subject_id)
+            JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id = subject.stock_id)
+            JOIN nd_experiment ON(nd_experiment_stock.nd_experiment_id = nd_experiment.nd_experiment_id)
+            JOIN nd_geolocation ON (nd_geolocation.nd_geolocation_id = nd_experiment.nd_geolocation_id)";
     } else {
-        $stock_join = { nd_experiment_stocks => { nd_experiment => $nd_experiment_joins } };
+        $stock_join = "JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id = stock.stock_id)
+            JOIN nd_experiment ON(nd_experiment_stock.nd_experiment_id = nd_experiment.nd_experiment_id)
+            JOIN nd_geolocation ON (nd_geolocation.nd_geolocation_id = nd_experiment.nd_geolocation_id)";
     }
 
-    #$schema->storage->debug(1);
-    my $search_query = {
-        -and => [
-            $or_conditions,
-            $and_conditions,
-        ],
-    };
     if (!$self->include_obsolete) {
-        $search_query->{'me.is_obsolete'} = 'f';
+        push @sql_and_conditions, "stock.is_obsolete = 'f'";
     }
     if ($using_stockprop_filter || scalar(@stockprop_filtered_stock_ids)>0){
-        $search_query->{'me.stock_id'} = {'in'=>\@stockprop_filtered_stock_ids};
+        push @sql_and_conditions, "stock.stock_id in (".join(',', @stockprop_filtered_stock_ids).")";
     }
 
-    my $rs = $schema->resultset("Stock::Stock")->search(
-    $search_query,
-    {
-        join => ['type', 'organism', 'stockprops', $stock_join],
-        '+select' => [ 'type.name' , 'organism.species' , 'organism.common_name', 'organism.genus'],
-        '+as'     => [ 'cvterm_name' , 'species', 'common_name', 'genus'],
-        order_by  => 'me.name',
-        distinct=>1
-    });
-
-    my $records_total = $rs->count();
-    if (defined($limit) && defined($offset)){
-        $rs = $rs->slice($offset, $limit);
+    my $limit_offset = '';
+    if (defined($limit) && defined($offset)) {
+        my $limit_sql = $limit - $offset + 1;
+        $limit_offset = "LIMIT $limit_sql OFFSET $offset";
     }
+
+    push @sql_and_conditions, "(".join(' OR ', @sql_or_conditions).")";
+    my $where_clause = join ' AND ', @sql_and_conditions;
+
+    my $stock_search_q = "SELECT count(stock.stock_id), stock.stock_id, stock.uniquename, stock.name, stock.type_id, stock_type.name, stock.organism_id, organism.species, organism.common_name, organism.genus
+        FROM stock
+        $stock_join
+        $nd_experment_phenotype_join
+        $nd_experiment_project_join
+        JOIN cvterm AS stock_type ON(stock.type_id = stock_type.cvterm_id)
+        JOIN organism ON(stock.organism_id = organism.organism_id)
+        JOIN stockprop ON(stock.stock_id = stockprop.stock_id)
+        $where_clause
+        ORDER BY stock.name
+        GROUP BY stock.stock_id, stock.uniquename, stock.name, stock.type_id, stock_type.name, stock.organism_id, organism.species, organism.common_name, organism.genus
+        $limit_offset";
+    my $stock_search_h = $schema->storage->dbh()->prepare($stock_search_q);
+    $stock_search_h->execute();
 
     my $owners_hash;
     if (!$self->minimal_info){
@@ -521,24 +574,16 @@ sub search {
         $owners_hash = $stock_lookup->get_owner_hash_lookup();
     }
 
+    my $records_total = 0;
     my @result;
     my %result_hash;
     my @result_stock_ids;
-    while (my $a = $rs->next()) {
-        my $uniquename  = $a->uniquename;
-        my $stock_id    = $a->stock_id;
+    while (my ($result_count, $stock_id, $uniquename, $stock_name, $type_id, $type, $organism_id, $species, $common_name, $genus) = $stock_search_h->fetchrow_array()) {
+        $records_total = $result_count;
         push @result_stock_ids, $stock_id;
-
         if (!$self->minimal_info){
             # my $stock_object = CXGN::Stock::Accession->new({schema=>$self->bcs_schema, stock_id=>$stock_id});
             my @owners = $owners_hash->{$stock_id} ? @{$owners_hash->{$stock_id}} : ();
-            my $type_id     = $a->type_id ;
-            my $type        = $a->get_column('cvterm_name');
-            my $organism_id = $a->organism_id;
-            my $species    = $a->get_column('species');
-            my $stock_name  = $a->name;
-            my $common_name = $a->get_column('common_name');
-            my $genus       = $a->get_column('genus');
 
             $result_hash{$stock_id} = {
                 stock_id => $stock_id,
@@ -569,14 +614,14 @@ sub search {
     
     # Comma separated list of query placeholders for the result stock ids
     my $id_ph = scalar(@result_stock_ids) > 0 ? join ",", ("?") x @result_stock_ids : "NULL";
-    
+
     # Get additional organism properties (species authority, subtaxa, subtaxa authority)
     my $organism_query = "SELECT op.organism_id, cvterm.name, op.value, op.rank
-FROM organismprop AS op
-LEFT JOIN cvterm ON (op.type_id = cvterm.cvterm_id)
-WHERE op.organism_id IN (SELECT DISTINCT(organism_id) FROM stock WHERE stock_id IN ($id_ph))
-AND cvterm.name IN ('species authority', 'subtaxa', 'subtaxa authority')
-ORDER BY organism_id ASC;";
+        FROM organismprop AS op
+        LEFT JOIN cvterm ON (op.type_id = cvterm.cvterm_id)
+        WHERE op.organism_id IN (SELECT DISTINCT(organism_id) FROM stock WHERE stock_id IN ($id_ph))
+        AND cvterm.name IN ('species authority', 'subtaxa', 'subtaxa authority')
+        ORDER BY organism_id ASC;";
     my $organism_sth = $schema->storage()->dbh()->prepare($organism_query);
     $organism_sth->execute(@result_stock_ids);
 
