@@ -534,6 +534,45 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
         $c->res->body($output);
     }
 
+    # Create and Return CSV file
+    elsif ( $file_format eq ".csv" ) {
+        my $file_path = $tempfile . ".csv";
+        my $file_name = basename($file_path);
+
+        # Write to csv file
+        open(CSV, "> :encoding(UTF-8)", $file_path) || die "Can't open file $file_path\n";
+        my @header =  @{$rows->[0]};
+        my $num_col = scalar(@header);
+
+        for ( my $line = 0; $line < $#$rows; $line++ ) {
+            my $columns = $rows->[$line];
+            my $step = 1;
+            for ( my $i = 0; $i < $num_col; $i++ ) {
+                if ($columns->[$i]) {
+                    print CSV "\"$columns->[$i]\"";
+                } else {
+                    print CSV "\"\"";
+                }
+                if ($step < $num_col) {
+                    print CSV ",";
+                }
+                $step++;
+            }
+            print CSV "\n";
+        }
+        close CSV;
+
+        # Return the csv file
+        $c->res->content_type('text/csv');
+        $c->res->cookies->{$dl_cookie} = {
+          value => $dl_token,
+          expires => '+1m',
+        };
+        $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+        my $output = read_file($file_path);
+        $c->res->body($output);
+    }
+
 }
 
 sub build_accession_properties_info {
@@ -550,17 +589,19 @@ sub build_accession_properties_info {
 
     foreach my $stock_id ( @$accession_ids ) {
         my $a = new CXGN::Stock::Accession({ schema => $schema, stock_id => $stock_id});
+        my $synonym_string = join(', ', @{$a->synonyms()});
+        my $donor_string = join(', ', @{$a->donors()});
         my @r = (
             $a->uniquename(),
             $a->get_species(),
             $a->population_name(),
             $a->organization_name(),
-            $a->synonyms(),
+            $synonym_string,
             $a->locationCode(),
             $a->ploidyLevel(),
             $a->genomeStructure(),
             $a->variety(),
-            $a->donors(),
+            $donor_string,
             $a->_retrieve_stockprop('donor institute'),
             $a->_retrieve_stockprop('donor PUI'),
             $a->countryOfOriginCode(),
