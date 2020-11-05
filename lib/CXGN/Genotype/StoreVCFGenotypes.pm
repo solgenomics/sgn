@@ -625,48 +625,54 @@ sub validate {
     }
 
     #check if protocol_info is correct
-    while (my ($marker_name, $marker_info) = each %{$protocol_info->{markers}}){
-        if (!$marker_name || !$marker_info){
-            push @error_messages, "No genotype info provided";
-        }
-        foreach (keys %$marker_info){
-            if ($_ ne 'name' && $_ ne 'chrom' && $_ ne 'pos' && $_ ne 'ref' && $_ ne 'alt' && $_ ne 'qual' && $_ ne 'filter' && $_ ne 'info' && $_ ne 'format' && $_ ne 'intertek_name'){
-                push @error_messages, "protocol_info key not recognized: $_";
+    while (my ($chromosome, $protocol_info_chrom) = each %{$protocol_info->{markers}}) {
+        while (my ($marker_name, $marker_info) = each %{$protocol_info_chrom}) {
+            if (!$marker_name || !$marker_info){
+                push @error_messages, "No genotype info provided";
+            }
+            foreach (keys %$marker_info){
+                if ($_ ne 'name' && $_ ne 'chrom' && $_ ne 'pos' && $_ ne 'ref' && $_ ne 'alt' && $_ ne 'qual' && $_ ne 'filter' && $_ ne 'info' && $_ ne 'format' && $_ ne 'intertek_name'){
+                    push @error_messages, "protocol_info key not recognized: $_";
+                }
+            }
+            if(!exists($marker_info->{'name'})){
+                push @error_messages, "protocol_info missing name key";
+            }
+            if(!exists($marker_info->{'chrom'})){
+                push @error_messages, "protocol_info missing chrom key";
+            }
+            if(!exists($marker_info->{'pos'})){
+                push @error_messages, "protocol_info missing pos key";
+            }
+            if(!exists($marker_info->{'ref'})){
+                push @error_messages, "protocol_info missing ref key";
+            }
+            if(!exists($marker_info->{'alt'})){
+                push @error_messages, "protocol_info missing alt key";
+            }
+            if(!exists($marker_info->{'qual'})){
+                push @error_messages, "protocol_info missing qual key";
+            }
+            if(!exists($marker_info->{'filter'})){
+                push @error_messages, "protocol_info missing filter key";
+            }
+            if(!exists($marker_info->{'info'})){
+                push @error_messages, "protocol_info missing info key";
+            }
+            if(!exists($marker_info->{'format'})){
+                push @error_messages, "protocol_info missing format key";
             }
         }
-        if(!exists($marker_info->{'name'})){
-            push @error_messages, "protocol_info missing name key";
-        }
-        if(!exists($marker_info->{'chrom'})){
-            push @error_messages, "protocol_info missing chrom key";
-        }
-        if(!exists($marker_info->{'pos'})){
-            push @error_messages, "protocol_info missing pos key";
-        }
-        if(!exists($marker_info->{'ref'})){
-            push @error_messages, "protocol_info missing ref key";
-        }
-        if(!exists($marker_info->{'alt'})){
-            push @error_messages, "protocol_info missing alt key";
-        }
-        if(!exists($marker_info->{'qual'})){
-            push @error_messages, "protocol_info missing qual key";
-        }
-        if(!exists($marker_info->{'filter'})){
-            push @error_messages, "protocol_info missing filter key";
-        }
-        if(!exists($marker_info->{'info'})){
-            push @error_messages, "protocol_info missing info key";
-        }
-        if(!exists($marker_info->{'format'})){
-            push @error_messages, "protocol_info missing format key";
+    }
+    while (my ($chromosome, $protocol_info_chrom) = each %{$protocol_info->{marker_names}}) {
+        if (scalar(@{$protocol_info_chrom}) == 0){
+            push @error_messages, "No marker info in marker_names file";
         }
     }
-    if (scalar(@{$protocol_info->{marker_names}}) == 0){
-        push @error_messages, "No marker info in file";
-    }
-    if (scalar(@{$protocol_info->{marker_names}}) != scalar(@{$protocol_info->{markers_array}})){
-        push @error_messages, "In protocol_info the markers_array is not equal in length to marker_names!";
+    while (my ($chromosome, $protocol_info_chrom) = each %{$protocol_info->{markers_array}}) {
+        if (scalar(@{$protocol_info_chrom}) == 0){
+            push @error_messages, "No marker info in markers_array file";
+        }
     }
 
     #check if genotype_info is correct
@@ -829,13 +835,14 @@ sub store_metadata {
 
         my $new_protocol_info = $self->protocol_info;
         my $nd_protocolprop_markers = $new_protocol_info->{markers};
-        my $nd_protocolprop_markers_array = $new_protocol_info->{markers_array};
-        my $nd_protocolprop_markers_json_string = encode_json $nd_protocolprop_markers;
-        my $nd_protocolprop_markers_array_json_string = encode_json $nd_protocolprop_markers_array;
+	my $nd_protocolprop_markers_array = $new_protocol_info->{markers_array};
 
         my %unique_chromosomes;
-        foreach (@$nd_protocolprop_markers_array) {
-            $unique_chromosomes{$_->{chrom}}++;
+	while (my ($chromosome, $protocol_info_chrom) = each %{$nd_protocolprop_markers_array}) {
+	    print STDERR "getting count for chrom $chromosome\n";
+	    foreach (@$protocol_info_chrom) {
+		$unique_chromosomes{$_->{chrom}}++;
+            }
         }
         my %chromosomes;
         my $chr_count = 0;
@@ -848,19 +855,26 @@ sub store_metadata {
             $chr_count++;
         }
         print STDERR Dumper \%chromosomes;
-        $new_protocol_info->{chromosomes} = \%chromosomes;
 
-        delete($new_protocol_info->{markers});
-        delete($new_protocol_info->{markers_array});
+	foreach  my $chr_name (sort keys %unique_chromosomes) {
+	    print STDERR "Chromosome: $chr_name\n";
+            $new_protocol_info->{chromosomes} = $chr_name;
 
-        my $nd_protocol_json_string = encode_json $new_protocol_info;
-        my $new_protocolprop_sql = "INSERT INTO nd_protocolprop (nd_protocol_id, type_id, value) VALUES (?, ?, ?);";
-        my $h_protocolprop = $schema->storage->dbh()->prepare($new_protocolprop_sql);
-        $h_protocolprop->execute($protocol_id, $vcf_map_details_id, $nd_protocol_json_string);
-        $h_protocolprop->execute($protocol_id, $vcf_map_details_markers_cvterm_id, $nd_protocolprop_markers_json_string);
-        $h_protocolprop->execute($protocol_id, $vcf_map_details_markers_array_cvterm_id, $nd_protocolprop_markers_array_json_string);
+            delete($new_protocol_info->{markers});
+            delete($new_protocol_info->{markers_array});
 
-        print STDERR "Protocolprop stored...\n";
+	    my $rank = $chromosomes{$chr_name}->{rank};
+	    my $nd_protocol_json_string = encode_json $new_protocol_info->{$chr_name};
+	    my $nd_protocolprop_markers_json_string = encode_json $nd_protocolprop_markers->{$chr_name};
+	    my $nd_protocolprop_markers_array_json_string = encode_json $nd_protocolprop_markers->{$chr_name};
+            my $new_protocolprop_sql = "INSERT INTO nd_protocolprop (nd_protocol_id, type_id, rank, value) VALUES (?, ?, ?, ?);";
+            my $h_protocolprop = $schema->storage->dbh()->prepare($new_protocolprop_sql);
+            $h_protocolprop->execute($protocol_id, $vcf_map_details_id, $rank, $nd_protocol_json_string);
+            $h_protocolprop->execute($protocol_id, $vcf_map_details_markers_cvterm_id, $rank, $nd_protocolprop_markers_json_string);
+            $h_protocolprop->execute($protocol_id, $vcf_map_details_markers_array_cvterm_id, $rank, $nd_protocolprop_markers_array_json_string);
+
+            print STDERR "Protocolprop stored...\n";
+	}
     }
     $self->protocol_id($protocol_id);
 
