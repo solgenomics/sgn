@@ -42,6 +42,7 @@ use File::Path qw(make_path);
 use File::Spec::Functions qw / catfile catdir/;
 use CXGN::Cross;
 use JSON;
+use Spreadsheet::ParseExcel;
 use Tie::UrlEncoder; our(%urlencode);
 use LWP::UserAgent;
 use LWP::Simple;
@@ -877,6 +878,54 @@ sub list_cross_wishlists_GET : Args(0) {
     }
     #print STDERR Dumper \@files;
     $c->stash->{rest} = {"success" => 1, "files"=>\@files};
+}
+
+
+sub create_wishlist_by_uploading : Path('/ajax/cross/create_wishlist_by_uploading') : ActionClass('REST') { }
+
+sub create_wishlist_by_uploading_POST : Args(0) {
+
+    my ($self, $c) = @_;
+
+    if (!$c->user){
+        $c->stash->{rest}->{error} = "You must be logged in to actually create a cross wishlist.";
+        $c->detach();
+    }
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $user_name = $c->user()->get_object()->get_username();
+    my $site_name = $c->config->{project_name};
+
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+    my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+
+    my $female_trial_id = $c->req->param('cross_wishlist_upload_female_trial_id');
+    my $male_trial_id = $c->req->param('cross_wishlist_upload_male_trial_id');
+
+    print STDERR "FEMALE TRIAL ID =".Dumper($female_trial_id)."\n";
+    print STDERR "MALE TRIAL ID =".Dumper($male_trial_id)."\n";
+
+    my $ona_form_id = $c->req->param('') || '0';
+    my $ona_form_name = $c->req->param('wishlist_name_upload') || '';
+    my $test_ona_form_name = $c->config->{odk_crossing_data_test_form_name};
+    my $separate_crosswishlist_by_location = $c->config->{odk_crossing_data_separate_wishlist_by_location};
+
+    #For test ona forms, the cross wishlists are combined irrespective of location. On non-test forms, the cross wishlists can be separated by location
+#    my $is_test_form;
+#    if ($ona_form_name eq $test_ona_form_name){
+#        $is_test_form = 1;
+#    }
+    print STDERR "ONA FORM NAME =".Dumper($ona_form_name)."\n";
+
+#    my $upload = $c->req->upload('wishlist_file');
+
+
+
+    exit;
+
 }
 
 

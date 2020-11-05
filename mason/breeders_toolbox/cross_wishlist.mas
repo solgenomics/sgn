@@ -794,7 +794,7 @@ jQuery(document).ready(function($) {
             return;
         }
 
-        jQuery('#upload_wishlist_form').attr("action", "/ajax/cross/upload_wishlist");
+        jQuery('#upload_wishlist_form').attr("action", "/ajax/cross/create_wishlist_by_uploading");
 
         jQuery("#upload_wishlist_form").submit();
 
