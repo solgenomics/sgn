@@ -45,16 +45,16 @@ if (!$data_structure) {
 
 my $url = $c->req->path;
 my $title;
+my $collapsed = 0;
+
 if ($url =~ /cluster\/analysis/) {
 $title = 'Select a list of accessions or trials and run cluster analysis using k-means method';
 } else {
 $title = 'Clustering';
+$collapsed = 1 if $url =~ /breeders\/trial/;
 }
 
 </%perl>
-
-
-
 
 
 % if ($url =~ /cluster\/analysis/) {
@@ -67,10 +67,12 @@ $title = 'Clustering';
 
 <&| /page/info_section.mas, 
   collapsible => 1, 
-  collapsed   => 0, 
+  collapsed   => $collapsed, 
   title       => $title 
   &>
-<div id='cluster_div'>
+  
+  <div id='cluster_div'>
+    
 % if ($url =~ /cluster\/analysis|breeders\/trial\//) {
 
   <& /solgs/genotyping_protocol.mas &>
