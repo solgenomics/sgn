@@ -37,6 +37,8 @@ use CXGN::Stock::StockLookup;
 use CXGN::Genotype::DownloadFactory;
 use CXGN::Genotype::GRM;
 use CXGN::Genotype::GWAS;
+use CXGN::Accession;
+use Spreadsheet::WriteExcel;
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
     my $self = shift;
@@ -451,6 +453,145 @@ sub download_action : Path('/breeders/download_action') Args(0) {
         $c->res->body($output);
     }
 }
+
+
+
+# accession properties download -- begin
+
+#
+# Download a file of accession properties (in the same format as the accession upload template)
+# 
+# POST Params:
+#   accession_properties_accession_list_list_select = list id of an accession list
+#   file_format: format of the file output (.xls or .csv)
+#
+sub download_accession_properties_action : Path('/breeders/download_accession_properties_action') {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $dbh = $schema->storage->dbh;
+
+    # Get request params
+    my $accession_list_id = $c->req->param("accession_properties_accession_list_list_select");
+    my $file_format = $c->req->param("file_format") || ".xls";
+    my $dl_token = $c->req->param("accession_properties_download_token") || "no_token";
+    my $dl_cookie = "download".$dl_token;
+    if ( !$accession_list_id ) {
+        print STDERR "ERROR: No accession list id provided to download accession properties action";
+        return;
+    }
+
+    # Get accession IDs from list
+    my $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
+    my @accession_list = map { $_->[1] } @$accession_data;
+
+    my $t = CXGN::List::Transform->new();
+    my $acc_t = $t->can_transform("accessions", "accession_ids");
+    my $accession_id_hash = $t->transform($schema, $acc_t, \@accession_list);
+    my @accession_ids = @{$accession_id_hash->{transform}};
+
+    # Create list of accession objects
+    my @accessions = ();
+    foreach (@accession_ids) {
+        push @accessions, CXGN::Accession->new( $dbh, $_ );
+    }
+
+    print STDERR "\n\n\n\n\n========> DOWNLOAD ACCESSION PROPERTIES <=========\n";
+    print STDERR "Accession List ID: $accession_list_id\n";
+    print STDERR "File Format: $file_format\n";
+    print STDERR Dumper \@accession_ids;
+
+    # Create tempfile
+    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "download_accessions_XXXXX", UNLINK=> 0);
+
+    # Build Accession Info
+    my $rows = $self->build_accession_properties_info($schema, \@accession_ids);
+
+    print STDERR "TEMPFILE: $tempfile\n";
+    print STDERR "URI: $uri\n";
+
+    # Create and Return XLS file
+    if ( $file_format eq ".xls" ) {
+        my $file_path = $tempfile . ".xls";
+        my $file_name = basename($file_path);
+
+        # Write to the xls file
+        my $workbook = Spreadsheet::WriteExcel->new($file_path);
+        my $worksheet = $workbook->add_worksheet();
+        for ( my $i = 0; $i <= $#$rows; $i++ ) {
+            $worksheet->write_row($i, 0, $rows->[$i]);
+        }
+        $workbook->close();
+
+        # Return the xls file
+        $c->res->content_type('Application/xls');
+        $c->res->cookies->{$dl_cookie} = {
+          value => $dl_token,
+          expires => '+1m',
+        };
+        $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+        my $output = read_file($file_path);
+        $c->res->body($output);
+    }
+
+}
+
+sub build_accession_properties_info {
+    my $self = shift;
+    my $schema = shift;
+    my $accession_ids = shift;
+
+    # TODO: Support editable stock props
+
+    # my @accession_headers = ("accession_name", "species_name", "population_name", "organization_name(s)", "synonym(s)", "location_code(s)", "ploidy_level(s)", "genome_structure(s)", "variety(s)", "donor(s)", "donor_institute(s)", "donor_PUI(s)", "country_of_origin(s)", "state(s)", "institute_code(s)", "institute_name(s)", "biological_status_of_accession_code(s)", "notes(s)", "accession_number(s)", "PUI(s)", "seed_source(s)", "type_of_germplasm_storage_code(s)", "acquisition_date(s)", "transgenic", "introgression_parent", "introgression_backcross_parent", "introgression_map_version", "introgression_chromosome", "introgression_start_position_bp", "introgression_end_position_bp", "purdy_pedigree", "filial_generation");
+    my @accession_headers = ("accession_name", "species_name", "population_name", "organization_name(s)", "synonym(s)", "location_code(s)", "ploidy_level(s)", "genome_structure(s)", "variety(s)", "donor(s)", "donor_institute(s)", "donor_PUI(s)", "country_of_origin(s)", "state(s)", "institute_code(s)", "institute_name(s)", "biological_status_of_accession_code(s)", "notes(s)", "accession_number(s)", "PUI(s)", "seed_source(s)", "type_of_germplasm_storage_code(s)", "acquisition_date(s)", "transgenic", "introgression_parent", "introgression_backcross_parent", "introgression_map_version", "introgression_chromosome", "introgression_start_position_bp", "introgression_end_position_bp");
+    my @accession_rows = ();
+    push(@accession_rows, \@accession_headers);
+
+    foreach my $stock_id ( @$accession_ids ) {
+        my $a = new CXGN::Stock::Accession({ schema => $schema, stock_id => $stock_id});
+        my @r = (
+            $a->uniquename(),
+            $a->get_species(),
+            $a->population_name(),
+            $a->organization_name(),
+            $a->synonyms(),
+            $a->locationCode(),
+            $a->ploidyLevel(),
+            $a->genomeStructure(),
+            $a->variety(),
+            $a->donors(),
+            $a->_retrieve_stockprop('donor institute'),
+            $a->_retrieve_stockprop('donor PUI'),
+            $a->countryOfOriginCode(),
+            $a->state(),
+            $a->instituteCode(),
+            $a->instituteName(),
+            $a->biologicalStatusOfAccessionCode(),
+            $a->notes(),
+            $a->accessionNumber(),
+            $a->germplasmPUI(),
+            $a->germplasmSeedSource(),
+            $a->typeOfGermplasmStorageCode(),
+            $a->acquisitionDate(),
+            $a->transgenic(),
+            $a->introgression_parent(),
+            $a->introgression_backcross_parent(),
+            $a->introgression_map_version(),
+            $a->introgression_chromosome(),
+            $a->introgression_start_position_bp(),
+            $a->introgression_end_position_bp(),
+            # $a->purdyPedigree(),
+            # $a->filialGeneration()
+        );
+        push(@accession_rows, \@r);
+    }
+    
+    return \@accession_rows;
+}
+
+# accession properties download -- end
+
 
 
 # pedigree download -- begin
