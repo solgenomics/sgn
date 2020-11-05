@@ -54,6 +54,9 @@ sub patch {
 
     print STDOUT "\nExecuting the SQL commands.\n";
 
+# Legacy Upload date either: 2020-07-30_16:24:00 or 2013/4/9
+# Actual phenotypic timestamp in collect_date in phenotype table
+
     $self->dbh->do(<<EOSQL);
 
 CREATE TABLE public.nd_experiment_phenotype_bridge (
@@ -65,7 +68,7 @@ CREATE TABLE public.nd_experiment_phenotype_bridge (
     file_id INT,
     image_id INT,
     json_id INT,
-    upload_date DATE,
+    upload_date TIMESTAMP DEFAULT now(),
     create_date TIMESTAMP DEFAULT now(),
     CONSTRAINT nd_experiment_phenotype_bridge_stock_id_fkey
         FOREIGN KEY(stock_id) 
