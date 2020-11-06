@@ -135,8 +135,8 @@ sub trait_acronyms {
     my ($self, $c) = @_;
        
     $c->controller('solGS::solGS')->get_all_traits($c);
-    $c->controller('solGS::solGS')->get_acronym_pairs($c, $c->stash->{pop_id});
-    
+    my $acronyms = $c->controller('solGS::solGS')->get_acronym_pairs($c, $c->stash->{pop_id});
+    return $acronyms;
 }
 
 
@@ -270,10 +270,7 @@ sub pheno_correlation_analysis_output :Path('/phenotypic/correlation/analysis/ou
     
     if (-s $corre_json_file)
     {
-	$self->trait_acronyms($c);
-	my $acronyms = $c->stash->{acronym};
-    
-	$ret->{acronyms} = $acronyms;
+	$ret->{acronyms} =  $self->trait_acronyms($c);
         $ret->{status}   = 'success';
         $ret->{data}     = read_file($corre_json_file, {binmode => ':utf8'});	
     } 
@@ -485,14 +482,16 @@ sub run_pheno_correlation_analysis {
    
     $c->stash->{corre_input_files}  = $c->stash->{temp_pheno_corre_input_file};
     $c->stash->{corre_output_files} = $c->stash->{temp_pheno_corre_output_file};
-        
+    
+    #$self->trait_acronyms($c);
+    
     $c->stash->{correlation_type} = "pheno-correlation";
 
     $c->stash->{correlation_script} = "R/solGS/phenotypic_correlation.r";
     
     $self->run_correlation_analysis($c);
 
-    $self->trait_acronyms($c);
+    
 }
 
 

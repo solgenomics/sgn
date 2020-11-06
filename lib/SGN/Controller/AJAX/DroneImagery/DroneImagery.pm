@@ -6165,7 +6165,6 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
         };
     }
     print STDERR Dumper \%apply_drone_run_band_project_ids_type_hash;
-    print STDERR Dumper $drone_run_band_project_id_input;
     my $drone_run_band_project_type_current = $apply_drone_run_band_project_ids_type_hash{$drone_run_band_project_id_input}->{band_type};
 
     my $gcp_drone_run_band_q = "SELECT project.project_id

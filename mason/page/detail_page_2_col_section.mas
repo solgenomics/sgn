@@ -184,6 +184,11 @@ $locations => undef
 				<!-- Clustering -->
                                 <& /solgs/cluster/analysis.mas,
                                     trial_id => $trial_id
+                                  &>
+
+				<!-- kinship and inbreeding-->
+                                <& /solgs/kinship/analysis.mas,
+                                    trial_id => $trial_id
                                 &>
 
 

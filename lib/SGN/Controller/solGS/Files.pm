@@ -42,7 +42,7 @@ sub marker_effects_file {
 sub variance_components_file {
     my ($self, $c) = @_;
    
-    my $pop_id = $c->stash->{pop_id};
+    my $pop_id = $c->stash->{training_pop_id};
     my $trait  = $c->stash->{trait_abbr};
     
     my $data_set_type = $c->stash->{data_set_type};
@@ -230,9 +230,7 @@ sub genotype_file_name {
     else
     {
 	$dir = $c->stash->{solgs_cache_dir};
-    }
-    
-   
+    }   
   
     my $file_id = $pop_id . '-GP-' . $protocol_id;
     
@@ -241,27 +239,109 @@ sub genotype_file_name {
 		       stash_key => 'genotype_file_name',
 		       cache_dir => $dir
     };
- 
     
     $self->cache_file($c, $cache_data);
+    
 }
 
 
 sub relationship_matrix_file {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{pop_id};
+    my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
     my $data_set_type = $c->stash->{data_set_type};
     my $protocol_id = $c->stash->{genotyping_protocol_id};    
    
-    my $file_id = $pop_id . '-GP-' . $protocol_id;
+    my $file_id = $pop_id . '_GP_' . $protocol_id;
 
     no warnings 'uninitialized';
         
-    my $cache_data = {key    => 'relationship_matrix_' . $file_id ,
-		      file      => 'relationship_matrix_' . $file_id . '.txt',
-		      stash_key => 'relationship_matrix_file',
-		      cache_dir => $c->stash->{solgs_cache_dir}
+    my $cache_data = {key    => 'relationship_matrix_table_' . $file_id ,
+		      file      => 'relationship_matrix_table_' . $file_id . '.txt',
+		      stash_key => 'relationship_matrix_table_file',
+		      cache_dir => $c->stash->{kinship_cache_dir}
+    };
+ 
+    $self->cache_file($c, $cache_data);
+
+    my $cache_data = {key    => 'relationship_matrix_json_' . $file_id ,
+		      file      => 'relationship_matrix_json_' . $file_id . '.txt',
+		      stash_key => 'relationship_matrix_json_file',
+		      cache_dir => $c->stash->{kinship_cache_dir}
+    };
+  
+    $self->cache_file($c, $cache_data);
+  
+}
+
+
+sub relationship_matrix_adjusted_file {
+    my ($self, $c) = @_;
+
+    my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
+    my $data_set_type = $c->stash->{data_set_type};
+    my $protocol_id = $c->stash->{genotyping_protocol_id}; 
+    my $trait_abbr = $c->stash->{trait_abbr} || $pop_id;
+   
+    my $file_id = $pop_id ."_${trait_abbr}_GP_${protocol_id}";
+
+    no warnings 'uninitialized';
+        
+    my $cache_data = {key    => 'relationship_matrix_table_' . $file_id ,
+		      file      => 'relationship_matrix_adjusted_table_' . $file_id . '.txt',
+		      stash_key => 'relationship_matrix_adjusted_table_file',
+		      cache_dir => $c->stash->{kinship_cache_dir}
+    };
+ 
+    $self->cache_file($c, $cache_data);
+
+    my $cache_data = {key    => 'relationship_matrix_json_' . $file_id ,
+		      file      => 'relationship_matrix_adjusted_json_' . $file_id . '.txt',
+		      stash_key => 'relationship_matrix_adjusted_json_file',
+		      cache_dir => $c->stash->{kinship_cache_dir}
+    };
+  
+    $self->cache_file($c, $cache_data);
+  
+}
+
+
+sub average_kinship_file {
+    my ($self, $c) = @_;
+
+    my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
+    my $protocol_id = $c->stash->{genotyping_protocol_id};    
+    my $trait_abbr = $c->stash->{trait_abbr} || $pop_id;
+    
+    my $file_id =  $trait_abbr ? "${pop_id}_${trait_abbr}_GP_${protocol_id}" : "${pop_id}_GP_${protocol_id}";
+   
+    no warnings 'uninitialized';
+        
+    my $cache_data = {key    => 'average_kinship_file' . $file_id ,
+		      file      => 'average_kinship_file_' . $file_id . '.txt',
+		      stash_key => 'average_kinship_file',
+		      cache_dir => $c->stash->{kinship_cache_dir}
+    };
+  
+    $self->cache_file($c, $cache_data);
+
+}
+
+
+sub inbreeding_coefficients_file {
+    my ($self, $c) = @_;
+
+    my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
+    my $protocol_id = $c->stash->{genotyping_protocol_id};    
+   
+    my $file_id = "${pop_id}_GP_${protocol_id}";
+
+    no warnings 'uninitialized';
+        
+    my $cache_data = {key    => 'inbreeding_coefficients' . $file_id ,
+		      file      => 'inbreeding_coefficients_' . $file_id . '.txt',
+		      stash_key => 'inbreeding_coefficients_file',
+		      cache_dir => $c->stash->{kinship_cache_dir}
     };
   
 
@@ -778,43 +858,46 @@ sub get_solgs_dirs {
     my $cluster_temp    = catdir($tmp_dir, 'cluster', 'tempfiles');
     my $sel_index_cache = catdir($tmp_dir, 'selectionIndex', 'cache');
     my $sel_index_temp  = catdir($tmp_dir, 'selectionIndex', 'tempfiles');
+    my $kinship_cache   = catdir($tmp_dir, 'kinship', 'cache');
+    my $kinship_temp    = catdir($tmp_dir, 'kinship', 'tempfiles');
 
     mkpath (
 	[
 	 $solgs_dir, $solgs_cache, $solgs_tempfiles, $solgs_lists,  $solgs_datasets, 
 	 $pca_cache, $pca_temp, $histogram_cache, $histogram_temp, $log_dir, $corre_cache, $corre_temp,
-     $h2_temp, $h2_cache,$qc_cache, $qc_temp, $anova_temp,$anova_cache, $solqtl_cache, $solqtl_tempfiles,
-	 $cluster_cache, $cluster_temp, $sel_index_cache,  $sel_index_temp,
+	 $h2_temp, $h2_cache,  $qc_cache, $qc_temp, $anova_temp,$anova_cache, $solqtl_cache, $solqtl_tempfiles,
+	 $cluster_cache, $cluster_temp, $sel_index_cache,  $sel_index_temp, $kinship_cache, $kinship_temp
 	], 
 	0, 0755
 	);
    
-    $c->stash(solgs_dir                   => $solgs_dir, 
-              solgs_cache_dir             => $solgs_cache, 
-              solgs_tempfiles_dir         => $solgs_tempfiles,
-              solgs_lists_dir             => $solgs_lists,
-		      solgs_datasets_dir          => $solgs_datasets,
-		      pca_cache_dir               => $pca_cache,
-		      pca_temp_dir                => $pca_temp,
-		      cluster_cache_dir           => $cluster_cache,
-		      cluster_temp_dir            => $cluster_temp,
-	          correlation_cache_dir       => $corre_cache,
-		      correlation_temp_dir        => $corre_temp,
-	          heritability_cache_dir      => $h2_cache,
-	          heritability_temp_dir       => $h2_temp,
-	          qualityControl_cache_dir    => $qc_cache,
-	          qualityControl_temp_dir     => $qc_temp,
-		      histogram_cache_dir         => $histogram_cache,
-		      histogram_temp_dir          => $histogram_temp,
-		      analysis_log_dir            => $log_dir,
-	          anova_cache_dir             => $anova_cache,
-		      anova_temp_dir              => $anova_temp,
-		      solqtl_cache_dir            => $solqtl_cache,
-	          solqtl_tempfiles_dir        => $solqtl_tempfiles,
-		      cache_dir                   => $solgs_cache,
-		      selection_index_cache_dir   => $sel_index_cache,
-		      selection_index_temp_dir    => $sel_index_temp,
-
+    $c->stash(solgs_dir                 => $solgs_dir, 
+              solgs_cache_dir           => $solgs_cache, 
+              solgs_tempfiles_dir       => $solgs_tempfiles,
+              solgs_lists_dir           => $solgs_lists,
+	      solgs_datasets_dir        => $solgs_datasets,
+	      pca_cache_dir             => $pca_cache,
+	      pca_temp_dir              => $pca_temp,
+	      cluster_cache_dir         => $cluster_cache,
+	      cluster_temp_dir          => $cluster_temp,
+              correlation_cache_dir     => $corre_cache,
+	      correlation_temp_dir      => $corre_temp,
+	      heritability_cache_dir    => $h2_cache,
+	      heritability_temp_dir     => $h2_temp,
+	      qualityControl_cache_dir    => $qc_cache,
+	      qualityControl_temp_dir     => $qc_temp,
+	      histogram_cache_dir       => $histogram_cache,
+	      histogram_temp_dir        => $histogram_temp,
+	      analysis_log_dir          => $log_dir,
+              anova_cache_dir           => $anova_cache,
+	      anova_temp_dir            => $anova_temp,
+	      solqtl_cache_dir          => $solqtl_cache,
+              solqtl_tempfiles_dir      => $solqtl_tempfiles,
+	      cache_dir                 => $solgs_cache,
+	      selection_index_cache_dir => $sel_index_cache,
+	      selection_index_temp_dir  => $sel_index_temp,
+	      kinship_cache_dir         => $kinship_cache,
+	      kinship_temp_dir          => $kinship_temp
         );
 
 }
