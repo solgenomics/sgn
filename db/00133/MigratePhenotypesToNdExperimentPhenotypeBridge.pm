@@ -44,7 +44,7 @@ This is a patch to migrate to phenotype value storage to a simpler/faster system
 
 has '+prereq' => (
     default => sub {
-        [],
+        ['AddNdExperimentPhenotypeBridge'],
     },
   );
 
