@@ -392,7 +392,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         $trial_stock_type_id = $accesion_type_id;
     }
 
-    my $h = $dbh->prepare("SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
+    my $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
         cvterm.cvterm_id,
         count(phenotype.value),
         to_char(avg(phenotype.value::real), 'FM999990.990'),
@@ -402,22 +402,24 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         $select_clause_additional
         FROM cvterm
             JOIN phenotype ON (cvterm_id=cvalue_id)
-            JOIN nd_experiment_phenotype_bridge USING(phenotype_id)
-            JOIN stock as plot USING(stock_id)
+            JOIN nd_experiment_phenotype_bridge ON(nd_experiment_phenotype_bridge.phenotype_id=phenotype.phenotype_id)
+            JOIN stock as plot ON(plot.stock_id=nd_experiment_phenotype_bridge.stock_id)
             JOIN stock_relationship on (plot.stock_id = stock_relationship.subject_id)
             JOIN stock as accession on (accession.stock_id = stock_relationship.object_id)
             JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id
         WHERE project_id=?
             AND phenotype.value~?
-            AND stock_relationship.type_id=?
-            AND plot.type_id=?
-            AND accession.type_id=?
+            AND stock_relationship.type_id=$rel_type_id
+            AND plot.type_id=$stock_type_id
+            AND accession.type_id=$trial_stock_type_id
         GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id $group_by_additional
         ORDER BY cvterm.name ASC
-        $order_by_additional;");
+        $order_by_additional;";
+    print STDERR $q."\n";
+    my $h = $dbh->prepare($q);
 
     my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
-    $h->execute($c->stash->{trial_id}, $numeric_regex, $rel_type_id, $stock_type_id, $trial_stock_type_id);
+    $h->execute($c->stash->{trial_id}, $numeric_regex);
 
     my @phenotype_data;
 
@@ -446,6 +448,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, $average, $min, $max, $stddev, $cv, $count, $percent_missing, qq{<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change($trait_id)"><span class="glyphicon glyphicon-stats"></span></a>} );
         push @phenotype_data, \@return_array;
     }
+    # print STDERR Dumper \@phenotype_data;
 
     $c->stash->{rest} = { data => \@phenotype_data };
 }

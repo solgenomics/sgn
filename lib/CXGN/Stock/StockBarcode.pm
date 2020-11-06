@@ -280,7 +280,6 @@ sub store {
                                     uniquename => $uniquename,
                                 });
                             print STDERR " ** store: added phenotype value $value , observable = " . $cvterm->name ." uniquename = $uniquename \n";
-                            #link the phenotpe to the experiment
                             $experiment->find_or_create_related('nd_experiment_phenotypes' , {
                                 phenotype_id => $phenotype->phenotype_id });
                             $message .= "Added phenotype: trait= " . $cvterm->name . ", value = $value, to stock " . qq|<a href="/stock/$stock_id/view">$stock_name</a><br />| ;

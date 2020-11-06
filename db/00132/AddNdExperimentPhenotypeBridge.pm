@@ -98,7 +98,14 @@ CREATE TABLE public.nd_experiment_phenotype_bridge (
             ON DELETE CASCADE
 );
 
-      
+ALTER TABLE public.nd_experiment_phenotype_bridge OWNER TO postgres;
+GRANT ALL PRIVILEGES ON public.nd_experiment_phenotype_bridge TO web_usr;
+GRANT ALL PRIVILEGES ON public.nd_experiment_phenotype_bridge TO postgres;
+GRANT USAGE ON nd_experiment_phenotype_bridg_nd_experiment_phenotype_bridg_seq TO web_usr;
+GRANT USAGE ON nd_experiment_phenotype_bridg_nd_experiment_phenotype_bridg_seq TO postgres;
+
+DROP TABLE IF EXISTS sgn.nd_experiment_phenotype_bridge CASCADE;
+
 EOSQL
 	
 

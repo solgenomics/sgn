@@ -70,22 +70,39 @@ sub patch {
     my $local_date_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'date', 'local')->cvterm_id();
     my $local_operator_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'operator', 'local')->cvterm_id();
 
-    my $q = "SELECT nd_experiment.nd_experiment_id, phenotype_id, stock_id, project_id, nd_geolocation_id, file_id, image_id, json_id, upload_date.value
+    my $q = "SELECT nd_experiment.nd_experiment_id, phenotype_id, stock_id, project_id, nd_geolocation_id, file_id, image_id, json_id, upload_date.value, md_files.nd_experiment_md_files_id, md_images.nd_experiment_md_images_id, md_json.nd_experiment_md_json_id
         FROM phenotype
         JOIN nd_experiment_phenotype USING(phenotype_id)
         JOIN nd_experiment ON(nd_experiment_phenotype.nd_experiment_id=nd_experiment.nd_experiment_id)
         JOIN nd_experiment_stock ON(nd_experiment_stock.nd_experiment_id=nd_experiment.nd_experiment_id)
         JOIN nd_experiment_project ON(nd_experiment_project.nd_experiment_id=nd_experiment.nd_experiment_id)
         JOIN nd_experimentprop AS upload_date ON(upload_date.nd_experiment_id=nd_experiment.nd_experiment_id AND upload_date.type_id=$local_date_cvterm_id)
-        LEFT JOIN phenome.nd_experiment_md_files ON(nd_experiment_md_files.nd_experiment_id=nd_experiment.nd_experiment_id)
-        LEFT JOIN phenome.nd_experiment_md_images ON(nd_experiment_md_images.nd_experiment_id=nd_experiment.nd_experiment_id)
-        LEFT JOIN phenome.nd_experiment_md_json ON(nd_experiment_md_json.nd_experiment_id=nd_experiment.nd_experiment_id)
+        LEFT JOIN phenome.nd_experiment_md_files AS md_files ON(md_files.nd_experiment_id=nd_experiment.nd_experiment_id)
+        LEFT JOIN phenome.nd_experiment_md_images AS md_images ON(md_images.nd_experiment_id=nd_experiment.nd_experiment_id)
+        LEFT JOIN phenome.nd_experiment_md_json AS md_json ON(md_json.nd_experiment_id=nd_experiment.nd_experiment_id)
         WHERE nd_experiment.type_id=$phenotyping_experiment_cvterm_id;";
 
     my $h = $self->dbh()->prepare($q);
     $h->execute();
-    my @seen_nd_experiment_ids;
-    while (my ($nd_experiment_id, $phenotype_id, $stock_id, $project_id, $nd_geolocation_id, $file_id, $image_id, $json_id, $upload_date) = $h->fetchrow_array()) {
+
+    my $del_nd_q = "DELETE FROM nd_experiment WHERE nd_experiment_id = ?;";
+    my $del_nd_h = $self->dbh()->prepare($del_nd_q);
+
+    my $del_nd_files_q = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_md_files_id = ?;";
+    my $del_nd_files_h = $self->dbh()->prepare($del_nd_files_q);
+
+    my $del_nd_images_q = "DELETE FROM phenome.nd_experiment_md_images WHERE nd_experiment_md_images_id = ?;";
+    my $del_nd_images_h = $self->dbh()->prepare($del_nd_images_q);
+
+    my $del_nd_json_q = "DELETE FROM phenome.nd_experiment_md_json WHERE nd_experiment_md_json_id = ?;";
+    my $del_nd_json_h = $self->dbh()->prepare($del_nd_json_q);
+
+    my %unique_nd_experiment_ids;
+    my @deleted_nd_experiment_ids;
+    my @deleted_nd_experiment_md_files_ids;
+    my @deleted_nd_experiment_md_images_ids;
+    my @deleted_nd_experiment_md_json_ids;
+    while (my ($nd_experiment_id, $phenotype_id, $stock_id, $project_id, $nd_geolocation_id, $file_id, $image_id, $json_id, $upload_date, $nd_experiment_md_files_id, $nd_experiment_md_images_id, $nd_experiment_md_json_id) = $h->fetchrow_array()) {
         if ($upload_date =~ m/(\d{4})-(\d{2})-(\d{2})_(\d{2}):(\d{2}):(\d{2})/) {
             my $upload_date_obj = Time::Piece->strptime($upload_date, "%Y-%m-%d_%H:%M:%S");
             $upload_date = $upload_date_obj->strftime("%Y-%m-%d_%H:%M:%S");
@@ -97,10 +114,36 @@ sub patch {
         else {
             die "Upload date format not accounted for $upload_date\n";
         }
-        print STDERR $upload_date."\n";
         $nd_experiment_phenotype_bridge_dbh->execute($stock_id, $project_id, $phenotype_id, $nd_geolocation_id, $file_id, $image_id, $json_id, $upload_date);
-        push @seen_nd_experiment_ids, $nd_experiment_id;
+
+        if ($nd_experiment_md_files_id) {
+            $del_nd_files_h->execute($nd_experiment_md_files_id);
+            push @deleted_nd_experiment_md_files_ids, $nd_experiment_md_files_id;
+        }
+        if ($nd_experiment_md_images_id) {
+            $del_nd_images_h->execute($nd_experiment_md_images_id);
+            push @deleted_nd_experiment_md_images_ids, $nd_experiment_md_images_id;
+        }
+        if ($nd_experiment_md_json_id) {
+            $del_nd_json_h->execute($nd_experiment_md_json_id);
+            push @deleted_nd_experiment_md_json_ids, $nd_experiment_md_json_id;
+        }
+
+        print STDERR "Working on phenotype_id $phenotype_id \n";
+        $unique_nd_experiment_ids{$nd_experiment_id}++;
+        push @deleted_nd_experiment_ids, $nd_experiment_id;
     }
+
+    foreach (keys %unique_nd_experiment_ids) {
+        $del_nd_h->execute($_);
+        print STDERR "MIGRATED nd_experiment $_\n";
+    }
+
+    print STDERR "DELETED ".scalar(keys %unique_nd_experiment_ids)." unique nd_experiment\n";
+    print STDERR "DELETED ".scalar(@deleted_nd_experiment_ids)." nd_experiment_* links\n";
+    print STDERR "DELETED ".scalar(@deleted_nd_experiment_md_files_ids)." nd_experiment_md_files\n";
+    print STDERR "DELETED ".scalar(@deleted_nd_experiment_md_images_ids)." nd_experiment_md_images\n";
+    print STDERR "DELETED ".scalar(@deleted_nd_experiment_md_json_ids)." nd_experiment_md_json\n";
 
 print "You're done!\n";
 }
