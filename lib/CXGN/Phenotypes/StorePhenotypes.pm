@@ -56,6 +56,7 @@ use CXGN::UploadFile;
 use CXGN::List::Transform;
 use CXGN::Stock;
 use CXGN::Tools::Run;
+use Time::Piece;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -442,8 +443,11 @@ sub store {
     my $archived_file = $phenotype_metadata->{'archived_file'};
     my $archived_file_type = $phenotype_metadata->{'archived_file_type'};
     my $operator = $phenotype_metadata->{'operator'};
-    my $upload_date = $phenotype_metadata->{'date'};
+    my $upload_date_str = $phenotype_metadata->{'date'};
     my $success_message;
+
+    my $upload_date_obj = Time::Piece->strptime($upload_date_str, "%Y-%m-%d_%H:%M:%S");
+    my $upload_date = $upload_date_obj->strftime("%Y-%m-%d_%H:%M:%S");
 
     my $phenotyping_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
     my $local_date_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'date', 'local')->cvterm_id();

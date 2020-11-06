@@ -56,6 +56,7 @@ sub patch {
 
     $self->dbh->do(<<EOSQL);
 
+DROP TABLE IF EXISTS public.nd_experiment_phenotype_bridge CASCADE;
 CREATE TABLE public.nd_experiment_phenotype_bridge (
     nd_experiment_phenotype_bridge_id SERIAL PRIMARY KEY,
     stock_id INT NOT NULL,
