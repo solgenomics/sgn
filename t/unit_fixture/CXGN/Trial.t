@@ -496,7 +496,7 @@ my %plot_trait_value = ( $trial_design->{1}->{plot_name} => { 'root number|CO_33
     );
 
 
-my %metadata = ( operator => 'johndoe', date => '20141223' );
+my %metadata = ( operator => 'johndoe', date => '2014-12-23' );
 
 my $lp = CXGN::Phenotypes::StorePhenotypes->new(
     basepath=>$f->config->{basepath},
@@ -662,7 +662,7 @@ my %plant_trait_value = ( $trial_design->{1}->{plot_name}.'_plant_2' => { 'root 
     $trial_design->{3}->{plot_name}.'_plant_1' => { 'root number|CO_334:0000011'  => [20,''], 'dry yield|CO_334:0000014' => [50,''], 'harvest index|CO_334:0000015' => [7,''] },
 );
 
-my %metadata = ( operator => 'johndoe', date => '20141225' );
+my %metadata = ( operator => 'johndoe', date => '2014-12-25' );
 
 my $lp = CXGN::Phenotypes::StorePhenotypes->new(
     basepath=>$f->config->{basepath},

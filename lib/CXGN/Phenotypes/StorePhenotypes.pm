@@ -596,6 +596,9 @@ sub store {
                         $self->handle_timestamp($timestamp, $phenotype->phenotype_id);
                         $self->handle_operator($operator, $phenotype->phenotype_id);
 
+                        if (!$stored_file_id) {$stored_file_id = undef;}
+                        if (!$stored_image_id) {$stored_image_id = undef;}
+                        if (!$stored_json_id) {$stored_json_id = undef;}
                         $nd_experiment_phenotype_bridge_dbh->execute($stock_id, $project_id, $phenotype_id, $location_id, $stored_file_id, $stored_image_id, $stored_json_id, $upload_date);
                     }
 

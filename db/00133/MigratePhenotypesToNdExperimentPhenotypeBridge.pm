@@ -97,12 +97,21 @@ sub patch {
     my $del_nd_json_q = "DELETE FROM phenome.nd_experiment_md_json WHERE nd_experiment_md_json_id = ?;";
     my $del_nd_json_h = $self->dbh()->prepare($del_nd_json_q);
 
+    #VERIFY that the file_id is actually present in metadata table otherwise it will trigger a constraint failure
+    my $verify_nd_files_q = "SELECT file_id FROM metadata.md_files WHERE file_id = ?;";
+    my $verify_nd_files_h = $self->dbh()->prepare($verify_nd_files_q);
+    my $verify_nd_images_q = "SELECT image_id FROM metadata.md_image WHERE image_id = ?;";
+    my $verify_nd_images_h = $self->dbh()->prepare($verify_nd_images_q);
+    my $verify_nd_json_q = "SELECT json_id FROM metadata.md_json WHERE json_id = ?;";
+    my $verify_nd_json_h = $self->dbh()->prepare($verify_nd_json_q);
+
     my %unique_nd_experiment_ids;
     my @deleted_nd_experiment_ids;
     my @deleted_nd_experiment_md_files_ids;
     my @deleted_nd_experiment_md_images_ids;
     my @deleted_nd_experiment_md_json_ids;
     while (my ($nd_experiment_id, $phenotype_id, $stock_id, $project_id, $nd_geolocation_id, $file_id, $image_id, $json_id, $upload_date, $nd_experiment_md_files_id, $nd_experiment_md_images_id, $nd_experiment_md_json_id) = $h->fetchrow_array()) {
+        print STDERR "Working on phenotype_id $phenotype_id \n";
         if ($upload_date =~ m/(\d{4})-(\d{2})-(\d{2})_(\d{2}):(\d{2}):(\d{2})/) {
             my $upload_date_obj = Time::Piece->strptime($upload_date, "%Y-%m-%d_%H:%M:%S");
             $upload_date = $upload_date_obj->strftime("%Y-%m-%d_%H:%M:%S");
@@ -114,22 +123,40 @@ sub patch {
         else {
             die "Upload date format not accounted for $upload_date\n";
         }
-        $nd_experiment_phenotype_bridge_dbh->execute($stock_id, $project_id, $phenotype_id, $nd_geolocation_id, $file_id, $image_id, $json_id, $upload_date);
 
         if ($nd_experiment_md_files_id) {
             $del_nd_files_h->execute($nd_experiment_md_files_id);
             push @deleted_nd_experiment_md_files_ids, $nd_experiment_md_files_id;
+
+            $verify_nd_files_h->execute($file_id);
+            my ($file_id_verify) = $verify_nd_files_h->fetchrow_array();
+            if (!$file_id_verify) {
+                $file_id = undef;
+            }
         }
         if ($nd_experiment_md_images_id) {
             $del_nd_images_h->execute($nd_experiment_md_images_id);
             push @deleted_nd_experiment_md_images_ids, $nd_experiment_md_images_id;
+
+            $verify_nd_images_h->execute($image_id);
+            my ($image_id_verify) = $verify_nd_images_h->fetchrow_array();
+            if (!$image_id_verify) {
+                $image_id = undef;
+            }
         }
         if ($nd_experiment_md_json_id) {
             $del_nd_json_h->execute($nd_experiment_md_json_id);
             push @deleted_nd_experiment_md_json_ids, $nd_experiment_md_json_id;
+
+            $verify_nd_json_h->execute($json_id);
+            my ($json_id_verify) = $verify_nd_json_h->fetchrow_array();
+            if (!$json_id_verify) {
+                $json_id = undef;
+            }
         }
 
-        print STDERR "Working on phenotype_id $phenotype_id \n";
+        $nd_experiment_phenotype_bridge_dbh->execute($stock_id, $project_id, $phenotype_id, $nd_geolocation_id, $file_id, $image_id, $json_id, $upload_date);
+
         $unique_nd_experiment_ids{$nd_experiment_id}++;
         push @deleted_nd_experiment_ids, $nd_experiment_id;
     }
