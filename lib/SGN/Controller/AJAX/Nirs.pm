@@ -408,6 +408,7 @@ sub nirs_upload_store_POST : Args(0) {
     $phenotype_metadata{'operator'} = $user_name;
     $phenotype_metadata{'date'} = $timestamp;
 
+    # print STDERR Dumper \%parsed_data_agg_coalesced;
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
         basepath=>$c->config->{basepath},
         dbhost=>$c->config->{dbhost},
@@ -550,9 +551,7 @@ sub generate_spectral_plot_POST : Args(0) {
     my $stock_ids_sql = join ',', @all_stock_ids;
     my $nirs_training_q = "SELECT stock.uniquename, stock.stock_id, metadata.md_json.json->>'spectra', metadata.md_json.json->>'device_type'
         FROM stock
-        JOIN nd_experiment_stock USING(stock_id)
-        JOIN nd_experiment USING(nd_experiment_id)
-        JOIN phenome.nd_experiment_md_json USING(nd_experiment_id)
+        JOIN nd_experiment_phenotype_bridge USING(stock_id)
         JOIN metadata.md_json USING(json_id)
         WHERE stock.stock_id IN ($stock_ids_sql) AND metadata.md_json.json_type = 'nirs_spectra' AND metadata.md_json.json->>'device_type' = ?;";
     print STDERR Dumper $nirs_training_q;
@@ -730,9 +729,7 @@ sub generate_results_POST : Args(0) {
     my $stock_ids_sql = join ',', @all_plot_ids;
     my $nirs_training_q = "SELECT stock.uniquename, stock.stock_id, metadata.md_json.json->>'spectra'
         FROM stock
-        JOIN nd_experiment_stock USING(stock_id)
-        JOIN nd_experiment USING(nd_experiment_id)
-        JOIN phenome.nd_experiment_md_json USING(nd_experiment_id)
+        JOIN nd_experiment_phenotype_bridge USING(stock_id)
         JOIN metadata.md_json USING(json_id)
         WHERE stock.stock_id IN ($stock_ids_sql) AND metadata.md_json.json_type = 'nirs_spectra' AND metadata.md_json.json->>'device_type' = ? ;";
     print STDERR Dumper $nirs_training_q;
@@ -956,9 +953,7 @@ sub generate_predictions_POST : Args(0) {
     my $stock_ids_sql = join ',', @all_plot_ids;
     my $nirs_training_q = "SELECT stock.uniquename, stock.stock_id, metadata.md_json.json->>'spectra'
         FROM stock
-        JOIN nd_experiment_stock USING(stock_id)
-        JOIN nd_experiment USING(nd_experiment_id)
-        JOIN phenome.nd_experiment_md_json USING(nd_experiment_id)
+        JOIN nd_experiment_phenotype_bridge USING(stock_id)
         JOIN metadata.md_json USING(json_id)
         WHERE stock.stock_id IN ($stock_ids_sql) AND metadata.md_json.json_type = 'nirs_spectra' AND metadata.md_json.json->>'device_type' = ? ;";
     my $nirs_training_h = $dbh->prepare($nirs_training_q);    

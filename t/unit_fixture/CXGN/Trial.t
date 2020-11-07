@@ -563,7 +563,7 @@ is_deeply(\@phenotyped_stocks_values, ['30', '40', '50'], "check phenotyped stoc
 
 my $trial_experiment_count = $trial->get_experiment_count();
 print STDERR $trial_experiment_count."\n";
-is($trial_experiment_count, 4, "check get_experiment_count");
+is($trial_experiment_count, 1, "check get_experiment_count");
 
 my $location_type_id = $trial->get_location_type_id();
 #print STDERR $location_type_id."\n";

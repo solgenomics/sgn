@@ -446,6 +446,7 @@ sub store {
     my $upload_date_str = $phenotype_metadata->{'date'};
     my $success_message;
 
+    print STDERR Dumper $upload_date_str;
     my $upload_date_obj = Time::Piece->strptime($upload_date_str, "%Y-%m-%d_%H:%M:%S");
     my $upload_date = $upload_date_obj->strftime("%Y-%m-%d_%H:%M:%S");
 
