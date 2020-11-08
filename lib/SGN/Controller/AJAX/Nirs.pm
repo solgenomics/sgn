@@ -704,6 +704,11 @@ sub generate_results_POST : Args(0) {
                 }
             }
         }
+
+        if (scalar(keys %testing_pheno_data) == 0 ) {
+            $c->stash->{rest} = { error => "Not enough data! Are you sure phenotypes were uploaded for the trait in your testing dataset?"};
+            $c->detach();
+        }
     }
     # else { #waves package will do random split if the input JSON = 'NULL'
     #     my @full_training_plots = keys %training_pheno_data;
@@ -724,6 +729,12 @@ sub generate_results_POST : Args(0) {
     #     %training_pheno_data = %training_pheno_data_split;
     #     %testing_pheno_data = %testing_pheno_data_split;
     # }
+    # print STDERR Dumper \%testing_pheno_data;
+
+    if (scalar(keys %training_pheno_data) == 0 ) {
+        $c->stash->{rest} = { error => "Not enough data! Are you sure phenotypes were uploaded for the trait in your training dataset?"};
+        $c->detach();
+    }
 
     my @all_plot_ids = (keys %training_pheno_data, keys %testing_pheno_data);
     my $stock_ids_sql = join ',', @all_plot_ids;

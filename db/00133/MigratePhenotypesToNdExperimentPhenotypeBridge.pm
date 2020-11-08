@@ -70,10 +70,10 @@ sub patch {
     my $local_date_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'date', 'local')->cvterm_id();
     my $local_operator_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'operator', 'local')->cvterm_id();
 
-    my $q = "SELECT nd_experiment.nd_experiment_id, phenotype_id, stock_id, project_id, nd_geolocation_id, file_id, image_id, json_id, upload_date.value, md_files.nd_experiment_md_files_id, md_images.nd_experiment_md_images_id, md_json.nd_experiment_md_json_id
+    my $q = "SELECT nd_experiment.nd_experiment_id, phenotype.phenotype_id, stock.stock_id, nd_experiment_project.project_id, nd_experiment.nd_geolocation_id, file_id, image_id, json_id, upload_date.value, md_files.nd_experiment_md_files_id, md_images.nd_experiment_md_images_id, md_json.nd_experiment_md_json_id
         FROM stock
-        JOIN nd_experiment_stock ON(nd_experiment_stock.nd_experiment_id=nd_experiment.nd_experiment_id)
-        JOIN nd_experiment ON(nd_experiment_phenotype.nd_experiment_id=nd_experiment.nd_experiment_id)
+        JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=stock.stock_id)
+        JOIN nd_experiment ON(nd_experiment_stock.nd_experiment_id=nd_experiment.nd_experiment_id)
         JOIN nd_experimentprop AS upload_date ON(upload_date.nd_experiment_id=nd_experiment.nd_experiment_id AND upload_date.type_id=$local_date_cvterm_id)
         JOIN nd_experiment_project ON(nd_experiment_project.nd_experiment_id=nd_experiment.nd_experiment_id)
         LEFT JOIN nd_experiment_phenotype ON(nd_experiment_phenotype.nd_experiment_id=nd_experiment.nd_experiment_id)

@@ -61,7 +61,7 @@ CREATE TABLE public.nd_experiment_phenotype_bridge (
     nd_experiment_phenotype_bridge_id SERIAL PRIMARY KEY,
     stock_id INT NOT NULL,
     project_id INT NOT NULL,
-    phenotype_id INT NOT NULL,
+    phenotype_id INT,
     nd_geolocation_id INT NOT NULL,
     file_id INT,
     image_id INT,
