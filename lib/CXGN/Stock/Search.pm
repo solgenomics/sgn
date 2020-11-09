@@ -298,8 +298,6 @@ sub search {
             "stock.description ilike '".$start.$any_name.$end."'",
             "(stockprop.value ilike '".$start.$any_name.$end."' AND stockprop.type_id = $stock_synonym_cvterm_id)"
         );
-    } else {
-        push @sql_or_conditions, "stock.uniquename != NULL";
     }
 
     my @uniquename_array_filtered;
@@ -527,8 +525,8 @@ sub search {
     my $stock_join = '';
     if ($stock_type_search == $accession_cvterm_id){
         $stock_join = "JOIN stock_relationship ON(stock.stock_id = stock_relationship.object_id)
-            JOIN stock AS plot ON(subject.stock_id = stock_relationship.subject_id)
-            JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id = subject.stock_id)
+            JOIN stock AS plot ON(plot.stock_id = stock_relationship.subject_id)
+            JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id = plot.stock_id)
             JOIN nd_experiment ON(nd_experiment_stock.nd_experiment_id = nd_experiment.nd_experiment_id)
             JOIN nd_geolocation ON (nd_geolocation.nd_geolocation_id = nd_experiment.nd_geolocation_id)";
     } else {
@@ -550,10 +548,12 @@ sub search {
         $limit_offset = "LIMIT $limit_sql OFFSET $offset";
     }
 
-    push @sql_and_conditions, "(".join(' OR ', @sql_or_conditions).")";
+    if (scalar(@sql_or_conditions)>0) {
+        push @sql_and_conditions, "(".join(' OR ', @sql_or_conditions).")";
+    }
     my $where_clause = join ' AND ', @sql_and_conditions;
 
-    my $stock_search_q = "SELECT count(stock.stock_id), stock.stock_id, stock.uniquename, stock.name, stock.type_id, stock_type.name, stock.organism_id, organism.species, organism.common_name, organism.genus
+    my $stock_search_q = "SELECT stock.stock_id, stock.uniquename, stock.name, stock.type_id, stock_type.name, stock.organism_id, organism.species, organism.common_name, organism.genus, count(stock.stock_id) OVER()
         FROM stock
         $stock_join
         $nd_experment_phenotype_join
@@ -561,10 +561,11 @@ sub search {
         JOIN cvterm AS stock_type ON(stock.type_id = stock_type.cvterm_id)
         JOIN organism ON(stock.organism_id = organism.organism_id)
         JOIN stockprop ON(stock.stock_id = stockprop.stock_id)
-        $where_clause
-        ORDER BY stock.name
+        WHERE $where_clause
         GROUP BY stock.stock_id, stock.uniquename, stock.name, stock.type_id, stock_type.name, stock.organism_id, organism.species, organism.common_name, organism.genus
-        $limit_offset";
+        ORDER BY stock.name
+        $limit_offset;";
+    print STDERR $stock_search_q."\n";
     my $stock_search_h = $schema->storage->dbh()->prepare($stock_search_q);
     $stock_search_h->execute();
 
@@ -578,7 +579,7 @@ sub search {
     my @result;
     my %result_hash;
     my @result_stock_ids;
-    while (my ($result_count, $stock_id, $uniquename, $stock_name, $type_id, $type, $organism_id, $species, $common_name, $genus) = $stock_search_h->fetchrow_array()) {
+    while (my ($stock_id, $uniquename, $stock_name, $type_id, $type, $organism_id, $species, $common_name, $genus, $result_count) = $stock_search_h->fetchrow_array()) {
         $records_total = $result_count;
         push @result_stock_ids, $stock_id;
         if (!$self->minimal_info){

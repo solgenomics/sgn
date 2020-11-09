@@ -358,6 +358,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         if ($refresh_mat_views) {
             my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
             my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
+            sleep(10);
         }
     }
 
@@ -637,6 +638,11 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             my ($data, $unique_traits) = $phenotypes_search->search();
             @sorted_trait_names = sort keys %$unique_traits;
 
+            if (scalar(@$trait_id_list) < 2) {
+                $c->stash->{rest} = { error => "Select more than 2 time points!"};
+                return;
+            }
+
             if (scalar(@$data) == 0) {
                 $c->stash->{rest} = { error => "There are no phenotypes for the trials and traits you have selected!"};
                 return;
@@ -709,6 +715,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 }
             }
             print STDERR Dumper [$time_min, $time_max];
+
+            if ($legendre_order_number >= scalar(@sorted_trait_names)) {
+                $legendre_order_number = scalar(@sorted_trait_names) - 1;
+            }
 
             my @sorted_trait_names_scaled;
             my $leg_pos_counter = 0;
@@ -2257,12 +2267,29 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 }
             close($fh_grm_old);
 
+            my %grm_hash_ordered;
+            foreach (@grm_old) {
+                my $l1 = $accession_id_factor_map{$_->[0]};
+                my $l2 = $accession_id_factor_map{$_->[1]};
+                my $val = sprintf("%.8f", $_->[2]);
+                if ($l1 < $l2) {
+                    $grm_hash_ordered{$l1}->{$l2} = $val;
+                }
+                else {
+                    $grm_hash_ordered{$l2}->{$l1} = $val;
+                }
+            }
+
             open(my $fh_grm_new, '>', $grm_rename_tempfile)
                 or die "Could not open file '$grm_rename_tempfile' $!";
                 print STDERR "Opened $grm_rename_tempfile\n";
 
-                foreach (@grm_old) {
-                    print $fh_grm_new $accession_id_factor_map{$_->[0]}." ".$accession_id_factor_map{$_->[1]}." ".sprintf("%.8f", $_->[2])."\n";
+                foreach my $i (sort keys %grm_hash_ordered) {
+                    my $v = $grm_hash_ordered{$i};
+                    foreach my $j (sort keys %$v) {
+                        my $val = $v->{$j};
+                        print $fh_grm_new "$i $j $val\n";
+                    }
                 }
             close($fh_grm_new);
 
