@@ -101,6 +101,9 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
     my $self = shift;
     my $c = shift;
     my $datatype = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
     if ($self->privileges_denied($c)) {
         $c->stash->{rest} = { error => "You have insufficient access privileges to delete trial data." };
@@ -110,14 +113,23 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
     my $error = "";
 
     if ($datatype eq 'phenotypes') {
-        my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
-        my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
-
-        $error = $c->stash->{trial}->delete_phenotype_metadata($c->dbic_schema("CXGN::Metadata::Schema"), $c->dbic_schema("CXGN::Phenome::Schema"));
-        $error .= $c->stash->{trial}->delete_phenotype_data($c->config->{basepath}, $c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $temp_file_nd_experiment_id);
+        $error = $c->stash->{trial}->delete_phenotype_metadata($metadata_schema, $phenome_schema);
+        $error .= $c->stash->{trial}->delete_phenotype_data($c->config->{basepath}, $c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass});
     }
 
     elsif ($datatype eq 'layout') {
+
+        my $project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
+        my $drone_image_check_q = "SELECT count(subject_project_id) FROM project_relationship WHERE object_project_id = ? AND type_id = ?;";
+        my $drone_image_check_h = $schema->storage->dbh()->prepare($drone_image_check_q);;
+        $drone_image_check_h->execute($c->stash->{trial_id}, $project_relationship_type_id);
+        my ($drone_run_count) = $drone_image_check_h->fetchrow_array();
+
+        if ($drone_run_count > 0) {
+            $c->stash->{rest} = { error => "Please delete the imaging events belonging to this field trial first!" };
+            return;
+        }
+
         $error = $c->stash->{trial}->delete_metadata();
         $error .= $c->stash->{trial}->delete_field_layout();
         $error .= $c->stash->{trial}->delete_project_entry();
@@ -2560,9 +2572,7 @@ sub delete_single_assayed_trait : Chained('trial') PathPart('delete_single_trait
         return;
     }
 
-    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
-    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
-    my $delete_trait_return_error = $trial->delete_assayed_trait($c->config->{basepath}, $c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $temp_file_nd_experiment_id, $pheno_ids, $trait_ids);
+    my $delete_trait_return_error = $trial->delete_assayed_trait($c->config->{basepath}, $c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $pheno_ids, $trait_ids);
 
     if ($delete_trait_return_error) {
         $c->stash->{rest} = { error => $delete_trait_return_error };

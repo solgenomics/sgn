@@ -168,12 +168,12 @@ has 'trait_cvterm_name_list' => (
 );
 
 has 'minimum_phenotype_value' => (
-    isa => 'Int|Undef',
+    isa => 'Num|Undef',
     is => 'rw',
 );
 
 has 'maximum_phenotype_value' => (
-    isa => 'Int|Undef',
+    isa => 'Num|Undef',
     is => 'rw',
 );
 
@@ -374,7 +374,7 @@ sub search {
         my @trait_name_filtered;
         foreach (@trait_name_array){
             if ($_){
-                push @trait_name_filtered, "observable.name = $_";
+                push @trait_name_filtered, "observable.name = '$_'";
             }
         }
         if (scalar(@trait_name_filtered)>0) {
@@ -382,10 +382,10 @@ sub search {
         }
 
         if ($minimum_phenotype_value) {
-            push @sql_and_conditions, "phenotype.value > $minimum_phenotype_value";
+            push @sql_and_conditions, "phenotype.value::decimal > $minimum_phenotype_value";
         }
         if ($maximum_phenotype_value) {
-            push @sql_and_conditions, "phenotype.value < $maximum_phenotype_value";
+            push @sql_and_conditions, "phenotype.value::decimal < $maximum_phenotype_value";
         }
     }
 
@@ -524,22 +524,27 @@ sub search {
 
     my $stock_join = '';
     if ($stock_type_search == $accession_cvterm_id){
-        $stock_join = "JOIN stock_relationship ON(stock.stock_id = stock_relationship.object_id)
-            JOIN stock AS plot ON(plot.stock_id = stock_relationship.subject_id)
-            JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id = plot.stock_id)
-            JOIN nd_experiment ON(nd_experiment_stock.nd_experiment_id = nd_experiment.nd_experiment_id)
-            JOIN nd_geolocation ON (nd_geolocation.nd_geolocation_id = nd_experiment.nd_geolocation_id)";
+        $stock_join = "LEFT JOIN stock_relationship ON(stock.stock_id = stock_relationship.object_id)
+            LEFT JOIN stock AS plot ON(plot.stock_id = stock_relationship.subject_id)
+            LEFT JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id = plot.stock_id)
+            LEFT JOIN nd_experiment ON(nd_experiment_stock.nd_experiment_id = nd_experiment.nd_experiment_id)
+            LEFT JOIN nd_geolocation ON (nd_geolocation.nd_geolocation_id = nd_experiment.nd_geolocation_id)";
     } else {
-        $stock_join = "JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id = stock.stock_id)
-            JOIN nd_experiment ON(nd_experiment_stock.nd_experiment_id = nd_experiment.nd_experiment_id)
-            JOIN nd_geolocation ON (nd_geolocation.nd_geolocation_id = nd_experiment.nd_geolocation_id)";
+        $stock_join = "LEFT JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id = stock.stock_id)
+            LEFT JOIN nd_experiment ON(nd_experiment_stock.nd_experiment_id = nd_experiment.nd_experiment_id)
+            LEFT JOIN nd_geolocation ON (nd_geolocation.nd_geolocation_id = nd_experiment.nd_geolocation_id)";
     }
 
     if (!$self->include_obsolete) {
         push @sql_and_conditions, "stock.is_obsolete = 'f'";
     }
-    if ($using_stockprop_filter || scalar(@stockprop_filtered_stock_ids)>0){
-        push @sql_and_conditions, "stock.stock_id in (".join(',', @stockprop_filtered_stock_ids).")";
+    if ($using_stockprop_filter){
+        if (scalar(@stockprop_filtered_stock_ids)>0) {
+            push @sql_and_conditions, "stock.stock_id in (".join(',', @stockprop_filtered_stock_ids).")";
+        }
+        else {
+            push @sql_and_conditions, "stock.stock_id in (0)";
+        }
     }
 
     my $limit_offset = '';
@@ -560,7 +565,7 @@ sub search {
         $nd_experiment_project_join
         JOIN cvterm AS stock_type ON(stock.type_id = stock_type.cvterm_id)
         JOIN organism ON(stock.organism_id = organism.organism_id)
-        JOIN stockprop ON(stock.stock_id = stockprop.stock_id)
+        LEFT JOIN stockprop ON(stock.stock_id = stockprop.stock_id)
         WHERE $where_clause
         GROUP BY stock.stock_id, stock.uniquename, stock.name, stock.type_id, stock_type.name, stock.organism_id, organism.species, organism.common_name, organism.genus
         ORDER BY stock.name

@@ -236,7 +236,11 @@ sub BUILD {
         }
 
         my $analysis_nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_experiment', 'experiment_type')->cvterm_id();
-        my $nd_protocol_q = "SELECT nd_protocol_id FROM nd_experiment_protocol JOIN nd_experiment ON (nd_experiment_protocol.nd_experiment_id = nd_experiment.nd_experiment_id) JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id = nd_experiment.nd_experiment_id) WHERE nd_experiment.type_id=$analysis_nd_experiment_type_id AND project_id=?;";
+        my $nd_protocol_q = "SELECT nd_protocol_id
+            FROM nd_experiment_protocol
+            JOIN nd_experiment ON (nd_experiment_protocol.nd_experiment_id = nd_experiment.nd_experiment_id)
+            JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id = nd_experiment.nd_experiment_id)
+            WHERE nd_experiment.type_id=$analysis_nd_experiment_type_id AND project_id=?;";
         my $nd_protocol_h = $schema->storage->dbh()->prepare($nd_protocol_q);
         $nd_protocol_h->execute($self->get_trial_id());
         my ($nd_protocol_id) = $nd_protocol_h->fetchrow_array();

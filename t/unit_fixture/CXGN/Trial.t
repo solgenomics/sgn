@@ -767,7 +767,7 @@ is_deeply(\@get_plant_names, \@expected_sorted_plants, "check get_plants()");
 
 # check trial deletion - first, delete associated phenotypes
 #
-my $del_ret = $trial->delete_phenotype_data($f->config->{basepath}, $f->config->{dbhost}, $f->config->{dbname}, $f->config->{dbuser}, $f->config->{dbpass}, $f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete");
+my $del_ret = $trial->delete_phenotype_data($f->config->{basepath}, $f->config->{dbhost}, $f->config->{dbname}, $f->config->{dbuser}, $f->config->{dbpass});
 ok(!$del_ret);
 print STDERR Dumper $del_ret;
 
