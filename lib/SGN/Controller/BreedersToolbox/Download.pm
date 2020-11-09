@@ -658,19 +658,11 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
         push @accessions, CXGN::Accession->new( $dbh, $_ );
     }
 
-    print STDERR "\n\n\n\n\n========> DOWNLOAD ACCESSION PROPERTIES <=========\n";
-    print STDERR "Accession List ID: $accession_list_id\n";
-    print STDERR "File Format: $file_format\n";
-    print STDERR Dumper \@accession_ids;
-
     # Create tempfile
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "download_accessions_XXXXX", UNLINK=> 0);
 
     # Build Accession Info
     my $rows = $self->build_accession_properties_info($schema, \@accession_ids);
-
-    print STDERR "TEMPFILE: $tempfile\n";
-    print STDERR "URI: $uri\n";
 
     # Create and Return XLS file
     if ( $file_format eq ".xls" ) {
@@ -706,7 +698,7 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
         my @header =  @{$rows->[0]};
         my $num_col = scalar(@header);
 
-        for ( my $line = 0; $line < $#$rows; $line++ ) {
+        for ( my $line = 0; $line <= $#$rows; $line++ ) {
             my $columns = $rows->[$line];
             my $step = 1;
             for ( my $i = 0; $i < $num_col; $i++ ) {
