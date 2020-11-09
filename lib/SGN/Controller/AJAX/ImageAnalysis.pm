@@ -94,7 +94,7 @@ sub image_analysis_submit_POST : Args(0) {
         if ($service eq 'necrosis') {
             $server_endpoint = "http://unet.mcrops.org/api/";
             $image_type_name = "image_analysis_necrosis_solomon_nsumba";
-            $trait_name = "rotten root percentage |CO_334:0000229";
+            $trait_name = "CBSDpct |CO_334:0002078";
         }
         if ($service eq 'whitefly_count') {
             $server_endpoint = "http://18.216.149.204/home/api2/";

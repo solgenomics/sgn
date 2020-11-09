@@ -265,14 +265,18 @@ jQuery(document).ready(function(){
     jQuery(document).on("click", "#image_analysis_image_search_results_save", function() {
 
         // Retrieve observation units and linked analysis images and scores
-
+        var data = {
+            "observationUnitDbId": 39548,
+            "collector": "John Doe",
+            "observationTimeStamp": "2019-01-01T14:47:23-0610",
+            "observationVariableDbId":"70741",
+            "value": "500"
+        };
         // Save in db inclucing multiple image relationships
         jQuery.ajax({
-            url: '/ajax/image_analysis/store_phenotypes',
-            method: 'POST',
-            data: {
-                'phenotypes': values_hash,
-            },
+            url: 'brapi/v2/observations/',
+            method: 'PUT',
+            data: data
             dataType:'json',
             beforeSend: function() {
                 jQuery('#working_modal').modal('show');
@@ -280,6 +284,7 @@ jQuery(document).ready(function(){
             success: function(response) {},
             error: function(response) {}
         });
+
 
     });
 
