@@ -567,7 +567,7 @@ sub search {
         $nd_experment_phenotype_join
         $nd_experiment_project_join
         JOIN cvterm AS stock_type ON(stock.type_id = stock_type.cvterm_id)
-        JOIN organism ON(stock.organism_id = organism.organism_id)
+        LEFT JOIN organism ON(stock.organism_id = organism.organism_id)
         LEFT JOIN stockprop ON(stock.stock_id = stockprop.stock_id)
         WHERE $where_clause
         GROUP BY stock.stock_id, stock.uniquename, stock.name, stock.type_id, stock_type.name, stock.organism_id, organism.species, organism.common_name, organism.genus
