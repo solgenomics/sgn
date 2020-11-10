@@ -1,0 +1,25 @@
+<%args>
+$program_id
+</%args>
+
+<div class="well well-sm">
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <td>
+                <a href="/breeders/accessions"><p>Go To Manage Accessions</p></a>
+            </td>
+            <td>
+                <a href="/breeders/seedlots"><p>Go To Manage Seedlots</p></a>
+            </td>
+        </div>
+    </div>
+    <&| /page/info_section.mas, id=>"program_accessions", title=>"Accessions", collapsible=>1, collapsed=>1, hide_if_empty=>1 &>
+        <& /breeders_toolbox/program/program_accessions.mas, program_id => $program_id &>
+    </&>
+    <&| /page/info_section.mas, id=>"program_crosses", title=>"Crosses", collapsible=>1, collapsed=>1, hide_if_empty=>1 &>
+        <& /breeders_toolbox/program/program_crosses.mas, program_id => $program_id &>
+    </&>
+    <&| /page/info_section.mas, id=>"program_seedlots", title=>"Seedlots", collapsible=>1, collapsed=>1, hide_if_empty=>1 &>
+        <& /breeders_toolbox/program/program_seedlots.mas, program_id => $program_id &>
+    </&>
+</div>

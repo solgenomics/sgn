@@ -37,7 +37,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON' },
    );
 
 
@@ -50,63 +50,68 @@ sub create_phenotype_spreadsheet_GET : Args(0) {
 }
 
 sub create_phenotype_spreadsheet_POST : Args(0) {
-  print STDERR "phenotype download controller\n";
-  my ($self, $c) = @_;
-  if (!$c->user()) {
-    $c->stash->{rest} = {error => "You need to be logged in to download a phenotype spreadsheet." };
-    return;
-  }
+    print STDERR "phenotype download controller\n";
+    my ($self, $c) = @_;
+    if (!$c->user()) {
+        $c->stash->{rest} = {error => "You need to be logged in to download a phenotype spreadsheet." };
+        return;
+    }
 
-  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-  my @trial_ids = @{_parse_list_from_json($c->req->param('trial_ids'))};
-  #print STDERR Dumper \@trial_ids;
-  my $format = $c->req->param('format') || "ExcelBasic";
-  my $include_notes = $c->req->param('include_notes');
-  my $data_level = $c->req->param('data_level') || "plots";
-  my $file_format = $c->req->param('create_spreadsheet_phenotype_file_format') || "detailed";
-  my $sample_number = $c->req->param('sample_number');
-  if ($sample_number eq '') {$sample_number = undef};
-  my $predefined_columns = $c->req->param('predefined_columns') ? decode_json $c->req->param('predefined_columns') : [];
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my @trial_ids = @{_parse_list_from_json($c->req->param('trial_ids'))};
+    #print STDERR Dumper \@trial_ids;
+    my $format = $c->req->param('format') || "ExcelBasic";
+    my $include_notes = $c->req->param('include_notes');
+    my $data_level = $c->req->param('data_level') || "plots";
+    my $file_format = $c->req->param('create_spreadsheet_phenotype_file_format') || "detailed";
+    my $sample_number = $c->req->param('sample_number');
+    if ($sample_number eq '') {$sample_number = undef};
+    my $predefined_columns = $c->req->param('predefined_columns') ? decode_json $c->req->param('predefined_columns') : [];
+    my $trial_stock_type = $c->req->param('trial_stock_type');
+    #print STDERR Dumper $sample_number;
+    #print STDERR Dumper $predefined_columns;
 
-  #print STDERR Dumper $sample_number;
-  #print STDERR Dumper $predefined_columns;
+    foreach (@trial_ids){
+        my $trial = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $_ });
+        if ($data_level eq 'plants') {
+            if (!$trial->has_plant_entries()) {
+                $c->stash->{rest} = { error => "The requested trial (".$trial->get_name().") does not have plant entries. Please create the plant entries first." };
+                return;
+            }
+        }
+        if ($data_level eq 'subplots' || $data_level eq 'plants_subplots') {
+            if (!$trial->has_subplot_entries()) {
+                $c->stash->{rest} = { error => "The requested trial (".$trial->get_name().") does not have subplot entries." };
+                return;
+            }
+        }
+        if ($data_level eq 'tissue_samples') {
+            if (!$trial->has_tissue_sample_entries()) {
+                $c->stash->{rest} = { error => "The requested trial (".$trial->get_name().") does not have tissue sample entries. Please create the tissue sample entries first." };
+                return;
+            }
+        }
+    }
 
-  foreach (@trial_ids){
-      if ($data_level eq 'plants') {
-          my $trial = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $_ });
-          if (!$trial->has_plant_entries()) {
-              $c->stash->{rest} = { error => "The requested trial (".$trial->get_name().") does not have plant entries. Please create the plant entries first." };
-              return;
-          }
-      }
-      if ($data_level eq 'subplots' || $data_level eq 'plants_subplots') {
-          my $trial = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $_ });
-          if (!$trial->has_subplot_entries()) {
-              $c->stash->{rest} = { error => "The requested trial (".$trial->get_name().") does not have subplot entries." };
-              return;
-          }
-      }
-  }
+    my @trait_list = @{_parse_list_from_json($c->req->param('trait_list'))};
+    my $dir = $c->tempfiles_subdir('/download');
+    my $rel_file = $c->tempfile( TEMPLATE => 'download/downloadXXXXX');
+    my $tempfile = $c->config->{basepath}."/".$rel_file.".xls";
 
-  my @trait_list = @{_parse_list_from_json($c->req->param('trait_list'))};
-  my $dir = $c->tempfiles_subdir('/download');
-  my $rel_file = $c->tempfile( TEMPLATE => 'download/downloadXXXXX');
-  my $tempfile = $c->config->{basepath}."/".$rel_file.".xls";
+    my $create_spreadsheet = CXGN::Trial::Download->new({
+        bcs_schema => $schema,
+        trial_list => \@trial_ids,
+        trait_list => \@trait_list,
+        filename => $tempfile,
+        format => $format,
+        data_level => $data_level,
+        include_notes => $include_notes,
+        sample_number => $sample_number,
+        predefined_columns => $predefined_columns,
+        trial_stock_type => $trial_stock_type,
+    });
 
-  my $create_spreadsheet = CXGN::Trial::Download->new(
-      {
-	  bcs_schema => $schema,
-	  trial_list => \@trial_ids,
-	  trait_list => \@trait_list,
-	  filename => $tempfile,
-	  format => $format,
-      data_level => $data_level,
-      include_notes => $include_notes,
-      sample_number => $sample_number,
-      predefined_columns => $predefined_columns,
-      });
-
-     $create_spreadsheet->download();
+    $create_spreadsheet->download();
 
     print STDERR "DOWNLOAD FILENAME = ".$create_spreadsheet->filename()."\n";
     print STDERR "RELATIVE  = $rel_file\n";
@@ -148,20 +153,15 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
         #print STDERR Dumper $new_terms;
     }
 
-#if ($error) {
-#$c->stash->{rest} = { error => $error };
-#return;
-#}
     $c->stash->{rest} = { filename => $urlencode{$rel_file.".xls"} };
-
 }
 
 sub _parse_list_from_json {
   my $list_json = shift;
   my $json = new JSON;
   if ($list_json) {
-    my $decoded_list = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
-    #my $decoded_list = decode_json($list_json);
+      #my $decoded_list = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
+      my $decoded_list = decode_json($list_json);
     my @array_of_list_items = @{$decoded_list};
     return \@array_of_list_items;
   }

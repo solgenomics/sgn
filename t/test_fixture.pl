@@ -26,6 +26,7 @@ my $nocleanup;
 my $noserver;
 my $dumpupdatedfixture;
 my $noparallel = 0;
+my $list_config = "";
 # relative to `sgn/ (or parent of wherever this script is located)
 my $fixture_path = 't/data/fixture/cxgn_fixture.sql';
 
@@ -37,6 +38,7 @@ GetOptions(
     "noserver" => \$noserver,
     "noparallel" => \$noparallel,
     "fixture_path" => \$fixture_path,
+    "list_config" => \$list_config
     );
 
 require Carp::Always if $carpalways;
@@ -66,7 +68,10 @@ my $cfg = Config::Any->load_files({files=> [$conf_file_base, $template_file], us
 my $config = $cfg->[0]->{$conf_file_base};
 my $template = $cfg->[1]->{$template_file};
 
-print STDERR Dumper($cfg);
+if ($list_config) { 
+    print STDERR Dumper($cfg);
+}
+
 my $db_user_password = $config->{dbpass};
 my $dbhost = $config->{dbhost} || 'localhost';
 my $dbport = $config->{dbport} || '5432';
@@ -119,7 +124,7 @@ print $NEWCONF $new_conf;
 close($NEWCONF);
 
 #run fixture and db patches.
-system("t/data/fixture/patches/run_fixture_and_db_patches.pl -u postgres -p $db_postgres_password -h $config->{dbhost} -d $dbname -e janedoe");
+system("t/data/fixture/patches/run_fixture_and_db_patches.pl -u postgres -p $db_postgres_password -h $config->{dbhost} -d $dbname -e janedoe -s 117");
 
 # run the materialized views creation script
 #
@@ -160,6 +165,20 @@ else {
 	}
 	Catalyst::ScriptRunner->run('SGN', 'Server');
 
+	if (!$nocleanup) {
+	    print STDERR "# Removing test database ($dbname)... ";
+	    
+	    if ($noserver) {
+		print STDERR "# [ --noserver option: No logfile to remove]\n";
+	    }
+	    else {
+		print STDERR "# Delete server logfile... ";
+		close($logfile);
+		unlink $logfile;
+		print STDERR "Done.\n";
+
+	    }
+	}
 	exit;
     }
     print STDERR  "# Starting web server (PID=$server_pid)... ";
@@ -198,8 +217,11 @@ unless( $prove_pid ) {
     # now run the tests against it
     #
     my $app = App::Prove->new;
+
+    my $v = $verbose ? 'v' : '';
+    
     $app->process_args(
-        '-lr',
+        '-lr'.$v,
         ( map { -I => $_ } @INC ),
         @prove_args
         );
@@ -228,10 +250,10 @@ if (!$nocleanup) {
 	print STDERR "# [ --noserver option: No logfile to remove]\n";
     }
     else {
-	print STDERR "# Delete server logfile... ";
-	close($logfile);
-	unlink $logfile;
-	print STDERR "Done.\n";
+	# print STDERR "# Delete server logfile... ";
+	# close($logfile);
+	# unlink $logfile;
+	# print STDERR "Done.\n";
 
 	print STDERR "# Delete fixture conf file... ";
 	unlink "sgn_fixture.conf";
@@ -313,6 +335,8 @@ t/test_fixture.pl --carpalways -- -v -j5 t/mytest.t  t/mydiroftests/
                  (t/data/fixture/cxgn_fixture.pl). Note: You can also set the env
                  variable DATABASE_FIXTURE_PATH, which will overrule this
                  option.
+
+  --list_config  lists the configuration information
 
   -- -v          options specified after two dashes will be passed to prove
                  directly, such -v will run prove in verbose mode.

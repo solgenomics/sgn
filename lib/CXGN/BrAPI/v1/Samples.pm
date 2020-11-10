@@ -9,41 +9,7 @@ use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::FileResponse;
 use CXGN::BrAPI::JSONResponse;
 
-has 'bcs_schema' => (
-    isa => 'Bio::Chado::Schema',
-    is => 'rw',
-    required => 1,
-);
-
-has 'metadata_schema' => (
-    isa => 'CXGN::Metadata::Schema',
-    is => 'rw',
-    required => 1,
-);
-
-has 'phenome_schema' => (
-    isa => 'CXGN::Phenome::Schema',
-    is => 'rw',
-    required => 1,
-);
-
-has 'page_size' => (
-    isa => 'Int',
-    is => 'rw',
-    required => 1,
-);
-
-has 'page' => (
-    isa => 'Int',
-    is => 'rw',
-    required => 1,
-);
-
-has 'status' => (
-    isa => 'ArrayRef[Maybe[HashRef]]',
-    is => 'rw',
-    required => 1,
-);
+extends 'CXGN::BrAPI::v1::Common';
 
 sub detail {
     my $self = shift;
@@ -98,6 +64,7 @@ sub detail {
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Sample get result constructed');
 }
 
+
 sub search {
     my $self = shift;
     my $search_params = shift;
@@ -107,17 +74,17 @@ sub search {
     my @data;
 
     my $limit = $page_size*($page+1)-1;
-	my $offset = $page_size*$page;
+    my $offset = $page_size*$page;
 
-    my @tissue_ids = $search_params->{sampleDbId} ? @{$search_params->{sampleDbId}} : ();
+    my @tissue_ids = $search_params->{sampleDbId} ? @{$search_params->{sampleDbIds}} : ();
     my @tissue_names = $search_params->{sampleName} ? @{$search_params->{sampleName}} : ();
-    my @geno_trial_ids = $search_params->{plateDbId} ? @{$search_params->{plateDbId}} : ();
+    my @geno_trial_ids = $search_params->{plateDbId} ? @{$search_params->{plateDbIds}} : ();
     my @geno_trial_names = $search_params->{plateName} ? @{$search_params->{plateName}} : ();
-    my @accession_ids = $search_params->{germplasmDbId} ? @{$search_params->{germplasmDbId}} : ();
+    my @accession_ids = $search_params->{germplasmDbId} ? @{$search_params->{germplasmDbIds}} : ();
     my @accession_names = $search_params->{germplasmName} ? @{$search_params->{germplasmName}} : ();
-    my @obs_ids = $search_params->{observationUnitDbId} ? @{$search_params->{observationUnitDbId}} : ();
+    my @obs_ids = $search_params->{observationUnitDbId} ? @{$search_params->{observationUnitDbIds}} : ();
     my @obs_names = $search_params->{observationUnitName} ? @{$search_params->{observationUnitName}} : ();
-    
+
     my $sample_search = CXGN::Stock::TissueSample::Search->new({
         bcs_schema=>$self->bcs_schema,
         tissue_sample_db_id_list => \@tissue_ids,

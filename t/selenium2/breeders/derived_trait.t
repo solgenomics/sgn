@@ -52,7 +52,7 @@ $t->while_logged_in_as("submitter", sub {
 
     sleep(1);
 
-    $t->find_element_ok("upload_trial_submit", "name", "submit upload trial file ")->click();
+    $t->find_element_ok("upload_trial_submit_first", "name", "submit upload trial file ")->click();
 
     sleep(5);
 

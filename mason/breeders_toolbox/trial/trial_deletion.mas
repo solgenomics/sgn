@@ -16,13 +16,10 @@ $trial_id
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="delete_phenotype_data_form" name="delete_phenotype_data_form">
-                    
                     <center>
                     <p3> Are you sure you want to delete assayed traits data for this trial? <br> Proceed with deletion below...</p3>
                     </center></br>
 
-                    </form>
                 </div>
             </div>
             <div class="modal-footer">
@@ -77,7 +74,7 @@ $trial_id
 
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="delete_traits_form" name="delete_traits_form">
 
-                    <p3> Trait deletion was successfully...</p3>
+                    <p3>Trait deletion was successfully completed</p3>
 
                     </form>
                 </div>
@@ -110,7 +107,7 @@ jQuery(document).ready(function() {
 });
 
 function retrieve_trial_traits() {
-    get_select_box('traits', 'retrieve_assayed_trial_traits', { 'name' : 'retrieve_assayed_trial_traits_select', 'id' : 'retrieve_assayed_trial_traits_select', 'trial_ids':'<% $trial_id %>', 'size':'20px' });
+    get_select_box('traits', 'retrieve_assayed_trial_traits', { 'name' : 'retrieve_assayed_trial_traits_select', 'id' : 'retrieve_assayed_trial_traits_select', 'trial_ids':'<% $trial_id %>', 'size':'20px', 'multiple':'1' });
 }
 
 function delete_selected_assayed_traits() {

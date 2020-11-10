@@ -14,14 +14,20 @@ BEGIN { extends 'Catalyst::Controller' }
 
 sub check_regression_data :Path('/heritability/check/data/') Args(0) {
     my ($self, $c) = @_;
-    
-    my $pop_id   = $c->req->param('population_id');
-    $c->stash->{pop_id} = $pop_id;
-
-    my $solgs_controller = $c->controller('solGS::solGS');
 
     my $trait_id = $c->req->param('trait_id');
-    $solgs_controller->get_trait_details($c, $trait_id);
+    my $pop_id   = $c->req->param('training_pop_id');
+    my $combo_pops_id = $c->req->param('combo_pops_id');
+    my $protocol_id = $c->req->param('genotyping_protocol_id');
+
+    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
+    
+    $c->stash->{data_set_type} = 'combined populations' if $combo_pops_id;
+    $c->stash->{combo_pops_id} = $combo_pops_id;
+    $c->stash->{pop_id} = $pop_id;
+    $c->stash->{training_pop_id} = $pop_id;
+
+    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
     
     $self->get_regression_data_files($c);
 
@@ -49,13 +55,13 @@ sub get_regression_data_files {
     my $pop_id     = $c->stash->{pop_id};
     my $trait_abbr = $c->stash->{trait_abbr}; 
     my $cache_dir  = $c->stash->{solgs_cache_dir};
- 
-    my $phenotype_file = "phenotype_trait_${trait_abbr}_${pop_id}";
-    $phenotype_file    = $c->controller('solGS::Files')->grep_file($cache_dir, $phenotype_file);
-       
-    my $gebv_file = "rrblup_training_gebvs_${trait_abbr}_${pop_id}";
-    $gebv_file    = $c->controller('solGS::Files')->grep_file($cache_dir,  $gebv_file);
-   
+
+    $c->controller('solGS::Files')->trait_phenodata_file($c);
+    my $phenotype_file = $c->stash->{trait_phenodata_file};
+    
+    $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
+    my $gebv_file = $c->stash->{rrblup_training_gebvs_file};
+
     $c->stash->{regression_gebv_file} = $gebv_file;
     $c->stash->{regression_pheno_file} = $phenotype_file;  
 
@@ -63,40 +69,47 @@ sub get_regression_data_files {
 
 
 sub get_heritability {
-    my ($self, $c) = @_;
+    my ($self, $c, $pop_id, $trait_id) = @_;
     
-    my $trait_abbr = $c->stash->{trait_abbr};
-    my $pop_id     = $c->stash->{pop_id};
-    my $cache_dir  = $c->stash->{solgs_cache_dir};
-
+    $c->stash->{training_pop_id} = $pop_id;
+    $c->controller("solGS::solGS")->get_trait_details($c, $trait_id);
+    
     $c->controller('solGS::Files')->variance_components_file($c);
     my $var_comp_file = $c->stash->{variance_components_file};
-
+ 
     my ($txt, $value) = map { split(/\t/)  } 
-                        grep {/Heritability/}
-                        read_file($var_comp_file);
+                        grep {/SNP heritability/}
+                        read_file($var_comp_file, {binmode => ':utf8'});
 
-    $c->stash->{heritability} = $value;
+    return $value;
 }
 
 
 sub heritability_regeression_data :Path('/heritability/regression/data/') Args(0) {
     my ($self, $c) = @_;
-    
-    my $pop_id   = $c->req->param('population_id');
-    $c->stash->{pop_id} = $pop_id;
 
-    my $trait_id = $c->req->param('trait_id');
-    my $solgs_controller = $c->controller('solGS::solGS');
-    $solgs_controller->get_trait_details($c, $trait_id);
+    my $trait_id      = $c->req->param('trait_id');
+    my $pop_id        = $c->req->param('training_pop_id');
+    my $combo_pops_id = $c->req->param('combo_pops_id');
+
+    my $protocol_id = $c->req->param('genotyping_protocol_id');    
+    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
+    
+    $c->stash->{pop_id} = $pop_id;
+    $c->stash->{training_pop_id} = $pop_id;
+    
+    $c->stash->{data_set_type} = 'combined populations' if $combo_pops_id;
+    $c->stash->{combo_pops_id} = $combo_pops_id;
+    
+    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
 
     $self->get_regression_data_files($c);
 
     my $gebv_file  = $c->stash->{regression_gebv_file};
     my $pheno_file = $c->stash->{regression_pheno_file};
 
-    my @gebv_data  = map { $_ =~ s/\n//; $_ }  read_file($gebv_file);
-    my @pheno_data = map { $_ =~ s/\n//; $_ }  read_file($pheno_file);
+    my @gebv_data  = map { $_ =~ s/\n//; $_ }  read_file($gebv_file, {binmode => ':utf8'});
+    my @pheno_data = map { $_ =~ s/\n//; $_ }  read_file($pheno_file, {binmode => ':utf8'});
     
     @gebv_data  = map { [ split(/\t/) ] } @gebv_data;
     @pheno_data = map { [ split(/\t/) ] } @pheno_data;
@@ -114,9 +127,8 @@ sub heritability_regeression_data :Path('/heritability/regression/data/') Args(0
    
     my @pheno_deviations = map { [$_->[0], $round->round(( $_->[1] - $pheno_mean ))] } @pheno_data;
 
-    $self->get_heritability($c);
-    my $heritability = $c->stash->{heritability};
-    
+    my $heritability =  $self->get_heritability($c);
+ 
     my $ret->{status} = 'failed';
 
     if (@gebv_data && @pheno_data)

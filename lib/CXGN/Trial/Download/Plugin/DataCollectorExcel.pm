@@ -52,7 +52,7 @@ sub download {
     my @trait_list = @{$self->trait_list()};
     my $spreadsheet_metadata = $self->file_metadata();
     my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id, experiment_type=>'field_layout'} );
-
+    my $trial_stock_type = $self->trial_stock_type();
     my $design = $trial_layout->get_design();
 
     if (! $design) {
@@ -315,17 +315,24 @@ sub download {
    #$ws->write(1, 2, 'Operator');       $ws->write(1, 3, "Enter operator here");
    #$ws->write(2, 2, 'Date');           $ws->write(2, 3, "Enter date here");
    #$ws->data_validation(2,3, { validate => "date" });
-    
+
     my $num_col_before_traits;
+    my @column_headers;
     if ($self->data_level eq 'plots') {
         $num_col_before_traits = 6;
-        my @column_headers = qw | plot_name accession_name plot_number block_number is_a_control rep_number |;
-        for(my $n=0; $n<@column_headers; $n++) { 
+        if ($trial_stock_type eq 'family_name') {
+            @column_headers = qw | plot_name family_name plot_number block_number is_a_control rep_number |;
+        } elsif ($trial_stock_type eq 'cross') {
+            @column_headers = qw | plot_name cross_unique_id plot_number block_number is_a_control rep_number |;
+        } else {
+            @column_headers = qw | plot_name accession_name plot_number block_number is_a_control rep_number |;
+        }
+        for(my $n=0; $n<@column_headers; $n++) {
             $ws->write(0, $n, $column_headers[$n]);
         }
-        
-        my @ordered_plots = sort { $a <=> $b} keys(%design);        
-        for(my $n=0; $n<@ordered_plots; $n++) { 
+
+        my @ordered_plots = sort { $a <=> $b} keys(%design);
+        for(my $n=0; $n<@ordered_plots; $n++) {
             my %design_info = %{$design{$ordered_plots[$n]}};
 
             $ws->write($n+1, 0, $design_info{plot_name});
@@ -337,14 +344,21 @@ sub download {
         }
     } elsif ($self->data_level eq 'plants') {
         $num_col_before_traits = 7;
-        my @column_headers = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
-        for(my $n=0; $n<@column_headers; $n++) { 
+        if ($trial_stock_type eq 'family_name') {
+            @column_headers = qw | plant_name plot_name family_name plot_number block_number is_a_control rep_number |;
+        } elsif ($trial_stock_type eq 'cross') {
+            @column_headers = qw | plant_name plot_name cross_unique_id plot_number block_number is_a_control rep_number |;
+        } else {
+            @column_headers = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
+        }
+
+        for(my $n=0; $n<@column_headers; $n++) {
             $ws->write(0, $n, $column_headers[$n]);
         }
-        
+
         my @ordered_plots = sort { $a <=> $b} keys(%design);
         my $line = 1;
-        for(my $n=0; $n<@ordered_plots; $n++) { 
+        for(my $n=0; $n<@ordered_plots; $n++) {
             my %design_info = %{$design{$ordered_plots[$n]}};
 
             my $plant_names = $design_info{plant_names};
@@ -360,7 +374,7 @@ sub download {
             }
         }
     }
-    
+
 
     # write traits and format trait columns
     #
@@ -368,23 +382,23 @@ sub download {
 
     my $transform = $lt->transform($schema, "traits_2_trait_ids", \@trait_list);
 
-    if (@{$transform->{missing}}>0) { 
+    if (@{$transform->{missing}}>0) {
         print STDERR "Warning: Some traits could not be found. ".join(",",@{$transform->{missing}})."\n";
     }
     my @trait_ids = @{$transform->{transform}};
 
     my %cvinfo = ();
-    foreach my $t (@trait_ids) { 
+    foreach my $t (@trait_ids) {
         my $trait = CXGN::Trait->new( { bcs_schema=> $schema, cvterm_id => $t });
         $cvinfo{$trait->display_name()} = $trait;
     }
 
-    for (my $i = 0; $i < @trait_list; $i++) { 
-        #if (exists($cvinfo{$trait_list[$i]})) { 
+    for (my $i = 0; $i < @trait_list; $i++) {
+        #if (exists($cvinfo{$trait_list[$i]})) {
             #$ws->write(0, $i+6, $cvinfo{$trait_list[$i]}->display_name());
             $ws->write(0, $i+$num_col_before_traits, $trait_list[$i]);
         #}
-        #else { 
+        #else {
         #    print STDERR "Skipping output of trait $trait_list[$i] because it does not exist\n";
         #}
 
@@ -393,7 +407,7 @@ sub download {
         for (my $n = 1; $n < $plot_count; $n++) {
             if ($cvinfo{$trait_list[$i]}) {
                 my $format = $cvinfo{$trait_list[$i]}->format();
-                if ($format eq "numeric") { 
+                if ($format eq "numeric") {
                     $ws->data_validation($n, $i+$num_col_before_traits, { validate => "any" });
                 }
                 elsif ($format =~ /\,/) {  # is a list

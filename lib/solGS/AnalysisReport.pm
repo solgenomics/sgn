@@ -3,6 +3,7 @@ package solGS::AnalysisReport;
 use Moose;
 use namespace::autoclean;
 
+use DateTime;
 use Email::Sender::Simple qw /sendmail/;
 use Email::Simple;
 use Email::Simple::Creator;
@@ -20,12 +21,22 @@ has 'output_details_file' => (
     required => 1, 
     );
 
+#for how long (in minutes) to check for outputs before
+#reporting analyses status
+has 'status_check_duration' => (
+    is       => 'ro',
+    isa      => 'Int',
+    default  => 5,
+    );
 
+
+
+our $START_TIME = DateTime->now;
 
 sub run {
  my $self = shift;   
 
- my $output_details = retrieve($self->output_details_file);
+ my $output_details = retrieve($self->output_details_file); 
  $self->check_analysis_status($output_details);
 
 }
@@ -45,6 +56,7 @@ sub check_success {
     my ($self, $output_details) = @_;
     
     my $analysis_profile = $output_details->{analysis_profile};
+    my $type = $analysis_profile->{analysis_type};
   
     if ( $analysis_profile->{analysis_type} =~ /population download/ ) 
     {	
@@ -66,9 +78,11 @@ sub check_success {
 	$output_details = $self->check_multi_pops_data_download($output_details);
     }
     elsif ( $analysis_profile->{analysis_type} =~ /selection prediction/ ) 
-    {	
-	if ($output_details->{data_set_type} =~ /combined populations/) 
-	{	
+    {
+	my $st_type = $output_details->{data_set_type};
+
+	if ($output_details->{data_set_type} =~ /combined/) 
+	{
 	  # $output_details = $self->check_combined_pops_trait_modeling($output_details);
 	   $output_details = $self->check_selection_prediction($output_details);
 	}
@@ -76,6 +90,10 @@ sub check_success {
 	{
 	    $output_details = $self->check_selection_prediction($output_details);
 	}
+    }
+    elsif ( $analysis_profile->{analysis_type} =~ /kinship/ ) 
+    {	
+	$output_details = $self->check_kinship_analysis($output_details);
     }
     
     return $output_details;  
@@ -95,8 +113,6 @@ sub check_combined_pops_trait_modeling {
 sub check_pops_trait_data_combination {
     my ($self, $output_details) = @_;
   
-    my $job_tempdir = $output_details->{r_job_tempdir};
-    
     foreach my $k (keys %{$output_details})
     {
 	if ($k =~ /population_id/)
@@ -118,7 +134,7 @@ sub check_pops_trait_data_combination {
 		
 		while (1) 
 		{
-		    sleep 60;
+		    sleep 30;
 		    $pheno_size = -s $pheno_file;
 		    $geno_size  = -s $geno_file;
 		    
@@ -140,17 +156,14 @@ sub check_pops_trait_data_combination {
 		    }
 		    else
 		    {
-			if ($job_tempdir) 
+			my $end_process = $self->end_status_check();
+			if ($end_process) 
 			{
-			    $died_file = $self->get_file($job_tempdir, 'died');
-			    if ($died_file) 
-			    {
-				$output_details->{$k}->{pheno_success}   = 0;
-				$output_details->{$k}->{geno_success}    = 0;
-				$output_details->{$k}->{success} = 0;
-				$output_details->{status} = 'Failed';
-				last;
-			    }
+			    $output_details->{$k}->{pheno_success}   = 0;
+			    $output_details->{$k}->{geno_success}    = 0;
+			    $output_details->{$k}->{success} = 0;
+			    $output_details->{status} = 'Failed';
+			    last;
 			}
 		    }	    
 		}	   	    
@@ -176,8 +189,6 @@ sub check_pops_trait_data_combination {
 sub check_multi_pops_data_download {
     my ($self, $output_details) = @_;
   
-    my $job_tempdir = $output_details->{r_job_tempdir};
-    
     my $no_match = $output_details->{no_match};
 
     foreach my $k (keys %{$output_details})
@@ -200,7 +211,7 @@ sub check_multi_pops_data_download {
 		
 		while (1) 
 		{
-		    sleep 60;
+		    sleep 30;
 		    $pheno_size = -s $pheno_file;
 		    $geno_size  = -s $geno_file;
 		    
@@ -222,17 +233,14 @@ sub check_multi_pops_data_download {
 		    }
 		    else
 		    {
-			if ($job_tempdir) 
+			my $end_process = $self->end_status_check();
+			if ($end_process) 
 			{
-			    $died_file = $self->get_file($job_tempdir, 'died');
-			    if ($died_file) 
-			    {
-				$output_details->{$k}->{pheno_success} = 0;
-				$output_details->{$k}->{geno_success}  = 0;
-				$output_details->{$k}->{success} = 0;
-				$output_details->{status} = 'Failed';
-				last;
-			    }
+			    $output_details->{$k}->{pheno_success} = 0;
+			    $output_details->{$k}->{geno_success}  = 0;
+			    $output_details->{$k}->{success} = 0;
+			    $output_details->{status} = 'Failed';
+			    last;
 			}
 		    }	    
 		}	   	    
@@ -256,62 +264,50 @@ sub check_multi_pops_data_download {
 
 sub check_selection_prediction {
     my ($self, $output_details) = @_;
-
-    my $job_tempdir = $output_details->{r_job_tempdir};
-    
+  			  
     foreach my $k (keys %{$output_details})
     {
 	if ($k =~ /trait_id/)
 	{
-	    my $gebv_file;
-	    if (ref $output_details->{$k} eq 'HASH') 
-	    { 
-		if ($output_details->{$k}->{trait_id})
-		{
-		    my $trait = $output_details->{$k}->{trait_id};
-		    $gebv_file = $output_details->{$k}->{gebv_file};
-		}
+	    my $gebv_file;		
+	    if ($output_details->{$k}->{trait_id})
+	    {
+		$gebv_file = $output_details->{$k}->{gebv_file};
+	    }
 
-		if ($gebv_file) 
+	    if ($gebv_file) 
+	    {
+		while (1) 
 		{
-		    my $gebv_size;
-		    my $died_file;
-		    
-		    while (1) 
+		    sleep 30;
+		    if (-s $gebv_file) 
 		    {
-			sleep 60;
-			$gebv_size = -s $gebv_file;
-			if ($gebv_size) 
+			$output_details->{$k}->{success} = 1;
+			$output_details->{status} = 'Done';
+			last;		
+		    }
+		    else
+		    {
+			my $end_process = $self->end_status_check();
+			if ($end_process) 
 			{
-			    $output_details->{$k}->{success} = 1;
-			    $output_details->{status} = 'Done';
-			    last;		
-			}
-			else
-			{
-			    if ($job_tempdir) 
+			    if (!-s $output_details->{$k}->{selection_geno_file})
 			    {
-				$died_file = $self->get_file($job_tempdir, 'died');
-				if ($died_file) 
-				{
-				    $output_details->{$k}->{success} = 0;
-				    $output_details->{status} = 'Failed';
-				    last;
-				}
+				$output_details->{$k}->{failure_reason} = 'No genotype data was found for this selection population.';
+			    } 
+			    else 
+			    {
+				$output_details->{$k}->{failure_reason} = 'The prediction of the selection population failed.';	
 			    }
-			}	    
-		    }	   	    
-		}
-	    }
-	    else 
-	    {  
-		if (ref $output_details->{$k} eq 'HASH')	
-		{   	    
-		    $output_details->{$k}->{success} = 0;
-		    $output_details->{status} = 'Failed';
-		}	   
-	    }
-	}  
+			    
+			    $output_details->{$k}->{success} = 0;
+			    $output_details->{status} = 'Failed';
+			    last;
+			}
+		    }	    
+		}	   	    
+	    } 
+	}
     }
 
     return $output_details;
@@ -321,8 +317,6 @@ sub check_selection_prediction {
 sub check_trait_modeling {
     my ($self, $output_details) = @_;
 
-    my $job_tempdir = $output_details->{r_job_tempdir};
-    
     foreach my $k (keys %{$output_details})
     {
 	if ($k =~ /trait_id/)
@@ -342,7 +336,7 @@ sub check_trait_modeling {
 		    
 		    while (1) 
 		    {
-			sleep 60;
+			sleep 30;
 			$gebv_size = -s $gebv_file;
 
 			if ($gebv_size) 
@@ -353,15 +347,12 @@ sub check_trait_modeling {
 			}
 			else
 			{
-			    if ($job_tempdir) 
+			    my $end_process = $self->end_status_check();
+			    if ($end_process) 
 			    {
-				$died_file = $self->get_file($job_tempdir, 'died');
-				if ($died_file) 
-				{
-				    $output_details->{$k}->{success} = 0;
-				    $output_details->{status} = 'Failed';
-				    last;
-				}
+				$output_details->{$k}->{success} = 0;
+				$output_details->{status} = 'Failed';
+				last;
 			    }
 			}	    
 		    }	   	    
@@ -384,9 +375,7 @@ sub check_trait_modeling {
 
 sub check_population_download {
     my ($self, $output_details) = @_;
-
-    my $job_tempdir = $output_details->{r_job_tempdir};
-    
+          
     foreach my $k (keys %{$output_details})
     {
 	if ($k =~ /population_id/)
@@ -419,7 +408,7 @@ sub check_population_download {
 		
 			while (1) 
 			{
-			    sleep 60;
+			    sleep 30;
 			    $pheno_size = -s $pheno_file;
 			    $geno_size  = -s $geno_file;
 
@@ -449,18 +438,16 @@ sub check_population_download {
 			    }		
 			    else
 			    {
-				if ($job_tempdir) 
-				{
-				    $died_file = $self->get_file($job_tempdir, 'died');
-				    if ($died_file) 
-				    {
-					$output_details->{$k}->{pheno_success}   = 0;
-					$output_details->{$k}->{geno_success}    = 0;
-					$output_details->{$k}->{success} = 0;
-					$output_details->{status} = 'Failed';
-					
-					last;
-				    }
+				my $end_process = $self->end_status_check();
+				     				
+				if ($end_process ) 
+				{			    
+				    $output_details->{$k}->{pheno_success}   = 0;
+				    $output_details->{$k}->{geno_success}    = 0;
+				    $output_details->{$k}->{success} = 0;
+				    $output_details->{status} = 'Failed';
+				    
+				    last;				 
 				}
 			    }
 			}	   	    
@@ -485,6 +472,55 @@ sub check_population_download {
 }
 
 
+sub check_kinship_analysis {
+    my ($self, $output_details) = @_;
+  			  
+    foreach my $k (keys %{$output_details})
+    {
+	if ($k =~ /kinship/)
+	{
+	   
+	    my $kinship_file = $output_details->{$k}->{matrix_file};
+	    print STDERR "\kinship file matrix: $kinship_file\n";
+	    if ($kinship_file) 
+	    {
+		while (1) 
+		{
+		    sleep 30;
+		    if (-s $kinship_file) 
+		    {
+			$output_details->{$k}->{success} = 1;
+			$output_details->{status} = 'Done';
+			last;		
+		    }
+		    else
+		    {
+			my $end_process = $self->end_status_check();
+			if ($end_process) 
+			{
+			    if (!-s $output_details->{$k}->{genotype_file})
+			    {
+				$output_details->{$k}->{failure_reason} = 'No genotype data was found for this kinship analysis.';
+			    } 
+			    else 
+			    {
+				$output_details->{$k}->{failure_reason} = 'The kinship analysis failed.';	
+			    }
+			    
+			    $output_details->{$k}->{success} = 0;
+			    $output_details->{status} = 'Failed';
+			    last;
+			}
+		    }	    
+		}	   	    
+	    } 
+	}
+    }
+
+    return $output_details;
+}
+
+
 sub get_file {
     my ($self, $dir, $exp) = @_;
 
@@ -501,6 +537,8 @@ sub get_file {
 
     return $file;
 }
+
+
 
 
 sub report_status {
@@ -536,6 +574,10 @@ sub report_status {
     {
     	$analysis_result = $self->selection_prediction_message($output_details);
     }
+      elsif ($analysis_type =~ /kinship/  ) 
+    {
+    	$analysis_result = $self->kinship_analysis_message($output_details);
+    }
    
     my $closing = "If you have any remarks, please contact us:\n"
 	. $output_details->{contact_page}
@@ -552,14 +594,25 @@ sub report_status {
     if ($output_details->{host} =~ /localhost/) 
     {
 	my $uid = getpwuid($<);
-	$email_from = '"' . $uid .'" <' . $uid . '@localhost.localdomain>';
-	$email_to   = '"' . $uid .'" <' . $uid . '@localhost.localdomain>';
+	$email_from =  $uid . ' <' . $uid . '@localhost.localdomain>';
+	$email_to   =  $uid . ' <' . $uid . '@localhost.localdomain>';
     }
     else 
     {
-     	$email_from = '"solGS M Tool" <cluster-jobs@solgenomics.net>';
-     	$email_to   = "$user_name <$user_email>";   
-     	$email_cc   = 'solGS Job <cluster-jobs@solgenomics.net>';
+	my $mail_list = $output_details->{cluster_job_email};
+	
+	if ($mail_list)
+	{
+	    $email_from =  'solGS M Tool <' . $mail_list . '>';
+	    $email_cc   =  'solGS Job <' . $mail_list . '>'; 
+	}
+	else
+	{
+	    $email_from = 'solGS M Tool <cluster-jobs@solgenomics.net>'; 
+	    $email_cc   = 'solGS Job <cluster-jobs@solgenomics.net>';
+	}
+
+	$email_to   = "$user_name <$user_email>";  
     }
 
     my $email = Email::Simple->create(
@@ -589,37 +642,35 @@ sub multi_modeling_message {
     	{
     	    my $all_success;
 	    
-    	    if (ref $output_details->{$k} eq 'HASH')
-    	    {
-    		if ($output_details->{$k}->{trait_id})
-    		{
-		    my $trait_name = uc($output_details->{$k}->{trait_name});
-		    my $trait_page = $output_details->{$k}->{trait_page};
+	    if ($output_details->{$k}->{trait_id})
+	    {
+		my $trait_name = uc($output_details->{$k}->{trait_name});
+		my $trait_page = $output_details->{$k}->{trait_page};
 
-    		    if ($output_details->{$k}->{success})
-    		    {
-    			$cnt++;
-    			$all_success = 1;
-    			$message .= "The analysis for $trait_name is done."
-    			    ." You can view the model output here:"
-    			    ."\n\n$trait_page\n\n";
-    		    }
-    		    else 
-    		    {  
-    			$all_success = 0; 
-    			$message .= "The analysis for $trait_name failed.\n\n";	
-			$message .= 'Refering page: ' . $trait_page . "\n\n";
-    		    }		
-    		}
+		if ($output_details->{$k}->{success})
+		{
+		    $cnt++;
+		    $all_success = 1;
+		    $message .= "The analysis for $trait_name is done."
+			." You can view the model output here:"
+			."\n\n$trait_page\n\n";
+		}
+		else 
+		{  
+		    $all_success = 0; 
+		    $message .= "The analysis for $trait_name failed.\n\n";	
+		    $message .= 'Refering page: ' . $trait_page . "\n\n";
+		}			
     	    }
     	}
     }
+    
     if ($cnt > 1 ) 
     {
 	my $analysis_page = $output_details->{analysis_profile}->{analysis_page};
 	
-    	$message .= "You can also view the summary of all the analyses in the page below."
-    	    ."\nAdditionally, you may find the analytical features in the page useful.\n"
+    	$message .= "You can also view the summary of all the analyses in the page below.\n"
+    	    ."Additionally, you may find the analytical features in the page useful.\n"
     	    . $analysis_page ."\n\n";
     }
 
@@ -674,48 +725,45 @@ sub selection_prediction_message {
     foreach my $k (keys %{$output_details}) 
     {
     	if ($k =~ /trait_id/)
-    	{
-    	    my $gebv_file;
-    	    if (ref $output_details->{$k} eq 'HASH')
-    	    {
-    		if ($output_details->{$k}->{trait_id})
-    		{
-    		    my $trait_name          = uc($output_details->{$k}->{trait_name});
-    		    my $training_pop_page   = $output_details->{$k}->{training_pop_page};
-    		    my $prediction_pop_page = $output_details->{$k}->{prediction_pop_page};
-    		    my $prediction_pop_name = $output_details->{$k}->{prediction_pop_name};
-		    $prediction_pop_name =~ s/^\s+|\s+$//g;
+    	{    	
+	    if ($output_details->{$k}->{trait_id})
+	    {
+		my $trait_name          = uc($output_details->{$k}->{trait_name});
+		my $training_pop_page   = $output_details->{$k}->{training_pop_page};
+		my $prediction_pop_page = $output_details->{$k}->{prediction_pop_page};
+		my $prediction_pop_name = $output_details->{$k}->{prediction_pop_name};
+		$prediction_pop_name =~ s/^\s+|\s+$//g;
 
-    		    if ($output_details->{$k}->{success})		
-    		    {	
-			
-    			$cnt++;	
-    			if($cnt == 1) 
-    			{
-    			    $message .= "The prediction of selection population $prediction_pop_name is done."
-    				. "\nYou can view the prediction output here:\n\n"
-    			}
-		
-    			$message .= "$prediction_pop_page\n\n";
-    		    }
-    		    else 
-    		    {  
-			$message  = "The analysis for $trait_name failed.\n\n";
-			$message .= 'Refering page: ' . $prediction_pop_page . "\n\n";
-			$message .= "We will troubleshoot the cause and contact you when we find out more.\n\n";		 
-    		    }
-
-    		    if ($cnt > 1) 
-    		    {
-    			$message .= "You can also view the summary of all the analyses in the page below."
-    			    ."\nAdditionally, you may find the analytical features in the page useful.\n"
-    			    . $output_details->{referer} . "\n\n";	
-    		    }
-    		}
-    	    }
+		if ($output_details->{$k}->{success})		
+		{				
+		    $cnt++;	
+		    if($cnt == 1) 
+		    {
+			$message .= "The prediction of selection population $prediction_pop_name is done."
+			    . "\nYou can view the prediction output here:\n\n"
+		    }
+		    
+		    $message .= "$prediction_pop_page\n\n";
+		}
+		else 
+		{
+		    my $failure_reason = $output_details->{$k}->{failure_reason};
+		    $message = "The analysis for $trait_name failed. Possible reason is:\n\n";
+		    $message .= "$failure_reason\n\n";
+		    $message .= "Refering page: $prediction_pop_page\n\n";
+		    $message .= "We will troubleshoot the cause and contact you when we find out more.\n\n";		 
+		}    		   
+	    }		
     	}
     }
 
+    if ($cnt > 1) 
+    {
+	$message .= "You can also view the summary of all the analyses in the page below.\n"
+	    ."Additionally, you may find the analytical features in the page useful.\n"
+	    . $output_details->{referer} . "\n\n";	
+    }
+    
     return  $message;
 }
 
@@ -729,32 +777,29 @@ sub population_download_message {
     {
 	if ($k =~ /population_id/)
 	{
-	    if (ref $output_details->{$k} eq 'HASH')
+	    if ($output_details->{$k}->{population_id})
 	    {
-		if ($output_details->{$k}->{population_id})
-		{
-		    my $pop_name = uc($output_details->{$k}->{population_name});
-		    my $pop_page = $output_details->{$k}->{population_page};
-		    
-		    if ($output_details->{$k}->{success})		
-		    {		
-			$message = "The phenotype and genotype data for $pop_name is ready for analysis."
-			    ."\nYou can view the training population page here:\n"
-			    ."\n$pop_page.\n\n";
-		    }
-		    else 
-		    {   
-			no warnings 'uninitialized';
-			my $msg_geno  = $output_details->{$k}->{geno_message};
-			my $msg_pheno = $output_details->{$k}->{pheno_message};
+		my $pop_name = uc($output_details->{$k}->{population_name});
+		my $pop_page = $output_details->{$k}->{population_page};
+		
+		if ($output_details->{$k}->{success})		
+		{		
+		    $message = "The phenotype and genotype data for $pop_name is ready for analysis."
+			."\nYou can view the training population page here:\n"
+			."\n$pop_page.\n\n";
+		}
+		else 
+		{   
+		    no warnings 'uninitialized';
+		    my $msg_geno  = $output_details->{$k}->{geno_message};
+		    my $msg_pheno = $output_details->{$k}->{pheno_message};
 
-			$message  = "Downloading phenotype and genotype data for $pop_name failed.\n";
-			$message .= "\nPossible causes are:\n$msg_geno\n$msg_pheno\n";
-			$message .= 'Refering page: ' . $pop_page . "\n\n";
-			$message .= "We will troubleshoot the cause and contact you when we find out more.\n\n";	 
-		    }
-		}		
-	    }
+		    $message  = "Downloading phenotype and genotype data for $pop_name failed.\n";
+		    $message .= "\nPossible causes are:\n$msg_geno\n$msg_pheno\n";
+		    $message .= 'Refering page: ' . $pop_page . "\n\n";
+		    $message .= "We will troubleshoot the cause and contact you when we find out more.\n\n";	 
+		}
+	    }		
 	}
     }
   
@@ -782,27 +827,24 @@ sub combine_populations_message {
 	{
 	    if ($k =~ /population_id/)
 	    {
-		if (ref $output_details->{$k} eq 'HASH')
+		if ($output_details->{$k}->{population_id})
 		{
-		    if ($output_details->{$k}->{population_id})
-		    {
-			my $pop_name = uc($output_details->{$k}->{population_name});
-			my $pop_page = $output_details->{$k}->{population_page};
-			
-			if ($output_details->{$k}->{success})		
-			{		
-			    $message .= "The phenotype and genotype data for $pop_name is succesfuly downloaded."
+		    my $pop_name = uc($output_details->{$k}->{population_name});
+		    my $pop_page = $output_details->{$k}->{population_page};
+		    
+		    if ($output_details->{$k}->{success})		
+		    {		
+			$message .= "The phenotype and genotype data for $pop_name is succesfuly downloaded."
 			    ."\nYou can view the population here:"
 			    ."\n$pop_page.\n\n";
-			}
-			else 
-			{  		    
-			    $message .= "Downloading phenotype and genotype data for $pop_name failed.";
-			    $message .= 'Refering page: ' . $pop_page . "\n\n";
-			    $message .= "We will troubleshoot the cause and contact you when we find out more.\n\n";	    
-			}
-		    }		
-		}
+		    }
+		    else 
+		    {  		    
+			$message .= "Downloading phenotype and genotype data for $pop_name failed.";
+			$message .= 'Refering page: ' . $pop_page . "\n\n";
+			$message .= "We will troubleshoot the cause and contact you when we find out more.\n\n";	    
+		    }
+		}	       		
 	    }
 	}
 	
@@ -811,9 +853,43 @@ sub combine_populations_message {
     {
 	my $combined_pops_page = $output_details->{combined_pops_page};
 	$message .= "Your combined training population is ready for analysis." 
-	    ."You can view it here:\n\n$combined_pops_page\n\n";
+	    ." You can view it here:\n\n$combined_pops_page\n\n";
     } 
  
+    return  $message;
+}
+
+
+sub kinship_analysis_message {
+    my ($self, $output_details) = @_;
+
+    my $message;
+ 
+    foreach my $k (keys %{$output_details}) 
+    {
+	if ($k =~ /kinship/) {
+	 
+	    my $output_page;
+	    
+	    if ($output_details->{$k}->{success}) 
+	    {
+		$output_page = $output_details->{$k}->{output_page};		
+		$message = 'Your kinship analysis is done. You can access the result here:' 
+		    . "\n\n$output_page\n\n";
+	    }
+	    else 
+	    {
+		no warnings 'uninitialized';
+		my $fail_message  = $output_details->{$k}->{failure_reason};
+      
+		$message  = "The kinship analysis failed.\n";
+		$message .= "\nPossible causes are:\n$fail_message\n";
+		$message .= 'Refering page: ' . $output_page . "\n\n";
+		$message .= "We will troubleshoot the cause and contact you when we find out more.\n\n";	
+	    }
+	}
+    }
+    
     return  $message;
 }
 
@@ -828,17 +904,31 @@ sub log_analysis_status {
     
     my $status = $output_details->{status};
    
-    my @contents = read_file($log_file);
+    my @contents = read_file($log_file, {binmode => ':utf8'});
    
     map{ $contents[$_] =~ m/\t$analysis_name\t/ 
 	     ? $contents[$_] =~ s/error|submitted/$status/ig 
 	     : $contents[$_] } 0..$#contents; 
    
-    write_file($log_file, @contents);
+    write_file($log_file, {binmode => ':utf8'}, @contents);
 
 }
 
 
+sub end_status_check {
+    my $self = shift;
+
+    my $end_after = $self->status_check_duration;
+    
+    my $now_time = DateTime->now;       
+    my $dur = $START_TIME->delta_ms($now_time);
+    
+    my $dur_mins = $dur->in_units('minutes');
+    my $end_process = $dur_mins >= $end_after ? 1 : 0;
+       
+    return $end_process;
+    
+}
 
 
 

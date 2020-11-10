@@ -3,23 +3,30 @@
 =head1 DESCRIPTION
 
 Produces a list of <script src=""></script> lines for a set of
-JavaScript library names, including any necessary dependencies.
+legacy JavaScript modules or legacy JSAN class names, including any necessary dependencies.
 
 =head1 ARGS
 
-=head2 C<classes> - single class name, or arrayref of JavaScript classes to import
+=head2 C<entries> - single class name, or arrayref of JavaScript entry modules to import
 
-=head1 EXAMPLE
+=head1 EXAMPLES
 
-  <& /import_javascript, classes => [qw[ CXGN.Effects CXGN.Phenome.Locus MochiKit.DOM ]] &>
-
+  <& /import_javascript, entries => [], legacy => [] &>
+  
 =cut
 
 </%doc>
 <%args>
- $classes
+ $entries => []
+ $classes => []
+ $legacy => []
 </%args>
 <%perl>
+  $legacy = [ $legacy ] unless ref $legacy;
   $classes = [ $classes ] unless ref $classes; #< coerce to arrayref
-  push @{ $c->stash->{js_classes} }, @$classes;
+  push @$legacy, @$classes;
+  push @{ $c->stash->{jsan_classes} }, @$legacy;
+
+  $entries = [ $entries ] unless ref $entries; #< coerce to arrayref
+  push @{ $c->stash->{js_modules} }, @$entries;
 </%perl>

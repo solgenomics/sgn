@@ -100,7 +100,7 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     design_type => "RCBD",
     operator => "janedoe"
 						    }), "create trial object");
-                            
+
 my $save = $trial_create->save_trial();
 ok($save->{'trial_id'}, "save trial");
 
@@ -127,7 +127,7 @@ my $replace_accession_fieldmap = CXGN::Trial::FieldMap->new({
   old_accession_id => $stock_id,
   new_accession => $new_accession,
 });
-ok(!$replace_accession_fieldmap->replace_trial_accession_fieldMap(), "replace trial accession");
+ok(!$replace_accession_fieldmap->replace_trial_stock_fieldMap(), "replace trial accession");
 
 
 my $trial = CXGN::Trial->new( {

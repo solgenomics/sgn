@@ -43,7 +43,7 @@ sub retrieve {
     my $trial = $self->trial;
     my @output;
 
-    my @possible_cols = ('trial_name', 'acquisition_date', 'exported_tissue_sample_name', 'tissue_sample_name', 'well_A01', 'row_number', 'col_number', 'source_observation_unit_name', 'accession_name', 'accession_id', 'synonyms', 'pedigree', 'dna_person', 'notes', 'tissue_type', 'extraction', 'concentration', 'volume', 'is_blank', 'year', 'location_name');
+    my @possible_cols = ('genotyping_project_name', 'genotyping_facility', 'trial_name', 'acquisition_date', 'exported_tissue_sample_name', 'tissue_sample_name', 'well_A01', 'row_number', 'col_number', 'source_observation_unit_name', 'accession_name', 'accession_id', 'synonyms', 'pedigree', 'dna_person', 'notes', 'tissue_type', 'extraction', 'concentration', 'volume', 'is_blank', 'year', 'location_name');
 
     my @header;
     foreach (@possible_cols){
@@ -56,6 +56,15 @@ sub retrieve {
     my $trial_name = $trial->get_name ? $trial->get_name : '';
     my $location_name = $trial->get_location ? $trial->get_location->[1] : '';
     my $trial_year = $trial->get_year ? $trial->get_year : '';
+    my $genotyping_facility_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'genotyping_facility' })->first->cvterm_id();
+    my $geno_project_name_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'genotyping_project_name' })->first->cvterm_id();
+    my $genotyping_facility = $schema->resultset("Project::Projectprop")->search({ project_id => $trial->get_trial_id(), type_id => $genotyping_facility_cvterm_id } )->first->value();
+    my $genotyping_project_name = $schema->resultset("NaturalDiversity::NdExperimentProject")->search({
+            project_id => $trial->get_trial_id()
+        })->search_related('nd_experiment')->search_related('nd_experimentprops',{
+            'nd_experimentprops.type_id' => $geno_project_name_cvterm_id
+        })->first->value();
+    my $pedigree_strings = $self->_get_all_pedigrees(\%design);
 
     foreach my $key (sort { $a cmp $b} keys %design) {
         my $design_info = $design{$key};
@@ -78,9 +87,14 @@ sub retrieve {
                     my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
                     push @$line, join ',', @{$accession->synonyms}
                 } elsif ($_ eq 'pedigree'){
+                    push @$line, $pedigree_strings->{$design_info->{"accession_name"}};
+                } elsif ($_ eq 'genotyping_project_name'){
                     my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
                     push @$line, $accession->get_pedigree_string('Parents');
-                } else {
+                } elsif ($_ eq 'pedigree'){
+                    my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
+                    push @$line, $accession->get_pedigree_string('Parents');
+                }else {
                     push @$line, $design_info->{$_};
                 }
             }

@@ -221,6 +221,11 @@ has 'introgression_end_position_bp' => (
     builder  => '_retrieve_introgression_end_position_bp',
 );
 
+has 'other_editable_stock_props' => (
+    isa => 'Maybe[HashRef]',
+    is => 'rw'
+);
+
 sub BUILD {
     my $self = shift;
 
@@ -423,7 +428,8 @@ sub store {
     }
     if ($self->donors){
         foreach (@{$self->donors}){
-            $self->_store_stockprop('donor', $_->{donorGermplasmName});
+            my $accession = $_->{donorAccessionNumber} || $_->{donorGermplasmName};
+            $self->_store_stockprop('donor', $accession);
             $self->_store_stockprop('donor institute', $_->{donorInstituteCode});
             $self->_store_stockprop('donor PUI', $_->{germplasmPUI});
         }
@@ -469,6 +475,25 @@ sub store {
     }
     if ($self->introgression_end_position_bp){
         $self->_store_stockprop('introgression_end_position_bp', $self->introgression_end_position_bp);
+    }
+    if ($self->other_editable_stock_props){
+        while (my ($key, $value) = each %{$self->other_editable_stock_props}) {
+
+            # For other_editable_stock_props that can come from accession file upload and are defined in the editable_stock_props configuration
+            my $q = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
+            my $h = $self->schema->storage->dbh()->prepare($q);
+            $h->execute($key, 'stock_property');
+            my ($cvterm_id) = $h->fetchrow_array();
+            if (!$cvterm_id) {
+                my $new_term = $self->schema->resultset("Cv::Cvterm")->create_with({
+                   name => $key,
+                   cv => 'stock_property'
+                });
+                $cvterm_id = $new_term->cvterm_id();
+            }
+
+            $self->_store_stockprop($key, $value);
+        }
     }
 
     print STDERR "Saving returned ID $id.\n";

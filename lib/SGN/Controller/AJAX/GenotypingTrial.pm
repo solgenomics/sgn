@@ -10,13 +10,14 @@ use List::MoreUtils qw /any /;
 use CXGN::People::Person;
 use CXGN::Login;
 use CXGN::Genotype::Protocol;
+use CXGN::Genotype::CreatePlateOrder;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON'  },
 );
 
 sub generate_genotype_trial : Path('/ajax/breeders/generategenotypetrial') ActionClass('REST') {}
@@ -496,21 +497,21 @@ sub get_genotyping_data_protocols_GET : Args(0) {
     my $c = shift;
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $checkbox_select_name = $c->req->param('select_checkbox_name');
-    my @protocol_list = $c->req->param('protocol_ids') ? split ',', $c->req->param('protocol_ids') : ();
-    my @accession_list = $c->req->param('accession_ids') ? split ',', $c->req->param('accession_ids') : ();
-    my @tissue_sample_list = $c->req->param('tissue_sample_ids') ? split ',', $c->req->param('tissue_sample_ids') : ();
-    my @genotyping_data_project_list = $c->req->param('genotyping_data_project_ids') ? split ',', $c->req->param('genotyping_data_project_ids') : ();
+    # my @protocol_list = $c->req->param('protocol_ids') ? split ',', $c->req->param('protocol_ids') : ();
+    # my @accession_list = $c->req->param('accession_ids') ? split ',', $c->req->param('accession_ids') : ();
+    # my @tissue_sample_list = $c->req->param('tissue_sample_ids') ? split ',', $c->req->param('tissue_sample_ids') : ();
+    # my @genotyping_data_project_list = $c->req->param('genotyping_data_project_ids') ? split ',', $c->req->param('genotyping_data_project_ids') : ();
     my $limit;
     my $offset;
 
-    my $data = CXGN::Genotype::Protocol::list($bcs_schema, \@protocol_list, \@accession_list, \@tissue_sample_list, $limit, $offset, \@genotyping_data_project_list);
+    my $data = CXGN::Genotype::Protocol::list_simple($bcs_schema);
     my @result;
     foreach (@$data){
         my @res;
         if ($checkbox_select_name){
             push @res, "<input type='checkbox' name='$checkbox_select_name' value='$_->{protocol_id}'>";
         }
-        my $num_markers = scalar keys %{$_->{markers}};
+        my $num_markers = $_->{marker_count};
         my @trimmed;
         foreach (@{$_->{header_information_lines}}){
             $_ =~ tr/<>//d;
@@ -532,6 +533,74 @@ sub get_genotyping_data_protocols_GET : Args(0) {
     #print STDERR Dumper \@result;
 
     $c->stash->{rest} = { data => \@result };
+}
+
+sub create_plate_order : Path('/ajax/breeders/createplateorder') ActionClass('REST') {}
+sub create_plate_order_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+        
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $plate_info = decode_json $c->req->param("order_info");
+
+    my $plate_id = $plate_info->{plate_id};
+    my $client_id = $plate_info->{client_id};
+    my $service_id_list = $plate_info->{service_ids};
+    my $facility_id = $plate_info->{facility_id};
+    my $add_requirements = $plate_info->{requeriments};
+
+    print STDERR Dumper $plate_info;
+
+    my $submit_samples = CXGN::Genotype::CreatePlateOrder->new({
+        bcs_schema=>$schema,
+        client_id=>$client_id,
+        service_id_list=>$service_id_list,
+        plate_id => $plate_id,
+        facility_id => $facility_id,
+        requeriments => $add_requirements,
+    });
+    # my $errors = $submit_samples->validate();
+    my $order = $submit_samples->create();
+
+    print Dumper $order;
+
+    $c->stash->{rest} = {
+        message => "Successfully order created.",
+        trial_id => $plate_id,
+        order => $order
+    };
+}
+
+sub store_plate_order : Path('/ajax/breeders/storeplateorder') ActionClass('REST') {}
+sub store_plate_order_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+        
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $order_info = decode_json $c->req->param("order");
+
+    my $plate_id = $c->req->param("plate_id");
+    my $order_id = $order_info->{orderId};
+    my $shipment = $order_info->{shipmentForms};
+
+    my $genotyping_trial;
+    my $message;
+    if ($plate_id && $order_id) {
+        $genotyping_trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $plate_id });
+        $genotyping_trial->set_genotyping_vendor_order_id(encode_json $order_info);
+        $message = "Successfully order stored.";
+    } else {
+        my $error = "There was an error trying to store submission order";
+        $c->stash->{rest} = {
+            message => $error
+        };
+    }
+
+    $c->stash->{rest} = {
+        message => $message,
+        order_id => $order_id
+    };
+
 }
 
 1;

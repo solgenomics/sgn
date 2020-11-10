@@ -1,8 +1,20 @@
 <%args>
 $protocol_id
-$markers
 </%args>
 
+<div class="well well-sm">
+    <div class="form form-horizontal" id="markers_table_search_form">
+        <div class="form-group form-group-sm">
+            <label class="col-sm-3 control-label">Marker Name(s): </label>
+            <div class="col-sm-9" >
+                <input class="form-control" id="markers_table_search_marker_name" type="text" placeholder="Marker name(s) (comma separated)"/>
+            </div>
+        </div>
+    </div>
+    <center>
+    <button class="btn btn-primary btn-sm" id="marker_table_search_submit">Search</button>
+    </center>
+</div>
 
 <table id="protocol_markers_table" class="table table-hover table-bordered">
     <thead>
@@ -18,27 +30,37 @@ $markers
             <th>Format</th>
         </tr>
     </thead>
-    <tbody>
-%  foreach (values %$markers){
-        <tr>
-            <td><% $_->{name} %></td>
-            <td><% $_->{chrom} %></td>
-            <td><% $_->{pos} %></td>
-            <td><% $_->{alt} %></td>
-            <td><% $_->{ref} %></td>
-            <td><% $_->{qual} %></td>
-            <td><% $_->{filter} %></td>
-            <td><% $_->{info} %></td>
-            <td><% $_->{format} %></td>
-        </tr>
-%  }
     </tbody>
 </table>
 
 <script>
 
 jQuery(document).ready(function(){
-    jQuery('#protocol_markers_table').DataTable();
+    
+    var genotyping_protocol_table = jQuery('#protocol_markers_table').DataTable({
+        'searching' : false,
+        'ordering'  : false,
+        'processing': true,
+        'serverSide': true,
+        'lengthMenu': [10,20,50,100,1000],
+        'ajax': { 'url': '/ajax/genotyping_protocol/markers_search',
+                  'data': function(d) {
+                     d.protocol_id = <% $protocol_id %>;
+                     d.marker_names = jQuery('#markers_table_search_marker_name').val();
+                }
+        },
+    });
+
+    jQuery('#marker_table_search_submit').click( function() {
+        genotyping_protocol_table.search("available_seedlots_table").draw();
+    });
+
+    jQuery('#markers_table_search_form').keypress( function( e ) {
+        var code = e.keyCode || e.which;
+        if( code == 13 ) {
+            jQuery('#marker_table_search_submit').click();
+        }
+    });
 });
 
 </script>

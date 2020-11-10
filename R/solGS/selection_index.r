@@ -1,5 +1,5 @@
-# a script for calculating selection index
-# and ranking genotypes accordingly
+# calculates selection index
+# and ranks genotypes accordingly
 # Isaak Y Tecle iyt2cornell.edu
 
 
@@ -7,56 +7,31 @@ options(echo = FALSE)
 
 library(data.table)
 library(stats)
+library(stringi)
+library(dplyr)
 
 allArgs <- commandArgs()
 
-inFile <- grep("input_rank_genotypes",
-               allArgs,
-               ignore.case = TRUE,
-               perl = TRUE,
-               value = TRUE
-               )
+inputFiles <- scan(grep("input_files", allArgs, value = TRUE),
+                   what = "character")
 
-inputFiles <- scan(inFile, what = "character")
+relWeightsFile <- grep("rel_weights", inputFiles, value = TRUE)
 
-relWeightsFile <- grep("rel_weights",
-                       inputFiles,
-                       ignore.case = TRUE,
-                       perl = TRUE,
-                       value = TRUE
-                       )
+outputFiles <- scan(grep("output_files", allArgs, value = TRUE),
+                    what = "character")
 
-outFile <- grep("output_rank_genotypes",
-                allArgs,
-                ignore.case = TRUE,
-                perl = TRUE,
-                value = TRUE
-                )
+traitsFiles <- grep("gebv_files_of_traits", inputFiles, value = TRUE)
 
-outputFiles <- scan(outFile, what = "character")
+gebvsSelectionIndexFile <- grep("gebvs_selection_index",
+                                outputFiles,
+                                value = TRUE)
 
-traitsFiles <- grep("gebv_files_of_traits",
-                    inputFiles,
-                    ignore.case = TRUE,
-                    perl = TRUE,
-                    value = TRUE
-                    )
-
-rankedGenotypesFile <- grep("ranked_genotypes",
-                            outputFiles,
-                            ignore.case = TRUE,
-                            perl = TRUE,
-                            value = TRUE
-                            )
-
-selectionIndexFile <- grep("selection_index",
-                              outputFiles,
-                              ignore.case = TRUE,
-                              perl = TRUE,
-                              value = TRUE
-                              )
+selectionIndexFile <- grep("selection_index_only",
+                           outputFiles,
+                           value=TRUE)
 
 inTraitFiles   <- scan(traitsFiles, what = "character")
+
 traitFilesList <- strsplit(inTraitFiles, "\t");
 traitsTotal    <- length(traitFilesList)
 
@@ -66,31 +41,38 @@ if (length(relWeightsFile) == 0)
   stop("There is no file with relative weights of traits.")
 
 
-relWeights           <- data.frame(fread(relWeightsFile))
+relWeights           <- data.frame(fread(relWeightsFile, header = TRUE))
 rownames(relWeights) <- relWeights[, 1]
 relWeights[, 1]      <- NULL 
+
+if (is.null(relWeights)) {
+    stop('There were no relative weights for all the traits.')
+}
 
 combinedRelGebvs <- c()
 
 for (i in 1:traitsTotal) {
   traitFile           <- traitFilesList[[i]]
-  traitGEBV           <- data.frame(fread(traitFile))
+  traitGEBV           <- data.frame(fread(traitFile, header = TRUE))
   rownames(traitGEBV) <- traitGEBV[, 1]
   traitGEBV[, 1]      <- NULL
   traitGEBV           <- traitGEBV[order(rownames(traitGEBV)),,drop=FALSE] 
   trait               <- colnames(traitGEBV)
    
   relWeight <- relWeights[trait, ]
-   
+     
   if (is.na(relWeight) == FALSE && relWeight != 0 ) {
+      
       weightedTraitGEBV <- apply(traitGEBV, 1,
-                                 function(x) x*relWeight
-                                 )
-        
+                                 function(x) x*relWeight)
+
+      weightedTraitGEBV <- data.frame(weightedTraitGEBV)
+      colnames(weightedTraitGEBV) <- paste0(trait, '_weighted')
+
       combinedRelGebvs  <- merge(combinedRelGebvs, weightedTraitGEBV,
                                  by = 0,
-                                 all = TRUE                     
-                                 )
+                                 all = TRUE)
+
 
       rownames(combinedRelGebvs) <- combinedRelGebvs[, 1]
       combinedRelGebvs[, 1]      <- NULL
@@ -100,29 +82,27 @@ for (i in 1:traitsTotal) {
 sumRelWeights <- apply(relWeights, 2, sum)
 sumRelWeights <- sumRelWeights[[1]]
 
-combinedRelGebvs$Index <- apply(combinedRelGebvs, 1, function (x) sum(x)/sumRelWeights)
+combinedRelGebvs$Index <- apply(combinedRelGebvs, 1, function (x) sum(x))
 
 combinedRelGebvs <- combinedRelGebvs[ with(combinedRelGebvs,
                                            order(-combinedRelGebvs$Index)
                                            ),
                                      ]
 
-combinedRelGebvs <- round(combinedRelGebvs,
-                          digits = 2
-                          )
+combinedRelGebvs <- round(combinedRelGebvs, 2)
 
 selectionIndex <-c()
 
-if (is.null(combinedRelGebvs) == FALSE) {
+if (!is.null(combinedRelGebvs)) {
   selectionIndex <- subset(combinedRelGebvs,
                            select = 'Index'
                            )
 }
 
-if (length(rankedGenotypesFile) != 0) {
-  if (is.null(combinedRelGebvs) == FALSE) {
+if (gebvsSelectionIndexFile != 0) {
+  if (!is.null(combinedRelGebvs)) {
     fwrite(combinedRelGebvs,
-           file      = rankedGenotypesFile,
+           file      = gebvsSelectionIndexFile,
            sep       = "\t",
            row.names = TRUE,
            quote     = FALSE,
@@ -130,8 +110,8 @@ if (length(rankedGenotypesFile) != 0) {
       }
 }
 
-if (length(selectionIndexFile) != 0) {
-  if (is.null(selectionIndex) == FALSE) {
+if (!is.null(selectionIndexFile)) {
+  if (!is.null(selectionIndex)) {
     fwrite(selectionIndex,
            file      = selectionIndexFile,
            row.names = TRUE,

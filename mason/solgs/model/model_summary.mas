@@ -28,7 +28,7 @@ $model_data
     title       => "Models summary"
 &>     
   
-<table  style="width:95%">
+<table id="model_summary" style="width:95%">
   <tr>
     <th>Training population</th>
     <th>Description</th>
@@ -37,7 +37,7 @@ $model_data
    
 % foreach my $model (@$model_data)
 %{
-    
+%
   <tr style="background-color:#ccccff">
     <td>
    <%  $model->[0] %>

@@ -32,6 +32,8 @@ use Scalar::Util 'reftype';
 use CXGN::BreedersToolbox::StocksFuzzySearch;
 use CXGN::Stock::RelatedStocks;
 use CXGN::BreederSearch;
+use CXGN::Genotype::Search;
+use JSON;
 
 use Bio::Chado::Schema;
 
@@ -44,7 +46,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON' },
    );
 
 
@@ -1016,6 +1018,40 @@ sub cross_autocomplete_GET :Args(0) {
     $c->stash->{rest} = \@response_list;
 }
 
+=head2 family_name_autocomplete
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub family_name_autocomplete : Local : ActionClass('REST') { }
+
+sub family_name_autocomplete_GET :Args(0) {
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+
+    my @response_list;
+    my $q = "select distinct(stock.uniquename) from stock join cvterm on(type_id=cvterm_id) where stock.uniquename ilike ? and cvterm.name='family_name' ORDER BY stock.uniquename LIMIT 20";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my ($stock_name) = $sth->fetchrow_array) {
+        push @response_list, $stock_name;
+    }
+
+    #print STDERR Dumper @response_list;
+    $c->stash->{rest} = \@response_list;
+}
+
+
 =head2 population_autocomplete
 
  Usage:
@@ -1126,6 +1162,43 @@ sub pedigree_female_parent_autocomplete_GET : Args(0){
 }
 
 
+=head2 pedigree_male_parent_autocomplete
+
+Public Path: /ajax/stock/pedigree_male_parent_autocomplete
+
+Autocomplete a male parent associated with pedigree.
+
+=cut
+
+sub pedigree_male_parent_autocomplete: Local : ActionClass('REST'){}
+
+sub pedigree_male_parent_autocomplete_GET : Args(0){
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+    my @response_list;
+
+    my $q = "SELECT distinct (pedigree_male_parent.uniquename) FROM stock AS pedigree_male_parent
+    JOIN stock_relationship ON (stock_relationship.subject_id = pedigree_male_parent.stock_id)
+    JOIN cvterm AS cvterm1 ON (stock_relationship.type_id = cvterm1.cvterm_id) AND cvterm1.name = 'male_parent'
+    JOIN stock AS check_type ON (stock_relationship.object_id = check_type.stock_id)
+    JOIN cvterm AS cvterm2 ON (check_type.type_id = cvterm2.cvterm_id) AND cvterm2.name = 'accession'
+    WHERE pedigree_male_parent.uniquename ilike ? ORDER BY pedigree_male_parent.uniquename";
+
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my($pedigree_male_parent) = $sth->fetchrow_array){
+        push @response_list, $pedigree_male_parent;
+    }
+
+    $c->stash->{rest} = \@response_list;
+
+}
+
+
 =head2 cross_female_parent_autocomplete
 
 Public Path: /ajax/stock/cross_female_parent_autocomplete
@@ -1163,6 +1236,42 @@ sub cross_female_parent_autocomplete_GET : Args(0){
 
 }
 
+
+=head2 cross_male_parent_autocomplete
+
+Public Path: /ajax/stock/cross_male_parent_autocomplete
+
+Autocomplete a male parent associated with cross.
+
+=cut
+
+sub cross_male_parent_autocomplete: Local : ActionClass('REST'){}
+
+sub cross_male_parent_autocomplete_GET : Args(0){
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+    my @response_list;
+
+    my $q = "SELECT distinct (cross_male_parent.uniquename) FROM stock AS cross_male_parent
+    JOIN stock_relationship ON (stock_relationship.subject_id = cross_male_parent.stock_id)
+    JOIN cvterm AS cvterm1 ON (stock_relationship.type_id = cvterm1.cvterm_id) AND cvterm1.name = 'male_parent'
+    JOIN stock AS check_type ON (stock_relationship.object_id = check_type.stock_id)
+    JOIN cvterm AS cvterm2 ON (check_type.type_id = cvterm2.cvterm_id) AND cvterm2.name = 'cross'
+    WHERE cross_male_parent.uniquename ilike ? ORDER BY cross_male_parent.uniquename";
+
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my($cross_male_parent) = $sth->fetchrow_array){
+        push @response_list, $cross_male_parent;
+    }
+
+    $c->stash->{rest} = \@response_list;
+
+}
 
 
 sub parents : Local : ActionClass('REST') {}
@@ -1553,7 +1662,7 @@ sub get_shared_trials_GET :Args(1) {
     foreach my $stock_id (@stock_ids) {
 	     my $trials_string ='';
        my $stock = CXGN::Stock->new(schema => $schema, stock_id => $stock_id);
-       my $uniquename = $stock->get_uniquename;
+       my $uniquename = $stock->uniquename;
        $dataref = {
              'trials' => {
                          'accessions' => $stock_id
@@ -1652,12 +1761,6 @@ sub get_phenotypes {
 
     my $bcs_stock = $bcs_stock_rs->first();
 
-# #    my ($has_members_genotypes) = $bcs_stock->result_source->schema->storage->dbh->selectrow_array( <<'', undef, $bcs_stock->stock_id );
-# SELECT COUNT( DISTINCT genotype_id )
-#   FROM phenome.genotype
-#   JOIN stock subj using(stock_id)
-#   JOIN stock_relationship sr ON( sr.subject_id = subj.stock_id )
-#  WHERE sr.object_id = ?
 
     # now we have rs of stock_relationship objects. We need to find
     # the phenotypes of their related subjects
@@ -1792,6 +1895,72 @@ sub get_stock_for_tissue:Chained('/stock/get_stock') PathPart('datatables/stock_
 
 }
 
+sub get_stock_datatables_genotype_data : Chained('/stock/get_stock') :PathPart('datatables/genotype_data') : ActionClass('REST') { }
+
+sub get_stock_datatables_genotype_data_GET  {
+    my $self = shift;
+    my $c = shift;
+    my $limit = $c->req->param('length') || 1000;
+    my $offset = $c->req->param('start') || 0;
+    my $stock_id = $c->stash->{stock_row}->stock_id();
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $stock = CXGN::Stock->new({schema => $schema, stock_id => $stock_id});
+    my $stock_type = $stock->type();
+
+    my %genotype_search_params = (
+        bcs_schema=>$schema,
+        people_schema=>$people_schema,
+        cache_root=>$c->config->{cache_file_path},
+        genotypeprop_hash_select=>[],
+        protocolprop_top_key_select=>[],
+        protocolprop_marker_hash_select=>[]
+    );
+    if ($stock_type eq 'accession') {
+        $genotype_search_params{accession_list} = [$stock_id];
+    } elsif ($stock_type eq 'tissue_sample') {
+        $genotype_search_params{tissue_sample_list} = [$stock_id];
+    }
+    my $genotypes_search = CXGN::Genotype::Search->new(\%genotype_search_params);
+    my $file_handle = $genotypes_search->get_cached_file_search_json($c->config->{cluster_shared_tempdir}, 1); #only gets metadata and not all genotype data!
+
+    my @result;
+    my $counter = 0;
+
+    open my $fh, "<& :encoding(UTF-8)", $file_handle or die "Can't open output file: $!";
+    my $header_line = <$fh>;
+    if ($header_line) {
+        my $marker_objects = decode_json $header_line;
+
+        my $start_index = $offset;
+        my $end_index = $offset + $limit;
+        # print STDERR Dumper [$start_index, $end_index];
+
+        while (my $gt_line = <$fh>) {
+            if ($counter >= $start_index && $counter < $end_index) {
+                my $g = decode_json $gt_line;
+
+                push @result, [
+                    '<a href = "/breeders_toolbox/trial/'.$g->{genotypingDataProjectDbId}.'">'.$g->{genotypingDataProjectName}.'</a>',
+                    $g->{genotypingDataProjectDescription},
+                    $g->{analysisMethod},
+                    $g->{genotypeDescription},
+                    '<a href="/stock/'.$stock_id.'/genotypes?genotypeprop_id='.$g->{markerProfileDbId}.'">Download</a>'
+                ];
+            }
+            $counter++;
+        }
+    }
+
+    my $draw = $c->req->param('draw');
+    if ($draw){
+        $draw =~ s/\D//g; # cast to int
+    }
+
+    $c->stash->{rest} = { data => \@result, draw => $draw, recordsTotal => $counter,  recordsFiltered => $counter };
+}
+
 =head2 make_stock_obsolete
 
 L<Catalyst::Action::REST> action.
@@ -1806,14 +1975,14 @@ sub stock_obsolete_GET {
     my ( $self, $c ) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     if (!$c->user()) {
-        $c->stash->{rest} = { error => "Log in required for adding stock properties." }; return;
+        $c->stash->{rest} = { error => "Log in required for making stock obsolete." }; return;
     }
 
     if ( !any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
         $c->stash->{rest} = { error => 'user does not have a curator/sequencer/submitter account' };
         $c->detach();
     }
-    
+
     my $stock_id = $c->req->param('stock_id');
     my $is_obsolete  = $c->req->param('is_obsolete');
 

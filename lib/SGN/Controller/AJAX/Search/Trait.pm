@@ -12,7 +12,7 @@ BEGIN { extends 'Catalyst::Controller::REST'; }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON' },
 );
 
 sub search : Path('/ajax/search/traits') Args(0) {
@@ -22,10 +22,8 @@ sub search : Path('/ajax/search/traits') Args(0) {
     my $params = $c->req->params() || {};
     #print STDERR Dumper $params;
 
-    my $trait_cv_name = $params->{trait_cv_name} || $c->config->{trait_cv_name};
     my $ontology_db_ids;
     if ($params->{'ontology_db_id[]'}){
-        $trait_cv_name = undef;
         $ontology_db_ids = ref($params->{'ontology_db_id[]'}) eq 'ARRAY' ? $params->{'ontology_db_id[]'} : [$params->{'ontology_db_id[]'}];
     }
 
@@ -57,7 +55,7 @@ sub search : Path('/ajax/search/traits') Args(0) {
 
     my $trait_search = CXGN::Trait::Search->new({
         bcs_schema=>$schema,
-        trait_cv_name => $trait_cv_name,
+	is_variable=>1,
         ontology_db_id_list => $ontology_db_ids,
         limit => $limit,
         offset => $offset,
@@ -77,6 +75,8 @@ sub search : Path('/ajax/search/traits') Args(0) {
                 "<a href=\"/cvterm/$_->{trait_id}/view\">$trait_accession</a>",
                 "<a href=\"/cvterm/$_->{trait_id}/view\">$_->{trait_name}</a>",
                 $_->{trait_definition},
+	        $_->{trait_name},
+                $trait_accession
             ];
     }
     #print STDERR Dumper \@result;

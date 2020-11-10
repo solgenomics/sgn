@@ -14,7 +14,8 @@ use CXGN::Trial::Download;
 use CXGN::List::Transform;
 use CXGN::List::Validate;
 use CXGN::List;
-use JSON;
+use JSON::XS;
+use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -92,8 +93,6 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{field_trial_is_planned_to_cross} = $trial->get_field_trial_is_planned_to_cross();
 
     $c->stash->{trial_description} = $trial->get_description();
-    $c->stash->{trial_phenotype_files} = $trial->get_phenotype_metadata();
-    $c->stash->{assayed_traits} = $trial->get_traits_assayed();
 
     my $location_data = $trial->get_location();
     $c->stash->{location_id} = $location_data->[0];
@@ -138,6 +137,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         $c->stash->{genotyping_facility} = $trial->get_genotyping_facility;
         $c->stash->{genotyping_facility_submitted} = $trial->get_genotyping_facility_submitted;
         $c->stash->{genotyping_facility_status} = $trial->get_genotyping_facility_status;
+        $c->stash->{genotyping_vendor_order_id} = $trial->get_genotyping_vendor_order_id;
         $c->stash->{genotyping_plate_sample_type} = $trial->get_genotyping_plate_sample_type;
         if ($trial->get_genotyping_plate_format){
             $c->stash->{genotyping_plate_format} = $trial->get_genotyping_plate_format;
@@ -150,18 +150,40 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         }
     }
     elsif ($design_type eq "treatment"){
+        $c->stash->{management_factor_type} = $trial->get_management_factor_type;
+        $c->stash->{management_factor_date} = $trial->get_management_factor_date;
         $c->stash->{template} = '/breeders_toolbox/management_factor.mas';
     }
     elsif ($design_type eq "genotype_data_project"){
         $c->stash->{template} = '/breeders_toolbox/genotype_data_project.mas';
     }
-    else {
-        $c->stash->{template} = '/breeders_toolbox/trial.mas';
+    elsif ($design_type eq "drone_run"){
+        $c->stash->{drone_run_date} = $trial->get_drone_run_date;
+        $c->stash->{template} = '/breeders_toolbox/drone_run_project.mas';
     }
-
-    if ($trial_type_name eq "crossing_trial"){
+    elsif ($trial_type_name eq "crossing_trial"){
         print STDERR "It's a crossing trial!\n\n";
-        $c->stash->{template} = '/breeders_toolbox//cross/crossing_trial.mas';
+        my $program_name = $breeding_program_data->[0]->[1];
+        my $locations = JSON::XS->new->decode($program_object->get_all_locations_by_breeding_program());
+        my @locations_by_program;
+        foreach my $location_hashref (@$locations) {
+            my $properties = $location_hashref->{'properties'};
+            my $program = $properties->{'Program'};
+            my $name = $properties->{'Name'};
+            if ($program eq $program_name) {
+                push @locations_by_program, $name;
+            }
+        }
+        my $locations_by_program_json = encode_json(\@locations_by_program);
+        $c->stash->{locations_by_program_json} = $locations_by_program_json;
+        $c->stash->{template} = '/breeders_toolbox/cross/crossing_trial.mas';
+    }
+    else {
+        my $field_management_factors = $c->config->{management_factor_types};
+        my @management_factor_types = split ',',$field_management_factors;
+        $c->stash->{management_factor_types} = \@management_factor_types;
+        $c->stash->{trial_stock_type} = $trial->get_trial_stock_type();
+        $c->stash->{template} = '/breeders_toolbox/trial.mas';
     }
 
     print STDERR "End Load Trial Detail Page: ".localtime()."\n";
@@ -211,6 +233,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $self = shift;
     my $c = shift;
     my $what = shift;
+    print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     my $user = $c->user();
@@ -223,6 +246,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $data_level = $c->req->param("dataLevel") || "plot";
     my $timestamp_option = $c->req->param("timestamp") || 0;
     my $trait_list = $c->req->param("trait_list");
+    my $include_measured = $c->req->param('include_measured') || '';
     my $search_type = $c->req->param("search_type") || 'fast';
 
     my $trial = $c->stash->{trial};
@@ -241,7 +265,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         }
     }
 
-    my $selected_cols = $c->req->param('selected_columns') ? decode_json $c->req->param('selected_columns') : {};
+    my $selected_cols = $c->req->param('selected_columns') ? JSON::XS->new()->decode( $c->req->param('selected_columns') ) : {};
     if ($data_level eq 'plate'){
         $selected_cols = {'trial_name'=>1, 'acquisition_date'=>1, 'plot_name'=>1, 'plot_number'=>1, 'row_number'=>1, 'col_number'=>1, 'source_observation_unit_name'=>1, 'accession_name'=>1, 'synonyms'=>1, 'dna_person'=>1, 'notes'=>1, 'tissue_type'=>1, 'extraction'=>1, 'concentration'=>1, 'volume'=>1, 'is_blank'=>1};
     }
@@ -290,8 +314,8 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     if ( ($format eq "intertekxls") && ($what eq "layout")) {
         $plugin = "GenotypingTrialLayoutIntertekXLS";
     }
-    if ( ($format eq "dartseqxls") && ($what eq "layout")) {
-        $plugin = "GenotypingTrialLayoutDartSeqXLS";
+    if ( ($format eq "dartseqcsv") && ($what eq "layout")) {
+        $plugin = "GenotypingTrialLayoutDartSeqCSV";
     }
 
     my $trial_name = $trial->get_name();
@@ -315,12 +339,16 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         include_timestamp => $timestamp_option,
         treatment_project_ids => \@treatment_project_ids,
         selected_columns => $selected_cols,
+        include_measured => $include_measured
     });
 
     my $error = $download->download();
 
-    if ($format eq 'intertekxls' || $format eq 'dartseqxls'){
+    if ($format eq 'intertekxls'){
         $format = 'xls';
+    }
+    if ($format eq 'dartseqcsv'){
+        $format = 'csv';
     }
 
     my $file_name = $trial_id . "_" . "$what" . ".$format";
@@ -330,15 +358,83 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $output = read_file($tempfile);
 
     $c->res->body($output);
+}
 
+sub trials_download_layouts : Path('/breeders/trials/download/layout') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    print STDERR Dumper $c->req->params();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $user = $c->user();
+    if (!$user) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
+    my $format = $c->req->param("format") || "xls";
+    my $data_level = $c->req->param("dataLevel") || "plot";
+    my $genotyping_trial_id = $c->req->param("genotyping_trial_id");
+    my @genotyping_trial_id_list = $c->req->param("genotyping_trial_id_list") ? split ',', $c->req->param("genotyping_trial_id_list") : ();
+
+    my $selected_cols = $c->req->param('selected_columns') ? JSON::XS->new()->decode( $c->req->param('selected_columns') ) : {};
+    if ($data_level eq 'plate'){
+        $selected_cols = {'trial_name'=>1, 'acquisition_date'=>1, 'plot_name'=>1, 'plot_number'=>1, 'row_number'=>1, 'col_number'=>1, 'source_observation_unit_name'=>1,
+        'accession_name'=>1, 'synonyms'=>1, 'dna_person'=>1, 'notes'=>1, 'tissue_type'=>1, 'extraction'=>1, 'concentration'=>1, 'volume'=>1, 'is_blank'=>1};
+    }
+
+    my $plugin = "";
+    if ($format eq "intertekxls") {
+        $plugin = "GenotypingTrialLayoutIntertekXLS";
+    }
+    if ($format eq "dartseqcsv") {
+        $plugin = "GenotypingTrialLayoutDartSeqCSV";
+    }
+    if ($format eq "csv") {
+        $plugin = "TrialLayoutCSV";
+    }
+
+    my $dir = $c->tempfiles_subdir('download');
+    my $temp_file_name = "genotyping_plate_layouts"."XXXX";
+    my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
+    $rel_file = $rel_file . ".$format";
+    my $tempfile = $c->config->{basepath}."/".$rel_file;
+
+    print STDERR "TEMPFILE : $tempfile\n";
+
+    my $trial_download_args = {
+        bcs_schema => $schema,
+        trial_list => \@genotyping_trial_id_list,
+        filename => $tempfile,
+        format => $plugin,
+        data_level => $data_level,
+        selected_columns => $selected_cols
+    };
+    if ($genotyping_trial_id) {
+        $trial_download_args->{trial_id} = $genotyping_trial_id;
+    }
+    my $download = CXGN::Trial::Download->new($trial_download_args);
+    my $error = $download->download();
+
+    if ($format eq 'intertekxls'){
+        $format = 'xls';
+    }
+    if ($format eq 'dartseqcsv'){
+        $format = 'csv';
+    }
+
+    my $file_name = "genotyping_plate_layouts.$format";
+    $c->res->content_type('Application/'.$format);
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+    my $output = read_file($tempfile);
+    $c->res->body($output);
 }
 
 sub _parse_list_from_json {
     my $list_json = shift;
-    my $json = new JSON;
+
     if ($list_json) {
-	my $decoded_list = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
-	#my $decoded_list = decode_json($list_json);
+	#my $decoded_list = $json->allow_nonref->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
+	my $decoded_list = JSON::XS->new()->decode($list_json);
 	my @array_of_list_items = @{$decoded_list};
 	return \@array_of_list_items;
     }

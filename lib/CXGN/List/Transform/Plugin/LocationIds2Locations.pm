@@ -33,14 +33,17 @@ sub transform {
     my @missing = ();
 
     foreach my $l (@$list) { 
-        my $rs = $schema->resultset("NaturalDiversity::NdGeolocation")->find($l); 
+        my $rs = $schema->resultset("NaturalDiversity::NdGeolocation")->search({nd_geolocation_id =>$l});
         if ($rs->count() == 0) { 
             push @missing, $l;
         }
-	push @transform, $rs->first()->nd_geolocation_id();
+        else {
+            push @transform, $rs->first()->description();
+        }
     }
-    return { transform => \@transform,
-	     missing => \@missing,
+    return {
+        transform => \@transform,
+        missing => \@missing,
     };
 }
 

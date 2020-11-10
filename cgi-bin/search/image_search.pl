@@ -1,4 +1,5 @@
 ######################################################################
+# #### DEPRECATED CGIBIN CODE ########################################
 #
 #  Search the image database and display the results.
 #

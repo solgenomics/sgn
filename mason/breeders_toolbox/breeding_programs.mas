@@ -24,24 +24,24 @@ if ($user && $user->check_roles("curator")) {
       if ($delete_flag) { print "<th>Name</th><th>Info</th><th>Delete</th>"; }
         else { print "<th>Name</th><th>Info</th>"; }
     </%perl>
-    	  
+
     </tr>
   </thead>
   <tbody>
 
     <%perl>
-      foreach my $bp (@$breeding_programs) { 
+      foreach my $bp (@$breeding_programs) {
 
         print "<tr><td><b><a href=\"/breeders/program/$bp->[0]\" >$bp->[1]</a></b></td><td>$bp->[2]</td>";
 
-  	if ($delete_flag) { 
+  	if ($delete_flag) {
 	  print "<td><a title=\"delete this breeding program\" id=\"delete_breeding_program_link\_".$bp->[1]."\" href=\"javascript:delete_breeding_program($bp->[0])\" ><font color=\"red\">X</font></a></td></tr>";
-	} else { 
-	  print "</tr>"; 
+	} else {
+	  print "</tr>";
 	}
       }
-    </%perl>	
-	
+    </%perl>
+
   </tbody>
 </table>
 
@@ -74,7 +74,7 @@ if ($user && $user->check_roles("curator")) {
 		<input class="form-control" name="new_breeding_program_desc" id="new_breeding_program_desc" type="text" />
               </div>
 	    </div>
-	  </form>      
+	  </form>
         </div>
       </div>
       <div class="modal-footer">
@@ -97,9 +97,9 @@ if ($user && $user->check_roles("curator")) {
 
 <script>
 
-jQuery(document).ready(function() { 
-  
-  $("button#new_breeding_program_link").click( function(event) { 
+jQuery(document).ready(function() {
+
+  $("button#new_breeding_program_link").click( function(event) {
       event.preventDefault();
       $("#new_breeding_program_dialog").modal("show");
   });
@@ -108,7 +108,7 @@ jQuery(document).ready(function() {
       event.preventDefault();
       var name = jQuery('#new_breeding_program_name').val();
       var desc = jQuery('#new_breeding_program_desc').val();
-      if ( (name === '') || (desc === '')) { 
+      if ( (name === '') || (desc === '')) {
           alert("Please enter a name and a description.");
      	  return;
       }
@@ -116,17 +116,16 @@ jQuery(document).ready(function() {
 	  url: '/breeders/program/new',
      	  data: { 'name': name, 'desc': desc },
      	  beforeSend: function()  { jQuery('#working').dialog("open") },
-     	  error: function(response) { 
+     	  error: function(response) {
               alert("An error occurred."+ response.responseText);
       	      jQuery('#working').dialog("close");
           },
-     	  success: function(response) { 
-       	      if (response.error) { 
+     	  success: function(response) {
+       	      if (response.error) {
                   alert(response.error);
-       
               }
-       	      else { 
-              	  alert("The new breeding program "+name+" was created");
+       	      else {
+              	  alert(response.success);
        	      }
        	      jQuery('#working').dialog("close");
        	      location.reload();
@@ -138,18 +137,18 @@ jQuery(document).ready(function() {
 
 
 
-function delete_breeding_program(program_id) { 
-   if (confirm("Delete breeding program? The associated trials will not be deleted, but be listed under 'Other'")) { 
-      jQuery.ajax( { 
-        url: '/breeders/program/delete/'+program_id, 
-        error: function(response) { 
+function delete_breeding_program(program_id) {
+   if (confirm("Delete breeding program? The associated trials will not be deleted, but be listed under 'Other'")) {
+      jQuery.ajax( {
+        url: '/breeders/program/delete/'+program_id,
+        error: function(response) {
         alert("An error occurred.");
       },
-      success: function(response) { 
-        if (response.error) { 
+      success: function(response) {
+        if (response.error) {
           alert(response.error);
         }
-        else { 
+        else {
           location.reload();
         }
       }
