@@ -106,6 +106,38 @@ sub upload_drone_imagery_POST : Args(0) {
         $c->stash->{rest} = { error => "Please give a new drone run date in the format YYYY/MM/DD HH:mm:ss!" };
         $c->detach();
     }
+
+    my $drone_run_field_trial_project_relationship_type_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
+    my $drone_run_band_drone_run_project_relationship_type_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
+    my $project_start_date_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_start_date', 'project_property')->cvterm_id();
+
+    my $calendar_funcs = CXGN::Calendar->new({});
+
+    my %seen_field_trial_drone_run_dates;
+    my $drone_run_date_q = "SELECT drone_run_date.value
+        FROM project AS drone_run_band_project
+        JOIN project_relationship AS drone_run_band_rel ON (drone_run_band_rel.subject_project_id = drone_run_band_project.project_id AND drone_run_band_rel.type_id = $drone_run_band_drone_run_project_relationship_type_id_cvterm_id)
+        JOIN project AS drone_run_project ON (drone_run_band_rel.object_project_id = drone_run_project.project_id)
+        JOIN projectprop AS drone_run_date ON(drone_run_project.project_id=drone_run_date.project_id AND drone_run_date.type_id=$project_start_date_type_id)
+        JOIN project_relationship AS field_trial_rel ON (drone_run_project.project_id = field_trial_rel.subject_project_id AND field_trial_rel.type_id=$drone_run_field_trial_project_relationship_type_id_cvterm_id)
+        JOIN project AS field_trial ON (field_trial_rel.object_project_id = field_trial.project_id)
+        WHERE field_trial.project_id = ?;";
+    my $drone_run_date_h = $schema->storage->dbh()->prepare($drone_run_date_q);
+    $drone_run_date_h->execute($selected_trial_id);
+    while( my ($drone_run_date) = $drone_run_date_h->fetchrow_array()) {
+        my $drone_run_date_formatted = $drone_run_date ? $calendar_funcs->display_start_date($drone_run_date) : '';
+        if ($drone_run_date_formatted) {
+            my $date_obj = Time::Piece->strptime($drone_run_date_formatted, "%Y-%B-%d %H:%M:%S");
+            my $epoch_seconds = $date_obj->epoch;
+            $seen_field_trial_drone_run_dates{$epoch_seconds}++;
+        }
+    }
+    my $drone_run_date_obj = Time::Piece->strptime($new_drone_run_date, "%Y/%m/%d %H:%M:%S");
+    if (exists($seen_field_trial_drone_run_dates{$drone_run_date_obj->epoch})) {
+        $c->stash->{rest} = { error => "An imaging event has already occured on this field trial at the same date and time! Please give a unique date/time for each imaging event!" };
+        $c->detach();
+    }
+
     if ($new_drone_run_name && !$new_drone_run_desc){
         $c->stash->{rest} = { error => "Please give a new drone run description!" };
         $c->detach();
@@ -189,7 +221,6 @@ sub upload_drone_imagery_POST : Args(0) {
             day => $day_term
         );
 
-        my $calendar_funcs = CXGN::Calendar->new({});
         my $drone_run_event = $calendar_funcs->check_value_format($new_drone_run_date);
         my $drone_run_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_experiment', 'experiment_type')->cvterm_id();
         my $project_start_date_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_start_date', 'project_property')->cvterm_id();
