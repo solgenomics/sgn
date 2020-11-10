@@ -200,7 +200,9 @@ class ThreadNode {
         let edge = reduced._connect(this);
         this.all( (data) => { 
             try {
-                data.reduce(reduce_func).forEach(d=>edge.send([this._wrap_datum(d)]));
+                // data.reduce(reduce_func).forEach(d=>edge.send([this._wrap_datum(d)]));
+                data.reduce(reduce_func,[]);
+                edge.send([this._wrap_datum(data)]);
             } catch (e) {
                 edge.send([new DatumWrapper(new NodeFrayError(e), "0?")]);
             } finally {
