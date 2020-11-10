@@ -361,6 +361,9 @@ sub search {
 
     if (scalar(@trait_name_array)>0 || $minimum_phenotype_value || $maximum_phenotype_value){
 
+        my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
+        push @sql_and_conditions, "phenotype.value~\'$numeric_regex\'";
+
         if ($stock_type_search == $accession_cvterm_id){
             $nd_experment_phenotype_join = "JOIN nd_experiment_phenotype_bridge ON(plot.stock_id = nd_experiment_phenotype_bridge.stock_id)
                 JOIN phenotype ON(nd_experiment_phenotype_bridge.phenotype_id = phenotype.phenotype_id)
