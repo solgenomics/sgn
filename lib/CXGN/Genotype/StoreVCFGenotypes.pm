@@ -664,10 +664,8 @@ sub validate {
             }
         }
     }
-    while (my ($chromosome, $protocol_info_chrom) = each %{$protocol_info->{marker_names}}) {
-        if (scalar(@{$protocol_info_chrom}) == 0){
-            push @error_messages, "No marker info in marker_names file";
-        }
+    if (scalar(@{$protocol_info->{marker_names}}) == 0){
+        push @error_messages, "No marker info in file";
     }
     while (my ($chromosome, $protocol_info_chrom) = each %{$protocol_info->{markers_array}}) {
         if (scalar(@{$protocol_info_chrom}) == 0){
@@ -856,20 +854,21 @@ sub store_metadata {
         }
         print STDERR Dumper \%chromosomes;
 
+	delete($new_protocol_info->{markers});
+	delete($new_protocol_info->{markers_array});
+
+	my $nd_protocol_json_string = encode_json $new_protocol_info;
+	my $new_protocolprop_sql = "INSERT INTO nd_protocolprop (nd_protocol_id, type_id, rank, value) VALUES (?, ?, ?, ?);";
+	my $h_protocolprop = $schema->storage->dbh()->prepare($new_protocolprop_sql);
+	$h_protocolprop->execute($protocol_id, $vcf_map_details_id, 0, $nd_protocol_json_string);
+
 	foreach  my $chr_name (sort keys %unique_chromosomes) {
 	    print STDERR "Chromosome: $chr_name\n";
             $new_protocol_info->{chromosomes} = $chr_name;
 
-            delete($new_protocol_info->{markers});
-            delete($new_protocol_info->{markers_array});
-
 	    my $rank = $chromosomes{$chr_name}->{rank};
-	    my $nd_protocol_json_string = encode_json $new_protocol_info->{$chr_name};
 	    my $nd_protocolprop_markers_json_string = encode_json $nd_protocolprop_markers->{$chr_name};
 	    my $nd_protocolprop_markers_array_json_string = encode_json $nd_protocolprop_markers->{$chr_name};
-            my $new_protocolprop_sql = "INSERT INTO nd_protocolprop (nd_protocol_id, type_id, rank, value) VALUES (?, ?, ?, ?);";
-            my $h_protocolprop = $schema->storage->dbh()->prepare($new_protocolprop_sql);
-            $h_protocolprop->execute($protocol_id, $vcf_map_details_id, $rank, $nd_protocol_json_string);
             $h_protocolprop->execute($protocol_id, $vcf_map_details_markers_cvterm_id, $rank, $nd_protocolprop_markers_json_string);
             $h_protocolprop->execute($protocol_id, $vcf_map_details_markers_array_cvterm_id, $rank, $nd_protocolprop_markers_array_json_string);
 
