@@ -323,7 +323,6 @@ sub list_seedlots {
     my $experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot_experiment", "experiment_type")->cvterm_id();
     my $seedlot_quality_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot_quality", "stock_property")->cvterm_id();
 
-    my $time = localtime();
     my %search_criteria;
     $search_criteria{'me.type_id'} = $type_id;
     $search_criteria{'stock_relationship_objects.type_id'} = $collection_of_cvterm_id;
@@ -424,9 +423,6 @@ sub list_seedlots {
         push @{$unique_seedlots{$row->uniquename}->{source_stocks}}, [$row->get_column('source_stock_id'), $row->get_column('source_uniquename'), $source_types_hash{$row->get_column('source_type_id')}];
     }
 
-    my $time2 = localtime();
-    print STDERR "Elapsed : ". ($time2 - $time)."\n";
-    
     my @seen_seedlot_ids = keys %seen_seedlot_ids;
     my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
     my $owners_hash = $stock_lookup->get_owner_hash_lookup(\@seen_seedlot_ids);
@@ -443,8 +439,6 @@ sub list_seedlots {
     });
     my ($stocksearch_result, $records_stock_total) = $stock_search->search();
 
-    my $time3 = localtime();
-    print STDERR "Elapsed 2: ". ($time3- $time)."\n";
     my %stockprop_hash;
     foreach (@$stocksearch_result){
         $stockprop_hash{$_->{stock_id}} = $_;
