@@ -63,7 +63,7 @@ function loadBrAPIData(server,parameters,success){
     });
     
     var brapi_Data = BrAPI("/brapi/v1",'v1.3',auth_token).phenotypes_search(data);
-    
+
     if (currentGFilter!=null){
         $("#stock_search_graphical_filter_results_div").DataTable().destroy();
         $("#stock_search_graphical_filter_results_div").html("");
@@ -88,6 +88,7 @@ function loadBrAPIData(server,parameters,success){
           return d.germplasmDbId
         }
       );
+
     currentGFilter.draw("#stock_search_graphical_filter_div","#stock_search_graphical_filter_results_div");
     brapi_Data.all(function(){
       _make_graphical_filtering_list_select();
@@ -97,7 +98,7 @@ function loadBrAPIData(server,parameters,success){
     });
     
 
-    function _make_graphical_filtering_list_select(){console.log(currentGFilter.results_table);
+    function _make_graphical_filtering_list_select(){
         var data = currentGFilter.results_table.context[0].aoData;
         var displayed_rows = currentGFilter.results_table.context[0].aiDisplay;
         var names = [];
