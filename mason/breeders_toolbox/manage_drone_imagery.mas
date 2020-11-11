@@ -4365,6 +4365,12 @@ jQuery(document).ready(function() {
         manage_drone_imagery_calculate_statistics_field_trial_id_array = undefined;
         manage_drone_imagery_calculate_statistics_field_trial_id_string = "";
         manage_drone_imagery_calculate_statistics_field_trial_id_array = jQuery('#drone_imagery_calculate_statistics_field_trial_id').val();
+
+        if (manage_drone_imagery_calculate_statistics_field_trial_id_array.length > 1) {
+            alert('Please only select a single field trial for now!');
+            return false;
+        }
+
         manage_drone_imagery_calculate_statistics_field_trial_id_string = manage_drone_imagery_calculate_statistics_field_trial_id_array.join(",");
         manage_drone_imagery_calculate_statistics_observation_variable_type = jQuery('#drone_imagery_calculate_statistics_select_observation_variable_type').val();
         if (manage_drone_imagery_calculate_statistics_field_trial_id_string == '') {
@@ -4441,9 +4447,9 @@ jQuery(document).ready(function() {
         else if (manage_drone_imagery_calculate_statistics_select == 'sommer_grm_spatial_genetic_blups') {
             jQuery('#drone_imagery_calculate_statistics_marss_div').hide();
             jQuery('#drone_imagery_calculate_statistics_genotyping_protocol_div').show();
-            jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_genetic_pe_residual').hide();
-            jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_genetic').show();
-            jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_spatial').show();
+            jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_genetic_pe_residual').show();
+            jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_genetic').hide();
+            jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_spatial').hide();
             jQuery('#drone_imagery_calculate_statistics_analysis_save_blups_pe').hide();
             jQuery('#drone_imagery_calculate_statistics_analysis_save_residuals').hide();
             jQuery('#drone_imagery_calculate_statistics_analysis_save_fitted').hide();
@@ -4994,6 +5000,9 @@ jQuery(document).ready(function() {
                     var statistical_ontology_term;
                     var drone_imagery_stats_auxiliary_files;
                     var drone_imagery_stats_training_data_file;
+                    var generic_save_analysis_template_name_type = '_PermanentEnvironment';
+                    var generic_save_analysis_template_env1_result_values = JSON.stringify(manage_drone_imagery_calculate_statistics_response.result_blup_pe_data);
+
                     if (manage_drone_imagery_calculate_statistics_select == 'sommer_grm_temporal_random_regression_dap_genetic_blups') {
                         drone_imagery_stats_auxiliary_files = [
                             {'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.grm_file, auxiliary_model_file_archive_type:'nicksmixedmodels_v1.01_sommer_grm_temporal_legendre_polynomial_DAP_genetic_blups_grm_file'},
@@ -5085,12 +5094,23 @@ jQuery(document).ready(function() {
                         drone_imagery_stats_training_data_file = manage_drone_imagery_calculate_statistics_response.blupf90_training_file;
                     }
 
+                    if (manage_drone_imagery_calculate_statistics_select == 'sommer_grm_spatial_genetic_blups') {
+                        statistical_ontology_term = "Multivariate linear mixed model 2D spline spatial BLUPs using genetic relationship matrix and row and column spatial effects computed using Sommer R|SGNSTAT:0000003";
+
+                        drone_imagery_stats_auxiliary_files = [{'auxiliary_model_file':manage_drone_imagery_calculate_statistics_response.grm_file, auxiliary_model_file_archive_type:'nicksmixedmodels_v1.01_sommer_grm_spatial_genetic_blups_grm_file'}];
+
+                        generic_save_analysis_template_name_type = '_Spatial';
+                        generic_save_analysis_template_env1_result_values = JSON.stringify(manage_drone_imagery_calculate_statistics_response.result_blup_spatial_data);
+
+                        drone_imagery_stats_training_data_file = manage_drone_imagery_calculate_statistics_response.stats_tempfile;
+                    }
+
                     jQuery.ajax({
                         type: 'POST',
                         url : '/ajax/analysis/store/json',
                         data : {
                             'analysis_to_save_boolean':'yes',
-                            'analysis_name':generic_save_analysis_template_analysis_name+'_PermanentEnvironment',
+                            'analysis_name':generic_save_analysis_template_analysis_name+generic_save_analysis_template_name_type,
                             'analysis_description':generic_save_analysis_template_analysis_description,
                             'analysis_year':generic_save_analysis_template_analysis_year,
                             'analysis_breeding_program_id':generic_save_analysis_template_breeding_program_id,
@@ -5100,7 +5120,7 @@ jQuery(document).ready(function() {
                             'analysis_trait_names':JSON.stringify(manage_drone_imagery_calculate_statistics_response.unique_traits),
                             'analysis_statistical_ontology_term':statistical_ontology_term,
                             'analysis_precomputed_design_optional':JSON.stringify(manage_drone_imagery_calculate_statistics_response.field_trial_design),
-                            'analysis_result_values':JSON.stringify(manage_drone_imagery_calculate_statistics_response.result_blup_pe_data),
+                            'analysis_result_values':generic_save_analysis_template_env1_result_values,
                             'analysis_result_values_type':'analysis_result_values_match_precomputed_design',
                             'analysis_result_summary':JSON.stringify(drone_imagery_stats_result_summary),
                             'analysis_result_trait_compose_info':'',
@@ -5231,6 +5251,12 @@ jQuery(document).ready(function() {
                                     }
 
                                     drone_imagery_stats_training_data_file = manage_drone_imagery_calculate_statistics_response.blupf90_training_file;
+                                }
+
+                                if (manage_drone_imagery_calculate_statistics_select == 'sommer_grm_spatial_genetic_blups') {
+                                    jQuery('#working_modal').modal('hide');
+                                    alert('Analysis and/or model saved!');
+                                    return false;
                                 }
 
                                 jQuery.ajax({
