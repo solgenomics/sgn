@@ -112,7 +112,8 @@ sub patch {
     my @deleted_nd_experiment_md_images_ids;
     my @deleted_nd_experiment_md_json_ids;
     while (my ($nd_experiment_id, $phenotype_id, $stock_id, $project_id, $nd_geolocation_id, $file_id, $image_id, $json_id, $upload_date, $nd_experiment_md_files_id, $nd_experiment_md_images_id, $nd_experiment_md_json_id) = $h->fetchrow_array()) {
-        print STDERR "Working on phenotype_id $phenotype_id \n";
+        my $phenotype_id_string = $phenotype_id ? $phenotype_id : '';
+        print STDERR "Working on phenotype_id $phenotype_id_string \n";
         if ($upload_date =~ m/(\d{4})-(\d{2})-(\d{2})_(\d{2}):(\d{2}):(\d{2})/) {
             my $upload_date_obj = Time::Piece->strptime($upload_date, "%Y-%m-%d_%H:%M:%S");
             $upload_date = $upload_date_obj->strftime("%Y-%m-%d_%H:%M:%S");
