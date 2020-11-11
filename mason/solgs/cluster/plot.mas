@@ -51,8 +51,9 @@ $pop_id = undef if $list_id || $combo_pops_id;
 
 <div id="cluster_canvas">
   
-<& /solgs/spinner.mas &>
-<div id="cluster_message" style="font-weight:bold;text-align:center;color:#A7C942"> </div>
+  <& /solgs/spinner.mas &>
+    
+<div id="cluster_message" class="message"> </div>
 
 <div id="cluster_plot">
    

@@ -70,6 +70,13 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
     my @editable_stock_props = split ',', $c->config->{editable_stock_props};
     my %editable_stock_props = map { $_=>1 } @editable_stock_props;
 
+    my @editable_stock_props_definitions = split ',', $c->config->{editable_stock_props_definitions};
+    my %def_hash;
+    foreach (@editable_stock_props_definitions) {
+        my @term_def = split ':', $_;
+        $def_hash{$term_def[0]} = $term_def[1];
+    }
+
     my $breeding_programs = $projects->get_breeding_programs();
     my @breeding_programs = @$breeding_programs;
     my @roles = $c->user->roles();
@@ -95,6 +102,7 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
     $c->stash->{design_types} = \@design_types;
     $c->stash->{management_factor_types} = \@management_factor_types;
     $c->stash->{editable_stock_props} = \%editable_stock_props;
+    $c->stash->{editable_stock_props_definitions} = \%def_hash;
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{timestamp} = localtime;
 
@@ -131,11 +139,19 @@ sub manage_accessions : Path("/breeders/accessions") Args(0) {
     my @editable_stock_props = split ',', $c->config->{editable_stock_props};
     my %editable_stock_props = map { $_=>1 } @editable_stock_props;
 
+    my @editable_stock_props_definitions = split ',', $c->config->{editable_stock_props_definitions};
+    my %def_hash;
+    foreach (@editable_stock_props_definitions) {
+        my @term_def = split ':', $_;
+        $def_hash{$term_def[0]} = $term_def[1];
+    }
+
     $c->stash->{accessions} = $accessions;
     $c->stash->{list_id} = $list_id;
     #$c->stash->{population_groups} = $populations;
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{editable_stock_props} = \%editable_stock_props;
+    $c->stash->{editable_stock_props_definitions} = \%def_hash;
     $c->stash->{template} = '/breeders_toolbox/manage_accessions.mas';
 }
 
@@ -330,7 +346,13 @@ sub manage_upload :Path("/breeders/upload") Args(0) {
 
     my @editable_stock_props = split ',', $c->config->{editable_stock_props};
     my %editable_stock_props = map { $_=>1 } @editable_stock_props;
-    $c->stash->{editable_stock_props} = \%editable_stock_props;
+
+    my @editable_stock_props_definitions = split ',', $c->config->{editable_stock_props_definitions};
+    my %def_hash;
+    foreach (@editable_stock_props_definitions) {
+        my @term_def = split ':', $_;
+        $def_hash{$term_def[0]} = $term_def[1];
+    }
 
     my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
     my $breeding_programs = $projects->get_breeding_programs();
@@ -346,6 +368,8 @@ sub manage_upload :Path("/breeders/upload") Args(0) {
     my $design_type_string = $c->config->{design_types};
     my @design_types = split ',',$design_type_string;
 
+    $c->stash->{editable_stock_props} = \%editable_stock_props;
+    $c->stash->{editable_stock_props_definitions} = \%def_hash;
     $c->stash->{design_types} = \@design_types;
     $c->stash->{management_factor_types} = \@management_factor_types;
     $c->stash->{facilities} = \@facilities;

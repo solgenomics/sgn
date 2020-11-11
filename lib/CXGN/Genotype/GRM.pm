@@ -594,8 +594,8 @@ sub download_grm {
                 $row_num++;
             }
 
-            foreach my $r (sort keys %result_hash) {
-                foreach my $s (sort keys %{$result_hash{$r}}) {
+            foreach my $r (sort { $a <=> $b } keys %result_hash) {
+                foreach my $s (sort { $a <=> $b } keys %{$result_hash{$r}}) {
                     my $val = $result_hash{$r}->{$s};
                     if (defined $val and length $val) {
                         $data .= "S$r\tS$s\t$val\n";
@@ -637,8 +637,8 @@ sub download_grm {
                 $row_num++;
             }
 
-            foreach my $r (sort keys %result_hash) {
-                foreach my $s (sort keys %{$result_hash{$r}}) {
+            foreach my $r (sort { $a <=> $b } keys %result_hash) {
+                foreach my $s (sort { $a <=> $b } keys %{$result_hash{$r}}) {
                     my $val = $result_hash{$r}->{$s};
                     if (defined $val and length $val) {
                         $data .= "$r\t$s\t$val\n";
@@ -681,8 +681,8 @@ sub download_grm {
                 $row_num++;
             }
 
-            foreach my $r (sort keys %result_hash) {
-                foreach my $s (sort keys %{$result_hash{$r}}) {
+            foreach my $r (sort { $a <=> $b } keys %result_hash) {
+                foreach my $s (sort { $a <=> $b } keys %{$result_hash{$r}}) {
                     my $val = $result_hash{$r}->{$s};
                     if (defined $val and length $val) {
                         $data .= "S$r\tS$s\t$val\n";
@@ -728,8 +728,8 @@ sub download_grm {
                 $row_num++;
             }
 
-            foreach my $r (sort keys %result_hash) {
-                foreach my $s (sort keys %{$result_hash{$r}}) {
+            foreach my $r (sort { $a <=> $b } keys %result_hash) {
+                foreach my $s (sort { $a <=> $b } keys %{$result_hash{$r}}) {
                     my $val = $result_hash{$r}->{$s};
                     if (defined $val and length $val) {
                         $data .= "$r\t$s\t$val\n";
@@ -775,8 +775,8 @@ sub download_grm {
                 $row_num++;
             }
 
-            foreach my $r (sort keys %result_hash) {
-                foreach my $s (sort keys %{$result_hash{$r}}) {
+            foreach my $r (sort { $a <=> $b } keys %result_hash) {
+                foreach my $s (sort { $a <=> $b } keys %{$result_hash{$r}}) {
                     my $val = $result_hash{$r}->{$s};
                     $data .= "$r\t$s\t$val\n";
                 }

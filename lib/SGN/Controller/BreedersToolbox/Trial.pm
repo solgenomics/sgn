@@ -137,6 +137,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         $c->stash->{genotyping_facility} = $trial->get_genotyping_facility;
         $c->stash->{genotyping_facility_submitted} = $trial->get_genotyping_facility_submitted;
         $c->stash->{genotyping_facility_status} = $trial->get_genotyping_facility_status;
+        $c->stash->{genotyping_vendor_order_id} = $trial->get_genotyping_vendor_order_id;
         $c->stash->{genotyping_plate_sample_type} = $trial->get_genotyping_plate_sample_type;
         if ($trial->get_genotyping_plate_format){
             $c->stash->{genotyping_plate_format} = $trial->get_genotyping_plate_format;
@@ -232,6 +233,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $self = shift;
     my $c = shift;
     my $what = shift;
+    print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     my $user = $c->user();
@@ -244,6 +246,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $data_level = $c->req->param("dataLevel") || "plot";
     my $timestamp_option = $c->req->param("timestamp") || 0;
     my $trait_list = $c->req->param("trait_list");
+    my $include_measured = $c->req->param('include_measured') || '';
     my $search_type = $c->req->param("search_type") || 'fast';
 
     my $trial = $c->stash->{trial};
@@ -335,7 +338,8 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         search_type => $search_type,
         include_timestamp => $timestamp_option,
         treatment_project_ids => \@treatment_project_ids,
-        selected_columns => $selected_cols
+        selected_columns => $selected_cols,
+        include_measured => $include_measured
     });
 
     my $error = $download->download();
@@ -359,6 +363,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
 sub trials_download_layouts : Path('/breeders/trials/download/layout') Args(0) {
     my $self = shift;
     my $c = shift;
+    print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $user = $c->user();
     if (!$user) {

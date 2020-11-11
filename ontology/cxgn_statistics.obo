@@ -130,3 +130,63 @@ is_a: SGNSTAT:0000000
 id: SGNSTAT:0000025
 name: Adjusted means using LMER R
 is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000026
+name: Multivariate linear mixed model residual using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using AIREMLf90
+is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000027
+name: Multivariate linear mixed model residual using genetic relationship matrix and temporal Legendre polynomial random regression on growing degree days computed using AIREMLf90
+is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000028
+name: Multivariate linear mixed model residual using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using BLUPf90
+is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000029
+name: Multivariate linear mixed model residual using genetic relationship matrix and temporal Legendre polynomial random regression on growing degree days computed using BLUPf90
+is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000030
+name: Multivariate linear mixed model residual using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using Sommer R
+is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000031
+name: Multivariate linear mixed model residual using genetic relationship matrix and temporal Legendre polynomial random regression on growing degree days computed using Sommer R
+is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000032
+name: Multivariate linear mixed model residual using genetic relationship matrix and 2D spline row and column spatial effects computed using Sommer R
+is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000033
+name: Univariate linear mixed model residual using genetic relationship matrix and separable Ar1xAr1 row and column effect computed using ASReml
+is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000034
+name: Adjusted means from BLUPs using LMER R
+is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000035
+name: Phenotypic BLUPs using LMER R
+is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000036
+name: Adjusted means from BLUEs using LMER R
+is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000037
+name: Phenotypic BLUEs using LMER R
+is_a: SGNSTAT:0000000

@@ -19,7 +19,7 @@ $blups_download_url => ''
 
 </%args>
 
-<& /util/import_javascript.mas, classes => ["solGS.gebvs"] &>
+<& /util/import_javascript.mas, classes => ["solGS.gebvs",  "solGS.histogram"] &>
 
 
 <&| /page/info_section.mas, 

@@ -200,19 +200,19 @@ sub detail {
                 };
             }
 
-            my $phenotype_files = $t->get_phenotype_metadata();
-            foreach (@$additional_files){
-                push @data_links, {
-                    scientificType => 'Uploaded Phenotype File',
-                    name => $_->[4],
-                    url => $main_production_site_url.'/breeders/phenotyping/download/'.$_->[0],
-                    provenance => undef,
-                    dataFormat => undef,
-                    description => undef,
-                    fileFormat => undef,
-                    version => undef
-                };
-            }
+            # my $phenotype_files = $t->get_phenotype_metadata();
+            # foreach (@$phenotype_files){
+            #     push @data_links, {
+            #         scientificType => 'Uploaded Phenotype File',
+            #         name => $_->[4],
+            #         url => $main_production_site_url.'/breeders/phenotyping/download/'.$_->[0],
+            #         provenance => undef,
+            #         dataFormat => undef,
+            #         description => undef,
+            #         fileFormat => undef,
+            #         version => undef
+            #     };
+            # }
 
             my $data_agreement = $t->get_data_agreement() ? $t->get_data_agreement() : '';
             my $study_db_id = $t->get_trial_id();
@@ -590,58 +590,58 @@ sub _search {
 		my $planting_date;
 		if ($_->{project_planting_date}) {
 			$planting_date = format_date($_->{project_planting_date});
-			if($planting_date == "") { $planting_date = undef; }
+			if($planting_date eq "") { $planting_date = undef; }
 		}
 		my $harvest_date;
 		if ($_->{project_harvest_date}) {
 			$harvest_date = format_date($_->{project_harvest_date});
-			if($harvest_date == "") { $harvest_date = undef;}
+			if($harvest_date eq "") { $harvest_date = undef;}
 		}
 
-		my $t = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $_->{trial_id} });
-		my $contacts = $t->get_trial_contacts();
+		# my $t = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $_->{trial_id} });
+		# my $contacts = $t->get_trial_contacts();
 		my $brapi_contacts;
-		foreach (@$contacts){
-			push @$brapi_contacts, {
-				contactDbId => $_->{sp_person_id},
-				name => $_->{salutation}." ".$_->{first_name}." ".$_->{last_name},
-                instituteName => $_->{organization},
-				email => $_->{email},
-				type => $_->{user_type},
-				orcid => ''
-			};
-		}
-		my $additional_files = $t->get_additional_uploaded_files();
+		# foreach (@$contacts){
+		# 	push @$brapi_contacts, {
+		# 		contactDbId => $_->{sp_person_id},
+		# 		name => $_->{salutation}." ".$_->{first_name}." ".$_->{last_name},
+  #               instituteName => $_->{organization},
+		# 		email => $_->{email},
+		# 		type => $_->{user_type},
+		# 		orcid => ''
+		# 	};
+		# }
+		# my $additional_files = $t->get_additional_uploaded_files();
         my @data_links;
-        foreach (@$additional_files){
-            push @data_links, {
-                scientificType => 'Additional File',
-                name => $_->[4],
-                url => $main_production_site_url.'/breeders/phenotyping/download/'.$_->[0],
-                provenance => undef,
-                dataFormat => undef,
-                description => undef,
-                fileFormat => undef,
-                version => undef
-            };
-        }
+        # foreach (@$additional_files){
+        #     push @data_links, {
+        #         scientificType => 'Additional File',
+        #         name => $_->[4],
+        #         url => $main_production_site_url.'/breeders/phenotyping/download/'.$_->[0],
+        #         provenance => undef,
+        #         dataFormat => undef,
+        #         description => undef,
+        #         fileFormat => undef,
+        #         version => undef
+        #     };
+        # }
 
-        my $phenotype_files = $t->get_phenotype_metadata();
-        foreach (@$additional_files){
-            push @data_links, {
-                scientificType => 'Uploaded Phenotype File',
-                name => $_->[4],
-                url => $main_production_site_url.'/breeders/phenotyping/download/'.$_->[0],
-                provenance => undef,
-                dataFormat => undef,
-                description => undef,
-                fileFormat => undef,
-                version => undef
-            };
-        }
-        my $data_agreement = $t->get_data_agreement() ? $t->get_data_agreement() : '';
+        # my $phenotype_files = $t->get_phenotype_metadata();
+        # foreach (@$phenotype_files){
+        #     push @data_links, {
+        #         scientificType => 'Uploaded Phenotype File',
+        #         name => $_->[4],
+        #         url => $main_production_site_url.'/breeders/phenotyping/download/'.$_->[0],
+        #         provenance => undef,
+        #         dataFormat => undef,
+        #         description => undef,
+        #         fileFormat => undef,
+        #         version => undef
+        #     };
+        # }
+        my $data_agreement; # = $t->get_data_agreement() ? $t->get_data_agreement() : '';
 
-		my $folder_id = $t->get_folder()->id();	
+		# my $folder_id = $t->get_folder()->id();	
         my %data_obj = (
 			active=>JSON::true,
 			additionalInfo=>\%additional_info,
@@ -669,8 +669,8 @@ sub _search {
 			studyName => $_->{trial_name},
 			studyPUI => undef,
 			studyType => $_->{trial_type},
-            trialDbId => qq|$folder_id|,
-            trialName => $t->get_folder()->name(),
+            trialDbId => $_->{folder_id} ? qq|$_->{folder_id}| : undef, #qq|$folder_id|,
+            trialName => $_->{folder_name}  #$t->get_folder()->name(),
         );
         push @data_out, \%data_obj;
     }
