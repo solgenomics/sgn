@@ -323,22 +323,28 @@ sub list_seedlots {
     my $experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot_experiment", "experiment_type")->cvterm_id();
     my $seedlot_quality_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot_quality", "stock_property")->cvterm_id();
 
+    my $time = localtime();
     my %search_criteria;
     $search_criteria{'me.type_id'} = $type_id;
     $search_criteria{'stock_relationship_objects.type_id'} = $collection_of_cvterm_id;
     if ($seedlot_name) {
+	print STDERR "Adding seedlot name ($seedlot_name) to query...\n";
         $search_criteria{'me.uniquename'} = { 'ilike' => '%'.$seedlot_name.'%' };
     }
     if ($seedlot_id) {
+	print STDERR "Adding seedlot_id ($seedlot_id) to query...\n";
         $search_criteria{'me.stock_id'} = { -in => $seedlot_id };
     }
     if ($breeding_program) {
+	print STDERR "Addint breeding_program $breeding_program to query...\n";
         $search_criteria{'project.name'} = { 'ilike' => '%'.$breeding_program.'%' };
     }
     if ($location) {
+	print STDERR "Adding location $location to query...\n";
         $search_criteria{'nd_geolocation.description'} = { 'ilike' => '%'.$location.'%' };
     }
     if ($contents_accession && scalar(@$contents_accession)>0) {
+	print STDERR "Adding $contents_accession ...\n";
         $search_criteria{'subject.type_id'} = $accession_type_id;
         if ($exact_match_uniquenames){
             $search_criteria{'subject.uniquename'} = { -in => $contents_accession };
@@ -371,13 +377,16 @@ sub list_seedlots {
 
     if ($minimum_count || $minimum_weight || $quality || $only_good_quality) {
         if ($minimum_count) {
+	    print STDERR "Minimum count $minimum_count\n";
             $search_criteria{'stockprops.value' }  = { '>=' => $minimum_count };
             $search_criteria{'stockprops.type_id' }  = $current_count_cvterm_id;
         } elsif ($minimum_weight) {
+	    print STDERR "Minimum weight $minimum_weight\n";
             $search_criteria{'stockprops.value' }  = { '>=' => $minimum_weight };
             $search_criteria{'stockprops.type_id' }  = $current_weight_cvterm_id;
         }
 	if ($quality) {
+	    print STDERR "Quality $quality\n";
 	     $search_criteria{'stockprops.value' } = { '=' => $quality };
 	     $search_criteria{'stockprops.type_id' } = $seedlot_quality_cvterm_id;
 	}
@@ -415,10 +424,13 @@ sub list_seedlots {
         push @{$unique_seedlots{$row->uniquename}->{source_stocks}}, [$row->get_column('source_stock_id'), $row->get_column('source_uniquename'), $source_types_hash{$row->get_column('source_type_id')}];
     }
 
+    my $time2 = localtime();
+    print STDERR "Elapsed : ". ($time2 - $time)."\n";
+    
     my @seen_seedlot_ids = keys %seen_seedlot_ids;
     my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
     my $owners_hash = $stock_lookup->get_owner_hash_lookup(\@seen_seedlot_ids);
-
+    
     my $stock_search = CXGN::Stock::Search->new({
         bcs_schema=>$schema,
         people_schema=>$people_schema,
@@ -431,6 +443,8 @@ sub list_seedlots {
     });
     my ($stocksearch_result, $records_stock_total) = $stock_search->search();
 
+    my $time3 = localtime();
+    print STDERR "Elapsed 2: ". ($time3- $time)."\n";
     my %stockprop_hash;
     foreach (@$stocksearch_result){
         $stockprop_hash{$_->{stock_id}} = $_;
