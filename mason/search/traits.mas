@@ -144,7 +144,7 @@ jQuery(document).ready(function () {
             'ordering'  : false,
             'processing': true,
             'serverSide': true,
-            'lengthMenu': [10,20,50,100,1000,5000],
+            'lengthMenu': [10,20,50],
             'columnDefs': [ {
                 'orderable': false,
                 'className': 'select-checkbox',
