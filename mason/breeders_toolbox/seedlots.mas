@@ -129,10 +129,14 @@ $crossing_trials
 </div>
 </&>
 
-<br/>
+Enter search terms and click the "Search" button to view results.
+<br />
+<br />
+<br />
 
 <table id="available_seedlots_table" class="table table-hover table-striped table-bordered">
 </table>
+
 
 <hr>
 
