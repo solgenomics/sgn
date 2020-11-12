@@ -318,7 +318,7 @@ sub verify_accessions_file_POST : Args(0) {
         fuzzy_organisms => $parsed_data->{fuzzy_organisms},
         found_organisms => $parsed_data->{found_organisms}
     );
-
+    print STDERR "verify_accessions_file returns: " . Dumper %return;
     if ($parsed_data->{error_string}){
         $return{error_string} = $parsed_data->{error_string};
     }
