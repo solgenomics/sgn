@@ -460,6 +460,8 @@ sub create_and_store_analysis_design {
         die "Error saving trial: $_";
     };
 
+    $self->_get_layout();
+
     print STDERR "Done with design create & store.\n";
     return $self->get_trial_id();
 }
@@ -531,14 +533,9 @@ sub store_analysis_values {
 sub _get_layout {
     my $self = shift;
 
-    # Load the design
-    #
     my $design = CXGN::Trial::TrialLayout->new({ schema => $self->bcs_schema(), trial_id => $self->get_trial_id(), experiment_type=> 'analysis_experiment'});
 
     # print STDERR "_get_layout: design = ".Dumper($design->get_design);
-
-    #print STDERR "ERROR IN LAYOUT: ".Dumper($error)."\n";
-    #print STDERR "READ DESIGN: ".Dumper($design->get_design());
     return $design;
 }
 

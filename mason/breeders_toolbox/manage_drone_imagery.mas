@@ -5147,7 +5147,12 @@ jQuery(document).ready(function() {
                             if (response.success) {
                                 html = html + '<center>';
                                 if (response.analysis_id) {
-                                    html = html + '<p>Go to saved <a href="/analyses/'+response.analysis_id+'" target=_blank >permanent environment BLUP analysis</a></p>';
+                                    if (manage_drone_imagery_calculate_statistics_select == 'sommer_grm_spatial_genetic_blups') {
+                                        html = html + '<p>Go to saved <a href="/analyses/'+response.analysis_id+'" target=_blank >spatial BLUP analysis</a></p>';
+                                    }
+                                    else {
+                                        html = html + '<p>Go to saved <a href="/analyses/'+response.analysis_id+'" target=_blank >permanent environment BLUP analysis</a></p>';
+                                    }
                                 }
                                 html = html + '</center>';
                                 jQuery('#generic_save_analysis_template_response_div').html(html);
