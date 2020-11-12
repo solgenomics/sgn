@@ -129,7 +129,10 @@ $crossing_trials
 </div>
 </&>
 
-Enter search terms and click the "Search" button to view results.
+<center>
+  Enter search terms and click the "Search" button to view results.
+</center>
+
 <br />
 <br />
 <br />
@@ -167,27 +170,11 @@ jQuery(document).ready(function(){
 });
 
 
-    // show an empty table because we are not running the query by default
-    var seedlots_table = jQuery('#available_seedlots_table').DataTable({
-        columns: [
-            { title: "Seedlot Name", "data": null, "render": function ( data, type, row ) { return "<a href='/breeders/seedlot/"+row.seedlot_stock_id+"'>"+row.seedlot_stock_uniquename+"</a>"; } },
-            { title: "Breeding Program", "data": "breeding_program_name" },
-            { title: "Contents", "data": "contents_html" },
-            { title: "Location", "data": "location" },
-            { title: "Count", "data": "count" },
-            { title: "Weight (g)", "data": "weight_gram" },
-            { title: "Submitters", "data": "owners_string" },
-            { title: "Organization", "data": "organization" },
-            { title: "Box", "data": "box" },
-            { title: "Quality", "data": "seedlot_quality" },
-            { title: "Delete", "data": "null", "render": function ( data, type, row ) { return "<a onclick='removeSeedlot("+row.seedlot_stock_id+")' >X</a>"; } },
-        ],
-
-   });
+    var seedlots_table;
 
     //run the query only when the search button is clicked
     jQuery('#submit_seedlot_search').click( function() {
-	seedlots_table.destroy();
+        if (seedlots_table) { seedlots_table.destroy(); }
 	seedlots_table = jQuery('#available_seedlots_table').DataTable({
 	    'searching' : false,
             'ordering'  : false,
