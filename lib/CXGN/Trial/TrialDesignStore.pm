@@ -217,8 +217,6 @@ For each subplot, creates a stock_relationship between the subplot and plant if 
 
 For each subplot creates an nd_experiment_stock entry if not already present. They are all linked to the same nd_experiment entry found in step 1.
 
-=back
-
 store() will do the following for GENOTYPING LAYOUT trials:
 
 =over 5
