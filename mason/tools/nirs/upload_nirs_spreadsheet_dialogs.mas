@@ -5,68 +5,163 @@
 
 <!--button class="btn btn-primary" id="upload_spreadsheet_phenotypes_link">Upload NIRS</button-->
 
-<div class="modal fade" id="upload_nirs_spreadsheet_dialog" name="upload_nirs_spreadsheet_dialog" tabindex="-1" role="dialog" aria-labelledby="addSpreadsheetNIRSDialog">
+<div class="modal fade" id="upload_nirs_spreadsheet_dialog" name="upload_nirs_spreadsheet_dialog" tabindex="-1" role="dialog" aria-labelledby="addHighDimDataDialog">
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="addSpreadsheetNIRSDialog">Upload NIRS Spreadsheet</h4>
+        <h4 class="modal-title" id="addHighDimDataDialog">Upload High-Dimensional Data</h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
-            <&| /page/explanation.mas, title=>'Template Information' &>
-                <p>
-                <b>File format information</b>
-                <br>
-                <a id="upload_nirs_spreadsheet_format_info">Spreadsheet Format</a>
-                </p>
-            </&>
+            <&| /util/workflow.mas, id=> "high_dim_data_upload_workflow" &>
+                <&| /util/workflow.mas:step, title=> "Intro" &>
+                    <& /page/page_title.mas, title=>"This workflow will guide you through uploading high-dimensional data into the database." &>
 
-            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_nirs_spreadsheet_file_form" name="upload_nirs_spreadsheet_file_form">
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">Spreadsheet Format: </label>
-                    <div class="col-sm-9" >
-                        <select class="form-control" id="upload_nirs_spreadsheet_file_format" name="upload_nirs_spreadsheet_file_format">
-                            <option value="SCIO">NIRS generic format</option>
-                        </select>
-                    </div>
-                </div>
-                <div id="upload_spreadsheet_phenotype_data_level_div">
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label">Data Level: </label>
-                        <div class="col-sm-9" >
-                            <select class="form-control" id="upload_nirs_spreadsheet_data_level" name="upload_nirs_spreadsheet_data_level">
-                                <option value="plots">Plots</option>
-                                <option value="plants">Plants</option>
-                                <option value="subplots">Subplots</option>
-                                <option value="tissue_samples">Tissue Samples</option>
-                            </select>
+                    <center>
+                        <div class="well">
+                            <h4>High-dimensional phenotype data includes:</h4>
+                            <p>NIRS</p>
+                            <p>Transcriptomics</p>
+                            <p>Metabolomics</p>
+                        </div>
+                    </center>
+
+                    <center>
+                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Data Type" &>
+                    <& /page/page_title.mas, title=>"Select the type of high-dimensional data being uploaded" &>
+                    <br/><br/>
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Data Type: </label>
+                            <div class="col-sm-9" >
+                                <select class="form-control" id="high_dim_data_upload_type_select">
+                                    <option value="NIRS">NIRS</option>
+                                    <option value="Transcriptomics">Transcriptomics</option>
+                                    <option value="Metabolomics">Metabolomics</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                    <center>
+                    <button class="btn btn-primary" id="high_dim_data_upload_data_type_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Protocol Info" &>
+                    <& /page/page_title.mas, title=>"Select a protocol for how your data was generated or create a new protocol" &>
+
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Protocol Name: </label>
+                            <div class="col-sm-9" >
+                                <input class="form-control" id="high_dim_data_upload_protocol_name" type="text">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Protocol Description: </label>
+                            <div class="col-sm-9" >
+                                <input class="form-control" id="high_dim_data_upload_protocol_desc" type="text">
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">NIRS Spreadsheet: </label>
-                    <div class="col-sm-9" >
-                        <input type="file" id="upload_nirs_spreadsheet_file_input" name="upload_nirs_spreadsheet_file_input" encoding="multipart/form-data" />
+
+                    <div id="high_dim_data_upload_nirs_protocol_div" style="display:none">
+                        <div class="form-horizontal">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">NIRS Device: </label>
+                                <div class="col-sm-9" >
+                                    <select class="form-control" id="high_dim_data_upload_nirs_device_type_select">
+                                        <option value="SCIO">SCIO</option>
+                                        <option value="QST">QST</option>
+                                        <option value="Foss6500">Foss6500</option>
+                                        <option value="BunchiN500">BunchiN500</option>
+                                        <option value="LinkSquare">LinkSquare</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
+                    <center>
+                    <button class="btn btn-primary" id="high_dim_data_upload_data_protocol_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Template Info" &>
+                    <& /page/page_title.mas, title=>"High-dimensional data must be uploaded using the template information provided" &>
 
-                <div id="upload_nirs_spreadsheet_verify_status"></div>
-                <div id="upload_nirs_spreadsheet_verify_figure"></div>
+                    <center>
+                    <&| /page/explanation.mas, title=>'Template Information' &>
+                        <p>
+                        <b>File format information</b>
+                        <br>
+                        <a id="high_dim_data_spreadsheet_format_info">Spreadsheet Format</a>
+                        </p>
+                    </&>
+                    </center>
 
-                </div>
-            </form><br/>
+                    <center>
+                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Upload" &>
+                    <& /page/page_title.mas, title=>"Select your high-dimensional data file to upload" &>
 
+                    <div id="high_dim_data_upload_nirs_div" style="display:none">
+                        <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_nirs_spreadsheet_file_form" name="upload_nirs_spreadsheet_file_form">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Spreadsheet Format: </label>
+                                <div class="col-sm-9" >
+                                    <select class="form-control" id="upload_nirs_spreadsheet_file_format" name="upload_nirs_spreadsheet_file_format">
+                                        <option value="SCIO">NIRS generic format</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div id="upload_spreadsheet_phenotype_data_level_div">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Data Level: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="upload_nirs_spreadsheet_data_level" name="upload_nirs_spreadsheet_data_level">
+                                            <option value="plots">Plots</option>
+                                            <option value="plants">Plants</option>
+                                            <option value="subplots">Subplots</option>
+                                            <option value="tissue_samples">Tissue Samples</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">NIRS Spreadsheet: </label>
+                                <div class="col-sm-9" >
+                                    <input type="file" id="upload_nirs_spreadsheet_file_input" name="upload_nirs_spreadsheet_file_input" encoding="multipart/form-data" />
+                                </div>
+                            </div>
+                            
+                            <input type="hidden" id="upload_nirs_spreadsheet_protocol_name" type="text">
+                            <input type="hidden" id="upload_nirs_spreadsheet_protocol_desc" type="text">
+                            <input type="hidden" id="upload_nirs_spreadsheet_protocol_device_type" type="text">
+                        </form>
+
+                        <hr>
+                        <center>
+                            <button type="button" class="btn btn-info" name="upload_nirs_spreadsheet_submit_verify" id="upload_nirs_spreadsheet_submit_verify">Verify</button>
+                            <button disabled type="button" class="btn btn-primary" name="upload_nirs_spreadsheet_submit_store" id="upload_nirs_spreadsheet_submit_store" title="First Verify Your File">Store</button>
+                        </center>
+
+                        <div id="upload_nirs_spreadsheet_verify_status"></div>
+                        <div id="upload_nirs_spreadsheet_verify_figure"></div>
+                    </div>
+
+                </&>
+            </&>
         </div>
-
-        <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-info" name="upload_nirs_spreadsheet_submit_verify" id="upload_nirs_spreadsheet_submit_verify">Verify</button>
-            <button disabled type="button" class="btn btn-primary" name="upload_nirs_spreadsheet_submit_store" id="upload_nirs_spreadsheet_submit_store" title="First Verify Your File">Store</button>
-        </div>
-
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
     </div>
   </div>
 </div>
@@ -129,8 +224,36 @@ jQuery(document).ready(function() {
         jQuery('#upload_nirs_spreadsheet_dialog').modal("show");
     });
 
-    jQuery("#upload_nirs_spreadsheet_format_info").click( function () {
-        jQuery("#upload_nirs_spreadsheet_info_dialog" ).modal("show");
+    var high_dim_data_upload_type = '';
+    jQuery('#high_dim_data_upload_data_type_step').click(function(){
+        high_dim_data_upload_type = jQuery('#high_dim_data_upload_type_select').val();
+
+        if (high_dim_data_upload_type == 'NIRS') {
+            jQuery('#high_dim_data_upload_nirs_div').show();
+        }
+
+        Workflow.complete("#high_dim_data_upload_data_type_step");
+        Workflow.focus('#high_dim_data_upload_workflow', 2);
+    });
+
+    jQuery("#high_dim_data_spreadsheet_format_info").click( function () {
+        if (high_dim_data_upload_type == 'NIRS') {
+            jQuery("#upload_nirs_spreadsheet_info_dialog" ).modal("show");
+        }
+    });
+
+    jQuery('#high_dim_data_upload_data_protocol_step').click(function(){
+        Workflow.complete("#high_dim_data_upload_data_protocol_step");
+        Workflow.focus('#high_dim_data_upload_workflow', 3);
+
+        var high_dim_protocol_name = jQuery('#high_dim_data_upload_protocol_name').val();
+        var high_dim_protocol_desc = jQuery('#high_dim_data_upload_protocol_desc').val();
+
+        if (high_dim_data_upload_type == 'NIRS') {
+            jQuery('#upload_nirs_spreadsheet_protocol_name').val(high_dim_protocol_name);
+            jQuery('#upload_nirs_spreadsheet_protocol_desc').val(high_dim_protocol_desc);
+            jQuery('#upload_nirs_spreadsheet_protocol_device_type').val(jQuery('#high_dim_data_upload_nirs_device_type_select').val());
+        }
     });
 
     jQuery('#upload_nirs_spreadsheet_submit_verify').click(function(){
