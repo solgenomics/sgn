@@ -118,6 +118,7 @@ project_property	genotyping_plate_format	For genotyping plate to indicate if 96 
 project_property	genotyping_plate_sample_type	For genotyping plate to indicate the type of sample in plate e.g. DNA	2/16/2017	nm529	00091
 project_property	genotyping_facility_plate_id	To retrieve status info from genotyping facility this is the vendorPlateDbId	2/16/2017	nm529	00091
 project_property	drone_run_averaged_temperature_growing_degree_days	The averaged-temperature growing degree days corresponding to a drone run event	09/02/2019	nm529	00114
+project_property	drone_run_averaged_precipitation_sum	The averaged-precipitation across the growing season corresponding to a drone run event	09/02/2019	nm529	00130
 project_property	drone_run_related_time_cvterms_json	A json string containing time cvterms to annotate the drone run	09/02/2019	nm529	00114
 project_property	drone_run_is_raw_images	To distinguish when uploading raw images or orthomosaic images as drone runs	07/5172020	nm529	00126
 project_property	drone_run_ground_control_points	Ground control points (GCPs) can optionally be saved for a drone run	08/01/2020	nm529	00127
@@ -153,6 +154,7 @@ project_property	drone_run_raw_images_saved_micasense_stacks_rotated	When intera
 project_property	drone_run_raw_images_saved_gps_pixel_positions	When interactively matching raw drone captures, this stores the final positions	07/06/2020	nm529	00126
 project_property	project_sp_person_id	For saving results in analysis trials	06/04/2020	lam87nm529	00119
 project_property	analysis_metadata_json	For saving results in analysis trials	06/04/2020	lam87nm529	00119
+project_property    product_profile_json    00131
 project_relationship	breeding_program_trial_relationship				00051
 project_relationship	trial_treatment_relationship				00081
 project_relationship	field_trial_from_field_trial	For linking field trials preceding other field trials	4/6/18	nm529	00093
@@ -251,6 +253,9 @@ stock_relationship  female_plot_of    00086
 stock_relationship  male_plot_of    00086
 stock_relationship  female_plant_of    00094
 stock_relationship  male_plant_of    00094
+stock_relationship  cross_member_of    00129
+stock_relationship  family_female_parent_of    00129
+stock_relationship  family_male_parent_of    00129
 stock_relationship	analysis_of	For saving results in analysis trials	06/04/2020	lam87nm529	00119
 stock_type	accession				00052
 stock_type	backcross population				00052
@@ -292,6 +297,7 @@ protocol_property	analysis_model_properties	Properties of analysis model in json
 protocol_type	trained_keras_cnn_model	An nd_protocol for a saved trained keras cnn model	9/30/2019	nm529	00116
 protocol_type	trained_keras_mask_r_cnn_model	An nd_protocol for a saved trained keras mask r cnn model	5/27/2020	nm529	00125
 protocol_type	sommer_grm_spatial_genetic_blups	An nd_protocol for analysis using R Sommer for multivariate genetic and spatial blups using replicate, genetic relationship matrix, and row and column positions	6/11/2020	nm529	00125
+protocol_type	sommer_grm_genetic_blups	An nd_protocol for analysis using R Sommer for multivariate genetic blups using replicate and genetic relationship matrix	9/20/2020	nm529	00130
 protocol_type	sommer_grm_temporal_random_regression_gdd_genetic_blups	An nd_protocol for analysis using R Sommer for temporal random regression with legendre polynomials on growing degree days to calculate genetic and permanent environment blups using replicate, genetic relationship matrix, and growing degree days	6/11/2020	nm529	00125
 protocol_type	sommer_grm_temporal_random_regression_dap_genetic_blups	An nd_protocol for analysis using R Sommer for temporal random regression with legendre polynomials on days after planting to calculate genetic and permanent environment blups using replicate, genetic relationship matrix, and days after planting	6/11/2020	nm529	00125
 protocol_type	lmer_germplasmname_replicate	An nd_protocol for analysis using R LMER for univariate genetic blups using replicate and germplasm name	6/11/2020	nm529	00125

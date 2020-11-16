@@ -317,7 +317,7 @@ sub trial_compatibility_table {
 
     if (-s $compatibility_file) 
     {  
-        my @line =  read_file($compatibility_file);     
+        my @line =  read_file($compatibility_file, {binmode => ':utf8'});     
         my  ($entry) = grep(/$markers/, @line);
         chomp($entry);
        
@@ -336,7 +336,7 @@ sub trial_compatibility_table {
         my $color_code = $markers . "\t" . $color . "\n";
         
         $c->stash->{trial_compatibility_code} = $color;
-        write_file($compatibility_file,{append => 1}, $color_code);
+        write_file($compatibility_file, {append => 1, binmode => ':utf8'}, $color_code);
     }
 }
 
@@ -535,15 +535,17 @@ sub get_markers_count {
 	$c->controller('solGS::Files')->filtered_training_genotype_file($c, $protocol_id);
 	$filtered_geno_file  = $c->stash->{filtered_training_genotype_file};
 
-	if (-s $filtered_geno_file) {
-	    my @geno_lines = read_file($filtered_geno_file);
+	if (-s $filtered_geno_file) 
+	{
+	    my @geno_lines = read_file($filtered_geno_file, {binmode => ':utf8'});
 	    $markers_cnt = scalar(split('\t', $geno_lines[0]));
 	} 
 	else 
 	{
 	    $c->controller('solGS::Files')->genotype_file_name($c, $training_pop_id, $protocol_id);
 	    my $geno_file  = $c->stash->{genotype_file_name};
-	    my  @geno_lines = read_file($geno_file);
+
+	    my  @geno_lines = read_file($geno_file, {binmode => ':utf8'});
 	    $markers_cnt= scalar(split ('\t', $geno_lines[0]));	
 	}
 
@@ -555,20 +557,23 @@ sub get_markers_count {
 	$c->controller('solGS::Files')->filtered_selection_genotype_file($c);
 	$filtered_geno_file  = $c->stash->{filtered_selection_genotype_file};
 
-	if (-s $filtered_geno_file) {
-	    my @geno_lines = read_file($filtered_geno_file);
+	if (-s $filtered_geno_file) 
+	{
+	    my @geno_lines = read_file($filtered_geno_file, {binmode => ':utf8'});
 	    $markers_cnt = scalar(split('\t', $geno_lines[0]));
+
 	} 
 	else 
 	{
 	    $c->controller('solGS::Files')->genotype_file_name($c, $selection_pop_id, $protocol_id);
 	    my $geno_file  = $c->stash->{genotype_file_name};
-	    my @geno_lines = read_file($geno_file);
+
+	    my @geno_lines = read_file($geno_file, {binmode => ':utf8'});
 	    $markers_cnt= scalar(split ('\t', $geno_lines[0]));	
 	}
     }
 
-    return $markers_cnt;
+    return $markers_cnt - 1;
 
 }
 
@@ -603,30 +608,13 @@ sub project_description {
         $self->get_project_owners($c, $pr_id);       
         $c->stash->{owner} = $c->stash->{project_owners};
     } 
-    
-    $c->controller('solGS::Files')->filtered_training_genotype_file($c, $pr_id, $protocol_id);
-    my $filtered_geno_file  = $c->stash->{filtered_training_genotype_file};
 
-    my $markers_no;
-    my @geno_lines;
-
-    if (-s $filtered_geno_file) {
-	@geno_lines = read_file($filtered_geno_file);
-	$markers_no = scalar(split('\t', $geno_lines[0])) - 1;
-    } 
-    else 
-    {
-	$c->controller('solGS::Files')->genotype_file_name($c, $pr_id, $protocol_id);
-	my $geno_file  = $c->stash->{genotype_file_name};
-	@geno_lines = read_file($geno_file);
-	$markers_no = scalar(split ('\t', $geno_lines[0])) - 1;	
-    }
-   
-    my $stocks_no = $self->training_pop_member_count($c, $pr_id, $protocol_id);
+    my $markers_no = $self->get_markers_count($c, {'training_pop' => 1, 'training_pop_id' => $pr_id});
+    my $stocks_no = $self->training_pop_lines_count($c, $pr_id, $protocol_id);
 
     $c->controller('solGS::Files')->traits_acronym_file($c, $pr_id);
     my $traits_file = $c->stash->{traits_acronym_file};
-    my @traits_lines = read_file($traits_file);
+    my @traits_lines = read_file($traits_file, {binmode => ':utf8'});
     my $traits_no = scalar(@traits_lines) - 1;
 
     my $protocol_url = $c->controller('solGS::genotypingProtocol')->create_protocol_url($c, $protocol_id);
@@ -640,16 +628,55 @@ sub project_description {
 }
 
 
-sub training_pop_member_count {
-    my ($self, $c, $pop_id, $protocol_id) = @_;
+sub predicted_lines_count {
+    my ($self, $c, $args) = @_;
 
-    $c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
-    my $geno_file  = $c->stash->{genotype_file_name};
-    my $geno = qx /wc -l $geno_file/;
+    my $training_pop_id = $args->{training_pop_id};
+    my $selection_pop_id = $args->{selection_pop_id};
+    my $trait_id = $args->{trait_id};
+   
+    my $gebvs_file;
+    if (!$selection_pop_id)
+    {
+	$c->controller('solGS::Files')->rrblup_training_gebvs_file($c, $training_pop_id, $trait_id);
+	$gebvs_file = $c->stash->{rrblup_training_gebvs_file};
+    }
+    elsif ($selection_pop_id && $training_pop_id)
+    { 
+	my $identifier = $training_pop_id . '_' . $selection_pop_id;
+	$c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
+	$gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
+    }
+
+    my $geno = qx /wc -l $gebvs_file/;
     my ($geno_lines, $g_file) = split(" ", $geno);
     
     my $count = $geno_lines > 1 ? $geno_lines - 1 : 0;
-    
+   
+    return $count;
+}
+
+
+sub training_pop_lines_count {
+    my ($self, $c, $pop_id, $protocol_id) = @_;
+
+    $c->stash->{genotyping_protocol_id} = $protocol_id;
+    my $count;
+    if ($c->req->path =~ /solgs\/trait\//)
+    {
+	my $trait_id = $c->stash->{trait_id};
+    	$count = $self->predicted_lines_count($c, {'training_pop_id' => $pop_id, 'trait_id'=> $trait_id});
+    }    
+    else
+    {
+	$c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
+	my $geno_file  = $c->stash->{genotype_file_name};
+	my $geno = qx /wc -l $geno_file/;
+	my ($geno_lines, $g_file) = split(" ", $geno);
+	
+	$count = $geno_lines > 1 ? $geno_lines - 1 : 0;
+    }
+  
     return $count;
 }
 
@@ -666,12 +693,12 @@ sub check_training_pop_size : Path('/solgs/check/training/pop/size') Args(0) {
     my $count;
     if ($type =~ /single/)
     {
-	$count = $self->training_pop_member_count($c, $pop_id, $protocol_id);
+	$count = $self->training_pop_lines_count($c, $pop_id, $protocol_id);
     }
     elsif ($type =~ /combined/)
     {
 	$c->stash->{combo_pops_id} = $pop_id;
-	$count = $c->controller('solGS::combinedTrials')->count_combined_trials_members($c, $pop_id, $protocol_id);	
+	$count = $c->controller('solGS::combinedTrials')->count_combined_trials_lines_count($c, $pop_id, $protocol_id);	
     }
     
     my $ret->{status} = 'failed';
@@ -781,15 +808,36 @@ sub selection_trait :Path('/solgs/selection/') Args() {
 	my $tr_pop_mr_cnt = $self->get_markers_count($c, {'training_pop' => 1, 'training_pop_id' => $training_pop_id});
 	my $sel_pop_mr_cnt = $self->get_markers_count($c, {'selection_pop' => 1, 'selection_pop_id' => $selection_pop_id});
 
-	$c->stash->{training_markers_cnt} = $tr_pop_mr_cnt;
-	$c->stash->{selection_markers_cnt} = $sel_pop_mr_cnt;
-
 	my $protocol_url = $c->controller('solGS::genotypingProtocol')->create_protocol_url($c, $protocol_id);
 	$c->stash->{protocol_url} = $protocol_url;
 	
-	my @stock_rows = read_file($gebvs_file);
+	my $identifier    = $training_pop_id . '_' . $selection_pop_id;
+	
+	$c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
+	my $gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
+	
+	my @stock_rows = read_file($gebvs_file, {binmode => ':utf8'});
 	$c->stash->{selection_stocks_cnt} = scalar(@stock_rows) - 1;
+	$c->stash->{training_markers_cnt} = $tr_pop_mr_cnt;
+	$c->stash->{selection_markers_cnt} = $sel_pop_mr_cnt;
 
+	my $ma_args = {'selection_pop' => 1, 'selection_pop_id' => $selection_pop_id};
+	$c->stash->{selection_markers_cnt} = $self->get_markers_count($c, $ma_args);
+	my $protocol_url = $c->controller('solGS::genotypingProtocol')->create_protocol_url($c, $protocol_id);
+	$c->stash->{protocol_url} = $protocol_url;
+	
+	my $args = {
+	    'training_pop_id' => $training_pop_id, 
+	    'selection_pop_id'=> $selection_pop_id, 
+	    'trait_id' => $trait_id
+	};
+	
+	$c->stash->{selection_stocks_cnt} = $self->predicted_lines_count($c, $args);
+
+	my $identifier = $training_pop_id . '_' . $selection_pop_id; 
+	$c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
+	my $gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
+	
 	$self->top_blups($c, $gebvs_file);
 	
 	$c->stash->{blups_download_url} = qq | <a href="/solgs/download/prediction/model/$training_pop_id/prediction/$selection_pop_id/$trait_id/gp/$protocol_id">Download all GEBVs</a>|; 
@@ -895,7 +943,7 @@ sub trait_info_file {
     my $trait_info = $trait_id . "\t" . $trait_abbr;
     my $file = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);    
      
-    write_file($file, $trait_info);
+    write_file($file, {binmode => ':utf8'}, $trait_info);
 
     $c->stash->{trait_info_file} = $file;     
 }
@@ -949,7 +997,7 @@ sub input_files {
 	my $name = "input_files_${pop_id}"; 
 	my $temp_dir = $c->stash->{solgs_tempfiles_dir};
 	my $tempfile = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name); 
-	write_file($tempfile, $input_files);
+	write_file($tempfile, {binmode => ':utf8'}, $input_files);
 	$c->stash->{input_files} = $tempfile;
     }
 }
@@ -968,6 +1016,9 @@ sub output_files {
     $c->controller("solGS::Files")->trait_phenodata_file($c);
     $c->controller("solGS::Files")->variance_components_file($c);
     $c->controller('solGS::Files')->relationship_matrix_file($c);
+     $c->controller('solGS::Files')->relationship_matrix_adjusted_file($c);
+    $c->controller('solGS::Files')->inbreeding_coefficients_file($c);
+    $c->controller('solGS::Files')->average_kinship_file($c);
     $c->controller('solGS::Files')->filtered_training_genotype_file($c);
 
     my $selection_pop_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id};
@@ -988,15 +1039,20 @@ sub output_files {
                           $c->stash->{trait_phenodata_file},                         
                           $c->stash->{selected_traits_gebv_file},
                           $c->stash->{variance_components_file},
-			  $c->stash->{relationship_matrix_file},
+			  $c->stash->{relationship_matrix_table_file},
+			  $c->stash->{relationship_matrix_adjusted_table_file},
+			  $c->stash->{inbreeding_coefficients_file},
+			  $c->stash->{average_kinship_file},
+			  $c->stash->{relationship_matrix_json_file},
+			  $c->stash->{relationship_matrix_adjusted_json_file},
 			  $c->stash->{filtered_training_genotype_file},
                           $c->stash->{rrblup_selection_gebvs_file}
         );
                           
-    my $name = "output_files_${trait}_$pop_id"; 
+    my $name = "output_files_${trait}_${pop_id}"; 
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $tempfile = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name); 
-    write_file($tempfile, $file_list);
+    write_file($tempfile, {binmode => ':utf8'}, $file_list);
     
     $c->stash->{output_files} = $tempfile;
 
@@ -1287,7 +1343,7 @@ sub model_parameters {
     $c->controller("solGS::Files")->variance_components_file($c);
     my $file = $c->stash->{variance_components_file};
   
-    my $params = $c->controller('solGS::Utils')->read_file_data($file);
+    my $params = $c->controller('solGS::Utils')->read_file_data($file, {binmode => ':utf8'});
     $c->stash->{model_parameters} = $params;
    
 }
@@ -1676,12 +1732,12 @@ sub save_selection_pops {
     $c->controller('solGS::Files')->list_of_prediction_pops_file($c, $training_pop_id);
     my $selection_pops_file = $c->stash->{list_of_prediction_pops_file};
 
-    my @existing_pops_ids = read_file($selection_pops_file);
+    my @existing_pops_ids = read_file($selection_pops_file, {binmode => ':utf8'});
    
     my @uniq_ids = unique(@existing_pops_ids, @$selection_pop_id);
     my $formatted_ids = join("\n", @uniq_ids);
        
-    write_file($selection_pops_file, $formatted_ids);
+    write_file($selection_pops_file, {binmode => ':utf8'}, $formatted_ids);
 
 }
 
@@ -1714,7 +1770,7 @@ sub list_of_prediction_pops {
     $c->controller('solGS::Files')->list_of_prediction_pops_file($c, $training_pop_id);
     my $pred_pops_file = $c->stash->{list_of_prediction_pops_file};
   
-    my @pred_pops_ids = read_file($pred_pops_file);
+    my @pred_pops_ids = read_file($pred_pops_file, {binmode => ':utf8'});
     grep(s/\s//g, @pred_pops_ids);
   
     $c->stash->{selection_pops_ids} = \@pred_pops_ids;
@@ -1842,7 +1898,7 @@ sub build_multiple_traits_models {
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $file = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);
     
-    write_file($file, $traits);
+    write_file($file, {binmode => ':utf8'}, $traits);
     $c->stash->{selected_traits_file} = $file;
 
     $name     = "trait_info_${trait_id}_pop_${pop_id}";
@@ -1914,7 +1970,7 @@ sub all_traits_output :Path('/solgs/traits/all/population') Args() {
 	     { 
 		 $c->stash->{trait_id} = $trait_id;
 		 $c->stash->{model_id} = $training_pop_id;
-		 $self->create_model_summary($c);
+		 $c->controller('solGS::modelAccuracy')->create_model_summary($c, $training_pop_id, $trait_id);
 		 my $model_summary = $c->stash->{model_summary};
 
 		 push @traits_pages, $model_summary;
@@ -1931,48 +1987,12 @@ sub all_traits_output :Path('/solgs/traits/all/population') Args() {
 	 
 	 $c->stash->{model_data} = \@training_pop_data;
 	 $c->stash->{pop_id} = $training_pop_id;
-	 $c->controller('solGS::solGS')->get_acronym_pairs($c, $training_pop_id);
+	 $self->get_acronym_pairs($c, $training_pop_id);
 
 	 $c->stash->{template} = '/solgs/population/multiple_traits_output.mas';	
      }     
 
 }
-
-
-sub create_model_summary {
-    my ($self, $c) = @_;
-
-    my $trait_id =  $c->stash->{trait_id};
-    my $model_id =  $c->stash->{model_id};
-    my $protocol_id = $c->stash->{genotyping_protocol_id};
-    
-    $c->controller("solGS::solGS")->get_trait_details($c, $trait_id);
-    my $tr_abbr = $c->stash->{trait_abbr};
-
-    my $path = $c->req->path;
-    my $trait_page;
-
-    if ($path =~ /solgs\/traits\/all\/population\//)
-    {
-	$trait_page = qq | <a href="/solgs/trait/$trait_id/population/$model_id/gp/$protocol_id" onclick="solGS.waitPage()">$tr_abbr</a>|;
-    }
-    elsif ($path =~ /solgs\/models\/combined\/trials\//)
-    {
-	$trait_page = qq | <a href="/solgs/model/combined/populations/$model_id/trait/$trait_id/gp/$protocol_id" onclick="solGS.waitPage()">$tr_abbr</a>|;
-    }
-	            
-    $c->controller("solGS::modelAccuracy")->get_model_accuracy_value($c, $model_id, $tr_abbr);
-    my $accuracy_value = $c->stash->{accuracy_value};
-     
-    $c->controller("solGS::Heritability")->get_heritability($c);
-    my $heritability = $c->stash->{heritability};
-   	    	    
-    my $model_summary = [$trait_page, $accuracy_value, $heritability];	        
-
-    $c->stash->{model_summary} = $model_summary;
-    
-}
-
 
 
 sub traits_with_valid_models {
@@ -2039,8 +2059,8 @@ sub compare_marker_set_similarity {
     my $file_1 = $marker_file_pair->[0];
     my $file_2 = $marker_file_pair->[1];
 
-    my $first_markers = (read_file($marker_file_pair->[0]))[0];
-    my $sec_markers   = (read_file($marker_file_pair->[1]))[0];
+    my $first_markers = (read_file($marker_file_pair->[0], {binmode => ':utf8'}))[0];
+    my $sec_markers   = (read_file($marker_file_pair->[1], {binmode => ':utf8'}))[0];
  
     my @first_geno_markers = split(/\t/, $first_markers);
     my @sec_geno_markers   = split(/\t/, $sec_markers);
@@ -2211,7 +2231,7 @@ sub trait_pheno_data_type {
     my $mean_type;
     if (-s $trait_pheno_file)
     {
-	my @trait_data = read_file($trait_pheno_file);
+	my @trait_data = read_file($trait_pheno_file, {binmode => ':utf8'});
 	$mean_type = shift(@trait_data);
 	
 	if ($mean_type =~ /fixed_effects/)
@@ -2392,7 +2412,7 @@ sub save_single_trial_traits {
 	my $trait_names = $c->controller('solGS::Utils')->get_clean_trial_trait_names($c, $pop_id);
 
 	$trait_names = join("\t", @$trait_names);
-	write_file($traits_file, $trait_names);
+	write_file($traits_file, {binmode => ':utf8'}, $trait_names);
     }
 
 }
@@ -2405,18 +2425,17 @@ sub get_all_traits {
     
     $c->controller('solGS::Files')->traits_list_file($c, $pop_id);
     my $traits_file = $c->stash->{traits_list_file};
-    
+
     if (!-s $traits_file)
     {
 	my $page = $c->req->path;
-	
-	if ($page =~ /solgs\/population\/|anova\// && $pop_id !~ /\D+/)
+	if ($page =~ /solgs\/population\/|anova\/|correlation\// && $pop_id !~ /\D+/)
 	{
 	    $self->save_single_trial_traits($c, $pop_id);
 	}
     }  
     
-    my $traits = read_file($traits_file);
+    my $traits = read_file($traits_file, {binmode => ':utf8'});
     
     $c->controller('solGS::Files')->traits_acronym_file($c, $pop_id);
     my $acronym_file = $c->stash->{traits_acronym_file};
@@ -2457,7 +2476,7 @@ sub create_trait_data {
 
 	$c->controller('solGS::Files')->all_traits_file($c, $pop_id);
 	my $traits_file =  $c->stash->{all_traits_file};
-	write_file($traits_file, $table);
+	write_file($traits_file, {binmode => ':utf8'}, $table);
     }
 }
 
@@ -2482,7 +2501,7 @@ sub get_acronym_pairs {
     my @acronym_pairs;
     if (-f $acronyms_file) 
     {
-        @acronym_pairs =  map { [ split(/\t/) ] }  read_file($acronyms_file);   
+        @acronym_pairs =  map { [ split(/\t/) ] }  read_file($acronyms_file, {binmode => ':utf8'});   
         shift(@acronym_pairs); # remove header;
     }
 
@@ -2512,7 +2531,7 @@ sub traits_acronym_table {
 	$c->controller('solGS::Files')->traits_acronym_file($c, $pop_id);
 	my $acronym_file =  $c->stash->{traits_acronym_file};
     
-	write_file($acronym_file, $table);
+	write_file($acronym_file, {binmode => ':utf8'}, $table);
     }
 
 }
@@ -3107,7 +3126,7 @@ sub format_phenotype_dataset_headers {
 	$traits =~ s/($mh)//g;
     }
  
-    write_file($traits_file, $traits) if $traits_file && $traits_file =~ /pop_list/;  
+    write_file($traits_file, {binmode => ':utf8'}, $traits) if $traits_file && $traits_file =~ /pop_list/;  
     
     my  @filtered_traits = split(/\t/, $traits);
          
@@ -3194,7 +3213,7 @@ sub get_rrblup_output {
     else 
     {    
         $traits_file = $c->stash->{selected_traits_file};
-        my $content  = read_file($traits_file);
+        my $content  = read_file($traits_file, {binmode => ':utf8'});
      
         if ($content =~ /\t/)
         {
@@ -3328,7 +3347,7 @@ sub run_async {
     my $background_job     = $c->stash->{background_job};
     my $dependent_jobs     = $c->stash->{dependent_jobs};
     
-    my $temp_dir            = $c->stash->{solgs_tempfiles_dir};
+    my $temp_dir            = $c->stash->{analysis_tempfiles_dir} || $c->stash->{solgs_tempfiles_dir};
       
     $c->stash->{r_temp_file} = 'run-async';
     $self->create_cluster_accesible_tmp_files($c);
@@ -3703,7 +3722,7 @@ sub submit_job_cluster {
     my ($self, $c, $args) = @_;
 
     my $job;
- 
+
     eval 
     {	
 	$job = CXGN::Tools::Run->new($args->{config});

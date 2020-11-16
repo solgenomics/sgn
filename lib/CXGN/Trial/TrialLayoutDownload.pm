@@ -101,7 +101,7 @@ has 'selected_columns' => (
 has 'include_measured'=> (
     is => 'rw',
     isa => 'Str',
-    default => 'true',
+    default => 'false',
 );
 
 has 'use_synonyms'=> (

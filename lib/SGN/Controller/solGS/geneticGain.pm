@@ -23,7 +23,6 @@ use namespace::autoclean;
 use File::Copy;
 use File::Basename;
 use File::Path qw / mkpath  /;
-use File::Slurp qw /write_file read_file/;
 use File::Spec::Functions;
 use JSON;
 use List::MoreUtils qw /uniq/;
@@ -304,7 +303,7 @@ sub boxplot_input_files {
     my $boxplot_id = $c->stash->{boxplot_id};
     my $name = "boxplot_input_files_${boxplot_id}";
     my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
-    write_file($tempfile, $files);
+    write_file($tempfile, {binmode => ':utf8'}, $files, );
     
     $c->stash->{boxplot_input_files} = $tempfile;
 
@@ -336,7 +335,7 @@ sub boxplot_output_files {
     
     my $name = "boxplot_output_files_${boxplot_id}";
     my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
-    write_file($tempfile, $file_list);
+    write_file($tempfile, {binmode => ':utf8'}, $file_list);
     
     $c->stash->{boxplot_output_files} = $tempfile;
 

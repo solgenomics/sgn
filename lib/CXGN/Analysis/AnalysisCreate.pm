@@ -25,6 +25,7 @@ my $m = CXGN::Analysis::AnalysisCreate->new({
     analysis_result_values=>$analysis_result_values,
     analysis_result_values_type=>$analysis_result_values_type,
     analysis_result_summary=>$analysis_result_summary,
+    analysis_result_trait_compose_info=>$analysis_result_trait_compose_info,
     analysis_model_id=>$analysis_model_id,
     analysis_model_name=>$analysis_model_name,
     analysis_model_description=>$analysis_model_description,
@@ -202,6 +203,11 @@ has 'analysis_result_summary' => (
     is => 'rw',
 );
 
+has 'analysis_result_trait_compose_info_time' => (
+    isa => 'HashRef|Undef',
+    is => 'rw',
+);
+
 has 'analysis_model_id' => (
     isa => 'Int|Undef',
     is => 'rw',
@@ -334,6 +340,7 @@ sub store {
     my $analysis_result_values = $self->analysis_result_values();
     my $analysis_result_values_type = $self->analysis_result_values_type();
     my $analysis_result_summary = $self->analysis_result_summary();
+    my $analysis_result_trait_compose_info_time = $self->analysis_result_trait_compose_info_time();
     my $analysis_model_protocol_id = $self->analysis_model_id();
     my $analysis_model_name = $self->analysis_model_name();
     my $analysis_model_description = $self->analysis_model_description();
@@ -357,6 +364,10 @@ sub store {
 
     print STDERR Dumper $analysis_model_type;
     my $model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, $analysis_model_type, 'protocol_type')->cvterm_id();
+
+    if ($analysis_to_save_boolean eq 'yes' && !$analysis_name) {
+        return { error => "No analysis name given, but trying to save an analysis." };
+    }
 
     if (!$analysis_model_protocol_id) {
         $analysis_model_properties->{protocol} = $analysis_protocol;
@@ -385,15 +396,17 @@ sub store {
     if ($analysis_to_save_boolean eq 'yes') {
 
         my %trait_id_map;
+        # print STDERR Dumper $analysis_trait_names;
         foreach my $trait_name (@$analysis_trait_names) {
             my $trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($bcs_schema, $trait_name)->cvterm_id();
             $trait_id_map{$trait_name} = $trait_cvterm_id;
         }
+        # print STDERR Dumper \%trait_id_map;
         my @trait_ids = values %trait_id_map;
 
         my $stat_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($bcs_schema, $analysis_statistical_ontology_term)->cvterm_id();
 
-        my $traits = SGN::Model::Cvterm->get_traits_from_component_categories($bcs_schema, $allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, {
+        my $categories = {
             object => [],
             attribute => [$stat_cvterm_id],
             method => [],
@@ -402,7 +415,26 @@ sub store {
             tod => [],
             toy => [],
             gen => [],
-        });
+        };
+
+        # print STDERR Dumper $analysis_result_trait_compose_info_time;
+        my %time_term_map;
+        if ($analysis_result_trait_compose_info_time) {
+            my %unique_toy;
+            foreach my $v (values %$analysis_result_trait_compose_info_time) {
+                foreach (@$v) {
+                    my $trait_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($bcs_schema, $_)->cvterm_id();
+                    $unique_toy{$trait_id}++;
+                    $time_term_map{$_} = $trait_id;
+                }
+            }
+            my @toy = keys %unique_toy;
+            $categories->{toy} = \@toy;
+        }
+        # print STDERR Dumper $categories;
+        # print STDERR Dumper \%time_term_map;
+
+        my $traits = SGN::Model::Cvterm->get_traits_from_component_categories($bcs_schema, $allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, $categories);
         my $existing_traits = $traits->{existing_traits};
         my $new_traits = $traits->{new_traits};
         # print STDERR Dumper $new_traits;
@@ -418,7 +450,14 @@ sub store {
 
         my %composed_trait_map;
         while (my($trait_name, $trait_id) = each %trait_id_map) {
-            my $composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($bcs_schema, [$trait_id, $stat_cvterm_id]);
+            my $components = [$trait_id, $stat_cvterm_id];
+            if (exists($analysis_result_trait_compose_info_time->{$trait_name})) {
+                foreach (@{$analysis_result_trait_compose_info_time->{$trait_name}}) {
+                    my $time_cvterm_id = $time_term_map{$_};
+                    push @$components, $time_cvterm_id;
+                }
+            }
+            my $composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($bcs_schema, $components);
             my $composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($bcs_schema, $composed_cvterm_id, 'extended');
             $composed_trait_map{$trait_name} = $composed_trait_name;
         }

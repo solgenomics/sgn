@@ -29,12 +29,12 @@ Returns output like CXGN::Dataset, but uses a disk-cache for the response data
 
 =head1 SYNOPSYS
 
- my $ds = CXGN::Dataset->new( people_schema => $p, schema => $s);
+ my $ds = CXGN::Dataset->new( { people_schema => $p, schema => $s } );
  $ds->accessions([ 'a', 'b', 'c' ]);
  my $trials = $ds->retrieve_trials();
  my $sp_dataset_id = $ds->store();
  #...
- my $restored_ds = CXGN::Dataset( people_schema => $p, schema => $s, sp_dataset_id => $sp_dataset_id );
+ my $restored_ds = CXGN::Dataset( {  people_schema => $p, schema => $s, sp_dataset_id => $sp_dataset_id } );
  my $years = $restored_ds->retrieve_years();
  #...
 

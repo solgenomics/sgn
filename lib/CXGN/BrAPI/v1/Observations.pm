@@ -3,7 +3,6 @@ package CXGN::BrAPI::v1::Observations;
 use Moose;
 use Data::Dumper;
 use SGN::Model::Cvterm;
-use CXGN::Stock::Search;
 use CXGN::Stock;
 use CXGN::Chado::Organism;
 use CXGN::BrAPI::Pagination;
@@ -123,7 +122,6 @@ sub observations_store {
         dbname=>$params->{dbname},
         dbuser=>$params->{dbuser},
         dbpass=>$params->{dbpass},
-        temp_file_nd_experiment_id=>$params->{temp_file_nd_experiment_id},
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,

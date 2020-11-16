@@ -324,6 +324,50 @@ is($message_hash->{success}, 1);
 ok($message_hash->{project_id});
 ok($message_hash->{nd_protocol_id});
 
+my $file = $f->config->{basepath}."/t/data/genotype_data/testset_GT-AD-DP-GQ-DS-PL.h5";
+
+#test upload with file where sample names are not in the database
+my $ua = LWP::UserAgent->new;
+$response = $ua->post(
+        'http://localhost:3010/ajax/genotype/upload',
+        Content_Type => 'form-data',
+        Content => [
+            upload_genotype_tassel_hdf5_file_input => [ $file, 'upload_genotype_tassel_hdf5_file_input.h5' ],
+            "sgn_session_id"=>$sgn_session_id,
+            "upload_genotypes_species_name_input"=>"Manihot esculenta",
+            "upload_genotype_vcf_project_name"=>"Tassel HDF5 project 1",
+            "upload_genotype_location_select"=>$location_id,
+            "upload_genotype_year_select"=>"2018",
+            "upload_genotype_breeding_program_select"=>$breeding_program_id,
+            "upload_genotype_vcf_observation_type"=>"accession", #IDEALLY THIS IS "tissue_sample"
+            "upload_genotype_vcf_facility_select"=>"IGD",
+            "upload_genotype_vcf_project_description"=>"Tassel HDF5 project 1",
+            "upload_genotype_vcf_protocol_name"=>"Tassel HDF5 protocol 1",
+            "upload_genotype_vcf_include_igd_numbers"=>1,
+            "upload_genotype_vcf_reference_genome_name"=>"Mesculenta_511_v7",
+            "upload_genotype_accept_warnings"=>1
+        ]
+    );
+
+$message = $response->decoded_content;
+my $message_hash_tassel = decode_json $message;
+print STDERR Dumper $message_hash_tassel;
+is($message_hash_tassel->{success}, 1);
+ok($message_hash_tassel->{project_id});
+ok($message_hash_tassel->{nd_protocol_id});
+
+my $genotypes_search = CXGN::Genotype::Search->new({
+    bcs_schema=>$schema,
+    people_schema=>$people_schema,
+    protocol_id_list=>[$message_hash_tassel->{nd_protocol_id}],
+});
+my ($total_count, $data) = $genotypes_search->get_genotype_info();
+is($total_count, 21);
+print STDERR Dumper $data->[0];
+print STDERR Dumper $data->[0]->{germplasmName};
+is_deeply($data->[0]->{selected_genotype_hash}, {'S1_27874' => {'GQ' => undef,'DS' => 'NA','PL' => undef,'NT' => '','GT' => './.','AD' => '0','DP' => '0'},'S1_84628' => {'DS' => 'NA','PL' => undef,'NT' => '','GQ' => undef,'AD' => '0','DP' => '0','GT' => './.'},'S1_27720' => {'GT' => '0/0','AD' => '1','DP' => '1','GQ' => '66','DS' => '2','NT' => 'C,C','PL' => '0'},'S1_26646' => {'AD' => '4,0','DP' => '4','GT' => '0/0','DS' => '2','NT' => 'A,A','PL' => '0,12,144','GQ' => '94'},'S1_27746' => {'GT' => '0/0','DP' => '8','AD' => '8','GQ' => '99','NT' => 'A,A','PL' => '0','DS' => '2'},'S1_75644' => {'GQ' => undef,'DS' => 'NA','NT' => '','PL' => undef,'GT' => './.','AD' => '0','DP' => '0'},'S1_75629' => {'PL' => undef,'NT' => '','DS' => 'NA','GQ' => undef,'DP' => '0','AD' => '0','GT' => './.'},'S1_27724' => {'GQ' => '88','DS' => '2','PL' => '0','NT' => 'T,T','GT' => '0/0','AD' => '3','DP' => '3'},'S1_26576' => {'DP' => '4','AD' => '4,0','GT' => '0/0','NT' => 'A,A','PL' => '0,12,144','DS' => '2','GQ' => '94'},'S1_27739' => {'AD' => '3','DP' => '3','GT' => '0/0','DS' => '2','PL' => '0','NT' => 'A,A','GQ' => '88'},'S1_26674' => {'AD' => '1','DP' => '1','GT' => '0/0','DS' => '2','NT' => 'A,A','PL' => '0','GQ' => '66'},'S1_26659' => {'AD' => '4,0','DP' => '4','GT' => '0/0','DS' => '2','PL' => '0,12,144','NT' => 'C,C','GQ' => '94'},'S1_21597' => {'GQ' => '98','NT' => 'G,G','PL' => '0','DS' => '2','GT' => '0/0','DP' => '6','AD' => '6'},'S1_27861' => {'GT' => '0/0','AD' => '8','DP' => '8','GQ' => '99','DS' => '2','PL' => '0','NT' => 'C,C'},'S1_75465' => {'PL' => undef,'NT' => '','DS' => 'NA','GQ' => undef,'DP' => '0','AD' => '0','GT' => './.'},'S1_26662' => {'PL' => '0','NT' => 'C,C','DS' => '2','GQ' => '94','DP' => '4','AD' => '4','GT' => '0/0'},'S1_21594' => {'DP' => '0','AD' => '0','GT' => './.','PL' => undef,'NT' => '','DS' => 'NA','GQ' => undef},'S1_26624' => {'DS' => '2','PL' => '0','NT' => 'T,T','GQ' => '94','AD' => '4','DP' => '4','GT' => '0/0'}});
+
+
 my $genotypes_search = CXGN::Genotype::Search->new({
     bcs_schema=>$schema,
     people_schema=>$people_schema,

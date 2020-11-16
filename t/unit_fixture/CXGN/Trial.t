@@ -496,7 +496,7 @@ my %plot_trait_value = ( $trial_design->{1}->{plot_name} => { 'root number|CO_33
     );
 
 
-my %metadata = ( operator => 'johndoe', date => '20141223' );
+my %metadata = ( operator => 'johndoe', date => '2014-12-23' );
 
 my $lp = CXGN::Phenotypes::StorePhenotypes->new(
     basepath=>$f->config->{basepath},
@@ -504,7 +504,6 @@ my $lp = CXGN::Phenotypes::StorePhenotypes->new(
     dbname=>$f->config->{dbname},
     dbuser=>$f->config->{dbuser},
     dbpass=>$f->config->{dbpass},
-    temp_file_nd_experiment_id=>$f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete",
     bcs_schema=>$f->bcs_schema,
     metadata_schema=>$f->metadata_schema,
     phenome_schema=>$f->phenome_schema,
@@ -564,7 +563,7 @@ is_deeply(\@phenotyped_stocks_values, ['30', '40', '50'], "check phenotyped stoc
 
 my $trial_experiment_count = $trial->get_experiment_count();
 print STDERR $trial_experiment_count."\n";
-is($trial_experiment_count, 4, "check get_experiment_count");
+is($trial_experiment_count, 1, "check get_experiment_count");
 
 my $location_type_id = $trial->get_location_type_id();
 #print STDERR $location_type_id."\n";
@@ -663,7 +662,7 @@ my %plant_trait_value = ( $trial_design->{1}->{plot_name}.'_plant_2' => { 'root 
     $trial_design->{3}->{plot_name}.'_plant_1' => { 'root number|CO_334:0000011'  => [20,''], 'dry yield|CO_334:0000014' => [50,''], 'harvest index|CO_334:0000015' => [7,''] },
 );
 
-my %metadata = ( operator => 'johndoe', date => '20141225' );
+my %metadata = ( operator => 'johndoe', date => '2014-12-25' );
 
 my $lp = CXGN::Phenotypes::StorePhenotypes->new(
     basepath=>$f->config->{basepath},
@@ -671,7 +670,6 @@ my $lp = CXGN::Phenotypes::StorePhenotypes->new(
     dbname=>$f->config->{dbname},
     dbuser=>$f->config->{dbuser},
     dbpass=>$f->config->{dbpass},
-    temp_file_nd_experiment_id=>$f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete",
     bcs_schema=>$f->bcs_schema,
     metadata_schema=>$f->metadata_schema,
     phenome_schema=>$f->phenome_schema,
@@ -769,7 +767,7 @@ is_deeply(\@get_plant_names, \@expected_sorted_plants, "check get_plants()");
 
 # check trial deletion - first, delete associated phenotypes
 #
-my $del_ret = $trial->delete_phenotype_data($f->config->{basepath}, $f->config->{dbhost}, $f->config->{dbname}, $f->config->{dbuser}, $f->config->{dbpass}, $f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete");
+my $del_ret = $trial->delete_phenotype_data($f->config->{basepath}, $f->config->{dbhost}, $f->config->{dbname}, $f->config->{dbuser}, $f->config->{dbpass});
 ok(!$del_ret);
 print STDERR Dumper $del_ret;
 

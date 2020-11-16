@@ -44,10 +44,12 @@ my $url = $c->req->path;
 
 
 my $title;
+my $collapsed = 0;
 if ($url =~ /pca\/analysis/) {
 $title = 'Select a list of accessions or trials or a dataset and run PCA';
 } else {
-$title = 'Select data type and run PCA';
+$title = 'Population structure (PCA)';
+$collapsed = 1;
 }
 
 </%perl>
@@ -65,7 +67,7 @@ $title = 'Select data type and run PCA';
 
 <&| /page/info_section.mas, 
   collapsible => 1, 
-  collapsed   => 0, 
+  collapsed   => $collapsed, 
   title       => $title 
 &> 
 
@@ -85,7 +87,6 @@ $title = 'Select data type and run PCA';
    <& /solgs/pca/select_menu.mas &>
        
 %}
-
      
   <& /solgs/pca/plot.mas,
      pop_id => $pop_id,

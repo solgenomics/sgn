@@ -66,14 +66,14 @@ sub get_model {
     my $nd_protocol_id = $self->nd_protocol_id();
     my $model_experiment_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_experiment', 'experiment_type')->cvterm_id();
 
-    my $model_q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, basename, dirname, metadata.md_files.file_id, metadata.md_files.filetype, nd_protocol.type_id, nd_experiment.nd_experiment_id, nd_experiment.type_id, property.type_id, property.value
-        FROM metadata.md_files
-        JOIN phenome.nd_experiment_md_files using(file_id)
-        JOIN nd_experiment using(nd_experiment_id)
-        JOIN nd_experiment_protocol using(nd_experiment_id)
-        JOIN nd_protocol using(nd_protocol_id)
+    my $model_q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, basename, dirname, md_files.file_id, md_files.filetype, nd_protocol.type_id, nd_experiment.nd_experiment_id, nd_experiment.type_id, property.type_id, property.value
+        FROM nd_protocol
         JOIN nd_protocolprop AS property ON(nd_protocol.nd_protocol_id=property.nd_protocol_id)
-        WHERE nd_protocol.nd_protocol_id=? AND nd_experiment.type_id=$model_experiment_type_cvterm_id;";
+        LEFT JOIN nd_experiment_protocol ON(nd_protocol.nd_protocol_id=nd_experiment_protocol.nd_protocol_id)
+        LEFT JOIN nd_experiment ON(nd_experiment.nd_experiment_id = nd_experiment_protocol.nd_experiment_id AND nd_experiment.type_id=$model_experiment_type_cvterm_id)
+        LEFT JOIN phenome.nd_experiment_md_files AS nd_experiment_md_files ON(nd_experiment_md_files.nd_experiment_id = nd_experiment.nd_experiment_id)
+        LEFT JOIN metadata.md_files AS md_files ON(md_files.file_id=nd_experiment_md_files.file_id)
+        WHERE nd_protocol.nd_protocol_id=?;";
     my $model_h = $schema->storage->dbh()->prepare($model_q);
     $model_h->execute($nd_protocol_id);
     my %result;
@@ -86,8 +86,12 @@ sub get_model {
         $result{model_experiment_type_id} = $experiment_type_id;
         $result{model_experiment_id} = $nd_experiment_id;
         $result{model_properties} = decode_json $property_value;
-        $result{model_files}->{$filetype} = $filename."/".$basename;
-        $result{model_file_ids}->{$file_id} = $basename;
+        if ($filename && $basename) {
+            $result{model_files}->{$filetype} = $filename."/".$basename;
+        }
+        if ($basename) {
+            $result{model_file_ids}->{$file_id} = $basename;
+        }
     }
     return \%result;
 }
@@ -161,6 +165,7 @@ sub store_analysis_model_files {
         });
 
         $model_file_md_file_id = $file_row->file_id();
+        # unlink($model_file);
     }
 
     #SAVING TRAINING DATA FILE (Main phenotype file)
@@ -235,6 +240,8 @@ sub store_analysis_model_files {
                 nd_experiment_id => $nd_experiment_id,
                 file_id => $file_row_aux->file_id()
             });
+
+            # unlink($auxiliary_model_file);
         }
     }
 }

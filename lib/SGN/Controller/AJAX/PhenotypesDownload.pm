@@ -24,7 +24,6 @@ use File::Spec::Functions;
 use File::Copy;
 use List::MoreUtils qw /any /;
 use SGN::View::ArrayElements qw/array_elements_simple_view/;
-use CXGN::Stock::StockTemplate;
 use JSON -support_by_pp;
 use CXGN::Phenotypes::CreateSpreadsheet;
 use CXGN::Trial::Download;
@@ -37,7 +36,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON' },
    );
 
 
@@ -160,8 +159,8 @@ sub _parse_list_from_json {
   my $list_json = shift;
   my $json = new JSON;
   if ($list_json) {
-    my $decoded_list = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
-    #my $decoded_list = decode_json($list_json);
+      #my $decoded_list = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
+      my $decoded_list = decode_json($list_json);
     my @array_of_list_items = @{$decoded_list};
     return \@array_of_list_items;
   }

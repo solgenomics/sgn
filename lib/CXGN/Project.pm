@@ -1232,6 +1232,67 @@ sub get_temperature_averaged_gdd_cvterm_id {
     return SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'drone_run_averaged_temperature_growing_degree_days', 'project_property')->cvterm_id();
 }
 
+=head2 accessors get_precipitation_averaged_sum_gdd(), set_precipitation_averaged_sum_gdd()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_precipitation_averaged_sum_gdd {
+    my $self = shift;
+
+    my $precipitation_cvterm_id = $self->get_precipitation_averaged_sum_cvterm_id();
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find({
+        project_id => $self->get_trial_id(),
+        type_id => $precipitation_cvterm_id,
+    });
+
+    if ($row) {
+        return $row->value;
+    } else {
+        return;
+    }
+}
+
+sub set_precipitation_averaged_sum_gdd {
+    my $self = shift;
+    my $precipitation_averaged_sum = shift;
+
+    my $precipitation_cvterm_id = $self->get_precipitation_averaged_sum_cvterm_id();
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create({
+        project_id => $self->get_trial_id(),
+        type_id => $precipitation_cvterm_id,
+    });
+    $row->value($precipitation_averaged_sum);
+    $row->update();
+}
+
+sub remove_precipitation_averaged_sum {
+    my $self = shift;
+    my $precipitation = shift;
+
+    my $precipitation_cvterm_id = $self->get_precipitation_averaged_sum_cvterm_id();
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create({
+        project_id => $self->get_trial_id(),
+        type_id => $precipitation_cvterm_id,
+        value => $precipitation,
+    });
+    if ($row) {
+        print STDERR "Removing $precipitation from trial ".$self->get_trial_id()."\n";
+        $row->delete();
+    }
+}
+
+sub get_precipitation_averaged_sum_cvterm_id {
+    my $self = shift;
+    return SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'drone_run_averaged_precipitation_sum', 'project_property')->cvterm_id();
+}
+
 =head2 accessors get_related_time_cvterms_json(), set_related_time_cvterms_json()
 
  Usage:
@@ -1475,6 +1536,28 @@ sub set_genotyping_facility_status {
     $self->_set_projectprop('genotyping_facility_status', $value);
 }
 
+=head2 accessors get_genotyping_vendor_order_id(), set_genotyping_vendor_order_id()
+
+ Usage: For genotyping plates, if a genotyping plate has been submitted to genotyping facility, the order id of that plate can be set here
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_genotyping_vendor_order_id {
+    my $self = shift;
+    return $self->_get_projectprop('genotyping_vendor_order_id');
+}
+
+sub set_genotyping_vendor_order_id {
+    my $self = shift;
+    my $value = shift;
+    $self->_set_projectprop('genotyping_vendor_order_id', $value);
+}
+
 =head2 accessors get_genotyping_plate_format(), set_genotyping_plate_format()
 
  Usage: For genotyping plates, this records if it is 96 wells or 384 or other
@@ -1680,32 +1763,24 @@ sub delete_phenotype_data {
     my $dbname = shift;
     my $dbuser = shift;
     my $dbpass = shift;
-    my $temp_file_nd_experiment_id = shift;
 
     my $trial_id = $self->get_trial_id();
-    my $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
 
     my $q_search = "
-        SELECT phenotype_id, nd_experiment_id, file_id
+        SELECT phenotype_id, nd_experiment_phenotype_bridge_id, file_id
         FROM phenotype
-        JOIN nd_experiment_phenotype using(phenotype_id)
-        JOIN nd_experiment using(nd_experiment_id)
-        JOIN nd_experiment_stock using(nd_experiment_id)
-        JOIN nd_experiment_project using(nd_experiment_id)
-        LEFT JOIN phenome.nd_experiment_md_files using(nd_experiment_id)
-        JOIN stock using(stock_id)
-        WHERE project_id = $trial_id
-        AND nd_experiment.type_id = $nd_experiment_type_id;
+        JOIN nd_experiment_phenotype_bridge using(phenotype_id)
+        WHERE project_id = $trial_id;
         ";
     my $h = $self->bcs_schema->storage->dbh()->prepare($q_search);
     $h->execute();
 
-    my %phenotype_ids_and_nd_experiment_ids_to_delete;
-    while (my ($phenotype_id, $nd_experiment_id, $file_id) = $h->fetchrow_array()) {
-        push @{$phenotype_ids_and_nd_experiment_ids_to_delete{phenotype_ids}}, $phenotype_id;
-        push @{$phenotype_ids_and_nd_experiment_ids_to_delete{nd_experiment_ids}}, $nd_experiment_id;
+    my %phenotype_ids_and_nd_experiment_phenotype_bridge_ids_to_delete;
+    while (my ($phenotype_id, $nd_experiment_phenotype_bridge_id, $file_id) = $h->fetchrow_array()) {
+        push @{$phenotype_ids_and_nd_experiment_phenotype_bridge_ids_to_delete{phenotype_ids}}, $phenotype_id;
+        push @{$phenotype_ids_and_nd_experiment_phenotype_bridge_ids_to_delete{nd_experiment_phenotype_bridge_ids}}, $nd_experiment_phenotype_bridge_id;
     }
-    return delete_phenotype_values_and_nd_experiment_md_values($dbhost, $dbname, $dbuser, $dbpass, $temp_file_nd_experiment_id, $basepath, $self->bcs_schema, \%phenotype_ids_and_nd_experiment_ids_to_delete);
+    return delete_phenotype_values_and_nd_experiment_md_values($dbhost, $dbname, $dbuser, $dbpass, $basepath, $self->bcs_schema, \%phenotype_ids_and_nd_experiment_phenotype_bridge_ids_to_delete);
 }
 
 #Class function
@@ -1714,34 +1789,21 @@ sub delete_phenotype_values_and_nd_experiment_md_values {
     my $dbname = shift;
     my $dbuser = shift;
     my $dbpass = shift;
-    my $temp_file_nd_experiment_id = shift;
     my $basepath = shift;
     my $schema = shift;
-    my $phenotype_ids_and_nd_experiment_ids_to_delete = shift;
+    my $phenotype_ids_and_nd_experiment_phenotype_bridge_ids_to_delete = shift;
 
     my $coderef = sub {
-        my $phenotype_id_sql = join (",", @{$phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids}});
+        my $phenotype_id_sql = join (",", @{$phenotype_ids_and_nd_experiment_phenotype_bridge_ids_to_delete->{phenotype_ids}});
         my $q_pheno_delete = "DELETE FROM phenotype WHERE phenotype_id IN ($phenotype_id_sql);";
         my $h2 = $schema->storage->dbh()->prepare($q_pheno_delete);
         $h2->execute();
-        my $nd_experiment_id_sql = join (",", @{$phenotype_ids_and_nd_experiment_ids_to_delete->{nd_experiment_ids}});
-        my $q_nd_exp_files_delete = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
+        my $nd_experiment_phenotype_bridge_id_sql = join (",", @{$phenotype_ids_and_nd_experiment_phenotype_bridge_ids_to_delete->{nd_experiment_phenotype_bridge_ids}});
+        my $q_nd_exp_files_delete = "DELETE FROM nd_experiment_phenotype_bridge WHERE nd_experiment_phenotype_bridge_id IN ($nd_experiment_phenotype_bridge_id_sql);";
         my $h3 = $schema->storage->dbh()->prepare($q_nd_exp_files_delete);
         $h3->execute();
-        my $q_nd_exp_files_images_delete = "DELETE FROM phenome.nd_experiment_md_images WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
-        my $h4 = $schema->storage->dbh()->prepare($q_nd_exp_files_images_delete);
-        $h4->execute();
 
-        open (my $fh, ">", $temp_file_nd_experiment_id ) || die ("\nERROR: the file $temp_file_nd_experiment_id could not be found\n" );
-            foreach (@{$phenotype_ids_and_nd_experiment_ids_to_delete->{nd_experiment_ids}}) {
-                print $fh "$_\n";
-            }
-        close($fh);
-
-        my $async_delete = CXGN::Tools::Run->new();
-        $async_delete->run_async("perl $basepath/bin/delete_nd_experiment_entries.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -i $temp_file_nd_experiment_id");
-
-        print STDERR "DELETED ".scalar(@{$phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids}})." Phenotype Values and nd_experiment_md_file_links (nd_experiment entries may still be in deletion in asynchronous process.)\n";
+        print STDERR "DELETED ".scalar(@{$phenotype_ids_and_nd_experiment_phenotype_bridge_ids_to_delete->{phenotype_ids}})." Phenotype Values and nd_experiment_phenotype_bridge link\n";
     };
 
     my $error;
@@ -1819,11 +1881,19 @@ sub delete_field_layout {
 =cut
 
 sub get_phenotype_metadata {
-	my $self = shift;
-	my $trial_id = $self->get_trial_id();
-	my @file_array;
-	my %file_info;
-	my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype FROM nd_experiment_project JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenome.nd_experiment_md_files ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_md_files.nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata as m using(metadata_id) LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id) WHERE project_id=? and m.obsolete = 0 and NOT (metadata.md_files.filetype='generated from plot from plant phenotypes') and NOT (metadata.md_files.filetype='direct phenotyping') ORDER BY file_id ASC";
+    my $self = shift;
+    my $trial_id = $self->get_trial_id();
+    my @file_array;
+    my %file_info;
+    my $q = "SELECT nd_experiment_phenotype_bridge.file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype
+        FROM nd_experiment_phenotype_bridge
+        LEFT JOIN metadata.md_files using(file_id)
+        LEFT JOIN metadata.md_metadata as m using(metadata_id)
+        LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id)
+        WHERE project_id=? and m.obsolete = 0
+        AND NOT (metadata.md_files.filetype='generated from plot from plant phenotypes')
+        AND NOT (metadata.md_files.filetype='direct phenotyping')
+        ORDER BY file_id ASC";
 	my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
 	$h->execute($trial_id);
 
@@ -1858,37 +1928,21 @@ sub delete_phenotype_metadata {
 
     #print STDERR "Deleting metadata for trial $trial_id...\n";
 
-    # first, deal with entries in the md_metadata table, which may reference nd_experiment (through linking table)
-    #
-    my $q = "SELECT distinct(metadata_id) FROM nd_experiment_project JOIN nd_experiment_phenotype USING(nd_experiment_id) LEFT JOIN phenome.nd_experiment_md_files ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_md_files.nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata using(metadata_id) WHERE project_id=?";
+    my $q = "SELECT distinct(metadata_id)
+        FROM nd_experiment_phenotype_bridge
+        LEFT JOIN metadata.md_files using(file_id)
+        LEFT JOIN metadata.md_metadata using(metadata_id)
+        WHERE project_id=?";
     my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
     $h->execute($trial_id);
 
     while (my ($md_id) = $h->fetchrow_array()) {
-	#print STDERR "Associated metadata id: $md_id\n";
-	my $mdmd_row = $metadata_schema->resultset("MdMetadata")->find( { metadata_id => $md_id } );
-	if ($mdmd_row) {
-	    #print STDERR "Obsoleting $md_id...\n";
-
-	    $mdmd_row -> update( { obsolete => 1 });
-	}
-    }
-
-    #print STDERR "Deleting the entries in the linking table...\n";
-
-    # delete the entries from the linking table...
-    $q = "SELECT distinct(file_id) FROM nd_experiment_project JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenome.nd_experiment_md_files ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_md_files.nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata using(metadata_id) WHERE project_id=?";
-    $h = $self->bcs_schema->storage()->dbh()->prepare($q);
-    $h->execute($trial_id);
-
-    while (my ($file_id) = $h->fetchrow_array()) {
-	print STDERR "trying to delete association for file with id $file_id...\n";
-	my $ndemdf_rs = $phenome_schema->resultset("NdExperimentMdFiles")->search( { file_id=>$file_id });
-	print STDERR "Deleting md_files linking table entries...\n";
-	foreach my $row ($ndemdf_rs->all()) {
-	    print STDERR "DELETING !!!!\n";
-	    $row->delete();
-	}
+        #print STDERR "Associated metadata id: $md_id\n";
+        my $mdmd_row = $metadata_schema->resultset("MdMetadata")->find( { metadata_id => $md_id } );
+        if ($mdmd_row) {
+            #print STDERR "Obsoleting $md_id...\n";
+            $mdmd_row -> update( { obsolete => 1 });
+        }
     }
 }
 
@@ -1931,7 +1985,12 @@ sub delete_metadata {
 
     # first, deal with entries in the md_metadata table, which may reference nd_experiment (through linking table)
     #
-    my $q = "SELECT distinct(metadata_id) FROM nd_experiment_project JOIN phenome.nd_experiment_md_files using(nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata using(metadata_id) WHERE project_id=?";
+    my $q = "SELECT distinct(metadata_id)
+        FROM nd_experiment_project
+        JOIN phenome.nd_experiment_md_files using(nd_experiment_id)
+        LEFT JOIN metadata.md_files using(file_id)
+        LEFT JOIN metadata.md_metadata using(metadata_id)
+        WHERE project_id=?";
     my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
     $h->execute($trial_id);
 
@@ -1948,7 +2007,12 @@ sub delete_metadata {
     #print STDERR "Deleting the entries in the linking table...\n";
 
     # delete the entries from the linking table... (left joins are due to sometimes missing md_file entries)
-    $q = "SELECT distinct(file_id) FROM nd_experiment_project LEFT JOIN phenome.nd_experiment_md_files using(nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata using(metadata_id) WHERE project_id=?";
+    $q = "SELECT distinct(file_id)
+        FROM nd_experiment_project
+        LEFT JOIN phenome.nd_experiment_md_files using(nd_experiment_id)
+        LEFT JOIN metadata.md_files using(file_id)
+        LEFT JOIN metadata.md_metadata using(metadata_id)
+        WHERE project_id=?";
     $h = $self->bcs_schema->storage()->dbh()->prepare($q);
     $h->execute($trial_id);
 
@@ -1981,6 +2045,7 @@ sub _delete_field_layout_experiment {
 
     my $field_layout_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'field_layout', 'experiment_type')->cvterm_id();
     my $genotyping_layout_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'genotyping_layout', 'experiment_type')->cvterm_id();
+    my $analysis_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'analysis_experiment', 'experiment_type')->cvterm_id();
 
     my $layout_design = $self->get_layout->get_design;
     my @all_stock_ids;
@@ -2027,7 +2092,7 @@ sub _delete_field_layout_experiment {
         $has_cached_layout_prop->delete();
     }
 
-    my $nde_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperiment")->search({ 'me.type_id'=>[$field_layout_type_id, $genotyping_layout_type_id], 'project.project_id'=>$trial_id }, {'join'=>{'nd_experiment_projects'=>'project'}});
+    my $nde_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperiment")->search({ 'me.type_id'=>[$field_layout_type_id, $genotyping_layout_type_id, $analysis_experiment_type_id], 'project.project_id'=>$trial_id }, {'join'=>{'nd_experiment_projects'=>'project'}});
     if ($nde_rs->count != 1){
         die "Project $trial_id does not have exactly one ndexperiment of type field_layout or genotyping_layout!"
     }
@@ -2119,16 +2184,11 @@ sub delete_project_entry {
 
 sub phenotype_count {
     my $self = shift;
-    my $phenotyping_experiment_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'phenotyping_experiment' })->cvterm_id();
 
     my $q = "SELECT count(phenotype_id)
         FROM phenotype
-        JOIN nd_experiment_phenotype using(phenotype_id)
-        JOIN nd_experiment_project using(nd_experiment_id)
-        JOIN nd_experiment using(nd_experiment_id)
-        JOIN project using(project_id)
-        WHERE nd_experiment.type_id = $phenotyping_experiment_type_id
-        AND project_id = ?;";
+        JOIN nd_experiment_phenotype_bridge using(phenotype_id)
+        WHERE project_id = ?;";
     my $h = $self->bcs_schema->storage->dbh()->prepare($q);
     $h->execute($self->get_trial_id());
     my ($count) = $h->fetchrow_array();
@@ -2213,7 +2273,15 @@ sub get_additional_uploaded_files {
     my $trial_id = $self->get_trial_id();
     my @file_array;
     my %file_info;
-    my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype FROM project JOIN nd_experiment_project USING(project_id) JOIN phenome.nd_experiment_md_files ON (nd_experiment_project.nd_experiment_id=nd_experiment_md_files.nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata as m using(metadata_id) LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id) WHERE project_id=? and m.obsolete = 0 and metadata.md_files.filetype='trial_additional_file_upload' ORDER BY file_id ASC";
+    my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype
+        FROM project
+        JOIN nd_experiment_project USING(project_id)
+        JOIN phenome.nd_experiment_md_files ON (nd_experiment_project.nd_experiment_id=nd_experiment_md_files.nd_experiment_id)
+        LEFT JOIN metadata.md_files using(file_id)
+        LEFT JOIN metadata.md_metadata as m using(metadata_id)
+        LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id)
+        WHERE project_id=? and m.obsolete = 0 and metadata.md_files.filetype='trial_additional_file_upload'
+        ORDER BY file_id ASC";
     my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
     $h->execute($trial_id);
 
@@ -2243,23 +2311,32 @@ sub get_phenotypes_for_trait {
     my $stock_type = shift;
     my @data;
     my $dbh = $self->bcs_schema->storage()->dbh();
-	#my $schema = $self->bcs_schema();
+    #my $schema = $self->bcs_schema();
 
-	my $h;
-	my $join_string = '';
-	my $where_string = '';
-	if ($stock_type) {
-		my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, $stock_type, 'stock_type')->cvterm_id();
-		$join_string = 'JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id)';
-		$where_string = "stock.type_id=$stock_type_id and";
-	}
-	my $q = "SELECT phenotype.value::real FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) $join_string WHERE $where_string project_id=? and cvterm.cvterm_id = ? and phenotype.value~? ORDER BY phenotype_id ASC;";
-	$h = $dbh->prepare($q);
+    my $h;
+    my $join_string = '';
+    my $where_string = '';
+    if ($stock_type) {
+        my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, $stock_type, 'stock_type')->cvterm_id();
+        $join_string = 'JOIN stock USING(stock_id)';
+        $where_string = "stock.type_id=$stock_type_id AND";
+    }
+    my $q = "SELECT phenotype.value::real
+        FROM cvterm
+        JOIN phenotype ON (cvterm_id=cvalue_id)
+        JOIN nd_experiment_phenotype_bridge USING(phenotype_id)
+        $join_string
+        WHERE $where_string
+        project_id=?
+        AND cvterm.cvterm_id = ?
+        AND phenotype.value~?
+        ORDER BY phenotype_id ASC;";
+    $h = $dbh->prepare($q);
 
     my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
     $h->execute($self->get_trial_id(), $trait_id, $numeric_regex );
     while (my ($value) = $h->fetchrow_array()) {
-	   push @data, $value + 0;
+        push @data, $value + 0;
     }
     return @data;
 }
@@ -2285,60 +2362,56 @@ sub get_stock_phenotypes_for_traits {
     my $stock_type = shift; #plot, plant, all
     my $stock_relationships = shift; #arrayref. plot_of, plant_of
     my $relationship_stock_type = shift; #plot, plant
-	my $subject_or_object = shift;
+    my $subject_or_object = shift;
     my @data;
-	#$self->bcs_schema->storage->debug(1);
+    #$self->bcs_schema->storage->debug(1);
     my $dbh = $self->bcs_schema->storage()->dbh();
-	my $where_clause = "WHERE project_id=? and b.cvterm_id = ? and phenotype.value~? ";
-	my $phenotyping_experiment_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
+    my $where_clause = "WHERE project_id=? AND phenotype.value~? ";
 
-	if (scalar(@$trait_ids)>0){
-		my $sql_trait_ids = join ("," , @$trait_ids);
-		$where_clause .= "and a.cvterm_id IN ($sql_trait_ids) ";
-	}
+    if (scalar(@$trait_ids)>0){
+        my $sql_trait_ids = join ("," , @$trait_ids);
+        $where_clause .= "AND a.cvterm_id IN ($sql_trait_ids) ";
+    }
 
-	my $relationship_join = '';
-	if ($subject_or_object eq 'object') {
-		$relationship_join = 'JOIN stock_relationship on (stock.stock_id=stock_relationship.object_id) JOIN stock as rel_stock on (stock_relationship.subject_id=rel_stock.stock_id) ';
-	} elsif ($subject_or_object eq 'subject') {
-		$relationship_join = 'JOIN stock_relationship on (stock.stock_id=stock_relationship.subject_id) JOIN stock as rel_stock on (stock_relationship.object_id=rel_stock.stock_id) ';
-	}
-	if ($stock_type ne 'all') {
-		my $stock_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $stock_type, 'stock_type')->cvterm_id();
-		$where_clause .= "and stock.type_id=$stock_type_cvterm_id ";
-	}
-	my @stock_rel_or;
-	foreach (@$stock_relationships) {
-		my $stock_relationship_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $_, 'stock_relationship')->cvterm_id();
-		push @stock_rel_or, "stock_relationship.type_id=$stock_relationship_cvterm_id";
-	}
-	my $stock_rel_or_sql = join (" OR " , @stock_rel_or);
-	if ($stock_rel_or_sql) {
-		$where_clause .= "and ($stock_rel_or_sql) ";
-	}
-	my $rel_stock_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $relationship_stock_type, 'stock_type')->cvterm_id();
-	$where_clause .= "and rel_stock.type_id=$rel_stock_type_cvterm_id ";
+    my $relationship_join = '';
+    if ($subject_or_object eq 'object') {
+        $relationship_join = 'JOIN stock_relationship on (stock.stock_id=stock_relationship.object_id) JOIN stock as rel_stock on (stock_relationship.subject_id=rel_stock.stock_id) ';
+    } elsif ($subject_or_object eq 'subject') {
+        $relationship_join = 'JOIN stock_relationship on (stock.stock_id=stock_relationship.subject_id) JOIN stock as rel_stock on (stock_relationship.object_id=rel_stock.stock_id) ';
+    }
+    if ($stock_type ne 'all') {
+        my $stock_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $stock_type, 'stock_type')->cvterm_id();
+        $where_clause .= "and stock.type_id=$stock_type_cvterm_id ";
+    }
+    my @stock_rel_or;
+    foreach (@$stock_relationships) {
+        my $stock_relationship_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $_, 'stock_relationship')->cvterm_id();
+        push @stock_rel_or, "stock_relationship.type_id=$stock_relationship_cvterm_id";
+    }
+    my $stock_rel_or_sql = join (" OR " , @stock_rel_or);
+    if ($stock_rel_or_sql) {
+        $where_clause .= "and ($stock_rel_or_sql) ";
+    }
+    my $rel_stock_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $relationship_stock_type, 'stock_type')->cvterm_id();
+    $where_clause .= "and rel_stock.type_id=$rel_stock_type_cvterm_id ";
 
-	my $q = "SELECT stock.stock_id, stock.uniquename, a.cvterm_id, a.name || '|' || db.name ||  ':' || dbxref.accession, phenotype.phenotype_id, phenotype.uniquename, phenotype.sp_person_id, phenotype.value::real, rel_stock.stock_id, rel_stock.uniquename, stock_type.name
-		FROM cvterm as a
-		JOIN dbxref ON (a.dbxref_id = dbxref.dbxref_id)
-		JOIN db USING(db_id)
-		JOIN phenotype ON (a.cvterm_id=cvalue_id)
-		JOIN nd_experiment_phenotype USING(phenotype_id)
-		JOIN nd_experiment_project USING(nd_experiment_id)
-		JOIN nd_experiment_stock USING(nd_experiment_id)
-		JOIN cvterm as b ON (b.cvterm_id=nd_experiment_stock.type_id)
-		JOIN stock USING(stock_id)
-		JOIN cvterm as stock_type ON (stock_type.cvterm_id=stock.type_id)
-		$relationship_join
-		$where_clause
-		ORDER BY stock.stock_id;";
+    my $q = "SELECT stock.stock_id, stock.uniquename, a.cvterm_id, a.name || '|' || db.name ||  ':' || dbxref.accession, phenotype.phenotype_id, phenotype.uniquename, phenotype.sp_person_id, phenotype.value::real, rel_stock.stock_id, rel_stock.uniquename, stock_type.name
+        FROM cvterm as a
+        JOIN dbxref ON (a.dbxref_id = dbxref.dbxref_id)
+        JOIN db USING(db_id)
+        JOIN phenotype ON (a.cvterm_id=cvalue_id)
+        JOIN nd_experiment_phenotype_bridge USING(phenotype_id)
+        JOIN stock USING(stock_id)
+        JOIN cvterm as stock_type ON (stock_type.cvterm_id=stock.type_id)
+        $relationship_join
+        $where_clause
+        ORDER BY stock.stock_id;";
 
     print STDERR "QUERY = $q\n";
     my $h = $dbh->prepare($q);
 
     my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
-    $h->execute($self->get_trial_id(), $phenotyping_experiment_cvterm, $numeric_regex );
+    $h->execute($self->get_trial_id(), $numeric_regex );
     while (my ($stock_id, $stock_name, $trait_id, $trait_name, $phenotype_id, $pheno_uniquename, $uploader_id, $value, $rel_stock_id, $rel_stock_name, $stock_type) = $h->fetchrow_array()) {
         push @data, [$stock_id, $stock_name, $trait_id, $trait_name, $phenotype_id, $pheno_uniquename, $uploader_id, $value + 0, $rel_stock_id, $rel_stock_name, $stock_type];
     }
@@ -2401,14 +2474,11 @@ sub get_traits_assayed {
             JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id)
             JOIN db ON (dbxref.db_id = db.db_id)
             JOIN phenotype ON (cvterm.cvterm_id=phenotype.cvalue_id)
-            JOIN nd_experiment_phenotype USING(phenotype_id)
-            JOIN nd_experiment_project USING(nd_experiment_id)
-            JOIN nd_experiment_stock USING(nd_experiment_id)
-            LEFT JOIN phenome.nd_experiment_md_images AS nd_experiment_md_images USING(nd_experiment_id)
-            LEFT JOIN phenome.project_md_image AS project_md_image ON (nd_experiment_md_images.image_id=project_md_image.image_id)
+            JOIN nd_experiment_phenotype_bridge USING(phenotype_id)
+            LEFT JOIN phenome.project_md_image AS project_md_image ON (nd_experiment_phenotype_bridge.image_id=project_md_image.image_id)
             LEFT JOIN project AS imaging_project ON (project_md_image.project_id=imaging_project.project_id)
-            JOIN stock on (stock.stock_id = nd_experiment_stock.stock_id)
-            WHERE stock.type_id=$stock_type_cvterm_id and nd_experiment_project.project_id=? $cvtermprop_where
+            JOIN stock on (stock.stock_id = nd_experiment_phenotype_bridge.stock_id)
+            WHERE stock.type_id=$stock_type_cvterm_id and nd_experiment_phenotype_bridge.project_id=? $cvtermprop_where
             GROUP BY trait, cvterm.cvterm_id, imaging_project.project_id, imaging_project.name
             ORDER BY trait;";
     } else {
@@ -2418,12 +2488,10 @@ sub get_traits_assayed {
             JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id)
             JOIN db ON (dbxref.db_id = db.db_id)
             JOIN phenotype ON (cvterm.cvterm_id=phenotype.cvalue_id)
-            JOIN nd_experiment_phenotype USING(phenotype_id)
-            JOIN nd_experiment_project USING(nd_experiment_id)
-            LEFT JOIN phenome.nd_experiment_md_images AS nd_experiment_md_images USING(nd_experiment_id)
-            LEFT JOIN phenome.project_md_image AS project_md_image ON (nd_experiment_md_images.image_id=project_md_image.image_id)
+            JOIN nd_experiment_phenotype_bridge USING(phenotype_id)
+            LEFT JOIN phenome.project_md_image AS project_md_image ON (nd_experiment_phenotype_bridge.image_id=project_md_image.image_id)
             LEFT JOIN project AS imaging_project ON (project_md_image.project_id=imaging_project.project_id)
-            WHERE nd_experiment_project.project_id=? $cvtermprop_where
+            WHERE nd_experiment_phenotype_bridge.project_id=? $cvtermprop_where
             GROUP BY trait, cvterm.cvterm_id, imaging_project.project_id, imaging_project.name
             ORDER BY trait;";
     }
@@ -3923,37 +3991,38 @@ sub delete_assayed_trait {
     my $dbname = shift;
     my $dbuser = shift;
     my $dbpass = shift;
-    my $temp_file_nd_experiment_id = shift;
     my $pheno_ids = shift;
     my $trait_ids = shift;
+    my $error;
 
     my $trial_id = $self->get_trial_id();
     my $schema = $self->bcs_schema;
-    my $phenome_schema = $self->phenome_schema;
-    my ($error, @nd_expt_ids);
-    my $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
-    my $search_params = { 'nd_experiment.type_id' => $nd_experiment_type_id, 'nd_experiment_projects.project_id' => $trial_id };
+
+    my $q_search_where;
     if (scalar(@$trait_ids) > 0){
-        $search_params->{'me.observable_id'} = { '-in' => $trait_ids };
+        my $trait_ids_sql = join ',', @$trait_ids;
+        $q_search_where = "AND observable_id IN ($trait_ids_sql)";
     }
     if (scalar(@$pheno_ids) > 0){
-        $search_params->{'me.phenotype_id'} = { '-in' => $pheno_ids };
+        my $phenotype_ids_sql = join ',', @$pheno_ids;
+        $q_search_where = "AND phenotype_id IN($phenotype_ids_sql)";
     }
-    #$schema->storage->debug(1);
     if (scalar(@$pheno_ids) > 0 || scalar(@$trait_ids) > 0 ){
-        my %phenotype_ids_and_nd_experiment_ids_to_delete;
-        my $delete_pheno_id_rs = $schema->resultset("Phenotype::Phenotype")->search(
-        $search_params,
-        {
-            join => { 'nd_experiment_phenotypes' => {'nd_experiment' => 'nd_experiment_projects'} },
-            '+select' => ['nd_experiment.nd_experiment_id'],
-            '+as' => ['nd_expt_id'],
-        });
-        while ( my $res = $delete_pheno_id_rs->next()){
-            push @{$phenotype_ids_and_nd_experiment_ids_to_delete{nd_experiment_ids}}, $res->get_column('nd_expt_id');
-            push @{$phenotype_ids_and_nd_experiment_ids_to_delete{phenotype_ids}}, $res->phenotype_id;
+        my $q_search = "
+            SELECT phenotype_id, nd_experiment_phenotype_bridge_id, file_id
+            FROM phenotype
+            JOIN nd_experiment_phenotype_bridge using(phenotype_id)
+            WHERE project_id = $trial_id $q_search_where;
+            ";
+        my $h = $self->bcs_schema->storage->dbh()->prepare($q_search);
+        $h->execute();
+
+        my %phenotype_ids_and_nd_experiment_phenotype_bridge_ids_to_delete;
+        while (my ($phenotype_id, $nd_experiment_phenotype_bridge_id, $file_id) = $h->fetchrow_array()) {
+            push @{$phenotype_ids_and_nd_experiment_phenotype_bridge_ids_to_delete{phenotype_ids}}, $phenotype_id;
+            push @{$phenotype_ids_and_nd_experiment_phenotype_bridge_ids_to_delete{nd_experiment_phenotype_bridge_ids}}, $nd_experiment_phenotype_bridge_id;
         }
-        return delete_phenotype_values_and_nd_experiment_md_values($dbhost, $dbname, $dbuser, $dbpass, $temp_file_nd_experiment_id, $basepath, $schema, \%phenotype_ids_and_nd_experiment_ids_to_delete);
+        return delete_phenotype_values_and_nd_experiment_md_values($dbhost, $dbname, $dbuser, $dbpass, $basepath, $schema, \%phenotype_ids_and_nd_experiment_phenotype_bridge_ids_to_delete);
     }
     else {
         $error = "List of trait or phenotype ids was not provided for deletion.";

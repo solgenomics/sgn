@@ -8,7 +8,7 @@ use CatalystX::GlobalContext ();
 use CXGN::Login;
 use CXGN::People::Person;
 use List::MoreUtils 'uniq';
-use JSON;
+use JSON::XS;
 
 
 BEGIN { extends 'Catalyst::Controller' }
@@ -42,7 +42,15 @@ sub index :Path :Args(0) {
     if ($c->config->{homepage_display_phenotype_uploads}){
         my @file_array;
         my %file_info;
-        my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype, project_id, project.name FROM nd_experiment_project JOIN project USING(project_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenome.nd_experiment_md_files ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_md_files.nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata as m using(metadata_id) LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id) WHERE m.obsolete = 0 and NOT (metadata.md_files.filetype='generated from plot from plant phenotypes') and NOT (metadata.md_files.filetype='direct phenotyping')";
+        my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype, project_id, project.name
+            FROM project
+            JOIN nd_experiment_phenotype_bridge USING(project_id)
+            LEFT JOIN metadata.md_files using(file_id)
+            LEFT JOIN metadata.md_metadata as m using(metadata_id)
+            LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id)
+            WHERE m.obsolete = 0
+            AND NOT (metadata.md_files.filetype='generated from plot from plant phenotypes')
+            AND NOT (metadata.md_files.filetype='direct phenotyping')";
         my $h = $schema->storage()->dbh()->prepare($q);
         $h->execute();
 
@@ -59,7 +67,7 @@ sub index :Path :Args(0) {
 
     my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
     my $breeding_programs = $projects->get_breeding_programs();
-    $c->stash->{locations} = decode_json $projects->get_location_geojson();
+    $c->stash->{locations} = JSON::XS->new()->decode($projects->get_location_geojson());
     $c->stash->{breeding_programs} = $breeding_programs;
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{timestamp} = localtime;
@@ -67,6 +75,14 @@ sub index :Path :Args(0) {
     my @editable_stock_props = split ',', $c->config->{editable_stock_props};
     my %editable_stock_props = map { $_=>1 } @editable_stock_props;
     $c->stash->{editable_stock_props} = \%editable_stock_props;
+
+    my @editable_stock_props_definitions = split ',', $c->config->{editable_stock_props_definitions};
+    my %def_hash;
+    foreach (@editable_stock_props_definitions) {
+        my @term_def = split ':', $_;
+        $def_hash{$term_def[0]} = $term_def[1];
+    }
+    $c->stash->{editable_stock_props_definitions} = \%def_hash;
 
     my $genotyping_facilities = $c->config->{genotyping_facilities};
     my @facilities = split ',',$genotyping_facilities;

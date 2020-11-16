@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-delete_nd_experiment_entries.pl - script to delete nd_experiment entries. used during phenotpe deletion to move the slow process of deleting nd_experiment entries to an asynchronous process
+delete_nd_experiment_entries.pl - script to delete nd_experiment entries. used during deletion to move the slow process of deleting nd_experiment entries to an asynchronous process
 
 =head1 DESCRIPTION
 

@@ -1,19 +1,12 @@
 /*jslint browser: true, devel: true */
 
 /**
-
 =head1 Trial.js
-
 Display for managing genotyping plates
-
-
 =head1 AUTHOR
-
 Jeremy D. Edwards <jde22@cornell.edu>
 Lukas Mueller <lam87@cornell.edu>
-
 =cut
-
 */
 
 
@@ -556,4 +549,51 @@ function save_genotyping_trial_details (categories, details, success_message) {
       jQuery('#genotyping_trial_details_error_dialog').modal("show");
     },
   });
+}
+
+
+function save_replace_well_accession () {
+    var trial_id = get_trial_id();
+
+    var new_accession = jQuery('#new_cell_accession').val();
+    var old_accession = jQuery('#cell_accession').html();
+    var old_plot_id = jQuery('#plot_id').html();
+    var old_plot_name = jQuery('#plot_name').html();
+
+    var yes = confirm("Are you sure you want to replace accession "+ old_accession +" with "+ new_accession +" in sample " + old_plot_name + " ?");
+    if (yes) {
+        jQuery('#replace_plate_accessions_dialog').modal("hide");
+        jQuery('#working_modal').modal("show");
+
+        new jQuery.ajax({
+            type: 'POST',
+            url: '/ajax/breeders/trial/'+trial_id+'/replace_well_accessions',
+            dataType: "json",
+            data: {
+                    'new_accession': new_accession,
+                    'old_accession': old_accession,
+                    'old_plot_id': old_plot_id,
+                    'old_plot_name': old_plot_name,
+            },
+
+            success: function (response) {
+              jQuery('#working_modal').modal("hide");
+
+              if (response.error) {
+                alert("Error Replacing Plot Accession: "+response.error);
+              }
+              else {
+                jQuery('#replace_accessions_dialog_message').modal("show");
+              }
+            },
+            error: function () {
+              jQuery('#working_modal').modal("hide");
+              alert('An error occurred replacing plot accession');
+            }
+        });
+    }
+}
+
+function close_message_dialog () {
+    location.reload();
 }

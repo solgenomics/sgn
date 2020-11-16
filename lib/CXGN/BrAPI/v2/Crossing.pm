@@ -170,10 +170,10 @@ sub store_crossingproject {
 
         if ($error){
             return CXGN::BrAPI::JSONResponse->return_error($self->status, $error);
-        } 
+        }
         push @list, $crossingproj_id;
     }
-    
+
     my $counter = scalar @list;
     my %result;
 
@@ -298,8 +298,8 @@ sub crosses {
         my @crosses;
         foreach my $r (@$result){
 
-            my ($cross_id, $cross_name, $cross_combination, $cross_type, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name) =@$r;
-           
+            my ($cross_id, $cross_name, $cross_combination, $cross_type, $female_parent_id, $female_parent_name, $female_ploidy, $male_parent_id, $male_parent_name, $male_ploidy, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name) =@$r;
+
             push @data, {
                 additionalInfo=>{},
                 crossAttributes=>[
@@ -320,7 +320,7 @@ sub crosses {
                   observationUnitDbId=>$female_plot_id,
                   observationUnitName=>$female_plot_name,
                   parentType=>"FEMALE",
-                },      
+                },
                 parent2=>{
                   germplasmDbId=>qq|$male_parent_id|,
                   germplasmName=>$male_parent_name,
@@ -422,7 +422,7 @@ sub store_crosses { #crosses must belong to same experiment
     foreach my $r (@$result){
 
         my ($cross_id, $cross_name, $cross_combination, $cross_type, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name) =@$r;
-       
+
         push @data, {
             additionalInfo=>{},
             crossAttributes=>[
@@ -443,7 +443,7 @@ sub store_crosses { #crosses must belong to same experiment
               observationUnitDbId=>$female_plot_id,
               observationUnitName=>$female_plot_name,
               parentType=>"FEMALE",
-            },      
+            },
             parent2=>{
               germplasmDbId=>qq|$male_parent_id|,
               germplasmName=>$male_parent_name,
@@ -456,7 +456,7 @@ sub store_crosses { #crosses must belong to same experiment
         $counter++;
     }
 
-    
+
     my %result = (data=>\@data);
     my @data_files;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);

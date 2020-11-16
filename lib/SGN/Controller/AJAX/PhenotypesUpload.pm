@@ -36,7 +36,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON'  },
    );
 
 
@@ -58,16 +58,12 @@ sub upload_phenotype_verify_POST : Args(1) {
         $timestamp = 1;
     }
 
-    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
-    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
-
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
         basepath=>$c->config->{basepath},
         dbhost=>$c->config->{dbhost},
         dbname=>$c->config->{dbname},
         dbuser=>$c->config->{dbuser},
         dbpass=>$c->config->{dbpass},
-        temp_file_nd_experiment_id=>$temp_file_nd_experiment_id,
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
@@ -116,16 +112,12 @@ sub upload_phenotype_store_POST : Args(1) {
         $timestamp = 1;
     }
 
-    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
-    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
-
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
         basepath=>$c->config->{basepath},
         dbhost=>$c->config->{dbhost},
         dbname=>$c->config->{dbname},
         dbuser=>$c->config->{dbuser},
         dbpass=>$c->config->{dbpass},
-        temp_file_nd_experiment_id=>$temp_file_nd_experiment_id,
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
@@ -202,12 +194,6 @@ sub _prep_upload {
             $validate_type = "phenotype spreadsheet";
         } elsif ($spreadsheet_format eq 'simple'){
             $validate_type = "phenotype spreadsheet simple";
-        } elsif ($spreadsheet_format eq 'nirs'){
-            $validate_type = "phenotype spreadsheet nirs";
-            $metadata_file_type = "nirs spreadsheet";
-        } elsif ($spreadsheet_format eq 'scio'){
-            $validate_type = "scio spreadsheet nirs";
-            $metadata_file_type = "nirs spreadsheet";
         } elsif ($spreadsheet_format eq 'associated_images'){
             $validate_type = "phenotype spreadsheet associated_images";
         } else {
@@ -404,16 +390,12 @@ sub update_plot_phenotype_POST : Args(0) {
   $phenotype_metadata{'date'}="$timestamp";
   my $user_id = $c->can('user_exists') ? $c->user->get_object->get_sp_person_id : $c->sp_person_id;
 
-  my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
-  my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
-
   my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
       basepath=>$c->config->{basepath},
       dbhost=>$c->config->{dbhost},
       dbname=>$c->config->{dbname},
       dbuser=>$c->config->{dbuser},
       dbpass=>$c->config->{dbpass},
-      temp_file_nd_experiment_id=>$temp_file_nd_experiment_id,
       bcs_schema=>$schema,
       metadata_schema=>$metadata_schema,
       phenome_schema=>$phenome_schema,
@@ -455,16 +437,27 @@ sub retrieve_plot_phenotype_POST : Args(0) {
   my $stock_id = $stock->stock_id();
 
   if ($trait_list_option){
-      my $h = $dbh->prepare("SELECT cvterm.cvterm_id AS trait_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_name FROM cvterm JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id WHERE db.db_id = (( SELECT dbxref_1.db_id FROM stock JOIN nd_experiment_stock USING (stock_id) JOIN nd_experiment_phenotype USING (nd_experiment_id) JOIN phenotype USING (phenotype_id) JOIN cvterm cvterm_1 ON phenotype.cvalue_id = cvterm_1.cvterm_id JOIN dbxref dbxref_1 ON cvterm_1.dbxref_id = dbxref_1.dbxref_id LIMIT 1)) AND (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text =? GROUP BY cvterm.cvterm_id, ((((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text);");
+      my $h = $dbh->prepare("SELECT cvterm.cvterm_id AS trait_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_name
+        FROM cvterm
+        JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id
+        JOIN db ON dbxref.db_id = db.db_id
+        WHERE db.db_id = (( SELECT dbxref_1.db_id
+            FROM stock
+            JOIN nd_experiment_phenotype_bridge USING (stock_id)
+            JOIN phenotype USING (phenotype_id)
+            JOIN cvterm cvterm_1 ON phenotype.cvalue_id = cvterm_1.cvterm_id
+            JOIN dbxref dbxref_1 ON cvterm_1.dbxref_id = dbxref_1.dbxref_id LIMIT 1))
+        AND (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text =?
+        GROUP BY cvterm.cvterm_id, ((((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text);");
       $h->execute($trait_id);
       while (my ($id, $trait_name) = $h->fetchrow_array()) {
         $trait_id = $id;
       }
   }
 
-  my $h = $dbh->prepare("SELECT phenotype.value FROM stock
-    JOIN nd_experiment_stock USING(stock_id)
-    JOIN nd_experiment_phenotype USING(nd_experiment_id)
+  my $h = $dbh->prepare("SELECT phenotype.value
+    FROM stock
+    JOIN nd_experiment_phenotype_bridge USING(stock_id)
     JOIN phenotype USING(phenotype_id)
     WHERE cvalue_id =? and stock_id=?;"
     );

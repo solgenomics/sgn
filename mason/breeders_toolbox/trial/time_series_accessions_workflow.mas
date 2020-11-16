@@ -1,0 +1,136 @@
+<%args>
+$trial_id => undef
+$data_level => undef
+</%args>
+
+<& /util/import_javascript.mas, classes => [ ] &>
+
+<div class="well well-sm">
+    <button class="btn btn-primary" id="trial_detail_page_analysis_time_series_accessions_workflow">Get Time-Series Plots For Accessions On Saved Measurements</button>
+</div>
+<hr>
+
+<div class="modal fade" id="trial_analysis_time_series_accessions_workflow_dialog" name="trial_analysis_time_series_accessions_workflow_dialog" tabindex="-1" role="dialog" aria-labelledby="trialAnalysisTimeSeriesAccessionsWorkflowDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="trialAnalysisTimeSeriesAccessionsWorkflowDialog">Get Time Series</h4>
+            </div>
+            <div class="modal-body">
+
+                <&| /util/workflow.mas, id=> "trial_analysis_time_series_accessions_workflow_dialog_workflow" &>
+                    <&| /util/workflow.mas:step, title=> "Traits" &>
+                        <& /page/page_title.mas, title=>"Select the input measurements to use in time series" &>
+
+                        <div class="container-fluid">
+                            <div class="form-horizontal">
+
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Trait(s): </label>
+                                    <div class="col-sm-9" >
+                                        <div id="trial_analysis_time_series_accessions_workflow_traits_div"></div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <center>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;" >Go to Next Step</button>
+                            </center>
+                        </div>
+                    </&>
+                    <&| /util/workflow.mas:step, title=> "Accessions" &>
+                        <& /page/page_title.mas, title=>"Select the accessions to plot" &>
+
+                        <div class="container-fluid">
+                            <div class="form-horizontal">
+
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Accessions (Leave empty for all): </label>
+                                    <div class="col-sm-9" >
+                                        <div id="trial_analysis_time_series_accessions_workflow_accessions_div"></div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <center>
+                                <button type="button" class="btn btn-primary" name="trial_analysis_time_series_accessions_workflow_submit" id="trial_analysis_time_series_accessions_workflow_submit" title="Submit">Submit</button>
+                            </center>
+                        </div>
+                    </&>
+                    <&| /util/workflow.mas:step, title=> "Output" &>
+                        <& /page/page_title.mas, title=>"Results" &>
+
+                        <div id="trial_analysis_time_series_accessions_workflow_results_div"></div>
+                    </&>
+                </&>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#trial_detail_page_analysis_time_series_accessions_workflow').click( function(){
+        jQuery('#trial_analysis_time_series_accessions_workflow_dialog').modal('show');
+
+        get_select_box('traits', 'trial_analysis_time_series_accessions_workflow_traits_div', { 'name' : 'trial_analysis_time_series_accessions_workflow_trait_ids', 'id' : 'trial_analysis_time_series_accessions_workflow_trait_ids', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':<% $trial_id %>, 'stock_type':'analysis_instance', 'contains_composable_cv_type':'time_ontology', 'select_format':'component_table_select', 'select_all':0 });
+
+        get_select_box('stocks', 'trial_analysis_time_series_accessions_workflow_accessions_div', { 'name' : 'trial_analysis_time_series_accessions_workflow_accessions_ids', 'id' : 'trial_analysis_time_series_accessions_workflow_accessions_ids', 'empty':1, 'multiple':1, 'size': 20, 'trial_id_list':<% $trial_id %>, 'stock_type_name':'accession' });
+    });
+
+    jQuery('#trial_analysis_time_series_accessions_workflow_submit').click(function() {
+        var selected_trait_ids = [];
+        jQuery('input[name="trial_analysis_time_series_accessions_workflow_trait_ids"]').each(function() {
+            if (this.checked){
+                selected_trait_ids.push(jQuery(this).val());
+            }
+        });
+        console.log(selected_trait_ids);
+
+        var selected_accession_ids = jQuery('#trial_analysis_time_series_accessions_workflow_accessions_ids').val();
+        console.log(selected_accession_ids);
+
+        if (!selected_trait_ids || selected_trait_ids.length < 1) {
+            alert('Please select at least one trait!');
+            return false;
+        }
+        else {
+            jQuery.ajax({
+                url : '/ajax/breeders/trial/<% $trial_id %>/plot_time_series_accessions?trait_ids='+JSON.stringify(selected_trait_ids)+'&accession_ids='+JSON.stringify(selected_accession_ids)+'&data_level=<% $data_level %>',
+                beforeSend: function() {
+                    jQuery("#working_modal").modal("show");
+                },
+                success: function(response){
+                    console.log(response);
+                    jQuery("#working_modal").modal("hide");
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                    else {
+                        var html = '<img src="'+response.figure+'" >';
+                        jQuery('#trial_analysis_time_series_accessions_workflow_results_div').html(html);
+
+                        Workflow.complete("#trial_analysis_time_series_accessions_workflow_submit");
+                        Workflow.focus('#trial_analysis_time_series_accessions_workflow_dialog_workflow', 2);
+                    }
+                },
+                error: function(response){
+                    jQuery("#working_modal").modal("hide");
+                    alert('Error doing time series accessions!');
+                }
+            });
+        }
+        
+    });
+
+});
+
+</script>

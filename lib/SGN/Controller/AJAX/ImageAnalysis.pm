@@ -26,7 +26,6 @@ use URI::Encode qw(uri_encode uri_decode);
 use CXGN::Calendar;
 use Image::Size;
 use Text::CSV;
-use CXGN::Phenotypes::StorePhenotypes;
 use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::BrAPI::FileResponse;
 use CXGN::Onto;
@@ -46,7 +45,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON' },
 );
 
 sub image_analysis_submit : Path('/ajax/image_analysis/submit') : ActionClass('REST') { }

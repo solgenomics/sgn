@@ -21,7 +21,7 @@ use File::Spec::Functions;
 use CXGN::People::Roles;
 use CXGN::Trial::TrialLayout;
 use CXGN::Genotype::Search;
-use JSON;
+use JSON::XS;
 use CXGN::Trial;
 
 
@@ -70,6 +70,13 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
     my @editable_stock_props = split ',', $c->config->{editable_stock_props};
     my %editable_stock_props = map { $_=>1 } @editable_stock_props;
 
+    my @editable_stock_props_definitions = split ',', $c->config->{editable_stock_props_definitions};
+    my %def_hash;
+    foreach (@editable_stock_props_definitions) {
+        my @term_def = split ':', $_;
+        $def_hash{$term_def[0]} = $term_def[1];
+    }
+
     my $breeding_programs = $projects->get_breeding_programs();
     my @breeding_programs = @$breeding_programs;
     my @roles = $c->user->roles();
@@ -95,10 +102,12 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
     $c->stash->{design_types} = \@design_types;
     $c->stash->{management_factor_types} = \@management_factor_types;
     $c->stash->{editable_stock_props} = \%editable_stock_props;
+    $c->stash->{editable_stock_props_definitions} = \%def_hash;
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{timestamp} = localtime;
 
-    my $locations = decode_json($projects->get_all_locations_by_breeding_program());
+    my $json = JSON::XS->new();
+    my $locations = $json->decode($projects->get_all_locations_by_breeding_program());
 
     #print STDERR "Locations are ".Dumper($locations)."\n";
 
@@ -130,11 +139,19 @@ sub manage_accessions : Path("/breeders/accessions") Args(0) {
     my @editable_stock_props = split ',', $c->config->{editable_stock_props};
     my %editable_stock_props = map { $_=>1 } @editable_stock_props;
 
+    my @editable_stock_props_definitions = split ',', $c->config->{editable_stock_props_definitions};
+    my %def_hash;
+    foreach (@editable_stock_props_definitions) {
+        my @term_def = split ':', $_;
+        $def_hash{$term_def[0]} = $term_def[1];
+    }
+
     $c->stash->{accessions} = $accessions;
     $c->stash->{list_id} = $list_id;
     #$c->stash->{population_groups} = $populations;
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{editable_stock_props} = \%editable_stock_props;
+    $c->stash->{editable_stock_props_definitions} = \%def_hash;
     $c->stash->{template} = '/breeders_toolbox/manage_accessions.mas';
 }
 
@@ -257,7 +274,8 @@ sub manage_crosses : Path("/breeders/crosses") Args(0) {
         }
     }
 
-    my $locations = decode_json $crossingtrial->get_all_locations_by_breeding_program();
+    my $json = JSON::XS->new();
+    my $locations = $json->decode($crossingtrial->get_all_locations_by_breeding_program());
 
     $c->stash->{locations} = $locations;
 
@@ -304,10 +322,13 @@ sub manage_nirs :Path("/breeders/nirs") Args(0) {
     }
 
     my @file_types = [ 'nirs spreadsheet' ];
-    my $data = $self->get_file_data($c, \@file_types);
+    my $all_data = $self->get_file_data($c, \@file_types, 1);
+    my $data = $self->get_file_data($c, \@file_types, 0);
 
     $c->stash->{nirs_files} = $data->{files};
     $c->stash->{deleted_nirs_files} = $data->{deleted_files};
+    $c->stash->{all_nirs_files} = $all_data->{files};
+    $c->stash->{all_deleted_nirs_files} = $all_data->{deleted_files};
 
     $c->stash->{template} = '/breeders_toolbox/manage_nirs.mas';
 
@@ -325,7 +346,13 @@ sub manage_upload :Path("/breeders/upload") Args(0) {
 
     my @editable_stock_props = split ',', $c->config->{editable_stock_props};
     my %editable_stock_props = map { $_=>1 } @editable_stock_props;
-    $c->stash->{editable_stock_props} = \%editable_stock_props;
+
+    my @editable_stock_props_definitions = split ',', $c->config->{editable_stock_props_definitions};
+    my %def_hash;
+    foreach (@editable_stock_props_definitions) {
+        my @term_def = split ':', $_;
+        $def_hash{$term_def[0]} = $term_def[1];
+    }
 
     my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
     my $breeding_programs = $projects->get_breeding_programs();
@@ -333,16 +360,20 @@ sub manage_upload :Path("/breeders/upload") Args(0) {
     my $genotyping_facilities = $c->config->{genotyping_facilities};
     my @facilities = split ',',$genotyping_facilities;
 
+    my $json = JSON::XS->new();
+
     my $field_management_factors = $c->config->{management_factor_types};
     my @management_factor_types = split ',',$field_management_factors;
 
     my $design_type_string = $c->config->{design_types};
     my @design_types = split ',',$design_type_string;
 
+    $c->stash->{editable_stock_props} = \%editable_stock_props;
+    $c->stash->{editable_stock_props_definitions} = \%def_hash;
     $c->stash->{design_types} = \@design_types;
     $c->stash->{management_factor_types} = \@management_factor_types;
     $c->stash->{facilities} = \@facilities;
-    $c->stash->{geojson_locations} = decode_json($projects->get_all_locations_by_breeding_program());
+    $c->stash->{geojson_locations} = $json->decode($projects->get_all_locations_by_breeding_program());
     $c->stash->{locations} = $projects->get_all_locations();
     $c->stash->{breeding_programs} = $breeding_programs;
     $c->stash->{timestamp} = localtime;
@@ -704,6 +735,7 @@ sub get_file_data : Private {
     my $self = shift;
     my $c = shift;
     my $file_types = shift;
+    my $get_files_for_all_users = shift;
     my @file_types = @{$file_types};
 
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
@@ -711,7 +743,11 @@ sub get_file_data : Private {
     my $file_info = [];
     my $deleted_file_info = [];
 
-    my $metadata_rs = $metadata_schema->resultset("MdMetadata")->search( { create_person_id => $c->user()->get_object->get_sp_person_id() }, { order_by => 'create_date' } );
+    my %search_param;
+    if (!$get_files_for_all_users) {
+        $search_param{create_person_id} = $c->user()->get_object->get_sp_person_id();
+    }
+    my $metadata_rs = $metadata_schema->resultset("MdMetadata")->search( \%search_param, { order_by => 'create_date' } );
 
     print STDERR "RETRIEVED ".$metadata_rs->count()." METADATA ENTRIES...\n";
 

@@ -87,14 +87,11 @@ sub get_trial_phenotypes_heatmap {
 	  LEFT JOIN stockprop AS col_number ON (plot.stock_id=col_number.stock_id AND col_number.type_id = $col_number_type_id)
 	  LEFT JOIN stockprop AS row_number ON (plot.stock_id=row_number.stock_id AND row_number.type_id = $row_number_type_id)
       LEFT JOIN stockprop AS plot_number ON (plot.stock_id=plot_number.stock_id AND plot_number.type_id = $plot_number_type_id)
-      JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=plot.stock_id)
-      JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id=nd_experiment.nd_experiment_id)
-      LEFT JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment.nd_experiment_id)
+      LEFT JOIN nd_experiment_phenotype_bridge ON (nd_experiment_phenotype_bridge.stock_id=plot.stock_id)
       LEFT JOIN phenotype USING(phenotype_id)
       LEFT JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id)
       LEFT JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id)
       LEFT JOIN db USING(db_id)
-      JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment.nd_experiment_id)
       JOIN project USING(project_id)",
     );
 

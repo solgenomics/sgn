@@ -90,7 +90,6 @@ sub search :Path('/stock/search') Args(0) {
 	trait_db_name              => $c->get_conf('trait_ontology_db_name'),
 	breeding_programs          => breeding_programs($self->schema),
 	);
-    #my $results = $c->req->param('search_submitted') ? $self->_make_stock_search_rs($c) : undef;
     #my $form = HTML::FormFu->new(LoadFile($c->path_to(qw{forms stock stock_search.yaml})));
     #my $trait_db_name = $c->get_conf('trait_ontology_db_name');
     #$c->stash(
@@ -241,6 +240,9 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     my $barcode_tempuri  = $c->tempfiles_subdir('image');
     my $barcode_tempdir = $c->get_conf('basepath')."/$barcode_tempuri";
 
+    my $editable_stockprops = $c->get_conf('editable_stock_props');
+    $editable_stockprops .= ",PUI,organization";
+
     print STDERR "Checkpoint 4: Elapsed ".(time() - $time)."\n";
 ################
     $c->stash(
@@ -275,7 +277,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 	    has_pedigree => $c->stash->{has_pedigree},
 	    has_descendants => $c->stash->{has_descendants},
             trait_ontology_db_name => $c->get_conf('trait_ontology_db_name'),
-	    editable_stock_props   => $c->get_conf('editable_stock_props'),
+	    editable_stock_props   => $editable_stockprops,
 
         },
         locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
@@ -616,189 +618,6 @@ sub get_stock_extended_info : Private {
 
 ############## HELPER METHODS ######################3
 
-# assembles a DBIC resultset for the search based on the submitted
-# form values
-sub _make_stock_search_rs {
-    my ( $self, $c ) = @_;
-
-    my $rs = $self->schema->resultset('Stock::Stock');
-
-    if( my $name = $c->req->param('stock_name') ) {
-        # trim and regularize whitespace
-        $name =~ s/(^\s+|\s+)$//g;
-        $name =~ s/\s+/ /g;
-
-        $rs = $rs->search({ 'me.is_obsolete' => 'false',
-            -or => [
-                 'lower(me.name)' => { like => '%'.lc( $name ).'%' } ,
-                 'lower(me.uniquename)' => { like => '%'.lc( $name ).'%' },
-                 -and => [
-                     'lower(type.name)' => { like =>'%synonym%' },
-                     'lower(stockprops.value)' => { like =>'%'.lc( $name ).'%' },
-                 ],
-                ],
-                          } ,
-               {  join =>  { 'stockprops' =>  'type'  }  ,
-                  columns => [ qw/stock_id uniquename type_id organism_id / ],
-                  distinct => 1
-               }
-            );
-    }
-    if( my $type = $c->req->param('stock_type') ) {
-        $self->_validate_pair($c,'type_id',$type);
-        $rs = $rs->search({ 'me.type_id' => $type });
-    }
-    if( my $organism = $c->req->param('organism') ) {
-        $self->_validate_pair( $c, 'organism_id', $organism );
-        $rs = $rs->search({ 'organism_id' => $organism });
-    }
-    if ( my $description = $c->req->param('description') ) {
-        $self->_validate_pair($c, 'description');
-        $rs = $rs->search( {
-            -or => [
-                 'lower(me.description)' => { like => '%'.lc( $description ).'%' } ,
-                 'lower(stockprops.value)' => { like =>'%'.lc( $description ).'%' },
-                ],
-                           } ,
-                {  join =>  { 'stockprops' =>  'type'  }  ,
-                   columns => [ qw/stock_id uniquename type_id organism_id / ],
-                   distinct => 1
-                }
-            );
-    }
-    if ( my $editor = $c->req->param('person') ) {
-        $self->_validate_pair( $c, 'person') ;
-        $editor =~ s/,/ /g;
-        $editor =~ s/\s+/ /g;
-
-        my $person_ids = $c->dbc->dbh->selectcol_arrayref(<<'', undef, $editor);
-SELECT sp_person_id FROM sgn_people.sp_person
-    WHERE ( first_name || ' ' || last_name ) like '%' || ? || '%'
-
-        if (@$person_ids) {
-            my $bindstr = join ',', map '?', @$person_ids;
-            my $stock_ids =  $c->dbc->dbh->selectcol_arrayref(
-                "SELECT stock_id FROM phenome.stock_owner
-    WHERE sp_person_id IN ($bindstr)",
-                undef,
-                @$person_ids,
-                );
-            $rs = $rs->search({ 'me.stock_id' => { '-in' => $stock_ids } } );
-         } else {
-             $rs = $rs->search({ name => '' });
-         }
-    }
-    if ( my $trait = $c->req->param('trait') ) {
-        $rs = $rs->search( { 'observable.name' => $trait },
-                     { join => { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }}}},
-                       columns => [ qw/stock_id uniquename type_id organism_id / ],
-                       distinct => 1
-                     } );
-    }
-    if ( my $min = $c->req->param('min_limit') ) {
-        if ( $min =~ /^\d+$/ ) {
-            $rs = $rs->search( { 'cast(phenotype.value as numeric) ' => { '>=' => $min }  },
-                               { join => { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => 'phenotype' }}},
-                                 columns => [ qw/stock_id uniquename type_id organism_id / ],
-                                 distinct => 1
-                               } );
-        }
-    }
-    if ( my $max = $c->req->param('max_limit') ) {
-        if ( $max =~ /^\d+$/ ) {
-            $rs = $rs->search( { 'cast(phenotype.value as numeric) ' => { '<=' => $max }  },
-                               { join => { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => 'phenotype' }}},
-                                 columns => [ qw/stock_id uniquename type_id organism_id / ],
-                                 distinct => 1
-                               } );
-        }
-    }
-    # this is for direct annotations in stock_cvterm
-    if ( my $ontology = $c->req->param('onto') ) {
-        my ($cv_name, $full_accession, $cvterm_name) = split(/--/ , $ontology);
-        my ($db_name, $accession) = split(/:/, $full_accession);
-        my $cvterm;
-        my (@cvterm_ids, @children_ids);
-        if ($db_name && $accession) {
-            ($cvterm) = $self->schema->resultset("General::Db")->
-                search( { 'me.name' => $db_name })->
-                search_related('dbxrefs', { accession => $accession } )->
-                search_related('cvterm');
-            @cvterm_ids = ( $cvterm->cvterm_id );
-            @children_ids = $cvterm->recursive_children->get_column('cvterm_id')->all;
-        } else {
-            my $cvterms = $self->schema->resultset("Cv::Cvterm")->
-                search( { lc('name') => { 'LIKE' => lc($ontology) } });
-            while ( my $term =  $cvterms->next ) {
-                push @cvterm_ids ,   $term->cvterm_id ;
-                push @children_ids , $term->recursive_children->get_column('cvterm_id')->all;
-            }
-        }
-        push ( @children_ids, @cvterm_ids ) ;
-        $rs = $rs->search( {
-            'stock_cvterms.cvterm_id' => { -in =>  \@children_ids },
-            -or => [
-                'stock_cvtermprops.value' => { '!=' => '1' },
-                'stock_cvtermprops.value' => undef,
-                ],
-                -or => [
-                lc('type.name')       => { 'NOT LIKE' => lc('obsolete') },
-                'type.name'           =>  undef,
-                ],
-                           },
-                           { join => { stock_cvterms => { 'stock_cvtermprops' => 'type' } },
-                             columns => [ qw/stock_id uniquename type_id organism_id / ],
-                             distinct => 1
-                           } );
-    }
-    ###search for stocks involved in nd_experiments (phenotyping and genotyping)
-    if ( my $project = $c->req->param('project') ) {
-        $rs = $rs->search(
-            {
-                'lower(project.name)' => { -like  => lc($project) },
-            },
-            { join => { nd_experiment_stocks => { nd_experiment => { 'nd_experiment_projects' => 'project' } } },
-              columns => [ qw/stock_id uniquename type_id organism_id / ],
-              distinct => 1
-            } );
-    }
-    if ( my $location = $c->req->param('location') ) {
-        $rs = $rs->search(
-            {
-                'lower(nd_geolocation.description)' => { -like  => lc($location) },
-            },
-            { join => { nd_experiment_stocks => { nd_experiment => 'nd_geolocation' } },
-              columns => [ qw/stock_id uniquename type_id organism_id / ],
-              distinct => 1
-            } );
-    }
-    if ( my $year = $c->req->param('year') ) {
-        $rs = $rs->search(
-            {
-                'lower(projectprops.value)' => { -like  => lc($year) },
-            },
-            { join => { nd_experiment_stocks => { nd_experiment => { 'nd_experiment_projects' => { 'project' => 'projectprops' } } } },
-              columns => [ qw/stock_id uniquename type_id organism_id / ],
-              distinct => 1
-            } );
-    }
-
-    #########
-    ##########
-    if ( my $has_image = $c->req->param('has_image') ) {
-    }
-    if ( my $has_locus = $c->req->param('has_locus') ) {
-    }
-    # page number and page size, and order by name
-    $rs = $rs->search( undef, {
-        page => $c->req->param('page')  || 1,
-        rows => $c->req->param('page_size') || $self->default_page_size,
-        order_by => 'uniquename',
-                       });
-    return $rs;
-}
-
-
 sub _stockprops {
     my ($self,$stock) = @_;
 
@@ -853,11 +672,6 @@ sub _stock_members_phenotypes {
     return unless $bcs_stock;
     my %phenotypes;
     my ($has_members_genotypes) = $bcs_stock->result_source->schema->storage->dbh->selectrow_array( <<'', undef, $bcs_stock->stock_id );
-SELECT COUNT( DISTINCT genotype_id )
-  FROM phenome.genotype
-  JOIN stock subj using(stock_id)
-  JOIN stock_relationship sr ON( sr.subject_id = subj.stock_id )
- WHERE sr.object_id = ?
 
     # now we have rs of stock_relationship objects. We need to find
     # the phenotypes of their related subjects
@@ -896,17 +710,6 @@ sub _stock_project_genotypes {
         my @gen = map $_->genotype, $exp->nd_experiment_genotypes;
         $project_desc = $project_descriptions{ $exp->nd_experiment_id };
 	#or die "no project found for exp ".$exp->nd_experiment_id;
-
-    #my @values;
-	#foreach my $genotype (@gen) {
-	    #my $genotype_id = $genotype->genotype_id;
-	    #my $vals = $self->schema->storage->dbh->selectcol_arrayref
-	    #	("SELECT value  FROM genotypeprop  WHERE genotype_id = ? ",
-	    #	 undef,
-	    #	 $genotype_id
-	    #	);
-	    #push @values, $vals->[0];
-	#}
 	push @{ $genotypes{ $project_desc }}, @gen if scalar(@gen);
     }
     return \%genotypes;

@@ -317,46 +317,6 @@ function jqueryStuff() {
     <div id="remove_parent_list">[loading parent list...]</div>
 </div>
 
-
-<&| /page/info_section.mas, title=>"Phenotype data " ,  subtitle=>$p_download_link ,  collapsible => 1, collapsed => 1 &>
-% foreach my $project (keys %$direct_phenotypes) {
-%   my $rs = $direct_phenotypes->{$project} ;
-
-<&| /page/info_section.mas,
-    id       => "stock_phenotype",
-    title    =>"Experiment: $project",
-    subtitle => $add_phenotype_link,
-    is_subsection => 1,
-    collapsible => 1
-&>
-    <& /stock/add_phenotype.mas,
-      stock_id => $stock_id ,
-      trait_ontology_db_name => $trait_ontology_db_name,
-      project=>$project
-    &>
-  <& /phenotypes/phenotype_data.mas ,
-      phenotypes=> $rs
-    &>
-  </&>
-% }
-
-% foreach my $key (keys %$members_phenotypes) {
-% my $m_rs = $members_phenotypes->{$key};
-<&| /page/info_section.mas,
-     title         => "Member phenotypes",
-     subtitle      => $key,
-     is_subsection => 1,
-     collapsible   => 1,
- &>
-    <& /phenotypes/phenotype_data.mas,
-         phenotypes => $m_rs,
-         object_id  => $stock_id,
-         has_qtl    => $has_qtl_data,
-     &>
-  </&>
-% }
-</&>
-
 <div id="stock_trials_info_popup">
     <table id="stock_trials_info_table" >
         <thead>

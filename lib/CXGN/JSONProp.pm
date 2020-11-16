@@ -25,7 +25,7 @@ Example implementation of a subclass:
   sub BUILD {
       my $self = shift;
       my $args = shift;
-    
+
       $self->prop_table('projectprop');
       $self->prop_namespace('Project::Projectprop');
       $self->prop_primary_key('projectprop_id');
@@ -55,6 +55,7 @@ use Moose;
 use Data::Dumper;
 use Bio::Chado::Schema;
 use JSON::Any;
+use Try::Tiny;
 use SGN::Model::Cvterm;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema', is => 'rw');
@@ -84,15 +85,23 @@ has 'parent_id' => (isa => 'Maybe[Int]', is => 'rw');
 
 sub load {  # must be called from BUILD in subclass
     my $self = shift;
-    #print STDERR "prop_type ".$self->prop_type()." cv_name ".$self->cv_name()."\n";
-    $self->_prop_type_id(SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $self->prop_type(), $self->cv_name())->cvterm_id());
 
-    #print STDERR "LOAD PROP ID = ".$self->prop_id()."\n";
+    select(STDERR);
+    $|=1;
+    print STDERR "prop_type ".$self->prop_type()." cv_name ".$self->cv_name()."\n";
+
+    my $cvterm_row = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $self->prop_type(), $self->cv_name());
+
+    if (!$cvterm_row) { die "Can't find term ".$self->prop_type()." in cv ".$self->cv_name()."!!!!"; }
     
+    $self->_prop_type_id($cvterm_row->cvterm_id());
+
+    print STDERR "LOAD PROP ID = ".$self->prop_id()."\n";
+
     if ($self->prop_id()) {
 	my $rs = $self->bcs_schema()->resultset($self->prop_namespace())->search( { $self->prop_primary_key() => $self->prop_id() });
-	while (my $row = $rs->next()) {
-	    if ($row->type_id() == $self->_prop_type_id()) { 
+	if (my $row = $rs->next()) {
+	    if ($row->type_id() == $self->_prop_type_id()) {
 		#print STDERR "ROW VALUE = ".$row->value().", TYPEID=".$row->type_id()." TYPE = ".$self->prop_type()."\n";
 		 my $parent_primary_key = $self->parent_primary_key();
 		my $parent_id = $row->$parent_primary_key;
@@ -102,9 +111,12 @@ sub load {  # must be called from BUILD in subclass
 	    else {
 		print STDERR "Skipping property unrelated to metadata...\n";
 	    }
-	   
+
 	}
-	
+	else {
+	    die "The object with id ".$self->prop_id()." does not exist. Sorry!";
+	}
+
 
     }
 }
@@ -114,7 +126,7 @@ sub from_json {
     my $json = shift;
 
     my $data;
-    eval { 
+    eval {
 	$data = JSON::Any->decode($json);
     };
     if ($@) {
@@ -132,7 +144,7 @@ sub from_hash {
     my $allowed_fields = $self->allowed_fields();
 
     #print STDERR Dumper($hash);
-    
+
     foreach my $f (@$allowed_fields) {
 	if (exists($hash->{$f})) {
 	    #print STDERR "Processing $f ($hash->{$f})...\n";
@@ -143,14 +155,14 @@ sub from_hash {
 
 sub to_json {
     my $self = shift;
- 
+
     my $allowed_fields = $self->allowed_fields();
 
     #print STDERR Dumper($allowed_fields);
     my $data;
-    
+
     foreach my $f (@$allowed_fields) {
-	if (defined($self->$f())) { 
+	if (defined($self->$f())) {
 	    $data->{$f} = $self->$f();
 	}
     }
@@ -161,12 +173,25 @@ sub to_json {
     return $json;
 }
 
+sub to_hashref {
+    my $self = shift;
+    my $allowed_fields = $self->allowed_fields();
+    my $data;
+    
+    foreach my $f (@$allowed_fields) {
+	if (defined($self->$f())) {
+	    $data->{$f} = $self->$f();
+	}
+    }
+    return $data;
+}
+
 sub validate {   # override in subclass
     my $self = shift;
-    
+
     my @errors = ();
     my @warnings = ();
-    
+
     # check keys in the info hash...
 
     if (@errors) {
@@ -175,11 +200,11 @@ sub validate {   # override in subclass
 }
 
 =head2 Class methods
-   
 
-=head2 get_props($schema, $parent_object_id, $prop_type)
 
- Usage:        my @seq_projects = $stock->get_sequencing_project_infos($schema, $stock_id);
+=head2 get_props($schema, $prop_id)
+
+ Usage:        my @seq_projects = $stock->get_props($schema, $stock_id);
  Desc:
  Ret:
  Args:
@@ -188,28 +213,34 @@ sub validate {   # override in subclass
 
 =cut
 
-sub get_props { 
+sub get_props {
     my $class = shift;
     my $schema = shift;
-    my $parent_object_id = shift; # the id of the parent object, eg stock_id for a stockprop
-    my $prop_type = shift;
+    my $parent_id = shift;
+
+    print STDERR "get_props(): creating object; using parent_id $parent_id\n";
+    my $obj = $class->new( { bcs_schema => $schema });
     
-    my @props = _retrieve_stockprops($schema, $parent_object_id, $prop_type);
-    #print STDERR "Props = ".Dumper(\@props);
+    my @props = $obj->_retrieve_props($schema, $parent_id);
+    print STDERR "Props = ".Dumper(\@props);
     my @hashes = ();
-    foreach my $sp (@props) { 
-	my $json = $sp->[1];
+    foreach my $sp (@props) {
+	my $json = $sp->[2];
 	my $hash;
-	eval { 
+
+	eval {
 	    $hash = JSON::Any->jsonToObj($json);
+	    $hash->{prop_id} = $sp->[0];
+	    $hash->{parent_id} = $sp->[1]
 	};
-	if ($@) { 
-	    print STDERR "Warning: $json is not valid json in prop ".$sp->[0].".!\n"; 
+	
+	if ($@) {
+	    print STDERR "Warning: $json is not valid json in prop ".$sp->[0].".!\n";
 	}
-	push @hashes, [ $sp->[0], $hash ];
+	push @hashes, $hash;
     }
 
-    return @hashes;
+    return \@hashes;
 }
 
 
@@ -219,10 +250,10 @@ sub get_props {
 
  Usage:         $s->store();
  Desc:          creates a sequencing project info in the stockprop
- Ret:           
- Args:          
-                
-                
+ Ret:
+ Args:
+
+
  Side Effects:
  Example:
 
@@ -233,7 +264,7 @@ sub store {
 
     ## TO DO: need to check for rank
 
-    
+
     if ($self->prop_id()) {
 	# update
 	print STDERR "UPDATING JSONPROP ".$self->to_json()."\n";
@@ -243,16 +274,46 @@ sub store {
 	    $row->update();
 	}
     }
-    else { 
+    else {
 	# insert
-	print STDERR "INSERTING JSONPROP ".$self->to_json().", parent_id = ".$self->parent_id(),"\n";
-	my $row = $self->bcs_schema()->resultset($self->prop_namespace())->create( { $self->parent_primary_key()=> $self->parent_id(), value => $self->to_json(), type_id => $self->_prop_type_id() });
+	$self->store_by_rank();
+    }
+
+}
+
+
+=head2 method store_by_rank()
+
+Usage:         $prop->store_by_rank();
+Desc:          store multiple props with the same type_id
+Ret:
+Args:
+
+
+Side Effects:
+Example:
+
+=cut
+
+
+sub store_by_rank {
+    my $self = shift;
+
+    my $rs = $self->bcs_schema()->resultset($self->prop_namespace())->search( { $self->parent_primary_key() => $self->parent_id(), type_id => $self->_prop_type_id() });
+
+    my $rank;
+    if ($rs->count() > 0) {
+        $rank = $rs->get_column("rank")->max();
+    }
+    $rank++;
+
+	my $row = $self->bcs_schema()->resultset($self->prop_namespace())->create( { $self->parent_primary_key()=> $self->parent_id(), value => $self->to_json(), type_id => $self->_prop_type_id(), rank => $rank });
 	my $prop_primary_key = $self->prop_primary_key();
 	$self->prop_id($row->$prop_primary_key);
-    }
-    
+
 }
-    
+
+
 =head2 method delete()
 
  Usage:
@@ -267,9 +328,16 @@ sub store {
 sub delete {
     my $self = shift;
 
-    my $prop = $self->bcs_schema()->resultset($self->prop_namespace())->find({ type_id=>$self->_prop_type_id(), $self->parent_table() => $self->parent_id(),  $self->prop_primary_key() => $self->prop_id });
+    print STDERR "Prop type id = ".$self->_prop_type_id()."\n";
+    print STDERR "Parent primary key: ".$self->parent_primary_key()."\n";
+    print STDERR "Parent id: ".$self->parent_id()."\n";
+    print STDERR "Prop primary key: ".$self->prop_primary_key()."\n";
+    print STDERR "Prop ID : ".$self->prop_id()."\n";
+    
+    my $prop = $self->bcs_schema()->resultset($self->prop_namespace())->find({ type_id=>$self->_prop_type_id(), $self->parent_primary_key() => $self->parent_id(), $self->prop_primary_key() => $self->prop_id() });
 
     if (!$prop) {
+	print STDERR "Prop not found!\n";
 	return 0;
     }
     else {
@@ -278,36 +346,55 @@ sub delete {
     }
 }
 
-# =head2 _retrieve_stockprops
+=head2 _retrieve_props
 
-#  Usage:
-#  Desc:         Retrieves prop as a list of [prop_id, value]
-#  Ret:
-#  Args:         schema, parent_id, prop_type
-#  Side Effects:
-#  Example:
+  Usage:
+  Desc:         Retrieves prop as a list of [prop_id, value]
+  Ret:
+  Args:         schema, parent_id, prop_type
+  Side Effects:
+  Example:
 
-# =cut
+=cut
 
-# sub _retrieve_props {
-#     my $schema = shift;
-#     my $parent_object_id = shift;
-#     my $prop_type_id = shift;
+sub _retrieve_props {
+    my $self = shift;
+    my $schema = shift;
+    my $parent_id = shift;
+
+    print STDERR "Getting props for parent_id $parent_id, ".join(",", $self->parent_primary_key(), $self->_prop_type_id(), $self->prop_primary_key())."\n";
+    my @results;
+
+    my $prop_primary_key = $self->prop_primary_key();
+    my $parent_primary_key = $self->parent_primary_key();
+
+    if ($parent_id) { 
+	eval { 
+	    my $rs = $schema->resultset($self->prop_namespace())->search({ $self->parent_primary_key() => $parent_id, type_id => $self->_prop_type_id() }, { order_by => {-asc => $self->prop_primary_key() } });
+	    
+	    while (my $r = $rs->next()){
+		push @results, [ $r->$prop_primary_key, $r->$parent_primary_key, $r->value() ];
+	    }
+	};
+    }
+    else {
+	eval {
+	    
+	    print STDERR "Searching all ".$self->_prop_type_id()." in namespace ".$self->prop_namespace()." (primary key is ".$prop_primary_key."...\n";
+	    
+	    my $rs = $schema->resultset($self->prop_namespace())->search({ type_id => $self->_prop_type_id() }, { order_by => {-asc => $prop_primary_key } });
+	    
+	    while (my $r = $rs->next()){
+		push @results, [ $r->$prop_primary_key(), $r->$parent_primary_key(), $r->value() ];
+	    }
+	};
+    }
     
-#     my @results;
-
-#     try {
-# 	my $rs = $schema->resultset($self->prop_namespace())->search({ $self->parent_table()."_id" => $parent_object_id, type_id => $self->_prop_type_id() }, { order_by => {-asc => $self->prop_primary_key() } });
-
-#         while (my $r = $rs->next()){
-# 	    my $primary_key = $self->prop_primary_key();
-#             push @results, [ $r->($self->$primary_key, $r->value() ];
-#         }
-#     } catch {
-#         #print STDERR "Cvterm $type does not exist in this database\n";
-#     };
-
-#     return @results;
-# }
+    if ($@) {
+	print STDERR "ERROR $@\n";
+    }
+    
+    return @results;
+}
 
 "CXGN::JSONProp";

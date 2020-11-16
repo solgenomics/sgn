@@ -9,7 +9,6 @@ use File::Slurp "read_file";
 
 use CXGN::List;
 use CXGN::BreedersToolbox::Projects;
-use CXGN::BreedersToolbox::Delete;
 use CXGN::Trial::TrialDesign;
 use CXGN::Trial::TrialCreate;
 use CXGN::Stock::StockLookup;
@@ -22,7 +21,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON' },
    );
 
 sub get_breeding_programs : Path('/ajax/breeders/all_programs') Args(0) {
@@ -279,31 +278,24 @@ sub delete_uploaded_phenotype_files : Path('/ajax/breeders/phenotyping/delete/')
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     print STDERR "Deleting phenotypes from File ID: $file_id and making file obsolete\n";
     my $dbh = $c->dbc->dbh();
-    my $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
 
     my $q_search = "
-        SELECT phenotype_id, nd_experiment_id, file_id
+        SELECT phenotype_id, nd_experiment_phenotype_bridge_id, file_id
         FROM phenotype
-        JOIN nd_experiment_phenotype using(phenotype_id)
-        JOIN nd_experiment_stock using(nd_experiment_id)
-        JOIN nd_experiment using(nd_experiment_id)
-        LEFT JOIN phenome.nd_experiment_md_files using(nd_experiment_id)
+        JOIN nd_experiment_phenotype_bridge using(phenotype_id)
         JOIN stock using(stock_id)
-        WHERE file_id = ?
-        AND nd_experiment.type_id = $nd_experiment_type_id";
-
-    my $h = $dbh->prepare($q_search);
+        WHERE file_id = ?;
+        ";
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q_search);
     $h->execute($file_id);
 
-    my %phenotype_ids_and_nd_experiment_ids_to_delete;
-    while (my ($phenotype_id, $nd_experiment_id, $file_id) = $h->fetchrow_array()) {
-        push @{$phenotype_ids_and_nd_experiment_ids_to_delete{phenotype_ids}}, $phenotype_id;
-        push @{$phenotype_ids_and_nd_experiment_ids_to_delete{nd_experiment_ids}}, $nd_experiment_id;
+    my %phenotype_ids_and_nd_experiment_phenotype_bridge_ids_to_delete;
+    while (my ($phenotype_id, $nd_experiment_phenotype_bridge_id, $file_id) = $h->fetchrow_array()) {
+        push @{$phenotype_ids_and_nd_experiment_phenotype_bridge_ids_to_delete{phenotype_ids}}, $phenotype_id;
+        push @{$phenotype_ids_and_nd_experiment_phenotype_bridge_ids_to_delete{nd_experiment_phenotype_bridge_ids}}, $nd_experiment_phenotype_bridge_id;
     }
 
-    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
-    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
-    my $delete_phenotype_values_error = CXGN::Project::delete_phenotype_values_and_nd_experiment_md_values($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $temp_file_nd_experiment_id, $c->config->{basepath}, $self->bcs_schema, \%phenotype_ids_and_nd_experiment_ids_to_delete);
+    my $delete_phenotype_values_error = CXGN::Project::delete_phenotype_values_and_nd_experiment_md_values($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $c->config->{basepath}, $self->bcs_schema, \%phenotype_ids_and_nd_experiment_phenotype_bridge_ids_to_delete);
     if ($delete_phenotype_values_error) {
         die "Error deleting phenotype values ".$delete_phenotype_values_error."\n";
     }

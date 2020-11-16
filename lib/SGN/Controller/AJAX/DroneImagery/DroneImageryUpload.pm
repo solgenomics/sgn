@@ -34,13 +34,14 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON'  },
 );
 
 sub upload_drone_imagery_check_drone_name : Path('/api/drone_imagery/upload_drone_imagery_check_drone_name') : ActionClass('REST') { }
 sub upload_drone_imagery_check_drone_name_GET : Args(0) {
     my $self = shift;
     my $c = shift;
+    $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
     my $drone_name = $c->req->param('drone_run_name');
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
@@ -105,6 +106,38 @@ sub upload_drone_imagery_POST : Args(0) {
         $c->stash->{rest} = { error => "Please give a new drone run date in the format YYYY/MM/DD HH:mm:ss!" };
         $c->detach();
     }
+
+    my $drone_run_field_trial_project_relationship_type_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
+    my $drone_run_band_drone_run_project_relationship_type_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
+    my $project_start_date_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_start_date', 'project_property')->cvterm_id();
+
+    my $calendar_funcs = CXGN::Calendar->new({});
+
+    my %seen_field_trial_drone_run_dates;
+    my $drone_run_date_q = "SELECT drone_run_date.value
+        FROM project AS drone_run_band_project
+        JOIN project_relationship AS drone_run_band_rel ON (drone_run_band_rel.subject_project_id = drone_run_band_project.project_id AND drone_run_band_rel.type_id = $drone_run_band_drone_run_project_relationship_type_id_cvterm_id)
+        JOIN project AS drone_run_project ON (drone_run_band_rel.object_project_id = drone_run_project.project_id)
+        JOIN projectprop AS drone_run_date ON(drone_run_project.project_id=drone_run_date.project_id AND drone_run_date.type_id=$project_start_date_type_id)
+        JOIN project_relationship AS field_trial_rel ON (drone_run_project.project_id = field_trial_rel.subject_project_id AND field_trial_rel.type_id=$drone_run_field_trial_project_relationship_type_id_cvterm_id)
+        JOIN project AS field_trial ON (field_trial_rel.object_project_id = field_trial.project_id)
+        WHERE field_trial.project_id = ?;";
+    my $drone_run_date_h = $schema->storage->dbh()->prepare($drone_run_date_q);
+    $drone_run_date_h->execute($selected_trial_id);
+    while( my ($drone_run_date) = $drone_run_date_h->fetchrow_array()) {
+        my $drone_run_date_formatted = $drone_run_date ? $calendar_funcs->display_start_date($drone_run_date) : '';
+        if ($drone_run_date_formatted) {
+            my $date_obj = Time::Piece->strptime($drone_run_date_formatted, "%Y-%B-%d %H:%M:%S");
+            my $epoch_seconds = $date_obj->epoch;
+            $seen_field_trial_drone_run_dates{$epoch_seconds}++;
+        }
+    }
+    my $drone_run_date_obj = Time::Piece->strptime($new_drone_run_date, "%Y/%m/%d %H:%M:%S");
+    if (exists($seen_field_trial_drone_run_dates{$drone_run_date_obj->epoch})) {
+        $c->stash->{rest} = { error => "An imaging event has already occured on this field trial at the same date and time! Please give a unique date/time for each imaging event!" };
+        $c->detach();
+    }
+
     if ($new_drone_run_name && !$new_drone_run_desc){
         $c->stash->{rest} = { error => "Please give a new drone run description!" };
         $c->detach();
@@ -188,7 +221,6 @@ sub upload_drone_imagery_POST : Args(0) {
             day => $day_term
         );
 
-        my $calendar_funcs = CXGN::Calendar->new({});
         my $drone_run_event = $calendar_funcs->check_value_format($new_drone_run_date);
         my $drone_run_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_experiment', 'experiment_type')->cvterm_id();
         my $project_start_date_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_start_date', 'project_property')->cvterm_id();
@@ -371,6 +403,18 @@ sub upload_drone_imagery_POST : Args(0) {
             }
             unlink $upload_tempfile;
             print STDERR "Archived Drone Image File: $archived_filename_with_path\n";
+
+            my ($check_image_width, $check_image_height) = imgsize($archived_filename_with_path);
+            if ($check_image_width > 16384) {
+                my $cmd_resize = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/Resize.py --image_path \''.$archived_filename_with_path.'\' --outfile_path \''.$archived_filename_with_path.'\' --width 16384';
+                print STDERR Dumper $cmd_resize;
+                my $status_resize = system($cmd_resize);
+            }
+            elsif ($check_image_height > 16384) {
+                my $cmd_resize = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/Resize.py --image_path \''.$archived_filename_with_path.'\' --outfile_path \''.$archived_filename_with_path.'\' --height 16384';
+                print STDERR Dumper $cmd_resize;
+                my $status_resize = system($cmd_resize);
+            }
 
             my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
             $image->set_sp_person_id($user_id);
@@ -1741,6 +1785,7 @@ sub upload_drone_imagery_new_vehicle : Path('/api/drone_imagery/new_imaging_vehi
 sub upload_drone_imagery_new_vehicle_GET : Args(0) {
     my $self = shift;
     my $c = shift;
+    $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
     my $vehicle_name = $c->req->param('vehicle_name');

@@ -67,7 +67,9 @@ $identifier_prefix
                     <div id="model_files">
 %  my $model_files_string = '';
 %  while (my ($key, $val) = each %$model_file_ids) {
+%   if ($key) {
 %       $model_files_string .= "$val : <a href=\"/breeders/phenotyping/download/$key\">Download</a><br/>";
+%   }
 %  }
 %  print "$model_files_string";
                     </div>

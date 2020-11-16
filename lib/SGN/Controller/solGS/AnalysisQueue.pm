@@ -4,7 +4,7 @@ use Moose;
 use namespace::autoclean;
 use File::Path qw / mkpath  /;
 use File::Spec::Functions qw / catfile catdir/;
-use File::Slurp qw /write_file read_file :edit prepend_file/;
+use File::Slurp qw /write_file read_file/;
 use JSON;
 use CXGN::Tools::Run;
 use Try::Tiny;
@@ -83,7 +83,7 @@ sub save_profile {
     $self->format_log_entry($c);
     my $log_entry = $c->stash->{formatted_log_entry};
     
-    write_file($log_file, {append => 1}, $log_entry);
+    write_file($log_file, {binmode => ':utf8', append => 1}, $log_entry);
    
 }
 
@@ -94,7 +94,7 @@ sub add_log_headers {
   $self->analysis_log_file($c);
   my $log_file = $c->stash->{analysis_log_file};
 
-  my $headers = read_file($log_file);
+  my $headers = read_file($log_file, {binmode => ':utf8'});
   
   unless ($headers) 
   {  
@@ -107,7 +107,7 @@ sub add_log_headers {
 	  "\t" . "Arguments" .
 	  "\n";
 
-      write_file($log_file, $headers);
+      write_file($log_file, {binmode => ':utf8'}, $headers);
   }
   
 }
@@ -121,7 +121,7 @@ sub index_log_file_headers {
    $self->analysis_log_file($c);
    my $log_file = $c->stash->{analysis_log_file};
    
-   my @headers = split(/\t/, (read_file($log_file))[0]);
+   my @headers = split(/\t/, (read_file($log_file, {binmode => ':utf8'}))[0]);
    
    my $header_index = {};
    my $cnt = 0;
@@ -215,7 +215,8 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
     $self->run_analysis($c);
      
     my $ret->{result} = $c->stash->{status}; 	
-
+    $ret->{analysis_profile} = $analysis_profile;
+    
     $ret = to_json($ret);
        
     $c->res->content_type('application/json');
@@ -403,6 +404,16 @@ sub parse_arguments {
 	  {
 	      $c->stash->{data_set_type} =  $arguments->{$k};
 	  }
+	    
+	  if ($k eq 'data_structure') 
+	  {
+	      $c->stash->{data_structure} =  $arguments->{$k};
+	  }
+	  
+	  if ($k eq 'kinship_pop_id') 
+	  {
+	      $c->stash->{kinship_pop_id} =  $arguments->{$k};
+	  }
 
 	  if ($k eq 'genotyping_protocol_id') 
 	  {
@@ -448,20 +459,81 @@ sub structure_output_details {
     {	
 	$output_details = $self->structure_selection_prediction_output($c);
     }
+    elsif ( $analysis_page =~ m/kinship\/analysis/ ) 
+    {	
+	$output_details = $self->structure_kinship_analysis_output($c);
+    }
      
     $self->analysis_log_file($c);
     my $log_file = $c->stash->{analysis_log_file};
-   
+
+    my $mail_list = $c->config->{cluster_job_email};
+    
     $output_details->{analysis_profile}  = $analysis_data;
     $output_details->{contact_page}      = $base . 'contact/form';
     $output_details->{data_set_type}     = $c->stash->{data_set_type};
     $output_details->{analysis_log_file} = $log_file;
     $output_details->{host}              = qq | $base |;
     $output_details->{referer}           = qq | $referer |;
- 
+    $output_details->{cluster_job_email} = $mail_list;
+    
     $c->stash->{bg_job_output_details} = $output_details;
 
 }
+
+
+sub structure_kinship_analysis_output {
+    my ($self, $c) = @_;
+
+    my $analysis_data =  $c->stash->{analysis_profile};
+    my $analysis_page = $analysis_data->{analysis_page};  
+
+    my $protocol_id   = $c->stash->{genotyping_protocol_id};
+    
+    $c->controller('solGS::Kinship')->stash_data_str_kinship_pop_id($c);
+    my $pop_id = $c->stash->{kinship_pop_id};
+    
+    my $base = $c->req->base; 
+    $base =~ s/:\d+//;
+
+    my $kinship_page = $base . $analysis_page;
+    $analysis_data->{analysis_page} = $kinship_page;
+    
+    my %output_details = ();
+
+    my $trait_id = $c->stash->{trait_id};
+    
+    $c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);	    
+    my $geno_file  = $c->stash->{genotype_file_name};
+
+    my $coef_files = $c->controller('solGS::Kinship')->get_kinship_coef_files($c, $pop_id, $protocol_id, $trait_id);	 
+    my $matrix_file;
+
+    my $raw_matrix = "kinship\/analysis"
+	. "|solgs\/traits\/all\/" 
+	. "|breeders\/trial" 
+	. "|solgs\/models\/combined\/trials\/";
+
+    my $referer = $c->req->referer;
+
+    if ($referer =~ /$raw_matrix/){
+	$matrix_file = $coef_files->{matrix_file_raw};
+    } 
+    else 
+    {
+	$matrix_file = $coef_files->{matrix_file_adj};	
+    }
+    
+    $output_details{'kinship_' . $pop_id} = {
+	'output_page'    => $kinship_page,
+	'kinship_pop_id' => $pop_id,
+	'genotype_file'  => $geno_file,  
+	'matrix_file'    => $matrix_file,
+    };
+    
+   return \%output_details;  
+}
+
 
 sub structure_training_modeling_output {
     my ($self, $c) = @_;
@@ -809,6 +881,10 @@ sub run_analysis {
 	{
 	    $self->predict_selection_traits($c);
 	}
+	elsif ($analysis_page =~ /kinship\/analysis/)
+	{
+	    $self->run_kinship_analysis($c);
+	}
 	else 
 	{
 	    $c->stash->{status} = 'Error';
@@ -923,6 +999,19 @@ sub predict_selection_traits {
 }
 
 
+sub run_kinship_analysis {
+    my ($self, $c) = @_;
+
+    my $analysis_page = $c->stash->{analysis_page};
+  
+    if ($analysis_page = ~/kinship\/analysis/)
+    {
+	$c->controller('solGS::Kinship')->run_kinship($c);
+    }
+
+}
+
+
 sub update_analysis_progress {
     my ($self, $c) = @_;
      
@@ -933,13 +1022,13 @@ sub update_analysis_progress {
     $self->analysis_log_file($c);
     my $log_file = $c->stash->{analysis_log_file};
   
-    my @contents = read_file($log_file);
+    my @contents = read_file($log_file, {binmode => ':utf8'});
    
     map{ $contents[$_] =~ m/\t$analysis_name\t/
 	     ? $contents[$_] =~ s/error|submitted/$status/ig 
 	     : $contents[$_] } 0..$#contents; 
    
-    write_file($log_file, @contents);
+    write_file($log_file, {binmode => ':utf8'}, @contents);
 
 }
 
@@ -982,18 +1071,51 @@ sub analysis_log_file {
 
 sub confirm_request :Path('/solgs/confirm/request/') Args(0) {
     my ($self, $c) = @_;
-    
-    my $referer = $c->req->referer;
-    my $user_id = $c->user()->get_object()->get_sp_person_id();
 
-    $c->stash->{message} = "<p>Your analysis is running.<br />
-                            You will receive an email when it is completed.<br /></p>
-                            <p>You can also check the status of the analysis in 
-                            <a href=\"/solpeople/profile/$user_id\">your profile page</a>.</p>
+    my $job_type = $self->get_confirm_msg($c);
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $referer = $c->req->referer;
+    
+    $c->stash->{message} = "<p>$job_type</p>
+                            <p>You will receive an email when it is completed. " . 
+			    "You can also check the status of the job on " . 
+			    "<a href=\"/solpeople/profile/$user_id\">your profile page</a>.</p>
                             <p><a href=\"$referer\">[ Go back ]</a></p>";
 
-    $c->stash->{template} = "/generic_message.mas"; 
+    $c->stash->{template} = "/generic_message.mas";
 
+}
+
+
+sub get_confirm_msg {
+    my ($self, $c) = @_;
+   
+    my $referer = $c->req->referer;
+    my $job_type;  
+
+    if ($referer =~ /solgs\/search/) 
+    {
+	$job_type = 'Your training dataset is being created.';
+    } 
+    elsif ($referer =~ /solgs\/population\/|solgs\/populations\/combined\//) 
+    {
+	$job_type = 'Your model(s) training is running. ';
+    } 
+    elsif ($referer =~ /solgs\/trait\/|solgs\/traits\/all\/|solgs\/model\/combined\/populations\//) 
+    {
+	$job_type = 'Your GEBVs prediction is running.';
+    }
+    elsif ($referer =~ /kinship\/analysis/) 
+    {
+	$job_type = 'Your kinship analysis is running.';
+    }
+    else
+    {
+	$job_type = 'Your job submission is being processed.';	
+    }
+
+    return $job_type;
+    
 }
 
 
@@ -1024,7 +1146,7 @@ sub solgs_analysis_status_log {
     if ($log_file)
     {    
 	my @user_analyses = grep{$_ !~ /User_name\s+/i }
-	                    read_file($log_file);
+	                    read_file($log_file, {binmode => ':utf8'});
 
 	$self->index_log_file_headers($c);
 	my $header_index = $c->stash->{header_index};

@@ -10,14 +10,14 @@ use Bio::GeneticRelationships::Pedigree;
 use CXGN::Pedigree::AddPedigrees;
 use CXGN::List::Validate;
 use SGN::Model::Cvterm;
-use JSON;
+use utf8;
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON'  },
    );
 
 has 'schema' => (
@@ -51,10 +51,6 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my $upload = $c->req->upload('pedigrees_uploaded_file');
     my $upload_tempfile  = $upload->tempname;
 
-#    my $temp_contents = read_file($upload_tempfile);
-#    $c->stash->{rest} = { error => $temp_contents };
-#    return;
-
     my $upload_original_name  = $upload->filename();
 
     # check file type by file name extension
@@ -65,16 +61,21 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     }
 
     my $md5;
-    print STDERR "TEMP FILE: $upload_tempfile\n";
-    my $uploader = CXGN::UploadFile->new({
-      tempfile => $upload_tempfile,
-      subdirectory => $subdirectory,
-      archive_path => $c->config->{archive_path},
-      archive_filename => $upload_original_name,
-      timestamp => $timestamp,
-      user_id => $user_id,
-      user_role => $c->user()->roles
-    });
+
+    my @user_roles = $c->user()->roles();
+    my $user_role = shift @user_roles;
+
+    my $params = {
+	tempfile => $upload_tempfile,
+	subdirectory => $subdirectory,
+	archive_path => $c->config->{archive_path},
+	archive_filename => $upload_original_name,
+	timestamp => $timestamp,
+	user_id => $user_id,
+	user_role => $user_role,
+    };
+
+    my $uploader = CXGN::UploadFile->new( $params );
 
     my %upload_metadata;
     my $archived_filename_with_path = $uploader->archive();
@@ -89,12 +90,12 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
 
     # check if all accessions exist
     #
-    open(my $F, "<", $archived_filename_with_path) || die "Can't open archive file $archived_filename_with_path";
+    open(my $F, "< :encoding(UTF-8)", $archived_filename_with_path) || die "Can't open archive file $archived_filename_with_path";
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my %stocks;
 
     my $header = <$F>;
-    my %legal_cross_types = ( biparental => 1, open => 1, self => 1, sib => 1, polycross => 1);
+    my %legal_cross_types = ( biparental => 1, open => 1, self => 1, sib => 1, polycross => 1, backcross => 1);
     my %errors;
 
     while (<$F>) {
@@ -127,8 +128,10 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my @unique_stocks = keys(%stocks);
     my $accession_validator = CXGN::List::Validate->new();
     my @accessions_missing = @{$accession_validator->validate($schema,'accessions_or_populations',\@unique_stocks)->{'missing'}};
-    if (scalar(@accessions_missing)>0){
-        $errors{"The following accessions or populations are not in the database: ".(join ",", @accessions_missing)} = 1;
+    my $cross_validator = CXGN::List::Validate->new();
+    my @stocks_missing = @{$cross_validator->validate($schema,'crosses',\@accessions_missing)->{'missing'}};
+    if (scalar(@stocks_missing)>0){
+        $errors{"The following parents or progenies are not in the database: ".(join ",", @stocks_missing)} = 1;
     }
 
     if (%errors) {
@@ -188,7 +191,7 @@ sub _get_pedigrees_from_file {
     my $c = shift;
     my $archived_filename_with_path = shift;
 
-    open(my $F, "<", $archived_filename_with_path) || die "Can't open file $archived_filename_with_path";
+    open(my $F, "< :encoding(UTF-8)", $archived_filename_with_path) || die "Can't open file $archived_filename_with_path";
     my $header = <$F>;
     my @pedigrees;
     my $line_num = 2;
@@ -218,8 +221,8 @@ sub _get_pedigrees_from_file {
             $c->stash->{rest} = { error => "No cross type on line $line_num! Muse be one of these: biparental, open, self, sib, polycross." };
             $c->detach();
         }
-        if ($cross_type ne 'biparental' && $cross_type ne 'open' && $cross_type ne 'self' && $cross_type ne 'sib' && $cross_type ne 'polycross'){
-            $c->stash->{rest} = { error => "Invalid cross type on line $line_num! Must be one of these: biparental, open, self, sib, polycross." };
+        if ($cross_type ne 'biparental' && $cross_type ne 'open' && $cross_type ne 'self' && $cross_type ne 'sib' && $cross_type ne 'polycross' && $cross_type ne 'backcross'){
+            $c->stash->{rest} = { error => "Invalid cross type on line $line_num! Must be one of these: biparental, open, self, backcross,sib, polycross." };
             $c->detach();
         }
         if ($female eq $male) {
@@ -237,9 +240,17 @@ sub _get_pedigrees_from_file {
             $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
             $male_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
         }
-        elsif($cross_type eq "biparental") {
+        elsif($cross_type eq 'biparental') {
             if (!$male){
                 $c->stash->{rest} = { error => "For $progeny Cross Type is biparental, but no male parent given" };
+                $c->detach();
+            }
+            $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
+            $male_parent = Bio::GeneticRelationships::Individual->new( { name => $male });
+        }
+        elsif($cross_type eq 'backcross') {
+            if (!$male){
+                $c->stash->{rest} = { error => "For $progeny Cross Type is backcross, but no male parent given" };
                 $c->detach();
             }
             $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });

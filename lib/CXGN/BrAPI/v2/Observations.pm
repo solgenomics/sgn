@@ -222,8 +222,6 @@ sub observations_store {
     my $user_type = $params->{user_type};
     my $archive_path = $c->config->{archive_path};
     my $tempfiles_subdir = $c->config->{basepath}."/".$c->config->{tempfiles_subdir};
-    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
-    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
 
     my $page_size = $self->page_size;
     my $page = $self->page;
@@ -309,7 +307,6 @@ sub observations_store {
         dbname=>$c->config->{dbname},
         dbuser=>$c->config->{dbuser},
         dbpass=>$c->config->{dbpass},
-        temp_file_nd_experiment_id=>$temp_file_nd_experiment_id,
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,

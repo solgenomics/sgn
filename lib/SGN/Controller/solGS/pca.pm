@@ -220,7 +220,7 @@ sub error_message {
     my $error_message;
 
     my @data_exists;
-    my @data_files = split(/\s/, read_file($files));
+    my @data_files = split(/\s/, read_file($files, {binmode => ':utf8'}));
        
     foreach my $file (@data_files)
     {
@@ -324,72 +324,6 @@ sub format_pca_scores {
    $c->stash->{pca_scores} = $data;
 
 }
-
-
-# sub create_pca_data {
-#     my ($self, $c) = @_;
-
-#     my $data_type = $c->stash->{data_type};
-   
-#     if ($data_type =~ /genotype/i)
-#     { 
-# 	$self->create_pca_genotype_data($c);
-#     }
-#     elsif ($data_type =~ /phenotype/i)
-#     { 
-# 	$self->create_pca_phenotype_data($c);
-#     }    
-    
-# }
-
-
-# sub create_pca_genotype_data {    
-#     my ($self, $c) = @_;
-   
-#     my $data_structure = $c->stash->{data_structure};
-
-#     if ($data_structure =~ /list/) 
-#     {
-# 	$self->pca_list_genotype_data($c);
-#     }
-#     elsif ($data_structure =~ /dataset/)
-#     {
-# 	$self->pca_dataset_genotype_data($c);	
-#     }
-#     else
-#     {
-# 	$self->pca_trials_genotype_data($c);
-#     }
-
-# }
-
-
-# sub pca_trials_genotype_data {
-#     my ($self, $c) = @_;
-
-#     my $combo_pops_id = $c->stash->{combo_pops_id};
-
-  
-#     if ($combo_pops_id)
-#     {
-# 	# $c->controller('solGS::combinedTrials')->cache_combined_pops_data($c);
-
-	
-# 	# $c->stash->{genotype_file_name} = $c->stash->{trait_combined_geno_file};
-# 	# my $geno_file = $c->stash->{genotype_file_name};
-
-# 	# if (!-s $geno_file) 
-# 	# {
-# 	    $c->controller('solGS::List')->get_trials_list_geno_data($c);
-# 	#}
-#     }
-#     else 
-#     {
-# 	#$c->stash->{pop_id} = $c->stash->{training_pop_id};
-# 	$c->controller('solGS::solGS')->genotype_file_name($c);
-#     }
-    
-# }
 
 
 sub pca_dataset_genotype_data {
@@ -655,7 +589,7 @@ sub pca_output_files {
     my $tmp_dir = $c->stash->{pca_temp_dir};
     my $name = "pca_output_files_${file_id}"; 
     my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name); 
-    write_file($tempfile, $file_list);
+    write_file($tempfile, {binmode => ':utf8'}, $file_list);
     
     $c->stash->{pca_output_files} = $tempfile;
 
@@ -698,7 +632,7 @@ sub pca_input_files {
 	$files = $c->stash->{pca_pheno_input_files};
     }
     
-    write_file($tempfile, $files);
+    write_file($tempfile, {binmode => ':utf8'}, $files);
     
     $c->stash->{pca_input_files} = $tempfile;
 

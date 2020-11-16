@@ -91,6 +91,10 @@ sub check_success {
 	    $output_details = $self->check_selection_prediction($output_details);
 	}
     }
+    elsif ( $analysis_profile->{analysis_type} =~ /kinship/ ) 
+    {	
+	$output_details = $self->check_kinship_analysis($output_details);
+    }
     
     return $output_details;  
 }
@@ -468,6 +472,55 @@ sub check_population_download {
 }
 
 
+sub check_kinship_analysis {
+    my ($self, $output_details) = @_;
+  			  
+    foreach my $k (keys %{$output_details})
+    {
+	if ($k =~ /kinship/)
+	{
+	   
+	    my $kinship_file = $output_details->{$k}->{matrix_file};
+	    print STDERR "\kinship file matrix: $kinship_file\n";
+	    if ($kinship_file) 
+	    {
+		while (1) 
+		{
+		    sleep 30;
+		    if (-s $kinship_file) 
+		    {
+			$output_details->{$k}->{success} = 1;
+			$output_details->{status} = 'Done';
+			last;		
+		    }
+		    else
+		    {
+			my $end_process = $self->end_status_check();
+			if ($end_process) 
+			{
+			    if (!-s $output_details->{$k}->{genotype_file})
+			    {
+				$output_details->{$k}->{failure_reason} = 'No genotype data was found for this kinship analysis.';
+			    } 
+			    else 
+			    {
+				$output_details->{$k}->{failure_reason} = 'The kinship analysis failed.';	
+			    }
+			    
+			    $output_details->{$k}->{success} = 0;
+			    $output_details->{status} = 'Failed';
+			    last;
+			}
+		    }	    
+		}	   	    
+	    } 
+	}
+    }
+
+    return $output_details;
+}
+
+
 sub get_file {
     my ($self, $dir, $exp) = @_;
 
@@ -484,6 +537,8 @@ sub get_file {
 
     return $file;
 }
+
+
 
 
 sub report_status {
@@ -519,6 +574,10 @@ sub report_status {
     {
     	$analysis_result = $self->selection_prediction_message($output_details);
     }
+      elsif ($analysis_type =~ /kinship/  ) 
+    {
+    	$analysis_result = $self->kinship_analysis_message($output_details);
+    }
    
     my $closing = "If you have any remarks, please contact us:\n"
 	. $output_details->{contact_page}
@@ -535,14 +594,25 @@ sub report_status {
     if ($output_details->{host} =~ /localhost/) 
     {
 	my $uid = getpwuid($<);
-	$email_from = '"' . $uid .'" <' . $uid . '@localhost.localdomain>';
-	$email_to   = '"' . $uid .'" <' . $uid . '@localhost.localdomain>';
+	$email_from =  $uid . ' <' . $uid . '@localhost.localdomain>';
+	$email_to   =  $uid . ' <' . $uid . '@localhost.localdomain>';
     }
     else 
     {
-     	$email_from = '"solGS M Tool" <cluster-jobs@solgenomics.net>';
-     	$email_to   = "$user_name <$user_email>";   
-     	$email_cc   = 'solGS Job <cluster-jobs@solgenomics.net>';
+	my $mail_list = $output_details->{cluster_job_email};
+	
+	if ($mail_list)
+	{
+	    $email_from =  'solGS M Tool <' . $mail_list . '>';
+	    $email_cc   =  'solGS Job <' . $mail_list . '>'; 
+	}
+	else
+	{
+	    $email_from = 'solGS M Tool <cluster-jobs@solgenomics.net>'; 
+	    $email_cc   = 'solGS Job <cluster-jobs@solgenomics.net>';
+	}
+
+	$email_to   = "$user_name <$user_email>";  
     }
 
     my $email = Email::Simple->create(
@@ -790,6 +860,40 @@ sub combine_populations_message {
 }
 
 
+sub kinship_analysis_message {
+    my ($self, $output_details) = @_;
+
+    my $message;
+ 
+    foreach my $k (keys %{$output_details}) 
+    {
+	if ($k =~ /kinship/) {
+	 
+	    my $output_page;
+	    
+	    if ($output_details->{$k}->{success}) 
+	    {
+		$output_page = $output_details->{$k}->{output_page};		
+		$message = 'Your kinship analysis is done. You can access the result here:' 
+		    . "\n\n$output_page\n\n";
+	    }
+	    else 
+	    {
+		no warnings 'uninitialized';
+		my $fail_message  = $output_details->{$k}->{failure_reason};
+      
+		$message  = "The kinship analysis failed.\n";
+		$message .= "\nPossible causes are:\n$fail_message\n";
+		$message .= 'Refering page: ' . $output_page . "\n\n";
+		$message .= "We will troubleshoot the cause and contact you when we find out more.\n\n";	
+	    }
+	}
+    }
+    
+    return  $message;
+}
+
+
 sub log_analysis_status {
     my ($self, $output_details) = @_;
     
@@ -800,13 +904,13 @@ sub log_analysis_status {
     
     my $status = $output_details->{status};
    
-    my @contents = read_file($log_file);
+    my @contents = read_file($log_file, {binmode => ':utf8'});
    
     map{ $contents[$_] =~ m/\t$analysis_name\t/ 
 	     ? $contents[$_] =~ s/error|submitted/$status/ig 
 	     : $contents[$_] } 0..$#contents; 
    
-    write_file($log_file, @contents);
+    write_file($log_file, {binmode => ':utf8'}, @contents);
 
 }
 

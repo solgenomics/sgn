@@ -19,7 +19,7 @@ BEGIN {extends 'Catalyst::Controller::REST'}
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON'},
    );
 
  has 'trial_id' => (isa => 'Int',
@@ -199,18 +199,15 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
 	else {
 
 		print Dumper (\@found_trait_cvterm_ids);
-		my $h2 = $dbh->prepare("SELECT object.uniquename AS stock_name, object.stock_id AS stock_id, me.uniquename AS plot_name, phenotype.value FROM stock me LEFT JOIN
-nd_experiment_stock nd_experiment_stocks ON nd_experiment_stocks.stock_id =
-me.stock_id LEFT JOIN nd_experiment nd_experiment ON nd_experiment.nd_experiment_id = nd_experiment_stocks.nd_experiment_id LEFT JOIN nd_experiment_phenotype nd_experiment_phenotypes ON nd_experiment_phenotypes.nd_experiment_id = nd_experiment.nd_experiment_id LEFT JOIN phenotype phenotype ON phenotype.phenotype_id =
-nd_experiment_phenotypes.phenotype_id LEFT JOIN cvterm observable ON
-observable.cvterm_id = phenotype.observable_id LEFT JOIN nd_experiment_project
-nd_experiment_projects ON nd_experiment_projects.nd_experiment_id =
-nd_experiment.nd_experiment_id LEFT JOIN project project ON project.project_id =
-nd_experiment_projects.project_id LEFT JOIN stock_relationship
-stock_relationship_subjects ON stock_relationship_subjects.subject_id =
-me.stock_id LEFT JOIN stock object ON object.stock_id =
-stock_relationship_subjects.object_id WHERE ( ( observable.cvterm_id =? AND
-project.project_id=? ) );");
+		my $h2 = $dbh->prepare("SELECT object.uniquename AS stock_name, object.stock_id AS stock_id, me.uniquename AS plot_name, phenotype.value
+            FROM stock me
+            LEFT JOIN nd_experiment_phenotype_bridge ON nd_experiment_phenotype_bridge.stock_id = me.stock_id
+            LEFT JOIN phenotype phenotype ON phenotype.phenotype_id = nd_experiment_phenotype_bridge.phenotype_id
+            LEFT JOIN cvterm observable ON observable.cvterm_id = phenotype.observable_id
+            LEFT JOIN project project ON project.project_id = nd_experiment_phenotype_bridge.project_id
+            LEFT JOIN stock_relationship stock_relationship_subjects ON stock_relationship_subjects.subject_id = me.stock_id
+            LEFT JOIN stock object ON object.stock_id = stock_relationship_subjects.object_id
+            WHERE ( ( observable.cvterm_id =? AND project.project_id=? ) );");
 
 		my %cvterm_hash;
 		my %plot_hash;
@@ -277,16 +274,12 @@ project.project_id=? ) );");
     $phenotype_metadata{'date'}="$timestamp";
     my $user_id = $c->can('user_exists') ? $c->user->get_object->get_sp_person_id : $c->sp_person_id;
 
-    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
-    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
-
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
         basepath=>$c->config->{basepath},
         dbhost=>$c->config->{dbhost},
         dbname=>$c->config->{dbname},
         dbuser=>$c->config->{dbuser},
         dbpass=>$c->config->{dbpass},
-        temp_file_nd_experiment_id => $temp_file_nd_experiment_id,
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
@@ -404,16 +397,12 @@ sub store_generated_plot_phenotypes : Path('/ajax/breeders/trial/store_generated
     $phenotype_metadata{'date'}="$timestamp";
 
     for (my $i=0; $i<scalar(@$data); $i++) {
-        my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
-        my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
-
         my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
             basepath=>$c->config->{basepath},
             dbhost=>$c->config->{dbhost},
             dbname=>$c->config->{dbname},
             dbuser=>$c->config->{dbuser},
             dbpass=>$c->config->{dbpass},
-            temp_file_nd_experiment_id=>$temp_file_nd_experiment_id,
             bcs_schema=>$schema,
             metadata_schema=>$metadata_schema,
             phenome_schema=>$phenome_schema,

@@ -499,7 +499,7 @@ ok($saving_gcp_target_4->is_success);
 
 $ua = LWP::UserAgent->new;
 $ua->timeout(1200);
-my $response_raster_gcp_apply = $ua->post('http://localhost:3010/api/drone_imagery/standard_process_apply_ground_control_points?sgn_session_id='.$sgn_session_id.'&gcp_drone_run_project_id='.$a_drone_run_project_id.'&field_trial_id='.$field_trial_id.'&drone_run_project_id='.$gcp_apply_drone_run_project_id.'&drone_run_band_project_id='.$message_hash_raster_gcp_run->{drone_run_band_image_ids}->[3].'&time_cvterm_id='.$message_hash_days_time_cvterm_id.'&is_test=1&test_run=No');
+my $response_raster_gcp_apply = $ua->post('http://localhost:3010/api/drone_imagery/standard_process_apply_ground_control_points?sgn_session_id='.$sgn_session_id.'&gcp_drone_run_project_id='.$a_drone_run_project_id.'&field_trial_id='.$field_trial_id.'&drone_run_project_id='.$gcp_apply_drone_run_project_id.'&drone_run_band_project_id='.$message_hash_raster_gcp_run->{drone_run_band_project_ids}->[3].'&time_cvterm_id='.$message_hash_days_time_cvterm_id.'&is_test=1&test_run=No');
 ok($response_raster_gcp_apply->is_success);
 my $message_raster_gcp_apply = $response_raster_gcp_apply->decoded_content;
 my $message_hash_raster_gcp_apply = decode_json $message_raster_gcp_apply;

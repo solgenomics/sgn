@@ -17,7 +17,7 @@ use CXGN::BreederSearch;
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON'  },
    );
 
 sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
