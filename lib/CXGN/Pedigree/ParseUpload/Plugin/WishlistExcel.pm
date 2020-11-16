@@ -46,12 +46,16 @@ sub _validate_with_plugin {
     #get column headers
     my $female_accession_head;
     my $male_accession_head;
+    my $priority_head;
 
     if ($worksheet->get_cell(0,0)) {
         $female_accession_head  = $worksheet->get_cell(0,0)->value();
     }
     if ($worksheet->get_cell(0,1)) {
         $male_accession_head  = $worksheet->get_cell(0,1)->value();
+    }
+    if ($worksheet->get_cell(0,2)) {
+        $priority_head  = $worksheet->get_cell(0,2)->value();
     }
 
     if (!$female_accession_head || $female_accession_head ne 'female_accession' ) {
@@ -60,6 +64,9 @@ sub _validate_with_plugin {
     if (!$male_accession_head || $male_accession_head ne 'male_accession') {
         push @error_messages, "Cell B1: male_accession is missing from the header";
     }
+    if (!$priority_head || $priority_head ne 'priority') {
+        push @error_messages, "Cell C1: priority is missing from the header";
+    }
 
     my %seen_accessions;
 
@@ -67,12 +74,16 @@ sub _validate_with_plugin {
         my $row_name = $row+1;
         my $female_accession;
         my $male_accession;
+        my $priority;
 
         if ($worksheet->get_cell($row,0)) {
             $female_accession = $worksheet->get_cell($row,0)->value();
         }
         if ($worksheet->get_cell($row,1)) {
             $male_accession = $worksheet->get_cell($row,1)->value();
+        }
+        if ($worksheet->get_cell($row,2)) {
+            $priority = $worksheet->get_cell($row,2)->value();
         }
 
         if (!$female_accession || $female_accession eq '') {
@@ -126,25 +137,37 @@ sub _parse_with_plugin {
     my ($row_min, $row_max) = $worksheet->row_range();
     my ($col_min, $col_max) = $worksheet->col_range();
 
-    my %female_male_hash;
+    my @cross_combination_list;
 
     for my $row (1 .. $row_max){
         my $female_accession;
         my $male_accession;
+        my $priority;
+        my %cross_combination_hash = ();
 
         if ($worksheet->get_cell($row,0)){
             $female_accession = $worksheet->get_cell($row,0)->value();
             $female_accession =~ s/^\s+|\s+$//g;
+            $cross_combination_hash{'female_id'} = $female_accession;
+
         }
         if ($worksheet->get_cell($row,1)){
             $male_accession = $worksheet->get_cell($row,1)->value();
             $male_accession =~ s/^\s+|\s+$//g;
+            $cross_combination_hash{'male_id'} = $male_accession;
+        }
+        if ($worksheet->get_cell($row,2)){
+            $priority = $worksheet->get_cell($row,2)->value();
+            if (!$priority || $priority eq '') {
+                $priority = '1';
+            }
+            $cross_combination_hash{'priority'} = $priority;
         }
 
-        push @{$female_male_hash{$female_accession}}, $male_accession;
+        push @cross_combination_list, \%cross_combination_hash;
     }
 
-    $self->_set_parsed_data(\%female_male_hash);
+    $self->_set_parsed_data(\@cross_combination_list);
     return 1;
 }
 
