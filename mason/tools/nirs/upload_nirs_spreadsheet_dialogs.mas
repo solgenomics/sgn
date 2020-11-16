@@ -54,17 +54,28 @@
                 <&| /util/workflow.mas:step, title=> "Protocol Info" &>
                     <& /page/page_title.mas, title=>"Select a protocol for how your data was generated or create a new protocol" &>
 
-                    <div class="form-horizontal">
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Protocol Name: </label>
-                            <div class="col-sm-9" >
-                                <input class="form-control" id="high_dim_data_upload_protocol_name" type="text">
+                    <div id="high_dim_data_upload_protocol_select">
+                    </div>
+
+                    <hr>
+                    <center>
+                    <button class="btn btn-primary" id="high_dim_data_upload_new_protocol">Protocol Not Shown. Create a New Protocol</button>
+                    </center>
+                    <br/><br/>
+
+                    <div id="high_dim_data_upload_protocol_div" style="display:none">
+                        <div class="form-horizontal">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Protocol Name: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="high_dim_data_upload_protocol_name" type="text">
+                                </div>
                             </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Protocol Description: </label>
-                            <div class="col-sm-9" >
-                                <input class="form-control" id="high_dim_data_upload_protocol_desc" type="text">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Protocol Description: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="high_dim_data_upload_protocol_desc" type="text">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -140,6 +151,7 @@
                                 </div>
                             </div>
                             
+                            <input type="hidden" id="upload_nirs_spreadsheet_protocol_id" type="text">
                             <input type="hidden" id="upload_nirs_spreadsheet_protocol_name" type="text">
                             <input type="hidden" id="upload_nirs_spreadsheet_protocol_desc" type="text">
                             <input type="hidden" id="upload_nirs_spreadsheet_protocol_device_type" type="text">
@@ -230,10 +242,21 @@ jQuery(document).ready(function() {
 
         if (high_dim_data_upload_type == 'NIRS') {
             jQuery('#high_dim_data_upload_nirs_div').show();
+
+            get_select_box('high_dimensional_phenotypes_protocols','high_dim_data_upload_protocol_select', {'checkbox_name':'high_dim_data_upload_protocol_id', 'high_dimensional_phenotype_protocol_type':'high_dimensional_phenotype_nirs_protocol'});
         }
 
         Workflow.complete("#high_dim_data_upload_data_type_step");
         Workflow.focus('#high_dim_data_upload_workflow', 2);
+    });
+
+    jQuery('#high_dim_data_upload_new_protocol').click(function(){
+        jQuery('#high_dim_data_upload_protocol_div').show();
+
+        if (high_dim_data_upload_type == 'NIRS') {
+            jQuery('#high_dim_data_upload_nirs_protocol_div').show();
+        }
+
     });
 
     jQuery("#high_dim_data_spreadsheet_format_info").click( function () {
@@ -243,17 +266,41 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#high_dim_data_upload_data_protocol_step').click(function(){
-        Workflow.complete("#high_dim_data_upload_data_protocol_step");
-        Workflow.focus('#high_dim_data_upload_workflow', 3);
+
+        var selected = [];
+        jQuery('input[name="high_dim_data_upload_protocol_id"]:checked').each(function() {
+            selected.push(jQuery(this).val());
+        });
+        if(selected.length > 1) {
+            alert('Please select only one protocol!');
+            return false;
+        }
 
         var high_dim_protocol_name = jQuery('#high_dim_data_upload_protocol_name').val();
         var high_dim_protocol_desc = jQuery('#high_dim_data_upload_protocol_desc').val();
 
+        if (selected.length>0 && high_dim_protocol_name != '') {
+            alert('Please select a protocol or give a name for a new one! Not both!');
+            return false;
+        }
+        if (selected.length==0 && high_dim_protocol_name == '') {
+            alert('Please select a protocol or create a new one!');
+            return false;
+        }
+        if (selected.length==0 && high_dim_protocol_desc == '') {
+            alert('Please select a protocol or create a new one with a description!');
+            return false;
+        }
+
         if (high_dim_data_upload_type == 'NIRS') {
+            jQuery('#upload_nirs_spreadsheet_protocol_id').val(selected[0]);
             jQuery('#upload_nirs_spreadsheet_protocol_name').val(high_dim_protocol_name);
             jQuery('#upload_nirs_spreadsheet_protocol_desc').val(high_dim_protocol_desc);
             jQuery('#upload_nirs_spreadsheet_protocol_device_type').val(jQuery('#high_dim_data_upload_nirs_device_type_select').val());
         }
+
+        Workflow.complete("#high_dim_data_upload_data_protocol_step");
+        Workflow.focus('#high_dim_data_upload_workflow', 3);
     });
 
     jQuery('#upload_nirs_spreadsheet_submit_verify').click(function(){

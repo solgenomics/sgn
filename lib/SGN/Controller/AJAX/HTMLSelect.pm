@@ -700,6 +700,33 @@ sub get_ontologies : Path('/ajax/html/select/trait_variable_ontologies') Args(0)
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_high_dimensional_phenotypes_protocols : Path('/ajax/html/select/high_dimensional_phenotypes_protocols') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $checkbox_name = $c->req->param('checkbox_name');
+    my $protocol_type = $c->req->param('high_dimensional_phenotype_protocol_type');
+
+    my $protocol_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $protocol_type, 'protocol_type')->cvterm_id();
+
+    my $q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description
+        FROM nd_protocol
+        WHERE nd_protocol.type_id=$protocol_type_cvterm_id;";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute();
+
+    my $html = '<table class="table table-bordered table-hover" id="html-select-highdimprotocol-table"><thead><tr><th>Select</th><th>Protocol Name</th><th>Description</th></tr></thead><tbody>';
+
+    while (my ($nd_protocol_id, $name, $description) = $h->fetchrow_array()) {
+        $html .= '<tr><td><input type="checkbox" name="'.$checkbox_name.'" value="'.$nd_protocol_id.'"></td><td>'.$name.'</td><td>'.$description.'</td></tr>';
+    }
+    $html .= "</tbody></table>";
+
+    $html .= "<script>jQuery(document).ready(function() { jQuery('#html-select-highdimprotocol-table').DataTable({ }); } );</script>";
+
+    $c->stash->{rest} = { select => $html };
+}
+
 sub get_trained_nirs_models : Path('/ajax/html/select/trained_nirs_models') Args(0) {
     my $self = shift;
     my $c = shift;
