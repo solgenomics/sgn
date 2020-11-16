@@ -40,7 +40,7 @@ my $file = $f->config->{basepath}."/t/data/NIRS/C16Mval_spectra.csv";
 
 my $ua = LWP::UserAgent->new;
 $response = $ua->post(
-        'http://localhost:3010/ajax/Nirs/upload_verify',
+        'http://localhost:3010/ajax/highdimensionalphenotypes/nirs_upload_verify',
         Content_Type => 'form-data',
         Content => [
             upload_nirs_spreadsheet_file_input => [ $file, 'nirs_data_upload' ],
@@ -59,7 +59,7 @@ is_deeply($message_hash->{success}, ['File nirs_data_upload saved in archive.','
 
 my $ua = LWP::UserAgent->new;
 $response = $ua->post(
-        'http://localhost:3010/ajax/Nirs/upload_store',
+        'http://localhost:3010/ajax/highdimensionalphenotypes/nirs_upload_store',
         Content_Type => 'form-data',
         Content => [
             upload_nirs_spreadsheet_file_input => [ $file, 'nirs_data_upload' ],
