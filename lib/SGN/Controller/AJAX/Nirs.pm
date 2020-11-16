@@ -153,7 +153,7 @@ sub generate_spectral_plot_POST : Args(0) {
     # print STDERR Dumper \@training_data_input;
 
     if (scalar(@training_data_input) < 10) {
-        $c->stash->{rest} = { error => "Not enough data! Need atleast 10 samples with a phenotype and spectra!"};
+        $c->stash->{rest} = { error => "Not enough data! Need atleast 10 samples with a phenotype and spectra! Maybe choose a different device type?"};
         $c->detach();
     }
 
@@ -350,7 +350,7 @@ sub generate_results_POST : Args(0) {
     # print STDERR Dumper \@training_data_input;
 
     if (scalar(@training_data_input) < 10) {
-        $c->stash->{rest} = { error => "Not enough data! Need atleast 10 samples with a phenotype and spectra!"};
+        $c->stash->{rest} = { error => "Not enough data! Need atleast 10 samples with a phenotype and spectra! Maybe choose a different device type?"};
         $c->detach();
     }
 
