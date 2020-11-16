@@ -213,7 +213,7 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                                     <input type="file" id="upload_transcriptomics_spreadsheet_file_input" name="upload_transcriptomics_spreadsheet_file_input" encoding="multipart/form-data" />
                                 </div>
                             </div>
-                            
+
                             <input type="hidden" id="upload_transcriptomics_spreadsheet_protocol_id" type="text">
                             <input type="hidden" id="upload_transcriptomics_spreadsheet_protocol_name" type="text">
                             <input type="hidden" id="upload_transcriptomics_spreadsheet_protocol_desc" type="text">
@@ -247,7 +247,7 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                                     <input type="file" id="upload_metabolomics_spreadsheet_file_input" name="upload_metabolomics_spreadsheet_file_input" encoding="multipart/form-data" />
                                 </div>
                             </div>
-                            
+
                             <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_id" type="text">
                             <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_name" type="text">
                             <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_desc" type="text">

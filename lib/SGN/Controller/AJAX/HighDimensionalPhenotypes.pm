@@ -448,9 +448,6 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
     }
 
     if (!$protocol_id) {
-        my $high_dim_nirs_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_nirs_protocol', 'protocol_type')->cvterm_id();
-        my $high_dim_nirs_protocol_prop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_protocol_properties', 'protocol_property')->cvterm_id();
-
         my %nirs_protocol_prop = (device_type => $protocol_device_type);
 
         my $protocol = $schema->resultset('NaturalDiversity::NdProtocol')->create({
@@ -528,6 +525,646 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
 
     $c->stash->{rest} = {success => \@success_status, error => \@error_status, figure => $output_plot_filepath_string};
+}
+
+sub high_dimensional_phenotypes_transcriptomics_upload_verify : Path('/ajax/highdimensionalphenotypes/transcriptomics_upload_verify') : ActionClass('REST') { }
+sub high_dimensional_phenotypes_transcriptomics_upload_verify_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    print STDERR Dumper $c->req->params();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my ($user_id, $user_name, $user_type) = _check_user_login($c);
+    my @success_status;
+    my @error_status;
+    my @warning_status;
+
+    my $parser = CXGN::Phenotypes::ParseUpload->new();
+    my $validate_type = "highdimensionalphenotypes spreadsheet transcriptomics";
+    my $metadata_file_type = "transcriptomics spreadsheet";
+    my $subdirectory = "spreadsheet_phenotype_upload";
+    my $timestamp_included;
+
+    my $protocol_id = $c->req->param('upload_transcriptomics_spreadsheet_protocol_id');
+    my $protocol_name = $c->req->param('upload_transcriptomics_spreadsheet_protocol_name');
+    my $protocol_desc = $c->req->param('upload_transcriptomics_spreadsheet_protocol_desc');
+
+    if ($protocol_id && $protocol_name) {
+        return {error => ["Please give a protocol name or select a previous protocol, not both!"]};
+    }
+    if (!$protocol_id && (!$protocol_name || !$protocol_desc)) {
+        return {error => ["Please give a protocol name and description, or select a previous protocol!"]};
+    }
+
+    my $high_dim_transcriptomics_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_transcriptomics_protocol', 'protocol_type')->cvterm_id();
+    my $high_dim_transcriptomics_protocol_prop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_protocol_properties', 'protocol_property')->cvterm_id();
+
+    my $data_level = $c->req->param('upload_transcriptomics_spreadsheet_data_level') || 'plots';
+    my $upload = $c->req->upload('upload_transcriptomics_spreadsheet_file_input');
+
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_type
+    });
+    my $archived_filename_with_path = $uploader->archive();
+    my $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        push @error_status, "Could not save file $upload_original_name in archive.";
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    } else {
+        push @success_status, "File $upload_original_name saved in archive.";
+    }
+    unlink $upload_tempfile;
+
+    my $archived_image_zipfile_with_path;
+    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path);
+    if (!$validate_file) {
+        push @error_status, "Archived file not valid: $upload_original_name.";
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    }
+    if ($validate_file == 1){
+        push @success_status, "File valid: $upload_original_name.";
+    } else {
+        if ($validate_file->{'error'}) {
+            push @error_status, $validate_file->{'error'};
+        }
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    }
+
+    ## Set metadata
+    my %phenotype_metadata;
+    $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
+    $phenotype_metadata{'archived_file_type'} = $metadata_file_type;
+    $phenotype_metadata{'operator'} = $user_name;
+    $phenotype_metadata{'date'} = $timestamp;
+
+    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id);
+    if (!$parsed_file) {
+        push @error_status, "Error parsing file $upload_original_name.";
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    }
+    if ($parsed_file->{'error'}) {
+        push @error_status, $parsed_file->{'error'};
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    }
+    my %parsed_data;
+    my @plots;
+    my @traits;
+    if (scalar(@error_status) == 0) {
+        if ($parsed_file && !$parsed_file->{'error'}) {
+            %parsed_data = %{$parsed_file->{'data'}};
+            @plots = @{$parsed_file->{'units'}};
+            @traits = @{$parsed_file->{'variables'}};
+            push @success_status, "File data successfully parsed.";
+        }
+    }
+
+    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+
+    my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
+        basepath=>$c->config->{basepath},
+        dbhost=>$c->config->{dbhost},
+        dbname=>$c->config->{dbname},
+        dbuser=>$c->config->{dbuser},
+        dbpass=>$c->config->{dbpass},
+        temp_file_nd_experiment_id=>$temp_file_nd_experiment_id,
+        bcs_schema=>$schema,
+        metadata_schema=>$metadata_schema,
+        phenome_schema=>$phenome_schema,
+        user_id=>$user_id,
+        stock_list=>\@plots,
+        trait_list=>\@traits,
+        values_hash=>\%parsed_data,
+        has_timestamps=>0,
+        metadata_hash=>\%phenotype_metadata
+    });
+
+    my $warning_status;
+    my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+    if ($verified_error) {
+        push @error_status, $verified_error;
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    }
+    if ($verified_warning) {
+        push @warning_status, $verified_warning;
+    }
+    push @success_status, "File data verified. Plot names and trait names are valid.";
+
+    # print STDERR Dumper \@success_status;
+    # print STDERR Dumper \@warning_status;
+    # print STDERR Dumper \@error_status;
+    # print STDERR Dumper $output_plot_filepath_string;
+    $c->stash->{rest} = {success => \@success_status, warning => \@warning_status, error => \@error_status};
+}
+
+sub high_dimensional_phenotypes_transcriptomics_upload_store : Path('/ajax/highdimensionalphenotypes/transcriptomics_upload_store') : ActionClass('REST') { }
+sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my ($user_id, $user_name, $user_type) = _check_user_login($c);
+    my @success_status;
+    my @error_status;
+    my @warning_status;
+
+    my $parser = CXGN::Phenotypes::ParseUpload->new();
+    my $validate_type = "highdimensionalphenotypes spreadsheet transcriptomics";
+    my $metadata_file_type = "transcriptomics spreadsheet";
+    my $subdirectory = "spreadsheet_phenotype_upload";
+    my $timestamp_included;
+
+    my $protocol_id = $c->req->param('upload_transcriptomics_spreadsheet_protocol_id');
+    my $protocol_name = $c->req->param('upload_transcriptomics_spreadsheet_protocol_name');
+    my $protocol_desc = $c->req->param('upload_transcriptomics_spreadsheet_protocol_desc');
+
+    if ($protocol_id && $protocol_name) {
+        return {error => ["Please give a protocol name or select a previous protocol, not both!"]};
+    }
+    if (!$protocol_id && (!$protocol_name || !$protocol_desc)) {
+        return {error => ["Please give a protocol name and description, or select a previous protocol!"]};
+    }
+
+    my $high_dim_transcriptomics_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_nirs_protocol', 'protocol_type')->cvterm_id();
+    my $high_dim_transcriptomics_protocol_prop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_protocol_properties', 'protocol_property')->cvterm_id();
+
+    my $data_level = $c->req->param('upload_transcriptomics_spreadsheet_data_level') || 'plots';
+    my $upload = $c->req->upload('upload_transcriptomics_spreadsheet_file_input');
+
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_type
+    });
+    my $archived_filename_with_path = $uploader->archive();
+    my $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        push @error_status, "Could not save file $upload_original_name in archive.";
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    } else {
+        push @success_status, "File $upload_original_name saved in archive.";
+    }
+    unlink $upload_tempfile;
+
+    my $archived_image_zipfile_with_path;
+    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path);
+    if (!$validate_file) {
+        push @error_status, "Archived file not valid: $upload_original_name.";
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    }
+    if ($validate_file == 1){
+        push @success_status, "File valid: $upload_original_name.";
+    } else {
+        if ($validate_file->{'error'}) {
+            push @error_status, $validate_file->{'error'};
+        }
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    }
+
+    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id);
+    if (!$parsed_file) {
+        push @error_status, "Error parsing file $upload_original_name.";
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    }
+    if ($parsed_file->{'error'}) {
+        push @error_status, $parsed_file->{'error'};
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    }
+    my %parsed_data;
+    my @plots;
+    my @traits;
+    if (scalar(@error_status) == 0) {
+        if ($parsed_file && !$parsed_file->{'error'}) {
+            %parsed_data = %{$parsed_file->{'data'}};
+            @plots = @{$parsed_file->{'units'}};
+            @traits = @{$parsed_file->{'variables'}};
+            push @success_status, "File data successfully parsed.";
+        }
+    }
+
+    if (!$protocol_id) {
+        my %transcriptomics_protocol_prop = ();
+
+        my $protocol = $schema->resultset('NaturalDiversity::NdProtocol')->create({
+            name => $protocol_name,
+            type_id => $high_dim_transcriptomics_protocol_cvterm_id,
+            nd_protocolprops => [{type_id => $high_dim_transcriptomics_protocol_prop_cvterm_id, value => encode_json \%transcriptomics_protocol_prop}]
+        });
+        $protocol_id = $protocol->nd_protocol_id();
+
+        my $desc_q = "UPDATE nd_protocol SET description=? WHERE nd_protocol_id=?;";
+        my $dbh = $schema->storage->dbh()->prepare($desc_q);
+        $dbh->execute($protocol_desc, $protocol_id);
+    }
+
+    ## Set metadata
+    my %phenotype_metadata;
+    $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
+    $phenotype_metadata{'archived_file_type'} = $metadata_file_type;
+    $phenotype_metadata{'operator'} = $user_name;
+    $phenotype_metadata{'date'} = $timestamp;
+
+    my $pheno_dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+
+    my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
+        basepath=>$c->config->{basepath},
+        dbhost=>$c->config->{dbhost},
+        dbname=>$c->config->{dbname},
+        dbuser=>$c->config->{dbuser},
+        dbpass=>$c->config->{dbpass},
+        temp_file_nd_experiment_id=>$temp_file_nd_experiment_id,
+        bcs_schema=>$schema,
+        metadata_schema=>$metadata_schema,
+        phenome_schema=>$phenome_schema,
+        user_id=>$user_id,
+        stock_list=>\@plots,
+        trait_list=>\@traits,
+        values_hash=>\%parsed_data,
+        has_timestamps=>0,
+        metadata_hash=>\%phenotype_metadata
+    });
+
+    my $warning_status;
+    my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+    if ($verified_error) {
+        push @error_status, $verified_error;
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    }
+    if ($verified_warning) {
+        push @warning_status, $verified_warning;
+    }
+    push @success_status, "File data verified. Plot names and trait names are valid.";
+
+    my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
+    if ($stored_phenotype_error) {
+        push @error_status, $stored_phenotype_error;
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status};
+        $c->detach();
+    }
+    if ($stored_phenotype_success) {
+        push @success_status, $stored_phenotype_success;
+    }
+
+    push @success_status, "Metadata saved for archived file.";
+    my $bs = CXGN::BreederSearch->new({ dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname} });
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
+
+    $c->stash->{rest} = {success => \@success_status, error => \@error_status};
+}
+
+sub high_dimensional_phenotypes_metabolomics_upload_verify : Path('/ajax/highdimensionalphenotypes/metabolomics_upload_verify') : ActionClass('REST') { }
+sub high_dimensional_phenotypes_metabolomics_upload_verify_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    print STDERR Dumper $c->req->params();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my ($user_id, $user_name, $user_type) = _check_user_login($c);
+    my @success_status;
+    my @error_status;
+    my @warning_status;
+
+    my $parser = CXGN::Phenotypes::ParseUpload->new();
+    my $validate_type = "highdimensionalphenotypes spreadsheet metabolomics";
+    my $metadata_file_type = "metabolomics spreadsheet";
+    my $subdirectory = "spreadsheet_phenotype_upload";
+    my $timestamp_included;
+
+    my $protocol_id = $c->req->param('upload_metabolomics_spreadsheet_protocol_id');
+    my $protocol_name = $c->req->param('upload_metabolomics_spreadsheet_protocol_name');
+    my $protocol_desc = $c->req->param('upload_metabolomics_spreadsheet_protocol_desc');
+
+    if ($protocol_id && $protocol_name) {
+        return {error => ["Please give a protocol name or select a previous protocol, not both!"]};
+    }
+    if (!$protocol_id && (!$protocol_name || !$protocol_desc)) {
+        return {error => ["Please give a protocol name and description, or select a previous protocol!"]};
+    }
+
+    my $high_dim_metabolomics_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_metabolomics_protocol', 'protocol_type')->cvterm_id();
+    my $high_dim_metabolomics_protocol_prop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_protocol_properties', 'protocol_property')->cvterm_id();
+
+    my $data_level = $c->req->param('upload_metabolomics_spreadsheet_data_level') || 'plots';
+    my $upload = $c->req->upload('upload_metabolomics_spreadsheet_file_input');
+
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_type
+    });
+    my $archived_filename_with_path = $uploader->archive();
+    my $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        push @error_status, "Could not save file $upload_original_name in archive.";
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    } else {
+        push @success_status, "File $upload_original_name saved in archive.";
+    }
+    unlink $upload_tempfile;
+
+    my $archived_image_zipfile_with_path;
+    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path);
+    if (!$validate_file) {
+        push @error_status, "Archived file not valid: $upload_original_name.";
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    }
+    if ($validate_file == 1){
+        push @success_status, "File valid: $upload_original_name.";
+    } else {
+        if ($validate_file->{'error'}) {
+            push @error_status, $validate_file->{'error'};
+        }
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    }
+
+    ## Set metadata
+    my %phenotype_metadata;
+    $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
+    $phenotype_metadata{'archived_file_type'} = $metadata_file_type;
+    $phenotype_metadata{'operator'} = $user_name;
+    $phenotype_metadata{'date'} = $timestamp;
+
+    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id);
+    if (!$parsed_file) {
+        push @error_status, "Error parsing file $upload_original_name.";
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    }
+    if ($parsed_file->{'error'}) {
+        push @error_status, $parsed_file->{'error'};
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    }
+    my %parsed_data;
+    my @plots;
+    my @traits;
+    if (scalar(@error_status) == 0) {
+        if ($parsed_file && !$parsed_file->{'error'}) {
+            %parsed_data = %{$parsed_file->{'data'}};
+            @plots = @{$parsed_file->{'units'}};
+            @traits = @{$parsed_file->{'variables'}};
+            push @success_status, "File data successfully parsed.";
+        }
+    }
+
+    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+
+    my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
+        basepath=>$c->config->{basepath},
+        dbhost=>$c->config->{dbhost},
+        dbname=>$c->config->{dbname},
+        dbuser=>$c->config->{dbuser},
+        dbpass=>$c->config->{dbpass},
+        temp_file_nd_experiment_id=>$temp_file_nd_experiment_id,
+        bcs_schema=>$schema,
+        metadata_schema=>$metadata_schema,
+        phenome_schema=>$phenome_schema,
+        user_id=>$user_id,
+        stock_list=>\@plots,
+        trait_list=>\@traits,
+        values_hash=>\%parsed_data,
+        has_timestamps=>0,
+        metadata_hash=>\%phenotype_metadata
+    });
+
+    my $warning_status;
+    my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+    if ($verified_error) {
+        push @error_status, $verified_error;
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    }
+    if ($verified_warning) {
+        push @warning_status, $verified_warning;
+    }
+    push @success_status, "File data verified. Plot names and trait names are valid.";
+
+    # print STDERR Dumper \@success_status;
+    # print STDERR Dumper \@warning_status;
+    # print STDERR Dumper \@error_status;
+    # print STDERR Dumper $output_plot_filepath_string;
+    $c->stash->{rest} = {success => \@success_status, warning => \@warning_status, error => \@error_status};
+}
+
+sub high_dimensional_phenotypes_metabolomics_upload_store : Path('/ajax/highdimensionalphenotypes/metabolomics_upload_store') : ActionClass('REST') { }
+sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my ($user_id, $user_name, $user_type) = _check_user_login($c);
+    my @success_status;
+    my @error_status;
+    my @warning_status;
+
+    my $parser = CXGN::Phenotypes::ParseUpload->new();
+    my $validate_type = "highdimensionalphenotypes spreadsheet metabolomics";
+    my $metadata_file_type = "metabolomics spreadsheet";
+    my $subdirectory = "spreadsheet_phenotype_upload";
+    my $timestamp_included;
+
+    my $protocol_id = $c->req->param('upload_metabolomics_spreadsheet_protocol_id');
+    my $protocol_name = $c->req->param('upload_metabolomics_spreadsheet_protocol_name');
+    my $protocol_desc = $c->req->param('upload_metabolomics_spreadsheet_protocol_desc');
+
+    if ($protocol_id && $protocol_name) {
+        return {error => ["Please give a protocol name or select a previous protocol, not both!"]};
+    }
+    if (!$protocol_id && (!$protocol_name || !$protocol_desc)) {
+        return {error => ["Please give a protocol name and description, or select a previous protocol!"]};
+    }
+
+    my $high_dim_metabolomics_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_metabolomics_protocol', 'protocol_type')->cvterm_id();
+    my $high_dim_metabolomics_protocol_prop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_protocol_properties', 'protocol_property')->cvterm_id();
+
+    my $data_level = $c->req->param('upload_metabolomics_spreadsheet_data_level') || 'plots';
+    my $upload = $c->req->upload('upload_metabolomics_spreadsheet_file_input');
+
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_type
+    });
+    my $archived_filename_with_path = $uploader->archive();
+    my $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        push @error_status, "Could not save file $upload_original_name in archive.";
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    } else {
+        push @success_status, "File $upload_original_name saved in archive.";
+    }
+    unlink $upload_tempfile;
+
+    my $archived_image_zipfile_with_path;
+    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path);
+    if (!$validate_file) {
+        push @error_status, "Archived file not valid: $upload_original_name.";
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    }
+    if ($validate_file == 1){
+        push @success_status, "File valid: $upload_original_name.";
+    } else {
+        if ($validate_file->{'error'}) {
+            push @error_status, $validate_file->{'error'};
+        }
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    }
+
+    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id);
+    if (!$parsed_file) {
+        push @error_status, "Error parsing file $upload_original_name.";
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    }
+    if ($parsed_file->{'error'}) {
+        push @error_status, $parsed_file->{'error'};
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    }
+    my %parsed_data;
+    my @plots;
+    my @traits;
+    if (scalar(@error_status) == 0) {
+        if ($parsed_file && !$parsed_file->{'error'}) {
+            %parsed_data = %{$parsed_file->{'data'}};
+            @plots = @{$parsed_file->{'units'}};
+            @traits = @{$parsed_file->{'variables'}};
+            push @success_status, "File data successfully parsed.";
+        }
+    }
+
+    if (!$protocol_id) {
+        my %metabolomics_protocol_prop = ();
+
+        my $protocol = $schema->resultset('NaturalDiversity::NdProtocol')->create({
+            name => $protocol_name,
+            type_id => $high_dim_metabolomics_protocol_cvterm_id,
+            nd_protocolprops => [{type_id => $high_dim_metabolomics_protocol_prop_cvterm_id, value => encode_json \%metabolomics_protocol_prop}]
+        });
+        $protocol_id = $protocol->nd_protocol_id();
+
+        my $desc_q = "UPDATE nd_protocol SET description=? WHERE nd_protocol_id=?;";
+        my $dbh = $schema->storage->dbh()->prepare($desc_q);
+        $dbh->execute($protocol_desc, $protocol_id);
+    }
+
+    ## Set metadata
+    my %phenotype_metadata;
+    $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
+    $phenotype_metadata{'archived_file_type'} = $metadata_file_type;
+    $phenotype_metadata{'operator'} = $user_name;
+    $phenotype_metadata{'date'} = $timestamp;
+
+    my $pheno_dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+
+    my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
+        basepath=>$c->config->{basepath},
+        dbhost=>$c->config->{dbhost},
+        dbname=>$c->config->{dbname},
+        dbuser=>$c->config->{dbuser},
+        dbpass=>$c->config->{dbpass},
+        temp_file_nd_experiment_id=>$temp_file_nd_experiment_id,
+        bcs_schema=>$schema,
+        metadata_schema=>$metadata_schema,
+        phenome_schema=>$phenome_schema,
+        user_id=>$user_id,
+        stock_list=>\@plots,
+        trait_list=>\@traits,
+        values_hash=>\%parsed_data,
+        has_timestamps=>0,
+        metadata_hash=>\%phenotype_metadata
+    });
+
+    my $warning_status;
+    my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+    if ($verified_error) {
+        push @error_status, $verified_error;
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    }
+    if ($verified_warning) {
+        push @warning_status, $verified_warning;
+    }
+    push @success_status, "File data verified. Plot names and trait names are valid.";
+
+    my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
+    if ($stored_phenotype_error) {
+        push @error_status, $stored_phenotype_error;
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status};
+        $c->detach();
+    }
+    if ($stored_phenotype_success) {
+        push @success_status, $stored_phenotype_success;
+    }
+
+    push @success_status, "Metadata saved for archived file.";
+    my $bs = CXGN::BreederSearch->new({ dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname} });
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
+
+    $c->stash->{rest} = {success => \@success_status, error => \@error_status};
 }
 
 sub _check_user_login {
