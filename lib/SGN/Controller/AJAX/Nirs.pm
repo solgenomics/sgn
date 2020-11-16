@@ -46,6 +46,22 @@ sub nirs_upload_verify_POST : Args(0) {
     my $metadata_file_type = "nirs spreadsheet";
     my $subdirectory = "spreadsheet_phenotype_upload";
     my $timestamp_included;
+
+    my $protocol_id = $c->req->param('upload_nirs_spreadsheet_protocol_id');
+    my $protocol_name = $c->req->param('upload_nirs_spreadsheet_protocol_name');
+    my $protocol_desc = $c->req->param('upload_nirs_spreadsheet_protocol_desc');
+    my $protocol_device_type = $c->req->param('upload_nirs_spreadsheet_protocol_device_type');
+
+    if ($protocol_id && $protocol_name) {
+        return {error => "Please give a protocol name or select a previous protocol, not both!"};
+    }
+    if (!$protocol_id && (!$protocol_name || !$protocol_desc)) {
+        return {error => "Please give a protocol name and description, or select a previous protocol!"};
+    }
+    if ($protocol_name && !$protocol_device_type) {
+        return {error => "Please give a NIRS device type to save a new protocol!"};
+    }
+
     my $data_level = $c->req->param('upload_nirs_spreadsheet_data_level') || 'plots';
     my $upload = $c->req->upload('upload_nirs_spreadsheet_file_input');
 
@@ -238,6 +254,22 @@ sub nirs_upload_store_POST : Args(0) {
     my $subdirectory = "spreadsheet_phenotype_upload";
     my $timestamp_included;
     my $data_level = $c->req->param('upload_nirs_spreadsheet_data_level') || 'plots';
+
+    my $protocol_id = $c->req->param('upload_nirs_spreadsheet_protocol_id');
+    my $protocol_name = $c->req->param('upload_nirs_spreadsheet_protocol_name');
+    my $protocol_desc = $c->req->param('upload_nirs_spreadsheet_protocol_desc');
+    my $protocol_device_type = $c->req->param('upload_nirs_spreadsheet_protocol_device_type');
+
+    if ($protocol_id && $protocol_name) {
+        return {error => "Please give a protocol name or select a previous protocol, not both!"};
+    }
+    if (!$protocol_id && (!$protocol_name || !$protocol_desc)) {
+        return {error => "Please give a protocol name and description, or select a previous protocol!"};
+    }
+    if ($protocol_name && !$protocol_device_type) {
+        return {error => "Please give a NIRS device type to save a new protocol!"};
+    }
+
     my $upload = $c->req->upload('upload_nirs_spreadsheet_file_input');
 
     my $upload_original_name = $upload->filename();
@@ -397,6 +429,7 @@ sub nirs_upload_store_POST : Args(0) {
     my %parsed_data_agg_coalesced;
     while (my ($stock_name, $o) = each %parsed_data) {
        my $spectras = $o->{nirs}->{spectra};
+       $parsed_data_agg_coalesced{$stock_name}->{nirs}->{protocol_id} = $protocol_id;
        $parsed_data_agg_coalesced{$stock_name}->{nirs}->{device_type} = $o->{nirs}->{device_type};
        $parsed_data_agg_coalesced{$stock_name}->{nirs}->{spectra} = $spectras->[0];
     }
