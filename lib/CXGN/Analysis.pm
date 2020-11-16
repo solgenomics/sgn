@@ -460,6 +460,7 @@ sub create_and_store_analysis_design {
         die "Error saving trial: $_";
     };
 
+    #Refresh layout cache
     $self->_get_layout()->get_design();
 
     print STDERR "Done with design create & store.\n";
