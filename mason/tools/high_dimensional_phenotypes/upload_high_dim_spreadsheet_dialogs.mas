@@ -11,7 +11,7 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="addHighDimDataDialog">Upload High-Dimensional Data</h4>
+        <h4 class="modal-title" id="addHighDimDataDialog">Upload High-Dimensional Phenotype Data</h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
@@ -178,10 +178,10 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                                 </div>
                             </div>
                             
-                            <input type="hidden" id="upload_nirs_spreadsheet_protocol_id" type="text">
-                            <input type="hidden" id="upload_nirs_spreadsheet_protocol_name" type="text">
-                            <input type="hidden" id="upload_nirs_spreadsheet_protocol_desc" type="text">
-                            <input type="hidden" id="upload_nirs_spreadsheet_protocol_device_type" type="text">
+                            <input type="hidden" id="upload_nirs_spreadsheet_protocol_id" name="upload_nirs_spreadsheet_protocol_id" type="text">
+                            <input type="hidden" id="upload_nirs_spreadsheet_protocol_name" name="upload_nirs_spreadsheet_protocol_name" type="text">
+                            <input type="hidden" id="upload_nirs_spreadsheet_protocol_desc" name="upload_nirs_spreadsheet_protocol_desc" type="text">
+                            <input type="hidden" id="upload_nirs_spreadsheet_protocol_device_type" name="upload_nirs_spreadsheet_protocol_device_type" type="text">
                         </form>
 
                         <hr>
@@ -454,7 +454,7 @@ jQuery(document).ready(function() {
         else {
             jQuery('#working_msg').html("Verifying NIRS File and Data");
             jQuery('#working_modal').modal("show");
-            jQuery('#upload_nirs_spreadsheet_file_form').attr("action", '/ajax/Nirs/upload_verify');
+            jQuery('#upload_nirs_spreadsheet_file_form').attr("action", '/ajax/highdimensionalphenotypes/nirs_upload_verify');
             jQuery('#upload_nirs_spreadsheet_file_form').submit();
         }
     });
@@ -525,7 +525,7 @@ jQuery(document).ready(function() {
                 else {
                     jQuery('#working_msg').html("Storing NIRS File and Data");
                     jQuery('#working_modal').modal("show");
-                    jQuery('#upload_nirs_spreadsheet_file_form').attr("action", '/ajax/Nirs/upload_store');
+                    jQuery('#upload_nirs_spreadsheet_file_form').attr("action", '/ajax/highdimensionalphenotypes/nirs_upload_store');
                     jQuery('#upload_nirs_spreadsheet_file_form').submit();
                 }
             });
@@ -587,7 +587,7 @@ jQuery(document).ready(function() {
         else {
             jQuery('#working_msg').html("Verifying Transcriptomics File and Data");
             jQuery('#working_modal').modal("show");
-            jQuery('#upload_transcriptomics_spreadsheet_file_form').attr("action", '/ajax/highdimensionaldata/upload_verify');
+            jQuery('#upload_transcriptomics_spreadsheet_file_form').attr("action", '/ajax/highdimensionalphenotypes/transcriptomics_upload_verify');
             jQuery('#upload_transcriptomics_spreadsheet_file_form').submit();
         }
     });
@@ -656,7 +656,7 @@ jQuery(document).ready(function() {
                 else {
                     jQuery('#working_msg').html("Storing Transcriptomics File and Data");
                     jQuery('#working_modal').modal("show");
-                    jQuery('#upload_transcriptomics_spreadsheet_file_form').attr("action", '/ajax/highdimensionaldata/upload_store');
+                    jQuery('#upload_transcriptomics_spreadsheet_file_form').attr("action", '/ajax/highdimensionalphenotypes/transcriptomics_upload_store');
                     jQuery('#upload_transcriptomics_spreadsheet_file_form').submit();
                 }
             });
@@ -718,7 +718,7 @@ jQuery(document).ready(function() {
         else {
             jQuery('#working_msg').html("Verifying Metabolomics File and Data");
             jQuery('#working_modal').modal("show");
-            jQuery('#upload_metabolomics_spreadsheet_file_form').attr("action", '/ajax/highdimensionaldata/upload_verify');
+            jQuery('#upload_metabolomics_spreadsheet_file_form').attr("action", '/ajax/highdimensionalphenotypes/metabolomics_upload_verify');
             jQuery('#upload_metabolomics_spreadsheet_file_form').submit();
         }
     });
@@ -787,7 +787,7 @@ jQuery(document).ready(function() {
                 else {
                     jQuery('#working_msg').html("Storing Metabolomics File and Data");
                     jQuery('#working_modal').modal("show");
-                    jQuery('#upload_metabolomics_spreadsheet_file_form').attr("action", '/ajax/highdimensionaldata/upload_store');
+                    jQuery('#upload_metabolomics_spreadsheet_file_form').attr("action", '/ajax/highdimensionalphenotypes/metabolomics_upload_store');
                     jQuery('#upload_metabolomics_spreadsheet_file_form').submit();
                 }
             });

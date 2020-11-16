@@ -63,6 +63,9 @@ sub patch {
             'high_dimensional_phenotype_nirs_protocol',
             'high_dimensional_phenotype_transcriptomics_protocol',
             'high_dimensional_phenotype_metabolomics_protocol',
+        ],
+        'protocol_property' => [
+            'high_dimensional_phenotype_protocol_properties'
         ]
     };
 

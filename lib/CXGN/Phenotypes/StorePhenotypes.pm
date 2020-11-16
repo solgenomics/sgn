@@ -480,7 +480,7 @@ sub store {
     my $nirs_insert_query = "INSERT INTO metadata.md_json (json_type, json) VALUES ('nirs_spectra',?) RETURNING json_id;";
     my $nirs_dbh = $self->bcs_schema->storage->dbh()->prepare($nirs_insert_query);
 
-    my $nd_experiment_phenotype_bridge_q = "INSERT INTO nd_experiment_phenotype_bridge (stock_id, project_id, phenotype_id, nd_geolocation_id, file_id, image_id, json_id, upload_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
+    my $nd_experiment_phenotype_bridge_q = "INSERT INTO nd_experiment_phenotype_bridge (stock_id, project_id, phenotype_id, nd_protocol_id, nd_geolocation_id, file_id, image_id, json_id, upload_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);";
     my $nd_experiment_phenotype_bridge_dbh = $self->bcs_schema->storage->dbh()->prepare($nd_experiment_phenotype_bridge_q);
 
     my $nd_experiment_phenotype_bridge_update_image_q = "UPDATE nd_experiment_phenotype_bridge SET image_id = ? WHERE nd_experiment_phenotype_bridge_id = ?;";
@@ -503,10 +503,14 @@ sub store {
             my $location_id = $data{$plot_name}[1];
             my $project_id = $data{$plot_name}[2];
             my $stored_json_id;
+            my $stored_protocol_id;
 
             # Check if there is nirs data for this plot, If so add it using dedicated function
             my $nirs_hashref = $plot_trait_value{$plot_name}->{'nirs'};
             if (defined $nirs_hashref) {
+                $stored_protocol_id = $nirs_hashref->{protocol_id};
+                delete $nirs_hashref->{protocol_id};
+
                 my $nirs_json = encode_json $nirs_hashref;
 
                 $nirs_dbh->execute($nirs_json);
@@ -523,7 +527,7 @@ sub store {
             if (scalar(@trait_list) == 0 && $stored_json_id) {
                 my $stored_image_id = undef;
                 my $phenotype_id = undef;
-                $nd_experiment_phenotype_bridge_dbh->execute($stock_id, $project_id, $phenotype_id, $location_id, $stored_file_id, $stored_image_id, $stored_json_id, $upload_date);
+                $nd_experiment_phenotype_bridge_dbh->execute($stock_id, $project_id, $phenotype_id, $stored_protocol_id, $location_id, $stored_file_id, $stored_image_id, $stored_json_id, $upload_date);
             }
             else {
                 foreach my $trait_name (@trait_list) {
@@ -609,7 +613,8 @@ sub store {
                             $self->handle_operator($operator, $phenotype_id);
 
                             if (!$stored_image_id) {$stored_image_id = undef;}
-                            $nd_experiment_phenotype_bridge_dbh->execute($stock_id, $project_id, $phenotype_id, $location_id, $stored_file_id, $stored_image_id, $stored_json_id, $upload_date);
+                            if (!$stored_protocol_id) {$stored_protocol_id = undef;}
+                            $nd_experiment_phenotype_bridge_dbh->execute($stock_id, $project_id, $phenotype_id, $stored_protocol_id, $location_id, $stored_file_id, $stored_image_id, $stored_json_id, $upload_date);
                         }
 
                         my %details = (

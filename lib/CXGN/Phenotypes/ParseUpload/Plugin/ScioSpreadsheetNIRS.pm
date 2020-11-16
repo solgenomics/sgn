@@ -194,7 +194,6 @@ sub parse {
             my $observationunit_name = $columns[3];
             $observation_units_seen{$observationunit_name} = 1;
             # print "The plots are $observationunit_name\n";
-            $data{$observationunit_name}->{'nirs'}->{'device_type'} = 'SCIO';
             my %spectra;
             foreach my $col (0..$num_cols-1){
                 my $column_name = $header[$col];
