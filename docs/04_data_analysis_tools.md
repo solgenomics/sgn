@@ -420,7 +420,6 @@ De Maesschalck, R., D. Jouan-Rimbaud, and D.L. Massart. 2000. The Mahalanobis di
 
 
 4.12 General Mixed Model Tool
-
 --------------
 
 The general mixed model tool is available at <a href="/tools/mixedmodels">/tools/mixedmodels</a> and a link is provided from the Analyze menu.

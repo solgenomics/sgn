@@ -2,10 +2,10 @@
 
 =head1 NAME
 
-/solgs/pca/analysis.mas - PCA analysis template
+/solgs/kinship/analysis.mas - Kinship analysis template
 
-To add the PCA analysis interface any where on the website
-add the template '/solgs/pca/analysis.mas' in your mason template
+To add the kinship analysis interface any where on the website
+add the template '/solgs/kinship/analysis.mas' in your mason template
 and pass any of the arguments listed below.
 Adding the 'data_structure' argument is also recommended.
 A data structure can any of this: 'list', if of list type; 'dataset',if of dataset type;
@@ -22,6 +22,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <%args>
 
 $trial_id => undef
+$pop_id   => undef
 $list_id => undef
 $dataset_id => undef
 $data_structure => undef
@@ -30,7 +31,7 @@ $data_structure => undef
 
 <%perl>
 
-my $pop_id = $trial_id if $trial_id;
+$pop_id = $trial_id if $trial_id;
 
 if (!$data_structure) {
    if ($dataset_id) {
@@ -45,57 +46,63 @@ my $url = $c->req->path;
 
 my $title;
 my $collapsed = 0;
-if ($url =~ /pca\/analysis/) {
-$title = 'Select a list of accessions or trials or a dataset and run PCA';
+if ($url =~ /kinship\/analysis/) {
+$title = 'Select a list of accessions or trials or a dataset and run kinship';
 } else {
-$title = 'Population structure (PCA)';
+$title = 'Kinship and inbreeding coefficients';
 $collapsed = 1;
 }
 
 </%perl>
 
 
-
-  
-% if ($url =~ /pca\/analysis/) {
+% if ($url =~ /kinship\/analysis/) {
 
 <& /page/page_title.mas, 
-   title => "Principal Component Analysis (PCA)" 
+   title => 'Kinship and Inbreeding Analysis',
+   collapsed => $collapsed
   &>
-  
+ 
 %}
-
+  
 <&| /page/info_section.mas, 
   collapsible => 1, 
   collapsed   => $collapsed, 
   title       => $title 
-&> 
+&>
+    
+  
+<div id='kinship_div'>
 
-<div id='pca_div'>
-% if ($url =~ /pca\/analysis|breeders\/trial\//) {
+% if ($url =~ /kinship\/analysis|breeders\/trial\//) {
 
   <& /solgs/genotyping_protocol.mas &>
 
 %}
-<!-- <input id="run_pca" class="button" type="button" value="Run PCA" /> -->
-<!-- /breeders\/trial\/|solgs\/trait\/\d+\/population\/|solgs\/model\/combined\/populations\// -->
-% if ($url !~ /pca\/analysis/ ) {
-<& /solgs/pca/pca_options.mas &>
+  
 
-%} else {
+% if ($url =~ /kinship\/analysis/) {
 
-   <& /solgs/pca/select_menu.mas &>
-       
+<& /solgs/kinship/select_menu.mas &>
+
 %}
-     
-  <& /solgs/pca/plot.mas,
+ 
+
+
+% if ($url =~ /solgs\/|breeders\/trial\//) {
+
+    <input id="run_kinship" class="button" type="button" value="Run kinship" /> 
+ 
+
+%}
+  
+<& /solgs/kinship/plot.mas,
      pop_id => $pop_id,
     list_id => $list_id,
     dataset_id => $dataset_id,
     data_structure => $data_structure,
-    &>
+&>
 
-    
 </div>
-</&>
 
+</&>

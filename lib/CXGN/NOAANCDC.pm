@@ -54,6 +54,8 @@ use SGN::Model::Cvterm;
 use LWP::UserAgent;
 use JSON;
 use Math::Round;
+use Time::Piece;
+use Time::Seconds;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -92,6 +94,8 @@ has 'noaa_ncdc_access_token' => (
 
 sub get_noaa_data {
     my $self = shift;
+    my $start_date = $self->start_date;
+    my $end_date = $self->end_date;
 
     my $data_types_string = '&datatypeid=';
     $data_types_string .= join '&datatypeid=', @{$self->data_types};
@@ -99,7 +103,7 @@ sub get_noaa_data {
     my $ua = LWP::UserAgent->new(
         ssl_opts => { verify_hostname => 0 }
     );
-    my $server_endpoint = "https://www.ncdc.noaa.gov/cdo-web/api/v2/data?stationid=".$self->noaa_station_id."&limit=1000&datasetid=GHCND".$data_types_string."&startdate=".$self->start_date."&enddate=".$self->end_date;
+    my $server_endpoint = "https://www.ncdc.noaa.gov/cdo-web/api/v2/data?stationid=".$self->noaa_station_id."&limit=1000&datasetid=GHCND".$data_types_string."&startdate=".$start_date."&enddate=".$end_date;
 
     print STDERR $server_endpoint."\n";
     my $resp = $ua->get($server_endpoint, "token"=>$self->noaa_ncdc_access_token);
@@ -112,9 +116,64 @@ sub get_noaa_data {
     }
     else {
         my $message = $resp->decoded_content;
+        print STDERR Dumper $message;
         $message_hash = decode_json $message;
     }
     return $message_hash;
+}
+
+sub do_query_max_one_year {
+    my $self = shift;
+    my $start_date = $self->start_date;
+    my $end_date = $self->end_date;
+
+    my $start_date_object = Time::Piece->strptime($start_date, "%Y-%m-%d");
+    my $end_date_object = Time::Piece->strptime($end_date, "%Y-%m-%d");
+    my $time_diff = $end_date_object - $start_date_object;
+    my $time_diff_days = $time_diff->days;
+    print STDERR Dumper $time_diff_days;
+    my $end_date_epoch = $end_date_object->epoch;
+
+    my @time_ranges;
+    if ($time_diff_days > 365) {
+        my $day_start = Time::Piece->strptime($start_date, "%Y-%m-%d") + 12 * ONE_HOUR;
+        my $year_counter = 0;
+        my $day_end_year = $day_start + ONE_DAY * ( 365 - $day_start->day_of_year );
+        my $day_end_year_start_original = $day_end_year;
+        while (1) {
+            $day_end_year = $day_start + ONE_DAY * ( 365 - $day_start->day_of_year );
+
+            if ( $day_end_year > $end_date_object ) {
+                push @time_ranges, [$day_start->strftime("%Y-%m-%d"), $end_date_object->strftime("%Y-%m-%d")];
+                last;
+            }
+            else {
+                push @time_ranges, [$day_start->strftime("%Y-%m-%d"), $day_end_year->strftime("%Y-%m-%d")];
+                $day_start = $day_end_year_start_original + ONE_YEAR * $year_counter;
+            }
+            $year_counter++;
+        }
+    }
+    else {
+        push @time_ranges, [$start_date, $end_date];
+    }
+    print STDERR Dumper \@time_ranges;
+
+    my %weather_hash;
+    foreach (@time_ranges) {
+        $self->start_date($_->[0]);
+        $self->end_date($_->[1]);
+        my $message_hash = $self->get_noaa_data();
+        # print STDERR Dumper $message_hash;
+        if ($message_hash->{status} eq '400') {
+            return {error => $message_hash->{message}};
+        }
+
+        foreach (@{$message_hash->{results}}) {
+            $weather_hash{$_->{date}}->{$_->{datatype}} = $_->{value};
+        }
+    }
+    return \%weather_hash;
 }
 
 sub get_temperature_averaged_gdd {
@@ -124,17 +183,9 @@ sub get_temperature_averaged_gdd {
 
     $self->data_types(['TMIN','TMAX']);
 
-    my $message_hash = $self->get_noaa_data();
-    print STDERR Dumper $message_hash;
-    if ($message_hash->{status} eq '400') {
-        return {error => $message_hash->{message}};
-    }
+    my $weather_hash = $self->do_query_max_one_year();
 
-    my %weather_hash;
-    foreach (@{$message_hash->{results}}) {
-        $weather_hash{$_->{date}}->{$_->{datatype}} = $_->{value};
-    }
-    foreach (values %weather_hash) {
+    foreach (values %$weather_hash) {
         if (defined($_->{TMIN}) && defined($_->{TMAX})) {
             #TMAX and TMIN are in tenths of C
             my $tmax_f = (9/5)*($_->{TMAX}/10) + 32;
@@ -155,14 +206,9 @@ sub get_averaged_precipitation {
 
     $self->data_types(['PRCP']);
 
-    my $message_hash = $self->get_noaa_data();
-    # print STDERR Dumper $message_hash;
+    my $weather_hash = $self->do_query_max_one_year();
 
-    my %weather_hash;
-    foreach (@{$message_hash->{results}}) {
-        $weather_hash{$_->{date}}->{$_->{datatype}} = $_->{value};
-    }
-    foreach (values %weather_hash) {
+    foreach (values %$weather_hash) {
         if (defined($_->{PRCP})) {
             $result = $result + $_->{PRCP};
         }
