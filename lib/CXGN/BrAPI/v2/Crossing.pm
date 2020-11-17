@@ -4,6 +4,7 @@ use Moose;
 use Data::Dumper;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
+use CXGN::Location::LocationLookup;
 
 extends 'CXGN::BrAPI::v2::Common';
 
@@ -225,6 +226,13 @@ sub update_crossingproject {
         trial_id => $crossingproj_id
     });
 
+    my $location_id;
+    if ($location) {
+        my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema => $schema);
+    	$geolocation_lookup->set_location_name($location);
+    	$location_id = $geolocation_lookup->get_geolocation()->nd_geolocation_id;
+    }
+
     my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
     my $program_ref = $program_object->get_breeding_programs_by_trial($crossingproj_id);
 
@@ -242,7 +250,7 @@ sub update_crossingproject {
     eval {
       if ($crossingtrial_name) { $trial->set_name($crossingtrial_name); }
       if ($breeding_program_id) { $trial->set_breeding_program($breeding_program_id); }
-      if ($location) { $trial->set_location($location); }
+      if ($location_id) { $trial->set_location($location_id); }
       if ($year) { $trial->set_year($year); }
       if ($project_description) { $trial->set_description($project_description); }
     };

@@ -223,8 +223,8 @@ is_deeply($order->{plates}[0]->{clientPlateBarcode},$expected_order->{plates}[0]
 
 is_deeply(scalar(@{$order->{plates}[0]->{samples}}),scalar(@{$expected_order->{plates}[0]->{samples}}), 'test create plate order samples');
 
-print STDERR "Rolling back...\n";
+# print STDERR "Rolling back...\n";
 
-$schema->txn_rollback();
+# $schema->txn_rollback();
 
 done_testing();
