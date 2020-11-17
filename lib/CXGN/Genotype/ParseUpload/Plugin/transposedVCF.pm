@@ -291,36 +291,36 @@ sub extract_protocol_data {
     
 #    open(my $F, '<', $self->get_filename()) || die "Can't open file ".$self->get_filename()."\n";
 
-    for (my $i=1; $i<@{$self->ids()}; $i++) { 
-	my $marker_info_p2 = $self->ids()->[$i];
-	my $marker_info_p8 = $self->format()->[$i];
-	if ($marker_info_p2 eq '.') {
-	    $marker_name = $self->chroms()->[$i]."_".$self->pos()->[$i];
-	} else {
-	    $marker_name = $self->ids()->[$i];
-	}
-	my $chrom_name = $self->chroms()->[$i];
-	my %marker = 
-	    (
-	     name => $self->ids()->[$i],
-	     chrom => $self->chroms()->[$i],
-	     pos => $self->pos()->[$i],
-	     ref => $self->refs()->[$i],
-	     alt => $self->alts()->[$i],
-	     qual => $self->qual()->[$i],
-	     filter => $self->filter()->[$i],
-	     info => $self->info()->[$i],
-	     format => $marker_info_p8,
-            );
+    for (my $i=1; $i<@{$self->ids()}; $i++) {
+        my $marker_info_p2 = $self->ids()->[$i];
+        my $marker_info_p8 = $self->format()->[$i];
+        if ($marker_info_p2 eq '.') {
+            $marker_name = $self->chroms()->[$i]."_".$self->pos()->[$i];
+        } else {
+            $marker_name = $self->ids()->[$i];
+        }
+        my $chrom_name = $self->chroms()->[$i];
+        my %marker = (
+            name => $self->ids()->[$i],
+            chrom => $chrom_name,
+            pos => $self->pos()->[$i],
+            ref => $self->refs()->[$i],
+            alt => $self->alts()->[$i],
+            qual => $self->qual()->[$i],
+            filter => $self->filter()->[$i],
+            info => $self->info()->[$i],
+            format => $marker_info_p8,
+        );
 
-            #print STDERR "Marker: ".Dumper(\%marker);
-            $protocolprop_info{'markers'}->{$chrom_name}->{$marker_name} = \%marker;
-	    push @{$protocolprop_info{'marker_names'}}, $marker_name;
-	    push @{$protocolprop_info{'markers_array'}{$chrom_name}}, \%marker;
+        #print STDERR "Marker: ".Dumper(\%marker);
+        push @{$protocolprop_info{'marker_names'}}, $marker_name;
+
+        $protocolprop_info{'markers'}->{$chrom_name}->{$marker_name} = \%marker;
+        push @{$protocolprop_info{'markers_array'}->{$chrom_name}}, \%marker;
     }
     my $stock_type = $self->get_observation_unit_type_name;
-     $protocolprop_info{header_information_lines} = $self->header_info();
-     $protocolprop_info{sample_observation_unit_type_name} = $stock_type;
+    $protocolprop_info{header_information_lines} = $self->header_info();
+    $protocolprop_info{sample_observation_unit_type_name} = $stock_type;
 
     return \%protocolprop_info;
 }

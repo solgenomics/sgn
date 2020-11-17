@@ -224,6 +224,7 @@ sub _parse_with_plugin {
 
     my $F;
     my %marker_info;
+    my %marker_info_nonseparated;
 
     if ($marker_info_filename) {
         # Open Marker Info File and parse into the %marker_info for later use
@@ -266,9 +267,10 @@ sub _parse_with_plugin {
                     format => $format,
                 );
                 push @{$protocolprop_info{'marker_names'}}, $customer_snp_id;
-                push @{$protocolprop_info{'markers_array'}}, \%marker;
+                $marker_info_nonseparated{$customer_snp_id} = \%marker;
 
-                $marker_info{$customer_snp_id} = \%marker;
+                push @{$protocolprop_info{'markers_array'}->{$chromosome}}, \%marker;
+                $marker_info{$chromosome}->{$customer_snp_id} = \%marker;
             }
 
         close($F);
@@ -313,10 +315,10 @@ sub _parse_with_plugin {
                 $counter++;
                 my @alleles = split ":", $genotype;
 
-                my $ref = $marker_info{$customer_snp_id}->{ref};
-                my $alt = $marker_info{$customer_snp_id}->{alt};
-                my $chrom = $marker_info{$customer_snp_id}->{chrom};
-                my $marker_name = $marker_info{$customer_snp_id}->{name} || $customer_snp_id;
+                my $ref = $marker_info_nonseparated{$customer_snp_id}->{ref};
+                my $alt = $marker_info_nonseparated{$customer_snp_id}->{alt};
+                my $chrom = $marker_info_nonseparated{$customer_snp_id}->{chrom};
+                my $marker_name = $marker_info_nonseparated{$customer_snp_id}->{name} || $customer_snp_id;
 
                 my $genotype_obj;
                 if ($ref && $alt) {

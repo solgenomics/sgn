@@ -252,10 +252,10 @@ sub extract_protocol_data {
         } else {
             $marker_name = $self->ids()->[$i];
         }
-
+        my $chrom_name = $self->chroms()->[$i]
         my %marker = (
             name => $self->ids()->[$i],
-            chrom => $self->chroms()->[$i],
+            chrom => $chrom_name,
             pos => $self->pos()->[$i],
             ref => $self->refs()->[$i],
             alt => $self->alts()->[$i],
@@ -265,9 +265,10 @@ sub extract_protocol_data {
             format => $marker_info_p8,
         );
 
-        $protocolprop_info{'markers'}->{$marker_name} = \%marker;
         push @{$protocolprop_info{'marker_names'}}, $marker_name;
-        push @{$protocolprop_info{'markers_array'}}, \%marker;
+
+        $protocolprop_info{'markers'}->{$chrom_name}->{$marker_name} = \%marker;
+        push @{$protocolprop_info{'markers_array'}->{$chrom_name}}, \%marker;
     }
     $protocolprop_info{header_information_lines} = $self->header_info();
     $protocolprop_info{sample_observation_unit_type_name} = $self->get_observation_unit_type_name;
