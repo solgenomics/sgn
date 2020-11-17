@@ -833,13 +833,13 @@ sub store_metadata {
 
         my $new_protocol_info = $self->protocol_info;
         my $nd_protocolprop_markers = $new_protocol_info->{markers};
-	my $nd_protocolprop_markers_array = $new_protocol_info->{markers_array};
+        my $nd_protocolprop_markers_array = $new_protocol_info->{markers_array};
 
         my %unique_chromosomes;
-	while (my ($chromosome, $protocol_info_chrom) = each %{$nd_protocolprop_markers_array}) {
-	    print STDERR "getting count for chrom $chromosome\n";
-	    foreach (@$protocol_info_chrom) {
-		$unique_chromosomes{$_->{chrom}}++;
+        while (my ($chromosome, $protocol_info_chrom) = each %{$nd_protocolprop_markers_array}) {
+            print STDERR "getting count for chrom $chromosome\n";
+            foreach (@$protocol_info_chrom) {
+                $unique_chromosomes{$_->{chrom}}++;
             }
         }
         my %chromosomes;
@@ -854,26 +854,26 @@ sub store_metadata {
         }
         print STDERR Dumper \%chromosomes;
 
-	delete($new_protocol_info->{markers});
-	delete($new_protocol_info->{markers_array});
+        delete($new_protocol_info->{markers});
+        delete($new_protocol_info->{markers_array});
 
-	my $nd_protocol_json_string = encode_json $new_protocol_info;
-	my $new_protocolprop_sql = "INSERT INTO nd_protocolprop (nd_protocol_id, type_id, rank, value) VALUES (?, ?, ?, ?);";
-	my $h_protocolprop = $schema->storage->dbh()->prepare($new_protocolprop_sql);
-	$h_protocolprop->execute($protocol_id, $vcf_map_details_id, 0, $nd_protocol_json_string);
+        my $nd_protocol_json_string = encode_json $new_protocol_info;
+        my $new_protocolprop_sql = "INSERT INTO nd_protocolprop (nd_protocol_id, type_id, rank, value) VALUES (?, ?, ?, ?);";
+        my $h_protocolprop = $schema->storage->dbh()->prepare($new_protocolprop_sql);
+        $h_protocolprop->execute($protocol_id, $vcf_map_details_id, 0, $nd_protocol_json_string);
 
-	foreach  my $chr_name (sort keys %unique_chromosomes) {
-	    print STDERR "Chromosome: $chr_name\n";
+        foreach  my $chr_name (sort keys %unique_chromosomes) {
+            print STDERR "Chromosome: $chr_name\n";
             $new_protocol_info->{chromosomes} = $chr_name;
 
-	    my $rank = $chromosomes{$chr_name}->{rank};
-	    my $nd_protocolprop_markers_json_string = encode_json $nd_protocolprop_markers->{$chr_name};
-	    my $nd_protocolprop_markers_array_json_string = encode_json $nd_protocolprop_markers->{$chr_name};
+            my $rank = $chromosomes{$chr_name}->{rank};
+            my $nd_protocolprop_markers_json_string = encode_json $nd_protocolprop_markers->{$chr_name};
+            my $nd_protocolprop_markers_array_json_string = encode_json $nd_protocolprop_markers_array->{$chr_name};
             $h_protocolprop->execute($protocol_id, $vcf_map_details_markers_cvterm_id, $rank, $nd_protocolprop_markers_json_string);
             $h_protocolprop->execute($protocol_id, $vcf_map_details_markers_array_cvterm_id, $rank, $nd_protocolprop_markers_array_json_string);
 
             print STDERR "Protocolprop stored...\n";
-	}
+        }
     }
     $self->protocol_id($protocol_id);
 
