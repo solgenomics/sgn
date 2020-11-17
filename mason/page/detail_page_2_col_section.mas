@@ -161,12 +161,11 @@ $locations => undef
 % } #End trial_upload_files
 % if ($info_section_id eq 'trial_analysis_tools'){
 
-                                <& /breeders_toolbox/trial/correlation_workflow.mas, trial_id => $trial_id &>
-
-                                <& /breeders_toolbox/trial/time_series_accessions_workflow.mas, trial_id => $trial_id, data_level=>'plot' &>
-
-                                <& /breeders_toolbox/trial/numerical_derivatives_row_and_column_workflow.mas, trial_id => $trial_id, data_level=>'plot' &>
-
+				  
+			        <!-- analysis tools on saved measurements -->
+			       <& /breeders_toolbox/trial/saved_measurement_analysis.mas,
+				     trial_id => $trial_id
+				&>    
                                 <!-- Phenotypic correlation analysis -->
                                 <& /solgs/population/correlation.mas,
                                     trial_id => $trial_id
@@ -183,6 +182,11 @@ $locations => undef
 
 				<!-- Clustering -->
                                 <& /solgs/cluster/analysis.mas,
+                                    trial_id => $trial_id
+                                  &>
+
+				<!-- kinship and inbreeding-->
+                                <& /solgs/kinship/analysis.mas,
                                     trial_id => $trial_id
                                 &>
 

@@ -1754,6 +1754,7 @@ sub upload_drone_imagery_new_vehicle : Path('/api/drone_imagery/new_imaging_vehi
 sub upload_drone_imagery_new_vehicle_GET : Args(0) {
     my $self = shift;
     my $c = shift;
+    $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
     my $vehicle_name = $c->req->param('vehicle_name');

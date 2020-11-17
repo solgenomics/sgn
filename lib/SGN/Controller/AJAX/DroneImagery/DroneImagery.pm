@@ -5834,6 +5834,7 @@ sub get_week_after_planting_date : Path('/api/drone_imagery/get_weeks_after_plan
 sub get_week_after_planting_date_GET : Args(0) {
     my $self = shift;
     my $c = shift;
+    $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $drone_run_project_id = $c->req->param('drone_run_project_id');
 
@@ -7082,6 +7083,7 @@ sub drone_imagery_get_vehicle : Path('/api/drone_imagery/get_vehicle') : ActionC
 sub drone_imagery_get_vehicle_GET : Args(0) {
     my $self = shift;
     my $c = shift;
+    $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
     my $vehicle_id = $c->req->param('vehicle_id');
@@ -7300,6 +7302,7 @@ sub drone_imagery_save_single_plot_image : Path('/api/drone_imagery/save_single_
 sub drone_imagery_save_single_plot_image_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
     my $observation_unit_id = $c->req->param('observation_unit_id');
@@ -11589,6 +11592,7 @@ sub drone_imagery_get_image_types : Path('/api/drone_imagery/get_image_types') :
 sub drone_imagery_get_image_types_GET : Args(0) {
     my $self = shift;
     my $c = shift;
+    $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");

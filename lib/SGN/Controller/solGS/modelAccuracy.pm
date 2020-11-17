@@ -148,6 +148,39 @@ sub cross_validation_stat {
 }
 
 
+sub create_model_summary {
+    my ($self, $c, $model_id, $trait_id) = @_;
+ 
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    
+    $c->controller("solGS::solGS")->get_trait_details($c, $trait_id);
+    my $tr_abbr = $c->stash->{trait_abbr};
+
+    my $path = $c->req->path;
+    my $trait_page;
+
+    if ($path =~ /solgs\/traits\/all\/population\//)
+    {
+	$trait_page = qq | <a href="/solgs/trait/$trait_id/population/$model_id/gp/$protocol_id" onclick="solGS.waitPage()">$tr_abbr</a>|;
+    }
+    elsif ($path =~ /solgs\/models\/combined\/trials\//)
+    {
+	$trait_page = qq | <a href="/solgs/model/combined/populations/$model_id/trait/$trait_id/gp/$protocol_id" onclick="solGS.waitPage()">$tr_abbr</a>|;
+    }
+	            
+    $self->get_model_accuracy_value($c, $model_id, $tr_abbr);
+    my $accuracy_value = $c->stash->{accuracy_value};
+     
+    my $heritability = $c->controller("solGS::Heritability")->get_heritability($c, $model_id, $trait_id);
+   	    	    
+    my $model_summary = [$trait_page, $accuracy_value, $heritability];	        
+
+    $c->stash->{model_summary} = $model_summary;
+    
+}
+
+
+
 sub begin : Private {
     my ($self, $c) = @_;
 

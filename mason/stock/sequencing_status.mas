@@ -120,7 +120,7 @@ $stock_id
 
 <script>
 jQuery(window).ready( function() {
-//    var sequenced_stocks = window.jsMod['sequenced_accessions'].init("sequenced_stocks_div", <% $stock_id %>);
+    var sequenced_stocks = window.jsMod['sequenced_accessions'].init("sequenced_stocks_div", <% $stock_id %>);
 });
 </script>
 

@@ -98,8 +98,11 @@ $selection_traits_ids = join(',', @$prediction_pop_analyzed_traits_ids);
   &>
 
   
-<& /solgs/cluster/analysis.mas &>  
-
+<& /solgs/cluster/analysis.mas &>
+    
+  <& /solgs/kinship/analysis.mas,
+     pop_id => $pop_id &>
+    
 <& acronym.mas,
    acronym => $acronym,
 &>

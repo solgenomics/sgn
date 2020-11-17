@@ -655,9 +655,9 @@ ORDER BY organism_id ASC;";
         my $result_stock_ids_sql = join ",", @result_stock_ids;
         my $stockprop_where = "WHERE stock_id IN ($result_stock_ids_sql)";
 
-        my $stockprop_select_sql .= ', "' . join '","', @stockprop_view;
-        $stockprop_select_sql .= '"';
+        $self->_refresh_materialized_stockprop(\@stockprop_view);
 
+        my $stockprop_select_sql .= ', "' . join ('","', @stockprop_view) . '"';
         my $stockprop_query = "SELECT stock_id $stockprop_select_sql FROM materialized_stockprop $stockprop_where;";
         my $h = $schema->storage->dbh()->prepare($stockprop_query);
         $h->execute();
@@ -690,6 +690,100 @@ ORDER BY organism_id ASC;";
     #print STDERR Dumper \@result;
     print STDERR "CXGN::Stock::Search search end\n";
     return (\@result, $records_total);
+}
+
+sub _refresh_materialized_stockprop {
+    my $self = shift;
+    my $stockprop_view = shift;
+    my $schema = $self->bcs_schema;
+
+    eval {
+        my $stockprop_select_sql .= ', "' . join ('","', @$stockprop_view) . '"';
+        my $stockprop_query = "SELECT stock_id $stockprop_select_sql FROM materialized_stockprop;";
+        my $h = $schema->storage->dbh()->prepare($stockprop_query);
+        $h->execute();
+    };
+    if ($@) {
+        my @stock_props = ('block', 'col_number', 'igd_synonym', 'is a control', 'location_code', 'organization', 'plant_index_number', 'subplot_index_number', 'tissue_sample_index_number', 'plot number', 'plot_geo_json', 'range', 'replicate', 'row_number', 'stock_synonym', 'T1', 'T2', 'variety',
+        'notes', 'state', 'accession number', 'PUI', 'donor', 'donor institute', 'donor PUI', 'seed source', 'institute code', 'institute name', 'biological status of accession code', 'country of origin', 'type of germplasm storage code', 'entry number', 'acquisition date', 'current_count', 'current_weight_gram', 'crossing_metadata_json', 'ploidy_level', 'genome_structure',
+        'introgression_parent', 'introgression_backcross_parent', 'introgression_map_version', 'introgression_chromosome', 'introgression_start_position_bp', 'introgression_end_position_bp', 'is_blank', 'concentration', 'volume', 'extraction', 'dna_person', 'tissue_type', 'ncbi_taxonomy_id', 'seedlot_quality');
+        my %stockprop_check = map { $_ => 1 } @stock_props;
+        my @additional_terms;
+        foreach (@$stockprop_view) {
+            if (!exists($stockprop_check{$_})) {
+                push @additional_terms, $_;
+            }
+        }
+        print STDERR Dumper \@additional_terms;
+
+        my $q = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
+        my $h = $schema->storage->dbh()->prepare($q);
+
+        my $stockprop_refresh_q = "
+        DROP EXTENSION IF EXISTS tablefunc CASCADE;
+        CREATE EXTENSION tablefunc;
+
+        DROP MATERIALIZED VIEW IF EXISTS public.materialized_stockprop CASCADE;
+        CREATE MATERIALIZED VIEW public.materialized_stockprop AS
+        SELECT *
+        FROM crosstab(
+        'SELECT stockprop.stock_id, stock.uniquename, stock.type_id, stock_cvterm.name, stock.organism_id, stockprop.type_id, jsonb_object_agg(stockprop.value, ''RANK'' || stockprop.rank) FROM public.stockprop JOIN public.stock USING(stock_id) JOIN public.cvterm as stock_cvterm ON (stock_cvterm.cvterm_id=stock.type_id) GROUP BY (stockprop.stock_id, stock.uniquename, stock.type_id, stock_cvterm.name, stock.organism_id, stockprop.type_id) ORDER by stockprop.stock_id ASC',
+        'SELECT type_id FROM (VALUES ";
+        my @stockprop_ids_sql;
+        foreach (@stock_props) {
+            push @stockprop_ids_sql, "(''".SGN::Model::Cvterm->get_cvterm_row($schema, $_, 'stock_property')->cvterm_id()."'')";
+        }
+        my $stockprop_ids_sql_joined = join ',', @stockprop_ids_sql;
+        $stockprop_refresh_q .= $stockprop_ids_sql_joined;
+        foreach (@additional_terms) {
+            $h->execute($_, 'stock_property');
+            my ($cvterm_id) = $h->fetchrow_array();
+            if (!$cvterm_id) {
+                my $new_term = $schema->resultset("Cv::Cvterm")->create_with({
+                   name => $_,
+                   cv => 'stock_property'
+                });
+                $cvterm_id = $new_term->cvterm_id();
+            }
+            
+            $stockprop_refresh_q .= ",(''".$cvterm_id."'')";
+        }
+
+        $stockprop_refresh_q .= ") AS t (type_id);'
+        )
+        AS (stock_id int,
+        \"uniquename\" text,
+        \"stock_type_id\" int,
+        \"stock_type_name\" text,
+        \"organism_id\" int,";
+        my @stockprop_names_sql;
+        foreach (@stock_props) {
+            push @stockprop_names_sql, "\"$_\" jsonb";
+        }
+        my $stockprop_names_sql_joined = join ',', @stockprop_names_sql;
+        $stockprop_refresh_q .= $stockprop_names_sql_joined;
+        foreach (@additional_terms) {
+            $stockprop_refresh_q .= ",\"$_\" jsonb ";
+        }
+        $stockprop_refresh_q .= ");
+        CREATE UNIQUE INDEX materialized_stockprop_stock_idx ON public.materialized_stockprop(stock_id) WITH (fillfactor=100);
+        ALTER MATERIALIZED VIEW public.materialized_stockprop OWNER TO web_usr;
+
+        CREATE OR REPLACE FUNCTION public.refresh_materialized_stockprop() RETURNS VOID AS '
+        REFRESH MATERIALIZED VIEW public.materialized_stockprop;'
+        LANGUAGE SQL;
+
+        ALTER FUNCTION public.refresh_materialized_stockprop() OWNER TO web_usr;
+
+        CREATE OR REPLACE FUNCTION public.refresh_materialized_stockprop_concurrently() RETURNS VOID AS '
+        REFRESH MATERIALIZED VIEW CONCURRENTLY public.materialized_stockprop;'
+        LANGUAGE SQL;
+
+        ALTER FUNCTION public.refresh_materialized_stockprop_concurrently() OWNER TO web_usr;
+
+        ";
+        $schema->storage->dbh()->do($stockprop_refresh_q);
+    }
 }
 
 1;

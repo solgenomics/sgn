@@ -67,7 +67,14 @@ my $pop_link = qq | <a href="/solgs/population/$pop_id/gp/$genotyping_protocol_i
     owner        => $owner,
     protocol_url => $protocol_url,
  &>
- 
+
+   <& /solgs/population/hidden_input.mas,
+      pop_id       => $pop_id,
+     trait_id      => $trait_id,
+     combo_pops_id => $combo_pops_id,
+     genotyping_protocol_id => $genotyping_protocol_id,
+     pop_name => $project_name
+     &>
 </&>
 
 <&| /page/info_section.mas, 
@@ -113,6 +120,11 @@ my $pop_link = qq | <a href="/solgs/population/$pop_id/gp/$genotyping_protocol_i
        combo_pops_id => $combo_pops_id,
 &>
 
+
+<& /solgs/kinship/analysis.mas, 
+   pop_id  => $pop_id,
+  &>
+  
 <& /solgs/model/marker_effects.mas, 
    top_marker_effects          => $top_marker_effects,
    marker_effects_download_url => $marker_effects_download_url
@@ -140,11 +152,3 @@ my $pop_link = qq | <a href="/solgs/population/$pop_id/gp/$genotyping_protocol_i
 </&>
 %}
 
-
-
-<input type="hidden" id="model_id" value="<% $pop_id %>" /> 
-<input type="hidden" id="population_id" value="<% $pop_id %>" />
-<input type="hidden" id="population_name" value="<% $project_name %>" /> 
-<input type="hidden" id="combo_pops_id" value="<% $combo_pops_id %>" /> 
-<input type="hidden" id="trait_id" value="<% $trait_id %>" />
-<input type="hidden" id="genotyping_protocol_id" value="<% $genotyping_protocol_id %>" />
