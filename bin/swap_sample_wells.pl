@@ -32,6 +32,7 @@ use Getopt::Std;
 use DBI;
 use Bio::Chado::Schema;
 use SGN::Model::Cvterm;
+use CXGN::Trial::TrialLayout;
 
 our ($opt_H, $opt_D, $opt_p, $opt_f, $opt_t);
 getopts('H:D:p:f:t');
@@ -58,7 +59,9 @@ my $col_number = SGN::Model::Cvterm->get_cvterm_row($schema, 'col_number', 'stoc
 my $row_number = SGN::Model::Cvterm->get_cvterm_row($schema, 'row_number', 'stock_property')->cvterm_id();
 my $plot_number = SGN::Model::Cvterm-> get_cvterm_row($schema,'plot number', 'stock_property')->cvterm_id();
 my $tissue_sample = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
+my $genotyping_layout_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_layout', 'experiment_type')->cvterm_id();
 
+my %associated_project_ids;
 while (<$F>) {
     chomp;
     my($sample_stock_id, $old_well, $new_well) = split /\t/;
@@ -150,6 +153,17 @@ while (<$F>) {
     $row->update( { value => $new_well });
 
     print STDERR "Moved sample $old_uniquename ($old_well, $old_row, $old_col) to new location $uniquename ($new_well, $new_row, $new_col).\n\n";
+
+    my $q = "SELECT project_id from nd_experiment_project JOIN nd_experiment USING(nd_experiment_id) JOIN nd_experiment_stock USING(nd_experiment_id) WHERE stock_id = ? AND nd_experiment.type_id=$genotyping_layout_cvterm_id;";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($stock_id);
+    my ($project_id) = $h->fetchrow_array();
+    $associated_project_ids{$project_id}++;
+}
+
+foreach (keys %associated_project_ids) {
+    my $trial_layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $_, experiment_type => 'genotyping_layout' });
+    $trial_layout->generate_and_cache_layout();
 }
 
 print STDERR "Committing changes... ";
@@ -158,8 +172,3 @@ if (!$opt_t ) { $guard->commit();}
 else { $guard->rollback(); }
 
 print STDERR "Done!\n";
-    
-    
-    
-    
-    
