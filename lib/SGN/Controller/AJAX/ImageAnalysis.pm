@@ -67,8 +67,8 @@ sub image_analysis_submit_POST : Args(0) {
         phenome_schema=>$phenome_schema,
         image_id_list=>$image_ids,
     });
+
     my ($result, $records_total) = $image_search->search();
-    #print STDERR Dumper $result;
 
     my @image_urls;
     my @image_files;
@@ -82,42 +82,71 @@ sub image_analysis_submit_POST : Args(0) {
     }
     print STDERR Dumper \@image_urls;
 
+    my %service_details = {
+        necrosis => {
+            server_endpoint => "http://unet.mcrops.org/api/",
+            image_type_name => "image_analysis_necrosis_solomon_nsumba",
+        },
+        whitefly_count => {
+            server_endpoint => "http://18.216.149.204/home/api2/",
+            image_type_name => "image_analysis_white_fly_count_solomon_nsumba",
+        },
+        count_contours => {
+            image_type_name => "image_analysis_contours",
+            trait_name => "count_contours",
+            script => 'GetContours.py',
+            input_image => 'image_path',
+            outfile_image => 'outfile_path',
+            results_outfile => 'results_outfile_path',
+        },
+        largest_contour_percent => {
+            image_type_name => 'image_analysis_largest_contour',
+            trait_name => 'percent_largest_contour',
+            script => 'GetLargestContour.py',
+            input_image => 'image_path',
+            outfile_image => 'outfile_path',
+            results_outfile => 'results_outfile_path',
+        },
+        count_sift => {
+            image_type_name => "image_analysis_sift",
+            trait_name => "count_sift",
+            script => 'ImageProcess/CalculatePhenotypeSift.py',
+            input_image => 'image_paths',
+            outfile_image => 'outfile_paths',
+            results_outfile => 'results_outfile_path',
+        }
+    };
+
+    my $image_type_name = $service_details[$service]['image_type_name'];
+
+    my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $image_type_name, 'project_md_image')->cvterm_id();
+
+    my $image_tag_id = CXGN::Tag::exists_tag_named($schema->storage->dbh, $image_type_name);
+    if (!$image_tag_id) {
+        my $image_tag = CXGN::Tag->new($schema->storage->dbh);
+        $image_tag->set_name($image_type_name);
+        $image_tag->set_description('Image analysis result image: '.$image_type_name);
+        $image_tag->set_sp_person_id($user_id);
+        $image_tag_id = $image_tag->store();
+    }
+    my $image_tag = CXGN::Tag->new($schema->storage->dbh, $image_tag_id);
     my $ua = LWP::UserAgent->new(
         ssl_opts => {
                         verify_hostname => 0,
                         timeout         => 60,
                     }
     );
-    if ($service eq 'necrosis' || $service eq 'whitefly_count') {
-        my $server_endpoint;
-        my $image_type_name;
-        if ($service eq 'necrosis') {
-            $server_endpoint = "http://unet.mcrops.org/api/";
-            $image_type_name = "image_analysis_necrosis_solomon_nsumba";
-            $trait_name = "CBSDpct |CO_334:0002078";
-        }
-        if ($service eq 'whitefly_count') {
-            $server_endpoint = "http://18.216.149.204/home/api2/";
-            $image_type_name = "image_analysis_white_fly_count_solomon_nsumba";
-        }
-        print STDERR $server_endpoint."\n";
+    my $it = 0;
 
-        my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $image_type_name, 'project_md_image')->cvterm_id();
+    foreach (@image_files) {
+        my $dir = $c->tempfiles_subdir('/'.$image_type_name);
+        my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => $image_type_name.'/imageXXXX');
+        $archive_temp_image .= '.png';
+        my %res;
 
-        my $image_tag_id = CXGN::Tag::exists_tag_named($schema->storage->dbh, $image_type_name);
-        if (!$image_tag_id) {
-            my $image_tag = CXGN::Tag->new($schema->storage->dbh);
-            $image_tag->set_name($image_type_name);
-            $image_tag->set_description('Image analysis result image: '.$image_type_name);
-            $image_tag->set_sp_person_id($user_id);
-            $image_tag_id = $image_tag->store();
-        }
-        my $image_tag = CXGN::Tag->new($schema->storage->dbh, $image_tag_id);
-
-        my $it = 0;
-        foreach (@image_files) {
+        if (defined $service_details[$service]['server_endpoint']) { # submit image to external service for processing
             my $resp = $ua->post(
-                $server_endpoint,
+                $service_details[$service]['server_endpoint'],
                 Content_Type => 'form-data',
                 Content => [
                     image => [ $_, $_, Content_Type => 'image/png' ],
@@ -126,252 +155,113 @@ sub image_analysis_submit_POST : Args(0) {
             if ($resp->is_success) {
                 my $message = $resp->decoded_content;
                 my $message_hash = decode_json $message;
-                print STDERR Dumper $message_hash;
-                $message_hash->{original_image} = $image_urls[$it];
-                my $project_id = $result->[$it]->{project_id};
-                my $stock_id = $result->[$it]->{stock_id};
-
-                my $project_where = ' ';
-                my $project_join = ' ';
-                if ($project_id) {
-                    $project_where = " AND project_md_image.type_id = $linking_table_type_id AND project_md_image.project_id = $project_id ";
-                    $project_join = " JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id) ";
-                }
-
-                my $dir = $c->tempfiles_subdir('/'.$image_type_name);
-                my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => $image_type_name.'/imageXXXX');
-                $archive_temp_image .= '.png';
-
                 my $rc = getstore($message_hash->{image_link}, $archive_temp_image);
                 if (is_error($rc)) {
                     die "getstore of ".$message_hash->{image_link}." failed with $rc";
                 }
-
-                my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
-                my $md5 = $image->calculate_md5sum($archive_temp_image);
-                my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
-                    $project_join
-                    JOIN phenome.stock_image AS stock_image ON (stock_image.image_id = md_image.image_id)
-                    WHERE md_image.obsolete = 'f' $project_where AND stock_image.stock_id = $stock_id AND md_image.md5sum = '$md5';";
-                my $h = $schema->storage->dbh->prepare($q);
-                $h->execute();
-                my ($saved_image_id) = $h->fetchrow_array();
-                my $image_id;
-                if ($saved_image_id) {
-                    print STDERR Dumper "Image $archive_temp_image has already been added to the database and will not be added again.";
-                    $image = SGN::Image->new( $schema->storage->dbh, $saved_image_id, $c );
-                    $image_id = $image->get_image_id();
-                }
-                else {
-                    $image->set_sp_person_id($user_id);
-                    if ($project_id) {
-                        my $ret = $image->process_image($archive_temp_image, 'project', $project_id, $linking_table_type_id);
-                        if (!$ret ) {
-                            return {error => "Image processing for $archive_temp_image did not work. Image not associated to stock_id $stock_id.<br/><br/>"};
-                        }
-                        my $stock_associate = $image->associate_stock($stock_id);
-                    }
-                    else {
-                        my $ret = $image->process_image($archive_temp_image, 'stock', $stock_id);
-                        if (!$ret ) {
-                            return {error => "Image processing for $archive_temp_image did not work. Image not associated to stock_id $stock_id.<br/><br/>"};
-                        }
-                    }
-                    print STDERR "Saved $archive_temp_image\n";
-                    $image_id = $image->get_image_id();
-                    my $added_image_tag_id = $image->add_tag($image_tag);
-                }
-                $message_hash->{analyzed_image_id} = $image_id;
-                $message_hash->{trait_name} = $trait_name;
-                $result->[$it]->{result} = $message_hash;
+                print STDERR Dumper $message_hash;
+                $res['value'] = $message_hash->{value};
+                $res['trait'] = $message_hash->{trait};
             }
             else {
                 print STDERR Dumper $resp->status_line;
-                my $error_message_hash;
-                $error_message_hash->{original_image} = $image_urls[$it];
-                $error_message_hash->{error} = $resp->status_line;
-                $result->[$it]->{result} = $error_message_hash;
+                $res['error'] = $resp->status_line;
             }
-            $it++;
         }
-    }
-    elsif ($service eq 'count_contours' || $service eq 'count_sift' || $service eq 'largest_contour_percent') {
-
-        my $image_type_name;
-        my $trait_name;
-        my $script;
-        my $input_image;
-        my $outfile_image;
-        my $results_outfile;
-        if ($service eq 'count_contours') {
-            $image_type_name = "image_analysis_contours";
-            $trait_name = "count_contours";
-            $script = 'GetContours.py';
-            $input_image = 'image_path';
-            $outfile_image = 'outfile_path';
-            $results_outfile = 'results_outfile_path';
-        }
-        if ($service eq 'largest_contour_percent') {
-            $image_type_name = 'image_analysis_largest_contour';
-            $trait_name = 'percent_largest_contour';
-            $script = 'GetLargestContour.py';
-            $input_image = 'image_path';
-            $outfile_image = 'outfile_path';
-            $results_outfile = 'results_outfile_path';
-        }
-        if ($service eq 'count_sift') {
-            $image_type_name = "image_analysis_sift";
-            $trait_name = "count_sift";
-            $script = 'ImageProcess/CalculatePhenotypeSift.py';
-            $input_image = 'image_paths';
-            $outfile_image = 'outfile_paths';
-            $results_outfile = 'results_outfile_path';
-        }
-
-        my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $image_type_name, 'project_md_image')->cvterm_id();
-
-        my $image_tag_id = CXGN::Tag::exists_tag_named($schema->storage->dbh, $image_type_name);
-        if (!$image_tag_id) {
-            my $image_tag = CXGN::Tag->new($schema->storage->dbh);
-            $image_tag->set_name($image_type_name);
-            $image_tag->set_description('Image analysis result image: '.$image_type_name);
-            $image_tag->set_sp_person_id($user_id);
-            $image_tag_id = $image_tag->store();
-        }
-        my $image_tag = CXGN::Tag->new($schema->storage->dbh, $image_tag_id);
-
-        my $it = 0;
-        foreach (@image_files) {
-            my $dir = $c->tempfiles_subdir('/'.$image_type_name);
-            my $archive_contours_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => $image_type_name.'/imageXXXX');
-            $archive_contours_temp_image .= '.png';
-
+        elsif (defined $service_details[$service]['script']) { # supply image to local script for processing
+            my $script = $service_details[$service]['script'];
+            my $input_image = $service_details[$service]['input_image'];
+            my $outfile_image = $service_details[$service]['outfile_image'];
+            my $results_outfile = $service_details[$service]['results_outfile'];
             my $archive_temp_results = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => $image_type_name.'/imageXXXX');
 
-            my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/'.$script.' --'.$input_image.' \''.$_.'\' --'.$outfile_image.' \''.$archive_contours_temp_image.'\' --'.$results_outfile.' \''.$archive_temp_results.'\' ';
-            print STDERR Dumper $cmd;
+            my $cmd = $c->config->{python_executable} . ' ' . $c->config->{rootpath} .
+                '/DroneImageScripts/' . $script . ' --' . $input_image . ' \'' . $_ .
+                '\' --' . $outfile_image . ' \'' . $archive_temp_image . '\' --' .
+                $results_outfile . ' \'' . $archive_temp_results . '\' ';
+            # print STDERR Dumper $cmd;
             my $status = system($cmd);
 
             my $csv = Text::CSV->new({ sep_char => ',' });
             open(my $fh, '<', $archive_temp_results)
                 or die "Could not open file '$archive_temp_results' $!";
-
-            my $project_id = $result->[$it]->{project_id};
-            my $stock_id = $result->[$it]->{stock_id};
-
-            my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
-            my $md5 = $image->calculate_md5sum($archive_contours_temp_image);
-            my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
-                JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id)
-                JOIN phenome.stock_image AS stock_image ON (stock_image.image_id = md_image.image_id)
-                WHERE md_image.obsolete = 'f' AND project_md_image.type_id = $linking_table_type_id AND project_md_image.project_id = $project_id AND stock_image.stock_id = $stock_id AND md_image.md5sum = '$md5';";
-            my $h = $schema->storage->dbh->prepare($q);
-            $h->execute();
-            my ($saved_image_id) = $h->fetchrow_array();
-            my $image_id;
-            if ($saved_image_id) {
-                print STDERR Dumper "Image $archive_contours_temp_image has already been added to the database and will not be added again.";
-                $image = SGN::Image->new( $schema->storage->dbh, $saved_image_id, $c );
-                $image_id = $image->get_image_id();
-            }
-            else {
-                $image->set_sp_person_id($user_id);
-                my $ret = $image->process_image($archive_contours_temp_image, 'project', $project_id, $linking_table_type_id);
-                if (!$ret ) {
-                    return {error => "Image processing for $archive_contours_temp_image did not work. Image not associated to stock_id $stock_id.<br/><br/>"};
-                }
-                print STDERR "Saved $archive_contours_temp_image\n";
-                my $stock_associate = $image->associate_stock($stock_id);
-                $image_id = $image->get_image_id();
-                my $added_image_tag_id = $image->add_tag($image_tag);
-            }
-
             my $line = <$fh>;
             my @columns;
             if ($csv->parse($line)) {
                 @columns = $csv->fields();
             }
-            my $res = {
-                analyzed_image_id => $image_id,
-                trait_name => $trait_name,
-                trait_value => $columns[0],
-                image_link => $main_production_site_url.$image->get_image_url("original"),
-                original_image => $image_urls[$it]
-            };
-            $result->[$it]->{result} = $res;
-            $it++;
+            $res['value'] = $columns[0];
+            $res['trait'] = $service_details[$service]['trait'];
         }
+
+        my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+        my $md5 = $image->calculate_md5sum($archive_temp_image);
+        my $stock_id = $result->[$it]->{stock_id};
+        my $project_id = $result->[$it]->{project_id};
+
+        my $project_where = ' ';
+        my $project_join = ' ';
+        if ($project_id) {
+            $project_where = " AND project_md_image.type_id = $linking_table_type_id AND project_md_image.project_id = $project_id ";
+            $project_join = " JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id) ";
+        }
+
+        my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
+            $project_join
+            JOIN phenome.stock_image AS stock_image ON (stock_image.image_id = md_image.image_id)
+            WHERE md_image.obsolete = 'f'
+            $project_where
+            AND stock_image.stock_id = $stock_id
+            AND md_image.md5sum = '$md5';";
+        my $h = $schema->storage->dbh->prepare($q);
+        $h->execute();
+        my ($saved_image_id) = $h->fetchrow_array();
+        my $image_id;
+        if ($saved_image_id) {
+            print STDERR Dumper "Image $archive_temp_image has already been added to the database and will not be added again.";
+            $image = SGN::Image->new( $schema->storage->dbh, $saved_image_id, $c );
+            $image_id = $image->get_image_id();
+        }
+        else {
+            $image->set_sp_person_id($user_id);
+            if ($project_id) {
+                my $ret = $image->process_image($archive_temp_image, 'project', $project_id, $linking_table_type_id);
+                if (!$ret ) {
+                    return {error => "Image processing for $archive_temp_image did not work. Image not associated to stock_id $stock_id.<br/><br/>"};
+                }
+                my $stock_associate = $image->associate_stock($stock_id);
+            }
+            else {
+                my $ret = $image->process_image($archive_temp_image, 'stock', $stock_id);
+                if (!$ret ) {
+                    return {error => "Image processing for $archive_temp_image did not work. Image not associated to stock_id $stock_id.<br/><br/>"};
+                }
+            }
+            print STDERR "Saved $archive_temp_image\n";
+            $image_id = $image->get_image_id();
+            my $added_image_tag_id = $image->add_tag($image_tag);
+        }
+
+        # Store individual image results
+        $res['analyzed_image_id'] = $image_id;
+        $res['image_link'] = $main_production_site_url.$image->get_image_url("original");
+        $res['original_image'] = $image_urls[$it];
+        $result->[$it]->{result} = $res;
+        $it++;
     }
+
+    my $result = _group_results_by_observationunit($result);
 
     $c->stash->{rest} = { success => 1, results => $result };
 }
 
-sub image_analysis_store_phenotypes : Path('/ajax/image_analysis/store_phenotypes') : ActionClass('REST') { }
-sub image_analysis_store_phenotypes_POST : Args(0) {
-    my $self = shift;
+sub _group_results_by_observationunit {
     my $c = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
-    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-    my $phenotypes = decode_json $c->req->param('phenotypes');
-    my @traits;
-    foreach my $key (keys %{$phenotypes}) {
-        foreach my $trait (keys %{$key}) {
-            push @traits, $trait;
-        }
-    }
-    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
-
-    print STDERR Dumper $phenotypes;
-    print STDERR "Storing image analysis values...\n";
-
-    my $dbh = $c->dbc->dbh;
-    my $user_id = $self->user_id();
-    my $p = CXGN::People::Person->new($dbh, $user_id);
-    my $operator = $p->get_username;
-    my $time = DateTime->now();
-    my $timestamp = $time->ymd()."_".$time->hms();
-    my %phenotype_metadata;
-    $phenotype_metadata{'archived_file'} = 'none';
-    $phenotype_metadata{'archived_file_type'} = 'analysis_values';
-    $phenotype_metadata{'operator'} = $operator;
-    $phenotype_metadata{'date'} = $timestamp;
-
-    my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
-        basepath => $c->config->{basepath},
-        dbhost => $c->config->{dbhost},
-        dbname => $c->config->{dbname},
-        dbuser => $c->config->{dbuser},
-        dbpass => $c->config->{dbpass},
-        temp_file_nd_experiment_id => $temp_file_nd_experiment_id,
-        bcs_schema => $schema,
-        metadata_schema => $metadata_schema,
-        phenome_schema => $phenome_schema,
-        user_id => $user_id,
-        stock_list => keys %{$phenotypes},
-        trait_list => \@traits,
-        values_hash => $phenotypes,
-        has_timestamps => 0,
-        overwrite_values => 1,
-        metadata_hash => \%phenotype_metadata
-    );
-
-    my ($error, $success) = $store_phenotypes->store();
-
-    if ($error) {
-        print STDERR "An error occurred storing image analysis values ($error).\n";
-        $c->stash->{rest} = {
-            error => "An error occurred storing the image analysis values ($error).\n"
-        };
-        return;
-    }
-
-    my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
-    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
-
-    $c->stash->{rest} = { success => 1 };
-
+    my $result = shift;
+    print STDERR "LOOK I'M ALL THE RESULTS READY FOR PROCESSING\n"
+    print STDERR Dumper($results);
+    # Move JS processing here
+    return $results;
 }
 
 sub _check_user_login {
