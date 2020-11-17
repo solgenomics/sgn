@@ -246,7 +246,7 @@ print STDERR Dumper $stored_analysis_phenotypes;
 is(scalar(@$stored_analysis_phenotypes), 6);
 
 print STDERR "Rolling back...\n";
-$dbh->rollback();
+#$dbh->rollback();
 
 done_testing();
 

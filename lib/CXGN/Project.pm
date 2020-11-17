@@ -39,6 +39,7 @@ use Time::Seconds;
 use CXGN::Calendar;
 use JSON;
 use File::Basename qw | basename dirname|;
+use Scalar::Util qw | looks_like_number |;
 
 =head2 accessor bcs_schema()
 
@@ -393,6 +394,11 @@ sub get_location {
 sub set_location {
     my $self = shift;
     my $location_id = shift;
+
+    if (!looks_like_number($location_id)) {
+        die "Location_id $location_id not an integer!\n";
+    }
+
 		my $project_id = $self->get_trial_id();
 		my $type_id = $self->get_location_type_id();
 
@@ -903,6 +909,11 @@ sub get_breeding_program {
 sub set_breeding_program {
 	my $self = shift;
 	my $breeding_program_id = shift;
+
+    if (!looks_like_number($breeding_program_id)) {
+        die "Breeding_program_id $breeding_program_id is not an integer!\n";
+    }
+
 	my $trial_id = $self->get_trial_id();
 	my $type_id = $self->get_breeding_program_trial_relationship_cvterm_id();
 
