@@ -267,11 +267,14 @@ sub delete_location {
     my $self = shift;
     my $row = $self->bcs_schema->resultset("NaturalDiversity::NdGeolocation")->find({ nd_geolocation_id=> $self->nd_geolocation_id() });
     my $name = $row->description();
-    my @experiments = $row->nd_experiments;
-    #print STDERR "Associated experiments: ".Dumper(@experiments)."\n";
 
-    if (@experiments) {
-        my $error = "Location $name cannot be deleted because there are ".scalar @experiments." measurements associated with it from at least one trial.\n";
+    my $q = "SELECT count(nd_experiment_phenotype_bridge_id) FROM nd_experiment_phenotype_bridge WHERE nd_geolocation_id=?;";
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+    $h->execute($self->nd_geolocation_id());
+    my ($phenotype_experiment_count) = $h->fetchrow_array();
+
+    if ($phenotype_experiment_count) {
+        my $error = "Location $name cannot be deleted because there are $phenotype_experiment_count measurements associated with it from at least one trial.\n";
         print STDERR $error;
         return { error => $error };
     }
