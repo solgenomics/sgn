@@ -222,6 +222,22 @@ has 'associated_accessions' =>  ( isa => 'Str',
 				  default => sub { "not yet implemented" }
     );
 
+has 'uri' => (isa => 'Str',
+	is            => 'ro',
+	lazy          => 1,
+	default => sub {
+		my $self = shift;
+		my $row = $self->bcs_schema()->resultset("Cv::Cvtermprop")->find(
+			{cvterm_id => $self->cvterm_id(), 'type.name' => 'uri'},
+			{ join => 'type'}
+		);
+
+		if ($row) {
+			return $row->value();
+		}
+		return "";
+	}
+);
 
 sub BUILD { 
     #print STDERR "BUILDING...\n";

@@ -1,0 +1,1492 @@
+format-version: 1.2
+ontology: Imagesol_ontology
+default-namespace: Imagesol_ontology
+
+[Term]
+id: ISOL:0000000
+name: ISOL
+
+[Term]
+id: ISOL:0000001
+name: Spectral Band Type
+is_a: ISOL:0000000
+
+[Term]
+id: ISOL:0000002
+name: RGB Color Image
+def: "A three channel image where the channels are red, green, blue" []
+relationship: is_a ISOL:0000001
+
+[Term]
+id: ISOL:0000003
+name: Black and White Image
+def: "A gray scale, single channel, black and white image of unknown spectrum" []
+relationship: is_a ISOL:0000001
+
+[Term]
+id: ISOL:0000004
+name: Blue (450-520nm)
+def: "A single channel image capturing the blue spectrum between 450 to 520 nm" []
+relationship: is_a ISOL:0000001
+
+[Term]
+id: ISOL:0000005
+name: Green (515-600nm)
+def: "A single channel image capturing the green spectrum between 515 to 600 nm" []
+relationship: is_a ISOL:0000001
+
+[Term]
+id: ISOL:0000006
+name: Red (600-690nm)
+def: "A single channel image capturing the red spectrum between 600 to 690 nm" []
+relationship: is_a ISOL:0000001
+
+[Term]
+id: ISOL:0000007
+name: Red Edge (690-750nm)
+def: "A single channel image capturing the red edge spectrum between 690 to 750 nm" []
+relationship: is_a ISOL:0000001
+
+[Term]
+id: ISOL:0000008
+name: NIR (780-3000nm)
+def: "A single channel image capturing the near infrared (NIR) spectrum between 780 to 3000 nm" []
+relationship: is_a ISOL:0000001
+
+[Term]
+id: ISOL:0000009
+name: MIR (3000-50000nm)
+def: "A single channel image capturing the mid infrared (MIR) spectrum between 3000 to 50000 nm" []
+relationship: is_a ISOL:0000001
+
+[Term]
+id: ISOL:0000010
+name: FIR (50000-1000000nm)
+def: "A single channel image capturing the far infrared spectrum between 50000 to 1000000 nm" []
+relationship: is_a ISOL:0000001
+
+[Term]
+id: ISOL:0000011
+name: Thermal IR (9000-14000nm)
+def: "A single channel image capturing the thermal infrared spectrum between 9000 to 14000 nm" []
+relationship: is_a ISOL:0000001
+
+[Term]
+id: ISOL:0000012
+name: Merged 3 Bands BGR
+def: "Created a 3 band image by merging 3 single channel bands in the following order, Blue, Green, Red for band 1, band 2, and band 3, respectively." []
+relationship: is_a ISOL:0000001
+
+[Term]
+id: ISOL:0000013
+name: Merged 3 Bands NRN
+def: "Created a 3 band image by merging 3 single channel bands in the following order, NIR, Red, NIR for band 1, band 2, and band 3, respectively." []
+relationship: is_a ISOL:0000001
+
+[Term]
+id: ISOL:0000014
+name: Merged 3 Bands NReN
+def: "Created a 3 band image by merging 3 single channel bands in the following order, NIR, Red Edge, NIR for band 1, band 2, and band 3, respectively." []
+relationship: is_a ISOL:0000001
+
+[Term]
+id: ISOL:0000101
+name: Plot Polygon Image Pre-Process Type
+is_a: ISOL:0000000
+
+[Term]
+id: ISOL:0000102
+name: RGB Denoised Original Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000103
+name: Blue Image From RGB Denoised Original Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000104
+name: Green Image From RGB Denoised Original Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000105
+name: Red Image From RGB Denoised Original Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000106
+name: Black and White Denoised Original Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000107
+name: Blue Denoised Original Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000108
+name: Green Denoised Original Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000109
+name: Red Denoised Original Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000110
+name: Red Edge Denoised Original Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000111
+name: NIR Denoised Original Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000112
+name: MIR Denoised Original Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000113
+name: FIR Denoised Original Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000114
+name: Thermal IR Denoised Original Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000115
+name: Merged 3 Bands NRN Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000116
+name: Merged 3 Bands NReN Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000117
+name: Thresholded Black and White Denoised Original Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000118
+name: Thresholded Blue Image from RGB Color Denoised Original Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000119
+name: Thresholded Green Image from RGB Color Denoised Original Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000120
+name: Thresholded Red Image from RGB Color Denoised Original Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000121
+name: Thresholded Blue Denoised Original Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000122
+name: Thresholded Green Denoised Original Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000123
+name: Thresholded Red Denoised Original Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000124
+name: Thresholded Red Edge Denoised Original Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000125
+name: Thresholded NIR Denoised Original Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000126
+name: Thresholded MIR Denoised Original Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000127
+name: Thresholded FIR Denoised Original Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000128
+name: Thresholded Thermal IR Denoised Original Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000129
+name: TGI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000130
+name: VARI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000131
+name: NDVI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000132
+name: NDRE Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000133
+name: Thresholded TGI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000134
+name: Thresholded VARI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000135
+name: Thresholded NDVI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000136
+name: Thresholded NDRE Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000137
+name: RGB Color Image Masked with TGI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000138
+name: Blue Image from RGB Color Image Masked with TGI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000139
+name: Green Image from of RGB Color Image Masked with TGI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000140
+name: Red Image from RGB Color Image Masked with TGI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000141
+name: RGB Color Image Masked with VARI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000142
+name: Blue Image from RGB Color Image Masked with VARI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000143
+name: Green Image from RGB Color Image Masked with VARI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000144
+name: Red Image from RGB Color Image Masked with VARI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000145
+name: Merged 3 Channels NRN Image Masked with NDVI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000146
+name: NIR Image from Merged 3 Channels NRN Image Masked with NDVI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000147
+name: Red Image from Merged 3 Channels NRN Image Masked with NDVI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000148
+name: Merged 3 Channels NReN Image Masked with NDRE Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000149
+name: NIR Image from Merged 3 Channels NReN Image Masked with NDRE Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000150
+name: Red Edge Image from Merged 3 Channels NReN Image Masked with NDRE Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000151
+name: RGB Color Image Masked with Thresholded TGI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000152
+name: Blue Image from RGB Color Image Masked with Thresholded TGI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000153
+name: Green Image from of RGB Color Image Masked with Thresholded TGI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000154
+name: Red Image from RGB Color Image Masked with Thresholded TGI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000155
+name: RGB Color Image Masked with Thresholded VARI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000156
+name: Blue Image from RGB Color Image Masked with Thresholded VARI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000157
+name: Green Image from of RGB Color Image Masked with Thresholded VARI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000158
+name: Red Image from RGB Color Image Masked with Thresholded VARI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000159
+name: Merged 3 Channels NRN Image Masked with Thresholded NDVI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000160
+name: NIR Image from Merged 3 Channels NRN Image Masked with Thresholded NDVI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000161
+name: Red Image from Merged 3 Channels NRN Image Masked with Thresholded NDVI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000162
+name: Merged 3 Channels NReN Image Masked with Thresholded NDRE Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000163
+name: NIR Image from Merged 3 Channels NReN Image Masked with Thresholded NDRE Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000164
+name: Red Edge Image from Merged 3 Channels NReN Image Masked with Thresholded NDRE Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000165
+name: Fourier Transform High Pass Filter 20 Blue Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000166
+name: Fourier Transform High Pass Filter 30 Blue Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000167
+name: Fourier Transform High Pass Filter 40 Blue Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000168
+name: Fourier Transform High Pass Filter 20 Green Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000169
+name: Fourier Transform High Pass Filter 30 Green Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000170
+name: Fourier Transform High Pass Filter 40 Green Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000171
+name: Fourier Transform High Pass Filter 20 Red Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000172
+name: Fourier Transform High Pass Filter 30 Red Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000173
+name: Fourier Transform High Pass Filter 40 Red Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000174
+name: Fourier Transform High Pass Filter 20 Red Edge Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000175
+name: Fourier Transform High Pass Filter 30 Red Edge Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000176
+name: Fourier Transform High Pass Filter 40 Red Edge Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000177
+name: Fourier Transform High Pass Filter 20 NIR Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000178
+name: Fourier Transform High Pass Filter 30 NIR Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000179
+name: Fourier Transform High Pass Filter 40 NIR Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000180
+name: Fourier Transform High Pass Filter 20 MIR Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000181
+name: Fourier Transform High Pass Filter 30 MIR Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000182
+name: Fourier Transform High Pass Filter 40 MIR Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000183
+name: Fourier Transform High Pass Filter 20 FIR Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000184
+name: Fourier Transform High Pass Filter 30 FIR Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000185
+name: Fourier Transform High Pass Filter 40 FIR Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000186
+name: Fourier Transform High Pass Filter 20 Thermal IR Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000187
+name: Fourier Transform High Pass Filter 30 Thermal IR Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000188
+name: Fourier Transform High Pass Filter 40 Thermal IR Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000189
+name: Fourier Transform High Pass Filter 20 Black and White Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000190
+name: Fourier Transform High Pass Filter 30 Black and White Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000191
+name: Fourier Transform High Pass Filter 40 Black and White Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000192
+name: Fourier Transform High Pass Filter 20 Blue Image from Denoised RGB Color Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000193
+name: Fourier Transform High Pass Filter 30 Blue Image from Denoised RGB Color Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000194
+name: Fourier Transform High Pass Filter 40 Blue Image from Denoised RGB Color Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000195
+name: Fourier Transform High Pass Filter 20 Green Image from Denoised RGB Color Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000196
+name: Fourier Transform High Pass Filter 30 Green Image from Denoised RGB Color Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000197
+name: Fourier Transform High Pass Filter 40 Green Image from Denoised RGB Color Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000198
+name: Fourier Transform High Pass Filter 20 Red Image from Denoised RGB Color Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000199
+name: Fourier Transform High Pass Filter 30 Red Image from Denoised RGB Color Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000200
+name: Fourier Transform High Pass Filter 40 Red Image from Denoised RGB Color Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000201
+name: Fourier Transform High Pass Filter 20 TGI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000202
+name: Fourier Transform High Pass Filter 30 TGI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000203
+name: Fourier Transform High Pass Filter 40 TGI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000204
+name: Fourier Transform High Pass Filter 20 VARI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000205
+name: Fourier Transform High Pass Filter 30 VARI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000206
+name: Fourier Transform High Pass Filter 40 VARI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000207
+name: Fourier Transform High Pass Filter 20 NDVI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000208
+name: Fourier Transform High Pass Filter 30 NDVI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000209
+name: Fourier Transform High Pass Filter 40 NDVI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000210
+name: Fourier Transform High Pass Filter 20 NDRE Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000211
+name: Fourier Transform High Pass Filter 30 NDRE Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000212
+name: Fourier Transform High Pass Filter 40 NDRE Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000213
+name: Fourier Transform High Pass Filter 20 Thresholded TGI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000214
+name: Fourier Transform High Pass Filter 30 Thresholded TGI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000215
+name: Fourier Transform High Pass Filter 40 Thresholded TGI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000216
+name: Fourier Transform High Pass Filter 20 Thresholded VARI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000217
+name: Fourier Transform High Pass Filter 30 Thresholded VARI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000218
+name: Fourier Transform High Pass Filter 40 Thresholded VARI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000219
+name: Fourier Transform High Pass Filter 20 Thresholded NDVI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000220
+name: Fourier Transform High Pass Filter 30 Thresholded NDVI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000221
+name: Fourier Transform High Pass Filter 40 Thresholded NDVI Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000222
+name: Fourier Transform High Pass Filter 20 Thresholded NDRE Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000223
+name: Fourier Transform High Pass Filter 30 Thresholded NDRE Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000224
+name: Fourier Transform High Pass Filter 40 Thresholded NDRE Vegetative Index Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000225
+name: Fourier Transform High Pass Filter 20 Thresholded Blue Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000226
+name: Fourier Transform High Pass Filter 30 Thresholded Blue Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000227
+name: Fourier Transform High Pass Filter 40 Thresholded Blue Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000228
+name: Fourier Transform High Pass Filter 20 Thresholded Green Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000229
+name: Fourier Transform High Pass Filter 30 Thresholded Green Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000230
+name: Fourier Transform High Pass Filter 40 Thresholded Green Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000231
+name: Fourier Transform High Pass Filter 20 Thresholded Red Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000232
+name: Fourier Transform High Pass Filter 30 Thresholded Red Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000233
+name: Fourier Transform High Pass Filter 40 Thresholded Red Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000234
+name: Fourier Transform High Pass Filter 20 Thresholded Red Edge Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000235
+name: Fourier Transform High Pass Filter 30 Thresholded Red Edge Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000236
+name: Fourier Transform High Pass Filter 40 Thresholded Red Edge Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000237
+name: Fourier Transform High Pass Filter 20 Thresholded NIR Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000238
+name: Fourier Transform High Pass Filter 30 Thresholded NIR Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000239
+name: Fourier Transform High Pass Filter 40 Thresholded NIR Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000240
+name: Fourier Transform High Pass Filter 20 Thresholded MIR Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000241
+name: Fourier Transform High Pass Filter 30 Thresholded MIR Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000242
+name: Fourier Transform High Pass Filter 40 Thresholded MIR Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000243
+name: Fourier Transform High Pass Filter 20 Thresholded FIR Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000244
+name: Fourier Transform High Pass Filter 30 Thresholded FIR Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000245
+name: Fourier Transform High Pass Filter 40 Thresholded FIR Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000246
+name: Fourier Transform High Pass Filter 20 Thresholded Thermal IR Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000247
+name: Fourier Transform High Pass Filter 30 Thresholded Thermal IR Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000248
+name: Fourier Transform High Pass Filter 40 Thresholded Thermal IR Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000249
+name: Fourier Transform High Pass Filter 20 Thresholded Blank and White Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000250
+name: Fourier Transform High Pass Filter 30 Thresholded Blank and White Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000251
+name: Fourier Transform High Pass Filter 40 Thresholded Blank and White Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000252
+name: Fourier Transform High Pass Filter 20 Thresholded Blue Image From RGB Color Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000253
+name: Fourier Transform High Pass Filter 30 Thresholded Blue Image From RGB Color Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000254
+name: Fourier Transform High Pass Filter 40 Thresholded Blue Image From RGB Color Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000255
+name: Fourier Transform High Pass Filter 20 Thresholded Green Image From RGB Color Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000256
+name: Fourier Transform High Pass Filter 30 Thresholded Green Image From RGB Color Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000257
+name: Fourier Transform High Pass Filter 40 Thresholded Green Image From RGB Color Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000258
+name: Fourier Transform High Pass Filter 20 Thresholded Red Image From RGB Color Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000259
+name: Fourier Transform High Pass Filter 30 Thresholded Red Image From RGB Color Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000260
+name: Fourier Transform High Pass Filter 40 Thresholded Red Image From RGB Color Denoised Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000261
+name: Fourier Transform High Pass Filter 20 Blue Image From RGB Color Denoised TGI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000262
+name: Fourier Transform High Pass Filter 30 Blue Image From RGB Color Denoised TGI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000263
+name: Fourier Transform High Pass Filter 40 Blue Image From RGB Color Denoised TGI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000264
+name: Fourier Transform High Pass Filter 20 Green Image From RGB Color Denoised TGI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000265
+name: Fourier Transform High Pass Filter 30 Green Image From RGB Color Denoised TGI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000266
+name: Fourier Transform High Pass Filter 40 Green Image From RGB Color Denoised TGI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000267
+name: Fourier Transform High Pass Filter 20 Red Image From RGB Color Denoised TGI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000268
+name: Fourier Transform High Pass Filter 30 Red Image From RGB Color Denoised TGI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000269
+name: Fourier Transform High Pass Filter 40 Red Image From RGB Color Denoised TGI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000270
+name: Fourier Transform High Pass Filter 20 Blue Image From RGB Color Denoised Thresholded TGI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000271
+name: Fourier Transform High Pass Filter 30 Blue Image From RGB Color Denoised Thresholded TGI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000272
+name: Fourier Transform High Pass Filter 40 Blue Image From RGB Color Denoised Thresholded TGI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000273
+name: Fourier Transform High Pass Filter 20 Green Image From RGB Color Denoised Thresholded TGI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000274
+name: Fourier Transform High Pass Filter 30 Green Image From RGB Color Denoised Thresholded TGI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000275
+name: Fourier Transform High Pass Filter 40 Green Image From RGB Color Denoised Thresholded TGI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000276
+name: Fourier Transform High Pass Filter 20 Red Image From RGB Color Denoised Thresholded TGI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000277
+name: Fourier Transform High Pass Filter 30 Red Image From RGB Color Denoised Thresholded TGI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000278
+name: Fourier Transform High Pass Filter 40 Red Image From RGB Color Denoised Thresholded TGI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000279
+name: Fourier Transform High Pass Filter 20 Blue Image From RGB Color Denoised VARI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000280
+name: Fourier Transform High Pass Filter 30 Blue Image From RGB Color Denoised VARI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000281
+name: Fourier Transform High Pass Filter 40 Blue Image From RGB Color Denoised VARI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000282
+name: Fourier Transform High Pass Filter 20 Green Image From RGB Color Denoised VARI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000283
+name: Fourier Transform High Pass Filter 30 Green Image From RGB Color Denoised VARI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000284
+name: Fourier Transform High Pass Filter 40 Green Image From RGB Color Denoised VARI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000285
+name: Fourier Transform High Pass Filter 20 Red Image From RGB Color Denoised VARI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000286
+name: Fourier Transform High Pass Filter 30 Red Image From RGB Color Denoised VARI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000287
+name: Fourier Transform High Pass Filter 40 Red Image From RGB Color Denoised VARI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000288
+name: Fourier Transform High Pass Filter 20 Blue Image From RGB Color Denoised Thresholded VARI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000289
+name: Fourier Transform High Pass Filter 30 Blue Image From RGB Color Denoised Thresholded VARI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000290
+name: Fourier Transform High Pass Filter 40 Blue Image From RGB Color Denoised Thresholded VARI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000291
+name: Fourier Transform High Pass Filter 20 Green Image From RGB Color Denoised Thresholded VARI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000292
+name: Fourier Transform High Pass Filter 30 Green Image From RGB Color Denoised Thresholded VARI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000293
+name: Fourier Transform High Pass Filter 40 Green Image From RGB Color Denoised Thresholded VARI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000294
+name: Fourier Transform High Pass Filter 20 Red Image From RGB Color Denoised Thresholded VARI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000295
+name: Fourier Transform High Pass Filter 30 Red Image From RGB Color Denoised Thresholded VARI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000296
+name: Fourier Transform High Pass Filter 40 Red Image From RGB Color Denoised Thresholded VARI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000297
+name: Fourier Transform High Pass Filter 20 NIR Image From 3 Channel Merged NRN Denoised NDVI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000298
+name: Fourier Transform High Pass Filter 30 NIR Image From 3 Channel Merged NRN Denoised NDVI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000299
+name: Fourier Transform High Pass Filter 40 NIR Image From 3 Channel Merged NRN Denoised NDVI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000300
+name: Fourier Transform High Pass Filter 20 Red Image From 3 Channel Merged NRN Denoised NDVI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000301
+name: Fourier Transform High Pass Filter 30 Red Image From 3 Channel Merged NRN Denoised NDVI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000302
+name: Fourier Transform High Pass Filter 40 Red Image From 3 Channel Merged NRN Denoised NDVI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000303
+name: Fourier Transform High Pass Filter 20 NIR Image From 3 Channel Merged NRN Denoised Thresholded NDVI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000304
+name: Fourier Transform High Pass Filter 30 NIR Image From 3 Channel Merged NRN Denoised Thresholded NDVI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000305
+name: Fourier Transform High Pass Filter 40 NIR Image From 3 Channel Merged NRN Denoised Thresholded NDVI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000306
+name: Fourier Transform High Pass Filter 20 Red Image From 3 Channel Merged NRN Denoised Thresholded NDVI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000307
+name: Fourier Transform High Pass Filter 30 Red Image From 3 Channel Merged NRN Denoised Thresholded NDVI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000308
+name: Fourier Transform High Pass Filter 40 Red Image From 3 Channel Merged NRN Denoised Thresholded NDVI Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000309
+name: Fourier Transform High Pass Filter 20 NIR Image From 3 Channel Merged NReN Denoised NDRE Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000310
+name: Fourier Transform High Pass Filter 30 NIR Image From 3 Channel Merged NReN Denoised NDRE Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000311
+name: Fourier Transform High Pass Filter 40 NIR Image From 3 Channel Merged NReN Denoised NDRE Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000312
+name: Fourier Transform High Pass Filter 20 Red Edge Image From 3 Channel Merged NReN Denoised NDRE Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000313
+name: Fourier Transform High Pass Filter 30 Red Edge Image From 3 Channel Merged NReN Denoised NDRE Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000314
+name: Fourier Transform High Pass Filter 40 Red Edge Image From 3 Channel Merged NReN Denoised NDRE Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000315
+name: Fourier Transform High Pass Filter 20 NIR Image From 3 Channel Merged NReN Denoised Thresholded NDRE Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000316
+name: Fourier Transform High Pass Filter 30 NIR Image From 3 Channel Merged NReN Denoised Thresholded NDRE Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000317
+name: Fourier Transform High Pass Filter 40 NIR Image From 3 Channel Merged NReN Denoised Thresholded NDRE Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000318
+name: Fourier Transform High Pass Filter 20 Red Edge Image From 3 Channel Merged NReN Denoised Thresholded NDRE Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000319
+name: Fourier Transform High Pass Filter 30 Red Edge Image From 3 Channel Merged NReN Denoised Thresholded NDRE Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000320
+name: Fourier Transform High Pass Filter 40 Red Edge Image From 3 Channel Merged NReN Denoised Thresholded NDRE Vegetative Index Masked Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000321
+name: Raster DSM Denoised Original Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000322
+name: Thresholded Raster DSM Denoised Original Image
+def: "" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000323
+name: Raster DSM
+def: "A single channel image capturing the elevation map from a digital surface map (DSM) as a raster" []
+relationship: is_a ISOL:0000001
+
+[Term]
+id: ISOL:0000324
+name: Standard 4 Image Montage
+def: "Standard 4 Image Montage of RGB, NRN, NReN, NIR background removed with threshold images" []
+relationship: is_a ISOL:0000101
+
+[Term]
+id: ISOL:0000325
+name: Keras Tensorflow Models
+relationship: is_a ISOL:0000000
+
+[Term]
+id: ISOL:0000326
+name: Keras Predicted KerasTunerCNNSequentialSoftmaxCategorical
+def: "Keras Predicted using KerasTunerCNNSequentialSoftmaxCategorical model" []
+relationship: is_a ISOL:0000325
+
+[Term]
+id: ISOL:0000327
+name: Keras Predicted SimpleKerasTunerCNNSequentialSoftmaxCategorical
+def: "Keras Predicted using SimpleKerasTunerCNNSequentialSoftmaxCategorical model" []
+relationship: is_a ISOL:0000325
+
+[Term]
+id: ISOL:0000328
+name: Keras Predicted KerasCNNInceptionResNetV2ImageNetWeights
+def: "Keras Predicted using KerasCNNInceptionResNetV2ImageNetWeights model" []
+relationship: is_a ISOL:0000325
+
+[Term]
+id: ISOL:0000329
+name: Keras Predicted KerasCNNInceptionResNetV2
+def: "Keras Predicted using KerasCNNInceptionResNetV2 model" []
+relationship: is_a ISOL:0000325
+
+[Term]
+id: ISOL:0000330
+name: Keras Predicted KerasCNNLSTMDenseNet121ImageNetWeights
+def: "Keras Predicted using KerasCNNLSTMDenseNet121ImageNetWeights model" []
+relationship: is_a ISOL:0000325
+
+[Term]
+id: ISOL:0000331
+name: Keras Predicted KerasCNNDenseNet121ImageNetWeights
+def: "Keras Predicted using KerasCNNDenseNet121ImageNetWeights model" []
+relationship: is_a ISOL:0000325
+
+[Term]
+id: ISOL:0000332
+name: Keras Predicted KerasCNNSequentialSoftmaxCategorical
+def: "Keras Predicted using KerasCNNSequentialSoftmaxCategorical model" []
+relationship: is_a ISOL:0000325
+
+[Term]
+id: ISOL:0000333
+name: Keras Predicted KerasCNNMLPExample
+def: "Keras Predicted using KerasCNNMLPExample model" []
+relationship: is_a ISOL:0000325
+
+[Term]
+id: ISOL:0000336
+name: Keras Autoencoder 64_32_Conv_16_Latent
+def: "Keras Autoencoder 64_32_Conv_16_Latent model" []
+relationship: is_a ISOL:0000325

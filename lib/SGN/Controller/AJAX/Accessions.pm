@@ -1,4 +1,5 @@
 
+
 =head1 NAME
 
 SGN::Controller::AJAX::Accessions - a REST controller class to provide the
@@ -17,7 +18,6 @@ Jeremy Edwards <jde22@cornell.edu>
 package SGN::Controller::AJAX::Accessions;
 
 use Moose;
-use JSON -support_by_pp;
 use List::MoreUtils qw /any /;
 use CXGN::Stock::StockLookup;
 use CXGN::BreedersToolbox::Accessions;
@@ -30,14 +30,17 @@ use Data::Dumper;
 use Try::Tiny;
 use CXGN::Stock::ParseUpload;
 use CXGN::BreederSearch;
-#use JSON;
+use Encode;
+#use Encode::Detect;
+use JSON::XS qw | decode_json |;
+use utf8;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON'  },
    );
 
 sub verify_accession_list : Path('/ajax/accession_list/verify') : ActionClass('REST') { }
@@ -49,22 +52,50 @@ sub verify_accession_list_GET : Args(0) {
 }
 
 sub verify_accession_list_POST : Args(0) {
-  my ($self, $c) = @_;
+    my ($self, $c) = @_;
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
 
-  my $accession_list_json = $c->req->param('accession_list');
-  my $organism_list_json = $c->req->param('organism_list');
-  my @accession_list = @{_parse_list_from_json($accession_list_json)};
-  my @organism_list = $organism_list_json ? @{_parse_list_from_json($organism_list_json)} : [];
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else {
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
 
-  my $do_fuzzy_search = $c->req->param('do_fuzzy_search');
+    my $accession_list_json = $c->req->param('accession_list');
+    my $organism_list_json = $c->req->param('organism_list');
+    my @accession_list = @{_parse_list_from_json($c, $accession_list_json)};
+    my @organism_list = $organism_list_json ? @{_parse_list_from_json($c, $organism_list_json)} : [];
 
-  if ($do_fuzzy_search) {
-      $self->do_fuzzy_search($c, \@accession_list, \@organism_list);
-  }
-  else {
-      $self->do_exact_search($c, \@accession_list, \@organism_list);
-  }
+    my $do_fuzzy_search = $c->req->param('do_fuzzy_search');
+    if ($user_role ne 'curator' && !$do_fuzzy_search) {
+        $c->stash->{rest} = {error=>'Only a curator can add accessions without using the fuzzy search!'};
+        $c->detach();
+    }
 
+    if ($do_fuzzy_search) {
+        $self->do_fuzzy_search($c, \@accession_list, \@organism_list);
+    }
+    else {
+        $self->do_exact_search($c, \@accession_list, \@organism_list);
+    }
 }
 
 sub do_fuzzy_search {
@@ -100,7 +131,6 @@ sub do_fuzzy_search {
     s/^\s+|\s+$//g for @organism_list;
 
     my $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance, 'accession');
-    #print STDERR "\n\nAccessionFuzzyResult:\n".Data::Dumper::Dumper($fuzzy_search_result)."\n\n";
     print STDERR "DoFuzzySearch 2".localtime()."\n";
 
     $found_accessions = $fuzzy_search_result->{'found'};
@@ -166,6 +196,7 @@ sub do_exact_search {
         fuzzy_organisms => [],
         found_organisms => []
     };
+
     #print STDERR Dumper($rest);
     $c->stash->{rest} = $rest;
 }
@@ -173,6 +204,7 @@ sub do_exact_search {
 sub verify_accessions_file : Path('/ajax/accessions/verify_accessions_file') : ActionClass('REST') { }
 sub verify_accessions_file_POST : Args(0) {
     my ($self, $c) = @_;
+    
     my $user_id;
     my $user_name;
     my $user_role;
@@ -201,6 +233,19 @@ sub verify_accessions_file_POST : Args(0) {
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $upload = $c->req->upload('new_accessions_upload_file');
+    my $do_fuzzy_search = $user_role eq 'curator' && !$c->req->param('fuzzy_check_upload_accessions') ? 0 : 1;
+
+    if ($user_role ne 'curator' && !$do_fuzzy_search) {
+        $c->stash->{rest} = {error=>'Only a curator can add accessions without using the fuzzy search!'};
+        $c->detach();
+    }
+
+    # These roles are required by CXGN::UploadFile
+    if ($user_role ne 'curator' && $user_role ne 'submitter' && $user_role ne 'sequencer' ) {
+        $c->stash->{rest} = {error=>'Only a curator, submitter or sequencer can upload a file'};
+        $c->detach();
+    }
+
     my $subdirectory = "accessions_spreadsheet_upload";
     my $upload_original_name = $upload->filename();
     my $upload_tempfile = $upload->tempname;
@@ -226,10 +271,9 @@ sub verify_accessions_file_POST : Args(0) {
     unlink $upload_tempfile;
 
     my @editable_stock_props = split ',', $c->config->{editable_stock_props};
-    my $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@editable_stock_props);
+    my $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@editable_stock_props, do_fuzzy_search=>$do_fuzzy_search);
     $parser->load_plugin('AccessionsXLS');
     my $parsed_data = $parser->parse();
-    #print STDERR Dumper $parsed_data;
 
     if (!$parsed_data) {
         my $return_error = '';
@@ -256,8 +300,10 @@ sub verify_accessions_file_POST : Args(0) {
         push @accession_names, $val->{germplasmName};
         $full_accessions{$val->{germplasmName}} = $val;
     }
+
     my $new_list_id = CXGN::List::create_list($c->dbc->dbh, "AccessionsIn".$upload_original_name.$timestamp, 'Autocreated when upload accessions from file '.$upload_original_name.$timestamp, $user_id);
     my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id => $new_list_id } );
+
     $list->add_bulk(\@accession_names);
     $list->type('accessions');
 
@@ -272,11 +318,12 @@ sub verify_accessions_file_POST : Args(0) {
         fuzzy_organisms => $parsed_data->{fuzzy_organisms},
         found_organisms => $parsed_data->{found_organisms}
     );
-
+    print STDERR "verify_accessions_file returns: " . Dumper %return;
     if ($parsed_data->{error_string}){
         $return{error_string} = $parsed_data->{error_string};
     }
 
+        
     $c->stash->{rest} = \%return;
 }
 
@@ -286,8 +333,8 @@ sub verify_fuzzy_options_POST : Args(0) {
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $accession_list_id = $c->req->param('accession_list_id');
-    my $fuzzy_option_hash = decode_json($c->req->param('fuzzy_option_data'));
-    my $names_to_add = decode_json($c->req->param('names_to_add'));
+    my $fuzzy_option_hash = decode_json( encode("utf8", $c->req->param('fuzzy_option_data')));
+    my $names_to_add = _parse_list_from_json($c, $c->req->param('names_to_add'));
     #print STDERR Dumper $fuzzy_option_hash;
     my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $accession_list_id } );
 
@@ -328,9 +375,9 @@ sub add_accession_list : Path('/ajax/accession_list/add') : ActionClass('REST') 
 sub add_accession_list_POST : Args(0) {
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    #print STDERR Dumper $c->req->param('full_info');
-    my $full_info = $c->req->param('full_info') ? decode_json $c->req->param('full_info') : '';
-    my $allowed_organisms = $c->req->param('allowed_organisms') ? decode_json $c->req->param('allowed_organisms') : [];
+
+    my $full_info = $c->req->param('full_info') ? _parse_list_from_json($c, $c->req->param('full_info')) : '';
+    my $allowed_organisms = $c->req->param('allowed_organisms') ? _parse_list_from_json($c, $c->req->param('allowed_organisms')) : [];
     my %allowed_organisms = map {$_=>1} @$allowed_organisms;
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
@@ -350,6 +397,7 @@ sub add_accession_list_POST : Args(0) {
     my $main_production_site_url = $c->config->{main_production_site_url};
     my @added_fullinfo_stocks;
     my @added_stocks;
+
     my $coderef_bcs = sub {
         foreach (@$full_info){
             if (exists($allowed_organisms{$_->{species}})){
@@ -397,6 +445,7 @@ sub add_accession_list_POST : Args(0) {
                     introgression_chromosome=>$_->{introgression_chromosome},
                     introgression_start_position_bp=>$_->{introgression_start_position_bp},
                     introgression_end_position_bp=>$_->{introgression_end_position_bp},
+                    other_editable_stock_props=>$_->{other_editable_stock_props},
                     sp_person_id => $user_id,
                     user_name => $user_name,
                     modification_note => 'Bulk load of accession information'
@@ -470,7 +519,7 @@ sub fuzzy_response_download_POST : Args(0) {
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $fuzzy_json = $c->req->param('fuzzy_response');
-    my $fuzzy_response = decode_json $fuzzy_json;
+    my $fuzzy_response = decode_json(encode("utf8", $fuzzy_json));
     #print STDERR Dumper $fuzzy_response;
 
     my $synonym_hash_lookup = CXGN::Stock::StockLookup->new({schema => $schema})->get_synonym_hash_lookup();
@@ -529,18 +578,42 @@ sub population_members_GET : Args(1) {
 }
 
 sub _parse_list_from_json {
-  my $list_json = shift;
-  my $json = new JSON;
+    my $c = shift;
+    my $list_json = shift;
+    my $json = JSON::XS->new();
+
   if ($list_json) {
-    my $decoded_list = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
-    #my $decoded_list = decode_json($list_json);
-    my @array_of_list_items = @{$decoded_list};
+      #my $decoded_list = $json->allow_nonref->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
+      debug($c, "LIST_JSON is utf8? ".utf8::is_utf8($list_json)." valid utf8? ".utf8::valid($list_json)."\n");
+      my $decoded_list = $json->decode($list_json);# _json(encode("UTF-8", $list_json));
+     #my $decoded_list = decode_json($list_json);
+      
+      my @array_of_list_items = ();
+      if (ref($decoded_list) eq "ARRAY" ) {
+	  @array_of_list_items = @{$decoded_list};
+      }
+      else {
+	  debug($c, "Dont know what to do with $decoded_list");
+      }
+
     return \@array_of_list_items;
   }
-  else {
+    else {
+
     return;
   }
 }
 
+sub debug {
+    my $c = shift;
+    my $message = shift;
+
+    my $encoding = find_encoding($message);
+    open(my $F, ">> :encoding(UTF-8)", "/tmp/error_log.txt") || die "Can't open error_log.txt";
+
+    print $F "### Request from ".$c->req->referer()."\n";
+    print $F "### ENCODING: $encoding\n$message\n==========\n";
+    close($F);
+}
 
 1;

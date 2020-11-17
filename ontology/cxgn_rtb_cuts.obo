@@ -1,0 +1,184 @@
+format-version: 1.2
+default-namespace: cxgn_rtb_cuts
+ontology: cxgn_tuber_cuts
+
+
+[Term]
+id: TCUT:0000000
+name: Tuber cut
+
+[Term]
+id: TCUT:0000001
+name: cube 1
+is_a: TCUT:0000000 ! Tuber cut
+
+[Term]
+id: TCUT:0000002
+name: cube 2
+is_a: TCUT:0000000 ! Tuber cut
+
+[Term]
+id: TCUT:0000003
+name: cube 3
+is_a: TCUT:0000000 ! Tuber cut
+
+[Term]
+id: TCUT:0000004
+name: cube 4
+is_a: TCUT:0000000 ! Tuber cut
+
+[Term]
+id: TCUT:0000005
+name: cube 5
+is_a: TCUT:0000000 ! Tuber cut
+
+[Term]
+id: TCUT:0000006
+name: slice 1
+is_a: TCUT:0000000 ! Tuber cut
+
+[Term]
+id: TCUT:0000007
+name: slice 2
+is_a: TCUT:0000000 ! Tuber cut
+
+[Term]
+id: TCUT:0000008
+name: slice 3
+is_a: TCUT:0000000 ! Tuber cut
+
+[Term]
+id: TCUT:0000009
+name: slice 4
+is_a: TCUT:0000000 ! Tuber cut
+
+[Term]
+id: TCUT:0000010
+name: slice 5
+is_a: TCUT:0000000 ! Tuber cut
+
+[Term]
+id: TCUT:0000014
+name: cube 1 slice 1
+is_a: TCUT:0000001 ! cube 1
+
+[Term]
+id: TCUT:0000015
+name: cube 1 slice 2
+is_a: TCUT:0000001 ! cube 1
+
+[Term]
+id: TCUT:0000016
+name: cube 1 slice 3
+is_a: TCUT:0000001 ! cube 1
+
+[Term]
+id: TCUT:0000017
+name: cube 1 slice 4
+is_a: TCUT:0000001 ! cube 1
+
+[Term]
+id: TCUT:0000018
+name: cube 1 slice 5
+is_a: TCUT:0000001 ! cube 1
+
+[Term]
+id: TCUT:0000022
+name: cube 2 slice 1
+is_a: TCUT:0000002 ! cube 2
+
+[Term]
+id: TCUT:0000023
+name: cube 2 slice 2
+is_a: TCUT:0000002 ! cube 2
+
+[Term]
+id: TCUT:0000024
+name: cube 2 slice 3
+is_a: TCUT:0000002 ! cube 2
+
+[Term]
+id: TCUT:0000025
+name: cube 2 slice 4
+is_a: TCUT:0000002 ! cube 2
+
+[Term]
+id: TCUT:0000026
+name: cube 2 slice 5
+is_a: TCUT:0000002 ! cube 2
+
+[Term]
+id: TCUT:0000030
+name: cube 3 slice 1
+is_a: TCUT:0000003 ! cube 3
+
+[Term]
+id: TCUT:0000031
+name: cube 3 slice 2
+is_a: TCUT:0000003 ! cube 3
+
+[Term]
+id: TCUT:0000032
+name: cube 3 slice 3
+is_a: TCUT:0000003 ! cube 3
+
+[Term]
+id: TCUT:0000033
+name: cube 3 slice 4
+is_a: TCUT:0000003 ! cube 3
+
+[Term]
+id: TCUT:0000034
+name: cube 3 slice 5
+is_a: TCUT:0000003 ! cube 3
+
+[Term]
+id: TCUT:0000038
+name: cube 4 slice 1
+is_a: TCUT:0000004 ! cube 4
+
+[Term]
+id: TCUT:0000039
+name: cube 4 slice 2
+is_a: TCUT:0000004 ! cube 4
+
+[Term]
+id: TCUT:0000040
+name: cube 4 slice 3
+is_a: TCUT:0000004 ! cube 4
+
+[Term]
+id: TCUT:0000041
+name: cube 4 slice 4
+is_a: TCUT:0000004 ! cube 4
+
+[Term]
+id: TCUT:0000042
+name: cube 4 slice 5
+is_a: TCUT:0000004 ! cube 4
+
+[Term]
+id: TCUT:0000046
+name: cube 5 slice 1
+is_a: TCUT:0000005 ! cube 5
+
+[Term]
+id: TCUT:0000047
+name: cube 5 slice 2
+is_a: TCUT:0000005 ! cube 5
+
+[Term]
+id: TCUT:0000048
+name: cube 5 slice 3
+is_a: TCUT:0000005 ! cube 5
+
+[Term]
+id: TCUT:0000049
+name: cube 5 slice 4
+is_a: TCUT:0000005 ! cube 5
+
+[Term]
+id: TCUT:0000050
+name: cube 5 slice 5
+is_a: TCUT:0000005 ! cube 5
+

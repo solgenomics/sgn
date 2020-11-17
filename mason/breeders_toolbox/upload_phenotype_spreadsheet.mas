@@ -29,6 +29,7 @@
                         <select class="form-control" id="upload_spreadsheet_phenotype_file_format" name="upload_spreadsheet_phenotype_file_format">
                             <option value="detailed">Detailed</option>
                             <option value="simple">Simple</option>
+                            <option value="associated_images">Associated Images</option>
                         </select>
                     </div>
                 </div>
@@ -55,6 +56,14 @@
                     <label class="col-sm-3 control-label">Phenotype Spreadsheet: </label>
                     <div class="col-sm-9" >
                         <input type="file" id="upload_spreadsheet_phenotype_file_input" name="upload_spreadsheet_phenotype_file_input" encoding="multipart/form-data" />
+                    </div>
+                </div>
+                <div id="phenotype_upload_associated_images_div" style="display:none">
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Associated Images (.zip): </label>
+                        <div class="col-sm-9" >
+                            <input type="file" id="upload_spreadsheet_phenotype_associated_images_file_input" name="upload_spreadsheet_phenotype_associated_images_file_input" encoding="multipart/form-data" />
+                        </div>
                     </div>
                 </div>
 
@@ -94,7 +103,7 @@
 
             <h4>Required Data:</h4>
             <ul>
-                <li>Please click the above button to generate the required phenotype spreadsheet</li>
+                <li>Please click the above button to generate the required phenotype spreadsheet.</li>
             </ul>
 
             <h4>Notes:</h4>
@@ -108,6 +117,8 @@
             <ul>
                 <li>The "Simple" format requires only a column called 'observationunit_name' followed by your trait columns.</li>
                 <li>The "Detailed" format includes a special header as well as additional columns for design information.</li>
+                <li>The "NIRS" format is built on top of the simple format - a column called 'observationunit_name' followed by trait columns derived from the NIR spectra, followed by columns of NIR spectra data themselves. Trait column names must come form the trait ontology but NIR spectra column names should simply be copied from whateve standard output file the NIR device produces.
+                <li>The "Associated Images" format is useful for uploading a zipfile of images in association with phenotype values. It has the following columns: observationunit_name, observationvariable_name, phenotype_value, phenotype_timestamp, image_name, username. Image name should exist as the image name in the uploaded zipfile.</li>
             </ul>
 
             <h4>Timestamps:</h4>
@@ -165,6 +176,15 @@ jQuery(document).ready(function() {
 
     jQuery("#phenotype_upload_spreadsheet_format_info").click( function () {
         jQuery("#phenotype_upload_spreadsheet_info_dialog" ).modal("show");
+    });
+
+    jQuery('#upload_spreadsheet_phenotype_file_format').change(function(){
+        if (jQuery(this).val() == 'associated_images') {
+            jQuery('#phenotype_upload_associated_images_div').show();
+        }
+        else {
+            jQuery('#phenotype_upload_associated_images_div').hide();
+        }
     });
 
 });

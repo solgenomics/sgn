@@ -7,7 +7,7 @@ displays list of prediction populations and their GS output.
 <%args>
 
 $result => ''
-$download_prediction =>''
+$selection_prediction_download
 $analyzed_traits
 $pop_id
 $project_name
@@ -31,7 +31,7 @@ if ($c->req->path =~ /solgs\/traits\/all\/population/) {
 </%perl>
 
 
-<& /util/import_javascript.mas, classes => ["solGS.solGS", "jquery.dataTables", "solGS.selectionPopulations",  "solGS.ajaxAutocomplete"] &>
+<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.Dataset", "jquery.dataTables", "solGS.selectionPopulations",  "solGS.ajaxAutocomplete"] &>
 
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 

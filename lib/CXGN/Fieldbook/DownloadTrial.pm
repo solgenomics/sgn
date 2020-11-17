@@ -20,6 +20,7 @@ my $create_fieldbook = CXGN::Fieldbook::DownloadTrial->new({
     data_level => 'plots',
     treatment_project_ids => [1],
     selected_columns => {"plot_name"=>1,"block_number"=>1,"plot_number"=>1},
+    include_measured => 1,
     selected_trait_ids => [2,3],
 });
 
@@ -106,7 +107,7 @@ has 'data_level' => (
     isa => 'Str',
     default => 'plots',
 );
-  
+
 has 'file_metadata' => (isa => 'Str', is => 'rw', predicate => 'has_file_metadata');
 
 has 'treatment_project_ids' => (
@@ -120,16 +121,35 @@ has 'selected_columns' => (
     default => sub { {"plot_name"=>1, "plot_number"=>1} }
 );
 
+has 'include_measured'=> (
+    is => 'rw',
+    isa => 'Str',
+    default => 'true',
+);
+
+has 'use_synonyms'=> (
+    is => 'rw',
+    isa => 'Str',
+    default => 'true',
+);
+
 has 'selected_trait_ids'=> (
     is => 'ro',
     isa => 'ArrayRef[Int]|Undef',
 );
 
-sub download { 
+has 'trial_stock_type'=> (
+    is => 'rw',
+    isa => 'Str',
+    required => 0,
+    default => 'accession'
+);
+
+sub download {
     my $self = shift;
     my %errors;
     my @error_messages;
-    
+
     my $schema = $self->bcs_schema();
     my $trial_id = $self->trial_id();
     my $tempfile = $self->tempfile();
@@ -147,7 +167,10 @@ sub download {
         data_level => $self->data_level,
         treatment_project_ids => $self->treatment_project_ids,
         selected_columns => $self->selected_columns,
-        selected_trait_ids => $self->selected_trait_ids
+        include_measured => $self->include_measured,
+        use_synonyms => $self->use_synonyms,
+        selected_trait_ids => $self->selected_trait_ids,
+        trial_stock_type => $self->trial_stock_type
     });
     my $output = $trial_layout_download->get_layout_output();
     if ($output->{error_messages}){
@@ -231,7 +254,7 @@ sub download {
 
     move($tempfile,$file_destination);
     unlink $tempfile;
-    
+
     my $result = $file_row->file_id;
     print STDERR "FIeldbook file generated $file_destination ".localtime()."\n";
     return {result => $result, file => $file_destination, file_id=>$file_row->file_id() };

@@ -627,4 +627,33 @@ sub cross_wishlist_download : Path('/cross_wishlist/file_download/') Args(1) {
     $c->res->body($contents);
 }
 
+
+sub family_name_detail : Path('/family') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $id = shift;
+    my $family_type_id = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema"), 'family_name', 'stock_type')->cvterm_id();
+
+    #get family_name from stock id
+    my $family = $c->dbic_schema("Bio::Chado::Schema")->resultset("Stock::Stock")->search( { stock_id => $id, type_id => $family_type_id } )->first();
+
+    my $family_id;
+    my $family_name;
+	if (!$family) {
+    	$c->stash->{template} = '/generic_message.mas';
+    	$c->stash->{message} = 'The requested family name does not exist.';
+    	return;
+    } else {
+        $family_id = $family->stock_id();
+		$family_name = $family->uniquename();
+    }
+
+    $c->stash->{family_name} = $family_name;
+    $c->stash->{user_id} = $c->user ? $c->user->get_object()->get_sp_person_id() : undef;
+    $c->stash->{family_id} = $family_id;
+    $c->stash->{template} = '/breeders_toolbox/cross/family.mas';
+
+}
+
+
 1;

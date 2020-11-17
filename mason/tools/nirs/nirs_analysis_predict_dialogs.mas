@@ -1,0 +1,211 @@
+
+<!--button class="btn btn-primary" id="nirs_analysis_prediction_dialog_show">Predict Phenotypes From Spectral Model</button-->
+
+<div class="modal fade" id="nirs_analysis_prediction_dialog" name="nirs_analysis_prediction_dialog" tabindex="-1" role="dialog" aria-labelledby="nirsAnalysisPredictionDialog" data-backdrop="static">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="nirsAnalysisPredictionDialog">Predict Phenotypes From Spectral Model</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <&| /util/workflow.mas, id=> "nirs_analysis_prediction_workflow" &>
+                <&| /util/workflow.mas:step, title=> "Intro" &>
+                    <& /page/page_title.mas, title=>"This workflow will guide you through predicting phenotypes from trained spectral models in the database." &>
+                    <br/><br/>
+                    <center>
+                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Test Dataset" &>
+                    <& /page/page_title.mas, title=>"Select the dataset you are interested in predicting phenotypes for (the accessions or plots or tissues samples in the dataset need to have spectra uploaded):" &>
+                    <br/><br/>
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Dataset: </label>
+                            <div class="col-sm-11" >
+                                <div id="nirs_analysis_prediction_dataset_select_div"></div>
+                            </div>
+                        </div>
+                    </form>
+                    <center>
+                    <button class="btn btn-primary" id="nirs_analysis_prediction_dataset_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Spectral Model" &>
+                    <& /page/page_title.mas, title=>"Select the spectral model to use in predictions" &>
+
+                    <center>
+                    <button class="btn btn-info" id="nirs_analysis_prediction_dataset_info">More Info</button>
+                    </center>
+                    <hr>
+
+                    <div id="nirs_analysis_prediction_model_select_div"></div>
+
+                    <center>
+                    <button class="btn btn-primary" id="nir_analysis_prediction_model_step">Predict</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Summary" &>
+                    <& /page/page_title.mas, title=>"Summary of the predictions" &>
+
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Do you want to save the prediction results?: </label>
+                            <div class="col-sm-9" >
+                                <button class="btn btn-primary" id="nir_analysis_prediction_analysis_save_step">Save the Results</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="nir_analysis_prediction_analysis_predictions"></div>
+
+                </&>
+            </&>
+
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="nirs_analysis_prediction_dialog_info" name="nirs_analysis_prediction_dialog_info" tabindex="-1" role="dialog" aria-labelledby="nirsAnalysisPredictionInfoDialog" data-backdrop="static">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="nirsAnalysisPredictionInfoDialog">Predict Phenotypes from Spectral Model</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <h1>More </h1>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+jQuery(document).ready(function(){
+
+    jQuery('#nirs_analysis_prediction_dataset_info').click(function(){
+        jQuery('#nirs_analysis_prediction_dialog_info').modal('show');
+    });
+
+    jQuery('#nirs_analysis_prediction_dialog_show').click(function(){
+        jQuery('#nirs_analysis_prediction_dialog').modal('show');
+
+        get_select_box('datasets','nirs_analysis_prediction_dataset_select_div', {'checkbox_name':'nirs_analysis_prediction_dataset_select_id'});
+    });
+
+    var nirs_analysis_prediction_dataset_id;
+    jQuery('#nirs_analysis_prediction_dataset_select_step').click(function(){
+        var selected = [];
+        jQuery('input[name="nirs_analysis_prediction_dataset_select_id"]:checked').each(function() {
+            selected.push(jQuery(this).val());
+        });
+
+        if(selected.length > 1 || selected.length == 0) {
+            alert('Please select one dataset!');
+            return false;
+        }
+        else {
+            nirs_analysis_prediction_dataset_id = selected[0];
+
+            get_select_box('trained_nirs_models','nirs_analysis_prediction_model_select_div', {'checkbox_name':'nirs_analysis_prediction_model_select_id'});
+
+            Workflow.complete("#nirs_analysis_prediction_dataset_select_step");
+            Workflow.focus('#nirs_analysis_prediction_workflow', 2);
+            window.scrollTo(0,0);
+        }
+    });
+
+    var nirs_analysis_prediction_model_id;
+    jQuery('#nir_analysis_prediction_model_step').click(function(){
+        var selected = [];
+        jQuery('input[name="nirs_analysis_prediction_model_select_id"]:checked').each(function() {
+            selected.push(jQuery(this).val());
+        });
+
+        if(selected.length > 1 || selected.length == 0) {
+            alert('Please select one model!');
+            return false;
+        }
+        else {
+            nirs_analysis_prediction_model_id = selected[0];
+
+            jQuery.ajax({
+                url : '/ajax/Nirs/generate_predictions',
+                type : 'POST',
+                data : {
+                    'model_id' : nirs_analysis_prediction_model_id,
+                    'dataset_id' : nirs_analysis_prediction_dataset_id,
+                },
+                beforeSend: function(){
+                    jQuery('#working_modal').modal('show');
+                },
+                success: function(response){
+                    console.log(response);
+                    jQuery('#working_modal').modal('hide');
+
+                    if (response.error) {
+                        alert(response.error);
+                        return false;
+                    }
+
+                    var html = "<table class='table table-bordered table-hover'><thead><tr><th>Stock</th><th>Prediction</th></tr></thead><tbody>";
+                    for (var i=0; i<response.unique_plots.length; i++) {
+                        html = html + '<tr><td>'+response.unique_plots[i]+'</td><td>'+response.result_predictions[response.unique_plots[i]][response.unique_traits[0]][0]+'</td></tr>';
+                    }
+                    html = html + "</tbody></table>";
+                    jQuery('#nir_analysis_prediction_analysis_predictions').html(html);
+
+                    jQuery('#generic_save_analysis_protocol').val(response.protocol);
+                    jQuery('#generic_save_analysis_dataset_id').val(nirs_analysis_prediction_dataset_id);
+                    jQuery('#generic_save_analysis_accession_names').val(JSON.stringify(response.unique_accessions));
+                    jQuery('#generic_save_analysis_trait_names').val(JSON.stringify(response.unique_traits));
+                    jQuery('#generic_save_analysis_statistical_ontology_term').val(response.stat_term);
+                    jQuery('#generic_save_analysis_design').val(JSON.stringify(response.analysis_design));
+                    jQuery('#generic_save_analysis_result_values').val(JSON.stringify(response.result_predictions));
+                    jQuery('#generic_save_analysis_result_values_type').val('analysis_result_values_match_precomputed_design');
+                    jQuery('#generic_save_analysis_result_summary_values').val(JSON.stringify(response.result_summary));
+                    jQuery('#generic_save_analysis_model_type').val('waves_nirs_spectral_predictions');
+
+                    jQuery('#generic_save_analysis_model_select_form').hide();
+                    jQuery('#generic_save_analysis_model_name_div').hide();
+                    jQuery('#generic_save_analysis_model_description_div').hide();
+                    jQuery('#generic_save_analysis_model_is_public_div').hide();
+                    jQuery('#generic_save_analysis_model_id').val(nirs_analysis_prediction_model_id);
+
+                    jQuery('#generic_save_analysis_model_training_data_file').val(response.training_data_file);
+                    jQuery('#generic_save_analysis_model_archived_training_data_file_type').val(response.training_data_file_type);
+
+                    Workflow.complete("#nir_analysis_prediction_model_step");
+                    Workflow.focus('#nirs_analysis_prediction_workflow', 3);
+                    window.scrollTo(0,0);
+                },
+                error: function(response){
+                    alert('Error predicting phenotypes from NIRS!');
+                    jQuery('#working_modal').modal('hide');
+                }
+            });
+        }
+    });
+
+    jQuery('#nir_analysis_prediction_analysis_save_step').click(function(){
+        jQuery('#generic_save_analysis_dialog').modal('show');
+    });
+
+});
+</script>

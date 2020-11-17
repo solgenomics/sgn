@@ -30,6 +30,7 @@
                     <td>Latitude</td>
                     <td>Longitude</td>
                     <td>Altitude</td>
+                    <td>NOAA Station ID</td>
                   </tr>
                   </tbody>
                 </table>
@@ -43,6 +44,7 @@
                 <b>Latitude:</b> (in degrees) must be a number between 90 and -90.<br>
                 <b>Longitude:</b> (in degrees) must be a number between 180 and -180.<br>
                 <b>Altitude:</b> (in meters) must be a number between -418 (Dead Sea) and 8,848 (Mt. Everest).<br>
+                <b>NOAA Station ID:</b> The NOAA Station ID that is nearest and most relevant to the location. <a href="https://www.ncdc.noaa.gov/cdo-web/search" target="_blank">Search Here</a><br>
                 <br>
 
           <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_locations_form" name="upload_locations_form">
@@ -94,11 +96,15 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#upload_locations_form').iframePostForm({
-        json: true,
+        json: false,
         post: function () {
             jQuery('#working_modal').modal("show");
         },
-        complete: function (response) {
+        complete: function (r) {
+            r = r.replace('<pre>', '');
+            r = r.replace('</pre>', '');
+            var response = JSON.parse(r);
+
             jQuery('#working_modal').modal("hide");
             //console.log(response);
             if (response.error) {

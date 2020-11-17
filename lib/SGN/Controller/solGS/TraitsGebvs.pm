@@ -35,13 +35,13 @@ sub combine_gebvs_of_traits {
    
     my $index_file  = $c->stash->{selection_index_file};
     
-    my @files_no = map { split(/\t/) } read_file($gebvs_files);
+    my @files_no = map { split(/\t/) } read_file($gebvs_files, {binmode => ':utf8'});
    
     if (scalar(@files_no) > 1 ) 
     {    
         if ($index_file) 
         {
-            write_file($gebvs_files, {append => 1}, "\t". $index_file )   
+            write_file($gebvs_files, {append => 1, binmode => ':utf8'}, "\t". $index_file)   
         }
 
         my $pred_pop_id = $c->stash->{prediction_pop_id};
@@ -78,12 +78,11 @@ sub get_gebv_files_of_traits {
     my $selection_pop_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id};
     
     my $dir = $c->stash->{solgs_cache_dir};
-    
+ 
     my $gebv_files;
     my $valid_gebv_files;
-    my $pred_gebv_files;
-   
-    if ($selection_pop_id && $selection_pop_id != $training_pop_id) 
+     
+    if ($selection_pop_id) 
     {
         $c->controller('solGS::solGS')->prediction_pop_analyzed_traits($c, $training_pop_id, $selection_pop_id);
 	$gebv_files = join("\t", @{$c->stash->{prediction_pop_analyzed_traits_files}});	
@@ -93,24 +92,20 @@ sub get_gebv_files_of_traits {
         $c->controller('solGS::solGS')->analyzed_traits($c);
 	$gebv_files = join("\t", @{$c->stash->{analyzed_traits_files}});     
 	$valid_gebv_files = join("\t", @{$c->stash->{analyzed_valid_traits_files}}); 
-
     }
-   
-    #my $pred_file_suffix;
-    my $pred_file_suffix =  $selection_pop_id ? '_' . $selection_pop_id : 0; 
-    
+ 
+    my $pred_file_suffix =   '_' . $selection_pop_id if $selection_pop_id;    
     my $name = "gebv_files_of_traits_${training_pop_id}${pred_file_suffix}";
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $file = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);
    
-    write_file($file, $gebv_files);
-   
+    write_file($file, {binmode => ':utf8'}, $gebv_files);   
     $c->stash->{gebv_files_of_traits} = $file;
 
     my $name2 = "gebv_files_of_valid_traits_${training_pop_id}${pred_file_suffix}";
     my $file2 = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name2);
    
-    write_file($file2, $valid_gebv_files);
+    write_file($file2, {binmode => ':utf8'}, $valid_gebv_files);
    
     $c->stash->{gebv_files_of_valid_traits} = $file2;
 
@@ -144,18 +139,18 @@ sub catalogue_traits_selection {
     if (!-s $file) 
     {
         my $header = 'traits_selection_id' . "\t" . 'traits_ids' . "\n";
-        write_file($file, ($header, $entry));    
+        write_file($file, {binmode => ':utf8'}, ($header, $entry));    
     }
     else 
     {
 	my @combo = ($entry);
 
-        my @entries = map{ $_ =~ s/\n// ? $_ : undef } read_file($file);
+        my @entries = map{ $_ =~ s/\n// ? $_ : undef } read_file($file, {binmode => ':utf8'});
         my @intersect = intersect(@combo, @entries);
 
         unless( @intersect ) 
         {
-            write_file($file, {append => 1}, "\n" . $entry);
+            write_file($file, {append => 1, binmode => ':utf8'}, "\n" . $entry);
         }
     }
     
@@ -170,7 +165,7 @@ sub get_traits_selection_list {
     $self->traits_selection_catalogue_file($c);
     my $traits_selection_catalogue_file = $c->stash->{traits_selection_catalogue_file};
    
-    my @combos = uniq(read_file($traits_selection_catalogue_file));
+    my @combos = uniq(read_file($traits_selection_catalogue_file, {binmode => ':utf8'}));
     
     foreach my $entry (@combos)
     {
@@ -216,10 +211,12 @@ sub get_traits_selection_id :Path('/solgs/get/traits/selection/id') Args(0) {
 
 sub create_traits_selection_id {
     my ($self, $traits_ids) = @_;
+
+   
     
     if ($traits_ids)
     {
-	return  crc(join('', @$traits_ids));
+	return  crc(join('', sort(uniq(@$traits_ids))));
     }
     else
     {

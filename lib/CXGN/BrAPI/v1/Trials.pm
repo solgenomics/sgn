@@ -7,61 +7,30 @@ use CXGN::Trial::Folder;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 
-has 'bcs_schema' => (
-	isa => 'Bio::Chado::Schema',
-	is => 'rw',
-	required => 1,
-);
+extends 'CXGN::BrAPI::v1::Common';
 
-has 'metadata_schema' => (
-	isa => 'CXGN::Metadata::Schema',
-	is => 'rw',
-	required => 1,
-);
-
-has 'phenome_schema' => (
-	isa => 'CXGN::Phenome::Schema',
-	is => 'rw',
-	required => 1,
-);
-
-has 'page_size' => (
-	isa => 'Int',
-	is => 'rw',
-	required => 1,
-);
-
-has 'page' => (
-	isa => 'Int',
-	is => 'rw',
-	required => 1,
-);
-
-has 'status' => (
-	isa => 'ArrayRef[Maybe[HashRef]]',
-	is => 'rw',
-	required => 1,
-);
-
-sub trials_search {
+sub search {
 	my $self = shift;
 	my $search_params = shift;
 	my $schema = $self->bcs_schema;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
     my $data;
-	#my $auth = _authenticate_user($c);
+    my $status = $self->status();
+    #my $auth = _authenticate_user($c);
 
-	my @location_dbids = $search_params->{locationDbIds} ? @{$search_params->{locationDbIds}} : ();
-	my @program_dbids = $search_params->{programDbIds} ? @{$search_params->{programDbIds}} : ();
+    my @location_dbids = $search_params->{locationDbIds} ? @{$search_params->{locationDbIds}} : ();
+    my @program_dbids = $search_params->{programDbIds} ? @{$search_params->{programDbIds}} : ();
 
-	my %location_id_list;
-	if (scalar(@location_dbids)>0){
-		%location_id_list = map { $_ => 1} @location_dbids;
-	}
+    my %location_id_list;
+    if (scalar(@location_dbids)>0){
+        %location_id_list = map { $_ => 1} @location_dbids;
+    }
 
-	my %program_id_list;
-	if (scalar(@program_dbids)>0){
-		%program_id_list = map { $_ => 1} @program_dbids;
-	}
+    my %program_id_list;
+    if (scalar(@program_dbids)>0){
+        %program_id_list = map { $_ => 1} @program_dbids;
+    }
 
     my $p = CXGN::BreedersToolbox::Projects->new( { schema => $schema  } );
     my $programs = $p->get_breeding_programs();
@@ -73,13 +42,13 @@ sub trials_search {
         }
     }
     my $total_count = scalar @{$data};
-	my %result = (data => $data);
-	my @data_files;
-	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$self->page_size,$self->page);
-	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $self->status, 'Trials-search result constructed');
+    my %result = (data => $data);
+    my @data_files;
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$self->page_size,$self->page);
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $self->status, 'Trials-search result constructed');
 }
 
-sub trial_details {
+sub details {
 	my $self = shift;
 	my $folder_id = shift;
 
@@ -97,9 +66,10 @@ sub trial_details {
 			my $children = $folder->children();
 			foreach (@$children) {
 				push @folder_studies, {
-					studyDbId=>qq|$_->folder_id|,
+					studyDbId=>$_->folder_id,
 					studyName=>$_->name,
-					locationDbId=>qq|$_->location_id|
+					locationDbId=>$_->location_id,
+                    locationName=>$_->location_name
 				};
 			}
             my $folder_id = $folder->folder_id;
@@ -113,7 +83,9 @@ sub trial_details {
 				endDate=>'',
 				active=>undef,
 				studies=>\@folder_studies,
-				additionalInfo=>\%additional_info
+				additionalInfo=>\%additional_info,
+                commonCropName=>undef,
+                documentationURL=>undef
 			);
 			my @data_files;
 			my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);

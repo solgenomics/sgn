@@ -412,8 +412,6 @@ function trial_detail_page_setup_dialogs() {
 
     jQuery('#delete_phenotype_data_by_trial_id').click(function() {
         jQuery('#delete_phenotype_data_dialog').modal("show");
-	//    var trial_id = get_trial_id();
-	//    delete_phenotype_data_by_trial_id(trial_id);
 	});
 
     jQuery('#delete_layout_data_by_trial_id').click(
@@ -663,19 +661,19 @@ jQuery(document).ready(function ($) {
     }
 
     function open_replace_trial_accession_dialog() {
-      jQuery('#replace_trial_accessions_dialog').modal('show');
+      jQuery('#replace_trial_stocks_dialog').modal('show');
     }
 
-    $('#replace_trial_accession_submit').click(function () {
+    $('#replace_trial_stock_submit').click(function () {
       jQuery('#edit_field_map_dialog').modal('hide');
       open_replace_trial_accession_dialog();
     });
 
     function open_subtitute_plot_accession_dialog() {
-      jQuery('#subtitute_plot_accessions_dialog').modal('show');
+      jQuery('#substitute_plot_stocks_dialog').modal('show');
     }
 
-    $('#substitute_accession_submit').click(function () {
+    $('#substitute_stock_submit').click(function () {
       jQuery('#edit_field_map_dialog').modal('hide');
       open_subtitute_plot_accession_dialog();
     });
@@ -689,7 +687,7 @@ jQuery(document).ready(function ($) {
         $('#generate_trial_barcode_dialog').modal("show");
     });
 
-    jQuery('#trial_accession_barcode').click(function () {
+    jQuery('#trial_stock_barcode').click(function () {
         $('#generate_trial_barcode_button_dialog').modal("hide");
         $('#generate_trial_barcode_dialog').modal("show");
     });

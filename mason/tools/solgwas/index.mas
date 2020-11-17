@@ -75,7 +75,7 @@
         </div>
 
             <div style="text-align: center">
-              <button class="btn btn-primary" id="runGWA" type="submit" name="runGWA" value="runGWA">Run SolGWAS</button>
+              <button class="btn btn-primary" id="runGWA" name="runGWA">Run SolGWAS</button>
             </div>
             <br />
 
@@ -123,7 +123,7 @@
 
 jQuery(document).ready(function() {
   if (isLoggedIn()) {
-    get_select_box("datasets", "dataset_select");
+    get_select_box("datasets", "dataset_select", {"checkbox_name":"dataset_select_checkbox"});
   }
   else {
     alert('You must be logged in to use SolGWAS');
@@ -138,8 +138,7 @@ jQuery(document).ready(function() {
     $('#kinshipmat').attr('checked', false);
   });
   jQuery('#selectDataset').click(function() {
-    var dataset_id = jQuery('#available_datasets').val();
-//    alert("Dataset ID: "+dataset_id);
+    var dataset_id = get_dataset_id();
     $.ajax({
       url: '/ajax/solgwas/shared_phenotypes',
       data: {'dataset_id': dataset_id},
@@ -219,7 +218,7 @@ jQuery(document).ready(function() {
     } else {
       $('#pca_output').empty();
       if ($('#pheno_select').val() != ""){
-        var dataset_id = $('#available_datasets').val();
+        var dataset_id = get_dataset_id();
         var trait_id = $('#pheno_select').val();
         $.ajax({
           url: '/ajax/solgwas/generate_pca',
@@ -253,7 +252,7 @@ jQuery(document).ready(function() {
     } else {
       $('#Solgwas_output').empty();
       if ($('#pheno_select').val() != ""){
-        var dataset_id = $('#available_datasets').val();
+        var dataset_id = get_dataset_id();
         var trait_id = $('#pheno_select').val();
         var pc_check = 0;
         var kinship_check = 0;
@@ -273,31 +272,47 @@ jQuery(document).ready(function() {
   	      beforeSend: function() {
             jQuery("#working_modal").modal("show");
   	      },
+          timeout: 30000000,
           success: function(response) {
             jQuery("#working_modal").modal("hide");
             if (response.error) {
-              $('#dataset_select').val('ERROR');
+              alert(response.error);
             }
             else {
               var fig3_response = response.figure3;
               var fig4_response = response.figure4;
   	    //alert("Response ID: "+temp_response);
       	    //alert("Response ID: "+fig3_response);
-              //setTimeout(function() {
+
   	          $('#Solgwas_output').append("<img id='SolGWAS_Figure3' src='"+ fig3_response + "'/>");
   	          $('#Solgwas_output').append("<img id='SolGWAS_Figure4' src='"+ fig4_response + "'/>");
-              //}, 6000);
-  	      }
+  	        }
           },
-          error: function(response) {
-            alert("An error occurred, the service may temporarily be unavailable");
+          error: function(xhr, status, error) {
+            var err = eval("(" + xhr.responseText + ")");
+            alert(err.Message);
           }
         });
       }
     };
   });
 
-
+  function get_dataset_id() {
+      var selected_datasets = [];
+      jQuery('input[name="dataset_select_checkbox"]:checked').each(function() {
+          selected_datasets.push(jQuery(this).val());
+      });
+      if (selected_datasets.length < 1){
+          alert('Please select at least one dataset!');
+          return false;
+      } else if (selected_datasets.length > 1){
+          alert('Please select only one dataset!');
+          return false;
+      } else {
+  	var dataset_id=selected_datasets[0];
+  	return dataset_id;
+    }
+  }
 });
 
 

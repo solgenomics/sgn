@@ -114,6 +114,12 @@ my @plots = @{$parsed_file->{'units'}};
 my @traits = @{$parsed_file->{'variables'}};
 
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    basepath=>$f->config->{basepath},
+    dbhost=>$f->config->{dbhost},
+    dbname=>$f->config->{dbname},
+    dbuser=>$f->config->{dbuser},
+    dbpass=>$f->config->{dbpass},
+    temp_file_nd_experiment_id=>$f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete",
     bcs_schema=>$f->bcs_schema,
     metadata_schema=>$f->metadata_schema,
     phenome_schema=>$f->phenome_schema,
@@ -135,8 +141,8 @@ my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
 
 my $traits_assayed  = $tn->get_traits_assayed();
 my @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
-#print STDERR Dumper @traits_assayed_sorted;
-my @traits_assayed_check = ([70666,'fresh root weight|CO_334:0000012'], [70668,'harvest index variable|CO_334:0000015'], [70741,'dry matter content percentage|CO_334:0000092'], [70773,'fresh shoot weight measurement in kg|CO_334:0000016']);
+print STDERR Dumper @traits_assayed_sorted;
+my @traits_assayed_check = ([70666,'fresh root weight|CO_334:0000012', [], 15,undef,undef], [70668,'harvest index variable|CO_334:0000015', [], 15,undef,undef], [70741,'dry matter content percentage|CO_334:0000092', [], 15,undef,undef], [70773,'fresh shoot weight measurement in kg|CO_334:0000016', [], 15,undef,undef]);
 is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed from phenotyping spreadsheet upload' );
 
 my @pheno_for_trait = $tn->get_phenotypes_for_trait(70666);
@@ -168,7 +174,7 @@ $experiment = $f->bcs_schema->resultset('NaturalDiversity::NdExperiment')->searc
 my $post1_experiment_count = $experiment->count();
 my $post1_experiment_diff = $post1_experiment_count - $pre_experiment_count;
 print STDERR "Experiment count: ".$post1_experiment_diff."\n";
-ok($post1_experiment_diff == 60, "Check num rows in NdExperiment table after addition of phenotyping spreadsheet upload");
+ok($post1_experiment_diff == 15, "Check num rows in NdExperiment table after addition of phenotyping spreadsheet upload");
 
 $phenotype_rs = $f->bcs_schema->resultset('Phenotype::Phenotype')->search({});
 my $post1_phenotype_count = $phenotype_rs->count();
@@ -180,19 +186,19 @@ $exp_prop_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->
 my $post1_exp_prop_count = $exp_prop_rs->count();
 my $post1_exp_prop_diff = $post1_exp_prop_count - $pre_exp_prop_count;
 print STDERR "Experimentprop count: ".$post1_exp_prop_diff."\n";
-ok($post1_exp_prop_diff == 120, "Check num rows in Experimentprop table after addition of phenotyping spreadsheet upload");
+ok($post1_exp_prop_diff == 30, "Check num rows in Experimentprop table after addition of phenotyping spreadsheet upload");
 
 $exp_proj_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({});
 my $post1_exp_proj_count = $exp_proj_rs->count();
 my $post1_exp_proj_diff = $post1_exp_proj_count - $pre_exp_proj_count;
 print STDERR "Experimentproject count: ".$post1_exp_proj_diff."\n";
-ok($post1_exp_proj_diff == 60, "Check num rows in NdExperimentproject table after addition of phenotyping spreadsheet upload");
+ok($post1_exp_proj_diff == 15, "Check num rows in NdExperimentproject table after addition of phenotyping spreadsheet upload");
 
 $exp_stock_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({});
 my $post1_exp_stock_count = $exp_stock_rs->count();
 my $post1_exp_stock_diff = $post1_exp_stock_count - $pre_exp_stock_count;
 print STDERR "Experimentstock count: ".$post1_exp_stock_diff."\n";
-ok($post1_exp_stock_diff == 60, "Check num rows in NdExperimentstock table after addition of phenotyping spreadsheet upload");
+ok($post1_exp_stock_diff == 15, "Check num rows in NdExperimentstock table after addition of phenotyping spreadsheet upload");
 
 $exp_pheno_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
 my $post1_exp_pheno_count = $exp_pheno_rs->count();
@@ -216,7 +222,7 @@ $exp_md_files_rs = $f->phenome_schema->resultset('NdExperimentMdFiles')->search(
 my $post1_exp_md_files_count = $exp_md_files_rs->count();
 my $post1_exp_md_files_diff = $post1_exp_md_files_count - $pre_exp_md_files_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_md_files_diff."\n";
-ok($post1_exp_md_files_diff == 60, "Check num rows in NdExperimentMdFIles table after addition of phenotyping spreadsheet upload");
+ok($post1_exp_md_files_diff == 15, "Check num rows in NdExperimentMdFIles table after addition of phenotyping spreadsheet upload");
 
 
 
@@ -241,6 +247,12 @@ my @plots = @{$parsed_file->{'units'}};
 my @traits = @{$parsed_file->{'variables'}};
 
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    basepath=>$f->config->{basepath},
+    dbhost=>$f->config->{dbhost},
+    dbname=>$f->config->{dbname},
+    dbuser=>$f->config->{dbuser},
+    dbpass=>$f->config->{dbpass},
+    temp_file_nd_experiment_id=>$f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete",
     bcs_schema=>$f->bcs_schema,
     metadata_schema=>$f->metadata_schema,
     phenome_schema=>$f->phenome_schema,
@@ -260,8 +272,8 @@ ok(!$stored_phenotype_error_msg, "check that store pheno spreadsheet works");
 
 my $traits_assayed  = $tn->get_traits_assayed();
 my @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
-#print STDERR Dumper @traits_assayed_sorted;
-my @traits_assayed_check = ([70666,'fresh root weight|CO_334:0000012'], [70668,'harvest index variable|CO_334:0000015'], [70741,'dry matter content percentage|CO_334:0000092'], [70773,'fresh shoot weight measurement in kg|CO_334:0000016']);
+print STDERR Dumper @traits_assayed_sorted;
+my @traits_assayed_check = ([70666,'fresh root weight|CO_334:0000012', [], 30,undef,undef], [70668,'harvest index variable|CO_334:0000015', [], 30,undef,undef], [70741,'dry matter content percentage|CO_334:0000092', [], 30,undef,undef], [70773,'fresh shoot weight measurement in kg|CO_334:0000016', [], 30,undef,undef]);
 is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed from phenotyping spreadsheet upload' );
 
 my @pheno_for_trait = $tn->get_phenotypes_for_trait(70666);
@@ -293,7 +305,7 @@ $experiment = $f->bcs_schema->resultset('NaturalDiversity::NdExperiment')->searc
 my $post2_experiment_count = $experiment->count();
 my $post2_experiment_diff = $post2_experiment_count - $pre_experiment_count;
 print STDERR "Experiment count: ".$post2_experiment_diff."\n";
-ok($post2_experiment_diff == 120, "Check num rows in NdExperiment table after second addition of phenotyping spreadsheet upload");
+ok($post2_experiment_diff == 30, "Check num rows in NdExperiment table after second addition of phenotyping spreadsheet upload");
 
 $phenotype_rs = $f->bcs_schema->resultset('Phenotype::Phenotype')->search({});
 my $post2_phenotype_count = $phenotype_rs->count();
@@ -305,19 +317,19 @@ $exp_prop_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->
 my $post2_exp_prop_count = $exp_prop_rs->count();
 my $post2_exp_prop_diff = $post2_exp_prop_count - $pre_exp_prop_count;
 print STDERR "Experimentprop count: ".$post2_exp_prop_diff."\n";
-ok($post2_exp_prop_diff == 240, "Check num rows in Experimentprop table after second addition of phenotyping spreadsheet upload");
+ok($post2_exp_prop_diff == 60, "Check num rows in Experimentprop table after second addition of phenotyping spreadsheet upload");
 
 $exp_proj_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({});
 my $post2_exp_proj_count = $exp_proj_rs->count();
 my $post2_exp_proj_diff = $post2_exp_proj_count - $pre_exp_proj_count;
 print STDERR "Experimentproject count: ".$post2_exp_proj_diff."\n";
-ok($post2_exp_proj_diff == 120, "Check num rows in NdExperimentproject table after second addition of phenotyping spreadsheet upload");
+ok($post2_exp_proj_diff == 30, "Check num rows in NdExperimentproject table after second addition of phenotyping spreadsheet upload");
 
 $exp_stock_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({});
 my $post2_exp_stock_count = $exp_stock_rs->count();
 my $post2_exp_stock_diff = $post2_exp_stock_count - $pre_exp_stock_count;
 print STDERR "Experimentstock count: ".$post2_exp_stock_diff."\n";
-ok($post2_exp_stock_diff == 120, "Check num rows in NdExperimentstock table after second addition of phenotyping spreadsheet upload");
+ok($post2_exp_stock_diff == 30, "Check num rows in NdExperimentstock table after second addition of phenotyping spreadsheet upload");
 
 $exp_pheno_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
 my $post2_exp_pheno_count = $exp_pheno_rs->count();
@@ -341,7 +353,7 @@ $exp_md_files_rs = $f->phenome_schema->resultset('NdExperimentMdFiles')->search(
 my $post2_exp_md_files_count = $exp_md_files_rs->count();
 my $post2_exp_md_files_diff = $post2_exp_md_files_count - $pre_exp_md_files_count;
 print STDERR "Experimentphenotype count: ".$post2_exp_md_files_diff."\n";
-ok($post2_exp_md_files_diff == 120, "Check num rows in NdExperimentMdFIles table after second addition of phenotyping spreadsheet upload");
+ok($post2_exp_md_files_diff == 30, "Check num rows in NdExperimentMdFIles table after second addition of phenotyping spreadsheet upload");
 
 
 
@@ -385,6 +397,12 @@ $phenotype_metadata{'date'}="2016-01-16_03:15:26";
 @traits = @{$parsed_file->{'variables'}};
 my $user_id = 41;
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    basepath=>$f->config->{basepath},
+    dbhost=>$f->config->{dbhost},
+    dbname=>$f->config->{dbname},
+    dbuser=>$f->config->{dbuser},
+    dbpass=>$f->config->{dbpass},
+    temp_file_nd_experiment_id=>$f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete",
     bcs_schema=>$f->bcs_schema,
     metadata_schema=>$f->metadata_schema,
     phenome_schema=>$f->phenome_schema,
@@ -404,6 +422,7 @@ my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store fieldbook works");
 my $image = SGN::Image->new( $f->dbh, undef, $f );
 my $image_error = $image->upload_fieldbook_zipfile('t/data/fieldbook/photos.zip', $user_id);
+print STDERR Dumper $image_error;
 ok(!$image_error, "check no error in image upload");
 
 $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -411,25 +430,25 @@ $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
 
 $traits_assayed  = $tn->get_traits_assayed();
 @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
-#print STDERR Dumper \@traits_assayed_sorted;
+print STDERR Dumper \@traits_assayed_sorted;
 @traits_assayed_check = ([
           70666,
-          'fresh root weight|CO_334:0000012'
+          'fresh root weight|CO_334:0000012', [], 30,undef,undef
         ],[
           70668,
-          'harvest index variable|CO_334:0000015'
+          'harvest index variable|CO_334:0000015', [], 30,undef,undef
         ],[
           70727,
-          'dry yield|CO_334:0000014'
+          'dry yield|CO_334:0000014', [], 15,undef,undef
         ],[
           70741,
-          'dry matter content percentage|CO_334:0000092'
+          'dry matter content percentage|CO_334:0000092', [], 43,undef,undef
         ],[
           70773,
-          'fresh shoot weight measurement in kg|CO_334:0000016'
+          'fresh shoot weight measurement in kg|CO_334:0000016', [], 30,undef,undef
         ],[
           77107,
-          'fieldbook_image|CO_334:0010472'
+          'fieldbook_image|CO_334:0010472', [], 2,undef,undef
         ]);
 is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed from phenotyping spreadsheet upload' );
 
@@ -450,7 +469,7 @@ $experiment = $f->bcs_schema->resultset('NaturalDiversity::NdExperiment')->searc
 $post1_experiment_count = $experiment->count();
 $post1_experiment_diff = $post1_experiment_count - $pre_experiment_count;
 print STDERR "Experiment count: ".$post1_experiment_diff."\n";
-ok($post1_experiment_diff == 150, "Check num rows in NdExperiment table after addition of fieldbook upload");
+ok($post1_experiment_diff == 45, "Check num rows in NdExperiment table after addition of fieldbook upload");
 
 $phenotype_rs = $f->bcs_schema->resultset('Phenotype::Phenotype')->search({});
 $post1_phenotype_count = $phenotype_rs->count();
@@ -462,19 +481,19 @@ $exp_prop_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->
 $post1_exp_prop_count = $exp_prop_rs->count();
 $post1_exp_prop_diff = $post1_exp_prop_count - $pre_exp_prop_count;
 print STDERR "Experimentprop count: ".$post1_exp_prop_diff."\n";
-ok($post1_exp_prop_diff == 300, "Check num rows in Experimentprop table after addition of fieldbook upload");
+ok($post1_exp_prop_diff == 90, "Check num rows in Experimentprop table after addition of fieldbook upload");
 
 $exp_proj_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({});
 $post1_exp_proj_count = $exp_proj_rs->count();
 $post1_exp_proj_diff = $post1_exp_proj_count - $pre_exp_proj_count;
 print STDERR "Experimentproject count: ".$post1_exp_proj_diff."\n";
-ok($post1_exp_proj_diff == 150, "Check num rows in NdExperimentproject table after addition of fieldbook upload");
+ok($post1_exp_proj_diff == 45, "Check num rows in NdExperimentproject table after addition of fieldbook upload");
 
 $exp_stock_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({});
 $post1_exp_stock_count = $exp_stock_rs->count();
 $post1_exp_stock_diff = $post1_exp_stock_count - $pre_exp_stock_count;
 print STDERR "Experimentstock count: ".$post1_exp_stock_diff."\n";
-ok($post1_exp_stock_diff == 150, "Check num rows in NdExperimentstock table after addition of fieldbook upload");
+ok($post1_exp_stock_diff == 45, "Check num rows in NdExperimentstock table after addition of fieldbook upload");
 
 $exp_pheno_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
 my $post1_exp_pheno_count = $exp_pheno_rs->count();
@@ -498,7 +517,7 @@ $exp_md_files_rs = $f->phenome_schema->resultset('NdExperimentMdFiles')->search(
 my $post1_exp_md_files_count = $exp_md_files_rs->count();
 my $post1_exp_md_files_diff = $post1_exp_md_files_count - $pre_exp_md_files_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_md_files_diff."\n";
-ok($post1_exp_md_files_diff == 150, "Check num rows in NdExperimentMdFIles table after addition fieldbook upload");
+ok($post1_exp_md_files_diff == 45, "Check num rows in NdExperimentMdFIles table after addition fieldbook upload");
 
 
 
@@ -838,6 +857,12 @@ $phenotype_metadata{'date'}="2016-02-16_07:11:98";
 @traits = @{$parsed_file->{'variables'}};
 
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    basepath=>$f->config->{basepath},
+    dbhost=>$f->config->{dbhost},
+    dbname=>$f->config->{dbname},
+    dbuser=>$f->config->{dbuser},
+    dbpass=>$f->config->{dbpass},
+    temp_file_nd_experiment_id=>$f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete",
     bcs_schema=>$f->bcs_schema,
     metadata_schema=>$f->metadata_schema,
     phenome_schema=>$f->phenome_schema,
@@ -850,7 +875,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     metadata_hash=>\%phenotype_metadata,
 );
 my ($verified_warning, $verified_error) = $store_phenotypes->verify();
-#print STDERR Dumper $verified_error;
+print STDERR Dumper $verified_error;
 ok(!$verified_error);
 my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store fieldbook works");
@@ -860,25 +885,25 @@ $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
 
 $traits_assayed  = $tn->get_traits_assayed();
 @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
-#print STDERR Dumper /@traits_assayed_sorted;
+print STDERR Dumper \@traits_assayed_sorted;
 @traits_assayed_check = ([
           70666,
-          'fresh root weight|CO_334:0000012'
+          'fresh root weight|CO_334:0000012', [], 44,undef,undef
         ],[
           70668,
-          'harvest index variable|CO_334:0000015'
+          'harvest index variable|CO_334:0000015', [], 45,undef,undef
         ],[
           70727,
-          'dry yield|CO_334:0000014'
+          'dry yield|CO_334:0000014', [], 15,undef,undef
         ],[
           70741,
-          'dry matter content percentage|CO_334:0000092'
+          'dry matter content percentage|CO_334:0000092', [], 56,undef,undef
         ],[
           70773,
-          'fresh shoot weight measurement in kg|CO_334:0000016'
+          'fresh shoot weight measurement in kg|CO_334:0000016', [], 45,undef,undef
         ],[
           77107,
-          'fieldbook_image|CO_334:0010472'
+          'fieldbook_image|CO_334:0010472', [], 2,undef,undef
         ]);
 is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed from phenotyping spreadsheet upload' );
 
@@ -911,7 +936,7 @@ $experiment = $f->bcs_schema->resultset('NaturalDiversity::NdExperiment')->searc
 $post1_experiment_count = $experiment->count();
 $post1_experiment_diff = $post1_experiment_count - $pre_experiment_count;
 print STDERR "Experiment count: ".$post1_experiment_diff."\n";
-ok($post1_experiment_diff == 207, "Check num rows in NdExperiment table after addition of datacollector upload");
+ok($post1_experiment_diff == 60, "Check num rows in NdExperiment table after addition of datacollector upload");
 
 $phenotype_rs = $f->bcs_schema->resultset('Phenotype::Phenotype')->search({});
 $post1_phenotype_count = $phenotype_rs->count();
@@ -923,19 +948,19 @@ $exp_prop_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->
 $post1_exp_prop_count = $exp_prop_rs->count();
 $post1_exp_prop_diff = $post1_exp_prop_count - $pre_exp_prop_count;
 print STDERR "Experimentprop count: ".$post1_exp_prop_diff."\n";
-ok($post1_exp_prop_diff == 414, "Check num rows in Experimentprop table after addition of datacollector upload");
+ok($post1_exp_prop_diff == 120, "Check num rows in Experimentprop table after addition of datacollector upload");
 
 $exp_proj_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({});
 $post1_exp_proj_count = $exp_proj_rs->count();
 $post1_exp_proj_diff = $post1_exp_proj_count - $pre_exp_proj_count;
 print STDERR "Experimentproject count: ".$post1_exp_proj_diff."\n";
-ok($post1_exp_proj_diff == 207, "Check num rows in NdExperimentproject table after addition of datacollector upload");
+ok($post1_exp_proj_diff == 60, "Check num rows in NdExperimentproject table after addition of datacollector upload");
 
 $exp_stock_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({});
 $post1_exp_stock_count = $exp_stock_rs->count();
 $post1_exp_stock_diff = $post1_exp_stock_count - $pre_exp_stock_count;
 print STDERR "Experimentstock count: ".$post1_exp_stock_diff."\n";
-ok($post1_exp_stock_diff == 207, "Check num rows in NdExperimentstock table after addition of datacollector upload");
+ok($post1_exp_stock_diff == 60, "Check num rows in NdExperimentstock table after addition of datacollector upload");
 
 $exp_pheno_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
 my $post1_exp_pheno_count = $exp_pheno_rs->count();
@@ -959,7 +984,7 @@ $exp_md_files_rs = $f->phenome_schema->resultset('NdExperimentMdFiles')->search(
 my $post1_exp_md_files_count = $exp_md_files_rs->count();
 my $post1_exp_md_files_diff = $post1_exp_md_files_count - $pre_exp_md_files_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_md_files_diff."\n";
-ok($post1_exp_md_files_diff == 207, "Check num rows in NdExperimentMdFIles table after addition datacollector upload");
+ok($post1_exp_md_files_diff == 60, "Check num rows in NdExperimentMdFIles table after addition datacollector upload");
 
 
 
@@ -1528,6 +1553,12 @@ $phenotype_metadata{'date'}="2016-02-16_05:55:55";
 @traits = @{$parsed_file->{'variables'}};
 
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    basepath=>$f->config->{basepath},
+    dbhost=>$f->config->{dbhost},
+    dbname=>$f->config->{dbname},
+    dbuser=>$f->config->{dbuser},
+    dbpass=>$f->config->{dbpass},
+    temp_file_nd_experiment_id=>$f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete",
     bcs_schema=>$f->bcs_schema,
     metadata_schema=>$f->metadata_schema,
     phenome_schema=>$f->phenome_schema,
@@ -1549,37 +1580,37 @@ $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
 
 $traits_assayed  = $tn->get_traits_assayed();
 @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
-#print STDERR Dumper \@traits_assayed_sorted;
+print STDERR Dumper \@traits_assayed_sorted;
 @traits_assayed_check = ([
           70666,
-          'fresh root weight|CO_334:0000012'
+          'fresh root weight|CO_334:0000012', [], 59,undef,undef
         ],[
           70668,
-          'harvest index variable|CO_334:0000015'
+          'harvest index variable|CO_334:0000015', [], 59,undef,undef
         ],[
           70681,
-          'top yield|CO_334:0000017'
+          'top yield|CO_334:0000017', [], 15,undef,undef
         ],[
           70700,
-          'sprouting proportion|CO_334:0000008'
+          'sprouting proportion|CO_334:0000008', [], 15,undef,undef
         ],[
           70706,
-          'root number counting|CO_334:0000011'
+          'root number counting|CO_334:0000011', [], 14,undef,undef
         ],[
           70713,
-          'flower|CO_334:0000111'
+          'flower|CO_334:0000111', [], 15,undef,undef
         ],[
           70727,
-          'dry yield|CO_334:0000014'
+          'dry yield|CO_334:0000014', [], 15,undef,undef
         ],[
           70741,
-          'dry matter content percentage|CO_334:0000092'
+          'dry matter content percentage|CO_334:0000092', [], 71,undef,undef
         ],[
           70773,
-          'fresh shoot weight measurement in kg|CO_334:0000016'
+          'fresh shoot weight measurement in kg|CO_334:0000016', [], 60,undef,undef
         ],[
            77107,
-           'fieldbook_image|CO_334:0010472'
+           'fieldbook_image|CO_334:0010472', [], 2,undef,undef
          ]);
 is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed from large phenotyping spreadsheet upload' );
 
@@ -1637,7 +1668,7 @@ $experiment = $f->bcs_schema->resultset('NaturalDiversity::NdExperiment')->searc
 $post1_experiment_count = $experiment->count();
 $post1_experiment_diff = $post1_experiment_count - $pre_experiment_count;
 print STDERR "Experiment count: ".$post1_experiment_diff."\n";
-ok($post1_experiment_diff == 325, "Check num rows in NdExperiment table after addition of large phenotyping spreadsheet upload");
+ok($post1_experiment_diff == 75, "Check num rows in NdExperiment table after addition of large phenotyping spreadsheet upload");
 
 my @nd_experiment_table;
 my $nd_experiment_table_tail = $experiment->slice($post1_experiment_count-323, $post1_experiment_count);
@@ -1663,7 +1694,7 @@ $exp_prop_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->
 $post1_exp_prop_count = $exp_prop_rs->count();
 $post1_exp_prop_diff = $post1_exp_prop_count - $pre_exp_prop_count;
 print STDERR "Experimentprop count: ".$post1_exp_prop_diff."\n";
-ok($post1_exp_prop_diff == 650, "Check num rows in Experimentprop table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_prop_diff == 150, "Check num rows in Experimentprop table after addition of large phenotyping spreadsheet upload");
 
 my @exp_prop_table;
 my $exp_prop_table_tail = $exp_prop_rs->slice($post1_exp_prop_count-646, $post1_exp_prop_count);
@@ -1676,7 +1707,7 @@ $exp_proj_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentProject'
 $post1_exp_proj_count = $exp_proj_rs->count();
 $post1_exp_proj_diff = $post1_exp_proj_count - $pre_exp_proj_count;
 print STDERR "Experimentproject count: ".$post1_exp_proj_diff."\n";
-ok($post1_exp_proj_diff == 325, "Check num rows in NdExperimentproject table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_proj_diff == 75, "Check num rows in NdExperimentproject table after addition of large phenotyping spreadsheet upload");
 
 my @exp_proj_table;
 my $exp_proj_table_tail = $exp_proj_rs->slice($post1_exp_proj_count-323, $post1_exp_proj_count);
@@ -1689,7 +1720,7 @@ $exp_stock_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')
 $post1_exp_stock_count = $exp_stock_rs->count();
 $post1_exp_stock_diff = $post1_exp_stock_count - $pre_exp_stock_count;
 print STDERR "Experimentstock count: ".$post1_exp_stock_diff."\n";
-ok($post1_exp_stock_diff == 325, "Check num rows in NdExperimentstock table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_stock_diff == 75, "Check num rows in NdExperimentstock table after addition of large phenotyping spreadsheet upload");
 
 my @exp_stock_table;
 my $exp_stock_table_tail = $exp_stock_rs->slice($post1_exp_stock_count-323, $post1_exp_stock_count);
@@ -1741,7 +1772,7 @@ $exp_md_files_rs = $f->phenome_schema->resultset('NdExperimentMdFiles')->search(
 $post1_exp_md_files_count = $exp_md_files_rs->count();
 $post1_exp_md_files_diff = $post1_exp_md_files_count - $pre_exp_md_files_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_md_files_diff."\n";
-ok($post1_exp_md_files_diff == 325, "Check num rows in NdExperimentMdFIles table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_md_files_diff == 75, "Check num rows in NdExperimentMdFIles table after addition of large phenotyping spreadsheet upload");
 
 my @exp_md_files_table;
 my $exp_md_files_table_tail = $exp_md_files_rs->slice($post1_exp_md_files_count-324, $post1_exp_md_files_count-1);
@@ -1754,9 +1785,9 @@ while (my $rs = $exp_md_files_table_tail->next() ) {
 my $nd_experiment_stock_number;
 if (!$tn->has_plant_entries) {
 	$tn->create_plant_entities(2);
-	$nd_experiment_stock_number = 413;
+	$nd_experiment_stock_number = 135;
 } else {
-	$nd_experiment_stock_number = 383;
+	$nd_experiment_stock_number = 105;
 }
 
 #check that parse fails for plant spreadsheet file when using plot parser
@@ -2123,6 +2154,12 @@ $phenotype_metadata{'date'}="2016-02-16_05:15:21";
 @traits = @{$parsed_file->{'variables'}};
 
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    basepath=>$f->config->{basepath},
+    dbhost=>$f->config->{dbhost},
+    dbname=>$f->config->{dbname},
+    dbuser=>$f->config->{dbuser},
+    dbpass=>$f->config->{dbpass},
+    temp_file_nd_experiment_id=>$f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete",
     bcs_schema=>$f->bcs_schema,
     metadata_schema=>$f->metadata_schema,
     phenome_schema=>$f->phenome_schema,
@@ -2144,46 +2181,46 @@ $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
 
 $traits_assayed  = $tn->get_traits_assayed();
 @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
-#print STDERR Dumper \@traits_assayed_sorted;
+print STDERR Dumper \@traits_assayed_sorted;
 is_deeply(\@traits_assayed_sorted, [[
             70666,
-            'fresh root weight|CO_334:0000012'
+            'fresh root weight|CO_334:0000012', [], 88,undef,undef
           ],
           [
             70668,
-            'harvest index variable|CO_334:0000015'
+            'harvest index variable|CO_334:0000015', [], 59,undef,undef
           ],
           [
             70681,
-            'top yield|CO_334:0000017'
+            'top yield|CO_334:0000017', [], 15,undef,undef
           ],
           [
             70700,
-            'sprouting proportion|CO_334:0000008'
+            'sprouting proportion|CO_334:0000008', [], 15,undef,undef
           ],
           [
             70706,
-            'root number counting|CO_334:0000011'
+            'root number counting|CO_334:0000011', [], 14,undef,undef
           ],
           [
             70713,
-            'flower|CO_334:0000111'
+            'flower|CO_334:0000111', [], 15,undef,undef
           ],
           [
             70727,
-            'dry yield|CO_334:0000014'
+            'dry yield|CO_334:0000014', [], 15,undef,undef
           ],
           [
             70741,
-            'dry matter content percentage|CO_334:0000092'
+            'dry matter content percentage|CO_334:0000092', [], 100,undef,undef
           ],
           [
             70773,
-            'fresh shoot weight measurement in kg|CO_334:0000016'
+            'fresh shoot weight measurement in kg|CO_334:0000016', [], 60,undef,undef
           ],
           [
             77107,
-            'fieldbook_image|CO_334:0010472'
+            'fieldbook_image|CO_334:0010472', [], 2,undef,undef
           ]], 'check traits assayed after plant upload' );
 
 @pheno_for_trait = $tn->get_phenotypes_for_trait(70666);
@@ -2306,7 +2343,7 @@ $experiment = $f->bcs_schema->resultset('NaturalDiversity::NdExperiment')->searc
 $post1_experiment_count = $experiment->count();
 $post1_experiment_diff = $post1_experiment_count - $pre_experiment_count;
 print STDERR "Experiment count: ".$post1_experiment_diff."\n";
-ok($post1_experiment_diff == 383, "Check num rows in NdExperiment table after addition of large phenotyping spreadsheet upload");
+ok($post1_experiment_diff == 105, "Check num rows in NdExperiment table after addition of large phenotyping spreadsheet upload");
 
 my @nd_experiment_table;
 my $nd_experiment_table_tail = $experiment->slice($post1_experiment_count-323, $post1_experiment_count);
@@ -2332,7 +2369,7 @@ $exp_prop_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->
 $post1_exp_prop_count = $exp_prop_rs->count();
 $post1_exp_prop_diff = $post1_exp_prop_count - $pre_exp_prop_count;
 print STDERR "Experimentprop count: ".$post1_exp_prop_diff."\n";
-ok($post1_exp_prop_diff == 766, "Check num rows in Experimentprop table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_prop_diff == 210, "Check num rows in Experimentprop table after addition of large phenotyping spreadsheet upload");
 
 my @exp_prop_table;
 my $exp_prop_table_tail = $exp_prop_rs->slice($post1_exp_prop_count-646, $post1_exp_prop_count);
@@ -2345,7 +2382,7 @@ $exp_proj_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentProject'
 $post1_exp_proj_count = $exp_proj_rs->count();
 $post1_exp_proj_diff = $post1_exp_proj_count - $pre_exp_proj_count;
 print STDERR "Experimentproject count: ".$post1_exp_proj_diff."\n";
-ok($post1_exp_proj_diff == 383, "Check num rows in NdExperimentproject table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_proj_diff == 105, "Check num rows in NdExperimentproject table after addition of large phenotyping spreadsheet upload");
 
 my @exp_proj_table;
 my $exp_proj_table_tail = $exp_proj_rs->slice($post1_exp_proj_count-323, $post1_exp_proj_count);
@@ -2410,7 +2447,7 @@ $exp_md_files_rs = $f->phenome_schema->resultset('NdExperimentMdFiles')->search(
 $post1_exp_md_files_count = $exp_md_files_rs->count();
 $post1_exp_md_files_diff = $post1_exp_md_files_count - $pre_exp_md_files_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_md_files_diff."\n";
-ok($post1_exp_md_files_diff == 383, "Check num rows in NdExperimentMdFIles table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_md_files_diff == 105, "Check num rows in NdExperimentMdFIles table after addition of large phenotyping spreadsheet upload");
 
 my @exp_md_files_table;
 my $exp_md_files_table_tail = $exp_md_files_rs->slice($post1_exp_md_files_count-324, $post1_exp_md_files_count-1);
@@ -2443,6 +2480,12 @@ $phenotype_metadata{'date'}="2016-02-16_05:55:17";
 @traits = @{$parsed_file->{'variables'}};
 
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    basepath=>$f->config->{basepath},
+    dbhost=>$f->config->{dbhost},
+    dbname=>$f->config->{dbname},
+    dbuser=>$f->config->{dbuser},
+    dbpass=>$f->config->{dbpass},
+    temp_file_nd_experiment_id=>$f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete",
     bcs_schema=>$f->bcs_schema,
     metadata_schema=>$f->metadata_schema,
     phenome_schema=>$f->phenome_schema,
@@ -2468,43 +2511,43 @@ print STDERR Dumper \@traits_assayed_sorted;
 is_deeply(\@traits_assayed_sorted, [
           [
             70666,
-            'fresh root weight|CO_334:0000012'
+            'fresh root weight|CO_334:0000012', [], 88,undef,undef
           ],
           [
             70668,
-            'harvest index variable|CO_334:0000015'
+            'harvest index variable|CO_334:0000015', [], 59,undef,undef
           ],
           [
             70681,
-            'top yield|CO_334:0000017'
+            'top yield|CO_334:0000017', [], 15,undef,undef
           ],
           [
             70700,
-            'sprouting proportion|CO_334:0000008'
+            'sprouting proportion|CO_334:0000008', [], 15,undef,undef
           ],
           [
             70706,
-            'root number counting|CO_334:0000011'
+            'root number counting|CO_334:0000011', [], 14,undef,undef
           ],
           [
             70713,
-            'flower|CO_334:0000111'
+            'flower|CO_334:0000111', [], 15,undef,undef
           ],
           [
             70727,
-            'dry yield|CO_334:0000014'
+            'dry yield|CO_334:0000014', [], 19,undef,undef
           ],
           [
             70741,
-            'dry matter content percentage|CO_334:0000092'
+            'dry matter content percentage|CO_334:0000092', [], 106,undef,undef
           ],
           [
             70773,
-            'fresh shoot weight measurement in kg|CO_334:0000016'
+            'fresh shoot weight measurement in kg|CO_334:0000016', [], 60,undef,undef
           ],
           [
             77107,
-            'fieldbook_image|CO_334:0010472'
+            'fieldbook_image|CO_334:0010472', [], 2,undef,undef
           ]
         ], 'check traits assayed after plant upload' );
 
@@ -2554,7 +2597,7 @@ $experiment = $f->bcs_schema->resultset('NaturalDiversity::NdExperiment')->searc
 $post1_experiment_count = $experiment->count();
 $post1_experiment_diff = $post1_experiment_count - $pre_experiment_count;
 print STDERR "Experiment count: ".$post1_experiment_diff."\n";
-ok($post1_experiment_diff == 393, "Check num rows in NdExperiment table after addition of large phenotyping spreadsheet upload");
+ok($post1_experiment_diff == 111, "Check num rows in NdExperiment table after addition of large phenotyping spreadsheet upload");
 
 my @nd_experiment_table;
 my $nd_experiment_table_tail = $experiment->slice($post1_experiment_count-323, $post1_experiment_count);
@@ -2580,7 +2623,7 @@ $exp_prop_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->
 $post1_exp_prop_count = $exp_prop_rs->count();
 $post1_exp_prop_diff = $post1_exp_prop_count - $pre_exp_prop_count;
 print STDERR "Experimentprop count: ".$post1_exp_prop_diff."\n";
-ok($post1_exp_prop_diff == 786, "Check num rows in Experimentprop table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_prop_diff == 222, "Check num rows in Experimentprop table after addition of large phenotyping spreadsheet upload");
 
 my @exp_prop_table;
 my $exp_prop_table_tail = $exp_prop_rs->slice($post1_exp_prop_count-646, $post1_exp_prop_count);
@@ -2593,7 +2636,7 @@ $exp_proj_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentProject'
 $post1_exp_proj_count = $exp_proj_rs->count();
 $post1_exp_proj_diff = $post1_exp_proj_count - $pre_exp_proj_count;
 print STDERR "Experimentproject count: ".$post1_exp_proj_diff."\n";
-ok($post1_exp_proj_diff == 393, "Check num rows in NdExperimentproject table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_proj_diff == 111, "Check num rows in NdExperimentproject table after addition of large phenotyping spreadsheet upload");
 
 my @exp_proj_table;
 my $exp_proj_table_tail = $exp_proj_rs->slice($post1_exp_proj_count-323, $post1_exp_proj_count);
@@ -2606,7 +2649,7 @@ $exp_stock_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')
 $post1_exp_stock_count = $exp_stock_rs->count();
 $post1_exp_stock_diff = $post1_exp_stock_count - $pre_exp_stock_count;
 print STDERR "Experimentstock count: ".$post1_exp_stock_diff."\n";
-ok($post1_exp_stock_diff == $nd_experiment_stock_number+10, "Check num rows in NdExperimentstock table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_stock_diff == $nd_experiment_stock_number+6, "Check num rows in NdExperimentstock table after addition of large phenotyping spreadsheet upload");
 
 my @exp_stock_table;
 my $exp_stock_table_tail = $exp_stock_rs->slice($post1_exp_stock_count-323, $post1_exp_stock_count);
@@ -2658,7 +2701,7 @@ $exp_md_files_rs = $f->phenome_schema->resultset('NdExperimentMdFiles')->search(
 $post1_exp_md_files_count = $exp_md_files_rs->count();
 $post1_exp_md_files_diff = $post1_exp_md_files_count - $pre_exp_md_files_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_md_files_diff."\n";
-ok($post1_exp_md_files_diff == 393, "Check num rows in NdExperimentMdFIles table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_md_files_diff == 111, "Check num rows in NdExperimentMdFIles table after addition of large phenotyping spreadsheet upload");
 
 my @exp_md_files_table;
 my $exp_md_files_table_tail = $exp_md_files_rs->slice($post1_exp_md_files_count-324, $post1_exp_md_files_count-1);
@@ -5784,11 +5827,105 @@ is_deeply($parsed_file, {
 $mech->get_ok('http://localhost:3010/ajax/search/images?image_description_filename_composite=26');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is_deeply($response, {'recordsTotal' => 1,'draw' => undef,'recordsFiltered' => 1,'data' => [['<a href="/data/images/image_files/ac/41/9c/69/0b25d3ebaf00337274b4ca8a/medium.jpg"  title="<a href=/image/view/2425>Go to image page ()</a>" class="image_search_group" rel="gallery-figures"><img src="/data/images/image_files/ac/41/9c/69/0b25d3ebaf00337274b4ca8a/medium.jpg" width="40" height="30" border="0" alt="" /></a>','<a href=\'/image/view/2425\' >test_trial22_2016-09-12-11-15-26</a>',undef,'<a href=\'/solpeople/personal-info.pl?sp_person_id=41\' >janedoe</a>','Stock (plot) : <a href=\'/stock/38858/view\' >test_trial22</a>','']]});
+is($response->{recordsTotal}, 1);
+is($response->{data}[0][4], 'Stock (plot): <a href=\'/stock/38858/view\' >test_trial22</a>');
 
 $mech->get_ok('http://localhost:3010/ajax/search/images');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is_deeply($response, {'recordsTotal' => 2,'draw' => undef,'recordsFiltered' => 2,'data' => [['<a href="/data/images/image_files/ac/41/9c/69/0b25d3ebaf00337274b4ca8a/medium.jpg"  title="<a href=/image/view/2425>Go to image page ()</a>" class="image_search_group" rel="gallery-figures"><img src="/data/images/image_files/ac/41/9c/69/0b25d3ebaf00337274b4ca8a/medium.jpg" width="40" height="30" border="0" alt="" /></a>','<a href=\'/image/view/2425\' >test_trial22_2016-09-12-11-15-26</a>',undef,'<a href=\'/solpeople/personal-info.pl?sp_person_id=41\' >janedoe</a>','Stock (plot) : <a href=\'/stock/38858/view\' >test_trial22</a>',''],['<a href="/data/images/image_files/bd/d4/89/91/3effa017ae4b0593bf69a2f3/medium.jpg"  title="<a href=/image/view/2426>Go to image page ()</a>" class="image_search_group" rel="gallery-figures"><img src="/data/images/image_files/bd/d4/89/91/3effa017ae4b0593bf69a2f3/medium.jpg" width="40" height="30" border="0" alt="" /></a>','<a href=\'/image/view/2426\' >test_trial21_2016-09-12-11-15-12</a>',undef,'<a href=\'/solpeople/personal-info.pl?sp_person_id=41\' >janedoe</a>','Stock (plot) : <a href=\'/stock/38857/view\' >test_trial21</a>','']]});
+is($response->{recordsTotal}, 2);
+is($response->{data}[0][4], 'Stock (plot): <a href=\'/stock/38858/view\' >test_trial22</a>');
+is($response->{data}[1][4], 'Stock (plot): <a href=\'/stock/38857/view\' >test_trial21</a>');
+
+$parser = CXGN::Phenotypes::ParseUpload->new();
+$filename = "t/data/phenotypes_associated_images/4picsimagephenotypespreadsheet.xls";
+my $image_zipfile_filename = "t/data/phenotypes_associated_images/4pics.zip";
+
+$validate_file = $parser->validate('phenotype spreadsheet associated_images', $filename, 1, 'plots', $f->bcs_schema, $image_zipfile_filename);
+ok($validate_file == 1, "Check if parse validate works for associated_images phenotype spreadsheet file");
+
+$parsed_file = $parser->parse('phenotype spreadsheet associated_images', $filename, 1, 'plots', $f->bcs_schema, $image_zipfile_filename, 41, $f);
+ok($parsed_file, "Check if parse parse associated_images phenotype spreadsheet works");
+
+print STDERR Dumper $parsed_file;
+
+is_deeply($parsed_file, {'data' => {'test_trial22' => {'CO_334:0000011' => ['4','','','',2429],'CO_334:0000010' => ['5','','nmorales','',2429]},'test_trial21' => {'CO_334:0000008' => ['12','','nmorales','',2430],'CO_334:0000013' => ['23','','','',2430]}},'variables' => ['CO_334:0000008','CO_334:0000010','CO_334:0000011','CO_334:0000013'],'units' => ['test_trial21','test_trial22']}, "check parse associated_images phenotype spreadsheet file");
+
+$phenotype_metadata{'archived_file'} = $filename;
+$phenotype_metadata{'archived_file_type'}="spreadsheet phenotype associated_images file";
+$phenotype_metadata{'operator'}="janedoe";
+$phenotype_metadata{'date'}="2016-02-26_05:55:17";
+%parsed_data = %{$parsed_file->{'data'}};
+@plots = @{$parsed_file->{'units'}};
+@traits = @{$parsed_file->{'variables'}};
+
+my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    basepath=>$f->config->{basepath},
+    dbhost=>$f->config->{dbhost},
+    dbname=>$f->config->{dbname},
+    dbuser=>$f->config->{dbuser},
+    dbpass=>$f->config->{dbpass},
+    temp_file_nd_experiment_id=>$f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete",
+    bcs_schema=>$f->bcs_schema,
+    metadata_schema=>$f->metadata_schema,
+    phenome_schema=>$f->phenome_schema,
+    user_id=>41,
+    stock_list=>\@plots,
+    trait_list=>\@traits,
+    values_hash=>\%parsed_data,
+    has_timestamps=>1,
+    overwrite_values=>1,
+    metadata_hash=>\%phenotype_metadata,
+);
+my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+ok(!$verified_error);
+my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
+ok(!$stored_phenotype_error_msg, "check that store phenotype spreadsheet associated_images works");
+
+$mech->get_ok('http://localhost:3010/ajax/search/images');
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is($response->{recordsTotal}, 6);
+is($response->{data}[0][4], 'Stock (plot): <a href=\'/stock/38858/view\' >test_trial22</a>');
+is($response->{data}[1][4], 'Stock (plot): <a href=\'/stock/38857/view\' >test_trial21</a>');
+is($response->{data}[2][4], 'Stock (plot): <a href=\'/stock/38858/view\' >test_trial22</a><br/>Project (phenotype_spreadsheet_associated_images): test_trial');
+
+$mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
+my $response = decode_json $mech->content;
+print STDERR Dumper $response;
+is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
+my $sgn_session_id = $response->{access_token};
+print STDERR $sgn_session_id."\n";
+
+my $stored_image_ids = [2429,2430];
+my $stored_image_ids_string = encode_json $stored_image_ids;
+$mech->post_ok('http://localhost:3010/ajax/image_analysis/submit?service=necrosis&selected_image_ids='.$stored_image_ids_string.'&sgn_session_id='.$sgn_session_id);
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is(scalar(@{$response->{results}}), 2);
+is(scalar(@{$response->{results}->[1]->{observations_array}}), 2);
+
+my $stored_image_ids_string = encode_json $stored_image_ids;
+$mech->post_ok('http://localhost:3010/ajax/image_analysis/submit?service=whitefly_count&selected_image_ids='.$stored_image_ids_string.'&sgn_session_id='.$sgn_session_id);
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is(scalar(@{$response->{results}}), 2);
+is(scalar(@{$response->{results}->[1]->{observations_array}}), 2);
+
+my $python_dependencies_installed = `locate keras.py`;
+
+#print STDERR "PYTHON DEPENDENCIES INSTALLED=".Dumper($python_dependencies_installed)."\n";
+
+SKIP: {
+    skip 'missing pyhton dependencies', 1 unless $python_dependencies_installed;
+    my $stored_image_ids_string = encode_json $stored_image_ids;
+    $mech->post_ok('http://localhost:3010/ajax/image_analysis/submit?service=largest_contour_percent&selected_image_ids='.$stored_image_ids_string.'&sgn_session_id='.$sgn_session_id);
+    $response = decode_json $mech->content;
+    print STDERR Dumper $response;
+    is(scalar(@{$response->{results}}), 2);
+    is(scalar(@{$response->{results}->[1]->{observations_array}}), 2);
+    ok($response->{results}->[0]->{result}->{image_link});
+    ok($response->{results}->[1]->{result}->{image_link});
+}
 
 done_testing();

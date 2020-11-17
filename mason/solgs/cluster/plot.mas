@@ -18,7 +18,7 @@ $pop_id => undef
 $list_id => undef
 $dataset_id => undef
 $data_set_type => undef
-$data_structure_type => undef
+$data_structure => undef
 
 </%args>
 
@@ -49,8 +49,11 @@ $pop_id = undef if $list_id || $combo_pops_id;
 }
 </style>
 
-<& /solgs/spinner.mas &>
-<div id="cluster_message" style="font-weight:bold;text-align:center;color:#A7C942"> </div>
+<div id="cluster_canvas">
+  
+  <& /solgs/spinner.mas &>
+    
+<div id="cluster_message" class="message"> </div>
 
 <div id="cluster_plot">
    
@@ -59,7 +62,7 @@ $pop_id = undef if $list_id || $combo_pops_id;
     <input type="hidden"  id="cluster_type" value="" />
     <input type="hidden"  id="dataset_id" value="<% $dataset_id %>" />
     <input type="hidden"  id="list_id" value="<% $list_id %>" />
-    <input type="hidden"  id="data_structure_type" value="<% $data_structure_type %>" />
+    <input type="hidden"  id="data_structure" value="<% $data_structure %>" />
 </div>
 
-
+</div>

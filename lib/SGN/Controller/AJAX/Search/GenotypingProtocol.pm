@@ -14,7 +14,6 @@ package SGN::Controller::AJAX::Search::GenotypingProtocol;
 
 use Moose;
 use Data::Dumper;
-use JSON;
 use CXGN::People::Login;
 use CXGN::Genotype::Protocol;
 use CXGN::Genotype::MarkersSearch;
@@ -25,7 +24,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON' },
    );
 
 sub genotyping_protocol_search : Path('/ajax/genotyping_protocol/search') : ActionClass('REST') { }
@@ -52,12 +51,20 @@ sub genotyping_protocol_search_GET : Args(0) {
     foreach (@$protocol_search_result){
         my $num_markers = $_->{marker_count};
         my @trimmed;
+        my $header_line_count = 0;
         foreach (@{$_->{header_information_lines}}){
-            $_ =~ tr/<>//d;
-            push @trimmed, $_;
+            if ($header_line_count < 10) {
+                $_ =~ tr/<>//d;
+                push @trimmed, $_;
+            }
+            else {
+                push @trimmed, "### ----- SHOWING FIRST 10 LINES ONLY ----- ###";
+                last;
+            }
+            $header_line_count++;
         }
         my $description = join '<br/>', @trimmed;
-        $description = $description ? $description : 'Not set. Please reload this protocol using new genotype protocol format.';
+        $description = $description ? $description : 'NA';
         push @result,
           [
             "<a href=\"/breeders_toolbox/protocol/$_->{protocol_id}\">$_->{protocol_name}</a>",

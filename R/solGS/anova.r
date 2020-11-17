@@ -37,7 +37,9 @@ metaData <- scan(metadataFile, what="character")
 designFactors <- c('germplasmName','studyYear', 'studyDesign', 'blockNumber', 'locationName', 'replicate')
 dropCols <-  metaData[! metaData %in% designFactors]
 
-phenoData <- fread(phenoDataFile, sep="\t",
+phenoData <- fread(phenoDataFile,
+                   header = TRUE,
+                   sep="\t",
                    drop=dropCols,
                    na.strings=c("NA", "-", " ", ".", ".."))
 

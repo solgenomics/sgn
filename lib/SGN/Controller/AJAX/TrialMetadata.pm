@@ -8,6 +8,8 @@ use List::Util qw | any |;
 use CXGN::Trial;
 use Math::Round::Var;
 use List::MoreUtils qw(uniq);
+use File::Temp 'tempfile';
+use Text::CSV;
 use CXGN::Trial::FieldMap;
 use JSON;
 use CXGN::Phenotypes::PhenotypeMatrix;
@@ -24,13 +26,17 @@ use Try::Tiny;
 use CXGN::BreederSearch;
 use CXGN::Page::FormattingHelpers qw / html_optional_show /;
 use SGN::Image;
+use CXGN::Trial::TrialLayoutDownload;
+use List::Util qw(sum);
+use CXGN::Genotype::DownloadFactory;
+use POSIX;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON'  },
    );
 
 has 'schema' => (
@@ -71,6 +77,7 @@ sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) {
             $param{experiment_type} = 'field_layout';
         }
         $c->stash->{trial_layout} = CXGN::Trial::TrialLayout->new(\%param);
+	# print STDERR "Trial Layout: ".Dumper($c->stash->{trial_layout})."\n";
     }
     catch {
         print STDERR "Trial Layout for $trial_id does not exist. @_\n";
@@ -102,8 +109,11 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
     my $error = "";
 
     if ($datatype eq 'phenotypes') {
+        my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+        my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+
         $error = $c->stash->{trial}->delete_phenotype_metadata($c->dbic_schema("CXGN::Metadata::Schema"), $c->dbic_schema("CXGN::Phenome::Schema"));
-        $error .= $c->stash->{trial}->delete_phenotype_data();
+        $error .= $c->stash->{trial}->delete_phenotype_data($c->config->{basepath}, $c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $temp_file_nd_experiment_id);
     }
 
     elsif ($datatype eq 'layout') {
@@ -117,6 +127,9 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
     }
     elsif ($datatype eq 'entry') {
         $error = $c->stash->{trial}->delete_project_entry();
+    }
+    elsif ($datatype eq 'crossing_experiment') {
+        $error = $c->stash->{trial}->delete_empty_crossing_experiment();
     }
     else {
         $c->stash->{rest} = { error => "unknown delete action for $datatype" };
@@ -161,8 +174,17 @@ sub trial_details_GET   {
     my $c = shift;
 
     my $trial = $c->stash->{trial};
+    my $planting_date = $trial->get_planting_date();
+    my $harvest_date = $trial->get_harvest_date();
+    my $get_location_noaa_station_id = $trial->get_location_noaa_station_id();
 
-    $c->stash->{rest} = { details => $trial->get_details() };
+    $c->stash->{rest} = {
+        details => {
+            planting_date => $planting_date,
+            harvest_date => $harvest_date,
+            location_noaa_station_id => $get_location_noaa_station_id
+        }
+    };
 
 }
 
@@ -295,6 +317,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $dbh = $c->dbc->dbh();
     my $trial_id = $c->stash->{trial_id};
     my $display = $c->req->param('display');
+    my $trial_stock_type = $c->req->param('trial_stock_type');
     my $select_clause_additional = '';
     my $group_by_additional = '';
     my $order_by_additional = '';
@@ -350,7 +373,23 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         $stocks_per_accession = $c->stash->{trial}->get_plants_per_accession();
         $order_by_additional = ' ,accession.uniquename DESC';
     }
+    if ($display eq 'analysis_instance') {
+        $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_instance', 'stock_type')->cvterm_id();
+        $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_of', 'stock_relationship')->cvterm_id();
+        # my $plots = $c->stash->{trial}->get_plots();
+        # $total_complete_number = scalar (@$plots);
+    }
     my $accesion_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'family_name', 'stock_type')->cvterm_id();
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+    my $trial_stock_type_id;
+    if ($trial_stock_type eq 'family_name') {
+        $trial_stock_type_id = $family_name_type_id;
+    } elsif ($trial_stock_type eq 'cross') {
+        $trial_stock_type_id = $cross_type_id;
+    } else {
+        $trial_stock_type_id = $accesion_type_id;
+    }
 
     my $h = $dbh->prepare("SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
         cvterm.cvterm_id,
@@ -378,8 +417,8 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         ORDER BY cvterm.name ASC
         $order_by_additional;");
 
-    my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
-    $h->execute($c->stash->{trial_id}, $numeric_regex, $rel_type_id, $stock_type_id, $accesion_type_id);
+    my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
+    $h->execute($c->stash->{trial_id}, $numeric_regex, $rel_type_id, $stock_type_id, $trial_stock_type_id);
 
     my @phenotype_data;
 
@@ -455,6 +494,18 @@ sub trial_accessions : Chained('trial') PathPart('accessions') Args(0) {
     my @data = $trial->get_accessions();
 
     $c->stash->{rest} = { accessions => \@data };
+}
+
+sub trial_stocks : Chained('trial') PathPart('stocks') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+
+    my $stocks = $trial->get_accessions();
+
+    $c->stash->{rest} = { data => $stocks };
 }
 
 sub trial_tissue_sources : Chained('trial') PathPart('tissue_sources') Args(0) {
@@ -1067,6 +1118,142 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
     $c->stash->{rest} = { success => 1 };
 }
 
+sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot_accessions_using_file') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $upload = $c->req->upload('trial_design_change_accessions_file');
+    my $subdirectory = "trial_change_plot_accessions_upload";
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    ## Store uploaded temporary file in archive
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+    my $archived_filename_with_path = $uploader->archive();
+    my $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->detach();
+    }
+    unlink $upload_tempfile;
+    my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
+    $parser->load_plugin('TrialChangePlotAccessionsCSV');
+    my $parsed_data = $parser->parse();
+    #print STDERR Dumper $parsed_data;
+
+    if (!$parsed_data) {
+        my $return_error = '';
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $c->detach();
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+            #print STDERR Dumper $parse_errors;
+
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
+            }
+        }
+        $c->stash->{rest} = {error_string => $return_error, missing_plots => $parse_errors->{'missing_plots'}, missing_accessions => $parse_errors->{'missing_stocks'}};
+        $c->detach();
+    }
+
+    my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+    my $upload_change_plot_accessions_txn = sub {
+        my @stock_names;
+        print STDERR Dumper $parsed_data;
+        while (my ($key, $val) = each(%$parsed_data)){
+            my $plot_name = $val->{plot_name};
+            my $accession_name = $val->{accession_name};
+            push @stock_names, $plot_name;
+            push @stock_names, $accession_name;
+        }
+        my %stock_id_map;
+        my $stock_rs = $schema->resultset("Stock::Stock")->search({
+            uniquename => {'-in' => \@stock_names}
+        });
+        while (my $r = $stock_rs->next()){
+            $stock_id_map{$r->uniquename} = $r->stock_id;
+        }
+        print STDERR Dumper \%stock_id_map;
+        while (my ($key, $val) = each(%$parsed_data)){
+            my $plot_id = $stock_id_map{$val->{plot_name}};
+            my $accession_id = $stock_id_map{$val->{accession_name}};
+            my $stockprop_rs = $schema->resultset("Stock::StockRelationship")->search({
+                subject_id => $plot_id,
+                type_id => $plot_of_type_id
+            });
+            if ($stockprop_rs->count == 1) {
+                $stockprop_rs->first->delete();
+            }
+            else {
+                die "There should only be one accession linked to the plot via plot_of\n";
+            }
+
+            my $new_stockprop_rs = $schema->resultset("Stock::StockRelationship")->create({
+                subject_id => $plot_id,
+                object_id => $accession_id,
+                type_id => $plot_of_type_id
+            });
+        }
+
+        my $layout = $c->stash->{trial_layout};
+        $layout->generate_and_cache_layout();
+    };
+    eval {
+        $schema->txn_do($upload_change_plot_accessions_txn);
+    };
+    if ($@) {
+        $c->stash->{rest} = { error => $@ };
+        print STDERR "An error condition occurred, was not able to change plot accessions. ($@).\n";
+        $c->detach();
+    }
+
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+
+    $c->stash->{rest} = { success => 1 };
+}
+
 sub trial_additional_file_upload : Chained('trial') PathPart('upload_additional_file') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -1176,6 +1363,7 @@ sub trial_plots : Chained('trial') PathPart('plots') Args(0) {
     my $trial = $c->stash->{trial};
 
     my @data = $trial->get_plots();
+#    print STDERR "PLOTS =".Dumper(\@data)."\n";
 
     $c->stash->{rest} = { plots => \@data };
 }
@@ -1257,6 +1445,16 @@ sub trial_tissue_samples : Chained('trial') PathPart('tissue_samples') Args(0) {
     $c->stash->{rest} = { trial_tissue_samples => $data };
 }
 
+sub trial_phenotype_metadata : Chained('trial') PathPart('phenotype_metadata') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $trial = $c->stash->{trial};
+    my $data = $trial->get_phenotype_metadata();
+
+    $c->stash->{rest} = { data => $data };
+}
+
 sub trial_treatments : Chained('trial') PathPart('treatments') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -1323,6 +1521,25 @@ sub trial_layout : Chained('trial') PathPart('layout') Args(0) {
     $c->stash->{rest} = {design => $design};
 }
 
+sub trial_layout_table : Chained('trial') PathPart('layout_table') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $selected_cols = $c->req->param('selected_columns') ? decode_json $c->req->param('selected_columns') : {"plot_name"=>1,"plot_number"=>1,"block_number"=>1,"accession_name"=>1,"is_a_control"=>1,"rep_number"=>1,"row_number"=>1,"col_number"=>1,"plot_geo_json"=>1};
+
+    my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
+        schema => $schema,
+        trial_id => $c->stash->{trial_id},
+        data_level => 'plots',
+        #treatment_project_ids => [1,2],
+        selected_columns => $selected_cols,
+        include_measured => "false"
+    });
+    my $output = $trial_layout_download->get_layout_output();
+
+    $c->stash->{rest} = $output;
+}
+
 sub trial_design : Chained('trial') PathPart('design') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -1332,16 +1549,21 @@ sub trial_design : Chained('trial') PathPart('design') Args(0) {
 
     my $design = $layout->get_design();
     my $design_type = $layout->get_design_type();
-    my $plot_dimensions = $layout->get_plot_dimensions();
 
-    my $plot_length = $plot_dimensions->[0] ? $plot_dimensions->[0] : '';
-    my $plot_width = $plot_dimensions->[1] ? $plot_dimensions->[1] : '';
-    my $plants_per_plot = $plot_dimensions->[2] ? $plot_dimensions->[2] : '';
-
-    my $block_numbers = $layout->get_block_numbers();
+    my $plot_length = '';
+    my $plot_width = '';
+    my $plants_per_plot = '';
     my $number_of_blocks = '';
-    if ($block_numbers) {
-        $number_of_blocks = scalar(@{$block_numbers});
+    if ($design_type ne 'genotyping_plate') {
+        my $plot_dimensions = $layout->get_plot_dimensions();
+        $plot_length = $plot_dimensions->[0] ? $plot_dimensions->[0] : '';
+        $plot_width = $plot_dimensions->[1] ? $plot_dimensions->[1] : '';
+        $plants_per_plot = $plot_dimensions->[2] ? $plot_dimensions->[2] : '';
+
+        my $block_numbers = $layout->get_block_numbers();
+        if ($block_numbers) {
+            $number_of_blocks = scalar(@{$block_numbers});
+        }
     }
 
     my $replicate_numbers = $layout->get_replicate_numbers();
@@ -1374,9 +1596,12 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
+    my $cxgn_project_type = $c->stash->{trial}->get_cxgn_project_type();
+
     my $fieldmap = CXGN::Trial::FieldMap->new({
       bcs_schema => $schema,
       trial_id => $c->stash->{trial_id},
+      experiment_type => $cxgn_project_type->{experiment_type}
     });
     my $return = $fieldmap->display_fieldmap();
 
@@ -1487,12 +1712,13 @@ sub delete_field_coord : Path('/ajax/phenotype/delete_field_coords') Args(0) {
     $c->stash->{rest} = {success => 1};
 }
 
-sub replace_trial_accession : Chained('trial') PathPart('replace_accession') Args(0) {
+sub replace_trial_stock : Chained('trial') PathPart('replace_stock') Args(0) {
   my $self = shift;
   my $c = shift;
   my $schema = $c->dbic_schema('Bio::Chado::Schema');
-  my $old_accession_id = $c->req->param('old_accession_id');
-  my $new_accession = $c->req->param('new_accession');
+  my $old_stock_id = $c->req->param('old_stock_id');
+  my $new_stock = $c->req->param('new_stock');
+  my $trial_stock_type = $c->req->param('trial_stock_type');
   my $trial_id = $c->stash->{trial_id};
 
   if ($self->privileges_denied($c)) {
@@ -1500,25 +1726,26 @@ sub replace_trial_accession : Chained('trial') PathPart('replace_accession') Arg
     return;
   }
 
-  if (!$new_accession){
-    $c->stash->{rest} = { error => "Provide new accession name." };
+  if (!$new_stock){
+    $c->stash->{rest} = { error => "Provide new stock name." };
     return;
   }
 
-  my $replace_accession_fieldmap = CXGN::Trial::FieldMap->new({
+  my $replace_stock_fieldmap = CXGN::Trial::FieldMap->new({
     bcs_schema => $schema,
     trial_id => $trial_id,
-    old_accession_id => $old_accession_id,
-    new_accession => $new_accession,
+    old_accession_id => $old_stock_id,
+    new_accession => $new_stock,
+    trial_stock_type => $trial_stock_type,
   });
 
-  my $return_error = $replace_accession_fieldmap->update_fieldmap_precheck();
+  my $return_error = $replace_stock_fieldmap->update_fieldmap_precheck();
      if ($return_error) {
        $c->stash->{rest} = { error => $return_error };
        return;
      }
 
-  my $replace_return_error = $replace_accession_fieldmap->replace_trial_accession_fieldMap();
+  my $replace_return_error = $replace_stock_fieldmap->replace_trial_stock_fieldMap();
   if ($replace_return_error) {
     $c->stash->{rest} = { error => $replace_return_error };
     return;
@@ -1574,7 +1801,55 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
   $c->stash->{rest} = { success => 1};
 }
 
-sub substitute_accession : Chained('trial') PathPart('substitute_accession') Args(0) {
+sub replace_well_accession : Chained('trial') PathPart('replace_well_accessions') Args(0) {
+  my $self = shift;
+  my $c = shift;
+  my $schema = $c->dbic_schema('Bio::Chado::Schema');
+  my $old_accession = $c->req->param('old_accession');
+  my $new_accession = $c->req->param('new_accession');
+  my $old_plot_id = $c->req->param('old_plot_id');
+  my $old_plot_name = $c->req->param('old_plot_name');
+  my $trial_id = $c->stash->{trial_id};
+
+  if ($self->privileges_denied($c)) {
+    $c->stash->{rest} = { error => "You have insufficient access privileges to edit this map." };
+    return;
+  }
+
+  if (!$new_accession){
+    $c->stash->{rest} = { error => "Provide new accession name." };
+    return;
+  }
+  my $cxgn_project_type = $c->stash->{trial}->get_cxgn_project_type();
+
+  my $replace_plot_accession_fieldmap = CXGN::Trial::FieldMap->new({
+    bcs_schema => $schema,
+    trial_id => $trial_id,
+    new_accession => $new_accession,
+    old_accession => $old_accession,
+    old_plot_id => $old_plot_id,
+    old_plot_name => $old_plot_name,
+    experiment_type => $cxgn_project_type->{experiment_type}
+  });
+
+  my $return_error = $replace_plot_accession_fieldmap->update_fieldmap_precheck();
+     if ($return_error) {
+       $c->stash->{rest} = { error => $return_error };
+       return;
+     }
+
+  print "Calling Replace Function...............\n";
+  my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap();
+  if ($replace_return_error) {
+    $c->stash->{rest} = { error => $replace_return_error };
+    return;
+  }
+
+  print "OldAccession: $old_accession, NewAcc: $new_accession, OldWellId: $old_plot_id\n";
+  $c->stash->{rest} = { success => 1};
+}
+
+sub substitute_stock : Chained('trial') PathPart('substitute_stock') Args(0) {
   my $self = shift;
 	my $c = shift;
   my $schema = $c->dbic_schema('Bio::Chado::Schema');
@@ -1591,7 +1866,7 @@ sub substitute_accession : Chained('trial') PathPart('substitute_accession') Arg
   }
 
   if ($plot_1_id == $plot_2_id){
-    $c->stash->{rest} = { error => "Choose a different plot/accession in 'select Accession 2' to perform this operation." };
+    $c->stash->{rest} = { error => "Choose a different plot/stock in 'select plot 2' to perform this operation." };
     return;
   }
 
@@ -1802,7 +2077,7 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
 
     my $error_string = '';
    # open file and remove return of line
-    open(my $F, "<", $archived_filename_with_path) || die "Can't open archive file $archived_filename_with_path";
+    open(my $F, "< :encoding(UTF-8)", $archived_filename_with_path) || die "Can't open archive file $archived_filename_with_path";
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $header = <$F>;
     while (<$F>) {
@@ -1836,26 +2111,59 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
     $c->stash->{rest} = {success => 1};
 }
 
-sub crosses_in_trial : Chained('trial') PathPart('crosses_in_trial') Args(0) {
+sub crosses_in_crossingtrial : Chained('trial') PathPart('crosses_in_crossingtrial') Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $trial_id = $c->stash->{trial_id};
-    my $trial = CXGN::Cross->new({bcs_schema => $schema, trial_id => $trial_id});
+    my $trial = CXGN::Cross->new({schema => $schema, trial_id => $trial_id});
 
-    my $result = $trial->get_crosses_in_trial();
+    my $result = $trial->get_crosses_in_crossing_experiment();
     my @crosses;
     foreach my $r (@$result){
-        my ($cross_id, $cross_name, $cross_type, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name, $progeny_number, $family_name) =@$r;
-        push @crosses, [qq{<a href = "/cross/$cross_id">$cross_name</a>}, $cross_type,
-        qq{<a href = "/stock/$female_parent_id/view">$female_parent_name</a>},
-        qq{<a href = "/stock/$male_parent_id/view">$male_parent_name</a>},
-        qq{<a href = "/stock/$female_plot_id/view">$female_plot_name</a>},
-        qq{<a href = "/stock/$male_plot_id/view">$male_plot_name</a>},
-        qq{<a href = "/stock/$female_plant_id/view">$female_plant_name</a>},
-        qq{<a href = "/stock/$male_plant_id/view">$male_plant_name</a>},
-        $progeny_number, $family_name];
+        my ($cross_id, $cross_name) =@$r;
+        push @crosses, {
+            cross_id => $cross_id,
+            cross_name => $cross_name,
+        };
+    }
+
+    $c->stash->{rest} = { data => \@crosses };
+}
+
+sub crosses_and_details_in_trial : Chained('trial') PathPart('crosses_and_details_in_trial') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
+
+    my $result = $trial->get_crosses_and_details_in_crossingtrial();
+    my @crosses;
+    foreach my $r (@$result){
+        my ($cross_id, $cross_name, $cross_combination, $cross_type, $female_parent_id, $female_parent_name, $female_ploidy, $male_parent_id, $male_parent_name, $male_ploidy, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name) =@$r;
+        push @crosses, {
+            cross_id => $cross_id,
+            cross_name => $cross_name,
+            cross_combination => $cross_combination,
+            cross_type => $cross_type,
+            female_parent_id => $female_parent_id,
+            female_parent_name => $female_parent_name,
+            female_ploidy_level => $female_ploidy,
+            male_parent_id => $male_parent_id,
+            male_parent_name => $male_parent_name,
+            male_ploidy_level => $male_ploidy,
+            female_plot_id => $female_plot_id,
+            female_plot_name => $female_plot_name,
+            male_plot_id => $male_plot_id,
+            male_plot_name => $male_plot_name,
+            female_plant_id => $female_plant_id,
+            female_plant_name => $female_plant_name,
+            male_plant_id => $male_plant_id,
+            male_plant_name => $male_plant_name
+        };
     }
 
     $c->stash->{rest} = { data => \@crosses };
@@ -1867,7 +2175,7 @@ sub cross_properties_trial : Chained('trial') PathPart('cross_properties_trial')
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $trial_id = $c->stash->{trial_id};
-    my $trial = CXGN::Cross->new({bcs_schema => $schema, trial_id => $trial_id});
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
 
     my $result = $trial->get_cross_properties_trial();
 
@@ -1876,9 +2184,9 @@ sub cross_properties_trial : Chained('trial') PathPart('cross_properties_trial')
 
     my @crosses;
     foreach my $r (@$result){
-        my ($cross_id, $cross_name, $cross_props_hash) =@$r;
+        my ($cross_id, $cross_name, $cross_combination, $cross_props_hash) =@$r;
 
-        my @row = ( qq{<a href = "/cross/$cross_id">$cross_name</a>} );
+        my @row = ( qq{<a href = "/cross/$cross_id">$cross_name</a>}, $cross_combination );
         foreach my $key (@column_order){
           push @row, $cross_props_hash->{$key};
         }
@@ -1895,18 +2203,185 @@ sub cross_progenies_trial : Chained('trial') PathPart('cross_progenies_trial') A
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $trial_id = $c->stash->{trial_id};
-    my $trial = CXGN::Cross->new({bcs_schema => $schema, trial_id => $trial_id});
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
 
     my $result = $trial->get_cross_progenies_trial();
     my @crosses;
     foreach my $r (@$result){
-        my ($cross_id, $cross_name, $progeny_number, $family_name) =@$r;
-        push @crosses, [qq{<a href = "/cross/$cross_id">$cross_name</a>}, $progeny_number, $family_name];
+        my ($cross_id, $cross_name, $cross_combination, $family_id, $family_name, $progeny_number) =@$r;
+        push @crosses, [qq{<a href = "/cross/$cross_id">$cross_name</a>}, $cross_combination, $progeny_number, qq{<a href = "/family/$family_id/">$family_name</a>}];
     }
 
     $c->stash->{rest} = { data => \@crosses };
 }
 
+
+sub seedlots_from_crossingtrial : Chained('trial') PathPart('seedlots_from_crossingtrial') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = CXGN::Cross->new({schema => $schema, trial_id => $trial_id});
+
+    my $result = $trial->get_seedlots_from_crossingtrial();
+    my @crosses;
+    foreach my $r (@$result){
+        my ($cross_id, $cross_name, $seedlot_id, $seedlot_name) =@$r;
+        push @crosses, {
+            cross_id => $cross_id,
+            cross_name => $cross_name,
+            seedlot_id => $seedlot_id,
+            seedlot_name => $seedlot_name
+        };
+    }
+
+    $c->stash->{rest} = { data => \@crosses };
+
+}
+
+
+sub get_crosses : Chained('trial') PathPart('get_crosses') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
+
+    my $result = $trial->get_crosses_in_crossing_experiment();
+    my @data = @$result;
+#    print STDERR "CROSSES =".Dumper(\@data)."\n";
+
+    $c->stash->{rest} = { crosses => \@data };
+}
+
+
+sub get_female_accessions : Chained('trial') PathPart('get_female_accessions') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
+
+    my $result = $trial->get_female_accessions_in_crossing_experiment();
+    my @data = @$result;
+#    print STDERR "FEMALE ACCESSIONS =".Dumper(\@data)."\n";
+
+    $c->stash->{rest} = { female_accessions => \@data };
+}
+
+
+sub get_male_accessions : Chained('trial') PathPart('get_male_accessions') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
+
+    my $result = $trial->get_male_accessions_in_crossing_experiment();
+    my @data = @$result;
+
+    $c->stash->{rest} = { male_accessions => \@data };
+}
+
+
+sub get_female_plots : Chained('trial') PathPart('get_female_plots') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
+
+    my $result = $trial->get_female_plots_in_crossing_experiment();
+    my @data = @$result;
+
+    $c->stash->{rest} = { female_plots => \@data };
+}
+
+
+sub get_male_plots : Chained('trial') PathPart('get_male_plots') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
+
+    my $result = $trial->get_male_plots_in_crossing_experiment();
+    my @data = @$result;
+
+    $c->stash->{rest} = { male_plots => \@data };
+}
+
+
+sub get_female_plants : Chained('trial') PathPart('get_female_plants') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
+
+    my $result = $trial->get_female_plants_in_crossing_experiment();
+    my @data = @$result;
+#    print STDERR "FEMALE PLANTS =".Dumper(\@data)."\n";
+
+    $c->stash->{rest} = { female_plants => \@data };
+}
+
+
+sub get_male_plants : Chained('trial') PathPart('get_male_plants') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
+
+    my $result = $trial->get_male_plants_in_crossing_experiment();
+    my @data = @$result;
+
+    $c->stash->{rest} = { male_plants => \@data };
+}
+
+
+sub delete_all_crosses_in_crossingtrial : Chained('trial') PathPart('delete_all_crosses_in_crossingtrial') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $trial_id = $c->stash->{trial_id};
+
+    if (!$c->user()){
+        $c->stash->{rest} = { error => "You must be logged in to delete crosses" };
+        $c->detach();
+    }
+    if (!$c->user()->check_roles("curator")) {
+        $c->stash->{rest} = { error => "You do not have the correct role to delete crosses. Please contact us." };
+        $c->detach();
+    }
+
+    my $trial = CXGN::Cross->new({schema => $schema, trial_id => $trial_id});
+
+    my $result = $trial->get_crosses_in_crossing_experiment();
+
+    foreach my $r (@$result){
+        my ($cross_stock_id, $cross_name) =@$r;
+        my $cross = CXGN::Cross->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'), cross_stock_id => $cross_stock_id });
+        my $error = $cross->delete();
+        print STDERR "ERROR = $error\n";
+
+        if ($error) {
+            $c->stash->{rest} = { error => "An error occurred attempting to delete a cross. ($@)" };
+            return;
+        }
+    }
+
+    $c->stash->{rest} = { success => 1 };
+}
 
 sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
     my $self = shift;
@@ -2060,38 +2535,31 @@ sub get_suppress_plot_phenotype : Chained('trial') PathPart('suppress_phenotype'
 sub delete_single_assayed_trait : Chained('trial') PathPart('delete_single_trait') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $pheno_ids = $c->req->param('pheno_id');
-    my $trait_ids = $c->req->param('traits_id');
+    my $pheno_ids = $c->req->param('pheno_id') ? JSON::decode_json($c->req->param('pheno_id')) : [];
+    my $trait_ids = $c->req->param('traits_id') ? JSON::decode_json($c->req->param('traits_id')) : [];
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my $trial = $c->stash->{trial};
 
     if (!$c->user()) {
-    	print STDERR "User not logged in... not deleting trait.\n";
-    	$c->stash->{rest} = {error => "You need to be logged in to delete trait." };
-    	return;
+        print STDERR "User not logged in... not deleting trait.\n";
+        $c->stash->{rest} = {error => "You need to be logged in to delete trait." };
+        return;
     }
 
     if ($self->privileges_denied($c)) {
-      $c->stash->{rest} = { error => "You have insufficient access privileges to delete assayed trait for this trial." };
-      return;
+        $c->stash->{rest} = { error => "You have insufficient access privileges to delete assayed trait for this trial." };
+        return;
     }
 
-    my $delete_trait_return_error;
-    if ($pheno_ids){
-            my $phenotypes_ids = JSON::decode_json($pheno_ids);
-         $delete_trait_return_error = $trial->delete_assayed_trait($phenotypes_ids, [] );
-    }
-    if ($trait_ids){
-        my $traits_ids = JSON::decode_json($trait_ids);
-         $delete_trait_return_error = $trial->delete_assayed_trait([], $traits_ids );
-    }
+    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+    my $delete_trait_return_error = $trial->delete_assayed_trait($c->config->{basepath}, $c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $temp_file_nd_experiment_id, $pheno_ids, $trait_ids);
 
     if ($delete_trait_return_error) {
-      $c->stash->{rest} = { error => $delete_trait_return_error };
-      return;
+        $c->stash->{rest} = { error => $delete_trait_return_error };
+    } else {
+        $c->stash->{rest} = { success => 1};
     }
-
-    $c->stash->{rest} = { success => 1};
 }
 
 sub retrieve_plot_image : Chained('trial') PathPart('retrieve_plot_images') Args(0) {
@@ -2204,6 +2672,900 @@ sub crossing_trial_from_field_trial : Chained('trial') PathPart('crossing_trial_
     my $field_trials_source_of_crossing_trial = $c->stash->{trial}->get_field_trials_source_of_crossing_trial();
 
     $c->stash->{rest} = {success => 1, crossing_trials_from_field_trial => $crossing_trials_from_field_trial, field_trials_source_of_crossing_trial => $field_trials_source_of_crossing_trial};
+}
+
+sub trial_correlate_traits : Chained('trial') PathPart('correlate_traits') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $trait_ids = decode_json $c->req->param('trait_ids');
+    my $obsunit_level = $c->req->param('observation_unit_level');
+    my $correlation_type = $c->req->param('correlation_type');
+
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to do this analysis!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to do this analysis!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        'MaterializedViewTable',
+        {
+            bcs_schema=>$schema,
+            data_level=>$obsunit_level,
+            trait_list=>$trait_ids,
+            trial_list=>[$c->stash->{trial_id}],
+            include_timestamp=>0,
+            exclude_phenotype_outlier=>0
+        }
+    );
+    my ($data, $unique_traits) = $phenotypes_search->search();
+    my @sorted_trait_names = sort keys %$unique_traits;
+
+    if (scalar(@$data) == 0) {
+        $c->stash->{rest} = { error => "There are no phenotypes for the trials and traits you have selected!"};
+        return;
+    }
+
+    my %phenotype_data;
+    my %trait_hash;
+    my %seen_obsunit_ids;
+    foreach my $obs_unit (@$data){
+        my $obsunit_id = $obs_unit->{observationunit_stock_id};
+        my $observations = $obs_unit->{observations};
+        foreach (@$observations){
+            $phenotype_data{$obsunit_id}->{$_->{trait_id}} = $_->{value};
+            $trait_hash{$_->{trait_id}} = $_->{trait_name};
+        }
+        $seen_obsunit_ids{$obsunit_id}++;
+    }
+    my @sorted_obs_units = sort keys %seen_obsunit_ids;
+
+    my $header_string = join ',', @$trait_ids;
+
+    my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
+    my $tmp_stats_dir = $shared_cluster_dir_config."/tmp_trial_correlation";
+    mkdir $tmp_stats_dir if ! -d $tmp_stats_dir;
+    my ($stats_tempfile_fh, $stats_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    my ($stats_out_tempfile_fh, $stats_out_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+
+    open(my $F, ">", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
+        print $F $header_string."\n";
+        foreach my $s (@sorted_obs_units) {
+            my @line = ();
+            foreach my $t (@$trait_ids) {
+                my $val = $phenotype_data{$s}->{$t};
+                if (!$val && $val != 0) {
+                    $val = 'NA';
+                }
+                push @line, $val;
+            }
+            my $line_string = join ',', @line;
+            print $F "$line_string\n";
+        }
+    close($F);
+
+    my $cmd = 'R -e "library(data.table);
+    mat <- fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\');
+    res <- cor(mat, method=\''.$correlation_type.'\', use = \'complete.obs\')
+    res_rounded <- round(res, 2)
+    write.table(res_rounded, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
+    print STDERR Dumper $cmd;
+    my $status = system($cmd);
+
+    my $csv = Text::CSV->new({ sep_char => "\t" });
+    my @result;
+    open(my $fh, '<', $stats_out_tempfile)
+        or die "Could not open file '$stats_out_tempfile' $!";
+
+        print STDERR "Opened $stats_out_tempfile\n";
+        my $header = <$fh>;
+        my @header_cols;
+        if ($csv->parse($header)) {
+            @header_cols = $csv->fields();
+        }
+
+        my @header_trait_names = ("Trait");
+        foreach (@header_cols) {
+            push @header_trait_names, $trait_hash{$_};
+        }
+        push @result, \@header_trait_names;
+
+        while (my $row = <$fh>) {
+            my @columns;
+            if ($csv->parse($row)) {
+                @columns = $csv->fields();
+            }
+
+            my $trait_id = shift @columns;
+            my @line = ($trait_hash{$trait_id});
+            push @line, @columns;
+            push @result, \@line;
+        }
+    close($fh);
+
+    $c->stash->{rest} = {success => 1, result => \@result};
+}
+
+sub trial_plot_time_series_accessions : Chained('trial') PathPart('plot_time_series_accessions') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $trait_ids = decode_json $c->req->param('trait_ids');
+    my $accession_ids = $c->req->param('accession_ids') ne 'null' ? decode_json $c->req->param('accession_ids') : [];
+    my $trait_format = $c->req->param('trait_format');
+    my $data_level = $c->req->param('data_level');
+
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to do this analysis!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to do this analysis!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        'MaterializedViewTable',
+        {
+            bcs_schema=>$schema,
+            data_level=>$data_level,
+            trait_list=>$trait_ids,
+            trial_list=>[$c->stash->{trial_id}],
+            accession_list=>$accession_ids,
+            include_timestamp=>0,
+            exclude_phenotype_outlier=>0
+        }
+    );
+    my ($data, $unique_traits) = $phenotypes_search->search();
+    my @sorted_trait_names = sort keys %$unique_traits;
+
+    if (scalar(@$data) == 0) {
+        $c->stash->{rest} = { error => "There are no phenotypes for the trials and traits you have selected!"};
+        return;
+    }
+
+    my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$c->stash->{trial_id}});
+    my $traits_assayed = $trial->get_traits_assayed($data_level, $trait_format, 'time_ontology');
+    my %unique_traits_ids;
+    foreach (@$traits_assayed) {
+        $unique_traits_ids{$_->[0]} = $_;
+    }
+    my %unique_components;
+    foreach (values %unique_traits_ids) {
+        foreach my $component (@{$_->[2]}) {
+            if ($component->{cv_type} && $component->{cv_type} eq 'time_ontology') {
+                $unique_components{$_->[0]} = $component->{name};
+            }
+        }
+    }
+
+    my %phenotype_data;
+    my %trait_hash;
+    my %seen_germplasm_names;
+    foreach my $obs_unit (@$data){
+        my $obsunit_id = $obs_unit->{observationunit_stock_id};
+        my $observations = $obs_unit->{observations};
+        my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
+        my $germplasm_uniquename = $obs_unit->{germplasm_uniquename};
+        foreach (@$observations){
+            push @{$phenotype_data{$germplasm_uniquename}->{$_->{trait_id}}}, $_->{value};
+            $trait_hash{$_->{trait_id}} = $_->{trait_name};
+        }
+        $seen_germplasm_names{$germplasm_uniquename}++;
+    }
+    my @sorted_germplasm_names = sort keys %seen_germplasm_names;
+
+    my $header_string = 'germplasmName,time,value';
+
+    my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
+    my $tmp_stats_dir = $shared_cluster_dir_config."/tmp_trial_correlation";
+    mkdir $tmp_stats_dir if ! -d $tmp_stats_dir;
+    my ($stats_tempfile_fh, $stats_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    my ($stats_out_tempfile_fh, $stats_out_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+
+    open(my $F, ">", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
+        print $F $header_string."\n";
+        foreach my $s (@sorted_germplasm_names) {
+            foreach my $t (@$trait_ids) {
+                my $time = $unique_components{$t};
+                my @time_split = split ' ', $time;
+                my $time_val = $time_split[1];
+                my $vals = $phenotype_data{$s}->{$t};
+                my $val;
+                if (!$vals || scalar(@$vals) == 0) {
+                    $val = 'NA';
+                }
+                else {
+                    $val = sum(@$vals)/scalar(@$vals);
+                }
+                print $F "$s,$time_val,$val\n";
+            }
+        }
+    close($F);
+
+    my @set = ('0' ..'9', 'A' .. 'F');
+    my @colors;
+    for (1..scalar(@sorted_germplasm_names)) {
+        my $str = join '' => map $set[rand @set], 1 .. 6;
+        push @colors, '#'.$str;
+    }
+    my $color_string = join '\',\'', @colors;
+
+    my $dir = $c->tempfiles_subdir('/trial_analysis_accession_time_series_plot_dir');
+    my $pheno_figure_tempfile_string = $c->tempfile( TEMPLATE => 'trial_analysis_accession_time_series_plot_dir/figureXXXX');
+    $pheno_figure_tempfile_string .= '.png';
+    my $pheno_figure_tempfile = $c->config->{basepath}."/".$pheno_figure_tempfile_string;
+
+    my $cmd = 'R -e "library(data.table); library(ggplot2);
+    mat <- fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\');
+    mat\$time <- as.numeric(as.character(mat\$time));
+    options(device=\'png\');
+    par();
+    sp <- ggplot(mat, aes(x = time, y = value)) +
+        geom_line(aes(color = germplasmName), size = 1) +
+        scale_fill_manual(values = c(\''.$color_string.'\')) +
+        theme_minimal();
+    sp <- sp + guides(shape = guide_legend(override.aes = list(size = 0.5)));
+    sp <- sp + guides(color = guide_legend(override.aes = list(size = 0.5)));
+    sp <- sp + theme(legend.title = element_text(size = 3), legend.text = element_text(size = 3));';
+    if (scalar(@sorted_germplasm_names) > 100) {
+        $cmd .= 'sp <- sp + theme(legend.position = \'none\');';
+    }
+    $cmd .= 'ggsave(\''.$pheno_figure_tempfile.'\', sp, device=\'png\', width=12, height=6, units=\'in\');
+    dev.off();"';
+    print STDERR Dumper $cmd;
+    my $status = system($cmd);
+
+    $c->stash->{rest} = {success => 1, figure => $pheno_figure_tempfile_string};
+}
+
+sub trial_accessions_rank : Chained('trial') PathPart('accessions_rank') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $trait_ids = decode_json $c->req->param('trait_ids');
+    my $trait_weights = decode_json $c->req->param('trait_weights');
+    my $accession_ids = $c->req->param('accession_ids') ne 'null' ? decode_json $c->req->param('accession_ids') : [];
+    my $trait_format = $c->req->param('trait_format');
+    my $data_level = $c->req->param('data_level');
+
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to do this analysis!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to do this analysis!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        'MaterializedViewTable',
+        {
+            bcs_schema=>$schema,
+            data_level=>$data_level,
+            trait_list=>$trait_ids,
+            trial_list=>[$c->stash->{trial_id}],
+            accession_list=>$accession_ids,
+            include_timestamp=>0,
+            exclude_phenotype_outlier=>0
+        }
+    );
+    my ($data, $unique_traits) = $phenotypes_search->search();
+    my @sorted_trait_names = sort keys %$unique_traits;
+
+    if (scalar(@$data) == 0) {
+        $c->stash->{rest} = { error => "There are no phenotypes for the trials and traits you have selected!"};
+        return;
+    }
+
+    my %trait_weight_map;
+    foreach (@$trait_weights) {
+        $trait_weight_map{$_->[0]} = $_->[1];
+    }
+    print STDERR Dumper \%trait_weight_map;
+
+    my %phenotype_data;
+    my %trait_hash;
+    my %seen_germplasm_names;
+    foreach my $obs_unit (@$data){
+        my $obsunit_id = $obs_unit->{observationunit_stock_id};
+        my $observations = $obs_unit->{observations};
+        my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
+        my $germplasm_uniquename = $obs_unit->{germplasm_uniquename};
+        foreach (@$observations){
+            push @{$phenotype_data{$germplasm_uniquename}->{$_->{trait_id}}}, $_->{value};
+            $trait_hash{$_->{trait_id}} = $_->{trait_name};
+        }
+        $seen_germplasm_names{$germplasm_uniquename}++;
+    }
+    my @sorted_germplasm_names = sort keys %seen_germplasm_names;
+
+    my %accession_sum;
+    foreach my $s (@sorted_germplasm_names) {
+        foreach my $t (@$trait_ids) {
+            my $vals = $phenotype_data{$s}->{$t};
+            my $average_val = sum(@$vals)/scalar(@$vals);
+            my $average_val_weighted = $average_val*$trait_weight_map{$t};
+            $accession_sum{$s} += $average_val_weighted;
+        }
+    }
+
+    my @sorted_accessions = sort { $accession_sum{$b} <=> $accession_sum{$a} } keys(%accession_sum);
+    my @sorted_values = @accession_sum{@sorted_accessions};
+    my @sorted_rank = (1..scalar(@sorted_accessions));
+
+    $c->stash->{rest} = {success => 1, results => \%accession_sum, sorted_accessions => \@sorted_accessions, sorted_values => \@sorted_values, sorted_ranks => \@sorted_rank};
+}
+
+sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    print STDERR Dumper $c->req->params();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $trait_ids = decode_json $c->req->param('trait_ids');
+    my $trait_weights = decode_json $c->req->param('trait_weights');
+    my $accession_ids = $c->req->param('accession_ids') ne 'null' ? decode_json $c->req->param('accession_ids') : [];
+    my $trait_format = $c->req->param('trait_format');
+    my $nd_protocol_id = $c->req->param('nd_protocol_id');
+    my $data_level = $c->req->param('data_level');
+    my $genotype_filter_string = $c->req->param('genotype_filter');
+    my $compute_from_parents = $c->req->param('compute_from_parents') eq 'yes' ? 1 : 0;
+
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to do this analysis!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to do this analysis!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        'MaterializedViewTable',
+        {
+            bcs_schema=>$schema,
+            data_level=>$data_level,
+            trait_list=>$trait_ids,
+            trial_list=>[$c->stash->{trial_id}],
+            accession_list=>$accession_ids,
+            include_timestamp=>0,
+            exclude_phenotype_outlier=>0
+        }
+    );
+    my ($data, $unique_traits) = $phenotypes_search->search();
+    my @sorted_trait_names = sort keys %$unique_traits;
+
+    if (scalar(@$data) == 0) {
+        $c->stash->{rest} = { error => "There are no phenotypes for the trials and traits you have selected!"};
+        return;
+    }
+
+    my %trait_weight_map;
+    foreach (@$trait_weights) {
+        $trait_weight_map{$_->[0]} = $_->[1];
+    }
+    # print STDERR Dumper \%trait_weight_map;
+
+    my %phenotype_data;
+    my %trait_hash;
+    my %seen_germplasm_names;
+    my %seen_germplasm_ids;
+    foreach my $obs_unit (@$data){
+        my $obsunit_id = $obs_unit->{observationunit_stock_id};
+        my $observations = $obs_unit->{observations};
+        my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
+        my $germplasm_uniquename = $obs_unit->{germplasm_uniquename};
+        foreach (@$observations){
+            push @{$phenotype_data{$germplasm_uniquename}->{$_->{trait_id}}}, $_->{value};
+            $trait_hash{$_->{trait_id}} = $_->{trait_name};
+        }
+        $seen_germplasm_names{$germplasm_uniquename} = $germplasm_stock_id;
+        $seen_germplasm_ids{$germplasm_stock_id}++;
+    }
+    my @sorted_germplasm_names = sort keys %seen_germplasm_names;
+    my @sorted_germplasm_ids = sort keys %seen_germplasm_ids;
+
+    my %accession_sum;
+    foreach my $s (@sorted_germplasm_names) {
+        foreach my $t (@$trait_ids) {
+            my $vals = $phenotype_data{$s}->{$t};
+            my $average_val = sum(@$vals)/scalar(@$vals);
+            my $average_val_weighted = $average_val*$trait_weight_map{$t};
+            $accession_sum{$s} += $average_val_weighted;
+        }
+    }
+
+    my @sorted_accessions = sort { $accession_sum{$b} <=> $accession_sum{$a} } keys(%accession_sum);
+    my @sorted_values = @accession_sum{@sorted_accessions};
+    my $sort_increment = ceil(scalar(@sorted_accessions)/10)+0;
+    # print STDERR Dumper $sort_increment;
+
+    my $percentile_inc = $sort_increment/scalar(@sorted_accessions);
+
+    my $acc_counter = 1;
+    my $rank_counter = 1;
+    my %rank_hash;
+    my %rank_lookup;
+    my %rank_percentile;
+    foreach (@sorted_accessions) {
+        print STDERR Dumper $acc_counter;
+        if ($acc_counter >= $sort_increment) {
+            $rank_counter++;
+            $acc_counter = 0;
+        }
+        my $stock_id = $seen_germplasm_names{$_};
+        push @{$rank_hash{$rank_counter}}, $stock_id;
+        $rank_lookup{$stock_id} = $rank_counter;
+        my $percentile = $rank_counter*$percentile_inc;
+        $rank_percentile{$rank_counter} = "Rank ".$rank_counter;
+        $acc_counter++;
+    }
+
+    my @sorted_rank_groups;
+    foreach (@sorted_accessions) {
+        my $stock_id = $seen_germplasm_names{$_};
+        push @sorted_rank_groups, $rank_lookup{$stock_id};
+    }
+    my @sorted_ranks = (1..scalar(@sorted_accessions));
+    # print STDERR Dumper \%rank_hash;
+    # print STDERR Dumper \%rank_lookup;
+
+    my $geno = CXGN::Genotype::DownloadFactory->instantiate(
+        'DosageMatrix',    #can be either 'VCF' or 'DosageMatrix'
+        {
+            bcs_schema=>$schema,
+            people_schema=>$people_schema,
+            cache_root_dir=>$c->config->{cache_file_path},
+            accession_list=>\@sorted_germplasm_ids,
+            trial_list=>[$c->stash->{trial_id}],
+            protocol_id_list=>[$nd_protocol_id],
+            compute_from_parents=>$compute_from_parents,
+        }
+    );
+    my $file_handle = $geno->download(
+        $c->config->{cluster_shared_tempdir},
+        $c->config->{backend},
+        $c->config->{cluster_host},
+        $c->config->{'web_cluster_queue'},
+        $c->config->{basepath}
+    );
+
+    my %genotype_filter;
+    if ($genotype_filter_string) {
+        my @genos = split ',', $genotype_filter_string;
+        %genotype_filter = map {$_ => 1} @genos;
+    }
+
+    my %geno_rank_counter;
+    my %geno_rank_seen_scores;
+    my @marker_names;
+    open my $geno_fh, "<&", $file_handle or die "Can't open output file: $!";
+        my $header = <$geno_fh>;
+        chomp($header);
+        # print STDERR Dumper $header;
+        my @header = split "\t", $header;
+        my $header_dummy = shift @header;
+
+        my $position = 0;
+        while (my $row = <$geno_fh>) {
+            chomp($row);
+            if ($row) {
+                # print STDERR Dumper $row;
+                my @line = split "\t", $row;
+                my $marker_name = shift @line;
+                push @marker_names, $marker_name;
+                my $counter = 0;
+                foreach (@line) {
+                    if ( defined $_ && $_ ne '' && $_ ne 'NA') {
+                        my $rank = $rank_lookup{$header[$counter]};
+                        if (!$genotype_filter_string || exists($genotype_filter{$_})) {
+                            $geno_rank_counter{$rank}->{$position}->{$_}++;
+                            $geno_rank_seen_scores{$_}++;
+                        }
+                    }
+                    $counter++;
+                }
+                $position++;
+            }
+        }
+    close($geno_fh);
+    # print STDERR Dumper \%geno_rank_counter;
+    my @sorted_seen_scores = sort keys %geno_rank_seen_scores;
+
+    my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
+    my $tmp_stats_dir = $shared_cluster_dir_config."/tmp_trial_genotype_comparision";
+    mkdir $tmp_stats_dir if ! -d $tmp_stats_dir;
+    my ($stats_tempfile_fh, $stats_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+
+    my $header_string = 'Rank,Genotype,Marker,Count';
+
+    open(my $F, ">", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
+        print $F $header_string."\n";
+        while (my ($rank, $pos_o) = each %geno_rank_counter) {
+            while (my ($position, $score_o) = each %$pos_o) {
+                while (my ($score, $count) = each %$score_o) {
+                    print $F $rank_percentile{$rank}.",$score,$position,$count\n";
+                }
+            }
+        }
+    close($F);
+
+    my @set = ('0' ..'9', 'A' .. 'F');
+    my @colors;
+    for (1..scalar(@sorted_seen_scores)) {
+        my $str = join '' => map $set[rand @set], 1 .. 6;
+        push @colors, '#'.$str;
+    }
+    my $color_string = join '\',\'', @colors;
+
+    my $dir = $c->tempfiles_subdir('/trial_analysis_genotype_comparision_plot_dir');
+    my $pheno_figure_tempfile_string = $c->tempfile( TEMPLATE => 'trial_analysis_genotype_comparision_plot_dir/figureXXXX');
+    $pheno_figure_tempfile_string .= '.png';
+    my $pheno_figure_tempfile = $c->config->{basepath}."/".$pheno_figure_tempfile_string;
+
+    my $cmd = 'R -e "library(data.table); library(ggplot2);
+    mat <- fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\');
+    mat\$Marker <- as.numeric(as.character(mat\$Marker));
+    mat\$Genotype <- as.character(mat\$Genotype);
+    options(device=\'png\');
+    par();
+    sp <- ggplot(mat, aes(x = Marker, y = Count)) +
+        geom_line(aes(color = Genotype), size=0.2) +
+        scale_fill_manual(values = c(\''.$color_string.'\')) +
+        theme_minimal();
+    sp <- sp + facet_grid(Rank ~ .);';
+    $cmd .= 'ggsave(\''.$pheno_figure_tempfile.'\', sp, device=\'png\', width=12, height=12, units=\'in\');
+    dev.off();"';
+    print STDERR Dumper $cmd;
+    my $status = system($cmd);
+
+    $c->stash->{rest} = {success => 1, results => \%accession_sum, sorted_accessions => \@sorted_accessions, sorted_values => \@sorted_values, sorted_ranks => \@sorted_ranks, sorted_rank_groups => \@sorted_rank_groups, figure => $pheno_figure_tempfile_string};
+}
+
+sub trial_calculate_numerical_derivative : Chained('trial') PathPart('calculate_numerical_derivative') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $trait_ids = decode_json $c->req->param('trait_ids');
+    my $derivative = $c->req->param('derivative');
+    my $data_level = $c->req->param('data_level');
+
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to do this analysis!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to do this analysis!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        'MaterializedViewTable',
+        {
+            bcs_schema=>$schema,
+            data_level=>$data_level,
+            trait_list=>$trait_ids,
+            trial_list=>[$c->stash->{trial_id}],
+            include_timestamp=>0,
+            exclude_phenotype_outlier=>0
+        }
+    );
+    my ($data, $unique_traits) = $phenotypes_search->search();
+    my @sorted_trait_names = sort keys %$unique_traits;
+
+    if (scalar(@$data) == 0) {
+        $c->stash->{rest} = { error => "There are no phenotypes for the trials and traits you have selected!"};
+        return;
+    }
+
+    my %phenotype_data;
+    my %seen_plot_names;
+    my %seen_rows;
+    my %seen_cols;
+    my %row_col_hash;
+    my %rev_row;
+    my %rev_col;
+    foreach my $obs_unit (@$data){
+        my $obsunit_id = $obs_unit->{observationunit_stock_id};
+        my $obsunit_name = $obs_unit->{observationunit_uniquename};
+        my $observations = $obs_unit->{observations};
+        my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
+        my $germplasm_uniquename = $obs_unit->{germplasm_uniquename};
+        my $row = $obs_unit->{obsunit_row_number};
+        my $col = $obs_unit->{obsunit_col_number};
+        foreach (@$observations){
+            $phenotype_data{$obsunit_name}->{$_->{trait_name}} = $_->{value};
+        }
+        $rev_row{$obsunit_name} = $row;
+        $rev_col{$obsunit_name} = $col;
+        $row_col_hash{$row}->{$col} = $obsunit_name;
+        $seen_plot_names{$obsunit_name}++;
+        $seen_rows{$row}++;
+        $seen_cols{$col}++;
+    }
+    my @sorted_plot_names = sort keys %seen_plot_names;
+    my @sorted_rows = sort { $a <=> $b } keys %seen_rows;
+    my @sorted_cols = sort { $a <=> $b } keys %seen_cols;
+
+    my @allowed_composed_cvs = split ',', $c->config->{composable_cvs};
+    my $composable_cvterm_delimiter = $c->config->{composable_cvterm_delimiter};
+    my $composable_cvterm_format = $c->config->{composable_cvterm_format};
+
+    my %trait_id_map;
+    foreach my $trait_name (@sorted_trait_names) {
+        my $trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name)->cvterm_id();
+        $trait_id_map{$trait_name} = $trait_cvterm_id;
+    }
+    my @trait_ids = values %trait_id_map;
+
+    my $analysis_statistical_ontology_term = 'Two-dimension numerical first derivative across rows and columns|SGNSTAT:0000022';
+    # my $analysis_statistical_ontology_term = 'Two-dimension numerical second derivative across rows and columns|SGNSTAT:0000023';
+    my $stat_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $analysis_statistical_ontology_term)->cvterm_id();
+
+    my $categories = {
+        object => [],
+        attribute => [$stat_cvterm_id],
+        method => [],
+        unit => [],
+        trait => \@trait_ids,
+        tod => [],
+        toy => [],
+        gen => [],
+    };
+
+    my %time_term_map;
+
+    my $traits = SGN::Model::Cvterm->get_traits_from_component_categories($schema, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, $categories);
+    my $existing_traits = $traits->{existing_traits};
+    my $new_traits = $traits->{new_traits};
+    # print STDERR Dumper $new_traits;
+    # print STDERR Dumper $existing_traits;
+    my %new_trait_names;
+    foreach (@$new_traits) {
+        my $components = $_->[0];
+        $new_trait_names{$_->[1]} = join ',', @$components;
+    }
+
+    my $onto = CXGN::Onto->new( { schema => $schema } );
+    my $new_terms = $onto->store_composed_term(\%new_trait_names);
+
+    my %composed_trait_map;
+    while (my($trait_name, $trait_id) = each %trait_id_map) {
+        my $components = [$trait_id, $stat_cvterm_id];
+        my $composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, $components);
+        my $composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $composed_cvterm_id, 'extended');
+        $composed_trait_map{$trait_name} = $composed_trait_name;
+    }
+    my @composed_trait_names = values %composed_trait_map;
+
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    my %derivative_results;
+    no warnings 'uninitialized';
+    foreach my $s (@sorted_plot_names) {
+        foreach my $t (@sorted_trait_names) {
+            my $trait = $composed_trait_map{$t};
+            my @derivs;
+            my $val = $phenotype_data{$s}->{$t};
+            my $row = $rev_row{$s};
+            my $col = $rev_col{$s};
+            my @values = (
+                $phenotype_data{$row_col_hash{$row-1}->{$col}}->{$t},
+                $phenotype_data{$row_col_hash{$row+1}->{$col}}->{$t},
+                $phenotype_data{$row_col_hash{$row}->{$col-1}}->{$t},
+                $phenotype_data{$row_col_hash{$row}->{$col+1}}->{$t},
+
+                $phenotype_data{$row_col_hash{$row-1}->{$col-1}}->{$t},
+                $phenotype_data{$row_col_hash{$row+1}->{$col-1}}->{$t},
+                $phenotype_data{$row_col_hash{$row-1}->{$col+1}}->{$t},
+                $phenotype_data{$row_col_hash{$row+1}->{$col+1}}->{$t},
+
+                $phenotype_data{$row_col_hash{$row-2}->{$col}}->{$t},
+                $phenotype_data{$row_col_hash{$row+2}->{$col}}->{$t},
+                $phenotype_data{$row_col_hash{$row}->{$col-2}}->{$t},
+                $phenotype_data{$row_col_hash{$row}->{$col+2}}->{$t},
+
+                $phenotype_data{$row_col_hash{$row-2}->{$col-2}}->{$t},
+                $phenotype_data{$row_col_hash{$row+2}->{$col-2}}->{$t},
+                $phenotype_data{$row_col_hash{$row-2}->{$col+2}}->{$t},
+                $phenotype_data{$row_col_hash{$row+2}->{$col+2}}->{$t},
+
+                $phenotype_data{$row_col_hash{$row-2}->{$col-1}}->{$t},
+                $phenotype_data{$row_col_hash{$row+2}->{$col-1}}->{$t},
+                $phenotype_data{$row_col_hash{$row-2}->{$col+1}}->{$t},
+                $phenotype_data{$row_col_hash{$row+2}->{$col+1}}->{$t},
+
+                $phenotype_data{$row_col_hash{$row-1}->{$col-2}}->{$t},
+                $phenotype_data{$row_col_hash{$row+1}->{$col-2}}->{$t},
+                $phenotype_data{$row_col_hash{$row-1}->{$col+2}}->{$t},
+                $phenotype_data{$row_col_hash{$row+1}->{$col+2}}->{$t},
+
+                $phenotype_data{$row_col_hash{$row-3}->{$col}}->{$t},
+                $phenotype_data{$row_col_hash{$row+3}->{$col}}->{$t},
+                $phenotype_data{$row_col_hash{$row}->{$col-3}}->{$t},
+                $phenotype_data{$row_col_hash{$row}->{$col+3}}->{$t},
+
+                $phenotype_data{$row_col_hash{$row-3}->{$col-3}}->{$t},
+                $phenotype_data{$row_col_hash{$row+3}->{$col-3}}->{$t},
+                $phenotype_data{$row_col_hash{$row-3}->{$col+3}}->{$t},
+                $phenotype_data{$row_col_hash{$row+3}->{$col+3}}->{$t},
+
+                $phenotype_data{$row_col_hash{$row-3}->{$col-1}}->{$t},
+                $phenotype_data{$row_col_hash{$row+3}->{$col-1}}->{$t},
+                $phenotype_data{$row_col_hash{$row-3}->{$col+1}}->{$t},
+                $phenotype_data{$row_col_hash{$row+3}->{$col+1}}->{$t},
+
+                $phenotype_data{$row_col_hash{$row-3}->{$col-2}}->{$t},
+                $phenotype_data{$row_col_hash{$row+3}->{$col-2}}->{$t},
+                $phenotype_data{$row_col_hash{$row-3}->{$col+2}}->{$t},
+                $phenotype_data{$row_col_hash{$row+3}->{$col+2}}->{$t},
+
+                $phenotype_data{$row_col_hash{$row-1}->{$col-3}}->{$t},
+                $phenotype_data{$row_col_hash{$row+1}->{$col-3}}->{$t},
+                $phenotype_data{$row_col_hash{$row-1}->{$col+3}}->{$t},
+                $phenotype_data{$row_col_hash{$row+1}->{$col+3}}->{$t},
+
+                $phenotype_data{$row_col_hash{$row-2}->{$col-3}}->{$t},
+                $phenotype_data{$row_col_hash{$row+2}->{$col-3}}->{$t},
+                $phenotype_data{$row_col_hash{$row-2}->{$col+3}}->{$t},
+                $phenotype_data{$row_col_hash{$row+2}->{$col+3}}->{$t}
+            );
+
+            foreach (@values) {
+                if (defined($_)) {
+                    push @derivs, ($val - $_);
+                    push @derivs, ( (($val + $_)/8) - $_);
+                    push @derivs, ( (($val + $_)/4) - $_);
+                    push @derivs, ( (($val + $_)*3/8) - $_);
+                    push @derivs, ( (($val + $_)/2) - $_);
+                    push @derivs, ( (($val + $_)*5/8) - $_);
+                    push @derivs, ( (($val + $_)*3/4) - $_);
+                    push @derivs, ( (($val + $_)*7/8) - $_);
+                }
+            }
+            # print STDERR Dumper \@derivs;
+            if (scalar(@derivs) > 0) {
+                my $d = sum(@derivs)/scalar(@derivs);
+                $derivative_results{$s}->{$trait} = [$d, $timestamp, $user_name, '', ''];
+            }
+        }
+    }
+    # print STDERR Dumper \%derivative_results;
+
+    if (scalar(keys %derivative_results) != scalar(@sorted_plot_names)) {
+        $c->stash->{rest} = { error => "Not all plots have rows and columns defined! Please make sure row and columns are saved for this field trial!"};
+        return;
+    }
+
+    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+
+    my %phenotype_metadata = (
+        'archived_file' => 'none',
+        'archived_file_type' => 'numerical_derivative_row_and_column_computation',
+        'operator' => $user_name,
+        'date' => $timestamp
+    );
+
+    my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+        basepath=>$c->config->{basepath},
+        dbhost=>$c->config->{dbhost},
+        dbname=>$c->config->{dbname},
+        dbuser=>$c->config->{dbuser},
+        dbpass=>$c->config->{dbpass},
+        temp_file_nd_experiment_id=>$temp_file_nd_experiment_id,
+        bcs_schema=>$schema,
+        metadata_schema=>$metadata_schema,
+        phenome_schema=>$phenome_schema,
+        user_id=>$user_id,
+        stock_list=>\@sorted_plot_names,
+        trait_list=>\@composed_trait_names,
+        values_hash=>\%derivative_results,
+        has_timestamps=>0,
+        overwrite_values=>1,
+        ignore_new_values=>0,
+        metadata_hash=>\%phenotype_metadata,
+    );
+    my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+    my ($stored_phenotype_error, $stored_Phenotype_success) = $store_phenotypes->store();
+
+    my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
+
+    $c->stash->{rest} = {success => 1};
 }
 
 1;

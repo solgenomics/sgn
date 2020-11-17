@@ -1,5 +1,6 @@
 
 <%args>
+$facilities => ()
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.BreedersToolbox.GenotypingTrial' ] &>
@@ -21,7 +22,7 @@
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Genotyping Plate Tissue Samples</h4>", info_section_subtitle => 'View and create tissue samples for genotyping plates. Genotyping plates represent tissue samples in a 96 or 384 well plate layout.', buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" name="create_genotyping_trial_link">Create or upload a genotyping plate</button> <button class="btn btn-sm btn-primary" style="margin:3px" name="export_genotyping_trial_link">Export to Genotyping Vendor</button>', icon_class => "glyphicon glyphicon-th", info_section_id => "manage_tissue_samples_genotyping_trials" &>
 
 <& /help/workflow_guided/tissue_sample_help.mas &>
-<& /breeders_toolbox/genotyping_trials/create_genotyping_trial_dialogs.mas &>
+<& /breeders_toolbox/genotyping_trials/create_genotyping_trial_dialogs.mas, facilities=>$facilities &>
 <& /breeders_toolbox/create_tissue_samples_dialogs.mas &>
 
 <script>
@@ -33,4 +34,3 @@ jQuery(document).ready(function(){
 });
 
 </script>
-

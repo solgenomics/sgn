@@ -1,6 +1,7 @@
 <%args>
 $trial_id
 $trial_name
+$trial_stock_type => undef
 </%args>
 
 
@@ -18,27 +19,25 @@ $trial_name
                 <div class="container-fluid">
 
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="edit_field_map_form" name="edit_field_map_form">
-
-                    <p3> Replace Trial Accessions Or Substitute Accessions Within A Trial Plots</p3>
-
+                        <p id = "edit_field_map_title"></p>
                     </form>
                 </div>
             </div>
             <div class="modal-footer">
                 <button id="close_edit_field_map_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="replace_trial_accession_submit" id="replace_trial_accession_submit">Replace Accession</button>
-                <button type="button" class="btn btn-primary" name="substitute_accession_submit" id="substitute_accession_submit">Substitute Accession</button>
+                <button type="button" class="btn btn-primary" name="replace_trial_stock_submit" id="replace_trial_stock_submit"></button>
+                <button type="button" class="btn btn-primary" name="substitute_stock_submit" id="substitute_stock_submit"></button>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="replace_trial_accessions_dialog" name="replace_trial_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="ReplaceTrialAccessionsDialog">
+<div class="modal fade" id="replace_trial_stocks_dialog" name="replace_trial_stocks_dialog" tabindex="-1" role="dialog" aria-labelledby="replace_stocks_dialog">
     <div class="modal-dialog " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="ReplaceTrialAccessionsDialog">Replace Trial Accession In <% $trial_name %></h4>
+                <h4 class="modal-title" id="replace_stocks_dialog"></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -46,16 +45,16 @@ $trial_name
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="replace_trial_accession_form" name="replace_trial_accession_form">
 
 	                    <div class="form-group">
-	                      <label class="col-sm-3 control-label">Select Accession: </label>
-	                      <div class="col-sm-9" id="accessions_in_trial">
-	                        <!--<select class="form-control" id="accessions_in_trial" name="accessions_in_trial"></select>-->
+	                      <label id = "replace_stock_label1" class="col-sm-3 control-label"></label>
+	                      <div class="col-sm-9" id="stocks_in_trial">
+	                        <!--<select class="form-control" id="stocks_in_trial" name="stocks_in_trial"></select>-->
 	                      </div>
 	                    </div>
 
 	                      <div class="form-group">
-	                        <label class="col-sm-3 control-label">Enter New Accession: </label>
+	                        <label id = "replace_stock_label2" class="col-sm-3 control-label"></label>
 	                        <div class="col-sm-9" >
-	                          <input class="form-control" id="replace_database_accession" name="replace_database_accession"></input>
+	                          <input class="form-control" id="replace_database_stock" name="replace_database_stock"></input>
 	                        </div>
 	                      </div>
 
@@ -64,19 +63,19 @@ $trial_name
             </div>
             <div class="modal-footer">
                 <button id="close_replace_trial_accession_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="replace_accession_submit" id="replace_accession_submit">Replace Trial Accession</button>
+                <button type="button" class="btn btn-primary" name="replace_stock_submit" id="replace_stock_submit"></button>
             </div>
         </div>
     </div>
 </div>
 
 
-<div class="modal fade" id="subtitute_plot_accessions_dialog" name="subtitute_plot_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="SubstitutePlotAccessionsDialog">
+<div class="modal fade" id="substitute_plot_stocks_dialog" name="substitute_plot_stocks_dialog" tabindex="-1" role="dialog" aria-labelledby="substitute_plot_dialog">
     <div class="modal-dialog " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="SubstitutePlotAccessionsDialog">Substitute Plot Accession In <% $trial_name %></h4>
+                <h4 class="modal-title" id="substitute_plot_dialog"></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -101,23 +100,23 @@ $trial_name
             </div>
             <div class="modal-footer">
                 <button id="close_substitute_plot_accession_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="substitute_plot_accession_submit" id="substitute_plot_accession_submit">Substitute Plot Accession</button>
+                <button type="button" class="btn btn-primary" name="substitute_plot_stock_submit" id="substitute_plot_stock_submit"></button>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal  fade" id="replace_accessions_dialog_success_message" name="replace_accessions_dialog_success_message" tabindex="-1" role="dialog" aria-labelledby="ReplaceFieldMapDialog">
+<div class="modal  fade" id="replace_stock_dialog_success_message" name="replace_stock_dialog_success_message" tabindex="-1" role="dialog" aria-labelledby="replace_stock_message_title">
     <div class="modal-dialog " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="ReplaceFieldMapDialog">Replace Trial Accessions </h4>
+                <h4 class="modal-title" id="replace_stock_message_title"></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <p3> Accession was replaced successfully...</p3>
+                    <p3 id="replace_stock_success_message"></p3>
 
                 </div>
             </div>
@@ -129,17 +128,17 @@ $trial_name
     </div>
 </div>
 
-<div class="modal  fade" id="sub_success_message" name="sub_success_message" tabindex="-1" role="dialog" aria-labelledby="SubsFieldMapDialog">
+<div class="modal  fade" id="sub_success_message" name="sub_success_message" tabindex="-1" role="dialog" aria-labelledby="subs_stock_message_title">
     <div class="modal-dialog " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="SubsFieldMapDialog">Substitute Plot Accessions </h4>
+                <h4 class="modal-title" id="subs_stock_message_title"></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <p3> Accessions were substituted successfully...</p3>
+                    <p3 id="subs_stock_success_message"></p3>
 
                 </div>
             </div>
@@ -211,35 +210,44 @@ $trial_name
 
 
 <script>
-jQuery(document).ready( function() {
-
-  jQuery('input[id*="replace_database_accession"]').autocomplete({
-      appendTo: "#replace_trial_accessions_dialog",
-      source: '/ajax/stock/accession_autocomplete'
-  });
-});
-
 
 jQuery(document).ready(function () {
 
+    var trial_stock_type = "<% $trial_stock_type %>";
+
+    if (trial_stock_type == 'family_name') {
+        jQuery('input[id*="replace_database_stock"]').autocomplete({
+            appendTo: "#replace_trial_stocks_dialog",
+            source: '/ajax/stock/family_name_autocomplete'
+        });
+    } else if (trial_stock_type == 'cross') {
+        jQuery('input[id*="replace_database_stock"]').autocomplete({
+            appendTo: "#replace_trial_stocks_dialog",
+            source: '/ajax/stock/cross_autocomplete'
+        });
+    } else {
+        jQuery('input[id*="replace_database_stock"]').autocomplete({
+            appendTo: "#replace_trial_stocks_dialog",
+            source: '/ajax/stock/accession_autocomplete'
+        });
+    }
+
 	jQuery.ajax ( {
-            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/accessions',
+        url : '/ajax/breeders/trial/'+<% $trial_id %>+'/accessions',
 
 	    success: function(response){
 	         //console.log(response);
 
-		var trial_accessions_html = "<select class='form-control' id='trial_accessions_table'>";
-		for (i=0; i<response.accessions[0].length; i++) {
-		    trial_accessions_html = trial_accessions_html + "<option value=" + response.accessions[0][i].stock_id + ">" + response.accessions[0][i].accession_name + "</option>";
-
-		}
-		trial_accessions_html = trial_accessions_html + "</select>";
-		jQuery('#accessions_in_trial').empty();
-		jQuery('#accessions_in_trial').html(trial_accessions_html);
-
-	    },
+            var trial_stocks_html = "<select class='form-control' id='trial_stock_table'>";
+            for (i=0; i<response.accessions[0].length; i++) {
+                trial_stocks_html = trial_stocks_html + "<option value=" + response.accessions[0][i].stock_id + ">" + response.accessions[0][i].accession_name + "</option>";
+            }
+            trial_stocks_html = trial_stocks_html + "</select>";
+            jQuery('#stocks_in_trial').empty();
+            jQuery('#stocks_in_trial').html(trial_stocks_html);
+        },
 	    error: function(response){
-		alert("Error retrieving accessions.");
+            alert("Error retrieving stocks.");
 	    }
 	});
 
@@ -279,42 +287,42 @@ jQuery(document).ready(function () {
     jQuery('#edit_field_map_dialog').modal('show');
   }
 
-  jQuery('#replace_accession_submit').click(function() {
-    replace_accession_in_trial()
-  });
-
-  function replace_accession_in_trial() {
-    jQuery('#replace_trial_accessions_dialog').modal("hide");
-    var old_accession_id = jQuery('#trial_accessions_table').val();
-    var new_accession = jQuery('#replace_database_accession').val();
-
-    new jQuery.ajax({
-      type: 'POST',
-      url: '/ajax/breeders/trial/<% $trial_id %>/replace_accession',
-      dataType: "json",
-      data: {
-              'old_accession_id': old_accession_id,
-              'new_accession': new_accession,
-      },
-      beforeSend: function(){
-        jQuery('#working_modal').modal("show");
-      },
-      success: function (response) {
-        jQuery('#working_modal').modal("hide");
-
-        if (response.error) {
-          alert("Error Replacing Accession: "+response.error);
-        }else {
-            jQuery('#replace_accessions_dialog_success_message').modal("show");
-        }
-      },
-      error: function() {
-        jQuery('#working_modal').modal("hide");
-        alert('An error occurred replacing accession');
-      }
+    jQuery('#replace_stock_submit').click(function() {
+        replace_stock_in_trial(trial_stock_type)
     });
 
-  }
+    function replace_stock_in_trial() {
+        jQuery('#replace_trial_stocks_dialog').modal("hide");
+        var old_stock_id = jQuery('#trial_stock_table').val();
+        var new_stock = jQuery('#replace_database_stock').val();
+
+        new jQuery.ajax({
+            type: 'POST',
+            url: '/ajax/breeders/trial/<% $trial_id %>/replace_stock',
+            dataType: "json",
+            data: {
+                'old_stock_id': old_stock_id,
+                'new_stock': new_stock,
+                'trial_stock_type': trial_stock_type,
+            },
+            beforeSend: function(){
+                jQuery('#working_modal').modal("show");
+            },
+            success: function (response) {
+                jQuery('#working_modal').modal("hide");
+
+                if (response.error) {
+                    alert("Error Replacing Stock: "+response.error);
+                } else {
+                    jQuery('#replace_stock_dialog_success_message').modal("show");
+                }
+            },
+            error: function() {
+                jQuery('#working_modal').modal("hide");
+                alert('An error occurred replacing stock');
+            }
+        });
+    }
 
   jQuery('#close_replace_field_map_dialog').click( function() {
     location.reload();
@@ -324,18 +332,18 @@ jQuery(document).ready(function () {
     location.reload();
   });
 
-  jQuery('#substitute_plot_accession_submit').click( function() {
-    substitute_plot_accession();
+  jQuery('#substitute_plot_stock_submit').click( function() {
+    substitute_plot_stock();
   });
 
-  function substitute_plot_accession() {
+  function substitute_plot_stock() {
 
     var plot_1_info = jQuery('#trial_plot_1_name_table').val();
     var plot_2_info = jQuery('#trial_plot_2_name_table').val();
 
     new jQuery.ajax({
       type: 'POST',
-      url: '/ajax/breeders/trial/<% $trial_id %>/substitute_accession',
+      url: '/ajax/breeders/trial/<% $trial_id %>/substitute_stock',
       dataType: "json",
       data: {
               'plot_1_info': plot_1_info,
@@ -348,17 +356,90 @@ jQuery(document).ready(function () {
         jQuery('#working_modal').modal("hide");
 
         if (response.error){
-          alert("Error Substituting Accessions: "+response.error);
+          alert("Error Substituting Stock: "+response.error);
         } else {
           jQuery('#sub_success_message').modal("show");
         }
       },
       error: function(){
         jQuery('#working_modal').modal("hide");
-        alert('An error occurred substituting plot accession. Please try again or contact us.');
+        alert('An error occurred substituting plot stock. Please try again or contact us.');
       }
     });
   }
+
+    var trial_name = "<% $trial_name %>";
+    var edit_dialog_title = '';
+    var replace_button_label = '';
+    var substitute_button_label = '';
+    var replace_dialog_title = '';
+    var replace_stock_text1 = '';
+    var replace_stock_text2 = '';
+    var replace_button_submit = '';
+    var substitute_dialog_title = '';
+    var substitute_button_submit = '';
+    var replace_message_title = '';
+    var replace_success_message = '';
+    var subs_message_title = '';
+    var subs_success_message = '';
+
+    if (trial_stock_type == 'family_name') {
+        edit_dialog_title = 'Replace Trial Family Names Or Substitute Family Names Within A Trial Plots';
+        replace_button_label = 'Replace Family Name';
+        substitute_button_label = 'Substitute Family Name';
+        replace_dialog_title = 'Replace Trial Family Name in '.concat(trial_name);
+        replace_stock_text1 = 'Select Family Name: ';
+        replace_stock_text2 = 'Enter New Family Name: ';
+        replace_button_submit = 'Replace Trial Family Name';
+        substitute_dialog_title = 'Substitute Plot Family Name in '.concat(trial_name);
+        substitute_button_submit = 'Substitute Plot Family Name';
+        replace_message_title = 'Replace Trial Family Name';
+        replace_success_message = 'Family Name was replaced successfully.';
+        subs_message_title = 'Substitute Plot Family Name';
+        subs_success_message = 'Family Name was substituted successfully.';
+    } else if (trial_stock_type == 'cross') {
+        edit_dialog_title = 'Replace Trial Cross Unique IDs Or Substitute Cross Unique IDs Within A Trial Plots';
+        replace_button_label = 'Replace Cross Unique ID';
+        substitute_button_label = 'Substitute Cross Unique ID';
+        replace_dialog_title = 'Replace Trial Cross Unique ID in '.concat(trial_name);
+        replace_stock_text1 = 'Select Cross Unique ID: ';
+        replace_stock_text2 = 'Enter New Cross Unique ID: ';
+        replace_button_submit = 'Replace Trial Cross Unique ID';
+        substitute_dialog_title = 'Substitute Plot Cross Unique ID in '.concat(trial_name);
+        substitute_button_submit = 'Substitute Plot Cross Unique ID';
+        replace_message_title = 'Replace Cross Unique ID';
+        replace_success_message = 'Cross Unique ID was replaced successfully.';
+        subs_message_title = 'Substitute Cross Unique ID';
+        subs_success_message = 'Crosss Unique ID was substituted successfully.';
+    } else {
+        edit_dialog_title = 'Replace Trial Accessions Or Substitute Accessions Within A Trial Plots';
+        replace_button_label = 'Replace Accession';
+        substitute_button_label = 'Substitute Accession';
+        replace_dialog_title = 'Replace Trial Accession in '.concat(trial_name);
+        replace_stock_text1 = 'Select Accession: ';
+        replace_stock_text2 = 'Enter New Accession: ';
+        replace_button_submit = 'Replace Trial Accession';
+        substitute_dialog_title = 'Substitute Plot Accession in '.concat(trial_name);
+        substitute_button_submit = 'Substitute Plot Accession';
+        replace_message_title = 'Replace Trial Accession';
+        replace_success_message = 'Accession was replaced successfully.';
+        subs_message_title = 'Substitute Plot Accession';
+        subs_success_message = 'Accession was substituted successfully.';
+    }
+
+    jQuery('#edit_field_map_title').text(edit_dialog_title);
+    jQuery('#replace_trial_stock_submit').text(replace_button_label);
+    jQuery('#substitute_stock_submit').text(substitute_button_label);
+    jQuery('#replace_stocks_dialog').text(replace_dialog_title);
+    jQuery('#replace_stock_label1').text(replace_stock_text1);
+    jQuery('#replace_stock_label2').text(replace_stock_text2);
+    jQuery('#replace_stock_submit').text(replace_button_submit);
+    jQuery('#substitute_plot_dialog').text(substitute_dialog_title);
+    jQuery('#substitute_plot_stock_submit').text(substitute_button_submit);
+    jQuery('#replace_stock_message_title').text(replace_message_title);
+    jQuery('#replace_stock_success_message').text(replace_success_message);
+    jQuery('#subs_stock_message_title').text(subs_message_title);
+    jQuery('#subs_stock_success_message').text(subs_success_message);
 
 });
 

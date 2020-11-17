@@ -16,12 +16,18 @@ JSAN.use("jquery.blockUI");
 jQuery(document).ready( function() {
     var list = new CXGN.List();
     var listMenu = list.listSelect("list_type_selection_pops", ["accessions"], undefined, undefined, undefined);
-    var relevant =[]; 	
+    var relevant =[];
+
+    var dType = ['accessions']; 
+    var dMenu = solGS.dataset.getDatasetsMenu(dType);
         
     if (listMenu.match(/option/) != null) {
             
         jQuery("#list_type_selection_pops_list")
 	    .append(listMenu);
+
+	jQuery("#list_type_selection_pops_list_select")
+	    .append(dMenu);
 
         } else {       
             jQuery("#list_type_selection_pops_list")
@@ -32,31 +38,39 @@ jQuery(document).ready( function() {
 
 
 jQuery(document).ready( function() { 
-    var listId;
+    var selectedId;
+    var selectedType;
+    var selectedName;
         
     jQuery("<option>", {value: '', selected: true})
 	.prependTo("#list_type_selection_pops_list_select");
       
     jQuery("#list_type_selection_pops_list_select").change(function() {
-           
-        listId = jQuery(this).find("option:selected").val(); 
-	listId = parseInt(listId)
 
-        var listDetail = getListTypeSelectionPopDetail(listId);
-  
-        if (listId) {
+	selectedType = jQuery(this).find("option:selected").attr('name');           
+        selectedId = jQuery(this).find("option:selected").val(); 
+	selectedId = parseInt(selectedId)
+	selectedName = jQuery(this).find("option:selected").text();
+
+        if (selectedId) {
 	
 	    jQuery("#list_type_selection_pop_load").click(function() {
-	
-		if (listDetail.type.match(/accessions/)) {
-		    checkPredictedListSelection(listId);
-		    //askSelectionJobQueueing(listId);
-		} else {
+
+		if (typeof selectedType === 'undefined'
+		    || !selectedType.match(/dataset/i))  {
+
+		    var listDetail = getListTypeSelectionPopDetail(selectedId);
+		    if (listDetail.type.match(/accessions/)) {
+			checkPredictedListSelection(selectedId);
+		    } else {
 			//TO-DO
-		//	var trialsList = listDetail.list;
-		//	var trialsNames = listDetail.elementsNames;
+			//	var trialsList = listDetail.list;
+			//	var trialsNames = listDetail.elementsNames;
 			
-		//	loadTrialListTypeSelectionPop(trialsNames);		    
+			//	loadTrialListTypeSelectionPop(trialsNames);		    
+		    }
+		} else {
+		    solGS.dataset.checkPredictedDatasetSelection(selectedId, selectedName)
 		}
             });
         }
@@ -65,7 +79,7 @@ jQuery(document).ready( function() {
 
 
 function checkPredictedListSelection (listId) {
-  
+   
     var args =  createSelectionReqArgs(listId);
     args = JSON.stringify(args);
    
@@ -81,9 +95,9 @@ function checkPredictedListSelection (listId) {
 	    if (response.output) {		    
 		displayPredictedListTypeSelectionPops(args, response.output); 
 		
-		if (document.URL.match(/solgs\/traits\/all\/|solgs\/models\/combined\//)) {
-		    listSelectionIndexPopulations();
-		    listGenCorPopulations();
+		if (document.URL.match(/solgs\/traits\/all\/|solgs\/models\/combined\//)) {		  
+		    solGS.sIndex.listSelectionIndexPopulations();
+		    solGS.correlation.listGenCorPopulations();
 		    solGS.geneticGain.ggSelectionPopulations();
 		    solGS.cluster.listClusterPopulations();
 		} 			
@@ -116,8 +130,6 @@ function getListTypeSelectionPopDetail(listId) {
 	var listData;
 	var listType;
 	var listName;
-	//var listElements;
-	//var listElementsNames;
 
 	if (listId) {
             listData      = list.getListData(listId);
@@ -140,6 +152,7 @@ function askSelectionJobQueueing (listId) {
     var args = createSelectionReqArgs(listId);
     var modelId = args.training_pop_id;
     var selectionPopId = args.selection_pop_id;
+    var protocolId = args.genotyping_protocol_id;
       
     var hostName = window.location.protocol + '//' + window.location.host;    
     var page     = hostName + '/solgs/model/' + modelId + '/prediction/' + selectionPopId;
@@ -163,7 +176,7 @@ function createSelectionReqArgs (listId) {
 	var popType = 'list_prediction';
 	
 	var selectionPopId = 'list_' + listId;
-
+	var protocolId = jQuery('#genotyping_protocol_id').val();
 	var trainingTraitsIds = jQuery('#training_traits_ids').val();
 
 	if (trainingTraitsIds) {
@@ -181,7 +194,8 @@ function createSelectionReqArgs (listId) {
 	    'training_pop_id'  : modelId, 
 	    'selection_pop_id' : selectionPopId, 
 	    'population_type'  : popType,
-	    'training_traits_ids' : trainingTraitsIds
+	    'training_traits_ids' : trainingTraitsIds,
+	    'genotyping_protocol_id': protocolId
 	};  
 
 	return args;
@@ -250,8 +264,8 @@ function loadGenotypesListTypeSelectionPop(args) {
 			jQuery.unblockUI(); 	
 		    } else {
 			displayPredictedListTypeSelectionPops(args, response.output);
-			listSelectionIndexPopulations();
-			listGenCorPopulations();    
+			solGS.sIndex.listSelectionIndexPopulations();
+			solGS.correlation.listGenCorPopulations();    
 			jQuery.unblockUI(); 
 		    }
 		                                            
@@ -365,11 +379,11 @@ function displayPredictedListTypeSelectionPops(args, output) {
     popIdName       = JSON.stringify(popIdName);
     var hiddenInput =  '<input type="hidden" value=\'' + popIdName + '\'/>';
  
-    var predictedListTypeSelectionPops = jQuery("#list_selection_pops_table").doesExist();
+    var predictedListTypeSelectionPops = jQuery("#list_type_selection_pops_table").doesExist();
                        
     if ( predictedListTypeSelectionPops == false) {  
                                   
-	var predictedListTypeSelectionTable ='<table id="list_selection_pops_table" style="width:100%;text-align:left"><thead><tr>'
+	var predictedListTypeSelectionTable ='<table id="list_type_selection_pops_table" class="table"><thead><tr>'
             + '<th>List-based selection population</th>'
             + '<th>View GEBVs</th>'
             + '</tr></thead><tbody>'
@@ -381,7 +395,7 @@ function displayPredictedListTypeSelectionPops(args, output) {
             + output
             + '</td></tr></tbody></table>';
 	
-	jQuery("#list_selection_populations").append(predictedListTypeSelectionTable).show();
+	jQuery("#list_type_selection_populations").append(predictedListTypeSelectionTable).show();
 
     } else {
         var listIdArg = '\'' + listId +'\'';
@@ -402,11 +416,11 @@ function displayPredictedListTypeSelectionPops(args, output) {
         var samePop = jQuery(trId).doesExist();
         
         if (samePop == false) {
-            jQuery("#list_selection_pops_table tr:last").after(addRow);
+            jQuery("#list_type_selection_pops_table tr:last").after(addRow);
 
         } else {
 	    jQuery(trId).remove();
-	    jQuery("#list_selection_pops_table").append(addRow).show();
+	    jQuery("#list_type_selection_pops_table").append(addRow).show();
 	}                          
         
     }
@@ -444,8 +458,8 @@ function loadPredictionOutput (url, listId, listSource) {
                 var page = document.URL; 
                     
                 if (page.match('/traits/all/population/') != null) {
-                    listSelectionIndexPopulations();
-                    listGenCorPopulations();                 
+                    solGS.sIndex.listSelectionIndexPopulations();
+                    solGS.correlation.listGenCorPopulations();                 
                 }
                     
                 jQuery.unblockUI();        

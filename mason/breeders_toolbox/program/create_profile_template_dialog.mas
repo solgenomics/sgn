@@ -1,0 +1,115 @@
+
+<div class="modal fade" id="create_profile_template_dialog" name="create_profile_template_dialog" tabindex="-1" role="dialog" aria-labelledby="createProfileTemplateDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="createProfileTemplateDialog">To create product profile template, please provide file name and a list of traits </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Template File Name: </label>
+                            <div class="col-sm-9">
+                                <input class="form-control" id="template_file_name" name="template_file_name" type="text" placeholder="Enter template file name"/>
+                            </div>
+                        </div><br/><br/>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="select_list_list_select">Select a List of Traits: </label>
+                            <div class="col-sm-9">
+                                <span id="select_list_div"></span>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info" id="create_profile_template" >Create Template</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="profile_template_saved_dialog_message" name="profile_template_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="createProfileTemplateSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="createProfileTemplateSavedDialog">Product Profile Template Created</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The product profile template was created successfully.
+                    </p>
+                    <p>
+                        <a id="profile_template_download_link">Download Template</a>
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" name="profile_template_close_button" id="profile_template_close_button" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#create_profile_template').click(function(){
+
+        var list = new CXGN.List();
+        var template_file_name = jQuery('#template_file_name').val();
+        var trait_list_id = jQuery('#select_list_list_select').val();
+        var trait_list = list.getList(trait_list_id);
+        trait_list_json = JSON.stringify(trait_list);
+
+        if (template_file_name === '') {
+            alert("Please supply a template file name");
+            return;
+        }
+
+        if (trait_list_id === '') {
+            alert("Please select a trait list");
+            return;
+        }
+
+        jQuery.ajax({
+            url: '/ajax/program/create_profile_template',
+            dataType: "json",
+            type: 'POST',
+            data:{
+                'template_file_name': template_file_name,
+                'trait_list_json': trait_list_json,
+            },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (response.error) {
+                    alert(response.error);
+                } else {
+                    jQuery('#profile_template_download_link').attr('href', "/fieldbook/trait_file_download/" + response.file_id);
+                    jQuery("#profile_template_saved_dialog_message").modal("show");
+                    jQuery('#create_profile_template_dialog').modal("hide");
+                }
+            },
+            error: function() {
+                jQuery("#working_modal").modal("hide");
+                alert('An error occurred creating the profile template.');
+                jQuery('#create_profile_template_dialog').modal("hide");
+            },
+
+        });
+    });
+
+
+});
+
+</script>

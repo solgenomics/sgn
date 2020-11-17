@@ -13,7 +13,11 @@
       success: function(r) { 
         if (r.error) { alert(r.error); }
         else { 
-          jQuery('#login_button_html_div').html(r.html);  
+          jQuery('#login_button_html_div').html(r.html);
+
+          if (<% $c->config->{require_login} %> == 1 && !r.logged_in) {
+            jQuery('#site_login_dialog').modal({backdrop: 'static', keyboard: false});
+          }
         }
       }
     });

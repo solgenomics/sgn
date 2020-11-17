@@ -18,7 +18,7 @@ BEGIN { extends 'Catalyst::Controller::REST'; };
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON'  },
     );
 
 sub analyze_trial_phenotypes : Path('/analyze/phenotypes/trials') Args(0) {
@@ -118,7 +118,7 @@ sub analyze_trial_phenotypes : Path('/analyze/phenotypes/trials') Args(0) {
       my $file_path = $c->config->{basepath}."/".$tempfile.".csv";
       #move($tempfile, $file_path);
 
-      open(my $F, ">", $file_path) || die "Can't open file $file_path\n";
+      open(my $F, "> :encoding(UTF-8)", $file_path) || die "Can't open file $file_path\n";
       for (my $line =0; $line< @data; $line++) {
   	my @columns = split /\t/, $data[$line];
 

@@ -34,15 +34,18 @@ use CXGN::Phenotypes::MetaDataMatrix;
 use CXGN::Genotype::Search;
 use CXGN::Login;
 use CXGN::Stock::StockLookup;
+use CXGN::Genotype::DownloadFactory;
+use CXGN::Genotype::GRM;
+use CXGN::Genotype::GWAS;
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
     my $self = shift;
     my $c = shift;
 
     if (!$c->user()) {
-	# redirect to login page
-	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
-	return;
+	    # redirect to login page
+	    $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	    return;
     }
 
     $c->stash->{template} = '/breeders_toolbox/download.mas';
@@ -62,10 +65,10 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
 #    $self->trial_download_log($c, $trial_id, "trial layout");
 
 #    if ($format eq "csv") {
-#	$self->download_layout_csv($c, $trial_id, $design);
+#       $self->download_layout_csv($c, $trial_id, $design);
 #    }
 #    else {
-#	$self->download_layout_excel($c, $trial_id, $design);
+#       $self->download_layout_excel($c, $trial_id, $design);
 #    }
 #}
 
@@ -85,12 +88,12 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
 #    move($tempfile, $file_path);
 
 #    my $td = CXGN::Trial::Download->new(
-#	{
-#	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
-#	    trial_id => $trial_id,
-#	    filename => $file_path,
-#	    format => "TrialLayoutCSV",
-#	},
+#   	{
+#   	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+#   	    trial_id => $trial_id,
+#   	    filename => $file_path,
+#   	    format => "TrialLayoutCSV",
+#       },
 #	);
 
 #    $td->download();
@@ -119,12 +122,12 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
 #    move($tempfile, $file_path);
 
 #    my $td = CXGN::Trial::Download->new(
-#	{
-#	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
-#	    trial_id => $trial_id,
-#	    filename => $file_path,
-#	    format => "TrialLayoutExcel",
-#	},
+#   	{
+#   	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+#   	    trial_id => $trial_id,
+#   	    filename => $file_path,
+#   	    format => "TrialLayoutExcel",
+#   	},
 #	);
 
 #    $td->download();
@@ -179,8 +182,8 @@ sub _parse_list_from_json {
     #print STDERR Dumper $list_json;
     my $json = new JSON;
     if ($list_json) {
-        my $decoded_list = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
-        #my $decoded_list = decode_json($list_json);
+       # my $decoded_list = $json->allow_nonref->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
+        my $decoded_list = decode_json($list_json);
         my @array_of_list_items = @{$decoded_list};
         return \@array_of_list_items;
     } else {
@@ -213,6 +216,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $data_level = $c->req->param("dataLevel") && $c->req->param("dataLevel") ne 'null' ? $c->req->param("dataLevel") : "plot";
     my $timestamp_option = $c->req->param("timestamp") && $c->req->param("timestamp") ne 'null' ? $c->req->param("timestamp") : 0;
     my $exclude_phenotype_outlier = $c->req->param("exclude_phenotype_outlier") && $c->req->param("exclude_phenotype_outlier") ne 'null' && $c->req->param("exclude_phenotype_outlier") ne 'undefined' ? $c->req->param("exclude_phenotype_outlier") : 0;
+    my $include_pedigree_parents = $c->req->param('include_pedigree_parents');
     my $trait_list = $c->req->param("trait_list");
     my $trait_component_list = $c->req->param("trait_component_list");
     my $year_list = $c->req->param("year_list");
@@ -360,6 +364,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         format => $plugin,
         data_level => $data_level,
         include_timestamp => $timestamp_option,
+        include_pedigree_parents=>$include_pedigree_parents,
         exclude_phenotype_outlier => $exclude_phenotype_outlier,
         trait_contains => \@trait_contains_list,
         phenotype_min_value => $phenotype_min_value,
@@ -559,7 +564,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
         if ($format eq ".csv") {
 
             #build csv with column names
-            open(CSV, ">", $tempfile) || die "Can't open file $tempfile\n";
+            open(CSV, "> :encoding(UTF-8)", $tempfile) || die "Can't open file $tempfile\n";
                 my @header = @{$data[0]};
                 my $num_col = scalar(@header);
                 for (my $line =0; $line< @data; $line++) {
@@ -640,7 +645,7 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
 
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "pedigree_download_XXXXX", UNLINK=> 0);
 
-    open my $FILE, '>', $tempfile or die "Cannot open tempfile $tempfile: $!";
+    open my $FILE, '> :encoding(UTF-8)', $tempfile or die "Cannot open tempfile $tempfile: $!";
 
 	print $FILE "Accession\tFemale_Parent\tMale_Parent\tCross_Type\n";
     my $pedigrees_found = 0;
@@ -675,25 +680,139 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
 #=pod
 
 
-#Used from manage download page for downloading gbs from accessions
+#Used from wizard page and manage download page for downloading gbs from accessions
 sub download_gbs_action : Path('/breeders/download_gbs_action') {
-  my ($self, $c) = @_;
+    my ($self, $c) = @_;
+    # print STDERR Dumper $c->req->params();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $format = $c->req->param("format") || "list_id";
+    my $download_format = $c->req->param("download_format") || 'VCF';
+    my $chromosome_numbers = $c->req->param("chromosome_number") ? [$c->req->param("chromosome_number")] : [];
+    my $start_position = $c->req->param("start_position") || undef;
+    my $end_position = $c->req->param("end_position") || undef;
+    my $return_only_first_genotypeprop_for_stock = defined($c->req->param('return_only_first_genotypeprop_for_stock')) ? $c->req->param('return_only_first_genotypeprop_for_stock') : 1;
+    my $forbid_cache = defined($c->req->param('forbid_cache')) ? $c->req->param('forbid_cache') : 0;
+    my $dl_token = $c->req->param("gbs_download_token") || "no_token";
+    my $dl_cookie = "download".$dl_token;
 
-  print STDERR "Collecting download parameters ...  ".localtime()."\n";
-  my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-  my $format = $c->req->param("format") || "list_id";
-  my $return_only_first_genotypeprop_for_stock = defined($c->req->param('return_only_first_genotypeprop_for_stock')) ? $c->req->param('return_only_first_genotypeprop_for_stock') : 1;
-  my $dl_token = $c->req->param("gbs_download_token") || "no_token";
-  my $dl_cookie = "download".$dl_token;
+    my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, $accession_data, $id_string, $protocol_id, $trial_id_string, @trial_ids);
 
-  my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, $accession_data, $id_string, $protocol_id, $trial_id_string, @trial_ids);
+    $trial_id_string = $c->req->param("trial_ids");
+    if ($trial_id_string){
+        @trial_ids = split(',', $trial_id_string);
+    }
 
-  $trial_id_string = $c->req->param("trial_ids");
-  if ($trial_id_string){
-      @trial_ids = split(',', $trial_id_string);
-  }
+    if ($format eq 'accession_ids') {       #use protocol id and accession ids supplied directly
+        $id_string = $c->req->param("ids");
+        @accession_ids = split(',',$id_string);
+        $protocol_id = $c->req->param("protocol_id");
+        if (!$protocol_id){
+            my $default_genotyping_protocol = $c->config->{default_genotyping_protocol};
+            $protocol_id = $schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$default_genotyping_protocol})->nd_protocol_id();
+        }
+    }
+    elsif ($format eq 'list_id') {        #get accession names from list and tranform them to ids
+        my $accession_list_id = $c->req->param("genotype_accession_list_list_select");
+        $protocol_id = $c->req->param("genotyping_protocol_select");
 
-  if ($format eq 'accession_ids') {       #use protocol id and accession ids supplied directly
+        if ($accession_list_id) {
+            $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
+        }
+
+        @accession_list = map { $_->[1] } @$accession_data;
+
+        my $t = CXGN::List::Transform->new();
+        my $acc_t = $t->can_transform("accessions", "accession_ids");
+        my $accession_id_hash = $t->transform($schema, $acc_t, \@accession_list);
+        @accession_ids = @{$accession_id_hash->{transform}};
+    }
+
+    my $filename = '';
+    if ($download_format eq 'VCF') {
+        $filename = 'BreedBaseGenotypesDownload.vcf';
+    }
+    else {
+        $filename = 'BreedBaseGenotypesDownload.tsv';
+    }
+
+    my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
+    my $marker_set_list_id = $c->req->param('marker_set_list_id');
+
+    my @marker_name_list;
+    if ($marker_set_list_id) {
+        my $list = CXGN::List->new({ dbh => $schema->storage->dbh, list_id => $marker_set_list_id });
+        my $elements = $list->elements();
+
+        foreach my $e (@$elements) {
+            my $o = decode_json $e;
+            if (exists($o->{marker_name})) {
+                push @marker_name_list, $o->{marker_name};
+            }
+        }
+    }
+
+    my $geno = CXGN::Genotype::DownloadFactory->instantiate(
+        $download_format,    #can be either 'VCF' or 'DosageMatrix'
+        {
+            bcs_schema=>$schema,
+            people_schema=>$people_schema,
+            cache_root_dir=>$c->config->{cache_file_path},
+            accession_list=>\@accession_ids,
+            #tissue_sample_list=>$tissue_sample_list,
+            trial_list=>\@trial_ids,
+            protocol_id_list=>[$protocol_id],
+            chromosome_list=>$chromosome_numbers,
+            start_position=>$start_position,
+            end_position=>$end_position,
+            compute_from_parents=>$compute_from_parents,
+            forbid_cache=>$forbid_cache,
+            marker_name_list=>\@marker_name_list
+            #markerprofile_id_list=>$markerprofile_id_list,
+            #genotype_data_project_list=>$genotype_data_project_list,
+            #limit=>$limit,
+            #offset=>$offset
+        }
+    );
+    my $file_handle = $geno->download(
+        $c->config->{cluster_shared_tempdir},
+        $c->config->{backend},
+        $c->config->{cluster_host},
+        $c->config->{'web_cluster_queue'},
+        $c->config->{basepath}
+    );
+
+    $c->res->content_type("application/text");
+    $c->res->cookies->{$dl_cookie} = {
+        value => $dl_token,
+        expires => '+1m',
+    };
+
+    $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
+    $c->res->body($file_handle);
+}
+
+#Used from wizard page for downloading genetic relationship matrix (GRM)
+sub download_grm_action : Path('/breeders/download_grm_action') {
+    my ($self, $c) = @_;
+    # print STDERR Dumper $c->req->params();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $download_format = $c->req->param("download_format") || 'matrix';
+    my $minor_allele_frequency = $c->req->param("minor_allele_frequency") ? $c->req->param("minor_allele_frequency") + 0 : 0.05;
+    my $marker_filter = $c->req->param("marker_filter") ? $c->req->param("marker_filter") + 0 : 0.60;
+    my $individuals_filter = $c->req->param("individuals_filter") ? $c->req->param("individuals_filter") + 0 : 0.80;
+    my $return_only_first_genotypeprop_for_stock = defined($c->req->param('return_only_first_genotypeprop_for_stock')) ? $c->req->param('return_only_first_genotypeprop_for_stock') : 1;
+    my $dl_token = $c->req->param("gbs_download_token") || "no_token";
+    my $dl_cookie = "download".$dl_token;
+
+    my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, $accession_data, $id_string, $protocol_id, $trial_id_string, @trial_ids);
+
+    $trial_id_string = $c->req->param("trial_ids");
+    if ($trial_id_string){
+        @trial_ids = split(',', $trial_id_string);
+    }
+
     $id_string = $c->req->param("ids");
     @accession_ids = split(',',$id_string);
     $protocol_id = $c->req->param("protocol_id");
@@ -701,145 +820,134 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
         my $default_genotyping_protocol = $c->config->{default_genotyping_protocol};
         $protocol_id = $schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$default_genotyping_protocol})->nd_protocol_id();
     }
-  }
-  elsif ($format eq 'list_id') {        #get accession names from list and tranform them to ids
 
-
-    my $accession_list_id = $c->req->param("genotype_accession_list_list_select");
-    $protocol_id = $c->req->param("genotyping_protocol_select");
-    #$protocol_id = 2;
-
-    if ($accession_list_id) {
-	    $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
+    my $filename;
+    if ($download_format eq 'heatmap') {
+        $filename = 'BreedBaseGeneticRelationshipMatrixDownload.pdf';
+    }
+    else {
+        $filename = 'BreedBaseGeneticRelationshipMatrixDownload.tsv';
     }
 
-    @accession_list = map { $_->[1] } @$accession_data;
+    my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
 
-    my $t = CXGN::List::Transform->new();
+    my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
+    my $tmp_grm_dir = $shared_cluster_dir_config."/tmp_genotype_download_grm";
+    mkdir $tmp_grm_dir if ! -d $tmp_grm_dir;
+    my ($grm_tempfile_fh, $grm_tempfile) = tempfile("wizard_download_grm_XXXXX", DIR=> $tmp_grm_dir);
 
-    my $acc_t = $t->can_transform("accessions", "accession_ids");
-    my $accession_id_hash = $t->transform($schema, $acc_t, \@accession_list);
-    @accession_ids = @{$accession_id_hash->{transform}};
-  }
+    my $geno = CXGN::Genotype::GRM->new({
+        bcs_schema=>$schema,
+        grm_temp_file=>$grm_tempfile,
+        people_schema=>$people_schema,
+        cache_root=>$c->config->{cache_file_path},
+        accession_id_list=>\@accession_ids,
+        protocol_id=>$protocol_id,
+        get_grm_for_parental_accessions=>$compute_from_parents,
+        download_format=>$download_format,
+        minor_allele_frequency=>$minor_allele_frequency,
+        marker_filter=>$marker_filter,
+        individuals_filter=>$individuals_filter
+    });
+    my $file_handle = $geno->download_grm(
+        'filehandle',
+        $shared_cluster_dir_config,
+        $c->config->{backend},
+        $c->config->{cluster_host},
+        $c->config->{'web_cluster_queue'},
+        $c->config->{basepath}
+    );
 
-  my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "gt_download_XXXXX", UNLINK=> 0);  #create download file
-  open my $TEMP, '>', $tempfile or die "Cannot open tempfile $tempfile: $!";
-
-  print STDERR "Downloading genotype data ... ".localtime()."\n";
-
-  print STDERR "Accession ids= @accession_ids \n";
-  print STDERR "Protocol id= $protocol_id \n";
-
-  my $genotypes_search = CXGN::Genotype::Search->new({
-      bcs_schema=>$schema,
-      accession_list=>\@accession_ids,
-      trial_list=>\@trial_ids,
-      protocol_id_list=>[$protocol_id],
-      genotypeprop_hash_select=>['DS'], #THESE ARE THE KEYS IN THE GENOTYPEPROP OBJECT
-      protocolprop_top_key_select=>[], #THESE ARE THE KEYS AT THE TOP LEVEL OF THE PROTOCOLPROP OBJECT
-      protocolprop_marker_hash_select=>[], #THESE ARE THE KEYS IN THE MARKERS OBJECT IN THE PROTOCOLPROP OBJECT
-      return_only_first_genotypeprop_for_stock=>$return_only_first_genotypeprop_for_stock #FOR MEMORY REASONS TO LIMIT DATA
-  });
-  my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
-
-  if (scalar(@$genotypes) == 0) {
-    my $error = "No genotype data was found for Accessions: @accession_list, Trials: $trial_id_string, and protocol with id $protocol_id. You can determine which accessions have been genotyped with a given protocol by using the search wizard.";
     $c->res->content_type("application/text");
-    $c->res->header('Content-Disposition', qq[attachment; filename="Download error details"]);
-    $c->res->body($error);
-    return;
-  }
+    $c->res->cookies->{$dl_cookie} = {
+        value => $dl_token,
+        expires => '+1m',
+    };
 
-  # find accession synonyms
-  my $stocklookup = CXGN::Stock::StockLookup->new({ schema => $schema});
-  my $synonym_hash = $stocklookup->get_stock_synonyms('stock_id', 'accession', \@accession_ids);
-  my $synonym_string = "";
-  while( my( $uniquename, $synonym_list ) = each %{$synonym_hash}){
-      if(scalar(@{$synonym_list})>0){
-          if(not length($synonym_string)<1){
-              $synonym_string.=" ";
-          }
-          $synonym_string.=$uniquename."=(";
-          $synonym_string.= (join ", ", @{$synonym_list}).")";
-      }
-  }
+    $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
+    $c->res->body($file_handle);
+}
 
+#Used from wizard page for downloading genome wide association study (GWAS) results and plots
+sub download_gwas_action : Path('/breeders/download_gwas_action') {
+    my ($self, $c) = @_;
+    # print STDERR Dumper $c->req->params();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $minor_allele_frequency = $c->req->param("minor_allele_frequency") ? $c->req->param("minor_allele_frequency") + 0 : 0.05;
+    my $download_format = $c->req->param("download_format") ? $c->req->param("download_format") : 'results_tsv';
+    my $marker_filter = $c->req->param("marker_filter") ? $c->req->param("marker_filter") + 0 : 0.60;
+    my $individuals_filter = $c->req->param("individuals_filter") ? $c->req->param("individuals_filter") + 0 : 0.80;
+    my $traits_are_repeated_measurements = $c->req->param('traits_are_repeated_measurements') eq 'yes' ? 1 : 0;
+    my $return_only_first_genotypeprop_for_stock = defined($c->req->param('return_only_first_genotypeprop_for_stock')) ? $c->req->param('return_only_first_genotypeprop_for_stock') : 1;
+    my $dl_token = $c->req->param("gbs_download_token") || "no_token";
+    my $dl_cookie = "download".$dl_token;
 
-  print $TEMP "# Downloaded from ".$c->config->{project_name}.": ".localtime()."\n"; # print header info
-  print $TEMP "# Protocol Id=$protocol_id, Accession List: ".join(',',@accession_list).", Accession Ids: $id_string, Trial Ids: $trial_id_string\n";
-  if (length($synonym_string)>0){
-      print $TEMP "# Synonyms: ".$synonym_string."\n";
-  }
-  print $TEMP "Marker\t";
+    my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, $accession_data, $id_string, $protocol_id, $trait_id_string, @trait_ids);
 
-  print STDERR "Decoding genotype data ...".localtime()."\n";
-
-  for (my $i=0; $i < scalar(@$genotypes) ; $i++) {       # loop through resultset, printing accession uniquenames as column headers and storing decoded gt strings in array of hashes
-
-    my ($name,$batch_id) = split(/\|/, $genotypes->[$i]->{genotypeUniquename});
-    print $TEMP $genotypes->[$i]->{germplasmName} . "|" . $batch_id . "\t";
-    push(@accession_genotypes, $genotypes->[$i]->{selected_genotype_hash});
-  }
-  @unsorted_markers = keys   %{ $accession_genotypes[0] };
-  print $TEMP "\n";
-
-  #print STDERR "building custom optimiized sort ... ".localtime()."\n";
-  my $marker_sort = make_sorter(
-    qw( GRT ),
-    number => {
-      # primary subkeys (chrom number) comparison
-      # ascending numeric comparison
-      code => '/(\d+)/',
-      ascending => 1,
-      unsigned => 1,
-    },
-    number => {
-      # if chrom number is equal
-      # return secondary subkey (chrom position) comparison
-      # ascending numeric comparison
-      code => '/(\d+)$/',
-      ascending => 1,
-      unsigned => 1,
-    },
-  );
-  die "make_sorter: $@" unless $marker_sort;
-
-  print STDERR "Sorting markers... ".localtime()."\n";
-  my @markers = $marker_sort->( @unsorted_markers );
-
-  print STDERR "Printing sorted markers and scores ... ".localtime()."\n";
-  for my $j (0 .. $#markers) {
-    print $TEMP "$markers[$j]\t";
-
-    for my $i ( 0 .. $#accession_genotypes ) {
-      if($i == $#accession_genotypes ) {                              # print last accession genotype value and move onto new line
-        print $TEMP "$accession_genotypes[$i]->{$markers[$j]}->{'DS'}\n";
-      }
-      elsif (exists($accession_genotypes[$i]->{$markers[$j]}->{'DS'})) {        # print genotype and tab
-        print $TEMP "$accession_genotypes[$i]->{$markers[$j]}->{'DS'}\t";
-      }
+    $trait_id_string = $c->req->param("trait_ids");
+    if ($trait_id_string){
+        @trait_ids = split(',', $trait_id_string);
     }
-  }
 
-  close $TEMP;
-  print STDERR "Downloading file ... ".localtime()."\n";
+    $id_string = $c->req->param("ids");
+    @accession_ids = split(',',$id_string);
+    $protocol_id = $c->req->param("protocol_id");
+    if (!$protocol_id){
+        my $default_genotyping_protocol = $c->config->{default_genotyping_protocol};
+        $protocol_id = $schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$default_genotyping_protocol})->nd_protocol_id();
+    }
 
-  my $filename;
-  if (scalar(@$genotypes) > 1) { #name file with number of acessions and protocol id
-    $filename = scalar(@$genotypes) . "genotypes-p" . $protocol_id . ".txt";
-  }
-  else { #name file with acesssion name and protocol id if there's just one
-    $filename = $genotypes->[0]->{germplasmName} . "genotype-p" . $protocol_id . ".txt";
-  }
+    my $filename;
+    if ($download_format eq 'results_tsv') {
+        $filename = 'BreedBaseGWASDownloadResults.tsv';
+    }
+    elsif ($download_format eq 'manhattan_qq_plots') {
+        $filename = 'BreedBaseGWASDownloadManhattanAndQQPlots.pdf';
+    }
 
-  $c->res->content_type("application/text");
-  $c->res->cookies->{$dl_cookie} = {
-    value => $dl_token,
-    expires => '+1m',
-  };
-  $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
-  my $output = read_file($tempfile);
-  $c->res->body($output);
+    my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
+
+    my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
+    my $tmp_gwas_dir = $shared_cluster_dir_config."/tmp_genotype_download_gwas";
+    mkdir $tmp_gwas_dir if ! -d $tmp_gwas_dir;
+    my ($gwas_tempfile_fh, $gwas_tempfile) = tempfile("wizard_download_gwas_XXXXX", DIR=> $tmp_gwas_dir);
+    my ($grm_tempfile_fh, $grm_tempfile) = tempfile("wizard_download_gwas_grm_XXXXX", DIR=> $tmp_gwas_dir);
+    my ($pheno_tempfile_fh, $pheno_tempfile) = tempfile("wizard_download_gwas_pheno_XXXXX", DIR=> $tmp_gwas_dir);
+
+    my $geno = CXGN::Genotype::GWAS->new({
+        bcs_schema=>$schema,
+        grm_temp_file=>$grm_tempfile,
+        gwas_temp_file=>$gwas_tempfile,
+        pheno_temp_file=>$pheno_tempfile,
+        people_schema=>$people_schema,
+        cache_root=>$c->config->{cache_file_path},
+        download_format=>$download_format,
+        accession_id_list=>\@accession_ids,
+        trait_id_list=>\@trait_ids,
+        traits_are_repeated_measurements=>$traits_are_repeated_measurements,
+        protocol_id=>$protocol_id,
+        get_grm_for_parental_accessions=>$compute_from_parents,
+        minor_allele_frequency=>$minor_allele_frequency,
+        marker_filter=>$marker_filter,
+        individuals_filter=>$individuals_filter
+    });
+    my $file_handle = $geno->download_gwas(
+        $shared_cluster_dir_config,
+        $c->config->{backend},
+        $c->config->{cluster_host},
+        $c->config->{'web_cluster_queue'},
+        $c->config->{basepath}
+    );
+
+    $c->res->content_type("application/text");
+    $c->res->cookies->{$dl_cookie} = {
+        value => $dl_token,
+        expires => '+1m',
+    };
+
+    $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
+    $c->res->body($file_handle);
 }
 
 #=pod
@@ -867,6 +975,7 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
     my @trial_list = map { $_->[1] } @$trial_data;
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $t = CXGN::List::Transform->new();
 
 
@@ -882,7 +991,7 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "download_XXXXX", UNLINK=> 0);
 
 
-    open my $TEMP, '>', $tempfile or die "Cannot open output_test00.txt: $!";
+    open my $TEMP, '> :encoding(UTF-8)', $tempfile or die "Cannot open output_test00.txt: $!";
 
 
     $tempfile = File::Spec->catfile($tempfile);
@@ -894,6 +1003,7 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
 
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$schema,
+        people_schema=>$people_schema,
         accession_list=>$accession_id_data->{transform},
         trial_list=>$trial_id_data->{transform},
         protocol_id_list=>[$protocol_id]
@@ -969,7 +1079,7 @@ sub trial_download_log {
     }
     if ($c->config->{trial_download_logfile}) {
       my $logfile = $c->config->{trial_download_logfile};
-      open (my $F, ">>", $logfile) || die "Can't open logfile $logfile\n";
+      open (my $F, ">> :encoding(UTF-8)", $logfile) || die "Can't open logfile $logfile\n";
       print $F join("\t", (
             $c->user->get_object->get_username(),
             $trial_id,

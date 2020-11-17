@@ -1,0 +1,58 @@
+<%doc>
+
+=head1 NAME
+ 
+population/heritability.mas - heritability output section
+
+=AUTHOR
+
+Chris Simoes (ccs263@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$pop_id   => undef
+$trial_id => undef
+
+</%args>
+
+<%perl>
+
+$pop_id = $trial_id if $trial_id;
+
+</%perl>
+
+<style>
+/* heritability coefficients plot styling */
+.axis text {
+  font: 10px sans-serif;
+}
+
+.axis line,
+.axis path {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+</style>
+
+
+<& /util/import_javascript.mas, classes => ["d3.d3Min", "heritability.heritability"] &>
+<&| /page/info_section.mas, 
+      collapsible => 1, 
+      collapsed   => 0, 
+      title       => "Phenotypic heritability analysis"
+&>
+
+
+<div id="heritability_canvas">
+  <input id="run_pheno_heritability" class="button" type="button" value="Run heritability" /> 
+  <input type="hidden" id="population_id" value="<% $pop_id %>" />
+  <div id="heritability_message"  style="font-weight:bold;text-align:center;color:#A7C942"></div>
+</div>
+
+</&>
