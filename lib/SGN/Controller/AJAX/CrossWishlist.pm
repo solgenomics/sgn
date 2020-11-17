@@ -902,8 +902,8 @@ sub create_wishlist_by_uploading_POST : Args(0) {
     my $female_trial_id = $c->req->param('cross_wishlist_upload_female_trial_id');
     my $male_trial_id = $c->req->param('cross_wishlist_upload_male_trial_id');
 
-    print STDERR "FEMALE TRIAL ID =".Dumper($female_trial_id)."\n";
-    print STDERR "MALE TRIAL ID =".Dumper($male_trial_id)."\n";
+#    print STDERR "FEMALE TRIAL ID =".Dumper($female_trial_id)."\n";
+#    print STDERR "MALE TRIAL ID =".Dumper($male_trial_id)."\n";
 
     my $dbh = $c->dbc->dbh;
     my $upload = $c->req->upload('wishlist_file');
@@ -995,7 +995,10 @@ sub create_wishlist_by_uploading_POST : Args(0) {
         $c->detach();
     }
 
-    my @wishlist = @$parsed_data;
+#    my @wishlist = @$parsed_data;
+    my $wishlist_ref = $parsed_data->{'wishlist'};
+    my @wishlist = @$wishlist_ref;
+    print STDERR "WISHLIST ARRAY =".Dumper($parsed_data)."\n";
     my %selected_cross_hash;
     my %selected_females;
     my %selected_males;
@@ -1004,7 +1007,7 @@ sub create_wishlist_by_uploading_POST : Args(0) {
         $selected_females{$_->{female_id}}++;
         $selected_males{$_->{male_id}}++;
     }
-    print STDERR "CROSS HASH =".Dumper(\%selected_cross_hash)."\n";
+#    print STDERR "CROSS HASH =".Dumper(\%selected_cross_hash)."\n";
 
     my %ordered_wishlist;
     foreach my $female_id (keys %selected_cross_hash){
@@ -1015,11 +1018,11 @@ sub create_wishlist_by_uploading_POST : Args(0) {
             }
         }
     }
-    print STDERR "ORDERED WISHLIST =".Dumper(\%ordered_wishlist)."\n";
+#    print STDERR "ORDERED WISHLIST =".Dumper(\%ordered_wishlist)."\n";
 
     my $female_trial_layout = CXGN::Trial::TrialLayout->new({ schema => $chado_schema, trial_id => $female_trial_id, experiment_type=>'field_layout' });
     my $design_layout = $female_trial_layout->get_design();
-    print STDERR "LAYOUT =".Dumper($design_layout)."\n";
+#    print STDERR "LAYOUT =".Dumper($design_layout)."\n";
 
     my @selected_plot_ids;
 
@@ -1032,14 +1035,14 @@ sub create_wishlist_by_uploading_POST : Args(0) {
                 my $female_plot_id = $plot_info_hash{'plot_id'};
                 $selected_plot_hash{'female_plot_id'} = $female_plot_id;
                 $selected_plot_hash{'cross_female_accession_name'} = $female_accession_name;
-                my $males = $ordered_data{$female_accession_name};
+                my $males = $ordered_wishlist{$female_accession_name};
                 my $males_string = join ',', @$males;
                 $selected_plot_hash{'male_genotypes_string'} = $males_string;
                 push @selected_plot_ids, \%selected_plot_hash;
             }
         }
     }
-
+    print STDERR "SELECTED PLOT IDS =".Dumper(\@selected_plot_ids)."\n";
     $c->stash->{rest}->{data} = \@selected_plot_ids;
 
 }

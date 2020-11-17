@@ -16,7 +16,6 @@ sub _validate_with_plugin {
     my $parser   = Spreadsheet::ParseExcel->new();
     my $excel_obj;
     my $worksheet;
-
     #try to open the excel file and report any errors
     $excel_obj = $parser->parse($filename);
     if (!$excel_obj){
@@ -69,7 +68,6 @@ sub _validate_with_plugin {
     }
 
     my %seen_accessions;
-
     for my $row (1 .. $row_max){
         my $row_name = $row+1;
         my $female_accession;
@@ -166,9 +164,13 @@ sub _parse_with_plugin {
 
         push @cross_combination_list, \%cross_combination_hash;
     }
+#    print STDERR "CROSS COMBINATION LIST =".Dumper(\@cross_combination_list)."\n";
+    my %parsed_result;
+    $parsed_result{'wishlist'} = \@cross_combination_list;
 
-    $self->_set_parsed_data(\@cross_combination_list);
+    $self->_set_parsed_data(\%parsed_result);
     return 1;
+
 }
 
 1;
