@@ -810,6 +810,7 @@ jQuery(document).ready(function($) {
             jQuery("#working_modal").modal("show");
         },
         complete: function(response) {
+
             jQuery("#working_modal").modal("hide");
             if (response.error_string) {
 
@@ -819,7 +820,52 @@ jQuery(document).ready(function($) {
                 alert(response.error);
                 return;
             }
-            if (response.success) {
+            if ((response.selected_plot_ids) && (response.cross_combinations)) {
+                var selected_plot_ids = JSON.stringify(response.selected_plot_ids);
+                var cross_combinations = JSON.stringify(response.cross_combinations);
+                var female_trial_id = jQuery('#cross_wishlist_upload_female_trial_id').val();
+                var male_trial_id = jQuery('#cross_wishlist_upload_male_trial_id').val();
+                var form_id = jQuery('#cross_wishlist_availabe_odk_crossing_forms').val();
+                var form_name = jQuery("#cross_wishlist_availabe_odk_crossing_forms option:selected").text();
+
+                jQuery.ajax({
+                    url: '/ajax/cross/create_cross_wishlist_submit',
+                    method: 'POST',
+                    data: {
+                        'crosses': cross_combinations,
+                        'selected_plot_ids': selected_plot_ids,
+                        'female_trial_id': female_trial_id,
+                        'male_trial_id': male_trial_id,
+                        'form_id': form_id,
+                        'form_name': form_name
+                    },
+                    dataType:'json',
+                    beforeSend: function() {
+                        jQuery('#working_msg').html('Creating cross wishlist files and sending information to ONA... This can take time...');
+                        jQuery('#working_modal').modal('show');
+                    },
+                    success: function(response) {
+                        //console.log(response);
+                        jQuery('#working_msg').html('');
+                        jQuery('#working_modal').modal('hide');
+                        if (response.filename) {
+                            window.location.href = "/download/"+response.filename;
+                        }
+                        if (response.error) {
+                            jQuery('#cross_wishlist_response_div').html(response.error);
+                        }
+                        if (response.success){
+                            jQuery('#cross_wishlist_response_div').html(response.success);
+                        }
+                        jQuery('#create_cross_wishlist_response_dialog').modal('show');
+                    },
+                    error: function(response) {
+                        jQuery('#working_msg').html('');
+                        jQuery('#working_modal').modal('hide');
+                        alert("An error occurred creating cross wishlist");
+                    }
+                });
+
 
             }
         }
