@@ -37,8 +37,6 @@ system_message.txt
 sgn_local.conf.old
 export/*
 temp_images/*
-lib/SGN/Controller/Triticum
-bin/t3*
 js/node_modules
 js/build
 js/test_build
