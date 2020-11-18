@@ -1814,7 +1814,7 @@ sub delete_phenotype_values_and_nd_experiment_md_values {
         my $h3 = $schema->storage->dbh()->prepare($q_nd_exp_files_delete);
         $h3->execute();
 
-        print STDERR "DELETED ".scalar(@{$phenotype_ids_and_nd_experiment_phenotype_bridge_ids_to_delete->{phenotype_ids}})." Phenotype Values and nd_experiment_phenotype_bridge link\n";
+        #print STDERR "DELETED ".scalar(@{$phenotype_ids_and_nd_experiment_phenotype_bridge_ids_to_delete->{phenotype_ids}})." Phenotype Values and nd_experiment_phenotype_bridge link\n";
     };
 
     my $error;
