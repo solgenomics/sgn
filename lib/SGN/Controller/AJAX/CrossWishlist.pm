@@ -1042,8 +1042,8 @@ sub create_wishlist_by_uploading_POST : Args(0) {
             }
         }
     }
-    print STDERR "SELECTED PLOT IDS =".Dumper(\@selected_plot_ids)."\n";
-    $c->stash->{rest}->{data} = \@selected_plot_ids;
+#    print STDERR "SELECTED PLOT IDS =".Dumper(\@selected_plot_ids)."\n";
+    $c->stash->{rest} = { selected_plot_ids => \@selected_plot_ids, cross_combinations => \@wishlist };
 
 }
 
