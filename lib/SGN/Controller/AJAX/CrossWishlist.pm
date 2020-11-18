@@ -1025,6 +1025,8 @@ sub create_wishlist_by_uploading_POST : Args(0) {
 #    print STDERR "LAYOUT =".Dumper($design_layout)."\n";
 
     my @selected_plot_ids;
+    my %female_accessions_in_trial;
+    my @missing_accessions_in_trial;
 
     foreach my $hash_ref (values %$design_layout) {
         my %selected_plot_hash = ();
@@ -1039,11 +1041,24 @@ sub create_wishlist_by_uploading_POST : Args(0) {
                 my $males_string = join ',', @$males;
                 $selected_plot_hash{'male_genotypes_string'} = $males_string;
                 push @selected_plot_ids, \%selected_plot_hash;
+                $female_accessions_in_trial{$female_accession_name}++;
+
             }
         }
     }
-#    print STDERR "SELECTED PLOT IDS =".Dumper(\@selected_plot_ids)."\n";
-    $c->stash->{rest} = { selected_plot_ids => \@selected_plot_ids, cross_combinations => \@wishlist };
+    #    print STDERR "SELECTED PLOT IDS =".Dumper(\@selected_plot_ids)."\n";
+
+    my @wishlist_female_accessions = keys %ordered_wishlist;
+    my @accessions_not_in_trial = grep {not $female_accessions_in_trial{$_}} @wishlist_female_accessions;
+    print STDERR "ACCESSIONS NOT IN TRIAL =".Dumper(\@accessions_not_in_trial)."\n";
+
+    if (scalar(@accessions_not_in_trial) > 0){
+        my $trial_error = "The following accessions are not in this trial: ".join(',',@accessions_not_in_trial);
+        $c->stash->{rest} = {error_string => $trial_error };
+        $c->detach();
+    } else {
+        $c->stash->{rest} = { selected_plot_ids => \@selected_plot_ids, cross_combinations => \@wishlist };
+    }
 
 }
 
