@@ -270,6 +270,28 @@
     </div>
 </div>
 
+<div class="modal fade" id="upload_wishlist_error_display" name="upload_wishlist_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadWishlistErrorDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadWishlistErrorDialog">Upload Wishlist File Error</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <script>
 
 var lo = new CXGN.List();
@@ -803,17 +825,16 @@ jQuery(document).ready(function($) {
     jQuery('#upload_wishlist_form').iframePostForm({
         json: true,
         post: function() {
-            var uploadFile = $("#wishlist_file").val();
+            var uploadFile = $('#wishlist_file').val();
             if (uploadFile === '') {
                 alert("No file selected");
             }
-            jQuery("#working_modal").modal("show");
         },
         complete: function(response) {
-
-            jQuery("#working_modal").modal("hide");
             if (response.error_string) {
-
+                jQuery('#upload_wishlist_error_display tbody').html('');
+                jQuery('#upload_wishlist_error_display tbody').append(response.error_string);
+                jQuery('#upload_wishlist_error_display').modal("show");
                 return;
             }
             if (response.error) {
@@ -865,8 +886,6 @@ jQuery(document).ready(function($) {
                         alert("An error occurred creating cross wishlist");
                     }
                 });
-
-
             }
         }
     });
