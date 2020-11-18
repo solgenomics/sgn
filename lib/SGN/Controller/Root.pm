@@ -8,7 +8,7 @@ use CatalystX::GlobalContext ();
 use CXGN::Login;
 use CXGN::People::Person;
 use List::MoreUtils 'uniq';
-use JSON;
+use JSON::XS;
 
 
 BEGIN { extends 'Catalyst::Controller' }
@@ -59,7 +59,7 @@ sub index :Path :Args(0) {
 
     my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
     my $breeding_programs = $projects->get_breeding_programs();
-    $c->stash->{locations} = decode_json $projects->get_location_geojson();
+    $c->stash->{locations} = JSON::XS->new()->decode($projects->get_location_geojson());
     $c->stash->{breeding_programs} = $breeding_programs;
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{timestamp} = localtime;
@@ -68,7 +68,26 @@ sub index :Path :Args(0) {
     my %editable_stock_props = map { $_=>1 } @editable_stock_props;
     $c->stash->{editable_stock_props} = \%editable_stock_props;
 
-    # Hello World
+    my @editable_stock_props_definitions = split ',', $c->config->{editable_stock_props_definitions};
+    my %def_hash;
+    foreach (@editable_stock_props_definitions) {
+        my @term_def = split ':', $_;
+        $def_hash{$term_def[0]} = $term_def[1];
+    }
+    $c->stash->{editable_stock_props_definitions} = \%def_hash;
+
+    my $genotyping_facilities = $c->config->{genotyping_facilities};
+    my @facilities = split ',',$genotyping_facilities;
+    $c->stash->{facilities} = \@facilities;
+
+    my $field_management_factors = $c->config->{management_factor_types};
+    my @management_factor_types = split ',',$field_management_factors;
+    $c->stash->{management_factor_types} = \@management_factor_types;
+
+    my $design_type_string = $c->config->{design_types};
+    my @design_types = split ',',$design_type_string;
+    $c->stash->{design_types} = \@design_types;
+
     $c->stash->{template} = '/index.mas';
     $c->stash->{schema}   = $c->dbic_schema('SGN::Schema');
     $c->stash->{static_content_path} = $c->config->{static_content_path};

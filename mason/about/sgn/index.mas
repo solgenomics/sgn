@@ -1,22 +1,19 @@
-<& /page/page_title.mas, title=>'About the Sol Genomics Network'  &>
+<& /page/page_title.mas, title=>'About Breedbase'  &>
 
-<div class="indentedcontent">
-<p>The Sol Genomics Network (SGN) is a clade-oriented database dedicated to
-the biology of the Solanaceae family which includes a large
-number of closely related and many agronomically important
-species such as tomato, potato, tobacco, eggplant, pepper,
-and the ornamental <i>Petunia hybrida</i>.</p>
-
-<p>SGN is part of the International Solanaceae Initiative (SOL), which
-has the long-term goal of creating a network of resources and
-information to address key questions in plant adaptation and
-diversification.</p>
-
-<p>A key problem of the post-genomic era is the linking of the phenome to the genome, and SGN allows to track and help discover new such linkages. 
-
+  
+<div class="col-sm-11 col-md-11 col-lg-11">
+The Breedbase system has evolved from the <a href="https://solgenomics.net">Sol Genomics Network (SGN)</a> and <a href="https://cassavabase.org/">Cassavabase</a> and related sites (see <a href="https://rtbbase.org">RTBbase.org</a>).
 </div>
-
-<& tools.mas &>
+<div class="col-sm-11 col-md-11 col-lg-11">
+  Breedbase is striving to be a complete breeding management system, including field management, data collection, crossing utilities, and advanced trial analysis.
+</div>
+<div class="col-sm-11 col-md-11 col-lg-11">
+  Please refer to the Breedbase <a href="https://solgenomics.github.io/sgn/">manual</a> for detailed information about available features.
+  </div>
+<div class="col-sm-11 col-md-11 col-lg-11">
+  <br />
+  <br />
+  </div>
 
 <& people.mas &>
 

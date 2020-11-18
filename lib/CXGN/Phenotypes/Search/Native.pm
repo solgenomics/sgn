@@ -134,7 +134,13 @@ has 'limit' => (
 has 'offset' => (
     isa => 'Int|Undef',
     is => 'rw'
-);
+    );
+
+has 'experiment_type' => (
+    isa => 'Str',
+    is => 'rw',
+    default => 'field_layout',
+    );
 
 sub search {
     my $self = shift;
@@ -165,7 +171,7 @@ sub search {
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $phenotype_outlier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotype_outlier', 'phenotype_property')->cvterm_id();
     my $include_timestamp = $self->include_timestamp;
-    my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
+    my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
 
     my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
     my %synonym_hash_lookup = %{$stock_lookup->get_synonym_hash_lookup()};
@@ -179,8 +185,9 @@ sub search {
     if ($self->trial_list && scalar(@{$self->trial_list})>0) {
         $using_layout_hash = 1;
         foreach (@{$self->trial_list}){
-            my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $_, experiment_type=>'field_layout'});
+            my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $_, experiment_type=>$self->experiment_type()});
             my $tl = $trial_layout->get_design();
+	    
             while(my($key,$val) = each %$tl){
                 $design_layout_hash{$val->{plot_id}} = $val;
                 if($val->{plant_ids}){
@@ -257,8 +264,8 @@ sub search {
       JOIN db USING(db_id)
       JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment.nd_experiment_id)
       JOIN project USING(project_id)
-      JOIN project_relationship ON (project.project_id=project_relationship.subject_project_id AND project_relationship.type_id = $breeding_program_rel_type_id)
-      JOIN project as breeding_program on (breeding_program.project_id=project_relationship.object_project_id)
+      LEFT JOIN project_relationship ON (project.project_id=project_relationship.subject_project_id AND project_relationship.type_id = $breeding_program_rel_type_id)
+      LEFT JOIN project as breeding_program on (breeding_program.project_id=project_relationship.object_project_id)
       LEFT JOIN projectprop as year ON (project.project_id=year.project_id AND year.type_id = $year_type_id)
       LEFT JOIN projectprop as design ON (project.project_id=design.project_id AND design.type_id = $design_type_id)
       LEFT JOIN projectprop as location ON (project.project_id=location.project_id AND location.type_id = $project_location_type_id)

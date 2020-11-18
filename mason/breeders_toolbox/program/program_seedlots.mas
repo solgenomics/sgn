@@ -1,0 +1,31 @@
+<%args>
+$program_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+
+<table id="program_seedlot_table" class="display">
+    <thead>
+        <tr>
+            <th>Seedlot Name</th>
+            <th>Content</th>
+            <th>Content Type</th>
+        </tr>
+    </thead>
+</table>
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#program_seedlot_table').DataTable( {
+        'autoWidth': false,
+        'ajax': '/ajax/breeders/program/'+ <% $program_id %> + '/seedlots',
+    });
+
+});
+
+
+</script>

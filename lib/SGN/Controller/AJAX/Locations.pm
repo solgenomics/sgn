@@ -25,7 +25,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON'  },
    );
 
    sub get_all_locations :Path("/ajax/location/all") Args(0) {
@@ -46,14 +46,15 @@ __PACKAGE__->config(
        my $params = $c->request->parameters();
        my $id = $params->{id} || undef;
        my $name = $params->{name};
-       my $abbreviation =  $params->{abbreviation}; 
+       my $abbreviation =  $params->{abbreviation};
        my $country_name =  $params->{country_name};
        my $country_code =  $params->{country_code};
-       my $program =  $params->{program};
+       my $programs =  $params->{programs};
        my $type =  $params->{type};
        my $latitude    = $params->{latitude} || undef;
        my $longitude   = $params->{longitude} || undef;
        my $altitude    = $params->{altitude} || undef;
+       my $noaa_station_id    = $params->{noaa_station_id} || undef;
 
        if (! $c->user()) {
            $c->stash->{rest} = { error => 'You must be logged in to add or edit a location.' };
@@ -74,11 +75,12 @@ __PACKAGE__->config(
            abbreviation => $abbreviation,
            country_name => $country_name,
            country_code => $country_code,
-           breeding_program => $program,
+           breeding_programs => $programs,
            location_type => $type,
            latitude => $latitude,
            longitude => $longitude,
-           altitude => $altitude
+           altitude => $altitude,
+           noaa_station_id => $noaa_station_id
        });
 
        my $store = $location->store_location();
@@ -194,11 +196,12 @@ __PACKAGE__->config(
              abbreviation => $data[1],
              country_code => $data[2],
              country_name => $data[3],
-             breeding_program => $data[4],
+             breeding_programs => $data[4],
              location_type => $data[5],
              latitude => $data[6],
              longitude => $data[7],
-             altitude => $data[8]
+             altitude => $data[8],
+             noaa_station_id => $data[9],
          });
 
          my $store = $location->store_location();

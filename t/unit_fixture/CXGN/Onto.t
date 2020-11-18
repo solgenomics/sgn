@@ -8,8 +8,15 @@ use Data::Dumper;
 use SGN::Test::Fixture;
 use CXGN::Onto;
 use SGN::Model::Cvterm;
+use Test::WWW::Mechanize;
+use JSON;
+
+my $mech = Test::WWW::Mechanize->new;
+my $json = JSON->new->allow_nonref;
 
 my $t = SGN::Test::Fixture->new();
+my $schema = $t->bcs_schema();
+
 my $onto = CXGN::Onto->new( { schema => $t->bcs_schema() });
 
 my $cv_type = 'attribute_ontology';
@@ -282,15 +289,16 @@ foreach (@$results2){
     ok($_->[0], 'check that cvterm_id saved');
     push @results2_names, $_->[1];
 }
+print STDERR Dumper \@results2_names;
 is_deeply(\@results2_names, [
-            'anthocyanin pigmentation visual rating 0-3||month 10||end of day||cass lower leaf|COMP:0000014',
-            'anthocyanin pigmentation visual rating 0-3||month 10||end of day||cass sink leaf|COMP:0000015',
-            'anthocyanin pigmentation visual rating 0-3||month 1||end of day||cass lower leaf|COMP:0000016',
-            'anthocyanin pigmentation visual rating 0-3||month 1||end of day||cass sink leaf|COMP:0000017',
-            'ease of harvest assessment 1-3||month 10||end of day||cass lower leaf|COMP:0000018',
-            'ease of harvest assessment 1-3||month 10||end of day||cass sink leaf|COMP:0000019',
-            'ease of harvest assessment 1-3||month 1||end of day||cass lower leaf|COMP:0000020',
-            'ease of harvest assessment 1-3||month 1||end of day||cass sink leaf|COMP:0000021',
+          'anthocyanin pigmentation visual rating 0-3||month 10||end of day||cass lower leaf|COMP:0000018',
+          'anthocyanin pigmentation visual rating 0-3||month 10||end of day||cass sink leaf|COMP:0000019',
+          'anthocyanin pigmentation visual rating 0-3||month 1||end of day||cass lower leaf|COMP:0000020',
+          'anthocyanin pigmentation visual rating 0-3||month 1||end of day||cass sink leaf|COMP:0000021',
+          'ease of harvest assessment 1-3||month 10||end of day||cass lower leaf|COMP:0000022',
+          'ease of harvest assessment 1-3||month 10||end of day||cass sink leaf|COMP:0000023',
+          'ease of harvest assessment 1-3||month 1||end of day||cass lower leaf|COMP:0000024',
+          'ease of harvest assessment 1-3||month 1||end of day||cass sink leaf|COMP:0000025'
         ], 'check store composed terms 2');
 
 my $new_traits3 = $traits3->{new_traits};
@@ -305,15 +313,16 @@ foreach (@$results3){
     ok($_->[0], 'check that cvterm_id saved');
     push @results3_names, $_->[1];
 }
+print STDERR Dumper \@results3_names;
 is_deeply(\@results3_names, [
-            'anthocyanin pigmentation visual rating 0-3|CO_334:0000103||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010|COMP:0000022',
-            'anthocyanin pigmentation visual rating 0-3|CO_334:0000103||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009|COMP:0000023',
-            'anthocyanin pigmentation visual rating 0-3|CO_334:0000103||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010|COMP:0000024',
-            'anthocyanin pigmentation visual rating 0-3|CO_334:0000103||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009|COMP:0000025',
-            'ease of harvest assessment 1-3|CO_334:0000225||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010|COMP:0000026',
-            'ease of harvest assessment 1-3|CO_334:0000225||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009|COMP:0000027',
-            'ease of harvest assessment 1-3|CO_334:0000225||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010|COMP:0000028',
-            'ease of harvest assessment 1-3|CO_334:0000225||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009|COMP:0000029',
+          'anthocyanin pigmentation visual rating 0-3|CO_334:0000103||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010|COMP:0000026',
+          'anthocyanin pigmentation visual rating 0-3|CO_334:0000103||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009|COMP:0000027',
+          'anthocyanin pigmentation visual rating 0-3|CO_334:0000103||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010|COMP:0000028',
+          'anthocyanin pigmentation visual rating 0-3|CO_334:0000103||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009|COMP:0000029',
+          'ease of harvest assessment 1-3|CO_334:0000225||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010|COMP:0000030',
+          'ease of harvest assessment 1-3|CO_334:0000225||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009|COMP:0000031',
+          'ease of harvest assessment 1-3|CO_334:0000225||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010|COMP:0000032',
+          'ease of harvest assessment 1-3|CO_334:0000225||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009|COMP:0000033'
         ], 'test save composed terms 3');
 
 my $traits3_duplicate = SGN::Model::Cvterm->get_traits_from_component_categories($t->bcs_schema(), \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, {
@@ -335,16 +344,106 @@ foreach (@$existing_traits){
     push @check_names, $_->[1];
 }
 is_deeply($new_traits, [], 'check that duplicate traits are not added');
+print STDERR Dumper \@check_names;
 is_deeply(\@check_names, [
-            'anthocyanin pigmentation visual rating 0-3|CO_334:0000103||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010|COMP:0000022',
-            'anthocyanin pigmentation visual rating 0-3|CO_334:0000103||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009|COMP:0000023',
-            'anthocyanin pigmentation visual rating 0-3|CO_334:0000103||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010|COMP:0000024',
-            'anthocyanin pigmentation visual rating 0-3|CO_334:0000103||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009|COMP:0000025',
-            'ease of harvest assessment 1-3|CO_334:0000225||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010|COMP:0000026',
-            'ease of harvest assessment 1-3|CO_334:0000225||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009|COMP:0000027',
-            'ease of harvest assessment 1-3|CO_334:0000225||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010|COMP:0000028',
-            'ease of harvest assessment 1-3|CO_334:0000225||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009|COMP:0000029',
+          'anthocyanin pigmentation visual rating 0-3|CO_334:0000103||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010|COMP:0000026',
+          'anthocyanin pigmentation visual rating 0-3|CO_334:0000103||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009|COMP:0000027',
+          'anthocyanin pigmentation visual rating 0-3|CO_334:0000103||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010|COMP:0000028',
+          'anthocyanin pigmentation visual rating 0-3|CO_334:0000103||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009|COMP:0000029',
+          'ease of harvest assessment 1-3|CO_334:0000225||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010|COMP:0000030',
+          'ease of harvest assessment 1-3|CO_334:0000225||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009|COMP:0000031',
+          'ease of harvest assessment 1-3|CO_334:0000225||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010|COMP:0000032',
+          'ease of harvest assessment 1-3|CO_334:0000225||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009|COMP:0000033'
         ], 'check that duplicate traits are separated from new_traits');
 
+
+## Test adding observation variables, traits, methods, scales
+
+my $response;
+$mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+my $sgn_session_id = $response->{access_token};
+print STDERR $sgn_session_id."\n";
+
+my $q = "Select db_id FROM db where name = 'CO_334';";
+my $sth = $schema->storage->dbh->prepare($q);
+$sth->execute();
+my ($db_id) = $sth->fetchrow_array();
+
+$mech->post_ok('http://localhost:3010/ajax/onto/store_trait_method_scale_observation_variable',
+    [
+        "sgn_session_id"=>$sgn_session_id,
+        "selected_observation_variable_db_id"=> $db_id,
+        "new_observation_variable_name"=> "new observation variable name",
+        "new_observation_variable_definition"=> "new observation variable definition",
+        "selected_trait_db_id"=> $db_id,
+        "selected_trait_cvterm_id"=> "",
+        "new_trait_name"=> "new trait name",
+        "new_trait_definition"=> "new trait definition",
+        "selected_method_db_id"=> $db_id,
+        "selected_method_cvterm_id"=> "",
+        "new_method_name"=> "new method name",
+        "new_method_definition"=> "new method definition",
+        "selected_scale_db_id"=> $db_id,
+        "selected_scale_cvterm_id"=> "",
+        "new_scale_name"=> "new scale name",
+        "new_scale_definition"=> "new scale definition",
+        "new_scale_format"=> "",
+        "new_scale_minimum"=> "",
+        "new_scale_maximum"=> "",
+        "new_scale_default"=> "",
+        "new_scale_categories"=> ""
+    ]
+);
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+ok($response->{success});
+
+$q = "Select cvterm_id FROM cvterm where name = 'new trait name';";
+$sth = $schema->storage->dbh->prepare($q);
+$sth->execute();
+my ($trait_cvterm_id) = $sth->fetchrow_array();
+
+$mech->post_ok('http://localhost:3010/ajax/onto/store_trait_method_scale_observation_variable',
+    [
+        "selected_observation_variable_db_id"=> $db_id,
+        "new_observation_variable_name"=> "new observation variable name 2",
+        "new_observation_variable_definition"=> "new observation variable definition 2",
+        "selected_trait_db_id"=> $db_id,
+        "selected_trait_cvterm_id"=> $trait_cvterm_id,
+        "new_trait_name"=> "",
+        "new_trait_definition"=> "",
+        "selected_method_db_id"=> $db_id,
+        "selected_method_cvterm_id"=> "",
+        "new_method_name"=> "new method name 2",
+        "new_method_definition"=> "new method definition 2",
+        "selected_scale_db_id"=> $db_id,
+        "selected_scale_cvterm_id"=> "",
+        "new_scale_name"=> "new scale name 2",
+        "new_scale_definition"=> "new scale definition 2",
+        "new_scale_format"=> "",
+        "new_scale_minimum"=> "",
+        "new_scale_maximum"=> "",
+        "new_scale_default"=> "",
+        "new_scale_categories"=> ""
+    ]
+);
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+ok($response->{success});
+
+$mech->post_ok('http://localhost:3010/ajax/onto/store_ontology_identifier',
+    [
+        "sgn_session_id"=>$sgn_session_id,
+        "ontology_name"=> "NewOntology1",
+        "ontology_description"=> "new ontology",
+        "ontology_identifier"=> "NOO1",
+        "ontology_type"=> "method_ontology",
+    ]
+);
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+ok($response->{success});
 
 done_testing();

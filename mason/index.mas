@@ -7,70 +7,31 @@ $preferred_species => undef
 $editable_stock_props => {}
 </%args>
 
-<& homepage/carousel.mas &>
+      <div style="border:0px solid;text-align:center;">
+            <!-- span style="font-face:arial;font-size:48pt;color:darkgreen;font-weight:light;">BREE<b>DB</b>ASE</span -->
+	    <img src="/img/Breedbase_HighRes.png" width="400" />
+      </div>
 
-<br/>
+      <div>
+	<h3>What is Breedbase?</h3>
+	Breedbase is a comprehensive breeding management and analysis software. It can be used to design field layouts, collect phenotypic information using tablets, support the collection of genotyping samples in a field, store large amounts of high density genotypic information, and provide Genomic Selection related analyses and predictions. Breedbase supports the BrAPI standard.
+	<h3>How can I use Breedbase?</h3>
+	Breedbase is a web application that only requires a browser. To get your Breedbase instance, contact the <a href="/contact/form">Breedbase development team</a>.
+	<h3>What crops are using Breedbase?</h3>
+	There are a number of instances running for diverse crops, including Cassava (<a href="https://cassavabase.org/">https://cassavabase.org</a>), sweet potato (<a href="https://sweetpotatobase.org/">https://sweetpotatobase.org</a>), banana (<a href="https://musabase.org/">https://musabase.org</a>), rice (<a href="https://ricebase.org/">https://ricebase.org</a>), tomato and other Solanaceae (<a href="https://solgenomics.net">https://solgenomics.net/</a>) and many others.
+      </div>
+
+      <h3>How can I learn more about Breedbase?</h3>
+
+      You can watch the Breedbase workshops on <a href="https://www.youtube.com/channel/UC3jrvvzGKKEHzOriDBgnj0A">Youtube</a>, covering topics such as ontologies, trial design, data collection using fieldbook, data analysis, and genomic selection. 
+      
+      
 <div class="container-fluid">
   <div class="row">
     <div class="col-sm-6 col-md-6 col-lg-6">
-      
-      <div class="panel panel-info">
-        <div class="panel-heading">News</div>
-        <div class="panel-body" style="overflow:hidden">
-          <& homepage/news.mas &>
-        </div>
-      </div>
-      
-      <div class="panel panel-info">
-        <div class="panel-heading">Popular Species</div>
-        <div class="panel-body" style="overflow:hidden">
-          <& homepage/popular_species.mas &>
-        </div>
-      </div>
-      
-      <div class="panel panel-info">
-        <div class="panel-heading">SGN Featured</div>
-    	  <table class="table table-hover table-striped">
-    	    <tbody>
-    	      <tr><td><div class="container-fluid"><& homepage/publication_of_the_week.mas &></div></td></tr>
-    	      <tr><td><div class="container-fluid"><& homepage/image_of_the_week.mas &></div></td></tr>
-    	      <tr><td><div class="container-fluid"><& homepage/locus_of_the_week.mas &></div></td></tr>
-    	      <tr><td><div class="container-fluid"><& homepage/labs.mas &></div></td></tr>
-    	    </tbody>
-    	  </table>
-      </div>
-      
-      <div class="panel panel-info">
-        <div class="panel-heading">SOL Newsletters</div>
-        <div class="panel-body">
-          All SOL newsletters, edited by Joyce van Eck, are available on the <a href="/solanaceae-project/#sol_newsletters">Solanaceae Project page</a>
-        </div>
-      </div>
-      
     </div>
       
       <div class="col-sm-6 col-md-6 col-lg-6">
-        
-        <div class="panel panel-info">
-          <div class="panel-heading">Events</div>
-          <div class="panel-body" style="overflow:hidden">
-            <& homepage/events.mas &>
-          </div>
-        </div>
-        
-        <div class="panel panel-info">
-          <div class="panel-heading">Affiliated Sites</div>
-          <div class="panel-body" style="overflow:hidden">
-            <& homepage/affiliated_sites.mas &>
-          </div>
-        </div>
-        
-        <div class="panel panel-info">
-          <div class="panel-heading">Links</div>
-          <div class="panel-body" style="overflow:hidden">
-            <& homepage/other_links.mas &>
-          </div>
-        </div>
         
       </div>
       
@@ -81,4 +42,4 @@ $editable_stock_props => {}
      <& homepage/phenotype_uploads.mas, phenotype_files=>$phenotype_files &>
 % }
 
-<& homepage/github_pullrequests.mas &>
+<!-- & homepage/github_pullrequests.mas &  -->

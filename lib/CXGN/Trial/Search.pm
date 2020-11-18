@@ -178,6 +178,7 @@ sub search {
     my $breeding_program_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'breeding_program', 'project_property')->cvterm_id();
     my $breeding_program_trial_relationship_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'breeding_program_trial_relationship', 'project_relationship')->cvterm_id();
     my $trial_folder_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_folder', 'project_property')->cvterm_id();
+    my $analysis_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_metadata_json', 'project_property')->cvterm_id();
     my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
     my $location_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project location', 'project_property')->cvterm_id();
     my $year_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project year', 'project_property')->cvterm_id();
@@ -205,7 +206,8 @@ sub search {
         [
             { type_id => $breeding_program_cvterm_id },
             { type_id => $trial_folder_cvterm_id },
-            { type_id => $cross_cvterm_id }
+            { type_id => $cross_cvterm_id }, 
+            { type_id => $analysis_cvterm_id}
         ]
     );
     my %not_trials;
@@ -351,7 +353,7 @@ sub search {
             next;
         }
         if ($self->field_trials_only){
-            if ($design && ($design eq 'treatment' || $design eq 'genotype_data_project' || $design eq 'genotyping_plate')) {
+            if ($design && ($design eq 'treatment' || $design eq 'genotype_data_project' || $design eq 'genotyping_plate' || $design eq 'drone_run' || $design eq 'drone_run_band')) {
                 $subtract_count++;
                 next();
             }
@@ -369,6 +371,8 @@ sub search {
             folder_name => $folder_name,
             folder_description => $folder_description,
             trial_type => $trial_type_name,
+            trial_type_name => $trial_type_name,
+            trial_type_id => $trial_type_id,
             year => $year,
             location_id => $location_id,
             location_name => $location_name,

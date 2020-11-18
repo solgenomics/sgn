@@ -18,6 +18,7 @@ Jeremy Edwards <jde22@cornell.edu>
 package SGN::Controller::AJAX::Trial;
 
 use Moose;
+use utf8;
 use Try::Tiny;
 use Scalar::Util qw(looks_like_number);
 use DateTime;
@@ -31,7 +32,6 @@ use Data::Dumper;
 use CXGN::Trial;
 use CXGN::Trial::TrialDesign;
 use CXGN::Trial::TrialCreate;
-use JSON -support_by_pp;
 use SGN::View::Trial qw/design_layout_view design_info_view design_layout_map_view/;
 use CXGN::Location::LocationLookup;
 use CXGN::Stock::StockLookup;
@@ -43,16 +43,17 @@ use CXGN::Trial::ParseUpload;
 use CXGN::List::Transform;
 use CXGN::List::Validate;
 use SGN::Model::Cvterm;
-use JSON;
+use JSON::XS;
 use CXGN::BreedersToolbox::Accessions;
 use CXGN::BreederSearch;
+use YAML;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON'  },
    );
 
 has 'schema' => (
@@ -74,12 +75,13 @@ sub generate_experimental_design_POST : Args(0) {
     my $project_name = $c->req->param('project_name');
     my $project_description = $c->req->param('project_description');
     my $year = $c->req->param('year');
+    my $trial_stock_type = $c->req->param('trial_stock_type');
     my @stock_names;
     my $design_layout_view_html;
     my $design_info_view_html;
     my $design_map_view;
     if ($c->req->param('stock_list')) {
-        @stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
+	@stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
     }
     my $seedlot_hash_json = $c->req->param('seedlot_hash');
     my @control_names;
@@ -105,7 +107,7 @@ sub generate_experimental_design_POST : Args(0) {
     my $max_block_size =  $c->req->param('max_block_size');
     my $plot_prefix =  $c->req->param('plot_prefix');
     my $start_number =  $c->req->param('start_number');
-    my $increment =  $c->req->param('increment');
+    my $increment =  $c->req->param('increment') ? $c->req->param('increment') : 1;
     my $trial_location = $c->req->param('trial_location');
     my $fieldmap_col_number = $c->req->param('fieldmap_col_number');
     my $fieldmap_row_number = $c->req->param('fieldmap_row_number');
@@ -117,12 +119,16 @@ sub generate_experimental_design_POST : Args(0) {
     my $westcott_check_2 = $c->req->param('westcott_check_2');
     my $westcott_col = $c->req->param('westcott_col');
     my $westcott_col_between_check = $c->req->param('westcott_col_between_check');
-
     my $field_size = $c->req->param('field_size');
     my $plot_width = $c->req->param('plot_width');
     my $plot_length = $c->req->param('plot_length');
 
-    if ($design_type eq 'westcott'){
+    if ( !$start_number ) {
+        $c->stash->{rest} = { error => "You need to select the starting plot number."};
+        return;
+    }
+
+    if ($design_type eq 'Westcott'){
         if (!$westcott_check_1){
             $c->stash->{rest} = { error => "You need to provide name of check 1 for westcott design."};
             return;
@@ -158,22 +164,21 @@ sub generate_experimental_design_POST : Args(0) {
     my $col_in_design_number = $c->req->param('col_in_design_number');
     my $no_of_rep_times = $c->req->param('no_of_rep_times');
     my $no_of_block_sequence = $c->req->param('no_of_block_sequence');
-    my $unreplicated_accession_list = $c->req->param('unreplicated_accession_list');
-    my $replicated_accession_list = $c->req->param('replicated_accession_list');
+    my $unreplicated_stock_list = $c->req->param('unreplicated_stock_list');
+    my $replicated_stock_list = $c->req->param('replicated_stock_list');
     my $no_of_sub_block_sequence = $c->req->param('no_of_sub_block_sequence');
 
-    my @replicated_accession;
-    if ($c->req->param('replicated_accession_list')) {
-        @replicated_accession = @{_parse_list_from_json($c->req->param('replicated_accession_list'))};
+    my @replicated_stocks;
+    if ($c->req->param('replicated_stock_list')) {
+        @replicated_stocks = @{_parse_list_from_json($c->req->param('replicated_stock_list'))};
     }
-    my $number_of_replicated_accession = scalar(@replicated_accession);
+    my $number_of_replicated_stocks = scalar(@replicated_stocks);
 
-    my @unreplicated_accession;
-    if ($c->req->param('unreplicated_accession_list')) {
-        @unreplicated_accession = @{_parse_list_from_json($c->req->param('unreplicated_accession_list'))};
+    my @unreplicated_stocks;
+    if ($c->req->param('unreplicated_stock_list')) {
+        @unreplicated_stocks = @{_parse_list_from_json($c->req->param('unreplicated_stock_list'))};
     }
-    my $number_of_unreplicated_accession = scalar(@unreplicated_accession);
-
+    my $number_of_unreplicated_stocks = scalar(@unreplicated_stocks);
 
     my $greenhouse_num_plants = $c->req->param('greenhouse_num_plants');
     my $use_same_layout = $c->req->param('use_same_layout');
@@ -184,22 +189,30 @@ sub generate_experimental_design_POST : Args(0) {
             @stock_names = (@stock_names, @control_names_crbd);
         }
     }
+
+    my $number_of_prep_stocks = scalar(@stock_names);
+    my $p_rep_total_plots;
+    my $replicated_plots;
+    my $unreplicated_plots;
+    my $calculated_total_plot;
+
     if($design_type eq "p-rep"){
-        @stock_names = (@replicated_accession, @unreplicated_accession);
+        @stock_names = (@replicated_stocks, @unreplicated_stocks);
+    #}
+
+        $number_of_prep_stocks = scalar(@stock_names);
+        $p_rep_total_plots = $row_in_design_number * $col_in_design_number;
+        $replicated_plots = $no_of_rep_times * $number_of_replicated_stocks;
+        $unreplicated_plots = scalar(@unreplicated_stocks);
+        $calculated_total_plot = $replicated_plots + $unreplicated_plots;
     }
-    #print STDERR Dumper(\@stock_names);
-    my $number_of_prep_accession = scalar(@stock_names);
-    my $p_rep_total_plots = $row_in_design_number * $col_in_design_number;
-    my $replicated_plots = $no_of_rep_times * $number_of_replicated_accession;
-    my $unreplicated_plots = scalar(@unreplicated_accession);
-    my $calculated_total_plot = $replicated_plots + $unreplicated_plots;
 
     my @locations;
 
     try {
-        my $multi_location = decode_json($trial_location);
+	my $json = JSON::XS->new();
+        my $multi_location = $json->decode($trial_location);
         foreach my $loc (@$multi_location) {
-            print STDERR "One location is $loc\n";
             push @locations, $loc;
         }
     }
@@ -208,8 +221,6 @@ sub generate_experimental_design_POST : Args(0) {
     };
 
     my $location_number = scalar(@locations);
-
-    #print STDERR Dumper(@locations);
 
     if (!$c->user()) {
         $c->stash->{rest} = {error => "You need to be logged in to add a trial" };
@@ -228,20 +239,17 @@ sub generate_experimental_design_POST : Args(0) {
 
     my @design_array;
     my @design_layout_view_html_array;
-
+    my $json = JSON::XS->new();
+    
     foreach my $location (@locations) {
-
-        #print STDERR "Working on location $location\n";
-
         my $trial_name = $c->req->param('project_name');
         my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema => $schema);
-
+	
         $geolocation_lookup->set_location_name($location);
         if (!$geolocation_lookup->get_geolocation()){
             $c->stash->{rest} = { error => "Trial location not found" };
             return;
         }
-        #print STDERR Dumper(\$geolocation_lookup);
 
         if ($location_number > 1) {
 
@@ -253,14 +261,12 @@ sub generate_experimental_design_POST : Args(0) {
             });
 
             my $abbreviation = $location_object->abbreviation();
-            #print STDERR "Abbreviation is $abbreviation\n";
 
             if ($abbreviation) {
                 $trial_name = $trial_name.$abbreviation;
             } else {
                 $trial_name = $trial_name.$location;
             }
-            #print STDERR "Trial name after addition is $trial_name\n";
         }
 
         #strip name of any invalid filename characters
@@ -284,7 +290,6 @@ sub generate_experimental_design_POST : Args(0) {
             return;
         }
         if ($seedlot_hash_json){
-            my $json = JSON->new();
             $trial_design->set_seedlot_hash($json->decode($seedlot_hash_json));
         }
         if ($num_seed_per_plot){
@@ -336,7 +341,7 @@ sub generate_experimental_design_POST : Args(0) {
             $trial_design->set_maximum_block_size($max_block_size);
         }
         if ($greenhouse_num_plants) {
-            my $json = JSON->new();
+            my $json = JSON::XS->new();
             $trial_design->set_greenhouse_num_plants($json->decode($greenhouse_num_plants));
         }
         if ($westcott_check_1){
@@ -377,11 +382,11 @@ sub generate_experimental_design_POST : Args(0) {
         if ($plot_layout_format) {
             $trial_design->set_plot_layout_format($plot_layout_format);
         }
-        if ($number_of_replicated_accession) {
-            $trial_design->set_replicated_accession_no($number_of_replicated_accession);
+        if ($number_of_replicated_stocks) {
+            $trial_design->set_replicated_stock_no($number_of_replicated_stocks);
         }
-        if ($number_of_unreplicated_accession) {
-            $trial_design->set_unreplicated_accession_no($number_of_unreplicated_accession);
+        if ($number_of_unreplicated_stocks) {
+            $trial_design->set_unreplicated_stock_no($number_of_unreplicated_stocks);
         }
         if ($row_in_design_number) {
             $trial_design->set_row_in_design_number($row_in_design_number);
@@ -417,7 +422,6 @@ sub generate_experimental_design_POST : Args(0) {
         }
         if ($trial_design->get_design()) {
             %design = %{$trial_design->get_design()};
-            #print STDERR "DESIGN: ". Dumper(%design);
         } else {
             $c->stash->{rest} = {error => "Could not generate design" };
             return;
@@ -426,10 +430,10 @@ sub generate_experimental_design_POST : Args(0) {
         #For printing the table view of the generated design there are two designs that are different from the others:
         # 1. the greenhouse can use accessions or crosses, so the table should reflect that. the greenhouse generates plant and plot entries so the table should reflect that.
         # 2. the splitplot generates plots, subplots, and plant entries, so the table should reflect that.
-        $design_layout_view_html = design_layout_view(\%design, \%design_info, $design_type);
+        $design_layout_view_html = design_layout_view(\%design, \%design_info, $design_type, $trial_stock_type);
         $design_map_view = design_layout_map_view(\%design, $design_type);
-        $design_info_view_html = design_info_view(\%design, \%design_info);
-        my $design_json = encode_json(\%design);
+        $design_info_view_html = design_info_view(\%design, \%design_info, $trial_stock_type);
+        my $design_json = $json->encode(\%design);
         push @design_array,  $design_json;
         push @design_layout_view_html_array, $design_layout_view_html;
     }
@@ -437,7 +441,7 @@ sub generate_experimental_design_POST : Args(0) {
     my $warning_message;
     #check if field size can fit the design_json
     if ($field_size && $plot_width && $plot_length){
-        my $num_plots = scalar( keys %{decode_json $design_array[0]} );
+        my $num_plots = scalar( keys %{$json->decode($design_array[0])} );
         my $total_area = $plot_width * $plot_length * $num_plots; #sq meters. 1 ha = 10000m2
         my $field_size_m = $field_size * 10000;
         if ($field_size_m < $total_area){
@@ -449,10 +453,10 @@ sub generate_experimental_design_POST : Args(0) {
 
     $c->stash->{rest} = {
         success => "1",
-        design_layout_view_html => encode_json(\@design_layout_view_html_array),
+        design_layout_view_html => $json->encode(\@design_layout_view_html_array),
         design_info_view_html => $design_info_view_html,
         design_map_view => $design_map_view,
-        design_json =>  encode_json(\@design_array),
+        design_json =>  $json->encode(\@design_array),
         warning_message => $warning_message
     };
 }
@@ -469,7 +473,6 @@ sub save_experimental_design_POST : Args(0) {
     my $dbh = $c->dbc->dbh;
 
     print STDERR "Saving trial... :-)\n";
-
 
     if (!$c->user()) {
         $c->stash->{rest} = {error => "You need to be logged in to add a trial" };
@@ -494,6 +497,7 @@ sub save_experimental_design_POST : Args(0) {
     my $trial_name = $c->req->param('project_name');
     my $trial_type = $c->req->param('trial_type');
     my $breeding_program = $c->req->param('breeding_program_name');
+    my $trial_stock_type = $c->req->param('trial_stock_type');
     my $field_size = $c->req->param('field_size');
     my $plot_width = $c->req->param('plot_width');
     my $plot_length = $c->req->param('plot_length');
@@ -510,8 +514,9 @@ sub save_experimental_design_POST : Args(0) {
     my $folder;
     my $new_trial_id;
 
+    my $json = JSON::XS->new();
     try {
-        $multi_location = decode_json($locations);
+        $multi_location = $json->decode($locations);
         foreach my $loc (@$multi_location) {
             push @locations, $loc;
         }
@@ -554,24 +559,18 @@ sub save_experimental_design_POST : Args(0) {
                 nd_geolocation_id => $location_id,
             });
             my $abbreviation = $location_object->abbreviation();
-            #print STDERR "Abbreviation is $abbreviation\n";
-
-            #print STDERR "Trial name before change is $trial_name\n";
 
             if ($abbreviation) {
                 $trial_name = $trial_name.$abbreviation;
             } else {
                 $trial_name = $trial_name.$trial_location;
             }
-            #print STDERR "Trial name after addition is $trial_name\n";
         }
 
         #strip name of any invalid filename characters
         $trial_name =~ s/[\\\/\s:,"*?<>|]+//;
-        #print STDERR "Trial name after strip is $trial_name\n";
 
-        my $trial_location_design = decode_json($design->[$design_index]);
-        #print STDERR Dumper $trial_location_design;
+        my $trial_location_design = $json->decode($design->[$design_index]);
 
         my %trial_info_hash = (
             chado_schema => $chado_schema,
@@ -593,6 +592,7 @@ sub save_experimental_design_POST : Args(0) {
             field_trial_from_field_trial => \@add_project_trial_source,
             genotyping_trial_from_field_trial => $add_project_trial_genotype_trial_select,
             crossing_trial_from_field_trial => $add_project_trial_crossing_trial_select,
+            trial_stock_type => $trial_stock_type,
         );
 
         if ($field_size){
@@ -708,6 +708,64 @@ sub verify_stock_list_POST : Args(0) {
     }
 }
 
+sub verify_cross_list : Path('/ajax/trial/verify_cross_list') : ActionClass('REST') { }
+
+sub verify_cross_list_POST : Args(0) {
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my @stock_names;
+    my $error;
+    my %errors;
+    if ($c->req->param('cross_list')) {
+        @stock_names = @{_parse_list_from_json($c->req->param('cross_list'))};
+    }
+
+    if (!@stock_names) {
+        $c->stash->{rest} = {error => "No stock names supplied"};
+        $c->detach;
+    }
+
+    my $lv = CXGN::List::Validate->new();
+    my @crosses_missing = @{$lv->validate($schema,'crosses',\@stock_names)->{'missing'}};
+    if (scalar(@crosses_missing) > 0){
+        my $error = 'The following crosses are not valid in the database, so you must add them first: '.join ',', @crosses_missing;
+        $c->stash->{rest} = {error => $error};
+    } else {
+        $c->stash->{rest} = {
+            success => "1",
+        };
+    }
+}
+
+sub verify_family_name_list : Path('/ajax/trial/verify_family_name_list') : ActionClass('REST') { }
+
+sub verify_family_name_list_POST : Args(0) {
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my @stock_names;
+    my $error;
+    my %errors;
+    if ($c->req->param('family_name_list')) {
+        @stock_names = @{_parse_list_from_json($c->req->param('family_name_list'))};
+    }
+
+    if (!@stock_names) {
+        $c->stash->{rest} = {error => "No stock names supplied"};
+        $c->detach;
+    }
+
+    my $lv = CXGN::List::Validate->new();
+    my @family_names_missing = @{$lv->validate($schema,'family_names',\@stock_names)->{'missing'}};
+    if (scalar(@family_names_missing) > 0){
+        my $error = 'The following family names are not valid in the database, so you must add them first: '.join ',', @family_names_missing;
+        $c->stash->{rest} = {error => $error};
+    } else {
+        $c->stash->{rest} = {
+            success => "1",
+        };
+    }
+}
+
 sub verify_seedlot_list : Path('/ajax/trial/verify_seedlot_list') : ActionClass('REST') { }
 
 sub verify_seedlot_list_POST : Args(0) {
@@ -739,10 +797,10 @@ sub verify_seedlot_list_POST : Args(0) {
 
 sub _parse_list_from_json {
     my $list_json = shift;
-    my $json = new JSON;
+    my $json = JSON::XS->new();
     if ($list_json) {
-        my $decoded_list = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
-        #my $decoded_list = decode_json($list_json);
+        #my $decoded_list = $json->allow_nonref->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
+        my $decoded_list = $json->decode($list_json);
         my @array_of_list_items = @{$decoded_list};
         return \@array_of_list_items;
     }
@@ -753,10 +811,10 @@ sub _parse_list_from_json {
 
 sub _parse_design_from_json {
     my $design_json = shift;
-    my $json = new JSON;
+    my $json = JSON::XS->new();
     if ($design_json) {
-        my $decoded_json = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($design_json);
-        #my $decoded_json = decode_json($design_json);
+        #my $decoded_json = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($design_json);
+        my $decoded_json = $json->decode($design_json);
         #my %design = %{$decoded_json};
         return $decoded_json;
     }
@@ -772,8 +830,12 @@ sub upload_trial_file : Path('/ajax/trial/upload_trial_file') : ActionClass('RES
 sub upload_trial_file_POST : Args(0) {
     my ($self, $c) = @_;
 
+    select(STDERR);
+    $| = 1;
+    
     print STDERR "Check 1: ".localtime()."\n";
 
+    
     #print STDERR Dumper $c->req->params();
     my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
@@ -796,6 +858,7 @@ sub upload_trial_file_POST : Args(0) {
     my $add_project_trial_crossing_trial;
     my $add_project_trial_genotype_trial_select = [$add_project_trial_genotype_trial];
     my $add_project_trial_crossing_trial_select = [$add_project_trial_crossing_trial];
+    my $trial_stock_type = $c->req->param('trial_upload_trial_stock_type');
 
     my $upload = $c->req->upload('trial_uploaded_file');
     my $parser;
@@ -863,7 +926,7 @@ sub upload_trial_file_POST : Args(0) {
     $upload_metadata{'date'}="$timestamp";
 
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+    $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, trial_stock_type => $trial_stock_type);
     $parser->load_plugin('TrialExcelFormat');
     $parsed_data = $parser->parse();
 
@@ -883,8 +946,16 @@ sub upload_trial_file_POST : Args(0) {
             }
         }
 
-        $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}, missing_seedlots => $parse_errors->{'missing_seedlots'}};
+        $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_stocks'}, missing_seedlots => $parse_errors->{'missing_seedlots'}};
         return;
+    }
+
+    my $return_warnings;
+    if ($parser->has_parse_warnings()) {
+        my $warnings = $parser->get_parse_warnings();
+        foreach my $warning_string (@{$warnings->{'warning_messages'}}){
+            $return_warnings=$return_warnings.$warning_string."<br>";
+        }
     }
 
     print STDERR "Check 4: ".localtime()."\n";
@@ -913,7 +984,10 @@ sub upload_trial_file_POST : Args(0) {
             field_trial_from_field_trial => \@add_project_trial_source,
             genotyping_trial_from_field_trial => $add_project_trial_genotype_trial_select,
             crossing_trial_from_field_trial => $add_project_trial_crossing_trial_select,
+            trial_stock_type => $trial_stock_type
         );
+
+        print STDERR "Trial type is ".$trial_info_hash{'trial_type'}."\n";
 
         if ($field_size){
             $trial_info_hash{field_size} = $field_size;
@@ -944,10 +1018,197 @@ sub upload_trial_file_POST : Args(0) {
     #print STDERR "Check 5: ".localtime()."\n";
     if ($save->{'error'}) {
         print STDERR "Error saving trial: ".$save->{'error'};
-        $c->stash->{rest} = {error => $save->{'error'}};
+        $c->stash->{rest} = {warnings => $return_warnings, error => $save->{'error'}};
         return;
     } elsif ($save->{'trial_id'}) {
 
+        my $dbh = $c->dbc->dbh();
+        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+
+        $c->stash->{rest} = {warnings => $return_warnings, success => "1"};
+        return;
+    }
+
+}
+
+sub upload_multiple_trial_designs_file : Path('/ajax/trial/upload_multiple_trial_designs_file') : ActionClass('REST') { }
+
+sub upload_multiple_trial_designs_file_POST : Args(0) {
+    my ($self, $c) = @_;
+
+    # print STDERR "Check 1: ".localtime()."\n";
+
+    # print STDERR Dumper $c->req->params();
+    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh;
+    my $upload = $c->req->upload('multiple_trial_designs_upload_file');
+    my $ignore_warnings = $c->req->param('upload_multiple_trials_ignore_warnings');
+    my $parser;
+    my $parsed_data;
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $subdirectory = "trial_upload";
+    my $archived_filename_with_path;
+    my $md5;
+    my $validate_file;
+    my $parsed_file;
+    my $parse_errors;
+    my %parsed_data;
+    my %upload_metadata;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $user_id;
+    my $user_name;
+    my $error;
+
+    # print STDERR "Check 2: ".localtime()."\n";
+    print STDERR "Ignore warnings is $ignore_warnings\n";
+    if ($upload_original_name =~ /\s/ || $upload_original_name =~ /\// || $upload_original_name =~ /\\/ ) {
+        print STDERR "File name must not have spaces or slashes.\n";
+        $c->stash->{rest} = {errors => "Uploaded file name must not contain spaces or slashes." };
+        return;
+    }
+
+    if (!$c->user()) {
+        print STDERR "User not logged in... not uploading a trial.\n";
+        $c->stash->{rest} = {errors => "You need to be logged in to upload a trial." };
+        return;
+    }
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+        $c->stash->{rest} = {errors =>  "You have insufficient privileges to upload a trial." };
+        return;
+    }
+
+    $user_id = $c->user()->get_object()->get_sp_person_id();
+    $user_name = $c->user()->get_object()->get_username();
+
+    ## Store uploaded temporary file in archive
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $c->user->get_object->get_user_type()
+    });
+    $archived_filename_with_path = $uploader->archive();
+    $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {errors => "Could not save file $upload_original_name in archive",};
+        return;
+    }
+    unlink $upload_tempfile;
+
+    # print STDERR "Check 3: ".localtime()."\n";
+    $upload_metadata{'archived_file'} = $archived_filename_with_path;
+    $upload_metadata{'archived_file_type'}="trial upload file";
+    $upload_metadata{'user_id'}=$user_id;
+    $upload_metadata{'date'}="$timestamp";
+
+
+    #parse uploaded file with appropriate plugin
+    $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+    $parser->load_plugin('MultipleTrialDesignExcelFormat');
+    $parsed_data = $parser->parse();
+
+    if (!$parsed_data) {
+        my $return_error = '';
+
+        if (! $parser->has_parse_errors() ){
+            $c->stash->{rest} = {errors => "Could not get parsing errors"};
+            return;
+        }
+        else {
+            print STDERR "Parse errors are:\n";
+            print STDERR Dumper $parse_errors;
+            $parse_errors = $parser->get_parse_errors();
+            $c->stash->{rest} = {errors => $parse_errors->{'error_messages'}};
+            return;
+        }
+    }
+
+    if ($parser->has_parse_warnings()) {
+        unless ($ignore_warnings) {
+            my $warnings = $parser->get_parse_warnings();
+            $c->stash->{rest} = {warnings => $warnings->{'warning_messages'}};
+            return;
+        }
+    }
+
+    # print STDERR "Check 4: ".localtime()."\n";
+    my %all_designs = %{$parsed_data};
+    my %save;
+    $save{'errors'} = [];
+
+    my $coderef = sub {
+
+      for my $trial_name ( keys %all_designs ) {
+        my $trial_design = $all_designs{$trial_name};
+        # print STDERR "\nSaving trial $trial_name:\n";
+        my %trial_info_hash = (
+            chado_schema => $chado_schema,
+            dbh => $dbh,
+            trial_year => $trial_design->{'year'},
+            trial_description => $trial_design->{'description'},
+            trial_location => $trial_design->{'location'},
+            trial_name => $trial_name,
+            user_name => $user_name, #not implemented
+            design_type => $trial_design->{'design_type'},
+            design => $trial_design->{'design_details'},
+            program => $trial_design->{'breeding_program'},
+            upload_trial_file => $upload,
+            operator => $c->user()->get_object()->get_username()
+        );
+
+        if ($trial_design->{'trial_type'}){
+            $trial_info_hash{trial_type} = $trial_design->{'trial_type'};
+        }
+        if ($trial_design->{'plot_width'}){
+            $trial_info_hash{plot_width} = $trial_design->{'plot_width'};
+        }
+        if ($trial_design->{'plot_length'}){
+            $trial_info_hash{plot_length} = $trial_design->{'plot_length'};
+        }
+        if ($trial_design->{'field_size'}){
+            $trial_info_hash{field_size} = $trial_design->{'field_size'};
+        }
+        if ($trial_design->{'planting_date'}){
+            $trial_info_hash{planting_date} = $trial_design->{'planting_date'};
+        }
+        if ($trial_design->{'harvest_date'}){
+            $trial_info_hash{harvest_date} = $trial_design->{'harvest_date'};
+        }
+
+        my $trial_create = CXGN::Trial::TrialCreate->new(\%trial_info_hash);
+        my $current_save = $trial_create->save_trial();
+
+        if ($current_save->{error}){
+            $chado_schema->txn_rollback();
+            push @{$save{'errors'}}, $current_save->{'error'};
+        }
+
+      }
+
+    };
+
+    try {
+        $chado_schema->txn_do($coderef);
+    } catch {
+        print STDERR "Transaction Error: $_\n";
+        push @{$save{'errors'}}, $_;
+    };
+
+    #print STDERR "Check 5: ".localtime()."\n";
+    if (scalar @{$save{'errors'}} > 0) {
+        print STDERR "Errors saving trials: ".@{$save{'errors'}};
+        $c->stash->{rest} = {errors => $save{'errors'}};
+        return;
+    # } elsif ($save->{'trial_id'}) {
+    } else {
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});

@@ -18,7 +18,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 $traits_form => ''
 $combo_pops_id
 $all_traits_file
-
+$genotyping_protocol_id
 
 </%args>
 
@@ -31,7 +31,7 @@ $all_traits_file
  while (<FH>)
  {
  my ($id, $trait, $acronym) = split (/\t/);
-    my $trait_link   = qq | <a href="/solgs/model/combined/trials/$combo_pops_id/trait/$id" onclick="solGS.waitPage(this.href); return false;">$trait</a> |;
+    my $trait_link   = qq | <a href="/solgs/model/combined/trials/$combo_pops_id/trait/$id/gp/$genotyping_protocol_id" onclick="solGS.waitPage(this.href); return false;">$trait</a> |;
     my $row          = <<ROW;
      <tr>
       <td>
@@ -56,7 +56,7 @@ ROW
 
 <div id="traits_selection_div">
 
-  <table id="population_traits_list">
+  <table class="table-condensed" id="population_traits_list">
    <% $trait_rows %>
      <tr>
        <td>

@@ -2,7 +2,8 @@
 <%args>
 $trial_id => undef
 $trial_name => undef
+$trial_stock_type => undef
 </%args>
 
 
-<& /breeders_toolbox/trial/download_layout_interface_dialog.mas, trial_id => $trial_id, trial_name => $trial_name, download_type=>'Fieldbook' &>
+<& /breeders_toolbox/trial/download_layout_interface_dialog.mas, trial_id => $trial_id, trial_name => $trial_name, download_type=>'Fieldbook', trial_stock_type => $trial_stock_type &>

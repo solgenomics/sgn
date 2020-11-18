@@ -2,7 +2,7 @@ package CXGN::Pedigree::AddCrosses;
 
 =head1 NAME
 
-CXGN::Pedigree::AddCrosses - a module to add cross experiments.
+CXGN::Pedigree::AddCrosses - a module to add cross.
 
 =head1 USAGE
 
@@ -17,6 +17,7 @@ Adds an array of crosses. The parents used in the cross must already exist in th
 =head1 AUTHORS
 
  Jeremy D. Edwards (jde22@cornell.edu)
+ Titima Tantikanjana (tt15@cornell.edu)
 
 =cut
 
@@ -31,6 +32,7 @@ use CXGN::BreedersToolbox::Projects;
 use CXGN::Trial;
 use CXGN::Trial::Folder;
 use SGN::Model::Cvterm;
+use Data::Dumper;
 
 class_type 'Pedigree', { class => 'Bio::GeneticRelationships::Pedigree' };
 has 'chado_schema' => (
@@ -53,7 +55,6 @@ has 'metadata_schema' => (
 		);
 has 'dbh' => (is  => 'rw',predicate => 'has_dbh', required => 1,);
 has 'crosses' => (isa =>'ArrayRef[Pedigree]', is => 'rw', predicate => 'has_crosses', required => 1,);
-has 'location' => (isa =>'Str', is => 'rw', predicate => 'has_location', required => 1,);
 has 'owner_name' => (isa => 'Str', is => 'rw', predicate => 'has_owner_name', required => 1,);
 has 'crossing_trial_id' =>(isa =>'Int', is => 'rw', predicate => 'has_crossing_trial_id', required => 1,);
 
@@ -61,12 +62,10 @@ sub add_crosses {
     my $self = shift;
     my $chado_schema = $self->get_chado_schema();
     my $phenome_schema = $self->get_phenome_schema();
+    my $crossing_trial_id = $self->get_crossing_trial_id();
     my @crosses;
-    my $location_lookup;
-    my $geolocation;
     my $transaction_error;
     my @added_stock_ids;
-    my $crossing_trial_id;
 
     #lookup user by name
     my $owner_name = $self->get_owner_name();
@@ -85,6 +84,9 @@ sub add_crosses {
         my $female_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'female_parent', 'stock_relationship');
         my $male_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'male_parent', 'stock_relationship');
 
+		#get cvterm for cross_combination
+		my $cross_combination_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross_combination', 'stock_property');
+
         #get cvterm for cross_experiment
         my $cross_experiment_type_cvterm =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross_experiment', 'experiment_type');
 
@@ -99,9 +101,8 @@ sub add_crosses {
         my $female_plant_of_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'female_plant_of', 'stock_relationship');
         my $male_plant_of_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'male_plant_of', 'stock_relationship');
 
-        #lookup location by name
-        $location_lookup = CXGN::Location::LocationLookup->new({ schema => $chado_schema, location_name => $self->get_location });
-        $geolocation = $location_lookup->get_geolocation();
+		my $project_location_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project location', 'project_property')->cvterm_id();
+		my $geolocation_rs = $chado_schema->resultset("Project::Projectprop")->find({project_id => $crossing_trial_id, type_id => $project_location_cvterm_id});
 
         @crosses = @{$self->get_crosses()};
 
@@ -116,6 +117,7 @@ sub add_crosses {
             my $population_stock;
             my $cross_type = $pedigree->get_cross_type();
             my $cross_name = $pedigree->get_name();
+			my $cross_combination = $pedigree->get_cross_combination();
             my $crossing_trial_id;
             my $female_plot_name;
             my $male_plot_name;
@@ -131,12 +133,20 @@ sub add_crosses {
 
             if ($pedigree->has_female_parent()) {
                 $female_parent_name = $pedigree->get_female_parent()->get_name();
-                $female_parent = $self->_get_accession($female_parent_name);
+                if ($cross_type eq 'backcross') {
+                    $female_parent = $self->_get_accession_or_cross($female_parent_name);
+                } else {
+                    $female_parent = $self->_get_accession($female_parent_name);
+                }
             }
 
             if ($pedigree->has_male_parent()) {
                 $male_parent_name = $pedigree->get_male_parent()->get_name();
-                $male_parent = $self->_get_accession($male_parent_name);
+                if ($cross_type eq 'backcross') {
+                    $male_parent = $self->_get_accession_or_cross($male_parent_name);
+                } else {
+                    $male_parent = $self->_get_accession($male_parent_name);
+                }
             }
 
             if ($pedigree->has_female_plot()) {
@@ -178,8 +188,8 @@ sub add_crosses {
 
             #create cross experiment
             $experiment = $chado_schema->resultset('NaturalDiversity::NdExperiment')->create({
-                nd_geolocation_id => $geolocation->nd_geolocation_id(),
-                type_id => $cross_experiment_type_cvterm->cvterm_id(),
+                nd_geolocation_id => $geolocation_rs->value,
+                type_id => $cross_experiment_type_cvterm->cvterm_id,
             });
 
             #create a stock of type cross
@@ -256,6 +266,11 @@ sub add_crosses {
                 });
             }
 
+            #link cross to cross_combination
+			if ($cross_combination) {
+				$cross_stock->create_stockprops({$cross_combination_cvterm->name() => $cross_combination});
+            }
+
             #link the stock of type cross to the experiment
             $experiment->find_or_create_related('nd_experiment_stocks' , {
 	              stock_id => $cross_stock->stock_id(),
@@ -303,8 +318,6 @@ sub validate_crosses {
     my $crossing_trial_lookup;
     my $crossing_trial;
     my $trial_lookup;
-    my $geolocation = '';
-
 
     $crossing_trial_lookup = CXGN::BreedersToolbox::Projects->new({ schema => $chado_schema});
     $crossing_trial = $crossing_trial_lookup->get_crossing_trials($self->get_crossing_trial_id());
@@ -369,7 +382,19 @@ sub _validate_cross {
             print STDERR "Parent $female_parent_name in pedigree is not a stock\n";
             return;
         }
-    }
+    } elsif ($cross_type eq 'backcross') {
+	        $female_parent_name = $pedigree->get_female_parent()->get_name();
+	        $male_parent_name = $pedigree->get_male_parent()->get_name();
+	        $female_parent = $self->_get_accession_or_cross($female_parent_name);
+	        $male_parent = $self->_get_accession_or_cross($male_parent_name);
+
+        if (!$female_parent || !$male_parent) {
+            print STDERR "Parent $female_parent_name or $male_parent_name in pedigree is not a stock\n";
+            return;
+	    }
+
+	}
+
     #add support for other cross types here
 
     #else {
@@ -455,6 +480,30 @@ sub _get_plant {
     return $stock;
 }
 
+sub _get_accession_or_cross {
+    my $self = shift;
+    my $parent_name = shift;
+    my $chado_schema = $self->get_chado_schema();
+    my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
+    my $stock;
+    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type');
+	my $cross_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross', 'stock_type');
+
+    $stock_lookup->set_stock_name($parent_name);
+    $stock = $stock_lookup->get_stock_exact();
+
+    if (!$stock) {
+        print STDERR "Parent name is not a stock\n";
+        return;
+    }
+
+    if (($stock->type_id() != $accession_cvterm->cvterm_id()) && ($stock->type_id() != $cross_cvterm->cvterm_id())) {
+        print STDERR "Parent name is not a stock of type accession or cross \n";
+        return;
+    }
+
+    return $stock;
+}
 
 #######
 1;

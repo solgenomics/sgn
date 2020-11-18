@@ -58,7 +58,7 @@ sub solgs_population_search_autocomplete_GET :Args(0) {
     while (my $row = $rs->next) {
 
 	$c->stash->{pop_id} = $row->id;
-
+	$c->stash->{training_pop_id} = $row->id;
 	$c->controller('solGS::solGS')->check_population_is_training_population($c);
 
 	if ($c->stash->{is_training_population})

@@ -60,6 +60,8 @@ sub view_genome_data : Chained('/organism/find_organism') PathPart('genome') {
                              { join => 'type' },
                          )->count;
 
+    $c->stash->{dbh} = $c->dbic_schema("Bio::Chado::Schema")->storage()->dbh();
+    
     (my $template_name = '/genomes/'.$organism->species.'.mas') =~ s/ /_/g;
 
     # find assemblies for this organism
@@ -240,5 +242,26 @@ sub _annotation_cvterms {
     my @terms = $t->all;
     return [ @terms, map $_->recursive_children, @terms ];
 }
+
+
+=head2 view_sequenced_accessions
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub view_sequenced_accessions :Path('/genomes/sequenced_accessions') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{template} = '/genomes/sequenced_accessions.mas';
+}
+
+
 
 1;

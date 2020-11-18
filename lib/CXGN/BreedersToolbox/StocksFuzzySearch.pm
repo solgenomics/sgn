@@ -49,7 +49,7 @@ sub get_matches {
     my %results;
     my $error = '';
     print STDERR "FuzzySearch 1".localtime()."\n";
-
+    
     my $synonym_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
     my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type, 'stock_type')->cvterm_id();
     my $q = "SELECT stock.uniquename, stockprop.value, stockprop.type_id FROM stock LEFT JOIN stockprop USING(stock_id) WHERE stock.type_id=$stock_type_id";
@@ -76,25 +76,33 @@ sub get_matches {
         $lowercase_name_lookup{lc($_)} = $_;
     }
 
+    my @lowercased_synonyms;
+    my %lowercase_synonym_lookup;
+    foreach (@synonym_names){
+        push @lowercased_synonyms, lc($_);
+        $lowercase_synonym_lookup{lc($_)} = $_;
+    }
     print STDERR "FuzzySearch 2".localtime()."\n";
 
     foreach my $stock_name (@stock_list) {
-
-        if (exists($uniquename_hash{$stock_name})){
-            push @found_stocks, {matched_string => $stock_name, unique_name => $stock_name};
+	#lookup case insensitive stock names#
+	my $lc_name = lc($stock_name);
+	if (exists($lowercase_name_lookup{$lc_name})){
+	    my $uniquename = $lowercase_name_lookup{$lc_name};
+            push @found_stocks, {matched_string => $stock_name, unique_name => $uniquename}; 
             next;
         }
-
-        if (exists($synonym_uniquename_lookup{$stock_name})){
+	#lookup cases insensitive stock synonyms# 
+        if (exists($lowercase_synonym_lookup{$lc_name})){
             my %match_info;
-            if (scalar(@{$synonym_uniquename_lookup{$stock_name}}) > 1){
-                my $synonym_lookup_uniquename = join ',', @{$synonym_uniquename_lookup{$stock_name}};
+            if (scalar(@{$lowercase_synonym_lookup{$lc_name}}) > 1){
+                my $synonym_lookup_uniquename = join ',', @{$lowercase_synonym_lookup{$lc_name}};
                 $error .= "This synonym $stock_name has more than one uniquename $synonym_lookup_uniquename. This should not happen!";
                 next;
-            } elsif (scalar(@{$synonym_uniquename_lookup{$stock_name}}) == 1){
-                $match_info{matched_string} = $stock_name." (SYNONYM OF ".$synonym_uniquename_lookup{$stock_name}->[0].")";
+            } elsif (scalar(@{$lowercase_synonym_lookup{$lc_name}}) == 1){
+                $match_info{matched_string} = $stock_name." (SYNONYM OF ".$lowercase_synonym_lookup{$lc_name}->[0].")";
                 $match_info{is_synonym} = 1;
-                $match_info{uniquename} = $synonym_uniquename_lookup{$stock_name}->[0];
+                $match_info{unique_name} = $lowercase_synonym_lookup{$lc_name}->[0];
             }
             push @found_stocks, \%match_info;
             next;
@@ -102,16 +110,17 @@ sub get_matches {
 
         my @search_stock_names;
         foreach (@lowercased_names){
-            #if there is a difference in length greater than 10, it will not fuzzy search over that name
+	    #if there is a difference in length greater than 10, it will not fuzzy search over that name
             if (abs(length($_) - length($stock_name)) <= 10){
                 push @search_stock_names, $_;
             }
         }
 
+       #####case-sensitive matches are exact_match
         my @stock_matches = @{$fuzzy_string_search->get_matches(lc($stock_name), \@search_stock_names, $max_distance)};
 
         if (scalar(@stock_matches) == 0) {
-            push (@absent_stocks, $stock_name);
+	    push (@absent_stocks, $stock_name);
         } else {
             my @matches;
             foreach (@stock_matches){

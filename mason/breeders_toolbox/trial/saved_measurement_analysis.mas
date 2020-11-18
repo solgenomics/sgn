@@ -1,0 +1,30 @@
+<%doc>
+
+=head1 NAME
+
+/breeders_toolbox/trial/saved_measurement_analysis.mas - for analysis tools on saved measurements
+
+</%doc>
+
+<%args>
+
+$trial_id
+
+</%args>
+
+
+<&| /page/info_section.mas, 
+  collapsible => 1, 
+  collapsed   => 1, 
+  title       => "Analysis tools on saved measurements"
+  &>
+
+
+  <& /breeders_toolbox/trial/correlation_workflow.mas, trial_id => $trial_id &>
+
+  <& /breeders_toolbox/trial/time_series_accessions_workflow.mas, trial_id => $trial_id, data_level=>'plot' &>
+
+  <& /breeders_toolbox/trial/numerical_derivatives_row_and_column_workflow.mas, trial_id => $trial_id, data_level=>'plot' &>
+
+
+</&>

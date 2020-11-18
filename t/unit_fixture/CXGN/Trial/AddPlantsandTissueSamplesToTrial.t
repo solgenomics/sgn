@@ -20,7 +20,7 @@ my $trial_id = 137;
 my $tl = CXGN::Trial::TrialLayout->new({ schema => $f->bcs_schema(), trial_id => $trial_id, experiment_type => 'field_layout' });
 
 my $d = $tl->get_design();
-#print STDERR Dumper($d);
+print STDERR Dumper($d);
 
 my @plot_nums;
 my @accessions;
@@ -713,8 +713,8 @@ is_deeply( $columns, [
 my @trait_list = ("dry matter content percentage|CO_334:0000092", "fresh root weight|CO_334:0000012");
 my $tempfile = "/tmp/test_create_pheno_spreadsheet_plots_after_plants.xls";
 my $format = 'ExcelBasic';
-my $create_spreadsheet = CXGN::Trial::Download->new( 
-  { 
+my $create_spreadsheet = CXGN::Trial::Download->new(
+  {
   bcs_schema => $f->bcs_schema,
   trial_list => [$trial_id],
   trait_list => \@trait_list,
@@ -986,8 +986,8 @@ is_deeply($contents->[1]->{'cell'}->[11], [
 my @trait_list = ("dry matter content percentage|CO_334:0000092", "fresh root weight|CO_334:0000012");
 my $tempfile = "/tmp/test_create_pheno_spreadsheet_plots_after_plants.xls";
 my $format = 'ExcelBasic';
-my $create_spreadsheet = CXGN::Trial::Download->new( 
-{ 
+my $create_spreadsheet = CXGN::Trial::Download->new(
+{
 bcs_schema => $f->bcs_schema,
 trial_list => [$trial_id],
 trait_list => \@trait_list,

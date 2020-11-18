@@ -1,6 +1,6 @@
 
 <%args>
-$nd_geolocation => 'not_provided'
+$location_id => 'not_provided'
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
@@ -48,7 +48,7 @@ $nd_geolocation => 'not_provided'
 jQuery(document).ready(function () {
 
    var trial_table = jQuery('#trial_search_results').DataTable( {
-       'ajax': '/ajax/search/trials?nd_geolocation=<% $nd_geolocation %>',
+       'ajax': '/ajax/search/trials?location_id=<% $location_id %>',
        "scrollX": true
    });
 

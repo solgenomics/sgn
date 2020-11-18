@@ -101,7 +101,7 @@ sub BUILD {
         $cvterm = $self->schema()->resultset("Cv::Cvterm")->find({ cvterm_id => $self->cvterm_id() });
     } elsif ($self->accession )   {
 	my ($db_name, $dbxref_accession) = split "\:", $self->accession;
-	
+
 	#InterPro accessions have a namespace (db.name) that is different from the accession prefic
 	if ($self->accession =~ m/^IPR*/ ) {
 	    $db_name = 'InterPro';
@@ -114,17 +114,17 @@ sub BUILD {
 	    },
 	    { join => 'db'}
 	    );
-	
-	if ($dbxref) { $cvterm = $dbxref->cvterm ; } 
-    } 
-    
+
+	if ($dbxref) { $cvterm = $dbxref->cvterm ; }
+    }
+
     if (defined $cvterm) {
         $self->cvterm($cvterm);
         $self->cvterm_id($cvterm->cvterm_id);
         $self->name($cvterm->name);
 	$self->definition($cvterm->definition || '' );
 	$self->is_obsolete($cvterm->is_obsolete);
-	
+
         $self->dbxref( $self->schema()->resultset("General::Dbxref")->find({ dbxref_id=>$cvterm->dbxref_id() }) );
 	$self->cv_id( $cvterm->cv_id);
 	$self->cv( $self->schema()->resultset("Cv::Cv")->find( { cv_id => $cvterm->cv_id() }) );
@@ -165,10 +165,10 @@ sub get_image_ids {
 
 
 
-=head2 function get_is_relationshiptype 
+=head2 function get_is_relationshiptype
 
  Usage: my $is_relationshiptype = $self->get_is_relationship_type
- Desc:  find the database value of teh cvterm column is_relationship_type (integer 0,1) 
+ Desc:  find the database value of teh cvterm column is_relationship_type (integer 0,1)
  Property
  Side Effects:
  Example:
@@ -177,7 +177,7 @@ sub get_image_ids {
 
 sub get_is_relationshiptype {
   my $self = shift;
-  return $self->cvterm->is_relationship_type; 
+  return $self->cvterm->is_relationship_type;
 }
 
 
@@ -186,8 +186,8 @@ sub get_is_relationshiptype {
 =head2 synonyms
 
  Usage: my @synonyms = $self->synonyms()
- Desc:  Fetch all synonym names of a cvterm. use BCS cvterm->add_synonym and $cvterm->delete_synonym to manipulate cvtermsynonyms 
- Ret:   an array of synonym strings 
+ Desc:  Fetch all synonym names of a cvterm. use BCS cvterm->add_synonym and $cvterm->delete_synonym to manipulate cvtermsynonyms
+ Ret:   an array of synonym strings
  Args:  none
  Side Effects: none
  Example:
@@ -198,12 +198,36 @@ sub synonyms {
     my $self = shift;
     my $cvterm = $self->cvterm;
     my $synonym_rs = $cvterm->cvtermsynonyms;
-    
+
     my @synonyms =() ;
-    while ( my $s = $synonym_rs->next ) { 
-	push (@synonyms, $s->synonym)  ; 
+    while ( my $s = $synonym_rs->next ) {
+	push (@synonyms, $s->synonym)  ;
     }
     return @synonyms;
+}
+
+=head2 get_single_synonym
+
+ Usage: my $single_synonym = $self->get_single_synonym;
+ Desc: a method for fetching a single synonym, based on the synonym structure. This is ugly and it would be better if we used types and type ids
+ Ret:  a single synonym
+ Args: none
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_single_synonym {
+    my $self=shift;
+    my $cvterm_id= $self->cvterm_id();
+
+    my $query=  "SELECT synonym FROM cvtermsynonym WHERE cvterm_id= ? AND synonym NOT LIKE '% %' AND synonym NOT LIKE '%\\_%' LIMIT 1";
+    my $synonym_sth = $self->schema->storage->dbh->prepare($query);
+    $synonym_sth->execute($cvterm_id);
+
+    my $single_synonym = $synonym_sth->fetchrow_array();
+
+    return $single_synonym;
 }
 
 
@@ -212,7 +236,7 @@ sub synonyms {
  Usage: $self->secondary_dbxrefs
  Desc:  find all secondary accessions associated with the cvterm
         These are stored in cvterm_dbxref table
- Ret:   a list of full accession strings (PO:0001234) 
+ Ret:   a list of full accession strings (PO:0001234)
  Args:  none
  Side Effects: none
  Example:
@@ -248,7 +272,7 @@ sub def_dbxrefs {
     my $self=shift;
     my $cvterm = $self->cvterm;
     my @defs =  $cvterm->search_related('cvterm_dbxrefs' , { is_for_definition => 1} );
-    
+
     return @defs || undef ;
 }
 
@@ -268,8 +292,8 @@ sub def_dbxrefs {
 sub cvtermprops {
     my $self = shift;
     my $properties;
-    my $cvtermprops = $self->cvterm->cvtermprops; 
-    
+    my $cvtermprops = $self->cvterm->cvtermprops;
+
     while ( my $prop =  $cvtermprops->next ) {
 	push @{ $properties->{$prop->type->name } } ,   $prop->value ;
     }

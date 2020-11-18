@@ -87,7 +87,7 @@ sub get_sp_persons {
 	my $self = shift;
 	my $dbh = $self->bcs_schema->storage->dbh;
 	my @sp_persons;
-	my $q="SELECT username, sp_person_id FROM sgn_people.sp_person;";
+	my $q="SELECT username, sp_person_id FROM sgn_people.sp_person ORDER BY username ASC;";
 	my $sth = $dbh->prepare($q);
 	$sth->execute();
 	while (my ($username, $sp_person_id) = $sth->fetchrow_array ) {

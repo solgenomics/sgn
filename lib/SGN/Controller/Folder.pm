@@ -29,9 +29,11 @@ sub folder_page :Path("/folder") Args(1) {
     my $folder = CXGN::Trial::Folder->new({ bcs_schema => $self->schema, folder_id => $folder_id });
 
     my $children = $folder->children();
+    # print STDERR Dumper $children;
     my @trials;
     my @cross_trials;
     my @genotyping_trials;
+    my @analyses_trials;
     my @child_folders;
     my $has_child_folders;
     foreach (@$children) {
@@ -45,6 +47,9 @@ sub folder_page :Path("/folder") Args(1) {
         if ($_->folder_type eq 'genotyping_trial') {
             push @genotyping_trials, $_;
         }
+        if ($_->folder_type eq 'analyses') {
+            push @analyses_trials, $_;
+        }
         if ($_->folder_type eq 'folder') {
             $has_child_folders = 1;
             push @child_folders, $_;
@@ -55,6 +60,7 @@ sub folder_page :Path("/folder") Args(1) {
     $c->stash->{trials} = \@trials;
     $c->stash->{crossing_trials} = \@cross_trials;
     $c->stash->{genotyping_trials} = \@genotyping_trials;
+    $c->stash->{analyses_trials} = \@analyses_trials;
     $c->stash->{child_folders} = \@child_folders;
     $c->stash->{project_parent} = $folder->project_parent();
     $c->stash->{breeding_program} = $folder->breeding_program();
