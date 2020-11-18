@@ -487,7 +487,6 @@ sub store {
     # print STDERR "DATA: ".Dumper(\%data);
     ## Use txn_do with the following coderef so that if any part fails, the entire transaction fails.
     my $coderef = sub {
-        my %trait_and_stock_to_overwrite;
         my @overwritten_values;
 
         my $stored_file_id;
@@ -544,8 +543,11 @@ sub store {
                         #Remove previous phenotype values for a given stock and trait, if $overwrite values is checked
                         if ($overwrite_values) {
                             if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
-                                push @{$trait_and_stock_to_overwrite{traits}}, $trait_cvterm->cvterm_id();
-                                push @{$trait_and_stock_to_overwrite{stocks}}, $stock_id;
+                                my %trait_and_stock_to_overwrite = (
+                                    traits => [$trait_cvterm->cvterm_id()],
+                                    stocks => [$stock_id]
+                                );
+                                push @overwritten_values, $self->delete_previous_phenotypes(\%trait_and_stock_to_overwrite);
                             }
                             $check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id} = 1;
                         }
@@ -576,7 +578,7 @@ sub store {
                             $self->handle_timestamp($timestamp, $observation);
                             $self->handle_operator($operator, $observation);
 
-                            my $q = "SELECT nd_experiment_phenotype_bridge_id, phenotype_id, nd_experiment_id, file_id
+                            my $q = "SELECT nd_experiment_phenotype_bridge_id, phenotype_id, file_id
                             FROM phenotype
                             JOIN nd_experiment_phenotype_bridge using(phenotype_id)
                             WHERE stock_id=?
@@ -584,8 +586,8 @@ sub store {
 
                             my $h = $self->bcs_schema->storage->dbh()->prepare($q);
                             $h->execute($stock_id, $trait_cvterm->cvterm_id);
-                            while (my ($nd_experiment_phenotype_bridge_id, $phenotype_id, $nd_experiment_id, $file_id) = $h->fetchrow_array()) {
-                                push @overwritten_values, [$file_id, $phenotype_id, $nd_experiment_id];
+                            while (my ($nd_experiment_phenotype_bridge_id, $phenotype_id, $file_id) = $h->fetchrow_array()) {
+                                push @overwritten_values, [$file_id, $phenotype_id, $nd_experiment_phenotype_bridge_id];
                                 if ($stored_image_id) {
                                     $nd_experiment_phenotype_bridge_update_image_dbh->execute($stored_image_id, $nd_experiment_phenotype_bridge_id);
                                 }
@@ -630,10 +632,6 @@ sub store {
                     }
                 }
             }
-        }
-
-        if (scalar(keys %trait_and_stock_to_overwrite) > 0) {
-            push @overwritten_values, $self->delete_previous_phenotypes(\%trait_and_stock_to_overwrite);
         }
 
         $success_message = 'All values in your file are now saved in the database!';
