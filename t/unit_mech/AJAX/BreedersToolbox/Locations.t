@@ -82,7 +82,7 @@ my $location_id = 23;
 $mech->post_ok('http://localhost:3010/ajax/location/delete/'.$location_id);
 $response = decode_json $mech->content;
 #print STDERR Dumper $response->{'error'};
-$expected_response = "Location test_location cannot be deleted because there are 3520 measurements associated with it from at least one trial.\n";
+$expected_response = "Location test_location cannot be deleted because there are 3503 measurements associated with it from at least one trial.\n";
 is_deeply($response->{'error'}, $expected_response, 'test error message on delete on location with data');
 
 # test delete on unused location
