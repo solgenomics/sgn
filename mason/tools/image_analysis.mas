@@ -276,7 +276,7 @@ jQuery(document).ready(function(){
         jQuery.ajax({
             url: 'brapi/v2/observations/',
             method: 'PUT',
-            data: data
+            data: data,
             dataType:'json',
             beforeSend: function() {
                 jQuery('#working_modal').modal('show');

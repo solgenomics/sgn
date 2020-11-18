@@ -82,16 +82,16 @@ sub image_analysis_submit_POST : Args(0) {
     }
     print STDERR Dumper \@image_urls;
 
-    my %service_details = {
-        necrosis => {
+    my %service_details = (
+        'necrosis' => {
             server_endpoint => "http://unet.mcrops.org/api/",
             image_type_name => "image_analysis_necrosis_solomon_nsumba",
         },
-        whitefly_count => {
+        'whitefly_count' => {
             server_endpoint => "http://18.216.149.204/home/api2/",
             image_type_name => "image_analysis_white_fly_count_solomon_nsumba",
         },
-        count_contours => {
+        'count_contours' => {
             image_type_name => "image_analysis_contours",
             trait_name => "count_contours",
             script => 'GetContours.py',
@@ -99,7 +99,7 @@ sub image_analysis_submit_POST : Args(0) {
             outfile_image => 'outfile_path',
             results_outfile => 'results_outfile_path',
         },
-        largest_contour_percent => {
+        'largest_contour_percent' => {
             image_type_name => 'image_analysis_largest_contour',
             trait_name => 'percent_largest_contour',
             script => 'GetLargestContour.py',
@@ -107,7 +107,7 @@ sub image_analysis_submit_POST : Args(0) {
             outfile_image => 'outfile_path',
             results_outfile => 'results_outfile_path',
         },
-        count_sift => {
+        'count_sift' => {
             image_type_name => "image_analysis_sift",
             trait_name => "count_sift",
             script => 'ImageProcess/CalculatePhenotypeSift.py',
@@ -115,9 +115,9 @@ sub image_analysis_submit_POST : Args(0) {
             outfile_image => 'outfile_paths',
             results_outfile => 'results_outfile_path',
         }
-    };
+    );
 
-    my $image_type_name = $service_details[$service]['image_type_name'];
+    my $image_type_name = $service_details{$service}->{'image_type_name'};
 
     my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $image_type_name, 'project_md_image')->cvterm_id();
 
@@ -144,9 +144,10 @@ sub image_analysis_submit_POST : Args(0) {
         $archive_temp_image .= '.png';
         my %res;
 
-        if (defined $service_details[$service]['server_endpoint']) { # submit image to external service for processing
+        if (defined $service_details{$service}->{'server_endpoint'}) { # submit image to external service for processing
+            print STDERR "Using endpoint ".$service_details{$service}->{'server_endpoint'}." to analyze image\n";
             my $resp = $ua->post(
-                $service_details[$service]['server_endpoint'],
+                $service_details{$service}->{'server_endpoint'},
                 Content_Type => 'form-data',
                 Content => [
                     image => [ $_, $_, Content_Type => 'image/png' ],
@@ -154,25 +155,26 @@ sub image_analysis_submit_POST : Args(0) {
             );
             if ($resp->is_success) {
                 my $message = $resp->decoded_content;
-                my $message_hash = decode_json $message;
-                my $rc = getstore($message_hash->{image_link}, $archive_temp_image);
+                my $message_hashref = decode_json $message;
+                my $rc = getstore($message_hashref->{image_link}, $archive_temp_image);
                 if (is_error($rc)) {
-                    die "getstore of ".$message_hash->{image_link}." failed with $rc";
+                    die "getstore of ".$message_hashref->{image_link}." failed with $rc";
                 }
-                print STDERR Dumper $message_hash;
-                $res['value'] = $message_hash->{value};
-                $res['trait'] = $message_hash->{trait};
+                print STDERR Dumper $message_hashref;
+                $res{'value'} = $message_hashref->{trait_value};
+                $res{'trait'} = $message_hashref->{trait_name};
             }
             else {
                 print STDERR Dumper $resp->status_line;
-                $res['error'] = $resp->status_line;
+                $res{'error'} = $resp->status_line;
             }
         }
-        elsif (defined $service_details[$service]['script']) { # supply image to local script for processing
-            my $script = $service_details[$service]['script'];
-            my $input_image = $service_details[$service]['input_image'];
-            my $outfile_image = $service_details[$service]['outfile_image'];
-            my $results_outfile = $service_details[$service]['results_outfile'];
+        elsif (defined $service_details{$service}->{'script'}) { # supply image to local script for processing
+            my $script = $service_details{$service}->{'script'};
+            print STDERR "Using script $script to analyze image\n";
+            my $input_image = $service_details{$service}->{'input_image'};
+            my $outfile_image = $service_details{$service}->{'outfile_image'};
+            my $results_outfile = $service_details{$service}->{'results_outfile'};
             my $archive_temp_results = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => $image_type_name.'/imageXXXX');
 
             my $cmd = $c->config->{python_executable} . ' ' . $c->config->{rootpath} .
@@ -190,78 +192,135 @@ sub image_analysis_submit_POST : Args(0) {
             if ($csv->parse($line)) {
                 @columns = $csv->fields();
             }
-            $res['value'] = $columns[0];
-            $res['trait'] = $service_details[$service]['trait'];
+            $res{'value'} = $columns[0];
+            $res{'trait'} = $service_details{$service}->{'trait'};
         }
 
-        my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
-        my $md5 = $image->calculate_md5sum($archive_temp_image);
-        my $stock_id = $result->[$it]->{stock_id};
-        my $project_id = $result->[$it]->{project_id};
+        $res{'original_image'} = $image_urls[$it];
 
-        my $project_where = ' ';
-        my $project_join = ' ';
-        if ($project_id) {
-            $project_where = " AND project_md_image.type_id = $linking_table_type_id AND project_md_image.project_id = $project_id ";
-            $project_join = " JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id) ";
-        }
+        unless (defined $res{'error'}) {
 
-        my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
-            $project_join
-            JOIN phenome.stock_image AS stock_image ON (stock_image.image_id = md_image.image_id)
-            WHERE md_image.obsolete = 'f'
-            $project_where
-            AND stock_image.stock_id = $stock_id
-            AND md_image.md5sum = '$md5';";
-        my $h = $schema->storage->dbh->prepare($q);
-        $h->execute();
-        my ($saved_image_id) = $h->fetchrow_array();
-        my $image_id;
-        if ($saved_image_id) {
-            print STDERR Dumper "Image $archive_temp_image has already been added to the database and will not be added again.";
-            $image = SGN::Image->new( $schema->storage->dbh, $saved_image_id, $c );
-            $image_id = $image->get_image_id();
-        }
-        else {
-            $image->set_sp_person_id($user_id);
+            my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+            my $md5 = $image->calculate_md5sum($archive_temp_image);
+            my $stock_id = $result->[$it]->{stock_id};
+            my $project_id = $result->[$it]->{project_id};
+
+            my $project_where = ' ';
+            my $project_join = ' ';
             if ($project_id) {
-                my $ret = $image->process_image($archive_temp_image, 'project', $project_id, $linking_table_type_id);
-                if (!$ret ) {
-                    return {error => "Image processing for $archive_temp_image did not work. Image not associated to stock_id $stock_id.<br/><br/>"};
-                }
-                my $stock_associate = $image->associate_stock($stock_id);
+                $project_where = " AND project_md_image.type_id = $linking_table_type_id AND project_md_image.project_id = $project_id ";
+                $project_join = " JOIN phenome.project_md_image AS project_md_image ON(project_md_image.image_id = md_image.image_id) ";
+            }
+
+            my $q = "SELECT md_image.image_id FROM metadata.md_image AS md_image
+                $project_join
+                JOIN phenome.stock_image AS stock_image ON (stock_image.image_id = md_image.image_id)
+                WHERE md_image.obsolete = 'f'
+                $project_where
+                AND stock_image.stock_id = $stock_id
+                AND md_image.md5sum = '$md5';";
+            my $h = $schema->storage->dbh->prepare($q);
+            $h->execute();
+            my ($saved_image_id) = $h->fetchrow_array();
+            my $image_id;
+            if ($saved_image_id) {
+                print STDERR Dumper "Image $archive_temp_image has already been added to the database and will not be added again.";
+                $image = SGN::Image->new( $schema->storage->dbh, $saved_image_id, $c );
+                $image_id = $image->get_image_id();
             }
             else {
-                my $ret = $image->process_image($archive_temp_image, 'stock', $stock_id);
-                if (!$ret ) {
-                    return {error => "Image processing for $archive_temp_image did not work. Image not associated to stock_id $stock_id.<br/><br/>"};
+                $image->set_sp_person_id($user_id);
+                if ($project_id) {
+                    my $ret = $image->process_image($archive_temp_image, 'project', $project_id, $linking_table_type_id);
+                    if (!$ret ) {
+                        return {error => "Image processing for $archive_temp_image did not work. Image not associated to stock_id $stock_id.<br/><br/>"};
+                    }
+                    my $stock_associate = $image->associate_stock($stock_id);
                 }
+                else {
+                    my $ret = $image->process_image($archive_temp_image, 'stock', $stock_id);
+                    if (!$ret ) {
+                        return {error => "Image processing for $archive_temp_image did not work. Image not associated to stock_id $stock_id.<br/><br/>"};
+                    }
+                }
+                print STDERR "Saved $archive_temp_image\n";
+                $image_id = $image->get_image_id();
+                my $added_image_tag_id = $image->add_tag($image_tag);
             }
-            print STDERR "Saved $archive_temp_image\n";
-            $image_id = $image->get_image_id();
-            my $added_image_tag_id = $image->add_tag($image_tag);
+
+            # Store individual image results
+            $res{'analyzed_image_id'} = $image_id;
+            $res{'image_link'} = $main_production_site_url.$image->get_image_url("original");
         }
 
-        # Store individual image results
-        $res['analyzed_image_id'] = $image_id;
-        $res['image_link'] = $main_production_site_url.$image->get_image_url("original");
-        $res['original_image'] = $image_urls[$it];
-        $result->[$it]->{result} = $res;
+        $result->[$it]->{result} = \%res;
         $it++;
     }
 
-    my $result = _group_results_by_observationunit($result);
+    $result = _group_results_by_observationunit($result);
 
     $c->stash->{rest} = { success => 1, results => $result };
 }
 
 sub _group_results_by_observationunit {
-    my $c = shift;
     my $result = shift;
-    print STDERR "LOOK I'M ALL THE RESULTS READY FOR PROCESSING\n"
-    print STDERR Dumper($results);
-    # Move JS processing here
-    return $results;
+    my %grouped_results = ();
+    my @table_data = ();
+
+    my $uniquename, $trait, $value, $old_uniquename;
+    # sort result hash array by $stock_id
+    my @sorted_result = sort {$$a{"stock_id"} <=> $$b{"stock_id"} } @{$result};
+    # for each item in result hash array add to new grouped hash using stock_uniquename as key
+    foreach my $result_ref (@sorted_result) {
+        print STDERR "Working on Stock ".$results_ref->{'stock_uniquename'}." and image ".$results_ref->{'image_original_filename'}."\n";
+        $uniquename = $results_ref->{'stock_uniquename'};
+        $trait = $results_ref{'result'}->{'trait'};
+        $value = $results_ref{'result'}->{'value'};
+
+        if (undef $grouped_results{$uniquename} && undef $grouped_results{$uniquename}{$trait}) {
+            #this looks like a new stock, calulate and store mean value for previous stock
+            print STDERR "Calculating mean value for $old_uniquename before moving on to a new stock \n";
+
+            my $old_uniquename_data = $grouped_results{$old_uniquename};
+
+            foreach my $trait (keys %{$old_uniquename_data}) {
+
+                my $details = $old_uniquename_data->{$trait};
+
+                #blah blah get deets from here
+
+                push @table_data, {
+                    observationUnitDbId => ,
+                    observationUnitName => ,
+                    collector => ,
+                    observationTimeStamp => ,
+                    observationVariableDbId => ,
+                    observationVariableName => ,
+                    value => ,
+                    details => [{
+                            image_name =>,
+                            original_image_link =>,
+                            analyzed_image_link =>,
+                            value =>,
+                        },
+                        {}
+                    ]
+                };
+            }
+        }
+        if ($trait && $value) {
+            print STDERR "Found a $trait value calculated for $uniquename. Saving the details \n";
+            push @{$grouped_results{$uniquename}{$trait}}, {
+                        link => $results_ref{'result'}->{'image_link'},
+                        name => $results_ref->{'image_original_filename'}.$results_ref->{'image_file_ext'},
+                        value => $value + 0;
+                    };
+        }
+        else { print STDERR "No usable data in this results_ref \n" . Dumper($results_ref); } # if no result returned for an image, skip it.
+        $old_uniquename = $results_ref->{'stock_uniquename'};
+    }
+
+    return \@table_data;
 }
 
 sub _check_user_login {
