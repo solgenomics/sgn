@@ -202,15 +202,15 @@ jQuery(document).ready(function(){
                 console.log(response);
                 jQuery('#working_msg').html('');
                 jQuery('#working_modal').modal('hide');
-                values_hash = _create_values_hash(response.results);
-                var table_data = _group_image_phenotypes_by_stock(values_hash);
-                console.log("values hash is:");
-                console.log(values_hash);
-                console.log("table data is:");
-                console.log(table_data);
+                // values_hash = _create_values_hash(response.results);
+                // var table_data = _group_image_phenotypes_by_stock(values_hash);
+                // console.log("values hash is:");
+                // console.log(values_hash);
+                // console.log("table data is:");
+                // console.log(table_data);
 
                 var table = jQuery('#image_analysis_result_table').DataTable( {
-                    "data": table_data,
+                    "data": response.results,
                     "columns": [
                         {
                             "className":      'details-control',
@@ -222,9 +222,9 @@ jQuery(document).ready(function(){
                              },
                              width:"15px"
                         },
-                        { "data": "stock" },
-                        { "data": "trait" },
-                        { "data": "avg" }
+                        { "data": "observationUnitName" },
+                        { "data": "observationVariableName" },
+                        { "data": "value" }
                     ],
                     "order": [[1, 'asc']]
                 } );
@@ -392,8 +392,8 @@ function format ( d ) {
     d.details.forEach(function (image, index) {
       detail_rows +=
       `<tr>
-        <td>`+image.name+`</td>
-        <td><img src="`+image.link+`"></td>
+        <td>`+image.image_name+`</td>
+        <td><img src="`+image.analyzed_link+`"></td>
         <td>`+image.value+`</td>
       </tr>`
     });

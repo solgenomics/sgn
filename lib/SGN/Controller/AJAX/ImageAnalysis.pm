@@ -37,8 +37,10 @@ use CXGN::DroneImagery::ImageTypes;
 use Time::Piece;
 use POSIX;
 use Math::Round;
+use List::Util qw/sum/;
 use Parallel::ForkManager;
 use CXGN::Image::Search;
+use CXGN::Trait::Search;
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -163,6 +165,14 @@ sub image_analysis_submit_POST : Args(0) {
                 print STDERR Dumper $message_hashref;
                 $res{'value'} = $message_hashref->{trait_value};
                 $res{'trait'} = $message_hashref->{trait_name};
+                # get observationVariableDbId from trait name
+                my ($trait_details, $records_total) = CXGN::Trait::Search->new({
+                    bcs_schema=>$schema,
+                    trait_name_list => [$message_hashref->{trait_name}]
+                })->search();
+                # print STDERR "trait details are: ".Dumper($trait_details);
+                $res{'trait_id'} = $trait_details->[0]->{trait_id};
+                # $res{'collector'} = $user_name;
             }
             else {
                 print STDERR Dumper $resp->status_line;
@@ -194,6 +204,7 @@ sub image_analysis_submit_POST : Args(0) {
             }
             $res{'value'} = $columns[0];
             $res{'trait'} = $service_details{$service}->{'trait'};
+            # $res{'collector'} = $user_name;
         }
 
         $res{'original_image'} = $image_urls[$it];
@@ -250,7 +261,7 @@ sub image_analysis_submit_POST : Args(0) {
 
             # Store individual image results
             $res{'analyzed_image_id'} = $image_id;
-            $res{'image_link'} = $main_production_site_url.$image->get_image_url("original");
+            $res{'image_link'} = $image->get_image_url("original");
         }
 
         $result->[$it]->{result} = \%res;
@@ -267,59 +278,65 @@ sub _group_results_by_observationunit {
     my %grouped_results = ();
     my @table_data = ();
 
-    my $uniquename, $trait, $value, $old_uniquename;
+    my ($uniquename, $trait, $value, $results_ref);
     # sort result hash array by $stock_id
     my @sorted_result = sort {$$a{"stock_id"} <=> $$b{"stock_id"} } @{$result};
+    print STDERR "Sorted result is ".Dumper(@sorted_result);
+    my $old_uniquename = $sorted_result[0]->{'stock_uniquename'};
+    $grouped_results{$sorted_result[0]->{'stock_uniquename'}}{$sorted_result[0]->{'result'}->{'trait'}} = [];
     # for each item in result hash array add to new grouped hash using stock_uniquename as key
-    foreach my $result_ref (@sorted_result) {
-        print STDERR "Working on Stock ".$results_ref->{'stock_uniquename'}." and image ".$results_ref->{'image_original_filename'}."\n";
-        $uniquename = $results_ref->{'stock_uniquename'};
-        $trait = $results_ref{'result'}->{'trait'};
-        $value = $results_ref{'result'}->{'value'};
 
-        if (undef $grouped_results{$uniquename} && undef $grouped_results{$uniquename}{$trait}) {
-            #this looks like a new stock, calulate and store mean value for previous stock
+    for (my $i = 0; $i <= $#sorted_result; $i++) {
+        print STDERR "\n\nWorking on array item $i of $#sorted_result\n\n";
+        $results_ref = $sorted_result[$i];
+        # print STDERR "Results ref is ".Dumper($results_ref);
+        # print STDERR "Working on Stock ".$results_ref->{'stock_uniquename'}." and image ".$results_ref->{'image_original_filename'}."\n";
+        $uniquename = $results_ref->{'stock_uniquename'};
+        $trait = $results_ref->{'result'}->{'trait'};
+        $value = $results_ref->{'result'}->{'value'};
+
+        if ($trait && $value) {
+            print STDERR "Working a $trait for $uniquename. Saving the details \n";
+            push @{$grouped_results{$uniquename}{$trait}}, {
+                        stock_id => $results_ref->{'stock_id'},
+                        collector => $results_ref->{'image_username'},
+                        original_link => $results_ref->{'result'}->{'original_image'},
+                        analyzed_link => $results_ref->{'result'}->{'image_link'},
+                        image_name => $results_ref->{'image_original_filename'}.$results_ref->{'image_file_ext'},
+                        trait_id => $results_ref->{'result'}->{'trait_id'},
+                        value => $value + 0
+                    };
+        }
+        else { print STDERR "No usable data in this results_ref \n"} # if no result returned for an image, skip it.
+
+        if ( ($uniquename ne $old_uniquename) || ($i == $#sorted_result) ) {
+            if ($i == $#sorted_result) { $old_uniquename = $uniquename; }
+            #Calculate and store mean value for previous stock
             print STDERR "Calculating mean value for $old_uniquename before moving on to a new stock \n";
 
             my $old_uniquename_data = $grouped_results{$old_uniquename};
 
             foreach my $trait (keys %{$old_uniquename_data}) {
-
                 my $details = $old_uniquename_data->{$trait};
-
-                #blah blah get deets from here
+                print STDERR "Details are ".Dumper($details);
+                my @values = map { $_->{'value'}} @{$old_uniquename_data->{$trait}};
+                my $mean_value = @values ? sprintf("%.2f", sum(@values)/@values) : undef;
 
                 push @table_data, {
-                    observationUnitDbId => ,
-                    observationUnitName => ,
-                    collector => ,
-                    observationTimeStamp => ,
-                    observationVariableDbId => ,
-                    observationVariableName => ,
-                    value => ,
-                    details => [{
-                            image_name =>,
-                            original_image_link =>,
-                            analyzed_image_link =>,
-                            value =>,
-                        },
-                        {}
-                    ]
+                    observationUnitDbId => $old_uniquename_data->{$trait}[0]->{'stock_id'},
+                    observationUnitName => $old_uniquename,
+                    collector => $old_uniquename_data->{$trait}[0]->{'collector'},
+                    observationTimeStamp => localtime()->datetime,
+                    observationVariableDbId => $old_uniquename_data->{$trait}[0]->{'trait_id'},
+                    observationVariableName => $trait,
+                    value => $mean_value,
+                    details => $old_uniquename_data->{$trait}
                 };
             }
         }
-        if ($trait && $value) {
-            print STDERR "Found a $trait value calculated for $uniquename. Saving the details \n";
-            push @{$grouped_results{$uniquename}{$trait}}, {
-                        link => $results_ref{'result'}->{'image_link'},
-                        name => $results_ref->{'image_original_filename'}.$results_ref->{'image_file_ext'},
-                        value => $value + 0;
-                    };
-        }
-        else { print STDERR "No usable data in this results_ref \n" . Dumper($results_ref); } # if no result returned for an image, skip it.
-        $old_uniquename = $results_ref->{'stock_uniquename'};
+        $old_uniquename = $uniquename;
     }
-
+    print STDERR "table data is ".Dumper(@table_data);
     return \@table_data;
 }
 
