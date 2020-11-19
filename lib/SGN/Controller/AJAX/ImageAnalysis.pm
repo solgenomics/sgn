@@ -319,6 +319,7 @@ sub _group_results_by_observationunit {
                     observationVariableDbId => $old_uniquename_data->{$trait}[0]->{'trait_id'},
                     observationVariableName => $trait,
                     value => $mean_value,
+                    numberAnalyzed => scalar(@{$old_uniquename_data->{$trait}}),
                     details => $old_uniquename_data->{$trait}
                 };
             }

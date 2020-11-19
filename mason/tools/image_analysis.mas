@@ -131,6 +131,7 @@ tr.shown td.details-control {
                                <th></th>
                                <th>Stock</th>
                                <th>Trait</th>
+                               <th># Analyzed Images</th>
                                <th>Mean Value</th>
                            </tr>
                        </thead>
@@ -238,6 +239,7 @@ jQuery(document).ready(function(){
                         },
                         { "data": "observationUnitName" },
                         { "data": "observationVariableName" },
+                        { "data": "numberAnalyzed" },
                         { "data": "value" }
                     ],
                     "order": [[1, 'asc']]
