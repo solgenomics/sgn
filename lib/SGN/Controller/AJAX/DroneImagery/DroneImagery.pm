@@ -268,6 +268,9 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $stats_out_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/drone_stats_XXXXX');
     my $stats_out_tempfile = $c->config->{basepath}."/".$stats_out_tempfile_string;
 
+    my ($stats_out_htp_rel_tempfile_input_fh, $stats_out_htp_rel_tempfile_input) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    my ($stats_out_htp_rel_tempfile_fh, $stats_out_htp_rel_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+
     my ($stats_out_param_tempfile_fh, $stats_out_param_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_tempfile_row_fh, $stats_out_tempfile_row) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_tempfile_col_fh, $stats_out_tempfile_col) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
@@ -1521,22 +1524,6 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             }
             elsif ($compute_relationship_matrix_from_htp_phenotypes eq 'htp_phenotypes') {
 
-                my $non_zero_pixel_count_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Nonzero Pixel Count|G2F:0000014')->cvterm_id;
-                my $total_pixel_sum_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Total Pixel Sum|G2F:0000015')->cvterm_id;
-                my $mean_pixel_value_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Mean Pixel Value|G2F:0000016')->cvterm_id;
-                my $harmonic_mean_pixel_value_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Harmonic Mean Pixel Value|G2F:0000017')->cvterm_id;
-                my $median_pixel_value_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Median Pixel Value|G2F:0000018')->cvterm_id;
-                my $pixel_variance_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Pixel Variance|G2F:0000019')->cvterm_id;
-                my $pixel_standard_dev_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Pixel Standard Deviation|G2F:0000020')->cvterm_id;
-                my $pixel_pstandard_dev_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Pixel Population Standard Deviation|G2F:0000021')->cvterm_id;
-                my $minimum_pixel_value_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Minimum Pixel Value|G2F:0000022')->cvterm_id;
-                my $maximum_pixel_value_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Maximum Pixel Value|G2F:0000023')->cvterm_id;
-                my $minority_pixel_value_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Minority Pixel Value|G2F:0000024')->cvterm_id;
-                my $minority_pixel_count_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Minority Pixel Count|G2F:0000025')->cvterm_id;
-                my $majority_pixel_value_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Majority Pixel Value|G2F:0000026')->cvterm_id;
-                my $majority_pixel_count_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Majority Pixel Count|G2F:0000027')->cvterm_id;
-                my $pixel_group_count_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Pixel Group Count|G2F:0000028')->cvterm_id;
-
                 my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
                     'MaterializedViewTable',
                     {
@@ -1549,8 +1536,6 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 );
                 my ($data, $unique_traits) = $phenotypes_search->search();
                 @sorted_trait_names = sort keys %$unique_traits;
-
-                print STDERR Dumper $data;
 
                 if (scalar(@$data) == 0) {
                     $c->stash->{rest} = { error => "There are no phenotypes for the trial you have selected!"};
@@ -1596,11 +1581,33 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     }
                 }
 
-                print STDERR Dumper \%seen_times_htp_rel;
-                return;
+                my @allowed_standard_htp_values = ('Nonzero Pixel Count', 'Total Pixel Sum', 'Mean Pixel Value', 'Harmonic Mean Pixel Value', 'Median Pixel Value', 'Pixel Variance', 'Pixel Standard Deviation', 'Pixel Population Standard Deviation', 'Minimum Pixel Value', 'Maximum Pixel Value', 'Minority Pixel Value', 'Minority Pixel Count', 'Majority Pixel Value', 'Majority Pixel Count', 'Pixel Group Count');
+                my %filtered_seen_times_htp_rel;
+                while (my ($t, $time) = each %seen_times_htp_rel) {
+                    my $allowed = 0;
+                    foreach (@allowed_standard_htp_values) {
+                        if (index($t, $_) != -1) {
+                            $allowed = 1;
+                        }
+                    }
+                    if ($allowed) {
+                        $filtered_seen_times_htp_rel{$t} = $time;
+                    }
+                }
 
+                my @seen_plot_names_htp_rel_sorted = sort keys %seen_plot_names_htp_rel;
+                my @filtered_seen_times_htp_rel_sorted = sort keys %filtered_seen_times_htp_rel;
+
+                my @htp_pheno_matrix;
                 if ($compute_relationship_matrix_from_htp_phenotypes_time_points eq 'all') {
-                    
+                    foreach my $t (@filtered_seen_times_htp_rel_sorted) {
+                        my @row;
+                        foreach my $p (@seen_plot_names_htp_rel_sorted) {
+                            my $val = $phenotype_data_htp_rel{$p}->{$t} + 0;
+                            push @row, $val;
+                        }
+                        push @htp_pheno_matrix, \@row;
+                    }
                 }
                 elsif ($compute_relationship_matrix_from_htp_phenotypes_time_points eq 'vegetative') {
                     
@@ -1616,11 +1623,29 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     return;
                 }
 
+                open(my $htp_pheno_f, ">", $stats_out_htp_rel_tempfile_input) || die "Can't open file ".$stats_out_htp_rel_tempfile_input;
+                    foreach (@htp_pheno_matrix) {
+                        my $line = join "\t", @$_;
+                        print $htp_pheno_f $line."\n";
+                    }
+                close($htp_pheno_f);
+
                 if ($compute_relationship_matrix_from_htp_phenotypes_type eq 'correlations') {
-                    
+                    my $htp_cmd = 'R -e "library(lme4); library(data.table);
+                    mat <- fread(\''.$stats_out_htp_rel_tempfile_input.'\', header=FALSE, sep=\'\t\');
+                    write.table(cor(mat), file=\''.$stats_out_htp_rel_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
+                    print STDERR Dumper $htp_cmd;
+                    my $status = system($htp_cmd);
                 }
                 elsif ($compute_relationship_matrix_from_htp_phenotypes_type eq 'blues') {
-                    
+                    # my $htp_cmd = 'R -e "library(lme4); library(data.table);
+                    # mat <- fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\');
+                    # mix <- lmer('.$trait_name_encoder{$t}.' ~ replicate + (1|id), data = mat, na.action = na.omit );
+                    # #mix.summary <- summary(mix);
+                    # #ve <- mix.summary\$varcor\$id[1,1]/(mix.summary\$varcor\$id[1,1] + (mix.summary\$sigma)^2);
+                    # write.table(ranef(mix)\$id, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
+                    # print STDERR Dumper $htp_cmd;
+                    # my $status = system($htp_cmd);
                 }
                 else {
                     $c->stash->{rest} = { error => "The value of $compute_relationship_matrix_from_htp_phenotypes_type htp_pheno_rel_matrix_type is not valid!" };
