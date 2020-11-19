@@ -281,13 +281,13 @@ sub _group_results_by_observationunit {
     my ($uniquename, $trait, $value, $results_ref);
     # sort result hash array by $stock_id
     my @sorted_result = sort {$$a{"stock_id"} <=> $$b{"stock_id"} } @{$result};
-    print STDERR "Sorted result is ".Dumper(@sorted_result);
+    # print STDERR "Sorted result is ".Dumper(@sorted_result);
     my $old_uniquename = $sorted_result[0]->{'stock_uniquename'};
     $grouped_results{$sorted_result[0]->{'stock_uniquename'}}{$sorted_result[0]->{'result'}->{'trait'}} = [];
     # for each item in result hash array add to new grouped hash using stock_uniquename as key
 
     for (my $i = 0; $i <= $#sorted_result; $i++) {
-        print STDERR "\n\nWorking on array item $i of $#sorted_result\n\n";
+        # print STDERR "\n\nWorking on array item $i of $#sorted_result\n\n";
         $results_ref = $sorted_result[$i];
         # print STDERR "Results ref is ".Dumper($results_ref);
         # print STDERR "Working on Stock ".$results_ref->{'stock_uniquename'}." and image ".$results_ref->{'image_original_filename'}."\n";
@@ -296,7 +296,7 @@ sub _group_results_by_observationunit {
         $value = $results_ref->{'result'}->{'value'};
 
         if ($trait && $value) {
-            print STDERR "Working a $trait for $uniquename. Saving the details \n";
+            # print STDERR "Working a $trait for $uniquename. Saving the details \n";
             push @{$grouped_results{$uniquename}{$trait}}, {
                         stock_id => $results_ref->{'stock_id'},
                         collector => $results_ref->{'image_username'},
@@ -312,13 +312,13 @@ sub _group_results_by_observationunit {
         if ( ($uniquename ne $old_uniquename) || ($i == $#sorted_result) ) {
             if ($i == $#sorted_result) { $old_uniquename = $uniquename; }
             #Calculate and store mean value for previous stock
-            print STDERR "Calculating mean value for $old_uniquename before moving on to a new stock \n";
+            # print STDERR "Calculating mean value for $old_uniquename before moving on to a new stock \n";
 
             my $old_uniquename_data = $grouped_results{$old_uniquename};
 
             foreach my $trait (keys %{$old_uniquename_data}) {
                 my $details = $old_uniquename_data->{$trait};
-                print STDERR "Details are ".Dumper($details);
+                # print STDERR "Details are ".Dumper($details);
                 my @values = map { $_->{'value'}} @{$old_uniquename_data->{$trait}};
                 my $mean_value = @values ? sprintf("%.2f", sum(@values)/@values) : undef;
 
@@ -336,7 +336,7 @@ sub _group_results_by_observationunit {
         }
         $old_uniquename = $uniquename;
     }
-    print STDERR "table data is ".Dumper(@table_data);
+    # print STDERR "table data is ".Dumper(@table_data);
     return \@table_data;
 }
 

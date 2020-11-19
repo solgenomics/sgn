@@ -3,7 +3,7 @@
 
 </%args>
 
-<& /util/import_javascript.mas, classes => ['jquery', 'thickbox', 'CXGN.BreedersToolbox.HTMLSelect'] &>
+<& /util/import_javascript.mas, classes => ['jquery', 'jquery.cookie', 'thickbox', 'CXGN.BreedersToolbox.HTMLSelect'] &>
 
 <style>
 td.details-control {
@@ -121,20 +121,22 @@ tr.shown td.details-control {
 
                 <hr>
                 <center>
-                <button class="btn btn-primary" id="image_analysis_submit">Submit</button>
+                <button class="btn btn-primary" id="image_analysis_submit">Submit for Analysis</button>
                 </center>
                 <hr>
                 <div id="image_analysis_result">
-                <table class="display" style="width:100%" id="image_analysis_result_table">
-                    <thead>
-                       <tr>
-                           <th></th>
-                           <th>Stock</th>
-                           <th>Trait</th>
-                           <th>Avg Value</th>
-                       </tr>
-                   </thead>
-                </table>
+                    <table class="display" style="width:100%" id="image_analysis_result_table">
+                        <thead>
+                           <tr>
+                               <th></th>
+                               <th>Stock</th>
+                               <th>Trait</th>
+                               <th>Mean Value</th>
+                           </tr>
+                       </thead>
+                    </table>
+                    <hr>
+                    <center><button class="btn btn-primary" id="image_analysis_save_results">Save Results</button></center>
                 </div>
             </div>
         </div>
@@ -202,12 +204,6 @@ jQuery(document).ready(function(){
                 console.log(response);
                 jQuery('#working_msg').html('');
                 jQuery('#working_modal').modal('hide');
-                // values_hash = _create_values_hash(response.results);
-                // var table_data = _group_image_phenotypes_by_stock(values_hash);
-                // console.log("values hash is:");
-                // console.log(values_hash);
-                // console.log("table data is:");
-                // console.log(table_data);
 
                 var table = jQuery('#image_analysis_result_table').DataTable( {
                     "data": response.results,
@@ -262,27 +258,36 @@ jQuery(document).ready(function(){
         });
     });
 
-    jQuery(document).on("click", "#image_analysis_image_search_results_save", function() {
+    jQuery('#image_analysis_save_results').click(function(){
 
-        // Retrieve observation units and linked analysis images and scores
-        var data = {
-            "observationUnitDbId": 39548,
-            "collector": "John Doe",
-            "observationTimeStamp": "2019-01-01T14:47:23-0610",
-            "observationVariableDbId":"70741",
-            "value": "500"
-        };
-        // Save in db inclucing multiple image relationships
+        var table_data = jQuery('#image_analysis_result_table').DataTable().rows().data().toArray();
+        // var observations_data = {};
+        // table_data.forEach(function (row) {
+        //     observations_data[row['observationUnitDbId']] = row;
+        // });
+
+        console.log("Saving data");
+        console.log(table_data);
+
         jQuery.ajax({
-            url: 'brapi/v2/observations/',
-            method: 'PUT',
-            data: data,
-            dataType:'json',
+            url: '/brapi/v2/observations/',
+            method: 'POST',
+            headers: { "access_token": jQuery.cookie("sgn_session_id") },
+            data: JSON.stringify(table_data),
+            contentType: "application/json; charset=utf-8",
             beforeSend: function() {
                 jQuery('#working_modal').modal('show');
             },
-            success: function(response) {},
-            error: function(response) {}
+            success: function(response) {
+                console.log(response);
+                alert("Success!");
+                jQuery('#working_modal').modal('hide');
+            },
+            error: function(response) {
+                console.log(response);
+                alert("Error!");
+                jQuery('#working_modal').modal('hide');
+            }
         });
 
 
@@ -310,81 +315,6 @@ function _load_image_search_results() {
             }
         }
     });
-}
-
-function _create_values_hash (results) {
-    var uniquename, trait, image_id, value, new_uniquename;
-    var values_hash = {};
-    for (var i=0; i<results.length; i++) {
-        // trait = results[i].result.trait_name;
-        console.log("Working on Stock "+results[i].stock_uniquename+" and image "+results[i].image_original_filename);
-        uniquename = results[i].stock_uniquename;
-        trait = results[i].result.trait_name;
-        image_id = results[i].result.analyzed_image_id;
-        value = results[i].result.trait_value;
-        if (    values_hash[results[i].stock_uniquename]
-                && typeof(values_hash[results[i].stock_uniquename][trait]) !== "undefined"
-                && trait !== "undefined"
-                && image_id !== "undefined"
-                && value !== "undefined"
-            ) {
-            console.log("Stock "+results[i].stock_uniquename+" has already been used as a key, adding new image details");
-            values_hash[uniquename][trait][5].push({
-                "id": image_id,
-                "link": results[i].result.image_link,
-                "name": results[i].image_original_filename+results[i].image_file_ext,
-                "value": parseFloat(value)
-            });
-        }
-        else if (trait !== "undefined" && image_id !== "undefined" && value !== "undefined") {
-            console.log("Stock "+results[i].stock_uniquename+" hasn't been used as a key, creating new dictionary entry for it and saving image details");
-            values_hash[uniquename] = {};
-            values_hash[uniquename][trait] = ['','','','','',[]];
-            values_hash[uniquename][trait][5].push({
-                "id": image_id,
-                "link": results[i].result.image_link,
-                "name": results[i].image_original_filename+results[i].image_file_ext,
-                "value": parseFloat(value)
-            });
-        }
-        else {} // if no result returned for an image, skip it.
-    }
-
-    return values_hash;
-}
-
-function _group_image_phenotypes_by_stock (values_hash) {
-    var data = [];
-    Object.keys(values_hash).forEach(function(stock) {
-        Object.keys(values_hash[stock]).forEach(function(trait) {
-            var values = values_hash[stock][trait][5].map(({ value }) => value);
-            values_hash[stock][trait][0] = _average(values);
-            values_hash[stock][trait][1] = Date.now();
-            // values_hash[stock][trait][2] = results[i].result.username;
-            values_hash[stock][trait][4] = values_hash[stock][trait][5].map(({ id }) => id);
-
-            console.log("averaged values "+JSON.stringify(values)+" into "+values_hash[stock][trait][0]);
-
-            data.push({
-                "stock": stock,
-                "trait": trait,
-                "avg": values_hash[stock][trait][0],
-                "details": values_hash[stock][trait][5]
-            })
-        });
-    });
-    return data;
-}
-
-function _average(array) {
-    var usable_values = array.filter(value => !isNaN(value));
-    if (usable_values.length > 0) {
-        console.log(usable_values);
-        var avg = usable_values.reduce((a, b) => a + b) / usable_values.length;
-        return Math.round((avg + Number.EPSILON) * 100) / 100; // round to two decimal pts
-    } else {
-        return undefined;
-    }
 }
 
 function format ( d ) {
