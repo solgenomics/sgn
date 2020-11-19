@@ -1394,7 +1394,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="drone_image_calculate_statistics_htp_phenotypes_rel_matrix_select">
                                         <option value="correlations">Correlations</option>
-                                        <option value="blues" disabled>BLUEs</option>
+                                        <option value="blues">BLUEs</option>
                                     </select>
                                 </div>
                             </div>

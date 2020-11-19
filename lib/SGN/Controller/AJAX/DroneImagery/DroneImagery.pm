@@ -1592,6 +1592,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     foreach (@allowed_standard_htp_values) {
                         if (index($t, $_) != -1) {
                             $allowed = 1;
+                            last;
                         }
                     }
                     if ($allowed) {
@@ -1603,7 +1604,19 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 my @filtered_seen_times_htp_rel_sorted = sort keys %filtered_seen_times_htp_rel;
 
                 my @header_htp = ('plot_id', 'plot_name', 'accession_id', 'accession_name', 'rep', 'block');
-                push @header_htp, @filtered_seen_times_htp_rel_sorted;
+
+                my %trait_name_encoder_htp;
+                my %trait_name_encoder_rev_htp;
+                my $trait_name_encoded_htp = 1;
+                foreach my $trait_name (@filtered_seen_times_htp_rel_sorted) {
+                    if (!exists($trait_name_encoder_htp{$trait_name})) {
+                        my $trait_name_e = 't'.$trait_name_encoded_htp;
+                        $trait_name_encoder_htp{$trait_name} = $trait_name_e;
+                        $trait_name_encoder_rev_htp{$trait_name_e} = $trait_name;
+                        push @header_htp, $trait_name_e;
+                        $trait_name_encoded_htp++;
+                    }
+                }
 
                 my @htp_pheno_matrix = (\@header_htp);
                 if ($compute_relationship_matrix_from_htp_phenotypes_time_points eq 'all') {
@@ -1679,14 +1692,20 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     close($htp_rel_res);
                 }
                 elsif ($compute_relationship_matrix_from_htp_phenotypes_type eq 'blues') {
-                    # my $htp_cmd = 'R -e "library(lme4); library(data.table);
-                    # mat <- fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\');
-                    # mix <- lmer('.$trait_name_encoder{$t}.' ~ replicate + (1|id), data = mat, na.action = na.omit );
-                    # #mix.summary <- summary(mix);
-                    # #ve <- mix.summary\$varcor\$id[1,1]/(mix.summary\$varcor\$id[1,1] + (mix.summary\$sigma)^2);
-                    # write.table(ranef(mix)\$id, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
-                    # print STDERR Dumper $htp_cmd;
-                    # my $status = system($htp_cmd);
+                    my $htp_cmd = 'R -e "library(lme4); library(data.table);
+                    mat <- fread(\''.$stats_out_htp_rel_tempfile_input.'\', header=TRUE, sep=\'\t\');
+                    blues <- data.frame(accession_id=mat\$accession_id);
+                    ';
+                    my $htp_count = 0;
+                    foreach my $trait_name (@filtered_seen_times_htp_rel_sorted) {
+                        $htp_cmd .= 'mix'.$htp_count.' <- lmer('.$trait_name_encoder_htp{$trait_name}.' ~ 1 + (1|accession_id), data = mat);
+                        blues\$'.$trait_name_encoder_htp{$trait_name}.' <- ranef(mix'.$htp_count.')\$accession_id\$\`(Intercept)\`;
+                        ';
+                        $htp_count++;
+                    }
+                    $htp_cmd .= 'write.table(blues, file=\''.$stats_out_htp_rel_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
+                    print STDERR Dumper $htp_cmd;
+                    my $status = system($htp_cmd);
                 }
                 else {
                     $c->stash->{rest} = { error => "The value of $compute_relationship_matrix_from_htp_phenotypes_type htp_pheno_rel_matrix_type is not valid!" };
@@ -1694,8 +1713,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 }
 
                 my $data_rel_htp = '';
+                my %result_hash;
                 if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
-                    my %result_hash;
                     foreach my $s (sort @accession_ids) {
                         foreach my $c (sort @accession_ids) {
                             if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
@@ -1709,7 +1728,6 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     }
                 }
                 else {
-                    my %result_hash;
                     foreach my $s (sort @accession_ids) {
                         foreach my $c (sort @accession_ids) {
                             if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
