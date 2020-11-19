@@ -270,6 +270,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
     my ($stats_out_htp_rel_tempfile_input_fh, $stats_out_htp_rel_tempfile_input) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_htp_rel_tempfile_fh, $stats_out_htp_rel_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    my ($stats_out_htp_rel_tempfile_out_fh, $stats_out_htp_rel_tempfile_out) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
 
     my ($stats_out_param_tempfile_fh, $stats_out_param_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_tempfile_row_fh, $stats_out_tempfile_row) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
@@ -1535,7 +1536,6 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     }
                 );
                 my ($data, $unique_traits) = $phenotypes_search->search();
-                @sorted_trait_names = sort keys %$unique_traits;
 
                 if (scalar(@$data) == 0) {
                     $c->stash->{rest} = { error => "There are no phenotypes for the trial you have selected!"};
@@ -1551,7 +1551,11 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 foreach my $obs_unit (@$data){
                     my $germplasm_name = $obs_unit->{germplasm_uniquename};
                     my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
-                    $seen_plot_names_htp_rel{$obs_unit->{observationunit_uniquename}}++;
+                    my $row_number = $obs_unit->{obsunit_row_number} || '';
+                    my $col_number = $obs_unit->{obsunit_col_number} || '';
+                    my $rep = $obs_unit->{obsunit_rep};
+                    my $block = $obs_unit->{obsunit_block};
+                    $seen_plot_names_htp_rel{$obs_unit->{observationunit_uniquename}} = $obs_unit;
                     my $observations = $obs_unit->{observations};
                     foreach (@$observations){
                         if ($_->{associated_image_project_time_json}) {
@@ -1598,11 +1602,15 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 my @seen_plot_names_htp_rel_sorted = sort keys %seen_plot_names_htp_rel;
                 my @filtered_seen_times_htp_rel_sorted = sort keys %filtered_seen_times_htp_rel;
 
-                my @htp_pheno_matrix;
+                my @header_htp = ('plot_id', 'plot_name', 'accession_id', 'accession_name', 'rep', 'block');
+                push @header_htp, @filtered_seen_times_htp_rel_sorted;
+
+                my @htp_pheno_matrix = (\@header_htp);
                 if ($compute_relationship_matrix_from_htp_phenotypes_time_points eq 'all') {
-                    foreach my $t (@filtered_seen_times_htp_rel_sorted) {
-                        my @row;
-                        foreach my $p (@seen_plot_names_htp_rel_sorted) {
+                    foreach my $p (@seen_plot_names_htp_rel_sorted) {
+                        my $obj = $seen_plot_names_htp_rel{$p};
+                        my @row = ($obj->{observationunit_stock_id}, $obj->{observationunit_uniquename}, $obj->{germplasm_stock_id}, $obj->{germplasm_uniquename}, $obj->{obsunit_rep}, $obj->{obsunit_block});
+                        foreach my $t (@filtered_seen_times_htp_rel_sorted) {
                             my $val = $phenotype_data_htp_rel{$p}->{$t} + 0;
                             push @row, $val;
                         }
@@ -1630,12 +1638,45 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     }
                 close($htp_pheno_f);
 
+                my %rel_htp_result_hash;
                 if ($compute_relationship_matrix_from_htp_phenotypes_type eq 'correlations') {
                     my $htp_cmd = 'R -e "library(lme4); library(data.table);
-                    mat <- fread(\''.$stats_out_htp_rel_tempfile_input.'\', header=FALSE, sep=\'\t\');
-                    write.table(cor(mat), file=\''.$stats_out_htp_rel_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
+                    mat <- fread(\''.$stats_out_htp_rel_tempfile_input.'\', header=TRUE, sep=\'\t\');
+                    mat_agg <- aggregate(mat[, 7:ncol(mat)], list(mat\$accession_id), mean);
+                    mat_pheno <- mat_agg[,2:ncol(mat_agg)];
+                    cor_mat <- cor(t(mat_pheno));
+                    rownames(cor_mat) <- mat_agg[,1];
+                    colnames(cor_mat) <- mat_agg[,1];
+                    write.table(cor_mat, file=\''.$stats_out_htp_rel_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
                     print STDERR Dumper $htp_cmd;
                     my $status = system($htp_cmd);
+
+                    my $csv = Text::CSV->new({ sep_char => "\t" });
+
+                    open(my $htp_rel_res, '<', $stats_out_htp_rel_tempfile)
+                        or die "Could not open file '$stats_out_htp_rel_tempfile' $!";
+
+                        print STDERR "Opened $stats_out_htp_rel_tempfile\n";
+                        my $header_row = <$htp_rel_res>;
+                        my @header;
+                        if ($csv->parse($header_row)) {
+                            @header = $csv->fields();
+                        }
+
+                        while (my $row = <$htp_rel_res>) {
+                            my @columns;
+                            if ($csv->parse($row)) {
+                                @columns = $csv->fields();
+                            }
+                            my $stock_id1 = $columns[0];
+                            my $counter = 1;
+                            foreach my $stock_id2 (@header) {
+                                my $val = $columns[$counter];
+                                $rel_htp_result_hash{$stock_id1}->{$stock_id2} = $val;
+                                $counter++;
+                            }
+                        }
+                    close($htp_rel_res);
                 }
                 elsif ($compute_relationship_matrix_from_htp_phenotypes_type eq 'blues') {
                     # my $htp_cmd = 'R -e "library(lme4); library(data.table);
@@ -1651,6 +1692,45 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     $c->stash->{rest} = { error => "The value of $compute_relationship_matrix_from_htp_phenotypes_type htp_pheno_rel_matrix_type is not valid!" };
                     return;
                 }
+
+                my $data_rel_htp = '';
+                if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+                    my %result_hash;
+                    foreach my $s (sort @accession_ids) {
+                        foreach my $c (sort @accession_ids) {
+                            if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
+                                my $val = $rel_htp_result_hash{$s}->{$c};
+                                if (defined $val and length $val) {
+                                    $result_hash{$s}->{$c} = $val;
+                                    $data_rel_htp .= "$s\t$c\t$val\n";
+                                }
+                            }
+                        }
+                    }
+                }
+                else {
+                    my %result_hash;
+                    foreach my $s (sort @accession_ids) {
+                        foreach my $c (sort @accession_ids) {
+                            if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
+                                my $val = $rel_htp_result_hash{$s}->{$c};
+                                if (defined $val and length $val) {
+                                    $result_hash{$s}->{$c} = $val;
+                                    $data_rel_htp .= "S$s\tS$c\t$val\n";
+                                    if ($s != $c) {
+                                        $data_rel_htp .= "S$s\tS$c\t$val\n";
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                open(my $htp_rel_out, ">", $stats_out_htp_rel_tempfile_out) || die "Can't open file ".$stats_out_htp_rel_tempfile_out;
+                    print $htp_rel_out $data_rel_htp;
+                close($htp_rel_out);
+
+                $grm_file = $stats_out_htp_rel_tempfile_out;
             }
             else {
                 $c->stash->{rest} = { error => "The value of $compute_relationship_matrix_from_htp_phenotypes is not valid!" };
