@@ -318,7 +318,7 @@ sub verify_accessions_file_POST : Args(0) {
         fuzzy_organisms => $parsed_data->{fuzzy_organisms},
         found_organisms => $parsed_data->{found_organisms}
     );
-
+    print STDERR "verify_accessions_file returns: " . Dumper %return;
     if ($parsed_data->{error_string}){
         $return{error_string} = $parsed_data->{error_string};
     }
@@ -445,6 +445,7 @@ sub add_accession_list_POST : Args(0) {
                     introgression_chromosome=>$_->{introgression_chromosome},
                     introgression_start_position_bp=>$_->{introgression_start_position_bp},
                     introgression_end_position_bp=>$_->{introgression_end_position_bp},
+                    other_editable_stock_props=>$_->{other_editable_stock_props},
                     sp_person_id => $user_id,
                     user_name => $user_name,
                     modification_note => 'Bulk load of accession information'

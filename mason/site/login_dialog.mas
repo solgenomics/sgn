@@ -247,6 +247,12 @@ jQuery(document).ready( function() {
             }
         });
     });
+
+    // Display New User Dialog if `new_user` query param set
+    url = new URL(window.location.href);
+    if ( url.searchParams.get('new_user') ) {
+        jQuery('#site_login_new_user_dialog').modal('show');
+    }
 });
 </script>
 

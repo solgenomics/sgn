@@ -581,8 +581,13 @@ function populate_review_absent_dialog(absent, infoToAdd){
                 infoToAdd_html = infoToAdd_html + '<tr><td>'+infoToAdd[i]['germplasmName']+'</td>';
                 var infoToAdd_properties_html = '';
                 for (key in infoToAdd[i]){
-                    if (key != 'uniquename'){
+                    if (key != 'uniquename' && key != 'other_editable_stock_props'){
                         infoToAdd_properties_html = infoToAdd_properties_html + key+':'+infoToAdd[i][key]+'   ';
+                    }
+                    else if (key == 'other_editable_stock_props') {
+                        for (key_other in infoToAdd[i][key]) {
+                            infoToAdd_properties_html = infoToAdd_properties_html + key_other+':'+infoToAdd[i][key][key_other]+'   ';
+                        }
                     }
                 }
                 infoToAdd_html = infoToAdd_html + '<td>'+infoToAdd_properties_html+'</td></tr>';
@@ -595,8 +600,13 @@ function populate_review_absent_dialog(absent, infoToAdd){
                 infoToAdd_html = infoToAdd_html + '<tr><td>'+infoToAdd[i]['germplasmName']+'</td>';
                 var infoToAdd_properties_html = '';
                 for (key in infoToAdd[i]){
-                    if (key != 'uniquename'){
+                    if (key != 'uniquename' && key != 'other_editable_stock_props') {
                         infoToAdd_properties_html = infoToAdd_properties_html + key+':'+infoToAdd[i][key]+'   ';
+                    }
+                    else if (key == 'other_editable_stock_props') {
+                        for (key_other in infoToAdd[i][key]) {
+                            infoToAdd_properties_html = infoToAdd_properties_html + key_other+':'+infoToAdd[i][key][key_other]+'   ';
+                        }
                     }
                 }
                 infoToAdd_html = infoToAdd_html + '<td>'+infoToAdd_properties_html+'</td></tr>';

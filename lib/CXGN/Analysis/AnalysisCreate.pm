@@ -365,6 +365,10 @@ sub store {
     print STDERR Dumper $analysis_model_type;
     my $model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, $analysis_model_type, 'protocol_type')->cvterm_id();
 
+    if ($analysis_to_save_boolean eq 'yes' && !$analysis_name) {
+        return { error => "No analysis name given, but trying to save an analysis." };
+    }
+
     if (!$analysis_model_protocol_id) {
         $analysis_model_properties->{protocol} = $analysis_protocol;
 
@@ -392,10 +396,12 @@ sub store {
     if ($analysis_to_save_boolean eq 'yes') {
 
         my %trait_id_map;
+        # print STDERR Dumper $analysis_trait_names;
         foreach my $trait_name (@$analysis_trait_names) {
             my $trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($bcs_schema, $trait_name)->cvterm_id();
             $trait_id_map{$trait_name} = $trait_cvterm_id;
         }
+        # print STDERR Dumper \%trait_id_map;
         my @trait_ids = values %trait_id_map;
 
         my $stat_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($bcs_schema, $analysis_statistical_ontology_term)->cvterm_id();
@@ -411,6 +417,7 @@ sub store {
             gen => [],
         };
 
+        # print STDERR Dumper $analysis_result_trait_compose_info_time;
         my %time_term_map;
         if ($analysis_result_trait_compose_info_time) {
             my %unique_toy;
@@ -424,6 +431,8 @@ sub store {
             my @toy = keys %unique_toy;
             $categories->{toy} = \@toy;
         }
+        # print STDERR Dumper $categories;
+        # print STDERR Dumper \%time_term_map;
 
         my $traits = SGN::Model::Cvterm->get_traits_from_component_categories($bcs_schema, $allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, $categories);
         my $existing_traits = $traits->{existing_traits};

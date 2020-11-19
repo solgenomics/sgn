@@ -2,7 +2,7 @@
 
 =head1 NAME
  
-population/genetic_correlation.mas - genetic correlation output section
+/solgs/population/genetic_correlation.mas - genetic correlation output section
 
 =AUTHOR
 
@@ -53,15 +53,17 @@ $project_name
   &>
   
   <div id="correlation_canvas">
-
+    
+     
     <div class="row">  
       <div class="form-group col-sm-3" id="corre_select_a_population_div" style="margin-right:35px"></div>
       <input class="button" type="submit" value="Run correlation" id="run_genetic_correlation"/>
     </div>
 
-    <div id="correlation_message"  style="clear:both;font-weight:bold;text-align:center;color:#A7C942">
+    <& /solgs/spinner.mas &>
+    <div id="correlation_message"  class="message">
     </div>
-   
+    
     <div id="corre_selected_population_div" style="display:none">    
       <input type="hidden" id="model_id" value="<% $pop_id %>" />
       <input type="hidden" id="model_name" value="<% $project_name %>" />
@@ -73,6 +75,7 @@ $project_name
       <input type="hidden" id="corre_selected_population_id" value="" />
       <input type="hidden" id="corre_selected_population_type" value="" />
     </div>
+
   </div>
 
 </&>

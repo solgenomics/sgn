@@ -144,6 +144,8 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);    
     $d->find_element_ok('Analysis Tools', 'partial_link_text', 'toogle analysis tools')->click();
     sleep(5);
+    $d->find_element_ok('Clustering', 'partial_link_text', 'expand cluster sec')->click();
+    sleep(5);
     $d->find_element_ok('cluster_type_select', 'id', 'select k-means')->send_keys('K-means');
     sleep(2);
     $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
@@ -264,8 +266,8 @@ $d->while_logged_in_as("submitter", sub {
     # # sleep(10); 
     
     
-    # $d->get_ok('solgs/traits/all/population/139/traits/1971973596/gp/1', 'models page');
-    # sleep(15);
+    #$d->get_ok('solgs/traits/all/population/139/traits/1971973596/gp/1', 'models page');
+    #sleep(15);
  
     my $sel_pops = $d->find_element('Predict', 'partial_link_text', 'scroll up');
     my $elem =$d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0, -600);", $sel_pops);
@@ -308,7 +310,10 @@ $d->while_logged_in_as("submitter", sub {
 
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
-    sleep(5);
+     sleep(5);
+     #$d->find_element_ok('Clustering', 'partial_link_text', 'expand cluster sec')->click();
+    #sleep(5);
+     
     $d->find_element_ok('cluster_dropdown', 'class', 'select list sl pop')->click();
     sleep(5);
     $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="34 clones"]', 'xpath', 'select list sel pop')->click();
@@ -800,6 +805,8 @@ $d->while_logged_in_as("submitter", sub {
     sleep(60);
     $d->find_element_ok('//img[@id="k-means-plot-2804608595-70741-phenotype-k-4"]', 'xpath', 'check k-means plot')->click();  
     sleep(5);
+
+    
     
         
 });

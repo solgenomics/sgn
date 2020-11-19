@@ -63,6 +63,14 @@ $model_link
  
 &>
 
+  <& /solgs/population/hidden_input.mas,
+      pop_id       => $combo_pops_id,
+     trait_id      => $trait_id,
+     combo_pops_id => $combo_pops_id,
+     genotyping_protocol_id => $genotyping_protocol_id,
+     pop_name => $project_name
+     &>
+  
 </&>
 
 <&| /page/info_section.mas, 
@@ -99,15 +107,22 @@ $model_link
   trait_id            => $trait_id
   &>
 
- <& /solgs/population/gebv_pheno_regression.mas,
+<& /solgs/population/gebv_pheno_regression.mas,
        trait_id      => $trait_id,
-       combo_pops_id => $combo_pops_id,
+      combo_pops_id => $combo_pops_id,
 &>
+
+<& /solgs/population/kinship.mas, 
+     pop_id  => $combo_pops_id,
+&>
+     
 <& /solgs/model/marker_effects.mas, 
    top_marker_effects          => $top_marker_effects,
    marker_effects_download_url => $marker_effects_download_url
-&>
+  &>
+  
 
+  
 <& /solgs/population/selection_populations.mas, 
    selection_prediction_download => $selection_prediction_download,
    analyzed_traits         => $analyzed_traits,
@@ -118,10 +133,3 @@ $model_link
    project_name            => $project_name,
 &>
 
-
-<input type="hidden" id="model_id" value="<% $combo_pops_id %>" /> 
-<input type="hidden" id="population_id" value="<% $combo_pops_id %>" />
-<input type="hidden" id="population_name" value="<% $project_name %>" /> 
-<input type="hidden" id="combo_pops_id" value="<% $combo_pops_id %>" /> 
-<input type="hidden" id="trait_id" value="<% $trait_id %>" />
-<input type="hidden" id="genotyping_protocol_id" value="<% $genotyping_protocol_id %>" />

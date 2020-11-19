@@ -1,0 +1,34 @@
+<%args>
+$program_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+
+<table id="product_profile_table" class="display">
+    <thead>
+        <tr>
+            <th>Product Profile Name</th>
+            <th>Scope</th>
+            <th>Trait</th>
+            <th>Submitter</th>
+            <th>Date (Y-M-D)</th>
+        </tr>
+    </thead>
+</table>
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#product_profile_table').DataTable( {
+        'autoWidth': false,
+        'ajax': '/ajax/breeders/program/'+ <% $program_id %> + '/product_profiles',
+        'order': false,
+    });
+
+});
+
+
+</script>

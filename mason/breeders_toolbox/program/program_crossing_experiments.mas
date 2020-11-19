@@ -1,0 +1,29 @@
+<%args>
+$program_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+
+<table id="program_crossing_experiments" class="display">
+    <thead>
+        <tr>
+            <th>Crossing Experiment Name</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+</table>
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#program_crossing_experiments').DataTable( {
+        'autoWidth': false,
+        'ajax': '/ajax/breeders/program/'+ <% $program_id %> + '/crossing_experiments',
+    });
+
+});
+
+</script>

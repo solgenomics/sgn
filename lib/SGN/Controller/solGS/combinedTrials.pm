@@ -132,18 +132,26 @@ sub combined_trials_page :Path('/solgs/populations/combined') Args() {
     $c->stash->{combo_pops_id} = $combo_pops_id;
 
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
-    # my $cached = $c->controller('solGS::CachedResult')->check_single_trial_training_data($c, $pop_id, $protocol_id);
+    $self->get_combined_pops_list($c, $combo_pops_id);
+    my $pops_list =  $c->stash->{combined_pops_list};
+  
+    my $cached;
+
+    if ($pops_list)
+    {
+	$cached = $c->controller('solGS::CachedResult')->check_multi_trials_training_data($c, $pops_list, $protocol_id);
+    }
     
-    # if (!$cached)
-    # {	 
-    # 	$c->stash->{message} = "Cached output for this training population  does not exist anymore.\n" 
-    # 	    . "Please go to <a href=\"/solgs/search/\">the search page</a>"
-    # 	    . " and create the training population data.";
+    if (!$cached)
+    {	 
+    	$c->stash->{message} = "Cached output for this training population  does not exist anymore.\n" 
+    	    . "Please go to <a href=\"/solgs/search/\">the search page</a>"
+    	    . " and create the training population data.";
     
-    # 	$c->stash->{template} = "/generic_message.mas"; 
-    # }
-    # else
-    # {       
+    	$c->stash->{template} = "/generic_message.mas"; 
+    }
+    else
+    {       
 	$self->save_common_traits_acronyms($c);
 
 	$c->controller('solGS::solGS')->get_all_traits($c, $combo_pops_id);
@@ -152,7 +160,7 @@ sub combined_trials_page :Path('/solgs/populations/combined') Args() {
 	$self->combined_trials_desc($c);
 	
 	$c->stash->{template} = $c->controller('solGS::Files')->template('/population/combined/combined.mas');
-    # }
+    }
 }
 
 
@@ -163,8 +171,6 @@ sub model_combined_trials_trait :Path('/solgs/model/combined/trials') Args() {
     $c->stash->{trait_id}      = $trait_id;
 
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id); 
-    
-    
     
     $c->controller('solGS::Files')->rrblup_training_gebvs_file($c, $combo_pops_id, $trait_id);    
     my $gebv_file = $c->stash->{rrblup_training_gebvs_file};
@@ -231,7 +237,7 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args() {
 		#$self->build_model_combined_trials_trait($c);
 		$c->stash->{trait_id} = $trait_id;
   
-		$c->controller('solGS::solGS')->create_model_summary($c);
+		$c->controller('solGS::modelAccuracy')->create_model_summary($c, $combo_pops_id, $trait_id);
 		my $model_summary = $c->stash->{model_summary};
 
 		push @traits_pages, $model_summary;
@@ -746,28 +752,12 @@ sub combined_pops_summary {
         }
     }
    
+    my $marker_args = {'training_pop' => 1, 'training_pop_id' => $combo_pops_id}; 
+    my $markers_no = $c->controller('solGS::solGS')->get_markers_count($c, $marker_args);
+    
     my $trait_abbr = $c->stash->{trait_abbr};
     my $trait_id   = $c->stash->{trait_id};
-  
-    $c->controller('solGS::Files')->filtered_training_genotype_file($c);
-    my $filtered_geno_file  = $c->stash->{filtered_training_genotype_file};
-
-    $self->cache_combined_pops_data($c);
-    my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
-    my @unfiltered_geno_rows = read_file($combined_pops_geno_file, {binmode => ':utf8'});
- 
-    my $markers_no;
-
-    if (-s $filtered_geno_file) {
-	my @rows = read_file($filtered_geno_file, {binmode => ':utf8'});
-	$markers_no = scalar(split('\t', $rows[0])) - 1;
-    } 
-    else 
-    {
-	$markers_no = scalar(split ('\t', $unfiltered_geno_rows[0]));	
-    }
-
-    my $stocks_no    =  $self->count_combined_trials_members($c, $combo_pops_id);
+    my $stocks_no    =  $self->count_combined_trials_lines_count($c, $combo_pops_id, $trait_id);
     my $training_pop = "Training population $combo_pops_id";
     my $model_link   = qq | <a href="/solgs/populations/combined/$combo_pops_id/gp/$protocol_id">$training_pop </a>|;
     my $protocol = $c->controller('solGS::genotypingProtocol')->create_protocol_url($c); 
@@ -1186,13 +1176,9 @@ sub combined_trials_desc {
 
     my @traits_list = read_file($traits_list_file, {binmode => ':utf8'});
     my $traits_no   = scalar(@traits_list) - 1;
-
-    #my $stock_no  = scalar(@geno_lines) - 1;
-
     my $training_pop = "Training population $combo_pops_id";
-    
     my $protocol  = $c->controller('solGS::genotypingProtocol')->create_protocol_url($c); 
-    my $stocks_no = $self->count_combined_trials_members($c, $combo_pops_id);
+    my $stocks_no = $self->count_combined_trials_lines_count($c, $combo_pops_id);
    
     $c->stash(stocks_no    => $stocks_no,
 	      markers_no   => $markers_no,
@@ -1205,20 +1191,35 @@ sub combined_trials_desc {
 }
 
 
-sub count_combined_trials_members {
-    my ($self, $c, $combo_pops_id) = @_;
+sub count_combined_trials_lines_count {
+    my ($self, $c, $combo_pops_id, $trait_id) = @_;
 
     $combo_pops_id = $c->stash->{combo_pops_id} if !$combo_pops_id;
-    $c->stash->{combo_pops_id} = $combo_pops_id if $combo_pops_id;        
+    $trait_id  = $c->stash->{trait_id} if !$trait_id;      
     
-    $self->cache_combined_pops_data($c);   
-    my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
-
+    my $genos_cnt;
+    my @geno_lines;
     my @genotypes;
-    if (-s $combined_pops_geno_file)
+    
+    if ($c->req->path =~ /solgs\/model\/combined\/populations\//)
     {
-	my $genos = qx /cut -f 1 $combined_pops_geno_file/;
-	@genotypes = split(" ", $genos);	
+
+	$self->cache_combined_pops_data($c);   
+	my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
+
+
+	if (-s $combined_pops_geno_file)
+	{
+	    my $args = {
+	    	'training_pop_id' => $combo_pops_id,
+	    	'trait_id' => $trait_id
+	    };
+	    
+	    $genos_cnt = $c->controller('solGS::solGS')->predicted_lines_count($c, $args);
+
+	   # my $genos = qx /cut -f 1 $combined_pops_geno_file/;
+	   # @genotypes = split(" ", $genos);
+	}	
     }
     else
     {
@@ -1238,10 +1239,10 @@ sub count_combined_trials_members {
 	    
 	    push @genotypes, @genos;	
 	}
+	
+	$genos_cnt = scalar(uniq(@genotypes));
     }
 
-    my $genos_cnt = scalar(uniq(@genotypes));
-  
     return $genos_cnt;
     
 }

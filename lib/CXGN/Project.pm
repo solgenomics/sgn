@@ -1536,6 +1536,28 @@ sub set_genotyping_facility_status {
     $self->_set_projectprop('genotyping_facility_status', $value);
 }
 
+=head2 accessors get_genotyping_vendor_order_id(), set_genotyping_vendor_order_id()
+
+ Usage: For genotyping plates, if a genotyping plate has been submitted to genotyping facility, the order id of that plate can be set here
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_genotyping_vendor_order_id {
+    my $self = shift;
+    return $self->_get_projectprop('genotyping_vendor_order_id');
+}
+
+sub set_genotyping_vendor_order_id {
+    my $self = shift;
+    my $value = shift;
+    $self->_set_projectprop('genotyping_vendor_order_id', $value);
+}
+
 =head2 accessors get_genotyping_plate_format(), set_genotyping_plate_format()
 
  Usage: For genotyping plates, this records if it is 96 wells or 384 or other
@@ -1785,24 +1807,48 @@ sub delete_phenotype_values_and_nd_experiment_md_values {
         my $q_pheno_delete = "DELETE FROM phenotype WHERE phenotype_id IN ($phenotype_id_sql);";
         my $h2 = $schema->storage->dbh()->prepare($q_pheno_delete);
         $h2->execute();
+
+        print STDERR "DELETED ".scalar(@{$phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids}})." Phenotype Values\n";
+
         my $nd_experiment_id_sql = join (",", @{$phenotype_ids_and_nd_experiment_ids_to_delete->{nd_experiment_ids}});
-        my $q_nd_exp_files_delete = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
-        my $h3 = $schema->storage->dbh()->prepare($q_nd_exp_files_delete);
-        $h3->execute();
-        my $q_nd_exp_files_images_delete = "DELETE FROM phenome.nd_experiment_md_images WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
-        my $h4 = $schema->storage->dbh()->prepare($q_nd_exp_files_images_delete);
-        $h4->execute();
 
-        open (my $fh, ">", $temp_file_nd_experiment_id ) || die ("\nERROR: the file $temp_file_nd_experiment_id could not be found\n" );
-            foreach (@{$phenotype_ids_and_nd_experiment_ids_to_delete->{nd_experiment_ids}}) {
-                print $fh "$_\n";
-            }
-        close($fh);
+        # check if the nd_experiment has no other associated phenotypes, since phenotypstore actually attaches many phenotypes to one nd_experiment
+        #
+        my $checkq = "SELECT nd_experiment_id FROM nd_experiment left join nd_experiment_phenotype using(nd_experiment_id) where nd_experiment_id in ($nd_experiment_id_sql) and phenotype_id IS NULL";
+        my $check_h = $schema->storage->dbh()->prepare($checkq);
+        $check_h ->execute();
 
-        my $async_delete = CXGN::Tools::Run->new();
-        $async_delete->run_async("perl $basepath/bin/delete_nd_experiment_entries.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -i $temp_file_nd_experiment_id");
+        my @nd_experiment_ids;
+        while (my ($nd_experiment_id) = $check_h->fetchrow_array()) {
+            push @nd_experiment_ids, $nd_experiment_id;
+        }
 
-        print STDERR "DELETED ".scalar(@{$phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids}})." Phenotype Values and nd_experiment_md_file_links (nd_experiment entries may still be in deletion in asynchronous process.)\n";
+        if (scalar(@nd_experiment_ids)>0) { 
+            $nd_experiment_id_sql = join(",", @nd_experiment_ids);
+
+            my $q_nd_exp_files_delete = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
+            my $h3 = $schema->storage->dbh()->prepare($q_nd_exp_files_delete);
+            $h3->execute();
+
+            my $q_nd_json = "DELETE FROM phenome.nd_experiment_md_json WHERE nd_experiment_id IN ($nd_experiment_id_sql)";
+            my $h_nd_json = $schema->storage->dbh()->prepare($q_nd_json);
+            $h_nd_json->execute();
+
+            my $q_nd_exp_files_images_delete = "DELETE FROM phenome.nd_experiment_md_images WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
+            my $h4 = $schema->storage->dbh()->prepare($q_nd_exp_files_images_delete);
+            $h4->execute();
+
+            open (my $fh, ">", $temp_file_nd_experiment_id ) || die ("\nERROR: the file $temp_file_nd_experiment_id could not be found\n" );
+                foreach (@nd_experiment_ids) {
+                    print $fh "$_\n";
+                }
+            close($fh);
+
+            my $async_delete = CXGN::Tools::Run->new();
+            $async_delete->run_async("perl $basepath/bin/delete_nd_experiment_entries.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -i $temp_file_nd_experiment_id");
+
+            print STDERR "DELETED ".scalar(@{$phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids}})." Phenotype Values and nd_experiment_md_file_links (and ".scalar(@nd_experiment_ids)." nd_experiment entries may still be in deletion in asynchronous process.)\n";
+        }
     };
 
     my $error;

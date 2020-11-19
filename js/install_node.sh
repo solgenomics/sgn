@@ -19,4 +19,4 @@ echo "deb-src https://deb.nodesource.com/$VERSION $DISTRO main" | tee -a /etc/ap
 
 # Update package lists and install Node.js
 apt-get update
-apt-get install nodejs
+apt-get install nodejs -y

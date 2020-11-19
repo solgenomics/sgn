@@ -168,6 +168,65 @@ sub get_membership {
 }
 
 
+=head2 cross_parents
+
+ Usage:         CXGN::Cross->cross_parents($schema, $cross_id);
+ Desc:          Class method
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub cross_parents {
+    my $self = shift;
+    my $schema = $self->schema;
+    my $cross_id = $self->cross_stock_id;
+
+    my $female_accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
+    my $female_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_plot_of', 'stock_relationship')->cvterm_id();
+    my $male_accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
+    my $male_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_plot_of', 'stock_relationship')->cvterm_id();
+    my $female_plant_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_plant_of', 'stock_relationship')->cvterm_id();
+    my $male_plant_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_plant_of', 'stock_relationship')->cvterm_id();
+    my $cross_combination_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_combination', 'stock_property')->cvterm_id();
+    my $ploidy_level_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'ploidy_level', 'stock_property')->cvterm_id();
+
+    my $q ="SELECT female_accession.stock_id, female_accession.uniquename, female_plot.stock_id, female_plot.uniquename, female_plant.stock_id, female_plant.uniquename,
+        male_accession.stock_id, male_accession.uniquename, male_plot.stock_id, male_plot.uniquename, male_plant.stock_id, male_plant.uniquename,
+        female_relationship.value, cross_combination.value, female_ploidy.value, male_ploidy.value
+        FROM stock
+        JOIN stock_relationship AS female_relationship ON (stock.stock_id = female_relationship.object_id) AND female_relationship.type_id = ?
+        JOIN stock AS female_accession ON (female_relationship.subject_id = female_accession.stock_id)
+        LEFT JOIN stockprop AS female_ploidy ON (female_accession.stock_id = female_ploidy.stock_id) AND female_ploidy.type_id = ?
+        LEFT JOIN stock_relationship AS female_plot_relationship ON (stock.stock_id = female_plot_relationship.object_id) AND female_plot_relationship.type_id = ?
+        LEFT JOIN stock AS female_plot on (female_plot_relationship.subject_id = female_plot.stock_id)
+        LEFT JOIN stock_relationship AS female_plant_relationship ON (stock.stock_id = female_plant_relationship.object_id) AND female_plant_relationship.type_id = ?
+        LEFT JOIN stock AS female_plant ON (female_plant_relationship.subject_id = female_plant.stock_id)
+        LEFT JOIN stock_relationship AS male_relationship ON (stock.stock_id = male_relationship.object_id) AND male_relationship.type_id = ?
+        LEFT JOIN stock AS male_accession ON (male_relationship.subject_id = male_accession.stock_id)
+        LEFT JOIN stockprop AS male_ploidy ON (male_accession.stock_id = male_ploidy.stock_id) AND male_ploidy.type_id = ?
+        LEFT JOIN stock_relationship AS male_plot_relationship ON (stock.stock_id = male_plot_relationship.object_id) AND male_plot_relationship.type_id = ?
+        LEFT JOIN stock AS male_plot ON (male_plot_relationship.subject_id = male_plot.stock_id)
+        LEFT JOIN stock_relationship AS male_plant_relationship ON (stock.stock_id = male_plant_relationship.object_id) AND male_plant_relationship.type_id = ?
+        LEFT JOIN stock AS male_plant ON (male_plant_relationship.subject_id =male_plant.stock_id)
+        LEFT JOIN stockprop AS cross_combination ON (stock.stock_id = cross_combination.stock_id) AND cross_combination.type_id =?
+        WHERE stock.stock_id = ?";
+
+        my $h = $schema->storage->dbh()->prepare($q);
+        $h->execute($female_accession_cvterm, $ploidy_level_cvterm, $female_plot_cvterm, $female_plant_cvterm, $male_accession_cvterm, $ploidy_level_cvterm, $male_plot_cvterm, $male_plant_cvterm, $cross_combination_cvterm, $cross_id);
+
+        my @cross_parents = ();
+        while(my ($female_accession_id, $female_accession_name, $female_plot_id, $female_plot_name, $female_plant_id, $female_plant_name, $male_accession_id, $male_accession_name, $male_plot_id, $male_plot_name, $male_plant_id, $male_plant_name, $cross_type, $cross_combination, $female_ploidy, $male_ploidy) = $h->fetchrow_array()){
+            push @cross_parents, [$female_accession_id, $female_accession_name, $female_plot_id, $female_plot_name, $female_plant_id, $female_plant_name, $male_accession_id, $male_accession_name, $male_plot_id, $male_plot_name, $male_plant_id, $male_plant_name, $cross_type, $cross_combination, $female_ploidy, $male_ploidy]
+        }
+
+        return \@cross_parents;
+
+}
+
+
 =head2 get_cross_details
 
  Usage:         CXGN::Cross->get_cross_details( $schema, $female_parent, $male_parent);
@@ -614,17 +673,20 @@ sub get_crosses_and_details_in_crossingtrial {
     my $male_plot_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "male_plot_of", "stock_relationship")->cvterm_id();
     my $female_plant_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "female_plant_of", "stock_relationship")->cvterm_id();
     my $male_plant_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "male_plant_of", "stock_relationship")->cvterm_id();
+    my $ploidy_level_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "ploidy_level", "stock_property")->cvterm_id();
 
     my $q = "SELECT stock1.stock_id AS cross_id, stock1.uniquename AS cross_name, stockprop.value AS cross_combination, stock_relationship1.value AS cross_type, stock2.stock_id AS female_id,
-        stock2.uniquename AS female_name, stock3.stock_id AS male_id, stock3.uniquename AS male_name, stock4.stock_id AS female_plot_id, stock4.uniquename AS female_plot_name,
+        stock2.uniquename AS female_name, stockprop2.value AS female_ploidy, stock3.stock_id AS male_id, stock3.uniquename AS male_name, stockprop3.value AS male_ploidy, stock4.stock_id AS female_plot_id, stock4.uniquename AS female_plot_name,
         stock5.stock_id AS male_plot_id, stock5.uniquename AS male_plot_name, stock6.stock_id AS female_plant_id, stock6.uniquename AS female_plant_name, stock7.stock_id AS male_plant_id, stock7.uniquename AS male_plant_name
         FROM nd_experiment_project JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
         JOIN stock AS stock1 ON (nd_experiment_stock.stock_id = stock1.stock_id)
         LEFT JOIN stockprop ON (stock1.stock_id = stockprop.stock_id) AND stockprop.type_id =?
         JOIN stock_relationship AS stock_relationship1 ON (stock1.stock_id = stock_relationship1.object_id) AND stock_relationship1.type_id = ?
         JOIN stock AS stock2 ON (stock_relationship1.subject_id = stock2.stock_id)
+        LEFT JOIN stockprop AS stockprop2 ON (stock2.stock_id = stockprop2.stock_id) AND stockprop2.type_id = ?
         LEFT JOIN stock_relationship AS stock_relationship2 ON (stock1.stock_id = stock_relationship2.object_id) AND stock_relationship2.type_id = ?
         LEFT JOIN stock AS stock3 ON (stock_relationship2.subject_id = stock3.stock_id)
+        LEFT JOIN stockprop AS stockprop3 ON (stock3.stock_id = stockprop3.stock_id) AND stockprop3.type_id = ?
         LEFT JOIN stock_relationship AS stock_relationship3 ON (stock1.stock_id = stock_relationship3.object_id) AND stock_relationship3.type_id = ?
         LEFT JOIN stock AS stock4 ON (stock_relationship3.subject_id = stock4.stock_id)
         LEFT JOIN stock_relationship AS stock_relationship4 ON (stock1.stock_id = stock_relationship4.object_id) AND stock_relationship4.type_id = ?
@@ -637,11 +699,11 @@ sub get_crosses_and_details_in_crossingtrial {
 
     my $h = $schema->storage->dbh()->prepare($q);
 
-    $h->execute($cross_combination_type_id, $female_parent_typeid, $male_parent_typeid, $female_plot_of_typeid, $male_plot_of_typeid, $female_plant_of_typeid, $male_plant_of_typeid, $trial_id);
+    $h->execute($cross_combination_type_id, $female_parent_typeid, $ploidy_level_type_id, $male_parent_typeid, $ploidy_level_type_id, $female_plot_of_typeid, $male_plot_of_typeid, $female_plant_of_typeid, $male_plant_of_typeid, $trial_id);
 
     my @data =();
-    while(my($cross_id, $cross_name, $cross_combination, $cross_type, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name) = $h->fetchrow_array()){
-        push @data, [$cross_id, $cross_name, $cross_combination, $cross_type, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name]
+    while(my($cross_id, $cross_name, $cross_combination, $cross_type, $female_parent_id, $female_parent_name, $female_ploidy, $male_parent_id, $male_parent_name, $male_ploidy, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name) = $h->fetchrow_array()){
+        push @data, [$cross_id, $cross_name, $cross_combination, $cross_type, $female_parent_id, $female_parent_name, $female_ploidy, $male_parent_id, $male_parent_name, $male_ploidy, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name]
     }
     return \@data;
 }
@@ -794,10 +856,48 @@ sub delete {
     print STDERR "Delete cross ".$self->cross_name()."\n";
     my $dbh = $self->schema()->storage()->dbh();
     my $schema = $self->schema();
+    my $cross_id = $self->cross_stock_id();
 
     eval {
 	$dbh->begin_work();
 
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
+    my $cross_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_experiment", "experiment_type")->cvterm_id();
+    my $collection_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
+    my $field_layout_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_layout', 'experiment_type')->cvterm_id();
+    my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+
+    # checking if cross has associated seedlot
+    my $q = "SELECT stock_relationship.type_id, stock.uniquename FROM stock_relationship JOIN stock ON (stock_relationship.object_id = stock.stock_id) WHERE stock_relationship.subject_id = ?";
+
+    my $h = $self->schema->storage->dbh()->prepare($q);
+
+    $h->execute($cross_id);
+
+    while (my($type_id, $seedlot_name) = $h->fetchrow_array()) {
+	    if ($type_id == $collection_of_type_id) {
+            print STDERR "Cross has associated seedlot. Cannot delete.\n";
+	        die "Cross has associated seedlot: $seedlot_name. Cannot delete.\n";
+	    }
+    }
+
+    #checking if cross has associated trial
+    my $q2 = "SELECT nd_experiment_stock.type_id, project.name FROM stock_relationship JOIN nd_experiment_stock ON (stock_relationship.subject_id = nd_experiment_stock.stock_id) AND stock_relationship.type_id = ?
+        JOIN nd_experiment_project ON (nd_experiment_stock.nd_experiment_id = nd_experiment_project.nd_experiment_id)
+        JOIN project ON (nd_experiment_project.project_id = project.project_id) WHERE stock_relationship.object_id = ? ";
+
+    my $h2 = $self->schema->storage->dbh()->prepare($q2);
+
+    $h2->execute($plot_of_type_id, $cross_id);
+
+    while (my($type_id, $project_name) = $h2->fetchrow_array()) {
+        if ($type_id == $field_layout_type_id) {
+            print STDERR "Cross has associated trial. Cannot delete.\n";
+            die "Cross has associated trial: $project_name. Cannot delete.\n";
+        }
+    }
+
+    #checking if any progeny has associated data
 	my $properties = $self->progeny_properties();
 
 	my $can_delete =
@@ -813,8 +913,6 @@ sub delete {
 	else {
 	    print STDERR "This cross has no associated data that would prevent deletion.";
 	}
-	my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
-    my $cross_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_experiment", "experiment_type")->cvterm_id();
 
 	# TO DO: check if this row is actually a cross
 

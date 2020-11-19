@@ -51,10 +51,8 @@ $genotyping_protocol_id
 
 </&>
 
-% if ($show_data) 
-% {
-% if ($markers_no > 1)
-% {
+% if ($show_data) {
+% if ($markers_no > 1) {
  
 
 <&| /page/info_section.mas, 
@@ -72,31 +70,29 @@ $genotyping_protocol_id
 
 </&>
 
-% if ($training_pop_id !~ /list|dataset/)
-% {
-
-<& /solgs/anova/analysis.mas,
-   training_pop_id => $training_pop_id,
-  &>
-
-% }
      
   <& population/correlation.mas, 
      training_pop_id  => $training_pop_id,
   &>
 
+% if ($training_pop_id !~ /list|dataset/) {
+
+    <& /solgs/anova/analysis.mas,
+   training_pop_id => $training_pop_id,
+  &>
+
+
   <& /tools/heritability/heritability.mas, 
      pop_id  => $training_pop_id,
     &>
 
-
+%}
+    
   <& population/acronym.mas,
    acronym => $acronym,
     &>
 
-%} 
-% else
-% {
+%} else {
 
 <&| /page/info_section.mas, 
       collapsible => 1, 
@@ -110,9 +106,7 @@ $genotyping_protocol_id
 
 </&>
 %}
-%}
-% else
-%{
+%} else {
 
 <&| /page/info_section.mas, 
     collapsible => 1, 

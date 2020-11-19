@@ -14,6 +14,8 @@ load_genotypes_vcf_cxgn_postgres.pl - loading genotypes into cxgn databases, bas
     To use an existing project (not create a new project name entry), use -h project_id
     To use an existing protocol (not create a new nd_protocol name entry), use -j protocol_id
 
+perl bin/load_genotypes_vcf_cxgn_postgres.pl -H localhost -D imagebreedv4 -U postgres -c VCF -o /data/tmp/www-data/SGN-site/tmp/transposevcf.txt -v /data/tmp/www-data/SGN-site/tmp/convertvcf.vcf -s ~/g2f_2017_ZeaGBSv27_Imputed_AGPv4.h5 -r /data/prodv4/archive/41/genotype_tassel_hdf5_upload/tmp/ -R /home/nmorales/cxgn -g "G2F_GBS_2017_population" -p "G2F_Genotyping_2017" -d "https://datacommons.cyverse.org/browse/iplant/home/shared/commons_repo/curated/GenomesToFields_2014_2017_v1/G2F_Planting_Season_2017_v1/d._2017_genotypic_data/g2f_2017_ZeaGBSv27_Imputed_AGPv4.h5" -y 2017 -l "Cornell Biotech" -n "IGD" -b "accession" -m "G2F_GBS_2017" -k "https://datacommons.cyverse.org/browse/iplant/home/shared/commons_repo/curated/GenomesToFields_2014_2017_v1/G2F_Planting_Season_2017_v1/d._2017_genotypic_data/g2f_2017_ZeaGBSv27_Imputed_AGPv4.h5" -q "Zea mays" -e "G2F" -z -u nickmorales -f "ZeaGBSv27_Imputed_AGPv4" -B /data/tmp/www-data/SGN-site/tmp/SQLCOPY.csv -A
+
 =head1 COMMAND-LINE OPTIONS
   ARGUMENTS
  -H host name (required) e.g. "localhost"

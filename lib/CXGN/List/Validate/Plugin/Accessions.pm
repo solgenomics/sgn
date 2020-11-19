@@ -23,10 +23,10 @@ sub validate {
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
     while (my ($uniquename, $synonym, $type_id) = $h->fetchrow_array()) {
-        $all_names{$uniquename}++;
+        $all_names{lc($uniquename)}++;
         if ($type_id) {
             if ($type_id == $synonym_type_id) {
-                $all_names{$synonym}++;
+                $all_names{lc($synonym)}++;
             }
         }
     }
@@ -34,8 +34,7 @@ sub validate {
     #print STDERR Dumper \%all_names;
     my @missing;
     foreach my $item (@$list) {
-	
-        if (!exists($all_names{$item})) {
+        if (!exists($all_names{lc($item)})) {
             push @missing, $item;
         }
     }

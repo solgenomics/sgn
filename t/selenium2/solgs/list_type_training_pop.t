@@ -12,12 +12,13 @@ my $d = SGN::Test::WWW::WebDriver->new();
 
 
 $d->while_logged_in_as("submitter", sub {
+    
     $d->get_ok('/solgs', 'solgs home page');
-    sleep(20); 
+    sleep(5); 
  $d->find_element_ok('//select[@id="list_type_training_pops_list_select"]/option[text()="trial2 NaCRRI plots"]', 'xpath', 'select list tr pop')->click();  
-    sleep(10);
+    sleep(5);
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'select list sel pop')->click();
-    sleep(30);
+    sleep(5);
     $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'no job queueing')->send_keys('plots list tr pop');
@@ -122,12 +123,12 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//table[@id="list_type_selection_pops_table"]//*[contains(text(), "DMCP")]', 'xpath', 'click list sel pred')->click();
     sleep(10);
 
-
-
     $d->get('/solgs/population/list_8', 'plots list tr pop page');
     sleep(3);
     $d->find_element_ok('//table[@id="population_traits_list"]/tbody/tr[1]/td/input', 'xpath', 'select 1st trait')->click();
+    sleep(2);
     $d->find_element_ok('//table[@id="population_traits_list"]/tbody/tr[2]/td/input', 'xpath', 'select 2nd trait')->click();
+    sleep(2);
     $d->find_element_ok('runGS', 'id',  'build multi models')->click();
     sleep(3);
     $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
@@ -139,7 +140,9 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(3);
     $d->find_element_ok('//table[@id="population_traits_list"]/tbody/tr[1]/td/input', 'xpath', 'select 1st trait')->click();
+    sleep(2);
     $d->find_element_ok('//table[@id="population_traits_list"]/tbody/tr[2]/td/input', 'xpath', 'select 2nd trait')->click();
+    sleep(2);
     $d->find_element_ok('runGS', 'id',  'build multi models')->click();
     sleep(10);
 
@@ -183,6 +186,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('//table[@id="list_type_selection_pops_table"]//*[contains(text(), "FRW")]', 'xpath', 'click list sel pred')->click();
     sleep(5);
+    
     $d->driver->go_back();
     sleep(5);
 

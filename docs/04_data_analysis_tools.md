@@ -328,17 +328,19 @@ The GWAS will filter the data by the input MAF and missing data filters provided
 <img src='{{"assets/images/search_wizard_genotype_analyses_qq_plot.png" | relative_url }}' width="522" />
 
 
-4.11 Spectral Analysis
+4.11 Spectral Analysis {#spectral-analysis}
 --------------
 
-Visible and near-infrared spectroscopy (vis-NIRS) can be related to reference phenotypes through statistical models to produce accurate phenotypic predictions for unobserved samples, increasing phenotyping throughput. This technique is commonly used for predicting traits such as total starch, protein, carotenoid, and water content in many plant breeding programs. Breedbase implements the R package *waves* to offer training, evaluation, storage, and use of vis-NIRS prediction models for a wide range of spectrometers and phenotypes.
+Visible and near-infrared spectroscopy (vis-NIRS) can be related to reference phenotypes through statistical models to produce accurate phenotypic predictions for unobserved samples, increasing phenotyping throughput. This technique is commonly used for predicting traits such as total starch, protein, carotenoid, and water content in many plant breeding programs. Breedbase implements the R package [*waves*](https://CRAN.R-project.org/package=waves) to offer training, evaluation, storage, and use of vis-NIRS prediction models for a wide range of spectrometers and phenotypes.
 
 <img src='{{"assets/images/waves_breedbase_schema.png" | relative_url }}' width="522" />
 
 ### Dataset selection
-In order to initiate an analysis, the user must select one or more datasets using the Breedbase [**Search Wizard**]({{site.baseurl}}{% link 02_searching_the_database%}#the-search-wizard). A dataset in Breedbase can contain observationUnit-level (plot-, plant-, or sample-level) trial metadata and phenotypic data from one or more trials. After navigating to the “Spectral Analysis” webpage under the “Analysis” tab in Breedbase, the user can select one of these datasets as input for model training.
+In order to initiate an analysis, the user must select one or more datasets using the Breedbase [**Search Wizard**]({{site.baseurl}}{% link 02_searching_the_database.md%}#the-search-wizard). A dataset in Breedbase can contain observationUnit-level (plot-, plant-, or sample-level) trial metadata and phenotypic data from one or more trials. After navigating to the “NIRS” webpage under the “Manage” tab in Breedbase, the user can initiate an analysis and select one of these datasets as input for model training. An optional test dataset can be selected in the second step of the workflow.
 
-[screenshot of selecting dataset]
+<img src='{{"assets/images/manage_NIRS_prediction_workflow_intro.png" | relative_url }}' width="522" />
+
+<img src='{{"assets/images/manage_NIRS_prediction_workflow_dataset.png" | relative_url }}' width="522" />
 
 ### Cross-validation
 Five cross-validation schemes that represent scenarios common in plant breeding are available for this analysis. These include CV1, CV2, CV0, and CV00 as outlined below and described in depth by Jarquín et al. (2017) as well as random and stratified random sampling with a 70% training and 30% validation split. For those schemes from Jarquín et al. (2017), specific input datasets must be chosen based on genotype and environment relatedness. Cross-validation choices:
@@ -349,7 +351,7 @@ Five cross-validation schemes that represent scenarios common in plant breeding 
 * **CV0**, tested lines in untested environments
 * **CV00**, untested lines in untested environments
 
-[screenshot of pop-up guide]
+<img src='{{"assets/images/manage_NIRS_cv.png" | relative_url }}' width="522" />
 
 ### Preprocessing
 Preprocessing, also known as pretreatment, is often used to increase the signal to noise ratio in vis-NIR datasets. The *waves* function *DoPreprocessing()* applies functions from the *stats* and *prospectr* packages for common spectral preprocessing methods with the following options:
@@ -360,18 +362,18 @@ Preprocessing, also known as pretreatment, is often used to increase the signal 
 * Standard normal variate (SNV; Barnes et al., 1989)
 * Savitzky-Golay polynomial smoothing (Savitzky and Golay, 1964)
 
-For more information on preprocessing methods and implementation, see the *waves* manual [link to waves manual]
+For more information on preprocessing methods and implementation, see the [*waves*](https://CRAN.R-project.org/package=waves) manual, available through CRAN: [waves.pdf](https://cran.r-project.org/web/packages/waves/waves.pdf)
 
-[insert plot with example data raw and with each transformation]
+<img src='{{"assets/images/manage_NIRS_snv.png" | relative_url }}' width="522" />
 
 ### Algorithms
-Several algorithms are available for calibration model development in Breedbase via the *waves* package. The *TrainSpectralModel()* function in waves performs hyperparameter tuning as applicable using these algorithms in combination with cross validation and train functions from the package *caret*. Currently, only regression algorithms are available, but classification algorithms such as PLS-DA and SVM clasification are under development.
+Several algorithms are available for calibration model development in Breedbase via the [*waves*](https://CRAN.R-project.org/package=waves) package. The *TrainSpectralModel()* function in waves performs hyperparameter tuning as applicable using these algorithms in combination with cross validation and train functions from the package *caret*. Currently, only regression algorithms are available, but classification algorithms such as PLS-DA and SVM clasification are under development.
 * **Partial least squares regression** (PLSR; Wold et al., 1982; Wold et al., 1984) is a popular method for spectral calibrations, as it can handle datasets with high levels of collinearity, reducing the dimensionality of these data into orthogonal latent variables (components) that are then related to the response variable through a linear model (reviewed in Wold et al., 2001). To avoid overfitting, the number of these components included in the final model must be tuned for each use case. The PLSR algorithm from the *pls* package is implemented by waves.
 * **Random Forest regression** (RF; Ho, 1995) is a machine learning algorithm based on a series of decision trees. The number of trees and decisions at each junction are hyperparameters that must be tuned for each model. Another feature of this algorithm is the ability to extract variable importance measures from a fitted model (Breiman, 2001). In Breedbase, this option is made available through implementation of the RF algorithm from the package randomForest in the waves function TrainSpectralModel(). This function outputs both model performance statistics and a downloadable table of importance values for each wavelength. It is worth noting that this algorithm is computationally intensive, so the user should not be alarmed if results do not come right away. Breedbase will continue to work in the background and will display results when the analysis is finished.
 * **Support vector machine regression** (SVM; Vapnik, 2000) is another useful algorithm for working with high-dimension datasets consisting of non-linear data, with applications in both classification and regression. The package waves implements SVM with both linear and radial basis function kernels using the kernlab package.
 
 ### Output: common model summary statistics
-After training, model performance statistics are both displayed on a results webpage and made available for download in .csv format. These statistics are calculated by the *TrainSpectralModel()* function in *waves* using the *caret* and *spectacles* packages. Reported statistics include:
+After training, model performance statistics are both displayed on a results webpage and made available for download in .csv format. These statistics are calculated by the *TrainSpectralModel()* function in [*waves*](https://CRAN.R-project.org/package=waves) using the *caret* and *spectacles* packages. Reported statistics include:
 * Tuned parameters depending on the model algoritm
 	* **Best.n.comp**, the best number of components to be included in a PLSR model
 	* **Best.ntree**, the best number of trees in an RF model
@@ -387,18 +389,20 @@ After training, model performance statistics are both displayed on a results web
 * **SEP**, the standard error of prediction
 * **R<sup>2</sup><sub>sp</sub>**, the squared Spearman's rank correlation between predicted and observed test set values
 
-[screenshot of output]
-
 ### Export model for later use
-Once a model has been trained, it can be stored for later use. This action calls the *SaveModel()* function from *waves*. Metadata regarding the training dataset and other parameters specified by the user upon training initialization are stored alongside the model object itself in the database.
+Once a model has been trained, it can be stored for later use. This action calls the *SaveModel()* function from [*waves*](https://CRAN.R-project.org/package=waves). Metadata regarding the training dataset and other parameters specified by the user upon training initialization are stored alongside the model object itself in the database.
 
-[screenshot of save model page]
+<img src='{{"assets/images/manage_NIRS_export_model.png" | relative_url }}' width="522" />
 
 ### Predict phenotypes from an exported model (routine use)
 For phenotype predictions, users select a dataset and can then choose from models in the database that were trained using the same spectrometer type as the spectral data in the chosen dataset. Predicted phenotypes are stored as such in the database and are tagged with an ontology term specifying that they are predicted and not directly measured. Metadata regarding the model used for prediction is stored alongside the predicted value in the database. Predicted phenotypes can then be used as normal in other Breedbase analysis tools such as the Selection Index and GWAS.
 
+<img src='{{"assets/images/manage_NIRS_select_model.png" | relative_url }}' width="522" />
+
+<img src='{{"assets/images/manage_NIRS_prediction_results.png" | relative_url }}' width="522" />
+
 ### FAQ
-The Breedbase Apectral Analysis Tool does not allow for prediction models involving data from multiple spectrometer types at once.
+The Breedbase Spectral Analysis Tool does not allow for prediction models involving data from multiple spectrometer types at once.
 
 References
 * Barnes, R.J., M.S. Dhanoa, and S.J. Lister. 1989. Standard normal variate transformation and de-trending of near-infrared diffuse reflectance spectra. Appl. Spectrosc. 43(5): 772-777. doi: 10.1366/0003702894202201.
@@ -413,3 +417,27 @@ De Maesschalck, R., D. Jouan-Rimbaud, and D.L. Massart. 2000. The Mahalanobis di
 * Vapnik, V.N. 2000. The Nature of Statistical Learning Theory. Springer New York, New York, NY.
 * Wold, S., A. Ruhe, H. Wold, and W.J. Dunn, III. 1984. The Collinearity Problem in Linear Regression. The Partial Least Squares (PLS) Approach to Generalized Inverses. SIAM J. Sci. Stat. Comput. 5(3): 735-743. doi: 10.1137/0905052.
 * Wold, S., M. Sjöström, and L. Eriksson. 2001. PLS-regression: a basic tool of chemometrics. Chemom. Intell. Lab. Syst. 58(2): 109-130. doi: 10.1016/S0169-7439(01)00155-1.
+
+
+4.12 General Mixed Model Tool
+--------------
+
+The general mixed model tool is available at <a href="/tools/mixedmodels">/tools/mixedmodels</a> and a link is provided from the Analyze menu.
+
+To use the mixed model tool, first create dataset using the Wizard containing the data that you would like to analyze.
+
+Select the Mixed Model tool from the Analyze menu.
+
+You are presented with a workflow. On the first step of the workflow, select the dataset that you wish to analyze, click on "Choose dataset" to continue.
+
+The second part of the workflow presents you with the traits in the dataset; you can select one or more traits from the lists using the select buttons. If you selected one trait, a bargraph of the trait distribution will be shown.  Click the "Next step" button to move to the next screen.
+
+<img src='{{"assets/images/mixedmodel_tool_model_build_step.png" | relative_url }}' width="522" />
+
+On the model build screen, all the factors are displayed that are contained within the dataset. The factors are presented as a list of blue buttons that can be dragged using the mouse to areas on the screen which build a mixed model equation. The areas correspond to fixed factors, random factors, and optionally to more complex factors, such as fixed factors with interaction and fixe factors with vriable slope/intersects. Drag the available factors to the corresponding area. To calculate BLUPs for germplasm, drag the germplasmName button to the "Random factors" area. To calculate BLUEs, drag it to the "Fixed factors" area. The factors need to have different levels contained within them, for example, if there is only one trial in the dataset, it cannot be used as one of the factors. Click on "Run analysis and got to next step" to run the mixed model and display the results.
+
+The result view contains two tabs, one with the raw data, either BLUPS or BLUEs, and the other the adjusted means from the raw data.
+
+The results can be stored in the database as an analysis, by clicking the button provided on the top of the data.
+
+

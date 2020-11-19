@@ -1,4 +1,5 @@
 <%args>
+$facilities
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.GenotypingTrial' ] &>

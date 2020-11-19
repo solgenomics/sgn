@@ -1,0 +1,252 @@
+<%args>
+
+$program_id
+$program_name
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form'] &>
+
+<div class="modal fade" id="upload_profile_dialog" name="upload_profile_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadProfileDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadProfileDialog">Upload Product Profile</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <&| /util/workflow.mas, id=> "upload_profile_workflow" &>
+                        <&| /util/workflow.mas:step, title=> "Intro" &>
+                            <& /page/page_title.mas, title=>"Product Profile" &>
+                            <ul>
+                                <li>Product profiles can be stored in the database for downstream variety selection process for each breeding program.</li>
+                                <li>To facilitate data curation, targeted trait names and trait IDs can be retrieved directly from the database.</li>
+                                <li>Please use the product profile template generated from our database to fill out product profile details.</l>
+                                <li>You can find the link for creating the template in the product profile section, simply provide a file name and a list of traits.</l>
+                                <li>Instructions for filling out the form are on the next page</l>
+                            </ul>
+                            <br/><br/>
+                            <center>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                            </center>
+                        </&>
+                        <&| /util/workflow.mas:step, title=> "File format" &>
+                            <& /page/page_title.mas, title=>"Make sure your file matches the correct file format" &>
+                            <center>
+                                <&| /page/explanation.mas, title=>'Product Profile Spreadsheet' &>
+                                    <p>
+                                        <br>
+                                        <a id="product_profile_instructions">Instructions for Product Profile Spreadsheet</a>
+                                        <br>
+                                        <br>
+                                    </p>
+                                </&>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Once you think your file matches, go to Next Step</button>
+                            </center>
+                        </&>
+                        <&| /util/workflow.mas:step, title=> "Upload Product Profile" &>
+                            <& /page/page_title.mas, title=>"Provide basic information about the product profile and upload your file" &>
+                            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_profile_form" name="upload_profile_form">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Breeding Program: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" name="profile_program_name" id="profile_program_name" disabled value="<% $program_name %>">
+                                        <input name="profile_program_id" id="profile_program_id" type="hidden" value="<% $program_id %>">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Product Profile Name: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="new_profile_name" name="new_profile_name" type="text"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Scope: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="new_profile_scope" name="new_profile_scope" type="text"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Upload File (.xls): </label>
+                                    <div class="col-sm-9" >
+                                        <input type="file" name="profile_uploaded_file" id="profile_uploaded_file" encoding="multipart/form-data" />
+                                    </div>
+                                </div>
+                            </form>
+                            <center>
+                                <button type="button" class="btn btn-lg btn-primary" onclick="Workflow.complete(this, false);" id ="upload_profile_submit" name="upload_profile_submit" >Upload Profile</button><br/><br/>
+                            </center>
+                        </&>
+                        <&| /util/workflow.mas:complete, title=> "Complete" &>
+                            <& /page/page_title.mas, title=>"Finished! Your profile is now in the database" &>
+                            <p>
+                                <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                                The profile file was uploaded successfully
+                            </p>
+                            <br/>
+                            <center>
+                                <button class="btn btn-primary" name="upload_profile_success_complete_button">The profile was saved to the database with no errors! Congrats Click Here</button><br/><br/>
+                            </center>
+                        </&>
+                    </&>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_profile_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_profile_error_display" name="upload_profile_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadProfileErrorDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadProfileErrorDialog">Upload Profile File Error</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="product_profile_instruction_dialog" name="product_profile_instruction_dialog" tabindex="-1" role="dialog" aria-labelledby="profileInstructionDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="profileInstructionDialog">Instructions for Product Profile Spreadsheet</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>
+                        Product Profile Template
+                    </b>
+                    <ul>
+                        <li>Product profile template is an Excel file (.xls format)</li>
+                        <li>After filling out the product profile details, please also save the spreadsheet in the .xls format</li>
+                        <li>Please do not modify or delete any column header in the template.
+                    </ul>
+                    <br>
+                    <b>
+                        Header:
+                    </b>
+                    <br>
+                    <table class="table table-bordered table-hover">
+                        <tbody>
+                            <tr>
+                                <td>Trait Name</td>
+                                <td>Target Value</td>
+                                <td>Benchmark Variety</td>
+                                <td>Performance (equal, smaller, larger)</td>
+                                <td>Weight</td>
+                                <td>Trait Type</tr>
+                        </tbody>
+                    </table>
+                    <b>
+                        Required columns:
+                    </b>
+                    <ul>
+                        <li><b>Trait Name:</b> The template already contains trait names based on your trait list</li>
+                        <li><b>Target Value or Benchmark Variety:</b> Please indicates <b>either</b> a target value <b>or</b> a benchmark variety for each targeted trait. Benchmark variety must exist in the database.</li>
+                        <li><b>Performance:</b> Please specifies the performance of each targeted trait (equal, smaller or larger) compared to the target value or benchmark variety </li>
+                    </ul>
+                    <b>
+                        Optional columns:
+                    </b>
+                    <li><b>Weight:</b> Default is 1</li>
+                    <li><b>Trait Type:</b> e.g. basic trait, value-added trait</li>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#product_profile_instructions').click(function(){
+        jQuery('#product_profile_instruction_dialog').modal("show");
+    });
+
+    jQuery('#upload_profile_submit').click(function () {
+        upload_profile();
+    });
+
+    function upload_profile() {
+        var profile_uploaded_file = jQuery("#profile_uploaded_file").val();
+        var program_id = jQuery('#profile_program_id').val();
+        var new_profile_name = jQuery('#new_profile_name').val();
+        var new_profile_scope = jQuery('#new_profile_scope').val();
+
+        jQuery('#upload_profile_form').attr("action", '/ajax/breeders/program/upload_profile');
+
+        if (program_id === '') {
+            alert("Please choose a breeding program");
+            return;
+        }
+        if (new_profile_name === '') {
+            alert("Please enter a profile name");
+            return;
+        }
+        if (new_profile_scope == '') {
+            alert("Please enter a scope");
+            return;
+        }
+        jQuery('#upload_profile_form').submit();
+
+    }
+
+    jQuery('#upload_profile_form').iframePostForm({
+        json: true,
+        post: function () {
+        var profile_uploaded_file = jQuery("#profile_uploaded_file").val();
+            jQuery('#working_modal').modal("show");
+            if (profile_uploaded_file == '') {
+                jQuery('#working_modal').modal("hide");
+                alert("No file selected");
+            }
+        },
+        complete: function(response) {
+            jQuery("#working_modal").modal("hide");
+            if (response.error_string) {
+                jQuery('#upload_profile_error_display').modal("show");
+                jQuery('#upload_profile_error_display tbody').html('');
+                jQuery('#upload_profile_error_display tbody').append(response.error_string);
+                return;
+            }
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            if (response.success) {
+                Workflow.focus("#upload_profile_workflow", -1); //Go to success page
+                Workflow.check_complete("#upload_profile_workflow");
+
+            }
+        }
+    });
+
+    jQuery(document).on('click', '[name="upload_profile_success_complete_button"]', function(){
+        jQuery('#upload_profile_dialog').modal('hide');
+        location.reload();
+    });
+
+
+});
+
+</script>
