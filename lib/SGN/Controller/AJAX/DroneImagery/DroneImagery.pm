@@ -226,7 +226,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $field_trial_id_list = $c->req->param('field_trial_id_list') ? decode_json $c->req->param('field_trial_id_list') : [];
     my $field_trial_id_list_string = join ',', @$field_trial_id_list;
     my $trait_id_list = $c->req->param('observation_variable_id_list') ? decode_json $c->req->param('observation_variable_id_list') : [];
-    my $compute_relationship_matrix_from_htp_phenotypes = $c->req->param('compute_relationship_matrix_from_htp_phenotypes') eq 'yes' ? 1 : 0;
+    my $compute_relationship_matrix_from_htp_phenotypes = $c->req->param('relationship_matrix_type');
+    my $compute_relationship_matrix_from_htp_phenotypes_type = $c->req->param('htp_pheno_rel_matrix_type');
     my $compute_from_parents = $c->req->param('compute_from_parents') eq 'yes' ? 1 : 0;
     my $include_pedgiree_info_if_compute_from_parents = $c->req->param('include_pedgiree_info_if_compute_from_parents') eq 'yes' ? 1 : 0;
     my $use_parental_grms_if_compute_from_parents = $c->req->param('use_parental_grms_if_compute_from_parents') eq 'yes' ? 1 : 0;
@@ -996,519 +997,530 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             }
             my @accession_ids = keys %seen_accession_stock_ids;
 
-            if ($include_pedgiree_info_if_compute_from_parents) {
-                my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
-                my $tmp_arm_dir = $shared_cluster_dir_config."/tmp_download_arm";
-                mkdir $tmp_arm_dir if ! -d $tmp_arm_dir;
-                my ($arm_tempfile_fh, $arm_tempfile) = tempfile("drone_stats_download_arm_XXXXX", DIR=> $tmp_arm_dir);
-                my ($grm1_tempfile_fh, $grm1_tempfile) = tempfile("drone_stats_download_grm1_XXXXX", DIR=> $tmp_arm_dir);
-                my ($grm_out_temp_tempfile_fh, $grm_out_temp_tempfile) = tempfile("drone_stats_download_grm_temp_out_XXXXX", DIR=> $tmp_arm_dir);
-                my ($grm_out_tempfile_fh, $grm_out_tempfile) = tempfile("drone_stats_download_grm_out_XXXXX", DIR=> $tmp_arm_dir);
-                my ($grm_out_posdef_tempfile_fh, $grm_out_posdef_tempfile) = tempfile("drone_stats_download_grm_out_XXXXX", DIR=> $tmp_arm_dir);
+            if ($compute_relationship_matrix_from_htp_phenotypes eq 'genotypes') {
 
-                if (!$protocol_id) {
-                    $protocol_id = undef;
-                }
+                if ($include_pedgiree_info_if_compute_from_parents) {
+                    my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
+                    my $tmp_arm_dir = $shared_cluster_dir_config."/tmp_download_arm";
+                    mkdir $tmp_arm_dir if ! -d $tmp_arm_dir;
+                    my ($arm_tempfile_fh, $arm_tempfile) = tempfile("drone_stats_download_arm_XXXXX", DIR=> $tmp_arm_dir);
+                    my ($grm1_tempfile_fh, $grm1_tempfile) = tempfile("drone_stats_download_grm1_XXXXX", DIR=> $tmp_arm_dir);
+                    my ($grm_out_temp_tempfile_fh, $grm_out_temp_tempfile) = tempfile("drone_stats_download_grm_temp_out_XXXXX", DIR=> $tmp_arm_dir);
+                    my ($grm_out_tempfile_fh, $grm_out_tempfile) = tempfile("drone_stats_download_grm_out_XXXXX", DIR=> $tmp_arm_dir);
+                    my ($grm_out_posdef_tempfile_fh, $grm_out_posdef_tempfile) = tempfile("drone_stats_download_grm_out_XXXXX", DIR=> $tmp_arm_dir);
 
-                my $pedigree_arm = CXGN::Pedigree::ARM->new({
-                    bcs_schema=>$schema,
-                    arm_temp_file=>$arm_tempfile,
-                    people_schema=>$people_schema,
-                    accession_id_list=>\@accession_ids,
-                    # plot_id_list=>\@plot_id_list,
-                    cache_root=>$c->config->{cache_file_path},
-                    download_format=>'matrix', #either 'matrix', 'three_column', or 'heatmap'
-                });
-                my ($parent_hash, $stock_ids, $all_accession_stock_ids, $female_stock_ids, $male_stock_ids) = $pedigree_arm->get_arm(
-                    $shared_cluster_dir_config,
-                    $c->config->{backend},
-                    $c->config->{cluster_host},
-                    $c->config->{'web_cluster_queue'},
-                    $c->config->{basepath}
-                );
-                # print STDERR Dumper $parent_hash;
-
-                my $female_geno = CXGN::Genotype::GRM->new({
-                    bcs_schema=>$schema,
-                    grm_temp_file=>$grm1_tempfile,
-                    people_schema=>$people_schema,
-                    cache_root=>$c->config->{cache_file_path},
-                    accession_id_list=>$female_stock_ids,
-                    protocol_id=>$protocol_id,
-                    get_grm_for_parental_accessions=>0,
-                    download_format=>'three_column_reciprocal'
-                    # minor_allele_frequency=>$minor_allele_frequency,
-                    # marker_filter=>$marker_filter,
-                    # individuals_filter=>$individuals_filter
-                });
-                my $female_grm_data = $female_geno->download_grm(
-                    'data',
-                    $shared_cluster_dir_config,
-                    $c->config->{backend},
-                    $c->config->{cluster_host},
-                    $c->config->{'web_cluster_queue'},
-                    $c->config->{basepath}
-                );
-                my @fl = split '\n', $female_grm_data;
-                my %female_parent_grm;
-                foreach (@fl) {
-                    my @l = split '\t', $_;
-                    $female_parent_grm{$l[0]}->{$l[1]} = $l[2];
-                }
-                # print STDERR Dumper \%female_parent_grm;
-
-                my $male_geno = CXGN::Genotype::GRM->new({
-                    bcs_schema=>$schema,
-                    grm_temp_file=>$grm1_tempfile,
-                    people_schema=>$people_schema,
-                    cache_root=>$c->config->{cache_file_path},
-                    accession_id_list=>$male_stock_ids,
-                    protocol_id=>$protocol_id,
-                    get_grm_for_parental_accessions=>0,
-                    download_format=>'three_column_reciprocal'
-                    # minor_allele_frequency=>$minor_allele_frequency,
-                    # marker_filter=>$marker_filter,
-                    # individuals_filter=>$individuals_filter
-                });
-                my $male_grm_data = $male_geno->download_grm(
-                    'data',
-                    $shared_cluster_dir_config,
-                    $c->config->{backend},
-                    $c->config->{cluster_host},
-                    $c->config->{'web_cluster_queue'},
-                    $c->config->{basepath}
-                );
-                my @ml = split '\n', $male_grm_data;
-                my %male_parent_grm;
-                foreach (@ml) {
-                    my @l = split '\t', $_;
-                    $male_parent_grm{$l[0]}->{$l[1]} = $l[2];
-                }
-                # print STDERR Dumper \%male_parent_grm;
-
-                my %rel_result_hash;
-                foreach my $a1 (@accession_ids) {
-                    foreach my $a2 (@accession_ids) {
-                        my $female_parent1 = $parent_hash->{$a1}->{female_stock_id};
-                        my $male_parent1 = $parent_hash->{$a1}->{male_stock_id};
-                        my $female_parent2 = $parent_hash->{$a2}->{female_stock_id};
-                        my $male_parent2 = $parent_hash->{$a2}->{male_stock_id};
-
-                        my $female_rel = 0;
-                        if ($female_parent1 && $female_parent2 && $female_parent_grm{'S'.$female_parent1}->{'S'.$female_parent2}) {
-                            $female_rel = $female_parent_grm{'S'.$female_parent1}->{'S'.$female_parent2};
-                        }
-                        elsif ($female_parent1 && $female_parent2 && $female_parent1 == $female_parent2) {
-                            $female_rel = 1;
-                        }
-                        elsif ($a1 == $a2) {
-                            $female_rel = 1;
-                        }
-
-                        my $male_rel = 0;
-                        if ($male_parent1 && $male_parent2 && $male_parent_grm{'S'.$male_parent1}->{'S'.$male_parent2}) {
-                            $male_rel = $male_parent_grm{'S'.$male_parent1}->{'S'.$male_parent2};
-                        }
-                        elsif ($male_parent1 && $male_parent2 && $male_parent1 == $male_parent2) {
-                            $male_rel = 1;
-                        }
-                        elsif ($a1 == $a2) {
-                            $male_rel = 1;
-                        }
-                        # print STDERR "$a1 $a2 $female_rel $male_rel\n";
-
-                        my $rel = 0.5*($female_rel + $male_rel);
-                        $rel_result_hash{$a1}->{$a2} = $rel;
+                    if (!$protocol_id) {
+                        $protocol_id = undef;
                     }
-                }
-                # print STDERR Dumper \%rel_result_hash;
 
-                my $data = '';
-                my %result_hash;
-                foreach my $s (sort @accession_ids) {
-                    foreach my $c (sort @accession_ids) {
-                        if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
-                            my $val = $rel_result_hash{$s}->{$c};
-                            if (defined $val and length $val) {
-                                $result_hash{$s}->{$c} = $val;
-                                $data .= "S$s\tS$c\t$val\n";
+                    my $pedigree_arm = CXGN::Pedigree::ARM->new({
+                        bcs_schema=>$schema,
+                        arm_temp_file=>$arm_tempfile,
+                        people_schema=>$people_schema,
+                        accession_id_list=>\@accession_ids,
+                        # plot_id_list=>\@plot_id_list,
+                        cache_root=>$c->config->{cache_file_path},
+                        download_format=>'matrix', #either 'matrix', 'three_column', or 'heatmap'
+                    });
+                    my ($parent_hash, $stock_ids, $all_accession_stock_ids, $female_stock_ids, $male_stock_ids) = $pedigree_arm->get_arm(
+                        $shared_cluster_dir_config,
+                        $c->config->{backend},
+                        $c->config->{cluster_host},
+                        $c->config->{'web_cluster_queue'},
+                        $c->config->{basepath}
+                    );
+                    # print STDERR Dumper $parent_hash;
+
+                    my $female_geno = CXGN::Genotype::GRM->new({
+                        bcs_schema=>$schema,
+                        grm_temp_file=>$grm1_tempfile,
+                        people_schema=>$people_schema,
+                        cache_root=>$c->config->{cache_file_path},
+                        accession_id_list=>$female_stock_ids,
+                        protocol_id=>$protocol_id,
+                        get_grm_for_parental_accessions=>0,
+                        download_format=>'three_column_reciprocal'
+                        # minor_allele_frequency=>$minor_allele_frequency,
+                        # marker_filter=>$marker_filter,
+                        # individuals_filter=>$individuals_filter
+                    });
+                    my $female_grm_data = $female_geno->download_grm(
+                        'data',
+                        $shared_cluster_dir_config,
+                        $c->config->{backend},
+                        $c->config->{cluster_host},
+                        $c->config->{'web_cluster_queue'},
+                        $c->config->{basepath}
+                    );
+                    my @fl = split '\n', $female_grm_data;
+                    my %female_parent_grm;
+                    foreach (@fl) {
+                        my @l = split '\t', $_;
+                        $female_parent_grm{$l[0]}->{$l[1]} = $l[2];
+                    }
+                    # print STDERR Dumper \%female_parent_grm;
+
+                    my $male_geno = CXGN::Genotype::GRM->new({
+                        bcs_schema=>$schema,
+                        grm_temp_file=>$grm1_tempfile,
+                        people_schema=>$people_schema,
+                        cache_root=>$c->config->{cache_file_path},
+                        accession_id_list=>$male_stock_ids,
+                        protocol_id=>$protocol_id,
+                        get_grm_for_parental_accessions=>0,
+                        download_format=>'three_column_reciprocal'
+                        # minor_allele_frequency=>$minor_allele_frequency,
+                        # marker_filter=>$marker_filter,
+                        # individuals_filter=>$individuals_filter
+                    });
+                    my $male_grm_data = $male_geno->download_grm(
+                        'data',
+                        $shared_cluster_dir_config,
+                        $c->config->{backend},
+                        $c->config->{cluster_host},
+                        $c->config->{'web_cluster_queue'},
+                        $c->config->{basepath}
+                    );
+                    my @ml = split '\n', $male_grm_data;
+                    my %male_parent_grm;
+                    foreach (@ml) {
+                        my @l = split '\t', $_;
+                        $male_parent_grm{$l[0]}->{$l[1]} = $l[2];
+                    }
+                    # print STDERR Dumper \%male_parent_grm;
+
+                    my %rel_result_hash;
+                    foreach my $a1 (@accession_ids) {
+                        foreach my $a2 (@accession_ids) {
+                            my $female_parent1 = $parent_hash->{$a1}->{female_stock_id};
+                            my $male_parent1 = $parent_hash->{$a1}->{male_stock_id};
+                            my $female_parent2 = $parent_hash->{$a2}->{female_stock_id};
+                            my $male_parent2 = $parent_hash->{$a2}->{male_stock_id};
+
+                            my $female_rel = 0;
+                            if ($female_parent1 && $female_parent2 && $female_parent_grm{'S'.$female_parent1}->{'S'.$female_parent2}) {
+                                $female_rel = $female_parent_grm{'S'.$female_parent1}->{'S'.$female_parent2};
                             }
+                            elsif ($female_parent1 && $female_parent2 && $female_parent1 == $female_parent2) {
+                                $female_rel = 1;
+                            }
+                            elsif ($a1 == $a2) {
+                                $female_rel = 1;
+                            }
+
+                            my $male_rel = 0;
+                            if ($male_parent1 && $male_parent2 && $male_parent_grm{'S'.$male_parent1}->{'S'.$male_parent2}) {
+                                $male_rel = $male_parent_grm{'S'.$male_parent1}->{'S'.$male_parent2};
+                            }
+                            elsif ($male_parent1 && $male_parent2 && $male_parent1 == $male_parent2) {
+                                $male_rel = 1;
+                            }
+                            elsif ($a1 == $a2) {
+                                $male_rel = 1;
+                            }
+                            # print STDERR "$a1 $a2 $female_rel $male_rel\n";
+
+                            my $rel = 0.5*($female_rel + $male_rel);
+                            $rel_result_hash{$a1}->{$a2} = $rel;
                         }
                     }
-                }
+                    # print STDERR Dumper \%rel_result_hash;
 
-                # print STDERR Dumper $data;
-                open(my $F2, ">", $grm_out_temp_tempfile) || die "Can't open file ".$grm_out_temp_tempfile;
-                    print $F2 $data;
-                close($F2);
-
-                my $cmd = 'R -e "library(data.table); library(scales); library(tidyr); library(reshape2);
-                three_col <- fread(\''.$grm_out_temp_tempfile.'\', header=FALSE, sep=\'\t\');
-                A_wide <- dcast(three_col, V1~V2, value.var=\'V3\');
-                A_1 <- A_wide[,-1];
-                A_1[is.na(A_1)] <- 0;
-                A <- A_1 + t(A_1);
-                diag(A) <- diag(as.matrix(A_1));
-                E = eigen(A);
-                ev = E\$values;
-                U = E\$vectors;
-                no = dim(A)[1];
-                nev = which(ev < 0);
-                wr = 0;
-                k=length(nev);
-                if(k > 0){
-                    p = ev[no - k];
-                    B = sum(ev[nev])*2.0;
-                    wr = (B*B*100.0)+1;
-                    val = ev[nev];
-                    ev[nev] = p*(B-val)*(B-val)/wr;
-                    A = U%*%diag(ev)%*%t(U);
-                }
-                A <- as.data.frame(A);
-                colnames(A) <- A_wide[,1];
-                A\$stock_id <- A_wide[,1];
-                A_threecol <- melt(A, id.vars = c(\'stock_id\'), measure.vars = A_wide[,1]);
-                A_threecol\$stock_id <- substring(A_threecol\$stock_id, 2);
-                A_threecol\$variable <- substring(A_threecol\$variable, 2);
-                write.table(data.frame(variable = A_threecol\$variable, stock_id = A_threecol\$stock_id, value = A_threecol\$value), file=\''.$grm_out_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
-                print STDERR $cmd."\n";
-                my $status = system($cmd);
-
-                my $csv = Text::CSV->new({ sep_char => "\t" });
-
-                my %rel_pos_def_result_hash;
-                open(my $F3, '<', $grm_out_tempfile)
-                    or die "Could not open file '$grm_out_tempfile' $!";
-
-                    print STDERR "Opened $grm_out_tempfile\n";
-
-                    while (my $row = <$F3>) {
-                        my @columns;
-                        if ($csv->parse($row)) {
-                            @columns = $csv->fields();
-                        }
-                        my $stock_id1 = $columns[0];
-                        my $stock_id2 = $columns[1];
-                        my $val = $columns[2];
-                        $rel_pos_def_result_hash{$stock_id1}->{$stock_id2} = $val;
-                    }
-                close($F3);
-
-                my $data_pos_def = '';
-                if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+                    my $data = '';
                     my %result_hash;
                     foreach my $s (sort @accession_ids) {
                         foreach my $c (sort @accession_ids) {
                             if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
-                                my $val = $rel_pos_def_result_hash{$s}->{$c};
+                                my $val = $rel_result_hash{$s}->{$c};
                                 if (defined $val and length $val) {
                                     $result_hash{$s}->{$c} = $val;
-                                    $data_pos_def .= "$s\t$c\t$val\n";
+                                    $data .= "S$s\tS$c\t$val\n";
                                 }
                             }
                         }
                     }
-                }
-                else {
-                    my %result_hash;
-                    foreach my $s (sort @accession_ids) {
-                        foreach my $c (sort @accession_ids) {
-                            if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
-                                my $val = $rel_pos_def_result_hash{$s}->{$c};
-                                if (defined $val and length $val) {
-                                    $result_hash{$s}->{$c} = $val;
-                                    $data_pos_def .= "S$s\tS$c\t$val\n";
-                                    if ($s != $c) {
-                                        $data_pos_def .= "S$s\tS$c\t$val\n";
+
+                    # print STDERR Dumper $data;
+                    open(my $F2, ">", $grm_out_temp_tempfile) || die "Can't open file ".$grm_out_temp_tempfile;
+                        print $F2 $data;
+                    close($F2);
+
+                    my $cmd = 'R -e "library(data.table); library(scales); library(tidyr); library(reshape2);
+                    three_col <- fread(\''.$grm_out_temp_tempfile.'\', header=FALSE, sep=\'\t\');
+                    A_wide <- dcast(three_col, V1~V2, value.var=\'V3\');
+                    A_1 <- A_wide[,-1];
+                    A_1[is.na(A_1)] <- 0;
+                    A <- A_1 + t(A_1);
+                    diag(A) <- diag(as.matrix(A_1));
+                    E = eigen(A);
+                    ev = E\$values;
+                    U = E\$vectors;
+                    no = dim(A)[1];
+                    nev = which(ev < 0);
+                    wr = 0;
+                    k=length(nev);
+                    if(k > 0){
+                        p = ev[no - k];
+                        B = sum(ev[nev])*2.0;
+                        wr = (B*B*100.0)+1;
+                        val = ev[nev];
+                        ev[nev] = p*(B-val)*(B-val)/wr;
+                        A = U%*%diag(ev)%*%t(U);
+                    }
+                    A <- as.data.frame(A);
+                    colnames(A) <- A_wide[,1];
+                    A\$stock_id <- A_wide[,1];
+                    A_threecol <- melt(A, id.vars = c(\'stock_id\'), measure.vars = A_wide[,1]);
+                    A_threecol\$stock_id <- substring(A_threecol\$stock_id, 2);
+                    A_threecol\$variable <- substring(A_threecol\$variable, 2);
+                    write.table(data.frame(variable = A_threecol\$variable, stock_id = A_threecol\$stock_id, value = A_threecol\$value), file=\''.$grm_out_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
+                    print STDERR $cmd."\n";
+                    my $status = system($cmd);
+
+                    my $csv = Text::CSV->new({ sep_char => "\t" });
+
+                    my %rel_pos_def_result_hash;
+                    open(my $F3, '<', $grm_out_tempfile)
+                        or die "Could not open file '$grm_out_tempfile' $!";
+
+                        print STDERR "Opened $grm_out_tempfile\n";
+
+                        while (my $row = <$F3>) {
+                            my @columns;
+                            if ($csv->parse($row)) {
+                                @columns = $csv->fields();
+                            }
+                            my $stock_id1 = $columns[0];
+                            my $stock_id2 = $columns[1];
+                            my $val = $columns[2];
+                            $rel_pos_def_result_hash{$stock_id1}->{$stock_id2} = $val;
+                        }
+                    close($F3);
+
+                    my $data_pos_def = '';
+                    if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+                        my %result_hash;
+                        foreach my $s (sort @accession_ids) {
+                            foreach my $c (sort @accession_ids) {
+                                if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
+                                    my $val = $rel_pos_def_result_hash{$s}->{$c};
+                                    if (defined $val and length $val) {
+                                        $result_hash{$s}->{$c} = $val;
+                                        $data_pos_def .= "$s\t$c\t$val\n";
                                     }
                                 }
                             }
                         }
                     }
+                    else {
+                        my %result_hash;
+                        foreach my $s (sort @accession_ids) {
+                            foreach my $c (sort @accession_ids) {
+                                if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
+                                    my $val = $rel_pos_def_result_hash{$s}->{$c};
+                                    if (defined $val and length $val) {
+                                        $result_hash{$s}->{$c} = $val;
+                                        $data_pos_def .= "S$s\tS$c\t$val\n";
+                                        if ($s != $c) {
+                                            $data_pos_def .= "S$s\tS$c\t$val\n";
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    open(my $F4, ">", $grm_out_posdef_tempfile) || die "Can't open file ".$grm_out_posdef_tempfile;
+                        print $F4 $data_pos_def;
+                    close($F4);
+
+                    $grm_file = $grm_out_posdef_tempfile;
+                }
+                elsif ($use_parental_grms_if_compute_from_parents) {
+                    my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
+                    my $tmp_arm_dir = $shared_cluster_dir_config."/tmp_download_arm";
+                    mkdir $tmp_arm_dir if ! -d $tmp_arm_dir;
+                    my ($arm_tempfile_fh, $arm_tempfile) = tempfile("drone_stats_download_arm_XXXXX", DIR=> $tmp_arm_dir);
+                    my ($grm1_tempfile_fh, $grm1_tempfile) = tempfile("drone_stats_download_grm1_XXXXX", DIR=> $tmp_arm_dir);
+                    my ($grm_out_temp_tempfile_fh, $grm_out_temp_tempfile) = tempfile("drone_stats_download_grm_temp_out_XXXXX", DIR=> $tmp_arm_dir);
+                    my ($grm_out_tempfile_fh, $grm_out_tempfile) = tempfile("drone_stats_download_grm_out_XXXXX", DIR=> $tmp_arm_dir);
+                    my ($grm_out_posdef_tempfile_fh, $grm_out_posdef_tempfile) = tempfile("drone_stats_download_grm_out_XXXXX", DIR=> $tmp_arm_dir);
+
+                    if (!$protocol_id) {
+                        $protocol_id = undef;
+                    }
+
+                    my $pedigree_arm = CXGN::Pedigree::ARM->new({
+                        bcs_schema=>$schema,
+                        arm_temp_file=>$arm_tempfile,
+                        people_schema=>$people_schema,
+                        accession_id_list=>\@accession_ids,
+                        # plot_id_list=>\@plot_id_list,
+                        cache_root=>$c->config->{cache_file_path},
+                        download_format=>'matrix', #either 'matrix', 'three_column', or 'heatmap'
+                    });
+                    my ($parent_hash, $stock_ids, $all_accession_stock_ids, $female_stock_ids, $male_stock_ids) = $pedigree_arm->get_arm(
+                        $shared_cluster_dir_config,
+                        $c->config->{backend},
+                        $c->config->{cluster_host},
+                        $c->config->{'web_cluster_queue'},
+                        $c->config->{basepath}
+                    );
+                    # print STDERR Dumper $parent_hash;
+
+                    my $female_geno = CXGN::Genotype::GRM->new({
+                        bcs_schema=>$schema,
+                        grm_temp_file=>$grm1_tempfile,
+                        people_schema=>$people_schema,
+                        cache_root=>$c->config->{cache_file_path},
+                        accession_id_list=>$female_stock_ids,
+                        protocol_id=>$protocol_id,
+                        get_grm_for_parental_accessions=>0,
+                        download_format=>'three_column_reciprocal'
+                        # minor_allele_frequency=>$minor_allele_frequency,
+                        # marker_filter=>$marker_filter,
+                        # individuals_filter=>$individuals_filter
+                    });
+                    my $female_grm_data = $female_geno->download_grm(
+                        'data',
+                        $shared_cluster_dir_config,
+                        $c->config->{backend},
+                        $c->config->{cluster_host},
+                        $c->config->{'web_cluster_queue'},
+                        $c->config->{basepath}
+                    );
+                    my @fl = split '\n', $female_grm_data;
+                    my %female_parent_grm;
+                    foreach (@fl) {
+                        my @l = split '\t', $_;
+                        $female_parent_grm{$l[0]}->{$l[1]} = $l[2];
+                    }
+                    # print STDERR Dumper \%female_parent_grm;
+
+                    my $male_geno = CXGN::Genotype::GRM->new({
+                        bcs_schema=>$schema,
+                        grm_temp_file=>$grm1_tempfile,
+                        people_schema=>$people_schema,
+                        cache_root=>$c->config->{cache_file_path},
+                        accession_id_list=>$male_stock_ids,
+                        protocol_id=>$protocol_id,
+                        get_grm_for_parental_accessions=>0,
+                        download_format=>'three_column_reciprocal'
+                        # minor_allele_frequency=>$minor_allele_frequency,
+                        # marker_filter=>$marker_filter,
+                        # individuals_filter=>$individuals_filter
+                    });
+                    my $male_grm_data = $male_geno->download_grm(
+                        'data',
+                        $shared_cluster_dir_config,
+                        $c->config->{backend},
+                        $c->config->{cluster_host},
+                        $c->config->{'web_cluster_queue'},
+                        $c->config->{basepath}
+                    );
+                    my @ml = split '\n', $male_grm_data;
+                    my %male_parent_grm;
+                    foreach (@ml) {
+                        my @l = split '\t', $_;
+                        $male_parent_grm{$l[0]}->{$l[1]} = $l[2];
+                    }
+                    # print STDERR Dumper \%male_parent_grm;
+
+                    my %rel_result_hash;
+                    foreach my $a1 (@accession_ids) {
+                        foreach my $a2 (@accession_ids) {
+                            my $female_parent1 = $parent_hash->{$a1}->{female_stock_id};
+                            my $male_parent1 = $parent_hash->{$a1}->{male_stock_id};
+                            my $female_parent2 = $parent_hash->{$a2}->{female_stock_id};
+                            my $male_parent2 = $parent_hash->{$a2}->{male_stock_id};
+
+                            my $female_rel = 0;
+                            if ($female_parent1 && $female_parent2 && $female_parent_grm{'S'.$female_parent1}->{'S'.$female_parent2}) {
+                                $female_rel = $female_parent_grm{'S'.$female_parent1}->{'S'.$female_parent2};
+                            }
+                            elsif ($a1 == $a2) {
+                                $female_rel = 1;
+                            }
+
+                            my $male_rel = 0;
+                            if ($male_parent1 && $male_parent2 && $male_parent_grm{'S'.$male_parent1}->{'S'.$male_parent2}) {
+                                $male_rel = $male_parent_grm{'S'.$male_parent1}->{'S'.$male_parent2};
+                            }
+                            elsif ($a1 == $a2) {
+                                $male_rel = 1;
+                            }
+                            # print STDERR "$a1 $a2 $female_rel $male_rel\n";
+
+                            my $rel = 0.5*($female_rel + $male_rel);
+                            $rel_result_hash{$a1}->{$a2} = $rel;
+                        }
+                    }
+                    # print STDERR Dumper \%rel_result_hash;
+
+                    my $data = '';
+                    my %result_hash;
+                    foreach my $s (sort @accession_ids) {
+                        foreach my $c (sort @accession_ids) {
+                            if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
+                                my $val = $rel_result_hash{$s}->{$c};
+                                if (defined $val and length $val) {
+                                    $result_hash{$s}->{$c} = $val;
+                                    $data .= "S$s\tS$c\t$val\n";
+                                }
+                            }
+                        }
+                    }
+
+                    # print STDERR Dumper $data;
+                    open(my $F2, ">", $grm_out_temp_tempfile) || die "Can't open file ".$grm_out_temp_tempfile;
+                        print $F2 $data;
+                    close($F2);
+
+                    my $cmd = 'R -e "library(data.table); library(scales); library(tidyr); library(reshape2);
+                    three_col <- fread(\''.$grm_out_temp_tempfile.'\', header=FALSE, sep=\'\t\');
+                    A_wide <- dcast(three_col, V1~V2, value.var=\'V3\');
+                    A_1 <- A_wide[,-1];
+                    A_1[is.na(A_1)] <- 0;
+                    A <- A_1 + t(A_1);
+                    diag(A) <- diag(as.matrix(A_1));
+                    E = eigen(A);
+                    ev = E\$values;
+                    U = E\$vectors;
+                    no = dim(A)[1];
+                    nev = which(ev < 0);
+                    wr = 0;
+                    k=length(nev);
+                    if(k > 0){
+                        p = ev[no - k];
+                        B = sum(ev[nev])*2.0;
+                        wr = (B*B*100.0)+1;
+                        val = ev[nev];
+                        ev[nev] = p*(B-val)*(B-val)/wr;
+                        A = U%*%diag(ev)%*%t(U);
+                    }
+                    A <- as.data.frame(A);
+                    colnames(A) <- A_wide[,1];
+                    A\$stock_id <- A_wide[,1];
+                    A_threecol <- melt(A, id.vars = c(\'stock_id\'), measure.vars = A_wide[,1]);
+                    A_threecol\$stock_id <- substring(A_threecol\$stock_id, 2);
+                    A_threecol\$variable <- substring(A_threecol\$variable, 2);
+                    write.table(data.frame(variable = A_threecol\$variable, stock_id = A_threecol\$stock_id, value = A_threecol\$value), file=\''.$grm_out_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
+                    print STDERR $cmd."\n";
+                    my $status = system($cmd);
+
+                    my $csv = Text::CSV->new({ sep_char => "\t" });
+
+                    my %rel_pos_def_result_hash;
+                    open(my $F3, '<', $grm_out_tempfile)
+                        or die "Could not open file '$grm_out_tempfile' $!";
+
+                        print STDERR "Opened $grm_out_tempfile\n";
+
+                        while (my $row = <$F3>) {
+                            my @columns;
+                            if ($csv->parse($row)) {
+                                @columns = $csv->fields();
+                            }
+                            my $stock_id1 = $columns[0];
+                            my $stock_id2 = $columns[1];
+                            my $val = $columns[2];
+                            $rel_pos_def_result_hash{$stock_id1}->{$stock_id2} = $val;
+                        }
+                    close($F3);
+
+                    my $data_pos_def = '';
+                    if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+                        my %result_hash;
+                        foreach my $s (sort @accession_ids) {
+                            foreach my $c (sort @accession_ids) {
+                                if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
+                                    my $val = $rel_pos_def_result_hash{$s}->{$c};
+                                    if (defined $val and length $val) {
+                                        $result_hash{$s}->{$c} = $val;
+                                        $data_pos_def .= "$s\t$c\t$val\n";
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else {
+                        my %result_hash;
+                        foreach my $s (sort @accession_ids) {
+                            foreach my $c (sort @accession_ids) {
+                                if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
+                                    my $val = $rel_pos_def_result_hash{$s}->{$c};
+                                    if (defined $val and length $val) {
+                                        $result_hash{$s}->{$c} = $val;
+                                        $data_pos_def .= "S$s\tS$c\t$val\n";
+                                        if ($s != $c) {
+                                            $data_pos_def .= "S$s\tS$c\t$val\n";
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    open(my $F4, ">", $grm_out_posdef_tempfile) || die "Can't open file ".$grm_out_posdef_tempfile;
+                        print $F4 $data_pos_def;
+                    close($F4);
+
+                    $grm_file = $grm_out_posdef_tempfile;
+                }
+                else {
+                    my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
+                    my $tmp_grm_dir = $shared_cluster_dir_config."/tmp_genotype_download_grm";
+                    mkdir $tmp_grm_dir if ! -d $tmp_grm_dir;
+                    my ($grm_tempfile_fh, $grm_tempfile) = tempfile("drone_stats_download_grm_XXXXX", DIR=> $tmp_grm_dir);
+                    my ($grm_out_tempfile_fh, $grm_out_tempfile) = tempfile("drone_stats_download_grm_XXXXX", DIR=> $tmp_grm_dir);
+
+                    if (!$protocol_id) {
+                        $protocol_id = undef;
+                    }
+
+                    my $grm_search_params = {
+                        bcs_schema=>$schema,
+                        grm_temp_file=>$grm_tempfile,
+                        people_schema=>$people_schema,
+                        cache_root=>$c->config->{cache_file_path},
+                        accession_id_list=>\@accession_ids,
+                        protocol_id=>$protocol_id,
+                        get_grm_for_parental_accessions=>$compute_from_parents,
+                        # minor_allele_frequency=>$minor_allele_frequency,
+                        # marker_filter=>$marker_filter,
+                        # individuals_filter=>$individuals_filter
+                    };
+
+                    if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+                        $grm_search_params->{download_format} = 'three_column_stock_id_integer';
+                    }
+                    else {
+                        $grm_search_params->{download_format} = 'three_column_reciprocal';
+                    }
+
+                    my $geno = CXGN::Genotype::GRM->new($grm_search_params);
+                    my $grm_data = $geno->download_grm(
+                        'data',
+                        $shared_cluster_dir_config,
+                        $c->config->{backend},
+                        $c->config->{cluster_host},
+                        $c->config->{'web_cluster_queue'},
+                        $c->config->{basepath}
+                    );
+
+                    open(my $F2, ">", $grm_out_tempfile) || die "Can't open file ".$grm_out_tempfile;
+                        print $F2 $grm_data;
+                    close($F2);
+                    $grm_file = $grm_out_tempfile;
                 }
 
-                open(my $F4, ">", $grm_out_posdef_tempfile) || die "Can't open file ".$grm_out_posdef_tempfile;
-                    print $F4 $data_pos_def;
-                close($F4);
-
-                $grm_file = $grm_out_posdef_tempfile;
             }
-            elsif ($use_parental_grms_if_compute_from_parents) {
-                my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
-                my $tmp_arm_dir = $shared_cluster_dir_config."/tmp_download_arm";
-                mkdir $tmp_arm_dir if ! -d $tmp_arm_dir;
-                my ($arm_tempfile_fh, $arm_tempfile) = tempfile("drone_stats_download_arm_XXXXX", DIR=> $tmp_arm_dir);
-                my ($grm1_tempfile_fh, $grm1_tempfile) = tempfile("drone_stats_download_grm1_XXXXX", DIR=> $tmp_arm_dir);
-                my ($grm_out_temp_tempfile_fh, $grm_out_temp_tempfile) = tempfile("drone_stats_download_grm_temp_out_XXXXX", DIR=> $tmp_arm_dir);
-                my ($grm_out_tempfile_fh, $grm_out_tempfile) = tempfile("drone_stats_download_grm_out_XXXXX", DIR=> $tmp_arm_dir);
-                my ($grm_out_posdef_tempfile_fh, $grm_out_posdef_tempfile) = tempfile("drone_stats_download_grm_out_XXXXX", DIR=> $tmp_arm_dir);
-
-                if (!$protocol_id) {
-                    $protocol_id = undef;
-                }
-
-                my $pedigree_arm = CXGN::Pedigree::ARM->new({
-                    bcs_schema=>$schema,
-                    arm_temp_file=>$arm_tempfile,
-                    people_schema=>$people_schema,
-                    accession_id_list=>\@accession_ids,
-                    # plot_id_list=>\@plot_id_list,
-                    cache_root=>$c->config->{cache_file_path},
-                    download_format=>'matrix', #either 'matrix', 'three_column', or 'heatmap'
-                });
-                my ($parent_hash, $stock_ids, $all_accession_stock_ids, $female_stock_ids, $male_stock_ids) = $pedigree_arm->get_arm(
-                    $shared_cluster_dir_config,
-                    $c->config->{backend},
-                    $c->config->{cluster_host},
-                    $c->config->{'web_cluster_queue'},
-                    $c->config->{basepath}
-                );
-                # print STDERR Dumper $parent_hash;
-
-                my $female_geno = CXGN::Genotype::GRM->new({
-                    bcs_schema=>$schema,
-                    grm_temp_file=>$grm1_tempfile,
-                    people_schema=>$people_schema,
-                    cache_root=>$c->config->{cache_file_path},
-                    accession_id_list=>$female_stock_ids,
-                    protocol_id=>$protocol_id,
-                    get_grm_for_parental_accessions=>0,
-                    download_format=>'three_column_reciprocal'
-                    # minor_allele_frequency=>$minor_allele_frequency,
-                    # marker_filter=>$marker_filter,
-                    # individuals_filter=>$individuals_filter
-                });
-                my $female_grm_data = $female_geno->download_grm(
-                    'data',
-                    $shared_cluster_dir_config,
-                    $c->config->{backend},
-                    $c->config->{cluster_host},
-                    $c->config->{'web_cluster_queue'},
-                    $c->config->{basepath}
-                );
-                my @fl = split '\n', $female_grm_data;
-                my %female_parent_grm;
-                foreach (@fl) {
-                    my @l = split '\t', $_;
-                    $female_parent_grm{$l[0]}->{$l[1]} = $l[2];
-                }
-                # print STDERR Dumper \%female_parent_grm;
-
-                my $male_geno = CXGN::Genotype::GRM->new({
-                    bcs_schema=>$schema,
-                    grm_temp_file=>$grm1_tempfile,
-                    people_schema=>$people_schema,
-                    cache_root=>$c->config->{cache_file_path},
-                    accession_id_list=>$male_stock_ids,
-                    protocol_id=>$protocol_id,
-                    get_grm_for_parental_accessions=>0,
-                    download_format=>'three_column_reciprocal'
-                    # minor_allele_frequency=>$minor_allele_frequency,
-                    # marker_filter=>$marker_filter,
-                    # individuals_filter=>$individuals_filter
-                });
-                my $male_grm_data = $male_geno->download_grm(
-                    'data',
-                    $shared_cluster_dir_config,
-                    $c->config->{backend},
-                    $c->config->{cluster_host},
-                    $c->config->{'web_cluster_queue'},
-                    $c->config->{basepath}
-                );
-                my @ml = split '\n', $male_grm_data;
-                my %male_parent_grm;
-                foreach (@ml) {
-                    my @l = split '\t', $_;
-                    $male_parent_grm{$l[0]}->{$l[1]} = $l[2];
-                }
-                # print STDERR Dumper \%male_parent_grm;
-
-                my %rel_result_hash;
-                foreach my $a1 (@accession_ids) {
-                    foreach my $a2 (@accession_ids) {
-                        my $female_parent1 = $parent_hash->{$a1}->{female_stock_id};
-                        my $male_parent1 = $parent_hash->{$a1}->{male_stock_id};
-                        my $female_parent2 = $parent_hash->{$a2}->{female_stock_id};
-                        my $male_parent2 = $parent_hash->{$a2}->{male_stock_id};
-
-                        my $female_rel = 0;
-                        if ($female_parent1 && $female_parent2 && $female_parent_grm{'S'.$female_parent1}->{'S'.$female_parent2}) {
-                            $female_rel = $female_parent_grm{'S'.$female_parent1}->{'S'.$female_parent2};
-                        }
-                        elsif ($a1 == $a2) {
-                            $female_rel = 1;
-                        }
-
-                        my $male_rel = 0;
-                        if ($male_parent1 && $male_parent2 && $male_parent_grm{'S'.$male_parent1}->{'S'.$male_parent2}) {
-                            $male_rel = $male_parent_grm{'S'.$male_parent1}->{'S'.$male_parent2};
-                        }
-                        elsif ($a1 == $a2) {
-                            $male_rel = 1;
-                        }
-                        # print STDERR "$a1 $a2 $female_rel $male_rel\n";
-
-                        my $rel = 0.5*($female_rel + $male_rel);
-                        $rel_result_hash{$a1}->{$a2} = $rel;
-                    }
-                }
-                # print STDERR Dumper \%rel_result_hash;
-
-                my $data = '';
-                my %result_hash;
-                foreach my $s (sort @accession_ids) {
-                    foreach my $c (sort @accession_ids) {
-                        if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
-                            my $val = $rel_result_hash{$s}->{$c};
-                            if (defined $val and length $val) {
-                                $result_hash{$s}->{$c} = $val;
-                                $data .= "S$s\tS$c\t$val\n";
-                            }
-                        }
-                    }
-                }
-
-                # print STDERR Dumper $data;
-                open(my $F2, ">", $grm_out_temp_tempfile) || die "Can't open file ".$grm_out_temp_tempfile;
-                    print $F2 $data;
-                close($F2);
-
-                my $cmd = 'R -e "library(data.table); library(scales); library(tidyr); library(reshape2);
-                three_col <- fread(\''.$grm_out_temp_tempfile.'\', header=FALSE, sep=\'\t\');
-                A_wide <- dcast(three_col, V1~V2, value.var=\'V3\');
-                A_1 <- A_wide[,-1];
-                A_1[is.na(A_1)] <- 0;
-                A <- A_1 + t(A_1);
-                diag(A) <- diag(as.matrix(A_1));
-                E = eigen(A);
-                ev = E\$values;
-                U = E\$vectors;
-                no = dim(A)[1];
-                nev = which(ev < 0);
-                wr = 0;
-                k=length(nev);
-                if(k > 0){
-                    p = ev[no - k];
-                    B = sum(ev[nev])*2.0;
-                    wr = (B*B*100.0)+1;
-                    val = ev[nev];
-                    ev[nev] = p*(B-val)*(B-val)/wr;
-                    A = U%*%diag(ev)%*%t(U);
-                }
-                A <- as.data.frame(A);
-                colnames(A) <- A_wide[,1];
-                A\$stock_id <- A_wide[,1];
-                A_threecol <- melt(A, id.vars = c(\'stock_id\'), measure.vars = A_wide[,1]);
-                A_threecol\$stock_id <- substring(A_threecol\$stock_id, 2);
-                A_threecol\$variable <- substring(A_threecol\$variable, 2);
-                write.table(data.frame(variable = A_threecol\$variable, stock_id = A_threecol\$stock_id, value = A_threecol\$value), file=\''.$grm_out_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
-                print STDERR $cmd."\n";
-                my $status = system($cmd);
-
-                my $csv = Text::CSV->new({ sep_char => "\t" });
-
-                my %rel_pos_def_result_hash;
-                open(my $F3, '<', $grm_out_tempfile)
-                    or die "Could not open file '$grm_out_tempfile' $!";
-
-                    print STDERR "Opened $grm_out_tempfile\n";
-
-                    while (my $row = <$F3>) {
-                        my @columns;
-                        if ($csv->parse($row)) {
-                            @columns = $csv->fields();
-                        }
-                        my $stock_id1 = $columns[0];
-                        my $stock_id2 = $columns[1];
-                        my $val = $columns[2];
-                        $rel_pos_def_result_hash{$stock_id1}->{$stock_id2} = $val;
-                    }
-                close($F3);
-
-                my $data_pos_def = '';
-                if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
-                    my %result_hash;
-                    foreach my $s (sort @accession_ids) {
-                        foreach my $c (sort @accession_ids) {
-                            if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
-                                my $val = $rel_pos_def_result_hash{$s}->{$c};
-                                if (defined $val and length $val) {
-                                    $result_hash{$s}->{$c} = $val;
-                                    $data_pos_def .= "$s\t$c\t$val\n";
-                                }
-                            }
-                        }
-                    }
-                }
-                else {
-                    my %result_hash;
-                    foreach my $s (sort @accession_ids) {
-                        foreach my $c (sort @accession_ids) {
-                            if (!exists($result_hash{$s}->{$c}) && !exists($result_hash{$c}->{$s})) {
-                                my $val = $rel_pos_def_result_hash{$s}->{$c};
-                                if (defined $val and length $val) {
-                                    $result_hash{$s}->{$c} = $val;
-                                    $data_pos_def .= "S$s\tS$c\t$val\n";
-                                    if ($s != $c) {
-                                        $data_pos_def .= "S$s\tS$c\t$val\n";
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                open(my $F4, ">", $grm_out_posdef_tempfile) || die "Can't open file ".$grm_out_posdef_tempfile;
-                    print $F4 $data_pos_def;
-                close($F4);
-
-                $grm_file = $grm_out_posdef_tempfile;
+            elsif ($compute_relationship_matrix_from_htp_phenotypes eq 'htp_phenotypes') {
+                
             }
             else {
-                my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
-                my $tmp_grm_dir = $shared_cluster_dir_config."/tmp_genotype_download_grm";
-                mkdir $tmp_grm_dir if ! -d $tmp_grm_dir;
-                my ($grm_tempfile_fh, $grm_tempfile) = tempfile("drone_stats_download_grm_XXXXX", DIR=> $tmp_grm_dir);
-                my ($grm_out_tempfile_fh, $grm_out_tempfile) = tempfile("drone_stats_download_grm_XXXXX", DIR=> $tmp_grm_dir);
-
-                if (!$protocol_id) {
-                    $protocol_id = undef;
-                }
-
-                my $grm_search_params = {
-                    bcs_schema=>$schema,
-                    grm_temp_file=>$grm_tempfile,
-                    people_schema=>$people_schema,
-                    cache_root=>$c->config->{cache_file_path},
-                    accession_id_list=>\@accession_ids,
-                    protocol_id=>$protocol_id,
-                    get_grm_for_parental_accessions=>$compute_from_parents,
-                    # minor_allele_frequency=>$minor_allele_frequency,
-                    # marker_filter=>$marker_filter,
-                    # individuals_filter=>$individuals_filter
-                };
-
-                if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
-                    $grm_search_params->{download_format} = 'three_column_stock_id_integer';
-                }
-                else {
-                    $grm_search_params->{download_format} = 'three_column_reciprocal';
-                }
-
-                my $geno = CXGN::Genotype::GRM->new($grm_search_params);
-                my $grm_data = $geno->download_grm(
-                    'data',
-                    $shared_cluster_dir_config,
-                    $c->config->{backend},
-                    $c->config->{cluster_host},
-                    $c->config->{'web_cluster_queue'},
-                    $c->config->{basepath}
-                );
-
-                open(my $F2, ">", $grm_out_tempfile) || die "Can't open file ".$grm_out_tempfile;
-                    print $F2 $grm_data;
-                close($F2);
-                $grm_file = $grm_out_tempfile;
+                $c->stash->{rest} = { error => "The value of $compute_relationship_matrix_from_htp_phenotypes is not valid!" };
+                return;
             }
         }
 
