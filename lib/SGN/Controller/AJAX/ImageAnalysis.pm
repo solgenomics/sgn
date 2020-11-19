@@ -170,9 +170,7 @@ sub image_analysis_submit_POST : Args(0) {
                     bcs_schema=>$schema,
                     trait_name_list => [$message_hashref->{trait_name}]
                 })->search();
-                # print STDERR "trait details are: ".Dumper($trait_details);
                 $res{'trait_id'} = $trait_details->[0]->{trait_id};
-                # $res{'collector'} = $user_name;
             }
             else {
                 print STDERR Dumper $resp->status_line;
@@ -204,7 +202,6 @@ sub image_analysis_submit_POST : Args(0) {
             }
             $res{'value'} = $columns[0];
             $res{'trait'} = $service_details{$service}->{'trait'};
-            # $res{'collector'} = $user_name;
         }
 
         $res{'original_image'} = $image_urls[$it];
@@ -259,7 +256,6 @@ sub image_analysis_submit_POST : Args(0) {
                 my $added_image_tag_id = $image->add_tag($image_tag);
             }
 
-            # Store individual image results
             $res{'analyzed_image_id'} = $image_id;
             $res{'image_link'} = $image->get_image_url("original");
         }
@@ -269,7 +265,6 @@ sub image_analysis_submit_POST : Args(0) {
     }
 
     $result = _group_results_by_observationunit($result);
-
     $c->stash->{rest} = { success => 1, results => $result };
 }
 
@@ -281,22 +276,18 @@ sub _group_results_by_observationunit {
     my ($uniquename, $trait, $value, $results_ref);
     # sort result hash array by $stock_id
     my @sorted_result = sort {$$a{"stock_id"} <=> $$b{"stock_id"} } @{$result};
-    # print STDERR "Sorted result is ".Dumper(@sorted_result);
     my $old_uniquename = $sorted_result[0]->{'stock_uniquename'};
     $grouped_results{$sorted_result[0]->{'stock_uniquename'}}{$sorted_result[0]->{'result'}->{'trait'}} = [];
-    # for each item in result hash array add to new grouped hash using stock_uniquename as key
 
     for (my $i = 0; $i <= $#sorted_result; $i++) {
-        # print STDERR "\n\nWorking on array item $i of $#sorted_result\n\n";
         $results_ref = $sorted_result[$i];
         # print STDERR "Results ref is ".Dumper($results_ref);
-        # print STDERR "Working on Stock ".$results_ref->{'stock_uniquename'}." and image ".$results_ref->{'image_original_filename'}."\n";
         $uniquename = $results_ref->{'stock_uniquename'};
         $trait = $results_ref->{'result'}->{'trait'};
         $value = $results_ref->{'result'}->{'value'};
 
         if ($trait && $value) {
-            # print STDERR "Working a $trait for $uniquename. Saving the details \n";
+            print STDERR "Working a $trait for $uniquename. Saving the details \n";
             push @{$grouped_results{$uniquename}{$trait}}, {
                         stock_id => $results_ref->{'stock_id'},
                         collector => $results_ref->{'image_username'},
@@ -311,14 +302,12 @@ sub _group_results_by_observationunit {
 
         if ( ($uniquename ne $old_uniquename) || ($i == $#sorted_result) ) {
             if ($i == $#sorted_result) { $old_uniquename = $uniquename; }
-            #Calculate and store mean value for previous stock
-            # print STDERR "Calculating mean value for $old_uniquename before moving on to a new stock \n";
+            print STDERR "Calculating mean value for $old_uniquename before moving on to a new stock \n";
 
             my $old_uniquename_data = $grouped_results{$old_uniquename};
 
             foreach my $trait (keys %{$old_uniquename_data}) {
                 my $details = $old_uniquename_data->{$trait};
-                # print STDERR "Details are ".Dumper($details);
                 my @values = map { $_->{'value'}} @{$old_uniquename_data->{$trait}};
                 my $mean_value = @values ? sprintf("%.2f", sum(@values)/@values) : undef;
 

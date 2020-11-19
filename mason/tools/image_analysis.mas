@@ -124,7 +124,7 @@ tr.shown td.details-control {
                 <button class="btn btn-primary" id="image_analysis_submit">Submit for Analysis</button>
                 </center>
                 <hr>
-                <div id="image_analysis_result">
+                <div id="image_analysis_result" style="display: none;">
                     <table class="display" style="width:100%" id="image_analysis_result_table">
                         <thead>
                            <tr>
@@ -140,6 +140,24 @@ tr.shown td.details-control {
                 </div>
             </div>
         </div>
+    </div>
+
+    <div class="modal fade" id="saveResultModal" tabindex="-1" role="dialog" aria-labelledby="saveResultModal" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="saveResultModalTitle">Image Analysis Save Status</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body" id="saveResultModalBody">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
     </div>
 </&>
 
@@ -204,7 +222,7 @@ jQuery(document).ready(function(){
                 console.log(response);
                 jQuery('#working_msg').html('');
                 jQuery('#working_modal').modal('hide');
-
+                jQuery('#image_analysis_result').show();
                 var table = jQuery('#image_analysis_result_table').DataTable( {
                     "data": response.results,
                     "columns": [
@@ -237,7 +255,6 @@ jQuery(document).ready(function(){
                         tr.removeClass('shown');
                         tdi.first().removeClass('fa-minus-square');
                         tdi.first().addClass('fa-plus-square');
-                        // tr.find('svg').attr('data-icon', 'plus-circle');
                     }
                     else {
                         // Open this row
@@ -245,7 +262,6 @@ jQuery(document).ready(function(){
                         tr.addClass('shown');
                         tdi.first().removeClass('fa-plus-square');
                         tdi.first().addClass('fa-minus-square');
-                        // tr.find('svg').attr('data-icon', 'minus-circle');
                     }
                 } );
 
@@ -261,14 +277,7 @@ jQuery(document).ready(function(){
     jQuery('#image_analysis_save_results').click(function(){
 
         var table_data = jQuery('#image_analysis_result_table').DataTable().rows().data().toArray();
-        // var observations_data = {};
-        // table_data.forEach(function (row) {
-        //     observations_data[row['observationUnitDbId']] = row;
-        // });
-
-        console.log("Saving data");
-        console.log(table_data);
-
+        // console.log(table_data);
         jQuery.ajax({
             url: '/brapi/v2/observations/',
             method: 'POST',
@@ -282,11 +291,15 @@ jQuery(document).ready(function(){
                 console.log(response);
                 alert("Success!");
                 jQuery('#working_modal').modal('hide');
+                jQuery('#saveResultModalBody').html('<ul class="list-group"><li class="list-group-item list-group-item-success"><span class="badge"><span class="glyphicon glyphicon-ok"></span></span>Analysis results saved successfully in the database.</li></ul>');
+                jQuery('#saveResultModal').modal('show');
             },
             error: function(response) {
                 console.log(response);
                 alert("Error!");
                 jQuery('#working_modal').modal('hide');
+                jQuery('#saveResultModalBody').html('<ul class="list-group"><li class="list-group-item list-group-item-danger"><span class="badge"><span class="glyphicon glyphicon-remove"></span></span>Error while trying to save the analysis results.</li></ul>');
+                jQuery('#saveResultModal').modal('show');
             }
         });
 
