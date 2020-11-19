@@ -291,6 +291,54 @@
     </div>
 </div>
 
+<div class="modal fade" id="upload_wishlist_spreadsheet_info_dialog" name="upload_wishlist_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadWishlistInfoDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadWishlistInfoDialog">Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>
+                        Cross wishlist may be uploaded in an Excel file (.xls)
+                    </b>
+                    <br>
+                        (.xlsx format not supported)
+                    <br><br>
+                    <b>
+                        Header:
+                    </b>
+                    <br>
+                        The first row (header) must contain the following:
+                    <br>
+
+                    <table class="table table-bordered table-hover">
+                        <tbody>
+                            <tr>
+                                <td>female_accession</td>
+                                <td>male_accession</td>
+                                <td>priority</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>
+                        Required columns:
+                    </b>
+                    <ul>
+                        <li><b>female_accession</b> (accession names must exist as <b>uniquenames</b> in the database and are in the selected female trial)</li>
+                        <li><b>male_accession</b> (accession names must exist as <b>uniquenames</b> in the database)</li>
+                        <li><b>priority</b> (1 is the most important) </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
 
@@ -791,6 +839,10 @@ jQuery(document).ready(function($) {
     jQuery('#cross_wishlist_female_trial_select_upload_div').change(function(){
         jQuery('#wishlist_lists_footer').hide();
         jQuery('#wishlist_upload_footer').show();
+    });
+
+    jQuery('#wishlist_format').click(function() {
+        jQuery('#upload_wishlist_spreadsheet_info_dialog').modal("show");
     });
 
     jQuery('#wishlist_upload_submit').click(function() {
