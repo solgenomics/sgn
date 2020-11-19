@@ -75,10 +75,10 @@ while (my $line = <$file_fh>) {
 	$id = $1;
     }
 
-  #  if ($id =~ /^TMSI/) {
-#	$id =~ s/^TMSI/TMS-I/;
-#
- #   }
+    if ($line =~ /^(TMS.*)\_A\d{5}$/) {
+	$id = $1;
+    }
+    
     my $uniquename = "";
     my $match_type = "";
     my $stock_type = "";
@@ -125,7 +125,7 @@ while (my $line = <$file_fh>) {
 		}
 	    }		    
 	    else {
-		$uniquename = "";
+		$uniquename = $line;
 		$match_type = "absent";
 		$stats{absent}++;
 	    }
