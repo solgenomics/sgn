@@ -225,9 +225,16 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $statistics_select = $c->req->param('statistics_select');
     my $field_trial_id_list = $c->req->param('field_trial_id_list') ? decode_json $c->req->param('field_trial_id_list') : [];
     my $field_trial_id_list_string = join ',', @$field_trial_id_list;
+    
+    if (scalar(@$field_trial_id_list) != 1) {
+        $c->stash->{rest} = { error => "Please select one field trial!"};
+        return;
+    }
+
     my $trait_id_list = $c->req->param('observation_variable_id_list') ? decode_json $c->req->param('observation_variable_id_list') : [];
     my $compute_relationship_matrix_from_htp_phenotypes = $c->req->param('relationship_matrix_type');
     my $compute_relationship_matrix_from_htp_phenotypes_type = $c->req->param('htp_pheno_rel_matrix_type');
+    my $compute_relationship_matrix_from_htp_phenotypes_time_points = $c->req->param('htp_pheno_rel_matrix_time_points');
     my $compute_from_parents = $c->req->param('compute_from_parents') eq 'yes' ? 1 : 0;
     my $include_pedgiree_info_if_compute_from_parents = $c->req->param('include_pedgiree_info_if_compute_from_parents') eq 'yes' ? 1 : 0;
     my $use_parental_grms_if_compute_from_parents = $c->req->param('use_parental_grms_if_compute_from_parents') eq 'yes' ? 1 : 0;
@@ -328,40 +335,37 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         }
     }
 
-    if ($statistics_select eq 'marss_germplasmname_block' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
-
-        my $drone_run_related_time_cvterms_json_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_related_time_cvterms_json', 'project_property')->cvterm_id();
-        my $drone_run_field_trial_project_relationship_type_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
-        my $drone_run_band_drone_run_project_relationship_type_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
-        my $drone_run_time_q = "SELECT drone_run_project.project_id, project_relationship.object_project_id, projectprop.value
-            FROM project AS drone_run_band_project
-            JOIN project_relationship AS drone_run_band_rel ON (drone_run_band_rel.subject_project_id = drone_run_band_project.project_id AND drone_run_band_rel.type_id = $drone_run_band_drone_run_project_relationship_type_id_cvterm_id)
-            JOIN project AS drone_run_project ON (drone_run_project.project_id = drone_run_band_rel.object_project_id)
-            JOIN project_relationship ON (drone_run_project.project_id = project_relationship.subject_project_id AND project_relationship.type_id=$drone_run_field_trial_project_relationship_type_id_cvterm_id)
-            LEFT JOIN projectprop ON (drone_run_band_project.project_id = projectprop.project_id AND projectprop.type_id=$drone_run_related_time_cvterms_json_cvterm_id)
-            WHERE project_relationship.object_project_id IN ($field_trial_id_list_string) ;";
-        my $h = $schema->storage->dbh()->prepare($drone_run_time_q);
-        $h->execute();
-        my $refresh_mat_views = 0;
-        while( my ($drone_run_project_id, $field_trial_project_id, $related_time_terms_json) = $h->fetchrow_array()) {
-            my $related_time_terms;
-            if (!$related_time_terms_json) {
-                $related_time_terms = _perform_gdd_calculation_and_drone_run_time_saving($c, $schema, $field_trial_project_id, $drone_run_project_id, $c->config->{noaa_ncdc_access_token}, 50, 'average_daily_temp_sum');
-                $refresh_mat_views = 1;
-            }
-            else {
-                $related_time_terms = decode_json $related_time_terms_json;
-            }
-            if (!exists($related_time_terms->{gdd_average_temp})) {
-                $related_time_terms = _perform_gdd_calculation_and_drone_run_time_saving($c, $schema, $field_trial_project_id, $drone_run_project_id, $c->config->{noaa_ncdc_access_token}, 50, 'average_daily_temp_sum');
-                $refresh_mat_views = 1;
-            }
+    my $drone_run_related_time_cvterms_json_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_related_time_cvterms_json', 'project_property')->cvterm_id();
+    my $drone_run_field_trial_project_relationship_type_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
+    my $drone_run_band_drone_run_project_relationship_type_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
+    my $drone_run_time_q = "SELECT drone_run_project.project_id, project_relationship.object_project_id, projectprop.value
+        FROM project AS drone_run_band_project
+        JOIN project_relationship AS drone_run_band_rel ON (drone_run_band_rel.subject_project_id = drone_run_band_project.project_id AND drone_run_band_rel.type_id = $drone_run_band_drone_run_project_relationship_type_id_cvterm_id)
+        JOIN project AS drone_run_project ON (drone_run_project.project_id = drone_run_band_rel.object_project_id)
+        JOIN project_relationship ON (drone_run_project.project_id = project_relationship.subject_project_id AND project_relationship.type_id=$drone_run_field_trial_project_relationship_type_id_cvterm_id)
+        LEFT JOIN projectprop ON (drone_run_band_project.project_id = projectprop.project_id AND projectprop.type_id=$drone_run_related_time_cvterms_json_cvterm_id)
+        WHERE project_relationship.object_project_id IN ($field_trial_id_list_string) ;";
+    my $h = $schema->storage->dbh()->prepare($drone_run_time_q);
+    $h->execute();
+    my $refresh_mat_views = 0;
+    while( my ($drone_run_project_id, $field_trial_project_id, $related_time_terms_json) = $h->fetchrow_array()) {
+        my $related_time_terms;
+        if (!$related_time_terms_json) {
+            $related_time_terms = _perform_gdd_calculation_and_drone_run_time_saving($c, $schema, $field_trial_project_id, $drone_run_project_id, $c->config->{noaa_ncdc_access_token}, 50, 'average_daily_temp_sum');
+            $refresh_mat_views = 1;
         }
-        if ($refresh_mat_views) {
-            my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
-            my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
-            sleep(10);
+        else {
+            $related_time_terms = decode_json $related_time_terms_json;
         }
+        if (!exists($related_time_terms->{gdd_average_temp})) {
+            $related_time_terms = _perform_gdd_calculation_and_drone_run_time_saving($c, $schema, $field_trial_project_id, $drone_run_project_id, $c->config->{noaa_ncdc_access_token}, 50, 'average_daily_temp_sum');
+            $refresh_mat_views = 1;
+        }
+    }
+    if ($refresh_mat_views) {
+        my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
+        sleep(10);
     }
 
     if ($statistics_select eq 'lmer_germplasmname_replicate' || $statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'sommer_grm_genetic_blups') {
@@ -430,8 +434,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 my $germplasm_stock_id = $_->{germplasm_stock_id};
                 my $obsunit_stock_id = $_->{observationunit_stock_id};
                 my $obsunit_stock_uniquename = $_->{observationunit_uniquename};
-                my $row_number = $_->{obsunit_row_number};
-                my $col_number = $_->{obsunit_col_number};
+                my $row_number = $_->{obsunit_row_number} || '';
+                my $col_number = $_->{obsunit_col_number} || '';
                 my @row = ($_->{obsunit_rep}, $_->{obsunit_block}, "S".$germplasm_stock_id, $obsunit_stock_id, $row_number, $col_number, $row_number, $col_number);
                 $obsunit_row_col{$row_number}->{$col_number} = {
                     stock_id => $obsunit_stock_id,
@@ -1516,7 +1520,112 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
             }
             elsif ($compute_relationship_matrix_from_htp_phenotypes eq 'htp_phenotypes') {
-                
+
+                my $non_zero_pixel_count_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Nonzero Pixel Count|G2F:0000014')->cvterm_id;
+                my $total_pixel_sum_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Total Pixel Sum|G2F:0000015')->cvterm_id;
+                my $mean_pixel_value_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Mean Pixel Value|G2F:0000016')->cvterm_id;
+                my $harmonic_mean_pixel_value_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Harmonic Mean Pixel Value|G2F:0000017')->cvterm_id;
+                my $median_pixel_value_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Median Pixel Value|G2F:0000018')->cvterm_id;
+                my $pixel_variance_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Pixel Variance|G2F:0000019')->cvterm_id;
+                my $pixel_standard_dev_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Pixel Standard Deviation|G2F:0000020')->cvterm_id;
+                my $pixel_pstandard_dev_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Pixel Population Standard Deviation|G2F:0000021')->cvterm_id;
+                my $minimum_pixel_value_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Minimum Pixel Value|G2F:0000022')->cvterm_id;
+                my $maximum_pixel_value_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Maximum Pixel Value|G2F:0000023')->cvterm_id;
+                my $minority_pixel_value_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Minority Pixel Value|G2F:0000024')->cvterm_id;
+                my $minority_pixel_count_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Minority Pixel Count|G2F:0000025')->cvterm_id;
+                my $majority_pixel_value_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Majority Pixel Value|G2F:0000026')->cvterm_id;
+                my $majority_pixel_count_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Majority Pixel Count|G2F:0000027')->cvterm_id;
+                my $pixel_group_count_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, 'Pixel Group Count|G2F:0000028')->cvterm_id;
+
+                my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+                    'MaterializedViewTable',
+                    {
+                        bcs_schema=>$schema,
+                        data_level=>'plot',
+                        trial_list=>$field_trial_id_list,
+                        include_timestamp=>0,
+                        exclude_phenotype_outlier=>0
+                    }
+                );
+                my ($data, $unique_traits) = $phenotypes_search->search();
+                @sorted_trait_names = sort keys %$unique_traits;
+
+                print STDERR Dumper $data;
+
+                if (scalar(@$data) == 0) {
+                    $c->stash->{rest} = { error => "There are no phenotypes for the trial you have selected!"};
+                    return;
+                }
+
+                my $q_time = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
+                my $h_time = $schema->storage->dbh()->prepare($q_time);
+
+                my %seen_plot_names_htp_rel;
+                my %phenotype_data_htp_rel;
+                my %seen_times_htp_rel;
+                foreach my $obs_unit (@$data){
+                    my $germplasm_name = $obs_unit->{germplasm_uniquename};
+                    my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
+                    $seen_plot_names_htp_rel{$obs_unit->{observationunit_uniquename}}++;
+                    my $observations = $obs_unit->{observations};
+                    foreach (@$observations){
+                        if ($_->{associated_image_project_time_json}) {
+                            my $related_time_terms_json = decode_json $_->{associated_image_project_time_json};
+
+                            my $time_days_cvterm = $related_time_terms_json->{day};
+                            my $time_days_term_string = $time_days_cvterm;
+                            my $time_days = (split '\|', $time_days_cvterm)[0];
+                            my $time_days_value = (split ' ', $time_days)[1];
+
+                            my $time_gdd_value = $related_time_terms_json->{gdd_average_temp} + 0;
+                            my $gdd_term_string = "GDD $time_gdd_value";
+                            $h_time->execute($gdd_term_string, 'cxgn_time_ontology');
+                            my ($gdd_cvterm_id) = $h_time->fetchrow_array();
+                            if (!$gdd_cvterm_id) {
+                                my $new_gdd_term = $schema->resultset("Cv::Cvterm")->create_with({
+                                   name => $gdd_term_string,
+                                   cv => 'cxgn_time_ontology'
+                                });
+                                $gdd_cvterm_id = $new_gdd_term->cvterm_id();
+                            }
+                            my $time_gdd_term_string = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $gdd_cvterm_id, 'extended');
+
+                            $phenotype_data_htp_rel{$obs_unit->{observationunit_uniquename}}->{$_->{trait_name}} = $_->{value};
+                            $seen_times_htp_rel{$_->{trait_name}} = [$time_days_value, $time_days_term_string, $time_gdd_value, $time_gdd_term_string];
+                        }
+                    }
+                }
+
+                print STDERR Dumper \%seen_times_htp_rel;
+                return;
+
+                if ($compute_relationship_matrix_from_htp_phenotypes_time_points eq 'all') {
+                    
+                }
+                elsif ($compute_relationship_matrix_from_htp_phenotypes_time_points eq 'vegetative') {
+                    
+                }
+                elsif ($compute_relationship_matrix_from_htp_phenotypes_time_points eq 'reproductive') {
+                    
+                }
+                elsif ($compute_relationship_matrix_from_htp_phenotypes_time_points eq 'mature') {
+                    
+                }
+                else {
+                    $c->stash->{rest} = { error => "The value of $compute_relationship_matrix_from_htp_phenotypes_time_points htp_pheno_rel_matrix_time_points is not valid!" };
+                    return;
+                }
+
+                if ($compute_relationship_matrix_from_htp_phenotypes_type eq 'correlations') {
+                    
+                }
+                elsif ($compute_relationship_matrix_from_htp_phenotypes_type eq 'blues') {
+                    
+                }
+                else {
+                    $c->stash->{rest} = { error => "The value of $compute_relationship_matrix_from_htp_phenotypes_type htp_pheno_rel_matrix_type is not valid!" };
+                    return;
+                }
             }
             else {
                 $c->stash->{rest} = { error => "The value of $compute_relationship_matrix_from_htp_phenotypes is not valid!" };
