@@ -168,12 +168,12 @@ has 'trait_cvterm_name_list' => (
 );
 
 has 'minimum_phenotype_value' => (
-    isa => 'Int|Undef',
+    isa => 'Num|Undef',
     is => 'rw',
 );
 
 has 'maximum_phenotype_value' => (
-    isa => 'Int|Undef',
+    isa => 'Num|Undef',
     is => 'rw',
 );
 
