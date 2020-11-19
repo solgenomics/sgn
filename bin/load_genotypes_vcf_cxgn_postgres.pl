@@ -239,7 +239,7 @@ if ($protocol_id){
         nd_protocol_id => $protocol_id
     });
     $organism_species = $protocol->species_name;
-    $obs_type = $protocol->sample_observation_unit_type_name;
+    $obs_type = $protocol->sample_observation_unit_type_name if !$obs_type;
 }
 
 my $organism_q = "SELECT organism_id FROM organism WHERE species = ?";
