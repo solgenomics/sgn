@@ -288,15 +288,13 @@ jQuery(document).ready(function(){
                 jQuery('#working_modal').modal('show');
             },
             success: function(response) {
-                console.log(response);
-                alert("Success!");
+                // console.log(response);
                 jQuery('#working_modal').modal('hide');
                 jQuery('#saveResultModalBody').html('<ul class="list-group"><li class="list-group-item list-group-item-success"><span class="badge"><span class="glyphicon glyphicon-ok"></span></span>Analysis results saved successfully in the database.</li></ul>');
                 jQuery('#saveResultModal').modal('show');
             },
             error: function(response) {
-                console.log(response);
-                alert("Error!");
+                // console.log(response);
                 jQuery('#working_modal').modal('hide');
                 jQuery('#saveResultModalBody').html('<ul class="list-group"><li class="list-group-item list-group-item-danger"><span class="badge"><span class="glyphicon glyphicon-remove"></span></span>Error while trying to save the analysis results.</li></ul>');
                 jQuery('#saveResultModal').modal('show');
