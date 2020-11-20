@@ -326,7 +326,7 @@
                         Required columns:
                     </b>
                     <ul>
-                        <li><b>female_accession</b> (accession names must exist as <b>uniquenames</b> in the database and are in the selected female trial)</li>
+                        <li><b>female_accession</b> (accession names must exist as <b>uniquenames</b> in the database and are in the selected female trial. Wishlist will include all of the female plots in the trial.)</li>
                         <li><b>male_accession</b> (accession names must exist as <b>uniquenames</b> in the database)</li>
                         <li><b>priority</b> (1 is the most important) </li>
                     </ul>
@@ -881,15 +881,19 @@ jQuery(document).ready(function($) {
             if (uploadFile === '') {
                 alert("No file selected");
             }
+            jQuery('#working_msg').html('Creating cross wishlist files and sending information to ONA... This can take time...');
+            jQuery('#working_modal').modal('show');
         },
         complete: function(response) {
             if (response.error_string) {
+                jQuery('#working_modal').modal('hide');
                 jQuery('#upload_wishlist_error_display tbody').html('');
                 jQuery('#upload_wishlist_error_display tbody').append(response.error_string);
                 jQuery('#upload_wishlist_error_display').modal("show");
                 return;
             }
             if (response.error) {
+                jQuery('#working_modal').modal('hide');
                 alert(response.error);
                 return;
             }
@@ -913,10 +917,6 @@ jQuery(document).ready(function($) {
                         'form_name': form_name
                     },
                     dataType:'json',
-                    beforeSend: function() {
-                        jQuery('#working_msg').html('Creating cross wishlist files and sending information to ONA... This can take time...');
-                        jQuery('#working_modal').modal('show');
-                    },
                     success: function(response) {
                         //console.log(response);
                         jQuery('#working_msg').html('');

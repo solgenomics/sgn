@@ -104,7 +104,7 @@ sub _validate_with_plugin {
     my @accessions_missing = @{$accession_validator->validate($schema,'uniquenames',\@accessions)->{'missing'}};
 
     if (scalar(@accessions_missing) > 0){
-        push @error_messages, "The following accessions are not in the database as uniquenames: ".join(',',@accessions_missing);
+        push @error_messages, "The following accessions are not in the database or are not in the database as uniquenames: ".join(',',@accessions_missing);
     }
 
     #store any errors found in the parsed file to parse_errors accessor
