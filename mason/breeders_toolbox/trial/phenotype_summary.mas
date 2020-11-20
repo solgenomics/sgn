@@ -196,6 +196,7 @@ jQuery(document).ready(function () {
 
 function datatables_display_phenosummary(type) {
     jQuery('#phenotype_summary_data').DataTable( {
+        "lengthMenu": [ 5, 10, 25, 50, 75, 100 ],
         "retrieve": true,
         "ajax": '/ajax/breeders/trial/'+ <% $trial_id %> + '/phenotypes?display='+jQuery('#display_trial_phenosummary').val() + '&trial_stock_type='+type,
     });
