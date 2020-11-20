@@ -1663,47 +1663,26 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     write.table(cor_mat, file=\''.$stats_out_htp_rel_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
                     print STDERR Dumper $htp_cmd;
                     my $status = system($htp_cmd);
-
-                    my $csv = Text::CSV->new({ sep_char => "\t" });
-
-                    open(my $htp_rel_res, '<', $stats_out_htp_rel_tempfile)
-                        or die "Could not open file '$stats_out_htp_rel_tempfile' $!";
-
-                        print STDERR "Opened $stats_out_htp_rel_tempfile\n";
-                        my $header_row = <$htp_rel_res>;
-                        my @header;
-                        if ($csv->parse($header_row)) {
-                            @header = $csv->fields();
-                        }
-
-                        while (my $row = <$htp_rel_res>) {
-                            my @columns;
-                            if ($csv->parse($row)) {
-                                @columns = $csv->fields();
-                            }
-                            my $stock_id1 = $columns[0];
-                            my $counter = 1;
-                            foreach my $stock_id2 (@header) {
-                                my $val = $columns[$counter];
-                                $rel_htp_result_hash{$stock_id1}->{$stock_id2} = $val;
-                                $counter++;
-                            }
-                        }
-                    close($htp_rel_res);
                 }
                 elsif ($compute_relationship_matrix_from_htp_phenotypes_type eq 'blues') {
                     my $htp_cmd = 'R -e "library(lme4); library(data.table);
                     mat <- fread(\''.$stats_out_htp_rel_tempfile_input.'\', header=TRUE, sep=\'\t\');
-                    blues <- data.frame(accession_id=mat\$accession_id);
-                    ';
-                    my $htp_count = 0;
-                    foreach my $trait_name (@filtered_seen_times_htp_rel_sorted) {
-                        $htp_cmd .= 'mix'.$htp_count.' <- lmer('.$trait_name_encoder_htp{$trait_name}.' ~ 1 + (1|accession_id), data = mat);
-                        blues\$'.$trait_name_encoder_htp{$trait_name}.' <- ranef(mix'.$htp_count.')\$accession_id\$\`(Intercept)\`;
-                        ';
-                        $htp_count++;
+                    blues <- data.frame(id = seq(1,length(unique(mat\$accession_id))));
+                    varlist <- names(mat)[7:ncol(mat)];
+                    blues.models <- lapply(varlist, function(x) { lmer(substitute(i ~ 1 + (1|accession_id), list(i = as.name(x))), data = mat) });
+                    counter = 1;
+                    for (m in blues.models) {
+                        blues\$accession_id <- row.names(ranef(m)\$accession_id);
+                        blues[,ncol(blues) + 1] <- ranef(m)\$accession_id\$\`(Intercept)\`;
+                        colnames(blues)[ncol(blues)] <- varlist[counter];
+                        counter = counter + 1;
                     }
-                    $htp_cmd .= 'write.table(blues, file=\''.$stats_out_htp_rel_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
+                    blues_vals <- as.matrix(blues[,3:ncol(blues)]);
+                    blues_vals <- apply(blues_vals, 2, function(y) (y - mean(y)) / sd(y) ^ as.logical(sd(y)));
+                    rel <- (1/ncol(blues_vals)) * (blues_vals %*% t(blues_vals));
+                    rownames(rel) <- blues[,2];
+                    colnames(rel) <- blues[,2];
+                    write.table(rel, file=\''.$stats_out_htp_rel_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
                     print STDERR Dumper $htp_cmd;
                     my $status = system($htp_cmd);
                 }
@@ -1711,6 +1690,33 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     $c->stash->{rest} = { error => "The value of $compute_relationship_matrix_from_htp_phenotypes_type htp_pheno_rel_matrix_type is not valid!" };
                     return;
                 }
+
+                my $csv = Text::CSV->new({ sep_char => "\t" });
+
+                open(my $htp_rel_res, '<', $stats_out_htp_rel_tempfile)
+                    or die "Could not open file '$stats_out_htp_rel_tempfile' $!";
+
+                    print STDERR "Opened $stats_out_htp_rel_tempfile\n";
+                    my $header_row = <$htp_rel_res>;
+                    my @header;
+                    if ($csv->parse($header_row)) {
+                        @header = $csv->fields();
+                    }
+
+                    while (my $row = <$htp_rel_res>) {
+                        my @columns;
+                        if ($csv->parse($row)) {
+                            @columns = $csv->fields();
+                        }
+                        my $stock_id1 = $columns[0];
+                        my $counter = 1;
+                        foreach my $stock_id2 (@header) {
+                            my $val = $columns[$counter];
+                            $rel_htp_result_hash{$stock_id1}->{$stock_id2} = $val;
+                            $counter++;
+                        }
+                    }
+                close($htp_rel_res);
 
                 my $data_rel_htp = '';
                 my %result_hash;
