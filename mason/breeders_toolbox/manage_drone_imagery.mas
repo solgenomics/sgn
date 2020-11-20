@@ -1403,6 +1403,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="drone_image_calculate_statistics_htp_phenotypes_rel_matrix_times_select">
                                         <option value="all">All Available</option>
+                                        <option value="latest_trait">Up to latest days after planting selecting in traits</option>
                                         <option value="vegetative" disabled>Vegetative Growth Stage</option>
                                         <option value="reproductive" disabled>Reproductive Growth Stage</option>
                                         <option value="mature" disabled>Mature Growth Stage</option>

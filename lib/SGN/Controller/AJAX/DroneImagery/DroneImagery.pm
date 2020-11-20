@@ -380,6 +380,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         my %phenotype_data;
         my %stock_info;
         my %unique_accessions;
+        my %seen_days_after_plantings;
         my %seen_times;
         my @data_matrix;
         my %obsunit_row_col;
@@ -419,6 +420,15 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 foreach (@$observations){
                     $phenotype_data{$obs_unit->{observationunit_uniquename}}->{$_->{trait_name}} = $_->{value};
                     $seen_trait_names{$_->{trait_name}}++;
+                    
+                    if ($_->{associated_image_project_time_json}) {
+                        my $related_time_terms_json = decode_json $_->{associated_image_project_time_json};
+                        my $time_days_cvterm = $related_time_terms_json->{day};
+                        my $time_term_string = $time_days_cvterm;
+                        my $time_days = (split '\|', $time_days_cvterm)[0];
+                        my $time_value = (split ' ', $time_days)[1];
+                        $seen_days_after_plantings{$time_value}++;
+                    }
                 }
             }
             @unique_accession_names = sort keys %unique_accessions;
@@ -526,37 +536,46 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 };
                 my $observations = $obs_unit->{observations};
                 foreach (@$observations){
-                    my $related_time_terms_json = decode_json $_->{associated_image_project_time_json};
+                    if ($_->{associated_image_project_time_json}) {
+                        my $related_time_terms_json = decode_json $_->{associated_image_project_time_json};
 
-                    my $time_value;
-                    my $time_term_string;
-                    if ($statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups') {
-                        my $time_days_cvterm = $related_time_terms_json->{day};
-                        $time_term_string = $time_days_cvterm;
-                        my $time_days = (split '\|', $time_days_cvterm)[0];
-                        $time_value = (split ' ', $time_days)[1];
-                    }
-                    elsif ($statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups') {
-                        $time_value = $related_time_terms_json->{gdd_average_temp} + 0;
+                        my $time_value;
+                        my $time_term_string;
+                        if ($statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups') {
+                            my $time_days_cvterm = $related_time_terms_json->{day};
+                            $time_term_string = $time_days_cvterm;
+                            my $time_days = (split '\|', $time_days_cvterm)[0];
+                            $time_value = (split ' ', $time_days)[1];
 
-                        my $gdd_term_string = "GDD $time_value";
-                        $h_time->execute($gdd_term_string, 'cxgn_time_ontology');
-                        my ($gdd_cvterm_id) = $h_time->fetchrow_array();
-
-                        if (!$gdd_cvterm_id) {
-                            my $new_gdd_term = $schema->resultset("Cv::Cvterm")->create_with({
-                               name => $gdd_term_string,
-                               cv => 'cxgn_time_ontology'
-                            });
-                            $gdd_cvterm_id = $new_gdd_term->cvterm_id();
+                            $seen_days_after_plantings{$time_value}++;
                         }
-                        $time_term_string = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $gdd_cvterm_id, 'extended');
+                        elsif ($statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups') {
+                            $time_value = $related_time_terms_json->{gdd_average_temp} + 0;
+
+                            my $gdd_term_string = "GDD $time_value";
+                            $h_time->execute($gdd_term_string, 'cxgn_time_ontology');
+                            my ($gdd_cvterm_id) = $h_time->fetchrow_array();
+
+                            if (!$gdd_cvterm_id) {
+                                my $new_gdd_term = $schema->resultset("Cv::Cvterm")->create_with({
+                                   name => $gdd_term_string,
+                                   cv => 'cxgn_time_ontology'
+                                });
+                                $gdd_cvterm_id = $new_gdd_term->cvterm_id();
+                            }
+                            $time_term_string = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $gdd_cvterm_id, 'extended');
+                        }
+                        $phenotype_data{$obs_unit->{observationunit_uniquename}}->{$time_value} = $_->{value};
+                        $seen_times{$time_value} = $_->{trait_name};
+                        $seen_trait_names{$_->{trait_name}} = $time_term_string;
                     }
-                    $phenotype_data{$obs_unit->{observationunit_uniquename}}->{$time_value} = $_->{value};
-                    $seen_times{$time_value} = $_->{trait_name};
-                    $seen_trait_names{$_->{trait_name}} = $time_term_string;
                 }
             }
+            if (scalar(keys %seen_times) == 0) {
+                $c->stash->{rest} = { error => "There are no phenotypes with associated days after planting time associated to the traits you have selected!"};
+                return;
+            }
+
             @unique_accession_names = sort keys %unique_accessions;
             @sorted_trait_names = sort {$a <=> $b} keys %seen_times;
             @unique_plot_names = sort keys %seen_plot_names;
@@ -675,36 +694,45 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 $seen_plot_names{$obs_unit->{observationunit_uniquename}}++;
                 my $observations = $obs_unit->{observations};
                 foreach (@$observations){
-                    my $related_time_terms_json = decode_json $_->{associated_image_project_time_json};
-                    my $time;
-                    my $time_term_string = '';
-                    if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
-                        $time = $related_time_terms_json->{gdd_average_temp} + 0;
+                    if ($_->{associated_image_project_time_json}) {
+                        my $related_time_terms_json = decode_json $_->{associated_image_project_time_json};
+                        my $time;
+                        my $time_term_string = '';
+                        if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
+                            $time = $related_time_terms_json->{gdd_average_temp} + 0;
 
-                        my $gdd_term_string = "GDD $time";
-                        $h_time->execute($gdd_term_string, 'cxgn_time_ontology');
-                        my ($gdd_cvterm_id) = $h_time->fetchrow_array();
+                            my $gdd_term_string = "GDD $time";
+                            $h_time->execute($gdd_term_string, 'cxgn_time_ontology');
+                            my ($gdd_cvterm_id) = $h_time->fetchrow_array();
 
-                        if (!$gdd_cvterm_id) {
-                            my $new_gdd_term = $schema->resultset("Cv::Cvterm")->create_with({
-                               name => $gdd_term_string,
-                               cv => 'cxgn_time_ontology'
-                            });
-                            $gdd_cvterm_id = $new_gdd_term->cvterm_id();
+                            if (!$gdd_cvterm_id) {
+                                my $new_gdd_term = $schema->resultset("Cv::Cvterm")->create_with({
+                                   name => $gdd_term_string,
+                                   cv => 'cxgn_time_ontology'
+                                });
+                                $gdd_cvterm_id = $new_gdd_term->cvterm_id();
+                            }
+                            $time_term_string = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $gdd_cvterm_id, 'extended');
                         }
-                        $time_term_string = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $gdd_cvterm_id, 'extended');
+                        elsif ($statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+                            my $time_days_cvterm = $related_time_terms_json->{day};
+                            $time_term_string = $time_days_cvterm;
+                            my $time_days = (split '\|', $time_days_cvterm)[0];
+                            $time = (split ' ', $time_days)[1] + 0;
+
+                            $seen_days_after_plantings{$time}++;
+                        }
+                        $phenotype_data{$obs_unit->{observationunit_uniquename}}->{$time} = $_->{value};
+                        $seen_times{$time} = $_->{trait_name};
+                        $seen_trait_names{$_->{trait_name}} = $time_term_string;
                     }
-                    elsif ($statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
-                        my $time_days_cvterm = $related_time_terms_json->{day};
-                        $time_term_string = $time_days_cvterm;
-                        my $time_days = (split '\|', $time_days_cvterm)[0];
-                        $time = (split ' ', $time_days)[1] + 0;
-                    }
-                    $phenotype_data{$obs_unit->{observationunit_uniquename}}->{$time} = $_->{value};
-                    $seen_times{$time} = $_->{trait_name};
-                    $seen_trait_names{$_->{trait_name}} = $time_term_string;
                 }
             }
+            if (scalar(keys %seen_times) == 0) {
+                $c->stash->{rest} = { error => "There are no phenotypes with associated days after planting time associated to the traits you have selected!"};
+                return;
+            }
+
             @unique_accession_names = sort keys %unique_accessions;
             @sorted_trait_names = sort {$a <=> $b} keys %seen_times;
             @unique_plot_names = sort keys %seen_plot_names;
@@ -1608,24 +1636,57 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 my %trait_name_encoder_htp;
                 my %trait_name_encoder_rev_htp;
                 my $trait_name_encoded_htp = 1;
+                my @header_traits_htp;
                 foreach my $trait_name (@filtered_seen_times_htp_rel_sorted) {
                     if (!exists($trait_name_encoder_htp{$trait_name})) {
                         my $trait_name_e = 't'.$trait_name_encoded_htp;
                         $trait_name_encoder_htp{$trait_name} = $trait_name_e;
                         $trait_name_encoder_rev_htp{$trait_name_e} = $trait_name;
-                        push @header_htp, $trait_name_e;
+                        push @header_traits_htp, $trait_name_e;
                         $trait_name_encoded_htp++;
                     }
                 }
 
-                my @htp_pheno_matrix = (\@header_htp);
+                my @htp_pheno_matrix;
                 if ($compute_relationship_matrix_from_htp_phenotypes_time_points eq 'all') {
+                    push @header_htp, @header_traits_htp;
+                    push @htp_pheno_matrix, \@header_htp;
+
                     foreach my $p (@seen_plot_names_htp_rel_sorted) {
                         my $obj = $seen_plot_names_htp_rel{$p};
                         my @row = ($obj->{observationunit_stock_id}, $obj->{observationunit_uniquename}, $obj->{germplasm_stock_id}, $obj->{germplasm_uniquename}, $obj->{obsunit_rep}, $obj->{obsunit_block});
                         foreach my $t (@filtered_seen_times_htp_rel_sorted) {
                             my $val = $phenotype_data_htp_rel{$p}->{$t} + 0;
                             push @row, $val;
+                        }
+                        push @htp_pheno_matrix, \@row;
+                    }
+                }
+                elsif ($compute_relationship_matrix_from_htp_phenotypes_time_points eq 'latest_trait') {
+                    my $max_day = 0;
+                    foreach (keys %seen_days_after_plantings) {
+                        if ($_ + 0 > $max_day) {
+                            $max_day = $_;
+                        }
+                    }
+
+                    foreach my $t (@filtered_seen_times_htp_rel_sorted) {
+                        my $day = $filtered_seen_times_htp_rel{$t}->[0];
+                        if ($day <= $max_day) {
+                            push @header_htp, $t;
+                        }
+                    }
+                    push @htp_pheno_matrix, \@header_htp;
+
+                    foreach my $p (@seen_plot_names_htp_rel_sorted) {
+                        my $obj = $seen_plot_names_htp_rel{$p};
+                        my @row = ($obj->{observationunit_stock_id}, $obj->{observationunit_uniquename}, $obj->{germplasm_stock_id}, $obj->{germplasm_uniquename}, $obj->{obsunit_rep}, $obj->{obsunit_block});
+                        foreach my $t (@filtered_seen_times_htp_rel_sorted) {
+                            my $day = $filtered_seen_times_htp_rel{$t}->[0];
+                            if ($day <= $max_day) {
+                                my $val = $phenotype_data_htp_rel{$p}->{$t} + 0;
+                                push @row, $val;
+                            }
                         }
                         push @htp_pheno_matrix, \@row;
                     }
