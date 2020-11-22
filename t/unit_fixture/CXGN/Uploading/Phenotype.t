@@ -5539,30 +5539,23 @@ my $stored_image_ids_string = encode_json $stored_image_ids;
 $mech->post_ok('http://localhost:3010/ajax/image_analysis/submit?service=necrosis&selected_image_ids='.$stored_image_ids_string.'&sgn_session_id='.$sgn_session_id);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is(scalar(@{$response->{results}}), 2);
-is(scalar(@{$response->{results}->[1]->{observations_array}}), 2);
+is(scalar(@{$response->{results}}), 1);
+is(scalar(@{$response->{results}->[0]->{details}}), 1);
 
 my $stored_image_ids_string = encode_json $stored_image_ids;
 $mech->post_ok('http://localhost:3010/ajax/image_analysis/submit?service=whitefly_count&selected_image_ids='.$stored_image_ids_string.'&sgn_session_id='.$sgn_session_id);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is(scalar(@{$response->{results}}), 2);
-is(scalar(@{$response->{results}->[1]->{observations_array}}), 2);
+is(scalar(@{$response->{results}}), 1);
+is(scalar(@{$response->{results}->[0]->{details}}), 1);
 
-my $python_dependencies_installed = `locate keras.py`;
-
-#print STDERR "PYTHON DEPENDENCIES INSTALLED=".Dumper($python_dependencies_installed)."\n";
-
-SKIP: {
-    skip 'missing pyhton dependencies', 1 unless $python_dependencies_installed;
-    my $stored_image_ids_string = encode_json $stored_image_ids;
-    $mech->post_ok('http://localhost:3010/ajax/image_analysis/submit?service=largest_contour_percent&selected_image_ids='.$stored_image_ids_string.'&sgn_session_id='.$sgn_session_id);
-    $response = decode_json $mech->content;
-    print STDERR Dumper $response;
-    is(scalar(@{$response->{results}}), 2);
-    is(scalar(@{$response->{results}->[1]->{observations_array}}), 2);
-    ok($response->{results}->[0]->{result}->{image_link});
-    ok($response->{results}->[1]->{result}->{image_link});
-}
+my $stored_image_ids_string = encode_json $stored_image_ids;
+$mech->post_ok('http://localhost:3010/ajax/image_analysis/submit?service=largest_contour_percent&selected_image_ids='.$stored_image_ids_string.'&sgn_session_id='.$sgn_session_id);
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is(scalar(@{$response->{results}}), 1);
+is(scalar(@{$response->{results}->[0]->{details}}), 1);
+ok($response->{results}->[0]->{details}->[0]->{original_link});
+ok($response->{results}->[0]->{details}->[0]->{analyzed_link});
 
 done_testing();
