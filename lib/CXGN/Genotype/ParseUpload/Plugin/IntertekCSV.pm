@@ -73,6 +73,7 @@ sub _validate_with_plugin {
             my $customer_snp_id = $line_info[1];
             my $ref = $line_info[2];
             my $alt = $line_info[3];
+            my $chrom = $line_info[4];
 
             if (!$intertek_snp_id){
                 push @error_messages, 'Intertek snp id is required for all markers.';
@@ -85,6 +86,9 @@ sub _validate_with_plugin {
             }
             if (!$alt){
                 push @error_messages, 'Alternate is required for all markers.';
+            }
+            if ($chrom eq '' || !defined($chrom)) {
+                push @error_messages, 'Chromosome is required for all markers.';
             }
             $marker_names{$customer_snp_id} = 1;
         }
@@ -139,8 +143,8 @@ sub _validate_with_plugin {
 
     my @observation_units_names_trim;
     # Separates sample name from lab id
-    foreach my $observation_unit_name_with_accession_name (@observation_unit_names) {
-        #my ($observation_unit_name_with_accession_name, $lab_id) = split(/\./, $_);
+    foreach (@observation_unit_names) {
+        my ($observation_unit_name_with_accession_name, $lab_number) = split(/\./, $_, 2);
         $observation_unit_name_with_accession_name =~ s/^\s+|\s+$//g;
         my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
         push @observation_units_names_trim, $observation_unit_name;
@@ -220,6 +224,7 @@ sub _parse_with_plugin {
 
     my $F;
     my %marker_info;
+    my %marker_info_nonseparated;
 
     if ($marker_info_filename) {
         # Open Marker Info File and parse into the %marker_info for later use
@@ -262,9 +267,10 @@ sub _parse_with_plugin {
                     format => $format,
                 );
                 push @{$protocolprop_info{'marker_names'}}, $customer_snp_id;
-                push @{$protocolprop_info{'markers_array'}}, \%marker;
+                $marker_info_nonseparated{$customer_snp_id} = \%marker;
 
-                $marker_info{$customer_snp_id} = \%marker;
+                push @{$protocolprop_info{'markers_array'}->{$chromosome}}, \%marker;
+                $marker_info{$chromosome}->{$customer_snp_id} = \%marker;
             }
 
         close($F);
@@ -309,9 +315,10 @@ sub _parse_with_plugin {
                 $counter++;
                 my @alleles = split ":", $genotype;
 
-                my $ref = $marker_info{$customer_snp_id}->{ref};
-                my $alt = $marker_info{$customer_snp_id}->{alt};
-                my $marker_name = $marker_info{$customer_snp_id}->{name} || $customer_snp_id;
+                my $ref = $marker_info_nonseparated{$customer_snp_id}->{ref};
+                my $alt = $marker_info_nonseparated{$customer_snp_id}->{alt};
+                my $chrom = $marker_info_nonseparated{$customer_snp_id}->{chrom};
+                my $marker_name = $marker_info_nonseparated{$customer_snp_id}->{name} || $customer_snp_id;
 
                 my $genotype_obj;
                 if ($ref && $alt) {
@@ -351,7 +358,7 @@ sub _parse_with_plugin {
                     die "There should always be a ref and alt according to validation above\n";
                 }
 
-                $genotype_info{$sample_id_with_lab_id}->{$marker_name} = $genotype_obj;
+                $genotype_info{$sample_id_with_lab_id}->{$chrom}->{$marker_name} = $genotype_obj;
             }
         }
 

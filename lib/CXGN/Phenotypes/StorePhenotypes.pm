@@ -220,19 +220,19 @@ sub create_hash_lookups {
     #print STDERR "Cvterm ids are @cvterm_ids";
     if (scalar @cvterm_ids > 0) {
         my $cvterm_ids_sql = join ("," , @cvterm_ids);
-        my $previous_phenotype_q = "SELECT phenotype.value, phenotype.cvalue_id, phenotype.collect_date, stock.stock_id
+        my $previous_phenotype_q = "SELECT nd_experiment_phenotype_bridge.nd_experiment_phenotype_bridge_id, phenotype.value, phenotype.cvalue_id, phenotype.collect_date, stock.stock_id
             FROM phenotype
-            LEFT JOIN nd_experiment_phenotype_bridge USING(phenotype_id)
-            LEFT JOIN stock USING(stock_id)
+            JOIN nd_experiment_phenotype_bridge USING(phenotype_id)
+            JOIN stock USING(stock_id)
             WHERE stock.stock_id IN ($stock_ids_sql) AND phenotype.cvalue_id IN ($cvterm_ids_sql);";
         my $h = $schema->storage->dbh()->prepare($previous_phenotype_q);
         $h->execute();
 
-        while (my ($previous_value, $cvterm_id, $collect_timestamp, $stock_id) = $h->fetchrow_array()) {
+        while (my ($nd_experiment_phenotype_bridge_id, $previous_value, $cvterm_id, $collect_timestamp, $stock_id) = $h->fetchrow_array()) {
             if ($stock_id){
                 $collect_timestamp = $collect_timestamp || 'NA';
-                $check_unique_trait_stock{$cvterm_id, $stock_id} = $previous_value;
-                $check_unique_trait_stock_timestamp{$cvterm_id, $stock_id, $collect_timestamp} = $previous_value;
+                $check_unique_trait_stock{$cvterm_id, $stock_id} = [$nd_experiment_phenotype_bridge_id, $previous_value];
+                $check_unique_trait_stock_timestamp{$cvterm_id, $stock_id, $collect_timestamp} = [$nd_experiment_phenotype_bridge_id, $previous_value];
                 $check_unique_value_trait_stock{$previous_value, $cvterm_id, $stock_id} = 1;
             }
         }
@@ -371,9 +371,11 @@ sub verify {
                 if (exists($check_unique_value_trait_stock{$trait_value, $trait_cvterm_id, $stock_id})) {
                     $warning_message = $warning_message."<small>$plot_name already has the same value as in your file ($trait_value) stored for the trait $trait_name.</small><hr>";
                 } elsif (exists($check_unique_trait_stock_timestamp{$trait_cvterm_id, $stock_id, $timestamp})) {
-                    $warning_message = $warning_message."<small>$plot_name already has a different value ($check_unique_trait_stock_timestamp{$trait_cvterm_id, $stock_id, $timestamp}) than in your file ($trait_value) stored in the database for the trait $trait_name for the timestamp $timestamp.</small><hr>";
+                    my $previous_value = $check_unique_trait_stock_timestamp{$trait_cvterm_id, $stock_id, $timestamp}->[1];
+                    $warning_message = $warning_message."<small>$plot_name already has a different value ($previous_value) than in your file ($trait_value) stored in the database for the trait $trait_name for the timestamp $timestamp.</small><hr>";
                 } elsif (exists($check_unique_trait_stock{$trait_cvterm_id, $stock_id})) {
-                    $warning_message = $warning_message."<small>$plot_name already has a different value ($check_unique_trait_stock{$trait_cvterm_id, $stock_id}) than in your file ($trait_value) stored in the database for the trait $trait_name.</small><hr>";
+                    my $previous_value = $check_unique_trait_stock{$trait_cvterm_id, $stock_id}->[1];
+                    $warning_message = $warning_message."<small>$plot_name already has a different value ($previous_value) than in your file ($trait_value) stored in the database for the trait $trait_name.</small><hr>";
                 }
 
                 #check if the plot_name, trait_name combination already exists in same file.
@@ -487,7 +489,6 @@ sub store {
     # print STDERR "DATA: ".Dumper(\%data);
     ## Use txn_do with the following coderef so that if any part fails, the entire transaction fails.
     my $coderef = sub {
-        my %trait_and_stock_to_overwrite;
         my @overwritten_values;
 
         my $stored_file_id;
@@ -541,20 +542,6 @@ sub store {
 
                     if (defined($trait_value) && length($trait_value)) {
 
-                        #Remove previous phenotype values for a given stock and trait, if $overwrite values is checked
-                        if ($overwrite_values) {
-                            if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
-                                push @{$trait_and_stock_to_overwrite{traits}}, $trait_cvterm->cvterm_id();
-                                push @{$trait_and_stock_to_overwrite{stocks}}, $stock_id;
-                            }
-                            $check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id} = 1;
-                        }
-                        if ($ignore_new_values) {
-                            if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
-                                next;
-                            }
-                        }
-
                         my $plot_trait_uniquename = "Stock: " .
                             $stock_id . ", trait: " .
                             $trait_cvterm->name .
@@ -576,7 +563,7 @@ sub store {
                             $self->handle_timestamp($timestamp, $observation);
                             $self->handle_operator($operator, $observation);
 
-                            my $q = "SELECT nd_experiment_phenotype_bridge_id, phenotype_id, nd_experiment_id, file_id
+                            my $q = "SELECT nd_experiment_phenotype_bridge_id, phenotype_id, file_id
                             FROM phenotype
                             JOIN nd_experiment_phenotype_bridge using(phenotype_id)
                             WHERE stock_id=?
@@ -584,8 +571,8 @@ sub store {
 
                             my $h = $self->bcs_schema->storage->dbh()->prepare($q);
                             $h->execute($stock_id, $trait_cvterm->cvterm_id);
-                            while (my ($nd_experiment_phenotype_bridge_id, $phenotype_id, $nd_experiment_id, $file_id) = $h->fetchrow_array()) {
-                                push @overwritten_values, [$file_id, $phenotype_id, $nd_experiment_id];
+                            while (my ($nd_experiment_phenotype_bridge_id, $phenotype_id, $file_id) = $h->fetchrow_array()) {
+                                push @overwritten_values, [$file_id, $phenotype_id, $nd_experiment_phenotype_bridge_id];
                                 if ($stored_image_id) {
                                     $nd_experiment_phenotype_bridge_update_image_dbh->execute($stored_image_id, $nd_experiment_phenotype_bridge_id);
                                 }
@@ -593,17 +580,33 @@ sub store {
 
                         } else {
 
-                            if (defined($trait_value) && length($trait_value)) {
-                                my $phenotype = $trait_cvterm->create_related("phenotype_cvalues", {
-                                    observable_id => $trait_cvterm->cvterm_id,
-                                    value => $trait_value ,
-                                    uniquename => $plot_trait_uniquename,
-                                });
-                                $phenotype_id = $phenotype->phenotype_id;
-
-                                $self->handle_timestamp($timestamp, $phenotype_id);
-                                $self->handle_operator($operator, $phenotype_id);
+                            #Remove previous phenotype values for a given stock and trait, if $overwrite values is checked
+                            if ($overwrite_values) {
+                                if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
+                                    my %trait_and_stock_to_overwrite = (
+                                        traits => [$trait_cvterm->cvterm_id()],
+                                        stocks => [$stock_id]
+                                    );
+                                    push @overwritten_values, $self->delete_previous_phenotypes(\%trait_and_stock_to_overwrite);
+                                }
+                                $check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id} = 1;
                             }
+
+                            if ($ignore_new_values) {
+                                if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
+                                    next;
+                                }
+                            }
+
+                            my $phenotype = $trait_cvterm->create_related("phenotype_cvalues", {
+                                observable_id => $trait_cvterm->cvterm_id,
+                                value => $trait_value ,
+                                uniquename => $plot_trait_uniquename,
+                            });
+                            $phenotype_id = $phenotype->phenotype_id;
+
+                            $self->handle_timestamp($timestamp, $phenotype_id);
+                            $self->handle_operator($operator, $phenotype_id);
 
                             if (!$stored_image_id) {$stored_image_id = undef;}
                             $nd_experiment_phenotype_bridge_dbh->execute($stock_id, $project_id, $phenotype_id, $location_id, $stored_file_id, $stored_image_id, $stored_json_id, $upload_date);
@@ -630,10 +633,6 @@ sub store {
                     }
                 }
             }
-        }
-
-        if (scalar(keys %trait_and_stock_to_overwrite) > 0) {
-            push @overwritten_values, $self->delete_previous_phenotypes(\%trait_and_stock_to_overwrite);
         }
 
         $success_message = 'All values in your file are now saved in the database!';

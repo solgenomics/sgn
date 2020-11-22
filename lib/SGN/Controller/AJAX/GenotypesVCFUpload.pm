@@ -112,7 +112,6 @@ sub upload_genotype_verify_POST : Args(0) {
     my $upload_tempfile;
     my $subdirectory;
     my $parser_plugin;
-    my $include_lab_numbers;
     if ($upload_vcf) {
         $upload_original_name = $upload_vcf->filename();
         $upload_tempfile = $upload_vcf->tempname;
@@ -289,6 +288,7 @@ sub upload_genotype_verify_POST : Args(0) {
     my $description = $c->req->param('upload_genotype_vcf_project_description');
     my $protocol_name = $c->req->param('upload_genotype_vcf_protocol_name');
     my $contains_igd = $c->req->param('upload_genotype_vcf_include_igd_numbers');
+    my $contains_lab_numbers = $c->req->param('upload_genotype_vcf_include_lab_numbers');
     my $reference_genome_name = $c->req->param('upload_genotype_vcf_reference_genome_name');
     my $add_new_accessions = $c->req->param('upload_genotype_add_new_accessions');
     my $add_accessions;
@@ -299,6 +299,10 @@ sub upload_genotype_verify_POST : Args(0) {
     my $include_igd_numbers;
     if ($contains_igd){
         $include_igd_numbers = 1;
+    }
+    my $include_lab_numbers;
+    if ($contains_lab_numbers){
+        $include_lab_numbers = 1;
     }
     my $accept_warnings_input = $c->req->param('upload_genotype_accept_warnings');
     my $accept_warnings;
@@ -340,7 +344,8 @@ sub upload_genotype_verify_POST : Args(0) {
         observation_unit_type_name => $obs_type,
         organism_id => $organism_id,
         create_missing_observation_units_as_accessions => $add_accessions,
-        igd_numbers_included => $include_igd_numbers
+        igd_numbers_included => $include_igd_numbers,
+        lab_numbers_included => $include_lab_numbers
     });
     $parser->load_plugin($parser_plugin);
 
@@ -550,6 +555,10 @@ sub upload_genotype_verify_POST : Args(0) {
         $c->stash->{rest} = { error => "Parser plugin $parser_plugin not recognized!" };
         $c->detach();
     }
+
+    my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
+
     $c->stash->{rest} = $return;
 }
 

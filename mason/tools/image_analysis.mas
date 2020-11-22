@@ -3,7 +3,21 @@
 
 </%args>
 
-<& /util/import_javascript.mas, classes => ['jquery', 'thickbox', 'CXGN.BreedersToolbox.HTMLSelect'] &>
+<& /util/import_javascript.mas, classes => ['jquery', 'jquery.cookie', 'thickbox', 'CXGN.BreedersToolbox.HTMLSelect'] &>
+
+<style>
+td.details-control {
+    text-align:center;
+    color:forestgreen;
+    cursor: pointer;
+}
+tr.shown td.details-control {
+    text-align:center;
+    color:red;
+}
+</style>
+
+<link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
 
 <& /page/page_title.mas, title=>"Image Analysis" &>
 <hr>
@@ -24,12 +38,12 @@
 
 <&| /page/info_section.mas, title=>"Image Search Criteria",  collapsible => 1, collapsed=>0, subtitle => "All images may not have names, descriptions, or tags associated with them."&>
 
-    <div id="necrosis_image_search_form" class="well well-sm">
+    <div id="image_search_form" class="well well-sm">
         <div class="form-horizontal" >
             <div class="form-group">
                 <label class="col-sm-3 control-label">Select a Field Trial: </label>
                 <div class="col-sm-9" >
-                    <div id ="necrosis_image_analysis_trial_select">
+                    <div id ="image_analysis_trial_select">
                     </div>
                 </div>
             </div>
@@ -60,7 +74,7 @@
         </div>
 
         <center>
-        <button class="btn btn-primary" id="necrosis_image_search_submit" >Search</button>
+        <button class="btn btn-primary" id="image_search_submit" >Search</button>
         </center>
     </div>
 </&>
@@ -69,7 +83,7 @@
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
-                <table id="necrosis_image_analysis_image_search_results" class="table table-hover table-striped">
+                <table id="image_analysis_image_search_results" class="table table-hover table-striped">
                 <thead>
                   <tr>
                     <th>Select</th>
@@ -94,7 +108,7 @@
                 <div class="form-group">
                     <label class="col-sm-6 control-label">Image Analysis Service: </label>
                     <div class="col-sm-6" >
-                        <select class="form-control" id="necrosis_image_analysis_service_select" name="necrosis_image_analysis_service_select">
+                        <select class="form-control" id="image_analysis_service_select" name="image_analysis_service_select">
                             <option value="necrosis">Necrosis(Makerere AIR Lab)</option>
                             <option value="largest_contour_percent">Necrosis Largest Contour Mask Percent</option>
                             <option value="count_contours">Count Contours</option>
@@ -107,56 +121,89 @@
 
                 <hr>
                 <center>
-                <button class="btn btn-primary" id="necrosis_image_analysis_submit">Submit</button>
+                <button class="btn btn-primary" id="image_analysis_submit">Submit for Analysis</button>
                 </center>
                 <hr>
-                <div id="necrosis_image_analysis_result">
+                <div id="image_analysis_result" style="display: none;">
+                    <table class="display" style="width:100%" id="image_analysis_result_table">
+                        <thead>
+                           <tr>
+                               <th></th>
+                               <th>Stock</th>
+                               <th>Trait</th>
+                               <th>Mean Value</th>
+                           </tr>
+                       </thead>
+                    </table>
+                    <hr>
+                    <center><button class="btn btn-primary" id="image_analysis_save_results">Save Results</button></center>
                 </div>
             </div>
         </div>
+    </div>
+
+    <div class="modal fade" id="saveResultModal" tabindex="-1" role="dialog" aria-labelledby="saveResultModal" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="saveResultModalTitle">Image Analysis Save Status</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body" id="saveResultModalBody">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
     </div>
 </&>
 
 <script>
 
 jQuery(document).ready(function(){
-    get_select_box('trials', 'necrosis_image_analysis_trial_select', { 'name' : 'html_necrosis_image_analysis_trial_select', 'id' : 'html_necrosis_image_analysis_trial_select', 'multiple':0, 'size':10, 'trial_name_values':1 });
 
-    _load_necrosis_image_search_results();
+    var values_hash;
 
-    jQuery('#necrosis_image_search_submit').click(function(){
-        if (jQuery('#html_necrosis_image_analysis_trial_select').val() == '') {
+    get_select_box('trials', 'image_analysis_trial_select', { 'name' : 'html_image_analysis_trial_select', 'id' : 'html_image_analysis_trial_select', 'multiple':0, 'size':10, 'trial_name_values':1 });
+
+    _load_image_search_results();
+
+    jQuery('#image_search_submit').click(function(){
+        if (jQuery('#html_image_analysis_trial_select').val() == '') {
             alert("Please select a Field Trial first!");
             return false;
         }
-        _load_necrosis_image_search_results();
+        _load_image_search_results();
     });
 
     jQuery("#image_submitter").autocomplete({
         source: '/ajax/people/autocomplete'
     });
 
-    jQuery('#necrosis_image_search_form').keypress( function( e ) {
+    jQuery('#image_search_form').keypress( function( e ) {
         var code = e.keyCode || e.which;
         if( code == 13 ) {
-            jQuery('#necrosis_image_search_submit').click();
+            jQuery('#image_search_submit').click();
         }
     });
 
-    jQuery('#necrosis_image_analysis_image_search_results').on( 'draw.dt', function () {
+    jQuery('#image_analysis_image_search_results').on( 'draw.dt', function () {
         jQuery('a.image_search_group').colorbox();
     });
 
-    jQuery('#necrosis_image_analysis_submit').click(function(){
+    jQuery('#image_analysis_submit').click(function(){
         var selected_image_ids = [];
-        jQuery('input[name="necrosis_image_analysis_select"]').each(function() {
+        jQuery('input[name="image_analysis_select"]').each(function() {
             if (this.checked){
                 selected_image_ids.push(this.value);
             }
         });
 
         if (selected_image_ids.length < 1) {
-            alert('Please select atleast one image first!');
+            alert('Please select at least one image first!');
             return false;
         }
 
@@ -165,7 +212,7 @@ jQuery(document).ready(function(){
             method: 'POST',
             data: {
                 'selected_image_ids': JSON.stringify(selected_image_ids),
-                'service': jQuery('#necrosis_image_analysis_service_select').val()
+                'service': jQuery('#image_analysis_service_select').val()
             },
             dataType:'json',
             beforeSend: function() {
@@ -175,20 +222,49 @@ jQuery(document).ready(function(){
                 console.log(response);
                 jQuery('#working_msg').html('');
                 jQuery('#working_modal').modal('hide');
+                jQuery('#image_analysis_result').show();
+                var table = jQuery('#image_analysis_result_table').DataTable( {
+                    "data": response.results,
+                    "columns": [
+                        {
+                            "className":      'details-control',
+                            "orderable":      false,
+                            "data":           null,
+                            "defaultContent": '',
+                            "render": function () {
+                                 return '<i class="fa fa-plus-square" aria-hidden="true"></i>';
+                             },
+                             width:"15px"
+                        },
+                        { "data": "observationUnitName" },
+                        { "data": "observationVariableName" },
+                        { "data": "value" }
+                    ],
+                    "order": [[1, 'asc']]
+                } );
 
-                var html = '<table class="table table-hover"><thead><tr><th>Original Image</th><th>Analyzed Image</th><th>Analysis</th><th>Previously Saved Image-Associated Phenotype(s)</th><th>Observation Unit</th></tr></thead><tbody>';
-                for (var i=0; i<response.results.length; i++) {
-                    html = html + '<tr><td><img src="'+response.results[i].result.original_image+'"></td><td><img src="'+response.results[i].result.image_link+'"></td><td>'+response.results[i].result.trait_name+': '+response.results[i].result.trait_value+'</td><td>';
-                    for (var j=0; j<response.results[i].observations_array.length; j++) {
-                        html = html + response.results[i].observations_array[j].observationvariable_name + ": " + response.results[i].observations_array[j].value;
+                // Add event listener for opening and closing details
+                jQuery('#image_analysis_result_table tbody').on('click', 'td.details-control', function () {
+                    var tr = jQuery(this).closest('tr');
+                    var tdi = tr.find("i.fa");
+                    var row = table.row( tr );
+
+                    if ( row.child.isShown() ) {
+                        // This row is already open - close it
+                        row.child.hide();
+                        tr.removeClass('shown');
+                        tdi.first().removeClass('fa-minus-square');
+                        tdi.first().addClass('fa-plus-square');
                     }
-                    html = html + "</td>";
-                    html = html + "<td><a href='/stock/"+response.results[i].stock_id+"/view'>"+response.results[i].stock_uniquename+"</a></td>";
-                    html = html + '</tr>';
-                }
-                html = html + '</tbody></table>';
-                html = html + '<hr><button class="btn btn-primary" id="necrosis_image_analysis_image_search_results_save">Store New Analysis Phenotypes and Images</button>';
-                jQuery('#necrosis_image_analysis_result').html(html);
+                    else {
+                        // Open this row
+                        row.child( format(row.data()) ).show();
+                        tr.addClass('shown');
+                        tdi.first().removeClass('fa-plus-square');
+                        tdi.first().addClass('fa-minus-square');
+                    }
+                } );
+
             },
             error: function(response) {
                 jQuery('#working_msg').html('');
@@ -198,14 +274,40 @@ jQuery(document).ready(function(){
         });
     });
 
-    jQuery(document).on("click", "#necrosis_image_analysis_image_search_results_save", function() {
-        alert("Need to implement!");
+    jQuery('#image_analysis_save_results').click(function(){
+
+        var table_data = jQuery('#image_analysis_result_table').DataTable().rows().data().toArray();
+        // console.log(table_data);
+        jQuery.ajax({
+            url: '/brapi/v2/observations/',
+            method: 'POST',
+            headers: { "access_token": jQuery.cookie("sgn_session_id") },
+            data: JSON.stringify(table_data),
+            contentType: "application/json; charset=utf-8",
+            beforeSend: function() {
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                // console.log(response);
+                jQuery('#working_modal').modal('hide');
+                jQuery('#saveResultModalBody').html('<ul class="list-group"><li class="list-group-item list-group-item-success"><span class="badge"><span class="glyphicon glyphicon-ok"></span></span>Analysis results saved successfully in the database.</li></ul>');
+                jQuery('#saveResultModal').modal('show');
+            },
+            error: function(response) {
+                // console.log(response);
+                jQuery('#working_modal').modal('hide');
+                jQuery('#saveResultModalBody').html('<ul class="list-group"><li class="list-group-item list-group-item-danger"><span class="badge"><span class="glyphicon glyphicon-remove"></span></span>Error while trying to save the analysis results.</li></ul>');
+                jQuery('#saveResultModal').modal('show');
+            }
+        });
+
+
     });
 
 });
 
-function _load_necrosis_image_search_results() {
-    images_table = jQuery('#necrosis_image_analysis_image_search_results').DataTable({
+function _load_image_search_results() {
+    images_table = jQuery('#image_analysis_image_search_results').DataTable({
         'destroy' : true,
         'searching' : false,
         'ordering'  : false,
@@ -215,15 +317,39 @@ function _load_necrosis_image_search_results() {
         'lengthMenu': [10,20,50,100,1000,5000],
         'ajax': { 'url':  '/ajax/search/images',
             'data': function(d) {
-              d.html_select_box = "necrosis_image_analysis_select";
+              d.html_select_box = "image_analysis_select";
               d.image_description_filename_composite = jQuery('#image_description_filename_composite').val();
               d.image_person = jQuery('#image_submitter').val();
               d.image_tag = jQuery('#image_tag').val();
               d.image_stock_uniquename = jQuery('#image_stock_uniquename').val();
-              d.image_project_name = jQuery('#html_necrosis_image_analysis_trial_select').val();
+              d.image_project_name = jQuery('#html_image_analysis_trial_select').val();
             }
         }
     });
+}
+
+function format ( d ) {
+    var detail_rows = '';
+    d.details.forEach(function (image, index) {
+      detail_rows +=
+      `<tr>
+        <td>`+image.image_name+`</td>
+        <td><img src="`+image.analyzed_link+`"></td>
+        <td>`+image.value+`</td>
+      </tr>`
+    });
+
+return `<table class="table">
+            <thead>
+                <tr>
+                  <th scope="col">Image Name</th>
+                  <th scope="col">Analyzed Image</th>
+                  <th scope="col">Value</th>
+                </tr>
+             </thead>
+             <tbody>` + detail_rows + `</tbody>
+        </table>`;
+
 }
 
 </script>

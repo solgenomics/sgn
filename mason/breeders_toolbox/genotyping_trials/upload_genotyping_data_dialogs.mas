@@ -334,13 +334,15 @@ $facilities
                                 <button type="button" class="btn btn-primary" name="upload_genotype_submit" id="upload_genotype_submit">Submit</button>
                                 </center>
                             </&>
-                            <&| /util/workflow.mas:complete, title=> "Complete" &>
+                            <&| /util/workflow.mas:step, title=> "Complete" &>
                                 <& /page/page_title.mas, title=>"Complete! Your genotyping data was saved in the database." &>
 
                                 <p>
                                     <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
                                     The genotyping data was saved successfully
                                 </p>
+
+                                <div id="upload_genotype_submit_complete"></div>
 
                                 <br/>
                             </&>
