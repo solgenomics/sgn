@@ -270,7 +270,9 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
     my ($stats_out_htp_rel_tempfile_input_fh, $stats_out_htp_rel_tempfile_input) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_htp_rel_tempfile_fh, $stats_out_htp_rel_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
-    my ($stats_out_htp_rel_tempfile_out_fh, $stats_out_htp_rel_tempfile_out) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+
+    my $stats_out_htp_rel_tempfile_out_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/drone_stats_XXXXX');
+    my $stats_out_htp_rel_tempfile_out = $c->config->{basepath}."/".$stats_out_htp_rel_tempfile_out_string;
 
     my ($stats_out_param_tempfile_fh, $stats_out_param_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_tempfile_row_fh, $stats_out_tempfile_row) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
@@ -3156,6 +3158,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         blupf90_solutions => $blupf90_solutions_tempfile,
         stats_out_tempfile => $stats_out_tempfile,
         stats_out_tempfile_string => $stats_out_tempfile_string,
+        stats_out_htp_rel_tempfile_out_string => $stats_out_htp_rel_tempfile_out_string,
         stats_out_tempfile_col => $stats_out_tempfile_col,
         stats_out_tempfile_row => $stats_out_tempfile_row,
         statistical_ontology_term => $statistical_ontology_term,

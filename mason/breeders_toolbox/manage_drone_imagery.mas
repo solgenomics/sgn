@@ -4780,6 +4780,10 @@ jQuery(document).ready(function() {
 
                     html = html + '<hr><a href="'+response.stats_out_tempfile_string+'.log" target=_blank>Stats file or log</a>';
 
+                    if (jQuery('#drone_imagery_calculate_statistics_relationship_matrix_type_select_div').val() == 'htp_phenotypes') {
+                        html = html + '<hr><a href="'+response.stats_out_htp_rel_tempfile_out_string+'" target=_blank>HTP Relationship Matrix</a>';
+                    }
+
                     jQuery('#drone_imagery_calculate_statistics_result_div').html(html);
 
                     Workflow.complete("#drone_imagery_calculate_statistics_select_step");
