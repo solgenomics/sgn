@@ -1259,9 +1259,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                                     my $val = $rel_pos_def_result_hash{$s}->{$c};
                                     if (defined $val and length $val) {
                                         $result_hash{$s}->{$c} = $val;
+                                        $result_hash{$c}->{$s} = $val;
                                         $data_pos_def .= "S$s\tS$c\t$val\n";
                                         if ($s != $c) {
-                                            $data_pos_def .= "S$s\tS$c\t$val\n";
+                                            $data_pos_def .= "S$c\tS$s\t$val\n";
                                         }
                                     }
                                 }
@@ -1490,9 +1491,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                                     my $val = $rel_pos_def_result_hash{$s}->{$c};
                                     if (defined $val and length $val) {
                                         $result_hash{$s}->{$c} = $val;
+                                        $result_hash{$c}->{$s} = $val;
                                         $data_pos_def .= "S$s\tS$c\t$val\n";
                                         if ($s != $c) {
-                                            $data_pos_def .= "S$s\tS$c\t$val\n";
+                                            $data_pos_def .= "S$c\tS$s\t$val\n";
                                         }
                                     }
                                 }
@@ -1812,9 +1814,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                                 my $val = $rel_htp_result_hash{$s}->{$c};
                                 if (defined $val and length $val) {
                                     $result_hash{$s}->{$c} = $val;
+                                    $result_hash{$c}->{$s} = $val;
                                     $data_rel_htp .= "S$s\tS$c\t$val\n";
                                     if ($s != $c) {
-                                        $data_rel_htp .= "S$s\tS$c\t$val\n";
+                                        $data_rel_htp .= "S$c\tS$s\t$val\n";
                                     }
                                 }
                             }
