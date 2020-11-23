@@ -433,7 +433,8 @@ sub get_trial_design {
         treatment_project_ids => \@treatment_ids,
         selected_columns => $selected_columns{$type},
         selected_trait_ids => [],
-        use_synonyms => 'false'
+        use_synonyms => 'false',
+        include_measured => 'true'
     });
     my $layout = $trial_layout_download->get_layout_output();
 

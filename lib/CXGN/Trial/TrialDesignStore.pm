@@ -219,6 +219,8 @@ For each subplot creates an nd_experiment_stock entry if not already present. Th
 
 store() will do the following for GENOTYPING LAYOUT trials:
 
+=back
+
 =over 5
 
 

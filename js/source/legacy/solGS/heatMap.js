@@ -74,7 +74,7 @@ solGS.heatmap = {
 
 	fs = fs + 'px';
 
-	var pad    = {left:150, top:30, right:255, bottom: 90};
+	var pad    = {left:150, top:30, right:255, bottom: 150};
 	var totalH = height + pad.top + pad.bottom;
 	var totalW = width + pad.left + pad.right;
 
