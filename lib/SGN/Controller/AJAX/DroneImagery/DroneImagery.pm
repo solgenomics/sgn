@@ -1742,9 +1742,11 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     });
                     counter = 1;
                     for (m in blues.models) {
-                        blues\$accession_id <- row.names(ranef(m)\$accession_id);
-                        blues[,ncol(blues) + 1] <- ranef(m)\$accession_id\$\`(Intercept)\`;
-                        colnames(blues)[ncol(blues)] <- varlist[counter];
+                        if (!is.null(m)) {
+                            blues\$accession_id <- row.names(ranef(m)\$accession_id);
+                            blues[,ncol(blues) + 1] <- ranef(m)\$accession_id\$\`(Intercept)\`;
+                            colnames(blues)[ncol(blues)] <- varlist[counter];
+                        }
                         counter = counter + 1;
                     }
                     blues_vals <- as.matrix(blues[,3:ncol(blues)]);
