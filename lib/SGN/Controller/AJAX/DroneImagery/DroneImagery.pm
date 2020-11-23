@@ -235,6 +235,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $compute_relationship_matrix_from_htp_phenotypes = $c->req->param('relationship_matrix_type');
     my $compute_relationship_matrix_from_htp_phenotypes_type = $c->req->param('htp_pheno_rel_matrix_type');
     my $compute_relationship_matrix_from_htp_phenotypes_time_points = $c->req->param('htp_pheno_rel_matrix_time_points');
+    my $compute_relationship_matrix_from_htp_phenotypes_blues_inversion = $c->req->param('htp_pheno_rel_matrix_blues_inversion');
     my $compute_from_parents = $c->req->param('compute_from_parents') eq 'yes' ? 1 : 0;
     my $include_pedgiree_info_if_compute_from_parents = $c->req->param('include_pedgiree_info_if_compute_from_parents') eq 'yes' ? 1 : 0;
     my $use_parental_grms_if_compute_from_parents = $c->req->param('use_parental_grms_if_compute_from_parents') eq 'yes' ? 1 : 0;
@@ -1723,6 +1724,8 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     cor_mat <- cor(t(mat_pheno));
                     rownames(cor_mat) <- mat_agg[,1];
                     colnames(cor_mat) <- mat_agg[,1];
+                    range01 <- function(x){(x-min(x))/(max(x)-min(x))};
+                    cor_mat <- range01(cor_mat);
                     write.table(cor_mat, file=\''.$stats_out_htp_rel_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
                     print STDERR Dumper $htp_cmd;
                     my $status = system($htp_cmd);
@@ -1732,7 +1735,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     mat <- fread(\''.$stats_out_htp_rel_tempfile_input.'\', header=TRUE, sep=\'\t\');
                     blues <- data.frame(id = seq(1,length(unique(mat\$accession_id))));
                     varlist <- names(mat)[7:ncol(mat)];
-                    blues.models <- lapply(varlist, function(x) { lmer(substitute(i ~ 1 + (1|accession_id), list(i = as.name(x))), data = mat) });
+                    blues.models <- lapply(varlist, function(x) { lmer(substitute(i ~ 1 + (1|accession_id), list(i = as.name(x))), data = mat, control = lmerControl(boundary.tol='.$compute_relationship_matrix_from_htp_phenotypes_blues_inversion.' ) ) });
                     counter = 1;
                     for (m in blues.models) {
                         blues\$accession_id <- row.names(ranef(m)\$accession_id);
