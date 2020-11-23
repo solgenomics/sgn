@@ -1736,7 +1736,9 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     blues <- data.frame(id = seq(1,length(unique(mat\$accession_id))));
                     varlist <- names(mat)[7:ncol(mat)];
                     blues.models <- lapply(varlist, function(x) {
-                        tryCatch(lmer(substitute(i ~ 1 + (1|accession_id), list(i = as.name(x))), data = mat, control = lmerControl(boundary.tol='.$compute_relationship_matrix_from_htp_phenotypes_blues_inversion.' ) ) )
+                        tryCatch(
+                            lmer(substitute(i ~ 1 + (1|accession_id), list(i = as.name(x))), data = mat, control = lmerControl(boundary.tol='.$compute_relationship_matrix_from_htp_phenotypes_blues_inversion.' ) ), error=function(e) {}
+                        )
                     });
                     counter = 1;
                     for (m in blues.models) {
