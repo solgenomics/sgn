@@ -1410,6 +1410,18 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                                     </select>
                                 </div>
                             </div>
+                            <div class="form-group" id="drone_image_calculate_statistics_htp_phenotypes_rel_matrix_inversion_select_div" style="display:none">
+                                <label class="col-sm-3 control-label">HTP BLUEs Inversion Tolerance: </label>
+                                <div class="col-sm-9" >
+                                    <select class="form-control" id="drone_image_calculate_statistics_htp_phenotypes_rel_matrix_inversion_select">
+                                        <option value="0.00001">0.00001</option>
+                                        <option value="0.0001">0.0001</option>
+                                        <option value="0.001">0.001</option>
+                                        <option value="0.01">0.01</option>
+                                        <option value="0.1">0.1</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -4616,6 +4628,15 @@ jQuery(document).ready(function() {
         }
     });
 
+    jQuery('#drone_image_calculate_statistics_htp_phenotypes_rel_matrix_select').change(function(){
+        if (jQuery(this).val() == 'blues') {
+            jQuery('#drone_image_calculate_statistics_htp_phenotypes_rel_matrix_inversion_select_div').show();
+        }
+        else {
+            jQuery('#drone_image_calculate_statistics_htp_phenotypes_rel_matrix_inversion_select_div').hide();
+        }
+    });
+
     jQuery('#drone_image_calculate_statistics_genotyping_protocol_compute_from_parents_select').change(function(){
         if (jQuery(this).val() == 'yes') {
             jQuery('#drone_image_calculate_statistics_genotyping_protocol_include_pedigree_select_div').show();
@@ -4676,6 +4697,7 @@ jQuery(document).ready(function() {
                 'include_pedgiree_info_if_compute_from_parents':jQuery('#drone_image_calculate_statistics_genotyping_protocol_include_pedigree_select').val(),
                 'htp_pheno_rel_matrix_type':jQuery('#drone_image_calculate_statistics_htp_phenotypes_rel_matrix_select').val(),
                 'htp_pheno_rel_matrix_time_points':jQuery('#drone_image_calculate_statistics_htp_phenotypes_rel_matrix_times_select').val(),
+                'htp_pheno_rel_matrix_blues_inversion':jQuery('#drone_image_calculate_statistics_htp_phenotypes_rel_matrix_inversion_select').val(),
                 'tolparinv':jQuery('#drone_image_calculate_statistics_tolparinv_select').val(),
                 'legendre_order_number':jQuery('#drone_image_calculate_statistics_legendre_order_number_select').val(),
                 'use_area_under_curve':jQuery('#drone_image_calculate_statistics_use_area_under_curve_select').val(),
