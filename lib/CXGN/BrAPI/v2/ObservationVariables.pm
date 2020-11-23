@@ -360,6 +360,19 @@ sub detail {
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observationvariable search result constructed');
 }
 
+sub store {
+
+    my $self = shift;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
+
+    my %result;
+    my $count = 0;
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($count,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success( \%result, $pagination, undef, $self->status(), $count . " Variables were saved.");
+
+}
+
 sub observation_variable_ontologies {
     my $self = shift;
     my $inputs = shift;

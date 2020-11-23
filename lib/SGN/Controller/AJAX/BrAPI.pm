@@ -3276,6 +3276,24 @@ sub variables_search_retrieve : Chained('brapi') PathPart('search/variables') Ar
 
 sub observationvariable_list : Chained('brapi') PathPart('variables') Args(0) : ActionClass('REST') { }
 
+sub observationvariable_list_POST {
+	my $self = shift;
+	my $c = shift;
+	# TODO: auth later, not doing for now
+	# my ($auth,$user_id) = _authenticate_user($c);
+	my $user_id;
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $data = $clean_inputs;
+	my @all_variables;
+	foreach my $variable (values %{$data}) {
+		push @all_variables, $variable;
+	}
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
+	my $brapi_package_result = $brapi_module->store(\@all_variables,$user_id);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
 sub observationvariable_list_GET {
 	my $self = shift;
 	my $c = shift;
