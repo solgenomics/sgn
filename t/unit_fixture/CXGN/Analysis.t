@@ -153,7 +153,7 @@ my $m = CXGN::Analysis::AnalysisCreate->new({
 my $saved_analysis_object = $m->store();
 print STDERR Dumper $saved_analysis_object;
 is_deeply($saved_analysis_object, {
-          'model_id' => 2,
+          'model_id' => 3,
           'success' => 1,
           'analysis_id' => 166
         });
