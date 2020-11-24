@@ -109,6 +109,7 @@ tr.shown td.details-control {
                     <label class="col-sm-6 control-label">Image Analysis Service: </label>
                     <div class="col-sm-6" >
                         <select class="form-control" id="image_analysis_service_select" name="image_analysis_service_select">
+                            <option value="">Select An Analysis Service</option>
                             <option value="necrosis">Necrosis(Makerere AIR Lab)</option>
                             <option value="largest_contour_percent">Necrosis Largest Contour Mask Percent</option>
                             <option value="count_contours">Count Contours</option>
@@ -118,10 +119,17 @@ tr.shown td.details-control {
                     </div>
                 </div>
                 <br/>
+                <div class="form-group" id="image_analysis_trait_group" style="display: none;">
+                    <label class="col-sm-6 control-label">Trait to be Analyzed: </label>
+                    <div class="col-sm-6" >
+                        <select class="form-control" id="image_analysis_trait_select" name="image_analysis_service_select"></select>
+                    </div>
+                </div>
+                <br/><br/><br/>
 
                 <hr>
                 <center>
-                <button class="btn btn-primary" id="image_analysis_submit">Submit for Analysis</button>
+                <button class="btn btn-primary" id="image_analysis_submit" disabled>Submit for Analysis</button>
                 </center>
                 <hr>
                 <div id="image_analysis_result" style="display: none;">
@@ -164,6 +172,17 @@ tr.shown td.details-control {
 
 <script>
 
+var service_traits = {
+    'necrosis': {
+        "CBSDpct | CO_334:0002078" : "Cassava",
+        "Necrosis rating | CO_331:01234567": "SweetPotato",
+    },
+    'largest_contour_percent': {},
+    'count_contours': {},
+    'count_sift': {},
+    'whitefly_count': {},
+}
+
 jQuery(document).ready(function(){
 
     var values_hash;
@@ -193,6 +212,68 @@ jQuery(document).ready(function(){
 
     jQuery('#image_analysis_image_search_results').on( 'draw.dt', function () {
         jQuery('a.image_search_group').colorbox();
+    });$
+
+    jQuery('#image_analysis_service_select').change(function() {
+        console.log( "Service select .change() called." );
+        var service = jQuery('#image_analysis_service_select').val();
+        jQuery('#image_analysis_trait_select').html('<option value="">Select A Trait</option>');
+        if (service) {
+            jQuery('#working_modal').modal('show');
+            // add crop and service specific trait options
+            var all_traits = service_traits[service];
+            var trait_names = Object.keys(all_traits);
+            var options =  [];
+            console.log("all traits are "+all_traits);
+            console.log("trait names are "+trait_names);
+
+            jQuery.ajax({
+                url: '/brapi/v2/commoncropnames/',
+                method: 'GET',
+                success: function(response) {
+                    console.log("Retrieved crop names and they are: "+response.result.data);
+                    var supportedcrops = response.result.data;
+                    supportedcrops.forEach(function(crop) {
+                        trait_names.forEach(function(name) {
+                            if (all_traits[name] == crop) {
+                                var id = name.split("|")[1];
+                                console.log("Id is "+id);
+                                options.push('<option value="'+ id +'">'+ name +'</option>');
+                            }
+                        });
+                    });
+                    jQuery('#image_analysis_trait_select').append(options);
+                    jQuery('#image_analysis_trait_group').show();
+                    jQuery('#working_modal').modal('hide');
+                },
+                error: function(response) {
+                    console.log("error retrieving crop names: "+response);
+                    // just add all traits regardless of crop
+                    trait_names.forEach(function(name) {
+                        var id = name.split("|")[1];
+                        console.log("Id is "+id);
+                        options.push('<option value="'+ id +'">'+ name +'</option>');
+
+                    });
+                    jQuery('#image_analysis_trait_select').append(options);
+                    jQuery('#image_analysis_trait_group').show();
+                    jQuery('#working_modal').modal('hide');
+                }
+            });
+      }
+      else {
+          // hide trait select
+          jQuery('#image_analysis_trait_group').hide();
+      }
+    });
+
+    jQuery('#image_analysis_trait_select').change(function() {
+        if (jQuery('#image_analysis_trait_select').val()) {
+            jQuery('#image_analysis_submit').prop('disabled', false);
+        }
+        else {
+            jQuery('#image_analysis_submit').prop('disabled', true);
+        }
     });
 
     jQuery('#image_analysis_submit').click(function(){
@@ -213,7 +294,8 @@ jQuery(document).ready(function(){
             method: 'POST',
             data: {
                 'selected_image_ids': JSON.stringify(selected_image_ids),
-                'service': jQuery('#image_analysis_service_select').val()
+                'service': jQuery('#image_analysis_service_select').val(),
+                'trait': jQuery('#image_analysis_trait_select').val(),
             },
             dataType:'json',
             beforeSend: function() {
