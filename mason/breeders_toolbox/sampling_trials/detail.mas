@@ -58,7 +58,10 @@ $identifier_prefix => 'SGN'
                 </div>
             </div>
 
+            <a class='btn btn-default' href='/breeders/trial/<% $trial_id %>/download/layout?format=csv&dataLevel=samplingtrial'>Download Layout</a>
+
         </div>
+
         <div class="col-sm-3">
 
             <center><& /util/barcode.mas, identifier => "$identifier_prefix"."$trial_id", text=> "$identifier_prefix trial $trial_id ($trial_name)", format=>"stock_qrcode"  &></center><br />
