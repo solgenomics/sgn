@@ -28,26 +28,25 @@ sub generate_sampling_trial_POST : Args(0) {
     }
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $plate_info = decode_json $c->req->param("plate_data");
-    #print STDERR Dumper $plate_info;
+    my $sampling_data = decode_json $c->req->param("sampling_data");
+    print STDERR Dumper $sampling_data;
 
-    if ( !$plate_info->{elements} || !$plate_info->{genotyping_facility_submit} || !$plate_info->{project_name} || !$plate_info->{description} || !$plate_info->{location} || !$plate_info->{year} || !$plate_info->{name} || !$plate_info->{breeding_program} || !$plate_info->{genotyping_facility} || !$plate_info->{sample_type} || !$plate_info->{plate_format} ) {
-        $c->stash->{rest} = { error => "Please provide all parameters in the plate information section" };
+    if ( !$sampling_data->{elements} || !$sampling_data->{description} || !$sampling_data->{location} || !$sampling_data->{year} || !$sampling_data->{name} || !$sampling_data->{breeding_program} || !$sampling_data->{sampling_facility} || !$sampling_data->{sample_type} ) {
+        $c->stash->{rest} = { error => "Please provide all parameters in the basic sampling trial information section" };
+        $c->detach();
+    }
+    if ( !$sampling_data->{replicates}) {
+        $c->stash->{rest} = { error => "Please provide number of replicates" };
         $c->detach();
     }
 
-    if ( $plate_info->{genotyping_facility} eq 'igd' && $plate_info->{genotyping_facility_submit} eq 'yes' && $plate_info->{blank_well} eq ''){
-        $c->stash->{rest} = { error => "To submit to Cornell IGD you need to provide the blank well!" };
-        $c->detach();
-    }
-
-    my $location = $schema->resultset("NaturalDiversity::NdGeolocation")->find( { nd_geolocation_id => $plate_info->{location} } );
+    my $location = $schema->resultset("NaturalDiversity::NdGeolocation")->find( { nd_geolocation_id => $sampling_data->{location} } );
     if (!$location) {
         $c->stash->{rest} = { error => "Unknown location" };
         $c->detach();
     }
 
-    my $breeding_program = $schema->resultset("Project::Project")->find( { project_id => $plate_info->{breeding_program} });
+    my $breeding_program = $schema->resultset("Project::Project")->find( { project_id => $sampling_data->{breeding_program} });
     if (!$breeding_program) {
         $c->stash->{rest} = { error => "Unknown breeding program" };
         $c->detach();
@@ -55,11 +54,10 @@ sub generate_sampling_trial_POST : Args(0) {
 
     my $td = CXGN::Trial::TrialDesign->new( { schema => $schema });
 
-    $td->set_stock_list($plate_info->{elements});
-    $td->set_block_size($plate_info->{plate_format});
-    $td->set_blank($plate_info->{blank_well});
-    $td->set_trial_name($plate_info->{name});
-    $td->set_design_type("genotyping_plate");
+    $td->set_stock_list($sampling_data->{elements});
+    $td->set_number_of_reps($sampling_data->{replicates});
+    $td->set_trial_name($sampling_data->{name});
+    $td->set_design_type("CRD");
 
     eval {
         $td->calculate_design();
@@ -80,16 +78,18 @@ sub generate_sampling_trial_POST : Args(0) {
 
     #Add common answers from form to all wells
     foreach (values %$design){
-        $_->{replicate} = $plate_info->{replicate};
-        $_->{block} = $plate_info->{block};
-        $_->{concentration} = $plate_info->{well_concentration};
-        $_->{volume} = $plate_info->{well_volume};
-        $_->{tissue_type} = $plate_info->{well_tissue};
-        $_->{dna_person} = $plate_info->{well_dna_person};
-        $_->{extraction} = $plate_info->{well_extraction};
-        $_->{acquisition_date} = $plate_info->{well_date};
-        $_->{notes} = $plate_info->{well_notes};
-        $_->{ncbi_taxonomy_id} = $plate_info->{ncbi_taxonomy_id};
+        $_->{concentration} = $sampling_data->{sample_concentration};
+        $_->{volume} = $sampling_data->{sample_volume};
+        $_->{tissue_type} = $sampling_data->{sample_tissue};
+        $_->{dna_person} = $sampling_data->{sample_person};
+        $_->{extraction} = $sampling_data->{sample_extraction};
+        $_->{acquisition_date} = $sampling_data->{sample_date};
+        $_->{notes} = $sampling_data->{sample_notes};
+        $_->{ncbi_taxonomy_id} = $sampling_data->{ncbi_taxonomy_id};
+
+        delete($_->{seedlot_name});
+        delete($_->{is_a_control});
+        delete($_->{plot_num_per_block});
     }
     #print STDERR Dumper($design);
 
@@ -307,21 +307,20 @@ sub store_sampling_trial_POST : Args(0) {
     }
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $plate_info = decode_json $c->req->param("plate_data");
+    my $sampling_data = decode_json $c->req->param("sampling_data");
     #print STDERR Dumper $plate_info;
-
-    if ( !$plate_info->{design} || !$plate_info->{genotyping_facility_submit} || !$plate_info->{project_name} || !$plate_info->{description} || !$plate_info->{location} || !$plate_info->{year} || !$plate_info->{name} || !$plate_info->{breeding_program} || !$plate_info->{genotyping_facility} || !$plate_info->{sample_type} || !$plate_info->{plate_format} ) {
-        $c->stash->{rest} = { error => "Please provide all parameters in the plate information section" };
+    if ( !$sampling_data->{design} || !$sampling_data->{description} || !$sampling_data->{location} || !$sampling_data->{year} || !$sampling_data->{name} || !$sampling_data->{breeding_program} || !$sampling_data->{sampling_facility} || !$sampling_data->{sample_type} ) {
+        $c->stash->{rest} = { error => "Please provide all parameters in the sampling trial information section" };
         $c->detach();
     }
 
-    my $location = $schema->resultset("NaturalDiversity::NdGeolocation")->find( { nd_geolocation_id => $plate_info->{location} } );
+    my $location = $schema->resultset("NaturalDiversity::NdGeolocation")->find( { nd_geolocation_id => $sampling_data->{location} } );
     if (!$location) {
         $c->stash->{rest} = { error => "Unknown location" };
         $c->detach();
     }
 
-    my $breeding_program = $schema->resultset("Project::Project")->find( { project_id => $plate_info->{breeding_program} });
+    my $breeding_program = $schema->resultset("Project::Project")->find( { project_id => $sampling_data->{breeding_program} });
     if (!$breeding_program) {
         $c->stash->{rest} = { error => "Unknown breeding program" };
         $c->detach();
@@ -332,7 +331,7 @@ sub store_sampling_trial_POST : Args(0) {
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id;
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id;
     my %source_stock_names;
-    foreach (values %{$plate_info->{design}}){
+    foreach (values %{$sampling_data->{design}}){
         $source_stock_names{$_->{stock_name}}++;
     }
     my @source_stock_names = keys %source_stock_names;
@@ -346,31 +345,27 @@ sub store_sampling_trial_POST : Args(0) {
     my @field_trial_ids = keys %field_trial_ids;
     #print STDERR Dumper \@field_trial_ids;
 
-    print STDERR "Creating the genotyping plate...\n";
+    print STDERR "Creating the sampling trial...\n";
 
     my $message;
     my $coderef = sub {
 
-        my $ct = CXGN::Trial::TrialCreate->new( {
+        my $ct = CXGN::Trial::TrialCreate->new({
             chado_schema => $schema,
             dbh => $c->dbc->dbh(),
             user_name => $user_name, #not implemented,
             operator => $user_name,
-            trial_year => $plate_info->{year},
+            trial_year => $sampling_data->{year},
             trial_location => $location->description(),
             program => $breeding_program->name(),
-            trial_description => $plate_info->{description},
-            design_type => 'genotyping_plate',
-            design => $plate_info->{design},
-            trial_name => $plate_info->{name},
-            is_genotyping => 1,
-            genotyping_user_id => $user_id,
-            genotyping_project_name => $plate_info->{project_name},
-            genotyping_facility_submitted => $plate_info->{genotyping_facility_submit},
-            genotyping_facility => $plate_info->{genotyping_facility},
-            genotyping_plate_format => $plate_info->{plate_format},
-            genotyping_plate_sample_type => $plate_info->{sample_type},
-            genotyping_trial_from_field_trial => \@field_trial_ids,
+            trial_description => $sampling_data->{description},
+            design_type => 'sampling_trial',
+            design => $sampling_data->{design},
+            trial_name => $sampling_data->{name},
+            is_sampling_trial => 1,
+            sampling_trial_facility => $sampling_data->{sampling_facility},
+            sampling_trial_sample_type => $sampling_data->{sample_type},
+            sampling_trial_from_field_trial => \@field_trial_ids,
         });
 
         $message = $ct->save_trial();
@@ -380,7 +375,7 @@ sub store_sampling_trial_POST : Args(0) {
         $schema->txn_do($coderef);
     } catch {
         print STDERR "Transaction Error: $_\n";
-        $c->stash->{rest} = {error => "Error saving genotyping plate in the database: $_"};
+        $c->stash->{rest} = {error => "Error saving sampling trial in the database: $_"};
         $c->detach;
     };
 
@@ -389,7 +384,7 @@ sub store_sampling_trial_POST : Args(0) {
         $error = $message->{'error'};
     }
     if ($error){
-        $c->stash->{rest} = {error => "Error saving genotyping plate in the database: $error"};
+        $c->stash->{rest} = {error => "Error saving sampling trial in the database: $error"};
         $c->detach;
     }
     #print STDERR Dumper(%message);
@@ -398,41 +393,14 @@ sub store_sampling_trial_POST : Args(0) {
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
-    my $saved_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $message->{trial_id}, experiment_type=>'genotyping_layout'});
+    my $saved_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $message->{trial_id}, experiment_type=>'sampling_layout'});
     my $saved_design = $saved_layout->get_design();
     #print STDERR Dumper $saved_design;
-
-    my @brapi_samples;
-    foreach (values %$saved_design){
-        push @brapi_samples, {
-            sampleDbId => $_->{plot_id},
-            sampleName => $_->{plot_name},
-            well => $_->{plot_number},
-            row => $_->{row_number},
-            column => $_->{col_number},
-            concentration => $_->{concentration},
-            volume => $_->{volume},
-            tissueType => $_->{tissue_type},
-            taxonId => {
-                sourceName => 'NCBI',
-                taxonId => $_->{ncbi_taxonomy_id}
-            }
-        };
-    }
-
-    my $brapi_plate_data = {
-        vendorProjectDbId => $plate_info->{project_name},
-        clientPlateDbId => $message->{trial_id},
-        clientPlateName => $plate_info->{name},
-        plateFormat => $plate_info->{plate_format},
-        sampleType => $plate_info->{sample_type},
-        samples => \@brapi_samples
-    };
 
     $c->stash->{rest} = {
         message => "Successfully stored the genotyping plate.",
         trial_id => $message->{trial_id},
-        plate_data => $brapi_plate_data
+        saved_design => $saved_design
     };
 }
 
