@@ -72,7 +72,7 @@ sub retrieve {
                     push @$line, $trial_name;
                 } elsif ($_ eq 'year'){
                     push @$line, $trial_year;
-                } elsif ($_ eq 'location_name'){
+                } elsif ($_ eq 'location'){
                     push @$line, $location_name;
                 } elsif ($_ eq 'sampling_facility'){
                     push @$line, $sampling_facility;

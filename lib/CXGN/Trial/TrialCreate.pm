@@ -372,7 +372,7 @@ sub save_trial {
         my $genotyping_trial_ids = $t->set_genotyping_trials_from_field_trial($self->get_genotyping_trial_from_field_trial);
         my $crossing_trial_ids = $t->set_crossing_trials_from_field_trial($self->get_crossing_trial_from_field_trial);
     }
-    
+
     $t->set_location($geolocation->nd_geolocation_id()); # set location also as a project prop
     $t->set_breeding_program($self->get_breeding_program_id);
     if ($self->get_trial_type){
