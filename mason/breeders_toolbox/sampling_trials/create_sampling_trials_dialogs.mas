@@ -278,15 +278,13 @@ $sampling_facilities => ();
                         <tbody>
                             <tr>
                                 <td>date</td>
-                                <td>sample_id</td>
+                                <td>sample_name</td>
                                 <td>source_observation_unit_name</td>
+                                <td>sample_number</td>
                                 <td>replicate</td>
                                 <td>tissue_type</td>
-                                <td>well_A01</td>
-                                <td>row</td>
-                                <td>column</td>
                                 <td>ncbi_taxonomy_id</td>
-                                <td>dna_person</td>
+                                <td>person</td>
                                 <td>notes</td>
                                 <td>extraction</td>
                                 <td>concentration</td>
@@ -297,20 +295,18 @@ $sampling_facilities => ();
 
                     <b>Required fields:</b>
                     <ul>
-                    <li>date (should be YYYY/MM/DD)</li>
-                    <li>sample_id (the unique identifier for the sample)</li>
-                    <li>replicate (the replicate number for the sample)</li>
+                    <li>date (should be YYYY-MM-DD)</li>
+                    <li>sample_name (the globally unique identifier for the sample)</li>
                     <li>source_observation_unit_name (must exist in the database. the identifier of the origin material. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, plot name, accession name. For blank wells, you can write BLANK here and place a 1 in the is_blank column also.)</li>
+                    <li>sample_number (the sample number for the sample. Must be unique within this sampling trial)</li>
+                    <li>replicate (the replicate number for the sample)</li>
                     <li>tissue_type (must be either leaf, root, or stem)</li>
                     </ul>
 
                     <b>Optional fields:</b>
                     <ul>
-                    <li>well_A01 (the position of the sample in a plate)</li>
-                    <li>row (the row position of the sample in a plate e.g. A)</li>
-                    <li>column (the column position of the sample in a plate e.g. 10)</li>
                     <li>ncbi_taxonomy_id (NCBI taxonomy identifier)</li>
-                    <li>dna_person (the name of the person who prepared the sample)</li>
+                    <li>person (the name of the person who prepared the sample)</li>
                     <li>notes (any additional notes on the sample)</li>
                     <li>extraction (free-text for the extraction method e.g. CTAB)</li>
                     <li>concentration (concentration in ng/ul)</li>
@@ -447,6 +443,31 @@ jQuery(document).ready(function(){
                     jQuery("working_modal").modal('hide');
                 }
             });
+        }
+        else {
+            jQuery('#upload_sampling_trials_form').attr("action", "/ajax/breeders/parsesamplingtrial");
+            jQuery("#upload_sampling_trials_form").submit();
+        }
+    });
+
+    jQuery('#upload_sampling_trials_form').iframePostForm({
+        json: true,
+        post: function () {
+        },
+        complete: function (response) {
+            console.log(response);
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            if (response.error_string) {
+                alert(response.error_string);
+                return;
+            }
+            if (response.success) {
+                sampling_data.design = response.design;
+                store_sampling_trial(sampling_data);
+            }
         }
     });
 

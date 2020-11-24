@@ -105,49 +105,24 @@ sub parse_sampling_trial_file_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
-    my $genotyping_plate_name = $c->req->param('genotyping_trial_name');
-    my $upload_xls = $c->req->upload('genotyping_trial_layout_upload');
-    my $upload_coordinate = $c->req->upload('genotyping_trial_layout_upload_coordinate');
-    my $upload_coordinate_custom = $c->req->upload('genotyping_trial_layout_upload_coordinate_template');
-    if ($upload_xls && $upload_coordinate){
-        $c->stash->{rest} = {error => "Do not upload both XLS and Coordinate file at the same time!" };
+    my $sampling_trial_name = $c->req->param('sampling_trial_name');
+    my $upload_xls = $c->req->upload('sampling_trial_layout_upload');
+    if (!$upload_xls ){
+        $c->stash->{rest} = {error => "You must upload a sampling trial file!" };
         return;
     }
-    if ($upload_xls && $upload_coordinate_custom){
-        $c->stash->{rest} = {error => "Do not upload both XLS and Custom Coordinate file at the same time!" };
-        return;
-    }
-    if ($upload_coordinate && $upload_coordinate_custom){
-        $c->stash->{rest} = {error => "Do not upload both Coordinate file and Custom Coordinate file at the same time!" };
-        return;
-    }
-    if (!$upload_xls && !$upload_coordinate && !$upload_coordinate_custom){
-        $c->stash->{rest} = {error => "You must upload a genotyping plate file!" };
-        return;
-    }
-    if (!$genotyping_plate_name){
-        $c->stash->{rest} = {error => 'Genotyping plate id must be given!'};
+    if (!$sampling_trial_name){
+        $c->stash->{rest} = {error => 'Sampling trial name must be given!'};
         return;
     }
     my $parser;
     my $parsed_data;
-    my $upload;
-    my $upload_type;
-    if ($upload_xls){
-        $upload = $upload_xls;
-        $upload_type = 'GenotypeTrialXLS';
-    }
-    if ($upload_coordinate){
-        $upload = $upload_coordinate;
-        $upload_type = 'GenotypeTrialCoordinate';
-    }
-    if ($upload_coordinate_custom){
-        $upload = $upload_coordinate_custom;
-        $upload_type = 'GenotypeTrialCoordinateTemplate';
-    }
+    my $upload = $upload_xls;
+    my $upload_type = 'SamplingTrialXLS';
+
     my $upload_original_name = $upload->filename();
     my $upload_tempfile = $upload->tempname;
-    my $subdirectory = "genotyping_trial_upload";
+    my $subdirectory = "sampling_trial_upload";
     my $archived_filename_with_path;
     my $md5;
     my $validate_file;
@@ -174,7 +149,7 @@ sub parse_sampling_trial_file_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload genotyping plate!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload sampling trial!'};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -183,7 +158,7 @@ sub parse_sampling_trial_file_POST : Args(0) {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload a genotyping plate!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload sampling trial!'};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -192,7 +167,7 @@ sub parse_sampling_trial_file_POST : Args(0) {
     }
 
     if ($user_role ne 'curator' && $user_role ne 'submitter') {
-        $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a genotyping plate." };
+        $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a sampling trial. Please contact us." };
         $c->detach();
     }
 
@@ -215,14 +190,11 @@ sub parse_sampling_trial_file_POST : Args(0) {
     unlink $upload_tempfile;
 
     #Parse of Coordinate Template formatted file requires the plate name to be passed, so that a unique sample name can be created by concatenating the plate name to the well position.
-    my %parse_args = (
-        genotyping_plate_id => $genotyping_plate_name
-    );
 
     #parse uploaded file with appropriate plugin
     $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
     $parser->load_plugin($upload_type);
-    $parsed_data = $parser->parse(\%parse_args);
+    $parsed_data = $parser->parse();
 
     if (!$parsed_data) {
         my $return_error = '';
@@ -249,21 +221,20 @@ sub parse_sampling_trial_file_POST : Args(0) {
     my %design;
     foreach (sort keys %$parsed_data){
         my $val = $parsed_data->{$_};
-        $design{$val->{well}} = {
-            plot_name => $val->{sample_id},
+        $design{$val->{sample_number}} = {
+            acquisition_date => $val->{date},
+            plot_name => $val->{sample_name},
             stock_name => $val->{source_stock_uniquename},
-            plot_number => $val->{well},
-            row_number => $val->{row},
-            col_number => $val->{column},
-            is_blank => $val->{is_blank},
+            plot_number => $val->{sample_number},
+            rep_number => $val->{replicate},
+            tissue_type => $val->{tissue_type},
+            block_number => 1,
+            ncbi_taxonomy_id => $val->{ncbi_taxonomy_id},
+            dna_person => $val->{person},
+            notes => $val->{notes},
+            extraction => $val->{extraction},
             concentration => $val->{concentration},
             volume => $val->{volume},
-            tissue_type => $val->{tissue_type},
-            dna_person => $val->{dna_person},
-            extraction => $val->{extraction},
-            acquisition_date => $val->{date},
-            notes => $val->{notes},
-            ncbi_taxonomy_id => $val->{ncbi_taxonomy_id}
         };
     }
 
@@ -284,7 +255,7 @@ sub store_sampling_trial_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload genotyping plate!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload sampling trial!'};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -293,7 +264,7 @@ sub store_sampling_trial_POST : Args(0) {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload a genotyping plate!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload a sampling trial!'};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -302,7 +273,7 @@ sub store_sampling_trial_POST : Args(0) {
     }
 
     if ($user_role ne 'curator' && $user_role ne 'submitter') {
-        $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a genotyping plate." };
+        $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a sampling trial." };
         $c->detach();
     }
 
@@ -398,7 +369,7 @@ sub store_sampling_trial_POST : Args(0) {
     #print STDERR Dumper $saved_design;
 
     $c->stash->{rest} = {
-        message => "Successfully stored the genotyping plate.",
+        message => "Successfully stored the sampling trial.",
         trial_id => $message->{trial_id},
         saved_design => $saved_design
     };
