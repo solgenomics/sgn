@@ -215,10 +215,9 @@ $sampling_facilities => ();
                                 <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
                                 </center>
                             </&>
-                            <&| /util/workflow.mas:step, title=> "Trial Linkage" &>
-                                <& /page/page_title.mas, title=>"Is your genotyping plate linked with field trials in the database? This information can also be added from the genotyping plate detail page once the trial is saved in the database." &>
+                                <& /page/page_title.mas, title=>"Is your sampling trial linked with field trials in the database? This information can also be added from the sampling trial detail page once the trial is saved in the database." &>
 
-                                <p>If you provided us with information about where the tissue sample in each well originated (e.g. it came from a plot name or plant name or tissue sample name in a field trial), we will automatically create linkage between the field trial(s) and this genotyping plate.</p>
+                                <p>If you provided us with information about where the sample originated (e.g. it came from a plot name or plant name or tissue sample name in a field trial), we will automatically create linkage between the field trial(s) and this sampling trial.</p>
 
                                 <br/>
                                 <center>
@@ -226,35 +225,21 @@ $sampling_facilities => ();
                                 <center>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Confirm" &>
-                                <& /page/page_title.mas, title=>"Finalize and submit your genotyping plate" &>
+                                <& /page/page_title.mas, title=>"Finalize and submit your sampling trial" &>
 
-                                <div class="form-group">
-                                    <label class="col-sm-5 control-label">Along with saving this information to this database, I want to automatically submit to the Genotyping Facility: <small>Automatic submission currently not working. You can submit it from the Genotyping Plate's detail page or download the information from the Genotyping Plate's detail page and submit it yourself after clicking Submit</small></label>
-                                    <div class="col-sm-7">
-                                        <select class="form-control" id="genotyping_trial_facility_submit_select" disabled>
-                                            <option value="no">No</option>
-                                            <option value="yes">Yes</option>
-                                        </select>
-                                    </div>
-                                </div>
                                 <hr>
                                 <center>
-                                <button type="button" class="btn btn-primary" name="add_geno_trial_submit" id="add_geno_trial_submit">Submit</button>
+                                <button type="button" class="btn btn-primary" name="add_sampling_trial_submit" id="add_sampling_trial_submit">Submit</button>
                                 </center>
                             </&>
                             <&| /util/workflow.mas:complete, title=> "Complete" &>
-                                <& /page/page_title.mas, title=>"Complete! Your genotyping plate was saved in the database." &>
+                                <& /page/page_title.mas, title=>"Complete! Your sampling trial was saved in the database." &>
 
                                 <p>
                                     <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                                    The trial was saved successfully
+                                    The sampling trial was saved successfully
                                 </p>
 
-                                <ul>
-                                    <li>You may want to proceed to the genotyping plate detail page for the trial you just created.</li>
-                                    <li>You can print barcodes for the plate and tissue samplesl.</li>
-                                </ul>
-                                <br/>
                             </&>
                         </&>
 
@@ -343,6 +328,16 @@ $sampling_facilities => ();
 <script>
 jQuery(document).ready(function(){
 
+    jQuery('#sampling_trial_dialog').on('show.bs.modal', function (e) {
+        get_select_box("locations", "sampling_trial_location_select_div", {'id':'sampling_trial_location_select', 'name':'sampling_trial_location_select'});
+        get_select_box("breeding_programs", "sampling_trial_breeding_program_select_div", {'id':'sampling_trial_breeding_program_select', 'name':'sampling_trial_breeding_program_select'});
+        get_select_box("years", "sampling_trial_year_select_div", {'auto_generate': 1, 'id':'sampling_trial_year_select', 'name':'sampling_trial_year_select'});
+
+        var l = new CXGN.List();
+        var html = l.listSelect('sampling_trial_accession_select_box', [ 'accessions', 'plots', 'plants', 'tissue_samples' ], undefined, undefined, undefined);
+        jQuery('#sampling_trial_accession_select_box_span').html(html);
+    });
+
     jQuery('#sampling_trial_layout_upload_spreadsheet_info_format').click(function(){
         jQuery('#sampling_trial_layout_upload_spreadsheet_info_format_dialog').modal('show');
     });
@@ -357,6 +352,63 @@ jQuery(document).ready(function(){
             jQuery("#sampling_trial_well_upload_section").hide();
             jQuery('#sampling_trial_layout_upload').val('');
         }
+    });
+
+    var sampling_data = new Object();
+    jQuery('#add_sampling_trial_submit').click(function () {
+        sampling_data = new Object();
+        sampling_data.breeding_program = jQuery('#sampling_trial_breeding_program_select').val();
+        sampling_data.year = jQuery('#sampling_trial_year_select').val();
+        sampling_data.location = jQuery('#sampling_trial_location_select').val();
+        sampling_data.description = jQuery('#sampling_trial_description').val();
+        sampling_data.name = jQuery('#sampling_trial_name').val();
+        sampling_data.sample_type = jQuery('#sampling_trial_plate_sample_type').val();
+        sampling_data.sample_concentration = jQuery('#sampling_trial_concentration').val();
+        sampling_data.ncbi_taxonomy_id = jQuery('#sampling_trial_ncbi_taxonomy_id').val();
+        sampling_data.sample_extraction = jQuery('#sampling_trial_extraction').val();
+        sampling_data.sample_date = jQuery('#sampling_trial_date').val();
+        sampling_data.sample_person = jQuery('#sampling_trial_person').val();
+        sampling_data.sample_volume = jQuery('#sampling_trial_volume').val();
+        sampling_data.sample_tissue = jQuery('#sampling_trial_tissue').val();
+        sampling_data.sample_notes = jQuery('#sampling_trial_notes').val();
+
+        if (sampling_data.breeding_program == '') {
+            alert("A breeding program is required. Please try again.");
+            return;
+        }
+        if (sampling_data.year == '') {
+            alert("A year is required. Please try again.");
+            return;
+        }
+        if (sampling_data.location == '') {
+            alert("A location is required. Please try again.");
+            return;
+        }
+        if (sampling_data.name == '') {
+            alert("A sampling trial name is required and it should be unique in the database. Please try again.");
+            return;
+        }
+        if (sampling_data.description == '') {
+            alert("A sampling trial description is required. Please try again.");
+            return;
+        }
+        if (sampling_data.sample_type == '') {
+            alert("A sampling trial type is required. Please try again.");
+            return;
+        }
+
+        sampling_data.list_id = jQuery('#sampling_trial_accession_select_box_list_select').val();
+        var l = new CXGN.List();
+        if (! l.validate(sampling_data.list_id, 'accessions', true) && ! l.validate(sampling_data.list_id, 'plots', true) && ! l.validate(sampling_data.list_id, 'plants', true) && ! l.validate(sampling_data.list_id, 'tissue_samples', true)) {
+            alert('The list contains elements that are not accessions or plots or plants or tissue_samples.');
+            return;
+        }
+        var elements = l.getList(sampling_data.list_id);
+        if (typeof elements == 'undefined' ) {
+            alert("There are no elements in the list provided.");
+            return;
+        }
+        sampling_data.elements = elements;
     });
 
 });
