@@ -13,7 +13,7 @@ $facilities => ();
                 <h4 class="modal-title" id="addGenoTrialDialog">Add Genotyping Plate</h4>
             </div>
             <div class="modal-body">
-                <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_genotyping_trials_form" name="upload_genotyping_trials_form" action="/ajax/breeders/genotypetrial">
+                <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_genotyping_trials_form" name="upload_genotyping_trials_form">
 
                     <div class="container-fluid">
 
@@ -224,7 +224,7 @@ $facilities => ();
                                     <div class="well well-sm">
                                         <ul>
                                             <li>Select a list for the source material going into each well. Your list should be a one to one pairing to each well e.g. if you want to fill 95 wells you should supply a list of 95 elements.</li>
-                                            <li>Note: From the most desirable to least desirable list type you can choose: tissue samples, plants, plots, or accessions</li>
+                                            <li>Note: From the most desirable to least desirable source observation unit you can choose: tissue samples, plants, plots, or accessions</li>
                                         </ul>
                                     </div>
                                     <div class="form-group">
@@ -396,7 +396,7 @@ $facilities => ();
                     <ul>
                     <li>date (should be YYYY-MM-DD)</li>
                     <li>sample_id (the unique identifier for the sample in the well)</li>
-                    <li>well_A01 (the position of the sample in the plate)</li>
+                    <li>well_A01 (the position of the sample in the plate e.q. A10)</li>
                     <li>row (the row position of the sample in the plate e.g. A)</li>
                     <li>column (the column position of the sample in the plate e.g. 10)</li>
                     <li>source_observation_unit_name (must exist in the database. the identifier of the origin material. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, plot name, accession name. For blank wells, you can write BLANK here and place a 1 in the is_blank column also.)</li>
