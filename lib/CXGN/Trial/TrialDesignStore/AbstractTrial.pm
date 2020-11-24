@@ -363,8 +363,8 @@ sub BUILD {
     $self->set_has_tissues_cvterm(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_tissue_sample_entries', 'project_property')->cvterm_id());
 
     $self->set_cross_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross', 'stock_type')->cvterm_id());
-   $self->set_family_name_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'family_name', 'stock_type')->cvterm_id());
 
+    $self->set_family_name_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'family_name', 'stock_type')->cvterm_id());
 
 }
 
