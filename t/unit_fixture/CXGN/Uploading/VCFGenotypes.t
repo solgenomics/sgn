@@ -225,7 +225,7 @@ my $genotypes_search = CXGN::Genotype::Search->new({
     
 });
 my ($total_count, $data) = $genotypes_search->get_genotype_info();
-is($total_count, 42);
+is($total_count, 63);
 print STDERR Dumper "VCF GENOTYPE SEARCH";
 print STDERR Dumper $data->[0];
 print STDERR Dumper $data->[0]->{germplasmName};
@@ -245,7 +245,7 @@ my $stock_id = $schema->resultset("Stock::Stock")->find({uniquename => 'SRLI1_90
 $mech->get_ok('http://localhost:3010/stock/'.$stock_id.'/datatables/genotype_data');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is(scalar(@{$response->{data}}), 3);
+is(scalar(@{$response->{data}}), 4);
 
 
 my $file = $f->config->{basepath}."/t/data/genotype_data/10acc_200Ksnps.transposedVCF.hd.txt";
@@ -311,7 +311,7 @@ $response = $ua->post(
             "upload_genotype_vcf_facility_select"=>"IGD",
             "upload_genotype_vcf_project_description"=>"Intertek SNP project 1",
             "upload_genotype_vcf_protocol_name"=>"Intertek SNP protocol 1",
-            "upload_genotype_vcf_include_igd_numbers"=>1,
+            "upload_genotype_vcf_include_lab_numbers"=>1,
             "upload_genotype_vcf_reference_genome_name"=>"Mesculenta_511_v7",
             "upload_genotype_add_new_accessions"=>1, #IDEALLY THIS is set to 0
         ]

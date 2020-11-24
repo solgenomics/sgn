@@ -4,9 +4,9 @@
     (global.PedigreeViewer = factory());
 }(this, (function () { 'use strict';
 
-function PedigreeViewer(server,auth,urlFunc){
+function PedigreeViewer(server,auth,version,urlFunc){
         var pdgv = {};
-        var brapijs = BrAPI(server,auth);
+        var brapijs = BrAPI(server,version,auth);
         var root = null;
         var access_token = null;
         var loaded_nodes = {};

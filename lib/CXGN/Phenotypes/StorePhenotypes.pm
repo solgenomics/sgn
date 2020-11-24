@@ -427,10 +427,13 @@ sub store {
     $self->create_hash_lookups();
     my %linked_data = %{$self->get_linked_data()};
     my @plot_list = @{$self->stock_list};
+    print STDERR Dumper \@plot_list;
     my @trait_list = @{$self->trait_list};
+    print STDERR Dumper \@trait_list;
     @trait_list = map { $_ eq 'notes' ? () : ($_) } @trait_list; # omit notes so they can be handled separately
     my %trait_objs = %{$self->trait_objs};
     my %plot_trait_value = %{$self->values_hash};
+    print STDERR Dumper %plot_trait_value;
     my %phenotype_metadata = %{$self->metadata_hash};
     my $timestamp_included = $self->has_timestamps;
     my $archived_image_zipfile_with_path = $self->image_zipfile_path;
@@ -828,6 +831,7 @@ sub save_archived_images_metadata {
 
     my $q = "INSERT into phenome.nd_experiment_md_images (nd_experiment_id, image_id) VALUES (?, ?);";
     my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+    # Check for single image id vs array, then handle accordingly
     while (my ($nd_experiment_id, $image_id) = each %$nd_experiment_md_images) {
         $h->execute($nd_experiment_id, $image_id);
     }

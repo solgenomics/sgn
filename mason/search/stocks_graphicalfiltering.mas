@@ -48,6 +48,13 @@ jQuery(document).ready(function () {
 
 var currentGFilter = null;
 function loadBrAPIData(server,parameters,success){
+      var auth_token;
+      var require_login = "<%  $c->get_conf('brapi_require_login') %>";
+      if (require_login === '1'){
+          auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
+          if (!auth_token){ alert("Login required to display graphical filtering"); }
+      }
+
     var data = {
         "pageSize" : 10000000,
     };
@@ -55,8 +62,8 @@ function loadBrAPIData(server,parameters,success){
         data[entry.key] = data[entry.key]||entry.value;
     });
     
-    var brapi_Data = BrAPI(server+"/brapi/v1").phenotypes_search(data);
-    
+    var brapi_Data = BrAPI("/brapi/v1",'v1.3',auth_token).phenotypes_search(data);
+
     if (currentGFilter!=null){
         $("#stock_search_graphical_filter_results_div").DataTable().destroy();
         $("#stock_search_graphical_filter_results_div").html("");
@@ -81,6 +88,7 @@ function loadBrAPIData(server,parameters,success){
           return d.germplasmDbId
         }
       );
+
     currentGFilter.draw("#stock_search_graphical_filter_div","#stock_search_graphical_filter_results_div");
     brapi_Data.all(function(){
       _make_graphical_filtering_list_select();
