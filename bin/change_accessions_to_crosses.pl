@@ -78,6 +78,9 @@ my $coderef = sub {
 	}
     my $crossing_experiment_id = $crossing_experiment_rs->project_id();
 
+    my $project_location_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project location', 'project_property')->cvterm_id();
+    my $geolocation_rs = $schema->resultset("Project::Projectprop")->find({project_id => $crossing_experiment_id, type_id => $project_location_cvterm_id});
+
     for my $row ( 1 .. $row_max ) {
 
     	my $stock_uniquename = $worksheet->get_cell($row,0)->value();
@@ -109,10 +112,41 @@ my $coderef = sub {
 
         my $cross_stock_rs = $stock_rs->update({ type_id => $cross_cvterm_id});
 
+        my $stock_female_relationship_rs = $self->schema->resultset("Stock::StockRelationship")->search({ object_id => $stock_rs->stock_id(), type_id => $female_parent_cvterm_id });
+        if (!$stock_female_relationship_rs) {
+            $cross_stock_rs->find_or_create_related('stock_relationship_objects', {
+                type_id => $female_parent_cvterm_id,
+                object_id => $cross_stock_rs->stock_id(),
+                subject_id => $female_rs->stock_id(),
+                value => $cross_type,
+            });
+        }
 
+        my $stock_male_relationship_rs = $self->schema->resultset("Stock::StockRelationship")->search({ object_id => $stock_rs->stock_id(), type_id => $male_parent_cvterm_id });
+        if (!$stock_male_relationship_rs) {
+            $cross_stock_rs->find_or_create_related('stock_relationship_objects', {
+                type_id => $male_parent_cvterm_id,
+                object_id => $cross_stock_rs->stock_id(),
+                subject_id => $male_rs->stock_id(),
+            });
+        }
 
+        #create experiment
+        my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create({
+            nd_geolocation_id => $geolocation_rs->value,
+            type_id => $cross_experiment_cvterm_id,
+        });
 
+        #link cross unique id to the experiment
+        $experiment->find_or_create_related('nd_experiment_stocks' , {
+              stock_id => $cross_stock_rs->stock_id(),
+              type_id  =>  $cross_experiment_cvterm_id,
+            });
 
+        #link the experiment to the project
+        $experiment->find_or_create_related('nd_experiment_projects', {
+            project_id => $crossing_experiment_id,
+        });
     }
 };
 
