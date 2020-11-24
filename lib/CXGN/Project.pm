@@ -210,6 +210,10 @@ sub get_cxgn_project_type {
                     $cxgn_project_type = 'genotyping_plate_project';
                     $experiment_type = 'genotyping_layout';
                 }
+                if ($propvalue eq "sampling_trial") {
+                    $cxgn_project_type = 'sampling_trial_project';
+                    $experiment_type = 'sampling_layout';
+                }
                 if ($propvalue eq "treatment") {
                     $cxgn_project_type = 'management_factor_project';
                 }
@@ -679,6 +683,65 @@ sub get_field_trials_source_of_genotyping_trial {
     return  \@projects;
 }
 
+=head2 function set_source_field_trials_for_sampling_trial()
+
+ Usage:
+ Desc:         sets associated field trials for the current sampling trial
+ Ret:          returns an arrayref [ id, name ] of arrayrefs
+ Args:         an arrayref [field_trial_id1, field_trial_id2]
+ Side Effects:
+ Example:
+
+=cut
+
+sub set_source_field_trials_for_sampling_trial {
+    my $self = shift;
+    my $source_field_trial_ids = shift;
+    my $schema = $self->bcs_schema;
+    my $sampling_trial_from_field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'sampling_trial_from_field_trial', 'project_relationship')->cvterm_id();
+
+    foreach (@$source_field_trial_ids){
+        if ($_){
+            my $trial_rs= $self->bcs_schema->resultset('Project::ProjectRelationship')->create({
+                'object_project_id' => $self->get_trial_id(),
+                'subject_project_id' => $_,
+                'type_id' => $sampling_trial_from_field_trial_cvterm_id
+            });
+        }
+    }
+    my $projects = $self->get_field_trials_source_of_sampling_trial();
+    return $projects;
+}
+
+=head2 function get_field_trials_source_of_sampling_trial()
+
+ Usage:
+ Desc:         return associated field trials for current sampling trial
+ Ret:          returns an arrayref [ id, name ] of arrayrefs
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_field_trials_source_of_sampling_trial {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $sampling_trial_from_field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'sampling_trial_from_field_trial', 'project_relationship')->cvterm_id();
+
+    my $trial_rs= $self->bcs_schema->resultset('Project::ProjectRelationship')->search({
+        'me.object_project_id' => $self->get_trial_id(),
+        'me.type_id' => $sampling_trial_from_field_trial_cvterm_id
+    }, {
+        join => 'subject_project', '+select' => ['subject_project.name'], '+as' => ['source_trial_name']
+    });
+
+    my @projects;
+    while (my $r = $trial_rs->next) {
+        push @projects, [ $r->subject_project_id, $r->get_column('source_trial_name') ];
+    }
+    return  \@projects;
+}
 
 =head2 function set_crossing_trials_from_field_trial()
 

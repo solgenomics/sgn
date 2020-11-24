@@ -39,7 +39,7 @@ $sampling_facilities => ();
                                         <select class="form-control" id="sampling_trial_facility_select">
 % foreach my $facility(@$sampling_facilities){
     <option value="<%$facility%>"><%$facility%></option>
-%}
+% }
                                         </select>
                                     </div>
                                 </div>
@@ -153,7 +153,7 @@ $sampling_facilities => ();
                                     <div class="form-group">
                                         <label class="col-sm-7 control-label">Replicates: </label>
                                         <div class="col-sm-5">
-                                            <input class="form-control" id="sampling_trial_replicates" name="sampling_trial_replicates" type="number" />
+                                            <input class="form-control" id="sampling_trial_replicates" name="sampling_trial_replicates" type="number" placeholder="1"/>
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm">
@@ -215,6 +215,7 @@ $sampling_facilities => ();
                                 <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
                                 </center>
                             </&>
+                            <&| /util/workflow.mas:step, title=> "Linkage" &>
                                 <& /page/page_title.mas, title=>"Is your sampling trial linked with field trials in the database? This information can also be added from the sampling trial detail page once the trial is saved in the database." &>
 
                                 <p>If you provided us with information about where the sample originated (e.g. it came from a plot name or plant name or tissue sample name in a field trial), we will automatically create linkage between the field trial(s) and this sampling trial.</p>
@@ -328,6 +329,10 @@ $sampling_facilities => ();
 <script>
 jQuery(document).ready(function(){
 
+    jQuery('button[name="create_sampling_trial_button"]').click(function(){
+        jQuery('#sampling_trial_dialog').modal('show');
+    });
+
     jQuery('#sampling_trial_dialog').on('show.bs.modal', function (e) {
         get_select_box("locations", "sampling_trial_location_select_div", {'id':'sampling_trial_location_select', 'name':'sampling_trial_location_select'});
         get_select_box("breeding_programs", "sampling_trial_breeding_program_select_div", {'id':'sampling_trial_breeding_program_select', 'name':'sampling_trial_breeding_program_select'});
@@ -359,8 +364,10 @@ jQuery(document).ready(function(){
         sampling_data = new Object();
         sampling_data.breeding_program = jQuery('#sampling_trial_breeding_program_select').val();
         sampling_data.year = jQuery('#sampling_trial_year_select').val();
+        sampling_data.sampling_facility = jQuery('#sampling_trial_facility_select').val();
         sampling_data.location = jQuery('#sampling_trial_location_select').val();
         sampling_data.description = jQuery('#sampling_trial_description').val();
+        sampling_data.replicates = jQuery('#sampling_trial_replicates').val();
         sampling_data.name = jQuery('#sampling_trial_name').val();
         sampling_data.sample_type = jQuery('#sampling_trial_plate_sample_type').val();
         sampling_data.sample_concentration = jQuery('#sampling_trial_concentration').val();
@@ -396,20 +403,81 @@ jQuery(document).ready(function(){
             alert("A sampling trial type is required. Please try again.");
             return;
         }
+        if (sampling_data.replicates == '') {
+            sampling_data.replicates = 1;
+        }
 
-        sampling_data.list_id = jQuery('#sampling_trial_accession_select_box_list_select').val();
-        var l = new CXGN.List();
-        if (! l.validate(sampling_data.list_id, 'accessions', true) && ! l.validate(sampling_data.list_id, 'plots', true) && ! l.validate(sampling_data.list_id, 'plants', true) && ! l.validate(sampling_data.list_id, 'tissue_samples', true)) {
-            alert('The list contains elements that are not accessions or plots or plants or tissue_samples.');
-            return;
+        var uploadFileXLS = jQuery("#sampling_trial_layout_upload").val();
+        if (uploadFileXLS === ''){
+            sampling_data.list_id = jQuery('#sampling_trial_accession_select_box_list_select').val();
+            var l = new CXGN.List();
+            if (! l.validate(sampling_data.list_id, 'accessions', true) && ! l.validate(sampling_data.list_id, 'plots', true) && ! l.validate(sampling_data.list_id, 'plants', true) && ! l.validate(sampling_data.list_id, 'tissue_samples', true)) {
+                alert('The list contains elements that are not accessions or plots or plants or tissue_samples.');
+                return;
+            }
+            var elements = l.getList(sampling_data.list_id);
+            if (typeof elements == 'undefined' ) {
+                alert("There are no elements in the list provided.");
+                return;
+            }
+            sampling_data.elements = elements;
+
+            jQuery.ajax({
+                url: '/ajax/breeders/generatesamplingtrial',
+                method: 'POST',
+                beforeSend: function(){
+                    jQuery("working_modal").modal('show');
+                },
+                data: {
+                    'sampling_data': JSON.stringify(sampling_data)
+                },
+                success : function(response) {
+                    console.log(response);
+                    jQuery("working_modal").modal('hide');
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                    else {
+                        sampling_data.design = response.design;
+                        store_sampling_trial(sampling_data);
+                    }
+                },
+                error: function(response) {
+                    alert('An error occurred trying the create the sampling trial layout.');
+                    jQuery("working_modal").modal('hide');
+                }
+            });
         }
-        var elements = l.getList(sampling_data.list_id);
-        if (typeof elements == 'undefined' ) {
-            alert("There are no elements in the list provided.");
-            return;
-        }
-        sampling_data.elements = elements;
     });
+
+    function store_sampling_trial(sampling_data) {
+        jQuery.ajax({
+            url: '/ajax/breeders/storesamplingtrial',
+            method: 'POST',
+            beforeSend: function(){
+                jQuery("#working_modal").modal('show');
+            },
+            data: {
+                'sampling_data': JSON.stringify(sampling_data)
+            },
+            success : function(response) {
+                jQuery("#working_modal").modal('hide');
+                if (response.error) {
+                    alert(response.error);
+                }
+                else {
+                    alert(response.message);
+                    Workflow.complete('#add_sampling_trial_submit');
+                    Workflow.focus("#sampling_trial_create_workflow", -1); //Go to success page
+                    Workflow.check_complete("#sampling_trial_create_workflow");
+                }
+            },
+            error: function(response) {
+                alert('An error occurred trying the create the layout.');
+                jQuery("#working_modal").modal('hide');
+            }
+        });
+    }
 
 });
 </script>

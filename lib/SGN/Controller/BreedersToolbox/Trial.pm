@@ -149,6 +149,9 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
             $c->stash->{template} = '/breeders_toolbox/genotyping_trials/detail.mas';
         }
     }
+    elsif ($design_type eq "sampling_trial"){
+        $c->stash->{template} = '/breeders_toolbox/sampling_trials/detail.mas';
+    }
     elsif ($design_type eq "treatment"){
         $c->stash->{management_factor_type} = $trial->get_management_factor_type;
         $c->stash->{management_factor_date} = $trial->get_management_factor_date;

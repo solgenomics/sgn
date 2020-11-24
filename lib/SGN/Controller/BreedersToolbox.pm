@@ -186,7 +186,11 @@ sub manage_tissue_samples : Path("/breeders/samples") Args(0) {
     my $genotyping_facilities = $c->config->{genotyping_facilities};
     my @facilities = split ',',$genotyping_facilities;
 
+    my $sampling_facilities = $c->config->{sampling_facilities};
+    my @sampling_facilities = split ',',$sampling_facilities;
+
     $c->stash->{facilities} = \@facilities;
+    $c->stash->{sampling_facilities} = \@sampling_facilities;
     $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
     $c->stash->{template} = '/breeders_toolbox/manage_samples.mas';
 }

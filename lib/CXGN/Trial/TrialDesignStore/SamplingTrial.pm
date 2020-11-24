@@ -29,7 +29,6 @@ sub BUILD {
    	    'rep_number',
         'row_number',
         'col_number',
-        'is_blank',
         'plot_number',
         'extraction',
         'dna_person',
@@ -53,8 +52,8 @@ sub validate_design {
     my %design = %{$self->get_design}; 
     my $error = '';
 
-   if ($design_type ne 'sampling_plate') {
-        $error .= "design_type not equal to 'sampling_plate'";
+   if ($design_type ne 'sampling_trial') {
+        $error .= "design_type not equal to 'sampling_trial'";
         return $error;
     }
 
