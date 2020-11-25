@@ -23,14 +23,16 @@
     </div>
 
 <%perl>
-#my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Imagery</button><button class='btn btn-default' style='margin:3px' id='download_phenotypes_drone_imagery_link'>Download Image-Phenotypes</button><button class='btn btn-success' style='margin:3px' id='keras_cnn_drone_imagery_link'>Keras CNN Models</button><button class='btn btn-success' style='margin:3px' id='drone_imagery_calculate_statistics_link'>Calculate Statistics</button><button class='btn btn-default' style='margin:3px' id='drone_imagery_compare_field_images_link'>Compare Aerial Field Images</button><button class='btn btn-default' style='margin:3px' id='drone_imagery_view_imaging_vehicles_link'>Imaging Vehicles</button>";
+#my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Imagery</button><button class='btn btn-default' style='margin:3px' id='download_phenotypes_drone_imagery_link'>Download Image-Phenotypes</button><button class='btn btn-success' style='margin:3px' id='keras_cnn_drone_imagery_link'>CNN Models</button><button class='btn btn-success' style='margin:3px' id='drone_imagery_calculate_statistics_link'>Statistics</button><button class='btn btn-success' style='margin:3px' id='drone_imagery_analytics_link'>Analytics</button><button class='btn btn-default' style='margin:3px' id='drone_imagery_compare_field_images_link'>Compare Aerial Field Images</button><button class='btn btn-default' style='margin:3px' id='drone_imagery_view_imaging_vehicles_link'>Imaging Vehicles</button>";
 
-my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Imagery</button><button class='btn btn-success' style='margin:3px' id='keras_cnn_drone_imagery_link'>Keras CNN Models</button><button class='btn btn-success' style='margin:3px' id='drone_imagery_calculate_statistics_link'>Calculate Statistics</button><button class='btn btn-default' style='margin:3px' id='drone_imagery_compare_field_images_link'>Compare Aerial Field Images</button><button class='btn btn-default' style='margin:3px' id='drone_imagery_view_imaging_vehicles_link'>Imaging Vehicles</button>";
+my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='upload_drone_imagery_link'>Upload Imagery</button><button class='btn btn-success' style='margin:3px' id='keras_cnn_drone_imagery_link'>CNN Models</button><button class='btn btn-success' style='margin:3px' id='drone_imagery_calculate_statistics_link'>Calculate Statistics</button><button class='btn btn-success' style='margin:3px' id='drone_imagery_analytics_link'>Analytics</button><button class='btn btn-default' style='margin:3px' id='drone_imagery_view_imaging_vehicles_link'>Imaging Vehicles</button>";
 </%perl>
 
     <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Drone Imagery</h4>", info_section_subtitle => 'Please cite <a href="https://acsess.onlinelibrary.wiley.com/doi/full/10.1002/ppj2.20004" target=_blank>ImageBreed</a> if you find any of these tools useful', buttons_html => $buttons_html, icon_class => undef, col1_width_class => "col-sm-0", col2_width_class => "col-sm-12", info_section_id => "manage_drone_imagery_main" &>
 
 </div>
+
+<& /breeders_toolbox/drone_imagery/drone_imagery_analytics.mas &>
 
 <div id="manage_drone_imagery_standard_process_div" style="display:none">
 
@@ -1264,14 +1266,14 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="droneImageryCalculateStatisticsDialog">Calculate statistics on drone phenotypes</h4>
+        <h4 class="modal-title" id="droneImageryCalculateStatisticsDialog">Calculate statistics on aerial image phenotypes</h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
 
             <&| /util/workflow.mas, id=> "drone_imagery_calculate_statistics_workflow" &>
                 <&| /util/workflow.mas:step, title=> "Field Trial" &>
-                    <& /page/page_title.mas, title=>"Select the field trial(s) you are interested in. Selected field trials should have some common accessions between them." &>
+                    <& /page/page_title.mas, title=>"Select the field trial you are interested in. Select only one." &>
                     <br/><br/>
                     <form class="form-horizontal">
                         <div class="form-group">
@@ -1286,7 +1288,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                     </center>
                 </&>
                 <&| /util/workflow.mas:step, title=> "Trait Selection" &>
-                    <& /page/page_title.mas, title=>"Select the observation variable(s) you are interested in downloading" &>
+                    <& /page/page_title.mas, title=>"Select the observation variable(s) you are interested in" &>
                     <br/><br/>
                     <form class="form-horizontal">
                         <div class="form-group">
