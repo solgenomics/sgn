@@ -161,7 +161,8 @@ has 'trial_id' => (isa => 'Int',
 
 has 'layout' => (isa => 'CXGN::Trial::TrialLayout::Phenotyping |
                          CXGN::Trial::TrialLayout::Genotyping |
-                         CXGN::Trial::TrialLayout::Analysis',
+                         CXGN::Trial::TrialLayout::Analysis |
+                         CXGN::Trial::TrialLayout::SamplingTrial',
 		 is => 'rw',
 		 reader => 'get_layout',
 		 writer => 'set_layout',

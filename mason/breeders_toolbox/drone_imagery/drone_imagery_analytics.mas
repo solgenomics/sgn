@@ -563,7 +563,7 @@ jQuery(document).ready(function() {
         }
 
         jQuery.ajax({
-            url : '/api/drone_imagery/calculate_statistics',
+            url : '/api/drone_imagery/calculate_analytics',
             type : 'POST',
             data : {
                 'observation_variable_id_list':JSON.stringify(manage_drone_imagery_analytics_trait_ids),
