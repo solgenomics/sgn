@@ -58,7 +58,7 @@ sub patch {
 
 ALTER TABLE public.nd_experiment_phenotype_bridge 
       ADD COLUMN nd_protocol_id integer, 
-      ADD CONSTRAINT nd_experiment_phenotype_bridge_project_id_fkey 
+      ADD CONSTRAINT nd_experiment_phenotype_bridge_nd_protocol_id_fkey
         FOREIGN KEY (nd_protocol_id) 
             REFERENCES nd_protocol (nd_protocol_id)
             ON DELETE CASCADE;
