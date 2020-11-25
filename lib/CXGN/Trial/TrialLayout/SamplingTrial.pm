@@ -1,5 +1,5 @@
 
-package CXGN::Trial::TrialLayout::Genotyping;
+package CXGN::Trial::TrialLayout::SamplingTrial;
 
 use Moose;
 use namespace::autoclean;
@@ -11,7 +11,7 @@ extends 'CXGN::Trial::TrialLayout::AbstractLayout';
 sub BUILD {
     my $self = shift;
 
-    print STDERR "BUILD CXGN::Trial::TrialLayout::Genotyping...\n";
+    print STDERR "BUILD CXGN::Trial::TrialLayout::SamplingTrial...\n";
     
     $self->set_source_stock_types( [ "accession" ] );
     $self->set_relationship_types( [ "tissue_sample_of" ] );
@@ -46,27 +46,6 @@ sub retrieve_plot_info {
      if (! $plot_number) { print STDERR "NO PLOT NUMBER AVAILABLE!!!!\n"; }
 	      
      my $project = $self->get_project();
-     my $genotyping_user_id;
-     my $genotyping_project_name;
-
-     my $genotyping_user_id_row = $project
-	 ->search_related("nd_experiment_projects")
-	 ->search_related("nd_experiment")
-	 ->search_related("nd_experimentprops")
-	 ->find({ 'type.name' => 'genotyping_user_id' }, {join => 'type' });
-     $genotyping_user_id = $genotyping_user_id_row->get_column("value") || "unknown";
-     
-     my $genotyping_project_name_row = $project
-	 ->search_related("nd_experiment_projects")
-	 ->search_related("nd_experiment")
-	 ->search_related("nd_experimentprops")
-	 ->find({ 'type.name' => 'genotyping_project_name' }, {join => 'type' });
-     $genotyping_project_name = $genotyping_project_name_row->get_column("value") || "unknown";
-     
-     $design->{$plot_number}->{genotyping_user_id} = $genotyping_user_id;
-     print STDERR "RETRIEVED: genotyping_user_id: $design->{genotyping_user_id}\n";
-     $design->{$plot_number}->{genotyping_project_name} = $genotyping_project_name;
-     print STDERR "RETRIEVED: genotyping_project_name: $design->{genotyping_project_name}\n";
      
      my $source_rs = $plot->search_related('stock_relationship_subjects')->search(
 	 { 'me.type_id' => { -in => $self->get_relationship_type_ids() }, 'object.type_id' => { -in => $self->get_source_stock_type_ids() } },

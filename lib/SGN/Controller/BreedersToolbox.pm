@@ -186,7 +186,11 @@ sub manage_tissue_samples : Path("/breeders/samples") Args(0) {
     my $genotyping_facilities = $c->config->{genotyping_facilities};
     my @facilities = split ',',$genotyping_facilities;
 
+    my $sampling_facilities = $c->config->{sampling_facilities};
+    my @sampling_facilities = split ',',$sampling_facilities;
+
     $c->stash->{facilities} = \@facilities;
+    $c->stash->{sampling_facilities} = \@sampling_facilities;
     $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
     $c->stash->{template} = '/breeders_toolbox/manage_samples.mas';
 }
@@ -325,6 +329,10 @@ sub manage_nirs :Path("/breeders/nirs") Args(0) {
     my $all_data = $self->get_file_data($c, \@file_types, 1);
     my $data = $self->get_file_data($c, \@file_types, 0);
 
+    my $sampling_facilities = $c->config->{sampling_facilities};
+    my @sampling_facilities = split ',',$sampling_facilities;
+
+    $c->stash->{sampling_facilities} = \@sampling_facilities;
     $c->stash->{nirs_files} = $data->{files};
     $c->stash->{deleted_nirs_files} = $data->{deleted_files};
     $c->stash->{all_nirs_files} = $all_data->{files};

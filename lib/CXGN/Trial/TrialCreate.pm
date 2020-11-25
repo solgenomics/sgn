@@ -177,7 +177,6 @@ has 'genotyping_trial_from_field_trial' => (isa => 'ArrayRef', is => 'rw', predi
 # Properties for genotyping plates
 #
 has 'is_genotyping' => (isa => 'Bool', is => 'rw', required => 0, default => 0, );
-
 has 'genotyping_user_id' => (isa => 'Str', is => 'rw');
 has 'genotyping_project_name' => (isa => 'Str', is => 'rw');
 has 'genotyping_facility_submitted' => (isa => 'Str', is => 'rw');
@@ -189,6 +188,16 @@ has 'genotyping_plate_sample_type' => (isa => 'Str', is => 'rw');
 #
 has 'is_analysis' => (isa => 'Bool', is => 'rw', required => 0, default => 0, );
 has 'analysis_model_protocol_id' => (isa => 'Int|Undef', is => 'rw', required => 0 );
+
+# Trial linkage when saving either a sampling trial
+#
+has 'sampling_trial_from_field_trial' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_sampling_trial_from_field_trial', required => 0);
+
+# Properties for sampling trials
+#
+has 'is_sampling_trial' => (isa => 'Bool', is => 'rw', required => 0, default => 0, );
+has 'sampling_trial_facility' => (isa => 'Str', is => 'rw');
+has 'sampling_trial_sample_type' => (isa => 'Str', is => 'rw');
 
 
 sub trial_name_already_exists {
@@ -265,189 +274,196 @@ sub save_trial {
 		return { error => "Trial not saved: location not found" };
 	}
 
-    
-	my $project_year_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project year', 'project_property');
-	my $project_design_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'design', 'project_property');
-	my $field_size_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_size', 'project_property');
-	my $plot_width_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_width', 'project_property');
-	my $plot_length_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_length', 'project_property');
-	my $field_trial_is_planned_to_be_genotyped_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_trial_is_planned_to_be_genotyped', 'project_property');
-	my $field_trial_is_planned_to_cross_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_trial_is_planned_to_cross', 'project_property');
-	my $has_plant_entries_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property');
-	my $has_subplot_entries_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_subplot_entries', 'project_property');
-	my $genotyping_facility_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_facility', 'project_property');
-	my $genotyping_facility_submitted_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_facility_submitted', 'project_property');
-	my $genotyping_plate_format_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_plate_format', 'project_property');
-	my $genotyping_plate_sample_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_plate_sample_type', 'project_property');
-	my $genotyping_user_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_user_id', 'nd_experiment_property');
-	my $genotyping_project_name_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_project_name', 'nd_experiment_property');
-	my $trial_stock_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'trial_stock_type', 'project_property');
-
+    my $project_year_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project year', 'project_property');
+    my $project_design_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'design', 'project_property');
+    my $field_size_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_size', 'project_property');
+    my $plot_width_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_width', 'project_property');
+    my $plot_length_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_length', 'project_property');
+    my $field_trial_is_planned_to_be_genotyped_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_trial_is_planned_to_be_genotyped', 'project_property');
+    my $field_trial_is_planned_to_cross_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_trial_is_planned_to_cross', 'project_property');
+    my $has_plant_entries_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property');
+    my $has_subplot_entries_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_subplot_entries', 'project_property');
+    my $genotyping_facility_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_facility', 'project_property');
+    my $genotyping_facility_submitted_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_facility_submitted', 'project_property');
+    my $genotyping_plate_format_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_plate_format', 'project_property');
+    my $genotyping_plate_sample_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_plate_sample_type', 'project_property');
+    my $genotyping_user_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_user_id', 'nd_experiment_property');
+    my $genotyping_project_name_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_project_name', 'nd_experiment_property');
+    my $trial_stock_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'trial_stock_type', 'project_property');
+    my $sampling_facility_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'sampling_facility', 'project_property');
+    my $sampling_trial_sample_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'sampling_trial_sample_type', 'project_property');
 
     my $project;
     if ($self->has_trial_id()) {
-	$project = $chado_schema->resultset('Project::Project')->find( { project_id => $self->get_trial_id() });
-	if (! $project) {  die "The specified project id ".$self->get_trial_id()." does not exit in the database\n"; }
+        $project = $chado_schema->resultset('Project::Project')->find( { project_id => $self->get_trial_id() });
+        if (! $project) {  die "The specified project id ".$self->get_trial_id()." does not exit in the database\n"; }
     }
     else {
-	$project = $chado_schema->resultset('Project::Project')
-	    ->create({
-		name => $trial_name,
-		description => $self->get_trial_description(),
-		     });
+        $project = $chado_schema->resultset('Project::Project')
+        ->create({
+            name => $trial_name,
+            description => $self->get_trial_description(),
+        });
     }
-    
+
     my $t = CXGN::Trial->new({
-	bcs_schema => $chado_schema,
-	trial_id => $project->project_id()
-			     });
-    
-    
+        bcs_schema => $chado_schema,
+        trial_id => $project->project_id()
+    });
+
+
     #print STDERR "TRIAL TYPE = ".ref($t)."!!!!\n";
     my $nd_experiment_type_id;
     if ($self->get_is_genotyping()) {
-	print STDERR "Generating a genotyping trial...\n";
-	$nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_layout', 'experiment_type')->cvterm_id();
-    } 
-    elsif ($self->get_is_analysis()) { 
-	print STDERR "Generating an analysis trial...\n";
-	$nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, , 'analysis_experiment', 'experiment_type')->cvterm_id();
-    }
-    else {
-	print STDERR "Generating a phenotyping trial...\n";
-	$nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, , 'field_layout', 'experiment_type')->cvterm_id();
-    }
-    my $nd_experiment = $chado_schema->resultset('NaturalDiversity::NdExperiment')
-	->create(
-	{
-	    nd_geolocation_id => $geolocation->nd_geolocation_id(),
-	    type_id => $nd_experiment_type_id,
-	});
-    
-    
-    if ($self->get_is_genotyping()) { 
-	#print STDERR "Storing user_id and project_name provided by the IGD spreadksheet for later recovery in the spreadsheet download... ".(join ",", ($self->get_genotyping_user_id(), $self->get_genotyping_project_name()))."\n";
-	$nd_experiment->create_nd_experimentprops(
-	    {
-		$genotyping_user_cvterm->name() => $self->get_genotyping_user_id(),
-		$genotyping_project_name_cvterm->name() => $self->get_genotyping_project_name(),
-	    });
-	
-	
-	
-	$project->create_projectprops(
-	    {
-		$genotyping_facility_cvterm->name() => $self->get_genotyping_facility(),
-		$genotyping_facility_submitted_cvterm->name() => $self->get_genotyping_facility_submitted(),
-		$genotyping_plate_format_cvterm->name() => $self->get_genotyping_plate_format(),
-		$genotyping_plate_sample_type_cvterm->name() => $self->get_genotyping_plate_sample_type()
-	    });
-	
-	my $source_field_trial_ids = $t->set_source_field_trials_for_genotyping_trial($self->get_genotyping_trial_from_field_trial);
+        print STDERR "Generating a genotyping trial...\n";
+        $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_layout', 'experiment_type')->cvterm_id();
     }
     elsif ($self->get_is_analysis()) {
-		if ($self->get_analysis_model_protocol_id) {
-			#link to the saved analysis model
-		    $nd_experiment->find_or_create_related('nd_experiment_protocols', {nd_protocol_id => $self->get_analysis_model_protocol_id() });
-		}
+        print STDERR "Generating an analysis trial...\n";
+        $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, , 'analysis_experiment', 'experiment_type')->cvterm_id();
+    }
+    elsif ($self->get_is_sampling_trial()) {
+        print STDERR "Generating a sampling trial...\n";
+        $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, , 'sampling_layout', 'experiment_type')->cvterm_id();
     }
     else {
-	my $source_field_trial_ids = $t->set_field_trials_source_field_trials($self->get_field_trial_from_field_trial);
-	my $genotyping_trial_ids = $t->set_genotyping_trials_from_field_trial($self->get_genotyping_trial_from_field_trial);
-	my $crossing_trial_ids = $t->set_crossing_trials_from_field_trial($self->get_crossing_trial_from_field_trial);
+        print STDERR "Generating a phenotyping trial...\n";
+        $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, , 'field_layout', 'experiment_type')->cvterm_id();
     }
-    
+    my $nd_experiment = $chado_schema->resultset('NaturalDiversity::NdExperiment')
+    ->create({
+        nd_geolocation_id => $geolocation->nd_geolocation_id(),
+        type_id => $nd_experiment_type_id,
+    });
+
+
+    if ($self->get_is_genotyping()) { 
+        #print STDERR "Storing user_id and project_name provided by the IGD spreadksheet for later recovery in the spreadsheet download... ".(join ",", ($self->get_genotyping_user_id(), $self->get_genotyping_project_name()))."\n";
+        $nd_experiment->create_nd_experimentprops({
+            $genotyping_user_cvterm->name() => $self->get_genotyping_user_id(),
+            $genotyping_project_name_cvterm->name() => $self->get_genotyping_project_name(),
+        });
+
+        $project->create_projectprops({
+            $genotyping_facility_cvterm->name() => $self->get_genotyping_facility(),
+            $genotyping_facility_submitted_cvterm->name() => $self->get_genotyping_facility_submitted(),
+            $genotyping_plate_format_cvterm->name() => $self->get_genotyping_plate_format(),
+            $genotyping_plate_sample_type_cvterm->name() => $self->get_genotyping_plate_sample_type()
+        });
+
+        my $source_field_trial_ids = $t->set_source_field_trials_for_genotyping_trial($self->get_genotyping_trial_from_field_trial);
+    }
+    elsif ($self->get_is_analysis()) {
+        if ($self->get_analysis_model_protocol_id) {
+            #link to the saved analysis model
+            $nd_experiment->find_or_create_related('nd_experiment_protocols', {nd_protocol_id => $self->get_analysis_model_protocol_id() });
+        }
+    }
+    elsif ($self->get_is_sampling_trial()) { 
+        $project->create_projectprops({
+            $sampling_facility_cvterm->name() => $self->get_sampling_trial_facility(),
+            $sampling_trial_sample_type_cvterm->name() => $self->get_sampling_trial_sample_type()
+        });
+
+        my $source_field_trial_ids = $t->set_source_field_trials_for_sampling_trial($self->get_sampling_trial_from_field_trial);
+    }
+    else {
+        my $source_field_trial_ids = $t->set_field_trials_source_field_trials($self->get_field_trial_from_field_trial);
+        my $genotyping_trial_ids = $t->set_genotyping_trials_from_field_trial($self->get_genotyping_trial_from_field_trial);
+        my $crossing_trial_ids = $t->set_crossing_trials_from_field_trial($self->get_crossing_trial_from_field_trial);
+    }
+
     $t->set_location($geolocation->nd_geolocation_id()); # set location also as a project prop
     $t->set_breeding_program($self->get_breeding_program_id);
     if ($self->get_trial_type){
-	$t->set_project_type($self->get_trial_type);
+        $t->set_project_type($self->get_trial_type);
     }
     if ($self->get_planting_date){
-	$t->set_planting_date($self->get_planting_date);
+        $t->set_planting_date($self->get_planting_date);
     }
     if ($self->get_harvest_date){
-	$t->set_harvest_date($self->get_harvest_date);
+        $t->set_harvest_date($self->get_harvest_date);
     }
-    
+
     #link to the project
     $nd_experiment->find_or_create_related('nd_experiment_projects',{project_id => $project->project_id()});
-    
+
     $project->create_projectprops({
-	$project_year_cvterm->name() => $self->get_trial_year(),
-	$project_design_cvterm->name() => $self->get_design_type()
-				  });
+        $project_year_cvterm->name() => $self->get_trial_year(),
+        $project_design_cvterm->name() => $self->get_design_type()
+    });
     if ($self->has_field_size && $self->get_field_size){
-	$project->create_projectprops({
-	    $field_size_cvterm->name() => $self->get_field_size
-				      });
+        $project->create_projectprops({
+            $field_size_cvterm->name() => $self->get_field_size
+        });
     }
     if ($self->has_plot_width && $self->get_plot_width){
-	$project->create_projectprops({
-	    $plot_width_cvterm->name() => $self->get_plot_width
-				      });
+        $project->create_projectprops({
+            $plot_width_cvterm->name() => $self->get_plot_width
+        });
     }
     if ($self->has_plot_length && $self->get_plot_length){
-	$project->create_projectprops({
-	    $plot_length_cvterm->name() => $self->get_plot_length
-				      });
+        $project->create_projectprops({
+            $plot_length_cvterm->name() => $self->get_plot_length
+        });
     }
     if ($self->has_trial_has_plant_entries && $self->get_trial_has_plant_entries){
-	$project->create_projectprops({
-	    $has_plant_entries_cvterm->name() => $self->get_trial_has_plant_entries
-				      });
+        $project->create_projectprops({
+            $has_plant_entries_cvterm->name() => $self->get_trial_has_plant_entries
+        });
     }
     if ($self->has_trial_has_subplot_entries && $self->get_trial_has_subplot_entries){
-	$project->create_projectprops({
-	    $has_subplot_entries_cvterm->name() => $self->get_trial_has_subplot_entries
-				      });
+        $project->create_projectprops({
+            $has_subplot_entries_cvterm->name() => $self->get_trial_has_subplot_entries
+        });
     }
     if ($self->has_field_trial_is_planned_to_cross && $self->get_field_trial_is_planned_to_cross){
-		$project->create_projectprops({
-		    $field_trial_is_planned_to_cross_cvterm->name() => $self->get_field_trial_is_planned_to_cross
-					      });
+        $project->create_projectprops({
+            $field_trial_is_planned_to_cross_cvterm->name() => $self->get_field_trial_is_planned_to_cross
+        });
     }
     if ($self->has_field_trial_is_planned_to_be_genotyped && $self->get_field_trial_is_planned_to_be_genotyped){
-	$project->create_projectprops({
-	    $field_trial_is_planned_to_be_genotyped_cvterm->name() => $self->get_field_trial_is_planned_to_be_genotyped
-				      });
+        $project->create_projectprops({
+            $field_trial_is_planned_to_be_genotyped_cvterm->name() => $self->get_field_trial_is_planned_to_be_genotyped
+        });
     }
     
     if (!$self->get_is_genotyping) {
-	if ($self->has_trial_stock_type && $self->get_trial_stock_type){
-		$project->create_projectprops(
-		    {
-			$trial_stock_type_cvterm->name() => $self->get_trial_stock_type()
-		    });
-	}
+        if ($self->has_trial_stock_type && $self->get_trial_stock_type){
+            $project->create_projectprops({
+                $trial_stock_type_cvterm->name() => $self->get_trial_stock_type()
+            });
+        }
     }
-    
+
     my $design_type = $self->get_design_type();
     if ($design_type eq 'greenhouse') {
-	my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property');
-	$project->create_projectprops({ $has_plants_cvterm->name() => 'varies' });
+        my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property');
+        $project->create_projectprops({ $has_plants_cvterm->name() => 'varies' });
     }
-    
+
     print STDERR "NOW CALLING TRIAl DESIGN STORE...\n";
     my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
-	bcs_schema => $chado_schema,
-	trial_id => $project->project_id(),
-	trial_name => $trial_name,
-	nd_geolocation_id => $geolocation->nd_geolocation_id(),
-	nd_experiment_id => $nd_experiment->nd_experiment_id(),
-	design_type => $design_type,
-	design => \%design,
-	is_genotyping => $self->get_is_genotyping(),
-	is_analysis => $self->get_is_analysis(),
-	new_treatment_has_plant_entries => $self->get_trial_has_plant_entries,
-	new_treatment_has_subplot_entries => $self->get_trial_has_subplot_entries,
-	operator => $self->get_operator,
-	trial_stock_type => $self->get_trial_stock_type(),
-								});
+        bcs_schema => $chado_schema,
+        trial_id => $project->project_id(),
+        trial_name => $trial_name,
+        nd_geolocation_id => $geolocation->nd_geolocation_id(),
+        nd_experiment_id => $nd_experiment->nd_experiment_id(),
+        design_type => $design_type,
+        design => \%design,
+        is_genotyping => $self->get_is_genotyping(),
+        is_analysis => $self->get_is_analysis(),
+        is_sampling_trial => $self->get_is_sampling_trial(),
+        new_treatment_has_plant_entries => $self->get_trial_has_plant_entries,
+        new_treatment_has_subplot_entries => $self->get_trial_has_subplot_entries,
+        operator => $self->get_operator,
+        trial_stock_type => $self->get_trial_stock_type(),
+    });
     my $error;
     my $validate_design_error = $trial_design_store->validate_design();
     if ($validate_design_error) {
-	print STDERR "ERROR: $validate_design_error\n";
-	return { error => "Error validating trial design: $validate_design_error." };
+        print STDERR "ERROR: $validate_design_error\n";
+        return { error => "Error validating trial design: $validate_design_error." };
     } else {
 	try {
 	    $error = $trial_design_store->store();
