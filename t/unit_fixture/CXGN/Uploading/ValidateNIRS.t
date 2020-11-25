@@ -45,13 +45,17 @@ $response = $ua->post(
         Content => [
             upload_nirs_spreadsheet_file_input => [ $file, 'nirs_data_upload' ],
             "sgn_session_id"=>$sgn_session_id,
-            "upload_nirs_spreadsheet_data_level"=>"plots"
+            "upload_nirs_spreadsheet_data_level"=>"plots",
+            "upload_nirs_spreadsheet_protocol_name"=>"NIRS SCIO Protocol",
+            "upload_nirs_spreadsheet_protocol_desc"=>"description",
+            "upload_nirs_spreadsheet_protocol_device_type"=>"SCIO"
         ]
     );
 
 #print STDERR Dumper $response;
 ok($response->is_success);
 my $message = $response->decoded_content;
+print STDERR Dumper $message;
 my $message_hash = decode_json $message;
 print STDERR Dumper $message_hash;
 ok($message_hash->{figure});
@@ -64,7 +68,10 @@ $response = $ua->post(
         Content => [
             upload_nirs_spreadsheet_file_input => [ $file, 'nirs_data_upload' ],
             "sgn_session_id"=>$sgn_session_id,
-            "upload_nirs_spreadsheet_data_level"=>"plots"
+            "upload_nirs_spreadsheet_data_level"=>"plots",
+            "upload_nirs_spreadsheet_protocol_name"=>"NIRS SCIO Protocol",
+            "upload_nirs_spreadsheet_protocol_desc"=>"description",
+            "upload_nirs_spreadsheet_protocol_device_type"=>"SCIO"
         ]
     );
 
