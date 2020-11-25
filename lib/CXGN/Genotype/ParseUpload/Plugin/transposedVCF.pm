@@ -79,18 +79,33 @@ sub _validate_with_plugin {
     #print STDERR "CHROMS: $chroms\n";
     chomp($chroms);
     my @chroms = split /\t/, $chroms;
+    foreach (@chroms) {
+        if ($_ eq '' || !defined($_)) {
+            push @error_messages, 'Chromosome (chrom) must be defined for all markers!';
+        }
+    }
     $self->chroms(\@chroms);
     
     my $pos = <$F>;
     chomp($pos);
     my @pos = split /\t/, $pos;
+    foreach (@pos) {
+        if ($_ eq '' || !defined($_)) {
+            push @error_messages, 'Positions (pos) must be defined for all markers!';
+        }
+    }
     $self->pos(\@pos);
     #print STDERR "POS = ".Dumper(\@pos);
+
     my $ids = <$F>;
     chomp($ids);
     my @ids = split /\t/, $ids;
+    foreach (@ids) {
+        if ($_ eq '' || !defined($_)) {
+            push @error_messages, 'Identifiers (id) must be defined for all markers (or .)!';
+        }
+    }
     $self->ids(\@ids);
-    
     #print STDERR "IDS = ".Dumper(\@ids);
     
     my $refs = <$F>;
@@ -128,37 +143,37 @@ sub _validate_with_plugin {
     my @format = split /\t/, $format;
     $self->format(\@format);
     #print STDERR "FORMAT = ".Dumper(\@format);
-    
+
     print STDERR "marker count = ".scalar(@ids)."\n";
-    
+
     if ($chroms[0] ne '#CHROM'){
-	push @error_messages, 'Line 1 must start with "#CHROM".';
+        push @error_messages, 'Line 1 must start with "#CHROM".';
     }
     if ($pos[0] ne 'POS'){
-	push @error_messages, 'Line 2 must start with "POS".';
+        push @error_messages, 'Line 2 must start with "POS".';
     }
     if ($ids[0] ne 'ID'){
-	push @error_messages, 'Line 3 must start with "ID".';
+        push @error_messages, 'Line 3 must start with "ID".';
     }
     if ($refs[0] ne 'REF'){
-	push @error_messages, 'Line 4 must start with "REF".';
+        push @error_messages, 'Line 4 must start with "REF".';
     }
     if ($alts[0] ne 'ALT'){
-	push @error_messages, 'Line 5 must start with "ALT".';
+        push @error_messages, 'Line 5 must start with "ALT".';
     }
     if ($qual[0] ne 'QUAL'){
-	push @error_messages, 'Line 6 must start with "QUAL".';
+        push @error_messages, 'Line 6 must start with "QUAL".';
     }
     if ($filter[0] ne 'FILTER'){
-	push @error_messages, 'Line 7 must start with "FILTER".';
+        push @error_messages, 'Line 7 must start with "FILTER".';
     }
     if ($info[0] ne 'INFO'){
-	push @error_messages, 'Line 8 must start with "INFO".';
+        push @error_messages, 'Line 8 must start with "INFO".';
     }
     if ($format[0] ne 'FORMAT'){
-	push @error_messages, 'Line 9 must start with "FORMAT".';
+        push @error_messages, 'Line 9 must start with "FORMAT".';
     }
-    
+
     my @observation_unit_names;
 
     #print STDERR "Scanning file for observation unit names... \n";
@@ -276,36 +291,36 @@ sub extract_protocol_data {
     
 #    open(my $F, '<', $self->get_filename()) || die "Can't open file ".$self->get_filename()."\n";
 
-    for (my $i=1; $i<@{$self->ids()}; $i++) { 
-	my $marker_info_p2 = $self->ids()->[$i];
-	my $marker_info_p8 = $self->format()->[$i];
-	if ($marker_info_p2 eq '.') {
-	    $marker_name = $self->chroms()->[$i]."_".$self->pos()->[$i];
-	} else {
-	    $marker_name = $self->ids()->[$i];
-	}
-	
-	my %marker = 
-	    (
-	     name => $self->ids()->[$i],
-	     chrom => $self->chroms()->[$i],
-	     pos => $self->pos()->[$i],
-	     ref => $self->refs()->[$i],
-	     alt => $self->alts()->[$i],
-	     qual => $self->qual()->[$i],
-	     filter => $self->filter()->[$i],
-	     info => $self->info()->[$i],
-	     format => $marker_info_p8,
-            );
+    for (my $i=1; $i<@{$self->ids()}; $i++) {
+        my $marker_info_p2 = $self->ids()->[$i];
+        my $marker_info_p8 = $self->format()->[$i];
+        if ($marker_info_p2 eq '.') {
+            $marker_name = $self->chroms()->[$i]."_".$self->pos()->[$i];
+        } else {
+            $marker_name = $self->ids()->[$i];
+        }
+        my $chrom_name = $self->chroms()->[$i];
+        my %marker = (
+            name => $self->ids()->[$i],
+            chrom => $chrom_name,
+            pos => $self->pos()->[$i],
+            ref => $self->refs()->[$i],
+            alt => $self->alts()->[$i],
+            qual => $self->qual()->[$i],
+            filter => $self->filter()->[$i],
+            info => $self->info()->[$i],
+            format => $marker_info_p8,
+        );
 
-            #print STDERR "Marker: ".Dumper(\%marker);
-            $protocolprop_info{'markers'}->{$marker_name} = \%marker;
-            push @{$protocolprop_info{'marker_names'}}, $marker_name;
-            push @{$protocolprop_info{'markers_array'}}, \%marker;
+        #print STDERR "Marker: ".Dumper(\%marker);
+        push @{$protocolprop_info{'marker_names'}}, $marker_name;
+
+        $protocolprop_info{'markers'}->{$chrom_name}->{$marker_name} = \%marker;
+        push @{$protocolprop_info{'markers_array'}->{$chrom_name}}, \%marker;
     }
     my $stock_type = $self->get_observation_unit_type_name;
-     $protocolprop_info{header_information_lines} = $self->header_info();
-     $protocolprop_info{sample_observation_unit_type_name} = $stock_type;
+    $protocolprop_info{header_information_lines} = $self->header_info();
+    $protocolprop_info{sample_observation_unit_type_name} = $stock_type;
 
     return \%protocolprop_info;
 }
@@ -357,6 +372,7 @@ sub next_genotype {
 
         for(my $i=1; $i<=@scores; $i++) {
             my $marker_name = $self->ids()->[$i];
+            my $chrom = $self->chroms()->[$i];
             my @separated_alts = split ',', $self->alts()->[$i];
             my @format =  split /:/,  $self->format()->[$i];
 
@@ -410,7 +426,7 @@ sub next_genotype {
                 my $rounded_ds = round($value{'DS'});
                 $value{'DS'} = "$rounded_ds";
             }
-            $genotypeprop->{$marker_name} = \%value;
+            $genotypeprop->{$chrom}->{$marker_name} = \%value;
         }
         $self->_is_first_line(0);
     }

@@ -99,8 +99,14 @@ sub _validate_with_plugin {
             }
             push @markers, $marker_name;
 
-            if (!$marker_name) {
-                push @error_messages, "No marker name given on line $line_count";
+            if ($marker_info[2] eq '' || !defined($marker_info[2])) {
+                push @error_messages, "No marker name given on line $line_count. Marker name can be . if not assigned";
+            }
+            if ($marker_info[0] eq '' || !defined($marker_info[0])) {
+                push @error_messages, "No chromosome 'chrom' given for marker $marker_name";
+            }
+            if ($marker_info[1] eq '' || !defined($marker_info[1])) {
+                push @error_messages, "No position 'pos' given for marker $marker_name";
             }
             if (!$marker_info[3]) {
                 push @error_messages, "No reference 'ref' allele given for marker $marker_name";
@@ -246,10 +252,10 @@ sub extract_protocol_data {
         } else {
             $marker_name = $self->ids()->[$i];
         }
-
+        my $chrom_name = $self->chroms()->[$i]
         my %marker = (
             name => $self->ids()->[$i],
-            chrom => $self->chroms()->[$i],
+            chrom => $chrom_name,
             pos => $self->pos()->[$i],
             ref => $self->refs()->[$i],
             alt => $self->alts()->[$i],
@@ -259,9 +265,10 @@ sub extract_protocol_data {
             format => $marker_info_p8,
         );
 
-        $protocolprop_info{'markers'}->{$marker_name} = \%marker;
         push @{$protocolprop_info{'marker_names'}}, $marker_name;
-        push @{$protocolprop_info{'markers_array'}}, \%marker;
+
+        $protocolprop_info{'markers'}->{$chrom_name}->{$marker_name} = \%marker;
+        push @{$protocolprop_info{'markers_array'}->{$chrom_name}}, \%marker;
     }
     $protocolprop_info{header_information_lines} = $self->header_info();
     $protocolprop_info{sample_observation_unit_type_name} = $self->get_observation_unit_type_name;
@@ -323,6 +330,7 @@ sub next_genotype {
             }
 
             my @separated_alts = split ',', $marker_info[4];
+            my $chrom = $marker_info[0];
 
             my @format =  split /:/,  $marker_info_p8;
             #As it goes down the rows, it contructs a separate json object for each observation unit column. They are all stored in the %genotypeprop_observation_units. Later this hash is iterated over and actually stores the json object in the database.
@@ -377,7 +385,7 @@ sub next_genotype {
                     my $rounded_ds = round($value{'DS'});
                     $value{'DS'} = "$rounded_ds";
                 }
-                $genotypeprop_observation_units{$observation_unit_names->[$i]}->{$marker_name} = \%value;
+                $genotypeprop_observation_units{$observation_unit_names->[$i]}->{$chrom}->{$marker_name} = \%value;
             }
         }
     }

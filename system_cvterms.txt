@@ -19,6 +19,7 @@ experiment_type	grafting_experiment				00079
 experiment_type	analysis_experiment	For saving results in analysis trials	06/04/2020	lam87nm529	00119
 experiment_type	analysis_model_experiment	For saving results in analysis models	06/04/2020	lam87nm529	00125
 experiment_type	drone_run_experiment	For saving drone run experiment	07/20/2020	nm529	00126
+experiment_type	sampling_layout	For saving sampling trials	11/25/2020	nm529	00132
 genotype_property	igd number
 genotype_property	infinium array					sgn database
 genotype_property	snp genotyping
@@ -155,6 +156,8 @@ project_property	drone_run_raw_images_saved_gps_pixel_positions	When interactive
 project_property	project_sp_person_id	For saving results in analysis trials	06/04/2020	lam87nm529	00119
 project_property	analysis_metadata_json	For saving results in analysis trials	06/04/2020	lam87nm529	00119
 project_property    product_profile_json    00131
+project_property	sampling_facility	For saving the sampling facility of a sampling trial	11/25/2020	nm529	00132
+project_property	sampling_trial_sample_type	For saving the sample type of a sampling trial	11/25/2020	nm529	00132
 project_relationship	breeding_program_trial_relationship				00051
 project_relationship	trial_treatment_relationship				00081
 project_relationship	field_trial_from_field_trial	For linking field trials preceding other field trials	4/6/18	nm529	00093
@@ -162,6 +165,7 @@ project_relationship	genotyping_trial_from_field_trial	For linking genotyping pl
 project_relationship	crossing_trial_from_field_trial	For linking crossing trials to the source field trials 	4/6/18	nm529	00093
 project_relationship	drone_run_on_field_trial	For linking drone image runs to field trials 	9/18/18	nm529	00103
 project_relationship	drone_run_band_on_drone_run	For linking drone image runs bands to drone runs 	10/5/18	nm529	00103
+project_relationship	sampling_trial_from_field_trial	For linking sampling trial to field trials 	11/25/20	nm529	00132
 project_type	Advanced Yield Trial
 project_type	Clonal Evaluation
 project_type	Preliminary Yield Trial

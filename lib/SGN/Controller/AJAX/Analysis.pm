@@ -5,7 +5,6 @@ use Moose;
 use File::Slurp;
 use Data::Dumper;
 use CXGN::Phenotypes::ParseUpload;
-use CXGN::Phenotypes::StorePhenotypes;
 use CXGN::Trial::TrialDesign;
 use CXGN::Analysis::AnalysisCreate;
 use CXGN::AnalysisModel::GetModel;
@@ -69,10 +68,16 @@ sub store_analysis_json_POST {
     my $analysis_model_auxiliary_files = $c->req->param("analysis_model_auxiliary_files") ? decode_json $c->req->param("analysis_model_auxiliary_files") : [];
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    my $check_name = $schema->resultset("Project::Project")->find({ name => $analysis_name });
-    if ($check_name) {
-        $c->stash->{rest} = {error => "An analysis with name $analysis_name already exists in the database. Please choose another name."};
+    if ($analysis_to_save_boolean eq 'yes' && !$analysis_name) {
+        $c->stash->{rest} = {error => "You are trying to save an analysis, but no name was given."};
         return;
+    }
+    if ($analysis_name) {
+        my $check_name = $schema->resultset("Project::Project")->find({ name => $analysis_name });
+        if ($check_name) {
+            $c->stash->{rest} = {error => "An analysis with name $analysis_name already exists in the database. Please choose another name."};
+            return;
+        }
     }
 
     $self->store_data($c,

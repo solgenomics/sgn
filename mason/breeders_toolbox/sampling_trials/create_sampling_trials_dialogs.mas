@@ -1,0 +1,504 @@
+<%args>
+$sampling_facilities => ();
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.GenotypingTrial' ] &>
+
+
+<div class="modal fade" id="sampling_trial_dialog" name="sampling_trial_dialog" tabindex="-1" role="dialog" aria-labelledby="addSamplingTrialDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addSamplingTrialDialog">Add Sampling Trial</h4>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_sampling_trials_form" name="upload_sampling_trials_form" >
+
+                    <div class="container-fluid">
+
+                        <&| /util/workflow.mas, id=> "sampling_trial_create_workflow" &>
+                            <&| /util/workflow.mas:step, title=> "Intro" &>
+                                <& /page/page_title.mas, title=>"This workflow will guide you through adding a sampling trial in the database" &>
+                                <p>Sampling trials can represent 96 or 384 well plates, or more generically any sampling scheme.</p>
+                                <p>Each sample has a globally unique tissue sample ID.</p>
+                                <p>The "contents" of each sample can be either a tissue sample, plant name, plot name, or accession name. This "source" name must be in the database already. This is useful if you provide a field trial entity (such as a plot or plant or tissue sample name), so that phenotypes and genotypes can be directly compared.</p>
+
+                                <br/><br/>
+                                <center>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                </center>
+                            </&>
+
+                            <&| /util/workflow.mas:step, title=> "Basic Info" &>
+                                <& /page/page_title.mas, title=>"Provide info about your sampling trial" &>
+
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Sampling Facility: </label>
+                                    <div class="col-sm-7">
+                                        <select class="form-control" id="sampling_trial_facility_select">
+% foreach my $facility(@$sampling_facilities){
+    <option value="<%$facility%>"><%$facility%></option>
+% }
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Sampling Trial Name: </label>
+                                    <div class="col-sm-7">
+                                        <input class="form-control" id="sampling_trial_name" name="sampling_trial_name" type="text" placeholder=" e.g. 18DNA00001"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Sample Type: </label>
+                                    <div class="col-sm-7">
+                                        <select class="form-control" id="sampling_trial_plate_sample_type">
+                                            <option value="Tissue">Tissue</option>
+                                            <option value="DNA">DNA</option>
+                                            <option value="RNA">RNA</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Sampling Trial's Breeding Program: </label>
+                                    <div class="col-sm-7">
+                                        <span id="sampling_trial_breeding_program_select_div"></span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Sampling Trial's Location: </label>
+                                    <div class="col-sm-7">
+                                        <span id="sampling_trial_location_select_div"></span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Sampling Trial's Year: </label>
+                                    <div class="col-sm-7">
+                                        <span id="sampling_trial_year_select_div"></span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Sampling Trials's Description: </label>
+                                    <div class="col-sm-7">
+                                        <textarea class="form-control" id="sampling_trial_description" name="sampling_trial_description" maxlength="250"></textarea>
+                                    </div>
+                                </div>
+
+                                <br/>
+                                <center>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                </center>
+                            </&>
+                            <&| /util/workflow.mas:step, title=> "Samples Info" &>
+                                <& /page/page_title.mas, title=>"Provide information about the samples" &>
+                                <br/><br/>
+
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Select One: </label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="sampling_trial_well_input_option">
+                                            <option value="xls">I am uploading a sampling design I made in Excel</option>
+                                            <option value="design">I need to design a completely new sampling trial</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div id="sampling_trial_well_upload_section">
+                                    <h3>You want to upload an existing samples layout</h3>
+
+                                    <div class="well well-sm">
+                                        <div class="row">
+                                            <div class="col-sm-4">
+                                                <&| /page/explanation.mas, title=>'Template information' &>
+                                                    <p>
+                                                        <b>File format information</b>
+                                                        <br>
+                                                        <a id="sampling_trial_layout_upload_spreadsheet_info_format">Spreadsheet format</a>
+                                                    </p>
+                                                </&>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <br/>
+                                                <div class="panel panel-default">
+                                                    <div class="panel-body">
+                                                        <div class="form-group">
+                                                            <label class="col-sm-6 control-label">Select Samples Layout XLS File: </label>
+                                                            <div class="col-sm-6">
+                                                                <input type="file" name="sampling_trial_layout_upload" id="sampling_trial_layout_upload" encoding="multipart/form-data" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="sampling_trial_well_design_section" style="display:none">
+                                    <h3>You want to design a completely new sampling trial.</h3>
+
+                                    <div class="well well-sm">
+                                        <ul>
+                                            <li>Select a list for the source material of each tissue sample. Then indicate how many replicates are required.</li>
+                                            <li>Note: From the most desirable to least desirable source observation unit you can choose: tissue samples, plants, plots, or accessions</li>
+                                        </ul>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-7 control-label">Source Observation Unit List: </label>
+                                        <div class="col-sm-5">
+                                            <span id="sampling_trial_accession_select_box_span">[loading...]</span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-7 control-label">Replicates: </label>
+                                        <div class="col-sm-5">
+                                            <input class="form-control" id="sampling_trial_replicates" name="sampling_trial_replicates" type="number" placeholder="1"/>
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-7 control-label"><i>Optional</i> Sample Concentration (ng/ul): <small>(If you used the same conc for all samples)</small></label>
+                                        <div class="col-sm-5">
+                                            <input class="form-control" id="sampling_trial_concentration" name="sampling_trial_concentration" type="text" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-7 control-label"><i>Optional</i> Sampling Volume (ul): <small>(If you used the same vol for all samples)</small></label>
+                                        <div class="col-sm-5">
+                                            <input class="form-control" id="sampling_trial_volume" name="sampling_well_volume" type="text" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-7 control-label"><i>Optional</i> Tissue: <small>(If used the same tissue for all samples)</small> </label>
+                                        <div class="col-sm-5">
+                                            <select class="form-control" id="sampling_trial_tissue">
+                                                <option value="leaf">Leaf</option>
+                                                <option value="root">Root</option>
+                                                <option value="stem">Stem</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-7 control-label"><i>Optional</i> NCBI Taxonomy ID: <small>(Official NCBI ID.)</small> </label>
+                                        <div class="col-sm-5">
+                                            <input class="form-control" id="sampling_trial_ncbi_taxonomy_id" name="sampling_trial_ncbi_taxonomy_id" type="text" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-7 control-label"><i>Optional</i> Extraction: <small>(If used the same extraction for all samples)</small> </label>
+                                        <div class="col-sm-5">
+                                            <input class="form-control" id="sampling_trial_extraction" name="sampling_trial_extraction" type="text" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-7 control-label"><i>Optional</i> Person: <small>(If same person prepared all samples.)</small> </label>
+                                        <div class="col-sm-5">
+                                            <input class="form-control" id="sampling_trial_person" name="sampling_trial_person" type="text" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-7 control-label"><i>Optional</i> Date: <small>(If sampled on same date. YYYY/MM/DD)</small> </label>
+                                        <div class="col-sm-5">
+                                            <input class="form-control" id="sampling_trial_date" name="sampling_trial_date" type="text" placeholder="YYYY/MM/DD"/>
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm">
+                                        <label class="col-sm-7 control-label"><i>Optional</i> Notes: <small>(Additional notes for these samples.)</small> </label>
+                                        <div class="col-sm-5">
+                                            <input class="form-control" id="sampling_trial_notes" name="sampling_trial_notes" type="text" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <br/><br/>
+                                <center>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                </center>
+                            </&>
+                            <&| /util/workflow.mas:step, title=> "Linkage" &>
+                                <& /page/page_title.mas, title=>"Is your sampling trial linked with field trials in the database? This information can also be added from the sampling trial detail page once the trial is saved in the database." &>
+
+                                <p>If you provided us with information about where the sample originated (e.g. it came from a plot name or plant name or tissue sample name in a field trial), we will automatically create linkage between the field trial(s) and this sampling trial.</p>
+
+                                <br/>
+                                <center>
+                                <button class="btn btn-lg btn-primary" onclick="Workflow.complete(this); return false;" >Continue to Next Step</button>
+                                <center>
+                            </&>
+                            <&| /util/workflow.mas:step, title=> "Confirm" &>
+                                <& /page/page_title.mas, title=>"Finalize and submit your sampling trial" &>
+
+                                <hr>
+                                <center>
+                                <button type="button" class="btn btn-primary" name="add_sampling_trial_submit" id="add_sampling_trial_submit">Submit</button>
+                                </center>
+                            </&>
+                            <&| /util/workflow.mas:complete, title=> "Complete" &>
+                                <& /page/page_title.mas, title=>"Complete! Your sampling trial was saved in the database." &>
+
+                                <p>
+                                    <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                                    The sampling trial was saved successfully
+                                </p>
+
+                            </&>
+                        </&>
+
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="sampling_trial_layout_upload_spreadsheet_info_format_dialog" name="sampling_trial_layout_upload_spreadsheet_info_format_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadSamplingTrialInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadSamplingTrialInfoDialog">Upload Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>This is for uploading a pre-existing sampling trial layout.</b>
+                    <br/>
+                    <b>File must be Excel file (.xls)</b>
+                    <br />
+                    (.xlsx format not supported)
+                    <br /><br />
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) must contain the following:
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>date</td>
+                                <td>sample_name</td>
+                                <td>source_observation_unit_name</td>
+                                <td>sample_number</td>
+                                <td>replicate</td>
+                                <td>tissue_type</td>
+                                <td>ncbi_taxonomy_id</td>
+                                <td>person</td>
+                                <td>notes</td>
+                                <td>extraction</td>
+                                <td>concentration</td>
+                                <td>volume</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <b>Required fields:</b>
+                    <ul>
+                    <li>date (should be YYYY-MM-DD)</li>
+                    <li>sample_name (the globally unique identifier for the sample)</li>
+                    <li>source_observation_unit_name (must exist in the database. the identifier of the origin material. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, plot name, accession name. For blank wells, you can write BLANK here and place a 1 in the is_blank column also.)</li>
+                    <li>sample_number (the sample number for the sample. Must be unique within this sampling trial)</li>
+                    <li>replicate (the replicate number for the sample)</li>
+                    <li>tissue_type (must be either leaf, root, or stem)</li>
+                    </ul>
+
+                    <b>Optional fields:</b>
+                    <ul>
+                    <li>ncbi_taxonomy_id (NCBI taxonomy identifier)</li>
+                    <li>person (the name of the person who prepared the sample)</li>
+                    <li>notes (any additional notes on the sample)</li>
+                    <li>extraction (free-text for the extraction method e.g. CTAB)</li>
+                    <li>concentration (concentration in ng/ul)</li>
+                    <li>volume (volume in ul)</li>
+                    </ul>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_upload_sampling_spreadsheet_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+jQuery(document).ready(function(){
+
+    jQuery('button[name="create_sampling_trial_button"]').click(function(){
+        jQuery('#sampling_trial_dialog').modal('show');
+    });
+
+    jQuery('#sampling_trial_dialog').on('show.bs.modal', function (e) {
+        get_select_box("locations", "sampling_trial_location_select_div", {'id':'sampling_trial_location_select', 'name':'sampling_trial_location_select'});
+        get_select_box("breeding_programs", "sampling_trial_breeding_program_select_div", {'id':'sampling_trial_breeding_program_select', 'name':'sampling_trial_breeding_program_select'});
+        get_select_box("years", "sampling_trial_year_select_div", {'auto_generate': 1, 'id':'sampling_trial_year_select', 'name':'sampling_trial_year_select'});
+
+        var l = new CXGN.List();
+        var html = l.listSelect('sampling_trial_accession_select_box', [ 'accessions', 'plots', 'plants', 'tissue_samples' ], undefined, undefined, undefined);
+        jQuery('#sampling_trial_accession_select_box_span').html(html);
+    });
+
+    jQuery('#sampling_trial_layout_upload_spreadsheet_info_format').click(function(){
+        jQuery('#sampling_trial_layout_upload_spreadsheet_info_format_dialog').modal('show');
+    });
+
+    jQuery('#sampling_trial_well_input_option').change(function(){
+        if (jQuery(this).val() == 'xls'){
+            jQuery("#sampling_trial_well_upload_section").show();
+            jQuery("#sampling_trial_well_design_section").hide();
+        }
+        if (jQuery(this).val() == 'design' ){
+            jQuery("#sampling_trial_well_design_section").show();
+            jQuery("#sampling_trial_well_upload_section").hide();
+            jQuery('#sampling_trial_layout_upload').val('');
+        }
+    });
+
+    var sampling_data = new Object();
+    jQuery('#add_sampling_trial_submit').click(function () {
+        sampling_data = new Object();
+        sampling_data.breeding_program = jQuery('#sampling_trial_breeding_program_select').val();
+        sampling_data.year = jQuery('#sampling_trial_year_select').val();
+        sampling_data.sampling_facility = jQuery('#sampling_trial_facility_select').val();
+        sampling_data.location = jQuery('#sampling_trial_location_select').val();
+        sampling_data.description = jQuery('#sampling_trial_description').val();
+        sampling_data.replicates = jQuery('#sampling_trial_replicates').val();
+        sampling_data.name = jQuery('#sampling_trial_name').val();
+        sampling_data.sample_type = jQuery('#sampling_trial_plate_sample_type').val();
+        sampling_data.sample_concentration = jQuery('#sampling_trial_concentration').val();
+        sampling_data.ncbi_taxonomy_id = jQuery('#sampling_trial_ncbi_taxonomy_id').val();
+        sampling_data.sample_extraction = jQuery('#sampling_trial_extraction').val();
+        sampling_data.sample_date = jQuery('#sampling_trial_date').val();
+        sampling_data.sample_person = jQuery('#sampling_trial_person').val();
+        sampling_data.sample_volume = jQuery('#sampling_trial_volume').val();
+        sampling_data.sample_tissue = jQuery('#sampling_trial_tissue').val();
+        sampling_data.sample_notes = jQuery('#sampling_trial_notes').val();
+
+        if (sampling_data.breeding_program == '') {
+            alert("A breeding program is required. Please try again.");
+            return;
+        }
+        if (sampling_data.year == '') {
+            alert("A year is required. Please try again.");
+            return;
+        }
+        if (sampling_data.location == '') {
+            alert("A location is required. Please try again.");
+            return;
+        }
+        if (sampling_data.name == '') {
+            alert("A sampling trial name is required and it should be unique in the database. Please try again.");
+            return;
+        }
+        if (sampling_data.description == '') {
+            alert("A sampling trial description is required. Please try again.");
+            return;
+        }
+        if (sampling_data.sample_type == '') {
+            alert("A sampling trial type is required. Please try again.");
+            return;
+        }
+        if (sampling_data.replicates == '') {
+            sampling_data.replicates = 1;
+        }
+
+        var uploadFileXLS = jQuery("#sampling_trial_layout_upload").val();
+        if (uploadFileXLS === ''){
+            sampling_data.list_id = jQuery('#sampling_trial_accession_select_box_list_select').val();
+            var l = new CXGN.List();
+            if (! l.validate(sampling_data.list_id, 'accessions', true) && ! l.validate(sampling_data.list_id, 'plots', true) && ! l.validate(sampling_data.list_id, 'plants', true) && ! l.validate(sampling_data.list_id, 'tissue_samples', true)) {
+                alert('The list contains elements that are not accessions or plots or plants or tissue_samples.');
+                return;
+            }
+            var elements = l.getList(sampling_data.list_id);
+            if (typeof elements == 'undefined' ) {
+                alert("There are no elements in the list provided.");
+                return;
+            }
+            sampling_data.elements = elements;
+
+            jQuery.ajax({
+                url: '/ajax/breeders/generatesamplingtrial',
+                method: 'POST',
+                beforeSend: function(){
+                    jQuery("working_modal").modal('show');
+                },
+                data: {
+                    'sampling_data': JSON.stringify(sampling_data)
+                },
+                success : function(response) {
+                    console.log(response);
+                    jQuery("working_modal").modal('hide');
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                    else {
+                        sampling_data.design = response.design;
+                        store_sampling_trial(sampling_data);
+                    }
+                },
+                error: function(response) {
+                    alert('An error occurred trying the create the sampling trial layout.');
+                    jQuery("working_modal").modal('hide');
+                }
+            });
+        }
+        else {
+            jQuery('#upload_sampling_trials_form').attr("action", "/ajax/breeders/parsesamplingtrial");
+            jQuery("#upload_sampling_trials_form").submit();
+        }
+    });
+
+    jQuery('#upload_sampling_trials_form').iframePostForm({
+        json: true,
+        post: function () {
+        },
+        complete: function (response) {
+            console.log(response);
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            if (response.error_string) {
+                alert(response.error_string);
+                return;
+            }
+            if (response.success) {
+                sampling_data.design = response.design;
+                store_sampling_trial(sampling_data);
+            }
+        }
+    });
+
+    function store_sampling_trial(sampling_data) {
+        jQuery.ajax({
+            url: '/ajax/breeders/storesamplingtrial',
+            method: 'POST',
+            beforeSend: function(){
+                jQuery("#working_modal").modal('show');
+            },
+            data: {
+                'sampling_data': JSON.stringify(sampling_data)
+            },
+            success : function(response) {
+                jQuery("#working_modal").modal('hide');
+                if (response.error) {
+                    alert(response.error);
+                }
+                else {
+                    alert(response.message);
+                    Workflow.complete('#add_sampling_trial_submit');
+                    Workflow.focus("#sampling_trial_create_workflow", -1); //Go to success page
+                    Workflow.check_complete("#sampling_trial_create_workflow");
+                }
+            },
+            error: function(response) {
+                alert('An error occurred trying the create the layout.');
+                jQuery("#working_modal").modal('hide');
+            }
+        });
+    }
+
+});
+</script>

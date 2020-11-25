@@ -276,7 +276,9 @@ jQuery(document).ready(function ($) {
                     jQuery('#service_id_select').empty();
                 
                     jQuery.each(options, function(i, p) {
+                        jQuery('#organism_name').append(jQuery('<option></option>').val(p.organismName).html(p.organismName));
                         jQuery('#service_id_select').append(jQuery('<option></option>').val(p.serviceId).html(p.serviceName));
+
                         var requeriments = p.specificRequirements;
                         if (requeriments.length  > 0) {
                             requeriments.forEach(function(o) {
@@ -442,6 +444,7 @@ jQuery(document).ready(function ($) {
         order_info.client_id = jQuery('#client_id').val();
         order_info.service_ids = jQuery('#service_id_select').val();
         order_info.facility_id = jQuery('#genotyping_facility').html();
+        order_info.organism_name = jQuery('#organism_name').val();
         order_info.full_order = order_info.facility_id == 'DArT' ? false : true;
         
         if (order_info.plate_id == '' || order_info.client_id == '') {
@@ -469,6 +472,14 @@ jQuery(document).ready(function ($) {
     jQuery('#genotyping_trial_facility_submit_select').on('change', function() {
          
         jQuery("#submit_plate_btn").prop("disabled", this.value == 1);
+    });
+    jQuery('#organism_name').on('change', function() {
+        var select = document.getElementById("service_id_select");
+        for (var i = 0; i < select.length; i++) {
+            var txt = select.options[i].text;
+            var include = txt.includes(this.value);
+            select.options[i].style.display = include ? 'list-item':'none';
+        }
     });
 
     jQuery('#genotyping_facilities_section_onswitch').click( function() {

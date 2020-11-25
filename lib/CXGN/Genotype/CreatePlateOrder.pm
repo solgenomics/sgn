@@ -80,6 +80,11 @@ has 'facility_id' => (
     required => 0,
 );
 
+has 'organism_name' => (
+    isa => 'Str',
+    is => 'ro',
+    required => 1,
+);
 
 # sub BUILD {
 #     my $self = shift;
@@ -127,6 +132,7 @@ sub create {
     my $get_requeriments = $self->requeriments;
     my $service_id_list = $self->service_id_list;
     my $requeriments = $get_requeriments ? $get_requeriments : {};
+    my $organism_name = $self->organism_name;
     
     my $genotyping_trial;
     eval {
@@ -137,7 +143,7 @@ sub create {
 
     my $plate_format = 'PLATE_96' if ($genotyping_trial->get_genotyping_plate_format eq 96);
 
-    my $samples = _formated_samples($schema,$plate_id);
+    my $samples = _formated_samples($schema,$plate_id,$organism_name);
 
     my $plate;
     push @$plate, {
@@ -162,6 +168,11 @@ sub create {
 sub _formated_samples {
     my $schema = shift;
     my $plate_id = shift;
+    my $organism_name = shift;
+
+    if (!$plate_id || !$organism_name){
+        return
+    }
 
     my $concent_unit = 'ng';
     my $volume_unit =  'ul';
@@ -180,20 +191,20 @@ sub _formated_samples {
             push @samples, {
                         clientSampleBarCode=> $result->{sampleName},
                         clientSampleId=> qq|$result->{sampleDbId}|,
-                        column=> $result->{col_number},
+                        column=> $result->{col_number} + 0,
                         row=> $result->{row_number},
                         comments=> $result->{notes},
                         concentration=> {
                             units=> $concent_unit,
-                            value=> $result->{concentration} eq 'NA' ? 0 : $result->{concentration} + 0,
+                            value=> ($result->{concentration} eq 'NA' || $result->{concentration} eq '') ? 0 : $result->{concentration} + 0,
                         },
                         tissueType=> $result->{tissue_type},
                         volume=> {
                             units=> $volume_unit,
-                            value=> $result->{volume} eq 'NA' ? 0 : $result->{volume} + 0,
+                            value=> ($result->{volume} eq 'NA' || $result->{volume} eq '') ? 0 : $result->{volume} + 0,
                         },
                         well=> $result->{well} ? $result->{well} : $result->{row_number} . $result->{col_number},
-                        organismName=> $result->{genus} ? $result->{genus} : "",
+                        organismName=> $organism_name,
                         speciesName=> $result->{species} ? $result->{species} : "",
                         taxonomyOntologyReference=> {},
                         tissueTypeOntologyReference=> {},

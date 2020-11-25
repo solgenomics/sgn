@@ -33,6 +33,21 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                     <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
                     </center>
                 </&>
+                <&| /util/workflow.mas:step, title=> "Samples" &>
+                    <& /page/page_title.mas, title=>"Make sure your samples are already in the database." &>
+
+                    <center>
+                        <div class="well">
+                            <h4>The samples for which you are uploading high-dimensional phenotypes must exist in the database already. They can be field trial entities such as plot names, plant names, and tissue sample names. They can be genotyping plate well tissue sample names. They can also be sample names from a sampling trial in the database.</h4>
+                            <p>Go to <a href="/breeders/samples">Manage Tissue Samples</a> for more guidance.</p>
+                            <p>You can upload or create a new sampling trial <button class="btn btn-sm btn-primary" style="margin:3px" name="create_sampling_trial_button">Create new sampling trial</button></p>
+                        </div>
+                    </center>
+
+                    <center>
+                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                    </center>
+                </&>
                 <&| /util/workflow.mas:step, title=> "Data Type" &>
                     <& /page/page_title.mas, title=>"Select the type of high-dimensional data being uploaded" &>
                     <br/><br/>
@@ -41,19 +56,23 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                             <label class="col-sm-3 control-label">Data Type: </label>
                             <div class="col-sm-9" >
                                 <select class="form-control" id="high_dim_data_upload_type_select">
-                                    <option selected=""></option>
 %  if ($high_dimensional_phenotype_type eq 'NIRS') {
                                     <option value="NIRS">NIRS</option>
+                                    <option disabled value="Transcriptomics">Transcriptomics</option>
+                                    <option disabled value="Metabolomics">Metabolomics</option>
+%  } elsif ($high_dimensional_phenotype_type eq 'Transcriptomics') {
                                     <option value="Transcriptomics">Transcriptomics</option>
+                                    <option disabled value="NIRS">NIRS</option>
+                                    <option disabled value="Metabolomics">Metabolomics</option>
+%  } elsif ($high_dimensional_phenotype_type eq 'Metabolomics') {
                                     <option value="Metabolomics">Metabolomics</option>
-%  } if ($high_dimensional_phenotype_type eq 'Transcriptomics') {
-                                    <option value="Transcriptomics">Transcriptomics</option>
+                                    <option disabled value="Transcriptomics">Transcriptomics</option>
+                                    <option disabled value="NIRS">NIRS</option>
+%  } else {
+                                    <option selected=""></option>
                                     <option value="NIRS">NIRS</option>
-                                    <option value="Metabolomics">Metabolomics</option>
-%  } if ($high_dimensional_phenotype_type eq 'Metabolomics') {
-                                    <option value="Metabolomics">Metabolomics</option>
                                     <option value="Transcriptomics">Transcriptomics</option>
-                                    <option value="NIRS">NIRS</option>
+                                    <option value="Metabolomics">Metabolomics</option>
 %  }
                                 </select>
                             </div>
@@ -434,7 +453,7 @@ jQuery(document).ready(function() {
 
 
         Workflow.complete("#high_dim_data_upload_data_type_step");
-        Workflow.focus('#high_dim_data_upload_workflow', 2);
+        Workflow.focus('#high_dim_data_upload_workflow', 3);
     });
 
     jQuery('#high_dim_data_upload_new_protocol').click(function(){
@@ -515,7 +534,7 @@ jQuery(document).ready(function() {
         }
 
         Workflow.complete("#high_dim_data_upload_data_protocol_step");
-        Workflow.focus('#high_dim_data_upload_workflow', 3);
+        Workflow.focus('#high_dim_data_upload_workflow', 4);
     });
 
     // VERIFY AND UPLOAD NIRS

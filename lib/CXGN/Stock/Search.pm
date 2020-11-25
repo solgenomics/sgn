@@ -85,6 +85,7 @@ use CXGN::Chado::Stock;
 use CXGN::Chado::Organism;
 use JSON;
 use utf8;
+use Encode;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     is => 'rw',
@@ -168,12 +169,12 @@ has 'trait_cvterm_name_list' => (
 );
 
 has 'minimum_phenotype_value' => (
-    isa => 'Int|Undef',
+    isa => 'Num|Undef',
     is => 'rw',
 );
 
 has 'maximum_phenotype_value' => (
-    isa => 'Int|Undef',
+    isa => 'Num|Undef',
     is => 'rw',
 );
 
@@ -619,11 +620,11 @@ ORDER BY organism_id ASC;";
         my $organism_id = $r[2];
         my $mother = $r[3] || 'NA';
         my $father = $r[4] || 'NA';
-        my $syn_json = $r[6] ? decode_json($r[6]) : {};
+        my $syn_json = $r[6] ? decode_json(encode("utf8",$r[6])) : {};
         my @synonyms = sort keys %{$syn_json};
-        my $donor_json = $r[7] ? decode_json($r[7]) : {};
-        my $donor_inst_json = $r[8] ? decode_json($r[8]) : {};
-        my $donor_pui_json = $r[8] ? decode_json($r[8]) : {};
+        my $donor_json = $r[7] ? decode_json(encode("utf8",$r[7])) : {};
+        my $donor_inst_json = $r[8] ? decode_json(encode("utf8",$r[8])) : {};
+        my $donor_pui_json = $r[8] ? decode_json(encode("utf8",$r[8])) : {};
         my @donor_accessions = keys %{$donor_json};
         my @donor_institutes = keys %{$donor_inst_json};
         my @donor_puis = keys %{$donor_pui_json};
@@ -664,7 +665,7 @@ ORDER BY organism_id ASC;";
         while (my ($stock_id, @stockprop_select_return) = $h->fetchrow_array()) {
             for my $s (0 .. scalar(@stockprop_view)-1){
                 # my $stockprop_vals = $stockprop_select_return[$s] ? decode_json $stockprop_select_return[$s] : {};
-                my $stockprop_vals = $stockprop_select_return[$s] ? decode_json($stockprop_select_return[$s]) : {};
+                my $stockprop_vals = $stockprop_select_return[$s] ? decode_json(encode("utf8",$stockprop_select_return[$s])) : {};
                 my @stockprop_vals_string;
                 foreach (sort { $stockprop_vals->{$a} cmp $stockprop_vals->{$b} } (keys %$stockprop_vals) ){
                     push @stockprop_vals_string, $_;

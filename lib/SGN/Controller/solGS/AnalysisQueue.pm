@@ -507,22 +507,22 @@ sub structure_kinship_analysis_output {
     my $geno_file  = $c->stash->{genotype_file_name};
 
     my $coef_files = $c->controller('solGS::Kinship')->get_kinship_coef_files($c, $pop_id, $protocol_id, $trait_id);	 
-    my $matrix_file;
+    # my $matrix_file;
 
-    my $raw_matrix = "kinship\/analysis"
-	. "|solgs\/traits\/all\/" 
-	. "|breeders\/trial" 
-	. "|solgs\/models\/combined\/trials\/";
+    # my $raw_matrix = "kinship\/analysis"
+    # 	. "|solgs\/traits\/all\/" 
+    # 	. "|breeders\/trial" 
+    # 	. "|solgs\/models\/combined\/trials\/";
 
-    my $referer = $c->req->referer;
+    # my $referer = $c->req->referer;
 
-    if ($referer =~ /$raw_matrix/){
-	$matrix_file = $coef_files->{matrix_file_raw};
-    } 
-    else 
-    {
-	$matrix_file = $coef_files->{matrix_file_adj};	
-    }
+    # if ($referer =~ /$raw_matrix/){
+    # 	$matrix_file = $coef_files->{matrix_file_raw};
+    # } 
+    # else 
+    # {
+    my $matrix_file = $coef_files->{matrix_file_adj};	
+    #}
     
     $output_details{'kinship_' . $pop_id} = {
 	'output_page'    => $kinship_page,

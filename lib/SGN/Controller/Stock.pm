@@ -375,7 +375,7 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
     my $stock_row = $c->stash->{stock_row};
     my $stock_id = $stock_row->stock_id;
     my $stock_name = $stock_row->uniquename;
-    my $genotypeprop_id = $c->req->param('genotypeprop_id') ? [$c->req->param('genotypeprop_id')] : undef;
+    my $genotype_id = $c->req->param('genotype_id') ? [$c->req->param('genotype_id')] : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $dl_token = $c->req->param("gbs_download_token") || "no_token";
@@ -389,7 +389,7 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
             bcs_schema=>$schema,
             people_schema=>$people_schema,
             cache_root_dir=>$c->config->{cache_file_path},
-            markerprofile_id_list=>$genotypeprop_id,
+            markerprofile_id_list=>$genotype_id,
             #genotype_data_project_list=>$genotype_data_project_list,
             #marker_name_list=>['S80_265728', 'S80_265723'],
             #limit=>$limit,

@@ -59,6 +59,16 @@ sub patch {
     print STDERR "INSERTING CV TERMS...\n";
 
     my $terms = {
+        'experiment_type' => [
+            'sampling_layout'
+        ],
+        'project_property' => [
+            'sampling_facility',
+            'sampling_trial_sample_type'
+        ],
+        'project_relationship' => [
+            'sampling_trial_from_field_trial'
+        ],
         'protocol_type' => [
             'high_dimensional_phenotype_nirs_protocol',
             'high_dimensional_phenotype_transcriptomics_protocol',
