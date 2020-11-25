@@ -74,18 +74,9 @@ sub patch {
     my $desc_dbh = $schema->storage->dbh()->prepare($desc_q);
     $desc_dbh->execute('Default NIRS protocol', $protocol_id);
 
-    my $protocol_query = "INSERT INTO nd_experiment_protocol ( nd_experiment_id, nd_protocol_id) VALUES (?,?);";
+    my $protocol_query = "UPDATE nd_experiment_phenotype_bridge SET nd_protocol_id=? WHERE json_id IS NOT NULL;";
     my $protocol_dbh = $schema->storage->dbh()->prepare($protocol_query);
-
-    my $q = "SELECT nd_experiment_id
-        FROM phenome.nd_experiment_md_json
-        JOIN metadata.md_json USING(json_id)
-        WHERE json_type='nirs_spectra';";
-    my $dbh = $schema->storage->dbh()->prepare($q);
-    $dbh->execute();
-    while (my ($nd_experiment_id) = $dbh->fetchrow_array()) {
-        $protocol_dbh->execute($nd_experiment_id, $protocol_id);
-    }
+    $protocol_dbh->execute($protocol_id);
 
     print "You're done!\n";
 }
