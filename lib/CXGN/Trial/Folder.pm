@@ -503,6 +503,26 @@ sub delete_folder {
 	return 1;
 }
 
+sub rename_folder {
+        my $self = shift;
+	my $new_name = shift;
+	my $folder_exists = $self->get_folder_by_name($new_name);
+	return 0 if $folder_exists;
+	my $update_folder = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->folder_id });
+	$update_folder->name($new_name );
+	$update_folder->update();
+	return 1;
+}
+
+sub get_folder_by_name { 
+    my $self= shift;
+    my $name = shift;
+    my $exists = $self->bcs_schema->resultset("Project::Project")->search( { name => $name } );
+    my $count = $exists->count();
+    if ( $exists->count() > 0 ) { return 1 } else { return 0 }
+    return;
+}
+
 sub remove_parent {
 
 
