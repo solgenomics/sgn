@@ -55,14 +55,14 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Data Type: </label>
                             <div class="col-sm-9" >
-                                <select class="form-control" id="high_dim_data_upload_type_select">
-%  if ($high_dimensional_phenotype_type eq 'NIRS') {
-                                    <option value="NIRS">NIRS</option>
-                                    <option disabled value="Transcriptomics">Transcriptomics</option>
-                                    <option disabled value="Metabolomics">Metabolomics</option>
-%  } elsif ($high_dimensional_phenotype_type eq 'Transcriptomics') {
+                                <select class="form-control" id="high_dim_data_upload_type_select"> 
+%  if ($high_dimensional_phenotype_type eq 'Transcriptomics') {
                                     <option value="Transcriptomics">Transcriptomics</option>
                                     <option disabled value="NIRS">NIRS</option>
+                                    <option disabled value="Metabolomics">Metabolomics</option>
+%  } elsif ($high_dimensional_phenotype_type eq 'NIRS') {
+                                    <option value="NIRS">NIRS</option>
+                                    <option value="Transcriptomics">Transcriptomics</option>
                                     <option disabled value="Metabolomics">Metabolomics</option>
 %  } elsif ($high_dimensional_phenotype_type eq 'Metabolomics') {
                                     <option value="Metabolomics">Metabolomics</option>
@@ -385,16 +385,19 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
             
 
             <ul>
-                <li><strong>obserbationunit_name</strong>: It is a requiered field which matches with the name of an accession in the database.</li>
+                <li><strong>obserbationunit_name</strong>: It is a requiered field which matches with the database. It can be the plot name, subplots, plant name, or tissue sample, depending how your trial is designed.</li>
+                <li><strong>obserbation_name</strong>: It is a requiered field which matches with the name of an accession in the database.</li>
                 <li><strong>sample_type</strong>: It is a required field identification for tissue types sampled from a plant. The tissue types could be leaf, flower, stem, fibrous_root or storage_root.</li>
                 <li><strong>sampling_condition</strong>: This column is required in an upload file which indicates sampling conditions. However, it could be an optional field (empty column) when sampling has no conditions.</li>
                 <li><strong>sample_replication</strong>: It is a requiered field which indicates biological sample replicates. It should be written as "R1", "R2", "R3", ... "Rn". Where "n" is the number of replicates.</li>
+                <li>All other columns are required gene names. You can add how many columns you want to upload, there isn't a limit.</li>
             </ul>
             <table class="table table-hover table-bordered table-condensed" >
                         <thead></thead>
                         <tbody>
                             <tr>                                
                                 <td>obserbationunit_name</td>
+                                <td>obserbation_name</td>
                                 <td>sample_type</td>
                                 <td>sampling_condition</td>
                                 <td>sample_replication</td>
