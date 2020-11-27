@@ -174,7 +174,14 @@ eval {
 	# and convert the name into a canonical form so we can find it
 	# if it already exists with a different spelling or something
 	#
-        my ($marker_name,$subscript) = ($dirty_marker_name, "");
+
+	# Arabica nestle map uses (A) and (B) for multiple mapped markers.
+	my ($marker_name,$subscript) = ($dirty_marker_name, "");
+	if ($dirty_marker_name =~ m/(.*)\(.\)/) {
+	    $marker_name = $1;
+	    $subscript = $2;
+	}
+
 	    #CXGN::Marker::Tools::clean_marker_name($dirty_marker_name);
 
 	# get as many IDs as you can for a marker with a name like this
@@ -238,7 +245,7 @@ eval {
 #	    print $me->{protocol}."\n";
 #	}
 
-	my $chromosome=$ss->value_at($dirty_marker_name,'LINKAGE_GROUP');	    # get chromosome from spreadsheet
+	my $chromosome=$ss->value_at($dirty_marker_name,'LINKAGE_GROUP');	    # get chromosome from spreadsheet1
 	if (!defined($chromosome)) {  die"No chromosome found for $marker_name"; }
 
 	if (! str_in($chromosome, @$linkage_groups)) { 
@@ -267,6 +274,10 @@ eval {
 	    elsif ($confidence == 3) { $confidence = "F(LOD3)"; }
 	    else { $confidence = "uncalculated"; }
 	}
+
+	# for nestle arabica map:
+	$confidence = "uncalculated";
+	
 	# get protocol from spreadsheet
 	#
         my $protocols_string=uc($ss->value_at($dirty_marker_name,'PROTOCOL'));
