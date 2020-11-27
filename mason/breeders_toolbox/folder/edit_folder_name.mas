@@ -49,46 +49,26 @@ jQuery(document).ready(function() {
 
 });
 
-function display_trial_name(trial_id, type) {
-  jQuery.ajax( {
-    url: '/ajax/breeders/trial/'+trial_id+'/names',
-    success: function(response) {
-      if (response.error) {
-        jQuery('#trial_name').html('[ An error occurred fetching the trial name ]');
-      }
-      else {
-        jQuery('#trial_name').html(response.names);
-        jQuery('#trial_name_input').html(response.names);
-        jQuery('#pagetitle').html("<h3>"+type+" detail for "+response.names+"</h3>");
-      }
-    },
-    error: function(response) {
-      jQuery('#trial_name').html('[ A protocol error occurred ]');
-    }
-  });
-}
-
 
 function save_trial_name() {
   var trial_id = jQuery('#edit_trial_name_trial_id').val();
-  var names = jQuery('#trial_name_input').val();
-  //alert('New name = '+names);
-  jQuery.ajax( {
-    url: '/ajax/breeders/trial/'+trial_id+'/names/',
+  var new_name = jQuery('#trial_name_input').val();
+   jQuery.ajax( {
+    url: '/ajax/folder/'+trial_id+'/name/',
     type: 'POST',
-    data: {'names' : names},
+    data: {'new_name' : new_name},
     success: function(response) {
       if (response.error) {
         alert(response.error);
       }
       else {
-        alert("Successfully updated trial name");
+        alert("Successfully updated folder name");
         jQuery('#edit_trial_name_dialog').modal("hide");
-        display_trial_name(trial_id, "<% $trial_type %>");
+        jQuery('#pagetitle').html("<h3><% $trial_type %> detail for "+new_name+"</h3>");
       }
     },
     error: function(response) {
-      alert("An error occurred updating the trial name");
+      alert("An error occurred updating the folder name");
     },
   });
 }

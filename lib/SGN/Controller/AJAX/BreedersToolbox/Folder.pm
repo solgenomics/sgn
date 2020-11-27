@@ -81,6 +81,28 @@ sub delete_folder : Chained('get_folder') PathPart('delete') Args(0) {
 
 }
 
+sub rename_folder : Chained('get_folder') PathPart('name') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $new_folder_name = $c->req->param("new_name") ;
+    if (! $self->check_privileges($c)) {
+        return;
+    }
+
+    my $folder = CXGN::Trial::Folder->new({
+        bcs_schema => $c->stash->{schema},
+        folder_id => $c->stash->{folder_id}
+    });
+    my $rename_folder = $folder->rename_folder($new_folder_name);
+    if ($rename_folder) {
+        $c->stash->{rest} = { success => 1 };
+    } else {
+        $c->stash->{rest} = { error => 'Folder could not be renamed!' };
+    }
+
+}
+
+
 sub associate_parent_folder : Chained('get_folder') PathPart('associate/parent') Args(1) {
     my $self = shift;
     my $c = shift;
