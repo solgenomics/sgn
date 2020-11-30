@@ -73,6 +73,9 @@
                                     <option value="0.0001">0.0001</option>
                                     <option value="0.00001">0.00001</option>
                                     <option value="0.000001">0.000001</option>
+                                    <option value="0.0000001">0.0000001</option>
+                                    <option value="0.00000001">0.00000001</option>
+                                    <option value="0.000000001">0.000000001</option>
                                     <option value="0.01">0.01</option>
                                     <option value="0.1">0.1</option>
                                 </select>
@@ -86,8 +89,22 @@
                                     <option value="0.0001">0.0001</option>
                                     <option value="0.00001">0.00001</option>
                                     <option value="0.000001">0.000001</option>
+                                    <option value="0.0000001">0.0000001</option>
+                                    <option value="0.00000001">0.00000001</option>
+                                    <option value="0.000000001">0.000000001</option>
                                     <option value="0.01">0.01</option>
                                     <option value="0.1">0.1</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group" id="drone_imagery_analytics_select_analytics_env_sim_div" style="display:none">
+                            <label class="col-sm-3 control-label">Simulate Spatial or PE Effect: </label>
+                            <div class="col-sm-9" >
+                                <select class="form-control" id="drone_imagery_analytics_select_analytics_env_sim">
+                                    <option value="linear_gradient">Linear Gradient</option>
+                                    <option value="random_1d_normal_gradient">Random 1D Normal Gradient</option>
+                                    <option value="random_2d_normal_gradient">Random 2D Normal Gradient</option>
+                                    <option value="random">Random</option>
                                 </select>
                             </div>
                         </div>
@@ -418,15 +435,18 @@ jQuery(document).ready(function() {
     jQuery('#drone_imagery_analytics_select_analytics_type').change(function(){
         if (jQuery(this).val() == 'minimize_local_env_effect') {
             jQuery('#drone_imagery_analytics_select_analytics_env_threshold_div').show();
+            jQuery('#drone_imagery_analytics_select_analytics_env_sim_div').show();
             jQuery('#drone_imagery_analytics_select_analytics_genetic_threshold_div').hide();
         }
         else if (jQuery(this).val() == 'minimize_genetic_effect') {
             jQuery('#drone_imagery_analytics_select_analytics_genetic_threshold_div').show();
             jQuery('#drone_imagery_analytics_select_analytics_env_threshold_div').hide();
+            jQuery('#drone_imagery_analytics_select_analytics_env_sim_div').hide();
         }
         else {
             jQuery('#drone_imagery_analytics_select_analytics_env_threshold_div').hide();
             jQuery('#drone_imagery_analytics_select_analytics_genetic_threshold_div').hide();
+            jQuery('#drone_imagery_analytics_select_analytics_env_sim_div').hide();
         }
     });
 
@@ -615,6 +635,7 @@ jQuery(document).ready(function() {
                 'analytics_select':jQuery('#drone_imagery_analytics_select_analytics_type').val(),
                 'genetic_minimization_threshold':jQuery('#drone_imagery_analytics_select_analytics_genetic_threshold').val(),
                 'env_minimization_threshold':jQuery('#drone_imagery_analytics_select_analytics_env_threshold').val(),
+                'env_simulation':jQuery('#drone_imagery_analytics_select_analytics_env_sim').val(),
                 'relationship_matrix_type':jQuery('#drone_imagery_analytics_relationship_matrix_type_select_div').val(),
                 'protocol_id':jQuery('#drone_image_analytics_genotyping_protocol_select').val(),
                 'compute_from_parents':jQuery('#drone_image_analytics_genotyping_protocol_compute_from_parents_select').val(),
@@ -644,6 +665,12 @@ jQuery(document).ready(function() {
                     var html = '';
                     if (response.sum_square_residual) {
                         html = html + '<h4>Sum square residual: '+response.sum_square_residual+'</h4><hr>';
+                    }
+                    if (response.genetic_effect_sum) {
+                        html = html + '<h4>Genetic Effect Sum: '+response.genetic_effect_sum+'</h4><hr>';
+                    }
+                    if (response.env_effect_sum) {
+                        html = html + '<h4>Env Effect Sum: '+response.env_effect_sum+'</h4><hr>';
                     }
                     if (response.unique_accessions.length > 0 && response.unique_traits.length > 0 && response.result_blup_genetic_data) {
                         manage_drone_imagery_analytics_accession_names = response.unique_accessions;
