@@ -98,30 +98,25 @@ solGS.submitJob = {
 
 
     checkTrainingPopRequirement: function(page, args) {
-	args = JSON.parse(args);
-	var popId = args.training_pop_id[0];
-	var dataSetType = args.data_set_type;
 
-	if (popId) {	
-	    jQuery.ajax({
-		dataType: 'json',
-		type    : 'POST',
-		data    : {'training_pop_id': popId, 'data_set_type': dataSetType},
-		url     : '/solgs/check/training/pop/size/',
-		success : function (res) {
-		    var trainingPopSize = res.member_count;
-		    if (trainingPopSize >= 20) {	   
-			solGS.submitJob.askUser(page, args);		
-		    } else {
-			var msg = 'The training population size ('
-			    + trainingPopSize + ') is too small. Minimum required is 20.';
-			
-			solGS.alertMessage(msg);
-			
-		    }	
-		},	    
-	    });
-	}
+	jQuery.ajax({
+	    dataType: 'json',
+	    type    : 'POST',
+	    data    : {'args': args},
+	    url     : '/solgs/check/training/pop/size/',
+	    success : function (res) {
+		var trainingPopSize = res.member_count;
+		if (trainingPopSize >= 20) {	   
+		    solGS.submitJob.askUser(page, args);		
+		} else {
+		    var msg = 'The training population size ('
+			+ trainingPopSize + ') is too small. Minimum required is 20.';
+		    
+		    solGS.alertMessage(msg);
+		    
+		}	
+	    },	    
+	});
     },
 
 
