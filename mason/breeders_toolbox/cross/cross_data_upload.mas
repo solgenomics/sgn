@@ -1,0 +1,66 @@
+<%args>
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<div class="well well-sm">
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <&| /page/info_section.mas, title=>"Upload Cross Data", is_subsection => 1, collapsible=>1, collapsed=>0, &>
+                <&| /page/info_section.mas, title=>"Upload Intercross File ", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_intercross_file_link">Upload</button>'&>
+                </&>
+            </&><!-- closes upload cross data section -->
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_intercross_file_dialog" name="upload_intercross_file_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadIntercrossFileDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadIntercrossFileDialog">Upload Intercross File </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <&| /page/explanation.mas, title=>'Template Information' &>
+                        <p>
+                            <b>File Format Information</b>
+                            <br>
+                            <a id="upload_intercross_file_spreadsheet_format_info">Spreadsheet Format</a>
+                            <br>
+                        </p>
+                    </&>
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_intercross_form" name="upload_intercross_form">
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">Upload File: </label>
+                                <div class="col-sm-10">
+                                    <input type="file" name="intercross_file" id="intercross_file" encoding="multipart/form-data" />
+                                </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="upload_intercross_file_submit" id="upload_intercross_file_submit">Upload File</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#upload_intercross_file_link').click(function(){
+
+        jQuery('#upload_intercross_file_dialog').modal("show");
+    });
+
+});
+
+</script>
