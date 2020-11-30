@@ -28,6 +28,7 @@ use Data::Dumper;
 use SGN::Model::Cvterm;
 use JSON;
 use POSIX;
+use List::Util qw(sum);
 
 has 'parental_genotypes' => (
     isa => 'ArrayRef[HashRef]',
@@ -45,6 +46,44 @@ sub get_hybrid_genotype {
     my $self = shift;
     my $parental_genotypes = $self->parental_genotypes();
     my $marker_objects = $self->marker_objects();
+
+    # print STDERR Dumper $parental_genotypes;
+
+    # If there are more than one genotype for the parents given, will average them
+    if (scalar(@$parental_genotypes)>2) {
+        my %parental_genotypes;
+        my @parental_genotypes_averaged;
+        foreach my $g (@$parental_genotypes) {
+            my $geno = $g->{selected_genotype_hash};
+            my $parent = $g->{germplasmName};
+            push @{$parental_genotypes{$parent}}, $geno;
+        }
+        while (my ($parent, $genos) = each %parental_genotypes) {
+            my %averaged_parent_geno;
+            foreach my $m (@$marker_objects) {
+                my $marker_name = $m->{name};
+                my @avg_ds;
+                foreach my $g (@$genos) {
+                    my $ds = $g->{$marker_name}->{DS} ne 'NA' ? $g->{$marker_name}->{DS} : undef;
+                    if (defined($ds)) {
+                        push @avg_ds, $ds;
+                    }
+                }
+                my $avg_ds_val;
+                if (scalar(@avg_ds) > 0) {
+                    $avg_ds_val = sum(@avg_ds)/scalar(@avg_ds);
+                }
+                else {
+                    $avg_ds_val = 'NA';
+                }
+                $averaged_parent_geno{$marker_name} = {DS => $avg_ds_val};
+            }
+            push @parental_genotypes_averaged, {
+                selected_genotype_hash => \%averaged_parent_geno
+            }
+        }
+        $parental_genotypes = \@parental_genotypes_averaged;
+    }
 
     my @progeny_genotype;
     # If both parents are genotyped, calculate progeny genotype as a average of parent dosage

@@ -387,7 +387,7 @@ sub store {
 
 	my @data_files;
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Studies result constructed');
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Studies stored successfully');
 }
 
 sub update {
@@ -451,10 +451,9 @@ sub update {
 		return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Study type name: ' . $study_t . ' does not exist. Check study types supported!'));
 	}
 	my $folder = CXGN::Trial::Folder->new(bcs_schema=>$self->bcs_schema(), folder_id=>$folder_id);
-	my $program = $folder->breeding_program->name();
+	my $program = $folder->breeding_program->project_id();
 
-			
-    eval {
+    # eval {
     	my $trial_name_exists = CXGN::Trial::Search->new({
 	        bcs_schema => $schema,
 	        metadata_schema => $metadata_schema,
@@ -497,7 +496,7 @@ sub update {
 		if ($plot_width) { $trial->set_plot_width($plot_width); }
 		if ($plot_length) { $trial->set_plot_length($plot_length); }
 		if ($study_design_method) { $trial->set_design_type($study_design_method); }
-    };
+    # };
 
     my $data_out;
 	my $total_count=0;
@@ -598,7 +597,7 @@ sub _search {
 			if($harvest_date eq "") { $harvest_date = undef;}
 		}
 
-		# my $t = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $_->{trial_id} });
+		my $t = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $_->{trial_id} });
 		# my $contacts = $t->get_trial_contacts();
 		my $brapi_contacts;
 		# foreach (@$contacts){
@@ -639,9 +638,10 @@ sub _search {
         #         version => undef
         #     };
         # }
-        my $data_agreement; # = $t->get_data_agreement() ? $t->get_data_agreement() : '';
+        my $data_agreement = ''; # = $t->get_data_agreement() ? $t->get_data_agreement() : '';
 
-		# my $folder_id = $t->get_folder()->id();	
+        my $folder_id = $t->get_folder()->id();
+        my $folder_name = $t->get_folder()->name();
         my %data_obj = (
 			active=>JSON::true,
 			additionalInfo=>\%additional_info,
@@ -669,8 +669,8 @@ sub _search {
 			studyName => $_->{trial_name},
 			studyPUI => undef,
 			studyType => $_->{trial_type},
-            trialDbId => $_->{folder_id} ? qq|$_->{folder_id}| : undef, #qq|$folder_id|,
-            trialName => $_->{folder_name}  #$t->get_folder()->name(),
+            trialDbId => $folder_id,
+            trialName => $folder_name
         );
         push @data_out, \%data_obj;
     }
