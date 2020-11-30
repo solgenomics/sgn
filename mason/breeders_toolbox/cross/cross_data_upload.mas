@@ -51,6 +51,48 @@
     </div>
 </div>
 
+<div class="modal fade" id="upload_intercross_error_display" name="upload_intercross_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadIntercrossErrorDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadIntercrossErrorDialog">Upload Intercross File Error</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="intercross_saved_dialog_message" name="intercross_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="intercrossSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="intercrossSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The crossing data from intercross file were saved successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_intercross_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
 
@@ -59,6 +101,44 @@ jQuery(document).ready(function(){
     jQuery('#upload_intercross_file_link').click(function(){
 
         jQuery('#upload_intercross_file_dialog').modal("show");
+    });
+
+    jQuery("#upload_intercross_file_submit").click(function(){
+        var uploadFile = jQuery("#intercross_file").val();
+        jQuery('#upload_intercross_form').attr("action", "/ajax/cross/upload_intercross_file");
+        if (uploadFile === ''){
+            alert("Please select a file");
+            return;
+        }
+        jQuery("#upload_intercross_form").submit();
+        jQuery("#upload_intercross_file_dialog").modal("hide");
+    });
+
+    jQuery('#upload_intercross_form').iframePostForm({
+        json: true,
+        post: function(){
+            jQuery("#working_modal").modal("show");
+        },
+        complete: function(response) {
+            jQuery("#working_modal").modal("hide");
+            if (response.error_string) {
+                jQuery("#upload_intercross_error_display tbody").html('');
+                jQuery("#upload_intercross_error_display tbody").append(response.error_string);
+                jQuery("#upload_intercross_error_display").modal("show");
+                return;
+            }
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            if (response.success) {
+                jQuery('#intercross_saved_dialog_message').modal("show");
+            }
+        }
+    });
+
+    jQuery("#dismiss_intercross_saved_dialog").click(function(){
+        location.reload();
     });
 
 });
