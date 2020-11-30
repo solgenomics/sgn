@@ -237,7 +237,7 @@ sub search {
                 reference => ''
 		    },
 		    name => $cvterm_name."|".$db_name.":".$accession, #$cvterm_name,
-			observationVariableDbId => $cvterm_name."|".$db_name.":".$accession,
+			observationVariableDbId => $cvterm_id,
 			observationVariableName => $cvterm_name,
 			ontologyDbId => qq|$db_id|,
 			ontologyName => $db_name,
@@ -302,7 +302,7 @@ sub detail {
         my $trait_id = $trait->cvterm_id;
         my $trait_db_id = $trait->db_id;
 		%result = (
-			observationVariableDbId => $trait->term,
+			observationVariableDbId => $trait_id,
 			name => $trait->display_name,
 			ontologyDbId => qq|$trait_db_id|,
 			ontologyName => $trait->db,
