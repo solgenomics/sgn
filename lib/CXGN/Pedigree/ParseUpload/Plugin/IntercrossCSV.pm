@@ -110,6 +110,14 @@ sub validate {
             return \%parse_result;
         }
 
+        my $crossing_experiment_name = $column_values[5]
+        my $crossing_experiment_rs = $schema->resultset("Project::Project")->find( { name => $crossing_experiment_name });
+
+        if (!$crossing_experiment_rs) {
+            $parse_result{'error'} = "Error! Crossing experiment: $crossing_experiment_name was not found in the database.\n";
+            return \%parse_result;
+    	}
+
         my $female_parent = $column_values[1];
         $parent_names{$female_parent}++;
 
@@ -140,3 +148,73 @@ sub validate {
 
     return 1;
 }
+
+sub parse {
+    my $self = shift;
+    my $filename = shift;
+    my $timestamp_included = shift;
+    my $parent_type = shift;
+    my $schema = shift;
+    my $delimiter = ',';
+    my %parse_result;
+
+    my $csv = Text::CSV->new({ sep_char => ',' });
+    my %data;
+
+    open(my $fh, '<', $filename)
+        or die "Could not open file '$filename' $!";
+
+    if (!$fh) {
+        $parse_result{'error'} = "Could not read file.";
+        print STDERR "Could not read file.\n";
+        return \%parse_result;
+    }
+
+    my $header_row = <$fh>;
+    my @header_columns;
+    if ($csv->parse($header_row)) {
+        @header_columns = $csv->fields();
+    } else {
+        $parse_result{'error'} = "Could not parse header row.";
+        print STDERR "Could not parse header row.\n";
+        return \%parse_result;
+    }
+
+    while ( my $row = <$fh> ){
+        my @columns;
+        if ($csv->parse($row)) {
+            @columns = $csv->fields();
+        } else {
+            $parse_result{'error'} = "Could not parse row $row.";
+            print STDERR "Could not parse row $row.\n";
+            return \%parse_result;
+        }
+
+        my $transaction_id = $columns[0];
+        my $female_parent = $columns[1];
+        my $male_parent = $columns[2];
+        my $timestamp = $columns[3];
+        my $person = $columns[4];
+        my $crossing_experiment = $columns[5];
+        my $cross_type = $columns[6];
+        my $number_of_fruits = $columns[7];
+        my $number_of_flowers = $columns[8];
+        my $number_of_seeds = $columns[9];
+
+        my $cross_identifier = $crossing_experiment.'_'.$female_parent.'_'.$male_parent;
+        my $data{$cross_identifier}{'crossing_experiment'} = $crossing_experiment;
+        my $data{$cross_identifier}{'female_parent'} = $female_parent;
+        my $data{$cross_identifier}{'male_parent'} = $male_parent;
+        my $data{$cross_identifier}{'cross_type'} = $cross_type;
+        my $data{$cross_identifier}{$transaction_id}{'fruits'} = $number_of_fruits;
+        my $data{$cross_identifier}{$transaction_id}{'flowers'} = $number_of_flowers;
+        my $data{$cross_identifier}{$transaction_id}{'seeds'} = $number_of_seeds;
+    }
+
+    $parse_result{'data'} = \%data;
+    #print STDERR Dumper \%parse_result;
+
+    return \%parse_result;
+}
+
+1;
