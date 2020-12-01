@@ -98,7 +98,7 @@ sub BUILD {
     my $self = shift;
     my $args = shift;
 
-    print STDERR "BUILD CXGN::Project... with ".$args->{trial_id}."\n";
+    # print STDERR "BUILD CXGN::Project... with ".$args->{trial_id}."\n";
 
     if (! $args->{description}) {
 	$args->{description} = "(No description provided)";
@@ -2604,7 +2604,7 @@ sub get_traits_assayed {
         LEFT JOIN cvterm AS cv_type on (cv_type.cvterm_id = cvprop.type_id)
         WHERE cvterm.cvterm_id=? ;";
 
-    print STDERR Dumper $q;
+    # print STDERR Dumper $q;
 
     my $traits_assayed_h = $dbh->prepare($q);
     my $component_h = $dbh->prepare($component_q);
