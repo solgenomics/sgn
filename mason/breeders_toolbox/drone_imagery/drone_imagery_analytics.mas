@@ -460,6 +460,10 @@ jQuery(document).ready(function() {
             alert('Cannot minimize local environmental effects in a model that is only with genetic effects.');
             return false;
         }
+        if (manage_drone_imagery_analytics_type_select == 'minimize_local_env_effect' && (manage_drone_imagery_analytics_statistics_select == 'sommer_grm_genetic_only_random_regression_dap_genetic_blups' || manage_drone_imagery_analytics_statistics_select == 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups') ) {
+            alert('Cannot minimize local environmental effects in a model that is only with genetic effects.');
+            return false;
+        }
 
         if (manage_drone_imagery_analytics_statistics_select == 'lmer_germplasmname_replicate') {
             jQuery('#drone_imagery_analytics_relationship_matrix_type_div').hide();
