@@ -106,7 +106,8 @@ solGS.submitJob = {
 	    url     : '/solgs/check/training/pop/size/',
 	    success : function (res) {
 		var trainingPopSize = res.member_count;
-		if (trainingPopSize >= 20) {	   
+		if (trainingPopSize >= 20) {
+		    args = JSON.parse(args);
 		    solGS.submitJob.askUser(page, args);		
 		} else {
 		    var msg = 'The training population size ('
