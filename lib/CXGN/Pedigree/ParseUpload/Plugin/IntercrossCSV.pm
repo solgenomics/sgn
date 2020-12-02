@@ -11,16 +11,15 @@ use Data::Dumper;
 use CXGN::List::Validate;
 
 
-sub validate {
+sub _validate_with_plugin {
     my $self = shift;
-    my $filename = shift;
-    my $timestamp_included = shift;
-    my $parent_type = shift;
-    my $schema = shift;
+    my $filename = $self->get_filename();
+    my $schema = $self->get_chado_schema();
+#    my $parent_type = $self->get_data_level();
+    my $parent_type = 'accessions';
     my $delimiter = ',';
-    my %parse_result;
     my @error_messages;
-
+    my %errors;
 
     my $csv = Text::CSV->new({ sep_char => ',' });
 
@@ -28,9 +27,9 @@ sub validate {
         or die "Could not open file '$filename' $!";
 
     if (!$fh) {
-        $parse_result{'error'} = "Could not read file.";
-        print STDERR "Could not read file.\n";
-        return \%parse_result;
+        $errors{'error_messages'} = "Could not read file.";
+        $self->_set_parse_errors(\%errors);
+        return;
     }
 
     my $header_row = <$fh>;
@@ -38,65 +37,54 @@ sub validate {
     if ($csv->parse($header_row)) {
         @columns = $csv->fields();
     } else {
-        $parse_result{'error'} = "Could not parse header row.";
-        print STDERR "Could not parse header.\n";
-        return \%parse_result;
+        $errors{'error_messages'} = "Could not parse header row.";
+        $self->_set_parse_errors(\%errors);
+        return;
     }
 
     #  Check headers
     if ($columns[0] ne 'crossDbId'){
-            $parse_result{'error'} = "File contents incorrect. The first column must be crossDbId.";
-            return \%parse_result;
-        }
+        push @error_messages, "File contents incorrect. The first column must be crossDbId.";
+    }
 
     if ($columns[1] ne 'femaleObsUnitDbId'){
-        $parse_result{'error'} = "File contents incorrect. The second column must be femaleObsUnitDbId.";
-        return \%parse_result;
+        push @error_messages, "File contents incorrect. The second column must be femaleObsUnitDbId.";
     }
 
     if ($columns[2] ne 'maleObsUnitDbId'){
-        $parse_result{'error'} = "File contents incorrect. The third column must be maleObsUnitDbId.";
-        return \%parse_result;
+        push @error_messages, "File contents incorrect. The third column must be maleObsUnitDbId.";
     }
 
     if ($columns[3] ne 'timestamp'){
-        $parse_result{'error'} = "File contents incorrect. The fourth column must be timestamp.";
-        return \%parse_result;
+        push @error_messages, "File contents incorrect. The fourth column must be timestamp.";
     }
 
     if ($columns[4] ne 'person'){
-        $parse_result{'error'} = "File contents incorrect. The fifth column must be person.";
-        return \%parse_result;
+        push @error_messages, "File contents incorrect. The fifth column must be person.";
     }
 
     if ($columns[5] ne 'experiment'){
-        $parse_result{'error'} = "File contents incorrect. The sixth column must be experiment.";
-        return \%parse_result;
+        push @error_messages, "File contents incorrect. The sixth column must be experiment.";
     }
 
     if ($columns[6] ne 'type'){
-        $parse_result{'error'} = "File contents incorrect. The seventh column must be type.";
-        return \%parse_result;
+        push @error_messages, "File contents incorrect. The seventh column must be type.";
     }
 
     if ($columns[7] ne 'fruits'){
-        $parse_result{'error'} = "File contents incorrect. The eighth column must be fruits.";
-        return \%parse_result;
+        push @error_messages, "File contents incorrect. The eighth column must be fruits.";
     }
 
     if ($columns[8] ne 'flowers'){
-        $parse_result{'error'} = "File contents incorrect. The ninth column must be flowers.";
-        return \%parse_result;
+        push @error_messages, "File contents incorrect. The ninth column must be flowers.";
     }
 
     if ($columns[9] ne 'seeds'){
-        $parse_result{'error'} = "File contents incorrect. The tenth column must be seeds.";
-        return \%parse_result;
+        push @error_messages, "File contents incorrect. The tenth column must be seeds.";
     }
 
     if($parent_type ne 'accession' && $data_level ne 'plot' && $data_level ne 'plant'){
-        $parse_result{'error'} = "You must specify if the parents are accessions, plots or plants.";
-        return \%parse_result;
+        push @error_messages, "You must specify if the parents are accessions, plots or plants.";
     }
 
     my %parent_names;
@@ -105,17 +93,16 @@ sub validate {
         if ($csv->parse($row)) {
             @column_values = $csv->fields();
         } else {
-            $parse_result{'error'} = "Could not parse row $row.";
-            print STDERR "Could not parse row $row.\n";
-            return \%parse_result;
+            $errors{'error_messages'} = "Could not parse row $row.";
+            $self->_set_parse_errors(\%errors);
+            return;
         }
 
         my $crossing_experiment_name = $column_values[5]
         my $crossing_experiment_rs = $schema->resultset("Project::Project")->find( { name => $crossing_experiment_name });
 
         if (!$crossing_experiment_rs) {
-            $parse_result{'error'} = "Error! Crossing experiment: $crossing_experiment_name was not found in the database.\n";
-            return \%parse_result;
+            push @error_messages, "Error! Crossing experiment: $crossing_experiment_name was not found in the database.\n";
     	}
 
         my $female_parent = $column_values[1];
@@ -142,19 +129,25 @@ sub validate {
     }
 
     if (scalar(@parents_missing) > 0) {
-        $parse_result{'error'} = "The following parents are not in the database, or are not in the database as uniquenames: ".join(',',@parents_missing);
-        return \%parse_result;
+        push @error_messages, "The following parents are not in the database, or are not in the database as uniquenames: ".join(',',@parents_missing);
+    }
+
+    if (scalar(@error_messages) >= 1) {
+        $errors{'error_messages'} = \@error_messages;
+        $self->_set_parse_errors(\%errors);
+        return;
     }
 
     return 1;
 }
 
-sub parse {
+
+sub _parse_with_plugin {
     my $self = shift;
-    my $filename = shift;
-    my $timestamp_included = shift;
-    my $parent_type = shift;
-    my $schema = shift;
+    my $filename = $self->get_filename();
+#    my $parent_type = $self->get_data_level();
+    my $parent_type = 'accessions';
+    my $schema = $self->get_chado_schema();
     my $delimiter = ',';
     my %parse_result;
 
@@ -165,9 +158,7 @@ sub parse {
         or die "Could not open file '$filename' $!";
 
     if (!$fh) {
-        $parse_result{'error'} = "Could not read file.";
-        print STDERR "Could not read file.\n";
-        return \%parse_result;
+        return;
     }
 
     my $header_row = <$fh>;
@@ -175,9 +166,7 @@ sub parse {
     if ($csv->parse($header_row)) {
         @header_columns = $csv->fields();
     } else {
-        $parse_result{'error'} = "Could not parse header row.";
-        print STDERR "Could not parse header row.\n";
-        return \%parse_result;
+        return;
     }
 
     while ( my $row = <$fh> ){
@@ -185,9 +174,7 @@ sub parse {
         if ($csv->parse($row)) {
             @columns = $csv->fields();
         } else {
-            $parse_result{'error'} = "Could not parse row $row.";
-            print STDERR "Could not parse row $row.\n";
-            return \%parse_result;
+            return;
         }
 
         my $transaction_id = $columns[0];
@@ -212,9 +199,12 @@ sub parse {
     }
 
     $parse_result{'data'} = \%data;
-    #print STDERR Dumper \%parse_result;
+    print STDERR "DATA =".Dumper(\%parse_result)."\n";
 
-    return \%parse_result;
+    $self->_set_parsed_data(\%parsed_result);
+
+    return 1;
+
 }
 
 1;
