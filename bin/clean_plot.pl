@@ -19,6 +19,8 @@ use strict;
 use warnings;
 use Getopt::Std;
 use DBI;
+use Try::Tiny;
+use DBIx::Class;
 use Bio::Chado::Schema;
 
 our ($opt_H, $opt_D, $opt_t);
@@ -30,6 +32,9 @@ print "Password for $opt_H / $opt_D: \n";
 my $pw = <>;
 chomp($pw);
 
+
+my $schema = Bio::Chado::Schema->connect($opt_H, "postgres", $pw);
+
 print STDERR "Connecting to database...\n";
 my $dsn = 'dbi:Pg:database='.$opt_D.";host=".$opt_H.";port=5432";
 
@@ -38,20 +43,23 @@ my $dbh = DBI->connect($dsn, "postgres", $pw);
 print STDERR "Connecting to DBI schema...\n";
     
 
-my @plot_names = ();
+my @plot_ids = ();
 
-my $sql = "select count(stock_id) from stock left join nd_experiment_stock using (stock_id) where nd_experiment_id  is null and stock.type_id = 76393;";
+my $sql = "BEGIN; select uniquename, stock_id from stock left join nd_experiment_stock using (stock_id) where nd_experiment_id  is null and stock.type_id = 76393;";
 my $sth = $dbh->prepare($sql);
 $sth->execute();
 while (my @row = $sth->fetchrow_array) {
-	print "Number of orphan plots to delete: $row[0]\n";
+	push @plot_ids, $row[1];
+	print "Plot id is: $row[1]\n";
 }
 
+foreach my $plot_id (@plot_ids) { 
+	my $sql2 = "delete from stock where stock_id in (select stock_id from stock left join nd_experiment_stock using (stock_id) where stock_id = ? and stock.type_id = 76393);";
+	my $sth2 = $dbh->prepare($sql2);
+	try { $schema->txn_do($sth2->execute($plot_id)); }  catch { print STDOUT $_ ; next () ; } ;
+	print("deleting plot id $plot_id ...");
+	
+}
 
-my $sql2 = "BEGIN; delete from stock where stock_id in (select stock_id from stock left join nd_experiment_stock using (stock_id) where nd_experiment_id is null and stock.type_id = 76393);";
-my $sth2 = $dbh->prepare($sql2);
-$sth2->execute();
-
-#searching for plots using trial names
 
 print "done\n";
