@@ -1591,7 +1591,6 @@ sub upload_intercross_file_POST : Args(0) {
     $upload_metadata{'date'}="$timestamp";
 
     #parse uploaded file with appropriate plugin
-    #parse uploaded file with appropriate plugin
     $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
     $parser->load_plugin('IntercrossCSV');
     $parsed_data = $parser->parse();
