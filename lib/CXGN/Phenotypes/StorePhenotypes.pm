@@ -617,6 +617,7 @@ sub store {
                             $nd_experiment_phenotype_bridge_dbh->execute($stock_id, $project_id, $phenotype_id, $stored_protocol_id, $location_id, $stored_file_id, $stored_image_id, $stored_json_id, $upload_date);
                         }
 
+                        my $observationVariableDbId = $trait_cvterm->cvterm_id;
                         my %details = (
                             "germplasmDbId"=> $linked_data{$plot_name}->{germplasmDbId},
                             "germplasmName"=> $linked_data{$plot_name}->{germplasmName},
@@ -624,7 +625,7 @@ sub store {
                             "observationLevel"=> $linked_data{$plot_name}->{observationLevel},
                             "observationUnitDbId"=> $linked_data{$plot_name}->{observationUnitDbId},
                             "observationUnitName"=> $linked_data{$plot_name}->{observationUnitName},
-                            "observationVariableDbId"=> $trait_name,
+                            "observationVariableDbId"=> qq|$observationVariableDbId|,
                             "observationVariableName"=> $trait_cvterm->name,
                             "studyDbId"=> $project_id,
                             "uploadedBy"=> $user_id,
