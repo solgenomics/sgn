@@ -248,6 +248,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $minimization_env_done = 0;
     my $genetic_effect_sum = 0;
     my $env_effect_sum = 0;
+    my $residual_sum = 0;
 
     my $csv = Text::CSV->new({ sep_char => "\t" });
 
@@ -1084,6 +1085,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 $genetic_effect_max = -1000000000;
                 $genetic_effect_sum = 0;
                 $env_effect_sum = 0;
+                $residual_sum = 0;
 
                 my $cmd = 'R -e "library(sommer); library(data.table); library(reshape2);
                 mat <- data.frame(fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\'));
@@ -1138,7 +1140,39 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     }
                 close($fh);
 
-                push @result_effect_sum_iterations, [$iteration_count, $genetic_effect_sum, $env_effect_sum];
+                open(my $fh_residual, '<', $stats_out_tempfile_residual)
+                    or die "Could not open file '$stats_out_tempfile_residual' $!";
+                
+                    print STDERR "Opened $stats_out_tempfile_residual\n";
+                    my $header_residual = <$fh_residual>;
+                    my @header_cols_residual;
+                    if ($csv->parse($header_residual)) {
+                        @header_cols_residual = $csv->fields();
+                    }
+                    while (my $row = <$fh_residual>) {
+                        my @columns;
+                        if ($csv->parse($row)) {
+                            @columns = $csv->fields();
+                        }
+
+                        my $stock_id = $columns[0];
+                        foreach (0..$number_traits-1) {
+                            my $trait_name = $sorted_trait_names[$_];
+                            my $residual = $columns[1 + $_];
+                            my $fitted = $columns[1 + $number_traits + $_];
+                            my $stock_name = $plot_id_map{$stock_id};
+                            if (defined $residual && $residual ne '') {
+                                $result_residual_data->{$stock_name}->{$trait_name} = [$residual, $timestamp, $user_name, '', ''];
+                                $residual_sum += abs($residual);
+                            }
+                            if (defined $fitted && $fitted ne '') {
+                                $result_fitted_data->{$stock_name}->{$trait_name} = [$fitted, $timestamp, $user_name, '', ''];
+                            }
+                        }
+                    }
+                close($fh_residual);
+
+                push @result_effect_sum_iterations, [$iteration_count, $genetic_effect_sum, $env_effect_sum, $residual_sum];
 
                 $result_blup_data_iterations->{$genetic_effect_sum} = {
                     gen => $result_blup_data,
@@ -1180,6 +1214,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 $env_effect_max = -1000000000;
                 $genetic_effect_sum = 0;
                 $env_effect_sum = 0;
+                $residual_sum = 0;
 
                 my $cmd = 'R -e "library(sommer); library(data.table); library(reshape2);
                 mat <- data.frame(fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\'));
@@ -1305,6 +1340,38 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         }
                     close($fh_2dspl);
 
+                    open(my $fh_residual, '<', $stats_out_tempfile_residual)
+                        or die "Could not open file '$stats_out_tempfile_residual' $!";
+                    
+                        print STDERR "Opened $stats_out_tempfile_residual\n";
+                        my $header_residual = <$fh_residual>;
+                        my @header_cols_residual;
+                        if ($csv->parse($header_residual)) {
+                            @header_cols_residual = $csv->fields();
+                        }
+                        while (my $row = <$fh_residual>) {
+                            my @columns;
+                            if ($csv->parse($row)) {
+                                @columns = $csv->fields();
+                            }
+
+                            my $stock_id = $columns[0];
+                            foreach (0..$number_traits-1) {
+                                my $trait_name = $sorted_trait_names[$_];
+                                my $residual = $columns[1 + $_];
+                                my $fitted = $columns[1 + $number_traits + $_];
+                                my $stock_name = $plot_id_map{$stock_id};
+                                if (defined $residual && $residual ne '') {
+                                    $result_residual_data->{$stock_name}->{$trait_name} = [$residual, $timestamp, $user_name, '', ''];
+                                    $residual_sum += abs($residual);
+                                }
+                                if (defined $fitted && $fitted ne '') {
+                                    $result_fitted_data->{$stock_name}->{$trait_name} = [$fitted, $timestamp, $user_name, '', ''];
+                                }
+                            }
+                        }
+                    close($fh_residual);
+
                     if ($current_env_row_count == 0 || $current_gen_row_count == 0) {
                         $run_stats_fault = 1;
                     }
@@ -1318,17 +1385,21 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     $minimization_shift = 1;
                 }
                 else {
-                    push @result_effect_sum_iterations, [$iteration_count, $genetic_effect_sum, $env_effect_sum];
+                    push @result_effect_sum_iterations, [$iteration_count, $genetic_effect_sum, $env_effect_sum, $residual_sum];
 
                     $result_blup_data_iterations->{$genetic_effect_sum} = {
                         env => $result_blup_spatial_data,
                         gen => $result_blup_data,
+                        residual => $result_residual_data,
+                        fitted => $result_fitted_data,
                         env_effect => $env_effect_sum
                     };
 
                     $result_blup_spatial_data_iterations->{$env_effect_sum} = {
                         env => $result_blup_spatial_data,
                         gen => $result_blup_data,
+                        residual => $result_residual_data,
+                        fitted => $result_fitted_data,
                         gen_effect => $genetic_effect_sum
                     };
                 }
@@ -1377,6 +1448,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 $env_effect_max = -1000000000;
                 $genetic_effect_sum = 0;
                 $env_effect_sum = 0;
+                $residual_sum = 0;
                 my $result_blup_data_delta = {};
                 my $result_blup_pe_data_delta = {};
 
@@ -1503,6 +1575,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         my $stock_name = $plot_id_map{$stock_id};
                         if (defined $residual && $residual ne '') {
                             $result_residual_data->{$stock_name}->{$seen_times{$time}} = [$residual, $timestamp, $user_name, '', ''];
+                            $residual_sum += abs($residual);
                         }
                         if (defined $fitted && $fitted ne '') {
                             $result_fitted_data->{$stock_name}->{$seen_times{$time}} = [$fitted, $timestamp, $user_name, '', ''];
@@ -1651,16 +1724,20 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     }
                 }
 
-                push @result_effect_sum_iterations, [$iteration_count, $genetic_effect_sum, $env_effect_sum];
+                push @result_effect_sum_iterations, [$iteration_count, $genetic_effect_sum, $env_effect_sum, $residual_sum];
 
                 $result_blup_data_iterations->{$genetic_effect_sum} = {
                     env => $result_blup_pe_data_delta,
                     gen => $result_blup_data_delta,
+                    residual => $result_residual_data,
+                    fitted => $result_fitted_data,
                     env_effect => $env_effect_sum
                 };
                 $result_blup_pe_data_iterations->{$env_effect_sum} = {
                     env => $result_blup_pe_data_delta,
                     gen => $result_blup_data_delta,
+                    residual => $result_residual_data,
+                    fitted => $result_fitted_data,
                     gen_effect => $genetic_effect_sum
                 };
 
@@ -1709,6 +1786,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 $genetic_effect_max = -1000000000;
                 $genetic_effect_sum = 0;
                 $env_effect_sum = 0;
+                $residual_sum = 0;
                 my $result_blup_data_delta = {};
 
                 my $cmd = 'R -e "library(sommer); library(data.table); library(reshape2); library(orthopolynom);
@@ -1800,6 +1878,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         my $stock_name = $plot_id_map{$stock_id};
                         if (defined $residual && $residual ne '') {
                             $result_residual_data->{$stock_name}->{$seen_times{$time}} = [$residual, $timestamp, $user_name, '', ''];
+                            $residual_sum += abs($residual);
                         }
                         if (defined $fitted && $fitted ne '') {
                             $result_fitted_data->{$stock_name}->{$seen_times{$time}} = [$fitted, $timestamp, $user_name, '', ''];
@@ -1879,10 +1958,12 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     }
                 }
 
-                push @result_effect_sum_iterations, [$iteration_count, $genetic_effect_sum, $env_effect_sum];
+                push @result_effect_sum_iterations, [$iteration_count, $genetic_effect_sum, $env_effect_sum, $residual_sum];
 
                 $result_blup_data_iterations->{$genetic_effect_sum} = {
-                    gen => $result_blup_data_delta
+                    gen => $result_blup_data_delta,
+                    residual => $result_residual_data,
+                    fitted => $result_fitted_data,
                 };
 
                 print STDERR "$statistics_select GENETIC EFFECT SUM $genetic_effect_sum\n";
@@ -1932,6 +2013,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 $env_effect_max = -1000000000;
                 $genetic_effect_sum = 0;
                 $env_effect_sum = 0;
+                $residual_sum = 0;
                 my $result_blup_pe_data_delta = {};
                 my $result_blup_data_delta = {};
 
@@ -2152,6 +2234,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
                         if (defined $residual && $residual ne '') {
                             $result_residual_data->{$plot_name}->{$seen_times{$time}} = [$residual, $timestamp, $user_name, '', ''];
+                            $residual_sum += abs($residual);
                         }
                         if (defined $pred && $pred ne '') {
                             $result_fitted_data->{$plot_name}->{$seen_times{$time}} = [$pred, $timestamp, $user_name, '', ''];
@@ -2358,16 +2441,20 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     }
                 }
 
-                push @result_effect_sum_iterations, [$iteration_count, $genetic_effect_sum, $env_effect_sum];
+                push @result_effect_sum_iterations, [$iteration_count, $genetic_effect_sum, $env_effect_sum, $residual_sum];
 
                 $result_blup_data_iterations->{$genetic_effect_sum} = {
                     env => $result_blup_pe_data_delta,
                     gen => $result_blup_data_delta,
+                    residual => $result_residual_data,
+                    fitted => $result_fitted_data,
                     env_effect => $env_effect_sum
                 };
                 $result_blup_pe_data_iterations->{$env_effect_sum} = {
                     env => $result_blup_pe_data_delta,
                     gen => $result_blup_data_delta,
+                    residual => $result_residual_data,
+                    fitted => $result_fitted_data,
                     gen_effect => $genetic_effect_sum
                 };
 
@@ -2411,8 +2498,9 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
     ($genetic_effect_sum, $env_effect_sum, $result_blup_data, $result_blup_spatial_data, $result_blup_pe_data) = _select_lowest_effects($analytics_select, $statistics_select, $result_blup_data_iterations, $result_blup_spatial_data_iterations, $result_blup_pe_data_iterations);
 
-    print STDERR Dumper $result_blup_data;
-    print STDERR Dumper $result_blup_spatial_data;
+    # print STDERR Dumper $result_blup_data;
+    # print STDERR Dumper $result_blup_spatial_data;
+    # print STDERR Dumper $result_blup_pe_data;
 
     my @sorted_germplasm_names = sort keys %$unique_accessions_hash;
     my @set = ('0' ..'9', 'A' .. 'F');
@@ -2442,7 +2530,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     # dev.off();"';
 
     open(my $F_min, ">", $minimization_iterations_tempfile) || die "Can't open file ".$minimization_iterations_tempfile;
-        print $F_min "iteration,genetic,environment\n";
+        print $F_min "iteration,genetic,environment,residual\n";
         foreach (@result_effect_sum_iterations) {
             my $line = join ',', @$_;
             print $F_min "$line\n";
@@ -2466,8 +2554,11 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     $c->stash->{rest} = {
         results => \@results,
         result_blup_genetic_data => $result_blup_data,
+        result_blup_genetic_data_iterations => $result_blup_data_iterations,
         result_blup_spatial_data => $result_blup_spatial_data,
+        result_blup_spatial_data_iterations => $result_blup_spatial_data_iterations,
         result_blup_pe_data => $result_blup_pe_data,
+        result_blup_pe_data_iterations => $result_blup_pe_data_iterations,
         result_residual_data => $result_residual_data,
         result_fitted_data => $result_fitted_data,
         unique_traits => \@sorted_trait_names,
