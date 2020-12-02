@@ -1,9 +1,7 @@
-package CXGN::Pedigree::ParseUpload::Plugin::Intercross;
+package CXGN::Pedigree::ParseUpload::Plugin::IntercrossCSV;
 
-use Moose;
 use File::Slurp;
 use Text::CSV;
-
 use Moose::Role;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
@@ -46,10 +44,11 @@ sub _validate_with_plugin {
     if ($columns[0] ne 'crossDbId'){
         push @error_messages, "File contents incorrect. The first column must be crossDbId.";
     }
-
+    print STDERR "COLUMN 0 =".Dumper($columns[0])."\n";
     if ($columns[1] ne 'femaleObsUnitDbId'){
         push @error_messages, "File contents incorrect. The second column must be femaleObsUnitDbId.";
     }
+    print STDERR "COLUMN 1 =".Dumper($columns[1])."\n";
 
     if ($columns[2] ne 'maleObsUnitDbId'){
         push @error_messages, "File contents incorrect. The third column must be maleObsUnitDbId.";
@@ -83,7 +82,7 @@ sub _validate_with_plugin {
         push @error_messages, "File contents incorrect. The tenth column must be seeds.";
     }
 
-    if($parent_type ne 'accession' && $data_level ne 'plot' && $data_level ne 'plant'){
+    if(($parent_type ne 'accessions') && ($parent_type ne 'plots') && ($parent_type ne 'plants')){
         push @error_messages, "You must specify if the parents are accessions, plots or plants.";
     }
 
@@ -98,7 +97,7 @@ sub _validate_with_plugin {
             return;
         }
 
-        my $crossing_experiment_name = $column_values[5]
+        my $crossing_experiment_name = $column_values[5];
         my $crossing_experiment_rs = $schema->resultset("Project::Project")->find( { name => $crossing_experiment_name });
 
         if (!$crossing_experiment_rs) {
@@ -115,17 +114,18 @@ sub _validate_with_plugin {
 
     my @parent_list = keys %parent_names;
     my $parent_validator = CXGN::List::Validate->new();
+    my @parents_missing;
 
     if($parent_type eq 'accessions') {
-        my @parents_missing = @{$parent_validator->validate($schema,'uniquenames',\@parent_list)->{'missing'}};
+        @parents_missing = @{$parent_validator->validate($schema,'uniquenames',\@parent_list)->{'missing'}};
     }
 
     if($parent_type eq 'plots') {
-        my @parents_missing = @{$parent_validator->validate($schema,'plots',\@parent_list)->{'missing'}};
+        @parents_missing = @{$parent_validator->validate($schema,'plots',\@parent_list)->{'missing'}};
     }
 
     if($parent_type eq 'plants') {
-        my @parents_missing = @{$parent_validator->validate($schema,'plants',\@parent_list)->{'missing'}};
+        @parents_missing = @{$parent_validator->validate($schema,'plants',\@parent_list)->{'missing'}};
     }
 
     if (scalar(@parents_missing) > 0) {
@@ -189,19 +189,26 @@ sub _parse_with_plugin {
         my $number_of_seeds = $columns[9];
 
         my $cross_identifier = $crossing_experiment.'_'.$female_parent.'_'.$male_parent;
-        my $data{$cross_identifier}{'crossing_experiment'} = $crossing_experiment;
-        my $data{$cross_identifier}{'female_parent'} = $female_parent;
-        my $data{$cross_identifier}{'male_parent'} = $male_parent;
-        my $data{$cross_identifier}{'cross_type'} = $cross_type;
-        my $data{$cross_identifier}{$transaction_id}{'fruits'} = $number_of_fruits;
-        my $data{$cross_identifier}{$transaction_id}{'flowers'} = $number_of_flowers;
-        my $data{$cross_identifier}{$transaction_id}{'seeds'} = $number_of_seeds;
+#        my $crossing_experiment_key = 'crossing_experiment_name';
+#        my $female_parent_key = 'female_parent_name';
+        my $male_parent_key = 'male_parent_name';
+        my $cross_type_key = 'cross_type';
+        my $fruit_key = 'fruits';
+        my $flower_key = 'flowers';
+        my $seed_key = 'seeds';
+        $data{$cross_identifier}{'crossing_experiment_name'} = $crossing_experiment;
+        $data{$cross_identifier}{'female_parent_name'} = $female_parent;
+        $data{$cross_identifier}{'male_parent_name'} = $male_parent;
+        $data{$cross_identifier}{'cross_type'} = $cross_type;
+        $data{$cross_identifier}{'activities'}{$transaction_id}{'fruits'} = $number_of_fruits;
+        $data{$cross_identifier}{'activities'}{$transaction_id}{'flowers'} = $number_of_flowers;
+        $data{$cross_identifier}{'activities'}{$transaction_id}{'seeds'} = $number_of_seeds;
     }
 
     $parse_result{'data'} = \%data;
     print STDERR "DATA =".Dumper(\%parse_result)."\n";
 
-    $self->_set_parsed_data(\%parsed_result);
+    $self->_set_parsed_data(\%parse_result);
 
     return 1;
 
