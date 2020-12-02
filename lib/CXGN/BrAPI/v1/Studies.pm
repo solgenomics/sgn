@@ -575,7 +575,7 @@ sub studies_layout {
 
 			$formatted_plot = {
 				studyDbId => $study_id,
-				observationUnitDbId => $design->{$plot_number}->{plot_id},
+				observationUnitDbId => qq|$design->{$plot_number}->{plot_id}|,
 				observationUnitName => $design->{$plot_number}->{plot_name},
 				observationLevel => $cxgn_trial_type->{data_level},
 				replicate => $design->{$plot_number}->{rep_number} ? $design->{$plot_number}->{rep_number} : '',
