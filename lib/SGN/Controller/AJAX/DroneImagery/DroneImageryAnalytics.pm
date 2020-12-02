@@ -113,6 +113,14 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     $minimization_iterations_tempfile_string .= '.png';
     my $minimization_iterations_figure_tempfile = $c->config->{basepath}."/".$minimization_iterations_tempfile_string;
 
+    my $genetic_effects_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
+    $genetic_effects_figure_tempfile_string .= '.png';
+    my $genetic_effects_figure_tempfile = $c->config->{basepath}."/".$genetic_effects_figure_tempfile_string;
+
+    my $env_effects_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
+    $env_effects_figure_tempfile_string .= '.png';
+    my $env_effects_figure_tempfile = $c->config->{basepath}."/".$env_effects_figure_tempfile_string;
+
     my $blupf90_solutions_tempfile;
     my $yhat_residual_tempfile;
     my $grm_file;
@@ -139,7 +147,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $env_effect_min = 1000000000;
     my $env_effect_max = -1000000000;
     my $iteration_count = 0;
-    my $iteration_max = 25;
+    my $iteration_max = 5;
 
     my %sommer_rr_genetic_coeff;
     my %sommer_rr_temporal_coeff;
@@ -2398,6 +2406,36 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
     ($genetic_effect_sum, $env_effect_sum, $result_blup_data, $result_blup_spatial_data, $result_blup_pe_data) = _select_lowest_effects($analytics_select, $statistics_select, $result_blup_data_iterations, $result_blup_spatial_data_iterations, $result_blup_pe_data_iterations);
 
+    print STDERR Dumper $result_blup_data;
+    print STDERR Dumper $result_blup_spatial_data;
+
+    my @sorted_germplasm_names = sort keys %$unique_accessions_hash;
+    my @set = ('0' ..'9', 'A' .. 'F');
+    my @colors;
+    for (1..scalar(@sorted_germplasm_names)) {
+        my $str = join '' => map $set[rand @set], 1 .. 6;
+        push @colors, '#'.$str;
+    }
+    my $color_string = join '\',\'', @colors;
+
+    # my $cmd_gen_plot = 'R -e "library(data.table); library(ggplot2);
+    # mat <- fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\');
+    # mat\$time <- as.numeric(as.character(mat\$time));
+    # options(device=\'png\');
+    # par();
+    # sp <- ggplot(mat, aes(x = time, y = value)) +
+    #     geom_line(aes(color = germplasmName), size = 1) +
+    #     scale_fill_manual(values = c(\''.$color_string.'\')) +
+    #     theme_minimal();
+    # sp <- sp + guides(shape = guide_legend(override.aes = list(size = 0.5)));
+    # sp <- sp + guides(color = guide_legend(override.aes = list(size = 0.5)));
+    # sp <- sp + theme(legend.title = element_text(size = 3), legend.text = element_text(size = 3));';
+    # if (scalar(@sorted_germplasm_names) > 100) {
+    #     $cmd_gen_plot .= 'sp <- sp + theme(legend.position = \'none\');';
+    # }
+    # $cmd_gen_plot .= 'ggsave(\''.$genetic_effects_figure_tempfile.'\', sp, device=\'png\', width=12, height=6, units=\'in\');
+    # dev.off();"';
+
     open(my $F_min, ">", $minimization_iterations_tempfile) || die "Can't open file ".$minimization_iterations_tempfile;
         print $F_min "iteration,genetic,environment\n";
         foreach (@result_effect_sum_iterations) {
@@ -2406,20 +2444,19 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         }
     close($F_min);
 
-    my $cmd = 'R -e "library(data.table); library(ggplot2);
+    my $cmd_min_plot = 'R -e "library(data.table); library(ggplot2); library(dplyr);
     mat <- fread(\''.$minimization_iterations_tempfile.'\', header=TRUE, sep=\',\');
-    mat\$time <- as.numeric(as.character(mat\$iteration));
+    matmelted <- reshape2::melt(mat, id.var=\'iteration\');
     options(device=\'png\');
     par();
-    sp <- ggplot(mat, aes(x=iteration)) +
-        geom_line(aes(y = genetic), color = \'darkred\') +
-        geom_line(aes(y = environment), color=\'steelblue\') +
-        theme(legend.position=\'right\') +
-        scale_color_manual(values = c(\'darkred\', \'steelblue\'), labels = c(\'Genetic\', \'Environment\') );
+    sp <- ggplot(matmelted, aes(x=iteration, y=value, col=variable)) + geom_line();
+    sp <- sp + guides(shape = guide_legend(override.aes = list(size = 0.5)));
+    sp <- sp + guides(color = guide_legend(override.aes = list(size = 0.5)));
+    sp <- sp + theme(legend.title = element_text(size = 3), legend.text = element_text(size = 3));
     ggsave(\''.$minimization_iterations_figure_tempfile.'\', sp, device=\'png\', width=3, height=2, units=\'in\');
     dev.off();"';
     # print STDERR Dumper $cmd;
-    my $status = system($cmd);
+    my $status_min_plot = system($cmd_min_plot);
 
     $c->stash->{rest} = {
         results => \@results,
