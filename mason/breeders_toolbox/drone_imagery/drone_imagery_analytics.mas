@@ -676,6 +676,9 @@ jQuery(document).ready(function() {
                     if (response.env_effect_sum) {
                         html = html + '<h4>Env Effect Sum: '+response.env_effect_sum+'</h4><hr>';
                     }
+
+                    html = html + '<hr><img src="'+response.minimization_iterations_tempfile_string+'"><hr>';
+
                     if (response.unique_accessions.length > 0 && response.unique_traits.length > 0 && response.result_blup_genetic_data) {
                         manage_drone_imagery_analytics_accession_names = response.unique_accessions;
                         manage_drone_imagery_analytics_trait_names = response.unique_traits;
