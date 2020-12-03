@@ -514,6 +514,12 @@ sub store {
             if (defined $nirs_hashref) {
                 $self->store_nirs_data($nirs_hashref, $experiment->nd_experiment_id());
             }
+            
+            # Check if there is nirs data for this plot, If so add it using edicated function
+            my $transcriptomics_hashref = $plot_trait_value{$plot_name}->{'transcriptomics'};
+            if (defined $transcriptomics_hashref) {
+                $self->store_transcriptomics_data($transcriptomics_hashref, $experiment->nd_experiment_id());
+            }
 
             foreach my $trait_name (@trait_list) {
 
@@ -690,6 +696,8 @@ sub store_stock_note {
     $stock->create_stockprops( { 'notes' => $note } );
 }
 
+
+
 sub store_nirs_data {
     my $self = shift;
     my $nirs_hashref = shift;
@@ -702,6 +710,33 @@ sub store_nirs_data {
     my $nirs_json = encode_json \%nirs_hash;
 
     my $insert_query = "INSERT INTO metadata.md_json (json_type, json) VALUES ('nirs_spectra',?) RETURNING json_id;";
+    my $dbh = $self->bcs_schema->storage->dbh()->prepare($insert_query);
+    $dbh->execute($nirs_json);
+    my ($json_id) = $dbh->fetchrow_array();
+
+    my $linking_query = "INSERT INTO phenome.nd_experiment_md_json ( nd_experiment_id, json_id) VALUES (?,?);";
+    $dbh = $self->bcs_schema->storage->dbh()->prepare($linking_query);
+    $dbh->execute($nd_experiment_id,$json_id);
+
+    my $protocol_query = "INSERT INTO nd_experiment_protocol ( nd_experiment_id, nd_protocol_id) VALUES (?,?);";
+    $dbh = $self->bcs_schema->storage->dbh()->prepare($protocol_query);
+    $dbh->execute($nd_experiment_id,$protocol_id);
+
+    print STDERR "[StorePhenotypes] Linked json with id $json_id to nd_experiment $nd_experiment_id to protocol $protocol_id\n";
+}
+
+sub store_transcriptomics_data {
+    my $self = shift;
+    my $nirs_hashref = shift;
+    my $nd_experiment_id = shift;
+    my %nirs_hash = %{$nirs_hashref};
+    
+    my $protocol_id = $nirs_hash{protocol_id};
+    delete $nirs_hash{protocol_id}
+
+    my $nirs_json = encode_json \%nirs_hash;
+
+    my $insert_query = "INSERT INTO metadata.md_json (json_type, json) VALUES ('transcriptomics',?) RETURNING json_id;";
     my $dbh = $self->bcs_schema->storage->dbh()->prepare($insert_query);
     $dbh->execute($nirs_json);
     my ($json_id) = $dbh->fetchrow_array();
