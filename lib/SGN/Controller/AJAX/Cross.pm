@@ -1519,7 +1519,7 @@ sub upload_intercross_file : Path('/ajax/cross/upload_intercross_file') : Action
 sub upload_intercross_file_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
@@ -1542,7 +1542,6 @@ sub upload_intercross_file_POST : Args(0) {
     my $user_id;
     my $user_name;
     my $owner_name;
-#   my $upload_file_type = "crosses excel";#get from form when more options are added
     my $session_id = $c->req->param("sgn_session_id");
 
     if ($session_id){
@@ -1556,7 +1555,7 @@ sub upload_intercross_file_POST : Args(0) {
         $user_role = $user_info[1];
         my $p = CXGN::People::Person->new($dbh, $user_id);
         $user_name = $p->get_username;
-    } else{
+    } else {
         if (!$c->user){
             $c->stash->{rest} = {error=>'You must be logged in to upload intercross data!'};
             $c->detach();
@@ -1591,7 +1590,7 @@ sub upload_intercross_file_POST : Args(0) {
     $upload_metadata{'date'}="$timestamp";
 
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
     $parser->load_plugin('IntercrossCSV');
     $parsed_data = $parser->parse();
     print STDERR "PARSED DATA =". Dumper($parsed_data)."\n";
@@ -1609,12 +1608,65 @@ sub upload_intercross_file_POST : Args(0) {
                 $return_error .= $error_string."<br>";
             }
         }
-        $c->stash->{rest} = {error_string => $return_error, missing_crosses => $parse_errors->{'missing_crosses'} };
+        $c->stash->{rest} = {error_string => $return_error};
         $c->detach();
     }
 
     if ($parsed_data){
-        my %family_name_hash = %{$parsed_data};
+        my %intercross_data = %{$parsed_data};
+        my $crosses_ref = $intercross_data{'crosses'};
+        my %crosses_hash = %{$crosses_ref};
+        my @cross_id_list = keys %crosses_hash;
+        my $cross_validator = CXGN::List::Validate->new();
+        my @new_crosses = @{$cross_validator->validate($schema,'crosses',\@cross_id_list)->{'missing'}};
+        print STDERR "NEW CROSSES =".Dumper(\@new_crosses)."\n";
+
+        if (scalar(@new_crosses) > 0) {
+            my @crosses;
+            my $crossing_experiment_name = $intercross_data{'crossing_experiment_name'};
+            my $crossing_experiment_rs = $schema->resultset('Project::Project')->find({name => $crossing_experiment_name});
+            my $crossing_experiment_id = $crossing_experiment_rs->project_id();
+
+            foreach my $new_cross_id (@new_crosses) {
+                my $female_parent = $crosses_hash{$new_cross_id}{'female_parent_name'};
+                my $male_parent = $crosses_hash{$new_cross_id}{'male_parent_name'};
+                my $cross_type = $crosses_hash{$new_cross_id}{'cross_type'};
+                if ($cross_type eq 'BIPARENTAL') {
+                    $cross_type = 'biparental';
+                }
+                my $cross_combination = $female_parent.'/'.$male_parent;
+
+                my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name => $new_cross_id, cross_combination=>$cross_combination, cross_type =>$cross_type);
+                my $female_parent_individual = Bio::GeneticRelationships::Individual->new(name => $female_parent);
+                $pedigree->set_female_parent($female_parent_individual);
+                my $male_parent_individual = Bio::GeneticRelationships::Individual->new(name => $male_parent);
+                $pedigree->set_male_parent($male_parent_individual);
+                push @crosses, $pedigree;
+            }
+            my $cross_add = CXGN::Pedigree::AddCrosses->new({
+                chado_schema => $schema,
+                phenome_schema => $phenome_schema,
+                metadata_schema => $metadata_schema,
+                dbh => $dbh,
+                crossing_trial_id => $crossing_experiment_id,
+                crosses => \@crosses,
+                owner_name => $user_name
+        	  });
+
+            #validate the crosses
+            if (!$cross_add->validate_crosses()){
+                $c->stash->{rest} = {error_string => "Error validating crosses",};
+                return;
+            }
+
+            #add the crosses
+            if (!$cross_add->add_crosses()){
+                $c->stash->{rest} = {error_string => "Error adding crosses",};
+                return;
+            }
+        }
+
+
     }
 
     $c->stash->{rest} = {success => "1",};
