@@ -43,7 +43,7 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
     my @warning_status;
 
     my $parser = CXGN::Phenotypes::ParseUpload->new();
-    my $validate_type = "scio spreadsheet nirs";
+    my $validate_type = "spreadsheet nirs";
     my $metadata_file_type = "nirs spreadsheet";
     my $subdirectory = "spreadsheet_phenotype_upload";
     my $timestamp_included;
@@ -265,7 +265,7 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
     my @warning_status;
 
     my $parser = CXGN::Phenotypes::ParseUpload->new();
-    my $validate_type = "scio spreadsheet nirs";
+    my $validate_type = "spreadsheet nirs";
     my $metadata_file_type = "nirs spreadsheet";
     my $subdirectory = "spreadsheet_phenotype_upload";
     my $timestamp_included;
