@@ -87,6 +87,7 @@ sub _validate_with_plugin {
     }
 
     my %parent_names;
+    my %experiment;
     while ( my $row = <$fh> ){
         my @column_values;
         if ($csv->parse($row)) {
@@ -98,6 +99,7 @@ sub _validate_with_plugin {
         }
 
         my $crossing_experiment_name = $column_values[5];
+        $experiment{$crossing_experiment_name}++;
         my $crossing_experiment_rs = $schema->resultset("Project::Project")->find( { name => $crossing_experiment_name });
 
         if (!$crossing_experiment_rs) {
@@ -111,6 +113,12 @@ sub _validate_with_plugin {
         $parent_names{$male_parent}++;
 
     }
+
+    my @experiment_list = keys %experiment;
+    if (scalar(@experiment_list) > 1) {
+        push @error_messages, "All of the crosses in each Intercross file should be in the same crossing_experiment";
+    }
+
 
     my @parent_list = keys %parent_names;
     my $parent_validator = CXGN::List::Validate->new();
@@ -149,7 +157,6 @@ sub _parse_with_plugin {
     my $parent_type = 'accessions';
     my $schema = $self->get_chado_schema();
     my $delimiter = ',';
-    my %parse_result;
 
     my $csv = Text::CSV->new({ sep_char => ',' });
     my %data;
@@ -189,26 +196,19 @@ sub _parse_with_plugin {
         my $number_of_seeds = $columns[9];
 
         my $cross_identifier = $crossing_experiment.'_'.$female_parent.'_'.$male_parent;
-#        my $crossing_experiment_key = 'crossing_experiment_name';
-#        my $female_parent_key = 'female_parent_name';
-        my $male_parent_key = 'male_parent_name';
-        my $cross_type_key = 'cross_type';
-        my $fruit_key = 'fruits';
-        my $flower_key = 'flowers';
-        my $seed_key = 'seeds';
-        $data{$cross_identifier}{'crossing_experiment_name'} = $crossing_experiment;
-        $data{$cross_identifier}{'female_parent_name'} = $female_parent;
-        $data{$cross_identifier}{'male_parent_name'} = $male_parent;
-        $data{$cross_identifier}{'cross_type'} = $cross_type;
-        $data{$cross_identifier}{'activities'}{$transaction_id}{'fruits'} = $number_of_fruits;
-        $data{$cross_identifier}{'activities'}{$transaction_id}{'flowers'} = $number_of_flowers;
-        $data{$cross_identifier}{'activities'}{$transaction_id}{'seeds'} = $number_of_seeds;
+        $data{'crossing_experiment_name'} = $crossing_experiment;
+        $data{'crosses'}{$cross_identifier}{'female_parent_name'} = $female_parent;
+        $data{'crosses'}{$cross_identifier}{'male_parent_name'} = $male_parent;
+        $data{'crosses'}{$cross_identifier}{'cross_type'} = $cross_type;
+        $data{'crosses'}{$cross_identifier}{'activities'}{$transaction_id}{'fruits'} = $number_of_fruits;
+        $data{'crosses'}{$cross_identifier}{'activities'}{$transaction_id}{'flowers'} = $number_of_flowers;
+        $data{'crosses'}{$cross_identifier}{'activities'}{$transaction_id}{'seeds'} = $number_of_seeds;
     }
 
-    $parse_result{'data'} = \%data;
-    print STDERR "DATA =".Dumper(\%parse_result)."\n";
+    my $parsed_result = \%data;
+    print STDERR "DATA =".Dumper($parsed_result)."\n";
 
-    $self->_set_parsed_data(\%parse_result);
+    $self->_set_parsed_data($parsed_result);
 
     return 1;
 
