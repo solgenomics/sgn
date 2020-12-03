@@ -210,10 +210,7 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                                 <label class="col-sm-3 control-label">Data Level: </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="upload_nirs_spreadsheet_data_level" name="upload_nirs_spreadsheet_data_level">
-                                        <option value="plots">Plots</option>
-                                        <option value="plants">Plants</option>
-                                        <option value="subplots">Subplots</option>
-                                        <option value="tissue_samples">Tissue Samples</option>
+                                        <option value="tissue_samples">Samples</option>
                                     </select>
                                 </div>
                             </div>
@@ -335,35 +332,19 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
             <h3>Upload NIRS in a tabular spreadsheet (.csv) format with the following columns:</h3>
 
             <ul>
-                <li><strong>id</strong>: It is an optional identification for each NIRS read. The id must be an integer.</li>
-                <li><strong>sampling_id</strong>: It is an optional identification for each sample. Strings are allowed.</li>
-                <li><strong>sampling_date</strong>: It is an optional field. The format allowed is: YYYY-MM-DD.</li>
-                <li><strong>observationunit_name</strong>: It is a requiered field which matches with the databank. It can be the plot name, subplots, plant name, or tissue sample, depending how your trial is designed.</li>
-                <li><strong>device_id</strong>: It is an optional field to identify your device. Strings are allowed.</li>
-                <li><strong>device_type</strong>: It is a required field. It is possible upload data for a single device type. They can be:<strong>SCiO, QST, Foss6500, BunchiN500, or LinkSquare</strong>.</li>
-                <li><strong>comments</strong>: Optional field for general comments.</li>
-                <li>All other columns are required wavelengths. You can add how many columns you want upload, there isn't a limit.</li>
+                <li><strong>observationunit_name</strong>: It is a required field which matches with the database. It can be the plot name, subplots, plant name, or tissue sample, depending how your trial is designed.</li>
+                <li>All other columns are required <strong>wavelengths</strong> (e.g. 100, 400, 2000, etc). You can add how many columns you want upload, there isn't a limit.</li>
             </ul>
             <table class="table table-hover table-bordered table-condensed" >
-                        <thead></thead>
-                        <tbody>
-                            <tr>
-                                <td>id</td>
-                                <td>sample_id</td>
-                                <td>sampling_date</td>
-                                <td>obserbationunit_name</td>
-                                <td>device_id</td>
-                                <td>device_type</td>
-                                <td>comments</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <thead></thead>
+                <tbody>
+                    <tr>
+                        <td>sample_name</td>
+                        <td>wavelength columns (e.g. 400, 1200, etc)</td>
+                    </tr>
+                </tbody>
+            </table>
 
-            <h3>Template for Upload NIRS (.csv):</h3>
-            <ul>
-                <li>The observationunit_name and device_type must be valid for BreedBase.</li>
-                <li><a href="https://docs.google.com/spreadsheets/d/1Zxxwhq6Dz1PvvUEMz3Xj3gBYTkchp4tGDfgsIHDNJB8/edit?usp=sharing">Upload NIRS .csv template</a></li>
-            </ul>
         </div>
       </div>
       <div class="modal-footer">
