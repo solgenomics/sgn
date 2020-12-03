@@ -56,13 +56,13 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                             <label class="col-sm-3 control-label">Data Type: </label>
                             <div class="col-sm-9" >
                                 <select class="form-control" id="high_dim_data_upload_type_select"> 
-%  if ($high_dimensional_phenotype_type eq 'Transcriptomics') {
-                                    <option value="Transcriptomics">Transcriptomics</option>
-                                    <option disabled value="NIRS">NIRS</option>
-                                    <option disabled value="Metabolomics">Metabolomics</option>
-%  } elsif ($high_dimensional_phenotype_type eq 'NIRS') {
+%  if ($high_dimensional_phenotype_type eq 'NIRS') {
                                     <option value="NIRS">NIRS</option>
                                     <option value="Transcriptomics">Transcriptomics</option>
+                                    <option disabled value="Metabolomics">Metabolomics</option>
+%  } elsif ($high_dimensional_phenotype_type eq 'Transcriptomics') {
+                                    <option value="Transcriptomics">Transcriptomics</option>
+                                    <option disabled value="NIRS">NIRS</option>
                                     <option disabled value="Metabolomics">Metabolomics</option>
 %  } elsif ($high_dimensional_phenotype_type eq 'Metabolomics') {
                                     <option value="Metabolomics">Metabolomics</option>
