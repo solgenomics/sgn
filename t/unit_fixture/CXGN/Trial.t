@@ -51,7 +51,9 @@ is_deeply($result, [
             'genotyping_facility' => undef,
             'project_planting_date' => '',
             'folder_name' => undef,
-            'trial_id' => 165
+            'trial_id' => 165,
+            'sampling_facility' => undef,
+            'sampling_trial_sample_type' => undef,
           },
           {
             'genotyping_facility_status' => undef,
@@ -77,7 +79,9 @@ is_deeply($result, [
             'location_name' => 'test_location',
             'location_id' => '23',
             'project_harvest_date' => '',
-            'breeding_program_name' => 'test'
+            'breeding_program_name' => 'test',
+            'sampling_facility' => undef,
+            'sampling_trial_sample_type' => undef,
           },
           {
             'description' => 'new_test_cross',
@@ -103,7 +107,9 @@ is_deeply($result, [
             'genotyping_facility_status' => undef,
             'genotyping_facility_submitted' => undef,
             'breeding_program_id' => 134,
-            'design' => undef
+            'design' => undef,
+            'sampling_facility' => undef,
+            'sampling_trial_sample_type' => undef,
           },
           {
             'genotyping_facility_plate_id' => undef,
@@ -129,7 +135,9 @@ is_deeply($result, [
             'genotyping_plate_sample_type' => undef,
             'genotyping_facility_status' => undef,
             'design' => 'CRD',
-            'breeding_program_id' => 134
+            'breeding_program_id' => 134,
+            'sampling_facility' => undef,
+            'sampling_trial_sample_type' => undef,
           },
           {
             'genotyping_facility_status' => undef,
@@ -155,7 +163,9 @@ is_deeply($result, [
             'breeding_program_description' => 'test',
             'location_name' => 'test_location',
             'project_harvest_date' => '2017-July-21',
-            'location_id' => '23'
+            'location_id' => '23',
+            'sampling_facility' => undef,
+            'sampling_trial_sample_type' => undef,
           },
           {
             'genotyping_facility_submitted' => undef,
@@ -181,7 +191,9 @@ is_deeply($result, [
             'location_name' => 'test_location',
             'location_id' => '23',
             'project_harvest_date' => '',
-            'breeding_program_name' => 'test'
+            'breeding_program_name' => 'test',
+            'sampling_facility' => undef,
+            'sampling_trial_sample_type' => undef,
           }
         ], 'trial search test 1');
 
@@ -217,7 +229,9 @@ is_deeply($result, [
             'breeding_program_description' => 'test',
             'location_name' => 'test_location',
             'location_id' => '23',
-            'project_harvest_date' => ''
+            'project_harvest_date' => '',
+            'sampling_facility' => undef,
+            'sampling_trial_sample_type' => undef,
           },
           {
             'project_harvest_date' => '',
@@ -243,7 +257,9 @@ is_deeply($result, [
             'breeding_program_id' => 134,
             'genotyping_facility_status' => undef,
             'genotyping_plate_sample_type' => undef,
-            'genotyping_facility_submitted' => undef
+            'genotyping_facility_submitted' => undef,
+            'sampling_facility' => undef,
+            'sampling_trial_sample_type' => undef,
           },
           {
             'genotyping_facility_plate_id' => undef,
@@ -269,7 +285,9 @@ is_deeply($result, [
             'genotyping_plate_sample_type' => undef,
             'genotyping_facility_status' => undef,
             'breeding_program_id' => 134,
-            'design' => undef
+            'design' => undef,
+            'sampling_facility' => undef,
+            'sampling_trial_sample_type' => undef,
           },
           {
             'design' => 'CRD',
@@ -295,7 +313,9 @@ is_deeply($result, [
             'trial_id' => 144,
             'folder_name' => undef,
             'trial_type_id' => undef,
-            'folder_description' => undef
+            'folder_description' => undef,
+            'sampling_facility' => undef,
+            'sampling_trial_sample_type' => undef,
           },
           {
             'design' => 'CRD',
@@ -321,7 +341,9 @@ is_deeply($result, [
             'trial_type' => undef,
             'description' => 'test trial',
             'genotyping_plate_format' => undef,
-            'year' => '2014'
+            'year' => '2014',
+            'sampling_facility' => undef,
+            'sampling_trial_sample_type' => undef,
           },
           {
             'breeding_program_description' => 'test',
@@ -347,7 +369,9 @@ is_deeply($result, [
             'breeding_program_id' => 134,
             'genotyping_facility_status' => undef,
             'genotyping_plate_sample_type' => undef,
-            'genotyping_facility_submitted' => undef
+            'genotyping_facility_submitted' => undef,
+            'sampling_facility' => undef,
+            'sampling_trial_sample_type' => undef,
           }
         ], 'trial search test 2');
 

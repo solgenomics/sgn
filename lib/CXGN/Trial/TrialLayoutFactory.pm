@@ -6,6 +6,7 @@ use namespace::autoclean;
 use CXGN::Trial::TrialLayout::Analysis;
 use CXGN::Trial::TrialLayout::Phenotyping;
 use CXGN::Trial::TrialLayout::Genotyping;
+use CXGN::Trial::TrialLayout::SamplingTrial;
 
 has 'schema' => (
     is       => 'rw',
@@ -31,17 +32,21 @@ has 'experiment_type' => (
 sub create {
     my $self = shift;
     my $args = shift;
-    
+
     if ($args->{experiment_type} eq "analysis_experiment") {
-	return CXGN::Trial::TrialLayout::Analysis->new($args);
+        return CXGN::Trial::TrialLayout::Analysis->new($args);
     }
 
     if ($args->{experiment_type} eq "field_layout"  || ! $args->{experiment_type}) {
-	return CXGN::Trial::TrialLayout::Phenotyping->new($args);
+        return CXGN::Trial::TrialLayout::Phenotyping->new($args);
     }
 
     if ($args->{experiment_type} eq "genotyping_layout") {
-	return CXGN::Trial::TrialLayout::Genotyping->new($args);
+        return CXGN::Trial::TrialLayout::Genotyping->new($args);
+    }
+
+    if ($args->{experiment_type} eq "sampling_layout") {
+        return CXGN::Trial::TrialLayout::SamplingTrial->new($args);
     }
 
     print STDERR "unknown experiment_type ".$args->{experiment_type}."\n";

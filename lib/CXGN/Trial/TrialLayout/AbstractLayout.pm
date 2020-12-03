@@ -724,7 +724,7 @@ sub _get_field_layout_experiment_from_project {
     $field_layout_experiment = $project
 	->search_related("nd_experiment_projects")
 	->search_related("nd_experiment")
-   	->find({ 'type.name' => { in => ['field_layout', 'genotyping_layout', 'genotyping_experiment', 'treatment_experiment', 'analysis_experiment']} }, {join => 'type' } );
+   	->find({ 'type.name' => { in => ['field_layout', 'genotyping_layout', 'genotyping_experiment', 'treatment_experiment', 'analysis_experiment', 'sampling_layout']} }, {join => 'type' } );
     return $field_layout_experiment;
 }
 
