@@ -109,7 +109,6 @@ sub validate {
     while (my $line = <$fh>) {
       if ($csv->parse($line)) {
         @fields = $csv->fields(); 
-        #print STDERR Dumper(\@fields);
         if ($count == 1) {
           $size = scalar @fields;
           while ($number < 6) {
@@ -120,19 +119,9 @@ sub validate {
                 $number++;
               }
             }
-        #   while ($number < $size){
-        #     if (not $fields[$number]=~/^\D+[+]?\d+\.?\d*$/){
-        #       $parse_result{'error'}= "It is not a valid wavelength: '$fields[$number]'. Could you check the data format?";
-        #       return \%parse_result;
-        #     }else{
-        #       $number++;
-        #     }
-        #   }
         }elsif($count>1){
           my $number2 = 8;
           while ($number2 < $size){
-            # if (not exists $types{$fields[5]}){
-              #print "$fields[5]\n";
               if (not grep {/$fields[2]/i} keys %types){
                 $parse_result{'error'}= "Wrong sample type '$fields[2]'. Please, check names allowed in File Format Information.";
                 return \%parse_result;
