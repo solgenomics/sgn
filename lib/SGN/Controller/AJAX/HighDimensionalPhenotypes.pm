@@ -538,7 +538,7 @@ sub high_dimensional_phenotypes_transcriptomics_upload_verify_POST : Args(0) {
     my @error_status;
     my @warning_status;
 
-    my $parser = CXGN::Phenotypes::ParseUpload->new();
+    my $parser = CXGN::Phenotypes::ParseUpload->new(); 
     my $validate_type = "highdimensionalphenotypes spreadsheet transcriptomics";
     my $metadata_file_type = "transcriptomics spreadsheet";
     my $subdirectory = "spreadsheet_phenotype_upload";
@@ -698,12 +698,15 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
     my $protocol_id = $c->req->param('upload_transcriptomics_spreadsheet_protocol_id');
     my $protocol_name = $c->req->param('upload_transcriptomics_spreadsheet_protocol_name');
     my $protocol_desc = $c->req->param('upload_transcriptomics_spreadsheet_protocol_desc');
+    my $protocol_unit = $c->req->param('upload_transcriptomics_spreadsheet_protocol_unit');
+    my $protocol_genome_version = $c->req->param('upload_transcriptomics_spreadsheet_protocol_genome');
+    my $protocol_genome_annotation_version = $c->req->param('upload_transcriptomics_spreadsheet_protocol_annotation');
 
     if ($protocol_id && $protocol_name) {
         return {error => ["Please give a protocol name or select a previous protocol, not both!"]};
     }
-    if (!$protocol_id && (!$protocol_name || !$protocol_desc)) {
-        return {error => ["Please give a protocol name and description, or select a previous protocol!"]};
+    if (!$protocol_id && (!$protocol_name || !$protocol_desc || !$protocol_unit || !$protocol_genome_version || !$protocol_genome_annotation_version)) {
+        return {error => ["Please give a protocol name, description, unit, genome and annotation version, or select a previous protocol!"]};
     }
 
     my $high_dim_transcriptomics_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_nirs_protocol', 'protocol_type')->cvterm_id();
@@ -778,7 +781,7 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
     }
 
     if (!$protocol_id) {
-        my %transcriptomics_protocol_prop = ();
+        my %transcriptomics_protocol_prop = (expression_unit => $protocol_unit, genome_version => $protocol_genome_version, annotation_version => $protocol_genome_annotation_version);
 
         my $protocol = $schema->resultset('NaturalDiversity::NdProtocol')->create({
             name => $protocol_name,
