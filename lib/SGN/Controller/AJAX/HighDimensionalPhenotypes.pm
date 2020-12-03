@@ -547,12 +547,16 @@ sub high_dimensional_phenotypes_transcriptomics_upload_verify_POST : Args(0) {
     my $protocol_id = $c->req->param('upload_transcriptomics_spreadsheet_protocol_id');
     my $protocol_name = $c->req->param('upload_transcriptomics_spreadsheet_protocol_name');
     my $protocol_desc = $c->req->param('upload_transcriptomics_spreadsheet_protocol_desc');
+    my $protocol_unit = $c->req->param('upload_transcriptomics_spreadsheet_protocol_unit');
+    my $protocol_genome_version = $c->req->param('upload_transcriptomics_spreadsheet_protocol_genome');
+    my $protocol_genome_annotation_version = $c->req->param('upload_transcriptomics_spreadsheet_protocol_annotation');
+
 
     if ($protocol_id && $protocol_name) {
         return {error => ["Please give a protocol name or select a previous protocol, not both!"]};
     }
-    if (!$protocol_id && (!$protocol_name || !$protocol_desc)) {
-        return {error => ["Please give a protocol name and description, or select a previous protocol!"]};
+    if (!$protocol_id && (!$protocol_name || !$protocol_desc || !$protocol_unit || !$protocol_genome_version || !$protocol_genome_annotation_version)) {
+        return {error => ["Please give a protocol name, description, unit, genome and annotation version, or select a previous protocol!"]};
     }
 
     my $high_dim_transcriptomics_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_transcriptomics_protocol', 'protocol_type')->cvterm_id();

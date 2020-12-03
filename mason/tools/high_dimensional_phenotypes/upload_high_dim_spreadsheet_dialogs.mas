@@ -133,7 +133,7 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">Transcriptomics Unit: </label>
                                 <div class="col-sm-9" >
-                                    <select class="form-control" id="high_dim_data_upload_transcriptomics_device_type_select">
+                                    <select class="form-control" id="high_dim_data_upload_transcriptomics_unit_select">
                                     <option value="RPKM">RPKM</option>
                                     <option value="FPKM">FPKM</option>
                                     <option value="TPM">TPM</option>
@@ -260,9 +260,12 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                                 </div>
                             </div>
 
-                            <input type="hidden" id="upload_transcriptomics_spreadsheet_protocol_id" type="text">
-                            <input type="hidden" id="upload_transcriptomics_spreadsheet_protocol_name" type="text">
-                            <input type="hidden" id="upload_transcriptomics_spreadsheet_protocol_desc" type="text">
+                            <input type="hidden" id="upload_transcriptomics_spreadsheet_protocol_id" name="upload_transcriptomics_spreadsheet_protocol_id" type="text">
+                            <input type="hidden" id="upload_transcriptomics_spreadsheet_protocol_name" name="upload_transcriptomics_spreadsheet_protocol_name" type="text">
+                            <input type="hidden" id="upload_transcriptomics_spreadsheet_protocol_desc" name="upload_transcriptomics_spreadsheet_protocol_desc" type="text">
+                            <input type="hidden" id="upload_transcriptomics_spreadsheet_protocol_unit" name="upload_transcriptomics_spreadsheet_protocol_unit" type="text">
+                            <input type="hidden" id="upload_transcriptomics_spreadsheet_protocol_genome" name="upload_transcriptomics_spreadsheet_protocol_genome" type="text">
+                            <input type="hidden" id="upload_transcriptomics_spreadsheet_protocol_annotation" name="upload_transcriptomics_spreadsheet_protocol_annotation" type="text">
                         </form>
 
                         <hr>
@@ -385,22 +388,24 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
             
 
             <ul>
-                <li><strong>obserbationunit_name</strong>: It is a requiered field which matches with the database. It can be the plot name, subplots, plant name, or tissue sample, depending how your trial is designed.</li>
-                <li><strong>obserbation_name</strong>: It is a requiered field which matches with the name of an accession in the database.</li>
+                <li><strong>observationunit_name</strong>: It is a requiered field which matches with the database. It can be the plot name, subplots, plant name, or tissue sample, depending how your trial is designed.</li>
+                <li><strong>observation_name</strong>: It is a requiered field which matches with the name of an accession in the database.</li>
                 <li><strong>sample_type</strong>: It is a required field identification for tissue types sampled from a plant. The tissue types could be leaf, flower, stem, fibrous_root or storage_root.</li>
                 <li><strong>sampling_condition</strong>: This column is required in an upload file which indicates sampling conditions. However, it could be an optional field (empty column) when sampling has no conditions.</li>
-                <li><strong>sample_replication</strong>: It is a requiered field which indicates biological sample replicates. It should be written as "R1", "R2", "R3", ... "Rn". Where "n" is the number of replicates.</li>
+                <li><strong>sample_replication</strong>: It is a requiered field which indicates biological sample replicates. It should be written as "1", "2", "3", ... "n". Where "n" is the number of replicates.</li>
+                <li><strong>expression_unit</strong>: It is a required field and indicates the digital unit of quantified expressions. They can be:<strong>FPKM, RPKM, TPM, or VST. To use other units, ensure it is first registered in the database.</strong>.</li>
                 <li>All other columns are required gene names. You can add how many columns you want to upload, there isn't a limit.</li>
             </ul>
             <table class="table table-hover table-bordered table-condensed" >
                         <thead></thead>
                         <tbody>
                             <tr>                                
-                                <td>obserbationunit_name</td>
-                                <td>obserbation_name</td>
+                                <td>observationunit_name</td>
+                                <td>observation_name</td>
                                 <td>sample_type</td>
                                 <td>sampling_condition</td>
                                 <td>sample_replication</td>
+                                <td>expression_unit</td>
                             </tr>
                         </tbody>
                     </table>
@@ -529,6 +534,9 @@ jQuery(document).ready(function() {
             jQuery('#upload_transcriptomics_spreadsheet_protocol_id').val(selected[0]);
             jQuery('#upload_transcriptomics_spreadsheet_protocol_name').val(high_dim_protocol_name);
             jQuery('#upload_transcriptomics_spreadsheet_protocol_desc').val(high_dim_protocol_desc);
+            jQuery('#upload_transcriptomics_spreadsheet_protocol_unit').val(jQuery('#high_dim_data_upload_transcriptomics_unit_select').val());
+            jQuery('#upload_transcriptomics_spreadsheet_protocol_genome').val(jQuery('#high_dim_data_upload_transcriptomics_genome_version_select').val());
+            jQuery('#upload_transcriptomics_spreadsheet_protocol_annotation').val(jQuery('#high_dim_data_upload_transcriptomics_genome_annotation_version_select').val());
         }
         else if (high_dim_data_upload_type == 'Metabolomics') {
             jQuery('#upload_metabolomics_spreadsheet_protocol_id').val(selected[0]);
