@@ -45,13 +45,13 @@ export function WizardDatasets(main_id,wizard){
   main.select(".wizard-dataset-delete").on("click",function(){
     var name = main.select(".wizard-dataset-select option:checked").text();
     var val = main.select(".wizard-dataset-select").node().value;
-    var dataset = datasets.getDataset(val);
-    var details = '';
-    dataset.category_order.forEach(function(cat) {
-        var contents = dataset.categories[cat];
-        details+= `\n    ${contents.length} ${cat}`;
-    })
     if(val!=""){
+        var dataset = datasets.getDataset(val);
+        var details = '';
+        dataset.category_order.forEach(function(cat) {
+            var contents = dataset.categories[cat];
+            details+= `\n    ${contents.length} ${cat}`;
+        })
         if ( confirm(`Dataset ${name} contains\: ${details}\nAre you sure you would like to delete it? Deletion cannot be undone.`)) {
             datasets.deleteDataset(val);
             load_datasets();
