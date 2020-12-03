@@ -4,6 +4,7 @@ $trial_name
 $breeding_program_name
 $breeding_program_id
 $location_name
+$country_name
 $year
 $trial_type
 $planting_date
@@ -57,7 +58,7 @@ $trial_stock_type
                 <td>
                     <div id="trial_location">
 % if ($location_name) {
-%  print "$location_name";
+%  print "$location_name ( $country_name )";
 % } else {
 %  print "<span class='text-danger'>[No Location]</span>";
 % }
