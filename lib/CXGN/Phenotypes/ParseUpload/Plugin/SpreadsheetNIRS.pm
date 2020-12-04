@@ -23,6 +23,7 @@ use Moose;
 use JSON;
 use Data::Dumper;
 use Text::CSV;
+use CXGN::List::Validate;
 
 sub name {
     return "spreadsheet nirs";
@@ -80,12 +81,14 @@ sub validate {
                   LinkSquare  =>5
                   );
 
+    my @samples;
     while (my $line = <$fh>) {
         my @fields;
         if ($csv->parse($line)) {
             @fields = $csv->fields();
         }
         my $sample_name = shift @fields;
+        push @samples, $sample_name;
 
         foreach (@fields) {
             if (not $_=~/^[+]?\d+\.?\d*$/){
@@ -95,6 +98,14 @@ sub validate {
         }
     }
     close $fh;
+
+    my $samples_validator = CXGN::List::Validate->new();
+    my @samples_missing = @{$samples_validator->validate($schema,'tissue_samples',\@samples)->{'missing'}};
+    if (scalar(@samples_missing) > 0) {
+        my $samples_string = join ', ', @samples_missing;
+        $parse_result{'error'}= "The following samples in your file are not valid in the database (".$samples_string."). Please add them in a sampling trial first!";
+        return \%parse_result;
+    }
 
     return 1;
 }
