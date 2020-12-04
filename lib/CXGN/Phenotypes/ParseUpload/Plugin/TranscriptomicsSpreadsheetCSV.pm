@@ -65,89 +65,33 @@ sub validate {
         print STDERR "Could not parse header.\n";
         return \%parse_result;
     }
-    if ( $columns[0] ne "observationunit_name" ) {
+    
+    my $header_col_1 = shift @columns;
+    if ( $header_col_1 ne "observationunit_name" ) {
       $parse_result{'error'} = "First cell must be 'observationunit_name'. Please, check your file.";
       print STDERR "First cell must be 'observationunit_name'\n";
       return \%parse_result;
     }
-
-    close $fh;
-
-    my %headers = ( 
-                    observationunit_name =>1,
-                    observation_name     =>2,
-                    sample_type          =>3,
-                    sampling_condition   =>4,
-                    sample_replication   =>5,
-                    expression_unit =>6
-
-                    );
-
-    my %types = (
-                  leaf =>1,
-                  stem =>2,
-                  flower  =>3,
-                  fibrous_root  =>4,
-                  storage_root =>5
-                  );
-                  
-    my %units = (
-                    RPKM =>1,
-                    FPKM =>2,
-                    TPM  =>3,
-                    VST  =>4
-                    );
-                  
-                                   
-    open($fh, '<', $filename)
-        or die "Could not open file '$filename' $!";
     
-    my $size = 0;
-    my $number = 0;
-    my $count = 1;
-    my @fields;
     while (my $line = <$fh>) {
-      if ($csv->parse($line)) {
-        @fields = $csv->fields(); 
-        if ($count == 1) {
-          $size = scalar @fields;
-          while ($number < 6) {
-              if (not exists $headers{$fields[$number]}){
-                $parse_result{'error'} = "Wrong headers at '$fields[$number]'! Is this file matching with Spredsheet Format?";
-                return \%parse_result;
-              }else{
-                $number++;
-              }
-            }
-        }elsif($count>1){
-          my $number2 = 8;
-          while ($number2 < $size){
-              if (not grep {/$fields[2]/i} keys %types){
-                $parse_result{'error'}= "Wrong sample type '$fields[2]'. Please, check names allowed in File Format Information.";
-                return \%parse_result;
-            }
-            if (not $fields[$number2]=~/^[+]?\d+\.?\d*$/){
-                $parse_result{'error'}= "It is not a real value for trancripts: '$fields[$number2]'";
-                return \%parse_result;
-            }
-            if (not $fields[4] eq ''){
-              if (not $fields[4] =~/\d+/) {
-                  $parse_result{'error'} = "Sample replication needs to be an integer of the form 1, 2, or 3";
-                  print STDERR "value: $fields[4]\n";
-                  return \%parse_result;
-              }
-            }
-            $number2++;
-          }
+        my @fields;
+        if ($csv->parse($line)) {
+            @fields = $csv->fields();
         }
-        $count++;
-      }
-        
+        my $sample_name = shift @fields;
+
+        foreach (@fields) {
+            if (not $_=~/^[+]?\d+\.?\d*$/){
+                $parse_result{'error'}= "It is not a real value for trancripts: '$_'";
+                return \%parse_result;
+            }
+        }
     }
     close $fh;
 
     return 1;
 }
+
 
 sub parse {
     my $self = shift;
