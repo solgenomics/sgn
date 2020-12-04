@@ -1765,7 +1765,9 @@ sub programs_list : Chained('brapi') PathPart('programs') Args(0) : ActionClass(
 sub programs_list_POST {
 	my $self = shift;
 	my $c = shift;
-	my ($auth,$user_id) = _authenticate_user($c);
+	# TODO: Disabled auth for use with bi-api for now
+	#my ($auth,$user_id) = _authenticate_user($c);
+	my $user_id = undef;
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $data = $clean_inputs;
 	my @all_programs;
@@ -1824,7 +1826,9 @@ sub programs_detail_GET {
 sub programs_detail_PUT {
 	my $self = shift;
 	my $c = shift;
-	my ($auth,$user_id) = _authenticate_user($c);
+	# TODO: Disabled auth for use with bi-api for now
+	# my ($auth,$user_id) = _authenticate_user($c);
+	my $user_id = undef;
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $data = $clean_inputs;
 	$data->{programDbId} = $c->stash->{program_id};
@@ -3105,7 +3109,9 @@ sub locations_list : Chained('brapi') PathPart('locations') Args(0) : ActionClas
 sub locations_list_POST {
 	my $self = shift;
 	my $c = shift;
-	my ($auth,$user_id) = _authenticate_user($c);
+	# TODO: disable auth for now with use for bi-api
+	#my ($auth,$user_id) = _authenticate_user($c);
+	my $user_id = undef;
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $data = $clean_inputs;
 	my @all_locations;
@@ -3147,7 +3153,9 @@ sub locations_detail_PUT {
 	my $self = shift;
 	my $c = shift;
 	my $location_id = shift;
-	my ($auth,$user_id) = _authenticate_user($c);
+	# TODO: disable auth for now with use for bi-api
+	#my ($auth,$user_id) = _authenticate_user($c);
+	my $user_id = undef;
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $data = $clean_inputs;
 	my @all_locations;
@@ -3288,6 +3296,7 @@ sub observationvariable_list_POST {
 	foreach my $variable (values %{$data}) {
 		push @all_variables, $variable;
 	}
+
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
 	my $brapi_package_result = $brapi_module->store(\@all_variables,$user_id);
