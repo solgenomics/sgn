@@ -2603,48 +2603,63 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     # $cmd_gen_plot .= 'ggsave(\''.$genetic_effects_figure_tempfile.'\', sp, device=\'png\', width=12, height=6, units=\'in\');
     # dev.off();"';
 
-    my ($original_spatial_effects_heatmap_tempfile_fh, $original_spatial_effects_heatmap_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
-    open(my $F_spatialfirst, ">", $original_spatial_effects_heatmap_tempfile) || die "Can't open file ".$original_spatial_effects_heatmap_tempfile;
-        print $F_spatialfirst "trait,row,col,phenotype_original,effect_original,phenotype_corrected,effect\n";
+    my ($phenotypes_heatmap_tempfile_fh, $phenotypes_heatmap_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    open(my $F_pheno, ">", $phenotypes_heatmap_tempfile) || die "Can't open file ".$phenotypes_heatmap_tempfile;
+        print $F_pheno "trait_type,row,col,value\n";
         foreach my $p (@unique_plot_names) {
             foreach my $t (@sorted_trait_names) {
-                my @row = (
-                    $trait_name_encoder{$t},
-                    $stock_name_row_col{$p}->{row_number},
-                    $stock_name_row_col{$p}->{col_number},
-                    $phenotype_data_original_hash_out->{$p}->{$t},
-                    $result_blup_spatial_data_first->{$p}->{$t}->[0],
-                    $phenotype_data_hash_out->{$p}->{$t},
-                    $result_blup_spatial_data->{$p}->{$t}->[0]
-                );
+                my @row = ("phenotype_original_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $phenotype_data_original_hash_out->{$p}->{$t});
                 my $line = join ',', @row;
-                print $F_spatialfirst "$line\n";
+                print $F_pheno "$line\n";
+
+                my @row = ("phenotype_post_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $phenotype_data_hash_out->{$p}->{$t});
+                my $line = join ',', @row;
+                print $F_pheno "$line\n";
             }
         }
-    close($F_spatialfirst);
+    close($F_pheno);
+
+    my ($effects_heatmap_tempfile_fh, $effects_heatmap_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    open(my $F_eff, ">", $effects_heatmap_tempfile) || die "Can't open file ".$effects_heatmap_tempfile;
+        print $F_eff "trait_type,row,col,value\n";
+        foreach my $p (@unique_plot_names) {
+            foreach my $t (@sorted_trait_names) {
+                my @row = ("effect_original_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $result_blup_spatial_data_first->{$p}->{$t}->[0]);
+                my $line = join ',', @row;
+                print $F_eff "$line\n";
+
+                my @row = ("effect_post_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $result_blup_spatial_data->{$p}->{$t}->[0]);
+                my $line = join ',', @row;
+                print $F_eff "$line\n";
+            }
+        }
+    close($F_eff);
 
     my $spatial_effects_first_plots;
-    foreach my $t (@sorted_trait_names) {
-        my $env_effects_first_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
-        $env_effects_first_figure_tempfile_string .= '.png';
-        my $env_effects_first_figure_tempfile = $c->config->{basepath}."/".$env_effects_first_figure_tempfile_string;
+    my $env_effects_first_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
+    $env_effects_first_figure_tempfile_string .= '.png';
+    my $env_effects_first_figure_tempfile = $c->config->{basepath}."/".$env_effects_first_figure_tempfile_string;
 
-        my $cmd_spatialfirst_plot = 'R -e "library(data.table); library(ggplot2); library(dplyr); library(viridis); library(GGally);
-        mat <- fread(\''.$original_spatial_effects_heatmap_tempfile.'\', header=TRUE, sep=\',\');
-        mat <- mat[mat\$trait==\''.$trait_name_encoder{$t}.'\',];
-        options(device=\'png\');
-        par();
-        gg <- ggplot(mat, aes(col, row, fill=effect)) + 
-            geom_tile() +
-            scale_fill_viridis(discrete=FALSE)
-        gg <- gg + ggtitle(\'Prior to minimization '.$t.'\') + theme(plot.title = element_text(size=4), axis.text=element_text(size=10), axis.title=element_text(size=10));
-        ggsave(\''.$env_effects_first_figure_tempfile.'\', gg, device=\'png\', width=3, height=2, units=\'in\');
-        dev.off();"';
-        # print STDERR Dumper $cmd;
-        my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
-
-        push @$spatial_effects_first_plots, $env_effects_first_figure_tempfile_string;
-    }
+    my $cmd_spatialfirst_plot = 'R -e "library(data.table); library(ggplot2); library(dplyr); library(viridis); library(GGally); library(gridExtra);
+    mat <- fread(\''.$phenotypes_heatmap_tempfile.'\', header=TRUE, sep=\',\');
+    mat_eff <- fread(\''.$effects_heatmap_tempfile.'\', header=TRUE, sep=\',\');
+    options(device=\'png\');
+    par();
+    gg <- ggplot(mat, aes(col, row, fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_eff <- ggplot(mat_eff, aes(col, row, fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    ggsave(\''.$env_effects_first_figure_tempfile.'\', arrangeGrob(gg, gg_eff, nrow=2), device=\'png\', width=10, height=10, units=\'in\');
+    dev.off();"';
+    # print STDERR Dumper $cmd;
+    my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
+    push @$spatial_effects_first_plots, $env_effects_first_figure_tempfile_string;
 
     my ($selected_spatial_effects_heatmap_tempfile_fh, $selected_spatial_effects_heatmap_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     open(my $F_spatialsel, ">", $selected_spatial_effects_heatmap_tempfile) || die "Can't open file ".$selected_spatial_effects_heatmap_tempfile;
@@ -2659,27 +2674,6 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     close($F_spatialsel);
 
     my $spatial_effects_minimized_plots;
-    foreach my $t (@sorted_trait_names) {
-        my $env_effects_first_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
-        $env_effects_first_figure_tempfile_string .= '.png';
-        my $env_effects_first_figure_tempfile = $c->config->{basepath}."/".$env_effects_first_figure_tempfile_string;
-
-        my $cmd_spatialfirst_plot = 'R -e "library(data.table); library(ggplot2); library(dplyr); library(viridis); library(GGally);
-        mat <- fread(\''.$selected_spatial_effects_heatmap_tempfile.'\', header=TRUE, sep=\',\');
-        mat <- mat[mat\$trait==\''.$trait_name_encoder{$t}.'\',];
-        options(device=\'png\');
-        par();
-        gg <- ggplot(mat, aes(col, row, fill=effect)) + 
-            geom_tile() +
-            scale_fill_viridis(discrete=FALSE)
-        gg <- gg + ggtitle(\'After minimization '.$t.'\') + theme(plot.title = element_text(size=4), axis.text=element_text(size=10), axis.title=element_text(size=10));
-        ggsave(\''.$env_effects_first_figure_tempfile.'\', gg, device=\'png\', width=3, height=2, units=\'in\');
-        dev.off();"';
-        # print STDERR Dumper $cmd;
-        my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
-
-        push @$spatial_effects_minimized_plots, $env_effects_first_figure_tempfile_string;
-    }
 
     open(my $F_min, ">", $minimization_iterations_tempfile) || die "Can't open file ".$minimization_iterations_tempfile;
         print STDERR "Opened $minimization_iterations_tempfile\n";
