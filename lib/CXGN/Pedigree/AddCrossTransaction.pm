@@ -40,11 +40,10 @@ sub add_intercross_transaction {
     my %transaction_info_hash = %{$transaction_info};
     my $transaction_error;
 
-    #add all cross transaction in a single transaction
     my $coderef = sub {
 
         #get cross (stock of type cross)
-        my $cross_stock = $self->_get_cross($self->get_cross_name());
+        my $cross_stock = $self->_get_cross($cross_unique_id);
         if (!$cross_stock) {
             print STDERR "Cross could not be found\n";
             return;

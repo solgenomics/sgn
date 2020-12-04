@@ -39,6 +39,7 @@ use CXGN::Pedigree::AddProgeniesExistingAccessions;
 use CXGN::Pedigree::AddCrossInfo;
 use CXGN::Pedigree::AddFamilyNames;
 use CXGN::Pedigree::AddPopulations;
+use CXGN::Pedigree::AddCrossTransaction;
 use CXGN::Pedigree::ParseUpload;
 use CXGN::Trial::Folder;
 use CXGN::Trial::TrialLayout;
@@ -1653,20 +1654,33 @@ sub upload_intercross_file_POST : Args(0) {
                 owner_name => $user_name
         	  });
 
-            #validate the crosses
             if (!$cross_add->validate_crosses()){
                 $c->stash->{rest} = {error_string => "Error validating crosses",};
                 return;
             }
 
-            #add the crosses
             if (!$cross_add->add_crosses()){
                 $c->stash->{rest} = {error_string => "Error adding crosses",};
                 return;
             }
         }
 
+        foreach my $cross_unique_id(keys %crosses_hash) {
+            my $cross_transaction_info = $crosses_hash{$cross_unique_id}{'activities'};
+            print STDERR "TRANSACTION INFO =".Dumper($cross_transaction_info)."\n";
+            my $cross_transaction = CXGN::Pedigree::AddCrossTransaction->new({
+                chado_schema => $schema,
+                cross_unique_id => $cross_unique_id,
+                transaction_info => $cross_transaction_info
+            });
 
+            my $return = $cross_transaction->add_intercross_transaction();
+
+            if (!$return) {
+                  $c->stash->{rest} = {error_string => "Error adding cross transaction",};
+                  return;
+            }
+        }
     }
 
     $c->stash->{rest} = {success => "1",};
