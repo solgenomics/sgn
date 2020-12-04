@@ -177,9 +177,10 @@ sub store {
     my $status = $self->status;
     my $schema = $self->bcs_schema();
 
-    if (!$user_id) {
-		return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must login and have permission to access this BrAPI call.'));
-	}
+	# TODO: Disabled auth for use with bi-api
+    #if (!$user_id) {
+	#	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must login and have permission to access this BrAPI call.'));
+	#}
 	my @program_ids;
 
 	foreach my $params (@{$data}) {
@@ -213,9 +214,10 @@ sub update {
     my $status = $self->status;
     my $schema = $self->bcs_schema();
 
-    if (!$user_id) {
-		return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must login and have permission to access this BrAPI call.'));
-	}
+	# TODO: Disabled auth for use with bi-api
+    #if (!$user_id) {
+	#	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must login and have permission to access this BrAPI call.'));
+	#}
 	my @program_ids;
 
 	my $name = $params->{programName} || undef;

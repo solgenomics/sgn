@@ -131,7 +131,7 @@ sub search {
     my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, db.url, dbxref.accession, array_agg(cvtermsynonym.synonym), cvterm.is_obsolete, count(cvterm.cvterm_id) OVER() AS full_count FROM cvterm ". 
         "JOIN dbxref USING(dbxref_id) ".
         "JOIN db using(db_id) ".
-        "JOIN cvtermsynonym using(cvterm_id) ".
+        "JOIN cvtermsynonym using(cvterm_id) ". # left join if want to include variables without synonyms
         "inner JOIN cvterm_relationship as rel on (rel.subject_id=cvterm.cvterm_id) ".
         "JOIN cvterm as reltype on (rel.type_id=reltype.cvterm_id) $join ".
         "WHERE $and_where_clause ".
@@ -257,7 +257,7 @@ sub detail {
     my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, db.url, dbxref.accession, array_agg(cvtermsynonym.synonym), cvterm.is_obsolete, count(cvterm.cvterm_id) OVER() AS full_count FROM cvterm ". 
         "JOIN dbxref USING(dbxref_id) ".
         "JOIN db using(db_id) ".
-        "JOIN cvtermsynonym using(cvterm_id) ".
+        "JOIN cvtermsynonym using(cvterm_id) ". # left join if want to include variables without synonyms
         "JOIN cvterm_relationship as rel on (rel.subject_id=cvterm.cvterm_id) ".
         "JOIN cvterm as reltype on (rel.type_id=reltype.cvterm_id) $join ".
         "WHERE $and_where " .
@@ -360,14 +360,50 @@ sub detail {
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observationvariable search result constructed');
 }
 
+# TODO: handle create and update, just create for now
 sub store {
 
     my $self = shift;
+    my $data = shift;
+    my $user_id = shift;
+
     my $page_size = $self->page_size;
     my $page = $self->page;
+    my $schema = $self->bcs_schema();
+
+    my @variable_ids;
+
+    # nothing for now, eventually edit
+    my $cvterm_id = undef;
+
+    #print Dumper($data);
+    foreach my $params (@{$data}) {
+        my $cvterm_id = $params->{observationVariableDbId} || undef;
+        my $name = $params->{observationVariableName};
+        my $ontology_id = $params->{ontologyReference}{ontologyDbId};
+        my $description = $params->{trait}{traitDescription};
+        my $synonyms = $params->{trait}{synonyms};
+        my $trait = CXGN::Trait->new({ bcs_schema => $self->bcs_schema,
+            cvterm_id                             => $cvterm_id,
+            name                                  => $name,
+            ontology_id                           => $ontology_id,
+            definition                            => $description,
+            synonyms                              => $synonyms
+        });
+        my $new_variable = $trait->store();
+
+        if ($new_variable->{'error'}) {
+            # TODO: status codes
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, $new_variable->{'error'});
+        } else {
+            push @variable_ids, $new_variable;
+            print STDERR "New variable is ".Dumper($new_variable)."\n";
+        }
+
+    }
 
     my %result;
-    my $count = 0;
+    my $count = scalar @variable_ids;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($count,$page_size,$page);
     return CXGN::BrAPI::JSONResponse->return_success( \%result, $pagination, undef, $self->status(), $count . " Variables were saved.");
 
