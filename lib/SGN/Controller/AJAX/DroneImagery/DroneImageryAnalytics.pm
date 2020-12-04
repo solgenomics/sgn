@@ -151,8 +151,6 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $genetic_effect_max = -1000000000;
     my $env_effect_min = 1000000000;
     my $env_effect_max = -1000000000;
-    my $iteration_count = 0;
-    my $iteration_max = 2;
 
     my %sommer_rr_genetic_coeff;
     my %sommer_rr_temporal_coeff;
@@ -1071,1500 +1069,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             }
         }
 
-        my $time = DateTime->now();
-        my $timestamp = $time->ymd()."_".$time->hms();
-
-        if ($statistics_select eq 'sommer_grm_genetic_blups') {
-            $statistical_ontology_term = "Multivariate genetic BLUPs using genetic relationship matrix computed using Sommer R|SGNSTAT:0000024";
-
-            $analysis_result_values_type = "analysis_result_values_match_accession_names";
-            $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_sommer_grm_genetic_blups_phenotype_file";
-
-            @unique_plot_names = sort keys %seen_plot_names;
-
-            my @encoded_traits = values %trait_name_encoder;
-            my $encoded_trait_string = join ',', @encoded_traits;
-            my $number_traits = scalar(@encoded_traits);
-            my $cbind_string = $number_traits > 1 ? "cbind($encoded_trait_string)" : $encoded_trait_string;
-
-            while ($analytics_select eq 'minimize_genetic_effect' && !$minimization_genetic_done) {
-                $genetic_effect_min = 1000000000;
-                $genetic_effect_max = -1000000000;
-                $genetic_effect_sum = 0;
-                $env_effect_sum = 0;
-                $residual_sum = 0;
-
-                my $cmd = 'R -e "library(sommer); library(data.table); library(reshape2);
-                mat <- data.frame(fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\'));
-                geno_mat_3col <- data.frame(fread(\''.$grm_file.'\', header=FALSE, sep=\'\t\'));
-                geno_mat <- acast(geno_mat_3col, V1~V2, value.var=\'V3\');
-                geno_mat[is.na(geno_mat)] <- 0;
-                mix <- mmer('.$cbind_string.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
-                write.table(data.frame(plot_id = mix\$data\$plot_id, residuals = mix\$residuals, fitted = mix\$fitted), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-                write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
-                "';
-                print STDERR Dumper $cmd;
-                eval {
-                    my $status = system($cmd);
-                };
-                my $run_stats_fault = 0;
-                if ($@) {
-                    print STDERR "R ERROR\n";
-                    print STDERR Dumper $@;
-                    $run_stats_fault = 1;
-                }
-                else {
-                    my $current_gen_row_count = 0;
-
-                    open(my $fh, '<', $stats_out_tempfile)
-                        or die "Could not open file '$stats_out_tempfile' $!";
-
-                        print STDERR "Opened $stats_out_tempfile\n";
-                        my $header = <$fh>;
-                        my @header_cols;
-                        if ($csv->parse($header)) {
-                            @header_cols = $csv->fields();
-                        }
-
-                        while (my $row = <$fh>) {
-                            my @columns;
-                            if ($csv->parse($row)) {
-                                @columns = $csv->fields();
-                            }
-                            my $col_counter = 0;
-                            foreach my $encoded_trait (@header_cols) {
-                                my $trait = $trait_name_encoder_rev{$encoded_trait};
-                                my $stock_id = $columns[0];
-
-                                my $stock_name = $stock_info{$stock_id}->{uniquename};
-                                my $value = $columns[$col_counter+1];
-                                if (defined $value && $value ne '') {
-                                    $result_blup_data->{$stock_name}->{$trait} = [$value, $timestamp, $user_name, '', ''];
-
-                                    if ($value < $genetic_effect_min) {
-                                        $genetic_effect_min = $value;
-                                    }
-                                    elsif ($value >= $genetic_effect_max) {
-                                        $genetic_effect_max = $value;
-                                    }
-
-                                    $genetic_effect_sum += abs($value);
-                                }
-                                $col_counter++;
-                            }
-                            $current_gen_row_count++;
-                        }
-                    close($fh);
-
-                    open(my $fh_residual, '<', $stats_out_tempfile_residual)
-                        or die "Could not open file '$stats_out_tempfile_residual' $!";
-                    
-                        print STDERR "Opened $stats_out_tempfile_residual\n";
-                        my $header_residual = <$fh_residual>;
-                        my @header_cols_residual;
-                        if ($csv->parse($header_residual)) {
-                            @header_cols_residual = $csv->fields();
-                        }
-                        while (my $row = <$fh_residual>) {
-                            my @columns;
-                            if ($csv->parse($row)) {
-                                @columns = $csv->fields();
-                            }
-
-                            my $stock_id = $columns[0];
-                            foreach (0..$number_traits-1) {
-                                my $trait_name = $sorted_trait_names[$_];
-                                my $residual = $columns[1 + $_];
-                                my $fitted = $columns[1 + $number_traits + $_];
-                                my $stock_name = $plot_id_map{$stock_id};
-                                if (defined $residual && $residual ne '') {
-                                    $result_residual_data->{$stock_name}->{$trait_name} = [$residual, $timestamp, $user_name, '', ''];
-                                    $residual_sum += abs($residual);
-                                }
-                                if (defined $fitted && $fitted ne '') {
-                                    $result_fitted_data->{$stock_name}->{$trait_name} = [$fitted, $timestamp, $user_name, '', ''];
-                                }
-                            }
-                        }
-                    close($fh_residual);
-
-                    if ($current_gen_row_count == 0) {
-                        $run_stats_fault = 1;
-                    }
-                }
-
-                if ($run_stats_fault == 1) {
-                    print STDERR "ERROR IN R CMD\n";
-                    ($genetic_effect_sum, $env_effect_sum, $phenotype_data_original_hash_out, $phenotype_data_hash_out, $result_blup_data, $result_blup_spatial_data, $result_blup_pe_data) = _select_lowest_effects($analytics_select, $statistics_select, $result_blup_data_iterations, $result_blup_spatial_data_iterations, $result_blup_pe_data_iterations);
-                }
-                else {
-                    push @result_effect_sum_iterations, [$iteration_count, $genetic_effect_sum, $env_effect_sum, $residual_sum];
-
-                    my $result_blup_data_copy = dclone $result_blup_data;
-                    my $phenotype_data_hash_out_copy = dclone $phenotype_data_hash_out;
-
-                    $result_blup_data_iterations->{$genetic_effect_sum} = {
-                        gen => $result_blup_data_copy,
-                        env_effect => $env_effect_sum,
-                        phenotype_data => $phenotype_data_hash_out_copy,
-                        phenotype_data_original => $phenotype_data_original_hash_out
-                    };
-                }
-
-                if ($iteration_count == 0) {
-                    $result_blup_data_first = $result_blup_data;
-                }
-
-                print STDERR "$statistics_select GENETIC EFFECT SUM $genetic_effect_sum\n";
-
-                if ($genetic_effect_sum > $minimization_genetic_sum_threshold && $iteration_count < $iteration_max) {
-                    ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_original_hash_out, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $phenotype_data_hash, $analytics_select, $result_blup_data, undef, undef, $env_simulation, $genetic_effect_min, $genetic_effect_max, undef, undef);
-
-                    $phenotype_data_hash = $phenotype_data_hash_out;
-                }
-                else {
-                    $minimization_genetic_done = 1;
-                }
-
-                print STDERR "ITERATION $iteration_count\n";
-                $iteration_count++;
-            }
-        }
-        elsif ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
-            $statistical_ontology_term = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and row and column spatial effects computed using Sommer R|SGNSTAT:0000001"; #In the JS this is set to either the genetic or spatial BLUP term (Multivariate linear mixed model 2D spline spatial BLUPs using genetic relationship matrix and row and column spatial effects computed using Sommer R|SGNSTAT:0000003) when saving analysis results
-
-            $analysis_result_values_type = "analysis_result_values_match_accession_names";
-            $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_sommer_grm_spatial_genetic_blups_phenotype_file";
-
-            @unique_plot_names = sort keys %seen_plot_names;
-
-            my @encoded_traits = values %trait_name_encoder;
-            my $encoded_trait_string = join ',', @encoded_traits;
-            my $number_traits = scalar(@encoded_traits);
-            my $cbind_string = $number_traits > 1 ? "cbind($encoded_trait_string)" : $encoded_trait_string;
-
-            while ( ($analytics_select eq 'minimize_genetic_effect' && !$minimization_genetic_done) || ($analytics_select eq 'minimize_local_env_effect' && !$minimization_env_done) ) {
-                $genetic_effect_min = 1000000000;
-                $genetic_effect_max = -1000000000;
-                $env_effect_min = 1000000000;
-                $env_effect_max = -1000000000;
-                $genetic_effect_sum = 0;
-                $env_effect_sum = 0;
-                $residual_sum = 0;
-
-                my $cmd = 'R -e "library(sommer); library(data.table); library(reshape2);
-                mat <- data.frame(fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\'));
-                geno_mat_3col <- data.frame(fread(\''.$grm_file.'\', header=FALSE, sep=\'\t\'));
-                geno_mat <- acast(geno_mat_3col, V1~V2, value.var=\'V3\');
-                geno_mat[is.na(geno_mat)] <- 0;
-                mat\$rowNumber <- as.numeric(mat\$rowNumber);
-                mat\$colNumber <- as.numeric(mat\$colNumber);
-                mat\$rowNumberFactor <- as.factor(mat\$rowNumberFactor);
-                mat\$colNumberFactor <- as.factor(mat\$colNumberFactor);
-                mix <- mmer('.$cbind_string.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
-                if (!is.null(mix\$U)) {
-                #gen_cor <- cov2cor(mix\$sigma\$\`u:id\`);
-                write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
-                write.table(mix\$U\$\`u:rowNumberFactor\`, file=\''.$stats_out_tempfile_row.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
-                write.table(mix\$U\$\`u:colNumberFactor\`, file=\''.$stats_out_tempfile_col.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
-                write.table(data.frame(plot_id = mix\$data\$plot_id, residuals = mix\$residuals, fitted = mix\$fitted), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-                X <- with(mat, spl2D(rowNumber, colNumber));
-                spatial_blup_results <- data.frame(plot_id = mat\$plot_id);
-                ';
-                my $trait_index = 1;
-                foreach my $enc_trait_name (@encoded_traits) {
-                    $cmd .= '
-                blups'.$trait_index.' <- mix\$U\$\`u:rowNumber\`\$'.$enc_trait_name.';
-                spatial_blup_results\$'.$enc_trait_name.' <- data.matrix(X) %*% data.matrix(blups'.$trait_index.');
-                    ';
-                    $trait_index++;
-                }
-                $cmd .= 'write.table(spatial_blup_results, file=\''.$stats_out_tempfile_2dspl.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-                }
-                "';
-                # print STDERR Dumper $cmd;
-                eval {
-                    my $status = system($cmd);
-                };
-                my $run_stats_fault = 0;
-                if ($@) {
-                    print STDERR "R ERROR\n";
-                    print STDERR Dumper $@;
-                    $run_stats_fault = 1;
-                }
-                else {
-                    my $current_gen_row_count = 0;
-                    my $current_env_row_count = 0;
-
-                    open(my $fh, '<', $stats_out_tempfile)
-                        or die "Could not open file '$stats_out_tempfile' $!";
-
-                        print STDERR "Opened $stats_out_tempfile\n";
-                        my $header = <$fh>;
-                        my @header_cols;
-                        if ($csv->parse($header)) {
-                            @header_cols = $csv->fields();
-                        }
-
-                        while (my $row = <$fh>) {
-                            my @columns;
-                            if ($csv->parse($row)) {
-                                @columns = $csv->fields();
-                            }
-                            my $col_counter = 0;
-                            foreach my $encoded_trait (@header_cols) {
-                                my $trait = $trait_name_encoder_rev{$encoded_trait};
-                                my $stock_id = $columns[0];
-
-                                my $stock_name = $stock_info{$stock_id}->{uniquename};
-                                my $value = $columns[$col_counter+1];
-                                if (defined $value && $value ne '') {
-                                    $result_blup_data->{$stock_name}->{$trait} = [$value, $timestamp, $user_name, '', ''];
-
-                                    if ($value < $genetic_effect_min) {
-                                        $genetic_effect_min = $value;
-                                    }
-                                    elsif ($value >= $genetic_effect_max) {
-                                        $genetic_effect_max = $value;
-                                    }
-
-                                    $genetic_effect_sum += abs($value);
-                                }
-                                $col_counter++;
-                            }
-                            $current_gen_row_count++;
-                        }
-                    close($fh);
-
-                    open(my $fh_2dspl, '<', $stats_out_tempfile_2dspl)
-                        or die "Could not open file '$stats_out_tempfile_2dspl' $!";
-
-                        print STDERR "Opened $stats_out_tempfile_2dspl\n";
-                        my $header_2dspl = <$fh_2dspl>;
-                        my @header_cols_2dspl;
-                        if ($csv->parse($header_2dspl)) {
-                            @header_cols_2dspl = $csv->fields();
-                        }
-                        shift @header_cols_2dspl;
-                        while (my $row_2dspl = <$fh_2dspl>) {
-                            my @columns;
-                            if ($csv->parse($row_2dspl)) {
-                                @columns = $csv->fields();
-                            }
-                            my $col_counter = 0;
-                            foreach my $encoded_trait (@header_cols_2dspl) {
-                                my $trait = $trait_name_encoder_rev{$encoded_trait};
-                                my $plot_id = $columns[0];
-
-                                my $plot_name = $plot_id_map{$plot_id};
-                                my $value = $columns[$col_counter+1];
-                                if (defined $value && $value ne '') {
-                                    $result_blup_spatial_data->{$plot_name}->{$trait} = [$value, $timestamp, $user_name, '', ''];
-
-                                    if ($value < $env_effect_min) {
-                                        $env_effect_min = $value;
-                                    }
-                                    elsif ($value >= $env_effect_max) {
-                                        $env_effect_max = $value;
-                                    }
-
-                                    $env_effect_sum += abs($value);
-                                }
-                                $col_counter++;
-                            }
-                            $current_env_row_count++;
-                        }
-                    close($fh_2dspl);
-
-                    open(my $fh_residual, '<', $stats_out_tempfile_residual)
-                        or die "Could not open file '$stats_out_tempfile_residual' $!";
-                    
-                        print STDERR "Opened $stats_out_tempfile_residual\n";
-                        my $header_residual = <$fh_residual>;
-                        my @header_cols_residual;
-                        if ($csv->parse($header_residual)) {
-                            @header_cols_residual = $csv->fields();
-                        }
-                        while (my $row = <$fh_residual>) {
-                            my @columns;
-                            if ($csv->parse($row)) {
-                                @columns = $csv->fields();
-                            }
-
-                            my $stock_id = $columns[0];
-                            foreach (0..$number_traits-1) {
-                                my $trait_name = $sorted_trait_names[$_];
-                                my $residual = $columns[1 + $_];
-                                my $fitted = $columns[1 + $number_traits + $_];
-                                my $stock_name = $plot_id_map{$stock_id};
-                                if (defined $residual && $residual ne '') {
-                                    $result_residual_data->{$stock_name}->{$trait_name} = [$residual, $timestamp, $user_name, '', ''];
-                                    $residual_sum += abs($residual);
-                                }
-                                if (defined $fitted && $fitted ne '') {
-                                    $result_fitted_data->{$stock_name}->{$trait_name} = [$fitted, $timestamp, $user_name, '', ''];
-                                }
-                            }
-                        }
-                    close($fh_residual);
-
-                    if ($current_env_row_count == 0 || $current_gen_row_count == 0) {
-                        $run_stats_fault = 1;
-                    }
-                }
-
-                if ($run_stats_fault == 1) {
-                    print STDERR "ERROR IN R CMD\n";
-                    ($genetic_effect_sum, $env_effect_sum, $phenotype_data_original_hash_out, $phenotype_data_hash_out, $result_blup_data, $result_blup_spatial_data, $result_blup_pe_data) = _select_lowest_effects($analytics_select, $statistics_select, $result_blup_data_iterations, $result_blup_spatial_data_iterations, $result_blup_pe_data_iterations);
-                }
-                else {
-                    push @result_effect_sum_iterations, [$iteration_count, $genetic_effect_sum, $env_effect_sum, $residual_sum];
-
-                    my $result_blup_data_copy = dclone $result_blup_data;
-                    my $result_blup_spatial_data_copy = dclone $result_blup_spatial_data;
-                    my $result_residual_data_copy = dclone $result_residual_data;
-                    my $result_fitted_data_copy = dclone $result_fitted_data;
-                    my $phenotype_data_hash_out_copy = dclone $phenotype_data_hash_out;
-
-                    $result_blup_data_iterations->{$genetic_effect_sum} = {
-                        env => $result_blup_spatial_data_copy,
-                        gen => $result_blup_data_copy,
-                        residual => $result_residual_data_copy,
-                        fitted => $result_fitted_data_copy,
-                        env_effect => $env_effect_sum,
-                        phenotype_data => $phenotype_data_hash_out_copy,
-                        phenotype_data_original => $phenotype_data_original_hash_out
-                    };
-
-                    $result_blup_spatial_data_iterations->{$env_effect_sum} = {
-                        env => $result_blup_spatial_data_copy,
-                        gen => $result_blup_data_copy,
-                        residual => $result_residual_data_copy,
-                        fitted => $result_fitted_data_copy,
-                        gen_effect => $genetic_effect_sum,
-                        phenotype_data => $phenotype_data_hash_out_copy,
-                        phenotype_data_original => $phenotype_data_original_hash_out
-                    };
-                }
-
-                if ($iteration_count == 0) {
-                    $result_blup_data_first = $result_blup_data;
-                    $result_blup_spatial_data_first = $result_blup_spatial_data;
-                }
-
-                print STDERR "$statistics_select GENETIC EFFECT SUM $genetic_effect_sum\n";
-                print STDERR "$statistics_select ENV EFFECT SUM $env_effect_sum\n";
-
-                if ($analytics_select eq 'minimize_genetic_effect' && $genetic_effect_sum > $minimization_genetic_sum_threshold && $iteration_count < $iteration_max) {
-                    ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_original_hash_out, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $phenotype_data_hash, $analytics_select, $result_blup_data, undef, undef, $env_simulation, $genetic_effect_min, $genetic_effect_max, undef, undef);
-
-                    $phenotype_data_hash = $phenotype_data_hash_out;
-                }
-                else {
-                    $minimization_genetic_done = 1;
-                }
-
-                if ($analytics_select eq 'minimize_local_env_effect' && $env_effect_sum > $minimization_env_sum_threshold && $iteration_count < $iteration_max) {
-                    ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_original_hash_out, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $phenotype_data_hash, $analytics_select, undef, $result_blup_spatial_data, undef, $env_simulation, undef, undef, $env_effect_min, $env_effect_max);
-
-                    $phenotype_data_hash = $phenotype_data_hash_out;
-                }
-                else {
-                    $minimization_env_done = 1;
-                }
-
-                print STDERR "ITERATION $iteration_count\n";
-                $iteration_count++;
-            }
-        }
-        elsif ($statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups') {
-            $statistical_ontology_term = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using Sommer R|SGNSTAT:0000004"; #In the JS this is set to either the genetic of permanent environment BLUP term (Multivariate linear mixed model permanent environment BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using Sommer R|SGNSTAT:0000005) when saving results
-        
-            $analysis_result_values_type = "analysis_result_values_match_accession_names";
-
-            if ($statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups') {
-                $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_sommer_grm_temporal_leg_random_regression_DAP_genetic_blups_phenotype_file";
-            }
-            elsif ($statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups') {
-                $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_sommer_grm_temporal_leg_random_regression_GDD_genetic_blups_phenotype_file";
-            }
-
-            while ( ($analytics_select eq 'minimize_genetic_effect' && !$minimization_genetic_done) || ($analytics_select eq 'minimize_local_env_effect' && !$minimization_env_done) ) {
-                $genetic_effect_min = 1000000000;
-                $genetic_effect_max = -1000000000;
-                $env_effect_min = 1000000000;
-                $env_effect_max = -1000000000;
-                $genetic_effect_sum = 0;
-                $env_effect_sum = 0;
-                $residual_sum = 0;
-                my $result_blup_data_delta = {};
-                my $result_blup_pe_data_delta = {};
-
-                my $cmd = 'R -e "library(sommer); library(data.table); library(reshape2); library(orthopolynom);
-                mat <- fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\', check.names = FALSE);
-                geno_mat_3col <- data.frame(fread(\''.$grm_file.'\', header=FALSE, sep=\'\t\'));
-                geno_mat <- acast(geno_mat_3col, V1~V2, value.var=\'V3\');
-                geno_mat[is.na(geno_mat)] <- 0;
-                mat_long <- melt(mat, id.vars=c(\'replicate\', \'block\', \'id\', \'plot_id\', \'rowNumber\', \'colNumber\', \'rowNumberFactor\', \'colNumberFactor\'), variable.name=\'time\', value.name=\'value\');
-                mat_long\$time <- as.numeric(as.character(mat_long\$time));
-                mat_long <- mat_long[order(time),];
-                mat\$rowNumber <- as.numeric(mat\$rowNumber);
-                mat\$colNumber <- as.numeric(mat\$colNumber);
-                mat\$rowNumberFactor <- as.factor(mat\$rowNumberFactor);
-                mat\$colNumberFactor <- as.factor(mat\$colNumberFactor);
-                mix <- mmer(
-                    value~1 + replicate,
-                    random=~vs(id, Gu=geno_mat) +vs(leg(time,'.$legendre_order_number.', intercept=TRUE), id) +vs(leg(time,'.$legendre_order_number.', intercept=TRUE), plot_id),
-                    rcov=~vs(units),
-                    data=mat_long, tolparinv='.$tolparinv.'
-                );
-                if (!is.null(mix\$U)) {
-                write.table(data.frame(plot_id = mix\$data\$plot_id, time = mix\$data\$time, residuals = mix\$residuals, fitted = mix\$fitted), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-                write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
-                genetic_coeff <- data.frame(id = names(mix\$U\$\`leg0:id\`\$value));
-                pe_coeff <- data.frame(plot_id = names(mix\$U\$\`leg0:plot_id\`\$value));';
-                for my $leg_num (0..$legendre_order_number) {
-                    $cmd .= 'genetic_coeff\$leg_'.$leg_num.' <- mix\$U\$\`leg'.$leg_num.':id\`\$value;';
-                }
-                for my $leg_num (0..$legendre_order_number) {
-                    $cmd .= 'pe_coeff\$leg_'.$leg_num.' <- mix\$U\$\`leg'.$leg_num.':plot_id\`\$value;';
-                }
-                $cmd .= 'write.table(genetic_coeff, file=\''.$stats_out_tempfile_genetic.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-                    write.table(pe_coeff, file=\''.$stats_out_tempfile_permanent_environment.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');"
-                }
-                ';
-                print STDERR Dumper $cmd;
-                my $status = system($cmd);
-
-                # no warnings 'uninitialized';
-
-                open(my $fh_genetic, '<', $stats_out_tempfile_genetic)
-                    or die "Could not open file '$stats_out_tempfile_genetic' $!";
-
-                    print STDERR "Opened $stats_out_tempfile_genetic\n";
-                    my $header = <$fh_genetic>;
-                    my @header_cols;
-                    if ($csv->parse($header)) {
-                        @header_cols = $csv->fields();
-                    }
-
-                    while (my $row = <$fh_genetic>) {
-                        my @columns;
-                        if ($csv->parse($row)) {
-                            @columns = $csv->fields();
-                        }
-
-                        my $accession_id = $columns[0];
-                        my $accession_name = $stock_info{$accession_id}->{uniquename};
-                        $unique_accessions_seen{$accession_name}++;
-
-                        my $col_counter = 1;
-                        foreach (0..$legendre_order_number) {
-                            my $value = $columns[$col_counter];
-                            if (defined $value && $value ne '') {
-                                push @{$sommer_rr_genetic_coeff{$accession_name}}, $value;
-                            }
-                            $col_counter++;
-                        }
-                    }
-                close($fh_genetic);
-
-                open(my $fh, '<', $stats_out_tempfile_permanent_environment)
-                    or die "Could not open file '$stats_out_tempfile_permanent_environment' $!";
-                
-                    print STDERR "Opened $stats_out_tempfile_permanent_environment\n";
-                    $header = <$fh>;
-                    if ($csv->parse($header)) {
-                        @header_cols = $csv->fields();
-                    }
-
-                    my $row_counter = 0;
-                    while (my $row = <$fh>) {
-                        my @columns;
-                        if ($csv->parse($row)) {
-                            @columns = $csv->fields();
-                        }
-
-                        my $plot_id = $columns[0];
-                        my $plot_name = $plot_id_map{$plot_id};
-
-                        my $col_counter = 1;
-                        foreach (0..$legendre_order_number) {
-                            my $value = $columns[$col_counter];
-                            if (defined $value && $value ne '') {
-                                push @{$sommer_rr_temporal_coeff{$plot_name}}, $value;
-                            }
-                            $col_counter++;
-                        }
-                        $row_counter++;
-                    }
-                close($fh);
-
-                open(my $fh_residual, '<', $stats_out_tempfile_residual)
-                    or die "Could not open file '$stats_out_tempfile_residual' $!";
-                
-                    print STDERR "Opened $stats_out_tempfile_residual\n";
-                    my $header_residual = <$fh_residual>;
-                    my @header_cols_residual;
-                    if ($csv->parse($header_residual)) {
-                        @header_cols_residual = $csv->fields();
-                    }
-                
-                    while (my $row = <$fh_residual>) {
-                        my @columns;
-                        if ($csv->parse($row)) {
-                            @columns = $csv->fields();
-                        }
-
-                        my $stock_id = $columns[0];
-                        my $time = $columns[1];
-                        my $residual = $columns[2];
-                        my $fitted = $columns[3];
-                        my $stock_name = $plot_id_map{$stock_id};
-                        if (defined $residual && $residual ne '') {
-                            $result_residual_data->{$stock_name}->{$seen_times{$time}} = [$residual, $timestamp, $user_name, '', ''];
-                            $residual_sum += abs($residual);
-                        }
-                        if (defined $fitted && $fitted ne '') {
-                            $result_fitted_data->{$stock_name}->{$seen_times{$time}} = [$fitted, $timestamp, $user_name, '', ''];
-                        }
-                    }
-                close($fh_residual);
-
-                my $q_time = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
-                my $h_time = $schema->storage->dbh()->prepare($q_time);
-
-                open(my $Fgc, ">", $coeff_genetic_tempfile) || die "Can't open file ".$coeff_genetic_tempfile;
-
-                while ( my ($accession_name, $coeffs) = each %sommer_rr_genetic_coeff) {
-                    my @line = ($accession_name, @$coeffs);
-                    my $line_string = join ',', @line;
-                    print $Fgc "$line_string\n";
-
-                    foreach my $t_i (0..20) {
-                        my $time = $t_i*5/100;
-                        my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
-
-                        my $value = 0;
-                        my $coeff_counter = 0;
-                        foreach my $b (@$coeffs) {
-                            my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                            # print STDERR Dumper [$eval_string, $b, $time];
-                            $value += eval $eval_string;
-                            $coeff_counter++;
-                        }
-
-                        my $time_term_string = '';
-                        if ($statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups') {
-                            $time_term_string = "GDD $time_rescaled";
-                        }
-                        elsif ($statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups') {
-                            $time_term_string = "day $time_rescaled"
-                        }
-                        $h_time->execute($time_term_string, 'cxgn_time_ontology');
-                        my ($time_cvterm_id) = $h_time->fetchrow_array();
-
-                        if (!$time_cvterm_id) {
-                            my $new_time_term = $schema->resultset("Cv::Cvterm")->create_with({
-                               name => $time_term_string,
-                               cv => 'cxgn_time_ontology'
-                            });
-                            $time_cvterm_id = $new_time_term->cvterm_id();
-                        }
-                        my $time_term_string_blup = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $time_cvterm_id, 'extended');
-                        $rr_unique_traits{$time_term_string_blup}++;
-
-                        $result_blup_data->{$accession_name}->{$time_term_string_blup} = [$value, $timestamp, $user_name, '', ''];
-                    }
-                }
-                close($Fgc);
-
-                while ( my ($accession_name, $coeffs) = each %sommer_rr_genetic_coeff) {
-                    foreach my $time (@sorted_trait_names) {
-                        my $value = 0;
-                        my $coeff_counter = 0;
-                        foreach my $b (@$coeffs) {
-                            my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                            # print STDERR Dumper [$eval_string, $b, $time];
-                            $value += eval $eval_string;
-                            $coeff_counter++;
-                        }
-
-                        $result_blup_data_delta->{$accession_name}->{$time} = [$value, $timestamp, $user_name, '', ''];
-
-                        if ($value < $genetic_effect_min) {
-                            $genetic_effect_min = $value;
-                        }
-                        elsif ($value >= $genetic_effect_max) {
-                            $genetic_effect_max = $value;
-                        }
-
-                        $genetic_effect_sum += abs($value);
-                    }
-                }
-
-                open(my $Fpc, ">", $coeff_pe_tempfile) || die "Can't open file ".$coeff_pe_tempfile;
-
-                while ( my ($plot_name, $coeffs) = each %sommer_rr_temporal_coeff) {
-                    my @line = ($plot_name, @$coeffs);
-                    my $line_string = join ',', @line;
-                    print $Fpc "$line_string\n";
-
-                    foreach my $t_i (0..20) {
-                        my $time = $t_i*5/100;
-                        my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
-
-                        my $value = 0;
-                        my $coeff_counter = 0;
-                        foreach my $b (@$coeffs) {
-                            my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                            # print STDERR Dumper [$eval_string, $b, $time];
-                            $value += eval $eval_string;
-                            $coeff_counter++;
-                        }
-
-                        my $time_term_string = '';
-                        if ($statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups') {
-                            $time_term_string = "GDD $time_rescaled";
-                        }
-                        elsif ($statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups') {
-                            $time_term_string = "day $time_rescaled"
-                        }
-                        $h_time->execute($time_term_string, 'cxgn_time_ontology');
-                        my ($time_cvterm_id) = $h_time->fetchrow_array();
-
-                        if (!$time_cvterm_id) {
-                            my $new_time_term = $schema->resultset("Cv::Cvterm")->create_with({
-                               name => $time_term_string,
-                               cv => 'cxgn_time_ontology'
-                            });
-                            $time_cvterm_id = $new_time_term->cvterm_id();
-                        }
-                        my $time_term_string_pe = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $time_cvterm_id, 'extended');
-                        $rr_unique_traits{$time_term_string_pe}++;
-
-                        $result_blup_pe_data->{$plot_name}->{$time_term_string_pe} = [$value, $timestamp, $user_name, '', ''];
-                    }
-                }
-                close($Fpc);
-
-                while ( my ($plot_name, $coeffs) = each %sommer_rr_temporal_coeff) {
-                    foreach my $time (@sorted_trait_names) {
-                        my $value = 0;
-                        my $coeff_counter = 0;
-                        foreach my $b (@$coeffs) {
-                            my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                            # print STDERR Dumper [$eval_string, $b, $time];
-                            $value += eval $eval_string;
-                            $coeff_counter++;
-                        }
-
-                        $result_blup_pe_data_delta->{$plot_name}->{$time} = [$value, $timestamp, $user_name, '', ''];
-
-                        if ($value < $env_effect_min) {
-                            $env_effect_min = $value;
-                        }
-                        elsif ($value >= $env_effect_max) {
-                            $env_effect_max = $value;
-                        }
-
-                        $env_effect_sum += abs($value);
-                    }
-                }
-
-                push @result_effect_sum_iterations, [$iteration_count, $genetic_effect_sum, $env_effect_sum, $residual_sum];
-
-                my $result_blup_data_delta_copy = dclone $result_blup_data_delta;
-                my $result_blup_pe_data_delta_copy = dclone $result_blup_pe_data_delta;
-                my $result_residual_data_copy = dclone $result_residual_data;
-                my $result_fitted_data_copy = dclone $result_fitted_data;
-                my $phenotype_data_hash_out_copy = dclone $phenotype_data_hash_out;
-
-                $result_blup_data_iterations->{$genetic_effect_sum} = {
-                    env => $result_blup_pe_data_delta_copy,
-                    gen => $result_blup_data_delta_copy,
-                    residual => $result_residual_data_copy,
-                    fitted => $result_fitted_data_copy,
-                    env_effect => $env_effect_sum,
-                    phenotype_data => $phenotype_data_hash_out_copy,
-                    phenotype_data_original => $phenotype_data_original_hash_out
-                };
-                $result_blup_pe_data_iterations->{$env_effect_sum} = {
-                    env => $result_blup_pe_data_delta_copy,
-                    gen => $result_blup_data_delta_copy,
-                    residual => $result_residual_data_copy,
-                    fitted => $result_fitted_data_copy,
-                    gen_effect => $genetic_effect_sum,
-                    phenotype_data => $phenotype_data_hash_out_copy,
-                    phenotype_data_original => $phenotype_data_original_hash_out
-                };
-
-                print STDERR "$statistics_select GENETIC EFFECT SUM $genetic_effect_sum\n";
-
-                if ($analytics_select eq 'minimize_genetic_effect' && $genetic_effect_sum > $minimization_genetic_sum_threshold && $iteration_count < $iteration_max) {
-                    ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_original_hash_out, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $phenotype_data_hash, $analytics_select, $result_blup_data_delta, undef, undef, $env_simulation, $genetic_effect_min, $genetic_effect_max, undef, undef);
-
-                    $phenotype_data_hash = $phenotype_data_hash_out;
-                }
-                else {
-                    $minimization_genetic_done = 1;
-                }
-
-                print STDERR "$statistics_select ENV EFFECT SUM $env_effect_sum\n";
-
-                if ($analytics_select eq 'minimize_local_env_effect' && $env_effect_sum > $minimization_env_sum_threshold && $iteration_count < $iteration_max) {
-                    ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_original_hash_out, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $phenotype_data_hash, $analytics_select, undef, undef, $result_blup_pe_data_delta, $env_simulation, undef, undef, $env_effect_min, $env_effect_max);
-
-                    $phenotype_data_hash = $phenotype_data_hash_out;
-                }
-                else {
-                    $minimization_env_done = 1;
-                }
-
-                print STDERR "ITERATION $iteration_count\n";
-                $iteration_count++;
-            }
-
-            @sorted_trait_names = sort keys %rr_unique_traits;
-        }
-        elsif ($statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups') {
-            $statistical_ontology_term = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using Sommer R|SGNSTAT:0000004";
-        
-            $analysis_result_values_type = "analysis_result_values_match_accession_names";
-
-            if ($statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups') {
-                $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_sommer_grm_genetic_leg_random_regression_DAP_genetic_blups_phenotype_file";
-            }
-            elsif ($statistics_select eq 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups') {
-                $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_sommer_grm_genetic_leg_random_regression_GDD_genetic_blups_phenotype_file";
-            }
-    
-            while ( ($analytics_select eq 'minimize_genetic_effect' && !$minimization_genetic_done) || ($analytics_select eq 'minimize_local_env_effect' && !$minimization_env_done) ) {
-                $genetic_effect_min = 1000000000;
-                $genetic_effect_max = -1000000000;
-                $genetic_effect_sum = 0;
-                $env_effect_sum = 0;
-                $residual_sum = 0;
-                my $result_blup_data_delta = {};
-
-                my $cmd = 'R -e "library(sommer); library(data.table); library(reshape2); library(orthopolynom);
-                mat <- fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\', check.names = FALSE);
-                geno_mat_3col <- data.frame(fread(\''.$grm_file.'\', header=FALSE, sep=\'\t\'));
-                geno_mat <- acast(geno_mat_3col, V1~V2, value.var=\'V3\');
-                geno_mat[is.na(geno_mat)] <- 0;
-                mat_long <- melt(mat, id.vars=c(\'replicate\', \'block\', \'id\', \'plot_id\', \'rowNumber\', \'colNumber\', \'rowNumberFactor\', \'colNumberFactor\'), variable.name=\'time\', value.name=\'value\');
-                mat_long\$time <- as.numeric(as.character(mat_long\$time));
-                mat_long <- mat_long[order(time),];
-                mat\$rowNumber <- as.numeric(mat\$rowNumber);
-                mat\$colNumber <- as.numeric(mat\$colNumber);
-                mat\$rowNumberFactor <- as.factor(mat\$rowNumberFactor);
-                mat\$colNumberFactor <- as.factor(mat\$colNumberFactor);
-                mix <- mmer(
-                    value~1 + replicate,
-                    random=~vs(id, Gu=geno_mat) +vs(leg(time,'.$legendre_order_number.', intercept=TRUE), id),
-                    rcov=~vs(units),
-                    data=mat_long, tolparinv='.$tolparinv.'
-                );
-                if (!is.null(mix\$U)) {
-                write.table(data.frame(plot_id = mix\$data\$plot_id, time = mix\$data\$time, residuals = mix\$residuals, fitted = mix\$fitted), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
-                write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
-                genetic_coeff <- data.frame(id = names(mix\$U\$\`leg0:id\`\$value));';
-                for my $leg_num (0..$legendre_order_number) {
-                    $cmd .= 'genetic_coeff\$leg_'.$leg_num.' <- mix\$U\$\`leg'.$leg_num.':id\`\$value;';
-                }
-                $cmd .= 'write.table(genetic_coeff, file=\''.$stats_out_tempfile_genetic.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');"
-                }
-                ';
-                print STDERR Dumper $cmd;
-                my $status = system($cmd);
-
-                # no warnings 'uninitialized';
-
-                open(my $fh_genetic, '<', $stats_out_tempfile_genetic)
-                    or die "Could not open file '$stats_out_tempfile_genetic' $!";
-
-                    print STDERR "Opened $stats_out_tempfile_genetic\n";
-                    my $header = <$fh_genetic>;
-                    my @header_cols;
-                    if ($csv->parse($header)) {
-                        @header_cols = $csv->fields();
-                    }
-
-                    while (my $row = <$fh_genetic>) {
-                        my @columns;
-                        if ($csv->parse($row)) {
-                            @columns = $csv->fields();
-                        }
-
-                        my $accession_id = $columns[0];
-                        my $accession_name = $stock_info{$accession_id}->{uniquename};
-                        $unique_accessions_seen{$accession_name}++;
-
-                        my $col_counter = 1;
-                        foreach (0..$legendre_order_number) {
-                            my $value = $columns[$col_counter];
-                            if (defined $value && $value ne '') {
-                                push @{$sommer_rr_genetic_coeff{$accession_name}}, $value;
-                            }
-                            $col_counter++;
-                        }
-                    }
-                close($fh_genetic);
-
-                # print STDERR Dumper \%sommer_rr_genetic_coeff;
-
-                open(my $fh_residual, '<', $stats_out_tempfile_residual)
-                    or die "Could not open file '$stats_out_tempfile_residual' $!";
-                
-                    print STDERR "Opened $stats_out_tempfile_residual\n";
-                    my $header_residual = <$fh_residual>;
-                    my @header_cols_residual;
-                    if ($csv->parse($header_residual)) {
-                        @header_cols_residual = $csv->fields();
-                    }
-                
-                    while (my $row = <$fh_residual>) {
-                        my @columns;
-                        if ($csv->parse($row)) {
-                            @columns = $csv->fields();
-                        }
-
-                        my $stock_id = $columns[0];
-                        my $time = $columns[1];
-                        my $residual = $columns[2];
-                        my $fitted = $columns[3];
-                        my $stock_name = $plot_id_map{$stock_id};
-                        if (defined $residual && $residual ne '') {
-                            $result_residual_data->{$stock_name}->{$seen_times{$time}} = [$residual, $timestamp, $user_name, '', ''];
-                            $residual_sum += abs($residual);
-                        }
-                        if (defined $fitted && $fitted ne '') {
-                            $result_fitted_data->{$stock_name}->{$seen_times{$time}} = [$fitted, $timestamp, $user_name, '', ''];
-                        }
-                    }
-                close($fh_residual);
-
-                my $q_time = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
-                my $h_time = $schema->storage->dbh()->prepare($q_time);
-
-                open(my $Fgc, ">", $coeff_genetic_tempfile) || die "Can't open file ".$coeff_genetic_tempfile;
-
-                while ( my ($accession_name, $coeffs) = each %sommer_rr_genetic_coeff) {
-                    my @line = ($accession_name, @$coeffs);
-                    my $line_string = join ',', @line;
-                    print $Fgc "$line_string\n";
-
-                    foreach my $t_i (0..20) {
-                        my $time = $t_i*5/100;
-                        my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
-
-                        my $value = 0;
-                        my $coeff_counter = 0;
-                        foreach my $b (@$coeffs) {
-                            my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                            # print STDERR Dumper [$eval_string, $b, $time];
-                            $value += eval $eval_string;
-                            $coeff_counter++;
-                        }
-
-                        my $time_term_string = '';
-                        if ($statistics_select eq 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups') {
-                            $time_term_string = "GDD $time_rescaled";
-                        }
-                        elsif ($statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups') {
-                            $time_term_string = "day $time_rescaled"
-                        }
-                        $h_time->execute($time_term_string, 'cxgn_time_ontology');
-                        my ($time_cvterm_id) = $h_time->fetchrow_array();
-
-                        if (!$time_cvterm_id) {
-                            my $new_time_term = $schema->resultset("Cv::Cvterm")->create_with({
-                               name => $time_term_string,
-                               cv => 'cxgn_time_ontology'
-                            });
-                            $time_cvterm_id = $new_time_term->cvterm_id();
-                        }
-                        my $time_term_string_blup = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $time_cvterm_id, 'extended');
-                        $rr_unique_traits{$time_term_string_blup}++;
-
-                        $result_blup_data->{$accession_name}->{$time_term_string_blup} = [$value, $timestamp, $user_name, '', ''];
-                    }
-                }
-                close($Fgc);
-
-                while ( my ($accession_name, $coeffs) = each %sommer_rr_genetic_coeff) {
-                    foreach my $time (@sorted_trait_names) {
-                        my $value = 0;
-                        my $coeff_counter = 0;
-                        foreach my $b (@$coeffs) {
-                            my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                            # print STDERR Dumper [$eval_string, $b, $time];
-                            $value += eval $eval_string;
-                            $coeff_counter++;
-                        }
-
-                        $result_blup_data_delta->{$accession_name}->{$time} = [$value, $timestamp, $user_name, '', ''];
-
-                        if ($value < $genetic_effect_min) {
-                            $genetic_effect_min = $value;
-                        }
-                        elsif ($value >= $genetic_effect_max) {
-                            $genetic_effect_max = $value;
-                        }
-
-                        $genetic_effect_sum += abs($value);
-                    }
-                }
-
-                push @result_effect_sum_iterations, [$iteration_count, $genetic_effect_sum, $env_effect_sum, $residual_sum];
-
-                my $result_blup_data_delta_copy = dclone $result_blup_data_delta;
-                my $result_residual_data_copy = dclone $result_residual_data;
-                my $result_fitted_data_copy = dclone $result_fitted_data;
-                my $phenotype_data_hash_out_copy = dclone $phenotype_data_hash_out;
-
-                $result_blup_data_iterations->{$genetic_effect_sum} = {
-                    gen => $result_blup_data_delta_copy,
-                    residual => $result_residual_data_copy,
-                    fitted => $result_fitted_data_copy,
-                    phenotype_data => $phenotype_data_hash_out_copy,
-                    phenotype_data_original => $phenotype_data_original_hash_out
-                };
-
-                print STDERR "$statistics_select GENETIC EFFECT SUM $genetic_effect_sum\n";
-
-                if ($analytics_select eq 'minimize_genetic_effect' && $genetic_effect_sum > $minimization_genetic_sum_threshold && $iteration_count < $iteration_max) {
-                    ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_original_hash_out, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $phenotype_data_hash, $analytics_select, $result_blup_data_delta, undef, undef, $env_simulation, $genetic_effect_min, $genetic_effect_max, undef, undef);
-
-                    $phenotype_data_hash = $phenotype_data_hash_out;
-                }
-                else {
-                    $minimization_genetic_done = 1;
-                }
-
-                print STDERR "ITERATION $iteration_count\n";
-                $iteration_count++;
-            }
-
-            @sorted_trait_names = sort keys %rr_unique_traits;
-        }
-        elsif ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
-
-            $analysis_model_language = "F90";
-
-            $statistical_ontology_term = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using Sommer R|SGNSTAT:0000004"; #In the JS this is set to either the genetic of permanent environment BLUP term (Multivariate linear mixed model permanent environment BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using Sommer R|SGNSTAT:0000005) when saving results
-        
-            $analysis_result_values_type = "analysis_result_values_match_accession_names";
-
-            if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups') {
-                $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_blupf90_grm_temporal_leg_random_regression_GDD_genetic_blups_phenotype_file";
-            }
-            elsif ($statistics_select eq 'blupf90_grm_random_regression_dap_blups') {
-                $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_blupf90_grm_temporal_leg_random_regression_DAP_genetic_blups_phenotype_file";
-            }
-            elsif ($statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
-                $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_airemlf90_grm_temporal_leg_random_regression_GDD_genetic_blups_phenotype_file";
-            }
-            elsif ($statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
-                $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_airemlf90_grm_temporal_leg_random_regression_DAP_genetic_blups_phenotype_file";
-            }
-
-            my $pheno_var_pos = $legendre_order_number+1;
-
-            while ( ($analytics_select eq 'minimize_genetic_effect' && !$minimization_genetic_done) || ($analytics_select eq 'minimize_local_env_effect' && !$minimization_env_done) ) {
-                $genetic_effect_min = 1000000000;
-                $genetic_effect_max = -1000000000;
-                $env_effect_min = 1000000000;
-                $env_effect_max = -1000000000;
-                $genetic_effect_sum = 0;
-                $env_effect_sum = 0;
-                $residual_sum = 0;
-                my $result_blup_pe_data_delta = {};
-                my $result_blup_data_delta = {};
-
-                my $cmd_r = 'R -e "
-                    pheno <- read.csv(\''.$stats_prep2_tempfile.'\', header=FALSE, sep=\',\');
-                    v <- var(pheno);
-                    v <- v[1:'.$pheno_var_pos.', 1:'.$pheno_var_pos.'];
-                    #v <- matrix(rep(0.1, '.$pheno_var_pos.'*'.$pheno_var_pos.'), nrow = '.$pheno_var_pos.');
-                    #diag(v) <- rep(1, '.$pheno_var_pos.');
-                    write.table(v, file=\''.$stats_out_param_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');
-                "';
-                print STDERR Dumper $cmd_r;
-                my $status_r = system($cmd_r);
-
-                my @pheno_var;
-                open(my $fh_r, '<', $stats_out_param_tempfile)
-                    or die "Could not open file '$stats_out_param_tempfile' $!";
-                    print STDERR "Opened $stats_out_param_tempfile\n";
-
-                    while (my $row = <$fh_r>) {
-                        my @columns;
-                        if ($csv->parse($row)) {
-                            @columns = $csv->fields();
-                        }
-                        push @pheno_var, \@columns;
-                    }
-                close($fh_r);
-                # print STDERR Dumper \@pheno_var;
-
-                my @grm_old;
-                open(my $fh_grm_old, '<', $grm_file)
-                    or die "Could not open file '$grm_file' $!";
-                    print STDERR "Opened $grm_file\n";
-
-                    while (my $row = <$fh_grm_old>) {
-                        my @columns;
-                        if ($csv->parse($row)) {
-                            @columns = $csv->fields();
-                        }
-                        push @grm_old, \@columns;
-                    }
-                close($fh_grm_old);
-
-                my %grm_hash_ordered;
-                foreach (@grm_old) {
-                    my $l1 = $accession_id_factor_map{$_->[0]};
-                    my $l2 = $accession_id_factor_map{$_->[1]};
-                    my $val = sprintf("%.8f", $_->[2]);
-                    if ($l1 < $l2) {
-                        $grm_hash_ordered{$l1}->{$l2} = $val;
-                    }
-                    else {
-                        $grm_hash_ordered{$l2}->{$l1} = $val;
-                    }
-                }
-
-                open(my $fh_grm_new, '>', $grm_rename_tempfile)
-                    or die "Could not open file '$grm_rename_tempfile' $!";
-                    print STDERR "Opened $grm_rename_tempfile\n";
-
-                    foreach my $i (sort keys %grm_hash_ordered) {
-                        my $v = $grm_hash_ordered{$i};
-                        foreach my $j (sort keys %$v) {
-                            my $val = $v->{$j};
-                            print $fh_grm_new "$i $j $val\n";
-                        }
-                    }
-                close($fh_grm_new);
-
-                my $stats_tempfile_2_basename = basename($stats_tempfile_2);
-                my $grm_file_basename = basename($grm_rename_tempfile);
-                my $permanent_environment_structure_file_basename = basename($permanent_environment_structure_tempfile);
-                #my @phenotype_header = ("id", "plot_id", "replicate", "time", "replicate_time", "ind_replicate", @sorted_trait_names, "phenotype");
-
-                my $effect_1_levels = scalar(@rep_time_factors);
-                my $effect_grm_levels = scalar(@unique_accession_names);
-                my $effect_pe_levels = scalar(@ind_rep_factors);
-
-                my @param_file_rows = (
-                    'DATAFILE',
-                    $stats_tempfile_2_basename,
-                    'NUMBER_OF_TRAITS',
-                    '1',
-                    'NUMBER_OF_EFFECTS',
-                    ($legendre_order_number + 1)*2 + 1,
-                    'OBSERVATION(S)',
-                    $legendre_order_number + 1 + 6 + 1,
-                    'WEIGHT(S)',
-                    '',
-                    'EFFECTS: POSITION_IN_DATAFILE NUMBER_OF_LEVELS TYPE_OF_EFFECT',
-                    '5 '.$effect_1_levels.' cross',
-                );
-                my $p_counter = 1;
-                foreach (0 .. $legendre_order_number) {
-                    push @param_file_rows, 6+$p_counter.' '.$effect_grm_levels.' cov 1';
-                    $p_counter++;
-                }
-                my $p2_counter = 1;
-                my @hetres_group;
-                foreach (0 .. $legendre_order_number) {
-                    push @param_file_rows, 6+$p2_counter.' '.$effect_pe_levels.' cov 6';
-                    push @hetres_group, 6+$p2_counter;
-                    $p2_counter++;
-                }
-                my @random_group1;
-                foreach (1..$legendre_order_number+1) {
-                    push @random_group1, 1+$_;
-                }
-                my $random_group_string1 = join ' ', @random_group1;
-                my @random_group2;
-                foreach (1..$legendre_order_number+1) {
-                    push @random_group2, 1+scalar(@random_group1)+$_;
-                }
-                my $random_group_string2 = join ' ', @random_group2;
-                my $hetres_group_string = join ' ', @hetres_group;
-                push @param_file_rows, (
-                    'RANDOM_RESIDUAL VALUES',
-                    '1',
-                    'RANDOM_GROUP',
-                    $random_group_string1,
-                    'RANDOM_TYPE',
-                    'user_file_inv',
-                    'FILE',
-                    $grm_file_basename,
-                    '(CO)VARIANCES'
-                );
-                foreach (@pheno_var) {
-                    my $s = join ' ', @$_;
-                    push @param_file_rows, $s;
-                }
-                push @param_file_rows, (
-                    'RANDOM_GROUP',
-                    $random_group_string2,
-                    'RANDOM_TYPE'
-                );
-
-                if ($permanent_environment_structure eq 'identity') {
-                    push @param_file_rows, (
-                        'diagonal',
-                        'FILE',
-                        ''
-                    );
-                }
-                elsif ($permanent_environment_structure eq 'euclidean_rows_and_columns') {
-                    push @param_file_rows, (
-                        'user_file_inv',
-                        'FILE',
-                        $permanent_environment_structure_file_basename
-                    );
-                }
-
-                push @param_file_rows, (
-                    '(CO)VARIANCES'
-                );
-                foreach (@pheno_var) {
-                    my $s = join ' ', @$_;
-                    push @param_file_rows, $s;
-                }
-                my $hetres_pol_string = join ' ', @sorted_scaled_ln_times;
-                push @param_file_rows, (
-                    'OPTION hetres_pos '.$hetres_group_string,
-                    'OPTION hetres_pol '.$hetres_pol_string,
-                    'OPTION conv_crit '.$tolparinv,
-                    'OPTION residual',
-                );
-
-                open(my $Fp, ">", $parameter_tempfile) || die "Can't open file ".$parameter_tempfile;
-                    foreach (@param_file_rows) {
-                        print $Fp "$_\n";
-                    }
-                close($Fp);
-
-                my $command_name = '';
-                if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups') {
-                    $command_name = 'blupf90';
-                }
-                elsif ($statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
-                    $command_name = 'airemlf90';
-                }
-
-                my $parameter_tempfile_basename = basename($parameter_tempfile);
-                $stats_out_tempfile .= '.log';
-                my $cmd = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_basename.' | '.$command_name.' > '.$stats_out_tempfile;
-                print STDERR Dumper $cmd;
-                my $status = system($cmd);
-
-                open(my $fh_log, '<', $stats_out_tempfile)
-                    or die "Could not open file '$stats_out_tempfile' $!";
-
-                    print STDERR "Opened $stats_out_tempfile\n";
-                    while (my $row = <$fh_log>) {
-                        print STDERR $row;
-                    }
-                close($fh_log);
-
-                my $q_time = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
-                my $h_time = $schema->storage->dbh()->prepare($q_time);
-
-                my $sum_square_res = 0;
-                $yhat_residual_tempfile = $tmp_stats_dir."/yhat_residual";
-                open(my $fh_yhat_res, '<', $yhat_residual_tempfile)
-                    or die "Could not open file '$yhat_residual_tempfile' $!";
-                    print STDERR "Opened $yhat_residual_tempfile\n";
-
-                    my $pred_res_counter = 0;
-                    my $trait_counter = 0;
-                    while (my $row = <$fh_yhat_res>) {
-                        # print STDERR $row;
-                        my @vals = split ' ', $row;
-                        my $pred = $vals[0];
-                        my $residual = $vals[1];
-                        $sum_square_res = $sum_square_res + $residual*$residual;
-
-                        my $plot_name = $plot_id_count_map_reverse{$pred_res_counter};
-                        my $time = $time_count_map_reverse{$pred_res_counter};
-
-                        $rr_residual_unique_traits{$seen_times{$time}}++;
-
-                        if (defined $residual && $residual ne '') {
-                            $result_residual_data->{$plot_name}->{$seen_times{$time}} = [$residual, $timestamp, $user_name, '', ''];
-                            $residual_sum += abs($residual);
-                        }
-                        if (defined $pred && $pred ne '') {
-                            $result_fitted_data->{$plot_name}->{$seen_times{$time}} = [$pred, $timestamp, $user_name, '', ''];
-                        }
-
-                        $pred_res_counter++;
-                    }
-                close($fh_yhat_res);
-                $model_sum_square_residual = $sum_square_res;
-
-                $blupf90_solutions_tempfile = $tmp_stats_dir."/solutions";
-                open(my $fh_sol, '<', $blupf90_solutions_tempfile)
-                    or die "Could not open file '$blupf90_solutions_tempfile' $!";
-                    print STDERR "Opened $blupf90_solutions_tempfile\n";
-
-                    my $head = <$fh_sol>;
-                    print STDERR $head;
-
-                    my $solution_file_counter = 0;
-                    my $grm_sol_counter = 0;
-                    my $grm_sol_trait_counter = 0;
-                    my $pe_sol_counter = 0;
-                    my $pe_sol_trait_counter = 0;
-                    while (my $row = <$fh_sol>) {
-                        # print STDERR $row;
-                        my @vals = split ' ', $row;
-                        my $level = $vals[2];
-                        my $value = $vals[3];
-                        if ($solution_file_counter < $effect_1_levels) {
-                            $fixed_effects{$solution_file_counter}->{$level} = $value;
-                        }
-                        elsif ($solution_file_counter < $effect_1_levels + $effect_grm_levels*($legendre_order_number+1)) {
-                            my $accession_name = $accession_id_factor_map_reverse{$level};
-                            # my $trait = $seen_times{$sorted_trait_names[$grm_sol_trait_counter]};
-                            if ($grm_sol_counter < $effect_grm_levels-1) {
-                                $grm_sol_counter++;
-                            }
-                            else {
-                                $grm_sol_counter = 0;
-                                $grm_sol_trait_counter++;
-                            }
-                            # $result_blup_data->{$accession_name}->{$trait} = [$value, $timestamp, $user_name, '', ''];
-                            if (defined $value && $value ne '') {
-                                push @{$rr_genetic_coefficients{$accession_name}}, $value;
-                            }
-                        }
-                        else {
-                            my $plot_name = $plot_id_factor_map_reverse{$level};
-                            # my $trait = $seen_times{$sorted_trait_names[$pe_sol_trait_counter]};
-                            if ($pe_sol_counter < $effect_pe_levels-1) {
-                                $pe_sol_counter++;
-                            }
-                            else {
-                                $pe_sol_counter = 0;
-                                $pe_sol_trait_counter++;
-                            }
-                            # $result_blup_pe_data->{$plot_name}->{$trait} = [$value, $timestamp, $user_name, '', ''];
-                            if (defined $value && $value ne '') {
-                                push @{$rr_temporal_coefficients{$plot_name}}, $value;
-                            }
-                        }
-                        $solution_file_counter++;
-                    }
-                close($fh_sol);
-
-                # print STDERR Dumper \%rr_genetic_coefficients;
-                # print STDERR Dumper \%rr_temporal_coefficients;
-
-                open(my $Fgc, ">", $coeff_genetic_tempfile) || die "Can't open file ".$coeff_genetic_tempfile;
-
-                while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients) {
-                    my @line = ($accession_name, @$coeffs);
-                    my $line_string = join ',', @line;
-                    print $Fgc "$line_string\n";
-
-                    foreach my $t_i (0..20) {
-                        my $time = $t_i*5/100;
-                        my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
-
-                        my $value = 0;
-                        my $coeff_counter = 0;
-                        foreach my $b (@$coeffs) {
-                            my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                            # print STDERR Dumper [$eval_string, $b, $time];
-                            $value += eval $eval_string;
-                            $coeff_counter++;
-                        }
-
-                        my $time_term_string = '';
-                        if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
-                            $time_term_string = "GDD $time_rescaled";
-                        }
-                        elsif ($statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
-                            $time_term_string = "day $time_rescaled"
-                        }
-                        $h_time->execute($time_term_string, 'cxgn_time_ontology');
-                        my ($time_cvterm_id) = $h_time->fetchrow_array();
-
-                        if (!$time_cvterm_id) {
-                            my $new_time_term = $schema->resultset("Cv::Cvterm")->create_with({
-                               name => $time_term_string,
-                               cv => 'cxgn_time_ontology'
-                            });
-                            $time_cvterm_id = $new_time_term->cvterm_id();
-                        }
-                        my $time_term_string_blup = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $time_cvterm_id, 'extended');
-                        $rr_unique_traits{$time_term_string_blup}++;
-
-                        $result_blup_data->{$accession_name}->{$time_term_string_blup} = [$value, $timestamp, $user_name, '', ''];
-                    }
-                }
-                close($Fgc);
-
-                while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients) {
-                    foreach my $time (@sorted_trait_names) {
-                        my $value = 0;
-                        my $coeff_counter = 0;
-                        foreach my $b (@$coeffs) {
-                            my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                            # print STDERR Dumper [$eval_string, $b, $time];
-                            $value += eval $eval_string;
-                            $coeff_counter++;
-                        }
-
-                        $result_blup_data_delta->{$accession_name}->{$time} = [$value, $timestamp, $user_name, '', ''];
-
-                        if ($value < $genetic_effect_min) {
-                            $genetic_effect_min = $value;
-                        }
-                        elsif ($value >= $genetic_effect_max) {
-                            $genetic_effect_max = $value;
-                        }
-
-                        $genetic_effect_sum += abs($value);
-                    }
-                }
-
-                open(my $Fpc, ">", $coeff_pe_tempfile) || die "Can't open file ".$coeff_pe_tempfile;
-
-                while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients) {
-                    my @line = ($plot_name, @$coeffs);
-                    my $line_string = join ',', @line;
-                    print $Fpc "$line_string\n";
-
-                    foreach my $t_i (0..20) {
-                        my $time = $t_i*5/100;
-                        my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
-
-                        my $value = 0;
-                        my $coeff_counter = 0;
-                        foreach my $b (@$coeffs) {
-                            my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                            # print STDERR Dumper [$eval_string, $b, $time];
-                            $value += eval $eval_string;
-                            $coeff_counter++;
-                        }
-
-                        my $time_term_string = '';
-                        if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
-                            $time_term_string = "GDD $time_rescaled";
-                        }
-                        elsif ($statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
-                            $time_term_string = "day $time_rescaled"
-                        }
-                        $h_time->execute($time_term_string, 'cxgn_time_ontology');
-                        my ($time_cvterm_id) = $h_time->fetchrow_array();
-
-                        if (!$time_cvterm_id) {
-                            my $new_time_term = $schema->resultset("Cv::Cvterm")->create_with({
-                               name => $time_term_string,
-                               cv => 'cxgn_time_ontology'
-                            });
-                            $time_cvterm_id = $new_time_term->cvterm_id();
-                        }
-                        my $time_term_string_pe = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $time_cvterm_id, 'extended');
-                        $rr_unique_traits{$time_term_string_pe}++;
-
-                        $result_blup_pe_data->{$plot_name}->{$time_term_string_pe} = [$value, $timestamp, $user_name, '', ''];
-                    }
-                }
-                close($Fpc);
-
-                while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients) {
-                    foreach my $time (@sorted_trait_names) {
-                        my $value = 0;
-                        my $coeff_counter = 0;
-                        foreach my $b (@$coeffs) {
-                            my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                            # print STDERR Dumper [$eval_string, $b, $time];
-                            $value += eval $eval_string;
-                            $coeff_counter++;
-                        }
-
-                        $result_blup_pe_data_delta->{$plot_name}->{$time} = [$value, $timestamp, $user_name, '', ''];
-
-                        if ($value < $env_effect_min) {
-                            $env_effect_min = $value;
-                        }
-                        elsif ($value >= $env_effect_max) {
-                            $env_effect_max = $value;
-                        }
-
-                        $env_effect_sum += abs($value);
-                    }
-                }
-
-                push @result_effect_sum_iterations, [$iteration_count, $genetic_effect_sum, $env_effect_sum, $residual_sum];
-
-                my $result_blup_data_delta_copy = dclone $result_blup_data_delta;
-                my $result_blup_pe_data_delta_copy = dclone $result_blup_pe_data_delta;
-                my $result_residual_data_copy = dclone $result_residual_data;
-                my $result_fitted_data_copy = dclone $result_fitted_data;
-                my $phenotype_data_hash_out_copy = dclone $phenotype_data_hash_out;
-
-                $result_blup_data_iterations->{$genetic_effect_sum} = {
-                    env => $result_blup_pe_data_delta_copy,
-                    gen => $result_blup_data_delta_copy,
-                    residual => $result_residual_data_copy,
-                    fitted => $result_fitted_data_copy,
-                    env_effect => $env_effect_sum,
-                    phenotype_data => $phenotype_data_hash_out_copy,
-                    phenotype_data_original => $phenotype_data_original_hash_out
-                };
-                $result_blup_pe_data_iterations->{$env_effect_sum} = {
-                    env => $result_blup_pe_data_delta_copy,
-                    gen => $result_blup_data_delta_copy,
-                    residual => $result_residual_data_copy,
-                    fitted => $result_fitted_data_copy,
-                    gen_effect => $genetic_effect_sum,
-                    phenotype_data => $phenotype_data_hash_out_copy,
-                    phenotype_data_original => $phenotype_data_original_hash_out
-                };
-
-                print STDERR "$statistics_select GENETIC EFFECT SUM $genetic_effect_sum\n";
-
-                if ($analytics_select eq 'minimize_genetic_effect' && $genetic_effect_sum > $minimization_genetic_sum_threshold && $iteration_count < $iteration_max) {
-                    ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_original_hash_out, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $phenotype_data_hash, $analytics_select, $result_blup_data_delta, undef, undef, $env_simulation, $genetic_effect_min, $genetic_effect_max, undef, undef);
-
-                    $phenotype_data_hash = $phenotype_data_hash_out;
-                }
-                else {
-                    $minimization_genetic_done = 1;
-                }
-
-                print STDERR "$statistics_select ENV EFFECT SUM $env_effect_sum\n";
-
-                if ($analytics_select eq 'minimize_local_env_effect' && $env_effect_sum > $minimization_env_sum_threshold && $iteration_count < $iteration_max) {
-                    ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_original_hash_out, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $phenotype_data_hash, $analytics_select, undef, undef, $result_blup_pe_data_delta, $env_simulation, undef, undef, $env_effect_min, $env_effect_max);
-
-                    $phenotype_data_hash = $phenotype_data_hash_out;
-                }
-                else {
-                    $minimization_env_done = 1;
-                }
-
-                print STDERR "ITERATION $iteration_count\n";
-                $iteration_count++;
-
-                # print STDERR Dumper \%fixed_effects;
-                # print STDERR Dumper $result_blup_data;
-                # print STDERR Dumper $result_blup_pe_data;
-                @sorted_trait_names = sort keys %rr_unique_traits;
-                @sorted_residual_trait_names = sort keys %rr_residual_unique_traits;
-            }
-        }
+        ($statistical_ontology_term, $analysis_result_values_type, $analysis_model_training_data_file_type, $result_blup_data, $result_blup_spatial_data, $result_blup_pe_data) = _perform_statistics($statistics_select);
     }
     else {
         $c->stash->{rest} = { error => "Not supported $statistics_select!"};
@@ -2613,8 +1118,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 my $line = join ',', @row;
                 print $F_pheno "$line\n";
 
-                my @row = ("phenotype_post_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $phenotype_data_hash_out->{$p}->{$t});
-                my $line = join ',', @row;
+                @row = ("phenotype_post_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $phenotype_data_hash_out->{$p}->{$t});
+                $line = join ',', @row;
                 print $F_pheno "$line\n";
             }
         }
@@ -2629,8 +1134,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 my $line = join ',', @row;
                 print $F_eff "$line\n";
 
-                my @row = ("effect_post_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $result_blup_spatial_data->{$p}->{$t}->[0]);
-                my $line = join ',', @row;
+                @row = ("effect_post_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $result_blup_spatial_data->{$p}->{$t}->[0]);
+                $line = join ',', @row;
                 print $F_eff "$line\n";
             }
         }
@@ -2757,6 +1262,1592 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     };
 }
 
+sub _perform_statistics {
+    my $c = shift;
+    my $schema = shift;
+    my $trait_id_list = shift;
+    my $field_trial_id_list = shift;
+    my $statistics_select = shift;
+    my $tmp_stats_dir = shift;
+    my $use_area_under_curve = shift;
+    my $legendre_order_number = shift;
+    my $permanent_environment_structure = shift;
+    my $previous_phenotype_data = shift;
+    my $analytics_select = shift;
+    my $stats_tempfile = shift;
+    my $grm_file = shift;
+    my $stats_out_tempfile_residual = shift;
+    my $stats_out_tempfile = shift;
+    my $permanent_environment_structure_tempfile = shift;
+    my $stats_tempfile_2 = shift;
+    my $parameter_tempfile = shift;
+    my $coeff_genetic_tempfile = shift;
+    my $coeff_pe_tempfile = shift;
+    my $stats_prep2_tempfile = shift;
+    my $stats_out_param_tempfile = shift;
+    my $stats_out_tempfile_row = shift;
+    my $stats_out_tempfile_col = shift;
+    my $stats_out_tempfile_2dspl = shift;
+    my $stats_out_tempfile_genetic = shift;
+    my $stats_out_tempfile_permanent_environment = shift;
+    my $trait_name_encoder_hash = shift;
+    my $trait_name_encoder_rev_hash = shift;
+    my $stock_info_hash = shift;
+    my $sorted_trait_names_array = shift;
+    my $plot_id_map_hash = shift;
+    my $sorted_scaled_ln_times_array = shift;
+    my $phenotype_data_original_hash_out = shift;
+    my $phenotype_data_hash_out = shift;
+    my $iteration_max = shift; #2
+    my $tolparinv = shift;
+    my $user_name = shift;
+    my $minimization_genetic_sum_threshold = shift;
+    my $env_simulation = shift;
+    my $include_sim_env = shift;
+
+    my %trait_name_encoder = %$trait_name_encoder_hash;
+    my %trait_name_encoder_rev = %$trait_name_encoder_rev_hash;
+    my %stock_info = %$stock_info_hash;
+    my @sorted_trait_names = @$sorted_trait_names_array;
+    my %plot_id_map = %$plot_id_map_hash;
+    my @sorted_scaled_ln_times = @$sorted_scaled_ln_times_array;
+
+    my $csv = Text::CSV->new({ sep_char => "\t" });
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    my $statistical_ontology_term = '';
+    my $analysis_result_values_type = '';
+    my $analysis_model_training_data_file_type = '';
+    my $result_blup_data;
+    my $result_blup_data_first;
+    my $result_blup_data_delta;
+    my $result_blup_data_iterations;
+    my $result_blup_spatial_data;
+    my $result_blup_spatial_data_first;
+    my $result_blup_spatial_data_iterations;
+    my $result_blup_pe_data;
+    my $result_blup_pe_data_first;
+    my $result_blup_pe_data_delta;
+    my $result_blup_pe_data_iterations;
+    my $result_residual_data;
+    my $result_fitted_data;
+    my @result_effect_sum_iterations;
+
+    my ($unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $trait_composing_info_hash, $stats_out_tempfile_string, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash);
+
+    my $iteration_count = 0;
+    my $minimization_genetic_done = 0;
+    my $genetic_effect_min = 1000000000;
+    my $genetic_effect_max = -1000000000;
+    my $genetic_effect_sum = 0;
+    my $env_effect_sum = 0;
+    my $residual_sum = 0;
+
+    if ($statistics_select eq 'sommer_grm_genetic_blups') {
+        $statistical_ontology_term = "Multivariate genetic BLUPs using genetic relationship matrix computed using Sommer R|SGNSTAT:0000024";
+
+        $analysis_result_values_type = "analysis_result_values_match_accession_names";
+        $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_sommer_grm_genetic_blups_phenotype_file";
+
+        my @encoded_traits = values %trait_name_encoder;
+        my $encoded_trait_string = join ',', @encoded_traits;
+        my $number_traits = scalar(@encoded_traits);
+        my $cbind_string = $number_traits > 1 ? "cbind($encoded_trait_string)" : $encoded_trait_string;
+
+        while ($analytics_select eq 'minimize_genetic_effect' && !$minimization_genetic_done) {
+            $genetic_effect_min = 1000000000;
+            $genetic_effect_max = -1000000000;
+            $genetic_effect_sum = 0;
+            $env_effect_sum = 0;
+            $residual_sum = 0;
+
+            my $cmd = 'R -e "library(sommer); library(data.table); library(reshape2);
+            mat <- data.frame(fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\'));
+            geno_mat_3col <- data.frame(fread(\''.$grm_file.'\', header=FALSE, sep=\'\t\'));
+            geno_mat <- acast(geno_mat_3col, V1~V2, value.var=\'V3\');
+            geno_mat[is.na(geno_mat)] <- 0;
+            mix <- mmer('.$cbind_string.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
+            write.table(data.frame(plot_id = mix\$data\$plot_id, residuals = mix\$residuals, fitted = mix\$fitted), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+            write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
+            "';
+            print STDERR Dumper $cmd;
+            eval {
+                my $status = system($cmd);
+            };
+            my $run_stats_fault = 0;
+            if ($@) {
+                print STDERR "R ERROR\n";
+                print STDERR Dumper $@;
+                $run_stats_fault = 1;
+            }
+            else {
+                my $current_gen_row_count = 0;
+
+                open(my $fh, '<', $stats_out_tempfile)
+                    or die "Could not open file '$stats_out_tempfile' $!";
+
+                    print STDERR "Opened $stats_out_tempfile\n";
+                    my $header = <$fh>;
+                    my @header_cols;
+                    if ($csv->parse($header)) {
+                        @header_cols = $csv->fields();
+                    }
+
+                    while (my $row = <$fh>) {
+                        my @columns;
+                        if ($csv->parse($row)) {
+                            @columns = $csv->fields();
+                        }
+                        my $col_counter = 0;
+                        foreach my $encoded_trait (@header_cols) {
+                            my $trait = $trait_name_encoder_rev{$encoded_trait};
+                            my $stock_id = $columns[0];
+
+                            my $stock_name = $stock_info{$stock_id}->{uniquename};
+                            my $value = $columns[$col_counter+1];
+                            if (defined $value && $value ne '') {
+                                $result_blup_data->{$stock_name}->{$trait} = [$value, $timestamp, $user_name, '', ''];
+
+                                if ($value < $genetic_effect_min) {
+                                    $genetic_effect_min = $value;
+                                }
+                                elsif ($value >= $genetic_effect_max) {
+                                    $genetic_effect_max = $value;
+                                }
+
+                                $genetic_effect_sum += abs($value);
+                            }
+                            $col_counter++;
+                        }
+                        $current_gen_row_count++;
+                    }
+                close($fh);
+
+                open(my $fh_residual, '<', $stats_out_tempfile_residual)
+                    or die "Could not open file '$stats_out_tempfile_residual' $!";
+                
+                    print STDERR "Opened $stats_out_tempfile_residual\n";
+                    my $header_residual = <$fh_residual>;
+                    my @header_cols_residual;
+                    if ($csv->parse($header_residual)) {
+                        @header_cols_residual = $csv->fields();
+                    }
+                    while (my $row = <$fh_residual>) {
+                        my @columns;
+                        if ($csv->parse($row)) {
+                            @columns = $csv->fields();
+                        }
+
+                        my $stock_id = $columns[0];
+                        foreach (0..$number_traits-1) {
+                            my $trait_name = $sorted_trait_names[$_];
+                            my $residual = $columns[1 + $_];
+                            my $fitted = $columns[1 + $number_traits + $_];
+                            my $stock_name = $plot_id_map{$stock_id};
+                            if (defined $residual && $residual ne '') {
+                                $result_residual_data->{$stock_name}->{$trait_name} = [$residual, $timestamp, $user_name, '', ''];
+                                $residual_sum += abs($residual);
+                            }
+                            if (defined $fitted && $fitted ne '') {
+                                $result_fitted_data->{$stock_name}->{$trait_name} = [$fitted, $timestamp, $user_name, '', ''];
+                            }
+                        }
+                    }
+                close($fh_residual);
+
+                if ($current_gen_row_count == 0) {
+                    $run_stats_fault = 1;
+                }
+            }
+
+            if ($run_stats_fault == 1) {
+                print STDERR "ERROR IN R CMD\n";
+                ($genetic_effect_sum, $env_effect_sum, $phenotype_data_original_hash_out, $phenotype_data_hash_out, $result_blup_data, $result_blup_spatial_data, $result_blup_pe_data) = _select_lowest_effects($analytics_select, $statistics_select, $result_blup_data_iterations, $result_blup_spatial_data_iterations, $result_blup_pe_data_iterations);
+            }
+            else {
+                push @result_effect_sum_iterations, [$iteration_count, $genetic_effect_sum, $env_effect_sum, $residual_sum];
+
+                my $result_blup_data_copy = dclone $result_blup_data;
+                my $phenotype_data_hash_out_copy = dclone $phenotype_data_hash_out;
+
+                $result_blup_data_iterations->{$genetic_effect_sum} = {
+                    gen => $result_blup_data_copy,
+                    env_effect => $env_effect_sum,
+                    phenotype_data => $phenotype_data_hash_out_copy,
+                    phenotype_data_original => $phenotype_data_original_hash_out
+                };
+            }
+
+            if ($iteration_count == 0) {
+                $result_blup_data_first = $result_blup_data;
+            }
+
+            print STDERR "$statistics_select GENETIC EFFECT SUM $genetic_effect_sum\n";
+
+            if ($genetic_effect_sum > $minimization_genetic_sum_threshold && $iteration_count < $iteration_max) {
+                ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_original_hash_out, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $phenotype_data_hash, $analytics_select, $result_blup_data, undef, undef, $env_simulation, $genetic_effect_min, $genetic_effect_max, undef, undef);
+
+                $phenotype_data_hash = $phenotype_data_hash_out;
+            }
+            else {
+                $minimization_genetic_done = 1;
+            }
+
+            print STDERR "ITERATION $iteration_count\n";
+            $iteration_count++;
+        }
+    }
+    elsif ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
+        $statistical_ontology_term = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and row and column spatial effects computed using Sommer R|SGNSTAT:0000001"; #In the JS this is set to either the genetic or spatial BLUP term (Multivariate linear mixed model 2D spline spatial BLUPs using genetic relationship matrix and row and column spatial effects computed using Sommer R|SGNSTAT:0000003) when saving analysis results
+
+        $analysis_result_values_type = "analysis_result_values_match_accession_names";
+        $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_sommer_grm_spatial_genetic_blups_phenotype_file";
+
+        my @encoded_traits = values %trait_name_encoder;
+        my $encoded_trait_string = join ',', @encoded_traits;
+        my $number_traits = scalar(@encoded_traits);
+        my $cbind_string = $number_traits > 1 ? "cbind($encoded_trait_string)" : $encoded_trait_string;
+
+        while ( ($analytics_select eq 'minimize_genetic_effect' && !$minimization_genetic_done) || ($analytics_select eq 'minimize_local_env_effect' && !$minimization_env_done) ) {
+            $genetic_effect_min = 1000000000;
+            $genetic_effect_max = -1000000000;
+            $env_effect_min = 1000000000;
+            $env_effect_max = -1000000000;
+            $genetic_effect_sum = 0;
+            $env_effect_sum = 0;
+            $residual_sum = 0;
+
+            my $cmd = 'R -e "library(sommer); library(data.table); library(reshape2);
+            mat <- data.frame(fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\'));
+            geno_mat_3col <- data.frame(fread(\''.$grm_file.'\', header=FALSE, sep=\'\t\'));
+            geno_mat <- acast(geno_mat_3col, V1~V2, value.var=\'V3\');
+            geno_mat[is.na(geno_mat)] <- 0;
+            mat\$rowNumber <- as.numeric(mat\$rowNumber);
+            mat\$colNumber <- as.numeric(mat\$colNumber);
+            mat\$rowNumberFactor <- as.factor(mat\$rowNumberFactor);
+            mat\$colNumberFactor <- as.factor(mat\$colNumberFactor);
+            mix <- mmer('.$cbind_string.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
+            if (!is.null(mix\$U)) {
+            #gen_cor <- cov2cor(mix\$sigma\$\`u:id\`);
+            write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
+            write.table(mix\$U\$\`u:rowNumberFactor\`, file=\''.$stats_out_tempfile_row.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
+            write.table(mix\$U\$\`u:colNumberFactor\`, file=\''.$stats_out_tempfile_col.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
+            write.table(data.frame(plot_id = mix\$data\$plot_id, residuals = mix\$residuals, fitted = mix\$fitted), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+            X <- with(mat, spl2D(rowNumber, colNumber));
+            spatial_blup_results <- data.frame(plot_id = mat\$plot_id);
+            ';
+            my $trait_index = 1;
+            foreach my $enc_trait_name (@encoded_traits) {
+                $cmd .= '
+            blups'.$trait_index.' <- mix\$U\$\`u:rowNumber\`\$'.$enc_trait_name.';
+            spatial_blup_results\$'.$enc_trait_name.' <- data.matrix(X) %*% data.matrix(blups'.$trait_index.');
+                ';
+                $trait_index++;
+            }
+            $cmd .= 'write.table(spatial_blup_results, file=\''.$stats_out_tempfile_2dspl.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+            }
+            "';
+            # print STDERR Dumper $cmd;
+            eval {
+                my $status = system($cmd);
+            };
+            my $run_stats_fault = 0;
+            if ($@) {
+                print STDERR "R ERROR\n";
+                print STDERR Dumper $@;
+                $run_stats_fault = 1;
+            }
+            else {
+                my $current_gen_row_count = 0;
+                my $current_env_row_count = 0;
+
+                open(my $fh, '<', $stats_out_tempfile)
+                    or die "Could not open file '$stats_out_tempfile' $!";
+
+                    print STDERR "Opened $stats_out_tempfile\n";
+                    my $header = <$fh>;
+                    my @header_cols;
+                    if ($csv->parse($header)) {
+                        @header_cols = $csv->fields();
+                    }
+
+                    while (my $row = <$fh>) {
+                        my @columns;
+                        if ($csv->parse($row)) {
+                            @columns = $csv->fields();
+                        }
+                        my $col_counter = 0;
+                        foreach my $encoded_trait (@header_cols) {
+                            my $trait = $trait_name_encoder_rev{$encoded_trait};
+                            my $stock_id = $columns[0];
+
+                            my $stock_name = $stock_info{$stock_id}->{uniquename};
+                            my $value = $columns[$col_counter+1];
+                            if (defined $value && $value ne '') {
+                                $result_blup_data->{$stock_name}->{$trait} = [$value, $timestamp, $user_name, '', ''];
+
+                                if ($value < $genetic_effect_min) {
+                                    $genetic_effect_min = $value;
+                                }
+                                elsif ($value >= $genetic_effect_max) {
+                                    $genetic_effect_max = $value;
+                                }
+
+                                $genetic_effect_sum += abs($value);
+                            }
+                            $col_counter++;
+                        }
+                        $current_gen_row_count++;
+                    }
+                close($fh);
+
+                open(my $fh_2dspl, '<', $stats_out_tempfile_2dspl)
+                    or die "Could not open file '$stats_out_tempfile_2dspl' $!";
+
+                    print STDERR "Opened $stats_out_tempfile_2dspl\n";
+                    my $header_2dspl = <$fh_2dspl>;
+                    my @header_cols_2dspl;
+                    if ($csv->parse($header_2dspl)) {
+                        @header_cols_2dspl = $csv->fields();
+                    }
+                    shift @header_cols_2dspl;
+                    while (my $row_2dspl = <$fh_2dspl>) {
+                        my @columns;
+                        if ($csv->parse($row_2dspl)) {
+                            @columns = $csv->fields();
+                        }
+                        my $col_counter = 0;
+                        foreach my $encoded_trait (@header_cols_2dspl) {
+                            my $trait = $trait_name_encoder_rev{$encoded_trait};
+                            my $plot_id = $columns[0];
+
+                            my $plot_name = $plot_id_map{$plot_id};
+                            my $value = $columns[$col_counter+1];
+                            if (defined $value && $value ne '') {
+                                $result_blup_spatial_data->{$plot_name}->{$trait} = [$value, $timestamp, $user_name, '', ''];
+
+                                if ($value < $env_effect_min) {
+                                    $env_effect_min = $value;
+                                }
+                                elsif ($value >= $env_effect_max) {
+                                    $env_effect_max = $value;
+                                }
+
+                                $env_effect_sum += abs($value);
+                            }
+                            $col_counter++;
+                        }
+                        $current_env_row_count++;
+                    }
+                close($fh_2dspl);
+
+                open(my $fh_residual, '<', $stats_out_tempfile_residual)
+                    or die "Could not open file '$stats_out_tempfile_residual' $!";
+                
+                    print STDERR "Opened $stats_out_tempfile_residual\n";
+                    my $header_residual = <$fh_residual>;
+                    my @header_cols_residual;
+                    if ($csv->parse($header_residual)) {
+                        @header_cols_residual = $csv->fields();
+                    }
+                    while (my $row = <$fh_residual>) {
+                        my @columns;
+                        if ($csv->parse($row)) {
+                            @columns = $csv->fields();
+                        }
+
+                        my $stock_id = $columns[0];
+                        foreach (0..$number_traits-1) {
+                            my $trait_name = $sorted_trait_names[$_];
+                            my $residual = $columns[1 + $_];
+                            my $fitted = $columns[1 + $number_traits + $_];
+                            my $stock_name = $plot_id_map{$stock_id};
+                            if (defined $residual && $residual ne '') {
+                                $result_residual_data->{$stock_name}->{$trait_name} = [$residual, $timestamp, $user_name, '', ''];
+                                $residual_sum += abs($residual);
+                            }
+                            if (defined $fitted && $fitted ne '') {
+                                $result_fitted_data->{$stock_name}->{$trait_name} = [$fitted, $timestamp, $user_name, '', ''];
+                            }
+                        }
+                    }
+                close($fh_residual);
+
+                if ($current_env_row_count == 0 || $current_gen_row_count == 0) {
+                    $run_stats_fault = 1;
+                }
+            }
+
+            if ($run_stats_fault == 1) {
+                print STDERR "ERROR IN R CMD\n";
+                ($genetic_effect_sum, $env_effect_sum, $phenotype_data_original_hash_out, $phenotype_data_hash_out, $result_blup_data, $result_blup_spatial_data, $result_blup_pe_data) = _select_lowest_effects($analytics_select, $statistics_select, $result_blup_data_iterations, $result_blup_spatial_data_iterations, $result_blup_pe_data_iterations);
+            }
+            else {
+                push @result_effect_sum_iterations, [$iteration_count, $genetic_effect_sum, $env_effect_sum, $residual_sum];
+
+                my $result_blup_data_copy = dclone $result_blup_data;
+                my $result_blup_spatial_data_copy = dclone $result_blup_spatial_data;
+                my $result_residual_data_copy = dclone $result_residual_data;
+                my $result_fitted_data_copy = dclone $result_fitted_data;
+                my $phenotype_data_hash_out_copy = dclone $phenotype_data_hash_out;
+
+                $result_blup_data_iterations->{$genetic_effect_sum} = {
+                    env => $result_blup_spatial_data_copy,
+                    gen => $result_blup_data_copy,
+                    residual => $result_residual_data_copy,
+                    fitted => $result_fitted_data_copy,
+                    env_effect => $env_effect_sum,
+                    phenotype_data => $phenotype_data_hash_out_copy,
+                    phenotype_data_original => $phenotype_data_original_hash_out
+                };
+
+                $result_blup_spatial_data_iterations->{$env_effect_sum} = {
+                    env => $result_blup_spatial_data_copy,
+                    gen => $result_blup_data_copy,
+                    residual => $result_residual_data_copy,
+                    fitted => $result_fitted_data_copy,
+                    gen_effect => $genetic_effect_sum,
+                    phenotype_data => $phenotype_data_hash_out_copy,
+                    phenotype_data_original => $phenotype_data_original_hash_out
+                };
+            }
+
+            if ($iteration_count == 0) {
+                $result_blup_data_first = dclone $result_blup_data;
+                $result_blup_spatial_data_first = dclone $result_blup_spatial_data;
+            }
+
+            print STDERR "$statistics_select GENETIC EFFECT SUM $genetic_effect_sum\n";
+            print STDERR "$statistics_select ENV EFFECT SUM $env_effect_sum\n";
+
+            if ($analytics_select eq 'minimize_genetic_effect' && $genetic_effect_sum > $minimization_genetic_sum_threshold && $iteration_count < $iteration_max) {
+                ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_original_hash_out, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $phenotype_data_hash, $analytics_select, $result_blup_data, undef, undef, $env_simulation, $genetic_effect_min, $genetic_effect_max, undef, undef);
+
+                $phenotype_data_hash = $phenotype_data_hash_out;
+            }
+            else {
+                $minimization_genetic_done = 1;
+            }
+
+            if ($analytics_select eq 'minimize_local_env_effect' && $env_effect_sum > $minimization_env_sum_threshold && $iteration_count < $iteration_max) {
+                ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_original_hash_out, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $phenotype_data_hash, $analytics_select, undef, $result_blup_spatial_data, undef, $env_simulation, undef, undef, $env_effect_min, $env_effect_max);
+
+                $phenotype_data_hash = $phenotype_data_hash_out;
+            }
+            else {
+                $minimization_env_done = 1;
+            }
+
+            print STDERR "ITERATION $iteration_count\n";
+            $iteration_count++;
+        }
+    }
+    elsif ($statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups') {
+        $statistical_ontology_term = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using Sommer R|SGNSTAT:0000004"; #In the JS this is set to either the genetic of permanent environment BLUP term (Multivariate linear mixed model permanent environment BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using Sommer R|SGNSTAT:0000005) when saving results
+    
+        $analysis_result_values_type = "analysis_result_values_match_accession_names";
+
+        if ($statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups') {
+            $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_sommer_grm_temporal_leg_random_regression_DAP_genetic_blups_phenotype_file";
+        }
+        elsif ($statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups') {
+            $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_sommer_grm_temporal_leg_random_regression_GDD_genetic_blups_phenotype_file";
+        }
+
+        while ( ($analytics_select eq 'minimize_genetic_effect' && !$minimization_genetic_done) || ($analytics_select eq 'minimize_local_env_effect' && !$minimization_env_done) ) {
+            $genetic_effect_min = 1000000000;
+            $genetic_effect_max = -1000000000;
+            $env_effect_min = 1000000000;
+            $env_effect_max = -1000000000;
+            $genetic_effect_sum = 0;
+            $env_effect_sum = 0;
+            $residual_sum = 0;
+            my $result_blup_data_delta = {};
+            my $result_blup_pe_data_delta = {};
+
+            my $cmd = 'R -e "library(sommer); library(data.table); library(reshape2); library(orthopolynom);
+            mat <- fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\', check.names = FALSE);
+            geno_mat_3col <- data.frame(fread(\''.$grm_file.'\', header=FALSE, sep=\'\t\'));
+            geno_mat <- acast(geno_mat_3col, V1~V2, value.var=\'V3\');
+            geno_mat[is.na(geno_mat)] <- 0;
+            mat_long <- melt(mat, id.vars=c(\'replicate\', \'block\', \'id\', \'plot_id\', \'rowNumber\', \'colNumber\', \'rowNumberFactor\', \'colNumberFactor\'), variable.name=\'time\', value.name=\'value\');
+            mat_long\$time <- as.numeric(as.character(mat_long\$time));
+            mat_long <- mat_long[order(time),];
+            mat\$rowNumber <- as.numeric(mat\$rowNumber);
+            mat\$colNumber <- as.numeric(mat\$colNumber);
+            mat\$rowNumberFactor <- as.factor(mat\$rowNumberFactor);
+            mat\$colNumberFactor <- as.factor(mat\$colNumberFactor);
+            mix <- mmer(
+                value~1 + replicate,
+                random=~vs(id, Gu=geno_mat) +vs(leg(time,'.$legendre_order_number.', intercept=TRUE), id) +vs(leg(time,'.$legendre_order_number.', intercept=TRUE), plot_id),
+                rcov=~vs(units),
+                data=mat_long, tolparinv='.$tolparinv.'
+            );
+            if (!is.null(mix\$U)) {
+            write.table(data.frame(plot_id = mix\$data\$plot_id, time = mix\$data\$time, residuals = mix\$residuals, fitted = mix\$fitted), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+            write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
+            genetic_coeff <- data.frame(id = names(mix\$U\$\`leg0:id\`\$value));
+            pe_coeff <- data.frame(plot_id = names(mix\$U\$\`leg0:plot_id\`\$value));';
+            for my $leg_num (0..$legendre_order_number) {
+                $cmd .= 'genetic_coeff\$leg_'.$leg_num.' <- mix\$U\$\`leg'.$leg_num.':id\`\$value;';
+            }
+            for my $leg_num (0..$legendre_order_number) {
+                $cmd .= 'pe_coeff\$leg_'.$leg_num.' <- mix\$U\$\`leg'.$leg_num.':plot_id\`\$value;';
+            }
+            $cmd .= 'write.table(genetic_coeff, file=\''.$stats_out_tempfile_genetic.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+                write.table(pe_coeff, file=\''.$stats_out_tempfile_permanent_environment.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');"
+            }
+            ';
+            print STDERR Dumper $cmd;
+            my $status = system($cmd);
+
+            # no warnings 'uninitialized';
+
+            open(my $fh_genetic, '<', $stats_out_tempfile_genetic)
+                or die "Could not open file '$stats_out_tempfile_genetic' $!";
+
+                print STDERR "Opened $stats_out_tempfile_genetic\n";
+                my $header = <$fh_genetic>;
+                my @header_cols;
+                if ($csv->parse($header)) {
+                    @header_cols = $csv->fields();
+                }
+
+                while (my $row = <$fh_genetic>) {
+                    my @columns;
+                    if ($csv->parse($row)) {
+                        @columns = $csv->fields();
+                    }
+
+                    my $accession_id = $columns[0];
+                    my $accession_name = $stock_info{$accession_id}->{uniquename};
+                    $unique_accessions_seen{$accession_name}++;
+
+                    my $col_counter = 1;
+                    foreach (0..$legendre_order_number) {
+                        my $value = $columns[$col_counter];
+                        if (defined $value && $value ne '') {
+                            push @{$sommer_rr_genetic_coeff{$accession_name}}, $value;
+                        }
+                        $col_counter++;
+                    }
+                }
+            close($fh_genetic);
+
+            open(my $fh, '<', $stats_out_tempfile_permanent_environment)
+                or die "Could not open file '$stats_out_tempfile_permanent_environment' $!";
+            
+                print STDERR "Opened $stats_out_tempfile_permanent_environment\n";
+                $header = <$fh>;
+                if ($csv->parse($header)) {
+                    @header_cols = $csv->fields();
+                }
+
+                my $row_counter = 0;
+                while (my $row = <$fh>) {
+                    my @columns;
+                    if ($csv->parse($row)) {
+                        @columns = $csv->fields();
+                    }
+
+                    my $plot_id = $columns[0];
+                    my $plot_name = $plot_id_map{$plot_id};
+
+                    my $col_counter = 1;
+                    foreach (0..$legendre_order_number) {
+                        my $value = $columns[$col_counter];
+                        if (defined $value && $value ne '') {
+                            push @{$sommer_rr_temporal_coeff{$plot_name}}, $value;
+                        }
+                        $col_counter++;
+                    }
+                    $row_counter++;
+                }
+            close($fh);
+
+            open(my $fh_residual, '<', $stats_out_tempfile_residual)
+                or die "Could not open file '$stats_out_tempfile_residual' $!";
+            
+                print STDERR "Opened $stats_out_tempfile_residual\n";
+                my $header_residual = <$fh_residual>;
+                my @header_cols_residual;
+                if ($csv->parse($header_residual)) {
+                    @header_cols_residual = $csv->fields();
+                }
+            
+                while (my $row = <$fh_residual>) {
+                    my @columns;
+                    if ($csv->parse($row)) {
+                        @columns = $csv->fields();
+                    }
+
+                    my $stock_id = $columns[0];
+                    my $time = $columns[1];
+                    my $residual = $columns[2];
+                    my $fitted = $columns[3];
+                    my $stock_name = $plot_id_map{$stock_id};
+                    if (defined $residual && $residual ne '') {
+                        $result_residual_data->{$stock_name}->{$seen_times{$time}} = [$residual, $timestamp, $user_name, '', ''];
+                        $residual_sum += abs($residual);
+                    }
+                    if (defined $fitted && $fitted ne '') {
+                        $result_fitted_data->{$stock_name}->{$seen_times{$time}} = [$fitted, $timestamp, $user_name, '', ''];
+                    }
+                }
+            close($fh_residual);
+
+            my $q_time = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
+            my $h_time = $schema->storage->dbh()->prepare($q_time);
+
+            open(my $Fgc, ">", $coeff_genetic_tempfile) || die "Can't open file ".$coeff_genetic_tempfile;
+
+            while ( my ($accession_name, $coeffs) = each %sommer_rr_genetic_coeff) {
+                my @line = ($accession_name, @$coeffs);
+                my $line_string = join ',', @line;
+                print $Fgc "$line_string\n";
+
+                foreach my $t_i (0..20) {
+                    my $time = $t_i*5/100;
+                    my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
+
+                    my $value = 0;
+                    my $coeff_counter = 0;
+                    foreach my $b (@$coeffs) {
+                        my $eval_string = $legendre_coeff_exec[$coeff_counter];
+                        # print STDERR Dumper [$eval_string, $b, $time];
+                        $value += eval $eval_string;
+                        $coeff_counter++;
+                    }
+
+                    my $time_term_string = '';
+                    if ($statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups') {
+                        $time_term_string = "GDD $time_rescaled";
+                    }
+                    elsif ($statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups') {
+                        $time_term_string = "day $time_rescaled"
+                    }
+                    $h_time->execute($time_term_string, 'cxgn_time_ontology');
+                    my ($time_cvterm_id) = $h_time->fetchrow_array();
+
+                    if (!$time_cvterm_id) {
+                        my $new_time_term = $schema->resultset("Cv::Cvterm")->create_with({
+                           name => $time_term_string,
+                           cv => 'cxgn_time_ontology'
+                        });
+                        $time_cvterm_id = $new_time_term->cvterm_id();
+                    }
+                    my $time_term_string_blup = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $time_cvterm_id, 'extended');
+                    $rr_unique_traits{$time_term_string_blup}++;
+
+                    $result_blup_data->{$accession_name}->{$time_term_string_blup} = [$value, $timestamp, $user_name, '', ''];
+                }
+            }
+            close($Fgc);
+
+            while ( my ($accession_name, $coeffs) = each %sommer_rr_genetic_coeff) {
+                foreach my $time (@sorted_trait_names) {
+                    my $value = 0;
+                    my $coeff_counter = 0;
+                    foreach my $b (@$coeffs) {
+                        my $eval_string = $legendre_coeff_exec[$coeff_counter];
+                        # print STDERR Dumper [$eval_string, $b, $time];
+                        $value += eval $eval_string;
+                        $coeff_counter++;
+                    }
+
+                    $result_blup_data_delta->{$accession_name}->{$time} = [$value, $timestamp, $user_name, '', ''];
+
+                    if ($value < $genetic_effect_min) {
+                        $genetic_effect_min = $value;
+                    }
+                    elsif ($value >= $genetic_effect_max) {
+                        $genetic_effect_max = $value;
+                    }
+
+                    $genetic_effect_sum += abs($value);
+                }
+            }
+
+            open(my $Fpc, ">", $coeff_pe_tempfile) || die "Can't open file ".$coeff_pe_tempfile;
+
+            while ( my ($plot_name, $coeffs) = each %sommer_rr_temporal_coeff) {
+                my @line = ($plot_name, @$coeffs);
+                my $line_string = join ',', @line;
+                print $Fpc "$line_string\n";
+
+                foreach my $t_i (0..20) {
+                    my $time = $t_i*5/100;
+                    my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
+
+                    my $value = 0;
+                    my $coeff_counter = 0;
+                    foreach my $b (@$coeffs) {
+                        my $eval_string = $legendre_coeff_exec[$coeff_counter];
+                        # print STDERR Dumper [$eval_string, $b, $time];
+                        $value += eval $eval_string;
+                        $coeff_counter++;
+                    }
+
+                    my $time_term_string = '';
+                    if ($statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups') {
+                        $time_term_string = "GDD $time_rescaled";
+                    }
+                    elsif ($statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups') {
+                        $time_term_string = "day $time_rescaled"
+                    }
+                    $h_time->execute($time_term_string, 'cxgn_time_ontology');
+                    my ($time_cvterm_id) = $h_time->fetchrow_array();
+
+                    if (!$time_cvterm_id) {
+                        my $new_time_term = $schema->resultset("Cv::Cvterm")->create_with({
+                           name => $time_term_string,
+                           cv => 'cxgn_time_ontology'
+                        });
+                        $time_cvterm_id = $new_time_term->cvterm_id();
+                    }
+                    my $time_term_string_pe = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $time_cvterm_id, 'extended');
+                    $rr_unique_traits{$time_term_string_pe}++;
+
+                    $result_blup_pe_data->{$plot_name}->{$time_term_string_pe} = [$value, $timestamp, $user_name, '', ''];
+                }
+            }
+            close($Fpc);
+
+            while ( my ($plot_name, $coeffs) = each %sommer_rr_temporal_coeff) {
+                foreach my $time (@sorted_trait_names) {
+                    my $value = 0;
+                    my $coeff_counter = 0;
+                    foreach my $b (@$coeffs) {
+                        my $eval_string = $legendre_coeff_exec[$coeff_counter];
+                        # print STDERR Dumper [$eval_string, $b, $time];
+                        $value += eval $eval_string;
+                        $coeff_counter++;
+                    }
+
+                    $result_blup_pe_data_delta->{$plot_name}->{$time} = [$value, $timestamp, $user_name, '', ''];
+
+                    if ($value < $env_effect_min) {
+                        $env_effect_min = $value;
+                    }
+                    elsif ($value >= $env_effect_max) {
+                        $env_effect_max = $value;
+                    }
+
+                    $env_effect_sum += abs($value);
+                }
+            }
+
+            push @result_effect_sum_iterations, [$iteration_count, $genetic_effect_sum, $env_effect_sum, $residual_sum];
+
+            my $result_blup_data_delta_copy = dclone $result_blup_data_delta;
+            my $result_blup_pe_data_delta_copy = dclone $result_blup_pe_data_delta;
+            my $result_residual_data_copy = dclone $result_residual_data;
+            my $result_fitted_data_copy = dclone $result_fitted_data;
+            my $phenotype_data_hash_out_copy = dclone $phenotype_data_hash_out;
+
+            $result_blup_data_iterations->{$genetic_effect_sum} = {
+                env => $result_blup_pe_data_delta_copy,
+                gen => $result_blup_data_delta_copy,
+                residual => $result_residual_data_copy,
+                fitted => $result_fitted_data_copy,
+                env_effect => $env_effect_sum,
+                phenotype_data => $phenotype_data_hash_out_copy,
+                phenotype_data_original => $phenotype_data_original_hash_out
+            };
+            $result_blup_pe_data_iterations->{$env_effect_sum} = {
+                env => $result_blup_pe_data_delta_copy,
+                gen => $result_blup_data_delta_copy,
+                residual => $result_residual_data_copy,
+                fitted => $result_fitted_data_copy,
+                gen_effect => $genetic_effect_sum,
+                phenotype_data => $phenotype_data_hash_out_copy,
+                phenotype_data_original => $phenotype_data_original_hash_out
+            };
+
+            if ($iteration_count == 0) {
+                $result_blup_data_first = dclone $result_blup_data_delta;
+                $result_blup_pe_data_first = dclone $result_blup_pe_data_delta;
+            }
+
+            print STDERR "$statistics_select GENETIC EFFECT SUM $genetic_effect_sum\n";
+
+            if ($analytics_select eq 'minimize_genetic_effect' && $genetic_effect_sum > $minimization_genetic_sum_threshold && $iteration_count < $iteration_max) {
+                ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_original_hash_out, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $phenotype_data_hash, $analytics_select, $result_blup_data_delta, undef, undef, $env_simulation, $genetic_effect_min, $genetic_effect_max, undef, undef);
+
+                $phenotype_data_hash = $phenotype_data_hash_out;
+            }
+            else {
+                $minimization_genetic_done = 1;
+            }
+
+            print STDERR "$statistics_select ENV EFFECT SUM $env_effect_sum\n";
+
+            if ($analytics_select eq 'minimize_local_env_effect' && $env_effect_sum > $minimization_env_sum_threshold && $iteration_count < $iteration_max) {
+                ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_original_hash_out, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $phenotype_data_hash, $analytics_select, undef, undef, $result_blup_pe_data_delta, $env_simulation, undef, undef, $env_effect_min, $env_effect_max);
+
+                $phenotype_data_hash = $phenotype_data_hash_out;
+            }
+            else {
+                $minimization_env_done = 1;
+            }
+
+            print STDERR "ITERATION $iteration_count\n";
+            $iteration_count++;
+        }
+
+        @sorted_trait_names = sort keys %rr_unique_traits;
+    }
+    elsif ($statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups') {
+        $statistical_ontology_term = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using Sommer R|SGNSTAT:0000004";
+    
+        $analysis_result_values_type = "analysis_result_values_match_accession_names";
+
+        if ($statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups') {
+            $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_sommer_grm_genetic_leg_random_regression_DAP_genetic_blups_phenotype_file";
+        }
+        elsif ($statistics_select eq 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups') {
+            $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_sommer_grm_genetic_leg_random_regression_GDD_genetic_blups_phenotype_file";
+        }
+
+        while ( ($analytics_select eq 'minimize_genetic_effect' && !$minimization_genetic_done) || ($analytics_select eq 'minimize_local_env_effect' && !$minimization_env_done) ) {
+            $genetic_effect_min = 1000000000;
+            $genetic_effect_max = -1000000000;
+            $genetic_effect_sum = 0;
+            $env_effect_sum = 0;
+            $residual_sum = 0;
+            my $result_blup_data_delta = {};
+
+            my $cmd = 'R -e "library(sommer); library(data.table); library(reshape2); library(orthopolynom);
+            mat <- fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\', check.names = FALSE);
+            geno_mat_3col <- data.frame(fread(\''.$grm_file.'\', header=FALSE, sep=\'\t\'));
+            geno_mat <- acast(geno_mat_3col, V1~V2, value.var=\'V3\');
+            geno_mat[is.na(geno_mat)] <- 0;
+            mat_long <- melt(mat, id.vars=c(\'replicate\', \'block\', \'id\', \'plot_id\', \'rowNumber\', \'colNumber\', \'rowNumberFactor\', \'colNumberFactor\'), variable.name=\'time\', value.name=\'value\');
+            mat_long\$time <- as.numeric(as.character(mat_long\$time));
+            mat_long <- mat_long[order(time),];
+            mat\$rowNumber <- as.numeric(mat\$rowNumber);
+            mat\$colNumber <- as.numeric(mat\$colNumber);
+            mat\$rowNumberFactor <- as.factor(mat\$rowNumberFactor);
+            mat\$colNumberFactor <- as.factor(mat\$colNumberFactor);
+            mix <- mmer(
+                value~1 + replicate,
+                random=~vs(id, Gu=geno_mat) +vs(leg(time,'.$legendre_order_number.', intercept=TRUE), id),
+                rcov=~vs(units),
+                data=mat_long, tolparinv='.$tolparinv.'
+            );
+            if (!is.null(mix\$U)) {
+            write.table(data.frame(plot_id = mix\$data\$plot_id, time = mix\$data\$time, residuals = mix\$residuals, fitted = mix\$fitted), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+            write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
+            genetic_coeff <- data.frame(id = names(mix\$U\$\`leg0:id\`\$value));';
+            for my $leg_num (0..$legendre_order_number) {
+                $cmd .= 'genetic_coeff\$leg_'.$leg_num.' <- mix\$U\$\`leg'.$leg_num.':id\`\$value;';
+            }
+            $cmd .= 'write.table(genetic_coeff, file=\''.$stats_out_tempfile_genetic.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');"
+            }
+            ';
+            print STDERR Dumper $cmd;
+            my $status = system($cmd);
+
+            # no warnings 'uninitialized';
+
+            open(my $fh_genetic, '<', $stats_out_tempfile_genetic)
+                or die "Could not open file '$stats_out_tempfile_genetic' $!";
+
+                print STDERR "Opened $stats_out_tempfile_genetic\n";
+                my $header = <$fh_genetic>;
+                my @header_cols;
+                if ($csv->parse($header)) {
+                    @header_cols = $csv->fields();
+                }
+
+                while (my $row = <$fh_genetic>) {
+                    my @columns;
+                    if ($csv->parse($row)) {
+                        @columns = $csv->fields();
+                    }
+
+                    my $accession_id = $columns[0];
+                    my $accession_name = $stock_info{$accession_id}->{uniquename};
+                    $unique_accessions_seen{$accession_name}++;
+
+                    my $col_counter = 1;
+                    foreach (0..$legendre_order_number) {
+                        my $value = $columns[$col_counter];
+                        if (defined $value && $value ne '') {
+                            push @{$sommer_rr_genetic_coeff{$accession_name}}, $value;
+                        }
+                        $col_counter++;
+                    }
+                }
+            close($fh_genetic);
+
+            # print STDERR Dumper \%sommer_rr_genetic_coeff;
+
+            open(my $fh_residual, '<', $stats_out_tempfile_residual)
+                or die "Could not open file '$stats_out_tempfile_residual' $!";
+            
+                print STDERR "Opened $stats_out_tempfile_residual\n";
+                my $header_residual = <$fh_residual>;
+                my @header_cols_residual;
+                if ($csv->parse($header_residual)) {
+                    @header_cols_residual = $csv->fields();
+                }
+            
+                while (my $row = <$fh_residual>) {
+                    my @columns;
+                    if ($csv->parse($row)) {
+                        @columns = $csv->fields();
+                    }
+
+                    my $stock_id = $columns[0];
+                    my $time = $columns[1];
+                    my $residual = $columns[2];
+                    my $fitted = $columns[3];
+                    my $stock_name = $plot_id_map{$stock_id};
+                    if (defined $residual && $residual ne '') {
+                        $result_residual_data->{$stock_name}->{$seen_times{$time}} = [$residual, $timestamp, $user_name, '', ''];
+                        $residual_sum += abs($residual);
+                    }
+                    if (defined $fitted && $fitted ne '') {
+                        $result_fitted_data->{$stock_name}->{$seen_times{$time}} = [$fitted, $timestamp, $user_name, '', ''];
+                    }
+                }
+            close($fh_residual);
+
+            my $q_time = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
+            my $h_time = $schema->storage->dbh()->prepare($q_time);
+
+            open(my $Fgc, ">", $coeff_genetic_tempfile) || die "Can't open file ".$coeff_genetic_tempfile;
+
+            while ( my ($accession_name, $coeffs) = each %sommer_rr_genetic_coeff) {
+                my @line = ($accession_name, @$coeffs);
+                my $line_string = join ',', @line;
+                print $Fgc "$line_string\n";
+
+                foreach my $t_i (0..20) {
+                    my $time = $t_i*5/100;
+                    my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
+
+                    my $value = 0;
+                    my $coeff_counter = 0;
+                    foreach my $b (@$coeffs) {
+                        my $eval_string = $legendre_coeff_exec[$coeff_counter];
+                        # print STDERR Dumper [$eval_string, $b, $time];
+                        $value += eval $eval_string;
+                        $coeff_counter++;
+                    }
+
+                    my $time_term_string = '';
+                    if ($statistics_select eq 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups') {
+                        $time_term_string = "GDD $time_rescaled";
+                    }
+                    elsif ($statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups') {
+                        $time_term_string = "day $time_rescaled"
+                    }
+                    $h_time->execute($time_term_string, 'cxgn_time_ontology');
+                    my ($time_cvterm_id) = $h_time->fetchrow_array();
+
+                    if (!$time_cvterm_id) {
+                        my $new_time_term = $schema->resultset("Cv::Cvterm")->create_with({
+                           name => $time_term_string,
+                           cv => 'cxgn_time_ontology'
+                        });
+                        $time_cvterm_id = $new_time_term->cvterm_id();
+                    }
+                    my $time_term_string_blup = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $time_cvterm_id, 'extended');
+                    $rr_unique_traits{$time_term_string_blup}++;
+
+                    $result_blup_data->{$accession_name}->{$time_term_string_blup} = [$value, $timestamp, $user_name, '', ''];
+                }
+            }
+            close($Fgc);
+
+            while ( my ($accession_name, $coeffs) = each %sommer_rr_genetic_coeff) {
+                foreach my $time (@sorted_trait_names) {
+                    my $value = 0;
+                    my $coeff_counter = 0;
+                    foreach my $b (@$coeffs) {
+                        my $eval_string = $legendre_coeff_exec[$coeff_counter];
+                        # print STDERR Dumper [$eval_string, $b, $time];
+                        $value += eval $eval_string;
+                        $coeff_counter++;
+                    }
+
+                    $result_blup_data_delta->{$accession_name}->{$time} = [$value, $timestamp, $user_name, '', ''];
+
+                    if ($value < $genetic_effect_min) {
+                        $genetic_effect_min = $value;
+                    }
+                    elsif ($value >= $genetic_effect_max) {
+                        $genetic_effect_max = $value;
+                    }
+
+                    $genetic_effect_sum += abs($value);
+                }
+            }
+
+            push @result_effect_sum_iterations, [$iteration_count, $genetic_effect_sum, $env_effect_sum, $residual_sum];
+
+            my $result_blup_data_delta_copy = dclone $result_blup_data_delta;
+            my $result_residual_data_copy = dclone $result_residual_data;
+            my $result_fitted_data_copy = dclone $result_fitted_data;
+            my $phenotype_data_hash_out_copy = dclone $phenotype_data_hash_out;
+
+            $result_blup_data_iterations->{$genetic_effect_sum} = {
+                gen => $result_blup_data_delta_copy,
+                residual => $result_residual_data_copy,
+                fitted => $result_fitted_data_copy,
+                phenotype_data => $phenotype_data_hash_out_copy,
+                phenotype_data_original => $phenotype_data_original_hash_out
+            };
+
+            if ($iteration_count == 0) {
+                $result_blup_data_first = dclone $result_blup_data_delta;
+            }
+
+            print STDERR "$statistics_select GENETIC EFFECT SUM $genetic_effect_sum\n";
+
+            if ($analytics_select eq 'minimize_genetic_effect' && $genetic_effect_sum > $minimization_genetic_sum_threshold && $iteration_count < $iteration_max) {
+                ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_original_hash_out, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $phenotype_data_hash, $analytics_select, $result_blup_data_delta, undef, undef, $env_simulation, $genetic_effect_min, $genetic_effect_max, undef, undef);
+
+                $phenotype_data_hash = $phenotype_data_hash_out;
+            }
+            else {
+                $minimization_genetic_done = 1;
+            }
+
+            print STDERR "ITERATION $iteration_count\n";
+            $iteration_count++;
+        }
+
+        @sorted_trait_names = sort keys %rr_unique_traits;
+    }
+    elsif ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+
+        $analysis_model_language = "F90";
+
+        $statistical_ontology_term = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using Sommer R|SGNSTAT:0000004"; #In the JS this is set to either the genetic of permanent environment BLUP term (Multivariate linear mixed model permanent environment BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using Sommer R|SGNSTAT:0000005) when saving results
+    
+        $analysis_result_values_type = "analysis_result_values_match_accession_names";
+
+        if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups') {
+            $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_blupf90_grm_temporal_leg_random_regression_GDD_genetic_blups_phenotype_file";
+        }
+        elsif ($statistics_select eq 'blupf90_grm_random_regression_dap_blups') {
+            $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_blupf90_grm_temporal_leg_random_regression_DAP_genetic_blups_phenotype_file";
+        }
+        elsif ($statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
+            $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_airemlf90_grm_temporal_leg_random_regression_GDD_genetic_blups_phenotype_file";
+        }
+        elsif ($statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+            $analysis_model_training_data_file_type = "nicksmixedmodels_v1.01_airemlf90_grm_temporal_leg_random_regression_DAP_genetic_blups_phenotype_file";
+        }
+
+        my $pheno_var_pos = $legendre_order_number+1;
+
+        while ( ($analytics_select eq 'minimize_genetic_effect' && !$minimization_genetic_done) || ($analytics_select eq 'minimize_local_env_effect' && !$minimization_env_done) ) {
+            $genetic_effect_min = 1000000000;
+            $genetic_effect_max = -1000000000;
+            $env_effect_min = 1000000000;
+            $env_effect_max = -1000000000;
+            $genetic_effect_sum = 0;
+            $env_effect_sum = 0;
+            $residual_sum = 0;
+            my $result_blup_pe_data_delta = {};
+            my $result_blup_data_delta = {};
+
+            my $cmd_r = 'R -e "
+                pheno <- read.csv(\''.$stats_prep2_tempfile.'\', header=FALSE, sep=\',\');
+                v <- var(pheno);
+                v <- v[1:'.$pheno_var_pos.', 1:'.$pheno_var_pos.'];
+                #v <- matrix(rep(0.1, '.$pheno_var_pos.'*'.$pheno_var_pos.'), nrow = '.$pheno_var_pos.');
+                #diag(v) <- rep(1, '.$pheno_var_pos.');
+                write.table(v, file=\''.$stats_out_param_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');
+            "';
+            print STDERR Dumper $cmd_r;
+            my $status_r = system($cmd_r);
+
+            my @pheno_var;
+            open(my $fh_r, '<', $stats_out_param_tempfile)
+                or die "Could not open file '$stats_out_param_tempfile' $!";
+                print STDERR "Opened $stats_out_param_tempfile\n";
+
+                while (my $row = <$fh_r>) {
+                    my @columns;
+                    if ($csv->parse($row)) {
+                        @columns = $csv->fields();
+                    }
+                    push @pheno_var, \@columns;
+                }
+            close($fh_r);
+            # print STDERR Dumper \@pheno_var;
+
+            my @grm_old;
+            open(my $fh_grm_old, '<', $grm_file)
+                or die "Could not open file '$grm_file' $!";
+                print STDERR "Opened $grm_file\n";
+
+                while (my $row = <$fh_grm_old>) {
+                    my @columns;
+                    if ($csv->parse($row)) {
+                        @columns = $csv->fields();
+                    }
+                    push @grm_old, \@columns;
+                }
+            close($fh_grm_old);
+
+            my %grm_hash_ordered;
+            foreach (@grm_old) {
+                my $l1 = $accession_id_factor_map{$_->[0]};
+                my $l2 = $accession_id_factor_map{$_->[1]};
+                my $val = sprintf("%.8f", $_->[2]);
+                if ($l1 < $l2) {
+                    $grm_hash_ordered{$l1}->{$l2} = $val;
+                }
+                else {
+                    $grm_hash_ordered{$l2}->{$l1} = $val;
+                }
+            }
+
+            open(my $fh_grm_new, '>', $grm_rename_tempfile)
+                or die "Could not open file '$grm_rename_tempfile' $!";
+                print STDERR "Opened $grm_rename_tempfile\n";
+
+                foreach my $i (sort keys %grm_hash_ordered) {
+                    my $v = $grm_hash_ordered{$i};
+                    foreach my $j (sort keys %$v) {
+                        my $val = $v->{$j};
+                        print $fh_grm_new "$i $j $val\n";
+                    }
+                }
+            close($fh_grm_new);
+
+            my $stats_tempfile_2_basename = basename($stats_tempfile_2);
+            my $grm_file_basename = basename($grm_rename_tempfile);
+            my $permanent_environment_structure_file_basename = basename($permanent_environment_structure_tempfile);
+            #my @phenotype_header = ("id", "plot_id", "replicate", "time", "replicate_time", "ind_replicate", @sorted_trait_names, "phenotype");
+
+            my $effect_1_levels = scalar(@rep_time_factors);
+            my $effect_grm_levels = scalar(@unique_accession_names);
+            my $effect_pe_levels = scalar(@ind_rep_factors);
+
+            my @param_file_rows = (
+                'DATAFILE',
+                $stats_tempfile_2_basename,
+                'NUMBER_OF_TRAITS',
+                '1',
+                'NUMBER_OF_EFFECTS',
+                ($legendre_order_number + 1)*2 + 1,
+                'OBSERVATION(S)',
+                $legendre_order_number + 1 + 6 + 1,
+                'WEIGHT(S)',
+                '',
+                'EFFECTS: POSITION_IN_DATAFILE NUMBER_OF_LEVELS TYPE_OF_EFFECT',
+                '5 '.$effect_1_levels.' cross',
+            );
+            my $p_counter = 1;
+            foreach (0 .. $legendre_order_number) {
+                push @param_file_rows, 6+$p_counter.' '.$effect_grm_levels.' cov 1';
+                $p_counter++;
+            }
+            my $p2_counter = 1;
+            my @hetres_group;
+            foreach (0 .. $legendre_order_number) {
+                push @param_file_rows, 6+$p2_counter.' '.$effect_pe_levels.' cov 6';
+                push @hetres_group, 6+$p2_counter;
+                $p2_counter++;
+            }
+            my @random_group1;
+            foreach (1..$legendre_order_number+1) {
+                push @random_group1, 1+$_;
+            }
+            my $random_group_string1 = join ' ', @random_group1;
+            my @random_group2;
+            foreach (1..$legendre_order_number+1) {
+                push @random_group2, 1+scalar(@random_group1)+$_;
+            }
+            my $random_group_string2 = join ' ', @random_group2;
+            my $hetres_group_string = join ' ', @hetres_group;
+            push @param_file_rows, (
+                'RANDOM_RESIDUAL VALUES',
+                '1',
+                'RANDOM_GROUP',
+                $random_group_string1,
+                'RANDOM_TYPE',
+                'user_file_inv',
+                'FILE',
+                $grm_file_basename,
+                '(CO)VARIANCES'
+            );
+            foreach (@pheno_var) {
+                my $s = join ' ', @$_;
+                push @param_file_rows, $s;
+            }
+            push @param_file_rows, (
+                'RANDOM_GROUP',
+                $random_group_string2,
+                'RANDOM_TYPE'
+            );
+
+            if ($permanent_environment_structure eq 'identity') {
+                push @param_file_rows, (
+                    'diagonal',
+                    'FILE',
+                    ''
+                );
+            }
+            elsif ($permanent_environment_structure eq 'euclidean_rows_and_columns') {
+                push @param_file_rows, (
+                    'user_file_inv',
+                    'FILE',
+                    $permanent_environment_structure_file_basename
+                );
+            }
+
+            push @param_file_rows, (
+                '(CO)VARIANCES'
+            );
+            foreach (@pheno_var) {
+                my $s = join ' ', @$_;
+                push @param_file_rows, $s;
+            }
+            my $hetres_pol_string = join ' ', @sorted_scaled_ln_times;
+            push @param_file_rows, (
+                'OPTION hetres_pos '.$hetres_group_string,
+                'OPTION hetres_pol '.$hetres_pol_string,
+                'OPTION conv_crit '.$tolparinv,
+                'OPTION residual',
+            );
+
+            open(my $Fp, ">", $parameter_tempfile) || die "Can't open file ".$parameter_tempfile;
+                foreach (@param_file_rows) {
+                    print $Fp "$_\n";
+                }
+            close($Fp);
+
+            my $command_name = '';
+            if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups') {
+                $command_name = 'blupf90';
+            }
+            elsif ($statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+                $command_name = 'airemlf90';
+            }
+
+            my $parameter_tempfile_basename = basename($parameter_tempfile);
+            $stats_out_tempfile .= '.log';
+            my $cmd = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_basename.' | '.$command_name.' > '.$stats_out_tempfile;
+            print STDERR Dumper $cmd;
+            my $status = system($cmd);
+
+            open(my $fh_log, '<', $stats_out_tempfile)
+                or die "Could not open file '$stats_out_tempfile' $!";
+
+                print STDERR "Opened $stats_out_tempfile\n";
+                while (my $row = <$fh_log>) {
+                    print STDERR $row;
+                }
+            close($fh_log);
+
+            my $q_time = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
+            my $h_time = $schema->storage->dbh()->prepare($q_time);
+
+            my $sum_square_res = 0;
+            $yhat_residual_tempfile = $tmp_stats_dir."/yhat_residual";
+            open(my $fh_yhat_res, '<', $yhat_residual_tempfile)
+                or die "Could not open file '$yhat_residual_tempfile' $!";
+                print STDERR "Opened $yhat_residual_tempfile\n";
+
+                my $pred_res_counter = 0;
+                my $trait_counter = 0;
+                while (my $row = <$fh_yhat_res>) {
+                    # print STDERR $row;
+                    my @vals = split ' ', $row;
+                    my $pred = $vals[0];
+                    my $residual = $vals[1];
+                    $sum_square_res = $sum_square_res + $residual*$residual;
+
+                    my $plot_name = $plot_id_count_map_reverse{$pred_res_counter};
+                    my $time = $time_count_map_reverse{$pred_res_counter};
+
+                    $rr_residual_unique_traits{$seen_times{$time}}++;
+
+                    if (defined $residual && $residual ne '') {
+                        $result_residual_data->{$plot_name}->{$seen_times{$time}} = [$residual, $timestamp, $user_name, '', ''];
+                        $residual_sum += abs($residual);
+                    }
+                    if (defined $pred && $pred ne '') {
+                        $result_fitted_data->{$plot_name}->{$seen_times{$time}} = [$pred, $timestamp, $user_name, '', ''];
+                    }
+
+                    $pred_res_counter++;
+                }
+            close($fh_yhat_res);
+            $model_sum_square_residual = $sum_square_res;
+
+            $blupf90_solutions_tempfile = $tmp_stats_dir."/solutions";
+            open(my $fh_sol, '<', $blupf90_solutions_tempfile)
+                or die "Could not open file '$blupf90_solutions_tempfile' $!";
+                print STDERR "Opened $blupf90_solutions_tempfile\n";
+
+                my $head = <$fh_sol>;
+                print STDERR $head;
+
+                my $solution_file_counter = 0;
+                my $grm_sol_counter = 0;
+                my $grm_sol_trait_counter = 0;
+                my $pe_sol_counter = 0;
+                my $pe_sol_trait_counter = 0;
+                while (defined(my $row = <$fh_sol>)) {
+                    # print STDERR $row;
+                    my @vals = split ' ', $row;
+                    my $level = $vals[2];
+                    my $value = $vals[3];
+                    if ($solution_file_counter < $effect_1_levels) {
+                        $fixed_effects{$solution_file_counter}->{$level} = $value;
+                    }
+                    elsif ($solution_file_counter < $effect_1_levels + $effect_grm_levels*($legendre_order_number+1)) {
+                        my $accession_name = $accession_id_factor_map_reverse{$level};
+                        # my $trait = $seen_times{$sorted_trait_names[$grm_sol_trait_counter]};
+                        if ($grm_sol_counter < $effect_grm_levels-1) {
+                            $grm_sol_counter++;
+                        }
+                        else {
+                            $grm_sol_counter = 0;
+                            $grm_sol_trait_counter++;
+                        }
+                        # $result_blup_data->{$accession_name}->{$trait} = [$value, $timestamp, $user_name, '', ''];
+                        if (defined $value && $value ne '') {
+                            push @{$rr_genetic_coefficients{$accession_name}}, $value;
+                        }
+                    }
+                    else {
+                        my $plot_name = $plot_id_factor_map_reverse{$level};
+                        # my $trait = $seen_times{$sorted_trait_names[$pe_sol_trait_counter]};
+                        if ($pe_sol_counter < $effect_pe_levels-1) {
+                            $pe_sol_counter++;
+                        }
+                        else {
+                            $pe_sol_counter = 0;
+                            $pe_sol_trait_counter++;
+                        }
+                        # $result_blup_pe_data->{$plot_name}->{$trait} = [$value, $timestamp, $user_name, '', ''];
+                        if (defined $value && $value ne '') {
+                            push @{$rr_temporal_coefficients{$plot_name}}, $value;
+                        }
+                    }
+                    $solution_file_counter++;
+                }
+            close($fh_sol);
+
+            # print STDERR Dumper \%rr_genetic_coefficients;
+            # print STDERR Dumper \%rr_temporal_coefficients;
+
+            open(my $Fgc, ">", $coeff_genetic_tempfile) || die "Can't open file ".$coeff_genetic_tempfile;
+
+            while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients) {
+                my @line = ($accession_name, @$coeffs);
+                my $line_string = join ',', @line;
+                print $Fgc "$line_string\n";
+
+                foreach my $t_i (0..20) {
+                    my $time = $t_i*5/100;
+                    my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
+
+                    my $value = 0;
+                    my $coeff_counter = 0;
+                    foreach my $b (@$coeffs) {
+                        my $eval_string = $legendre_coeff_exec[$coeff_counter];
+                        # print STDERR Dumper [$eval_string, $b, $time];
+                        $value += eval $eval_string;
+                        $coeff_counter++;
+                    }
+
+                    my $time_term_string = '';
+                    if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
+                        $time_term_string = "GDD $time_rescaled";
+                    }
+                    elsif ($statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+                        $time_term_string = "day $time_rescaled"
+                    }
+                    $h_time->execute($time_term_string, 'cxgn_time_ontology');
+                    my ($time_cvterm_id) = $h_time->fetchrow_array();
+
+                    if (!$time_cvterm_id) {
+                        my $new_time_term = $schema->resultset("Cv::Cvterm")->create_with({
+                           name => $time_term_string,
+                           cv => 'cxgn_time_ontology'
+                        });
+                        $time_cvterm_id = $new_time_term->cvterm_id();
+                    }
+                    my $time_term_string_blup = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $time_cvterm_id, 'extended');
+                    $rr_unique_traits{$time_term_string_blup}++;
+
+                    $result_blup_data->{$accession_name}->{$time_term_string_blup} = [$value, $timestamp, $user_name, '', ''];
+                }
+            }
+            close($Fgc);
+
+            while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients) {
+                foreach my $time (@sorted_trait_names) {
+                    my $value = 0;
+                    my $coeff_counter = 0;
+                    foreach my $b (@$coeffs) {
+                        my $eval_string = $legendre_coeff_exec[$coeff_counter];
+                        # print STDERR Dumper [$eval_string, $b, $time];
+                        $value += eval $eval_string;
+                        $coeff_counter++;
+                    }
+
+                    $result_blup_data_delta->{$accession_name}->{$time} = [$value, $timestamp, $user_name, '', ''];
+
+                    if ($value < $genetic_effect_min) {
+                        $genetic_effect_min = $value;
+                    }
+                    elsif ($value >= $genetic_effect_max) {
+                        $genetic_effect_max = $value;
+                    }
+
+                    $genetic_effect_sum += abs($value);
+                }
+            }
+
+            open(my $Fpc, ">", $coeff_pe_tempfile) || die "Can't open file ".$coeff_pe_tempfile;
+
+            while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients) {
+                my @line = ($plot_name, @$coeffs);
+                my $line_string = join ',', @line;
+                print $Fpc "$line_string\n";
+
+                foreach my $t_i (0..20) {
+                    my $time = $t_i*5/100;
+                    my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
+
+                    my $value = 0;
+                    my $coeff_counter = 0;
+                    foreach my $b (@$coeffs) {
+                        my $eval_string = $legendre_coeff_exec[$coeff_counter];
+                        # print STDERR Dumper [$eval_string, $b, $time];
+                        $value += eval $eval_string;
+                        $coeff_counter++;
+                    }
+
+                    my $time_term_string = '';
+                    if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
+                        $time_term_string = "GDD $time_rescaled";
+                    }
+                    elsif ($statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+                        $time_term_string = "day $time_rescaled"
+                    }
+                    $h_time->execute($time_term_string, 'cxgn_time_ontology');
+                    my ($time_cvterm_id) = $h_time->fetchrow_array();
+
+                    if (!$time_cvterm_id) {
+                        my $new_time_term = $schema->resultset("Cv::Cvterm")->create_with({
+                           name => $time_term_string,
+                           cv => 'cxgn_time_ontology'
+                        });
+                        $time_cvterm_id = $new_time_term->cvterm_id();
+                    }
+                    my $time_term_string_pe = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $time_cvterm_id, 'extended');
+                    $rr_unique_traits{$time_term_string_pe}++;
+
+                    $result_blup_pe_data->{$plot_name}->{$time_term_string_pe} = [$value, $timestamp, $user_name, '', ''];
+                }
+            }
+            close($Fpc);
+
+            while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients) {
+                foreach my $time (@sorted_trait_names) {
+                    my $value = 0;
+                    my $coeff_counter = 0;
+                    foreach my $b (@$coeffs) {
+                        my $eval_string = $legendre_coeff_exec[$coeff_counter];
+                        # print STDERR Dumper [$eval_string, $b, $time];
+                        $value += eval $eval_string;
+                        $coeff_counter++;
+                    }
+
+                    $result_blup_pe_data_delta->{$plot_name}->{$time} = [$value, $timestamp, $user_name, '', ''];
+
+                    if ($value < $env_effect_min) {
+                        $env_effect_min = $value;
+                    }
+                    elsif ($value >= $env_effect_max) {
+                        $env_effect_max = $value;
+                    }
+
+                    $env_effect_sum += abs($value);
+                }
+            }
+
+            push @result_effect_sum_iterations, [$iteration_count, $genetic_effect_sum, $env_effect_sum, $residual_sum];
+
+            my $result_blup_data_delta_copy = dclone $result_blup_data_delta;
+            my $result_blup_pe_data_delta_copy = dclone $result_blup_pe_data_delta;
+            my $result_residual_data_copy = dclone $result_residual_data;
+            my $result_fitted_data_copy = dclone $result_fitted_data;
+            my $phenotype_data_hash_out_copy = dclone $phenotype_data_hash_out;
+
+            $result_blup_data_iterations->{$genetic_effect_sum} = {
+                env => $result_blup_pe_data_delta_copy,
+                gen => $result_blup_data_delta_copy,
+                residual => $result_residual_data_copy,
+                fitted => $result_fitted_data_copy,
+                env_effect => $env_effect_sum,
+                phenotype_data => $phenotype_data_hash_out_copy,
+                phenotype_data_original => $phenotype_data_original_hash_out
+            };
+            $result_blup_pe_data_iterations->{$env_effect_sum} = {
+                env => $result_blup_pe_data_delta_copy,
+                gen => $result_blup_data_delta_copy,
+                residual => $result_residual_data_copy,
+                fitted => $result_fitted_data_copy,
+                gen_effect => $genetic_effect_sum,
+                phenotype_data => $phenotype_data_hash_out_copy,
+                phenotype_data_original => $phenotype_data_original_hash_out
+            };
+
+            if ($iteration_count == 0) {
+                $result_blup_data_first = dclone $result_blup_data_delta;
+                $result_blup_pe_data_first = dclone $result_blup_pe_data_delta;
+            }
+
+            print STDERR "$statistics_select GENETIC EFFECT SUM $genetic_effect_sum\n";
+
+            if ($analytics_select eq 'minimize_genetic_effect' && $genetic_effect_sum > $minimization_genetic_sum_threshold && $iteration_count < $iteration_max) {
+                ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_original_hash_out, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $phenotype_data_hash, $analytics_select, $result_blup_data_delta, undef, undef, $env_simulation, $genetic_effect_min, $genetic_effect_max, undef, undef);
+
+                $phenotype_data_hash = $phenotype_data_hash_out;
+            }
+            else {
+                $minimization_genetic_done = 1;
+            }
+
+            print STDERR "$statistics_select ENV EFFECT SUM $env_effect_sum\n";
+
+            if ($analytics_select eq 'minimize_local_env_effect' && $env_effect_sum > $minimization_env_sum_threshold && $iteration_count < $iteration_max) {
+                ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_original_hash_out, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $phenotype_data_hash, $analytics_select, undef, undef, $result_blup_pe_data_delta, $env_simulation, undef, undef, $env_effect_min, $env_effect_max);
+
+                $phenotype_data_hash = $phenotype_data_hash_out;
+            }
+            else {
+                $minimization_env_done = 1;
+            }
+
+            print STDERR "ITERATION $iteration_count\n";
+            $iteration_count++;
+
+            # print STDERR Dumper \%fixed_effects;
+            # print STDERR Dumper $result_blup_data;
+            # print STDERR Dumper $result_blup_pe_data;
+            @sorted_trait_names = sort keys %rr_unique_traits;
+            @sorted_residual_trait_names = sort keys %rr_residual_unique_traits;
+        }
+    }
+    return ($statistical_ontology_term, $analysis_result_values_type, $analysis_model_training_data_file_type, $result_blup_data, $result_blup_spatial_data, $result_blup_pe_data);
+}
+
 sub _select_lowest_effects {
     my $analytics_select = shift;
     my $statistics_select = shift;
@@ -2835,6 +2926,7 @@ sub _generate_input_file {
     my $genetic_effect_max = shift;
     my $env_effect_min = shift;
     my $env_effect_max = shift;
+    my $include_sim_env = shift;
 
     # print STDERR Dumper $result_blup_data;
     # print STDERR Dumper $result_blup_spatial_data;
@@ -2910,6 +3002,13 @@ sub _generate_input_file {
     my $phenotype_max = -1000000000;
 
     my $csv = Text::CSV->new({ sep_char => "\t" });
+
+    my $env_sim_exec = {
+        "linear_gradient" => '$a*$row + $b*$col',
+        "random_1d_normal_gradient" => '(1/(2*3.14159)) * exp(-1*($row**2)/2)',
+        "random_2d_normal_gradient" => 'exp( (-1/(2*(1-$ro**2))) * ( (($row - $mean_row)**2)/($sig_row**2) + (($col - $mean_col)**2)/($sig_col**2) - ((2**$ro)*($row - $mean_row)*($col - $mean_col))/($sig_row*$sig_col) ) ) / (2*3.14159*$sig_row*$sig_col*sqrt(1-$ro**2))',
+        "random" => 'rand(1)'
+    });
 
     if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_blups') {
 
@@ -3027,6 +3126,9 @@ sub _generate_input_file {
                     }
                     my $new_val = $phenotype_data{$obsunit_stock_uniquename}->{$t} + 0 - $minimizer;
                     $phenotype_data{$obsunit_stock_uniquename}->{$t} = $new_val;
+
+                    my $sim_val = eval $env_sim_exec->{$env_simulation};
+                    $new_val += $sim_val;
                     push @row, $new_val;
                 } else {
                     print STDERR $obsunit_stock_uniquename." : $t : $germplasm_name : NA \n";
