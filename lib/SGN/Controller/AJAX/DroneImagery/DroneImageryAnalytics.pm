@@ -54,6 +54,7 @@ use List::MoreUtils qw(first_index);
 use List::Util qw(sum);
 use Scalar::Util qw(looks_like_number);
 use SGN::Controller::AJAX::DroneImagery::DroneImagery;
+use Storable qw(dclone);
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -150,7 +151,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $env_effect_min = 1000000000;
     my $env_effect_max = -1000000000;
     my $iteration_count = 0;
-    my $iteration_max = 4;
+    my $iteration_max = 2;
 
     my %sommer_rr_genetic_coeff;
     my %sommer_rr_temporal_coeff;
@@ -222,9 +223,10 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         sleep(10);
     }
 
-    my ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, undef, $analytics_select, undef, undef, undef, undef, undef, undef, undef, undef, 0);
+    my ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_original_hash_out, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, undef, $analytics_select, undef, undef, undef, undef, undef, undef, undef, undef);
     my %trait_name_encoder = %$trait_name_encoder_hash;
     my %trait_name_encoder_rev = %$trait_name_encoder_rev_hash;
+    my $phenotype_data_original_hash = $phenotype_data_original_hash_out;
     my $phenotype_data_hash = $phenotype_data_hash_out;
     my %stock_info = %$stock_info_hash;
     my %unique_accessions = %$unique_accessions_hash;
@@ -1190,19 +1192,21 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     }
                 }
 
-                my $minimization_shift = 0;
                 if ($run_stats_fault == 1) {
                     print STDERR "ERROR IN R CMD\n";
-                    ($genetic_effect_sum, $env_effect_sum, $result_blup_data, $result_blup_spatial_data, $result_blup_pe_data) = _select_lowest_effects($analytics_select, $statistics_select, $result_blup_data_iterations, $result_blup_spatial_data_iterations, $result_blup_pe_data_iterations);
-
-                    $minimization_shift = 1;
+                    ($genetic_effect_sum, $env_effect_sum, $phenotype_data_original_hash_out, $phenotype_data_hash_out, $result_blup_data, $result_blup_spatial_data, $result_blup_pe_data) = _select_lowest_effects($analytics_select, $statistics_select, $result_blup_data_iterations, $result_blup_spatial_data_iterations, $result_blup_pe_data_iterations);
                 }
                 else {
                     push @result_effect_sum_iterations, [$iteration_count, $genetic_effect_sum, $env_effect_sum, $residual_sum];
 
+                    my $result_blup_data_copy = dclone $result_blup_data;
+                    my $phenotype_data_hash_out_copy = dclone $phenotype_data_hash_out;
+
                     $result_blup_data_iterations->{$genetic_effect_sum} = {
-                        gen => $result_blup_data,
-                        env_effect => $env_effect_sum
+                        gen => $result_blup_data_copy,
+                        env_effect => $env_effect_sum,
+                        phenotype_data => $phenotype_data_hash_out_copy,
+                        phenotype_data_original => $phenotype_data_original_hash_out
                     };
                 }
 
@@ -1212,8 +1216,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
                 print STDERR "$statistics_select GENETIC EFFECT SUM $genetic_effect_sum\n";
 
-                if ($genetic_effect_sum > $minimization_genetic_sum_threshold && $iteration_count <= $iteration_max) {
-                    ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $phenotype_data_hash, $analytics_select, $result_blup_data, undef, undef, $env_simulation, $genetic_effect_min, $genetic_effect_max, undef, undef, 0);
+                if ($genetic_effect_sum > $minimization_genetic_sum_threshold && $iteration_count < $iteration_max) {
+                    ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_original_hash_out, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $phenotype_data_hash, $analytics_select, $result_blup_data, undef, undef, $env_simulation, $genetic_effect_min, $genetic_effect_max, undef, undef);
 
                     $phenotype_data_hash = $phenotype_data_hash_out;
                 }
@@ -1408,30 +1412,37 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     }
                 }
 
-                my $minimization_shift = 0;
                 if ($run_stats_fault == 1) {
                     print STDERR "ERROR IN R CMD\n";
-                    ($genetic_effect_sum, $env_effect_sum, $result_blup_data, $result_blup_spatial_data, $result_blup_pe_data) = _select_lowest_effects($analytics_select, $statistics_select, $result_blup_data_iterations, $result_blup_spatial_data_iterations, $result_blup_pe_data_iterations);
-
-                    $minimization_shift = 1;
+                    ($genetic_effect_sum, $env_effect_sum, $phenotype_data_original_hash_out, $phenotype_data_hash_out, $result_blup_data, $result_blup_spatial_data, $result_blup_pe_data) = _select_lowest_effects($analytics_select, $statistics_select, $result_blup_data_iterations, $result_blup_spatial_data_iterations, $result_blup_pe_data_iterations);
                 }
                 else {
                     push @result_effect_sum_iterations, [$iteration_count, $genetic_effect_sum, $env_effect_sum, $residual_sum];
 
+                    my $result_blup_data_copy = dclone $result_blup_data;
+                    my $result_blup_spatial_data_copy = dclone $result_blup_spatial_data;
+                    my $result_residual_data_copy = dclone $result_residual_data;
+                    my $result_fitted_data_copy = dclone $result_fitted_data;
+                    my $phenotype_data_hash_out_copy = dclone $phenotype_data_hash_out;
+
                     $result_blup_data_iterations->{$genetic_effect_sum} = {
-                        env => $result_blup_spatial_data,
-                        gen => $result_blup_data,
-                        residual => $result_residual_data,
-                        fitted => $result_fitted_data,
-                        env_effect => $env_effect_sum
+                        env => $result_blup_spatial_data_copy,
+                        gen => $result_blup_data_copy,
+                        residual => $result_residual_data_copy,
+                        fitted => $result_fitted_data_copy,
+                        env_effect => $env_effect_sum,
+                        phenotype_data => $phenotype_data_hash_out_copy,
+                        phenotype_data_original => $phenotype_data_original_hash_out
                     };
 
                     $result_blup_spatial_data_iterations->{$env_effect_sum} = {
-                        env => $result_blup_spatial_data,
-                        gen => $result_blup_data,
-                        residual => $result_residual_data,
-                        fitted => $result_fitted_data,
-                        gen_effect => $genetic_effect_sum
+                        env => $result_blup_spatial_data_copy,
+                        gen => $result_blup_data_copy,
+                        residual => $result_residual_data_copy,
+                        fitted => $result_fitted_data_copy,
+                        gen_effect => $genetic_effect_sum,
+                        phenotype_data => $phenotype_data_hash_out_copy,
+                        phenotype_data_original => $phenotype_data_original_hash_out
                     };
                 }
 
@@ -1443,8 +1454,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 print STDERR "$statistics_select GENETIC EFFECT SUM $genetic_effect_sum\n";
                 print STDERR "$statistics_select ENV EFFECT SUM $env_effect_sum\n";
 
-                if ($analytics_select eq 'minimize_genetic_effect' && $genetic_effect_sum > $minimization_genetic_sum_threshold && $iteration_count <= $iteration_max) {
-                    ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $phenotype_data_hash, $analytics_select, $result_blup_data, undef, undef, $env_simulation, $genetic_effect_min, $genetic_effect_max, undef, undef, $minimization_shift);
+                if ($analytics_select eq 'minimize_genetic_effect' && $genetic_effect_sum > $minimization_genetic_sum_threshold && $iteration_count < $iteration_max) {
+                    ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_original_hash_out, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $phenotype_data_hash, $analytics_select, $result_blup_data, undef, undef, $env_simulation, $genetic_effect_min, $genetic_effect_max, undef, undef);
 
                     $phenotype_data_hash = $phenotype_data_hash_out;
                 }
@@ -1452,8 +1463,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     $minimization_genetic_done = 1;
                 }
 
-                if ($analytics_select eq 'minimize_local_env_effect' && $env_effect_sum > $minimization_env_sum_threshold && $iteration_count <= $iteration_max) {
-                    ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $phenotype_data_hash, $analytics_select, undef, $result_blup_spatial_data, undef, $env_simulation, undef, undef, $env_effect_min, $env_effect_max, $minimization_shift);
+                if ($analytics_select eq 'minimize_local_env_effect' && $env_effect_sum > $minimization_env_sum_threshold && $iteration_count < $iteration_max) {
+                    ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_original_hash_out, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $phenotype_data_hash, $analytics_select, undef, $result_blup_spatial_data, undef, $env_simulation, undef, undef, $env_effect_min, $env_effect_max);
 
                     $phenotype_data_hash = $phenotype_data_hash_out;
                 }
@@ -1762,25 +1773,35 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
                 push @result_effect_sum_iterations, [$iteration_count, $genetic_effect_sum, $env_effect_sum, $residual_sum];
 
+                my $result_blup_data_delta_copy = dclone $result_blup_data_delta;
+                my $result_blup_pe_data_delta_copy = dclone $result_blup_pe_data_delta;
+                my $result_residual_data_copy = dclone $result_residual_data;
+                my $result_fitted_data_copy = dclone $result_fitted_data;
+                my $phenotype_data_hash_out_copy = dclone $phenotype_data_hash_out;
+
                 $result_blup_data_iterations->{$genetic_effect_sum} = {
-                    env => $result_blup_pe_data_delta,
-                    gen => $result_blup_data_delta,
-                    residual => $result_residual_data,
-                    fitted => $result_fitted_data,
-                    env_effect => $env_effect_sum
+                    env => $result_blup_pe_data_delta_copy,
+                    gen => $result_blup_data_delta_copy,
+                    residual => $result_residual_data_copy,
+                    fitted => $result_fitted_data_copy,
+                    env_effect => $env_effect_sum,
+                    phenotype_data => $phenotype_data_hash_out_copy,
+                    phenotype_data_original => $phenotype_data_original_hash_out
                 };
                 $result_blup_pe_data_iterations->{$env_effect_sum} = {
-                    env => $result_blup_pe_data_delta,
-                    gen => $result_blup_data_delta,
-                    residual => $result_residual_data,
-                    fitted => $result_fitted_data,
-                    gen_effect => $genetic_effect_sum
+                    env => $result_blup_pe_data_delta_copy,
+                    gen => $result_blup_data_delta_copy,
+                    residual => $result_residual_data_copy,
+                    fitted => $result_fitted_data_copy,
+                    gen_effect => $genetic_effect_sum,
+                    phenotype_data => $phenotype_data_hash_out_copy,
+                    phenotype_data_original => $phenotype_data_original_hash_out
                 };
 
                 print STDERR "$statistics_select GENETIC EFFECT SUM $genetic_effect_sum\n";
 
-                if ($analytics_select eq 'minimize_genetic_effect' && $genetic_effect_sum > $minimization_genetic_sum_threshold && $iteration_count <= $iteration_max) {
-                    ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $phenotype_data_hash, $analytics_select, $result_blup_data_delta, undef, undef, $env_simulation, $genetic_effect_min, $genetic_effect_max, undef, undef, 0);
+                if ($analytics_select eq 'minimize_genetic_effect' && $genetic_effect_sum > $minimization_genetic_sum_threshold && $iteration_count < $iteration_max) {
+                    ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_original_hash_out, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $phenotype_data_hash, $analytics_select, $result_blup_data_delta, undef, undef, $env_simulation, $genetic_effect_min, $genetic_effect_max, undef, undef);
 
                     $phenotype_data_hash = $phenotype_data_hash_out;
                 }
@@ -1790,8 +1811,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
                 print STDERR "$statistics_select ENV EFFECT SUM $env_effect_sum\n";
 
-                if ($analytics_select eq 'minimize_local_env_effect' && $env_effect_sum > $minimization_env_sum_threshold && $iteration_count <= $iteration_max) {
-                    ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $phenotype_data_hash, $analytics_select, undef, undef, $result_blup_pe_data_delta, $env_simulation, undef, undef, $env_effect_min, $env_effect_max, 0);
+                if ($analytics_select eq 'minimize_local_env_effect' && $env_effect_sum > $minimization_env_sum_threshold && $iteration_count < $iteration_max) {
+                    ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_original_hash_out, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $phenotype_data_hash, $analytics_select, undef, undef, $result_blup_pe_data_delta, $env_simulation, undef, undef, $env_effect_min, $env_effect_max);
 
                     $phenotype_data_hash = $phenotype_data_hash_out;
                 }
@@ -1996,16 +2017,23 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
                 push @result_effect_sum_iterations, [$iteration_count, $genetic_effect_sum, $env_effect_sum, $residual_sum];
 
+                my $result_blup_data_delta_copy = dclone $result_blup_data_delta;
+                my $result_residual_data_copy = dclone $result_residual_data;
+                my $result_fitted_data_copy = dclone $result_fitted_data;
+                my $phenotype_data_hash_out_copy = dclone $phenotype_data_hash_out;
+
                 $result_blup_data_iterations->{$genetic_effect_sum} = {
-                    gen => $result_blup_data_delta,
-                    residual => $result_residual_data,
-                    fitted => $result_fitted_data,
+                    gen => $result_blup_data_delta_copy,
+                    residual => $result_residual_data_copy,
+                    fitted => $result_fitted_data_copy,
+                    phenotype_data => $phenotype_data_hash_out_copy,
+                    phenotype_data_original => $phenotype_data_original_hash_out
                 };
 
                 print STDERR "$statistics_select GENETIC EFFECT SUM $genetic_effect_sum\n";
 
-                if ($analytics_select eq 'minimize_genetic_effect' && $genetic_effect_sum > $minimization_genetic_sum_threshold && $iteration_count <= $iteration_max) {
-                    ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $phenotype_data_hash, $analytics_select, $result_blup_data_delta, undef, undef, $env_simulation, $genetic_effect_min, $genetic_effect_max, undef, undef, 0);
+                if ($analytics_select eq 'minimize_genetic_effect' && $genetic_effect_sum > $minimization_genetic_sum_threshold && $iteration_count < $iteration_max) {
+                    ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_original_hash_out, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $phenotype_data_hash, $analytics_select, $result_blup_data_delta, undef, undef, $env_simulation, $genetic_effect_min, $genetic_effect_max, undef, undef);
 
                     $phenotype_data_hash = $phenotype_data_hash_out;
                 }
@@ -2479,25 +2507,35 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
                 push @result_effect_sum_iterations, [$iteration_count, $genetic_effect_sum, $env_effect_sum, $residual_sum];
 
+                my $result_blup_data_delta_copy = dclone $result_blup_data_delta;
+                my $result_blup_pe_data_delta_copy = dclone $result_blup_pe_data_delta;
+                my $result_residual_data_copy = dclone $result_residual_data;
+                my $result_fitted_data_copy = dclone $result_fitted_data;
+                my $phenotype_data_hash_out_copy = dclone $phenotype_data_hash_out;
+
                 $result_blup_data_iterations->{$genetic_effect_sum} = {
-                    env => $result_blup_pe_data_delta,
-                    gen => $result_blup_data_delta,
-                    residual => $result_residual_data,
-                    fitted => $result_fitted_data,
-                    env_effect => $env_effect_sum
+                    env => $result_blup_pe_data_delta_copy,
+                    gen => $result_blup_data_delta_copy,
+                    residual => $result_residual_data_copy,
+                    fitted => $result_fitted_data_copy,
+                    env_effect => $env_effect_sum,
+                    phenotype_data => $phenotype_data_hash_out_copy,
+                    phenotype_data_original => $phenotype_data_original_hash_out
                 };
                 $result_blup_pe_data_iterations->{$env_effect_sum} = {
-                    env => $result_blup_pe_data_delta,
-                    gen => $result_blup_data_delta,
-                    residual => $result_residual_data,
-                    fitted => $result_fitted_data,
-                    gen_effect => $genetic_effect_sum
+                    env => $result_blup_pe_data_delta_copy,
+                    gen => $result_blup_data_delta_copy,
+                    residual => $result_residual_data_copy,
+                    fitted => $result_fitted_data_copy,
+                    gen_effect => $genetic_effect_sum,
+                    phenotype_data => $phenotype_data_hash_out_copy,
+                    phenotype_data_original => $phenotype_data_original_hash_out
                 };
 
                 print STDERR "$statistics_select GENETIC EFFECT SUM $genetic_effect_sum\n";
 
-                if ($analytics_select eq 'minimize_genetic_effect' && $genetic_effect_sum > $minimization_genetic_sum_threshold && $iteration_count <= $iteration_max) {
-                    ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $phenotype_data_hash, $analytics_select, $result_blup_data_delta, undef, undef, $env_simulation, $genetic_effect_min, $genetic_effect_max, undef, undef, 0);
+                if ($analytics_select eq 'minimize_genetic_effect' && $genetic_effect_sum > $minimization_genetic_sum_threshold && $iteration_count < $iteration_max) {
+                    ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_original_hash_out, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $phenotype_data_hash, $analytics_select, $result_blup_data_delta, undef, undef, $env_simulation, $genetic_effect_min, $genetic_effect_max, undef, undef);
 
                     $phenotype_data_hash = $phenotype_data_hash_out;
                 }
@@ -2507,8 +2545,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
                 print STDERR "$statistics_select ENV EFFECT SUM $env_effect_sum\n";
 
-                if ($analytics_select eq 'minimize_local_env_effect' && $env_effect_sum > $minimization_env_sum_threshold && $iteration_count <= $iteration_max) {
-                    ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $phenotype_data_hash, $analytics_select, undef, undef, $result_blup_pe_data_delta, $env_simulation, undef, undef, $env_effect_min, $env_effect_max, 0);
+                if ($analytics_select eq 'minimize_local_env_effect' && $env_effect_sum > $minimization_env_sum_threshold && $iteration_count < $iteration_max) {
+                    ($trait_name_encoder_hash, $trait_name_encoder_rev_hash, $phenotype_data_original_hash_out, $phenotype_data_hash_out, $stock_info_hash, $unique_accessions_hash, $seen_days_after_plantings_hash, $seen_times_hash, $data_matrix_array, $obsunit_row_col_hash, $seen_plot_names_hash, $plot_id_map_hash, $trait_composing_info_hash, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, $sorted_scaled_ln_times_array, $time_max, $time_min, $plot_id_factor_map_reverse_hash, $plot_id_count_map_reverse_hash, $sorted_trait_names_array, $unique_accession_names_array, $unique_plot_names_array, $accession_id_factor_map_hash, $accession_id_factor_map_reverse_hash, $time_count_map_reverse_hash, $rep_time_factors_array, $ind_rep_factors_array, $stock_name_row_col_hash) = _generate_input_file($c, $schema, $trait_id_list, $field_trial_id_list, $statistics_select, $tmp_stats_dir, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $phenotype_data_hash, $analytics_select, undef, undef, $result_blup_pe_data_delta, $env_simulation, undef, undef, $env_effect_min, $env_effect_max);
 
                     $phenotype_data_hash = $phenotype_data_hash_out;
                 }
@@ -2532,7 +2570,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         return;
     }
 
-    ($genetic_effect_sum, $env_effect_sum, $result_blup_data, $result_blup_spatial_data, $result_blup_pe_data) = _select_lowest_effects($analytics_select, $statistics_select, $result_blup_data_iterations, $result_blup_spatial_data_iterations, $result_blup_pe_data_iterations);
+    ($genetic_effect_sum, $env_effect_sum, $phenotype_data_original_hash_out, $phenotype_data_hash_out, $result_blup_data, $result_blup_spatial_data, $result_blup_pe_data) = _select_lowest_effects($analytics_select, $statistics_select, $result_blup_data_iterations, $result_blup_spatial_data_iterations, $result_blup_pe_data_iterations);
 
     # print STDERR Dumper $result_blup_data;
     # print STDERR Dumper $result_blup_spatial_data;
@@ -2567,10 +2605,18 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
     my ($original_spatial_effects_heatmap_tempfile_fh, $original_spatial_effects_heatmap_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     open(my $F_spatialfirst, ">", $original_spatial_effects_heatmap_tempfile) || die "Can't open file ".$original_spatial_effects_heatmap_tempfile;
-        print $F_spatialfirst "trait,row,col,effect\n";
+        print $F_spatialfirst "trait,row,col,phenotype_original,effect_original,phenotype_corrected,effect\n";
         foreach my $p (@unique_plot_names) {
             foreach my $t (@sorted_trait_names) {
-                my @row = ($trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $result_blup_spatial_data_first->{$p}->{$t}->[0]);
+                my @row = (
+                    $trait_name_encoder{$t},
+                    $stock_name_row_col{$p}->{row_number},
+                    $stock_name_row_col{$p}->{col_number},
+                    $phenotype_data_original_hash_out->{$p}->{$t},
+                    $result_blup_spatial_data_first->{$p}->{$t}->[0],
+                    $phenotype_data_hash_out->{$p}->{$t},
+                    $result_blup_spatial_data->{$p}->{$t}->[0]
+                );
                 my $line = join ',', @row;
                 print $F_spatialfirst "$line\n";
             }
@@ -2723,6 +2769,8 @@ sub _select_lowest_effects {
     my $result_blup_spatial_data_iterations = shift;
     my $result_blup_pe_data_iterations = shift;
 
+    my $phenotype_data_original_hash_out_selected;
+    my $phenotype_data_hash_out_selected;
     my $result_blup_data_selected;
     my $result_blup_spatial_data_selected;
     my $result_blup_pe_data_selected;
@@ -2735,6 +2783,8 @@ sub _select_lowest_effects {
         $minimum_genetic_effect = $sorted[0];
         my $sel = $result_blup_data_iterations->{$minimum_genetic_effect};
         $result_blup_data_selected = $sel->{gen};
+        $phenotype_data_original_hash_out_selected = $sel->{phenotype_data_original};
+        $phenotype_data_hash_out_selected = $sel->{phenotype_data};
 
         if ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
             $result_blup_spatial_data_selected = $sel->{env};
@@ -2750,6 +2800,8 @@ sub _select_lowest_effects {
             my @sorted = sort { $a <=> $b } keys %$result_blup_spatial_data_iterations;
             $minimum_env_effect = $sorted[0];
             my $sel = $result_blup_spatial_data_iterations->{$minimum_env_effect};
+            $phenotype_data_original_hash_out_selected = $sel->{phenotype_data_original};
+            $phenotype_data_hash_out_selected = $sel->{phenotype_data};
             $result_blup_data_selected = $sel->{gen};
             $result_blup_spatial_data_selected = $sel->{env};
             $minimum_genetic_effect = $sel->{gen_effect};
@@ -2758,12 +2810,14 @@ sub _select_lowest_effects {
             my @sorted = sort { $a <=> $b } keys %$result_blup_pe_data_iterations;
             $minimum_env_effect = $sorted[0];
             my $sel = $result_blup_pe_data_iterations->{$minimum_env_effect};
+            $phenotype_data_original_hash_out_selected = $sel->{phenotype_data_original};
+            $phenotype_data_hash_out_selected = $sel->{phenotype_data};
             $result_blup_data_selected = $sel->{gen};
             $result_blup_pe_data_selected = $sel->{env};
             $minimum_genetic_effect = $sel->{gen_effect};
         }
     }
-    return ($minimum_genetic_effect, $minimum_env_effect, $result_blup_data_selected, $result_blup_spatial_data_selected, $result_blup_pe_data_selected);
+    return ($minimum_genetic_effect, $minimum_env_effect, $phenotype_data_original_hash_out_selected, $phenotype_data_hash_out_selected, $result_blup_data_selected, $result_blup_spatial_data_selected, $result_blup_pe_data_selected);
 }
 
 sub _generate_input_file {
@@ -2786,7 +2840,6 @@ sub _generate_input_file {
     my $genetic_effect_max = shift;
     my $env_effect_min = shift;
     my $env_effect_max = shift;
-    my $minimization_shift = shift;
 
     # print STDERR Dumper $result_blup_data;
     # print STDERR Dumper $result_blup_spatial_data;
@@ -2826,6 +2879,7 @@ sub _generate_input_file {
 
     my %trait_name_encoder;
     my %trait_name_encoder_rev;
+    my $phenotype_data_original;
     my %phenotype_data;
     my %stock_info;
     my %unique_accessions;
@@ -2950,6 +3004,7 @@ sub _generate_input_file {
         if ($previous_phenotype_data) {
             %phenotype_data = %$previous_phenotype_data;
         }
+        $phenotype_data_original = dclone \%phenotype_data;
 
         foreach (@$data) {
             my $germplasm_name = $_->{germplasm_uniquename};
@@ -2967,23 +3022,17 @@ sub _generate_input_file {
                         if (defined($result_blup_spatial_data->{$obsunit_stock_uniquename}->{$t})) {
                             $minimizer = $result_blup_spatial_data->{$obsunit_stock_uniquename}->{$t}->[0];
                             $minimizer = $minimizer * ($phenotype_max - $phenotype_min)/($env_effect_max - $env_effect_min);
-
-                            if ($minimization_shift) {
-                                $minimizer = $minimizer * ($env_effect_max - $env_effect_min);
-                            }
                         }
                     }
                     elsif ($analytics_select eq 'minimize_genetic_effect') {
                         if (defined($result_blup_data->{$obsunit_stock_uniquename}->{$t})) {
                             $minimizer = $result_blup_data->{$obsunit_stock_uniquename}->{$t}->[0];
                             $minimizer = $minimizer * ($phenotype_max - $phenotype_min)/($genetic_effect_max - $genetic_effect_min);
-
-                            if ($minimization_shift) {
-                                $minimizer = $minimizer * ($genetic_effect_max - $genetic_effect_min);
-                            }
                         }
                     }
-                    push @row, $phenotype_data{$obsunit_stock_uniquename}->{$t} + 0 - $minimizer;
+                    my $new_val = $phenotype_data{$obsunit_stock_uniquename}->{$t} + 0 - $minimizer;
+                    $phenotype_data{$obsunit_stock_uniquename}->{$t} = $new_val;
+                    push @row, $new_val;
                 } else {
                     print STDERR $obsunit_stock_uniquename." : $t : $germplasm_name : NA \n";
                     push @row, 'NA';
@@ -3138,6 +3187,7 @@ sub _generate_input_file {
         if ($previous_phenotype_data) {
             %phenotype_data = %$previous_phenotype_data;
         }
+        $phenotype_data_original = dclone \%phenotype_data;
 
         foreach (@$data) {
             my $germplasm_name = $_->{germplasm_uniquename};
@@ -3178,46 +3228,34 @@ sub _generate_input_file {
                             if (defined($result_blup_pe_data->{$obsunit_stock_uniquename}->{$t})) {
                                 $minimizer = $result_blup_pe_data->{$obsunit_stock_uniquename}->{$t}->[0];
                                 $minimizer = $minimizer * ($phenotype_max - $phenotype_min)/($env_effect_max - $env_effect_min);
-
-                                if ($minimization_shift) {
-                                    $minimizer = $minimizer * ($genetic_effect_max - $genetic_effect_min);
-                                }
                             }
                         }
                         elsif ($analytics_select eq 'minimize_genetic_effect') {
                             if (defined($result_blup_data->{$obsunit_stock_uniquename}->{$t})) {
                                 $minimizer = $result_blup_data->{$obsunit_stock_uniquename}->{$t}->[0];
                                 $minimizer = $minimizer * ($phenotype_max - $phenotype_min)/($genetic_effect_max - $genetic_effect_min);
-
-                                if ($minimization_shift) {
-                                    $minimizer = $minimizer * ($env_effect_max - $env_effect_min);
-                                }
                             }
                         }
-                        push @row, $val - $minimizer;
+                        my $new_val = $val - $minimizer;
+                        $phenotype_data{$obsunit_stock_uniquename}->{$t} = $new_val;
+                        push @row, $new_val;
                     }
                     else {
                         if ($analytics_select eq 'minimize_local_env_effect') {
                             if (defined($result_blup_pe_data->{$obsunit_stock_uniquename}->{$t})) {
                                 $minimizer = $result_blup_pe_data->{$obsunit_stock_uniquename}->{$t}->[0];
                                 $minimizer = $minimizer * ($phenotype_max - $phenotype_min)/($env_effect_max - $env_effect_min);
-
-                                if ($minimization_shift) {
-                                    $minimizer = $minimizer * ($env_effect_max - $env_effect_min);
-                                }
                             }
                         }
                         elsif ($analytics_select eq 'minimize_genetic_effect') {
                             if (defined($result_blup_data->{$obsunit_stock_uniquename}->{$t})) {
                                 $minimizer = $result_blup_data->{$obsunit_stock_uniquename}->{$t}->[0];
                                 $minimizer = $minimizer * ($phenotype_max - $phenotype_min)/($genetic_effect_max - $genetic_effect_min);
-
-                                if ($minimization_shift) {
-                                    $minimizer = $minimizer * ($genetic_effect_max - $genetic_effect_min);
-                                }
                             }
                         }
-                        push @row, $phenotype_data{$obsunit_stock_uniquename}->{$t} + 0 - $minimizer;
+                        my $new_val = $phenotype_data{$obsunit_stock_uniquename}->{$t} + 0 - $minimizer;
+                        $phenotype_data{$obsunit_stock_uniquename}->{$t} = $new_val;
+                        push @row, $new_val;
                     }
                 } else {
                     print STDERR $obsunit_stock_uniquename." : $t : $germplasm_name : NA \n";
@@ -3485,6 +3523,7 @@ sub _generate_input_file {
         if ($previous_phenotype_data) {
             %phenotype_data = %$previous_phenotype_data;
         }
+        $phenotype_data_original = dclone \%phenotype_data;
 
         my @data_matrix_phenotypes;
         my @stocks_ordered;
@@ -3539,48 +3578,36 @@ sub _generate_input_file {
                             if (defined($result_blup_pe_data->{$obsunit_stock_uniquename}->{$t})) {
                                 $minimizer = $result_blup_pe_data->{$obsunit_stock_uniquename}->{$t}->[0];
                                 $minimizer = $minimizer * ($phenotype_max - $phenotype_min)/($env_effect_max - $env_effect_min);
-
-                                if ($minimization_shift) {
-                                    $minimizer = $minimizer * ($env_effect_max - $env_effect_min);
-                                }
                             }
                         }
                         elsif ($analytics_select eq 'minimize_genetic_effect') {
                             if (defined($result_blup_data->{$obsunit_stock_uniquename}->{$t})) {
                                 $minimizer = $result_blup_data->{$obsunit_stock_uniquename}->{$t}->[0];
                                 $minimizer = $minimizer * ($phenotype_max - $phenotype_min)/($genetic_effect_max - $genetic_effect_min);
-
-                                if ($minimization_shift) {
-                                    $minimizer = $minimizer * ($genetic_effect_max - $genetic_effect_min);
-                                }
                             }
                         }
-                        push @row, $val - $minimizer;
-                        push @data_matrix_phenotypes_row, $val - $minimizer;
+                        my $new_val = $val - $minimizer;
+                        $phenotype_data{$obsunit_stock_uniquename}->{$t} = $new_val;
+                        push @row, $new_val;
+                        push @data_matrix_phenotypes_row, $new_val;
                     }
                     else {
                         if ($analytics_select eq 'minimize_local_env_effect') {
                             if (defined($result_blup_pe_data->{$obsunit_stock_uniquename}->{$t})) {
                                 $minimizer = $result_blup_pe_data->{$obsunit_stock_uniquename}->{$t}->[0];
                                 $minimizer = $minimizer * ($phenotype_max - $phenotype_min)/($env_effect_max - $env_effect_min);
-
-                                if ($minimization_shift) {
-                                    $minimizer = $minimizer * ($env_effect_max - $env_effect_min);
-                                }
                             }
                         }
                         elsif ($analytics_select eq 'minimize_genetic_effect') {
                             if (defined($result_blup_data->{$obsunit_stock_uniquename}->{$t})) {
                                 $minimizer = $result_blup_data->{$obsunit_stock_uniquename}->{$t}->[0];
                                 $minimizer = $minimizer * ($phenotype_max - $phenotype_min)/($genetic_effect_max - $genetic_effect_min);
-
-                                if ($minimization_shift) {
-                                    $minimizer = $minimizer * ($genetic_effect_max - $genetic_effect_min);
-                                }
                             }
                         }
-                        push @row, $phenotype_data{$obsunit_stock_uniquename}->{$t} + 0 - $minimizer;
-                        push @data_matrix_phenotypes_row, $phenotype_data{$obsunit_stock_uniquename}->{$t} + 0 - $minimizer;
+                        my $new_val = $phenotype_data{$obsunit_stock_uniquename}->{$t} + 0 - $minimizer;
+                        $phenotype_data{$obsunit_stock_uniquename}->{$t} = $new_val;
+                        push @row, $new_val;
+                        push @data_matrix_phenotypes_row, $new_val;
                     }
                 } else {
                     print STDERR $obsunit_stock_uniquename." : $t : $germplasm_name : NA \n";
@@ -3667,7 +3694,7 @@ sub _generate_input_file {
     }
     # print STDERR Dumper [$time_min, $time_max];
 
-    return (\%trait_name_encoder, \%trait_name_encoder_rev, \%phenotype_data, \%stock_info, \%unique_accessions, \%seen_days_after_plantings, \%seen_times, \@data_matrix, \%obsunit_row_col, \%seen_plot_names, \%plot_id_map, \%trait_composing_info, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, \@sorted_scaled_ln_times, $time_max, $time_min, \%plot_id_factor_map_reverse, \%plot_id_count_map_reverse, \@sorted_trait_names, \@unique_accession_names, \@unique_plot_names, \%accession_id_factor_map, \%accession_id_factor_map_reverse, \%time_count_map_reverse, \@rep_time_factors, \@ind_rep_factors, \%stock_name_row_col);
+    return (\%trait_name_encoder, \%trait_name_encoder_rev, $phenotype_data_original, \%phenotype_data, \%stock_info, \%unique_accessions, \%seen_days_after_plantings, \%seen_times, \@data_matrix, \%obsunit_row_col, \%seen_plot_names, \%plot_id_map, \%trait_composing_info, $permanent_environment_structure_tempfile, $stats_tempfile, $stats_tempfile_2, $parameter_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_string, $stats_out_tempfile, $stats_prep2_tempfile, $stats_out_htp_rel_tempfile_input, $stats_out_htp_rel_tempfile, $stats_out_htp_rel_tempfile_out_string, $stats_out_htp_rel_tempfile_out, $stats_out_param_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_2dspl, $stats_out_tempfile_residual, $stats_out_tempfile_genetic, $stats_out_tempfile_permanent_environment, \@sorted_scaled_ln_times, $time_max, $time_min, \%plot_id_factor_map_reverse, \%plot_id_count_map_reverse, \@sorted_trait_names, \@unique_accession_names, \@unique_plot_names, \%accession_id_factor_map, \%accession_id_factor_map_reverse, \%time_count_map_reverse, \@rep_time_factors, \@ind_rep_factors, \%stock_name_row_col);
 }
 
 sub _check_user_login {
