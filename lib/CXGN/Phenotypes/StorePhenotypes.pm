@@ -732,7 +732,7 @@ sub store_transcriptomics_data {
     my %nirs_hash = %{$nirs_hashref};
     
     my $protocol_id = $nirs_hash{protocol_id};
-    delete $nirs_hash{protocol_id}
+    delete $nirs_hash{protocol_id};
 
     my $nirs_json = encode_json \%nirs_hash;
 
