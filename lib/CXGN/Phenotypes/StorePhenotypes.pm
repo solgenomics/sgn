@@ -730,7 +730,7 @@ sub store_transcriptomics_data {
     my $nirs_hashref = shift;
     my $nd_experiment_id = shift;
     my %nirs_hash = %{$nirs_hashref};
-    
+
     my $protocol_id = $nirs_hash{protocol_id};
     delete $nirs_hash{protocol_id};
 

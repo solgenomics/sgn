@@ -645,6 +645,17 @@ sub high_dimensional_phenotypes_transcriptomics_upload_verify_POST : Args(0) {
     my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
     my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
 
+    my %parsed_data_agg_coalesced;
+    while (my ($stock_name, $o) = each %parsed_data) {
+        my $spectras = $o->{transcriptomics}->{transcripts};
+        $parsed_data_agg_coalesced{$stock_name}->{transcriptomics}->{protocol_id} = $protocol_id;
+        $parsed_data_agg_coalesced{$stock_name}->{transcriptomics}->{expression_unit} = $protocol_unit;
+        $parsed_data_agg_coalesced{$stock_name}->{transcriptomics}->{genome_version} = $protocol_genome_version;
+        $parsed_data_agg_coalesced{$stock_name}->{transcriptomics}->{annotation_version} = $protocol_genome_annotation_version;
+        $parsed_data_agg_coalesced{$stock_name}->{transcriptomics}->{transcripts} = $spectras->[0];
+    }
+
+    
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
         basepath=>$c->config->{basepath},
         dbhost=>$c->config->{dbhost},
@@ -658,7 +669,7 @@ sub high_dimensional_phenotypes_transcriptomics_upload_verify_POST : Args(0) {
         user_id=>$user_id,
         stock_list=>\@plots,
         trait_list=>\@traits,
-        values_hash=>\%parsed_data,
+        values_hash=>\%parsed_data_agg_coalesced,
         has_timestamps=>0,
         metadata_hash=>\%phenotype_metadata
     });
@@ -714,7 +725,7 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
         return {error => ["Please give a protocol name, description, unit, genome and annotation version, or select a previous protocol!"]};
     }
 
-    my $high_dim_transcriptomics_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_nirs_protocol', 'protocol_type')->cvterm_id();
+    my $high_dim_transcriptomics_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_transcriptomics_protocol', 'protocol_type')->cvterm_id();
     my $high_dim_transcriptomics_protocol_prop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_protocol_properties', 'protocol_property')->cvterm_id();
 
     my $data_level = $c->req->param('upload_transcriptomics_spreadsheet_data_level') || 'plots';
@@ -800,6 +811,16 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
         $dbh->execute($protocol_desc, $protocol_id);
     }
 
+    my %parsed_data_agg_coalesced;
+    while (my ($stock_name, $o) = each %parsed_data) {
+        my $spectras = $o->{transcriptomics}->{transcripts};
+        $parsed_data_agg_coalesced{$stock_name}->{transcriptomics}->{protocol_id} = $protocol_id;
+        $parsed_data_agg_coalesced{$stock_name}->{transcriptomics}->{expression_unit} = $protocol_unit;
+        $parsed_data_agg_coalesced{$stock_name}->{transcriptomics}->{genome_version} = $protocol_genome_version;
+        $parsed_data_agg_coalesced{$stock_name}->{transcriptomics}->{annotation_version} = $protocol_genome_annotation_version;
+        $parsed_data_agg_coalesced{$stock_name}->{transcriptomics}->{transcripts} = $spectras->[0];
+    }
+
     ## Set metadata
     my %phenotype_metadata;
     $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
@@ -823,9 +844,10 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
         user_id=>$user_id,
         stock_list=>\@plots,
         trait_list=>\@traits,
-        values_hash=>\%parsed_data,
+        values_hash=>\%parsed_data_agg_coalesced,
         has_timestamps=>0,
         metadata_hash=>\%phenotype_metadata
+    
     });
 
     my $warning_status;
