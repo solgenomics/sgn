@@ -200,6 +200,8 @@ sub _parse_with_plugin {
         $data{'crosses'}{$cross_identifier}{'female_parent_name'} = $female_parent;
         $data{'crosses'}{$cross_identifier}{'male_parent_name'} = $male_parent;
         $data{'crosses'}{$cross_identifier}{'cross_type'} = $cross_type;
+        $data{'crosses'}{$cross_identifier}{'activities'}{$transaction_id}{'timestamp'} = $timestamp;
+        $data{'crosses'}{$cross_identifier}{'activities'}{$transaction_id}{'person'} = $person;
         $data{'crosses'}{$cross_identifier}{'activities'}{$transaction_id}{'fruits'} = $number_of_fruits;
         $data{'crosses'}{$cross_identifier}{'activities'}{$transaction_id}{'flowers'} = $number_of_flowers;
         $data{'crosses'}{$cross_identifier}{'activities'}{$transaction_id}{'seeds'} = $number_of_seeds;
