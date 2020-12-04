@@ -370,11 +370,6 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
 
             <ul>
                 <li><strong>observationunit_name</strong>: It is a requiered field which matches with the database. It can be the plot name, subplots, plant name, or tissue sample, depending how your trial is designed.</li>
-                <li><strong>observation_name</strong>: It is a requiered field which matches with the name of an accession in the database.</li>
-                <li><strong>sample_type</strong>: It is a required field identification for tissue types sampled from a plant. The tissue types could be leaf, flower, stem, fibrous_root or storage_root.</li>
-                <li><strong>sampling_condition</strong>: This column is required in an upload file which indicates sampling conditions. However, it could be an optional field (empty column) when sampling has no conditions.</li>
-                <li><strong>sample_replication</strong>: It is a requiered field which indicates biological sample replicates. It should be written as "1", "2", "3", ... "n". Where "n" is the number of replicates.</li>
-                <li><strong>expression_unit</strong>: It is a required field and indicates the digital unit of quantified expressions. They can be:<strong>FPKM, RPKM, TPM, or VST. To use other units, ensure it is first registered in the database.</strong>.</li>
                 <li>All other columns are required gene names. You can add how many columns you want to upload, there isn't a limit.</li>
             </ul>
             <table class="table table-hover table-bordered table-condensed" >
@@ -382,11 +377,7 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                         <tbody>
                             <tr>                                
                                 <td>observationunit_name</td>
-                                <td>observation_name</td>
-                                <td>sample_type</td>
-                                <td>sampling_condition</td>
-                                <td>sample_replication</td>
-                                <td>expression_unit</td>
+                                <td>gene name columns</td>
                             </tr>
                         </tbody>
                     </table>
@@ -394,7 +385,7 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
             <h3>Template for Uploading Transcriptomics (.csv):</h3>
             <ul>
                 <li>The observationunit_name must be valid for BreedBase.</li>
-                <li><a href="https://docs.google.com/spreadsheets/d/1Ep5_aRkA_XXDiwyQaG2H2qoRF2iXi1s1Ysd0wm14l-s/edit#gid=1259845279">Upload Transcriptomics .csv template</a></li>
+                <li><a href="https://docs.google.com/spreadsheets/d/1hOlKZf7z7jZd89LCIcd6nFU-MZ5YAi2ZiZB3VIpEu4Y/edit?usp=sharing">Upload Transcriptomics .csv template</a></li>
             </ul>
         </div>
       </div>
