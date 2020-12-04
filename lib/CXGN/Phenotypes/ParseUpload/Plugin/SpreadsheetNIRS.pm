@@ -1,4 +1,4 @@
-package CXGN::Phenotypes::ParseUpload::Plugin::ScioSpreadsheetNIRS;
+package CXGN::Phenotypes::ParseUpload::Plugin::SpreadsheetNIRS;
 
 # Validate Returns %validate_result = (
 #   error => 'error message'
@@ -7,9 +7,7 @@ package CXGN::Phenotypes::ParseUpload::Plugin::ScioSpreadsheetNIRS;
 # Parse Returns %parsed_result = (
 #   data => {
 #       plotname1 => {
-#           varname1 => [12, '2015-06-16T00:53:26Z']
 #           nirs => {
-#              sampling_time => '2/11/19',
 #              spectra => {
 #                 "740" => "0.939101707",
 #                 "741" => "0.93868202",
@@ -27,7 +25,7 @@ use Data::Dumper;
 use Text::CSV;
 
 sub name {
-    return "scio spreadsheet nirs";
+    return "spreadsheet nirs";
 }
 
 sub validate {
@@ -60,23 +58,19 @@ sub validate {
         return \%parse_result;
     }
 
-    if ( $columns[0] ne "id" ) {
-      $parse_result{'error'} = "First cell must be 'id'. Please, check your file.";
-      print STDERR "First cell must be 'id'\n";
-      return \%parse_result;
+    my $header_col_1 = shift @columns;
+    if ($header_col_1 ne "sample_name") {
+        $parse_result{'error'} = "First cell must be 'sample_name'. Please, check your file.";
+        print STDERR "First cell must be 'sample_name'\n";
+        return \%parse_result;
     }
 
-    close $fh;
-
-    my %headers = ( 
-                    id                  =>1,
-                    sample_id           =>2,
-                    sampling_date       =>3,
-                    observationunit_name=>4,
-                    device_id           =>5,
-                    device_type         =>6,
-                    comments            =>7
-                    );
+    foreach (@columns) {
+        if (not $_=~/^[+]?\d+\.?\d*$/){
+            $parse_result{'error'}= "It is not a valid wavelength in the header: '$_'. Could you check the data format?";
+            return \%parse_result;
+        }
+    }
 
     my %types = (
                   SCIO        =>1,
@@ -86,60 +80,19 @@ sub validate {
                   LinkSquare  =>5
                   );
 
-    open(my $fh, '<', $filename)
-        or die "Could not open file '$filename' $!";
-    
-    my $size = 0;
-    my $number = 0;
-    my $count = 1;
-    my @fields;
     while (my $line = <$fh>) {
-      if ($csv->parse($line)) {
-        @fields = $csv->fields();
-        if ($count == 1) {
-          $size = scalar @fields;
-          while ($number < 7) {
-              if (not exists $headers{$fields[$number]}){
-                $parse_result{'error'} = "Wrong headers at '$fields[$number]'! Is this file matching with Spredsheet Format?";
-                return \%parse_result;
-              }else{
-                $number++;
-              }
-            }
-          while ($number < $size){
-            if (not $fields[$number]=~/^[+]?\d+\.?\d*$/){
-              $parse_result{'error'}= "It is not a valid wavelength: '$fields[$number]'. Could you check the data format?";
-              return \%parse_result;
-            }else{
-              $number++;
-            }
-          }
-        }elsif($count>1){
-          my $number2 = 9;
-          while ($number2 < $size){
-            # if (not exists $types{$fields[5]}){
-              #print "$fields[5]\n";
-              if (not grep {/$fields[5]/i} keys %types){
-                $parse_result{'error'}= "Wrong device type '$fields[5]'. Please, check names allowed in File Format Information.";
-                return \%parse_result;
-            }
-            if (not $fields[$number2]=~/^[+]?\d+\.?\d*$/){
-                $parse_result{'error'}= "It is not a real value for wavelength: '$fields[$number2]'";
-                return \%parse_result;
-            }
-            if (not $fields[2] eq ''){
-              if (not $fields[2] =~/(\d{4})-(\d{2})-(\d{2})/) {
-                  $parse_result{'error'} = "Sampling date needs to be of form YYYY-MM-DD";
-                 # print STDERR "value: $fields[2]\n";
-                  return \%parse_result;
-              }
-            }
-            $number2++;
-          }
+        my @fields;
+        if ($csv->parse($line)) {
+            @fields = $csv->fields();
         }
-        $count++;
-      }
-        
+        my $sample_name = shift @fields;
+
+        foreach (@fields) {
+            if (not $_=~/^[+]?\d+\.?\d*$/){
+                $parse_result{'error'}= "It is not a real value for wavelength: '$_'";
+                return \%parse_result;
+            }
+        }
     }
     close $fh;
 
@@ -185,23 +138,20 @@ sub parse {
     }
 
     while (my $row = $csv->getline ($fh)) {
-        # print STDERR "Row is ".Dumper($row)."\n";
         if ( $row_number == 0 ) {
             @header = @{$row};
             $num_cols = scalar(@header);
         } elsif ( $row_number > 0 ) {# get data
             my @columns = @{$row};
-            my $observationunit_name = $columns[3];
+            my $observationunit_name = $columns[0];
             $observation_units_seen{$observationunit_name} = 1;
             # print "The plots are $observationunit_name\n";
             my %spectra;
-            foreach my $col (0..$num_cols-1){
+            foreach my $col (1..$num_cols-1){
                 my $column_name = $header[$col];
-                if ($column_name ne '' && $column_name =~ /^[+]?\d+\.?\d*$/){
-                    my $wavelength = "X".$column_name;
-                    my $nir_value = $columns[$col];
-                    $spectra{$wavelength} = $nir_value;
-                }
+                my $wavelength = "X".$column_name;
+                my $nir_value = $columns[$col];
+                $spectra{$wavelength} = $nir_value;
             }
             push @{$data{$observationunit_name}->{'nirs'}->{'spectra'}}, \%spectra;
         }
@@ -219,8 +169,8 @@ sub parse {
     $parse_result{'data'} = \%data;
     $parse_result{'units'} = \@observation_units;
     $parse_result{'variables'} = \@traits;
-    return \%parse_result;
     # print STDERR Dumper \%parse_result;
+    return \%parse_result;
 }
 
 1;
