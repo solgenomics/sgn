@@ -434,12 +434,12 @@ jQuery(document).ready(function() {
 
     jQuery('#drone_imagery_analytics_select_analytics_type').change(function(){
         if (jQuery(this).val() == 'minimize_local_env_effect') {
-            jQuery('#drone_imagery_analytics_select_analytics_env_threshold_div').show();
+            jQuery('#drone_imagery_analytics_select_analytics_env_threshold_div').hide();
             jQuery('#drone_imagery_analytics_select_analytics_env_sim_div').show();
             jQuery('#drone_imagery_analytics_select_analytics_genetic_threshold_div').hide();
         }
         else if (jQuery(this).val() == 'minimize_genetic_effect') {
-            jQuery('#drone_imagery_analytics_select_analytics_genetic_threshold_div').show();
+            jQuery('#drone_imagery_analytics_select_analytics_genetic_threshold_div').hide();
             jQuery('#drone_imagery_analytics_select_analytics_env_threshold_div').hide();
             jQuery('#drone_imagery_analytics_select_analytics_env_sim_div').hide();
         }
@@ -637,8 +637,8 @@ jQuery(document).ready(function() {
                 'field_trial_id_list':JSON.stringify(manage_drone_imagery_analytics_field_trial_id_array),
                 'statistics_select':manage_drone_imagery_analytics_statistics_select,
                 'analytics_select':jQuery('#drone_imagery_analytics_select_analytics_type').val(),
-                'genetic_minimization_threshold':jQuery('#drone_imagery_analytics_select_analytics_genetic_threshold').val(),
-                'env_minimization_threshold':jQuery('#drone_imagery_analytics_select_analytics_env_threshold').val(),
+                //'genetic_minimization_threshold':jQuery('#drone_imagery_analytics_select_analytics_genetic_threshold').val(),
+                //'env_minimization_threshold':jQuery('#drone_imagery_analytics_select_analytics_env_threshold').val(),
                 'env_simulation':jQuery('#drone_imagery_analytics_select_analytics_env_sim').val(),
                 'relationship_matrix_type':jQuery('#drone_imagery_analytics_relationship_matrix_type_select_div').val(),
                 'protocol_id':jQuery('#drone_image_analytics_genotyping_protocol_select').val(),

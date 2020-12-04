@@ -69,6 +69,7 @@ sub drone_imagery_calculate_analytics : Path('/api/drone_imagery/calculate_analy
 sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
@@ -98,8 +99,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $legendre_order_number = $c->req->param('legendre_order_number');
     my $permanent_environment_structure = $c->req->param('permanent_environment_structure');
 
-    my $minimization_genetic_sum_threshold = $c->req->param('genetic_minimization_threshold');
-    my $minimization_env_sum_threshold = $c->req->param('env_minimization_threshold');
+    my $minimization_genetic_sum_threshold = $c->req->param('genetic_minimization_threshold') || '0.000001';
+    my $minimization_env_sum_threshold = $c->req->param('env_minimization_threshold') || '0.000001';
     my $env_simulation = $c->req->param('env_simulation');
 
     my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
