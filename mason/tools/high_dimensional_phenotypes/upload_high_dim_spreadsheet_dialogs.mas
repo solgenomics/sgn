@@ -243,10 +243,7 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                                 <label class="col-sm-3 control-label">Data Level: </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="upload_transcriptomics_spreadsheet_data_level" name="upload_transcriptomics_spreadsheet_data_level">
-                                        <option value="plots">Plots</option>
-                                        <option value="plants">Plants</option>
-                                        <option value="subplots">Subplots</option>
-                                        <option value="tissue_samples">Tissue Samples</option>
+                                        <option value="tissue_samples">Tissue Samples</option>    
                                     </select>
                                 </div>
                             </div>
@@ -369,7 +366,7 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
             
 
             <ul>
-                <li><strong>observationunit_name</strong>: It is a requiered field which matches with the database. It can be the plot name, subplots, plant name, or tissue sample, depending how your trial is designed.</li>
+                <li><strong>observationunit_name</strong>: It is a requiered field which matches with the database. It should be the tissue sample names from a sampling trial.</li>
                 <li>All other columns are required gene names. You can add how many columns you want to upload, there isn't a limit.</li>
             </ul>
             <table class="table table-hover table-bordered table-condensed" >
