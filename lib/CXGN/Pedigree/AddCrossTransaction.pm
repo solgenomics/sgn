@@ -36,8 +36,8 @@ sub add_intercross_transaction {
     my $self = shift;
     my $schema = $self->get_chado_schema();
     my $cross_unique_id = $self->get_cross_unique_id();
-    my $transaction_info = $self->get_transaction_info();
-    my %transaction_info_hash = %{$transaction_info};
+    my $new_transaction_info = $self->get_transaction_info();
+    my %new_transaction_info_hash = %{$new_transaction_info};
     my $transaction_error;
 
     my $coderef = sub {
@@ -50,27 +50,28 @@ sub add_intercross_transaction {
         }
 
         my $cross_transaction_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_transaction_json', 'stock_property');
+        my $crossing_metadata_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_metadata_json', 'stock_property');
 
-        my $transaction_json_string;
-        my $transaction_json_hash = {};
         my $previous_stockprop_rs = $cross_stock->stockprops({type_id=>$cross_transaction_cvterm->cvterm_id});
         if ($previous_stockprop_rs->count == 1){
-            $transaction_json_string = $previous_stockprop_rs->first->value();
-            $transaction_json_hash = decode_json $transaction_json_string;
-
-            foreach my $transaction_id(keys %transaction_info_hash) {
-                my $activity_info = $transaction_info_hash{$transaction_id};
-                $transaction_json_hash->{$transaction_id} = $activity_info;
+            my $transaction_json_string = $previous_stockprop_rs->first->value();
+            my $transaction_hash_ref = decode_json $transaction_json_string;
+            my %transaction_hash = %{$transaction_hash_ref};
+            foreach my $transaction_id(keys %new_transaction_info_hash) {
+                my $activity_info = $new_transaction_info_hash{$transaction_id};
+                $transaction_hash{$transaction_id} = $activity_info;
             }
 
-            my $update_transaction_json_string = encode_json $transaction_json_hash;
-            $previous_stockprop_rs->first->update({value => $update_transaction_json_string});
+            my $updated_transaction_json_string = encode_json \%transaction_hash;
+            $previous_stockprop_rs->first->update({value => $updated_transaction_json_string});
+
 
         } elsif ($previous_stockprop_rs->count > 1) {
             print STDERR "Error: More than one found!\n";
             return;
         } else {
-            my $new_transaction_json_string = encode_json %transaction_info_hash;
+            my $new_transaction_json_string = encode_json $new_transaction_info;
+#            print STDERR "NEW TRANSACTION JSON STRING =".Dumper($new_transaction_json_string)."\n";
             $cross_stock->create_stockprops({$cross_transaction_cvterm->name() => $new_transaction_json_string});
         }
 

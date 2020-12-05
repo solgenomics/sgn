@@ -44,11 +44,10 @@ sub _validate_with_plugin {
     if ($columns[0] ne 'crossDbId'){
         push @error_messages, "File contents incorrect. The first column must be crossDbId.";
     }
-    print STDERR "COLUMN 0 =".Dumper($columns[0])."\n";
+
     if ($columns[1] ne 'femaleObsUnitDbId'){
         push @error_messages, "File contents incorrect. The second column must be femaleObsUnitDbId.";
     }
-    print STDERR "COLUMN 1 =".Dumper($columns[1])."\n";
 
     if ($columns[2] ne 'maleObsUnitDbId'){
         push @error_messages, "File contents incorrect. The third column must be maleObsUnitDbId.";
@@ -208,7 +207,7 @@ sub _parse_with_plugin {
     }
 
     my $parsed_result = \%data;
-    print STDERR "DATA =".Dumper($parsed_result)."\n";
+#    print STDERR "DATA =".Dumper($parsed_result)."\n";
 
     $self->_set_parsed_data($parsed_result);
 
