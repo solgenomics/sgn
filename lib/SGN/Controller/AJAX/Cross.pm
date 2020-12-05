@@ -1594,7 +1594,7 @@ sub upload_intercross_file_POST : Args(0) {
     $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
     $parser->load_plugin('IntercrossCSV');
     $parsed_data = $parser->parse();
-    print STDERR "PARSED DATA =". Dumper($parsed_data)."\n";
+#    print STDERR "PARSED DATA =". Dumper($parsed_data)."\n";
 
     if (!$parsed_data){
         my $return_error = '';
@@ -1620,7 +1620,7 @@ sub upload_intercross_file_POST : Args(0) {
         my @cross_id_list = keys %crosses_hash;
         my $cross_validator = CXGN::List::Validate->new();
         my @new_crosses = @{$cross_validator->validate($schema,'crosses',\@cross_id_list)->{'missing'}};
-        print STDERR "NEW CROSSES =".Dumper(\@new_crosses)."\n";
+#        print STDERR "NEW CROSSES =".Dumper(\@new_crosses)."\n";
 
         if (scalar(@new_crosses) > 0) {
             my @crosses;
@@ -1667,7 +1667,6 @@ sub upload_intercross_file_POST : Args(0) {
 
         foreach my $cross_unique_id(keys %crosses_hash) {
             my $cross_transaction_info = $crosses_hash{$cross_unique_id}{'activities'};
-            print STDERR "TRANSACTION INFO =".Dumper($cross_transaction_info)."\n";
             my $cross_transaction = CXGN::Pedigree::AddCrossTransaction->new({
                 chado_schema => $schema,
                 cross_unique_id => $cross_unique_id,
