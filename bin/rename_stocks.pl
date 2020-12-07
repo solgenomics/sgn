@@ -13,6 +13,8 @@ rename_stocks.pl - a script for renaming stocks
  -H host name (required) e.g. "localhost"
  -D database name (required) e.g. "cxgn_cassava"
  -i path to infile (required)
+ -s stock type (default: accession)
+ -t test mode, do not commit changes.
 
 =head1 DESCRIPTION
 
@@ -38,9 +40,9 @@ use Bio::Chado::Schema;
 use CXGN::DB::InsertDBH;
 use Try::Tiny;
 
-our ($opt_H, $opt_D, $opt_i);
+our ($opt_H, $opt_D, $opt_i, $opt_s, $opt_t);
 
-getopts('H:D:i:');
+getopts('H:D:i:s:t');
 
 if (!$opt_H || !$opt_D || !$opt_i) {
     pod2usage(-verbose => 2, -message => "Must provide options -H (hostname), -D (database name), -i (input file)\n");
@@ -48,13 +50,14 @@ if (!$opt_H || !$opt_D || !$opt_i) {
 
 my $dbhost = $opt_H;
 my $dbname = $opt_D;
+my $stock_type = $opt_s || "accession";
 my $parser   = Spreadsheet::ParseExcel->new();
 my $excel_obj = $parser->parse($opt_i);
 
 my $dbh = CXGN::DB::InsertDBH->new({ 
 	dbhost=>$dbhost,
 	dbname=>$dbname,
-	dbargs => {AutoCommit => 1, RaiseError => 1}
+	dbargs => {AutoCommit => 0, RaiseError => 1}
 });
 
 my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } );
@@ -65,6 +68,12 @@ my $worksheet = ( $excel_obj->worksheets() )[0]; #support only one worksheet
 my ( $row_min, $row_max ) = $worksheet->row_range();
 my ( $col_min, $col_max ) = $worksheet->col_range();
 
+my $stock_type_row = $schema->resultset("Cv::Cvterm")->find( { name => $stock_type });
+
+if (! $stock_type_row) { die "The stock type $stock_type is not in the database."; }
+
+my $stock_type_id = $stock_type_row->cvterm_id();
+
 my $coderef = sub {
     for my $row ( 0 .. $row_max ) {
 
@@ -73,26 +82,33 @@ my $coderef = sub {
         
 	print STDERR "$db_uniquename -> $new_uniquename\n";
 
-    	my $old_stock = $schema->resultset('Stock::Stock')->find({ uniquename => $db_uniquename });
+    	my $old_stock = $schema->resultset('Stock::Stock')->find({ uniquename => $db_uniquename, type_id => $stock_type_id });
 
 	if (!$old_stock) { 
 	    print STDERR "Warning! Stock with uniquename $db_uniquename was not found in the database.\n";
 	    next();
 	}
-        my $new_stock = $old_stock->update({ uniquename => $new_uniquename});
+        my $new_stock = $old_stock->update({ name => $new_uniquename, uniquename => $new_uniquename});
 
     }
 };
 
 my $transaction_error;
 try {
-    $schema->txn_do($coderef);
+    eval($coderef->());
 } catch {
     $transaction_error =  $_;
 };
 
-if ($transaction_error) {
-    print STDERR "Transaction error storing terms: $transaction_error\n";
+if ($opt_t) {
+    print STDERR "Not storing with test flag (-t). Rolling back.\n";
+    $schema->txn_rollback();
+}
+elsif ($transaction_error) {
+    print STDERR "Transaction error storing terms: $transaction_error. Rolling back.\n";
+    $schema->txn_rollback();
 } else {
+    print STDERR "Everything looks good. Committing.\n";
+    $schema->txn_commit();
     print STDERR "Script Complete.\n";
 }
