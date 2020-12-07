@@ -71,10 +71,12 @@ sub validate {
 
     foreach (@columns) {
         if (not $_=~/^[+]?\d+\.?\d*$/){
-            $parse_result{'error'}= "It is not a valid wavelength in the header: '$_'. Could you check the data format?";
+            $parse_result{'error'}= "It is not a valid wavelength in the header. Must be a numeric spectra: '$_'. Could you check the data format?";
             return \%parse_result;
         }
     }
+
+    my @wavelengths = @columns;
 
     my %types = (
                   SCIO        =>1,
@@ -85,7 +87,6 @@ sub validate {
                   );
 
     my @samples;
-    my @wavelengths;
     while (my $line = <$fh>) {
         my @fields;
         if ($csv->parse($line)) {
@@ -93,11 +94,10 @@ sub validate {
         }
         my $sample_name = shift @fields;
         push @samples, $sample_name;
-        @wavelengths = @fields;
 
         foreach (@fields) {
             if (not $_=~/^[+]?\d+\.?\d*$/){
-                $parse_result{'error'}= "It is not a real value for wavelength: '$_'";
+                $parse_result{'error'}= "It is not a real value for wavelength. Must be a numeric value: '$_'";
                 return \%parse_result;
             }
         }
@@ -134,8 +134,8 @@ sub validate {
 
         #If there are markers in the uploaded file that are not saved in the protocol, they will be returned along in the error message
         if (scalar(@wavelengths_not_in_protocol)>0){
-            $errors{'missing_wavelengths'} = \@wavelengths_not_in_protocol;
-            push @error_messages, "The following wavelengths are not in the database for the selected protocol: ".join(',',@wavelengths_not_in_protocol);
+            $parse_result{'error'} = "The following wavelengths are not in the database for the selected protocol: ".join(',',@wavelengths_not_in_protocol);
+            return \%parse_result;
         }
     }
 
