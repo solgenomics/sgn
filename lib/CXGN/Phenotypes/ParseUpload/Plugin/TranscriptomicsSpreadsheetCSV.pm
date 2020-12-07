@@ -77,6 +77,7 @@ sub validate {
     }
 
     my @samples;
+    my @transcripts;
     while (my $line = <$fh>) {
         my @fields;
         if ($csv->parse($line)) {
@@ -84,6 +85,7 @@ sub validate {
         }
         my $sample_name = shift @fields;
         push @samples, $sample_name;
+        @transcripts = @fields;
 
         foreach (@fields) {
             if (not $_=~/^[+]?\d+\.?\d*$/){
@@ -100,6 +102,33 @@ sub validate {
         my $samples_string = join ', ', @samples_missing;
         $parse_result{'error'}= "The following samples in your file are not valid in the database (".$samples_string."). Please add them in a sampling trial first!";
         return \%parse_result;
+    }
+
+    if ($nd_protocol_id) {
+        my $transcriptomics_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_transcriptomics_protocol', 'protocol_type')->cvterm_id();
+        my $protocol = CXGN::Phenotypes::HighDimensionalPhenotypeProtocol->new({
+            bcs_schema => $schema,
+            nd_protocol_id => $nd_protocol_id,
+            nd_protocol_type_id => $transcriptomics_protocol_cvterm_id
+        });
+        my $transcripts_in_protocol = $protocol->header_column_names;
+        my %transcripts_in_protocol_hash;
+        foreach (@$transcripts_in_protocol) {
+            $transcripts_in_protocol_hash{$_}++;
+        }
+
+        my @transcripts_not_in_protocol;
+        foreach (@transcripts) {
+            if (!exists($transcripts_in_protocol_hash{$_})) {
+                push @transcripts_not_in_protocol, $_;
+            }
+        }
+
+        #If there are markers in the uploaded file that are not saved in the protocol, they will be returned along in the error message
+        if (scalar(@transcripts_not_in_protocol)>0){
+            $errors{'missing_transcripts'} = \@transcripts_not_in_protocol;
+            push @error_messages, "The following transcripts are not in the database for the selected protocol: ".join(',',@transcripts_not_in_protocol);
+        }
     }
 
     return 1;
@@ -163,6 +192,7 @@ sub parse {
                 my $column_name = $header[$col];
                 if ($column_name ne '' && $column_name =~ /^Manes/){
                     my $wavelength = $column_name;
+                    $traits_seen{$wavelength}++;
                     my $nir_value = $columns[$col];
                     $spectra{$wavelength} = $nir_value;
                 }

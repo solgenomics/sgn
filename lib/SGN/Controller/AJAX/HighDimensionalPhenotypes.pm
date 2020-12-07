@@ -139,12 +139,12 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
     }
     my %parsed_data;
     my @plots;
-    my @traits;
+    my @wavelengths;
     if (scalar(@error_status) == 0) {
         if ($parsed_file && !$parsed_file->{'error'}) {
             %parsed_data = %{$parsed_file->{'data'}};
             @plots = @{$parsed_file->{'units'}};
-            @traits = @{$parsed_file->{'variables'}};
+            @wavelengths = @{$parsed_file->{'variables'}};
             push @success_status, "File data successfully parsed.";
         }
     }
@@ -195,12 +195,12 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
     }
     my %parsed_data_agg;
     my @plots_agg;
-    my @traits_agg;
+    my @wavelengths_agg;
     if (scalar(@error_status) == 0) {
         if ($parsed_file_agg && !$parsed_file_agg->{'error'}) {
             %parsed_data_agg = %{$parsed_file_agg->{'data'}};
             @plots_agg = @{$parsed_file_agg->{'units'}};
-            @traits_agg = @{$parsed_file_agg->{'variables'}};
+            @wavelengths_agg = @{$parsed_file_agg->{'variables'}};
             push @success_status, "Aggregated file data successfully parsed.";
         }
     }
@@ -223,7 +223,7 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
         phenome_schema=>$phenome_schema,
         user_id=>$user_id,
         stock_list=>\@plots_agg,
-        trait_list=>\@traits_agg,
+        trait_list=>\@wavelengths_agg,
         values_hash=>\%parsed_data_agg_coalesced,
         has_timestamps=>0,
         metadata_hash=>\%phenotype_metadata
@@ -350,12 +350,12 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
     }
     my %parsed_data;
     my @plots;
-    my @traits;
+    my @wavelengths;
     if (scalar(@error_status) == 0) {
         if ($parsed_file && !$parsed_file->{'error'}) {
             %parsed_data = %{$parsed_file->{'data'}};
             @plots = @{$parsed_file->{'units'}};
-            @traits = @{$parsed_file->{'variables'}};
+            @wavelengths = @{$parsed_file->{'variables'}};
             push @success_status, "File data successfully parsed.";
         }
     }
@@ -439,18 +439,21 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
         $c->detach();
     }
     my @plots_agg;
-    my @traits_agg;
+    my @wavelengths_agg;
     if (scalar(@error_status) == 0) {
         if ($parsed_file_agg && !$parsed_file_agg->{'error'}) {
             %parsed_data_agg = %{$parsed_file_agg->{'data'}};
             @plots_agg = @{$parsed_file_agg->{'units'}};
-            @traits_agg = @{$parsed_file_agg->{'variables'}};
+            @wavelengths_agg = @{$parsed_file_agg->{'variables'}};
             push @success_status, "Aggregated file data successfully parsed.";
         }
     }
 
     if (!$protocol_id) {
-        my %nirs_protocol_prop = (device_type => $protocol_device_type);
+        my %nirs_protocol_prop = (
+            device_type => $protocol_device_type,
+            header_column_names => \@wavelengths_agg
+        );
 
         my $protocol = $schema->resultset('NaturalDiversity::NdProtocol')->create({
             name => $protocol_name,
@@ -490,7 +493,7 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
         phenome_schema=>$phenome_schema,
         user_id=>$user_id,
         stock_list=>\@plots_agg,
-        trait_list=>\@traits_agg,
+        trait_list=>\@wavelengths_agg,
         values_hash=>\%parsed_data_agg_coalesced,
         has_timestamps=>0,
         metadata_hash=>\%phenotype_metadata
@@ -627,12 +630,12 @@ sub high_dimensional_phenotypes_transcriptomics_upload_verify_POST : Args(0) {
     }
     my %parsed_data;
     my @plots;
-    my @traits;
+    my @transcripts;
     if (scalar(@error_status) == 0) {
         if ($parsed_file && !$parsed_file->{'error'}) {
             %parsed_data = %{$parsed_file->{'data'}};
             @plots = @{$parsed_file->{'units'}};
-            @traits = @{$parsed_file->{'variables'}};
+            @transcripts = @{$parsed_file->{'variables'}};
             push @success_status, "File data successfully parsed.";
         }
     }
@@ -663,7 +666,7 @@ sub high_dimensional_phenotypes_transcriptomics_upload_verify_POST : Args(0) {
         phenome_schema=>$phenome_schema,
         user_id=>$user_id,
         stock_list=>\@plots,
-        trait_list=>\@traits,
+        trait_list=>\@transcripts,
         values_hash=>\%parsed_data_agg_coalesced,
         has_timestamps=>0,
         metadata_hash=>\%phenotype_metadata
@@ -781,18 +784,23 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
     }
     my %parsed_data;
     my @plots;
-    my @traits;
+    my @transcripts;
     if (scalar(@error_status) == 0) {
         if ($parsed_file && !$parsed_file->{'error'}) {
             %parsed_data = %{$parsed_file->{'data'}};
             @plots = @{$parsed_file->{'units'}};
-            @traits = @{$parsed_file->{'variables'}};
+            @transcripts = @{$parsed_file->{'variables'}};
             push @success_status, "File data successfully parsed.";
         }
     }
 
     if (!$protocol_id) {
-        my %transcriptomics_protocol_prop = (expression_unit => $protocol_unit, genome_version => $protocol_genome_version, annotation_version => $protocol_genome_annotation_version);
+        my %transcriptomics_protocol_prop = (
+            expression_unit => $protocol_unit,
+            genome_version => $protocol_genome_version,
+            annotation_version => $protocol_genome_annotation_version,
+            header_column_names => \@transcripts
+        );
 
         my $protocol = $schema->resultset('NaturalDiversity::NdProtocol')->create({
             name => $protocol_name,
@@ -810,9 +818,6 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
     while (my ($stock_name, $o) = each %parsed_data) {
         my $spectras = $o->{transcriptomics}->{transcripts};
         $parsed_data_agg_coalesced{$stock_name}->{transcriptomics}->{protocol_id} = $protocol_id;
-        $parsed_data_agg_coalesced{$stock_name}->{transcriptomics}->{expression_unit} = $protocol_unit;
-        $parsed_data_agg_coalesced{$stock_name}->{transcriptomics}->{genome_version} = $protocol_genome_version;
-        $parsed_data_agg_coalesced{$stock_name}->{transcriptomics}->{annotation_version} = $protocol_genome_annotation_version;
         $parsed_data_agg_coalesced{$stock_name}->{transcriptomics}->{transcripts} = $spectras->[0];
     }
 
@@ -838,7 +843,7 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
         phenome_schema=>$phenome_schema,
         user_id=>$user_id,
         stock_list=>\@plots,
-        trait_list=>\@traits,
+        trait_list=>\@transcripts,
         values_hash=>\%parsed_data_agg_coalesced,
         has_timestamps=>0,
         metadata_hash=>\%phenotype_metadata
@@ -972,12 +977,12 @@ sub high_dimensional_phenotypes_metabolomics_upload_verify_POST : Args(0) {
     }
     my %parsed_data;
     my @plots;
-    my @traits;
+    my @metabolites;
     if (scalar(@error_status) == 0) {
         if ($parsed_file && !$parsed_file->{'error'}) {
             %parsed_data = %{$parsed_file->{'data'}};
             @plots = @{$parsed_file->{'units'}};
-            @traits = @{$parsed_file->{'variables'}};
+            @metabolites = @{$parsed_file->{'variables'}};
             push @success_status, "File data successfully parsed.";
         }
     }
@@ -997,7 +1002,7 @@ sub high_dimensional_phenotypes_metabolomics_upload_verify_POST : Args(0) {
         phenome_schema=>$phenome_schema,
         user_id=>$user_id,
         stock_list=>\@plots,
-        trait_list=>\@traits,
+        trait_list=>\@metabolites,
         values_hash=>\%parsed_data,
         has_timestamps=>0,
         metadata_hash=>\%phenotype_metadata
@@ -1112,18 +1117,20 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
     }
     my %parsed_data;
     my @plots;
-    my @traits;
+    my @metabolites;
     if (scalar(@error_status) == 0) {
         if ($parsed_file && !$parsed_file->{'error'}) {
             %parsed_data = %{$parsed_file->{'data'}};
             @plots = @{$parsed_file->{'units'}};
-            @traits = @{$parsed_file->{'variables'}};
+            @metabolites = @{$parsed_file->{'variables'}};
             push @success_status, "File data successfully parsed.";
         }
     }
 
     if (!$protocol_id) {
-        my %metabolomics_protocol_prop = ();
+        my %metabolomics_protocol_prop = (
+            header_column_names => \@metabolites
+        );
 
         my $protocol = $schema->resultset('NaturalDiversity::NdProtocol')->create({
             name => $protocol_name,
@@ -1159,7 +1166,7 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
         phenome_schema=>$phenome_schema,
         user_id=>$user_id,
         stock_list=>\@plots,
-        trait_list=>\@traits,
+        trait_list=>\@metabolites,
         values_hash=>\%parsed_data,
         has_timestamps=>0,
         metadata_hash=>\%phenotype_metadata
