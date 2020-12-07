@@ -1071,16 +1071,30 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         }
     close($F_min);
 
+    # my $cmd_min_plot = 'R -e "library(data.table); library(ggplot2); library(dplyr);
+    # mat <- fread(\''.$minimization_iterations_tempfile.'\', header=TRUE, sep=\',\');
+    # ';
+    # if ($analytics_select eq 'minimize_genetic_effect') {
+    #     $cmd_min_plot .= 'mat <- mat[order(-genetic),];';
+    # }
+    # elsif ($analytics_select eq 'minimize_local_env_effect') {
+    #     $cmd_min_plot .= 'mat <- mat[order(-environment),];';
+    # }
+    # $cmd_min_plot .= 'mat\$iteration <- seq.int(nrow(mat));
+    # matmelted <- reshape2::melt(mat, id.var=\'iteration\');
+    # options(device=\'png\');
+    # par();
+    # sp <- ggplot(matmelted, aes(x=iteration, y=value, col=variable)) + geom_line();
+    # sp <- sp + guides(shape = guide_legend(override.aes = list(size = 0.5)));
+    # sp <- sp + guides(color = guide_legend(override.aes = list(size = 0.5)));
+    # sp <- sp + theme(legend.title = element_text(size = 3), legend.text = element_text(size = 3));
+    # ggsave(\''.$minimization_iterations_figure_tempfile.'\', sp, device=\'png\', width=3, height=2, units=\'in\');
+    # dev.off();"';
+    # # print STDERR Dumper $cmd;
+    # my $status_min_plot = system($cmd_min_plot);
+
     my $cmd_min_plot = 'R -e "library(data.table); library(ggplot2); library(dplyr);
     mat <- fread(\''.$minimization_iterations_tempfile.'\', header=TRUE, sep=\',\');
-    ';
-    if ($analytics_select eq 'minimize_genetic_effect') {
-        $cmd_min_plot .= 'mat <- mat[order(-genetic),];';
-    }
-    elsif ($analytics_select eq 'minimize_local_env_effect') {
-        $cmd_min_plot .= 'mat <- mat[order(-environment),];';
-    }
-    $cmd_min_plot .= 'mat\$iteration <- seq.int(nrow(mat));
     matmelted <- reshape2::melt(mat, id.var=\'iteration\');
     options(device=\'png\');
     par();
@@ -1161,6 +1175,41 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     # $cmd_gen_plot .= 'ggsave(\''.$genetic_effects_figure_tempfile.'\', sp, device=\'png\', width=12, height=6, units=\'in\');
     # dev.off();"';
 
+    my $spatial_effects_first_plots;
+
+    my ($spatial_iterations_heatmap_tempfile_fh, $spatial_iterations_heatmap_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    open(my $F_spatialit, ">", $spatial_iterations_heatmap_tempfile) || die "Can't open file ".$spatial_iterations_heatmap_tempfile;
+        print $F_spatialit "trait_type,row,col,value\n";
+        while (my($env_val, $obj) = each %$result_blup_spatial_data_iterations) {
+            foreach my $p (@unique_plot_names) {
+                foreach my $t (@sorted_trait_names) {
+                    my @row = ("spatial_".$env_val."_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $obj->{env}->{$p}->{$t}->[0]);
+                    my $line = join ',', @row;
+                    print $F_spatialit "$line\n";
+                }
+            }
+        }
+    close($F_spatialit);
+
+    my $env_effects_iterations_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
+    $env_effects_iterations_figure_tempfile_string .= '.png';
+    my $env_effects_iterations_figure_tempfile = $c->config->{basepath}."/".$env_effects_iterations_figure_tempfile_string;
+
+    my $cmd_spatialiterations_plot = 'R -e "library(data.table); library(ggplot2); library(dplyr); library(viridis); library(GGally); library(gridExtra);
+    mat <- fread(\''.$spatial_iterations_heatmap_tempfile.'\', header=TRUE, sep=\',\');
+    options(device=\'png\');
+    par();
+    gg <- ggplot(mat, aes(col, row, fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    ggsave(\''.$env_effects_iterations_figure_tempfile.'\', gg, device=\'png\', width=10, height=10, units=\'in\');
+    dev.off();"';
+    # print STDERR Dumper $cmd;
+    my $status_spatialiterations_plot = system($cmd_spatialiterations_plot);
+    push @$spatial_effects_first_plots, $env_effects_iterations_figure_tempfile_string;
+
     my ($phenotypes_heatmap_tempfile_fh, $phenotypes_heatmap_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     open(my $F_pheno, ">", $phenotypes_heatmap_tempfile) || die "Can't open file ".$phenotypes_heatmap_tempfile;
         print $F_pheno "trait_type,row,col,value\n";
@@ -1205,7 +1254,6 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         }
     close($F_eff);
 
-    my $spatial_effects_first_plots;
     my $env_effects_first_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
     $env_effects_first_figure_tempfile_string .= '.png';
     my $env_effects_first_figure_tempfile = $c->config->{basepath}."/".$env_effects_first_figure_tempfile_string;
@@ -1547,6 +1595,7 @@ sub _perform_statistics {
                 my $phenotype_data_original_hash_out_copy = dclone $phenotype_data_original_hash_out;
 
                 $result_blup_data_iterations->{$genetic_effect_sum} = {
+                    iteration_count => $iteration_count,
                     gen => $result_blup_data_copy,
                     env_effect => $env_effect_sum,
                     phenotype_data => $phenotype_data_hash_out_copy,
@@ -1769,6 +1818,7 @@ sub _perform_statistics {
                 my $phenotype_data_original_hash_out_copy = dclone $phenotype_data_original_hash_out;
 
                 $result_blup_data_iterations->{$genetic_effect_sum} = {
+                    iteration_count => $iteration_count,
                     env => $result_blup_spatial_data_copy,
                     gen => $result_blup_data_copy,
                     residual => $result_residual_data_copy,
@@ -1779,6 +1829,7 @@ sub _perform_statistics {
                 };
 
                 $result_blup_spatial_data_iterations->{$env_effect_sum} = {
+                    iteration_count => $iteration_count,
                     env => $result_blup_spatial_data_copy,
                     gen => $result_blup_data_copy,
                     residual => $result_residual_data_copy,
@@ -2124,6 +2175,7 @@ sub _perform_statistics {
             my $phenotype_data_original_hash_out_copy = dclone $phenotype_data_original_hash_out;
 
             $result_blup_data_iterations->{$genetic_effect_sum} = {
+                iteration_count => $iteration_count,
                 env => $result_blup_pe_data_delta_copy,
                 gen => $result_blup_data_delta_copy,
                 residual => $result_residual_data_copy,
@@ -2133,6 +2185,7 @@ sub _perform_statistics {
                 phenotype_data_original => $phenotype_data_original_hash_out_copy
             };
             $result_blup_pe_data_iterations->{$env_effect_sum} = {
+                iteration_count => $iteration_count,
                 env => $result_blup_pe_data_delta_copy,
                 gen => $result_blup_data_delta_copy,
                 residual => $result_residual_data_copy,
@@ -2372,6 +2425,7 @@ sub _perform_statistics {
             my $phenotype_data_original_hash_out_copy = dclone $phenotype_data_original_hash_out;
 
             $result_blup_data_iterations->{$genetic_effect_sum} = {
+                iteration_count => $iteration_count,
                 gen => $result_blup_data_delta_copy,
                 residual => $result_residual_data_copy,
                 fitted => $result_fitted_data_copy,
@@ -2868,6 +2922,7 @@ sub _perform_statistics {
             my $phenotype_data_original_hash_out_copy = dclone $phenotype_data_original_hash_out;
 
             $result_blup_data_iterations->{$genetic_effect_sum} = {
+                iteration_count => $iteration_count,
                 env => $result_blup_pe_data_delta_copy,
                 gen => $result_blup_data_delta_copy,
                 residual => $result_residual_data_copy,
@@ -2877,6 +2932,7 @@ sub _perform_statistics {
                 phenotype_data_original => $phenotype_data_original_hash_out_copy
             };
             $result_blup_pe_data_iterations->{$env_effect_sum} = {
+                iteration_count => $iteration_count,
                 env => $result_blup_pe_data_delta_copy,
                 gen => $result_blup_data_delta_copy,
                 residual => $result_residual_data_copy,
@@ -2931,6 +2987,11 @@ sub _select_lowest_effects {
     my $result_blup_data_iterations = shift;
     my $result_blup_spatial_data_iterations = shift;
     my $result_blup_pe_data_iterations = shift;
+
+    # foreach my $k (sort {$a <=> $b} keys %$result_blup_spatial_data_iterations) {
+    #     my $v = $result_blup_spatial_data_iterations->{$k};
+    #     print STDERR Dumper [$k, $v->{iteration_count}, $v->{phenotype_data}];
+    # }
 
     my $phenotype_data_original_hash_out_selected = {};
     my $phenotype_data_hash_out_selected = {};
