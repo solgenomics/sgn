@@ -53,18 +53,23 @@ sub add_intercross_transaction {
         my $crossing_metadata_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_metadata_json', 'stock_property');
 
         my $previous_stockprop_rs = $cross_stock->stockprops({type_id=>$cross_transaction_cvterm->cvterm_id});
+        my $total_number_of_flowers = 0;
+        my $total_number_of_fruits = 0;
+        my $total_number_of_seeds = 0;
+        my %transaction_hash;
+        my %summary_info_hash;
+
         if ($previous_stockprop_rs->count == 1){
             my $transaction_json_string = $previous_stockprop_rs->first->value();
             my $transaction_hash_ref = decode_json $transaction_json_string;
-            my %transaction_hash = %{$transaction_hash_ref};
-            foreach my $transaction_id(keys %new_transaction_info_hash) {
-                my $activity_info = $new_transaction_info_hash{$transaction_id};
-                $transaction_hash{$transaction_id} = $activity_info;
+            %transaction_hash = %{$transaction_hash_ref};
+            foreach my $new_transaction_id(keys %new_transaction_info_hash) {
+                my $activity_info = $new_transaction_info_hash{$new_transaction_id};
+                $transaction_hash{$new_transaction_id} = $activity_info;
             }
 
             my $updated_transaction_json_string = encode_json \%transaction_hash;
             $previous_stockprop_rs->first->update({value => $updated_transaction_json_string});
-
 
         } elsif ($previous_stockprop_rs->count > 1) {
             print STDERR "Error: More than one found!\n";
@@ -73,8 +78,35 @@ sub add_intercross_transaction {
             my $new_transaction_json_string = encode_json $new_transaction_info;
 #            print STDERR "NEW TRANSACTION JSON STRING =".Dumper($new_transaction_json_string)."\n";
             $cross_stock->create_stockprops({$cross_transaction_cvterm->name() => $new_transaction_json_string});
+
+            %transaction_hash = %new_transaction_info_hash;
         }
 
+        foreach my $transaction_id(keys %transaction_hash) {
+            my $number_of_flowers = $transaction_hash{$transaction_id}{'Number of Flowers'};
+            $total_number_of_flowers += $number_of_flowers;
+
+            my $number_of_fruits = $transaction_hash{$transaction_id}{'Number of Fruits'};
+            $total_number_of_fruits += $number_of_fruits;
+
+            my $number_of_seeds = $transaction_hash{$transaction_id}{'Number of Seeds'};
+            $total_number_of_seeds += $number_of_seeds;
+        }
+
+        $summary_info_hash{'Number of Flowers'} = $total_number_of_flowers;
+        $summary_info_hash{'Number of Fruits'} = $total_number_of_fruits;
+        $summary_info_hash{'Number of Seeds'} = $total_number_of_seeds;
+
+        foreach my $info_type(keys %summary_info_hash){
+            my $value = $summary_info_hash{$info_type};
+            my $cross_summary_info = CXGN::Pedigree::AddCrossInfo->new({
+                chado_schema => $schema,
+                cross_name => $cross_unique_id,
+                key => $info_type,
+                value => $value,
+            });
+            $cross_summary_info->add_info();
+        }
     };
 
     #try to add all cross info in a transaction
