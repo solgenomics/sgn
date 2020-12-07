@@ -1686,6 +1686,38 @@ sub upload_intercross_file_POST : Args(0) {
 }
 
 
+sub get_cross_transactions :Path('/ajax/cross/transactions') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $cross_id = shift;
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $cross_transaction_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_transaction_json', 'stock_property')->cvterm_id();
+    my $cross_transactions = $schema->resultset("Stock::Stockprop")->find({stock_id => $cross_id, type_id => $cross_transaction_cvterm});
+
+    my $cross_transaction_string;
+    my %cross_transaction_hash;
+    my @all_transactions;
+
+    if($cross_transactions){
+        $cross_transaction_string = $cross_transactions->value();
+        my $cross_transaction_ref = decode_json $cross_transaction_string;
+        %cross_transaction_hash = %{$cross_transaction_ref};
+        foreach my $transaction_key (sort keys %cross_transaction_hash) {
+            my $operator = $cross_transaction_hash{$transaction_key}{'Operator'};
+            my $timestamp = $cross_transaction_hash{$transaction_key}{'Timestamp'};
+            my $number_of_flowers = $cross_transaction_hash{$transaction_key}{'Number of Flowers'};
+            my $number_of_fruits = $cross_transaction_hash{$transaction_key}{'Number of Fruits'};
+            my $number_of_seeds = $cross_transaction_hash{$transaction_key}{'Number of Seeds'};
+            push @all_transactions, [$transaction_key, $operator, $timestamp, $number_of_flowers, $number_of_fruits, $number_of_seeds];
+        }
+    }
+
+    $c->stash->{rest} = {data => \@all_transactions};
+
+}
+
+
 ###
 1;#
 ###
