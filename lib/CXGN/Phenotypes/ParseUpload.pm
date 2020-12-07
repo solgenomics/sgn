@@ -13,12 +13,13 @@ sub validate {
     my $data_level = shift;
     my $schema = shift;
     my $zipfile = shift;
+    my $nd_protocol_id = shift;
     my $validate_result;
 
     foreach my $p ($self->plugins()) {
         if ($type eq $p->name()) {
-	     $validate_result = $p->validate($filename, $timestamp_included, $data_level, $schema, $zipfile);
-	}
+            $validate_result = $p->validate($filename, $timestamp_included, $data_level, $schema, $zipfile, $nd_protocol_id);
+        }
     }
     return $validate_result;
 }
@@ -33,12 +34,13 @@ sub parse {
     my $zipfile = shift;
     my $user_id = shift;
     my $c = shift;
+    my $nd_protocol_id = shift;
     my $parse_result;
 
     foreach my $p ($self->plugins()) {
         if ($type eq $p->name()) {
-    	       $parse_result = $p->parse($filename, $timestamp_included, $data_level, $schema, $zipfile, $user_id, $c);
-    	}
+            $parse_result = $p->parse($filename, $timestamp_included, $data_level, $schema, $zipfile, $user_id, $c, $nd_protocol_id);
+        }
     }
     return $parse_result;
 }

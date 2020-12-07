@@ -103,7 +103,7 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
     unlink $upload_tempfile;
 
     my $archived_image_zipfile_with_path;
-    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path);
+    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $protocol_id);
     if (!$validate_file) {
         push @error_status, "Archived file not valid: $upload_original_name.";
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
@@ -126,7 +126,7 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
     $phenotype_metadata{'operator'} = $user_name;
     $phenotype_metadata{'date'} = $timestamp;
 
-    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id);
+    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c, $protocol_id);
     if (!$parsed_file) {
         push @error_status, "Error parsing file $upload_original_name.";
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
@@ -321,7 +321,7 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
     unlink $upload_tempfile;
 
     my $archived_image_zipfile_with_path;
-    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path);
+    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $protocol_id);
     if (!$validate_file) {
         push @error_status, "Archived file not valid: $upload_original_name.";
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
@@ -337,7 +337,7 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
         $c->detach();
     }
 
-    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id);
+    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c, $protocol_id);
     if (!$parsed_file) {
         push @error_status, "Error parsing file $upload_original_name.";
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
@@ -591,7 +591,7 @@ sub high_dimensional_phenotypes_transcriptomics_upload_verify_POST : Args(0) {
     unlink $upload_tempfile;
 
     my $archived_image_zipfile_with_path;
-    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path);
+    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $protocol_id);
     if (!$validate_file) {
         push @error_status, "Archived file not valid: $upload_original_name.";
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
@@ -614,7 +614,7 @@ sub high_dimensional_phenotypes_transcriptomics_upload_verify_POST : Args(0) {
     $phenotype_metadata{'operator'} = $user_name;
     $phenotype_metadata{'date'} = $timestamp;
 
-    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id);
+    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c, $protocol_id);
     if (!$parsed_file) {
         push @error_status, "Error parsing file $upload_original_name.";
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
@@ -752,7 +752,7 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
     unlink $upload_tempfile;
 
     my $archived_image_zipfile_with_path;
-    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path);
+    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $protocol_id);
     if (!$validate_file) {
         push @error_status, "Archived file not valid: $upload_original_name.";
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
@@ -768,7 +768,7 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
         $c->detach();
     }
 
-    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id);
+    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c, $protocol_id);
     if (!$parsed_file) {
         push @error_status, "Error parsing file $upload_original_name.";
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
@@ -936,7 +936,7 @@ sub high_dimensional_phenotypes_metabolomics_upload_verify_POST : Args(0) {
     unlink $upload_tempfile;
 
     my $archived_image_zipfile_with_path;
-    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path);
+    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $protocol_id);
     if (!$validate_file) {
         push @error_status, "Archived file not valid: $upload_original_name.";
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
@@ -959,7 +959,7 @@ sub high_dimensional_phenotypes_metabolomics_upload_verify_POST : Args(0) {
     $phenotype_metadata{'operator'} = $user_name;
     $phenotype_metadata{'date'} = $timestamp;
 
-    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id);
+    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c, $protocol_id);
     if (!$parsed_file) {
         push @error_status, "Error parsing file $upload_original_name.";
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
@@ -1083,7 +1083,7 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
     unlink $upload_tempfile;
 
     my $archived_image_zipfile_with_path;
-    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path);
+    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $protocol_id);
     if (!$validate_file) {
         push @error_status, "Archived file not valid: $upload_original_name.";
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
@@ -1099,7 +1099,7 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
         $c->detach();
     }
 
-    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id);
+    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c, $protocol_id);
     if (!$parsed_file) {
         push @error_status, "Error parsing file $upload_original_name.";
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
