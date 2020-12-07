@@ -112,14 +112,25 @@ relationshipMatrixJson <- c()
 
 relationshipMatrix           <- A.mat(genoData)
 diag(relationshipMatrix)     <- diag(relationshipMatrix) + 1e-6
-colnames(relationshipMatrix) <- rownames(relationshipMatrix)
-relationshipMatrix           <- round(data.frame(relationshipMatrix), 3)
+genos <- rownames(relationshipMatrix)
+
+relationshipMatrix <- data.frame(relationshipMatrix)
+
+colnames(relationshipMatrix) <- genos
+rownames(relationshipMatrix) <- genos
+
+relationshipMatrix <- relationshipMatrix %>%
+    rownames_to_column('genotypes') %>%
+	        mutate_if(is.numeric, round, 3) %>%
+		    column_to_rownames('genotypes')
+		    
+
 
 inbreeding <- diag(data.matrix(relationshipMatrix))
 inbreeding <- inbreeding - 1
 diag(relationshipMatrix) <- inbreeding
 
-relationshipMatrix <- data.frame(relationshipMatrix) %>% replace(., . < 0, 0)
+relationshipMatrix <- relationshipMatrix %>% replace(., . < 0, 0)
 
 inbreeding <- inbreeding %>% replace(., . < 0, 0)
 inbreeding <- data.frame(inbreeding)
@@ -145,7 +156,7 @@ relationshipMatrixJson <- relationshipMatrix
 relationshipMatrixJson[upper.tri(relationshipMatrixJson)] <- NA
 
 
-relationshipMatrixJson <- data.frame(relationshipMatrixJson)  
+#relationshipMatrixJson <- data.frame(relationshipMatrixJson)  
 relationshipMatrixList <- list(labels = names(relationshipMatrixJson),
                                values = relationshipMatrixJson)
 relationshipMatrixJson <- jsonlite::toJSON(relationshipMatrixList)

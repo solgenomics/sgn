@@ -684,10 +684,15 @@ sub training_pop_lines_count {
 sub check_training_pop_size : Path('/solgs/check/training/pop/size') Args(0) {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->req->param('training_pop_id');
-    my $type   = $c->req->param('data_set_type');
-    my $protocol_id  = $c->req->param('genotyping_protocol_id');
-
+    my $args = $c->req->param('args');
+    
+    my $json = JSON->new();
+    $args = $json->decode($args);
+    
+    my $pop_id = @{$args->{training_pop_id}}[0];
+    my $type   = $args->{data_set_type};
+    my $protocol_id  = $args->{genotyping_protocol_id};
+    
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
   
     my $count;

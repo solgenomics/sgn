@@ -130,6 +130,8 @@ sub BUILD {
 				$self->folder_type("cross");
 			} elsif ($tt->value eq 'genotyping_plate') {
 				$self->folder_type("genotyping_trial");
+            } elsif ($tt->value eq 'sampling_trial') {
+				$self->folder_type("sampling_trial");
             } elsif ($tt->type_id == $analyses_cvterm_id) {
 				$self->folder_type("analyses");
 			} elsif ($tt->type_id == $location_cvterm_id) {
@@ -501,6 +503,26 @@ sub delete_folder {
 	return 1;
 }
 
+sub rename_folder {
+        my $self = shift;
+	my $new_name = shift;
+	my $folder_exists = $self->get_folder_by_name($new_name);
+	return 0 if $folder_exists;
+	my $update_folder = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->folder_id });
+	$update_folder->name($new_name );
+	$update_folder->update();
+	return 1;
+}
+
+sub get_folder_by_name { 
+    my $self= shift;
+    my $name = shift;
+    my $exists = $self->bcs_schema->resultset("Project::Project")->search( { name => $name } );
+    my $count = $exists->count();
+    if ( $exists->count() > 0 ) { return 1 } else { return 0 }
+    return;
+}
+
 sub remove_parent {
 
 
@@ -538,7 +560,7 @@ sub get_jstree_html {
     $html .= "<ul>";
 
     my %children = fast_children($self, $schema, $parent_type);
-    # print STDERR Dumper \%children;
+    print STDERR Dumper \%children;
     if (%children) {
         foreach my $child (sort keys %children) {
             #print STDERR "Working on child ".$children{$child}->{'name'}."\n";
@@ -548,6 +570,9 @@ sub get_jstree_html {
             }
             elsif ($project_type_of_interest eq 'trial' && $children{$child}->{'genotype_data_project'}) {
                 $html .= _jstree_li_html($schema, 'genotyping_data_project', $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
+            }
+            elsif ($project_type_of_interest eq 'trial' && $children{$child}->{'sampling_trial'}) {
+                $html .= _jstree_li_html($schema, 'sampling_trial', $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
             }
             elsif ($children{$child}->{$folder_type_of_interest}) {
                 $html .= get_jstree_html('shift', $children{$child}, $schema, 'folder', $project_type_of_interest);
@@ -575,7 +600,7 @@ sub _jstree_li_html {
     my $name = shift;
 
     my $url = '#';
-    if ($type eq 'trial' || $type eq 'genotyping_trial') {
+    if ($type eq 'trial' || $type eq 'genotyping_trial' || $type eq 'sampling_trial') {
         $url = "/breeders/trial/".$id;
     } elsif ($type eq 'folder') {
         $url = "/folder/".$id;

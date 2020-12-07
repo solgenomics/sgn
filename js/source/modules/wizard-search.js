@@ -268,8 +268,12 @@ export function Wizard(main_id,col_number){
     reflow(d.index, true);
   });
   allCols.select(".wizard-select-all").on("click",function(d){
-    d.items.forEach(i=>{i.selected=true});
-    reflow(d.index,true);
+      var search_txt = d3.select(".wizard-search").property("value").replace(/\s+/g, "").toLowerCase();
+      d.items.forEach(i=>{
+          var val = i.name.replace(/\s+/g, "").toLowerCase();
+          val.indexOf(search_txt)!=-1 ? i.selected=true : i.selected=false
+      });
+      reflow(d.index,true);
   })
   allCols.select(".wizard-select-clear").on("click",function(d){
     d.items.forEach(i=>{i.selected=false});

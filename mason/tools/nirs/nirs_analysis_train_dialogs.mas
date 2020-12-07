@@ -98,10 +98,10 @@
 
                                 <select class="form-control input-sm" id="nirs_analysis_training_format_select">
                                     <option value="">Select spectrometer format</option>
-                                    <option selected value="SCIO">SCiO</option>
-                                    <option value="QST">QualitySpec Trek</option>
-                                    <option value="FOSS6500">FOSS 6500</option>
-                                    <option value="BUCHIN500">Buchi N500</option>
+                                    <option selected value="SCIO">SCIO</option>
+                                    <option value="QST">QST</option>
+                                    <option value="Foss6500">Foss6500</option>
+                                    <option value="BunchiN500">BunchiN500</option>
                                     <option value="LinkSquare">LinkSquare</option>
                                 </select>
                             </div>

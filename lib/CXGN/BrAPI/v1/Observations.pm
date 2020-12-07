@@ -17,6 +17,7 @@ extends 'CXGN::BrAPI::v1::Common';
 sub observations_store {
     my $self = shift;
     my $params = shift;
+    my $c = shift;
 
     my $schema = $self->bcs_schema;
     my $metadata_schema = $self->metadata_schema;
@@ -144,16 +145,12 @@ sub observations_store {
     }
     if ($stored_observation_success) {
         print STDERR "Success: $stored_observation_success\n";
-        if ($version eq 'v1') {
-            $result{observations} = $stored_observation_details;
-        } elsif ($version eq 'v2') {
-            $result{data} = $stored_observation_details;
-        }
+        $result{observations} = $stored_observation_details;
     }
 
     ## Will need to initiate refresh matviews in controller instead
-    #my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
-    #my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
+    my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
 
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, $stored_observation_success);
 

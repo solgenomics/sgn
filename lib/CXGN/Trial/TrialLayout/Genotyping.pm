@@ -32,7 +32,7 @@ sub retrieve_plot_info {
      my $plot = shift;
      my $design = shift;
 
-     print STDERR "DESIGN INFO = ".Dumper($design);
+     # print STDERR "DESIGN INFO = ".Dumper($design);
 
      $self->SUPER::retrieve_plot_info($plot, $design);
 

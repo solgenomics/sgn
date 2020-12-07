@@ -180,7 +180,7 @@ jQuery(document).ready(function () {
      //console.log(selected_rows.data());
 
      var name_links = selected_rows.data().map(function(row){
-         return [row[4], row[5]];
+         return [row[5], row[6]];
          trait_table.rows().deselect();
      });
 
