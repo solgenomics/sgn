@@ -223,7 +223,7 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
         phenome_schema=>$phenome_schema,
         user_id=>$user_id,
         stock_list=>\@plots_agg,
-        trait_list=>\@wavelengths_agg,
+        trait_list=>[],
         values_hash=>\%parsed_data_agg_coalesced,
         has_timestamps=>0,
         metadata_hash=>\%phenotype_metadata
@@ -493,7 +493,7 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
         phenome_schema=>$phenome_schema,
         user_id=>$user_id,
         stock_list=>\@plots_agg,
-        trait_list=>\@wavelengths_agg,
+        trait_list=>[],
         values_hash=>\%parsed_data_agg_coalesced,
         has_timestamps=>0,
         metadata_hash=>\%phenotype_metadata
@@ -666,7 +666,7 @@ sub high_dimensional_phenotypes_transcriptomics_upload_verify_POST : Args(0) {
         phenome_schema=>$phenome_schema,
         user_id=>$user_id,
         stock_list=>\@plots,
-        trait_list=>\@transcripts,
+        trait_list=>[],
         values_hash=>\%parsed_data_agg_coalesced,
         has_timestamps=>0,
         metadata_hash=>\%phenotype_metadata
@@ -843,7 +843,7 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
         phenome_schema=>$phenome_schema,
         user_id=>$user_id,
         stock_list=>\@plots,
-        trait_list=>\@transcripts,
+        trait_list=>[],
         values_hash=>\%parsed_data_agg_coalesced,
         has_timestamps=>0,
         metadata_hash=>\%phenotype_metadata
@@ -1002,7 +1002,7 @@ sub high_dimensional_phenotypes_metabolomics_upload_verify_POST : Args(0) {
         phenome_schema=>$phenome_schema,
         user_id=>$user_id,
         stock_list=>\@plots,
-        trait_list=>\@metabolites,
+        trait_list=>[],
         values_hash=>\%parsed_data,
         has_timestamps=>0,
         metadata_hash=>\%phenotype_metadata
@@ -1166,7 +1166,7 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
         phenome_schema=>$phenome_schema,
         user_id=>$user_id,
         stock_list=>\@plots,
-        trait_list=>\@metabolites,
+        trait_list=>[],
         values_hash=>\%parsed_data,
         has_timestamps=>0,
         metadata_hash=>\%phenotype_metadata

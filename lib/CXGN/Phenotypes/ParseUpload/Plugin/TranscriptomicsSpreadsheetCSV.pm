@@ -76,8 +76,9 @@ sub validate {
       return \%parse_result;
     }
 
+    my @transcripts = @columns;
+
     my @samples;
-    my @transcripts;
     while (my $line = <$fh>) {
         my @fields;
         if ($csv->parse($line)) {
@@ -85,11 +86,10 @@ sub validate {
         }
         my $sample_name = shift @fields;
         push @samples, $sample_name;
-        @transcripts = @fields;
 
         foreach (@fields) {
             if (not $_=~/^[+]?\d+\.?\d*$/){
-                $parse_result{'error'}= "It is not a real value for trancripts: '$_'";
+                $parse_result{'error'}= "It is not a real value for trancripts. Must be numeric: '$_'";
                 return \%parse_result;
             }
         }
@@ -126,8 +126,8 @@ sub validate {
 
         #If there are markers in the uploaded file that are not saved in the protocol, they will be returned along in the error message
         if (scalar(@transcripts_not_in_protocol)>0){
-            $errors{'missing_transcripts'} = \@transcripts_not_in_protocol;
-            push @error_messages, "The following transcripts are not in the database for the selected protocol: ".join(',',@transcripts_not_in_protocol);
+            $parse_result{'error'} = "The following transcripts are not in the database for the selected protocol: ".join(',',@transcripts_not_in_protocol);
+            return \%parse_result;
         }
     }
 
