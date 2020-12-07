@@ -532,7 +532,7 @@ sub get_markers_count {
     {
 	my $training_pop_id = $pop_hash->{training_pop_id};
 	$c->stash->{pop_id} = $training_pop_id;
-	$c->controller('solGS::Files')->filtered_training_genotype_file($c, $protocol_id);
+	$c->controller('solGS::Files')->filtered_training_genotype_file($c, $training_pop_id, $protocol_id);
 	$filtered_geno_file  = $c->stash->{filtered_training_genotype_file};
 
 	if (-s $filtered_geno_file) 
@@ -965,7 +965,7 @@ sub input_files {
     }
     else
     {
-	my $pop_id = $c->stash->{pop_id};
+	my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
 	my $protocol_id = $c->stash->{genotyping_protocol_id};
 	
 	$c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id); 
@@ -1012,22 +1012,24 @@ sub output_files {
     my ($self, $c) = @_;
     
     my $pop_id   = $c->stash->{pop_id};
+    $pop_id = $c->stash->{model_id} || $c->stash->{training_pop_id}  if !$pop_id;
+    
     my $trait    = $c->stash->{trait_abbr}; 
-    my $trait_id = $c->stash->{trait_id};
-
+    my $trait_id = $c->stash->{trait_id};   
+    
     $c->controller('solGS::Files')->marker_effects_file($c);  
     $c->controller('solGS::Files')->rrblup_training_gebvs_file($c); 
     $c->controller('solGS::Files')->validation_file($c);
     $c->controller("solGS::Files")->trait_phenodata_file($c);
     $c->controller("solGS::Files")->variance_components_file($c);
     $c->controller('solGS::Files')->relationship_matrix_file($c);
-     $c->controller('solGS::Files')->relationship_matrix_adjusted_file($c);
+    $c->controller('solGS::Files')->relationship_matrix_adjusted_file($c);
     $c->controller('solGS::Files')->inbreeding_coefficients_file($c);
     $c->controller('solGS::Files')->average_kinship_file($c);
     $c->controller('solGS::Files')->filtered_training_genotype_file($c);
 
     my $selection_pop_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id};
-    if (!$pop_id) {$pop_id = $c->stash->{model_id};}
+   
 
     no warnings 'uninitialized';
        
@@ -1347,7 +1349,7 @@ sub model_parameters {
 
     $c->controller("solGS::Files")->variance_components_file($c);
     my $file = $c->stash->{variance_components_file};
-  
+ 
     my $params = $c->controller('solGS::Utils')->read_file_data($file, {binmode => ':utf8'});
     $c->stash->{model_parameters} = $params;
    
@@ -2411,7 +2413,7 @@ sub save_single_trial_traits {
 
     $c->controller('solGS::Files')->traits_list_file($c, $pop_id);
     my $traits_file = $c->stash->{traits_list_file};
-    print STDERR "\save single : pop_id: $pop_id -- file: $traits_file\n";
+  
     if (!-s $traits_file)
     {
 	my $trait_names = $c->controller('solGS::Utils')->get_clean_trial_trait_names($c, $pop_id);
