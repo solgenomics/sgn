@@ -35,6 +35,8 @@ sub validate {
     my $timestamp_included = shift;
     my $data_level = shift;
     my $schema = shift;
+    my $zipfile = shift; #not relevant for this plugin
+    my $nd_protocol_id = shift;
     my $delimiter = ',';
     my %parse_result;
 
@@ -82,6 +84,7 @@ sub validate {
                   );
 
     my @samples;
+    my @wavelengths;
     while (my $line = <$fh>) {
         my @fields;
         if ($csv->parse($line)) {
@@ -89,6 +92,7 @@ sub validate {
         }
         my $sample_name = shift @fields;
         push @samples, $sample_name;
+        @wavelengths = @fields;
 
         foreach (@fields) {
             if (not $_=~/^[+]?\d+\.?\d*$/){
@@ -107,6 +111,8 @@ sub validate {
         return \%parse_result;
     }
 
+    
+
     return 1;
 }
 
@@ -116,6 +122,11 @@ sub parse {
     my $timestamp_included = shift;
     my $data_level = shift;
     my $schema = shift;
+    my $zipfile = shift; #not relevant for this plugin
+    my $user_id = shift; #not relevant for this plugin
+    my $c = shift; #not relevant for this plugin
+    my $nd_protocol_id = shift;
+    
     my $delimiter = ',';
     my %parse_result;
 
