@@ -24,6 +24,7 @@ use JSON;
 use Data::Dumper;
 use Text::CSV;
 use CXGN::List::Validate;
+use CXGN::Phenotypes::HighDimensionalPhenotypeProtocol;
 
 sub name {
     return "spreadsheet nirs";
@@ -111,7 +112,32 @@ sub validate {
         return \%parse_result;
     }
 
-    
+    if ($nd_protocol_id) {
+        my $nirs_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_nirs_protocol', 'protocol_type')->cvterm_id();
+        my $protocol = CXGN::Phenotypes::HighDimensionalPhenotypeProtocol->new({
+            bcs_schema => $schema,
+            nd_protocol_id => $nd_protocol_id,
+            nd_protocol_type_id => $nirs_protocol_cvterm_id
+        });
+        my $wavelength_in_protocol = $protocol->header_column_names;
+        my %wavelength_in_protocol_hash;
+        foreach (@$wavelength_in_protocol) {
+            $wavelength_in_protocol_hash{$_}++;
+        }
+
+        my @wavelengths_not_in_protocol;
+        foreach (@wavelengths) {
+            if (!exists($wavelength_in_protocol_hash{$_})) {
+                push @wavelengths_not_in_protocol, $_;
+            }
+        }
+
+        #If there are markers in the uploaded file that are not saved in the protocol, they will be returned along in the error message
+        if (scalar(@wavelengths_not_in_protocol)>0){
+            $errors{'missing_wavelengths'} = \@wavelengths_not_in_protocol;
+            push @error_messages, "The following wavelengths are not in the database for the selected protocol: ".join(',',@wavelengths_not_in_protocol);
+        }
+    }
 
     return 1;
 }
@@ -171,6 +197,7 @@ sub parse {
             my %spectra;
             foreach my $col (1..$num_cols-1){
                 my $column_name = $header[$col];
+                $traits_seen{$column_name}++;
                 my $wavelength = "X".$column_name;
                 my $nir_value = $columns[$col];
                 $spectra{$wavelength} = $nir_value;

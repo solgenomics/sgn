@@ -208,7 +208,7 @@ sub parse {
     my $c = shift; #not relevant for this plugin
     my $nd_protocol_id = shift; #not relevant for this plugin
 
-    my $composable_cvterm_format = $c->config->{composable_cvterm_format};
+    my $composable_cvterm_format = $c ? $c->config->{composable_cvterm_format} : 'extended';
     my %parse_result;
     my @file_lines;
     my $delimiter = ',';
