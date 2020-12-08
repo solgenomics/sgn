@@ -2672,10 +2672,23 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 '1',
                 'RANDOM_GROUP',
                 $random_group_string1,
-                'RANDOM_TYPE',
-                'user_file_inv',
-                'FILE',
-                $grm_file_basename,
+                'RANDOM_TYPE'
+            );
+            if (!$protocol_id) {
+                push @param_file_rows, (
+                    'diagonal',
+                    'FILE',
+                    ''
+                );
+            }
+            else {
+                push @param_file_rows, (
+                    'user_file_inv',
+                    'FILE',
+                    $grm_file_basename
+                );
+            }
+            push @param_file_rows, (
                 '(CO)VARIANCES'
             );
             foreach (@pheno_var) {

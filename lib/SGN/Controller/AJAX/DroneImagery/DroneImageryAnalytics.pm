@@ -224,7 +224,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
     my $csv = Text::CSV->new({ sep_char => "\t" });
 
-    my $env_factor = 1/1000000;
+    my $env_factor = 1;
     my $env_sim_exec = {
         "linear_gradient" => '($a_env*$row_number/$max_row + $b_env*$col_number/$max_col)*($env_effect_max_altered-$env_effect_min_altered)/($phenotype_max_altered-$phenotype_min_altered)*$env_factor',
         "random_1d_normal_gradient" => '( (1/(2*3.14159)) * exp(-1*(($row_number/$max_row)**2)/2) )*($env_effect_max_altered-$env_effect_min_altered)/($phenotype_max_altered-$phenotype_min_altered)*$env_factor',
@@ -1958,10 +1958,23 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             '1',
             'RANDOM_GROUP',
             $random_group_string1,
-            'RANDOM_TYPE',
-            'user_file_inv',
-            'FILE',
-            $grm_file_basename,
+            'RANDOM_TYPE'
+        );
+        if (!$protocol_id) {
+            push @param_file_rows, (
+                'diagonal',
+                'FILE',
+                ''
+            );
+        }
+        else {
+            push @param_file_rows, (
+                'user_file_inv',
+                'FILE',
+                $grm_file_basename
+            );
+        }
+        push @param_file_rows, (
             '(CO)VARIANCES'
         );
         foreach (@pheno_var) {
@@ -2963,6 +2976,21 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my (%phenotype_data_altered_env, @data_matrix_altered_env, @data_matrix_phenotypes_altered_env);
     my $phenotype_min_altered_env = 1000000000;
     my $phenotype_max_altered_env = -1000000000;
+    my $env_sim_min = 10000000000000;
+    my $env_sim_max = -10000000000000;
+
+    foreach my $p (@unique_plot_names) {
+        my $row_number = $stock_name_row_col{$p}->{row_number};
+        my $col_number = $stock_name_row_col{$p}->{col_number};
+        my $sim_val = eval $env_sim_exec->{$env_simulation};
+    
+        if ($sim_val < $env_sim_min) {
+            $env_sim_min = $sim_val;
+        }
+        elsif ($sim_val >= $env_sim_max) {
+            $env_sim_max = $sim_val;
+        }
+    }
 
     print STDERR "ADD SIMULATED ENV TO ALTERED PHENO\n";
     if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_blups') {
@@ -2981,6 +3009,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 if (defined($phenotype_data_altered{$p}->{$t})) {
                     my $new_val = $phenotype_data_altered{$p}->{$t} + 0;
                     my $sim_val = eval $env_sim_exec->{$env_simulation};
+                    $sim_val = (($sim_val - $env_sim_min)/($env_sim_max - $env_sim_min))/10;
                     $new_val += $sim_val;
 
                     if ($new_val < $phenotype_min_altered_env) {
@@ -3058,6 +3087,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         }
 
                         my $sim_val = eval $env_sim_exec->{$env_simulation};
+                        $sim_val = (($sim_val - $env_sim_min)/($env_sim_max - $env_sim_min))/10;
                         $val += $sim_val;
 
                         if ($val < $phenotype_min_altered_env) {
@@ -3076,6 +3106,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         my $val = $phenotype_data_altered{$p}->{$t} + 0;
 
                         my $sim_val = eval $env_sim_exec->{$env_simulation};
+                        $sim_val = (($sim_val - $env_sim_min)/($env_sim_max - $env_sim_min))/10;
                         $val += $sim_val;
 
                         if ($val < $phenotype_min_altered_env) {
