@@ -3787,7 +3787,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         scale_fill_viridis(discrete=FALSE) +
         coord_equal() +
         facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
-    ggsave(\''.$env_effects_first_figure_tempfile.'\', arrangeGrob(gg, gg_altered, gg_env, gg_p_sim, gg_eff, gg_eff_altered, gg_eff_sim, nrow=7), device=\'png\', width=10, height=20, units=\'in\');
+    ggsave(\''.$env_effects_first_figure_tempfile.'\', arrangeGrob(gg, gg_altered, gg_env, gg_p_sim, gg_eff, gg_eff_altered, gg_eff_sim, nrow=7), device=\'png\', width=15, height=25, units=\'in\');
     dev.off();"';
     # print STDERR Dumper $cmd;
     my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
