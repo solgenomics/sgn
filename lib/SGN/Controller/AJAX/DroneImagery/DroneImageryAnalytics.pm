@@ -215,6 +215,10 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my (@sorted_scaled_ln_times, %plot_id_factor_map_reverse, %plot_id_count_map_reverse, %accession_id_factor_map, %accession_id_factor_map_reverse, %time_count_map_reverse, @rep_time_factors, @ind_rep_factors, @sorted_trait_names_times, %plot_rep_time_factor_map, %seen_rep_times, %seen_ind_reps, @legs_header, %polynomial_map);
     my $time_min = 100000000;
     my $time_max = 0;
+    my $min_row = 10000000000;
+    my $max_row = 0;
+    my $min_col = 10000000000;
+    my $max_col = 0;
     my $phenotype_min_original = 1000000000;
     my $phenotype_max_original = -1000000000;
 
@@ -222,9 +226,9 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
     my $env_factor = 1;
     my $env_sim_exec = {
-        "linear_gradient" => '($a_env*$row_number + $b_env*$col_number)*($env_effect_max_altered-$env_effect_min_altered)/($phenotype_max_altered-$phenotype_min_altered)*$env_factor',
-        "random_1d_normal_gradient" => '( (1/(2*3.14159)) * exp(-1*($row_number**2)/2) )*($env_effect_max_altered-$env_effect_min_altered)/($phenotype_max_altered-$phenotype_min_altered)*$env_factor',
-        "random_2d_normal_gradient" => '( exp( (-1/(2*(1-$ro_env**2))) * ( (($row_number - $mean_row)**2)/($sig_row**2) + (($col_number - $mean_col)**2)/($sig_col**2) - ((2**$ro_env)*($row_number - $mean_row)*($col_number - $mean_col))/($sig_row*$sig_col) ) ) / (2*3.14159*$sig_row*$sig_col*sqrt(1-$ro_env**2)) )*($env_effect_max_altered-$env_effect_min_altered)/($phenotype_max_altered-$phenotype_min_altered)*$env_factor',
+        "linear_gradient" => '($a_env*$row_number/$max_row + $b_env*$col_number/$max_col)*($env_effect_max_altered-$env_effect_min_altered)/($phenotype_max_altered-$phenotype_min_altered)*$env_factor',
+        "random_1d_normal_gradient" => '( (1/(2*3.14159)) * exp(-1*(($row_number/$max_row)**2)/2) )*($env_effect_max_altered-$env_effect_min_altered)/($phenotype_max_altered-$phenotype_min_altered)*$env_factor',
+        "random_2d_normal_gradient" => '( exp( (-1/(2*(1-$ro_env**2))) * ( ( (($row_number - $mean_row)/$max_row)**2)/($sig_row**2) + ( (($col_number - $mean_col)/$max_col)**2)/($sig_col**2) - ((2**$ro_env)*(($row_number - $mean_row)/$max_row)*(($col_number - $mean_col)/$max_col) )/($sig_row*$sig_col) ) ) / (2*3.14159*$sig_row*$sig_col*sqrt(1-$ro_env**2)) )*($env_effect_max_altered-$env_effect_min_altered)/($phenotype_max_altered-$phenotype_min_altered)*$env_factor',
         "random" => 'rand(1)*($env_effect_max_altered-$env_effect_min_altered)/($phenotype_max_altered-$phenotype_min_altered)*$env_factor'
     };
 
@@ -264,6 +268,20 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             my $obsunit_stock_uniquename = $obs_unit->{observationunit_uniquename};
             my $row_number = $obs_unit->{obsunit_row_number} || '';
             my $col_number = $obs_unit->{obsunit_col_number} || '';
+
+            if ($row_number < $min_row) {
+                $min_row = $row_number;
+            }
+            elsif ($row_number >= $max_row) {
+                $max_row = $row_number;
+            }
+            if ($col_number < $min_col) {
+                $min_col = $col_number;
+            }
+            elsif ($col_number >= $max_col) {
+                $max_col = $col_number;
+            }
+
             $obsunit_row_col{$row_number}->{$col_number} = {
                 stock_id => $obsunit_stock_id,
                 stock_uniquename => $obsunit_stock_uniquename
@@ -424,6 +442,20 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             my $obsunit_stock_uniquename = $obs_unit->{observationunit_uniquename};
             my $row_number = $obs_unit->{obsunit_row_number} || '';
             my $col_number = $obs_unit->{obsunit_col_number} || '';
+
+            if ($row_number < $min_row) {
+                $min_row = $row_number;
+            }
+            elsif ($row_number >= $max_row) {
+                $max_row = $row_number;
+            }
+            if ($col_number < $min_col) {
+                $min_col = $col_number;
+            }
+            elsif ($col_number >= $max_col) {
+                $max_col = $col_number;
+            }
+
             $obsunit_row_col{$row_number}->{$col_number} = {
                 stock_id => $obsunit_stock_id,
                 stock_uniquename => $obsunit_stock_uniquename
