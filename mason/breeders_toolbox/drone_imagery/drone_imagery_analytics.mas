@@ -61,7 +61,7 @@
                                 <select class="form-control" id="drone_imagery_analytics_select_analytics_type">
                                     <option value="">Select One</option>
                                     <option value="minimize_local_env_effect">Minimize Spatial or PE Effects</option>
-                                    <option value="minimize_genetic_effect">Minimize Genetic Effects</option>
+                                    <!--option value="minimize_genetic_effect">Minimize Genetic Effects</option-->
                                 </select>
                             </div>
                         </div>
@@ -120,7 +120,7 @@
                         <option value="">Select A Model</option>
                         <!--option value="lmer_germplasmname_replicate">LMER BLUPs y~replicate+1|Germplasm. Univariate genetic effects</option-->
 
-                        <option value="sommer_grm_genetic_blups">Sommer GBLUPs Y~replicate+GRM. Multivariate genetic effects using GRM</option>
+                        <!--option value="sommer_grm_genetic_blups">Sommer GBLUPs Y~replicate+GRM. Multivariate genetic effects using GRM</option-->
                         <option value="sommer_grm_spatial_genetic_blups">Sommer Spatial GBLUPs Y~replicate+GRM+spatial. Multivariate genetic + 2Dspl spatial effects</option>
 
                         <!--option value="blupf90_grm_random_regression_dap_blups">BLUPf90 GBLUPs Y~replicate+GRM+temporal random regression using days after planting. Multivariate genetic + permanent environment effects</option>
@@ -667,25 +667,32 @@ jQuery(document).ready(function() {
                     manage_drone_imagery_analytics_response = response;
 
                     var html = '';
-                    if (response.sum_square_residual) {
-                        html = html + '<h4>Sum square residual: '+response.sum_square_residual+'</h4><hr>';
+                    if (response.sum_square_residual_original) {
+                        html = html + '<h4>Sum square residual original: '+response.sum_square_residual_original+'</h4><hr>';
                     }
-                    if (response.genetic_effect_sum) {
-                        html = html + '<h4>Genetic Effect Sum: '+response.genetic_effect_sum+'</h4><hr>';
+                    if (response.sum_square_residual_altered) {
+                        html = html + '<h4>Sum square residual altered: '+response.sum_square_residual_altered+'</h4><hr>';
                     }
-                    if (response.env_effect_sum) {
-                        html = html + '<h4>Env Effect Sum: '+response.env_effect_sum+'</h4><hr>';
+                    if (response.genetic_effect_sum_original) {
+                        html = html + '<h4>Genetic Effect Sum original: '+response.genetic_effect_sum_original+'</h4><hr>';
+                    }
+                    if (response.genetic_effect_sum_altered) {
+                        html = html + '<h4>Genetic Effect Sum altered: '+response.genetic_effect_sum_altered+'</h4><hr>';
+                    }
+                    if (response.env_effect_sum_original) {
+                        html = html + '<h4>Env Effect Sum original: '+response.env_effect_sum_original+'</h4><hr>';
+                    }
+                    if (response.env_effect_sum_altered) {
+                        html = html + '<h4>Env Effect Sum altered: '+response.env_effect_sum_altered+'</h4><hr>';
                     }
 
-                    html = html + '<hr><img src="'+response.minimization_iterations_tempfile_string+'"><hr>';
-
-                    if (response.spatial_effects_first_plots) {
-                        for (i=0; i<response.spatial_effects_first_plots.length; i++) {
-                            html = html + '<img src="'+response.spatial_effects_first_plots[i]+'"><hr>';
+                    if (response.spatial_effects_plots) {
+                        for (i=0; i<response.spatial_effects_plots.length; i++) {
+                            html = html + '<img src="'+response.spatial_effects_plots[i]+'"><hr>';
                         }
                     }
 
-                    if (response.unique_accessions.length > 0 && response.unique_traits.length > 0 && response.result_blup_genetic_data) {
+                    if (response.unique_accessions.length > 0 && response.unique_traits.length > 0 && response.result_blup_genetic_data_altered) {
                         manage_drone_imagery_analytics_accession_names = response.unique_accessions;
                         manage_drone_imagery_analytics_trait_names = response.unique_traits;
                         manage_drone_imagery_analytics_phenotype_training_file = response.stats_tempfile;
@@ -700,8 +707,8 @@ jQuery(document).ready(function() {
                             var acc = response.unique_accessions[k];
                             html = html + '<tr><td>'+acc+'</td>';
                             for (var i=0; i<manage_drone_imagery_analytics_trait_names.length; i++) {
-                                if (response.result_blup_genetic_data[acc] && response.result_blup_genetic_data[acc][manage_drone_imagery_analytics_trait_names[i]]) {
-                                    html = html + '<td>'+response.result_blup_genetic_data[acc][manage_drone_imagery_analytics_trait_names[i]][0]+'</td>';
+                                if (response.result_blup_genetic_data_altered[acc] && response.result_blup_genetic_data_altered[acc][manage_drone_imagery_analytics_trait_names[i]]) {
+                                    html = html + '<td>'+response.result_blup_genetic_data_altered[acc][manage_drone_imagery_analytics_trait_names[i]][0]+'</td>';
                                 }
                                 else {
                                     html = html + '<td>NA</td>';
@@ -712,7 +719,7 @@ jQuery(document).ready(function() {
                         html = html + '</tbody></table>';
                     }
 
-                    if (response.unique_plots.length > 0 && response.unique_traits.length > 0 && response.result_blup_spatial_data) {
+                    if (response.unique_plots.length > 0 && response.unique_traits.length > 0 && response.result_blup_spatial_data_altered) {
                         manage_drone_imagery_analytics_plot_names = response.unique_plots;
                         manage_drone_imagery_analytics_trait_names = response.unique_traits;
 
@@ -725,14 +732,14 @@ jQuery(document).ready(function() {
                             var plot = response.unique_plots[k];
                             html = html + '<tr><td>'+plot+'</td>';
                             for (var i=0; i<response.unique_traits.length; i++) {
-                                html = html + '<td>'+response.result_blup_spatial_data[plot][response.unique_traits[i]][0]+'</td>';
+                                html = html + '<td>'+response.result_blup_spatial_data_altered[plot][response.unique_traits[i]][0]+'</td>';
                             }
                             html = html + '</tr>';
                         }
                         html = html + '</tbody></table>';
                     }
 
-                    if (response.unique_plots.length > 0 && response.unique_traits.length > 0 && response.result_blup_pe_data) {
+                    if (response.unique_plots.length > 0 && response.unique_traits.length > 0 && response.result_blup_pe_data_altered) {
                         manage_drone_imagery_analytics_plot_names = response.unique_plots;
                         manage_drone_imagery_analytics_trait_names = response.unique_traits;
 
@@ -745,22 +752,14 @@ jQuery(document).ready(function() {
                             var plot = response.unique_plots[k];
                             html = html + '<tr><td>'+plot+'</td>';
                             for (var i=0; i<response.unique_traits.length; i++) {
-                                if (response.result_blup_pe_data[plot] && response.result_blup_pe_data[plot][response.unique_traits[i]]) {
-                                    html = html + '<td>'+response.result_blup_pe_data[plot][response.unique_traits[i]][0]+'</td>';
+                                if (response.result_blup_pe_data_altered[plot] && response.result_blup_pe_data_altered[plot][response.unique_traits[i]]) {
+                                    html = html + '<td>'+response.result_blup_pe_data_altered[plot][response.unique_traits[i]][0]+'</td>';
                                 }
                                 else {
                                     html = html + '<td>NA</td>';
                                 }
                             }
                             html = html + '</tr>';
-                        }
-                        html = html + '</tbody></table>';
-                    }
-
-                    if (response.results.length > 0) {
-                        html = '<table class="table table-bordered table-hover"><thead><tr><th>Observation Variable</th><th>Statistics</th><th>Plot</th></tr></thead><tbody>';
-                        for (var i=0; i<response.results.length; i++) {
-                            html = html + '<tr><td>'+response.results[i][0]+'</td><td>'+response.results[i][1]+'</td><td><img src="'+response.results[i][2]+'"></td></tr>';
                         }
                         html = html + '</tbody></table>';
                     }
