@@ -220,7 +220,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
     my $csv = Text::CSV->new({ sep_char => "\t" });
 
-    my $env_factor = 8;
+    my $env_factor = 1;
     my $env_sim_exec = {
         "linear_gradient" => '($a_env*$row_number + $b_env*$col_number)*($env_effect_max_altered-$env_effect_min_altered)/($phenotype_max_altered-$phenotype_min_altered)*$env_factor',
         "random_1d_normal_gradient" => '( (1/(2*3.14159)) * exp(-1*($row_number**2)/2) )*($env_effect_max_altered-$env_effect_min_altered)/($phenotype_max_altered-$phenotype_min_altered)*$env_factor',
