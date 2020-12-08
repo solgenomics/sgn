@@ -509,7 +509,28 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         }
 
         @sorted_trait_names_times = sort {$a <=> $b} keys %seen_times;
+        @sorted_trait_names = @sorted_trait_names_times;
         # print STDERR Dumper \@sorted_trait_names_times;
+
+        my $trait_name_encoded = 1;
+        foreach my $trait_name (@sorted_trait_names_times) {
+            if (!exists($trait_name_encoder{$trait_name})) {
+                my $trait_name_e = 't'.$trait_name_encoded;
+                $trait_name_encoder{$trait_name} = $trait_name_e;
+                $trait_name_encoder_rev{$trait_name_e} = $trait_name;
+                $trait_name_encoded++;
+            }
+        }
+
+        foreach (@sorted_trait_names_times) {
+            if ($_ < $time_min) {
+                $time_min = $_;
+            }
+            if ($_ >= $time_max) {
+                $time_max = $_;
+            }
+        }
+        print STDERR Dumper [$time_min, $time_max];
 
         while ( my ($trait_name, $time_term) = each %seen_trait_names) {
             push @{$trait_composing_info{$trait_name}}, $time_term;
@@ -523,7 +544,6 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         my @sorted_trait_names_scaled;
         my $leg_pos_counter = 0;
         foreach (@sorted_trait_names_times) {
-            # my $scaled_time = 2*(($_ - $time_min)/($time_max - $time_min)) - 1;
             my $scaled_time = ($_ - $time_min)/($time_max - $time_min);
             push @sorted_trait_names_scaled, $scaled_time;
             if ($leg_pos_counter < $legendre_order_number+1) {
@@ -744,17 +764,6 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     }
 
     print STDERR Dumper [$phenotype_min_original, $phenotype_max_original];
-
-    foreach (@sorted_trait_names) {
-        if (looks_like_number($_)) {
-            if ($_ < $time_min) {
-                $time_min = $_;
-            }
-            if ($_ >= $time_max) {
-                $time_max = $_;
-            }
-        }
-    }
 
     @unique_accession_names = sort keys %unique_accessions;
     @unique_plot_names = sort keys %seen_plot_names;
@@ -2219,9 +2228,6 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
         print STDERR "ORIGINAL $statistics_select GENETIC EFFECT SUM $genetic_effect_sum_original\n";
         print STDERR "ORIGINAL $statistics_select ENV EFFECT SUM $env_effect_sum_original\n";
-
-        @sorted_trait_names = sort keys %rr_unique_traits;
-        @sorted_residual_trait_names = sort keys %rr_residual_unique_traits;
     }
 
     print STDERR Dumper [$genetic_effect_min_original, $genetic_effect_max_original, $env_effect_min_original, $env_effect_max_original];
@@ -2331,11 +2337,11 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
                         my $minimizer = 0;
                         if ($analytics_select eq 'minimize_local_env_effect') {
-                            $minimizer = $result_blup_pe_data_original->{$p}->{$t}->[0];
+                            $minimizer = $result_blup_pe_data_delta_original->{$p}->{$t}->[0];
                             $minimizer = $minimizer * ($phenotype_max_original - $phenotype_min_original)/($env_effect_max_original - $env_effect_min_original);
                         }
                         elsif ($analytics_select eq 'minimize_genetic_effect') {
-                            $minimizer = $result_blup_data_original->{$p}->{$t}->[0];
+                            $minimizer = $result_blup_data_delta_original->{$p}->{$t}->[0];
                             $minimizer = $minimizer * ($phenotype_max_original - $phenotype_min_original)/($genetic_effect_max_original - $genetic_effect_min_original);
                         }
                         my $new_val = $val - $minimizer;
@@ -2356,11 +2362,11 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
                         my $minimizer = 0;
                         if ($analytics_select eq 'minimize_local_env_effect') {
-                            $minimizer = $result_blup_pe_data_original->{$p}->{$t}->[0];
+                            $minimizer = $result_blup_pe_data_delta_original->{$p}->{$t}->[0];
                             $minimizer = $minimizer * ($phenotype_max_original - $phenotype_min_original)/($env_effect_max_original - $env_effect_min_original);
                         }
                         elsif ($analytics_select eq 'minimize_genetic_effect') {
-                            $minimizer = $result_blup_data_original->{$p}->{$t}->[0];
+                            $minimizer = $result_blup_data_delta_original->{$p}->{$t}->[0];
                             $minimizer = $minimizer * ($phenotype_max_original - $phenotype_min_original)/($genetic_effect_max_original - $genetic_effect_min_original);
                         }
                         my $new_val = $val - $minimizer;
@@ -2926,7 +2932,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $phenotype_min_altered_env = 1000000000;
     my $phenotype_max_altered_env = -1000000000;
 
-    print STDERR "ADD SIMULATED END TO ALTERED PHENO\n";
+    print STDERR "ADD SIMULATED ENV TO ALTERED PHENO\n";
     if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_blups') {
 
         foreach my $p (@unique_plot_names) {
@@ -3654,17 +3660,32 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         print $F_eff "trait_type,row,col,value\n";
         foreach my $p (@unique_plot_names) {
             foreach my $t (@sorted_trait_names) {
-                my @row = ("effect_original_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $result_blup_spatial_data_original->{$p}->{$t}->[0]);
-                my $line = join ',', @row;
-                print $F_eff "$line\n";
+                if ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
+                    my @row = ("effect_original_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $result_blup_spatial_data_original->{$p}->{$t}->[0]);
+                    my $line = join ',', @row;
+                    print $F_eff "$line\n";
 
-                @row = ("effect_post_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $result_blup_spatial_data_altered->{$p}->{$t}->[0]);
-                $line = join ',', @row;
-                print $F_eff "$line\n";
+                    @row = ("effect_post_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $result_blup_spatial_data_altered->{$p}->{$t}->[0]);
+                    $line = join ',', @row;
+                    print $F_eff "$line\n";
 
-                @row = ("effect_simulated_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $result_blup_spatial_data_altered_env->{$p}->{$t}->[0]);
-                $line = join ',', @row;
-                print $F_eff "$line\n";
+                    @row = ("effect_simulated_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $result_blup_spatial_data_altered_env->{$p}->{$t}->[0]);
+                    $line = join ',', @row;
+                    print $F_eff "$line\n";
+                }
+                elsif ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+                    my @row = ("effect_original_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $result_blup_pe_data_delta_original->{$p}->{$t}->[0]);
+                    my $line = join ',', @row;
+                    print $F_eff "$line\n";
+
+                    @row = ("effect_post_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $result_blup_pe_data_delta_altered->{$p}->{$t}->[0]);
+                    $line = join ',', @row;
+                    print $F_eff "$line\n";
+
+                    @row = ("effect_simulated_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $result_blup_pe_data_delta_altered_env->{$p}->{$t}->[0]);
+                    $line = join ',', @row;
+                    print $F_eff "$line\n";
+                }
             }
         }
     close($F_eff);
@@ -3695,6 +3716,9 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     # print STDERR Dumper $cmd;
     my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
     push @$spatial_effects_plots, $env_effects_first_figure_tempfile_string;
+
+    @sorted_trait_names = sort keys %rr_unique_traits;
+    @sorted_residual_trait_names = sort keys %rr_residual_unique_traits;
 
     $c->stash->{rest} = {
         result_blup_genetic_data_original => $result_blup_data_original,
