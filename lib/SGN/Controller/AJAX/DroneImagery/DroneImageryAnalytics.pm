@@ -232,7 +232,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $b_env = rand(1);
     my $ro_env = rand(1);
 
-    #PREPARE ORIGINAL PHENOTYPE FILES
+    print STDERR "PREPARE ORIGINAL PHENOTYPE FILES\n";
     if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_blups') {
 
         my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
@@ -515,6 +515,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             push @{$trait_composing_info{$trait_name}}, $time_term;
         }
 
+        @unique_plot_names = sort keys %seen_plot_names;
         if ($legendre_order_number >= scalar(@sorted_trait_names_times)) {
             $legendre_order_number = scalar(@sorted_trait_names_times) - 1;
         }
@@ -742,6 +743,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         }
     }
 
+    print STDERR Dumper [$phenotype_min_original, $phenotype_max_original];
+
     foreach (@sorted_trait_names) {
         if (looks_like_number($_)) {
             if ($_ < $time_min) {
@@ -756,7 +759,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     @unique_accession_names = sort keys %unique_accessions;
     @unique_plot_names = sort keys %seen_plot_names;
 
-    # PREPARE RELATIONSHIP MATRIX
+    print STDERR "PREPARE RELATIONSHIP MATRIX\n";
     if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups'
         || $statistics_select eq 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups'
         || $statistics_select eq 'sommer_grm_genetic_blups') {
@@ -1591,7 +1594,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         '1/16*(231*$time**6 - 315*$time**4 + 105*$time**2 - 5)*$b'
     );
 
-    #RUN FIRST ENV ESTIMATION
+    print STDERR "RUN FIRST ENV ESTIMATION\n";
     if ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
         $statistical_ontology_term = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and row and column spatial effects computed using Sommer R|SGNSTAT:0000001"; #In the JS this is set to either the genetic or spatial BLUP term (Multivariate linear mixed model 2D spline spatial BLUPs using genetic relationship matrix and row and column spatial effects computed using Sommer R|SGNSTAT:0000003) when saving analysis results
 
@@ -2221,11 +2224,13 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         @sorted_residual_trait_names = sort keys %rr_residual_unique_traits;
     }
 
+    print STDERR Dumper [$genetic_effect_min_original, $genetic_effect_max_original, $env_effect_min_original, $env_effect_max_original];
+
     my (%phenotype_data_altered, @data_matrix_altered, @data_matrix_phenotypes_altered);
     my $phenotype_min_altered = 1000000000;
     my $phenotype_max_altered = -1000000000;
 
-    #SUBTRACT ENV ESTIMATE
+    print STDERR "SUBTRACT ENV ESTIMATE\n";
     if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_blups') {
 
         foreach my $p (@unique_plot_names) {
@@ -2399,6 +2404,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         close($F2);
     }
 
+    print STDERR Dumper [$phenotype_min_altered, $phenotype_max_altered];
+
     my ($result_blup_data_altered, $result_blup_data_delta_altered, $result_blup_spatial_data_altered, $result_blup_pe_data_altered, $result_blup_pe_data_delta_altered, $result_residual_data_altered, $result_fitted_data_altered, %fixed_effects_altered, %rr_genetic_coefficients_altered, %rr_temporal_coefficients_altered);
     my $model_sum_square_residual_altered = 0;
     my $genetic_effect_min_altered = 1000000000;
@@ -2409,7 +2416,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $env_effect_sum_altered = 0;
     my $residual_sum_altered = 0;
 
-    #RUN ENV ESTIMATE ON Altered Pheno
+    print STDERR "RUN ENV ESTIMATE ON ALTERED PHENO\n";
     if ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
         # print STDERR Dumper $statistics_cmd;
         eval {
@@ -2913,11 +2920,13 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         print STDERR "ALTERED $statistics_select ENV EFFECT SUM $env_effect_sum_altered\n";
     }
 
+    print STDERR Dumper [$genetic_effect_min_altered, $genetic_effect_max_altered, $env_effect_min_altered, $env_effect_max_altered];
+
     my (%phenotype_data_altered_env, @data_matrix_altered_env, @data_matrix_phenotypes_altered_env);
     my $phenotype_min_altered_env = 1000000000;
     my $phenotype_max_altered_env = -1000000000;
 
-    #Add Simulated Env to Altered Pheno
+    print STDERR "ADD SIMULATED END TO ALTERED PHENO\n";
     if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_blups') {
 
         foreach my $p (@unique_plot_names) {
@@ -3071,6 +3080,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         close($F2);
     }
 
+    print STDERR Dumper [$phenotype_min_altered_env, $phenotype_max_altered_env];
+
     my ($result_blup_data_altered_env, $result_blup_data_delta_altered_env, $result_blup_spatial_data_altered_env, $result_blup_pe_data_altered_env, $result_blup_pe_data_delta_altered_env, $result_residual_data_altered_env, $result_fitted_data_altered_env, %fixed_effects_altered_env, %rr_genetic_coefficients_altered_env, %rr_temporal_coefficients_altered_env);
     my $model_sum_square_residual_altered_env = 0;
     my $genetic_effect_min_altered_env = 1000000000;
@@ -3081,7 +3092,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $env_effect_sum_altered_env = 0;
     my $residual_sum_altered_env = 0;
 
-    #RUN ENV ESTIMATE ON Altered Pheno With Sim Env
+    print STDERR "RUN ENV ESTIMATE ON Altered Pheno With Sim Env\n";
     if ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
         # print STDERR Dumper $statistics_cmd;
         eval {
@@ -3584,6 +3595,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         print STDERR "ALTERED w/SIM_ENV $statistics_select GENETIC EFFECT SUM $genetic_effect_sum_altered_env\n";
         print STDERR "ALTERED w/SIM_ENV $statistics_select ENV EFFECT SUM $env_effect_sum_altered_env\n";
     }
+
+    print STDERR Dumper [$genetic_effect_min_altered_env, $genetic_effect_max_altered_env, $env_effect_min_altered_env, $env_effect_max_altered_env];
 
     my @sorted_germplasm_names = sort keys %unique_accessions;
     my @set = ('0' ..'9', 'A' .. 'F');
