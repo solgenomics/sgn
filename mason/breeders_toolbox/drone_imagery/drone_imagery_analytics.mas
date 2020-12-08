@@ -673,17 +673,26 @@ jQuery(document).ready(function() {
                     if (response.sum_square_residual_altered) {
                         html = html + '<h4>Sum square residual altered: '+response.sum_square_residual_altered+'</h4><hr>';
                     }
+                    if (response.sum_square_residual_altered) {
+                        html = html + '<h4>Sum square residual altered with simulated env: '+response.sum_square_residual_altered_env+'</h4><hr>';
+                    }
                     if (response.genetic_effect_sum_original) {
-                        html = html + '<h4>Genetic Effect Sum original: '+response.genetic_effect_sum_original+'</h4><hr>';
+                        html = html + '<h4>Genetic effect sum original: '+response.genetic_effect_sum_original+'</h4><hr>';
                     }
                     if (response.genetic_effect_sum_altered) {
-                        html = html + '<h4>Genetic Effect Sum altered: '+response.genetic_effect_sum_altered+'</h4><hr>';
+                        html = html + '<h4>Genetic effect sum altered: '+response.genetic_effect_sum_altered+'</h4><hr>';
+                    }
+                    if (response.genetic_effect_sum_altered_env) {
+                        html = html + '<h4>Genetic effect sum altered with simulated env: '+response.genetic_effect_sum_altered_env+'</h4><hr>';
                     }
                     if (response.env_effect_sum_original) {
-                        html = html + '<h4>Env Effect Sum original: '+response.env_effect_sum_original+'</h4><hr>';
+                        html = html + '<h4>Env effect sum original: '+response.env_effect_sum_original+'</h4><hr>';
                     }
                     if (response.env_effect_sum_altered) {
-                        html = html + '<h4>Env Effect Sum altered: '+response.env_effect_sum_altered+'</h4><hr>';
+                        html = html + '<h4>Env effect sum altered: '+response.env_effect_sum_altered+'</h4><hr>';
+                    }
+                    if (response.env_effect_sum_altered_env) {
+                        html = html + '<h4>Env effect sum altered with simulated env: '+response.env_effect_sum_altered_env+'</h4><hr>';
                     }
 
                     if (response.spatial_effects_plots) {
