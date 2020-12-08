@@ -42,6 +42,12 @@ has 'cross_properties' => (
     required => 0,
 );
 
+has 'parent_data_level' => (
+    is => 'ro',
+    isa => 'Str',
+    required => 0,
+);
+
 
 sub parse {
     my $self = shift;

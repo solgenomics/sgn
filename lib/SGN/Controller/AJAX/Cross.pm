@@ -1524,6 +1524,8 @@ sub upload_intercross_file_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
+    my $parent_data_level = $c->req->param('intercross_parent_level');
+    print STDERR "PARENT DATA LEVEL =".Dumper($parent_data_level)."\n";
     my $upload = $c->req->upload('intercross_file');
     my $parser;
     my $parsed_data;
@@ -1591,7 +1593,7 @@ sub upload_intercross_file_POST : Args(0) {
     $upload_metadata{'date'}="$timestamp";
 
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
+    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, parent_data_level => $parent_data_level);
     $parser->load_plugin('IntercrossCSV');
     $parsed_data = $parser->parse();
 #    print STDERR "PARSED DATA =". Dumper($parsed_data)."\n";
@@ -1621,6 +1623,7 @@ sub upload_intercross_file_POST : Args(0) {
         my $cross_validator = CXGN::List::Validate->new();
         my @new_crosses = @{$cross_validator->validate($schema,'crosses',\@cross_id_list)->{'missing'}};
 #        print STDERR "NEW CROSSES =".Dumper(\@new_crosses)."\n";
+#        print STDERR "CROSSES HASH =".Dumper(\%crosses_hash)."\n";
 
         if (scalar(@new_crosses) > 0) {
             my @crosses;
