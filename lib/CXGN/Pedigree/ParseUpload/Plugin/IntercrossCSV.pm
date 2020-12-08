@@ -13,8 +13,7 @@ sub _validate_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
-#    my $parent_type = $self->get_data_level();
-    my $parent_type = 'accessions';
+    my $parent_data_level = $self->get_parent_data_level();
     my $delimiter = ',';
     my @error_messages;
     my %errors;
@@ -123,15 +122,15 @@ sub _validate_with_plugin {
     my $parent_validator = CXGN::List::Validate->new();
     my @parents_missing;
 
-    if($parent_type eq 'accessions') {
+    if($parent_data_level eq 'accessions') {
         @parents_missing = @{$parent_validator->validate($schema,'uniquenames',\@parent_list)->{'missing'}};
     }
 
-    if($parent_type eq 'plots') {
+    if($parent_data_level eq 'plots') {
         @parents_missing = @{$parent_validator->validate($schema,'plots',\@parent_list)->{'missing'}};
     }
 
-    if($parent_type eq 'plants') {
+    if($parent_data_level eq 'plants') {
         @parents_missing = @{$parent_validator->validate($schema,'plants',\@parent_list)->{'missing'}};
     }
 
