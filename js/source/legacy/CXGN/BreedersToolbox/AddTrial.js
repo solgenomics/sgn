@@ -82,7 +82,7 @@ jQuery(document).ready(function ($) {
             alert("Please check the plot length is too high");
         }
         else if (description === '') {
-            alert("alert");
+            alert("Please suplly a description!");
         }
         else if (design_type === '') {
             alert("Please select a design type");
