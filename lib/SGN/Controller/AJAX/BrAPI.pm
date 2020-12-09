@@ -3299,7 +3299,7 @@ sub observationvariable_list_POST {
 
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
-	my $brapi_package_result = $brapi_module->store(\@all_variables,$user_id);
+	my $brapi_package_result = $brapi_module->store(\@all_variables,$user_id, $c);
 	_standard_response_construction($c, $brapi_package_result);
 }
 

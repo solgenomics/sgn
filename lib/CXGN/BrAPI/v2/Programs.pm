@@ -184,15 +184,19 @@ sub store {
 	my @program_ids;
 
 	foreach my $params (@{$data}) {
-		my $name = $params->{programName} || undef;
-		my $desc = $params->{objective} || undef;
 
-		my $p = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
+		my $name = $params->{programName} || undef;
+		my $desc = $params->{objective} || 'N/A'; # needs an objective due to db constraints
+
+		my $p = CXGN::BreedersToolbox::Projects->new({ schema => $schema });
 
 		my $new_program = $p->new_breeding_program($name, $desc);
 
-		print STDERR "New program is ".Dumper($new_program)."\n";
+		if ($new_program->{'error'}) {
+			return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Program %s was not stored.', $name));
+		}
 
+		print STDERR "New program is " . Dumper($new_program) . "\n";
 		push @program_ids, $new_program;
 
 	}
@@ -221,7 +225,7 @@ sub update {
 	my @program_ids;
 
 	my $name = $params->{programName} || undef;
-	my $desc = $params->{objective} || undef;
+	my $desc = $params->{objective} || 'N/A'; # needs an objective due to db constraints
 	my $id = $params->{programDbId} || undef;
 
 	my $program = $schema->resultset('Project::Project')->find({project_id => $id});

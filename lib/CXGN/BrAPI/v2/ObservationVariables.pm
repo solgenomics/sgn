@@ -366,6 +366,7 @@ sub store {
     my $self = shift;
     my $data = shift;
     my $user_id = shift;
+    my $c = shift;
 
     my $page_size = $self->page_size;
     my $page = $self->page;
@@ -375,6 +376,8 @@ sub store {
 
     # nothing for now, eventually edit
     my $cvterm_id = undef;
+    my $supported_crop = $c->config->{'supportedCrop'};
+    my %result;
 
     #print Dumper($data);
     foreach my $params (@{$data}) {
@@ -390,23 +393,99 @@ sub store {
             definition                            => $description,
             synonyms                              => $synonyms
         });
-        my $new_variable = $trait->store();
+        my $variable = $trait->store();
 
-        if ($new_variable->{'error'}) {
+        if ($variable->{'error'}) {
             # TODO: status codes
-            return CXGN::BrAPI::JSONResponse->return_error($self->status, $new_variable->{'error'});
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, $variable->{'error'});
         } else {
-            push @variable_ids, $new_variable;
-            print STDERR "New variable is ".Dumper($new_variable)."\n";
+            $variable = $variable->{variable};
+            push @variable_ids, $variable;
+            print "New variable is ".Dumper($variable)."\n";
         }
 
+        %result = (
+            additionalInfo => undef,
+            commonCropName => $supported_crop,
+            contextOfUse => undef,
+            defaultValue => $variable->default_value,
+            documentationURL => $variable->uri,
+            # externalReferences => $db_name.":".$accession,
+            growthStage => undef,
+            institution  => undef,
+            language => 'eng',
+            method => {
+                # additionalInfo
+                # bibliographicalReference
+                # description
+                # externalReferences
+                # formula
+                # methodClass
+                # methodDbId
+                # methodName
+                # ontologyReference => {
+                #         documentationLinks
+                #         ontologyDbId
+                #         ontologyName
+                #         version
+                #     }
+            },
+            observationVariableDbId => $variable->cvterm_id,
+            observationVariableName => $variable->display_name,
+            ontologyReference => {
+                documentationLinks => $variable->uri ? $variable->uri : undef,
+                ontologyDbId => $variable->db_id ? $variable->db_id : undef,
+                ontologyName => $variable->db ? $variable->db : undef,
+                version => undef,
+            },
+            scale => {
+                datatype => $variable->format,
+                decimalPlaces => undef,
+            #     externalReferences => '',
+                ontologyReference => {
+                    documentationLinks => $variable->uri ? $variable->uri : undef,
+                    ontologyDbId => $variable->db_id ? $variable->db_id : undef,
+                    ontologyName => $variable->db ? $variable->db : undef,
+                    version => undef,
+                },
+                scaleDbId => undef,
+                scaleName => undef,
+                validValues => {
+                    min =>$variable->minimum ? $variable->minimum : undef,
+                    max =>$variable->maximum ? $variable->maximum : undef,
+                    #categories => \@brapi_categories,
+                },
+            #
+            },
+            scientist => undef,
+            # status => $obsolete = 0 ? "Obsolete" : "Active",
+            submissionTimestamp => undef,
+            # synonyms => $synonym,
+            trait => {
+                alternativeAbbreviations => undef,
+            #     attribute => $cvterm_name,
+                entity => undef,
+            #     externalReferences => $db_name.":".$accession,
+                mainAbbreviation => undef,
+                ontologyReference => {
+                    documentationLinks => $variable->uri ? $variable->uri : undef,
+                    ontologyDbId => $variable->db_id ? $variable->db_id : undef,
+                    ontologyName => $variable->db ? $variable->db : undef,
+                    version => undef,
+                },
+            #     status => $obsolete = 0 ? "Obsolete" : "Active",
+            #     synonyms => $synonym,
+                traitClass => undef,
+            #     traitDescription => $cvterm_definition,
+                traitDbId => $variable->cvterm_id,
+            #     traitName => $cvterm_name,
+            },
+        );
     }
 
-    my %result;
     my $count = scalar @variable_ids;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($count,$page_size,$page);
     return CXGN::BrAPI::JSONResponse->return_success( \%result, $pagination, undef, $self->status(), $count . " Variables were saved.");
-
 }
 
 sub observation_variable_ontologies {

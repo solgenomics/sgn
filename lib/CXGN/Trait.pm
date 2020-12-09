@@ -394,7 +394,10 @@ sub store {
 		$new_term->add_synonym($synonym);
 	}
 
-	return { success => "Variable added successfully\n", id=>undef };
+	$self->cvterm_id($variable_of_id);
+	$self->cvterm($cvterm);
+
+	return { success => "Variable added successfully\n", variable=>$self };
 }
 
 # TODO: common utilities somewhere, used by Location also
