@@ -56,6 +56,7 @@ jQuery(document).ready(function ($) {
         var plot_width = $("#add_project_plot_width").val();
         var plot_length = $("#add_project_plot_length").val();
 
+        
         if (trial_name === '') {
             alert("Please supply a trial name");
         }
@@ -71,11 +72,17 @@ jQuery(document).ready(function ($) {
         else if (plot_width < 0 ){
             alert("Please check the plot width");
         }
+        else if (plot_width > 13){
+            alert("Please check the plot width is too high");
+        }
         else if (plot_length < 0){
             alert("Please check the plot length");
         }
+        else if (plot_length > 13){
+            alert("Please check the plot length is too high");
+        }
         else if (description === '') {
-            alert("Please supply a description");
+            alert("alert");
         }
         else if (design_type === '') {
             alert("Please select a design type");
