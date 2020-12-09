@@ -2,19 +2,6 @@
 
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
-
-<div class="well well-sm">
-    <div class="panel panel-default">
-        <div class="panel-body">
-            <&| /page/info_section.mas, title=>"Upload Cross Data", is_subsection => 1, collapsible=>1, collapsed=>0, &>
-                <&| /page/info_section.mas, title=>"Upload Intercross File ", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_intercross_file_link">Upload</button>'&>
-                </&>
-            </&><!-- closes upload cross data section -->
-        </div>
-    </div>
-</div>
 
 <div class="modal fade" id="upload_intercross_file_dialog" name="upload_intercross_file_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadIntercrossFileDialog">
     <div class="modal-dialog modal-lg" role="document">
