@@ -3,6 +3,7 @@ package CXGN::Trait;
 
 use Moose;
 use Data::Dumper;
+use Try::Tiny;
 
 ## to do: add concept of trait short name; provide alternate constructors for term, shortname, and synonyms etc.
 
@@ -250,6 +251,8 @@ has 'synonyms' => (
 	is  => 'rw'
 );
 
+
+
 sub BUILD { 
     #print STDERR "BUILDING...\n";
     my $self = shift;
@@ -346,30 +349,6 @@ sub store {
 		$accession++;
 	}
 
-	# TODO: see if can setup transaction for rollbacks in case of error
-
-	# add trait info to dbxref
-	my $new_term_dbxref = $schema->resultset("General::Dbxref")->create(
-		{   db_id     => $ontology_id,
-			accession => $accession,
-			version   => '1',
-		},
-		{ key => 'dbxref_c1' } ,
-	);
-
-	# add trait info to cvterm
-	my $new_term = $schema->resultset("Cv::Cvterm")->create(
-		{ 	cv_id  => $cv_id,
-			name   => $name,
-			definition => $description,
-			dbxref_id  => $new_term_dbxref->dbxref_id(),
-			is_obsolete => 0
-		});
-
-	# TODO: make sure relationship_type is set correctly
-
-	# set cvtermrelationship VARIABLE_OF to put terms under ontology
-
 	# get cvterm_id for VARIABLE_OF
 	my $variable_of_cvterm = $schema->resultset("Cv::Cvterm")->find(
 		{
@@ -382,16 +361,55 @@ sub store {
 
 	my $variable_of_id = $variable_of_cvterm->get_column('cvterm_id');
 
-	# add cvterm_relationship entry linking term to ontology root
-	my $relationship = $schema->resultset("Cv::CvtermRelationship")->create(
-		{ 	type_id  => $variable_of_id,
-			subject_id   => $new_term->get_column('cvterm_id'),
-			object_id => $root_id
-		});
+	# setup transaction for rollbacks in case of error
+	my $coderef = sub {
 
-	# add synonyms
-	foreach my $synonym (@{$synonyms}) {
-		$new_term->add_synonym($synonym);
+		# add trait info to dbxref
+		my $new_term_dbxref = $schema->resultset("General::Dbxref")->create(
+			{ db_id       => $ontology_id,
+				accession => $accession,
+				version   => '1',
+			},
+			{ key => 'dbxref_c1' },
+		);
+
+		# add trait info to cvterm
+		my $new_term = $schema->resultset("Cv::Cvterm")->create(
+			{ cv_id         => $cv_id,
+				name        => $name,
+				definition  => $description,
+				dbxref_id   => $new_term_dbxref->dbxref_id(),
+				is_obsolete => 0
+			});
+
+		# TODO: make sure relationship_type is set correctly
+
+		# set cvtermrelationship VARIABLE_OF to put terms under ontology
+		# add cvterm_relationship entry linking term to ontology root
+		my $relationship = $schema->resultset("Cv::CvtermRelationship")->create(
+			{ type_id      => $variable_of_id,
+				subject_id => $new_term->get_column('cvterm_id'),
+				object_id  => $root_id
+			});
+
+		# add synonyms
+		foreach my $synonym (@{$synonyms}) {
+			$new_term->add_synonym($synonym);
+		}
+
+		# save scale properties
+	};
+
+	my $transaction_error;
+
+	try {
+		$self->bcs_schema()->txn_do($coderef);
+	} catch {
+		$transaction_error =  $_;
+	};
+
+	if ($transaction_error) {
+		return {error => "Transaction error trying to write to db"}
 	}
 
 	$self->cvterm_id($variable_of_id);
