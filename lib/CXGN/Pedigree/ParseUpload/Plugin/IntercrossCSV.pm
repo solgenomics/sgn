@@ -13,7 +13,6 @@ sub _validate_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
-    my $parent_data_level = $self->get_parent_data_level();
     my $delimiter = ',';
     my @error_messages;
     my %errors;
@@ -80,10 +79,6 @@ sub _validate_with_plugin {
         push @error_messages, "File contents incorrect. The tenth column must be seeds.";
     }
 
-    if(($parent_type ne 'accessions') && ($parent_type ne 'plots') && ($parent_type ne 'plants')){
-        push @error_messages, "You must specify if the parents are accessions, plots or plants.";
-    }
-
     my %parent_names;
     my %experiment;
     while ( my $row = <$fh> ){
@@ -117,22 +112,10 @@ sub _validate_with_plugin {
         push @error_messages, "All of the crosses in each Intercross file should be in the same crossing_experiment";
     }
 
-
     my @parent_list = keys %parent_names;
     my $parent_validator = CXGN::List::Validate->new();
-    my @parents_missing;
 
-    if($parent_data_level eq 'accessions') {
-        @parents_missing = @{$parent_validator->validate($schema,'uniquenames',\@parent_list)->{'missing'}};
-    }
-
-    if($parent_data_level eq 'plots') {
-        @parents_missing = @{$parent_validator->validate($schema,'plots',\@parent_list)->{'missing'}};
-    }
-
-    if($parent_data_level eq 'plants') {
-        @parents_missing = @{$parent_validator->validate($schema,'plants',\@parent_list)->{'missing'}};
-    }
+    my @parents_missing = @{$parent_validator->validate($schema,'accessions_or_plots_or_plants',\@parent_list)->{'missing'}};
 
     if (scalar(@parents_missing) > 0) {
         push @error_messages, "The following parents are not in the database, or are not in the database as uniquenames: ".join(',',@parents_missing);
@@ -151,8 +134,6 @@ sub _validate_with_plugin {
 sub _parse_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
-#    my $parent_type = $self->get_data_level();
-    my $parent_type = 'accessions';
     my $schema = $self->get_chado_schema();
     my $delimiter = ',';
 
@@ -195,8 +176,8 @@ sub _parse_with_plugin {
 
         my $cross_identifier = $crossing_experiment.'_'.$female_parent.'_'.$male_parent;
         $data{'crossing_experiment_name'} = $crossing_experiment;
-        $data{'crosses'}{$cross_identifier}{'female_parent_name'} = $female_parent;
-        $data{'crosses'}{$cross_identifier}{'male_parent_name'} = $male_parent;
+        $data{'crosses'}{$cross_identifier}{'intercross_female_parent'} = $female_parent;
+        $data{'crosses'}{$cross_identifier}{'intercross_male_parent'} = $male_parent;
         $data{'crosses'}{$cross_identifier}{'cross_type'} = $cross_type;
         $data{'crosses'}{$cross_identifier}{'activities'}{$transaction_id}{'Timestamp'} = $timestamp;
         $data{'crosses'}{$cross_identifier}{'activities'}{$transaction_id}{'Operator'} = $person;

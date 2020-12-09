@@ -1524,8 +1524,6 @@ sub upload_intercross_file_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
-    my $parent_data_level = $c->req->param('intercross_parent_level');
-    print STDERR "PARENT DATA LEVEL =".Dumper($parent_data_level)."\n";
     my $upload = $c->req->upload('intercross_file');
     my $parser;
     my $parsed_data;
@@ -1593,7 +1591,7 @@ sub upload_intercross_file_POST : Args(0) {
     $upload_metadata{'date'}="$timestamp";
 
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, parent_data_level => $parent_data_level);
+    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
     $parser->load_plugin('IntercrossCSV');
     $parsed_data = $parser->parse();
 #    print STDERR "PARSED DATA =". Dumper($parsed_data)."\n";
@@ -1631,19 +1629,30 @@ sub upload_intercross_file_POST : Args(0) {
             my $crossing_experiment_rs = $schema->resultset('Project::Project')->find({name => $crossing_experiment_name});
             my $crossing_experiment_id = $crossing_experiment_rs->project_id();
 
+            my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+            my $plant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
+
             foreach my $new_cross_id (@new_crosses) {
-                my $female_parent = $crosses_hash{$new_cross_id}{'female_parent_name'};
-                my $male_parent = $crosses_hash{$new_cross_id}{'male_parent_name'};
+                my $intercross_female_parent = $crosses_hash{$new_cross_id}{'intercross_female_parent'};
+                my $intercross_male_parent = $crosses_hash{$new_cross_id}{'intercross_male_parent'};
                 my $cross_type = $crosses_hash{$new_cross_id}{'cross_type'};
                 if ($cross_type eq 'BIPARENTAL') {
                     $cross_type = 'biparental';
                 }
-                my $cross_combination = $female_parent.'/'.$male_parent;
+                my $intercross_female_id = $schema->resultset("Stock::Stock")->find({uniquename => $intercross_female_parent})->stock_id();
+                my $intercross_male_id = $schema->resultset("Stock::Stock")->find({uniquename => $intercross_male_parent})->stock_id();
+
+                if ($parent_data_level eq 'plots') {
+                    my $female_parent_id = $schema->resultset("Stock::StockRelationship")->find({subject_id=>$intercross_female_id, type_id=>$plot_of_type_id})->object_id();
+                    my $female_parent_name = $schema->resultset("Stock::Stock")->find({stock_id => $female_parent_id})->uniquename();
+
+                }
+                my $cross_combination = $intercross_female_parent.'/'.$intercross_male_parent;
 
                 my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name => $new_cross_id, cross_combination=>$cross_combination, cross_type =>$cross_type);
-                my $female_parent_individual = Bio::GeneticRelationships::Individual->new(name => $female_parent);
+                my $female_parent_individual = Bio::GeneticRelationships::Individual->new(name => $intercross_female_parent);
                 $pedigree->set_female_parent($female_parent_individual);
-                my $male_parent_individual = Bio::GeneticRelationships::Individual->new(name => $male_parent);
+                my $male_parent_individual = Bio::GeneticRelationships::Individual->new(name => $intercross_male_parent);
                 $pedigree->set_male_parent($male_parent_individual);
                 push @crosses, $pedigree;
             }
