@@ -1629,9 +1629,9 @@ sub upload_intercross_file_POST : Args(0) {
             my $crossing_experiment_rs = $schema->resultset('Project::Project')->find({name => $crossing_experiment_name});
             my $crossing_experiment_id = $crossing_experiment_rs->project_id();
 
-            my $accession_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type')->cvterm_id();
-            my $plot_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id();
-            my $plant_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type')->cvterm_id();
+            my $accession_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+            my $plot_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+            my $plant_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
             my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
             my $plant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
 
@@ -1693,6 +1693,7 @@ sub upload_intercross_file_POST : Args(0) {
 
                 push @crosses, $pedigree;
             }
+
             my $cross_add = CXGN::Pedigree::AddCrosses->new({
                 chado_schema => $schema,
                 phenome_schema => $phenome_schema,
