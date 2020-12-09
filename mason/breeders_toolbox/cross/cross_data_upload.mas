@@ -35,20 +35,10 @@
                     </&>
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_intercross_form" name="upload_intercross_form">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Parent Data Level: </label>
-                            <div class="col-sm-9" >
-                                <select class="form-control" id="intercross_parent_level">
-                                    <option value="accessions">Accessions</option>
-                                    <option value="plots">Plots</option>
-                                    <option value="plants">Plants</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group">
                             <label class="col-sm-3 control-label">Upload File: </label>
-                                <div class="col-sm-9">
-                                    <input type="file" name="intercross_file" id="intercross_file" encoding="multipart/form-data" />
-                                </div>
+                            <div class="col-sm-9">
+                                <input type="file" name="intercross_file" id="intercross_file" encoding="multipart/form-data" />
+                            </div>
                         </div>
                     </form>
                 </div>
