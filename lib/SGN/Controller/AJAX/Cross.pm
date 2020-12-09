@@ -1629,6 +1629,9 @@ sub upload_intercross_file_POST : Args(0) {
             my $crossing_experiment_rs = $schema->resultset('Project::Project')->find({name => $crossing_experiment_name});
             my $crossing_experiment_id = $crossing_experiment_rs->project_id();
 
+            my $accession_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type')->cvterm_id();
+            my $plot_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id();
+            my $plant_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type')->cvterm_id();
             my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
             my $plant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
 
@@ -1639,21 +1642,55 @@ sub upload_intercross_file_POST : Args(0) {
                 if ($cross_type eq 'BIPARENTAL') {
                     $cross_type = 'biparental';
                 }
-                my $intercross_female_id = $schema->resultset("Stock::Stock")->find({uniquename => $intercross_female_parent})->stock_id();
-                my $intercross_male_id = $schema->resultset("Stock::Stock")->find({uniquename => $intercross_male_parent})->stock_id();
 
-                if ($parent_data_level eq 'plots') {
-                    my $female_parent_id = $schema->resultset("Stock::StockRelationship")->find({subject_id=>$intercross_female_id, type_id=>$plot_of_type_id})->object_id();
-                    my $female_parent_name = $schema->resultset("Stock::Stock")->find({stock_id => $female_parent_id})->uniquename();
+                my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name => $new_cross_id, cross_type =>$cross_type);
 
+                my $intercross_female_stock_id = $schema->resultset("Stock::Stock")->find({uniquename => $intercross_female_parent})->stock_id();
+                my $intercross_male_stock_id = $schema->resultset("Stock::Stock")->find({uniquename => $intercross_male_parent})->stock_id();
+                my $intercross_female_type_id = $schema->resultset("Stock::Stock")->find({uniquename => $intercross_female_parent})->type_id();
+                my $intercross_male_type_id = $schema->resultset("Stock::Stock")->find({uniquename => $intercross_male_parent})->type_id();
+                my $female_parent_name;
+                my $female_parent_stock_id;
+                my $male_parent_name;
+                my $male_parent_stock_id;
+
+                if ($intercross_female_type_id == $plot_stock_type_id) {
+                    $female_parent_stock_id = $schema->resultset("Stock::StockRelationship")->find({subject_id=>$intercross_female_stock_id, type_id=>$plot_of_type_id})->object_id();
+                    $female_parent_name = $schema->resultset("Stock::Stock")->find({stock_id => $female_parent_stock_id})->uniquename();
+                    my $female_plot_individual = Bio::GeneticRelationships::Individual->new(name => $intercross_female_parent);
+                    $pedigree->set_female_plot($female_plot_individual);
+                } elsif ($intercross_female_type_id == $plant_stock_type_id) {
+                    $female_parent_stock_id = $schema->resultset("Stock::StockRelationship")->find({subject_id=>$intercross_female_stock_id, type_id=>$plant_of_type_id})->object_id();
+                    $female_parent_name = $schema->resultset("Stock::Stock")->find({stock_id => $female_parent_stock_id})->uniquename();
+                    my $female_plant_individual = Bio::GeneticRelationships::Individual->new(name => $intercross_female_parent);
+                    $pedigree->set_female_plant($female_plant_individual);
+                } else {
+                    $female_parent_name = $intercross_female_parent;
                 }
-                my $cross_combination = $intercross_female_parent.'/'.$intercross_male_parent;
 
-                my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name => $new_cross_id, cross_combination=>$cross_combination, cross_type =>$cross_type);
-                my $female_parent_individual = Bio::GeneticRelationships::Individual->new(name => $intercross_female_parent);
+                if ($intercross_male_type_id == $plot_stock_type_id) {
+                    $male_parent_stock_id = $schema->resultset("Stock::StockRelationship")->find({subject_id=>$intercross_male_stock_id, type_id=>$plot_of_type_id})->object_id();
+                    $male_parent_name = $schema->resultset("Stock::Stock")->find({stock_id => $male_parent_stock_id})->uniquename();
+                    my $male_plot_individual = Bio::GeneticRelationships::Individual->new(name => $intercross_male_parent);
+                    $pedigree->set_male_plot($male_plot_individual);
+                } elsif ($intercross_male_type_id == $plant_stock_type_id) {
+                    $male_parent_stock_id = $schema->resultset("Stock::StockRelationship")->find({subject_id=>$intercross_male_stock_id, type_id=>$plant_of_type_id})->object_id();
+                    $male_parent_name = $schema->resultset("Stock::Stock")->find({stock_id => $male_parent_stock_id})->uniquename();
+                    my $male_plant_individual = Bio::GeneticRelationships::Individual->new(name => $intercross_male_parent);
+                    $pedigree->set_male_plant($male_plant_individual);
+                } else {
+                    $male_parent_name = $intercross_male_parent
+                }
+
+                my $female_parent_individual = Bio::GeneticRelationships::Individual->new(name => $female_parent_name);
                 $pedigree->set_female_parent($female_parent_individual);
-                my $male_parent_individual = Bio::GeneticRelationships::Individual->new(name => $intercross_male_parent);
+
+                my $male_parent_individual = Bio::GeneticRelationships::Individual->new(name => $male_parent_name);
                 $pedigree->set_male_parent($male_parent_individual);
+
+                my $cross_combination = $female_parent_name.'/'.$male_parent_name;
+                $pedigree->set_cross_combination($cross_combination);
+
                 push @crosses, $pedigree;
             }
             my $cross_add = CXGN::Pedigree::AddCrosses->new({
