@@ -143,7 +143,7 @@
                                 <label class="col-sm-3 control-label">Relationship Matrix Type: </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="drone_imagery_analytics_relationship_matrix_type_select_div">
-                                        <option value="">Select One</option>
+                                        <option value="">Identity</option>
                                         <option value="htp_phenotypes">High-throughput Phenotyping Data</option>
                                         <option value="genotypes">Genotyping Data</option>
                                     </select>
@@ -614,11 +614,6 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#drone_imagery_analytics_select_step').click(function(){
-
-        if (jQuery('#drone_imagery_analytics_relationship_matrix_type_select_div').val() == '') {
-            alert('Select to use genotyping or high-throughput phenotype data for calculating relationship matrix!');
-            return false;
-        }
 
         if (jQuery('#drone_image_analytics_genotyping_protocol_include_pedigree_select').val() == 'yes' && jQuery('#drone_image_analytics_genotyping_protocol_compute_from_parents_select').val() != 'yes') {
             alert('You can only use pedigree info in the relationship matrix if you will compute the genotypes from the parents!');

@@ -86,7 +86,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     }
 
     my $trait_id_list = $c->req->param('observation_variable_id_list') ? decode_json $c->req->param('observation_variable_id_list') : [];
-    my $compute_relationship_matrix_from_htp_phenotypes = $c->req->param('relationship_matrix_type');
+    my $compute_relationship_matrix_from_htp_phenotypes = $c->req->param('relationship_matrix_type') || 'genotypes';
     my $compute_relationship_matrix_from_htp_phenotypes_type = $c->req->param('htp_pheno_rel_matrix_type');
     my $compute_relationship_matrix_from_htp_phenotypes_time_points = $c->req->param('htp_pheno_rel_matrix_time_points');
     my $compute_relationship_matrix_from_htp_phenotypes_blues_inversion = $c->req->param('htp_pheno_rel_matrix_blues_inversion');
@@ -2303,11 +2303,11 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     my $minimizer = 0;
                     if ($analytics_select eq 'minimize_local_env_effect') {
                         $minimizer = $result_blup_spatial_data_original->{$p}->{$t}->[0];
-                        $minimizer = $minimizer * ($phenotype_max_original - $phenotype_min_original)/($env_effect_max_original - $env_effect_min_original);
+                        # $minimizer = $minimizer * ($phenotype_max_original - $phenotype_min_original)/($env_effect_max_original - $env_effect_min_original);
                     }
                     elsif ($analytics_select eq 'minimize_genetic_effect') {
                         $minimizer = $result_blup_data_original->{$p}->{$t}->[0];
-                        $minimizer = $minimizer * ($phenotype_max_original - $phenotype_min_original)/($genetic_effect_max_original - $genetic_effect_min_original);
+                        # $minimizer = $minimizer * ($phenotype_max_original - $phenotype_min_original)/($genetic_effect_max_original - $genetic_effect_min_original);
                     }
                     my $new_val = $phenotype_data_original{$p}->{$t} + 0 - $minimizer;
 
@@ -2387,11 +2387,11 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         my $minimizer = 0;
                         if ($analytics_select eq 'minimize_local_env_effect') {
                             $minimizer = $result_blup_pe_data_delta_original->{$p}->{$t}->[0];
-                            $minimizer = $minimizer * ($phenotype_max_original - $phenotype_min_original)/($env_effect_max_original - $env_effect_min_original);
+                            # $minimizer = $minimizer * ($phenotype_max_original - $phenotype_min_original)/($env_effect_max_original - $env_effect_min_original);
                         }
                         elsif ($analytics_select eq 'minimize_genetic_effect') {
                             $minimizer = $result_blup_data_delta_original->{$p}->{$t}->[0];
-                            $minimizer = $minimizer * ($phenotype_max_original - $phenotype_min_original)/($genetic_effect_max_original - $genetic_effect_min_original);
+                            # $minimizer = $minimizer * ($phenotype_max_original - $phenotype_min_original)/($genetic_effect_max_original - $genetic_effect_min_original);
                         }
                         my $new_val = $val - $minimizer;
 
@@ -2412,11 +2412,11 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         my $minimizer = 0;
                         if ($analytics_select eq 'minimize_local_env_effect') {
                             $minimizer = $result_blup_pe_data_delta_original->{$p}->{$t}->[0];
-                            $minimizer = $minimizer * ($phenotype_max_original - $phenotype_min_original)/($env_effect_max_original - $env_effect_min_original);
+                            # $minimizer = $minimizer * ($phenotype_max_original - $phenotype_min_original)/($env_effect_max_original - $env_effect_min_original);
                         }
                         elsif ($analytics_select eq 'minimize_genetic_effect') {
                             $minimizer = $result_blup_data_delta_original->{$p}->{$t}->[0];
-                            $minimizer = $minimizer * ($phenotype_max_original - $phenotype_min_original)/($genetic_effect_max_original - $genetic_effect_min_original);
+                            # $minimizer = $minimizer * ($phenotype_max_original - $phenotype_min_original)/($genetic_effect_max_original - $genetic_effect_min_original);
                         }
                         my $new_val = $val - $minimizer;
 
