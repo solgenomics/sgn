@@ -118,7 +118,7 @@ sub _validate_with_plugin {
     my @parents_missing = @{$parent_validator->validate($schema,'accessions_or_plots_or_plants',\@parent_list)->{'missing'}};
 
     if (scalar(@parents_missing) > 0) {
-        push @error_messages, "The following parents are not in the database, or are not in the database as uniquenames: ".join(',',@parents_missing);
+        push @error_messages, "The following parents are not in the database, or are not in the database as accession names, plot names or plant names: ".join(',',@parents_missing);
     }
 
     if (scalar(@error_messages) >= 1) {
