@@ -2135,6 +2135,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         # print STDERR Dumper \%rr_temporal_coefficients;
 
         open(my $Fgc, ">", $coeff_genetic_tempfile) || die "Can't open file ".$coeff_genetic_tempfile;
+        print STDERR "OPENED $coeff_genetic_tempfile\n";
 
         while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients_original) {
             my @line = ($accession_name, @$coeffs);
@@ -2180,7 +2181,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         close($Fgc);
 
         while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients_original) {
-            foreach my $time (@sorted_trait_names_times) {
+            foreach my $time_term (@sorted_trait_names_times) {
+                $time = ($time_term - $time_min)/($time_max - $time_min);
                 my $value = 0;
                 my $coeff_counter = 0;
                 foreach my $b (@$coeffs) {
@@ -2190,7 +2192,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     $coeff_counter++;
                 }
 
-                $result_blup_data_delta_original->{$accession_name}->{$time} = [$value, $timestamp, $user_name, '', ''];
+                $result_blup_data_delta_original->{$accession_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
                 if ($value < $genetic_effect_min_original) {
                     $genetic_effect_min_original = $value;
@@ -2204,6 +2206,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         }
 
         open(my $Fpc, ">", $coeff_pe_tempfile) || die "Can't open file ".$coeff_pe_tempfile;
+        print STDERR "OPENED $coeff_pe_tempfile\n";
 
         while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients_original) {
             my @line = ($plot_name, @$coeffs);
@@ -2248,7 +2251,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         close($Fpc);
 
         while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients_original) {
-            foreach my $time (@sorted_trait_names_times) {
+            foreach my $time_term (@sorted_trait_names) {
+                my $time = ($time_term - $time_min)/($time_max - $time_min);
                 my $value = 0;
                 my $coeff_counter = 0;
                 foreach my $b (@$coeffs) {
@@ -2258,7 +2262,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     $coeff_counter++;
                 }
 
-                $result_blup_pe_data_delta_original->{$plot_name}->{$time} = [$value, $timestamp, $user_name, '', ''];
+                $result_blup_pe_data_delta_original->{$plot_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
                 if ($value < $env_effect_min_original) {
                     $env_effect_min_original = $value;
@@ -2876,7 +2880,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         close($Fgc);
 
         while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients_altered) {
-            foreach my $time (@sorted_trait_names_times) {
+            foreach my $time_term (@sorted_trait_names_times) {
+                my $time = ($time_term - $time_min)/($time_max - $time_min);
                 my $value = 0;
                 my $coeff_counter = 0;
                 foreach my $b (@$coeffs) {
@@ -2886,7 +2891,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     $coeff_counter++;
                 }
 
-                $result_blup_data_delta_altered->{$accession_name}->{$time} = [$value, $timestamp, $user_name, '', ''];
+                $result_blup_data_delta_altered->{$accession_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
                 if ($value < $genetic_effect_min_altered) {
                     $genetic_effect_min_altered = $value;
@@ -2944,7 +2949,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         close($Fpc);
 
         while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients_altered) {
-            foreach my $time (@sorted_trait_names_times) {
+            foreach my $time_term (@sorted_trait_names_times) {
+                my $time = ($time_term - $time_min)/($time_max - $time_min);
                 my $value = 0;
                 my $coeff_counter = 0;
                 foreach my $b (@$coeffs) {
@@ -2954,7 +2960,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     $coeff_counter++;
                 }
 
-                $result_blup_pe_data_delta_altered->{$plot_name}->{$time} = [$value, $timestamp, $user_name, '', ''];
+                $result_blup_pe_data_delta_altered->{$plot_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
                 if ($value < $env_effect_min_altered) {
                     $env_effect_min_altered = $value;
@@ -3570,7 +3576,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         close($Fgc);
 
         while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients_altered_env) {
-            foreach my $time (@sorted_trait_names_times) {
+            foreach my $time_term (@sorted_trait_names_times) {
+                my $time = ($time_term - $time_min)/($time_max - $time_min);
                 my $value = 0;
                 my $coeff_counter = 0;
                 foreach my $b (@$coeffs) {
@@ -3580,7 +3587,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     $coeff_counter++;
                 }
 
-                $result_blup_data_delta_altered_env->{$accession_name}->{$time} = [$value, $timestamp, $user_name, '', ''];
+                $result_blup_data_delta_altered_env->{$accession_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
                 if ($value < $genetic_effect_min_altered_env) {
                     $genetic_effect_min_altered_env = $value;
@@ -3638,7 +3645,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         close($Fpc);
 
         while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients_altered_env) {
-            foreach my $time (@sorted_trait_names_times) {
+            foreach my $time_term (@sorted_trait_names_times) {
+                my $time = ($time_term - $time_min)/($time_max - $time_min);
                 my $value = 0;
                 my $coeff_counter = 0;
                 foreach my $b (@$coeffs) {
@@ -3648,7 +3656,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     $coeff_counter++;
                 }
 
-                $result_blup_pe_data_delta_altered_env->{$plot_name}->{$time} = [$value, $timestamp, $user_name, '', ''];
+                $result_blup_pe_data_delta_altered_env->{$plot_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
                 if ($value < $env_effect_min_altered_env) {
                     $env_effect_min_altered_env = $value;

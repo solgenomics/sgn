@@ -2854,6 +2854,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             # print STDERR Dumper \%rr_temporal_coefficients;
 
             open(my $Fgc, ">", $coeff_genetic_tempfile) || die "Can't open file ".$coeff_genetic_tempfile;
+            print STDERR "OPENED $coeff_genetic_tempfile\n";
 
             while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients) {
                 my @line = ($accession_name, @$coeffs);
@@ -2897,8 +2898,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 }
             }
             close($Fgc);
+            print STDERR Dumper $result_blup_data;
 
             open(my $Fpc, ">", $coeff_pe_tempfile) || die "Can't open file ".$coeff_pe_tempfile;
+            print STDERR "OPENED $coeff_pe_tempfile\n";
 
             while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients) {
                 my @line = ($plot_name, @$coeffs);
@@ -2942,6 +2945,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 }
             }
             close($Fpc);
+            print STDERR Dumper $result_blup_pe_data;
 
             # print STDERR Dumper \%fixed_effects;
             # print STDERR Dumper $result_blup_data;
