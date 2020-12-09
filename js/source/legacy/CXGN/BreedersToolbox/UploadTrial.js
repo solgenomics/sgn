@@ -72,7 +72,7 @@ jQuery(document).ready(function ($) {
             alert("Please check the plot length is too high");
         }
         else if (description === '') {
-            alert("test a description");
+            alert("Please give a description");
         }
         else if (trial_stock_type === '') {
             alert("Please select stock type being evaluated in trial");
