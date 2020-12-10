@@ -141,7 +141,9 @@ rect.bordered {
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Plot Width (m): </label>
                                     <div class="col-sm-9">
-                                        <select class="form-control" id="add_project_plot_width" name="add_project_plot_width">
+                                        <input class="form-control" id="add_project_plot_width" name="add_project_plot_width" type="text" />
+
+                                        <!-- <select class="form-control" id="add_project_plot_width" name="add_project_plot_width">
                                             <option value="">NA</option>
                                             <option value="0.1">0.1</option>
                                             <option value="0.15">0.15</option>
@@ -186,13 +188,15 @@ rect.bordered {
                                             <option value="11.5">11.5</option>
                                             <option value="12">12.0</option>
                                             <option value="12.5">12.5</option>
-                                        </select>
+                                        </select> -->
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Plot Length (m): </label>
                                     <div class="col-sm-9">
-                                        <select class="form-control" id="add_project_plot_length" name="add_project_plot_length">
+                                        <input class="form-control" id="add_project_plot_length" name="add_project_plot_length" type="text" />
+                                        
+                                        <!-- <select class="form-control" id="add_project_plot_length" name="add_project_plot_length">
                                             <option value="">NA</option>
                                             <option value="0.1">0.1</option>
                                             <option value="0.15">0.15</option>
@@ -237,7 +241,7 @@ rect.bordered {
                                             <option value="11.5">11.5</option>
                                             <option value="12">12.0</option>
                                             <option value="12.5">12.5</option>
-                                        </select>
+                                        </select> -->
                                     </div>
                                 </div>
                                 <div class="form-group">

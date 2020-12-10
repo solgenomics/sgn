@@ -1,4 +1,4 @@
-package CXGN::Phenotypes::ParseUpload::Plugin::ScioSpreadsheetNIRS;
+package CXGN::Phenotypes::ParseUpload::Plugin::TranscriptomicsSpreadsheetCSV;
 
 # Validate Returns %validate_result = (
 #   error => 'error message'
@@ -6,18 +6,23 @@ package CXGN::Phenotypes::ParseUpload::Plugin::ScioSpreadsheetNIRS;
 
 # Parse Returns %parsed_result = (
 #   data => {
-#       plotname1 => {
-#           varname1 => [12, '2015-06-16T00:53:26Z']
-#           nirs => {
-#              sampling_time => '2/11/19',
-#              spectra => {
-#                 "740" => "0.939101707",
-#                 "741" => "0.93868202",
+#       tissue_samples1 => {
+#           varname1 => [RNAseqUG150-rep1-UG15F118P001_100_plant_1_leaf1, '2015-06-16T00:53:26Z']
+#           transcript => {
+#              observationunit_name => 'RNAseqUG150-rep1-UG15F118P001_100_plant_1_leaf1',
+#              observation_name => 'UG15F118P001',
+#              sample_type => 'leaf',
+#              sampling_condition => 'day',
+#              sample_replication => '1',
+#              expression_unit => 'RPKM',
+#              transcripts => {
+#                 "Manes.01G000100" => "0.939101707",
+#                 "Manes.01G000200" => "0.93868202",
 #              },
 #          }
 #       }
 #   },
-#   units => [plotname1],
+#   units => [tissue_samples1],
 #   variables => [varname1, varname2]
 #)
 
@@ -27,7 +32,7 @@ use Data::Dumper;
 use Text::CSV;
 
 sub name {
-    return "scio spreadsheet nirs";
+    return "highdimensionalphenotypes spreadsheet transcriptomics";
 }
 
 sub validate {
@@ -52,6 +57,7 @@ sub validate {
 
     my $header_row = <$fh>;
     my @columns;
+    print STDERR Dumper $csv->fields();
     if ($csv->parse($header_row)) {
         @columns = $csv->fields();
     } else {
@@ -59,34 +65,41 @@ sub validate {
         print STDERR "Could not parse header.\n";
         return \%parse_result;
     }
-
-    if ( $columns[0] ne "id" ) {
-      $parse_result{'error'} = "First cell must be 'id'. Please, check your file.";
-      print STDERR "First cell must be 'id'\n";
+    if ( $columns[0] ne "observationunit_name" ) {
+      $parse_result{'error'} = "First cell must be 'observationunit_name'. Please, check your file.";
+      print STDERR "First cell must be 'observationunit_name'\n";
       return \%parse_result;
     }
 
     close $fh;
 
     my %headers = ( 
-                    id                  =>1,
-                    sample_id           =>2,
-                    sampling_date       =>3,
-                    observationunit_name=>4,
-                    device_id           =>5,
-                    device_type         =>6,
-                    comments            =>7
+                    observationunit_name =>1,
+                    observation_name     =>2,
+                    sample_type          =>3,
+                    sampling_condition   =>4,
+                    sample_replication   =>5,
+                    expression_unit =>6
+
                     );
 
     my %types = (
-                  SCIO        =>1,
-                  QST         =>2,
-                  Foss6500    =>3,
-                  BunchiN500  =>4,
-                  LinkSquare  =>5
+                  leaf =>1,
+                  stem =>2,
+                  flower  =>3,
+                  fibrous_root  =>4,
+                  storage_root =>5
                   );
-
-    open(my $fh, '<', $filename)
+                  
+    my %units = (
+                    RPKM =>1,
+                    FPKM =>2,
+                    TPM  =>3,
+                    VST  =>4
+                    );
+                  
+                                   
+    open($fh, '<', $filename)
         or die "Could not open file '$filename' $!";
     
     my $size = 0;
@@ -95,10 +108,11 @@ sub validate {
     my @fields;
     while (my $line = <$fh>) {
       if ($csv->parse($line)) {
-        @fields = $csv->fields();
+        @fields = $csv->fields(); 
+        #print STDERR Dumper(\@fields);
         if ($count == 1) {
           $size = scalar @fields;
-          while ($number < 7) {
+          while ($number < 6) {
               if (not exists $headers{$fields[$number]}){
                 $parse_result{'error'} = "Wrong headers at '$fields[$number]'! Is this file matching with Spredsheet Format?";
                 return \%parse_result;
@@ -106,31 +120,31 @@ sub validate {
                 $number++;
               }
             }
-          while ($number < $size){
-            if (not $fields[$number]=~/^[+]?\d+\.?\d*$/){
-              $parse_result{'error'}= "It is not a valid wavelength: '$fields[$number]'. Could you check the data format?";
-              return \%parse_result;
-            }else{
-              $number++;
-            }
-          }
+        #   while ($number < $size){
+        #     if (not $fields[$number]=~/^\D+[+]?\d+\.?\d*$/){
+        #       $parse_result{'error'}= "It is not a valid wavelength: '$fields[$number]'. Could you check the data format?";
+        #       return \%parse_result;
+        #     }else{
+        #       $number++;
+        #     }
+        #   }
         }elsif($count>1){
-          my $number2 = 9;
+          my $number2 = 8;
           while ($number2 < $size){
             # if (not exists $types{$fields[5]}){
               #print "$fields[5]\n";
-              if (not grep {/$fields[5]/i} keys %types){
-                $parse_result{'error'}= "Wrong device type '$fields[5]'. Please, check names allowed in File Format Information.";
+              if (not grep {/$fields[2]/i} keys %types){
+                $parse_result{'error'}= "Wrong sample type '$fields[2]'. Please, check names allowed in File Format Information.";
                 return \%parse_result;
             }
             if (not $fields[$number2]=~/^[+]?\d+\.?\d*$/){
-                $parse_result{'error'}= "It is not a real value for wavelength: '$fields[$number2]'";
+                $parse_result{'error'}= "It is not a real value for trancripts: '$fields[$number2]'";
                 return \%parse_result;
             }
-            if (not $fields[2] eq ''){
-              if (not $fields[2] =~/(\d{4})-(\d{2})-(\d{2})/) {
-                  $parse_result{'error'} = "Sampling date needs to be of form YYYY-MM-DD";
-                 # print STDERR "value: $fields[2]\n";
+            if (not $fields[4] eq ''){
+              if (not $fields[4] =~/\d+/) {
+                  $parse_result{'error'} = "Sample replication needs to be an integer of the form 1, 2, or 3";
+                  print STDERR "value: $fields[4]\n";
                   return \%parse_result;
               }
             }
@@ -191,19 +205,19 @@ sub parse {
             $num_cols = scalar(@header);
         } elsif ( $row_number > 0 ) {# get data
             my @columns = @{$row};
-            my $observationunit_name = $columns[3];
+            my $observationunit_name = $columns[0];
             $observation_units_seen{$observationunit_name} = 1;
             # print "The plots are $observationunit_name\n";
             my %spectra;
             foreach my $col (0..$num_cols-1){
                 my $column_name = $header[$col];
-                if ($column_name ne '' && $column_name =~ /^[+]?\d+\.?\d*$/){
-                    my $wavelength = "X".$column_name;
+                if ($column_name ne '' && $column_name =~ /^Manes/){
+                    my $wavelength = $column_name;
                     my $nir_value = $columns[$col];
                     $spectra{$wavelength} = $nir_value;
                 }
             }
-            push @{$data{$observationunit_name}->{'nirs'}->{'spectra'}}, \%spectra;
+            push @{$data{$observationunit_name}->{'transcriptomics'}->{'transcripts'}}, \%spectra;
         }
         $row_number++;
     }

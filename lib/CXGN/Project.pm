@@ -98,7 +98,7 @@ sub BUILD {
     my $self = shift;
     my $args = shift;
 
-    print STDERR "BUILD CXGN::Project... with ".$args->{trial_id}."\n";
+    # print STDERR "BUILD CXGN::Project... with ".$args->{trial_id}."\n";
 
     if (! $args->{description}) {
 	$args->{description} = "(No description provided)";
@@ -446,6 +446,36 @@ sub get_location_noaa_station_id {
     $h->execute($nd_geolocation_id, $noaa_station_id_cvterm_id);
     my ($noaa_station_id) = $h->fetchrow_array();
     return $noaa_station_id;
+}
+
+=head2 function get_location_country_name()
+ Usage:        my $country_name = $trial->get_location_country_name();
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+=cut
+
+sub get_location_country_name {
+    my $self = shift;
+    
+    my $country_name;
+
+    eval {
+        my $nd_geolocation_id = $self->bcs_schema->resultset('Project::Projectprop')->find( { project_id => $self->get_trial_id() , type_id=> $self->get_location_type_id() })->value();
+        my $country_name_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'country_name', 'geolocation_property')->cvterm_id();
+
+        if ( $nd_geolocation_id && $country_name_cvterm_id ) {
+            my $q = "SELECT value FROM nd_geolocationprop WHERE nd_geolocation_id = ? AND type_id = ?;";
+            my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+                    
+            $h->execute($nd_geolocation_id, $country_name_cvterm_id);
+            ($country_name) = $h->fetchrow_array();
+        }
+    };
+
+    return $country_name;
 }
 
 =head2 function get_breeding_programs()
@@ -2583,7 +2613,7 @@ sub get_traits_assayed {
         LEFT JOIN cvterm AS cv_type on (cv_type.cvterm_id = cvprop.type_id)
         WHERE cvterm.cvterm_id=? ;";
 
-    print STDERR Dumper $q;
+    # print STDERR Dumper $q;
 
     my $traits_assayed_h = $dbh->prepare($q);
     my $component_h = $dbh->prepare($component_q);
