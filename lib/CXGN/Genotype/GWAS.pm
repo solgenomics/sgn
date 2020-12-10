@@ -47,6 +47,7 @@ use CXGN::Genotype::Protocol;
 use CXGN::Genotype::Search;
 use CXGN::Genotype::ComputeHybridGenotype;
 use CXGN::Phenotypes::SearchFactory;
+use CXGN::Page;
 use R::YapRI::Base;
 use R::YapRI::Data::Matrix;
 use CXGN::Dataset::Cache;
@@ -275,9 +276,14 @@ sub get_gwas {
     });
     my $markers = $protocol->markers;
     my @all_marker_objects = values %$markers;
+    if (scalar(@all_marker_objects) > 10000) {
+	my $page = CXGN::Page->new();
+	$page->message_page('GWAS Error', 'Please choose less than 10,000 markers');
+        print STDERR "Error: for GWAS please choose less than 10,000 markers";
+    }
 
     no warnings 'uninitialized';
-    @all_marker_objects = sort { $a->{chrom} <=> $b->{chrom} || $a->{pos} <=> $b->{pos} || $a->{name} cmp $b->{name} } @all_marker_objects;
+    @all_marker_objects = sort { $a->{chrom} cmp $b->{chrom} || $a->{pos} <=> $b->{pos} || $a->{name} cmp $b->{name} } @all_marker_objects;
 
     my @individuals_stock_ids;
     my @all_individual_accessions_stock_ids;
@@ -286,7 +292,11 @@ sub get_gwas {
     # In this case a list of accessions is given, so get a GRM between these accessions
     if ($accession_list && scalar(@$accession_list)>0 && !$get_grm_for_parental_accessions){
         @all_individual_accessions_stock_ids = @$accession_list;
-
+        if (scalar(@all_individual_accessions_stock_ids) > 100) {
+	    my $page = CXGN::Page->new();
+            $page->message_page('GWAS Error', 'Please choose less than 100 accessions');
+            print STDERR "Error: for GWAS please choose less than 100 accessions";
+        }
         foreach (@$accession_list) {
             my $dataset = CXGN::Dataset::Cache->new({
                 people_schema=>$people_schema,
@@ -486,7 +496,7 @@ sub get_gwas {
     geno_gwas <- cbind(geno_mat_marker_first[geno_mat_marker_first\$ID %in% remaining_markers, c(1:3)], t(geno_imputed));
     gwas_results <- GWAS(pheno[pheno\$gid %in% remaining_samples, ], geno_gwas, fixed=c(\'field_trial_id\',\'replicate\'), K=K.mat, plot=F, min.MAF='.$maf.'); #columns are ID,CHROM,POS,TraitIDs and values in TraitIDs column are -log10 p values'."\n";
     if ($download_format eq 'manhattan_qq_plots') {
-        $cmd .= 'pdf( \''.$gwas_tempfile.'\', width = 11, height = 8.5 );
+	$cmd .= 'pdf( \''.$gwas_tempfile.'\', width = 11, height = 8.5 );
         for (i in 4:length(gwas_results)) { alpha_bonferroni=-log10(0.05/length(gwas_results[,i])); chromosome_ids <- as.factor(gwas_results\$CHROM); marker_indicator <- match(unique(gwas_results\$CHROM), gwas_results\$CHROM); N <- length(gwas_results[,1]); plot(seq(1:N), gwas_results[,i], col=chromosome_ids, ylab=\'-log10(pvalue)\', main=paste(\'Manhattan Plot \',colnames(gwas_results)[i]), xaxt=\'n\', xlab=\'Position\', ylim=c(0,14)); axis(1,at=marker_indicator,labels=gwas_results\$CHROM[marker_indicator], cex.axis=0.8, las=2); abline(h=alpha_bonferroni,col=\'red\',lwd=2); expected.logvalues <- sort( -log10( c(1:N) * (1/N) ) ); observed.logvalues <- sort(gwas_results[,i]); plot(expected.logvalues, observed.logvalues, main=paste(\'QQ Plot \',colnames(gwas_results)[i]), xlab=\'Expected -log p-values \', ylab=\'Observed -log p-values\', col.main=\'black\', col=\'coral1\', pch=20); abline(0,1,lwd=3,col=\'black\'); }
         dev.off();
         "';
