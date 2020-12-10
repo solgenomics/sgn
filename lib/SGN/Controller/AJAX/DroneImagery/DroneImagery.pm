@@ -9132,6 +9132,7 @@ sub _perform_phenotype_automated {
 
     my @result;
     while (my ($drone_run_band_project_id, $drone_run_band_name, $drone_run_band_project_type) = $h->fetchrow_array()) {
+        print STDERR Dumper [$drone_run_band_name, $drone_run_band_project_type];
         foreach my $phenotype_method (@$phenotype_types) {
             #my $pm = Parallel::ForkManager->new(floor(int($number_system_cores)*0.5));
             foreach my $plot_polygon_type (@{$project_observation_unit_plot_polygons_types{$drone_run_band_project_type}->{$standard_process_type}}) {

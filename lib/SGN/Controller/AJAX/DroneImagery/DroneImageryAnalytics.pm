@@ -212,7 +212,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
     my (%phenotype_data_original, @data_matrix_original, @data_matrix_phenotypes_original);
     my (%trait_name_encoder, %trait_name_encoder_rev, %sim_data, %stock_info, %unique_accessions, %seen_days_after_plantings, %seen_times, %obsunit_row_col, %stock_row_col, %stock_name_row_col, %seen_rows, %seen_cols, %seen_plots, %seen_plot_names, %plot_id_map, %trait_composing_info, @sorted_trait_names, @unique_accession_names, @unique_plot_names, %seen_trial_ids, %seen_trait_names, %unique_traits_ids, @phenotype_header, $header_string);
-    my (@sorted_scaled_ln_times, %plot_id_factor_map_reverse, %plot_id_count_map_reverse, %accession_id_factor_map, %accession_id_factor_map_reverse, %time_count_map_reverse, @rep_time_factors, @ind_rep_factors, @sorted_trait_names_times, %plot_rep_time_factor_map, %seen_rep_times, %seen_ind_reps, @legs_header, %polynomial_map);
+    my (@sorted_scaled_ln_times, %plot_id_factor_map_reverse, %plot_id_count_map_reverse, %accession_id_factor_map, %accession_id_factor_map_reverse, %time_count_map_reverse, @rep_time_factors, @ind_rep_factors, %plot_rep_time_factor_map, %seen_rep_times, %seen_ind_reps, @legs_header, %polynomial_map);
     my $time_min = 100000000;
     my $time_max = 0;
     my $min_row = 10000000000;
@@ -540,12 +540,11 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             return;
         }
 
-        @sorted_trait_names_times = sort {$a <=> $b} keys %seen_times;
-        @sorted_trait_names = @sorted_trait_names_times;
-        # print STDERR Dumper \@sorted_trait_names_times;
+        @sorted_trait_names = sort {$a <=> $b} keys %seen_times;
+        # print STDERR Dumper \@sorted_trait_names;
 
         my $trait_name_encoded = 1;
-        foreach my $trait_name (@sorted_trait_names_times) {
+        foreach my $trait_name (@sorted_trait_names) {
             if (!exists($trait_name_encoder{$trait_name})) {
                 my $trait_name_e = 't'.$trait_name_encoded;
                 $trait_name_encoder{$trait_name} = $trait_name_e;
@@ -554,7 +553,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             }
         }
 
-        foreach (@sorted_trait_names_times) {
+        foreach (@sorted_trait_names) {
             if ($_ < $time_min) {
                 $time_min = $_;
             }
@@ -569,13 +568,13 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         }
 
         @unique_plot_names = sort keys %seen_plot_names;
-        if ($legendre_order_number >= scalar(@sorted_trait_names_times)) {
-            $legendre_order_number = scalar(@sorted_trait_names_times) - 1;
+        if ($legendre_order_number >= scalar(@sorted_trait_names)) {
+            $legendre_order_number = scalar(@sorted_trait_names) - 1;
         }
 
         my @sorted_trait_names_scaled;
         my $leg_pos_counter = 0;
-        foreach (@sorted_trait_names_times) {
+        foreach (@sorted_trait_names) {
             my $scaled_time = ($_ - $time_min)/($time_max - $time_min);
             push @sorted_trait_names_scaled, $scaled_time;
             if ($leg_pos_counter < $legendre_order_number+1) {
@@ -606,7 +605,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 if ($csv->parse($row)) {
                     @columns = $csv->fields();
                 }
-                my $time = $sorted_trait_names_times[$p_counter];
+                my $time = $sorted_trait_names[$p_counter];
                 $polynomial_map{$time} = \@columns;
                 $p_counter++;
             }
@@ -618,7 +617,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 my $replicate = $stock_name_row_col{$p}->{rep};
                 my $germplasm_stock_id = $stock_name_row_col{$p}->{germplasm_stock_id};
                 my $obsunit_stock_id = $stock_name_row_col{$p}->{obsunit_stock_id};
-                foreach my $t (@sorted_trait_names_times) {
+                foreach my $t (@sorted_trait_names) {
                     print $F_prep "$germplasm_stock_id,,$obsunit_stock_id,,$replicate,$t,$replicate"."_"."$t,$germplasm_stock_id"."_"."$replicate\n";
                 }
             }
@@ -683,7 +682,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
             my @data_matrix_phenotypes_row;
             my $current_trait_index = 0;
-            foreach my $t (@sorted_trait_names_times) {
+            foreach my $t (@sorted_trait_names) {
                 my @row = (
                     $accession_id_factor_map{$germplasm_stock_id},
                     $obsunit_stock_id,
@@ -701,11 +700,11 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         my $val = 0;
                         foreach my $counter (0..$current_trait_index) {
                             if ($counter == 0) {
-                                $val = $val + $phenotype_data_original{$p}->{$sorted_trait_names_times[$counter]} + 0;
+                                $val = $val + $phenotype_data_original{$p}->{$sorted_trait_names[$counter]} + 0;
                             }
                             else {
-                                my $t1 = $sorted_trait_names_times[$counter-1];
-                                my $t2 = $sorted_trait_names_times[$counter];
+                                my $t1 = $sorted_trait_names[$counter-1];
+                                my $t2 = $sorted_trait_names[$counter];
                                 my $p1 = $phenotype_data_original{$p}->{$t1} + 0;
                                 my $p2 = $phenotype_data_original{$p}->{$t2} + 0;
                                 my $neg = 1;
@@ -2181,7 +2180,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         close($Fgc);
 
         while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients_original) {
-            foreach my $time_term (@sorted_trait_names_times) {
+            foreach my $time_term (@sorted_trait_names) {
                 $time = ($time_term - $time_min)/($time_max - $time_min);
                 my $value = 0;
                 my $coeff_counter = 0;
@@ -2349,7 +2348,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
             my @data_matrix_phenotypes_row;
             my $current_trait_index = 0;
-            foreach my $t (@sorted_trait_names_times) {
+            foreach my $t (@sorted_trait_names) {
                 my @row = (
                     $accession_id_factor_map{$germplasm_stock_id},
                     $obsunit_stock_id,
@@ -2367,11 +2366,11 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         my $val = 0;
                         foreach my $counter (0..$current_trait_index) {
                             if ($counter == 0) {
-                                $val = $val + $phenotype_data_original{$p}->{$sorted_trait_names_times[$counter]} + 0;
+                                $val = $val + $phenotype_data_original{$p}->{$sorted_trait_names[$counter]} + 0;
                             }
                             else {
-                                my $t1 = $sorted_trait_names_times[$counter-1];
-                                my $t2 = $sorted_trait_names_times[$counter];
+                                my $t1 = $sorted_trait_names[$counter-1];
+                                my $t2 = $sorted_trait_names[$counter];
                                 my $p1 = $phenotype_data_original{$p}->{$t1} + 0;
                                 my $p2 = $phenotype_data_original{$p}->{$t2} + 0;
                                 my $neg = 1;
@@ -2880,7 +2879,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         close($Fgc);
 
         while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients_altered) {
-            foreach my $time_term (@sorted_trait_names_times) {
+            foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
                 my $value = 0;
                 my $coeff_counter = 0;
@@ -2949,7 +2948,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         close($Fpc);
 
         while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients_altered) {
-            foreach my $time_term (@sorted_trait_names_times) {
+            foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
                 my $value = 0;
                 my $coeff_counter = 0;
@@ -3057,7 +3056,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
             my @data_matrix_phenotypes_row;
             my $current_trait_index = 0;
-            foreach my $t (@sorted_trait_names_times) {
+            foreach my $t (@sorted_trait_names) {
                 my @row = (
                     $accession_id_factor_map{$germplasm_stock_id},
                     $obsunit_stock_id,
@@ -3075,11 +3074,11 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         my $val = 0;
                         foreach my $counter (0..$current_trait_index) {
                             if ($counter == 0) {
-                                $val = $val + $phenotype_data_altered{$p}->{$sorted_trait_names_times[$counter]} + 0;
+                                $val = $val + $phenotype_data_altered{$p}->{$sorted_trait_names[$counter]} + 0;
                             }
                             else {
-                                my $t1 = $sorted_trait_names_times[$counter-1];
-                                my $t2 = $sorted_trait_names_times[$counter];
+                                my $t1 = $sorted_trait_names[$counter-1];
+                                my $t2 = $sorted_trait_names[$counter];
                                 my $p1 = $phenotype_data_altered{$p}->{$t1} + 0;
                                 my $p2 = $phenotype_data_altered{$p}->{$t2} + 0;
                                 my $neg = 1;
@@ -3576,7 +3575,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         close($Fgc);
 
         while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients_altered_env) {
-            foreach my $time_term (@sorted_trait_names_times) {
+            foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
                 my $value = 0;
                 my $coeff_counter = 0;
@@ -3645,7 +3644,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         close($Fpc);
 
         while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients_altered_env) {
-            foreach my $time_term (@sorted_trait_names_times) {
+            foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
                 my $value = 0;
                 my $coeff_counter = 0;
@@ -3674,6 +3673,25 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     }
 
     print STDERR Dumper [$genetic_effect_min_altered_env, $genetic_effect_max_altered_env, $env_effect_min_altered_env, $env_effect_max_altered_env];
+
+    my ($full_plot_level_correlation_tempfile_fh, $full_plot_level_correlation_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    open(my $F_fullplot, ">", $full_plot_level_correlation_tempfile) || die "Can't open file ".$full_plot_level_correlation_tempfile;
+    
+        my @header_full_plot_corr;
+        my @types_full_plot_corr = ('phenotype_original_', 'phenotype_post_', 'simulated_env_', 'simulated_pheno_', 'effect_original_', 'effect_post_', 'effect_simulated_');
+        foreach my $type (@types_full_plot_corr) {
+            foreach my $t (@sorted_trait_names) {
+                push @header_full_plot_corr, $type.$trait_name_encoder{$t};
+            }
+        }
+        my $header_string_full_plot_corr = join ',', @header_full_plot_corr;
+        print $F_fullplot "$header_string_full_plot_corr\n";
+        foreach my $p (@unique_plot_names) {
+            foreach my $t (@sorted_trait_names) {
+                
+            }
+        }
+    close($F_fullplot);
 
     my @sorted_germplasm_names = sort keys %unique_accessions;
     my @set = ('0' ..'9', 'A' .. 'F');
@@ -3813,6 +3831,13 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     $env_effects_first_figure_tempfile_string .= '.png';
     my $env_effects_first_figure_tempfile = $c->config->{basepath}."/".$env_effects_first_figure_tempfile_string;
 
+    my $output_plot_row = 'row';
+    my $output_plot_col = 'col';
+    if ($max_col > $max_row) {
+        $output_plot_row = 'col';
+        $output_plot_col = 'row';
+    }
+
     my $cmd_spatialfirst_plot = 'R -e "library(data.table); library(ggplot2); library(dplyr); library(viridis); library(GGally); library(gridExtra);
     mat_orig <- fread(\''.$phenotypes_original_heatmap_tempfile.'\', header=TRUE, sep=\',\');
     mat_altered <- fread(\''.$phenotypes_post_heatmap_tempfile.'\', header=TRUE, sep=\',\');
@@ -3823,37 +3848,37 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     mat_eff_sim <- fread(\''.$effects_sim_heatmap_tempfile.'\', header=TRUE, sep=\',\');
     options(device=\'png\');
     par();
-    gg <- ggplot(mat_orig, aes(col, row, fill=value)) +
+    gg <- ggplot(mat_orig, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
         geom_tile() +
         scale_fill_viridis(discrete=FALSE) +
         coord_equal() +
         facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
-    gg_altered <- ggplot(mat_altered, aes(col, row, fill=value)) +
+    gg_altered <- ggplot(mat_altered, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
         geom_tile() +
         scale_fill_viridis(discrete=FALSE) +
         coord_equal() +
         facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
-    gg_env <- ggplot(mat_env, aes(col, row, fill=value)) +
+    gg_env <- ggplot(mat_env, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
         geom_tile() +
         scale_fill_viridis(discrete=FALSE) +
         coord_equal() +
         facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
-    gg_p_sim <- ggplot(mat_p_sim, aes(col, row, fill=value)) +
+    gg_p_sim <- ggplot(mat_p_sim, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
         geom_tile() +
         scale_fill_viridis(discrete=FALSE) +
         coord_equal() +
         facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
-    gg_eff <- ggplot(mat_eff, aes(col, row, fill=value)) +
+    gg_eff <- ggplot(mat_eff, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
         geom_tile() +
         scale_fill_viridis(discrete=FALSE) +
         coord_equal() +
         facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
-    gg_eff_altered <- ggplot(mat_eff_altered, aes(col, row, fill=value)) +
+    gg_eff_altered <- ggplot(mat_eff_altered, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
         geom_tile() +
         scale_fill_viridis(discrete=FALSE) +
         coord_equal() +
         facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
-    gg_eff_sim <- ggplot(mat_eff_sim, aes(col, row, fill=value)) +
+    gg_eff_sim <- ggplot(mat_eff_sim, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
         geom_tile() +
         scale_fill_viridis(discrete=FALSE) +
         coord_equal() +
