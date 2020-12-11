@@ -254,25 +254,30 @@ sub detail {
     my $limit = $page_size;
     my $offset = $page*$page_size;
     my $total_count = 0;
-    my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, db.url, dbxref.accession, array_agg(cvtermsynonym.synonym), cvterm.is_obsolete, count(cvterm.cvterm_id) OVER() AS full_count FROM cvterm ". 
+    my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, db.url, dbxref.dbxref_id, dbxref.accession, array_agg(cvtermsynonym.synonym), cvterm.is_obsolete, count(cvterm.cvterm_id) OVER() AS full_count FROM cvterm ".
         "JOIN dbxref USING(dbxref_id) ".
         "JOIN db using(db_id) ".
         "JOIN cvtermsynonym using(cvterm_id) ". # left join if want to include variables without synonyms
         "JOIN cvterm_relationship as rel on (rel.subject_id=cvterm.cvterm_id) ".
         "JOIN cvterm as reltype on (rel.type_id=reltype.cvterm_id) $join ".
         "WHERE $and_where " .
-        "GROUP BY cvterm.cvterm_id, db.name, db.db_id, dbxref.accession ".
+        "GROUP BY cvterm.cvterm_id, db.name, db.db_id, dbxref.dbxref_id, dbxref.accession ".
         "ORDER BY cvterm.name ASC LIMIT $limit OFFSET $offset; "  ;
 
     my $sth = $self->bcs_schema->storage->dbh->prepare($q);
     $sth->execute();
-    while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $db_url, $accession, $synonym, $obsolete, $count) = $sth->fetchrow_array()) {
+    while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $db_url, $dbxref_id, $accession, $synonym, $obsolete, $count) = $sth->fetchrow_array()) {
         $total_count = $count;
         foreach (@$synonym){
             $_ =~ s/ EXACT \[\]//;
             $_ =~ s/\"//g;
         }
         my $trait = CXGN::Trait->new({bcs_schema=>$self->bcs_schema, cvterm_id=>$cvterm_id});
+        my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+            bcs_schema => $self->bcs_schema,
+            dbxref_id => $dbxref_id
+        });
+        my $external_references = $references->references_db();
         my $categories = $trait->categories;
         my @brapi_categories = split '/', $categories;
         %result = (
@@ -281,7 +286,7 @@ sub detail {
             contextOfUse => undef,
             defaultValue => $trait->default_value,
             documentationURL => $trait->uri,
-            externalReferences => $db_name.":".$accession,
+            externalReferences => $external_references, #$db_name.":".$accession,
             growthStage => undef,
             institution  => undef,
             language => 'eng',
@@ -386,12 +391,14 @@ sub store {
         my $ontology_id = $params->{ontologyReference}{ontologyDbId};
         my $description = $params->{trait}{traitDescription};
         my $synonyms = $params->{trait}{synonyms};
+        my $references = $params->{externalReferences};
         my $trait = CXGN::Trait->new({ bcs_schema => $self->bcs_schema,
             cvterm_id                             => $cvterm_id,
             name                                  => $name,
             ontology_id                           => $ontology_id,
             definition                            => $description,
-            synonyms                              => $synonyms
+            synonyms                              => $synonyms,
+            external_references                   => $references
         });
         my $variable = $trait->store();
 
@@ -401,7 +408,7 @@ sub store {
         } else {
             $variable = $variable->{variable};
             push @variable_ids, $variable;
-            print "New variable is ".Dumper($variable)."\n";
+            #print "New variable is ".Dumper($variable)."\n";
         }
 
         %result = (
