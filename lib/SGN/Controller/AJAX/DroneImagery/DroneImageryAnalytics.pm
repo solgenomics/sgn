@@ -3676,7 +3676,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
     my ($full_plot_level_correlation_tempfile_fh, $full_plot_level_correlation_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     open(my $F_fullplot, ">", $full_plot_level_correlation_tempfile) || die "Can't open file ".$full_plot_level_correlation_tempfile;
-    
+        print STDERR "OPENED PLOTCORR FILE $full_plot_level_correlation_tempfile\n";
+
         my @header_full_plot_corr;
         my @types_full_plot_corr = ('phenotype_original_', 'phenotype_post_', 'simulated_env_', 'simulated_pheno_', 'effect_original_', 'effect_post_', 'effect_simulated_');
         foreach my $type (@types_full_plot_corr) {
@@ -3687,11 +3688,46 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         my $header_string_full_plot_corr = join ',', @header_full_plot_corr;
         print $F_fullplot "$header_string_full_plot_corr\n";
         foreach my $p (@unique_plot_names) {
+            my @row;
             foreach my $t (@sorted_trait_names) {
-                
+                my $phenotype_original = $phenotype_data_original{$p}->{$t};
+                my $phenotype_post = $phenotype_data_altered{$p}->{$t};
+                my $sim_env = $sim_data{$p}->{$t};
+                my $pheno_sim = $phenotype_data_altered_env{$p}->{$t};
+                my $effect_original;
+                my $effect_post;
+                my $effect_sim;
+                if ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
+                    $effect_original = $result_blup_spatial_data_original->{$p}->{$t}->[0];
+                    $effect_post = $result_blup_spatial_data_altered->{$p}->{$t}->[0];
+                    $effect_sim = $result_blup_spatial_data_altered_env->{$p}->{$t}->[0];
+                }
+                elsif ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+                    $effect_original = $result_blup_pe_data_delta_original->{$p}->{$t}->[0];
+                    $effect_post = $result_blup_pe_data_delta_altered->{$p}->{$t}->[0];
+                    $effect_sim = $result_blup_pe_data_delta_altered_env->{$p}->{$t}->[0];
+                }
+                push @row, ($phenotype_original, $phenotype_post, $sim_env, $pheno_sim, $effect_original, $effect_post, $effect_sim);
             }
+            my $line = join ',', @row;
+            print $F_fullplot "$line\n";
         }
     close($F_fullplot);
+
+    my $spatial_effects_plots;
+
+    my $plot_corr_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
+    $plot_corr_figure_tempfile_string .= '.png';
+    my $plot_corr_figure_tempfile = $c->config->{basepath}."/".$plot_corr_figure_tempfile_string;
+
+    my $cmd_plotcorr_plot = 'R -e "library(data.table); library(ggplot2); library(GGally);
+    mat_orig <- fread(\''.$full_plot_level_correlation_tempfile.'\', header=TRUE, sep=\',\');
+    gg <- ggcorr(data=mat_orig, hjust = 1, size = 2, color = \'grey50\', layout.exp = 1, label = TRUE);
+    ggsave(\''.$plot_corr_figure_tempfile.'\', gg, device=\'png\', width=25, height=25, units=\'in\');
+    dev.off();"';
+    # print STDERR Dumper $cmd;
+    my $status_plotcorr_plot = system($cmd_plotcorr_plot);
+    push @$spatial_effects_plots, $plot_corr_figure_tempfile_string;
 
     my @sorted_germplasm_names = sort keys %unique_accessions;
     my @set = ('0' ..'9', 'A' .. 'F');
@@ -3824,8 +3860,6 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             }
         }
     close($F_eff);
-
-    my $spatial_effects_plots;
 
     my $env_effects_first_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
     $env_effects_first_figure_tempfile_string .= '.png';
