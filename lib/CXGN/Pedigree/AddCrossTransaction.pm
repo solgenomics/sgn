@@ -38,6 +38,8 @@ sub add_intercross_transaction {
     my $cross_unique_id = $self->get_cross_unique_id();
     my $new_transaction_info = $self->get_transaction_info();
     my %new_transaction_info_hash = %{$new_transaction_info};
+    my $new_transaction_id_ref = $new_transaction_info_hash{'transactionID'};
+    my %new_transaction_id_hash = %{$new_transaction_id_ref};
     my $transaction_error;
 
     my $coderef = sub {
@@ -56,19 +58,22 @@ sub add_intercross_transaction {
         my $total_number_of_flowers = 0;
         my $total_number_of_fruits = 0;
         my $total_number_of_seeds = 0;
-        my %transaction_hash;
+        my %transaction_info_hash;
+        my %transaction_id_hash;
         my %summary_info_hash;
 
         if ($previous_stockprop_rs->count == 1){
             my $transaction_json_string = $previous_stockprop_rs->first->value();
             my $transaction_hash_ref = decode_json $transaction_json_string;
-            %transaction_hash = %{$transaction_hash_ref};
-            foreach my $new_transaction_id(keys %new_transaction_info_hash) {
-                my $activity_info = $new_transaction_info_hash{$new_transaction_id};
-                $transaction_hash{$new_transaction_id} = $activity_info;
+            %transaction_info_hash = %{$transaction_hash_ref};
+            my $transaction_ids = $transaction_info_hash{'transactionID'};
+            %transaction_id_hash = %{$transaction_ids};
+            foreach my $new_transaction_id(keys %new_transaction_id_hash) {
+                my $activity_info = $new_transaction_id_hash{$new_transaction_id};
+                $transaction_info_hash{'transactionID'}{$new_transaction_id} = $activity_info;
             }
 
-            my $updated_transaction_json_string = encode_json \%transaction_hash;
+            my $updated_transaction_json_string = encode_json \%transaction_info_hash;
             $previous_stockprop_rs->first->update({value => $updated_transaction_json_string});
 
         } elsif ($previous_stockprop_rs->count > 1) {
@@ -79,17 +84,19 @@ sub add_intercross_transaction {
 #            print STDERR "NEW TRANSACTION JSON STRING =".Dumper($new_transaction_json_string)."\n";
             $cross_stock->create_stockprops({$cross_transaction_cvterm->name() => $new_transaction_json_string});
 
-            %transaction_hash = %new_transaction_info_hash;
+            %transaction_info_hash = %new_transaction_info_hash;
         }
 
-        foreach my $transaction_id(keys %transaction_hash) {
-            my $number_of_flowers = $transaction_hash{$transaction_id}{'Number of Flowers'};
+        my $updated_transaction_id_ref = $transaction_info_hash{'transactionID'};
+        my %updated_transaction_ids = %{$updated_transaction_id_ref};
+        foreach my $transaction_id(keys %updated_transaction_ids) {
+            my $number_of_flowers = $updated_transaction_ids{$transaction_id}{'Number of Flowers'};
             $total_number_of_flowers += $number_of_flowers;
 
-            my $number_of_fruits = $transaction_hash{$transaction_id}{'Number of Fruits'};
+            my $number_of_fruits = $updated_transaction_ids{$transaction_id}{'Number of Fruits'};
             $total_number_of_fruits += $number_of_fruits;
 
-            my $number_of_seeds = $transaction_hash{$transaction_id}{'Number of Seeds'};
+            my $number_of_seeds = $updated_transaction_ids{$transaction_id}{'Number of Seeds'};
             $total_number_of_seeds += $number_of_seeds;
         }
 

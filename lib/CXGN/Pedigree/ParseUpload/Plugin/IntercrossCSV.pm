@@ -179,11 +179,12 @@ sub _parse_with_plugin {
         $data{'crosses'}{$cross_identifier}{'intercross_female_parent'} = $female_parent;
         $data{'crosses'}{$cross_identifier}{'intercross_male_parent'} = $male_parent;
         $data{'crosses'}{$cross_identifier}{'cross_type'} = $cross_type;
-        $data{'crosses'}{$cross_identifier}{'activities'}{$transaction_id}{'Timestamp'} = $timestamp;
-        $data{'crosses'}{$cross_identifier}{'activities'}{$transaction_id}{'Operator'} = $person;
-        $data{'crosses'}{$cross_identifier}{'activities'}{$transaction_id}{'Number of Fruits'} = $number_of_fruits;
-        $data{'crosses'}{$cross_identifier}{'activities'}{$transaction_id}{'Number of Flowers'} = $number_of_flowers;
-        $data{'crosses'}{$cross_identifier}{'activities'}{$transaction_id}{'Number of Seeds'} = $number_of_seeds;
+        $data{'crosses'}{$cross_identifier}{'activities'}{'transactionID'}{$transaction_id}{'Timestamp'} = $timestamp;
+        $data{'crosses'}{$cross_identifier}{'activities'}{'transactionID'}{$transaction_id}{'Operator'} = $person;
+        $data{'crosses'}{$cross_identifier}{'activities'}{'transactionID'}{$transaction_id}{'Number of Fruits'} = $number_of_fruits;
+        $data{'crosses'}{$cross_identifier}{'activities'}{'transactionID'}{$transaction_id}{'Number of Flowers'} = $number_of_flowers;
+        $data{'crosses'}{$cross_identifier}{'activities'}{'transactionID'}{$transaction_id}{'Number of Seeds'} = $number_of_seeds;
+        $data{'crosses'}{$cross_identifier}{'activities'}{'cross_identifier'} = $cross_identifier;
     }
 
     my $parsed_result = \%data;
