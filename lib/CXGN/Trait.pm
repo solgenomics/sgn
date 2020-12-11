@@ -4,6 +4,7 @@ package CXGN::Trait;
 use Moose;
 use Data::Dumper;
 use Try::Tiny;
+use CXGN::BrAPI::v2::ExternalReferences;
 
 ## to do: add concept of trait short name; provide alternate constructors for term, shortname, and synonyms etc.
 
@@ -251,6 +252,10 @@ has 'synonyms' => (
 	is  => 'rw'
 );
 
+has 'external_references' => (
+	isa => 'Maybe[ArrayRef[HashRef[Str]]]',
+	is  => 'rw'
+);
 
 
 sub BUILD { 
@@ -267,6 +272,7 @@ sub BUILD {
 		$self->definition($self->definition());
 		$self->ontology_id($self->ontology_id);
 		$self->synonyms($self->synonyms());
+		$self->external_references($self->external_references());
     }
 
     #my $cvterm = $self->bcs_schema()->resultset("Cv::Cvterm")->find( { cvterm_id => $self->cvterm_id() });
@@ -382,8 +388,6 @@ sub store {
 				is_obsolete => 0
 			});
 
-		# TODO: make sure relationship_type is set correctly
-
 		# set cvtermrelationship VARIABLE_OF to put terms under ontology
 		# add cvterm_relationship entry linking term to ontology root
 		my $relationship = $schema->resultset("Cv::CvtermRelationship")->create(
@@ -397,7 +401,26 @@ sub store {
 			$new_term->add_synonym($synonym);
 		}
 
-		# save scale properties
+		# TODO: save scale properties
+
+		# TODO: save method properties
+
+		# save external references
+		print Dumper($self->external_references());
+		my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+			bcs_schema => $self->bcs_schema,
+			external_references => $self->external_references,
+			dbxref_id => $new_term_dbxref->dbxref_id()
+		});
+
+		$references->store();
+
+		if ($references->{'error'}) {
+			return {error => $references->{'error'}};
+		}
+
+
+
 	};
 
 	my $transaction_error;
