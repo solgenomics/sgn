@@ -55,6 +55,7 @@ use List::Util qw(sum);
 use Scalar::Util qw(looks_like_number);
 use SGN::Controller::AJAX::DroneImagery::DroneImagery;
 use Storable qw(dclone);
+use Statistics::Descriptive;
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -798,6 +799,17 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
     @unique_accession_names = sort keys %unique_accessions;
     @unique_plot_names = sort keys %seen_plot_names;
+
+    my @seen_rows_array = keys %seen_rows;
+    my @seen_cols_array = keys %seen_cols;
+    my $row_stat = Statistics::Descriptive::Full->new();
+    $row_stat->add_data(@seen_rows_array);
+    my $mean_row = $row_stat->mean();
+    my $sig_row = $row_stat->variance();
+    my $col_stat = Statistics::Descriptive::Full->new();
+    $col_stat->add_data(@seen_cols_array);
+    my $mean_col = $col_stat->mean();
+    my $sig_col = $col_stat->variance();
 
     print STDERR "PREPARE RELATIONSHIP MATRIX\n";
     if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups'
@@ -2998,6 +3010,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     }
 
     print STDERR "ADD SIMULATED ENV TO ALTERED PHENO\n";
+    print STDERR Dumper [$env_sim_min, $env_sim_max];
     if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_blups') {
 
         foreach my $p (@unique_plot_names) {
@@ -3674,6 +3687,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
     print STDERR Dumper [$genetic_effect_min_altered_env, $genetic_effect_max_altered_env, $env_effect_min_altered_env, $env_effect_max_altered_env];
 
+    print STDERR "PLOTTING CORRELATION\n";
     my ($full_plot_level_correlation_tempfile_fh, $full_plot_level_correlation_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     open(my $F_fullplot, ">", $full_plot_level_correlation_tempfile) || die "Can't open file ".$full_plot_level_correlation_tempfile;
         print STDERR "OPENED PLOTCORR FILE $full_plot_level_correlation_tempfile\n";
