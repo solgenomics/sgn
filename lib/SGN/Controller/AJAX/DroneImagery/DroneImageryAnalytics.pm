@@ -6148,6 +6148,35 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         }
     close($F_eff);
 
+    my $plot_corr_summary_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
+    $plot_corr_summary_figure_tempfile_string .= '.png';
+    my $plot_corr_summary_figure_tempfile = $c->config->{basepath}."/".$plot_corr_summary_figure_tempfile_string;
+
+    my $cmd_plotcorrsum_plot = 'R -e "library(data.table); library(ggplot2); library(GGally);
+    mat_orig <- fread(\''.$phenotypes_original_heatmap_tempfile.'\', header=TRUE, sep=\',\');
+    mat_altered <- fread(\''.$phenotypes_post_heatmap_tempfile.'\', header=TRUE, sep=\',\');
+    mat_eff <- fread(\''.$effects_heatmap_tempfile.'\', header=TRUE, sep=\',\');
+    mat_eff_altered <- fread(\''.$effects_post_heatmap_tempfile.'\', header=TRUE, sep=\',\');
+    mat_env <- fread(\''.$phenotypes_env_heatmap_tempfile.'\', header=TRUE, sep=\',\');
+    mat_p_sim <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile.'\', header=TRUE, sep=\',\');
+    mat_eff_sim <- fread(\''.$effects_sim_heatmap_tempfile.'\', header=TRUE, sep=\',\');
+    mat_env2 <- fread(\''.$phenotypes_env_heatmap_tempfile2.'\', header=TRUE, sep=\',\');
+    mat_p_sim2 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile2.'\', header=TRUE, sep=\',\');
+    mat_eff_sim2 <- fread(\''.$effects_sim_heatmap_tempfile2.'\', header=TRUE, sep=\',\');
+    mat_env3 <- fread(\''.$phenotypes_env_heatmap_tempfile3.'\', header=TRUE, sep=\',\');
+    mat_p_sim3 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile3.'\', header=TRUE, sep=\',\');
+    mat_eff_sim3 <- fread(\''.$effects_sim_heatmap_tempfile3.'\', header=TRUE, sep=\',\');
+    mat_env4 <- fread(\''.$phenotypes_env_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
+    mat_p_sim4 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
+    mat_eff_sim4 <- fread(\''.$effects_sim_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
+    mat <- data.frame(pheno_original = mat_orig\$value, pheno_altered = mat_altered\$value, effect_original = mat_eff\$value, effect_altered = mat_eff_altered\$value, env_linear = mat_env\$value, pheno_linear = mat_p_sim\$value, linear_effect = mat_eff_sim\$value, env_n1d = mat_env2\$value, pheno_n1d = mat_p_sim2\$value, n1d_effect = mat_eff_sim2\$value, env_n2d = mat_env3\$value, pheno_n2d = mat_p_sim3\$value, n2d_effect = mat_eff_sim3\$value, env_random = mat_env4\$value, pheno_random = mat_p_sim4\$value, random_effect = mat_eff_sim4\$value);
+    gg <- ggcorr(data=mat, hjust = 1, size = 2, color = \'grey50\', layout.exp = 1, label = TRUE);
+    ggsave(\''.$plot_corr_summary_figure_tempfile.'\', gg, device=\'png\', width=10, height=10, units=\'in\');
+    dev.off();"';
+    # print STDERR Dumper $cmd;
+    my $status_plotcorrsum_plot = system($cmd_plotcorrsum_plot);
+    push @$spatial_effects_plots, $plot_corr_summary_figure_tempfile_string;
+
     my $env_effects_first_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
     $env_effects_first_figure_tempfile_string .= '.png';
     my $env_effects_first_figure_tempfile = $c->config->{basepath}."/".$env_effects_first_figure_tempfile_string;
@@ -6158,6 +6187,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         $output_plot_row = 'col';
         $output_plot_col = 'row';
     }
+
+    my ($sim_effects_corr_results_fh, $sim_effects_corr_results) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
 
     my $cmd_spatialfirst_plot = 'R -e "library(data.table); library(ggplot2); library(dplyr); library(viridis); library(GGally); library(gridExtra);
     mat_orig <- fread(\''.$phenotypes_original_heatmap_tempfile.'\', header=TRUE, sep=\',\');
@@ -6259,13 +6290,29 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         coord_equal() +
         facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
     ggsave(\''.$env_effects_first_figure_tempfile.'\', arrangeGrob(gg, gg_altered, gg_eff, gg_eff_altered, gg_env, gg_p_sim, gg_eff_sim, gg_env2, gg_p_sim2, gg_eff_sim2, gg_env3, gg_p_sim3, gg_eff_sim3, gg_env4, gg_p_sim4, gg_eff_sim4, nrow=16), device=\'png\', width=25, height=35, units=\'in\');
-    dev.off();"';
+    dev.off();
+    write.table(data.frame(env1 = c(cor(mat_env\$value, mat_eff_sim\$value)), env2 = c(cor(mat_env2\$value, mat_eff_sim2\$value)), env3 = c(cor(mat_env3\$value, mat_eff_sim3\$value)), env4 = c(cor(mat_env4\$value, mat_eff_sim4\$value))), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');
+    "';
     # print STDERR Dumper $cmd;
     my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
     push @$spatial_effects_plots, $env_effects_first_figure_tempfile_string;
 
     @sorted_trait_names = sort keys %rr_unique_traits;
     @sorted_residual_trait_names = sort keys %rr_residual_unique_traits;
+
+    my @env_corr_res;
+    open(my $fh_corr_result, '<', $sim_effects_corr_results)
+        or die "Could not open file '$sim_effects_corr_results' $!";
+        print STDERR "Opened $sim_effects_corr_results\n";
+
+        while (my $row = <$fh_corr_result>) {
+            my @columns;
+            if ($csv->parse($row)) {
+                @columns = $csv->fields();
+            }
+            @env_corr_res = @columns;
+        }
+    close($fh_corr_result);
 
     $c->stash->{rest} = {
         result_blup_genetic_data_original => $result_blup_data_original,
@@ -6321,7 +6368,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         env_effect_sum_original => $env_effect_sum_original,
         env_effect_sum_altered => $env_effect_sum_altered,
         env_effect_sum_altered_env => $env_effect_sum_altered_env,
-        spatial_effects_plots => $spatial_effects_plots
+        spatial_effects_plots => $spatial_effects_plots,
+        simulated_environment_to_effect_correlations => \@env_corr_res
     };
 }
 

@@ -691,6 +691,10 @@ jQuery(document).ready(function() {
                         html = html + '<h4>Env effect sum altered with simulated env: '+response.env_effect_sum_altered_env+'</h4><hr>';
                     }
 
+                    if (response.simulated_environment_to_effect_correlations) {
+                        html = html + '<h4>Simulated Env to Effects Correlations:</h4><ul><li>Linear: '+response.simulated_environment_to_effect_correlations[0]+'</li><li>Random 1D Normal: '+response.simulated_environment_to_effect_correlations[1]+'</li><li>Random 2D Normal: '+response.simulated_environment_to_effect_correlations[2]+'</li><li>Random: '+response.simulated_environment_to_effect_correlations[3]+'</li></ul><hr>';
+                    }
+
                     if (response.spatial_effects_plots) {
                         for (i=0; i<response.spatial_effects_plots.length; i++) {
                             html = html + '<img src="'+response.spatial_effects_plots[i]+'"><hr>';
