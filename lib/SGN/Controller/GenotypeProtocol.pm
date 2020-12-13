@@ -25,6 +25,12 @@ sub protocol_page :Path("/breeders_toolbox/protocol") Args(1) {
     my $c = shift;
     my $protocol_id = shift;
 
+    if (!$c->user()) {
+        my $url = '/' . $c->req->path;
+        $c->res->redirect("/user/login?goto_url=$url");
+        $c->detach();
+    }
+
     my $protocol = CXGN::Genotype::Protocol->new({
         bcs_schema => $self->schema,
         nd_protocol_id => $protocol_id
