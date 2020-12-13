@@ -5938,30 +5938,6 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         }
     close($F_pheno);
 
-    my ($phenotypes_env_heatmap_tempfile_fh, $phenotypes_env_heatmap_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
-    open($F_pheno, ">", $phenotypes_env_heatmap_tempfile) || die "Can't open file ".$phenotypes_env_heatmap_tempfile;
-        print $F_pheno "trait_type,row,col,value\n";
-        foreach my $p (@unique_plot_names) {
-            foreach my $t (@sorted_trait_names) {
-                my @row = ("simulated_env_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data{$p}->{$t});
-                my $line = join ',', @row;
-                print $F_pheno "$line\n";
-            }
-        }
-    close($F_pheno);
-
-    my ($phenotypes_pheno_sim_heatmap_tempfile_fh, $phenotypes_pheno_sim_heatmap_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
-    open($F_pheno, ">", $phenotypes_pheno_sim_heatmap_tempfile) || die "Can't open file ".$phenotypes_pheno_sim_heatmap_tempfile;
-        print $F_pheno "trait_type,row,col,value\n";
-        foreach my $p (@unique_plot_names) {
-            foreach my $t (@sorted_trait_names) {
-                my @row = ("simulated_pheno_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $phenotype_data_altered_env{$p}->{$t});
-                my $line = join ',', @row;
-                print $F_pheno "$line\n";
-            }
-        }
-    close($F_pheno);
-
     my ($effects_heatmap_tempfile_fh, $effects_heatmap_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     open(my $F_eff, ">", $effects_heatmap_tempfile) || die "Can't open file ".$effects_heatmap_tempfile;
         print $F_eff "trait_type,row,col,value\n";
@@ -6000,18 +5976,171 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         }
     close($F_eff);
 
+    my ($phenotypes_env_heatmap_tempfile_fh, $phenotypes_env_heatmap_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    open($F_pheno, ">", $phenotypes_env_heatmap_tempfile) || die "Can't open file ".$phenotypes_env_heatmap_tempfile;
+        print $F_pheno "trait_type,row,col,value\n";
+        foreach my $p (@unique_plot_names) {
+            foreach my $t (@sorted_trait_names) {
+                my @row = ("simulated_env_1_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data{$p}->{$t});
+                my $line = join ',', @row;
+                print $F_pheno "$line\n";
+            }
+        }
+    close($F_pheno);
+
+    my ($phenotypes_pheno_sim_heatmap_tempfile_fh, $phenotypes_pheno_sim_heatmap_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    open($F_pheno, ">", $phenotypes_pheno_sim_heatmap_tempfile) || die "Can't open file ".$phenotypes_pheno_sim_heatmap_tempfile;
+        print $F_pheno "trait_type,row,col,value\n";
+        foreach my $p (@unique_plot_names) {
+            foreach my $t (@sorted_trait_names) {
+                my @row = ("simulated_pheno_1_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $phenotype_data_altered_env{$p}->{$t});
+                my $line = join ',', @row;
+                print $F_pheno "$line\n";
+            }
+        }
+    close($F_pheno);
+
     my ($effects_sim_heatmap_tempfile_fh, $effects_sim_heatmap_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     open($F_eff, ">", $effects_sim_heatmap_tempfile) || die "Can't open file ".$effects_sim_heatmap_tempfile;
         print $F_eff "trait_type,row,col,value\n";
         foreach my $p (@unique_plot_names) {
             foreach my $t (@sorted_trait_names) {
                 if ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
-                    my @row = ("effect_simulated_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $result_blup_spatial_data_altered_env->{$p}->{$t}->[0]);
+                    my @row = ("effect_simulated_1_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $result_blup_spatial_data_altered_env->{$p}->{$t}->[0]);
                     my $line = join ',', @row;
                     print $F_eff "$line\n";
                 }
                 elsif ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
-                    my @row = ("effect_simulated_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $result_blup_pe_data_delta_altered_env->{$p}->{$t}->[0]);
+                    my @row = ("effect_simulated_1_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $result_blup_pe_data_delta_altered_env->{$p}->{$t}->[0]);
+                    my $line = join ',', @row;
+                    print $F_eff "$line\n";
+                }
+            }
+        }
+    close($F_eff);
+
+    my ($phenotypes_env_heatmap_tempfile2_fh, $phenotypes_env_heatmap_tempfile2) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    open($F_pheno, ">", $phenotypes_env_heatmap_tempfile2) || die "Can't open file ".$phenotypes_env_heatmap_tempfile2;
+        print $F_pheno "trait_type,row,col,value\n";
+        foreach my $p (@unique_plot_names) {
+            foreach my $t (@sorted_trait_names) {
+                my @row = ("simulated_env_2_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_2{$p}->{$t});
+                my $line = join ',', @row;
+                print $F_pheno "$line\n";
+            }
+        }
+    close($F_pheno);
+
+    my ($phenotypes_pheno_sim_heatmap_tempfile2_fh, $phenotypes_pheno_sim_heatmap_tempfile2) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    open($F_pheno, ">", $phenotypes_pheno_sim_heatmap_tempfile2) || die "Can't open file ".$phenotypes_pheno_sim_heatmap_tempfile2;
+        print $F_pheno "trait_type,row,col,value\n";
+        foreach my $p (@unique_plot_names) {
+            foreach my $t (@sorted_trait_names) {
+                my @row = ("simulated_pheno_2_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $phenotype_data_altered_env_2{$p}->{$t});
+                my $line = join ',', @row;
+                print $F_pheno "$line\n";
+            }
+        }
+    close($F_pheno);
+
+    my ($effects_sim_heatmap_tempfile2_fh, $effects_sim_heatmap_tempfile2) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    open($F_eff, ">", $effects_sim_heatmap_tempfile2) || die "Can't open file ".$effects_sim_heatmap_tempfile2;
+        print $F_eff "trait_type,row,col,value\n";
+        foreach my $p (@unique_plot_names) {
+            foreach my $t (@sorted_trait_names) {
+                if ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
+                    my @row = ("effect_simulated_2_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $result_blup_spatial_data_altered_env_2->{$p}->{$t}->[0]);
+                    my $line = join ',', @row;
+                    print $F_eff "$line\n";
+                }
+                elsif ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+                    my @row = ("effect_simulated_2_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $result_blup_pe_data_delta_altered_env_2->{$p}->{$t}->[0]);
+                    my $line = join ',', @row;
+                    print $F_eff "$line\n";
+                }
+            }
+        }
+    close($F_eff);
+
+    my ($phenotypes_env_heatmap_tempfile3_fh, $phenotypes_env_heatmap_tempfile3) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    open($F_pheno, ">", $phenotypes_env_heatmap_tempfile3) || die "Can't open file ".$phenotypes_env_heatmap_tempfile3;
+        print $F_pheno "trait_type,row,col,value\n";
+        foreach my $p (@unique_plot_names) {
+            foreach my $t (@sorted_trait_names) {
+                my @row = ("simulated_env_3_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_3{$p}->{$t});
+                my $line = join ',', @row;
+                print $F_pheno "$line\n";
+            }
+        }
+    close($F_pheno);
+
+    my ($phenotypes_pheno_sim_heatmap_tempfile3_fh, $phenotypes_pheno_sim_heatmap_tempfile3) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    open($F_pheno, ">", $phenotypes_pheno_sim_heatmap_tempfile3) || die "Can't open file ".$phenotypes_pheno_sim_heatmap_tempfile3;
+        print $F_pheno "trait_type,row,col,value\n";
+        foreach my $p (@unique_plot_names) {
+            foreach my $t (@sorted_trait_names) {
+                my @row = ("simulated_pheno_3_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $phenotype_data_altered_env_3{$p}->{$t});
+                my $line = join ',', @row;
+                print $F_pheno "$line\n";
+            }
+        }
+    close($F_pheno);
+
+    my ($effects_sim_heatmap_tempfile3_fh, $effects_sim_heatmap_tempfile3) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    open($F_eff, ">", $effects_sim_heatmap_tempfile3) || die "Can't open file ".$effects_sim_heatmap_tempfile3;
+        print $F_eff "trait_type,row,col,value\n";
+        foreach my $p (@unique_plot_names) {
+            foreach my $t (@sorted_trait_names) {
+                if ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
+                    my @row = ("effect_simulated_3_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $result_blup_spatial_data_altered_env_3->{$p}->{$t}->[0]);
+                    my $line = join ',', @row;
+                    print $F_eff "$line\n";
+                }
+                elsif ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+                    my @row = ("effect_simulated_3_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $result_blup_pe_data_delta_altered_env_3->{$p}->{$t}->[0]);
+                    my $line = join ',', @row;
+                    print $F_eff "$line\n";
+                }
+            }
+        }
+    close($F_eff);
+
+    my ($phenotypes_env_heatmap_tempfile4_fh, $phenotypes_env_heatmap_tempfile4) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    open($F_pheno, ">", $phenotypes_env_heatmap_tempfile4) || die "Can't open file ".$phenotypes_env_heatmap_tempfile4;
+        print $F_pheno "trait_type,row,col,value\n";
+        foreach my $p (@unique_plot_names) {
+            foreach my $t (@sorted_trait_names) {
+                my @row = ("simulated_env_4_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_4{$p}->{$t});
+                my $line = join ',', @row;
+                print $F_pheno "$line\n";
+            }
+        }
+    close($F_pheno);
+
+    my ($phenotypes_pheno_sim_heatmap_tempfile4_fh, $phenotypes_pheno_sim_heatmap_tempfile4) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    open($F_pheno, ">", $phenotypes_pheno_sim_heatmap_tempfile4) || die "Can't open file ".$phenotypes_pheno_sim_heatmap_tempfile4;
+        print $F_pheno "trait_type,row,col,value\n";
+        foreach my $p (@unique_plot_names) {
+            foreach my $t (@sorted_trait_names) {
+                my @row = ("simulated_pheno_4_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $phenotype_data_altered_env_4{$p}->{$t});
+                my $line = join ',', @row;
+                print $F_pheno "$line\n";
+            }
+        }
+    close($F_pheno);
+
+    my ($effects_sim_heatmap_tempfile4_fh, $effects_sim_heatmap_tempfile4) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    open($F_eff, ">", $effects_sim_heatmap_tempfile4) || die "Can't open file ".$effects_sim_heatmap_tempfile4;
+        print $F_eff "trait_type,row,col,value\n";
+        foreach my $p (@unique_plot_names) {
+            foreach my $t (@sorted_trait_names) {
+                if ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
+                    my @row = ("effect_simulated_4_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $result_blup_spatial_data_altered_env_4->{$p}->{$t}->[0]);
+                    my $line = join ',', @row;
+                    print $F_eff "$line\n";
+                }
+                elsif ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+                    my @row = ("effect_simulated_4_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $result_blup_pe_data_delta_altered_env_4->{$p}->{$t}->[0]);
                     my $line = join ',', @row;
                     print $F_eff "$line\n";
                 }
@@ -6033,11 +6162,20 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $cmd_spatialfirst_plot = 'R -e "library(data.table); library(ggplot2); library(dplyr); library(viridis); library(GGally); library(gridExtra);
     mat_orig <- fread(\''.$phenotypes_original_heatmap_tempfile.'\', header=TRUE, sep=\',\');
     mat_altered <- fread(\''.$phenotypes_post_heatmap_tempfile.'\', header=TRUE, sep=\',\');
-    mat_env <- fread(\''.$phenotypes_env_heatmap_tempfile.'\', header=TRUE, sep=\',\');
-    mat_p_sim <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile.'\', header=TRUE, sep=\',\');
     mat_eff <- fread(\''.$effects_heatmap_tempfile.'\', header=TRUE, sep=\',\');
     mat_eff_altered <- fread(\''.$effects_post_heatmap_tempfile.'\', header=TRUE, sep=\',\');
+    mat_env <- fread(\''.$phenotypes_env_heatmap_tempfile.'\', header=TRUE, sep=\',\');
+    mat_p_sim <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile.'\', header=TRUE, sep=\',\');
     mat_eff_sim <- fread(\''.$effects_sim_heatmap_tempfile.'\', header=TRUE, sep=\',\');
+    mat_env2 <- fread(\''.$phenotypes_env_heatmap_tempfile2.'\', header=TRUE, sep=\',\');
+    mat_p_sim2 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile2.'\', header=TRUE, sep=\',\');
+    mat_eff_sim2 <- fread(\''.$effects_sim_heatmap_tempfile2.'\', header=TRUE, sep=\',\');
+    mat_env3 <- fread(\''.$phenotypes_env_heatmap_tempfile3.'\', header=TRUE, sep=\',\');
+    mat_p_sim3 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile3.'\', header=TRUE, sep=\',\');
+    mat_eff_sim3 <- fread(\''.$effects_sim_heatmap_tempfile3.'\', header=TRUE, sep=\',\');
+    mat_env4 <- fread(\''.$phenotypes_env_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
+    mat_p_sim4 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
+    mat_eff_sim4 <- fread(\''.$effects_sim_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
     options(device=\'png\');
     par();
     gg <- ggplot(mat_orig, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
@@ -6046,16 +6184,6 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         coord_equal() +
         facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
     gg_altered <- ggplot(mat_altered, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
-        geom_tile() +
-        scale_fill_viridis(discrete=FALSE) +
-        coord_equal() +
-        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
-    gg_env <- ggplot(mat_env, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
-        geom_tile() +
-        scale_fill_viridis(discrete=FALSE) +
-        coord_equal() +
-        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
-    gg_p_sim <- ggplot(mat_p_sim, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
         geom_tile() +
         scale_fill_viridis(discrete=FALSE) +
         coord_equal() +
@@ -6070,12 +6198,67 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         scale_fill_viridis(discrete=FALSE) +
         coord_equal() +
         facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_env <- ggplot(mat_env, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_p_sim <- ggplot(mat_p_sim, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
     gg_eff_sim <- ggplot(mat_eff_sim, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
         geom_tile() +
         scale_fill_viridis(discrete=FALSE) +
         coord_equal() +
         facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
-    ggsave(\''.$env_effects_first_figure_tempfile.'\', arrangeGrob(gg, gg_altered, gg_env, gg_p_sim, gg_eff, gg_eff_altered, gg_eff_sim, nrow=7), device=\'png\', width=15, height=25, units=\'in\');
+    gg_env2 <- ggplot(mat_env2, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_p_sim2 <- ggplot(mat_p_sim2, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_eff_sim2 <- ggplot(mat_eff_sim2, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_env3 <- ggplot(mat_env3, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_p_sim3 <- ggplot(mat_p_sim3, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_eff_sim3 <- ggplot(mat_eff_sim3, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_env4 <- ggplot(mat_env4, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_p_sim4 <- ggplot(mat_p_sim4, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_eff_sim4 <- ggplot(mat_eff_sim4, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    ggsave(\''.$env_effects_first_figure_tempfile.'\', arrangeGrob(gg, gg_altered, gg_eff, gg_eff_altered, gg_env, gg_p_sim, gg_eff_sim, gg_env2, gg_p_sim2, gg_eff_sim2, gg_env3, gg_p_sim3, gg_eff_sim3, gg_env4, gg_p_sim4, gg_eff_sim4, nrow=16), device=\'png\', width=25, height=35, units=\'in\');
     dev.off();"';
     # print STDERR Dumper $cmd;
     my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
