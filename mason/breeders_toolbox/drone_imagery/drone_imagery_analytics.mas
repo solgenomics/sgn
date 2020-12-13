@@ -101,10 +101,11 @@
                             <label class="col-sm-3 control-label">Simulate Spatial or PE Effect: </label>
                             <div class="col-sm-9" >
                                 <select class="form-control" id="drone_imagery_analytics_select_analytics_env_sim">
-                                    <option value="linear_gradient">Linear Gradient</option>
-                                    <option value="random_1d_normal_gradient">Random 1D Normal Gradient</option>
-                                    <option value="random_2d_normal_gradient">Random 2D Normal Gradient</option>
-                                    <option value="random">Random</option>
+                                    <option value="all">All of Below</option>
+                                    <option value="linear_gradient" disabled>Linear Gradient</option>
+                                    <option value="random_1d_normal_gradient" disabled>Random 1D Normal Gradient</option>
+                                    <option value="random_2d_normal_gradient" disabled>Random 2D Normal Gradient</option>
+                                    <option value="random" disabled>Random</option>
                                 </select>
                             </div>
                         </div>
