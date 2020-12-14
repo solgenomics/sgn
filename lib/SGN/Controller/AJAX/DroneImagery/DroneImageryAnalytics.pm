@@ -6307,7 +6307,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         scale_fill_viridis(discrete=FALSE) +
         coord_equal() +
         facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
-    ggsave(\''.$env_effects_sim_figure_tempfile.'\', arrangeGrob(gg_env, gg_p_sim, gg_eff_sim, gg_env2, gg_p_sim2, gg_eff_sim2, gg_env3, gg_p_sim3, gg_eff_sim3, gg_env4, gg_p_sim4, gg_eff_sim4, nrow=4), device=\'png\', width=25, height=25, units=\'in\');
+    ggsave(\''.$env_effects_sim_figure_tempfile.'\', arrangeGrob(gg_env, gg_p_sim, gg_eff_sim, gg_env2, gg_p_sim2, gg_eff_sim2, gg_env3, gg_p_sim3, gg_eff_sim3, gg_env4, gg_p_sim4, gg_eff_sim4, nrow=4), device=\'png\', width=35, height=35, units=\'in\');
     "';
     # print STDERR Dumper $cmd;
     my $status_spatialenvsim_plot = system($cmd_spatialenvsim_plot);
