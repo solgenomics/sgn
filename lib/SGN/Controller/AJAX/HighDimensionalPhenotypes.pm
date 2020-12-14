@@ -74,7 +74,7 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
         $protocol_device_type = $protocol_prop_json->{device_type};
     }
 
-    my $data_level = $c->req->param('upload_nirs_spreadsheet_data_level') || 'plots';
+    my $data_level = $c->req->param('upload_nirs_spreadsheet_data_level') || 'tissue_samples';
     my $upload = $c->req->upload('upload_nirs_spreadsheet_file_input');
 
     my $upload_original_name = $upload->filename();
@@ -103,7 +103,8 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
     unlink $upload_tempfile;
 
     my $archived_image_zipfile_with_path;
-    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $protocol_id);
+    my $nd_protocol_filename;
+    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $protocol_id, $nd_protocol_filename);
     if (!$validate_file) {
         push @error_status, "Archived file not valid: $upload_original_name.";
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
@@ -126,7 +127,7 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
     $phenotype_metadata{'operator'} = $user_name;
     $phenotype_metadata{'date'} = $timestamp;
 
-    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c, $protocol_id);
+    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c, $protocol_id, $nd_protocol_filename);
     if (!$parsed_file) {
         push @error_status, "Error parsing file $upload_original_name.";
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
@@ -182,7 +183,7 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
     print STDERR $cmd_s;
     my $cmd_status = system($cmd_s);
 
-    my $parsed_file_agg = $parser->parse($validate_type, $output_csv_filepath, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id);
+    my $parsed_file_agg = $parser->parse($validate_type, $output_csv_filepath, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c, $protocol_id, $nd_protocol_filename);
     if (!$parsed_file_agg) {
         push @error_status, "Error parsing aggregated file.";
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
@@ -292,7 +293,7 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
         $protocol_device_type = $protocol_prop_json->{device_type};
     }
 
-    my $data_level = $c->req->param('upload_nirs_spreadsheet_data_level') || 'plots';
+    my $data_level = $c->req->param('upload_nirs_spreadsheet_data_level') || 'tissue_samples';
     my $upload = $c->req->upload('upload_nirs_spreadsheet_file_input');
 
     my $upload_original_name = $upload->filename();
@@ -321,7 +322,8 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
     unlink $upload_tempfile;
 
     my $archived_image_zipfile_with_path;
-    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $protocol_id);
+    my $nd_protocol_filename;
+    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $protocol_id, $nd_protocol_filename);
     if (!$validate_file) {
         push @error_status, "Archived file not valid: $upload_original_name.";
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
@@ -337,7 +339,7 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
         $c->detach();
     }
 
-    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c, $protocol_id);
+    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c, $protocol_id, $nd_protocol_filename);
     if (!$parsed_file) {
         push @error_status, "Error parsing file $upload_original_name.";
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
@@ -427,7 +429,7 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
     unlink $output_csv_filepath;
 
     # Using aggregated spectra:
-    my $parsed_file_agg = $parser->parse($validate_type, $archived_agg_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id);
+    my $parsed_file_agg = $parser->parse($validate_type, $archived_agg_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c, $protocol_id, $nd_protocol_filename);
     if (!$parsed_file_agg) {
         push @error_status, "Error parsing aggregated file.";
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
@@ -452,7 +454,8 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
     if (!$protocol_id) {
         my %nirs_protocol_prop = (
             device_type => $protocol_device_type,
-            header_column_names => \@wavelengths_agg
+            header_column_names => \@wavelengths_agg,
+            header_column_details => {}
         );
 
         my $protocol = $schema->resultset('NaturalDiversity::NdProtocol')->create({
@@ -565,8 +568,9 @@ sub high_dimensional_phenotypes_transcriptomics_upload_verify_POST : Args(0) {
     my $high_dim_transcriptomics_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_transcriptomics_protocol', 'protocol_type')->cvterm_id();
     my $high_dim_transcriptomics_protocol_prop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_protocol_properties', 'protocol_property')->cvterm_id();
 
-    my $data_level = $c->req->param('upload_transcriptomics_spreadsheet_data_level') || 'plots';
+    my $data_level = $c->req->param('upload_transcriptomics_spreadsheet_data_level') || 'tissue_samples';
     my $upload = $c->req->upload('upload_transcriptomics_spreadsheet_file_input');
+    my $transcript_metadata_upload = $c->req->upload('upload_transcriptomics_transcript_metadata_spreadsheet_file_input');
 
     my $upload_original_name = $upload->filename();
     my $upload_tempfile = $upload->tempname;
@@ -593,8 +597,31 @@ sub high_dimensional_phenotypes_transcriptomics_upload_verify_POST : Args(0) {
     }
     unlink $upload_tempfile;
 
+    my $upload_transcripts_original_name = $transcript_metadata_upload->filename();
+    my $upload_transcripts_tempfile = $transcript_metadata_upload->tempname;
+
+    my $uploader_transcripts = CXGN::UploadFile->new({
+        tempfile => $upload_transcripts_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_transcripts_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_type
+    });
+    my $archived_filename_transcripts_with_path = $uploader_transcripts->archive();
+    my $md5_transcripts = $uploader_transcripts->get_md5($archived_filename_transcripts_with_path);
+    if (!$archived_filename_transcripts_with_path) {
+        push @error_status, "Could not save file $upload_transcripts_original_name in archive.";
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    } else {
+        push @success_status, "File $upload_transcripts_original_name saved in archive.";
+    }
+    unlink $upload_transcripts_tempfile;
+
     my $archived_image_zipfile_with_path;
-    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $protocol_id);
+    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $protocol_id, $archived_filename_transcripts_with_path);
     if (!$validate_file) {
         push @error_status, "Archived file not valid: $upload_original_name.";
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
@@ -617,7 +644,7 @@ sub high_dimensional_phenotypes_transcriptomics_upload_verify_POST : Args(0) {
     $phenotype_metadata{'operator'} = $user_name;
     $phenotype_metadata{'date'} = $timestamp;
 
-    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c, $protocol_id);
+    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c, $protocol_id, $archived_filename_transcripts_with_path);
     if (!$parsed_file) {
         push @error_status, "Error parsing file $upload_original_name.";
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
@@ -631,11 +658,13 @@ sub high_dimensional_phenotypes_transcriptomics_upload_verify_POST : Args(0) {
     my %parsed_data;
     my @plots;
     my @transcripts;
+    my %transcripts_details;
     if (scalar(@error_status) == 0) {
         if ($parsed_file && !$parsed_file->{'error'}) {
             %parsed_data = %{$parsed_file->{'data'}};
             @plots = @{$parsed_file->{'units'}};
             @transcripts = @{$parsed_file->{'variables'}};
+            %transcripts_details = %{$parsed_file->{'variables_desc'}};
             push @success_status, "File data successfully parsed.";
         }
     }
@@ -726,8 +755,9 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
     my $high_dim_transcriptomics_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_transcriptomics_protocol', 'protocol_type')->cvterm_id();
     my $high_dim_transcriptomics_protocol_prop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_protocol_properties', 'protocol_property')->cvterm_id();
 
-    my $data_level = $c->req->param('upload_transcriptomics_spreadsheet_data_level') || 'plots';
+    my $data_level = $c->req->param('upload_transcriptomics_spreadsheet_data_level') || 'tissue_samples';
     my $upload = $c->req->upload('upload_transcriptomics_spreadsheet_file_input');
+    my $transcript_metadata_upload = $c->req->upload('upload_transcriptomics_transcript_metadata_spreadsheet_file_input');
 
     my $upload_original_name = $upload->filename();
     my $upload_tempfile = $upload->tempname;
@@ -754,8 +784,31 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
     }
     unlink $upload_tempfile;
 
+    my $upload_transcripts_original_name = $transcript_metadata_upload->filename();
+    my $upload_transcripts_tempfile = $transcript_metadata_upload->tempname;
+
+    my $uploader_transcripts = CXGN::UploadFile->new({
+        tempfile => $upload_transcripts_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_transcripts_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_type
+    });
+    my $archived_filename_transcripts_with_path = $uploader_transcripts->archive();
+    my $md5_transcripts = $uploader_transcripts->get_md5($archived_filename_transcripts_with_path);
+    if (!$archived_filename_transcripts_with_path) {
+        push @error_status, "Could not save file $upload_transcripts_original_name in archive.";
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    } else {
+        push @success_status, "File $upload_transcripts_original_name saved in archive.";
+    }
+    unlink $upload_transcripts_tempfile;
+
     my $archived_image_zipfile_with_path;
-    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $protocol_id);
+    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $protocol_id, $archived_filename_transcripts_with_path);
     if (!$validate_file) {
         push @error_status, "Archived file not valid: $upload_original_name.";
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
@@ -771,7 +824,7 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
         $c->detach();
     }
 
-    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c, $protocol_id);
+    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c, $protocol_id, $archived_filename_transcripts_with_path);
     if (!$parsed_file) {
         push @error_status, "Error parsing file $upload_original_name.";
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
@@ -785,11 +838,13 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
     my %parsed_data;
     my @plots;
     my @transcripts;
+    my %transcripts_details;
     if (scalar(@error_status) == 0) {
         if ($parsed_file && !$parsed_file->{'error'}) {
             %parsed_data = %{$parsed_file->{'data'}};
             @plots = @{$parsed_file->{'units'}};
             @transcripts = @{$parsed_file->{'variables'}};
+            %transcripts_details = %{$parsed_file->{'variables_desc'}};
             push @success_status, "File data successfully parsed.";
         }
     }
@@ -799,7 +854,8 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
             expression_unit => $protocol_unit,
             genome_version => $protocol_genome_version,
             annotation_version => $protocol_genome_annotation_version,
-            header_column_names => \@transcripts
+            header_column_names => \@transcripts,
+            header_column_details => \%transcripts_details
         );
 
         my $protocol = $schema->resultset('NaturalDiversity::NdProtocol')->create({
@@ -912,8 +968,9 @@ sub high_dimensional_phenotypes_metabolomics_upload_verify_POST : Args(0) {
     my $high_dim_metabolomics_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_metabolomics_protocol', 'protocol_type')->cvterm_id();
     my $high_dim_metabolomics_protocol_prop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_protocol_properties', 'protocol_property')->cvterm_id();
 
-    my $data_level = $c->req->param('upload_metabolomics_spreadsheet_data_level') || 'plots';
+    my $data_level = $c->req->param('upload_metabolomics_spreadsheet_data_level') || 'tissue_samples';
     my $upload = $c->req->upload('upload_metabolomics_spreadsheet_file_input');
+    my $metabolite_details_upload = $c->req->upload('upload_metabolomics_metabolite_details_spreadsheet_file_input');
 
     my $upload_original_name = $upload->filename();
     my $upload_tempfile = $upload->tempname;
@@ -940,8 +997,31 @@ sub high_dimensional_phenotypes_metabolomics_upload_verify_POST : Args(0) {
     }
     unlink $upload_tempfile;
 
+    my $upload_transcripts_original_name = $metabolite_details_upload->filename();
+    my $upload_transcripts_tempfile = $metabolite_details_upload->tempname;
+
+    my $uploader_transcripts = CXGN::UploadFile->new({
+        tempfile => $upload_transcripts_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_transcripts_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_type
+    });
+    my $archived_filename_transcripts_with_path = $uploader_transcripts->archive();
+    my $md5_transcripts = $uploader_transcripts->get_md5($archived_filename_transcripts_with_path);
+    if (!$archived_filename_transcripts_with_path) {
+        push @error_status, "Could not save file $upload_transcripts_original_name in archive.";
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    } else {
+        push @success_status, "File $upload_transcripts_original_name saved in archive.";
+    }
+    unlink $upload_transcripts_tempfile;
+
     my $archived_image_zipfile_with_path;
-    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $protocol_id);
+    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $protocol_id, $archived_filename_transcripts_with_path);
     if (!$validate_file) {
         push @error_status, "Archived file not valid: $upload_original_name.";
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
@@ -964,7 +1044,7 @@ sub high_dimensional_phenotypes_metabolomics_upload_verify_POST : Args(0) {
     $phenotype_metadata{'operator'} = $user_name;
     $phenotype_metadata{'date'} = $timestamp;
 
-    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c, $protocol_id);
+    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c, $protocol_id, $archived_filename_transcripts_with_path);
     if (!$parsed_file) {
         push @error_status, "Error parsing file $upload_original_name.";
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
@@ -1059,8 +1139,9 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
     my $high_dim_metabolomics_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_metabolomics_protocol', 'protocol_type')->cvterm_id();
     my $high_dim_metabolomics_protocol_prop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_protocol_properties', 'protocol_property')->cvterm_id();
 
-    my $data_level = $c->req->param('upload_metabolomics_spreadsheet_data_level') || 'plots';
+    my $data_level = $c->req->param('upload_metabolomics_spreadsheet_data_level') || 'tissue_samples';
     my $upload = $c->req->upload('upload_metabolomics_spreadsheet_file_input');
+    my $metabolite_details_upload = $c->req->upload('upload_metabolomics_metabolite_details_spreadsheet_file_input');
 
     my $upload_original_name = $upload->filename();
     my $upload_tempfile = $upload->tempname;
@@ -1087,8 +1168,31 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
     }
     unlink $upload_tempfile;
 
+    my $upload_transcripts_original_name = $metabolite_details_upload->filename();
+    my $upload_transcripts_tempfile = $metabolite_details_upload->tempname;
+
+    my $uploader_transcripts = CXGN::UploadFile->new({
+        tempfile => $upload_transcripts_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_transcripts_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_type
+    });
+    my $archived_filename_transcripts_with_path = $uploader_transcripts->archive();
+    my $md5_transcripts = $uploader_transcripts->get_md5($archived_filename_transcripts_with_path);
+    if (!$archived_filename_transcripts_with_path) {
+        push @error_status, "Could not save file $upload_transcripts_original_name in archive.";
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    } else {
+        push @success_status, "File $upload_transcripts_original_name saved in archive.";
+    }
+    unlink $upload_transcripts_tempfile;
+
     my $archived_image_zipfile_with_path;
-    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $protocol_id);
+    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $protocol_id, $archived_filename_transcripts_with_path);
     if (!$validate_file) {
         push @error_status, "Archived file not valid: $upload_original_name.";
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
@@ -1104,7 +1208,7 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
         $c->detach();
     }
 
-    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c, $protocol_id);
+    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c, $protocol_id, $archived_filename_transcripts_with_path);
     if (!$parsed_file) {
         push @error_status, "Error parsing file $upload_original_name.";
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
@@ -1129,7 +1233,8 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
 
     if (!$protocol_id) {
         my %metabolomics_protocol_prop = (
-            header_column_names => \@metabolites
+            header_column_names => \@metabolites,
+            header_column_details => {}
         );
 
         my $protocol = $schema->resultset('NaturalDiversity::NdProtocol')->create({

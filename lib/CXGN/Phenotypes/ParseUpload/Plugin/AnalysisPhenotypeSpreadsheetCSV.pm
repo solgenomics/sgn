@@ -33,6 +33,7 @@ sub validate {
     my $schema = shift;
     my $zipfile = shift; #not relevant for this plugin
     my $nd_protocol_id = shift; #not relevant for this plugin
+    my $nd_protocol_filename = shift; #not relevant for this plugin
     my $delimiter = ',';
     my %parse_result;
 
@@ -142,6 +143,7 @@ sub parse {
     my $user_id = shift; #not relevant for this plugin
     my $c = shift; #not relevant for this plugin
     my $nd_protocol_id = shift; #not relevant for this plugin
+    my $nd_protocol_filename = shift; #not relevant for this plugin
     my $delimiter = ',';
     my %parse_result;
 
