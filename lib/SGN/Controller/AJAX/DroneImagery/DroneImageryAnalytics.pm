@@ -5882,7 +5882,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     mat_orig <- fread(\''.$full_plot_level_correlation_tempfile.'\', header=TRUE, sep=\',\');
     gg <- ggcorr(data=mat_orig, hjust = 1, size = 2, color = \'grey50\', layout.exp = 1, label = TRUE);
     ggsave(\''.$plot_corr_figure_tempfile.'\', gg, device=\'png\', width=25, height=25, units=\'in\');
-    dev.off();"';
+    "';
     # print STDERR Dumper $cmd;
     my $status_plotcorr_plot = system($cmd_plotcorr_plot);
     push @$spatial_effects_plots, $plot_corr_figure_tempfile_string;
@@ -6170,9 +6170,9 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     mat_p_sim4 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
     mat_eff_sim4 <- fread(\''.$effects_sim_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
     mat <- data.frame(pheno_original = mat_orig\$value, pheno_altered = mat_altered\$value, effect_original = mat_eff\$value, effect_altered = mat_eff_altered\$value, env_linear = mat_env\$value, pheno_linear = mat_p_sim\$value, linear_effect = mat_eff_sim\$value, env_n1d = mat_env2\$value, pheno_n1d = mat_p_sim2\$value, n1d_effect = mat_eff_sim2\$value, env_n2d = mat_env3\$value, pheno_n2d = mat_p_sim3\$value, n2d_effect = mat_eff_sim3\$value, env_random = mat_env4\$value, pheno_random = mat_p_sim4\$value, random_effect = mat_eff_sim4\$value);
-    gg <- ggcorr(data=mat, hjust = 1, size = 2, color = \'grey50\', layout.exp = 1, label = TRUE);
+    gg <- ggcorr(data=mat, hjust = 1, size = 2, color = \'grey50\', layout.exp = 1, label = TRUE, label_round = 2);
     ggsave(\''.$plot_corr_summary_figure_tempfile.'\', gg, device=\'png\', width=10, height=10, units=\'in\');
-    dev.off();"';
+    "';
     # print STDERR Dumper $cmd;
     my $status_plotcorrsum_plot = system($cmd_plotcorrsum_plot);
     push @$spatial_effects_plots, $plot_corr_summary_figure_tempfile_string;
@@ -6290,7 +6290,6 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         coord_equal() +
         facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
     ggsave(\''.$env_effects_first_figure_tempfile.'\', arrangeGrob(gg, gg_altered, gg_eff, gg_eff_altered, gg_env, gg_p_sim, gg_eff_sim, gg_env2, gg_p_sim2, gg_eff_sim2, gg_env3, gg_p_sim3, gg_eff_sim3, gg_env4, gg_p_sim4, gg_eff_sim4, nrow=8), device=\'png\', width=25, height=35, units=\'in\');
-    dev.off();
     write.table(data.frame(env1 = c(cor(mat_env\$value, mat_eff_sim\$value)), env2 = c(cor(mat_env2\$value, mat_eff_sim2\$value)), env3 = c(cor(mat_env3\$value, mat_eff_sim3\$value)), env4 = c(cor(mat_env4\$value, mat_eff_sim4\$value))), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');
     "';
     # print STDERR Dumper $cmd;
