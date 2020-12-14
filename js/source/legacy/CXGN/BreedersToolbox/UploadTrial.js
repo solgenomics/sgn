@@ -44,6 +44,8 @@ jQuery(document).ready(function ($) {
         var design_type = $("#trial_upload_design_method").val();
         var uploadFile = $("#trial_uploaded_file").val();
         var trial_stock_type = $("#trial_upload_trial_stock_type").val();
+        var plot_width = $("#trial_upload_plot_width").val();
+        var plot_length = $("#trial_upload_plot_length").val();
 
         if (trial_name === '') {
             alert("Please give a trial name");
@@ -56,6 +58,18 @@ jQuery(document).ready(function ($) {
         }
         else if (trial_year === '') {
             alert("Please give a trial year");
+        }
+        else if (plot_width < 0 ){
+            alert("Please check the plot width");
+        }
+        else if (plot_width > 13){
+            alert("Please check the plot width is too high");
+        }
+        else if (plot_length < 0){
+            alert("Please check the plot length");
+        }
+        else if (plot_length > 13){
+            alert("Please check the plot length is too high");
         }
         else if (description === '') {
             alert("Please give a description");
