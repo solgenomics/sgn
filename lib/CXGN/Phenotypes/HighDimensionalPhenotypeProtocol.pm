@@ -65,6 +65,11 @@ has 'header_column_names' => (
     is => 'rw'
 );
 
+has 'header_column_details' => (
+    isa => 'HashRef',
+    is => 'rw'
+);
+
 has 'protocol_properties' => (
     isa => 'HashRef',
     is => 'rw'
@@ -91,9 +96,12 @@ sub BUILD {
 
     my $protocol_details = $value ? decode_json $value : {};
     my $header_column_names = $protocol_details->{header_column_names} || [];
+    my $header_column_details = $protocol_details->{header_column_details} || {};
     delete($protocol_details->{header_column_names});
+    delete($protocol_details->{header_column_details});
 
     $self->header_column_names($header_column_names);
+    $self->header_column_details($header_column_details);
     $self->protocol_name($nd_protocol_name);
     $self->protocol_properties($protocol_details);
     if ($create_date) {

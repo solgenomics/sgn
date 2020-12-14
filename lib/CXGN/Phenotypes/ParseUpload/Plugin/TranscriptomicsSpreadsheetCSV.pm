@@ -44,6 +44,7 @@ sub validate {
     my $schema = shift;
     my $zipfile = shift; #not relevant for this plugin
     my $nd_protocol_id = shift;
+    my $nd_protocol_filename = shift;
     my $delimiter = ',';
     my %parse_result;
 
@@ -92,6 +93,69 @@ sub validate {
                 $parse_result{'error'}= "It is not a real value for trancripts. Must be numeric: '$_'";
                 return \%parse_result;
             }
+        }
+    }
+    close $fh;
+
+    open($fh, '<', $nd_protocol_filename)
+        or die "Could not open file '$nd_protocol_filename' $!";
+
+    if (!$fh) {
+        $parse_result{'error'} = "Could not read file.";
+        print STDERR "Could not read file.\n";
+        return \%parse_result;
+    }
+
+    $header_row = <$fh>;
+    print STDERR Dumper $csv->fields();
+    if ($csv->parse($header_row)) {
+        @columns = $csv->fields();
+    } else {
+        $parse_result{'error'} = "Could not parse header row.";
+        print STDERR "Could not parse header.\n";
+        return \%parse_result;
+    }
+    
+    if ( $columns[0] ne "transcript_name" ||
+        $columns[1] ne "chromosome" ||
+        $columns[2] ne "start_position" ||
+        $columns[3] ne "end_position" ||
+        $columns[4] ne "gene_description" ||
+        $columns[5] ne "notes") {
+      $parse_result{'error'} = "Header row must be 'transcript_name', 'chromosome', 'start_position', 'end_position', 'gene_description', 'notes'. Please, check your file.";
+      return \%parse_result;
+    }
+    while (my $line = <$fh>) {
+        my @fields;
+        if ($csv->parse($line)) {
+            @fields = $csv->fields();
+        }
+        my $transcript_name = $fields[0];
+        my $chromosome = $fields[1];
+        my $start_position = $fields[2];
+        my $end_position = $fields[3];
+        my $gene_description = $fields[4];
+        my $notes = $fields[5];
+
+        if (!$transcript_name){
+            $parse_result{'error'}= "Transcript name is required!";
+            return \%parse_result;
+        }
+        if (!defined($chromosome) && !length($chromosome)) {
+            $parse_result{'error'}= "Chromosome is required!";
+            return \%parse_result;
+        }
+        if (!defined($start_position) && !length($start_position)){
+            $parse_result{'error'}= "Start position is required!";
+            return \%parse_result;
+        }
+        if (!defined($end_position) && !length($end_position)){
+            $parse_result{'error'}= "End position is required!";
+            return \%parse_result;
+        }
+        if (not $transcript_name=~/^[+]?\d+\.?\d*$/){
+            $parse_result{'error'}= "It is not a real value for trancripts: $transcript_name. Must be numeric.";
+            return \%parse_result;
         }
     }
     close $fh;
@@ -145,6 +209,7 @@ sub parse {
     my $user_id = shift; #not relevant for this plugin
     my $c = shift; #not relevant for this plugin
     my $nd_protocol_id = shift;
+    my $nd_protocol_filename = shift;
     my $delimiter = ',';
     my %parse_result;
 
@@ -167,6 +232,7 @@ sub parse {
     my $size;
     my $count;
     my $num_cols;
+    my %header_column_details;
 
     open(my $fh, '<', $filename)
         or die "Could not open file '$filename' $!";
@@ -203,6 +269,48 @@ sub parse {
     }
     close($fh);
 
+    open($fh, '<', $nd_protocol_filename)
+        or die "Could not open file '$nd_protocol_filename' $!";
+
+    if (!$fh) {
+        $parse_result{'error'} = "Could not read file.";
+        print STDERR "Could not read file.\n";
+        return \%parse_result;
+    }
+
+    $header_row = <$fh>;
+    my @columns;
+    print STDERR Dumper $csv->fields();
+    if ($csv->parse($header_row)) {
+        @columns = $csv->fields();
+    } else {
+        $parse_result{'error'} = "Could not parse header row.";
+        print STDERR "Could not parse header.\n";
+        return \%parse_result;
+    }
+
+    while (my $line = <$fh>) {
+        my @fields;
+        if ($csv->parse($line)) {
+            @fields = $csv->fields();
+        }
+        my $transcript_name = $fields[0];
+        my $chromosome = $fields[1];
+        my $start_position = $fields[2];
+        my $end_position = $fields[3];
+        my $gene_description = $fields[4];
+        my $notes = $fields[5];
+
+        $header_column_details{$transcript_name} = {
+            chr => $chromosome,
+            start => $start_position,
+            end => $end_position,
+            gene_desc => $gene_description,
+            notes => $notes
+        };
+    }
+    close $fh;
+
     foreach my $obs (sort keys %observation_units_seen) {
         push @observation_units, $obs;
     }
@@ -213,6 +321,7 @@ sub parse {
     $parse_result{'data'} = \%data;
     $parse_result{'units'} = \@observation_units;
     $parse_result{'variables'} = \@traits;
+    $parse_result{'variables_desc'} = \%header_column_details;
     return \%parse_result;
     # print STDERR Dumper \%parse_result;
 }
