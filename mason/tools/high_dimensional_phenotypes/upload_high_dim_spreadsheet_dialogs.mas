@@ -180,7 +180,7 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                     <& /page/page_title.mas, title=>"High-dimensional data must be uploaded using the template information provided" &>
 
                     <center>
-                    <&| /page/explanation.mas, title=>'Template Information' &>
+                    <&| /page/explanation.mas, title=>'Spreadsheet Template Information' &>
                         <p>
                         <b>File format information</b>
                         <br>
@@ -188,6 +188,18 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                         </p>
                     </&> 
                     </center>
+
+                    <div id="high_dim_data_upload_transcriptomics_protocol_template_div">
+                        <center>
+                        <&| /page/explanation.mas, title=>'Transcript Details Spreadsheet Template Information' &>
+                            <p>
+                            <b>File format information</b>
+                            <br>
+                            <a id="high_dim_data_spreadsheet_transcripts_format_info">Transcript Details Spreadsheet Format</a>
+                            </p>
+                        </&>
+                        </center>
+                    </div>
 
                     <center>
                     <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
@@ -367,21 +379,20 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
         <div class="container-fluid">
 
             <h3>Upload Transcriptomics in a tabular spreadsheet (.csv) format with the following columns:</h3>
-            
 
             <ul>
                 <li><strong>sample_name</strong>: This should be a sample name that exists in the database. The sample can come from a sampling trial or a field trial or a genotyping plate.</li>
                 <li>All other columns are <strong>gene names</script>. You can add as many columns as you want to upload, there isn't a limit.</li>
             </ul>
             <table class="table table-hover table-bordered table-condensed" >
-                        <thead></thead>
-                        <tbody>
-                            <tr>                                
-                                <td>sample_name</td>
-                                <td>gene name columns</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <thead></thead>
+                <tbody>
+                    <tr>
+                        <td>sample_name</td>
+                        <td>gene name columns</td>
+                    </tr>
+                </tbody>
+            </table>
 
             <h3>Template for Uploading Transcriptomics (.csv):</h3>
             <ul>
@@ -397,6 +408,47 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
   </div>
 </div>
 
+<div class="modal fade" id="upload_transcriptomics_transcript_details_spreadsheet_info_dialog" name="upload_transcriptomics_transcript_details_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="transcriptomicsDetailsUploadInfoDialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="transcriptomicsDetailsUploadInfoDialog">Template Information</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <h3>Upload details about the transcripts in a tabular spreadsheet (.csv) format with the following columns:</h3>
+
+            <ul>
+                <li>transcript_name: This should be the same name as present in a column in your transcriptmics data matrix file.</li>
+                <li>chromosome: The chromosome where the transcript exists.</li>
+                <li>start_position: The start position in base pairs of where the transcript begins.</li>
+                <li>end_position: The end position in base pairs of where the transcript ends.</li>
+                <li>gene_description: Descriptors for gene annotations.</li>
+                <li>notes: Any additional descrptions.</li>
+            </ul>
+            <table class="table table-hover table-bordered table-condensed" >
+                <thead></thead>
+                <tbody>
+                    <tr>
+                        <td>transcript_name</td>
+                        <td>chromosome</td>
+                        <td>start_position</td>
+                        <td>end_position</td>
+                        <td>gene_description</td>
+                        <td>notes</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 
 <script>
@@ -444,16 +496,22 @@ jQuery(document).ready(function() {
             jQuery('#high_dim_data_upload_nirs_protocol_div').show();
             jQuery('#high_dim_data_upload_transcriptomics_protocol_div').hide();
             jQuery('#high_dim_data_upload_metabolomics_protocol_div').hide();
+
+            jQuery('#high_dim_data_upload_transcriptomics_protocol_template_div').hide();
         }
         else if (high_dim_data_upload_type == 'Transcriptomics') {
             jQuery('#high_dim_data_upload_nirs_protocol_div').hide();
             jQuery('#high_dim_data_upload_transcriptomics_protocol_div').show();
             jQuery('#high_dim_data_upload_metabolomics_protocol_div').hide();
+
+            jQuery('#high_dim_data_upload_transcriptomics_protocol_template_div').show();
         }
         if (high_dim_data_upload_type == 'Metabolomics') {
             jQuery('#high_dim_data_upload_nirs_protocol_div').hide();
             jQuery('#high_dim_data_upload_transcriptomics_protocol_div').hide();
             jQuery('#high_dim_data_upload_metabolomics_protocol_div').show();
+
+            jQuery('#high_dim_data_upload_transcriptomics_protocol_template_div').hide();
         }
 
     });
@@ -468,6 +526,10 @@ jQuery(document).ready(function() {
         else if (high_dim_data_upload_type == 'Metabolomics') {
             jQuery("#upload_metabolomics_spreadsheet_info_dialog" ).modal("show");
         }
+    });
+
+    jQuery('#high_dim_data_spreadsheet_transcripts_format_info').click(function() {
+        jQuery("#upload_transcriptomics_transcript_details_spreadsheet_info_dialog").modal("show");
     });
 
     jQuery('#high_dim_data_upload_data_protocol_step').click(function(){
