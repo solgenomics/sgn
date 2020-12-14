@@ -381,7 +381,7 @@ $dataset_id => undef
 
 </div>
 
-<script type="text/javascript">
+<script>
   window.sWizard = jsMod['wizard'].WizardSetup("#wizard");
 </script>
 
@@ -408,7 +408,15 @@ $dataset_id => undef
   </div>
 </div>
 
-<script type="text/javascript">
+<script>
+
+  jQuery(document).ready(function (){
+  %  if ($dataset_id){
+      document.getElementsByClassName("wizard-dataset-select")[0].value = <% $dataset_id %>;
+      document.getElementsByClassName("wizard-dataset-load")[0].click();
+  %  }
+  });
+
   d3.select('#update_wizard_show').on('click', function () {
     $('#update_wizard_dialog').modal("show");
     jsMod['wizard'].updateStatus("#wizard_status")
