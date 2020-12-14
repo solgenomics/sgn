@@ -411,10 +411,10 @@ $dataset_id => undef
 <script>
 
   jQuery(document).ready(function (){
-  %  if ($dataset_id){
+%  if ($dataset_id){
       document.getElementsByClassName("wizard-dataset-select")[0].value = <% $dataset_id %>;
       document.getElementsByClassName("wizard-dataset-load")[0].click();
-  %  }
+%  }
   });
 
   d3.select('#update_wizard_show').on('click', function () {
