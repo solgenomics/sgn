@@ -3559,9 +3559,9 @@ sub get_accessions {
 
 =head2 get_trial_stock_count
 
- Usage:        my $accessions = $t->get_accessions();
- Desc:         retrieves the accessions or family names or cross unique ids used in this trial.
- Ret:          an arrayref of { accession_name => acc_name, stock_id => stock_id, stock_type => stock_type }
+ Usage:        my $stock_count = $t->get_trial_stock_count();
+ Desc:         retrieves the count of accessions or family names or cross unique ids used in this trial.
+ Ret:          a scalar of the total count
  Args:         none
  Side Effects:
  Example:
@@ -3570,16 +3570,10 @@ sub get_accessions {
 
 sub get_trial_stock_count {
 	my $self = shift;
-	my $accessions = $self->get_accessions();
-	
-#	my @accessions;
 
-#	my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type' )->cvterm_id();
-#    my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'cross', 'stock_type' )->cvterm_id();
-#    my $family_name_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'family_name', 'stock_type' )->cvterm_id();
-#	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
-#	my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plot_of", "stock_relationship")->cvterm_id(
+	my $accessions = $self->get_accessions();
 	my $stock_count = scalar(@{$accessions});
+	
 	return $stock_count;
 }
 
