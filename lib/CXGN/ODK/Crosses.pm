@@ -498,25 +498,25 @@ sub save_ona_cross_info {
                             $db_male_accession_name = $self-> _get_accession_from_plot_name($male_plot_name);
 
                              # debugging
-#                            if (!defined $db_female_accession_name) {
-#                                push @checking_female_plots, $odk_female_plot_data;
-#                            }
+                            if (!defined $db_female_accession_name) {
+                                push @checking_female_plots, $odk_female_plot_data;
+                            }
 
-#                            if (!defined $db_male_accession_name) {
-#                                push @checking_male_plots, $odk_male_plot_data;
-#                            }
-#                            print STDERR "CHECKING FEMALE PLOT =".Dumper(\@checking_female_plots)."\n";
-#                            print STDERR "CHECKING MALE PLOT =".Dumper(\@checking_male_plots)."\n";
+                            if (!defined $db_male_accession_name) {
+                                push @checking_male_plots, $odk_male_plot_data;
+                            }
+                            print STDERR "CHECKING FEMALE PLOT =".Dumper(\@checking_female_plots)."\n";
+                            print STDERR "CHECKING MALE PLOT =".Dumper(\@checking_male_plots)."\n";
 
                             $odk_cross_unique_id = $a->{'FieldActivities/FirstPollination/print_crossBarcode/crossID'};
                             $cross_combination = $db_female_accession_name.'/'.$db_male_accession_name;
 
-#                            print STDERR "ODK FEMALE PLOT NAME =".Dumper($female_plot_name)."\n";
-#                            print STDERR "ODK MALE PLOT NAME =".Dumper($male_plot_name)."\n";
-#                            print STDERR "DB FEMALE ACCESSION NAME =".Dumper($db_female_accession_name)."\n";
-#                            print STDERR "DB MALE ACCESSION NAME =".Dumper($db_male_accession_name)."\n";
-#                            print STDERR "ODK CROSS ID =".Dumper($odk_cross_unique_id)."\n";
-#                            print STDERR "CROSS COMBINATION =".Dumper($cross_combination)."\n";
+                            print STDERR "ODK FEMALE PLOT NAME =".Dumper($female_plot_name)."\n";
+                            print STDERR "ODK MALE PLOT NAME =".Dumper($male_plot_name)."\n";
+                            print STDERR "DB FEMALE ACCESSION NAME =".Dumper($db_female_accession_name)."\n";
+                            print STDERR "DB MALE ACCESSION NAME =".Dumper($db_male_accession_name)."\n";
+                            print STDERR "ODK CROSS ID =".Dumper($odk_cross_unique_id)."\n";
+                            print STDERR "CROSS COMBINATION =".Dumper($cross_combination)."\n";
 
                             my $cross_exists_rs = $schema->resultset("Stock::Stock")->find({uniquename => $odk_cross_unique_id});
                             if (!defined $cross_exists_rs) {
