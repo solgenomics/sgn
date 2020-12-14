@@ -116,10 +116,6 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     $minimization_iterations_tempfile_string .= '.png';
     my $minimization_iterations_figure_tempfile = $c->config->{basepath}."/".$minimization_iterations_tempfile_string;
 
-    my $genetic_effects_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
-    $genetic_effects_figure_tempfile_string .= '.png';
-    my $genetic_effects_figure_tempfile = $c->config->{basepath}."/".$genetic_effects_figure_tempfile_string;
-
     my $env_effects_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
     $env_effects_figure_tempfile_string .= '.png';
     my $env_effects_figure_tempfile = $c->config->{basepath}."/".$env_effects_figure_tempfile_string;
@@ -212,7 +208,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my ($stats_out_tempfile_permanent_environment_fh, $stats_out_tempfile_permanent_environment) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
 
     my (%phenotype_data_original, @data_matrix_original, @data_matrix_phenotypes_original);
-    my (%trait_name_encoder, %trait_name_encoder_rev, %stock_info, %unique_accessions, %seen_days_after_plantings, %seen_times, %obsunit_row_col, %stock_row_col, %stock_name_row_col, %seen_rows, %seen_cols, %seen_plots, %seen_plot_names, %plot_id_map, %trait_composing_info, @sorted_trait_names, @unique_accession_names, @unique_plot_names, %seen_trial_ids, %seen_trait_names, %unique_traits_ids, @phenotype_header, $header_string);
+    my (%trait_name_encoder, %trait_name_encoder_rev, %stock_info, %unique_accessions, %seen_days_after_plantings, %seen_times, %trait_to_time_map, %obsunit_row_col, %stock_row_col, %stock_name_row_col, %seen_rows, %seen_cols, %seen_plots, %seen_plot_names, %plot_id_map, %trait_composing_info, @sorted_trait_names, @unique_accession_names, @unique_plot_names, %seen_trial_ids, %seen_trait_names, %unique_traits_ids, @phenotype_header, $header_string);
     my (@sorted_scaled_ln_times, %plot_id_factor_map_reverse, %plot_id_count_map_reverse, %accession_id_factor_map, %accession_id_factor_map_reverse, %time_count_map_reverse, @rep_time_factors, @ind_rep_factors, %plot_rep_time_factor_map, %seen_rep_times, %seen_ind_reps, @legs_header, %polynomial_map);
     my $time_min = 100000000;
     my $time_max = 0;
@@ -337,6 +333,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     my $time_days = (split '\|', $time_days_cvterm)[0];
                     my $time_value = (split ' ', $time_days)[1];
                     $seen_days_after_plantings{$time_value}++;
+                    $trait_to_time_map{$trait_name} = $time_value;
                 }
             }
         }
@@ -526,6 +523,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     $phenotype_data_original{$obsunit_stock_uniquename}->{$time} = $value;
                     $seen_times{$time} = $trait_name;
                     $seen_trait_names{$trait_name} = $time_term_string;
+                    $trait_to_time_map{$trait_name} = $time;
 
                     if ($value < $phenotype_min_original) {
                         $phenotype_min_original = $value;
@@ -2186,6 +2184,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 my $time_term_string_blup = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $time_cvterm_id, 'extended');
                 $rr_unique_traits{$time_term_string_blup}++;
 
+                $trait_to_time_map{$time_term_string_blup} = $time;
+
                 $result_blup_data_original->{$accession_name}->{$time_term_string_blup} = [$value, $timestamp, $user_name, '', ''];
             }
         }
@@ -2255,6 +2255,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     $time_cvterm_id = $new_time_term->cvterm_id();
                 }
                 my $time_term_string_pe = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $time_cvterm_id, 'extended');
+
+                $trait_to_time_map{$time_term_string_pe} = $time;
 
                 $result_blup_pe_data_original->{$plot_name}->{$time_term_string_pe} = [$value, $timestamp, $user_name, '', ''];
             }
@@ -5887,33 +5889,6 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $status_plotcorr_plot = system($cmd_plotcorr_plot);
     push @$spatial_effects_plots, $plot_corr_figure_tempfile_string;
 
-    my @sorted_germplasm_names = sort keys %unique_accessions;
-    my @set = ('0' ..'9', 'A' .. 'F');
-    my @colors;
-    for (1..scalar(@sorted_germplasm_names)) {
-        my $str = join '' => map $set[rand @set], 1 .. 6;
-        push @colors, '#'.$str;
-    }
-    my $color_string = join '\',\'', @colors;
-
-    # my $cmd_gen_plot = 'R -e "library(data.table); library(ggplot2);
-    # mat <- fread(\''.$stats_tempfile.'\', header=TRUE, sep=\',\');
-    # mat\$time <- as.numeric(as.character(mat\$time));
-    # options(device=\'png\');
-    # par();
-    # sp <- ggplot(mat, aes(x = time, y = value)) +
-    #     geom_line(aes(color = germplasmName), size = 1) +
-    #     scale_fill_manual(values = c(\''.$color_string.'\')) +
-    #     theme_minimal();
-    # sp <- sp + guides(shape = guide_legend(override.aes = list(size = 0.5)));
-    # sp <- sp + guides(color = guide_legend(override.aes = list(size = 0.5)));
-    # sp <- sp + theme(legend.title = element_text(size = 3), legend.text = element_text(size = 3));';
-    # if (scalar(@sorted_germplasm_names) > 100) {
-    #     $cmd_gen_plot .= 'sp <- sp + theme(legend.position = \'none\');';
-    # }
-    # $cmd_gen_plot .= 'ggsave(\''.$genetic_effects_figure_tempfile.'\', sp, device=\'png\', width=12, height=6, units=\'in\');
-    # dev.off();"';
-
     my ($phenotypes_original_heatmap_tempfile_fh, $phenotypes_original_heatmap_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     open(my $F_pheno, ">", $phenotypes_original_heatmap_tempfile) || die "Can't open file ".$phenotypes_original_heatmap_tempfile;
         print $F_pheno "trait_type,row,col,value\n";
@@ -6329,6 +6304,53 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             @env_corr_res = @columns;
         }
     close($fh_corr_result);
+
+    my @sorted_germplasm_names = sort keys %unique_accessions;
+
+    my ($effects_original_line_chart_tempfile_fh, $effects_original_line_chart_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    open($F_pheno, ">", $effects_original_line_chart_tempfile) || die "Can't open file ".$effects_original_line_chart_tempfile;
+        print $F_pheno "germplasmName,time,value\n";
+        foreach my $p (@sorted_germplasm_names) {
+            foreach my $t (@sorted_trait_names) {
+                my $val = $result_blup_data_original->{$p}->{$t}->[0];
+                my @row = ($p, $trait_to_time_map{$t}, $val);
+                my $line = join ',', @row;
+                print $F_pheno "$line\n";
+            }
+        }
+    close($F_pheno);
+
+    my @set = ('0' ..'9', 'A' .. 'F');
+    my @colors;
+    for (1..scalar(@sorted_germplasm_names)) {
+        my $str = join '' => map $set[rand @set], 1 .. 6;
+        push @colors, '#'.$str;
+    }
+    my $color_string = join '\',\'', @colors;
+
+    my $genetic_effects_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
+    $genetic_effects_figure_tempfile_string .= '.png';
+    my $genetic_effects_figure_tempfile = $c->config->{basepath}."/".$genetic_effects_figure_tempfile_string;
+
+    my $cmd_gen_plot = 'R -e "library(data.table); library(ggplot2);
+    mat <- fread(\''.$effects_original_line_chart_tempfile.'\', header=TRUE, sep=\',\');
+    mat\$time <- as.numeric(as.character(mat\$time));
+    options(device=\'png\');
+    par();
+    sp <- ggplot(mat, aes(x = time, y = value)) +
+        geom_line(aes(color = germplasmName), size = 1) +
+        scale_fill_manual(values = c(\''.$color_string.'\')) +
+        theme_minimal();
+    sp <- sp + guides(shape = guide_legend(override.aes = list(size = 0.5)));
+    sp <- sp + guides(color = guide_legend(override.aes = list(size = 0.5)));
+    sp <- sp + theme(legend.title = element_text(size = 3), legend.text = element_text(size = 3));';
+    if (scalar(@sorted_germplasm_names) > 100) {
+        $cmd_gen_plot .= 'sp <- sp + theme(legend.position = \'none\');';
+    }
+    $cmd_gen_plot .= 'ggsave(\''.$genetic_effects_figure_tempfile.'\', sp, device=\'png\', width=12, height=6, units=\'in\');
+    dev.off();"';
+    my $status_gen_plot = system($cmd_gen_plot);
+    push @$spatial_effects_plots, $genetic_effects_figure_tempfile_string;
 
     $c->stash->{rest} = {
         result_blup_genetic_data_original => $result_blup_data_original,
