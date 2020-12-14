@@ -23,7 +23,23 @@ package CXGN::Phenotypes::ParseUpload::Plugin::TranscriptomicsSpreadsheetCSV;
 #       }
 #   },
 #   units => [tissue_samples1],
-#   variables => [varname1, varname2]
+#   variables => [varname1, varname2],
+#   variables_desc => {
+#       "Manes.01G000100" => {
+#           "chr" => "1",
+#           "start" => "100",
+#           "end" => "101",
+#           "gene_desc" => "gene1",
+#           "notes" => ""
+#       },
+#       "Manes.01G000200" => {
+#           "chr" => "1",
+#           "start" => "200",
+#           "end" => "201",
+#           "gene_desc" => "gene2",
+#           "notes" => ""
+#       }
+#   }
 #)
 
 use Moose;
