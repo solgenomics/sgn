@@ -1752,10 +1752,8 @@ sub get_cross_transactions :Path('/ajax/cross/transactions') Args(1) {
     if($cross_transactions){
         $cross_transaction_string = $cross_transactions->value();
         my $cross_transaction_ref = decode_json $cross_transaction_string;
-        my $transaction_info_ref = $cross_transaction_ref->{transactionID};
-        %cross_transaction_hash = %{$transaction_info_ref};
-
-        foreach my $transaction_key (keys %cross_transaction_hash) {
+        %cross_transaction_hash = %{$cross_transaction_ref};
+        foreach my $transaction_key (sort keys %cross_transaction_hash) {
             my $operator = $cross_transaction_hash{$transaction_key}{'Operator'};
             my $timestamp = $cross_transaction_hash{$transaction_key}{'Timestamp'};
             my $number_of_flowers = $cross_transaction_hash{$transaction_key}{'Number of Flowers'};
