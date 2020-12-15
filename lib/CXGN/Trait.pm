@@ -5,6 +5,7 @@ use Moose;
 use Data::Dumper;
 use Try::Tiny;
 use CXGN::BrAPI::v2::ExternalReferences;
+use CXGN::BrAPI::v2::Methods;
 
 ## to do: add concept of trait short name; provide alternate constructors for term, shortname, and synonyms etc.
 
@@ -106,6 +107,21 @@ has 'db_id'   => (
 			my $db_id =  $rs->first()->get_column("db_id");
 			#print STDERR "DBID = $db_id\n";
 			return $db_id;
+		}
+		return "";
+	}
+);
+
+has 'dbxref_id' => (
+	isa => 'Int',
+	is => 'ro',
+	lazy => 1,
+	default => sub {
+		my $self = shift;
+		my $rs = $self->cvterm->search_related("dbxref");
+		if ($rs->count() == 1) {
+			my $dbxref_id =  $rs->first()->get_column("dbxref_id");
+			return $dbxref_id;
 		}
 		return "";
 	}
@@ -257,6 +273,11 @@ has 'external_references' => (
 	is  => 'rw'
 );
 
+has 'method' => (
+	isa => 'Maybe[HashRef[Any]]',
+	is  => 'rw'
+);
+
 
 sub BUILD { 
     #print STDERR "BUILDING...\n";
@@ -273,6 +294,7 @@ sub BUILD {
 		$self->ontology_id($self->ontology_id);
 		$self->synonyms($self->synonyms());
 		$self->external_references($self->external_references());
+		$self->method($self->method());
     }
 
     #my $cvterm = $self->bcs_schema()->resultset("Cv::Cvterm")->find( { cvterm_id => $self->cvterm_id() });
@@ -293,13 +315,14 @@ sub store {
 	# new variable
     my $name = _trim($self->name());
 	my $description = $self->definition();
-	my $ontology_id = $self->ontology_id();
+	my $ontology_id = $self->ontology_id(); # passed in value not used currently, uses config
 	my $synonyms = $self->synonyms();
 
 	# get cv_id from sgn_local.conf
 	my $context = SGN::Context->new;
 	my $cv_name = $context->get_conf('trait_ontology_cv_name');
 	my $cvterm_name = $context->get_conf('trait_ontology_cvterm_name');
+	my $ontology_name = $context->get_conf('trait_ontology_db_name');
 
 	# get cv_id for cv_name
 	my $cv = $schema->resultset("Cv::Cv")->find(
@@ -322,12 +345,21 @@ sub store {
 
 	my $root_id = $cvterm->get_column('cvterm_id');
 
+
+
 	# check to see if specified ontology exists
-	my $db = $schema->resultset("General::Db")->find($ontology_id);
+	my $db = $schema->resultset("General::Db")->find(
+		{
+			name => $ontology_name
+		},
+		{ key => 'db_c1' }
+	);
 
 	if (!defined($db)) {
 		return {error => "Ontology id does not exist"}
 	}
+
+	$ontology_id = $db->get_column('db_id');
 
 	# check to see if cvterm name already exists and don't attempt if so
 	my $cvterm_exists = $schema->resultset("Cv::Cvterm")->find(
@@ -404,9 +436,19 @@ sub store {
 		# TODO: save scale properties
 
 		# TODO: save method properties
+		my $m = CXGN::BrAPI::v2::Methods->new({
+			bcs_schema => $self->bcs_schema,
+			method => $self->method,
+			cvterm_id => $new_term->get_column('cvterm_id')
+		});
+
+		$m->store();
+
+		if ($m->{'error'}) {
+			return {error => $m->{'error'}};
+		}
 
 		# save external references
-		print Dumper($self->external_references());
 		my $references = CXGN::BrAPI::v2::ExternalReferences->new({
 			bcs_schema => $self->bcs_schema,
 			external_references => $self->external_references,
