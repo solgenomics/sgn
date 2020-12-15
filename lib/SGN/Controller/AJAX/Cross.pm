@@ -1619,45 +1619,56 @@ sub upload_intercross_file_POST : Args(0) {
         my $crossing_experiment_rs = $schema->resultset('Project::Project')->find({name => $crossing_experiment_name});
         my $crossing_experiment_id = $crossing_experiment_rs->project_id();
 
-        my $crosses = CXGN::Cross->new({schema => $schema, trial_id => $crossing_experiment_id});
-        my $identifiers = $crosses->get_cross_identifiers_in_crossing_experiment();
-        my %existing_identifier_hash = %{$identifiers};
-        my @existing_identifier_list = keys %existing_identifier_hash;
-
         my $crosses_ref = $intercross_data{'crosses'};
         my %crosses_hash = %{$crosses_ref};
         my @intercross_identifier_list = keys %crosses_hash;
-        my @new_cross_identifiers;
 
-        foreach my $intercross_identifier(@intercross_identifier_list) {
-            if ($intercross_identifier ~~ none (@existing_identifier_list)) {
-                push @new_cross_identifiers, $intercross_identifier;
+        my $crosses = CXGN::Cross->new({schema => $schema, trial_id => $crossing_experiment_id});
+        my $identifiers = $crosses->get_cross_identifiers_in_crossing_experiment();
+
+        my @new_cross_identifiers;
+        my %existing_identifier_hash;
+        if (defined $identifiers) {
+            %existing_identifier_hash = %{$identifiers};
+            my @existing_identifier_list = keys %existing_identifier_hash;
+
+            foreach my $intercross_identifier(@intercross_identifier_list) {
+                if ($intercross_identifier ~~ none (@existing_identifier_list)) {
+                    push @new_cross_identifiers, $intercross_identifier;
+                }
             }
+        } else {
+            @new_cross_identifiers = @intercross_identifier_list;
         }
 
-        my $cross_validator = CXGN::List::Validate->new();
-        my @new_crosses = @{$cross_validator->validate($schema,'crosses',\@cross_id_list)->{'missing'}};
-#        print STDERR "NEW CROSSES =".Dumper(\@new_crosses)."\n";
-#        print STDERR "CROSSES HASH =".Dumper(\%crosses_hash)."\n";
-
-        if (scalar(@new_crosses) > 0) {
-            my @crosses;
-
+        my @crosses;
+        if (scalar(@new_cross_identifiers) > 0) {
             my $accession_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
             my $plot_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
             my $plant_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
             my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
             my $plant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
 
-            foreach my $new_cross_id (@new_crosses) {
-                my $intercross_female_parent = $crosses_hash{$new_cross_id}{'intercross_female_parent'};
-                my $intercross_male_parent = $crosses_hash{$new_cross_id}{'intercross_male_parent'};
-                my $cross_type = $crosses_hash{$new_cross_id}{'cross_type'};
+            my $increment_cross_unique_id;
+
+            if (defined $identifiers) {
+                my @existing_cross_unique_ids = values %existing_identifier_hash;
+                my @sorted_existing_cross_unique_ids = natsort @existing_cross_unique_ids;
+                $increment_cross_unique_id = $sorted_existing_cross_unique_ids[-1];
+            } else {
+                $increment_cross_unique_id = $crossing_experiment_name.'_'.'00001';
+            }
+
+            foreach my $new_identifier (@new_cross_identifiers) {
+                $increment_cross_unique_id =~ s/(\d+)$/$1 + 1/e;
+                my $intercross_female_parent = $crosses_hash{$new_identifier}{'intercross_female_parent'};
+                my $intercross_male_parent = $crosses_hash{$new_identifier}{'intercross_male_parent'};
+                my $cross_type = $crosses_hash{$new_identifier}{'cross_type'};
                 if ($cross_type eq 'BIPARENTAL') {
                     $cross_type = 'biparental';
                 }
 
-                my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name => $new_cross_id, cross_type =>$cross_type);
+                my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name => $increment_cross_unique_id, cross_type =>$cross_type);
 
                 my $intercross_female_stock_id = $schema->resultset("Stock::Stock")->find({uniquename => $intercross_female_parent})->stock_id();
                 my $intercross_male_stock_id = $schema->resultset("Stock::Stock")->find({uniquename => $intercross_male_parent})->stock_id();
@@ -1716,7 +1727,7 @@ sub upload_intercross_file_POST : Args(0) {
                 crossing_trial_id => $crossing_experiment_id,
                 crosses => \@crosses,
                 owner_name => $user_name
-        	  });
+            });
 
             if (!$cross_add->validate_crosses()){
                 $c->stash->{rest} = {error_string => "Error validating crosses",};
