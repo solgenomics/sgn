@@ -6287,8 +6287,10 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $status_spatialenvsim_plot = system($cmd_spatialenvsim_plot);
     push @$spatial_effects_plots, $env_effects_sim_figure_tempfile_string;
 
-    @sorted_trait_names = sort keys %rr_unique_traits;
-    @sorted_residual_trait_names = sort keys %rr_residual_unique_traits;
+    if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+        @sorted_trait_names = sort keys %rr_unique_traits;
+        @sorted_residual_trait_names = sort keys %rr_residual_unique_traits;
+    }
 
     my @env_corr_res;
     open(my $fh_corr_result, '<', $sim_effects_corr_results)
