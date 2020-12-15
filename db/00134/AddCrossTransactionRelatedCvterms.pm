@@ -3,17 +3,17 @@
 
 =head1 NAME
 
- AddCrossTransactionJsonCvterm
+ AddCrossTransactionRelatedCvterms
 
 =head1 SYNOPSIS
 
-mx-run AddCrossTransactionJsonCvterm [options] -H hostname -D dbname -u username [-F]
+mx-run AddCrossTransactionRelatedCvterms [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
-This patch adds cross_transaction_json cvterm
+This patch adds cross_identifier and cross_transaction_json cvterms
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
@@ -30,7 +30,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddCrossTransactionJsonCvterm;
+package AddCrossTransactionRelatedCvterms;
 
 use Moose;
 use Bio::Chado::Schema;
@@ -39,7 +39,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch adds the 'cross_transaction_json' stock_property cvterm
+This patch adds the 'cross_identifier' and 'cross_transaction_json' stock_property cvterms
 
 has '+prereq' => (
 	default => sub {
@@ -61,11 +61,20 @@ sub patch {
 
     print STDERR "INSERTING CV TERMS...\n";
 
-    $schema->resultset("Cv::Cvterm")->create_with({
-        name => 'cross_transaction_json',
-        cv => 'stock_property',
-    });
+	my $terms = {
+	    'stock_property' => [
+            'cross_identifier',
+            'cross_transaction_json'],
+	};
 
+	foreach my $t (keys %$terms){
+		foreach (@{$terms->{$t}}){
+			$schema->resultset("Cv::Cvterm")->create_with({
+				name => $_,
+				cv => $t
+			});
+		}
+	}
 
     print "You're done!\n";
 }
