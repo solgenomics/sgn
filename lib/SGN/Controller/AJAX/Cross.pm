@@ -1615,9 +1615,26 @@ sub upload_intercross_file_POST : Args(0) {
 
     if ($parsed_data){
         my %intercross_data = %{$parsed_data};
+        my $crossing_experiment_name = $intercross_data{'crossing_experiment_name'};
+        my $crossing_experiment_rs = $schema->resultset('Project::Project')->find({name => $crossing_experiment_name});
+        my $crossing_experiment_id = $crossing_experiment_rs->project_id();
+
+        my $crosses = CXGN::Cross->new({schema => $schema, trial_id => $crossing_experiment_id});
+        my $identifiers = $crosses->get_cross_identifiers_in_crossing_experiment();
+        my %existing_identifier_hash = %{$identifiers};
+        my @existing_identifier_list = keys %existing_identifier_hash;
+
         my $crosses_ref = $intercross_data{'crosses'};
         my %crosses_hash = %{$crosses_ref};
-        my @cross_id_list = keys %crosses_hash;
+        my @intercross_identifier_list = keys %crosses_hash;
+        my @new_cross_identifiers;
+
+        foreach my $intercross_identifier(@intercross_identifier_list) {
+            if ($intercross_identifier ~~ none (@existing_identifier_list)) {
+                push @new_cross_identifiers, $intercross_identifier;
+            }
+        }
+
         my $cross_validator = CXGN::List::Validate->new();
         my @new_crosses = @{$cross_validator->validate($schema,'crosses',\@cross_id_list)->{'missing'}};
 #        print STDERR "NEW CROSSES =".Dumper(\@new_crosses)."\n";
@@ -1625,9 +1642,6 @@ sub upload_intercross_file_POST : Args(0) {
 
         if (scalar(@new_crosses) > 0) {
             my @crosses;
-            my $crossing_experiment_name = $intercross_data{'crossing_experiment_name'};
-            my $crossing_experiment_rs = $schema->resultset('Project::Project')->find({name => $crossing_experiment_name});
-            my $crossing_experiment_id = $crossing_experiment_rs->project_id();
 
             my $accession_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
             my $plot_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
