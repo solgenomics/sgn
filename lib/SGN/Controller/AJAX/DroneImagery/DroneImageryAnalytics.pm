@@ -2184,7 +2184,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 my $time_term_string_blup = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $time_cvterm_id, 'extended');
                 $rr_unique_traits{$time_term_string_blup}++;
 
-                $trait_to_time_map{$time_term_string_blup} = $time;
+                $trait_to_time_map{$time_term_string_blup} = $time_rescaled;
 
                 $result_blup_data_original->{$accession_name}->{$time_term_string_blup} = [$value, $timestamp, $user_name, '', ''];
             }
@@ -2256,7 +2256,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
                 my $time_term_string_pe = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $time_cvterm_id, 'extended');
 
-                $trait_to_time_map{$time_term_string_pe} = $time;
+                $trait_to_time_map{$time_term_string_pe} = $time_rescaled;
 
                 $result_blup_pe_data_original->{$plot_name}->{$time_term_string_pe} = [$value, $timestamp, $user_name, '', ''];
             }
@@ -5826,7 +5826,6 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
                 my $sim_env = $sim_data{$p}->{$t};
                 my $pheno_sim = $phenotype_data_altered_env{$p}->{$t};
-                my $effect_post;
                 my $effect_sim;
                 if ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
                     $effect_sim = $result_blup_spatial_data_altered_env->{$p}->{$t}->[0];
