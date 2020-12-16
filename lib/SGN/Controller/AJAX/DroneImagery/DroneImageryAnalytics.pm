@@ -759,6 +759,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         if ($permanent_environment_structure eq 'euclidean_rows_and_columns') {
             my $data = '';
             my %euclidean_distance_hash;
+            my $min_euc_dist = 10000000000000000000;
+            my $max_euc_dist = 0;
             foreach my $s (sort { $a <=> $b } @plot_ids_ordered) {
                 foreach my $r (sort { $a <=> $b } @plot_ids_ordered) {
                     my $s_factor = $stock_name_row_col{$plot_id_map{$s}}->{plot_id_factor};
@@ -771,6 +773,13 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         my $dist = sqrt( ($row_2 - $row_1)**2 + ($col_2 - $col_1)**2 );
                         if (defined $dist and length $dist) {
                             $euclidean_distance_hash{$s_factor}->{$r_factor} = $dist;
+
+                            if ($dist < $min_euc_dist) {
+                                $min_euc_dist = $dist;
+                            }
+                            elsif ($dist > $max_euc_dist) {
+                                $max_euc_dist = $dist;
+                            }
                         }
                         else {
                             $c->stash->{rest} = { error => "There are not rows and columns for all of the plots! Do not try to use a Euclidean distance between plots for the permanent environment structure"};
@@ -784,7 +793,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 foreach my $s (sort { $a <=> $b } keys %{$euclidean_distance_hash{$r}}) {
                     my $val = $euclidean_distance_hash{$r}->{$s};
                     if (defined $val and length $val) {
-                        $data .= "$r\t$s\t$val\n";
+                        my $val_scaled = ($val-$min_euc_dist)/($max_euc_dist-$min_euc_dist);
+                        $data .= "$r\t$s\t$val_scaled\n";
                     }
                 }
             }
