@@ -6,10 +6,12 @@ load_featureprop_json.pl - load json feature properties
 
 =head1 DESCRIPTION
 
-usage: load_featureprop_json.pl -H [hostname] -D [database] -i [infile] -t [type] -c [chunk count]
+usage: load_featureprop_json.pl -H [hostname] -D [database] -U [dbuser] -p [dbpass] -i [infile] -t [type] -c [chunk count]
 
 -H database host name (required)
 -D database name (required)
+-U database username (default: postgres)
+-p database password
 -i path to input file (required)
 -t cvterm name of featureprop type (cvterm of 'genotype_property' CV) (required)
 -c chunk count (max number of items to include in a single JSON value)
@@ -34,26 +36,28 @@ use JSON;
 
 
 # Parse CLI Arguments
-our ($opt_H, $opt_D, $opt_i, $opt_t, $opt_c);
-getopts('H:D:i:t:c:');
+our ($opt_H, $opt_D, $opt_U, $opt_p, $opt_i, $opt_t, $opt_c);
+getopts('H:D:U:p:i:t:c:');
 
 if ( !$opt_H || !$opt_D || !$opt_i || !$opt_t ) {
-    print STDERR "ERROR: You pust provide the required options: -H hostname, -D database -i infile, -t type\n";
+    print STDERR "ERROR: You pust provide the required options: -H hostname, -D database, -i infile, -t type\n";
     exit 1;
 }
 
 my $dbhost = $opt_H;
 my $dbname = $opt_D;
+my $dbuser = $opt_U ? $opt_U : "postgres";
+my $dbpass = $opt_p;
 my $infile = $opt_i;
 my $type_cvterm_name = $opt_t;
 my $chunk_size = $opt_c ? $opt_c : 10000;
 
-
 # Connect to Database
-my $dbh = CXGN::DB::InsertDBH->new({ 
-    dbhost => $opt_H,
-    dbname => $opt_D,
-    dbargs => {AutoCommit => 1, RaiseError => 1}
+my $dbh = CXGN::DB::Connection->new({ 
+    dbhost => $dbhost, 
+    dbname => $dbname,
+    dbuser => $dbuser,
+    dbpass => $dbpass 
 });
 my $schema = Bio::Chado::Schema->connect(sub { $dbh->get_actual_dbh() });
 
@@ -115,6 +119,9 @@ while ( defined(my $line = <$fh>) ) {
 # Write the last chunk
 write_chunk();
 
+# Commit the changes
+$dbh->commit;
+
 print "Wrote $total chunks\n";
 
 
@@ -142,4 +149,6 @@ sub write_chunk() {
     $chunk_count = 0;
     $total++;
 
+    # print STDERR "...Wrote Chunk #$total\n";
+    
 }
