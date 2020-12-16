@@ -1641,7 +1641,8 @@ sub upload_intercross_file_POST : Args(0) {
             @new_cross_identifiers = @intercross_identifier_list;
         }
 
-        my @crosses;
+        my @new_crosses;
+        my %new_stockprop;
         if (scalar(@new_cross_identifiers) > 0) {
             my $accession_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
             my $plot_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
@@ -1649,18 +1650,22 @@ sub upload_intercross_file_POST : Args(0) {
             my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
             my $plant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
 
-            my $increment_cross_unique_id;
+            my $generated_cross_unique_id;
 
             if (defined $identifiers) {
                 my @existing_cross_unique_ids = values %existing_identifier_hash;
                 my @sorted_existing_cross_unique_ids = natsort @existing_cross_unique_ids;
-                $increment_cross_unique_id = $sorted_existing_cross_unique_ids[-1];
+                $generated_cross_unique_id = $sorted_existing_cross_unique_ids[-1];
             } else {
-                $increment_cross_unique_id = $crossing_experiment_name.'_'.'00001';
+                $generated_cross_unique_id = $crossing_experiment_name.'_'.'00000';
             }
+            print STDERR "STARTING GENERATED CROSS UNIQUE ID =".Dumper($generated_cross_unique_id)."\n";
 
-            foreach my $new_identifier (@new_cross_identifiers) {
-                $increment_cross_unique_id =~ s/(\d+)$/$1 + 1/e;
+            foreach my $new_identifier (@new_cross_identifiers) {enerate
+                $generated_cross_unique_id =~ s/(\d+)$/$1 + 1/e;
+                print STDERR "GENERATED CROSS UNIQUE ID =".Dumper($generated_cross_unique_id)."\n";
+                $new_stockprop{$generated_cross_unique_id} = $new_identifier;
+
                 my $intercross_female_parent = $crosses_hash{$new_identifier}{'intercross_female_parent'};
                 my $intercross_male_parent = $crosses_hash{$new_identifier}{'intercross_male_parent'};
                 my $cross_type = $crosses_hash{$new_identifier}{'cross_type'};
@@ -1668,7 +1673,7 @@ sub upload_intercross_file_POST : Args(0) {
                     $cross_type = 'biparental';
                 }
 
-                my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name => $increment_cross_unique_id, cross_type =>$cross_type);
+                my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name => $generated_cross_unique_id, cross_type =>$cross_type);
 
                 my $intercross_female_stock_id = $schema->resultset("Stock::Stock")->find({uniquename => $intercross_female_parent})->stock_id();
                 my $intercross_male_stock_id = $schema->resultset("Stock::Stock")->find({uniquename => $intercross_male_parent})->stock_id();
@@ -1716,7 +1721,7 @@ sub upload_intercross_file_POST : Args(0) {
                 my $cross_combination = $female_parent_name.'/'.$male_parent_name;
                 $pedigree->set_cross_combination($cross_combination);
 
-                push @crosses, $pedigree;
+                push @new_crosses, $pedigree;
             }
 
             my $cross_add = CXGN::Pedigree::AddCrosses->new({
@@ -1725,7 +1730,7 @@ sub upload_intercross_file_POST : Args(0) {
                 metadata_schema => $metadata_schema,
                 dbh => $dbh,
                 crossing_trial_id => $crossing_experiment_id,
-                crosses => \@crosses,
+                crosses => \@new_crosses,
                 owner_name => $user_name
             });
 
@@ -1737,6 +1742,17 @@ sub upload_intercross_file_POST : Args(0) {
             if (!$cross_add->add_crosses()){
                 $c->stash->{rest} = {error_string => "Error adding crosses",};
                 return;
+            }
+        }
+
+        my $cross_identifier_cvterm  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_identifier', 'stock_property');
+        my $cross_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+
+        foreach $new_cross_id (keys %new_stockprop) {
+            my $cross_rs = $schema->resultset("Stock::Stock")->search({uniquename=> $new_cross_id, type_id => $cross_cvterm_id });
+            if ($cross_rs->count()== 1) {
+        	    my $cross_stock =  $rs->first();
+                $cross_stock->create_stockprops({$cross_identifier_cvterm->name() => $new_stockprop{$new_cross_id}});
             }
         }
 
