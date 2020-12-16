@@ -10,8 +10,15 @@ local $Data::Dumper::Indent = 0;
 
 my $mech = Test::WWW::Mechanize->new;
 
-$mech->get_ok('http://localhost:3010/breeders/download_gbs_action?format=accession_ids&ids=39973&download_format=VCF');
-my $response = $mech->content;
+$mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
+my $response = decode_json $mech->content;
+print STDERR Dumper $response;
+is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
+my $sgn_session_id = $response->{access_token};
+print STDERR $sgn_session_id."\n";
+
+$mech->get_ok('http://localhost:3010/breeders/download_gbs_action?format=accession_ids&ids=39973&download_format=VCF&sgn_session_id=$sgn_session_id');
+$response = $mech->content;
 
 $response  =~ s/^.*Synonyms/Synonyms/s;
 print STDERR Dumper $response;
@@ -522,7 +529,7 @@ my $expected_response = 'Synonyms of accessions:
 
 is_deeply($response, $expected_response, 'download single genotype VCF');
 
-$mech->get_ok('http://localhost:3010/breeders/download_gbs_action?format=accession_ids&ids=39973,39029&return_only_first_genotypeprop_for_stock=0&download_format=VCF');
+$mech->get_ok('http://localhost:3010/breeders/download_gbs_action?format=accession_ids&ids=39973,39029&return_only_first_genotypeprop_for_stock=0&download_format=VCF&sgn_session_id=$sgn_session_id');
 $response = $mech->content;
 
 $response  =~ s/^.*Synonyms/Synonyms/s;
@@ -1035,7 +1042,7 @@ $expected_response = 'Synonyms of accessions:
 
 is($response, $expected_response, "test multiple genotype download VCF");
 
-$mech->get_ok('http://localhost:3010/breeders/download_gbs_action?format=accession_ids&ids=39973,39029&return_only_first_genotypeprop_for_stock=0&download_format=DosageMatrix');
+$mech->get_ok('http://localhost:3010/breeders/download_gbs_action?format=accession_ids&ids=39973,39029&return_only_first_genotypeprop_for_stock=0&download_format=DosageMatrix&sgn_session_id=$sgn_session_id');
 $response = $mech->content;
 
 $expected_response = 'Marker	UG120181	UG120180

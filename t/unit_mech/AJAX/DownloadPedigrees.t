@@ -14,8 +14,15 @@ local $Data::Dumper::Indent = 0;
 
 my $mech = Test::WWW::Mechanize->new;
 
-$mech->get_ok("http://localhost:3010/breeders/download_pedigree_action?input_format=accession_ids&ped_format=parents_only&ids=38873,38874,38875,38876,38877");
-my $response = $mech->content;
+$mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
+my $response = decode_json $mech->content;
+print STDERR Dumper $response;
+is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
+my $sgn_session_id = $response->{access_token};
+print STDERR $sgn_session_id."\n";
+
+$mech->get_ok("http://localhost:3010/breeders/download_pedigree_action?input_format=accession_ids&ped_format=parents_only&ids=38873,38874,38875,38876,38877&sgn_session_id=$sgn_session_id");
+$response = $mech->content;
 
 my $expected_response = 'Accession	Female_Parent	Male_Parent	Cross_Type
 test5P001	test_accession4	test_accession5	
@@ -32,7 +39,7 @@ test5P005	test_accession4	test_accession5
 
 is($response, $expected_response, 'download direct parents pedigree');
 
-$mech->get_ok('http://localhost:3010/breeders/download_pedigree_action?input_format=accession_ids&ped_format=full&ids=38873,38874,38875,38876,38877');
+$mech->get_ok('http://localhost:3010/breeders/download_pedigree_action?input_format=accession_ids&ped_format=full&ids=38873,38874,38875,38876,38877&sgn_session_id=$sgn_session_id');
 $response = $mech->content;
 
 $expected_response = 'Accession	Female_Parent	Male_Parent	Cross_Type
