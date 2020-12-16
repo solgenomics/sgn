@@ -58,18 +58,23 @@ sub patch {
     $self->dbh->do(<<EOSQL);
 --do your SQL here
 
--- feature table might be missing primary key?
--- ALTER TABLE public.feature ADD PRIMARY KEY (feature_id);
-
 -- table definition
 CREATE TABLE IF NOT EXISTS public.featureprop_json (
     "feature_json_id" SERIAL PRIMARY KEY,
     "feature_id" int8 REFERENCES feature,
     "type_id" int8 REFERENCES cvterm,
+    "nd_protocol_id" int8 REFERENCES nd_protocol,
     "start_pos" int8,
     "end_pos" int8,
     "json" jsonb
 );
+
+-- add indices
+CREATE INDEX feaureprop_json_idx1 ON featureprop_json(feature_id);
+CREATE INDEX feaureprop_json_idx2 ON featureprop_json(type_id);
+CREATE INDEX feaureprop_json_idx3 ON featureprop_json(nd_protocol_id);
+CREATE INDEX feaureprop_json_idx4 ON featureprop_json(start_pos);
+CREATE INDEX feaureprop_json_idx5 ON featureprop_json(end_pos);
 
 EOSQL
 
