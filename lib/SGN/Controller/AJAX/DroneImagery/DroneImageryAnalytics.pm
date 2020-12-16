@@ -5285,7 +5285,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $env_effect_sum_altered_env_4 = 0;
     my $residual_sum_altered_env_4 = 0;
 
-    print STDERR "RUN ENV ESTIMATE ON Altered Pheno With Sim Env random_2d_normal_gradient\n";
+    print STDERR "RUN ENV ESTIMATE ON Altered Pheno With Sim Env random\n";
     if ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
         # print STDERR Dumper $statistics_cmd;
         eval {
