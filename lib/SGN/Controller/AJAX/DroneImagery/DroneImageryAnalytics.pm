@@ -431,6 +431,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         my $q_time = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
         my $h_time = $schema->storage->dbh()->prepare($q_time);
 
+        my @plot_ids_ordered;
         foreach my $obs_unit (@$data){
             my $germplasm_name = $obs_unit->{germplasm_uniquename};
             my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
@@ -440,6 +441,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             my $obsunit_stock_uniquename = $obs_unit->{observationunit_uniquename};
             my $row_number = $obs_unit->{obsunit_row_number} || '';
             my $col_number = $obs_unit->{obsunit_col_number} || '';
+            push @plot_ids_ordered, $obsunit_stock_id;
 
             if ($row_number < $min_row) {
                 $min_row = $row_number;
@@ -757,15 +759,15 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         if ($permanent_environment_structure eq 'euclidean_rows_and_columns') {
             my $data = '';
             my %euclidean_distance_hash;
-            foreach my $s (@unique_plot_names) {
-                foreach my $r (@unique_plot_names) {
-                    my $s_factor = $stock_name_row_col{$s}->{plot_id_factor};
-                    my $r_factor = $stock_name_row_col{$r}->{plot_id_factor};
+            foreach my $s (sort { $a <=> $b } @plot_ids_ordered) {
+                foreach my $r (sort { $a <=> $b } @plot_ids_ordered) {
+                    my $s_factor = $stock_name_row_col{$plot_id_map{$s}}->{plot_id_factor};
+                    my $r_factor = $stock_name_row_col{$plot_id_map{$r}}->{plot_id_factor};
                     if (!exists($euclidean_distance_hash{$s_factor}->{$r_factor}) && !exists($euclidean_distance_hash{$r_factor}->{$s_factor})) {
-                        my $row_1 = $stock_name_row_col{$s}->{row_number};
-                        my $col_1 = $stock_name_row_col{$s}->{col_number};
-                        my $row_2 = $stock_name_row_col{$r}->{row_number};
-                        my $col_2 = $stock_name_row_col{$r}->{col_number};
+                        my $row_1 = $stock_name_row_col{$plot_id_map{$s}}->{row_number};
+                        my $col_1 = $stock_name_row_col{$plot_id_map{$s}}->{col_number};
+                        my $row_2 = $stock_name_row_col{$plot_id_map{$r}}->{row_number};
+                        my $col_2 = $stock_name_row_col{$plot_id_map{$r}}->{col_number};
                         my $dist = sqrt( ($row_2 - $row_1)**2 + ($col_2 - $col_1)**2 );
                         if (defined $dist and length $dist) {
                             $euclidean_distance_hash{$s_factor}->{$r_factor} = $dist;
