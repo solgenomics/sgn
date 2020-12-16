@@ -174,8 +174,9 @@ tr.shown td.details-control {
 
 var service_traits = {
     'necrosis': {
-        "CBSDpct | CO_334:0002078" : "Cassava",
-        "Necrosis rating | CO_331:01234567": "SweetPotato",
+        "CBSDpct|CO_334:0002078" : "Cassava",
+        "Vine dry matter content computing percent|CO_331:0001014" : "Cassava",
+        "Necrosis rating|CO_331:01234567": "SweetPotato",
     },
     'largest_contour_percent': {},
     'count_contours': {},
@@ -236,9 +237,9 @@ jQuery(document).ready(function(){
                     supportedcrops.forEach(function(crop) {
                         trait_names.forEach(function(name) {
                             if (all_traits[name] == crop) {
-                                var id = name.split("|")[1];
-                                console.log("Id is "+id);
-                                options.push('<option value="'+ id +'">'+ name +'</option>');
+                                // var id = name.split("|")[1];
+                                // console.log("Id is "+id);
+                                options.push('<option value="'+ name +'">'+ name +'</option>');
                             }
                         });
                     });
@@ -250,9 +251,9 @@ jQuery(document).ready(function(){
                     console.log("error retrieving crop names: "+response);
                     // just add all traits regardless of crop
                     trait_names.forEach(function(name) {
-                        var id = name.split("|")[1];
-                        console.log("Id is "+id);
-                        options.push('<option value="'+ id +'">'+ name +'</option>');
+                        // var id = name.split("|")[1];
+                        // console.log("Id is "+id);
+                        options.push('<option value="'+ name +'">'+ name +'</option>');
 
                     });
                     jQuery('#image_analysis_trait_select').append(options);
