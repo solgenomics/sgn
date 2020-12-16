@@ -1342,7 +1342,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                                 <label class="col-sm-3 control-label">Relationship Matrix Type: </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="drone_imagery_calculate_statistics_relationship_matrix_type_select_div">
-                                        <option value="">Select One</option>
+                                        <option value="">Identity</option>
                                         <option value="htp_phenotypes">High-throughput Phenotyping Data</option>
                                         <option value="genotypes">Genotyping Data</option>
                                     </select>
@@ -4664,11 +4664,6 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#drone_imagery_calculate_statistics_select_step').click(function(){
-
-        if (jQuery('#drone_imagery_calculate_statistics_relationship_matrix_type_select_div').val() == '') {
-            alert('Select to use genotyping or high-throughput phenotype data for calculating relationship matrix!');
-            return false;
-        }
 
         manage_drone_imagery_calculate_statistics_select = jQuery('#drone_imagery_calculate_statistics_select_input').val();
 
