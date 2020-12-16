@@ -91,6 +91,14 @@ Whether the object is an analysis object. Assumes is_genotyping to be false.
 
 has 'is_analysis' => (isa => 'Bool', is => 'rw', required => 0, default => 0);
 
+=head2 set_is_sampling_trial(), get_is_sampling_trial()
+
+Whether the object is a sampling trial object. Assumes is_sampling_trial to be false.
+
+=cut
+
+has 'is_sampling_trial' => (isa => 'Bool', is => 'rw', required => 0, default => 0);
+
 =head2 set_stock_exist(), get_stock_exist()
 
 If the stocks in the design were checked and whether the check passed. Internal use only.
@@ -363,8 +371,8 @@ sub BUILD {
     $self->set_has_tissues_cvterm(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_tissue_sample_entries', 'project_property')->cvterm_id());
 
     $self->set_cross_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross', 'stock_type')->cvterm_id());
-   $self->set_family_name_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'family_name', 'stock_type')->cvterm_id());
 
+    $self->set_family_name_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'family_name', 'stock_type')->cvterm_id());
 
 }
 

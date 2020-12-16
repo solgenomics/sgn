@@ -68,12 +68,8 @@ sub validate_design {
     my %allowed_properties = map {$_ => 1} @valid_properties;
     
     my %seen_stock_names;
-    my %seen_source_names;
     my %seen_accession_names;
     foreach my $stock (keys %design){
-        if ($stock eq 'treatments'){
-            next;
-        }
         foreach my $property (keys %{$design{$stock}}){
             if (!exists($allowed_properties{$property})) {
                 $error .= "Property: $property not allowed! ";
@@ -82,40 +78,18 @@ sub validate_design {
                 my $stock_name = $design{$stock}->{$property};
                 $seen_accession_names{$stock_name}++;
             }
-            if ($property eq 'seedlot_name') {
-                my $stock_name = $design{$stock}->{$property};
-                if ($stock_name){
-                    $seen_source_names{$stock_name}++;
-                }
-            }
             if ($property eq 'plot_name') {
                 my $plot_name = $design{$stock}->{$property};
                 $seen_stock_names{$plot_name}++;
-            }
-            if ($property eq 'plant_names') {
-                my $plant_names = $design{$stock}->{$property};
-                foreach (@$plant_names) {
-                    $seen_stock_names{$_}++;
-                }
-            }
-            if ($property eq 'subplots_names') {
-                my $subplot_names = $design{$stock}->{$property};
-                foreach (@$subplot_names) {
-                    $seen_stock_names{$_}++;
-                }
             }
         }
     }
 
     my @stock_names = keys %seen_stock_names;
-    my @source_names = keys %seen_source_names;
     my @accession_names = keys %seen_accession_names;
     if(scalar(@stock_names)<1){
-        $error .= "You cannot create a trial with less than one plot.";
+        $error .= "You cannot create a trial with less than one genotyping sample.";
     }
-    #if(scalar(@source_names)<1){
-    #	$error .= "You cannot create a trial with less than one seedlot.";
-    #}
     if(scalar(@accession_names)<1){
         $error .= "You cannot create a trial with less than one accession.";
     }
@@ -131,12 +105,6 @@ sub validate_design {
     while (my $s = $stocks->next()) {
         $error .= "Name $s->uniquename already exists in the database.";
     }
-
-    # my $seedlot_validator = CXGN::List::Validate->new();
-    # my @seedlots_missing = @{$seedlot_validator->validate($chado_schema,'seedlots',\@source_names)->{'missing'}};
-    # if (scalar(@seedlots_missing) > 0) {
-    #     $error .=  "The following seedlots are not in the database as uniquenames or synonyms: ".join(',',@seedlots_missing);
-    # }
 
     my @source_stock_types = ($accession_type_id, $plot_type_id, $plant_type_id, $tissue_type_id);
 

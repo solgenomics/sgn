@@ -19,6 +19,7 @@ experiment_type	grafting_experiment				00079
 experiment_type	analysis_experiment	For saving results in analysis trials	06/04/2020	lam87nm529	00119
 experiment_type	analysis_model_experiment	For saving results in analysis models	06/04/2020	lam87nm529	00125
 experiment_type	drone_run_experiment	For saving drone run experiment	07/20/2020	nm529	00126
+experiment_type	sampling_layout	For saving sampling trials	11/25/2020	nm529	00132
 genotype_property	igd number
 genotype_property	infinium array					sgn database
 genotype_property	snp genotyping
@@ -155,6 +156,8 @@ project_property	drone_run_raw_images_saved_gps_pixel_positions	When interactive
 project_property	project_sp_person_id	For saving results in analysis trials	06/04/2020	lam87nm529	00119
 project_property	analysis_metadata_json	For saving results in analysis trials	06/04/2020	lam87nm529	00119
 project_property    product_profile_json    00131
+project_property	sampling_facility	For saving the sampling facility of a sampling trial	11/25/2020	nm529	00132
+project_property	sampling_trial_sample_type	For saving the sample type of a sampling trial	11/25/2020	nm529	00132
 project_relationship	breeding_program_trial_relationship				00051
 project_relationship	trial_treatment_relationship				00081
 project_relationship	field_trial_from_field_trial	For linking field trials preceding other field trials	4/6/18	nm529	00093
@@ -162,6 +165,7 @@ project_relationship	genotyping_trial_from_field_trial	For linking genotyping pl
 project_relationship	crossing_trial_from_field_trial	For linking crossing trials to the source field trials 	4/6/18	nm529	00093
 project_relationship	drone_run_on_field_trial	For linking drone image runs to field trials 	9/18/18	nm529	00103
 project_relationship	drone_run_band_on_drone_run	For linking drone image runs bands to drone runs 	10/5/18	nm529	00103
+project_relationship	sampling_trial_from_field_trial	For linking sampling trial to field trials 	11/25/20	nm529	00132
 project_type	Advanced Yield Trial
 project_type	Clonal Evaluation
 project_type	Preliminary Yield Trial
@@ -294,6 +298,7 @@ protocol_property	vcf_map_details	Information about protocol, such as marker nam
 protocol_property	vcf_map_details_markers	Genotyping protocol marker info in an object format	9/17/2019	nm529	00115
 protocol_property	vcf_map_details_markers_array	Genotyping protocol marker info in an array format	9/17/2019	nm529	00115
 protocol_property	analysis_model_properties	Properties of analysis model in json	6/8/2020	nm529	00125
+protocol_property	high_dimensional_phenotype_protocol_properties	Properties of high dimensional data protocol in json	11/16/2020	nm529	00132
 protocol_type	trained_keras_cnn_model	An nd_protocol for a saved trained keras cnn model	9/30/2019	nm529	00116
 protocol_type	trained_keras_mask_r_cnn_model	An nd_protocol for a saved trained keras mask r cnn model	5/27/2020	nm529	00125
 protocol_type	sommer_grm_spatial_genetic_blups	An nd_protocol for analysis using R Sommer for multivariate genetic and spatial blups using replicate, genetic relationship matrix, and row and column positions	6/11/2020	nm529	00125
@@ -305,6 +310,9 @@ protocol_type	waves_nirs_spectral_predictions	A protocol type for NIRs spectral 
 protocol_type	uploaded_generic_analysis_model	An nd_protocol for analysis for uploaded user results	8/19/2020	nm529	00128
 protocol_type	blupf90_grm_random_regression_gdd_blups	An nd_protocol for analysis using BLUPf90 temporal random regression with legendre polynomials on growing degree days to calculate genetic and permanent environment blups using replicate, genetic relationship matrix, and growing degree days	8/27/2020	nm529	00128
 protocol_type	blupf90_grm_random_regression_dap_blups	An nd_protocol for analysis using BLUPf90 temporal random regression with legendre polynomials on days after planting to calculate genetic and permanent environment blups using replicate, genetic relationship matrix, and days after planting	8/27/2020	nm529	00128
+protocol_type	high_dimensional_phenotype_nirs_protocol	An nd_protocol for storing high dimensional phenotype NIRS data	11/16/2020	nm529	00132
+protocol_type	high_dimensional_phenotype_transcriptomics_protocol	An nd_protocol for storing high dimensional phenotype transcriptomics data	11/16/2020	nm529	00132
+protocol_type	high_dimensional_phenotype_metabolomics_protocol	An nd_protocol for storing high dimensional phenotype metabolomics data	11/16/2020	nm529	00132
 composable_cvtypes	trait_ontology		05/01/2017		00073
 composable_cvtypes	composed_trait_ontology		05/01/2017		00073
 composable_cvtypes	object_ontology		05/01/2017		00073

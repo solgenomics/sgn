@@ -146,7 +146,7 @@ if (length(formattedPhenoFile) != 0 && file.info(formattedPhenoFile)$size != 0) 
 }
 
 phenoTrait <- c()
-
+print(head(phenoData))
 if (datasetInfo == 'combined populations') {
   
    if (!is.null(formattedPhenoData)) {
@@ -184,6 +184,7 @@ if (datasetInfo == 'combined populations') {
      }
 }
 
+print(head(phenoTrait))
 meanType <- names(phenoTrait)[2]
 names(phenoTrait)  <- c('genotypes', trait)
 
@@ -318,8 +319,8 @@ aveKinship <- c()
 if (length(relationshipMatrixFile) != 0) {
   if (file.info(relationshipMatrixFile)$size > 0 ) {
       relationshipMatrix <- data.frame(fread(relationshipMatrixFile,
-                                             header = TRUE))
-
+      			 header = TRUE))
+			 
       rownames(relationshipMatrix) <- relationshipMatrix[, 1]
       relationshipMatrix[, 1]      <- NULL
       colnames(relationshipMatrix) <- rownames(relationshipMatrix)
@@ -328,11 +329,8 @@ if (length(relationshipMatrixFile) != 0) {
   } else {
     relationshipMatrix           <- A.mat(genoData)
     diag(relationshipMatrix)     <- diag(relationshipMatrix) + 1e-6
-    colnames(relationshipMatrix) <- rownames(relationshipMatrix)
-
-    relationshipMatrix <- round(data.frame(relationshipMatrix), 3)
-
-    inbreeding <- diag(data.matrix(relationshipMatrix))
+    
+    inbreeding <- diag(relationshipMatrix)
     inbreeding <- inbreeding - 1
    
     inbreeding <- inbreeding %>% replace(., . < 0, 0)
@@ -347,12 +345,17 @@ if (length(relationshipMatrixFile) != 0) {
   }
 }
 
+relationshipMatrix <- data.frame(relationshipMatrix)
+colnames(relationshipMatrix) <- rownames(relationshipMatrix)
+
+relationshipMatrix <- rownames_to_column(relationshipMatrix, var="genotypes")
+relationshipMatrix <- relationshipMatrix %>% mutate_if(is.numeric, round, 3)
+relationshipMatrix <- column_to_rownames(relationshipMatrix, var="genotypes")
+
 traitRelationshipMatrix <- relationshipMatrix[(rownames(relationshipMatrix) %in% rownames(commonObs)), ]
 traitRelationshipMatrix <- traitRelationshipMatrix[, (colnames(traitRelationshipMatrix) %in% rownames(commonObs))]
 
 traitRelationshipMatrix <- data.matrix(traitRelationshipMatrix)
-
-
 
 #relationshipMatrixFiltered <- relationshipMatrixFiltered + 1e-3
 
@@ -364,6 +367,7 @@ if (nCores > 1) {
   nCores <- 1
 }
 
+
 if (length(selectionData) == 0) {
 
   trModel  <- kin.blup(data   = phenoTrait,
@@ -374,8 +378,7 @@ if (length(selectionData) == 0) {
                       PEV    = TRUE
                      )
 
-  trGEBV <- trModel$g
-
+  trGEBV    <- trModel$g
   trGEBVPEV <- trModel$PEV
   trGEBVSE  <- sqrt(trGEBVPEV)
   trGEBVSE  <- data.frame(round(trGEBVSE, 2))

@@ -68,6 +68,7 @@ use CXGN::Trial::TrialLayoutDownload::PlantLayout;
 use CXGN::Trial::TrialLayoutDownload::SubplotLayout;
 use CXGN::Trial::TrialLayoutDownload::TissueSampleLayout;
 use CXGN::Trial::TrialLayoutDownload::GenotypingPlateLayout;
+use CXGN::Trial::TrialLayoutDownload::SamplingTrialLayout;
 
 has 'schema' => (
     is       => 'rw',
@@ -134,7 +135,7 @@ has 'design' => (
 
 subtype 'Trial',
   as 'Ref',
-    where { $_ =~ /CXGN::Trial/ || $_ =~ /CXGN::PhenotypingTrial/ || $_ =~  /CXGN::GenotypingTrial/ || $_ =~ /CXGN::Folder/ || $_ =~ /CXGN::CrossingTrial/ || $_ =~ /CXGN::ManagementFactor/},
+    where { $_ =~ /CXGN::Trial/ || $_ =~ /CXGN::PhenotypingTrial/ || $_ =~  /CXGN::GenotypingTrial/ || $_ =~ /CXGN::Folder/ || $_ =~ /CXGN::CrossingTrial/ || $_ =~ /CXGN::ManagementFactor/ || $_ =~ /CXGN::SamplingTrial/},
   message { "The string, $_, was not a valid trial object type"};
 
 
@@ -420,6 +421,9 @@ sub get_layout_output {
     }
     if ($data_level eq 'plate' ) {
         $layout_output = CXGN::Trial::TrialLayoutDownload::GenotypingPlateLayout->new($layout_build);
+    }
+    if ($data_level eq 'samplingtrial' ) {
+        $layout_output = CXGN::Trial::TrialLayoutDownload::SamplingTrialLayout->new($layout_build);
     }
 
     print STDERR "TrialLayoutDownload retrieving output ".localtime."\n";
