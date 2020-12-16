@@ -417,9 +417,9 @@ my $accession_id1 = $schema->resultset("Stock::Stock")->find({uniquename=>$acces
 my $accession_id2 = $schema->resultset("Stock::Stock")->find({uniquename=>$accession_name_2})->stock_id();
 
 my $ua = LWP::UserAgent->new;
-$response = $ua->get("http://localhost:3010/breeders/download_gbs_action/?ids=$accession_id1,$accession_id2&forbid_cache=1&protocol_id=$protocol_id&format=accession_ids&download_format=VCF&compute_from_parents=0");
+$response = $ua->get("http://localhost:3010/breeders/download_gbs_action/?ids=$accession_id1,$accession_id2&forbid_cache=1&protocol_id=$protocol_id&format=accession_ids&download_format=VCF&compute_from_parents=0&sgn_session_id=$sgn_session_id");
 $message = $response->decoded_content;
-print STDERR Dumper $message;
+# print STDERR Dumper $message;
 my @vcf_response_expected = split "\n", $vcf_response_string_expected;
 my @vcf_response = split "\n", $message;
 my $header_ts = shift @vcf_response_expected;
@@ -449,7 +449,7 @@ S1_84628	0	0
 ';
 
 $ua = LWP::UserAgent->new;
-$response = $ua->get("http://localhost:3010/breeders/download_gbs_action/?ids=$accession_id1,$accession_id2&forbid_cache=1&protocol_id=$protocol_id&format=accession_ids&download_format=DosageMatrix&compute_from_parents=0");
+$response = $ua->get("http://localhost:3010/breeders/download_gbs_action/?ids=$accession_id1,$accession_id2&forbid_cache=1&protocol_id=$protocol_id&format=accession_ids&download_format=DosageMatrix&compute_from_parents=0&sgn_session_id=$sgn_session_id");
 $message = $response->decoded_content;
 print STDERR Dumper $message;
 is($message, $dosage_matrix_string);
@@ -492,7 +492,7 @@ my $vcf_response_string_expected = '##INFO=<ID=VCFDownload, Description=\'VCFv4.
 ';
 
 my $ua = LWP::UserAgent->new;
-$response = $ua->get("http://localhost:3010/breeders/download_gbs_action/?ids=$accession_id1,$accession_id2&forbid_cache=1&protocol_id=$protocol_id&format=accession_ids&download_format=VCF&compute_from_parents=0&marker_set_list_id=$new_marker_set_list_id");
+$response = $ua->get("http://localhost:3010/breeders/download_gbs_action/?ids=$accession_id1,$accession_id2&forbid_cache=1&protocol_id=$protocol_id&format=accession_ids&download_format=VCF&compute_from_parents=0&marker_set_list_id=$new_marker_set_list_id&sgn_session_id=$sgn_session_id");
 $message = $response->decoded_content;
 print STDERR Dumper $message;
 my @vcf_response_expected = split "\n", $vcf_response_string_expected;
@@ -503,7 +503,7 @@ print STDERR Dumper \@vcf_response;
 is_deeply(\@vcf_response, \@vcf_response_expected);
 
 $ua = LWP::UserAgent->new;
-$response = $ua->get("http://localhost:3010/breeders/download_gbs_action/?ids=$accession_id1,$accession_id2&forbid_cache=1&protocol_id=$protocol_id&format=accession_ids&download_format=DosageMatrix&compute_from_parents=0&marker_set_list_id=$new_marker_set_list_id");
+$response = $ua->get("http://localhost:3010/breeders/download_gbs_action/?ids=$accession_id1,$accession_id2&forbid_cache=1&protocol_id=$protocol_id&format=accession_ids&download_format=DosageMatrix&compute_from_parents=0&marker_set_list_id=$new_marker_set_list_id&sgn_session_id=$sgn_session_id");
 $message = $response->decoded_content;
 print STDERR Dumper $message;
 is($message, $dosage_matrix_string_filtered);
@@ -588,7 +588,7 @@ my $computed_from_parents_vcf_string_marker_set_expected = '##INFO=<ID=VCFDownlo
 ';
 
 $ua = LWP::UserAgent->new;
-$response = $ua->get("http://localhost:3010/breeders/download_gbs_action/?ids=$test_accession1_id&forbid_cache=1&protocol_id=$protocol_id&format=accession_ids&download_format=VCF&compute_from_parents=true");
+$response = $ua->get("http://localhost:3010/breeders/download_gbs_action/?ids=$test_accession1_id&forbid_cache=1&protocol_id=$protocol_id&format=accession_ids&download_format=VCF&compute_from_parents=true&sgn_session_id=$sgn_session_id");
 $message = $response->decoded_content;
 print STDERR Dumper $message;
 my @vcf_response_expected = split "\n", $computed_from_parents_vcf_string_expected;
@@ -598,7 +598,7 @@ my $header_ts = shift @vcf_response;
 is_deeply(\@vcf_response, \@vcf_response_expected);
 
 $ua = LWP::UserAgent->new;
-$response = $ua->get("http://localhost:3010/breeders/download_gbs_action/?ids=$test_accession1_id&forbid_cache=1&protocol_id=$protocol_id&format=accession_ids&download_format=VCF&compute_from_parents=true&marker_set_list_id=$new_marker_set_list_id");
+$response = $ua->get("http://localhost:3010/breeders/download_gbs_action/?ids=$test_accession1_id&forbid_cache=1&protocol_id=$protocol_id&format=accession_ids&download_format=VCF&compute_from_parents=true&marker_set_list_id=$new_marker_set_list_id&sgn_session_id=$sgn_session_id");
 $message = $response->decoded_content;
 print STDERR Dumper $message;
 my @vcf_response_expected = split "\n", $computed_from_parents_vcf_string_marker_set_expected;
@@ -635,13 +635,13 @@ S1_75465	1
 ';
 
 $ua = LWP::UserAgent->new;
-$response = $ua->get("http://localhost:3010/breeders/download_gbs_action/?ids=$test_accession1_id&forbid_cache=1&protocol_id=$protocol_id&format=accession_ids&download_format=DosageMatrix&compute_from_parents=true");
+$response = $ua->get("http://localhost:3010/breeders/download_gbs_action/?ids=$test_accession1_id&forbid_cache=1&protocol_id=$protocol_id&format=accession_ids&download_format=DosageMatrix&compute_from_parents=true&sgn_session_id=$sgn_session_id");
 $message = $response->decoded_content;
 print STDERR Dumper $message;
 is($message, $computed_from_parents_dosage_matrix_string);
 
 $ua = LWP::UserAgent->new;
-$response = $ua->get("http://localhost:3010/breeders/download_gbs_action/?ids=$test_accession1_id&forbid_cache=1&protocol_id=$protocol_id&format=accession_ids&download_format=DosageMatrix&compute_from_parents=true&marker_set_list_id=$new_marker_set_list_id");
+$response = $ua->get("http://localhost:3010/breeders/download_gbs_action/?ids=$test_accession1_id&forbid_cache=1&protocol_id=$protocol_id&format=accession_ids&download_format=DosageMatrix&compute_from_parents=true&marker_set_list_id=$new_marker_set_list_id&sgn_session_id=$sgn_session_id");
 $message = $response->decoded_content;
 print STDERR Dumper $message;
 is($message, $computed_from_parents_dosage_matrix_marker_set_string);
@@ -649,7 +649,7 @@ is($message, $computed_from_parents_dosage_matrix_marker_set_string);
 ## CHECK WIZARD SEARCH GRM
 
 $ua = LWP::UserAgent->new;
-$response = $ua->get("http://localhost:3010/breeders/download_grm_action/?ids=$accession_id1,$accession_id2&protocol_id=$protocol_id&format=accession_ids&compute_from_parents=false&download_format=matrix&minor_allele_frequency=0.01&marker_filter=1&individuals_filter=1");
+$response = $ua->get("http://localhost:3010/breeders/download_grm_action/?ids=$accession_id1,$accession_id2&protocol_id=$protocol_id&format=accession_ids&compute_from_parents=false&download_format=matrix&minor_allele_frequency=0.01&marker_filter=1&individuals_filter=1&sgn_session_id=$sgn_session_id");
 $message = $response->decoded_content;
 print STDERR Dumper $message;
 my @grm1_split = split "\n", $message;
@@ -662,7 +662,7 @@ foreach (@grm1_split) {
 is_deeply(\@grm1_vals, [1.63636363636364,-1.63636363636364,-1.63636363636364,1.63636363636364]);
 
 $ua = LWP::UserAgent->new;
-$response = $ua->get("http://localhost:3010/breeders/download_grm_action/?ids=$accession_id1,$accession_id2&protocol_id=$protocol_id&format=accession_ids&compute_from_parents=false&download_format=three_column&minor_allele_frequency=0.01&marker_filter=1&individuals_filter=1");
+$response = $ua->get("http://localhost:3010/breeders/download_grm_action/?ids=$accession_id1,$accession_id2&protocol_id=$protocol_id&format=accession_ids&compute_from_parents=false&download_format=three_column&minor_allele_frequency=0.01&marker_filter=1&individuals_filter=1&sgn_session_id=$sgn_session_id");
 $message = $response->decoded_content;
 print STDERR Dumper $message;
 my @grm2_split = split "\n", $message;
@@ -674,7 +674,7 @@ foreach (@grm2_split) {
 is_deeply(\@grm2_vals, [1.63636363636364,-1.63636363636364,1.63636363636364]);
 
 $ua = LWP::UserAgent->new;
-$response = $ua->get("http://localhost:3010/breeders/download_grm_action/?ids=$test_accession1_id,$accession_id1&protocol_id=$protocol_id&format=accession_ids&compute_from_parents=true&download_format=three_column&minor_allele_frequency=0.001&marker_filter=1&individuals_filter=1");
+$response = $ua->get("http://localhost:3010/breeders/download_grm_action/?ids=$test_accession1_id,$accession_id1&protocol_id=$protocol_id&format=accession_ids&compute_from_parents=true&download_format=three_column&minor_allele_frequency=0.001&marker_filter=1&individuals_filter=1&sgn_session_id=$sgn_session_id");
 $message = $response->decoded_content;
 print STDERR Dumper $message;
 my @grm3_split = split "\n", $message;
@@ -686,7 +686,7 @@ foreach (@grm3_split) {
 is_deeply(\@grm3_vals, [0.0512820512820513,-0.0512820512820513,0.0512820512820513]);
 
 $ua = LWP::UserAgent->new;
-$response = $ua->get("http://localhost:3010/breeders/download_grm_action/?ids=$test_accession1_id,$accession_id1&protocol_id=$protocol_id&format=accession_ids&compute_from_parents=true&download_format=heatmap&minor_allele_frequency=0.01&marker_filter=1&individuals_filter=1");
+$response = $ua->get("http://localhost:3010/breeders/download_grm_action/?ids=$test_accession1_id,$accession_id1&protocol_id=$protocol_id&format=accession_ids&compute_from_parents=true&download_format=heatmap&minor_allele_frequency=0.01&marker_filter=1&individuals_filter=1&sgn_session_id=$sgn_session_id");
 $message = $response->decoded_content;
 #print STDERR Dumper $message;
 ok($message);
@@ -694,13 +694,13 @@ ok($message);
 ## CHECK WIZARD SEARCH GWAS
 
 $ua = LWP::UserAgent->new;
-$response = $ua->get("http://localhost:3010/breeders/download_gwas_action/?ids=38937,39033&trait_ids=70666,70668&protocol_id=1&format=accession_ids&compute_from_parents=false&download_format=manhattan_qq_plots&minor_allele_frequency=0.01&marker_filter=1&individuals_filter=1");
+$response = $ua->get("http://localhost:3010/breeders/download_gwas_action/?ids=38937,39033&trait_ids=70666,70668&protocol_id=1&format=accession_ids&compute_from_parents=false&download_format=manhattan_qq_plots&minor_allele_frequency=0.01&marker_filter=1&individuals_filter=1&sgn_session_id=$sgn_session_id");
 $message = $response->decoded_content;
 #print STDERR Dumper $message;
 ok($message);
 
 $ua = LWP::UserAgent->new;
-$response = $ua->get("http://localhost:3010/breeders/download_gwas_action/?ids=38937,39033&trait_ids=70666&trait_ids=70666,70668&protocol_id=1&format=accession_ids&compute_from_parents=false&download_format=results_tsv&minor_allele_frequency=0.01&marker_filter=1&individuals_filter=1");
+$response = $ua->get("http://localhost:3010/breeders/download_gwas_action/?ids=38937,39033&trait_ids=70666&trait_ids=70666,70668&protocol_id=1&format=accession_ids&compute_from_parents=false&download_format=results_tsv&minor_allele_frequency=0.01&marker_filter=1&individuals_filter=1&sgn_session_id=$sgn_session_id");
 $message = $response->decoded_content;
 #print STDERR Dumper $message;
 ok($message);
