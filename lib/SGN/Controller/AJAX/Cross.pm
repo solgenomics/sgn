@@ -1661,10 +1661,9 @@ sub upload_intercross_file_POST : Args(0) {
             }
             print STDERR "STARTING GENERATED CROSS UNIQUE ID =".Dumper($generated_cross_unique_id)."\n";
 
-            foreach my $new_identifier (@new_cross_identifiers) {enerate
+            foreach my $new_identifier (@new_cross_identifiers) {
                 $generated_cross_unique_id =~ s/(\d+)$/$1 + 1/e;
                 print STDERR "GENERATED CROSS UNIQUE ID =".Dumper($generated_cross_unique_id)."\n";
-                $new_stockprop{$generated_cross_unique_id} = $new_identifier;
 
                 my $intercross_female_parent = $crosses_hash{$new_identifier}{'intercross_female_parent'};
                 my $intercross_male_parent = $crosses_hash{$new_identifier}{'intercross_male_parent'};
@@ -1722,6 +1721,9 @@ sub upload_intercross_file_POST : Args(0) {
                 $pedigree->set_cross_combination($cross_combination);
 
                 push @new_crosses, $pedigree;
+
+                $new_stockprop{$generated_cross_unique_id} = $new_identifier;
+                $existing_identifier_hash{$new_identifier} = $generated_cross_unique_id;
             }
 
             my $cross_add = CXGN::Pedigree::AddCrosses->new({
@@ -1756,11 +1758,12 @@ sub upload_intercross_file_POST : Args(0) {
             }
         }
 
-        foreach my $cross_unique_id(keys %crosses_hash) {
-            my $cross_transaction_info = $crosses_hash{$cross_unique_id}{'activities'};
+        foreach my $cross_identifier(keys %crosses_hash) {
+            my $cross_transaction_info = $crosses_hash{$cross_identifier}{'activities'};
+            my $db_cross_unique_id = $existing_identifier_hash{$cross_identifier};
             my $cross_transaction = CXGN::Pedigree::AddCrossTransaction->new({
                 chado_schema => $schema,
-                cross_unique_id => $cross_unique_id,
+                cross_unique_id => $db_cross_unique_id,
                 transaction_info => $cross_transaction_info
             });
 
