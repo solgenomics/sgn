@@ -15,6 +15,6 @@ while (<>) {
   }
 }
 for (my $i=0; $i <= $lastcol; $i++) {
-  $outline[$i] =~ s/[\f\n\r]*$//g;
+  $outline[$i] =~ s/\s*$//g;
   print $outline[$i]."\n";
 }
