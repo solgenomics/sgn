@@ -288,13 +288,17 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
     my @results;
     my $result_blup_data;
+    my $result_blup_data_delta;
     my $result_blup_spatial_data;
     my $result_blup_pe_data;
+    my $result_blup_pe_data_delta;
     my $result_residual_data;
     my $result_fitted_data;
     my @sorted_trait_names;
+    my @sorted_trait_names_original;
     my @sorted_residual_trait_names;
     my %seen_trait_names;
+    my %trait_to_time_map;
     my @sorted_scaled_ln_times;
     my @rep_time_factors;
     my @ind_rep_factors;
@@ -314,6 +318,10 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my %trait_composing_info;
     my $time_max;
     my $time_min;
+    my $min_row = 10000000000;
+    my $max_row = 0;
+    my $min_col = 10000000000;
+    my $max_col = 0;
 
     my @legendre_coeff_exec = (
         '1 * $b',
@@ -375,20 +383,21 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         sleep(10);
     }
 
-    if ($statistics_select eq 'lmer_germplasmname_replicate' || $statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'sommer_grm_genetic_blups') {
+    my %trait_name_encoder;
+    my %trait_name_encoder_rev;
+    my $trait_name_encoded = 1;
+    my %phenotype_data;
+    my %stock_info;
+    my %stock_name_row_col;
+    my %unique_accessions;
+    my %seen_days_after_plantings;
+    my %seen_times;
+    my @data_matrix;
+    my %obsunit_row_col;
+    my %seen_plot_names;
+    my %plot_id_map;
 
-        my %trait_name_encoder;
-        my %trait_name_encoder_rev;
-        my $trait_name_encoded = 1;
-        my %phenotype_data;
-        my %stock_info;
-        my %unique_accessions;
-        my %seen_days_after_plantings;
-        my %seen_times;
-        my @data_matrix;
-        my %obsunit_row_col;
-        my %seen_plot_names;
-        my %plot_id_map;
+    if ($statistics_select eq 'lmer_germplasmname_replicate' || $statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'sommer_grm_genetic_blups') {
 
         if ($statistics_select eq 'lmer_germplasmname_replicate' || $statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_blups') {
 
@@ -405,6 +414,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             );
             my ($data, $unique_traits) = $phenotypes_search->search();
             @sorted_trait_names = sort keys %$unique_traits;
+            @sorted_trait_names_original = sort keys %$unique_traits;
 
             if (scalar(@$data) == 0) {
                 $c->stash->{rest} = { error => "There are no phenotypes for the trials and traits you have selected!"};
@@ -415,14 +425,45 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             foreach my $obs_unit (@$data){
                 my $germplasm_name = $obs_unit->{germplasm_uniquename};
                 my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
+                my $replicate_number = $obs_unit->{obsunit_rep} || '';
+                my $block_number = $obs_unit->{obsunit_block} || '';
+                my $obsunit_stock_id = $obs_unit->{observationunit_stock_id};
+                my $obsunit_stock_uniquename = $obs_unit->{observationunit_uniquename};
+                my $row_number = $obs_unit->{obsunit_row_number} || '';
+                my $col_number = $obs_unit->{obsunit_col_number} || '';
                 $unique_accessions{$germplasm_name}++;
                 $stock_info{"S".$germplasm_stock_id} = {
                     uniquename => $germplasm_name
                 };
+                $stock_name_row_col{$obsunit_stock_uniquename} = {
+                    row_number => $row_number,
+                    col_number => $col_number,
+                    obsunit_stock_id => $obsunit_stock_id,
+                    obsunit_name => $obsunit_stock_uniquename,
+                    rep => $replicate_number,
+                    block => $block_number,
+                    germplasm_stock_id => $germplasm_stock_id,
+                    germplasm_name => $germplasm_name
+                };
+
+                if ($row_number < $min_row) {
+                    $min_row = $row_number;
+                }
+                elsif ($row_number >= $max_row) {
+                    $max_row = $row_number;
+                }
+                if ($col_number < $min_col) {
+                    $min_col = $col_number;
+                }
+                elsif ($col_number >= $max_col) {
+                    $max_col = $col_number;
+                }
+
                 my $observations = $obs_unit->{observations};
                 foreach (@$observations){
-                    $phenotype_data{$obs_unit->{observationunit_uniquename}}->{$_->{trait_name}} = $_->{value};
-                    $seen_trait_names{$_->{trait_name}}++;
+                    my $trait_name = $_->{trait_name};
+                    $phenotype_data{$obsunit_stock_uniquename}->{$trait_name} = $_->{value};
+                    $seen_trait_names{$trait_name}++;
                     
                     if ($_->{associated_image_project_time_json}) {
                         my $related_time_terms_json = decode_json $_->{associated_image_project_time_json};
@@ -431,6 +472,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                         my $time_days = (split '\|', $time_days_cvterm)[0];
                         my $time_value = (split ' ', $time_days)[1];
                         $seen_days_after_plantings{$time_value}++;
+                        $trait_to_time_map{$trait_name} = $time_value;
                     }
                 }
             }
@@ -532,11 +574,41 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             foreach my $obs_unit (@$data){
                 my $germplasm_name = $obs_unit->{germplasm_uniquename};
                 my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
-                $seen_plot_names{$obs_unit->{observationunit_uniquename}}++;
+                my $replicate_number = $obs_unit->{obsunit_rep} || '';
+                my $block_number = $obs_unit->{obsunit_block} || '';
+                my $obsunit_stock_id = $obs_unit->{observationunit_stock_id};
+                my $obsunit_stock_uniquename = $obs_unit->{observationunit_uniquename};
+                my $row_number = $obs_unit->{obsunit_row_number} || '';
+                my $col_number = $obs_unit->{obsunit_col_number} || '';
+                $seen_plot_names{$obsunit_stock_uniquename}++;
                 $unique_accessions{$germplasm_name}++;
                 $stock_info{"S".$germplasm_stock_id} = {
                     uniquename => $germplasm_name
                 };
+                $stock_name_row_col{$obsunit_stock_uniquename} = {
+                    row_number => $row_number,
+                    col_number => $col_number,
+                    obsunit_stock_id => $obsunit_stock_id,
+                    obsunit_name => $obsunit_stock_uniquename,
+                    rep => $replicate_number,
+                    block => $block_number,
+                    germplasm_stock_id => $germplasm_stock_id,
+                    germplasm_name => $germplasm_name
+                };
+
+                if ($row_number < $min_row) {
+                    $min_row = $row_number;
+                }
+                elsif ($row_number >= $max_row) {
+                    $max_row = $row_number;
+                }
+                if ($col_number < $min_col) {
+                    $min_col = $col_number;
+                }
+                elsif ($col_number >= $max_col) {
+                    $max_col = $col_number;
+                }
+
                 my $observations = $obs_unit->{observations};
                 foreach (@$observations){
                     if ($_->{associated_image_project_time_json}) {
@@ -568,9 +640,11 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                             }
                             $time_term_string = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $gdd_cvterm_id, 'extended');
                         }
-                        $phenotype_data{$obs_unit->{observationunit_uniquename}}->{$time_value} = $_->{value};
-                        $seen_times{$time_value} = $_->{trait_name};
-                        $seen_trait_names{$_->{trait_name}} = $time_term_string;
+                        my $trait_name = $_->{trait_name};
+                        $phenotype_data{$obsunit_stock_uniquename}->{$time_value} = $_->{value};
+                        $seen_times{$time_value} = $trait_name;
+                        $seen_trait_names{$trait_name} = $time_term_string;
+                        $trait_to_time_map{$trait_name} = $time_value;
                     }
                 }
             }
@@ -582,6 +656,17 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             @unique_accession_names = sort keys %unique_accessions;
             @sorted_trait_names = sort {$a <=> $b} keys %seen_times;
             @unique_plot_names = sort keys %seen_plot_names;
+            @sorted_trait_names_original = sort {$a <=> $b} keys %seen_times;
+
+            my $trait_name_encoded = 1;
+            foreach my $trait_name (@sorted_trait_names) {
+                if (!exists($trait_name_encoder{$trait_name})) {
+                    my $trait_name_e = 't'.$trait_name_encoded;
+                    $trait_name_encoder{$trait_name} = $trait_name_e;
+                    $trait_name_encoder_rev{$trait_name_e} = $trait_name;
+                    $trait_name_encoded++;
+                }
+            }
 
             while ( my ($trait_name, $time_term) = each %seen_trait_names) {
                 push @{$trait_composing_info{$trait_name}}, $time_term;
@@ -688,13 +773,42 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             foreach my $obs_unit (@$data){
                 my $germplasm_name = $obs_unit->{germplasm_uniquename};
                 my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
-                my $replicate_number = $obs_unit->{obsunit_rep};
+                my $replicate_number = $obs_unit->{obsunit_rep} || '';
+                my $block_number = $obs_unit->{obsunit_block} || '';
+                my $obsunit_stock_id = $obs_unit->{observationunit_stock_id};
+                my $obsunit_stock_uniquename = $obs_unit->{observationunit_uniquename};
+                my $row_number = $obs_unit->{obsunit_row_number} || '';
+                my $col_number = $obs_unit->{obsunit_col_number} || '';
                 $unique_accessions{$germplasm_name}++;
                 $stock_info{$germplasm_stock_id} = {
                     uniquename => $germplasm_name
                 };
-                $seen_plots{$obs_unit->{observationunit_stock_id}} = $obs_unit->{observationunit_uniquename};
-                $seen_plot_names{$obs_unit->{observationunit_uniquename}}++;
+                $stock_name_row_col{$obsunit_stock_uniquename} = {
+                    row_number => $row_number,
+                    col_number => $col_number,
+                    obsunit_stock_id => $obsunit_stock_id,
+                    obsunit_name => $obsunit_stock_uniquename,
+                    rep => $replicate_number,
+                    block => $block_number,
+                    germplasm_stock_id => $germplasm_stock_id,
+                    germplasm_name => $germplasm_name
+                };
+
+                if ($row_number < $min_row) {
+                    $min_row = $row_number;
+                }
+                elsif ($row_number >= $max_row) {
+                    $max_row = $row_number;
+                }
+                if ($col_number < $min_col) {
+                    $min_col = $col_number;
+                }
+                elsif ($col_number >= $max_col) {
+                    $max_col = $col_number;
+                }
+
+                $seen_plots{$obsunit_stock_id} = $obsunit_stock_uniquename;
+                $seen_plot_names{$obsunit_stock_uniquename}++;
                 my $observations = $obs_unit->{observations};
                 foreach (@$observations){
                     if ($_->{associated_image_project_time_json}) {
@@ -725,9 +839,11 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
                             $seen_days_after_plantings{$time}++;
                         }
-                        $phenotype_data{$obs_unit->{observationunit_uniquename}}->{$time} = $_->{value};
-                        $seen_times{$time} = $_->{trait_name};
-                        $seen_trait_names{$_->{trait_name}} = $time_term_string;
+                        my $trait_name = $_->{trait_name};
+                        $phenotype_data{$obsunit_stock_uniquename}->{$time} = $_->{value};
+                        $seen_times{$time} = $trait_name;
+                        $seen_trait_names{$trait_name} = $time_term_string;
+                        $trait_to_time_map{$trait_name} = $time;
                     }
                 }
             }
@@ -739,7 +855,18 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             @unique_accession_names = sort keys %unique_accessions;
             @sorted_trait_names = sort {$a <=> $b} keys %seen_times;
             @unique_plot_names = sort keys %seen_plot_names;
+            @sorted_trait_names_original = sort {$a <=> $b} keys %seen_times;
             # print STDERR Dumper \@sorted_trait_names;
+
+            my $trait_name_encoded = 1;
+            foreach my $trait_name (@sorted_trait_names) {
+                if (!exists($trait_name_encoder{$trait_name})) {
+                    my $trait_name_e = 't'.$trait_name_encoded;
+                    $trait_name_encoder{$trait_name} = $trait_name_e;
+                    $trait_name_encoder_rev{$trait_name_e} = $trait_name;
+                    $trait_name_encoded++;
+                }
+            }
 
             while ( my ($trait_name, $time_term) = each %seen_trait_names) {
                 push @{$trait_composing_info{$trait_name}}, $time_term;
@@ -2898,7 +3025,22 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 }
             }
             close($Fgc);
-            print STDERR Dumper $result_blup_data;
+
+            while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients) {
+                foreach my $time_term (@sorted_trait_names) {
+                    $time = ($time_term - $time_min)/($time_max - $time_min);
+                    my $value = 0;
+                    my $coeff_counter = 0;
+                    foreach my $b (@$coeffs) {
+                        my $eval_string = $legendre_coeff_exec[$coeff_counter];
+                        # print STDERR Dumper [$eval_string, $b, $time];
+                        $value += eval $eval_string;
+                        $coeff_counter++;
+                    }
+
+                    $result_blup_data_delta->{$accession_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
+                }
+            }
 
             open(my $Fpc, ">", $coeff_pe_tempfile) || die "Can't open file ".$coeff_pe_tempfile;
             print STDERR "OPENED $coeff_pe_tempfile\n";
@@ -2945,7 +3087,22 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 }
             }
             close($Fpc);
-            print STDERR Dumper $result_blup_pe_data;
+
+            while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients) {
+                foreach my $time_term (@sorted_trait_names) {
+                    my $time = ($time_term - $time_min)/($time_max - $time_min);
+                    my $value = 0;
+                    my $coeff_counter = 0;
+                    foreach my $b (@$coeffs) {
+                        my $eval_string = $legendre_coeff_exec[$coeff_counter];
+                        # print STDERR Dumper [$eval_string, $b, $time];
+                        $value += eval $eval_string;
+                        $coeff_counter++;
+                    }
+
+                    $result_blup_pe_data_delta->{$plot_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
+                }
+            }
 
             # print STDERR Dumper \%fixed_effects;
             # print STDERR Dumper $result_blup_data;
@@ -3163,6 +3320,132 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         return;
     }
 
+    my $genetic_effects_figure_tempfile_string;
+    if ($statistics_select eq 'sommer_grm_genetic_blups' || $statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+        my ($effects_original_line_chart_tempfile_fh, $effects_original_line_chart_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+        open(my $F_pheno, ">", $effects_original_line_chart_tempfile) || die "Can't open file ".$effects_original_line_chart_tempfile;
+            print $F_pheno "germplasmName,time,value\n";
+            foreach my $p (@unique_accession_names) {
+                foreach my $t (@sorted_trait_names_original) {
+                    my @row;
+                    if ($statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+                        my $val = $result_blup_data_delta->{$p}->{$t}->[0];
+                        @row = ($p, $t, $val);
+                    }
+                    elsif ($statistics_select eq 'sommer_grm_genetic_blups' || $statistics_select eq 'sommer_grm_spatial_genetic_blups') {
+                        my $val = $result_blup_data->{$p}->{$t}->[0];
+                        @row = ($p, $trait_to_time_map{$t}, $val);
+                    }
+                    my $line = join ',', @row;
+                    print $F_pheno "$line\n";
+                }
+            }
+        close($F_pheno);
+
+        my @set = ('0' ..'9', 'A' .. 'F');
+        my @colors;
+        for (1..scalar(@unique_accession_names)) {
+            my $str = join '' => map $set[rand @set], 1 .. 6;
+            push @colors, '#'.$str;
+        }
+        my $color_string = join '\',\'', @colors;
+
+        $genetic_effects_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
+        $genetic_effects_figure_tempfile_string .= '.png';
+        my $genetic_effects_figure_tempfile = $c->config->{basepath}."/".$genetic_effects_figure_tempfile_string;
+
+        my $cmd_gen_plot = 'R -e "library(data.table); library(ggplot2);
+        mat <- fread(\''.$effects_original_line_chart_tempfile.'\', header=TRUE, sep=\',\');
+        mat\$time <- as.numeric(as.character(mat\$time));
+        options(device=\'png\');
+        par();
+        sp <- ggplot(mat, aes(x = time, y = value)) +
+            geom_line(aes(color = germplasmName), size = 1) +
+            scale_fill_manual(values = c(\''.$color_string.'\')) +
+            theme_minimal();
+        sp <- sp + guides(shape = guide_legend(override.aes = list(size = 0.5)));
+        sp <- sp + guides(color = guide_legend(override.aes = list(size = 0.5)));
+        sp <- sp + theme(legend.title = element_text(size = 3), legend.text = element_text(size = 3));';
+        if (scalar(@unique_accession_names) > 100) {
+            $cmd_gen_plot .= 'sp <- sp + theme(legend.position = \'none\');';
+        }
+        $cmd_gen_plot .= 'ggsave(\''.$genetic_effects_figure_tempfile.'\', sp, device=\'png\', width=12, height=6, units=\'in\');
+        dev.off();"';
+        my $status_gen_plot = system($cmd_gen_plot);
+    }
+
+    my $env_effects_figure_tempfile_string;
+    if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+        my ($phenotypes_original_heatmap_tempfile_fh, $phenotypes_original_heatmap_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+        open(my $F_pheno, ">", $phenotypes_original_heatmap_tempfile) || die "Can't open file ".$phenotypes_original_heatmap_tempfile;
+            print $F_pheno "trait_type,row,col,value\n";
+            foreach my $p (@unique_plot_names) {
+                foreach my $t (@sorted_trait_names_original) {
+                    if ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
+                        my @row = ("phenotype_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $phenotype_data{$p}->{$t});
+                        my $line = join ',', @row;
+                        print $F_pheno "$line\n";
+                    }
+                    elsif ($statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+                        my @row = ("phenotype_dap".$t, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $phenotype_data{$p}->{$t});
+                        my $line = join ',', @row;
+                        print $F_pheno "$line\n";
+                    }
+                }
+            }
+        close($F_pheno);
+
+        my ($effects_heatmap_tempfile_fh, $effects_heatmap_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+        open(my $F_eff, ">", $effects_heatmap_tempfile) || die "Can't open file ".$effects_heatmap_tempfile;
+            print $F_eff "trait_type,row,col,value\n";
+            foreach my $p (@unique_plot_names) {
+                foreach my $t (@sorted_trait_names_original) {
+                    if ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
+                        my @row = ("effect_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $result_blup_spatial_data->{$p}->{$t}->[0]);
+                        my $line = join ',', @row;
+                        print $F_eff "$line\n";
+                    }
+                    elsif ($statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
+                        my @row = ("effect_".$t, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $result_blup_pe_data_delta->{$p}->{$t}->[0]);
+                        my $line = join ',', @row;
+                        print $F_eff "$line\n";
+                    }
+                }
+            }
+        close($F_eff);
+
+        $env_effects_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
+        $env_effects_figure_tempfile_string .= '.png';
+        my $env_effects_figure_tempfile = $c->config->{basepath}."/".$env_effects_figure_tempfile_string;
+
+        my $output_plot_row = 'row';
+        my $output_plot_col = 'col';
+        if ($max_col > $max_row) {
+            $output_plot_row = 'col';
+            $output_plot_col = 'row';
+        }
+
+        my $cmd_spatialfirst_plot = 'R -e "library(data.table); library(ggplot2); library(dplyr); library(viridis); library(GGally); library(gridExtra);
+        mat_pheno <- fread(\''.$phenotypes_original_heatmap_tempfile.'\', header=TRUE, sep=\',\');
+        mat_eff <- fread(\''.$effects_heatmap_tempfile.'\', header=TRUE, sep=\',\');
+        options(device=\'png\');
+        par();
+        gg <- ggplot(mat_pheno, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+            geom_tile() +
+            scale_fill_viridis(discrete=FALSE) +
+            coord_equal() +
+            facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+        gg_eff <- ggplot(mat_eff, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+            geom_tile() +
+            scale_fill_viridis(discrete=FALSE) +
+            coord_equal() +
+            facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+        ggsave(\''.$env_effects_figure_tempfile.'\', arrangeGrob(gg, gg_eff, nrow=2), device=\'png\', width=20, height=20, units=\'in\');
+        "';
+        # print STDERR Dumper $cmd;
+        my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
+    }
+
     $c->stash->{rest} = {
         results => \@results,
         result_blup_genetic_data => $result_blup_data,
@@ -3199,7 +3482,9 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         analysis_model_training_data_file_type => $analysis_model_training_data_file_type,
         field_trial_design => $field_trial_design,
         sum_square_residual => $model_sum_square_residual,
-        trait_composing_info => \%trait_composing_info
+        trait_composing_info => \%trait_composing_info,
+        genetic_effects_line_plot => $genetic_effects_figure_tempfile_string,
+        env_effects_heatmap_plot => $env_effects_figure_tempfile_string
     };
 }
 
@@ -9132,6 +9417,7 @@ sub _perform_phenotype_automated {
 
     my @result;
     while (my ($drone_run_band_project_id, $drone_run_band_name, $drone_run_band_project_type) = $h->fetchrow_array()) {
+        print STDERR Dumper [$drone_run_band_name, $drone_run_band_project_type];
         foreach my $phenotype_method (@$phenotype_types) {
             #my $pm = Parallel::ForkManager->new(floor(int($number_system_cores)*0.5));
             foreach my $plot_polygon_type (@{$project_observation_unit_plot_polygons_types{$drone_run_band_project_type}->{$standard_process_type}}) {
@@ -11932,7 +12218,7 @@ sub drone_imagery_delete_drone_run_GET : Args(0) {
     my $h3 = $schema->storage->dbh()->prepare($q3);
     $h3->execute();
 
-    my $q4 = "
+    my $q5 = "
         DROP TABLE IF EXISTS temp_drone_image_pheno_deletion;
         CREATE TEMP TABLE temp_drone_image_pheno_deletion AS
         (SELECT phenotype_id, nd_experiment_id, image_id
@@ -11942,8 +12228,8 @@ sub drone_imagery_delete_drone_run_GET : Args(0) {
         DELETE FROM phenotype WHERE phenotype_id IN (SELECT phenotype_id FROM temp_drone_image_pheno_deletion);
         DROP TABLE IF EXISTS temp_drone_image_pheno_deletion;
         ";
-    my $h4 = $schema->storage->dbh()->prepare($q4);
-    $h4->execute();
+    my $h5 = $schema->storage->dbh()->prepare($q5);
+    $h5->execute();
 
     $c->stash->{rest} = {success => 1};
 }

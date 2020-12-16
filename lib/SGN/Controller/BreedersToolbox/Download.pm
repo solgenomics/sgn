@@ -51,132 +51,6 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
     $c->stash->{template} = '/breeders_toolbox/download.mas';
 }
 
-#Deprecated. Look t0 SGN::Controller::BreedersToolbox::Trial->trial_download
-#sub download_trial_layout_action : Path('/breeders/trial/layout/download') Args(1) {
-#    my $self = shift;
-#    my $c = shift;
-#    my $trial_id = shift;
-#    my $format = $c->req->param("format");
-
-#    my $trial = CXGN::Trial::TrialLayout -> new({ schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id, experiment_type => 'field_layout' });
-
-#    my $design = $trial->get_design();
-
-#    $self->trial_download_log($c, $trial_id, "trial layout");
-
-#    if ($format eq "csv") {
-#       $self->download_layout_csv($c, $trial_id, $design);
-#    }
-#    else {
-#       $self->download_layout_excel($c, $trial_id, $design);
-#    }
-#}
-
-#Deprecated by deprecation of download_trial_layout_action
-#sub download_layout_csv {
-#    my $self = shift;
-#    my $c = shift;
-#    my $trial_id = shift;
-
-#    $c->tempfiles_subdir("downloads"); # make sure the dir exists
-#    my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"download/trial_layout_".$trial_id."_XXXXX");
-
-#    close($fh);
-
-#    my $file_path = $c->config->{basepath}."/".$tempfile.".csv"; # need xls extension to avoid trouble
-
-#    move($tempfile, $file_path);
-
-#    my $td = CXGN::Trial::Download->new(
-#   	{
-#   	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
-#   	    trial_id => $trial_id,
-#   	    filename => $file_path,
-#   	    format => "TrialLayoutCSV",
-#       },
-#	);
-
-#    $td->download();
-#     my $file_name = basename($file_path);
-#     $c->res->content_type('Application/csv');
-#     $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
-
-#    my $output = read_file($file_path);
-
-#    $c->res->body($output);
-#}
-
-#Deprecated by deprecation of download_trial_layout_action
-#sub download_layout_excel {
-#    my $self = shift;
-#    my $c = shift;
-#    my $trial_id = shift;
-
-#    $c->tempfiles_subdir("downloads"); # make sure the dir exists
-#    my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"downloads/trial_layout_".$trial_id."_XXXXX");
-
-#    close($fh);
-
-#    my $file_path = $c->config->{basepath}."/".$tempfile.".xls"; # need xls extension to avoid trouble
-
-#    move($tempfile, $file_path);
-
-#    my $td = CXGN::Trial::Download->new(
-#   	{
-#   	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
-#   	    trial_id => $trial_id,
-#   	    filename => $file_path,
-#   	    format => "TrialLayoutExcel",
-#   	},
-#	);
-
-#    $td->download();
-#      my $file_name = basename($file_path);
-#     $c->res->content_type('Application/xls');
-#     $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
-
-#    my $output = read_file($file_path);
-
-#    $c->res->body($output);
-
-#}
-
-
-
-#sub download_datacollector_excel {
-#    my $self = shift;
-#    my $c = shift;
-#    my $trial_id = shift;
-
-#    $c->tempfiles_subdir("downloads"); # make sure the dir exists
-#    my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"downloads/DataCollector_".$trial_id."_XXXXX");
-
-#    close($fh);
-
-#    my $file_path = $c->config->{basepath}."/".$tempfile.".xls"; # need xls extension to avoid trouble
-
-#    move($tempfile, $file_path);
-
-#    my $td = CXGN::Trial::Download->new(
-#	{
-#	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
-#	    trial_id => $trial_id,
-#	    filename => $file_path,
-#	    format => "DataCollectorExcel",
-#	},
-#	);
-
-#    $td->download();
-#      my $file_name = basename($file_path);
-#     $c->res->content_type('Application/xls');
-#     $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
-
-#    my $output = read_file($file_path);
-
-#    $c->res->body($output);
-
-#}
-
 sub _parse_list_from_json {
     my $list_json = shift;
     #print STDERR Dumper $list_json;
@@ -197,7 +71,6 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $sgn_session_id = $c->req->param("sgn_session_id");
-
     my $user = $c->user();
     if (!$user && !$sgn_session_id) {
         $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
@@ -383,59 +256,25 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     $c->res->body($output);
 }
 
-
-#Deprecated. Look to download_phenotypes_action
-#sub download_trial_phenotype_action : Path('/breeders/trial/phenotype/download') Args(1) {
-#    my $self = shift;
-#    my $c = shift;
-#    my $trial_id = shift;
-#    my $format = $c->req->param("format");
-
-#    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-#    my $plugin = "TrialPhenotypeExcel";
-#    if ($format eq "csv") { $plugin = "TrialPhenotypeCSV"; }
-
-#    my $t = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
-
-#    $c->tempfiles_subdir("download");
-#    my $trial_name = $t->get_name();
-#    $trial_name =~ s/ /\_/g;
-#    my $location = $t->get_location()->[1];
-#    $location =~ s/ /\_/g;
-#    my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"download/trial_".$trial_name."_phenotypes_".$location."_".$trial_id."_XXXXX");
-
-#    close($fh);
-#    my $file_path = $c->config->{basepath}."/".$tempfile.".".$format;
-#    move($tempfile, $file_path);
-
-
-#    my $td = CXGN::Trial::Download->new( {
-#	bcs_schema => $schema,
-#	trial_id => $trial_id,
-#	format => $plugin,
-#        filename => $file_path,
-#	user_id => $c->user->get_object()->get_sp_person_id(),
-#	trial_download_logfile => $c->config->{trial_download_logfile},
-#    }
-#    );
-
-#    $td->download();
-
-#	     my $file_name = basename($file_path);
-
-#     $c->res->content_type('Application/'.$format);
-#     $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
-
-#    my $output = read_file($file_path);
-
-#    $c->res->body($output);
-#}
-
-
 #used from manage download page for downloading phenotypes.
 sub download_action : Path('/breeders/download_action') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+
+    my $sgn_session_id = $c->req->param("sgn_session_id");
+    my $user = $c->user();
+    if (!$user && !$sgn_session_id) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    } elsif (!$user && $sgn_session_id) {
+        my $login = CXGN::Login->new($schema->storage->dbh);
+        my $logged_in = $login->query_from_cookie($sgn_session_id);
+        if (!$logged_in){
+            $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+            return;
+        }
+    }
 
     my $accession_list_id = $c->req->param("accession_list_list_select");
     my $trait_list_id     = $c->req->param("trait_list_list_select");
@@ -487,7 +326,6 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my %unique_hash = %$unique_list;
     my $unique_accessions = $unique_hash{transform};
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $t = CXGN::List::Transform->new();
 
     my $acc_t = $t->can_transform("accessions", "accession_ids");
@@ -621,6 +459,21 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+
+    my $sgn_session_id = $c->req->param("sgn_session_id");
+    my $user = $c->user();
+    if (!$user && !$sgn_session_id) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    } elsif (!$user && $sgn_session_id) {
+        my $login = CXGN::Login->new($schema->storage->dbh);
+        my $logged_in = $login->query_from_cookie($sgn_session_id);
+        if (!$logged_in){
+            $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+            return;
+        }
+    }
+
     my $input_format = $c->req->param("input_format") || 'list_id';
     my @accession_ids = [];
     if ($input_format eq 'accession_ids') {       #use accession ids supplied directly
@@ -683,8 +536,23 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
 #Used from wizard page and manage download page for downloading gbs from accessions
 sub download_gbs_action : Path('/breeders/download_gbs_action') {
     my ($self, $c) = @_;
-    # print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+
+    my $sgn_session_id = $c->req->param("sgn_session_id");
+    my $user = $c->user();
+    if (!$user && !$sgn_session_id) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    } elsif (!$user && $sgn_session_id) {
+        my $login = CXGN::Login->new($schema->storage->dbh);
+        my $logged_in = $login->query_from_cookie($sgn_session_id);
+        if (!$logged_in){
+            $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+            return;
+        }
+    }
+
+    # print STDERR Dumper $c->req->params();
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $format = $c->req->param("format") || "list_id";
     my $download_format = $c->req->param("download_format") || 'VCF';
@@ -797,6 +665,21 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
     my ($self, $c) = @_;
     # print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+
+    my $sgn_session_id = $c->req->param("sgn_session_id");
+    my $user = $c->user();
+    if (!$user && !$sgn_session_id) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    } elsif (!$user && $sgn_session_id) {
+        my $login = CXGN::Login->new($schema->storage->dbh);
+        my $logged_in = $login->query_from_cookie($sgn_session_id);
+        if (!$logged_in){
+            $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+            return;
+        }
+    }
+
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $download_format = $c->req->param("download_format") || 'matrix';
     my $minor_allele_frequency = $c->req->param("minor_allele_frequency") ? $c->req->param("minor_allele_frequency") + 0 : 0.05;
@@ -873,6 +756,21 @@ sub download_gwas_action : Path('/breeders/download_gwas_action') {
     my ($self, $c) = @_;
     # print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+
+    my $sgn_session_id = $c->req->param("sgn_session_id");
+    my $user = $c->user();
+    if (!$user && !$sgn_session_id) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    } elsif (!$user && $sgn_session_id) {
+        my $login = CXGN::Login->new($schema->storage->dbh);
+        my $logged_in = $login->query_from_cookie($sgn_session_id);
+        if (!$logged_in){
+            $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+            return;
+        }
+    }
+
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $minor_allele_frequency = $c->req->param("minor_allele_frequency") ? $c->req->param("minor_allele_frequency") + 0 : 0.05;
     my $download_format = $c->req->param("download_format") ? $c->req->param("download_format") : 'results_tsv';
@@ -959,6 +857,21 @@ sub download_gwas_action : Path('/breeders/download_gwas_action') {
 sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+
+    my $sgn_session_id = $c->req->param("sgn_session_id");
+    my $user = $c->user();
+    if (!$user && !$sgn_session_id) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    } elsif (!$user && $sgn_session_id) {
+        my $login = CXGN::Login->new($schema->storage->dbh);
+        my $logged_in = $login->query_from_cookie($sgn_session_id);
+        if (!$logged_in){
+            $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+            return;
+        }
+    }
 
     my $accession_list_id = $c->req->param("genotype_qc_accession_list_list_select");
     my $trial_list_id     = $c->req->param("genotype_trial_list_list_select");
@@ -974,7 +887,6 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
     my @accession_list = map { $_->[1] } @$accession_data;
     my @trial_list = map { $_->[1] } @$trial_data;
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $t = CXGN::List::Transform->new();
 
@@ -1123,88 +1035,9 @@ sub download_sequencing_facility_spreadsheet : Path( '/breeders/genotyping/sprea
 
     $td->download();
 
-
-    # my $ss = Spreadsheet::WriteExcel->new($c->config->{basepath}."/".$file_path);
-    # my $ws = $ss->add_worksheet();
-
-    # # write primary headers
-    # #
-    # $ws->write(0, 0, "Project Details");
-    # $ws->write(0, 2, "Sample Details");
-    # $ws->write(0, 12, "Organism Details");
-    # $ws->write(0, 21, "Origin Details");
-
-    # # write secondary headers
-    # #
-    # my @headers = (
-    # 	"Project Name",
-    # 	"User ID",
-    # 	"Plate Name",
-    # 	"Well",
-    # 	"Sample Name",
-    # 	"Pedigree",
-    # 	"Population",
-    # 	"Stock Number",
-    # 	"Sample DNA Concentration (ng/ul)",
-    # 	"Sample Volume (ul)",
-    # 	"Sample DNA Mass(ng)",
-    # 	"Kingdom",
-    # 	"Genus",
-    # 	"Species",
-    # 	"Common Name",
-    # 	"Subspecies",
-    # 	"Variety",
-    # 	"Seed Lot"
-    # 	);
-
-    # for(my $i=0; $i<@headers; $i++) {
-    # 	$ws->write(1, $i, $headers[$i]);
-    # }
-
-    # # replace accession names with igd_synonyms
-    # #
-    # print STDERR "Converting accession names to igd_synonyms...\n";
-    # foreach my $k (sort wellsort (keys %{$layout})) {
-    # 	my $q = "SELECT value FROM stock JOIN stockprop using(stock_id) JOIN cvterm ON (stockprop.type_id=cvterm.cvterm_id) WHERE cvterm.name='igd_synonym' AND stock.uniquename = ?";
-    # 	my $h = $c->dbc->dbh()->prepare($q);
-    # 	$h->execute($layout->{$k}->{accession_name});
-    # 	my ($igd_synonym) = $h->fetchrow_array();
-    # 	$layout->{$k}->{igd_synonym} = $igd_synonym;
-    # 	if ($layout->{$k}->{accession_name}=~/BLANK/i) {
-    # 	    $layout->{$k}->{igd_synonym} = "BLANK";
-    # 	}
-    # }
-    # # write plate info
-    # #
-    # my $line = 0;
-
-    # foreach my $k (sort wellsort (keys %{$layout})) {
-    # 	$ws->write(2 + $line, 0, "NextGen Cassava");
-    # 	my $breeding_program_data = $t->get_breeding_programs();
-    # 	my $breeding_program_name = "";
-    # 	if ($breeding_program_data->[0]) {
-    # 	    $breeding_program_name = $breeding_program_data->[0]->[1];
-    # 	}
-    # 	$ws->write(2 + $line, 0, $layout->{$k}->{genotyping_project_name});
-    # 	$ws->write(2 + $line, 1, $layout->{$k}->{genotyping_user_id});
-    # 	$ws->write(2 + $line, 2, $t->get_name());
-    # 	$ws->write(2 + $line, 3, $k);
-    # 	$ws->write(2 + $line, 4, $layout->{$k}->{igd_synonym});
-    # 	$ws->write(2 + $line, 16, "Manihot");
-    # 	$ws->write(2 + $line, 17, "esculenta");
-    # 	$ws->write(2 + $line, 20, $t->get_location());
-    # 	$line++;
-    # }
-
-    # $ss ->close();
-
-    # prepare file for download
-    #
     my $file_name = basename($file_path);
     $c->res->content_type('Application/xls');
     $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
-
-
 
     my $output = read_file($file_path, binmode=>':raw');
 

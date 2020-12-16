@@ -23,7 +23,7 @@ use CXGN::Trial::TrialLayout;
 use CXGN::Genotype::Search;
 use JSON::XS;
 use CXGN::Trial;
-
+use CXGN::Login;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -736,6 +736,21 @@ sub breeder_home :Path("/breeders/home") Args(0) {
 
 sub breeder_search : Path('/breeders/search/') :Args(0) {
     my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $sgn_session_id = $c->req->param("sgn_session_id");
+    my $user = $c->user();
+    if (!$user && !$sgn_session_id) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    } elsif (!$user && $sgn_session_id) {
+        my $login = CXGN::Login->new($schema->storage->dbh);
+        my $logged_in = $login->query_from_cookie($sgn_session_id);
+        if (!$logged_in){
+            $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+            return;
+        }
+    }
+
     $c->stash->{template} = '/breeders_toolbox/breeder_search_page.mas';
 
 }

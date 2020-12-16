@@ -4723,6 +4723,12 @@ jQuery(document).ready(function() {
                     if (response.sum_square_residual) {
                         html = html + '<h4>Sum square residual: '+response.sum_square_residual+'</h4><hr>';
                     }
+                    if (response.genetic_effects_line_plot) {
+                        html = html + '<img src="'+response.genetic_effects_line_plot+'"><hr>';
+                    }
+                    if (response.env_effects_heatmap_plot) {
+                        html = html + '<img src="'+response.env_effects_heatmap_plot+'"><hr>';
+                    }
                     if (response.unique_accessions.length > 0 && response.unique_traits.length > 0 && response.result_blup_genetic_data) {
                         manage_drone_imagery_calculate_statistics_accession_names = response.unique_accessions;
                         manage_drone_imagery_calculate_statistics_trait_names = response.unique_traits;

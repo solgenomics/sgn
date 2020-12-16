@@ -148,6 +148,12 @@ our $time;
 sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     my ( $self, $c, $action) = @_;
 
+    if (!$c->user()) {
+        my $url = '/' . $c->req->path;
+        $c->res->redirect("/user/login?goto_url=$url");
+        $c->detach();
+    }
+
     $time = time();
 
     if( $c->stash->{stock_row} ) {
