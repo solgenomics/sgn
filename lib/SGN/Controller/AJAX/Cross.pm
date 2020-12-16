@@ -29,6 +29,7 @@ use File::Slurp;
 use File::Spec::Functions;
 use Digest::MD5;
 use List::MoreUtils qw /any /;
+use List::MoreUtils 'none';
 use Bio::GeneticRelationships::Pedigree;
 use Bio::GeneticRelationships::Individual;
 use CXGN::UploadFile;
@@ -54,6 +55,7 @@ use LWP::UserAgent;
 use HTML::Entities;
 use URI::Encode qw(uri_encode uri_decode);
 use Sort::Key::Natural qw(natsort);
+
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -1612,7 +1614,6 @@ sub upload_intercross_file_POST : Args(0) {
         $c->stash->{rest} = {error_string => $return_error};
         $c->detach();
     }
-
     if ($parsed_data){
         my %intercross_data = %{$parsed_data};
         my $crossing_experiment_name = $intercross_data{'crossing_experiment_name'};
@@ -1625,20 +1626,22 @@ sub upload_intercross_file_POST : Args(0) {
 
         my $crosses = CXGN::Cross->new({schema => $schema, trial_id => $crossing_experiment_id});
         my $identifiers = $crosses->get_cross_identifiers_in_crossing_experiment();
+        my %existing_identifier_hash = %{$identifiers};
 
         my @new_cross_identifiers;
-        my %existing_identifier_hash;
-        if (defined $identifiers) {
-            %existing_identifier_hash = %{$identifiers};
+        if (%existing_identifier_hash) {
             my @existing_identifier_list = keys %existing_identifier_hash;
 
             foreach my $intercross_identifier(@intercross_identifier_list) {
-                if ($intercross_identifier ~~ none (@existing_identifier_list)) {
+                if (none {$_ eq $intercross_identifier} @existing_identifier_list) {
                     push @new_cross_identifiers, $intercross_identifier;
                 }
+                print STDERR "NEW CROSS IDENTIFIER_1 =".Dumper(\@new_cross_identifiers)."\n";
             }
         } else {
             @new_cross_identifiers = @intercross_identifier_list;
+            print STDERR "NEW CROSS IDENTIFIER_2 =".Dumper(\@new_cross_identifiers)."\n";
+
         }
 
         my @new_crosses;
@@ -1652,12 +1655,12 @@ sub upload_intercross_file_POST : Args(0) {
 
             my $generated_cross_unique_id;
 
-            if (defined $identifiers) {
+            if (%existing_identifier_hash) {
                 my @existing_cross_unique_ids = values %existing_identifier_hash;
                 my @sorted_existing_cross_unique_ids = natsort @existing_cross_unique_ids;
                 $generated_cross_unique_id = $sorted_existing_cross_unique_ids[-1];
             } else {
-                $generated_cross_unique_id = $crossing_experiment_name.'_'.'00000';
+                $generated_cross_unique_id = $crossing_experiment_name.'_'.'0';
             }
             print STDERR "STARTING GENERATED CROSS UNIQUE ID =".Dumper($generated_cross_unique_id)."\n";
 
@@ -1750,10 +1753,10 @@ sub upload_intercross_file_POST : Args(0) {
         my $cross_identifier_cvterm  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_identifier', 'stock_property');
         my $cross_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
 
-        foreach $new_cross_id (keys %new_stockprop) {
+        foreach my $new_cross_id (keys %new_stockprop) {
             my $cross_rs = $schema->resultset("Stock::Stock")->search({uniquename=> $new_cross_id, type_id => $cross_cvterm_id });
             if ($cross_rs->count()== 1) {
-        	    my $cross_stock =  $rs->first();
+        	    my $cross_stock =  $cross_rs->first();
                 $cross_stock->create_stockprops({$cross_identifier_cvterm->name() => $new_stockprop{$new_cross_id}});
             }
         }
