@@ -699,34 +699,28 @@ jQuery(document).ready(function() {
                 else {
                     manage_drone_imagery_analytics_response = response;
 
-                    var html = '';
+                    var html = '<h4>Summary :</h4><ul>';
                     if (response.sum_square_residual_original) {
-                        html = html + '<h4>Sum square residual original: '+response.sum_square_residual_original+'</h4><hr>';
+                        html = html + '<li>Sum square residual original: '+response.sum_square_residual_original+'</li>';
                     }
                     if (response.sum_square_residual_altered) {
-                        html = html + '<h4>Sum square residual altered: '+response.sum_square_residual_altered+'</h4><hr>';
-                    }
-                    if (response.sum_square_residual_altered) {
-                        html = html + '<h4>Sum square residual altered with simulated env: '+response.sum_square_residual_altered_env+'</h4><hr>';
+                        html = html + '<li>Sum square residual altered: '+response.sum_square_residual_altered+'</li>';
                     }
                     if (response.genetic_effect_sum_original) {
-                        html = html + '<h4>Genetic effect sum original: '+response.genetic_effect_sum_original+'</h4><hr>';
+                        html = html + '<li>Genetic effect sum original: '+response.genetic_effect_sum_original+'</li>';
                     }
                     if (response.genetic_effect_sum_altered) {
-                        html = html + '<h4>Genetic effect sum altered: '+response.genetic_effect_sum_altered+'</h4><hr>';
-                    }
-                    if (response.genetic_effect_sum_altered_env) {
-                        html = html + '<h4>Genetic effect sum altered with simulated env: '+response.genetic_effect_sum_altered_env+'</h4><hr>';
+                        html = html + '<li>Genetic effect sum altered: '+response.genetic_effect_sum_altered+'</li>';
                     }
                     if (response.env_effect_sum_original) {
-                        html = html + '<h4>Env effect sum original: '+response.env_effect_sum_original+'</h4><hr>';
+                        html = html + '<li>Env effect sum original: '+response.env_effect_sum_original+'</li>';
                     }
                     if (response.env_effect_sum_altered) {
-                        html = html + '<h4>Env effect sum altered: '+response.env_effect_sum_altered+'</h4><hr>';
+                        html = html + '<li>Env effect sum altered: '+response.env_effect_sum_altered+'</li>';
                     }
-                    if (response.env_effect_sum_altered_env) {
-                        html = html + '<h4>Env effect sum altered with simulated env: '+response.env_effect_sum_altered_env+'</h4><hr>';
-                    }
+                    html = html + '</ul>';
+
+                    html = html + '<h4>Heritablilty (h2):</h4><ul><li>Original: '+response.original_h2+'</li><li>Altered: '+response.altered_h2+'</li><li>Linear Sim: '+response.sim1_h2+'</li><li>Random 1D Normal: '+response.sim2_h2+'</li><li>Random 2D Normal: '+response.sim3_h2+'</li><li>Random: '+response.sim4_h2+'</li></ul>';
 
                     if (response.simulated_environment_to_effect_correlations) {
                         html = html + '<h4>Simulated Env to Effects Correlations:</h4><ul><li>Linear: '+response.simulated_environment_to_effect_correlations[0]+'</li><li>Random 1D Normal: '+response.simulated_environment_to_effect_correlations[1]+'</li><li>Random 2D Normal: '+response.simulated_environment_to_effect_correlations[2]+'</li><li>Random: '+response.simulated_environment_to_effect_correlations[3]+'</li></ul><hr>';
