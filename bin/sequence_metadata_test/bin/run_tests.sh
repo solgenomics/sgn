@@ -80,7 +80,7 @@ IFS=' ' read -r -a lengths <<< "$lengths"
 
 # CSV Tables of Results
 load_results="load,existing,chunk,load_time_total,load_time_avg"
-query_results="count,chunk,length,results,query_time_toal,query_time_avg"
+query_results="count,chunk,length,results,query_time_total,query_time_avg"
 
 
 # Write headers to output files
@@ -132,8 +132,8 @@ for chunk in "${chunks[@]}"; do
             type="$type_name"_$count
             sql="SELECT feature_json_id, feature_id, type_id, s.json->>'start' AS start, s.json->>'end' AS end, s.json->>'score' AS score
 FROM featureprop_json, jsonb_array_elements(featureprop_json.json) as s
-WHERE start_pos <= $start AND end_pos >= $end
-AND (s.json->>'start')::int >= $start AND (s.json->>'end')::int <= $end
+WHERE (s.json->>'start')::int >= $start AND (s.json->>'end')::int <= $end
+AND ((start_pos <= $start AND end_pos >= $start) OR (start_pos <= $end AND end_pos >= $end) OR (start_pos >= $start AND end_pos <= $end))
 AND feature_id = (SELECT feature_id FROM feature WHERE uniquename = '$chromosome')
 AND type_id = (SELECT cvterm_id FROM cvterm WHERE name = '$type');"
 
