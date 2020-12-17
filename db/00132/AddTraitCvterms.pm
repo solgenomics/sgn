@@ -70,8 +70,10 @@ sub patch {
                     'trait_method_name',
                     'trait_method_description',
                     'trait_method_class',
-                    'trait_method_formula'
-
+                    'trait_method_formula',
+                    'trait_decimal_places',
+                    'trait_categories_label',
+                    'trait_categories_value'
                 ]
         );
 
