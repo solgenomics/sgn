@@ -128,6 +128,7 @@ sub get_trials_by_breeding_program {
     my $drone_run_projects;
     my $drone_run_band_projects;
     my $analyses_projects;
+    my $sampling_trial_projects;
 
     my $h = $self->_get_all_trials_by_breeding_program($breeding_project_id);
     my $crossing_trial_cvterm_id = $self->get_crossing_trial_cvterm_id();
@@ -144,6 +145,7 @@ sub get_trials_by_breeding_program {
     my %projects_that_are_drone_run_projects;
     my %projects_that_are_drone_run_band_projects;
     my %projects_that_are_analyses;
+    my %projects_that_are_sampling_trials;
 
     while (my ($id, $name, $desc, $prop, $propvalue) = $h->fetchrow_array()) {
         #print STDERR "PROP: $prop, $propvalue \n";
@@ -169,6 +171,9 @@ sub get_trials_by_breeding_program {
                 if ($propvalue eq "genotyping_plate") {
                     $projects_that_are_genotyping_trials{$id} = 1;
                 }
+                if ($propvalue eq "sampling_trial") {
+                    $projects_that_are_sampling_trials{$id} = 1;
+                }
                 if ($propvalue eq "treatment") {
                     $projects_that_are_treatment_trials{$id} = 1;
                 }
@@ -188,7 +193,7 @@ sub get_trials_by_breeding_program {
     my @sorted_by_year_keys = sort { $project_year{$a} cmp $project_year{$b} } keys(%project_year);
 
     foreach my $id_key (@sorted_by_year_keys) {
-        if (!$projects_that_are_crosses{$id_key} && !$projects_that_are_genotyping_trials{$id_key} && !$projects_that_are_genotyping_trials{$id_key} && !$projects_that_are_treatment_trials{$id_key} && !$projects_that_are_genotyping_data_projects{$id_key} && !$projects_that_are_drone_run_projects{$id_key} && !$projects_that_are_drone_run_band_projects{$id_key} && !$projects_that_are_analyses{$id_key}) {
+        if (!$projects_that_are_crosses{$id_key} && !$projects_that_are_genotyping_trials{$id_key} && !$projects_that_are_genotyping_trials{$id_key} && !$projects_that_are_treatment_trials{$id_key} && !$projects_that_are_genotyping_data_projects{$id_key} && !$projects_that_are_drone_run_projects{$id_key} && !$projects_that_are_drone_run_band_projects{$id_key} && !$projects_that_are_analyses{$id_key} && !$projects_that_are_sampling_trials{$id_key}) {
             push @$field_trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
         } elsif ($projects_that_are_crosses{$id_key}) {
             push @$cross_trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
@@ -204,10 +209,12 @@ sub get_trials_by_breeding_program {
             push @$drone_run_band_projects, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
         } elsif ($projects_that_are_analyses{$id_key}) {
             push @$analyses_projects, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
+        } elsif ($projects_that_are_sampling_trials{$id_key}) {
+            push @$sampling_trial_projects, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
         }
     }
 
-    return ($field_trials, $cross_trials, $genotyping_trials, $genotyping_data_projects, $field_management_factor_projects, $drone_run_projects, $drone_run_band_projects, $analyses_projects);
+    return ($field_trials, $cross_trials, $genotyping_trials, $genotyping_data_projects, $field_management_factor_projects, $drone_run_projects, $drone_run_band_projects, $analyses_projects, $sampling_trial_projects);
 }
 
 sub get_genotyping_trials_by_breeding_program {

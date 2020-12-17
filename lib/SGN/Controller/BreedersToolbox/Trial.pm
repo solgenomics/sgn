@@ -97,6 +97,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     my $location_data = $trial->get_location();
     $c->stash->{location_id} = $location_data->[0];
     $c->stash->{location_name} = $location_data->[1];
+    $c->stash->{country_name} = $trial->get_location_country_name();
 
     my $breeding_program_data = $program_object->get_breeding_programs_by_trial($c->stash->{trial_id});
     $c->stash->{breeding_program_id} = $breeding_program_data->[0]->[0];
@@ -148,6 +149,9 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         else {
             $c->stash->{template} = '/breeders_toolbox/genotyping_trials/detail.mas';
         }
+    }
+    elsif ($design_type eq "sampling_trial"){
+        $c->stash->{template} = '/breeders_toolbox/sampling_trials/detail.mas';
     }
     elsif ($design_type eq "treatment"){
         $c->stash->{management_factor_type} = $trial->get_management_factor_type;
@@ -286,6 +290,9 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $selected_cols = $c->req->param('selected_columns') ? JSON::XS->new()->decode( $c->req->param('selected_columns') ) : {};
     if ($data_level eq 'plate'){
         $selected_cols = {'trial_name'=>1, 'acquisition_date'=>1, 'plot_name'=>1, 'plot_number'=>1, 'row_number'=>1, 'col_number'=>1, 'source_observation_unit_name'=>1, 'accession_name'=>1, 'synonyms'=>1, 'dna_person'=>1, 'notes'=>1, 'tissue_type'=>1, 'extraction'=>1, 'concentration'=>1, 'volume'=>1, 'is_blank'=>1};
+    }
+    if ($data_level eq 'samplingtrial'){
+        $selected_cols = {'trial_name'=>1, 'year'=>1, 'location'=>1, 'sampling_facility'=>1, 'sampling_trial_sample_type'=>1, 'acquisition_date'=>1, 'tissue_sample_name'=>1, 'plot_number'=>1, 'rep_number'=>1, 'source_observation_unit_name'=>1, 'accession_name'=>1, 'synonyms'=>1, 'dna_person'=>1, 'notes'=>1, 'tissue_type'=>1, 'extraction'=>1, 'concentration'=>1, 'volume'=>1 };
     }
     my $selected_trait_list_id = $c->req->param('trait_list_id');
     my @trait_list;

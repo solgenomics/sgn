@@ -42,6 +42,7 @@ use File::Path qw(make_path);
 use File::Spec::Functions qw / catfile catdir/;
 use CXGN::Cross;
 use JSON;
+use Spreadsheet::ParseExcel;
 use Tie::UrlEncoder; our(%urlencode);
 use LWP::UserAgent;
 use LWP::Simple;
@@ -65,7 +66,7 @@ sub create_cross_wishlist_POST : Args(0) {
     my $data = decode_json $c->req->param('crosses');
     my $female_trial_id = $c->req->param('female_trial_id');
     my $male_trial_id = $c->req->param('male_trial_id');
-    #print STDERR Dumper $data;
+#    print STDERR "CROSSES =".Dumper($data)."\n";
 
     my $female_trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $female_trial_id });
     my $location = $female_trial->get_location();
@@ -83,7 +84,7 @@ sub create_cross_wishlist_POST : Args(0) {
         $selected_females{$_->{female_id}}++;
         $selected_males{$_->{male_id}}++;
     }
-    #print STDERR Dumper \%selected_cross_hash;
+#    print STDERR "CROSS HASH =".Dumper(\%selected_cross_hash)."\n";
 
     my %ordered_data;
     foreach my $female_id (keys %selected_cross_hash){
@@ -94,18 +95,18 @@ sub create_cross_wishlist_POST : Args(0) {
             }
         }
     }
-    #print STDERR Dumper \%ordered_data;
+#    print STDERR "ORDERED DATA =".Dumper(\%ordered_data)."\n";
 
     my $female_trial_layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $female_trial_id, experiment_type=>'field_layout' });
     my $design_layout = $female_trial_layout->get_design();
-    #print STDERR Dumper $design_layout;
+    print STDERR Dumper $design_layout;
 
     my %block_plot_hash;
     print STDERR "NUM PLOTS:".scalar(keys %$design_layout);
     while ( my ($key,$value) = each %$design_layout){
         $block_plot_hash{$value->{block_number}}->{$value->{plot_number}} = $value;
     }
-    #print STDERR Dumper \%block_plot_hash;
+#    print STDERR "BLOCK PLOT HASH =".Dumper(\%block_plot_hash)."\n";
 
     my $cross_wishlist_plot_select_html = '<h1>Select Female <!--and Male -->Plots For Each Desired Cross Below:</h1>';
 
@@ -163,7 +164,7 @@ sub create_cross_wishlist_POST : Args(0) {
         #$cross_wishlist_plot_select_html .= '<script>jQuery(document).on("change", "#cross_wishlist_plot_select_all_male_'.$female_accession_name.'", function(){if(jQuery(this).is(":checked")){var female_accession = jQuery(this).data("female_accession_name");jQuery(\'input[name="cross_wishlist_plot_select_male_input"]\').each(function(){if(jQuery(this).data("female_accession_name")==female_accession){jQuery(this).prop("checked", true);}});}});jQuery(document).on("change", "#cross_wishlist_plot_select_all_female_'.$female_accession_name.'", function(){if(jQuery(this).is(":checked")){var female_accession = jQuery(this).data("female_accession_name");jQuery(\'input[name="cross_wishlist_plot_select_female_input"]\').each(function(){if(jQuery(this).data("female_accession_name")==female_accession){jQuery(this).prop("checked", true);}});}});</script>';
         $cross_wishlist_plot_select_html .= '<script>jQuery(document).on("change", "input[name=\"cross_wishlist_plot_select_all_female\"]", function(){var female_accession = jQuery(this).data("female_accession_name");if(jQuery(this).is(":checked")){jQuery(\'input[name="cross_wishlist_plot_select_female_input"]\').each(function(){if(jQuery(this).data("female_accession_name")==female_accession){jQuery(this).prop("checked", true);}});}else{jQuery(\'input[name="cross_wishlist_plot_select_female_input"]\').each(function(){if(jQuery(this).data("female_accession_name")==female_accession){jQuery(this).prop("checked", false);}});}});</script>';
 
-        print STDERR "NUM PLOTS SEEN: $num_seen\n";
+#        print STDERR "NUM PLOTS SEEN: $num_seen\n";
     }
 
     $c->stash->{rest}->{data} = $cross_wishlist_plot_select_html;
@@ -198,6 +199,9 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my $selected_plot_ids = decode_json $c->req->param('selected_plot_ids');
     my $test_ona_form_name = $c->config->{odk_crossing_data_test_form_name};
     my $separate_crosswishlist_by_location = $c->config->{odk_crossing_data_separate_wishlist_by_location};
+
+#    print STDERR "CROSSES =".Dumper($data)."\n";
+#    print STDERR "SELECT PLOT IDS =".Dumper($selected_plot_ids)."\n";
 
     #For test ona forms, the cross wishlists are combined irrespective of location. On non-test forms, the cross wishlists can be separated by location
     my $is_test_form;
@@ -877,6 +881,184 @@ sub list_cross_wishlists_GET : Args(0) {
     }
     #print STDERR Dumper \@files;
     $c->stash->{rest} = {"success" => 1, "files"=>\@files};
+}
+
+
+sub create_wishlist_by_uploading : Path('/ajax/cross/create_wishlist_by_uploading') : ActionClass('REST') { }
+
+sub create_wishlist_by_uploading_POST : Args(0) {
+
+    my ($self, $c) = @_;
+
+    if (!$c->user){
+        $c->stash->{rest}->{error} = "You must be logged in to actually create a cross wishlist.";
+        $c->detach();
+    }
+
+    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+
+    my $female_trial_id = $c->req->param('cross_wishlist_upload_female_trial_id');
+    my $male_trial_id = $c->req->param('cross_wishlist_upload_male_trial_id');
+
+#    print STDERR "FEMALE TRIAL ID =".Dumper($female_trial_id)."\n";
+#    print STDERR "MALE TRIAL ID =".Dumper($male_trial_id)."\n";
+
+    my $dbh = $c->dbc->dbh;
+    my $upload = $c->req->upload('wishlist_file');
+    my $upload_type = 'WishlistExcel';
+    my $parser;
+    my $parsed_data;
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $subdirectory = "wishlist_upload";
+    my $archived_filename_with_path;
+    my $md5;
+    my $validate_file;
+    my $parsed_file;
+    my $parse_errors;
+    my %parsed_data;
+    my %upload_metadata;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $user_role;
+    my $user_id;
+    my $user_name;
+    my $owner_name;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload wishlist!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload wishlist!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+
+    ## Store uploaded temporary file in arhive
+    $archived_filename_with_path = $uploader->archive();
+    $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        return;
+    }
+    unlink $upload_tempfile;
+
+    $upload_metadata{'archived_file'} = $archived_filename_with_path;
+    $upload_metadata{'archived_file_type'}="wishlist upload file";
+    $upload_metadata{'user_id'}=$user_id;
+    $upload_metadata{'date'}="$timestamp";
+    #parse uploaded file with appropriate plugin
+    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+    $parser->load_plugin($upload_type);
+    $parsed_data = $parser->parse();
+    #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
+
+    if (!$parsed_data){
+        my $return_error = '';
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+            #print STDERR Dumper $parse_errors;
+
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
+            }
+        }
+        $c->stash->{rest} = {error_string => $return_error};
+        $c->detach();
+    }
+
+    my $wishlist_ref = $parsed_data->{'wishlist'};
+    my @wishlist = @$wishlist_ref;
+#    print STDERR "WISHLIST ARRAY =".Dumper($parsed_data)."\n";
+    my %selected_cross_hash;
+    my %selected_females;
+    my %selected_males;
+    foreach (@wishlist){
+        push @{$selected_cross_hash{$_->{female_id}}->{$_->{priority}}}, $_->{male_id};
+        $selected_females{$_->{female_id}}++;
+        $selected_males{$_->{male_id}}++;
+    }
+#    print STDERR "CROSS HASH =".Dumper(\%selected_cross_hash)."\n";
+
+    my %ordered_wishlist;
+    foreach my $female_id (keys %selected_cross_hash){
+        foreach my $priority (sort keys %{$selected_cross_hash{$female_id}}){
+            my $males = $selected_cross_hash{$female_id}->{$priority};
+            foreach my $male_id (@$males){
+                push @{$ordered_wishlist{$female_id}}, $male_id;
+            }
+        }
+    }
+#    print STDERR "ORDERED WISHLIST =".Dumper(\%ordered_wishlist)."\n";
+
+    my $female_trial_layout = CXGN::Trial::TrialLayout->new({ schema => $chado_schema, trial_id => $female_trial_id, experiment_type=>'field_layout' });
+    my $design_layout = $female_trial_layout->get_design();
+#    print STDERR "LAYOUT =".Dumper($design_layout)."\n";
+
+    my @selected_plot_ids;
+    my %female_accessions_in_trial;
+    my @missing_accessions_in_trial;
+
+    foreach my $hash_ref (values %$design_layout) {
+        my %selected_plot_hash = ();
+        my %plot_info_hash = %$hash_ref;
+        my $accession_name = $plot_info_hash{'accession_name'};
+        foreach my $female_accession_name (sort keys %ordered_wishlist) {
+            if ($accession_name eq $female_accession_name) {
+                my $female_plot_id = $plot_info_hash{'plot_id'};
+                $selected_plot_hash{'female_plot_id'} = $female_plot_id;
+                $selected_plot_hash{'cross_female_accession_name'} = $female_accession_name;
+                my $males = $ordered_wishlist{$female_accession_name};
+                my $males_string = join ',', @$males;
+                $selected_plot_hash{'male_genotypes_string'} = $males_string;
+                push @selected_plot_ids, \%selected_plot_hash;
+                $female_accessions_in_trial{$female_accession_name}++;
+
+            }
+        }
+    }
+    #    print STDERR "SELECTED PLOT IDS =".Dumper(\@selected_plot_ids)."\n";
+
+    my @wishlist_female_accessions = keys %ordered_wishlist;
+    my @accessions_not_in_trial = grep {not $female_accessions_in_trial{$_}} @wishlist_female_accessions;
+#    print STDERR "ACCESSIONS NOT IN TRIAL =".Dumper(\@accessions_not_in_trial)."\n";
+
+    if (scalar(@accessions_not_in_trial) > 0){
+        my $trial_error = "The following accessions are not in the provided female trial: ".join(',',@accessions_not_in_trial);
+        $c->stash->{rest} = {error_string => $trial_error };
+        $c->detach();
+    } else {
+        $c->stash->{rest} = { selected_plot_ids => \@selected_plot_ids, cross_combinations => \@wishlist };
+    }
+
 }
 
 

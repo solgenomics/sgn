@@ -31,7 +31,7 @@ export function WizardDatasets(main_id,wizard){
           resolve(datasets.getDataset(val));
           d3.select(this).attr("disabled",null);
         })).then(dataset_data=>{
-          console.log(dataset_data);
+          // console.log(dataset_data);
           dataset_data.category_order.forEach((c,i)=>{
             var items = (dataset_data.categories[c]||[]).map(d=>d+"");
             wizard.setColumn(i,c,null,(d)=>{
@@ -39,6 +39,23 @@ export function WizardDatasets(main_id,wizard){
             })
           })
         }),1);
+    }
+  });
+
+  main.select(".wizard-dataset-delete").on("click",function(){
+    var name = main.select(".wizard-dataset-select option:checked").text();
+    var val = main.select(".wizard-dataset-select").node().value;
+    if(val!=""){
+        var dataset = datasets.getDataset(val);
+        var details = '';
+        dataset.category_order.forEach(function(cat) {
+            var contents = dataset.categories[cat];
+            details+= `\n    ${contents.length} ${cat}`;
+        })
+        if ( confirm(`Dataset ${name} contains\: ${details}\nAre you sure you would like to delete it? Deletion cannot be undone.`)) {
+            datasets.deleteDataset(val);
+            load_datasets();
+        }
     }
   });
 
@@ -84,7 +101,7 @@ export function WizardDatasets(main_id,wizard){
     resolve(datasets.getDatasets());
   })).then(datasets_data=>{
     if(datasets_data.error){
-      main.selectAll(".wizard-dataset-load, .wizard-dataset-create").attr("disabled",true);
+      main.selectAll(".wizard-dataset-load, .wizard-dataset-delete, .wizard-dataset-create").attr("disabled",true);
       main.select(".wizard-dataset-select")
         .attr("disabled",true)
         .select("option[selected]")

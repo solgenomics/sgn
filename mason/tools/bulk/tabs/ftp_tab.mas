@@ -43,6 +43,7 @@ HTML
 	  'genomes/Solanum_tuberosum' => 
 	  'Potato genome data',
 	  'genomes/Nicotiana_benthamiana' => 'Nicotiana benthamiana genome data',
+	  'genomes/Solanum_melongena_consortium' => 'Eggplant V3 genome data',
         'COSII' => 'COSII marker data'
     );
 

@@ -53,7 +53,7 @@ sub search {
 		['studies/{studyDbId}/observationunits', ['json'], ['GET'], ['1.0','1.2','1.3'] ],
 		['studies/{studyDbId}/table', ['json','csv','xls','tsv'], ['GET'], ['1.0','1.2','1.3'] ],
 		['studies/{studyDbId}/layout', ['json'], ['GET'], ['1.0','1.2'] ],
-		['studies/{studyDbId}/layouts', ['json'], ['GET','PUT'], ['1.3'] ],
+		['studies/{studyDbId}/layouts', ['json'], ['GET'], ['1.3'] ],
 		['studies/{studyDbId}/observations', ['json'], ['GET'], ['1.0','1.2','1.3'] ],
 		['phenotypes-search', ['json'], ['GET','POST'], ['1.0','1.2'] ],
 		['search/phenotypes', ['json'], ['GET','POST'], ['1.3'] ],

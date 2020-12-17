@@ -49,6 +49,7 @@ $design_types => ()
       <h5><i>Breeding programs (&nbsp;<span class="glyphicon glyphicon-briefcase text-info"></span>&nbsp;)</i></h5>
       <h5><i>Genotyping data projects (&nbsp;<span class="glyphicon glyphicon-align-left text-warning"></span>&nbsp;)</i></h5>
       <h5><i>Analyses (&nbsp;<span class="glyphicon glyphicon-stats text-success"></span>&nbsp;)</i></h5>
+      <h5><i>Sampling trials (&nbsp;<span class="glyphicon glyphicon-th text-success"></span>&nbsp;)</i></h5>
       <hr>
       <h4>Folders</h4>
       <button class="btn btn-sm btn-default" id="new_folder_dialog_link">Create new folder</button><br/><br/>
@@ -104,6 +105,9 @@ $design_types => ()
                 },
                 "analyses" : {
                     "icon": 'glyphicon glyphicon-stats text-success',
+                },
+                "sampling_trial" : {
+                    "icon": 'glyphicon glyphicon-th text-success',
                 }
             },
             "search" : {
@@ -145,6 +149,9 @@ $design_types => ()
                   },
                   "analyses" : {
                       "icon": 'glyphicon glyphicon-stats text-success',
+                  },
+                  "sampling_trial" : {
+                      "icon": 'glyphicon glyphicon-th text-success',
                   }
               },
               "search" : {
