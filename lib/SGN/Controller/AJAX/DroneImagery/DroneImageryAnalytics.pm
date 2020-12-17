@@ -6555,13 +6555,28 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     $genetic_effects_figure_tempfile_string .= '.png';
     my $genetic_effects_figure_tempfile = $c->config->{basepath}."/".$genetic_effects_figure_tempfile_string;
 
+    my $genetic_effects_alt_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
+    $genetic_effects_alt_figure_tempfile_string .= '.png';
+    my $genetic_effects_alt_figure_tempfile = $c->config->{basepath}."/".$genetic_effects_alt_figure_tempfile_string;
+
+    my $genetic_effects_alt_env1_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
+    $genetic_effects_alt_env1_figure_tempfile_string .= '.png';
+    my $genetic_effects_alt_env1_figure_tempfile = $c->config->{basepath}."/".$genetic_effects_alt_env1_figure_tempfile_string;
+
+    my $genetic_effects_alt_env2_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
+    $genetic_effects_alt_env2_figure_tempfile_string .= '.png';
+    my $genetic_effects_alt_env2_figure_tempfile = $c->config->{basepath}."/".$genetic_effects_alt_env2_figure_tempfile_string;
+
+    my $genetic_effects_alt_env3_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
+    $genetic_effects_alt_env3_figure_tempfile_string .= '.png';
+    my $genetic_effects_alt_env3_figure_tempfile = $c->config->{basepath}."/".$genetic_effects_alt_env3_figure_tempfile_string;
+
+    my $genetic_effects_alt_env4_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
+    $genetic_effects_alt_env4_figure_tempfile_string .= '.png';
+    my $genetic_effects_alt_env4_figure_tempfile = $c->config->{basepath}."/".$genetic_effects_alt_env4_figure_tempfile_string;
+
     my $cmd_gen_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
     mat <- fread(\''.$effects_original_line_chart_tempfile.'\', header=TRUE, sep=\',\');
-    mat_altered <- fread(\''.$effects_altered_line_chart_tempfile.'\', header=TRUE, sep=\',\');
-    mat_altered_env1 <- fread(\''.$effects_altered_env1_line_chart_tempfile.'\', header=TRUE, sep=\',\');
-    mat_altered_env2 <- fread(\''.$effects_altered_env2_line_chart_tempfile.'\', header=TRUE, sep=\',\');
-    mat_altered_env3 <- fread(\''.$effects_altered_env3_line_chart_tempfile.'\', header=TRUE, sep=\',\');
-    mat_altered_env4 <- fread(\''.$effects_altered_env4_line_chart_tempfile.'\', header=TRUE, sep=\',\');
     mat\$time <- as.numeric(as.character(mat\$time));
     options(device=\'png\');
     par();
@@ -6572,60 +6587,125 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     sp <- sp + guides(shape = guide_legend(override.aes = list(size = 0.5)));
     sp <- sp + guides(color = guide_legend(override.aes = list(size = 0.5)));
     sp <- sp + theme(legend.title = element_text(size = 3), legend.text = element_text(size = 3));
-    sp <- sp + labs(title = \'Original Genetic Effects\');
-    sp2 <- ggplot(mat_altered, aes(x = time, y = value)) +
-        geom_line(aes(color = germplasmName), size = 1) +
-        scale_fill_manual(values = c(\''.$color_string.'\')) +
-        theme_minimal();
-    sp2 <- sp2 + guides(shape = guide_legend(override.aes = list(size = 0.5)));
-    sp2 <- sp2 + guides(color = guide_legend(override.aes = list(size = 0.5)));
-    sp2 <- sp2 + theme(legend.title = element_text(size = 3), legend.text = element_text(size = 3));
-    sp2 <- sp2 + labs(title = \'Altered Genetic Effects\');
-    sp3 <- ggplot(mat_altered_env1, aes(x = time, y = value)) +
-        geom_line(aes(color = germplasmName), size = 1) +
-        scale_fill_manual(values = c(\''.$color_string.'\')) +
-        theme_minimal();
-    sp3 <- sp3 + guides(shape = guide_legend(override.aes = list(size = 0.5)));
-    sp3 <- sp3 + guides(color = guide_legend(override.aes = list(size = 0.5)));
-    sp3 <- sp3 + theme(legend.title = element_text(size = 3), legend.text = element_text(size = 3));
-    sp3 <- sp3 + labs(title = \'SimLinear Genetic Effects\');
-    sp4 <- ggplot(mat_altered_env2, aes(x = time, y = value)) +
-        geom_line(aes(color = germplasmName), size = 1) +
-        scale_fill_manual(values = c(\''.$color_string.'\')) +
-        theme_minimal();
-    sp4 <- sp4 + guides(shape = guide_legend(override.aes = list(size = 0.5)));
-    sp4 <- sp4 + guides(color = guide_legend(override.aes = list(size = 0.5)));
-    sp4 <- sp4 + theme(legend.title = element_text(size = 3), legend.text = element_text(size = 3));
-    sp4 <- sp4 + labs(title = \'Sim1DN Genetic Effects\');
-    sp5 <- ggplot(mat_altered_env3, aes(x = time, y = value)) +
-        geom_line(aes(color = germplasmName), size = 1) +
-        scale_fill_manual(values = c(\''.$color_string.'\')) +
-        theme_minimal();
-    sp5 <- sp5 + guides(shape = guide_legend(override.aes = list(size = 0.5)));
-    sp5 <- sp5 + guides(color = guide_legend(override.aes = list(size = 0.5)));
-    sp5 <- sp5 + theme(legend.title = element_text(size = 3), legend.text = element_text(size = 3));
-    sp5 <- sp5 + labs(title = \'Sim2DN Genetic Effects\');
-    sp6 <- ggplot(mat_altered_env4, aes(x = time, y = value)) +
-        geom_line(aes(color = germplasmName), size = 1) +
-        scale_fill_manual(values = c(\''.$color_string.'\')) +
-        theme_minimal();
-    sp6 <- sp6 + guides(shape = guide_legend(override.aes = list(size = 0.5)));
-    sp6 <- sp6 + guides(color = guide_legend(override.aes = list(size = 0.5)));
-    sp6 <- sp6 + theme(legend.title = element_text(size = 3), legend.text = element_text(size = 3));
-    sp6 <- sp6 + labs(title = \'SimRandom Genetic Effects\');';
+    sp <- sp + labs(title = \'Original Genetic Effects\');';
     if (scalar(@sorted_germplasm_names) > 100) {
         $cmd_gen_plot .= 'sp <- sp + theme(legend.position = \'none\');';
-        $cmd_gen_plot .= 'sp2 <- sp2 + theme(legend.position = \'none\');';
-        $cmd_gen_plot .= 'sp3 <- sp3 + theme(legend.position = \'none\');';
-        $cmd_gen_plot .= 'sp4 <- sp4 + theme(legend.position = \'none\');';
-        $cmd_gen_plot .= 'sp5 <- sp5 + theme(legend.position = \'none\');';
-        $cmd_gen_plot .= 'sp6 <- sp6 + theme(legend.position = \'none\');';
     }
-    $cmd_gen_plot .= 'ggsave(\''.$genetic_effects_figure_tempfile.'\', arrangeGrob(sp, sp2, sp3, sp4, sp5, sp6, nrow=3), device=\'png\', width=25, height=25, units=\'in\');
+    $cmd_gen_plot .= 'ggsave(\''.$genetic_effects_figure_tempfile.'\', sp, device=\'png\', width=12, height=6, units=\'in\');
     "';
     print STDERR Dumper $cmd_gen_plot;
     my $status_gen_plot = system($cmd_gen_plot);
     push @$spatial_effects_plots, $genetic_effects_figure_tempfile_string;
+
+    my $cmd_gen_alt_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
+    mat <- fread(\''.$effects_altered_line_chart_tempfile.'\', header=TRUE, sep=\',\');
+    mat\$time <- as.numeric(as.character(mat\$time));
+    options(device=\'png\');
+    par();
+    sp <- ggplot(mat, aes(x = time, y = value)) +
+        geom_line(aes(color = germplasmName), size = 1) +
+        scale_fill_manual(values = c(\''.$color_string.'\')) +
+        theme_minimal();
+    sp <- sp + guides(shape = guide_legend(override.aes = list(size = 0.5)));
+    sp <- sp + guides(color = guide_legend(override.aes = list(size = 0.5)));
+    sp <- sp + theme(legend.title = element_text(size = 3), legend.text = element_text(size = 3));
+    sp <- sp + labs(title = \'Altered Genetic Effects\');';
+    if (scalar(@sorted_germplasm_names) > 100) {
+        $cmd_gen_alt_plot .= 'sp <- sp + theme(legend.position = \'none\');';
+    }
+    $cmd_gen_alt_plot .= 'ggsave(\''.$genetic_effects_alt_figure_tempfile.'\', sp, device=\'png\', width=12, height=6, units=\'in\');
+    "';
+    print STDERR Dumper $cmd_gen_alt_plot;
+    my $status_gen_alt_plot = system($cmd_gen_alt_plot);
+    push @$spatial_effects_plots, $genetic_effects_alt_figure_tempfile_string;
+
+    my $cmd_gen_env1_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
+    mat <- fread(\''.$effects_altered_env1_line_chart_tempfile.'\', header=TRUE, sep=\',\');
+    mat\$time <- as.numeric(as.character(mat\$time));
+    options(device=\'png\');
+    par();
+    sp <- ggplot(mat, aes(x = time, y = value)) +
+        geom_line(aes(color = germplasmName), size = 1) +
+        scale_fill_manual(values = c(\''.$color_string.'\')) +
+        theme_minimal();
+    sp <- sp + guides(shape = guide_legend(override.aes = list(size = 0.5)));
+    sp <- sp + guides(color = guide_legend(override.aes = list(size = 0.5)));
+    sp <- sp + theme(legend.title = element_text(size = 3), legend.text = element_text(size = 3));
+    sp <- sp + labs(title = \'SimLinear Genetic Effects\');';
+    if (scalar(@sorted_germplasm_names) > 100) {
+        $cmd_gen_env1_plot .= 'sp <- sp + theme(legend.position = \'none\');';
+    }
+    $cmd_gen_env1_plot .= 'ggsave(\''.$genetic_effects_alt_env1_figure_tempfile.'\', sp, device=\'png\', width=12, height=6, units=\'in\');
+    "';
+    print STDERR Dumper $cmd_gen_env1_plot;
+    my $status_gen_env1_plot = system($cmd_gen_env1_plot);
+    push @$spatial_effects_plots, $genetic_effects_alt_env1_figure_tempfile_string;
+
+    my $cmd_gen_env2_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
+    mat <- fread(\''.$effects_altered_env2_line_chart_tempfile.'\', header=TRUE, sep=\',\');
+    mat\$time <- as.numeric(as.character(mat\$time));
+    options(device=\'png\');
+    par();
+    sp <- ggplot(mat, aes(x = time, y = value)) +
+        geom_line(aes(color = germplasmName), size = 1) +
+        scale_fill_manual(values = c(\''.$color_string.'\')) +
+        theme_minimal();
+    sp <- sp + guides(shape = guide_legend(override.aes = list(size = 0.5)));
+    sp <- sp + guides(color = guide_legend(override.aes = list(size = 0.5)));
+    sp <- sp + theme(legend.title = element_text(size = 3), legend.text = element_text(size = 3));
+    sp <- sp + labs(title = \'Sim1DN Genetic Effects\');';
+    if (scalar(@sorted_germplasm_names) > 100) {
+        $cmd_gen_env2_plot .= 'sp <- sp + theme(legend.position = \'none\');';
+    }
+    $cmd_gen_env2_plot .= 'ggsave(\''.$genetic_effects_alt_env2_figure_tempfile.'\', sp, device=\'png\', width=12, height=6, units=\'in\');
+    "';
+    print STDERR Dumper $cmd_gen_env2_plot;
+    my $status_gen_env2_plot = system($cmd_gen_env2_plot);
+    push @$spatial_effects_plots, $genetic_effects_alt_env2_figure_tempfile_string;
+
+    my $cmd_gen_env3_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
+    mat <- fread(\''.$effects_altered_env3_line_chart_tempfile.'\', header=TRUE, sep=\',\');
+    mat\$time <- as.numeric(as.character(mat\$time));
+    options(device=\'png\');
+    par();
+    sp <- ggplot(mat, aes(x = time, y = value)) +
+        geom_line(aes(color = germplasmName), size = 1) +
+        scale_fill_manual(values = c(\''.$color_string.'\')) +
+        theme_minimal();
+    sp <- sp + guides(shape = guide_legend(override.aes = list(size = 0.5)));
+    sp <- sp + guides(color = guide_legend(override.aes = list(size = 0.5)));
+    sp <- sp + theme(legend.title = element_text(size = 3), legend.text = element_text(size = 3));
+    sp <- sp + labs(title = \'Sim2DN Genetic Effects\');';
+    if (scalar(@sorted_germplasm_names) > 100) {
+        $cmd_gen_env3_plot .= 'sp <- sp + theme(legend.position = \'none\');';
+    }
+    $cmd_gen_env3_plot .= 'ggsave(\''.$genetic_effects_alt_env3_figure_tempfile.'\', sp, device=\'png\', width=12, height=6, units=\'in\');
+    "';
+    print STDERR Dumper $cmd_gen_env3_plot;
+    my $status_gen_env3_plot = system($cmd_gen_env3_plot);
+    push @$spatial_effects_plots, $genetic_effects_alt_env3_figure_tempfile_string;
+
+    my $cmd_gen_env4_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
+    mat <- fread(\''.$effects_altered_env4_line_chart_tempfile.'\', header=TRUE, sep=\',\');
+    mat\$time <- as.numeric(as.character(mat\$time));
+    options(device=\'png\');
+    par();
+    sp <- ggplot(mat, aes(x = time, y = value)) +
+        geom_line(aes(color = germplasmName), size = 1) +
+        scale_fill_manual(values = c(\''.$color_string.'\')) +
+        theme_minimal();
+    sp <- sp + guides(shape = guide_legend(override.aes = list(size = 0.5)));
+    sp <- sp + guides(color = guide_legend(override.aes = list(size = 0.5)));
+    sp <- sp + theme(legend.title = element_text(size = 3), legend.text = element_text(size = 3));
+    sp <- sp + labs(title = \'SimRandom Genetic Effects\');';
+    if (scalar(@sorted_germplasm_names) > 100) {
+        $cmd_gen_env4_plot .= 'sp <- sp + theme(legend.position = \'none\');';
+    }
+    $cmd_gen_env4_plot .= 'ggsave(\''.$genetic_effects_alt_env4_figure_tempfile.'\', sp, device=\'png\', width=12, height=6, units=\'in\');
+    "';
+    print STDERR Dumper $cmd_gen_env4_plot;
+    my $status_gen_env4_plot = system($cmd_gen_env4_plot);
+    push @$spatial_effects_plots, $genetic_effects_alt_env4_figure_tempfile_string;
 
     $c->stash->{rest} = {
         result_blup_genetic_data_original => $result_blup_data_original,
