@@ -91,7 +91,7 @@
             <div class="modal-body">
                 <div class="container-fluid">
                     <b>
-                        Intercross output file is an CSV file (.csv)
+                        Intercross file is an CSV file (.csv). Crosses in an intercross file must be in the same crossing experiment.
                     </b>
                     <br><br>
                     <b>
@@ -122,8 +122,8 @@
                         <li>femaleObsUnitDbId (must exist in the database, can be accession, plot or plant stock type.)</li>
                         <li>maleObsUnitDbId (must exist in the database, can be accession, plot or plant stock type.)</li>
                         <li>person (operator name, the operator does not need to have database user account)</li>
-                        <li>experiment (called crossing experiment in the database. The crossing experiment must exist in the database. All of the crosses in an intercross file must be in the same crossing experiment.)</li>
-                        <li>type (cross type)</li>
+                        <li>experiment (called crossing experiment in the database. The crossing experiment must exist in the database.)</li>
+                        <li>type (cross type, Intercross supports biparental, self, open and polycross cross types)</li>
                         <li>fruits (Number of Fruits)</li>
                         <li>flowers (Number of Flowers)</li>
                         <li>seeds (Number of Seeds)</li>
