@@ -284,19 +284,19 @@ sub get_query {
         };
     }
 
-    #my $pagination;
-    #my %result;
-    #if ($array) {
-        my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@variables, $page_size, $page);
-        my %result = (data => $data_window);
-    #} else {
-        #my %result = (\@variables);
-        #$pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-    #}
-    # my %result = (data=>\@data);
+    my $pagination;
+    my %result;
     my @data_files;
 
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observationvariable search result constructed');
+    if ($array) {
+        my $data_window;
+        ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@variables, $page_size, $page);
+        %result = (data => $data_window);
+        return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observationvariable search result constructed');
+    } else {
+        $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+        return CXGN::BrAPI::JSONResponse->return_success(@variables[0], $pagination, \@data_files, $status, 'Observationvariable search result constructed');
+    }
 
 }
 
