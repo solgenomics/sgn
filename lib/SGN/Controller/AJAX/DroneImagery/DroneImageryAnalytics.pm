@@ -6622,7 +6622,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         $cmd_gen_plot .= 'sp6 <- sp6 + theme(legend.position = \'none\');';
     }
     $cmd_gen_plot .= 'ggsave(\''.$genetic_effects_figure_tempfile.'\', arrangeGrob(sp, sp2, sp3, sp4, sp5, sp6, nrow=3), device=\'png\', width=25, height=25, units=\'in\');
-    dev.off();"';
+    "';
+    print STDERR Dumper $cmd_gen_plot;
     my $status_gen_plot = system($cmd_gen_plot);
     push @$spatial_effects_plots, $genetic_effects_figure_tempfile_string;
 
