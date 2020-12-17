@@ -1784,8 +1784,11 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $genetic_effect_max_original = -1000000000;
     my $env_effect_min_original = 1000000000;
     my $env_effect_max_original = -1000000000;
+    my $genetic_effect_sum_square_original = 0;
     my $genetic_effect_sum_original = 0;
+    my $env_effect_sum_square_original = 0;
     my $env_effect_sum_original = 0;
+    my $residual_sum_square_original = 0;
     my $residual_sum_original = 0;
 
     my $time = DateTime->now();
@@ -1891,6 +1894,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             }
 
                             $genetic_effect_sum_original += abs($value);
+                            $genetic_effect_sum_square_original = $genetic_effect_sum_square_original + $value*$value;
                         }
                         $col_counter++;
                     }
@@ -1931,6 +1935,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             }
 
                             $env_effect_sum_original += abs($value);
+                            $env_effect_sum_square_original = $env_effect_sum_square_original + $value*$value;
                         }
                         $col_counter++;
                     }
@@ -2237,6 +2242,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 if (defined $residual && $residual ne '') {
                     $result_residual_data_original->{$plot_name}->{$seen_times{$time}} = [$residual, $timestamp, $user_name, '', ''];
                     $residual_sum_original += abs($residual);
+                    $residual_sum_square_original = $residual_sum_square_original + $residual*$residual;
                 }
                 if (defined $pred && $pred ne '') {
                     $result_fitted_data_original->{$plot_name}->{$seen_times{$time}} = [$pred, $timestamp, $user_name, '', ''];
@@ -2370,6 +2376,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
 
                 $genetic_effect_sum_original += abs($value);
+                $genetic_effect_sum_square_original = $genetic_effect_sum_square_original + $value*$value;
             }
         }
 
@@ -2442,6 +2449,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
 
                 $env_effect_sum_original += abs($value);
+                $env_effect_sum_square_original = $env_effect_sum_square_original + $value*$value;
             }
         }
 
@@ -2637,8 +2645,11 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $genetic_effect_max_altered = -1000000000;
     my $env_effect_min_altered = 1000000000;
     my $env_effect_max_altered = -1000000000;
+    my $genetic_effect_sum_square_altered = 0;
     my $genetic_effect_sum_altered = 0;
+    my $env_effect_sum_square_altered = 0;
     my $env_effect_sum_altered = 0;
+    my $residual_sum_square_altered = 0;
     my $residual_sum_altered = 0;
 
     print STDERR "RUN ENV ESTIMATE ON ALTERED PHENO\n";
@@ -2690,6 +2701,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             }
 
                             $genetic_effect_sum_altered += abs($value);
+                            $genetic_effect_sum_square_altered = $genetic_effect_sum_square_altered + $value*$value;
                         }
                         $col_counter++;
                     }
@@ -2730,6 +2742,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             }
 
                             $env_effect_sum_altered += abs($value);
+                            $env_effect_sum_square_altered = $env_effect_sum_square_altered + $value*$value;
                         }
                         $col_counter++;
                     }
@@ -2761,6 +2774,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         if (defined $residual && $residual ne '') {
                             $result_residual_data_altered->{$stock_name}->{$trait_name} = [$residual, $timestamp, $user_name, '', ''];
                             $residual_sum_altered += abs($residual);
+                            $residual_sum_square_altered = $residual_sum_square_altered + $residual*$residual;
                         }
                         if (defined $fitted && $fitted ne '') {
                             $result_fitted_data_altered->{$stock_name}->{$trait_name} = [$fitted, $timestamp, $user_name, '', ''];
@@ -2942,6 +2956,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 if (defined $residual && $residual ne '') {
                     $result_residual_data_altered->{$plot_name}->{$seen_times{$time}} = [$residual, $timestamp, $user_name, '', ''];
                     $residual_sum_altered += abs($residual);
+                    $residual_sum_square_altered = $residual_sum_square_altered + $residual*$residual;
                 }
                 if (defined $pred && $pred ne '') {
                     $result_fitted_data_altered->{$plot_name}->{$seen_times{$time}} = [$pred, $timestamp, $user_name, '', ''];
@@ -3071,6 +3086,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
 
                 $genetic_effect_sum_altered += abs($value);
+                $genetic_effect_sum_square_altered = $genetic_effect_sum_square_altered + $value*$value;
             }
         }
 
@@ -3140,6 +3156,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
 
                 $env_effect_sum_altered += abs($value);
+                $env_effect_sum_square_altered = $env_effect_sum_square_altered + $value*$value;
             }
         }
 
@@ -3338,8 +3355,11 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $genetic_effect_max_altered_env = -1000000000;
     my $env_effect_min_altered_env = 1000000000;
     my $env_effect_max_altered_env = -1000000000;
+    my $genetic_effect_sum_square_altered_env = 0;
     my $genetic_effect_sum_altered_env = 0;
+    my $env_effect_sum_square_altered_env = 0;
     my $env_effect_sum_altered_env = 0;
+    my $residual_sum_square_altered_env = 0;
     my $residual_sum_altered_env = 0;
 
     print STDERR "RUN ENV ESTIMATE ON Altered Pheno With Sim Env linear_gradient\n";
@@ -3391,6 +3411,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             }
 
                             $genetic_effect_sum_altered_env += abs($value);
+                            $genetic_effect_sum_square_altered_env = $genetic_effect_sum_square_altered_env + $value*$value;
                         }
                         $col_counter++;
                     }
@@ -3431,6 +3452,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             }
 
                             $env_effect_sum_altered_env += abs($value);
+                            $env_effect_sum_square_altered_env = $env_effect_sum_square_altered_env + $value*$value;
                         }
                         $col_counter++;
                     }
@@ -3462,6 +3484,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         if (defined $residual && $residual ne '') {
                             $result_residual_data_altered_env->{$stock_name}->{$trait_name} = [$residual, $timestamp, $user_name, '', ''];
                             $residual_sum_altered_env += abs($residual);
+                            $residual_sum_square_altered_env = $residual_sum_square_altered_env + $residual*$residual;
                         }
                         if (defined $fitted && $fitted ne '') {
                             $result_fitted_data_altered_env->{$stock_name}->{$trait_name} = [$fitted, $timestamp, $user_name, '', ''];
@@ -3643,6 +3666,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 if (defined $residual && $residual ne '') {
                     $result_residual_data_altered_env->{$plot_name}->{$seen_times{$time}} = [$residual, $timestamp, $user_name, '', ''];
                     $residual_sum_altered_env += abs($residual);
+                    $residual_sum_square_altered_env = $residual_sum_square_altered_env + $residual*$residual;
                 }
                 if (defined $pred && $pred ne '') {
                     $result_fitted_data_altered_env->{$plot_name}->{$seen_times{$time}} = [$pred, $timestamp, $user_name, '', ''];
@@ -3772,6 +3796,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
 
                 $genetic_effect_sum_altered_env += abs($value);
+                $genetic_effect_sum_square_altered_env = $genetic_effect_sum_square_altered_env + $value*$value;
             }
         }
 
@@ -3841,6 +3866,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
 
                 $env_effect_sum_altered_env += abs($value);
+                $env_effect_sum_square_altered_env = $env_effect_sum_square_altered_env + $value*$value;
             }
         }
 
@@ -4038,8 +4064,11 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $genetic_effect_max_altered_env_2 = -1000000000;
     my $env_effect_min_altered_env_2 = 1000000000;
     my $env_effect_max_altered_env_2 = -1000000000;
+    my $genetic_effect_sum_square_altered_env_2 = 0;
     my $genetic_effect_sum_altered_env_2 = 0;
+    my $env_effect_sum_square_altered_env_2 = 0;
     my $env_effect_sum_altered_env_2 = 0;
+    my $residual_sum_square_altered_env_2 = 0;
     my $residual_sum_altered_env_2 = 0;
 
     print STDERR "RUN ENV ESTIMATE ON Altered Pheno With Sim Env random_1d_normal_gradient\n";
@@ -4091,6 +4120,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             }
 
                             $genetic_effect_sum_altered_env_2 += abs($value);
+                            $genetic_effect_sum_square_altered_env_2 = $genetic_effect_sum_square_altered_env_2 + $value*$value;
                         }
                         $col_counter++;
                     }
@@ -4131,6 +4161,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             }
 
                             $env_effect_sum_altered_env_2 += abs($value);
+                            $env_effect_sum_square_altered_env_2 = $env_effect_sum_square_altered_env_2 + $value*$value;
                         }
                         $col_counter++;
                     }
@@ -4162,6 +4193,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         if (defined $residual && $residual ne '') {
                             $result_residual_data_altered_env_2->{$stock_name}->{$trait_name} = [$residual, $timestamp, $user_name, '', ''];
                             $residual_sum_altered_env_2 += abs($residual);
+                            $residual_sum_square_altered_env_2 = $residual_sum_square_altered_env_2 + $residual*$residual;
                         }
                         if (defined $fitted && $fitted ne '') {
                             $result_fitted_data_altered_env_2->{$stock_name}->{$trait_name} = [$fitted, $timestamp, $user_name, '', ''];
@@ -4343,6 +4375,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 if (defined $residual && $residual ne '') {
                     $result_residual_data_altered_env_2->{$plot_name}->{$seen_times{$time}} = [$residual, $timestamp, $user_name, '', ''];
                     $residual_sum_altered_env_2 += abs($residual);
+                    $residual_sum_square_altered_env_2 = $residual_sum_square_altered_env_2 + $residual*$residual;
                 }
                 if (defined $pred && $pred ne '') {
                     $result_fitted_data_altered_env_2->{$plot_name}->{$seen_times{$time}} = [$pred, $timestamp, $user_name, '', ''];
@@ -4472,6 +4505,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
 
                 $genetic_effect_sum_altered_env_2 += abs($value);
+                $genetic_effect_sum_square_altered_env_2 = $genetic_effect_sum_square_altered_env_2 + $value*$value;
             }
         }
 
@@ -4541,6 +4575,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
 
                 $env_effect_sum_altered_env_2 += abs($value);
+                $env_effect_sum_square_altered_env_2 = $env_effect_sum_square_altered_env_2 + $value*$value;
             }
         }
 
@@ -4738,8 +4773,11 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $genetic_effect_max_altered_env_3 = -1000000000;
     my $env_effect_min_altered_env_3 = 1000000000;
     my $env_effect_max_altered_env_3 = -1000000000;
+    my $genetic_effect_sum_square_altered_env_3 = 0;
     my $genetic_effect_sum_altered_env_3 = 0;
+    my $env_effect_sum_square_altered_env_3 = 0;
     my $env_effect_sum_altered_env_3 = 0;
+    my $residual_sum_square_altered_env_3 = 0;
     my $residual_sum_altered_env_3 = 0;
 
     print STDERR "RUN ENV ESTIMATE ON Altered Pheno With Sim Env random_2d_normal_gradient\n";
@@ -4791,6 +4829,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             }
 
                             $genetic_effect_sum_altered_env_3 += abs($value);
+                            $genetic_effect_sum_square_altered_env_3 = $genetic_effect_sum_square_altered_env_3 + $value*$value;
                         }
                         $col_counter++;
                     }
@@ -4831,6 +4870,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             }
 
                             $env_effect_sum_altered_env_3 += abs($value);
+                            $env_effect_sum_square_altered_env_3 = $env_effect_sum_square_altered_env_3 + $value*$value;
                         }
                         $col_counter++;
                     }
@@ -4862,6 +4902,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         if (defined $residual && $residual ne '') {
                             $result_residual_data_altered_env_3->{$stock_name}->{$trait_name} = [$residual, $timestamp, $user_name, '', ''];
                             $residual_sum_altered_env_3 += abs($residual);
+                            $residual_sum_square_altered_env_3 = $residual_sum_square_altered_env_3 + $residual*$residual;
                         }
                         if (defined $fitted && $fitted ne '') {
                             $result_fitted_data_altered_env_3->{$stock_name}->{$trait_name} = [$fitted, $timestamp, $user_name, '', ''];
@@ -5043,6 +5084,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 if (defined $residual && $residual ne '') {
                     $result_residual_data_altered_env_3->{$plot_name}->{$seen_times{$time}} = [$residual, $timestamp, $user_name, '', ''];
                     $residual_sum_altered_env_3 += abs($residual);
+                    $residual_sum_square_altered_env_3 = $residual_sum_square_altered_env_3 + $residual*$residual;
                 }
                 if (defined $pred && $pred ne '') {
                     $result_fitted_data_altered_env_3->{$plot_name}->{$seen_times{$time}} = [$pred, $timestamp, $user_name, '', ''];
@@ -5172,6 +5214,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
 
                 $genetic_effect_sum_altered_env_3 += abs($value);
+                $genetic_effect_sum_square_altered_env_3 = $genetic_effect_sum_square_altered_env_3 + $value*$value;
             }
         }
 
@@ -5241,6 +5284,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
 
                 $env_effect_sum_altered_env_3 += abs($value);
+                $env_effect_sum_square_altered_env_3 = $env_effect_sum_square_altered_env_3 + $value*$value;
             }
         }
 
@@ -5438,8 +5482,11 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $genetic_effect_max_altered_env_4 = -1000000000;
     my $env_effect_min_altered_env_4 = 1000000000;
     my $env_effect_max_altered_env_4 = -1000000000;
+    my $genetic_effect_sum_square_altered_env_4 = 0;
     my $genetic_effect_sum_altered_env_4 = 0;
+    my $env_effect_sum_square_altered_env_4 = 0;
     my $env_effect_sum_altered_env_4 = 0;
+    my $residual_sum_square_altered_env_4 = 0;
     my $residual_sum_altered_env_4 = 0;
 
     print STDERR "RUN ENV ESTIMATE ON Altered Pheno With Sim Env random\n";
@@ -5491,6 +5538,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             }
 
                             $genetic_effect_sum_altered_env_4 += abs($value);
+                            $genetic_effect_sum_square_altered_env_4 = $genetic_effect_sum_square_altered_env_4 + $value*$value;
                         }
                         $col_counter++;
                     }
@@ -5531,6 +5579,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             }
 
                             $env_effect_sum_altered_env_4 += abs($value);
+                            $env_effect_sum_square_altered_env_4 = $env_effect_sum_square_altered_env_4 + $value*$value;
                         }
                         $col_counter++;
                     }
@@ -5562,6 +5611,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         if (defined $residual && $residual ne '') {
                             $result_residual_data_altered_env_4->{$stock_name}->{$trait_name} = [$residual, $timestamp, $user_name, '', ''];
                             $residual_sum_altered_env_4 += abs($residual);
+                            $residual_sum_square_altered_env_4 = $residual_sum_square_altered_env_4 + $residual*$residual;
                         }
                         if (defined $fitted && $fitted ne '') {
                             $result_fitted_data_altered_env_4->{$stock_name}->{$trait_name} = [$fitted, $timestamp, $user_name, '', ''];
@@ -5743,6 +5793,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 if (defined $residual && $residual ne '') {
                     $result_residual_data_altered_env_4->{$plot_name}->{$seen_times{$time}} = [$residual, $timestamp, $user_name, '', ''];
                     $residual_sum_altered_env_4 += abs($residual);
+                    $residual_sum_square_altered_env_4 = $residual_sum_square_altered_env_4 + $residual*$residual;
                 }
                 if (defined $pred && $pred ne '') {
                     $result_fitted_data_altered_env_4->{$plot_name}->{$seen_times{$time}} = [$pred, $timestamp, $user_name, '', ''];
@@ -5872,6 +5923,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
 
                 $genetic_effect_sum_altered_env_4 += abs($value);
+                $genetic_effect_sum_square_altered_env_4 = $genetic_effect_sum_square_altered_env_4 + $value*$value;
             }
         }
 
@@ -5941,6 +5993,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
 
                 $env_effect_sum_altered_env_4 += abs($value);
+                $env_effect_sum_square_altered_env_4 = $env_effect_sum_square_altered_env_4 + $value*$value;
             }
         }
 
@@ -6877,12 +6930,12 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         env_effect_sum_altered_env => $env_effect_sum_altered_env,
         spatial_effects_plots => $spatial_effects_plots,
         simulated_environment_to_effect_correlations => \@env_corr_res,
-        original_h2 => $sig_original_blup/$sig_original_pheno,
-        altered_h2 => $sig_altered_blup/$sig_altered_pheno,
-        sim1_h2 => $sig_sim1_blup/$sig_sim_pheno1,
-        sim2_h2 => $sig_sim2_blup/$sig_sim_pheno2,
-        sim3_h2 => $sig_sim3_blup/$sig_sim_pheno3,
-        sim4_h2 => $sig_sim4_blup/$sig_sim_pheno4,
+        original_h2 => $genetic_effect_sum_square_original/$residual_sum_square_original,
+        altered_h2 => $genetic_effect_sum_square_altered/$residual_sum_square_altered,
+        sim1_h2 => $genetic_effect_sum_square_altered_env/$residual_sum_square_altered_env,
+        sim2_h2 => $genetic_effect_sum_square_altered_env_2/$residual_sum_square_altered_env_2,
+        sim3_h2 => $genetic_effect_sum_square_altered_env_3/$residual_sum_square_altered_env_3,
+        sim4_h2 => $genetic_effect_sum_square_altered_env_4/$residual_sum_square_altered_env_4,
     };
 }
 
