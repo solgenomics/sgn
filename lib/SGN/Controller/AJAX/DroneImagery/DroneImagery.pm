@@ -1129,6 +1129,9 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                             my $row_2 = $stock_row_col{$r}->{row_number};
                             my $col_2 = $stock_row_col{$r}->{col_number};
                             my $dist = sqrt( ($row_2 - $row_1)**2 + ($col_2 - $col_1)**2 );
+                            if ($dist != 0) {
+                                $dist = 1/$dist;
+                            }
                             if (defined $dist and length $dist) {
                                 $euclidean_distance_hash{$s_factor}->{$r_factor} = $dist;
 
