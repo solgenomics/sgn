@@ -6,6 +6,7 @@ use Data::Dumper;
 use Try::Tiny;
 use CXGN::BrAPI::v2::ExternalReferences;
 use CXGN::BrAPI::v2::Methods;
+use CXGN::BrAPI::v2::Scales;
 
 ## to do: add concept of trait short name; provide alternate constructors for term, shortname, and synonyms etc.
 
@@ -278,6 +279,11 @@ has 'method' => (
 	is  => 'rw'
 );
 
+has 'scale' => (
+	isa => 'Maybe[HashRef[Any]]',
+	is  => 'rw'
+);
+
 
 sub BUILD { 
     #print STDERR "BUILDING...\n";
@@ -295,6 +301,7 @@ sub BUILD {
 		$self->synonyms($self->synonyms());
 		$self->external_references($self->external_references());
 		$self->method($self->method());
+		$self->scale($self->scale());
     }
 
     #my $cvterm = $self->bcs_schema()->resultset("Cv::Cvterm")->find( { cvterm_id => $self->cvterm_id() });
@@ -434,6 +441,17 @@ sub store {
 		}
 
 		# TODO: save scale properties
+		my $scale = CXGN::BrAPI::v2::Scales->new({
+			bcs_schema => $self->bcs_schema,
+			scale => $self->scale,
+			cvterm_id => $new_term->get_column('cvterm_id')
+		});
+
+		$scale->store();
+
+		if ($scale->{'error'}) {
+			return {error => $scale->{'error'}};
+		}
 
 		# TODO: save method properties
 		my $m = CXGN::BrAPI::v2::Methods->new({
