@@ -701,12 +701,17 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
                 <h4 id="match_name" class="modal-title">Match Information</h4>
               </div>
               <div class="modal-body">
-                <dl>
+	      <dl>
+	      <dt>Sequence match</dt>
                     <dd>
-                      <div style="margin: 0.5em 0"><a class="match_details" href="" target="_blank">View matched sequence</a></div>
+		    <div style="margin: 0.5em 0"><a class="match_details" href="" target="_blank">View matched sequence</a></div>
+		    </dd>
+	      <dt> JBrowse match </dt>
+		   <dd>
                       <div id="jbrowse_div" style="display:none"><a id="jbrowse_link" href="" target="_blank">View in genome context</a></div>
                     </dd>
-                    <dd class="subject_sequence_xrefs">
+		    <dt>Genome Feature match</dt>
+		    <dd class="subject_sequence_xrefs">
                     </dd>
                 </dl>
               </div>

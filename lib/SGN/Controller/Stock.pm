@@ -384,52 +384,64 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
     my $stock_id = $stock_row->stock_id;
     my $stock_name = $stock_row->uniquename;
     my $genotype_id = $c->req->param('genotype_id') ? [$c->req->param('genotype_id')] : undef;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    my $dl_token = $c->req->param("gbs_download_token") || "no_token";
-    my $dl_cookie = "download".$dl_token;
 
-    my $stock = CXGN::Stock->new({schema => $schema, stock_id => $stock_id});
-    my $stock_type = $stock->type();
+    if (!$genotype_id) {
 
-    if ($stock_id) {
-	my %genotype_download_factory = (
-	    bcs_schema=>$schema,
-	    people_schema=>$people_schema,
-	    cache_root_dir=>$c->config->{cache_file_path},
-	    markerprofile_id_list=>$genotype_id,
-	    #genotype_data_project_list=>$genotype_data_project_list,
-	    #marker_name_list=>['S80_265728', 'S80_265723'],
-	    #limit=>$limit,
-	    #offset=>$offset
-	    );
+	my $referer = $c->req->referer;
+	my $message = "<p>Genotype data download for the stock is missing an associated genotype id. <br/>"
+	    .  "<a href=\"$referer\">[ Go back ]</a></p>";
+	   
+	$c->stash->{message} = $message;
+	$c->stash->{template} = "/generic_message.mas";
+	
+    } else {
+	my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+	my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+	my $dl_token = $c->req->param("gbs_download_token") || "no_token";
+	my $dl_cookie = "download".$dl_token;
 
-	if ($stock_type eq 'accession') {
-	    $genotype_download_factory{accession_list} = [$stock_id];
+	my $stock = CXGN::Stock->new({schema => $schema, stock_id => $stock_id});
+	my $stock_type = $stock->type();
+
+	if ($stock_id) {
+	    my %genotype_download_factory = (
+		bcs_schema=>$schema,
+		people_schema=>$people_schema,
+		cache_root_dir=>$c->config->{cache_file_path},
+		markerprofile_id_list=>$genotype_id,
+		#genotype_data_project_list=>$genotype_data_project_list,
+		#marker_name_list=>['S80_265728', 'S80_265723'],
+		#limit=>$limit,
+		#offset=>$offset
+		);
+
+	    if ($stock_type eq 'accession') {
+		$genotype_download_factory{accession_list} = [$stock_id];
+	    }
+	    elsif ($stock_type eq 'tissue_sample') {
+		$genotype_download_factory{tissue_sample_list} = [$stock_id];
+	    }
+
+	    my $geno = CXGN::Genotype::DownloadFactory->instantiate(
+		'VCF',    #can be either 'VCF' or 'GenotypeMatrix'
+		\%genotype_download_factory
+		);
+	    my $file_handle = $geno->download(
+		$c->config->{cluster_shared_tempdir},
+		$c->config->{backend},
+		$c->config->{cluster_host},
+		$c->config->{'web_cluster_queue'},
+		$c->config->{basepath}
+		);
+
+	    $c->res->content_type("application/text");
+	    $c->res->cookies->{$dl_cookie} = {
+		value => $dl_token,
+		expires => '+1m',
+	    };
+	    $c->res->header('Content-Disposition', qq[attachment; filename="BreedBaseGenotypesDownload.vcf"]);
+	    $c->res->body($file_handle);
 	}
-	elsif ($stock_type eq 'tissue_sample') {
-	    $genotype_download_factory{tissue_sample_list} = [$stock_id];
-	}
-
-	my $geno = CXGN::Genotype::DownloadFactory->instantiate(
-	    'VCF',    #can be either 'VCF' or 'GenotypeMatrix'
-	    \%genotype_download_factory
-	    );
-	my $file_handle = $geno->download(
-	    $c->config->{cluster_shared_tempdir},
-	    $c->config->{backend},
-	    $c->config->{cluster_host},
-	    $c->config->{'web_cluster_queue'},
-	    $c->config->{basepath}
-	    );
-
-	$c->res->content_type("application/text");
-	$c->res->cookies->{$dl_cookie} = {
-	    value => $dl_token,
-	    expires => '+1m',
-	};
-	$c->res->header('Content-Disposition', qq[attachment; filename="BreedBaseGenotypesDownload.vcf"]);
-	$c->res->body($file_handle);
     }
     
 }
