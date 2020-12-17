@@ -9,6 +9,7 @@ use CXGN::BrAPI::JSONResponse;
 use SGN::Model::Cvterm;
 use CXGN::BrAPI::v2::ExternalReferences;
 use CXGN::BrAPI::v2::Methods;
+use CXGN::BrAPI::v2::Scales;
 
 extends 'CXGN::BrAPI::v2::Common';
 
@@ -195,8 +196,6 @@ sub get_query {
         "GROUP BY cvterm.cvterm_id, db.name, db.db_id, dbxref.dbxref_id, dbxref.accession ".
         "ORDER BY cvterm.name ASC LIMIT $limit OFFSET $offset; "  ;
 
-    print Dumper($q);
-
     my $sth = $self->bcs_schema->storage->dbh->prepare($q);
     $sth->execute();
     while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $db_url, $dbxref_id, $accession, $synonym, $obsolete, $count) = $sth->fetchrow_array()) {
@@ -211,6 +210,11 @@ sub get_query {
             cvterm_id => $cvterm_id
         });
         my $method = $method_object->method_db();
+        my $scale_object = CXGN::BrAPI::v2::Scales->new({
+            bcs_schema => $self->bcs_schema,
+            cvterm_id => $cvterm_id
+        });
+        my $scale = $scale_object->scale_db();
         my $references = CXGN::BrAPI::v2::ExternalReferences->new({
             bcs_schema => $self->bcs_schema,
             dbxref_id => $dbxref_id
@@ -248,30 +252,12 @@ sub get_query {
             observationVariableDbId => qq|$cvterm_id|,
             observationVariableName => $cvterm_name . "|" . $db_name . ":" . $accession,
             ontologyReference       => {
-                documentationLinks => $db_url,
-                ontologyDbId       => qq|$db_id|,
-                ontologyName       => $db_name,
+                documentationLinks => $trait->uri ? $trait->uri : undef,
+                ontologyDbId       => $trait->db_id ? $trait->db_id : undef,
+                ontologyName       => $trait->db ? $trait->db : undef,
                 version            => undef,
             },
-            scale                   => {
-                datatype           => $trait->format,
-                decimalPlaces      => undef,
-                externalReferences => $external_references,
-                ontologyReference  => {
-                    #         documentationLinks
-                    #         ontologyDbId
-                    #         ontologyName
-                    #         version
-                },
-                scaleDbId          => undef,
-                scaleName          => undef,
-                validValues        => {
-                    min        => $trait->minimum ? $trait->minimum : undef,
-                    max        => $trait->maximum ? $trait->maximum : undef,
-                    categories => \@brapi_categories,
-                },
-
-            },
+            scale                   => $scale,
             scientist               => undef,
             status                  => $obsolete = 0 ? "Obsolete" : "Active",
             submissionTimestamp     => undef,
@@ -342,6 +328,7 @@ sub store {
         my $synonyms = $params->{trait}{synonyms};
         my $references = $params->{externalReferences};
         my $method = $params->{method};
+        my $scale = $params->{scale};
         #print Dumper($method);
         my $trait = CXGN::Trait->new({ bcs_schema => $self->bcs_schema,
             cvterm_id                             => $cvterm_id,
@@ -350,7 +337,8 @@ sub store {
             definition                            => $description,
             synonyms                              => $synonyms,
             external_references                   => $references,
-            method                                => $method
+            method                                => $method,
+            scale                                 => $scale
         });
         my $variable = $trait->store();
         #my $method_object = CXGN::BrAPI::v2::Methods->new({
