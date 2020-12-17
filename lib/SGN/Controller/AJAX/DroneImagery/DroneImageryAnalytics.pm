@@ -99,6 +99,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $tolparinv = $c->req->param('tolparinv');
     my $legendre_order_number = $c->req->param('legendre_order_number');
     my $permanent_environment_structure = $c->req->param('permanent_environment_structure');
+    my $permanent_environment_structure_phenotype_correlation_traits = decode_json $c->req->param('permanent_environment_structure_phenotype_correlation_traits');
 
     my $minimization_genetic_sum_threshold = $c->req->param('genetic_minimization_threshold') || '0.000001';
     my $minimization_env_sum_threshold = $c->req->param('env_minimization_threshold') || '0.000001';
@@ -198,6 +199,9 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
     my $stats_out_htp_rel_tempfile_out_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/drone_stats_XXXXX');
     my $stats_out_htp_rel_tempfile_out = $c->config->{basepath}."/".$stats_out_htp_rel_tempfile_out_string;
+
+    my ($stats_out_pe_pheno_rel_tempfile_fh, $stats_out_pe_pheno_rel_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    my ($stats_out_pe_pheno_rel_tempfile2_fh, $stats_out_pe_pheno_rel_tempfile2) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
 
     my ($stats_out_param_tempfile_fh, $stats_out_param_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_tempfile_row_fh, $stats_out_tempfile_row) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
@@ -802,6 +806,147 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             open(my $F3, ">", $permanent_environment_structure_tempfile) || die "Can't open file ".$permanent_environment_structure_tempfile;
                 print $F3 $data;
             close($F3);
+        }
+        elsif ($permanent_environment_structure eq 'phenotype_correlation') {
+            my $phenotypes_search_permanent_environment_structure = CXGN::Phenotypes::SearchFactory->instantiate(
+                'MaterializedViewTable',
+                {
+                    bcs_schema=>$schema,
+                    data_level=>'plot',
+                    trial_list=>$field_trial_id_list,
+                    trait_list=>$permanent_environment_structure_phenotype_correlation_traits,
+                    include_timestamp=>0,
+                    exclude_phenotype_outlier=>0
+                }
+            );
+            my ($data_permanent_environment_structure, $unique_traits_permanent_environment_structure) = $phenotypes_search_permanent_environment_structure->search();
+
+            if (scalar(@$data_permanent_environment_structure) == 0) {
+                $c->stash->{rest} = { error => "There are no phenotypes for the permanent environment structure traits you have selected!"};
+                return;
+            }
+
+            my %seen_plot_names_pe_rel;
+            my %phenotype_data_pe_rel;
+            my %seen_traits_pe_rel;
+            foreach my $obs_unit (@$data_permanent_environment_structure){
+                my $obsunit_stock_uniquename = $obs_unit->{observationunit_uniquename};
+                my $germplasm_name = $obs_unit->{germplasm_uniquename};
+                my $germplasm_stock_id = $obs_unit->{germplasm_stock_id};
+                my $row_number = $obs_unit->{obsunit_row_number} || '';
+                my $col_number = $obs_unit->{obsunit_col_number} || '';
+                my $rep = $obs_unit->{obsunit_rep};
+                my $block = $obs_unit->{obsunit_block};
+                $seen_plot_names_pe_rel{$obsunit_stock_uniquename} = $obs_unit;
+                my $observations = $obs_unit->{observations};
+                foreach (@$observations){
+                    $phenotype_data_pe_rel{$obsunit_stock_uniquename}->{$_->{trait_name}} = $_->{value};
+                    $seen_traits_pe_rel{$_->{trait_name}}++;
+                }
+            }
+
+            my @seen_plot_names_pe_rel_sorted = sort keys %seen_plot_names_pe_rel;
+            my @seen_traits_pe_rel_sorted = sort keys %seen_traits_pe_rel;
+
+            my @header_pe = ('plot_id');
+
+            my %trait_name_encoder_pe;
+            my %trait_name_encoder_rev_pe;
+            my $trait_name_encoded_pe = 1;
+            my @header_traits_pe;
+            foreach my $trait_name (@seen_traits_pe_rel_sorted) {
+                if (!exists($trait_name_encoder_pe{$trait_name})) {
+                    my $trait_name_e = 't'.$trait_name_encoded_pe;
+                    $trait_name_encoder_pe{$trait_name} = $trait_name_e;
+                    $trait_name_encoder_rev_pe{$trait_name_e} = $trait_name;
+                    push @header_traits_pe, $trait_name_e;
+                    $trait_name_encoded_pe++;
+                }
+            }
+
+            my @pe_pheno_matrix;
+            push @header_pe, @header_traits_pe;
+            push @pe_pheno_matrix, \@header_pe;
+
+            foreach my $p (@seen_plot_names_pe_rel_sorted) {
+                my @row = ($stock_name_row_col{$p}->{plot_id_factor});
+                foreach my $t (@seen_traits_pe_rel_sorted) {
+                    my $val = $phenotype_data_pe_rel{$p}->{$t} + 0;
+                    push @row, $val;
+                }
+                push @pe_pheno_matrix, \@row;
+            }
+
+            open(my $pe_pheno_f, ">", $stats_out_pe_pheno_rel_tempfile) || die "Can't open file ".$stats_out_pe_pheno_rel_tempfile;
+                foreach (@pe_pheno_matrix) {
+                    my $line = join "\t", @$_;
+                    print $pe_pheno_f $line."\n";
+                }
+            close($pe_pheno_f);
+
+            my %rel_pe_result_hash;
+            my $pe_rel_cmd = 'R -e "library(lme4); library(data.table);
+            mat_agg <- fread(\''.$stats_out_pe_pheno_rel_tempfile.'\', header=TRUE, sep=\'\t\');
+            mat_pheno <- mat_agg[,2:ncol(mat_agg)];
+            cor_mat <- cor(t(mat_pheno));
+            rownames(cor_mat) <- mat_agg\$plot_id;
+            colnames(cor_mat) <- mat_agg\$plot_id;
+            range01 <- function(x){(x-min(x))/(max(x)-min(x))};
+            cor_mat <- range01(cor_mat);
+            write.table(cor_mat, file=\''.$stats_out_pe_pheno_rel_tempfile2.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
+            # print STDERR Dumper $pe_rel_cmd;
+            my $status_pe_rel = system($pe_rel_cmd);
+
+            my $csv = Text::CSV->new({ sep_char => "\t" });
+
+            open(my $pe_rel_res, '<', $stats_out_pe_pheno_rel_tempfile2)
+                or die "Could not open file '$stats_out_pe_pheno_rel_tempfile2' $!";
+
+                print STDERR "Opened $stats_out_pe_pheno_rel_tempfile2\n";
+                my $header_row = <$pe_rel_res>;
+                my @header;
+                if ($csv->parse($header_row)) {
+                    @header = $csv->fields();
+                }
+
+                while (my $row = <$pe_rel_res>) {
+                    my @columns;
+                    if ($csv->parse($row)) {
+                        @columns = $csv->fields();
+                    }
+                    my $stock_id1 = $columns[0];
+                    my $counter = 1;
+                    foreach my $stock_id2 (@header) {
+                        my $val = $columns[$counter];
+                        $rel_pe_result_hash{$stock_id1}->{$stock_id2} = $val;
+                        $counter++;
+                    }
+                }
+            close($pe_rel_res);
+
+            my $data_rel_pe = '';
+            my %result_hash_pe;
+            foreach my $s (sort { $a <=> $b } @plot_ids_ordered) {
+                foreach my $r (sort { $a <=> $b } @plot_ids_ordered) {
+                    my $s_factor = $stock_name_row_col{$plot_id_map{$s}}->{plot_id_factor};
+                    my $r_factor = $stock_name_row_col{$plot_id_map{$r}}->{plot_id_factor};
+                    if (!exists($result_hash_pe{$s_factor}->{$r_factor}) && !exists($result_hash_pe{$r_factor}->{$s_factor})) {
+                        $result_hash_pe{$s_factor}->{$r_factor} = $rel_pe_result_hash{$s_factor}->{$r_factor};
+                    }
+                }
+            }
+            foreach my $r (sort { $a <=> $b } keys %result_hash_pe) {
+                foreach my $s (sort { $a <=> $b } keys %{$result_hash_pe{$r}}) {
+                    my $val = $result_hash_pe{$r}->{$s};
+                    if (defined $val and length $val) {
+                        $data_rel_pe .= "$r\t$s\t$val\n";
+                    }
+                }
+            }
+
+            open(my $pe_rel_out, ">", $permanent_environment_structure_tempfile) || die "Can't open file ".$permanent_environment_structure_tempfile;
+                print $pe_rel_out $data_rel_pe;
+            close($pe_rel_out);
         }
     }
 
@@ -2015,7 +2160,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 ''
             );
         }
-        elsif ($permanent_environment_structure eq 'euclidean_rows_and_columns') {
+        else {
             push @param_file_rows, (
                 'user_file_inv',
                 'FILE',
@@ -2733,7 +2878,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 ''
             );
         }
-        elsif ($permanent_environment_structure eq 'euclidean_rows_and_columns') {
+        else {
             push @param_file_rows, (
                 'user_file_inv',
                 'FILE',
@@ -3434,7 +3579,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 ''
             );
         }
-        elsif ($permanent_environment_structure eq 'euclidean_rows_and_columns') {
+        else {
             push @param_file_rows, (
                 'user_file_inv',
                 'FILE',
@@ -4134,7 +4279,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 ''
             );
         }
-        elsif ($permanent_environment_structure eq 'euclidean_rows_and_columns') {
+        else {
             push @param_file_rows, (
                 'user_file_inv',
                 'FILE',
@@ -4834,7 +4979,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 ''
             );
         }
-        elsif ($permanent_environment_structure eq 'euclidean_rows_and_columns') {
+        else {
             push @param_file_rows, (
                 'user_file_inv',
                 'FILE',
@@ -5534,7 +5679,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 ''
             );
         }
-        elsif ($permanent_environment_structure eq 'euclidean_rows_and_columns') {
+        else {
             push @param_file_rows, (
                 'user_file_inv',
                 'FILE',
