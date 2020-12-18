@@ -6,24 +6,23 @@ load_featureprop_json.pl - load json feature properties
 
 =head1 DESCRIPTION
 
-usage: load_featureprop_json.pl -H [hostname] -D [database] -U [dbuser] -p [dbpass] -i [infile] -t [type] -c [chunk count]
+usage: load_featureprop_json.pl -H [hostname] -D [database] -U [dbuser] -p [dbpass] -i [infile] -t [type] -n [nd_protocol_id] -c [chunk count]
 
--H database host name (required)
--D database name (required)
+-H database host name (default: localhost)
+-D database name (default: breedbase)
 -U database username (default: postgres)
 -p database password
 -i path to input file (required)
 -t cvterm name of featureprop type (cvterm of 'genotype_property' CV) (required)
+-n protocol id (nd_protocol_id of the protocol describing the data) (required)
 -c chunk count (max number of items to include in a single JSON value)
 
-input file format (to be decided):
-
-a tab-delimited file with the following columns:
-- feature name
-- start position (zero-based)
-- end position (zero-based)
-- <not used>
-- value
+The input file needs to be formatted as a gff file.  The following columns are used:
+- 1: seqid - the name of the feature (chromosome name)
+- 4: start - the value’s start position
+- 5: end - the value’s end position
+- 6: score - the primary score value
+- 9: attributes - secondary key/value attributes to be saved with the score
 
 =cut
 
@@ -36,21 +35,23 @@ use JSON;
 
 
 # Parse CLI Arguments
-our ($opt_H, $opt_D, $opt_U, $opt_p, $opt_i, $opt_t, $opt_c);
-getopts('H:D:U:p:i:t:c:');
+our ($opt_H, $opt_D, $opt_U, $opt_p, $opt_i, $opt_t, $opt_n, $opt_c);
+getopts('H:D:U:p:i:t:n:c:');
 
-if ( !$opt_H || !$opt_D || !$opt_i || !$opt_t ) {
-    print STDERR "ERROR: You pust provide the required options: -H hostname, -D database, -i infile, -t type\n";
+if ( !$opt_i || !$opt_t || !$opt_n ) {
+    print STDERR "ERROR: You pust provide the required options: -i infile, -t type, -n protocol\n";
     exit 1;
 }
 
-my $dbhost = $opt_H;
-my $dbname = $opt_D;
+my $dbhost = $opt_H ? $opt_H : "localhost";
+my $dbname = $opt_D ? $opt_D : "breedbase";
 my $dbuser = $opt_U ? $opt_U : "postgres";
 my $dbpass = $opt_p;
 my $infile = $opt_i;
 my $type_cvterm_name = $opt_t;
+my $nd_protocol_id = $opt_n;
 my $chunk_size = $opt_c ? $opt_c : 10000;
+
 
 # Connect to Database
 my $dbh = CXGN::DB::Connection->new({ 
@@ -75,6 +76,9 @@ if ( !$cvterm ) {
 my $cvterm_id = $cvterm->cvterm_id();
 
 
+# TODO: Make sure nd_protocol_id is valid: exists, is appropriate type
+
+
 # Open the input file
 open(my $fh, '<', $infile) or die "Could not open input file\n";
 
@@ -89,16 +93,37 @@ my $total = 0;              # the total number of chunks
 # Parse the input by line
 while ( defined(my $line = <$fh>) ) {
     chomp $line;
+    next if ( $line =~ /^#/ );
+
+    # Get data from line
     my @data = split(/\t/, $line);
     my $feature = @data[0];
-    my $start = @data[1];
-    my $end = @data[2];
-    my $score = @data[4];
+    my $start = @data[3];
+    my $end = @data[4];
+    my $score = @data[5] ne "." ? @data[5] : "";
+    my $attributes = @data[8];
 
     # Write the current chunk to the database
     # when the feature changes or the chunk size has been reached
     if ( ($chunk_feature && $feature ne $chunk_feature) || $chunk_count > $chunk_size ) {
         write_chunk();
+    }
+
+    # Parse attributes
+    my %attribute_hash = ();
+    if ( $attributes ne "." ) {
+        my @as = split(/;/, $attributes);
+        for my $a (@as) {
+            my @kv = split(/=/, $a);
+            my $key = @kv[0];
+            my $value = @kv[1];
+            if ( $key eq "score" || $key eq "start" || $key eq "end" ) {
+                print STDERR "ERROR: Line has reserved key in attribute list (attributes cannot use keys of 'score', 'start' or 'end')\n";
+                print STDERR "LINE: $line\n";
+                exit 1;
+            }
+            $attribute_hash{$key} = $value;
+        }
     }
 
     # Set chunk properties
@@ -111,7 +136,9 @@ while ( defined(my $line = <$fh>) ) {
     if ( !$chunk_end || $end > $chunk_end ) {
         $chunk_end = $end;
     }
-    my %value = ( score => $score, start => $start, end => $end);
+    my %value = ( score => $score, start => $start, end => $end );
+    %value = (%value, %attribute_hash);
+
     push @chunk_values, \%value;
     $chunk_count++;
 }
@@ -133,13 +160,15 @@ sub write_chunk() {
     $sth->execute($chunk_feature);
     my ($feature_id) = $sth->fetchrow_array();
 
+    # TODO: Exit with an error if the feature is not found
+
     # Convert values to JSON array string
     my $json_str = encode_json(\@chunk_values);
 
     # Insert into the database
-    my $insert = "INSERT INTO public.featureprop_json (feature_id, type_id, start_pos, end_pos, json) VALUES (?, ?, ?, ?, ?);";
+    my $insert = "INSERT INTO public.featureprop_json (feature_id, type_id, nd_protocol_id, start_pos, end_pos, json) VALUES (?, ?, ?, ?, ?, ?);";
     my $ih = $dbh->prepare($insert);
-    $ih->execute($feature_id, $cvterm_id, $chunk_start, $chunk_end, $json_str);
+    $ih->execute($feature_id, $cvterm_id, $nd_protocol_id, $chunk_start, $chunk_end, $json_str);
 
     # Reset chunk properties
     $chunk_feature = undef;
