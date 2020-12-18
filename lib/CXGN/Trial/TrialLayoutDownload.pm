@@ -481,14 +481,16 @@ sub _get_all_pedigrees {
     }
     my @accession_ids = keys %accession_id_hash;
 
-    # retrieve pedigree info using batch download (fastest method), then extract pedigree strings from download rows.
-    my $stock = CXGN::Stock->new ( schema => $schema);
-    my $pedigree_rows = $stock->get_pedigree_rows(\@accession_ids, 'parents_only');
     my %pedigree_strings;
-    foreach my $row (@$pedigree_rows) {
-        my ($progeny, $female_parent, $male_parent, $cross_type) = split "\t", $row;
-        my $string = join ('/', $female_parent ? $female_parent : 'NA', $male_parent ? $male_parent : 'NA');
-        $pedigree_strings{$progeny} = $string;
+    if (scalar(@accession_ids)>0) {
+        # retrieve pedigree info using batch download (fastest method), then extract pedigree strings from download rows.
+        my $stock = CXGN::Stock->new ( schema => $schema);
+        my $pedigree_rows = $stock->get_pedigree_rows(\@accession_ids, 'parents_only');
+        foreach my $row (@$pedigree_rows) {
+            my ($progeny, $female_parent, $male_parent, $cross_type) = split "\t", $row;
+            my $string = join ('/', $female_parent ? $female_parent : 'NA', $male_parent ? $male_parent : 'NA');
+            $pedigree_strings{$progeny} = $string;
+        }
     }
 
     print STDERR "TrialLayoutDownload get_all_pedigrees finished at ".localtime()."\n";
