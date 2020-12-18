@@ -15,6 +15,7 @@ change_accessions_to_crosses.pl -H [dbhost] -D [dbname] -i [infile]
  -i path to infile (required)
 
 =head1 DESCRIPTION
+Use case: Previously, users were not able to use cross stock type in trials because cross stock type was not allowed. As a result, some of the cross names were uploaded as accession stock type. After an improvement by allowing cross stock type in trials, users would like to change those names with accession stock type to cross stock type.
 
 This script changes stocks with type accession to type cross, then links each cross to parents,a cross type, an nd_experiment and a project.  The infile provided has 5 columns. The first column contains stock uniquenames stored as accession stock type. The second column contains female parent uniquenames. The third column contains male parent uniquenames. The forth column contains cross type info. The fifth column contains crossing experiment names. There is no header on the infile and the infile is .xls.
 =head1 AUTHOR
