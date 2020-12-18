@@ -59,7 +59,7 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
 %  if ($high_dimensional_phenotype_type eq 'NIRS') {
                                     <option value="NIRS">NIRS</option>
                                     <option value="Transcriptomics">Transcriptomics</option>
-                                    <option disabled value="Metabolomics">Metabolomics</option>
+                                    <option value="Metabolomics">Metabolomics</option>
 %  } elsif ($high_dimensional_phenotype_type eq 'Transcriptomics') {
                                     <option value="Transcriptomics">Transcriptomics</option>
                                     <option disabled value="NIRS">NIRS</option>
@@ -162,11 +162,24 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                     <div id="high_dim_data_upload_metabolomics_protocol_div" style="display:none">
                         <div class="form-horizontal">
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Metabolomics Unit: </label>
+                                <label class="col-sm-3 control-label">Equipment Type: </label>
                                 <div class="col-sm-9" >
-                                    <select class="form-control" id="high_dim_data_upload_metabolomics_device_type_select">
-                                        <option value="">SOMETHING</option>
+                                    <select class="form-control" id="high_dim_data_upload_metabolomics_equipment_type">
+                                        <option value="LCMS">LCMS</option>
+                                        <option value="GCMS">GCMS</option>
                                     </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Equipment Description: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="high_dim_data_upload_metabolomics_equipment_description" type="text" placeholder="e.g. ThermoFisher MS100 Electron Ionization TOF Negative Ion Mode">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Data Process Description: </label>
+                                <div class="col-sm-9" >
+                                    <textarea rows="10" class="form-control" id="high_dim_data_upload_metabolomics_data_process_description" placeholder="e.g. This describes mode, instrument settings, calibration procedure. Also, describes how the files from the LCMS machine were transformed into peak area. Finally, describes how metabolite annotations were assinged to peaks"></textarea>
                                 </div>
                             </div>
                         </div>
@@ -196,6 +209,18 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                             <b>File format information</b>
                             <br>
                             <a id="high_dim_data_spreadsheet_transcripts_format_info">Transcript Details Spreadsheet Format</a>
+                            </p>
+                        </&>
+                        </center>
+                    </div>
+
+                    <div id="high_dim_data_upload_metabolomics_protocol_template_div">
+                        <center>
+                        <&| /page/explanation.mas, title=>'Metabolite Details Spreadsheet Template Information' &>
+                            <p>
+                            <b>File format information</b>
+                            <br>
+                            <a id="high_dim_data_spreadsheet_metabolites_format_info">Metabolite Details Spreadsheet Format</a>
                             </p>
                         </&>
                         </center>
@@ -307,9 +332,12 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                                 </div>
                             </div>
 
-                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_id" type="text">
-                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_name" type="text">
-                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_desc" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_id" name="upload_metabolomics_spreadsheet_protocol_id" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_name" name="upload_metabolomics_spreadsheet_protocol_name" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_desc" name="upload_metabolomics_spreadsheet_protocol_desc" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_equipment_type" name="upload_metabolomics_spreadsheet_protocol_equipment_type" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_equipment_description" name="upload_metabolomics_spreadsheet_protocol_equipment_description" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_data_process_description" name="upload_metabolomics_spreadsheet_protocol_data_process_description" type="text">
                         </form>
 
                         <hr>
@@ -382,23 +410,53 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
 
             <ul>
                 <li><strong>sample_name</strong>: This should be a sample name that exists in the database. The sample can come from a sampling trial or a field trial or a genotyping plate.</li>
-                <li>All other columns are <strong>gene names</script>. You can add as many columns as you want to upload, there isn't a limit.</li>
+                <li>All other columns are <strong>transcript names</strong>. You can add as many columns as you want to upload, there isn't a limit.</li>
             </ul>
             <table class="table table-hover table-bordered table-condensed" >
                 <thead></thead>
                 <tbody>
                     <tr>
                         <td>sample_name</td>
-                        <td>gene name columns</td>
+                        <td>transcipt name columns</td>
                     </tr>
                 </tbody>
             </table>
 
-            <h3>Template for Uploading Transcriptomics (.csv):</h3>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="upload_metabolomics_spreadsheet_info_dialog" name="upload_metabolomics_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="metabolomicsUploadInfoDialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="metabolomicsUploadInfoDialog">Template Information</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <h3>Upload Metabolomics in a tabular spreadsheet (.csv) format with the following columns:</h3>
+
             <ul>
-                <li>The observationunit_name must be valid for BreedBase.</li>
-                <li><a href="https://docs.google.com/spreadsheets/d/1hOlKZf7z7jZd89LCIcd6nFU-MZ5YAi2ZiZB3VIpEu4Y/edit?usp=sharing">Upload Transcriptomics .csv template</a></li>
+                <li><strong>sample_name</strong>: This should be a sample name that exists in the database. The sample can come from a sampling trial or a field trial or a genotyping plate.</li>
+                <li>All other columns are <strong>metabolite names</strong>. You can add as many columns as you want to upload, there isn't a limit.</li>
             </ul>
+            <table class="table table-hover table-bordered table-condensed" >
+                <thead></thead>
+                <tbody>
+                    <tr>
+                        <td>sample_name</td>
+                        <td>metabolite name columns</td>
+                    </tr>
+                </tbody>
+            </table>
+
         </div>
       </div>
       <div class="modal-footer">
@@ -421,12 +479,12 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
             <h3>Upload details about the transcripts in a tabular spreadsheet (.csv) format with the following columns:</h3>
 
             <ul>
-                <li>transcript_name: This should be the same name as present in a column in your transcriptmics data matrix file.</li>
-                <li>chromosome: The chromosome where the transcript exists.</li>
-                <li>start_position: The start position in base pairs of where the transcript begins.</li>
-                <li>end_position: The end position in base pairs of where the transcript ends.</li>
-                <li>gene_description: Descriptors for gene annotations.</li>
-                <li>notes: Any additional descrptions.</li>
+                <li>transcript_name (required): This should be the same name as present in a column in your transcriptomics data matrix file.</li>
+                <li>chromosome (required): The chromosome where the transcript exists.</li>
+                <li>start_position (required): The start position in base pairs of where the transcript begins.</li>
+                <li>end_position (required): The end position in base pairs of where the transcript ends.</li>
+                <li>gene_description (optional): Descriptors for gene annotations.</li>
+                <li>notes (optional): Any additional descrptions.</li>
             </ul>
             <table class="table table-hover table-bordered table-condensed" >
                 <thead></thead>
@@ -450,6 +508,41 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
   </div>
 </div>
 
+<div class="modal fade" id="upload_transcriptomics_metabolite_details_spreadsheet_info_dialog" name="upload_transcriptomics_metabolite_details_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="metabolomicsDetailsUploadInfoDialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="metabolomicsDetailsUploadInfoDialog">Template Information</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <h3>Upload details about the metabolites in a tabular spreadsheet (.csv) format with the following columns:</h3>
+
+            <ul>
+                <li>metabolite_name (required): This should be the same name as present in a column in your metabolomics data matrix file.</li>
+                <li>inchi_key (optional): The International Chemical Identifier for the metabolite.</li>
+                <li>compound_name (optional): Name for the compound.</li>
+            </ul>
+            <table class="table table-hover table-bordered table-condensed" >
+                <thead></thead>
+                <tbody>
+                    <tr>
+                        <td>metabolite_name</td>
+                        <td>inchi_key</td>
+                        <td>compound_name</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
 jQuery(document).ready(function() {
@@ -498,6 +591,7 @@ jQuery(document).ready(function() {
             jQuery('#high_dim_data_upload_metabolomics_protocol_div').hide();
 
             jQuery('#high_dim_data_upload_transcriptomics_protocol_template_div').hide();
+            jQuery('#high_dim_data_upload_metabolomics_protocol_template_div').hide();
         }
         else if (high_dim_data_upload_type == 'Transcriptomics') {
             jQuery('#high_dim_data_upload_nirs_protocol_div').hide();
@@ -505,6 +599,7 @@ jQuery(document).ready(function() {
             jQuery('#high_dim_data_upload_metabolomics_protocol_div').hide();
 
             jQuery('#high_dim_data_upload_transcriptomics_protocol_template_div').show();
+            jQuery('#high_dim_data_upload_metabolomics_protocol_template_div').hide();
         }
         if (high_dim_data_upload_type == 'Metabolomics') {
             jQuery('#high_dim_data_upload_nirs_protocol_div').hide();
@@ -512,6 +607,7 @@ jQuery(document).ready(function() {
             jQuery('#high_dim_data_upload_metabolomics_protocol_div').show();
 
             jQuery('#high_dim_data_upload_transcriptomics_protocol_template_div').hide();
+            jQuery('#high_dim_data_upload_metabolomics_protocol_template_div').show();
         }
 
     });
@@ -530,6 +626,10 @@ jQuery(document).ready(function() {
 
     jQuery('#high_dim_data_spreadsheet_transcripts_format_info').click(function() {
         jQuery("#upload_transcriptomics_transcript_details_spreadsheet_info_dialog").modal("show");
+    });
+
+    jQuery('#high_dim_data_spreadsheet_metabolites_format_info').click(function() {
+        jQuery("#upload_transcriptomics_metabolite_details_spreadsheet_info_dialog").modal("show");
     });
 
     jQuery('#high_dim_data_upload_data_protocol_step').click(function(){
@@ -577,6 +677,9 @@ jQuery(document).ready(function() {
             jQuery('#upload_metabolomics_spreadsheet_protocol_id').val(selected[0]);
             jQuery('#upload_metabolomics_spreadsheet_protocol_name').val(high_dim_protocol_name);
             jQuery('#upload_metabolomics_spreadsheet_protocol_desc').val(high_dim_protocol_desc);
+            jQuery('#upload_metabolomics_spreadsheet_protocol_equipment_type').val(jQuery('#high_dim_data_upload_metabolomics_equipment_type').val());
+            jQuery('#upload_metabolomics_spreadsheet_protocol_equipment_description').val(jQuery('#high_dim_data_upload_metabolomics_equipment_description').val());
+            jQuery('#upload_metabolomics_spreadsheet_protocol_data_process_description').val(jQuery('#high_dim_data_upload_metabolomics_data_process_description').val());
         }
 
         Workflow.complete("#high_dim_data_upload_data_protocol_step");
