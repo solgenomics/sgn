@@ -279,7 +279,44 @@ You can check for genetic gain by comparing the the GEBVs of a training and a se
 
 <img src='{{"assets/images/genetic-gain.png" | relative_url }}' width="522" />
 
-4.8 Creating Crossing Groups
+
+4.8 Kinship and Inbreeding Coefficients
+--------------
+This tool allows you to estimate genetic relatedness between a pair of individuals (kinship), homozygousity across loci in an individual (inbreeding coefficient), and genetic similarity of an individual relative to the rest of the population (averge kinship).
+
+There are three pathways to using this tool.
+
+ <strong>(1)</strong> When you have a list or dataset clones, created from the search wizard:
+
+   (A) -- go to the 'Analyze' menu and select the kinship and inbreeding
+
+   (B) -- make sure you are logged in
+
+   (C) -- Select the genotypic protocol for the marker data
+
+   (D) -- select your list or dataset of clones, click 'Go'
+
+   (F) -- click the 'Run Kinship' and wait for the analysis to finish, depending on the data size this may take minutes. You can choose to submit the analysis and wait for an email notice to view the results  or wait for it to complete.
+
+   (G) -- You can download the output following the download links.
+
+<strong>(2)</strong> From the trial detail page:
+
+   (A) -- Go to the 'Analysis Tools' section
+
+   (B) -- Follow steps C to G in (1)
+
+<strong>(3)</strong> In the solGS pipeline:
+
+   (A) -- Once you you are in a model output put page, scroll down to the 'Kinship and Inbreeding' section and run kinship.
+
+ <img src='{{"assets/images/kinship-inbreeding.png" | relative_url }}' width="522" />
+
+
+
+
+
+4.9 Creating Crossing Groups
 --------------
 
 If you calculate selection index based on GEBVs of multiple traits, and you want to select a certain proportion of the indexed individuals (e.g. top 10%, or bottom 10%) and then you want to partition the selected individuals into a number of groups based on their genotypes, you can use the k-means clustering method.
@@ -306,7 +343,7 @@ The procedure is:
 
 <img src='{{"assets/images/selection_proportion_clustering.png" | relative_url }}' width="522" />
 
-4.9 Search Wizard Genomic Relationship Matrix (GRM) Download
+5.10 Search Wizard Genomic Relationship Matrix (GRM) Download
 --------------
 
 The genomic relationship matrix (GRM) is useful for understanding underlying structure in your population. Breedbase can compute the GRM using rrBLUP. First, select accessions in the search wizard and optionally select a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol in your system is used (as defined in sgn_local.conf). Specify the minor allele frequency, missing marker data, and missing individuals data filters to apply. The GRM can be returned in a matrix format (.tsv) which shows all pairwise relationships between the selected accessions and is useful for visualization; alternatively, the GRM can be returned in a three-column format (.tsv) which is useful for programs like ASReml outside of Breedbase. The GRM can also be returned as a simple correlation heatmap image (.pdf). The GRM can be computed from parents of the selected accessions granted the parents were genotyped, by clicking the checkbox "compute from parents"; this is useful for programs where parental lines are genotyped and then hybrids are created and evaluated in the field.
@@ -314,7 +351,7 @@ The genomic relationship matrix (GRM) is useful for understanding underlying str
 <img src='{{"assets/images/search_wizard_genotype_analyses_grm.png" | relative_url }}' width="522" />
 
 
-4.10 Search Wizard Genome Wide Association Study (GWAS)
+4.11 Search Wizard Genome Wide Association Study (GWAS)
 --------------
 
 Performing a genome wide association study (GWAS) can determine genotypic markers which are significantly correlated to phenotypic traits. Breedbase can compute GWAS using rrBLUP. First, select accessions and trait(s) in the search wizard, and optionally select a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol in your system is used (as defined in sgn_local.conf). Several traits can be selected in the search wizard; if the traits are not to be treated as repeated measurements then select 'no' in the select box and this will tell Breedbase to return GWAS results independently for the selected traits. If the selected traits are indeed all repeated measurements then select 'yes' in the select box and Breedbase will return as single GWAS analysis across all the phenotypic records. Specify the minor allele frequency, missing marker data, and missing individuals data filters to apply. GWAS results can be returned in a tabular format (.tsv) where the -log10(p-values) for the selected traits are returned; alternatively, the GWAS results can be returned as Manhattan and QQ plots for the selected traits. The GWAS can be computed from parents of the selected accessions granted the parents were genotyped, by clicking the checkbox "compute from parents"; this is useful for programs where parental lines are genotyped and then hybrids are created and evaluated in the field.
@@ -328,7 +365,7 @@ The GWAS will filter the data by the input MAF and missing data filters provided
 <img src='{{"assets/images/search_wizard_genotype_analyses_qq_plot.png" | relative_url }}' width="522" />
 
 
-4.11 Spectral Analysis {#spectral-analysis}
+4.12 Spectral Analysis {#spectral-analysis}
 --------------
 
 Visible and near-infrared spectroscopy (vis-NIRS) can be related to reference phenotypes through statistical models to produce accurate phenotypic predictions for unobserved samples, increasing phenotyping throughput. This technique is commonly used for predicting traits such as total starch, protein, carotenoid, and water content in many plant breeding programs. Breedbase implements the R package [*waves*](https://CRAN.R-project.org/package=waves) to offer training, evaluation, storage, and use of vis-NIRS prediction models for a wide range of spectrometers and phenotypes.
@@ -336,7 +373,7 @@ Visible and near-infrared spectroscopy (vis-NIRS) can be related to reference ph
 <img src='{{"assets/images/waves_breedbase_schema.png" | relative_url }}' width="522" />
 
 ### Dataset selection
-In order to initiate an analysis, the user must select one or more datasets using the Breedbase [**Search Wizard**]({{site.baseurl}}{% link 02_searching_the_database%}#the-search-wizard). A dataset in Breedbase can contain observationUnit-level (plot-, plant-, or sample-level) trial metadata and phenotypic data from one or more trials. After navigating to the “NIRS” webpage under the “Manage” tab in Breedbase, the user can initiate an analysis and select one of these datasets as input for model training. An optional test dataset can be selected in the second step of the workflow.
+In order to initiate an analysis, the user must select one or more datasets using the Breedbase [**Search Wizard**]({{site.baseurl}}{% link 02_searching_the_database.md%}#the-search-wizard). A dataset in Breedbase can contain observationUnit-level (plot-, plant-, or sample-level) trial metadata and phenotypic data from one or more trials. After navigating to the “NIRS” webpage under the “Manage” tab in Breedbase, the user can initiate an analysis and select one of these datasets as input for model training. An optional test dataset can be selected in the second step of the workflow.
 
 <img src='{{"assets/images/manage_NIRS_prediction_workflow_intro.png" | relative_url }}' width="522" />
 
@@ -417,3 +454,27 @@ De Maesschalck, R., D. Jouan-Rimbaud, and D.L. Massart. 2000. The Mahalanobis di
 * Vapnik, V.N. 2000. The Nature of Statistical Learning Theory. Springer New York, New York, NY.
 * Wold, S., A. Ruhe, H. Wold, and W.J. Dunn, III. 1984. The Collinearity Problem in Linear Regression. The Partial Least Squares (PLS) Approach to Generalized Inverses. SIAM J. Sci. Stat. Comput. 5(3): 735-743. doi: 10.1137/0905052.
 * Wold, S., M. Sjöström, and L. Eriksson. 2001. PLS-regression: a basic tool of chemometrics. Chemom. Intell. Lab. Syst. 58(2): 109-130. doi: 10.1016/S0169-7439(01)00155-1.
+
+
+4.13 General Mixed Model Tool
+--------------
+
+The general mixed model tool is available at <a href="/tools/mixedmodels">/tools/mixedmodels</a> and a link is provided from the Analyze menu.
+
+To use the mixed model tool, first create dataset using the Wizard containing the data that you would like to analyze.
+
+Select the Mixed Model tool from the Analyze menu.
+
+You are presented with a workflow. On the first step of the workflow, select the dataset that you wish to analyze, click on "Choose dataset" to continue.
+
+The second part of the workflow presents you with the traits in the dataset; you can select one or more traits from the lists using the select buttons. If you selected one trait, a bargraph of the trait distribution will be shown.  Click the "Next step" button to move to the next screen.
+
+<img src='{{"assets/images/mixedmodel_tool_model_build_step.png" | relative_url }}' width="522" />
+
+On the model build screen, all the factors are displayed that are contained within the dataset. The factors are presented as a list of blue buttons that can be dragged using the mouse to areas on the screen which build a mixed model equation. The areas correspond to fixed factors, random factors, and optionally to more complex factors, such as fixed factors with interaction and fixe factors with vriable slope/intersects. Drag the available factors to the corresponding area. To calculate BLUPs for germplasm, drag the germplasmName button to the "Random factors" area. To calculate BLUEs, drag it to the "Fixed factors" area. The factors need to have different levels contained within them, for example, if there is only one trial in the dataset, it cannot be used as one of the factors. Click on "Run analysis and got to next step" to run the mixed model and display the results.
+
+The result view contains two tabs, one with the raw data, either BLUPS or BLUEs, and the other the adjusted means from the raw data.
+
+The results can be stored in the database as an analysis, by clicking the button provided on the top of the data.
+
+

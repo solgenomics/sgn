@@ -39,6 +39,7 @@ use Time::Seconds;
 use CXGN::Calendar;
 use JSON;
 use File::Basename qw | basename dirname|;
+use Scalar::Util qw | looks_like_number |;
 
 =head2 accessor bcs_schema()
 
@@ -160,7 +161,8 @@ has 'trial_id' => (isa => 'Int',
 
 has 'layout' => (isa => 'CXGN::Trial::TrialLayout::Phenotyping |
                          CXGN::Trial::TrialLayout::Genotyping |
-                         CXGN::Trial::TrialLayout::Analysis',
+                         CXGN::Trial::TrialLayout::Analysis |
+                          CXGN::Trial::TrialLayout::SamplingTrial',
 		 is => 'rw',
 		 reader => 'get_layout',
 		 writer => 'set_layout',
@@ -209,6 +211,10 @@ sub get_cxgn_project_type {
                 if ($propvalue eq "genotyping_plate") {
                     $cxgn_project_type = 'genotyping_plate_project';
                     $experiment_type = 'genotyping_layout';
+                }
+                if ($propvalue eq "sampling_trial") {
+                    $cxgn_project_type = 'sampling_trial_project';
+                    $experiment_type = 'sampling_layout';
                 }
                 if ($propvalue eq "treatment") {
                     $cxgn_project_type = 'management_factor_project';
@@ -393,6 +399,11 @@ sub get_location {
 sub set_location {
     my $self = shift;
     my $location_id = shift;
+
+    if (!looks_like_number($location_id)) {
+        die "Location_id $location_id not an integer!\n";
+    }
+
 		my $project_id = $self->get_trial_id();
 		my $type_id = $self->get_location_type_id();
 
@@ -435,6 +446,38 @@ sub get_location_noaa_station_id {
     $h->execute($nd_geolocation_id, $noaa_station_id_cvterm_id);
     my ($noaa_station_id) = $h->fetchrow_array();
     return $noaa_station_id;
+}
+
+=head2 function get_location_country_name()
+
+ Usage:        my $country_name = $trial->get_location_country_name();
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_location_country_name {
+    my $self = shift;
+    
+    my $country_name;
+
+    eval {
+        my $nd_geolocation_id = $self->bcs_schema->resultset('Project::Projectprop')->find( { project_id => $self->get_trial_id() , type_id=> $self->get_location_type_id() })->value();
+        my $country_name_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'country_name', 'geolocation_property')->cvterm_id();
+
+        if ( $nd_geolocation_id && $country_name_cvterm_id ) {
+            my $q = "SELECT value FROM nd_geolocationprop WHERE nd_geolocation_id = ? AND type_id = ?;";
+            my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+                    
+            $h->execute($nd_geolocation_id, $country_name_cvterm_id);
+            ($country_name) = $h->fetchrow_array();
+        }
+    };
+
+    return $country_name;
 }
 
 =head2 function get_breeding_programs()
@@ -679,6 +722,65 @@ sub get_field_trials_source_of_genotyping_trial {
     return  \@projects;
 }
 
+=head2 function set_source_field_trials_for_sampling_trial()
+
+ Usage:
+ Desc:         sets associated field trials for the current sampling trial
+ Ret:          returns an arrayref [ id, name ] of arrayrefs
+ Args:         an arrayref [field_trial_id1, field_trial_id2]
+ Side Effects:
+ Example:
+
+=cut
+
+sub set_source_field_trials_for_sampling_trial {
+    my $self = shift;
+    my $source_field_trial_ids = shift;
+    my $schema = $self->bcs_schema;
+    my $sampling_trial_from_field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'sampling_trial_from_field_trial', 'project_relationship')->cvterm_id();
+
+    foreach (@$source_field_trial_ids){
+        if ($_){
+            my $trial_rs= $self->bcs_schema->resultset('Project::ProjectRelationship')->create({
+                'object_project_id' => $self->get_trial_id(),
+                'subject_project_id' => $_,
+                'type_id' => $sampling_trial_from_field_trial_cvterm_id
+            });
+        }
+    }
+    my $projects = $self->get_field_trials_source_of_sampling_trial();
+    return $projects;
+}
+
+=head2 function get_field_trials_source_of_sampling_trial()
+
+ Usage:
+ Desc:         return associated field trials for current sampling trial
+ Ret:          returns an arrayref [ id, name ] of arrayrefs
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_field_trials_source_of_sampling_trial {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $sampling_trial_from_field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'sampling_trial_from_field_trial', 'project_relationship')->cvterm_id();
+
+    my $trial_rs= $self->bcs_schema->resultset('Project::ProjectRelationship')->search({
+        'me.object_project_id' => $self->get_trial_id(),
+        'me.type_id' => $sampling_trial_from_field_trial_cvterm_id
+    }, {
+        join => 'subject_project', '+select' => ['subject_project.name'], '+as' => ['source_trial_name']
+    });
+
+    my @projects;
+    while (my $r = $trial_rs->next) {
+        push @projects, [ $r->subject_project_id, $r->get_column('source_trial_name') ];
+    }
+    return  \@projects;
+}
 
 =head2 function set_crossing_trials_from_field_trial()
 
@@ -903,6 +1005,11 @@ sub get_breeding_program {
 sub set_breeding_program {
 	my $self = shift;
 	my $breeding_program_id = shift;
+
+    if (!looks_like_number($breeding_program_id)) {
+        die "Breeding_program_id $breeding_program_id is not an integer!\n";
+    }
+
 	my $trial_id = $self->get_trial_id();
 	my $type_id = $self->get_breeding_program_trial_relationship_cvterm_id();
 
@@ -1536,6 +1643,28 @@ sub set_genotyping_facility_status {
     $self->_set_projectprop('genotyping_facility_status', $value);
 }
 
+=head2 accessors get_genotyping_vendor_order_id(), set_genotyping_vendor_order_id()
+
+ Usage: For genotyping plates, if a genotyping plate has been submitted to genotyping facility, the order id of that plate can be set here
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_genotyping_vendor_order_id {
+    my $self = shift;
+    return $self->_get_projectprop('genotyping_vendor_order_id');
+}
+
+sub set_genotyping_vendor_order_id {
+    my $self = shift;
+    my $value = shift;
+    $self->_set_projectprop('genotyping_vendor_order_id', $value);
+}
+
 =head2 accessors get_genotyping_plate_format(), set_genotyping_plate_format()
 
  Usage: For genotyping plates, this records if it is 96 wells or 384 or other
@@ -1785,24 +1914,48 @@ sub delete_phenotype_values_and_nd_experiment_md_values {
         my $q_pheno_delete = "DELETE FROM phenotype WHERE phenotype_id IN ($phenotype_id_sql);";
         my $h2 = $schema->storage->dbh()->prepare($q_pheno_delete);
         $h2->execute();
+
+        print STDERR "DELETED ".scalar(@{$phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids}})." Phenotype Values\n";
+
         my $nd_experiment_id_sql = join (",", @{$phenotype_ids_and_nd_experiment_ids_to_delete->{nd_experiment_ids}});
-        my $q_nd_exp_files_delete = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
-        my $h3 = $schema->storage->dbh()->prepare($q_nd_exp_files_delete);
-        $h3->execute();
-        my $q_nd_exp_files_images_delete = "DELETE FROM phenome.nd_experiment_md_images WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
-        my $h4 = $schema->storage->dbh()->prepare($q_nd_exp_files_images_delete);
-        $h4->execute();
 
-        open (my $fh, ">", $temp_file_nd_experiment_id ) || die ("\nERROR: the file $temp_file_nd_experiment_id could not be found\n" );
-            foreach (@{$phenotype_ids_and_nd_experiment_ids_to_delete->{nd_experiment_ids}}) {
-                print $fh "$_\n";
-            }
-        close($fh);
+        # check if the nd_experiment has no other associated phenotypes, since phenotypstore actually attaches many phenotypes to one nd_experiment
+        #
+        my $checkq = "SELECT nd_experiment_id FROM nd_experiment left join nd_experiment_phenotype using(nd_experiment_id) where nd_experiment_id in ($nd_experiment_id_sql) and phenotype_id IS NULL";
+        my $check_h = $schema->storage->dbh()->prepare($checkq);
+        $check_h ->execute();
 
-        my $async_delete = CXGN::Tools::Run->new();
-        $async_delete->run_async("perl $basepath/bin/delete_nd_experiment_entries.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -i $temp_file_nd_experiment_id");
+        my @nd_experiment_ids;
+        while (my ($nd_experiment_id) = $check_h->fetchrow_array()) {
+            push @nd_experiment_ids, $nd_experiment_id;
+        }
 
-        print STDERR "DELETED ".scalar(@{$phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids}})." Phenotype Values and nd_experiment_md_file_links (nd_experiment entries may still be in deletion in asynchronous process.)\n";
+        if (scalar(@nd_experiment_ids)>0) { 
+            $nd_experiment_id_sql = join(",", @nd_experiment_ids);
+
+            my $q_nd_exp_files_delete = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
+            my $h3 = $schema->storage->dbh()->prepare($q_nd_exp_files_delete);
+            $h3->execute();
+
+            my $q_nd_json = "DELETE FROM phenome.nd_experiment_md_json WHERE nd_experiment_id IN ($nd_experiment_id_sql)";
+            my $h_nd_json = $schema->storage->dbh()->prepare($q_nd_json);
+            $h_nd_json->execute();
+
+            my $q_nd_exp_files_images_delete = "DELETE FROM phenome.nd_experiment_md_images WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
+            my $h4 = $schema->storage->dbh()->prepare($q_nd_exp_files_images_delete);
+            $h4->execute();
+
+            open (my $fh, ">", $temp_file_nd_experiment_id ) || die ("\nERROR: the file $temp_file_nd_experiment_id could not be found\n" );
+                foreach (@nd_experiment_ids) {
+                    print $fh "$_\n";
+                }
+            close($fh);
+
+            my $async_delete = CXGN::Tools::Run->new();
+            $async_delete->run_async("perl $basepath/bin/delete_nd_experiment_entries.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -i $temp_file_nd_experiment_id");
+
+            print STDERR "DELETED ".scalar(@{$phenotype_ids_and_nd_experiment_ids_to_delete->{phenotype_ids}})." Phenotype Values and nd_experiment_md_file_links (and ".scalar(@nd_experiment_ids)." nd_experiment entries may still be in deletion in asynchronous process.)\n";
+        }
     };
 
     my $error;

@@ -433,7 +433,8 @@ sub get_trial_design {
         treatment_project_ids => \@treatment_ids,
         selected_columns => $selected_columns{$type},
         selected_trait_ids => [],
-        use_synonyms => 'false'
+        use_synonyms => 'false',
+        include_measured => 'true'
     });
     my $layout = $trial_layout_download->get_layout_output();
 
@@ -580,16 +581,16 @@ sub get_data {
                 $cross_combination = $cross->[2];
             }
 
-            if ($cross->[7] eq ''){
+            if ($cross->[8] eq ''){
                 $male_parent_name = 'No male parent available';
             } else {
-                $male_parent_name = $cross->[7];
+                $male_parent_name = $cross->[8];
             }
 
-            if ($cross->[6] eq ''){
+            if ($cross->[7] eq ''){
                 $male_parent_id = 'No male parent available';
             } else {
-                $male_parent_id = $cross->[6];
+                $male_parent_id = $cross->[7];
             }
 
             $all_design{$cross->[0]} = {'cross_name' => $cross->[1],

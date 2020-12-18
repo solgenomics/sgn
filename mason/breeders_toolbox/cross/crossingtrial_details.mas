@@ -3,6 +3,7 @@ $trial_id
 $trial_name
 $breeding_program_name
 $location_name
+$country_name
 $year
 $planting_date
 $harvest_date
@@ -49,7 +50,7 @@ $identifier_prefix
                 <td>
                     <div id="trial_location">
 % if ($location_name) {
-%  print "$location_name";
+%  print "$location_name ( $country_name )";
 % } else {
 %  print "<span class='text-danger'>[No Location]</span>";
 % }

@@ -29,6 +29,7 @@ sub _validate_with_plugin {
     $supported_cross_types{'bulk_open'} = 1; #only female parent required
     $supported_cross_types{'doubled_haploid'} = 1; #only female parent required
     $supported_cross_types{'polycross'} = 1; #both parents required
+    $supported_cross_types{'backcross'} = 1; #both parents required, parents can be cross or accession stock type
 
     #try to open the excel file and report any errors
     $excel_obj = $parser->parse($filename);
@@ -122,6 +123,7 @@ sub _validate_with_plugin {
     my %seen_cross_names;
     my %seen_accession_names;
     my %seen_plot_plant_names;
+    my %seen_backcross_parents;
 
     for my $row ( 1 .. $row_max ) {
         my $row_name = $row+1;
@@ -205,8 +207,8 @@ sub _validate_with_plugin {
 
         #male parent must not be blank if type is biparental or bulk
         if (!$male_parent || $male_parent eq '') {
-            if ($cross_type eq ( 'biparental' || 'bulk' || 'sib' || 'polycross' )) {
-                push @error_messages, "Cell E$row_name: male parent required for biparental, sib, polycross and bulk cross types";
+            if ($cross_type eq ( 'biparental' || 'bulk' || 'sib' || 'polycross' || 'backcross' )) {
+                push @error_messages, "Cell E$row_name: male parent required for biparental, sib, polycross, backcross and bulk cross types";
             }
         }
 
@@ -215,14 +217,19 @@ sub _validate_with_plugin {
             $seen_cross_names{$cross_name}++;
         }
 
-        if ($female_parent){
+        if ($cross_type eq 'backcross') {
+            $female_parent =~ s/^\s+|\s+$//g;
+            $seen_backcross_parents{$female_parent}++;
+            $male_parent =~ s/^\s+|\s+$//g;
+            $seen_backcross_parents{$male_parent}++;
+        } else {
             $female_parent =~ s/^\s+|\s+$//g;
             $seen_accession_names{$female_parent}++;
-        }
 
-        if ($male_parent){
-            $male_parent =~ s/^\s+|\s+$//g;
-            $seen_accession_names{$male_parent}++;
+            if ($male_parent){
+                $male_parent =~ s/^\s+|\s+$//g;
+                $seen_accession_names{$male_parent}++;
+            }
         }
 
         if ($female_plot_plant_name){
@@ -246,6 +253,15 @@ sub _validate_with_plugin {
     if (scalar(@parents_missing) > 0) {
         push @error_messages, "The following parents are not in the database, or are not in the database as uniquenames: ".join(',',@parents_missing);
         $errors{'missing_accessions'} = \@parents_missing;
+    }
+
+    my @backcross_parents = keys %seen_backcross_parents;
+    my $backcross_parent_validator = CXGN::List::Validate->new();
+    my @backcross_parents_missing = @{$backcross_parent_validator->validate($schema,'accessions_or_crosses',\@backcross_parents)->{'missing'}};
+
+    if (scalar(@backcross_parents_missing) > 0) {
+        push @error_messages, "The following parents are not in the database, or are not in the database as uniquenames: ".join(',',@backcross_parents_missing);
+        $errors{'missing_accessions_or_crosses'} = \@backcross_parents_missing;
     }
 
     if (($female_plot_plant_header eq 'female_plot') && ($male_plot_plant_header eq 'male_plot')) {

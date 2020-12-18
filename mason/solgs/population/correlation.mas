@@ -44,15 +44,16 @@ $training_pop_id = $trial_id if $trial_id;
 <& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.correlation"] &>
 <&| /page/info_section.mas, 
       collapsible => 1, 
-      collapsed   => 0, 
+      collapsed   => 1, 
       title       => "Phenotypic correlation analysis (Pearson)"
 &>
 
 
-<div id="correlation_canvas">
-  <input id="run_pheno_correlation" class="button" type="button" value="Run correlation" /> 
-  <input type="hidden" id="population_id" value="<% $training_pop_id %>" />
-  <div id="correlation_message"  style="font-weight:bold;text-align:center;color:#A7C942"></div>
+  <div id="correlation_canvas">
+    <& /solgs/spinner.mas &>
+      <input id="run_pheno_correlation" class="button" type="button" value="Run correlation" /> 
+      <input type="hidden" id="population_id" value="<% $training_pop_id %>" />
+      <div id="correlation_message"  class="message"></div>
 </div>
 
 </&>

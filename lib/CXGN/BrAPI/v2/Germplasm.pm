@@ -473,8 +473,7 @@ sub store {
     my $person = CXGN::People::Person->new($dbh, $user_id);
     my $user_name = $person->get_username;
 
-    my $page_obj = CXGN::Page->new();
-    my $main_production_site_url = $page_obj->get_hostname();
+    my $main_production_site_url = $c->config->{main_production_site_url};
 
     my $accession_list;
     my $organism_list;
@@ -662,8 +661,7 @@ sub update {
         return CXGN::BrAPI::JSONResponse->return_error($status, 'GermplasmDbId does not exist in the database');
     }
 
-    my $page_obj = CXGN::Page->new();
-    my $main_production_site_url = $page_obj->get_hostname();
+    my $main_production_site_url = $c->config->{main_production_site_url};
 
     #validate organism
     my $organism_list;

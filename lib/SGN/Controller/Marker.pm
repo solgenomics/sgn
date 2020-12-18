@@ -7,6 +7,7 @@ SGN::Controller::Marker - controller for marker-related stuff
 package SGN::Controller::Marker;
 use Moose;
 use namespace::autoclean;
+use CXGN::Marker::Search;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -78,6 +79,25 @@ sub get_marker: Chained('/') PathPart('marker') :CaptureArgs(1) {
 }
 
 
+=head2 view_by_name 
+
+Public Path: /marker/view_by_name/$name
+
+Path Params:
+    name = marker unique name
+
+Search for the marker that matches the provided marker name.
+If 1 match is found, display the marker detail page.  Display an 
+error message if no matches are found.
+
+=cut
+
+sub view_marker_by_name :Path('/marker/view_by_name') CaptureArgs(1) {
+    my ($self, $c, $marker_query) = @_;
+    $self->search_marker($c, $marker_query);
+}
+
+
 ############ helper methods ########
 
 # Returns the stuff that goes in the 'href' attribute of the 'a' tag for
@@ -96,6 +116,56 @@ sub rflp_image_link {
     return unless -f $source;
 
     return catfile( $c->get_conf('static_datasets_url'), 'images','rflp', $dir, "$marker_name.jpg" );
+}
+
+
+sub search_marker : Private {
+    my ( $self, $c, $marker_query ) = @_;
+    my $dbh = $c->dbc->dbh();
+    
+    my $msearch = CXGN::Marker::Search->new($dbh);
+    $msearch->name_like($marker_query);
+    $msearch->perform_search();
+    my @marker_ids = $msearch->fetch_id_list();
+
+    my @filtered_marker_ids = _uniq(@marker_ids);
+    my $count = scalar @filtered_marker_ids;
+
+    
+    # NO MATCH FOUND
+    if ( $count == 0 ) {
+        $c->stash->{template} = "generic_message.mas";
+        $c->stash->{message} = "<strong>No Matching Marker Found</strong> ($marker_query)<br />You can view and search for markers from the <a href='/search/markers'>Marker Search Page</a>";
+    }
+
+    # MULTIPLE MATCHES FOUND
+    elsif ( $count > 1 ) {
+        my @marker_objs = $msearch->fetch_full_markers();
+        my $list = "<ul>";
+        foreach (@marker_objs) {
+            my $marker_id = $_->marker_id();
+            my $marker_name = $_->name_that_marker();
+            my $url = "/search/markers/markerinfo.pl?marker_id=$marker_id";
+            $list .= "<li><a href='$url'>$marker_name</a></li>";
+        }
+        $list .= "</ul>";
+        $c->stash->{template} = "generic_message.mas";
+        $c->stash->{message} = "<strong>Multiple Markers Found</strong><br />" . $list;
+    }
+
+    # 1 MATCH FOUND - FORWARD TO VIEW MARKER
+    else {
+        my $marker_id = $filtered_marker_ids[0];
+        $c->res->redirect('/search/markers/markerinfo.pl?marker_id=' . $marker_id, 301);
+        $c->detach();
+    }
+
+
+}
+
+sub _uniq : Private {
+    my %seen;
+    grep !$seen{$_}++, @_;
 }
 
 

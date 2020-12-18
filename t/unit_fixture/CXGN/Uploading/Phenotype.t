@@ -5530,299 +5530,87 @@ ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
 print STDERR Dumper $parsed_file;
 
 is_deeply($parsed_file, {
-          'units' => [
-                       'test_trial21',
-                       'test_trial210',
-                       'test_trial211',
-                       'test_trial212',
-                       'test_trial213',
-                       'test_trial214',
-                       'test_trial215',
-                       'test_trial22',
-                       'test_trial23',
-                       'test_trial24',
-                       'test_trial25',
-                       'test_trial26',
-                       'test_trial27',
-                       'test_trial28',
-                       'test_trial29'
-                     ],
-          'variables' => [
-                        'number of planted stakes counting|CO:0000159',
-                        'root weight in air|CO:0000157',
-                        'root weight in water|CO:0000158',
-                        'sprout count|CO:0000213'
-                      ],
-          'data' => {
-                      'test_trial212' => {
-                                           'root weight in water|CO:0000158' => [
-                                                                                  '',
-                                                                                  ''
-                                                                                ],
-                                           'number of planted stakes counting|CO:0000159' => [
-                                                                                               '',
-                                                                                               ''
-                                                                                             ],
-                                           'root weight in air|CO:0000157' => [
-                                                                                '',
-                                                                                ''
-                                                                              ],
-                                           'sprout count|CO:0000213' => [
-                                                                          '',
-                                                                          ''
-                                                                        ]
-                                         },
-                      'test_trial21' => {
-                                          'root weight in air|CO:0000157' => [
-                                                                               '3',
-                                                                               ''
-                                                                             ],
-                                          'sprout count|CO:0000213' => [
-                                                                         '18',
-                                                                         ''
-                                                                       ],
-                                          'number of planted stakes counting|CO:0000159' => [
-                                                                                              '20',
-                                                                                              ''
-                                                                                            ],
-                                          'root weight in water|CO:0000158' => [
-                                                                                 '0.3',
-                                                                                 ''
-                                                                               ]
-                                        },
-                      'test_trial213' => {
-                                           'root weight in water|CO:0000158' => [
-                                                                                  '',
-                                                                                  ''
-                                                                                ],
-                                           'number of planted stakes counting|CO:0000159' => [
-                                                                                               '',
-                                                                                               ''
-                                                                                             ],
-                                           'root weight in air|CO:0000157' => [
-                                                                                '',
-                                                                                ''
-                                                                              ],
-                                           'sprout count|CO:0000213' => [
-                                                                          '',
-                                                                          ''
-                                                                        ]
-                                         },
-                      'test_trial25' => {
-                                          'root weight in water|CO:0000158' => [
-                                                                                 '',
-                                                                                 ''
-                                                                               ],
-                                          'number of planted stakes counting|CO:0000159' => [
-                                                                                              '20',
-                                                                                              ''
-                                                                                            ],
-                                          'root weight in air|CO:0000157' => [
-                                                                               '3',
-                                                                               ''
-                                                                             ]
-                                        },
-                      'test_trial215' => {
-                                           'root weight in water|CO:0000158' => [
-                                                                                  '',
-                                                                                  ''
-                                                                                ],
-                                           'number of planted stakes counting|CO:0000159' => [
-                                                                                               '',
-                                                                                               ''
-                                                                                             ],
-                                           'root weight in air|CO:0000157' => [
-                                                                                '',
-                                                                                ''
-                                                                              ],
-                                           'sprout count|CO:0000213' => [
-                                                                          '',
-                                                                          ''
-                                                                        ]
-                                         },
-                      'test_trial214' => {
-                                           'root weight in water|CO:0000158' => [
-                                                                                  '',
-                                                                                  ''
-                                                                                ],
-                                           'sprout count|CO:0000213' => [
-                                                                          '',
-                                                                          ''
-                                                                        ],
-                                           'root weight in air|CO:0000157' => [
-                                                                                '',
-                                                                                ''
-                                                                              ],
-                                           'number of planted stakes counting|CO:0000159' => [
-                                                                                               '',
-                                                                                               ''
-                                                                                             ]
-                                         },
-                      'test_trial211' => {
-                                           'root weight in water|CO:0000158' => [
-                                                                                  '',
-                                                                                  ''
-                                                                                ],
-                                           'root weight in air|CO:0000157' => [
-                                                                                '',
-                                                                                ''
-                                                                              ],
-                                           'sprout count|CO:0000213' => [
-                                                                          '',
-                                                                          ''
-                                                                        ],
-                                           'number of planted stakes counting|CO:0000159' => [
-                                                                                               '',
-                                                                                               ''
-                                                                                             ]
-                                         },
-                      'test_trial28' => {
-                                          'root weight in water|CO:0000158' => [
-                                                                                 '0.32',
-                                                                                 ''
-                                                                               ],
-                                          'number of planted stakes counting|CO:0000159' => [
-                                                                                              '20',
-                                                                                              ''
-                                                                                            ],
-                                          'root weight in air|CO:0000157' => [
-                                                                               '3',
-                                                                               ''
-                                                                             ],
-                                          'sprout count|CO:0000213' => [
-                                                                         '14',
-                                                                         ''
-                                                                       ]
-                                        },
-                      'test_trial27' => {
-                                          'root weight in water|CO:0000158' => [
-                                                                                 '0.32',
-                                                                                 ''
-                                                                               ],
-                                          'number of planted stakes counting|CO:0000159' => [
-                                                                                              '20',
-                                                                                              ''
-                                                                                            ],
-                                          'root weight in air|CO:0000157' => [
-                                                                               '3',
-                                                                               ''
-                                                                             ],
-                                          'sprout count|CO:0000213' => [
-                                                                         '14',
-                                                                         ''
-                                                                       ]
-                                        },
-                      'test_trial22' => {
-                                          'number of planted stakes counting|CO:0000159' => [
-                                                                                              '20',
-                                                                                              ''
-                                                                                            ],
-                                          'root weight in air|CO:0000157' => [
-                                                                               '3',
-                                                                               ''
-                                                                             ],
-                                          'sprout count|CO:0000213' => [
-                                                                         '',
-                                                                         ''
-                                                                       ],
-                                          'root weight in water|CO:0000158' => [
-                                                                                 '',
-                                                                                 ''
-                                                                               ]
-                                        },
-                      'test_trial210' => {
-                                           'root weight in water|CO:0000158' => [
-                                                                                  '',
-                                                                                  ''
-                                                                                ],
-                                           'number of planted stakes counting|CO:0000159' => [
-                                                                                               '',
-                                                                                               ''
-                                                                                             ],
-                                           'sprout count|CO:0000213' => [
-                                                                          '',
-                                                                          ''
-                                                                        ],
-                                           'root weight in air|CO:0000157' => [
-                                                                                '',
-                                                                                ''
-                                                                              ]
-                                         },
-                      'test_trial23' => {
-                                          'root weight in air|CO:0000157' => [
-                                                                               '3',
-                                                                               ''
-                                                                             ],
-                                          'sprout count|CO:0000213' => [
-                                                                         '20',
-                                                                         ''
-                                                                       ],
-                                          'number of planted stakes counting|CO:0000159' => [
-                                                                                              '20',
-                                                                                              ''
-                                                                                            ],
-                                          'root weight in water|CO:0000158' => [
-                                                                                 '0.32',
-                                                                                 ''
-                                                                               ]
-                                        },
-                      'test_trial26' => {
-                                          'root weight in water|CO:0000158' => [
-                                                                                 '0.36',
-                                                                                 ''
-                                                                               ],
-                                          'number of planted stakes counting|CO:0000159' => [
-                                                                                              '20',
-                                                                                              ''
-                                                                                            ],
-                                          'sprout count|CO:0000213' => [
-                                                                         '18',
-                                                                         ''
-                                                                       ],
-                                          'root weight in air|CO:0000157' => [
-                                                                               '3',
-                                                                               ''
-                                                                             ]
-                                        },
-                      'test_trial24' => {
-                                          'root weight in water|CO:0000158' => [
-                                                                                 '',
-                                                                                 ''
-                                                                               ],
-                                          'sprout count|CO:0000213' => [
-                                                                         '6',
-                                                                         ''
-                                                                       ],
-                                          'root weight in air|CO:0000157' => [
-                                                                               '3',
-                                                                               ''
-                                                                             ],
-                                          'number of planted stakes counting|CO:0000159' => [
-                                                                                              '20',
-                                                                                              ''
-                                                                                            ]
-                                        },
-                      'test_trial29' => {
-                                          'number of planted stakes counting|CO:0000159' => [
-                                                                                              '',
-                                                                                              ''
-                                                                                            ],
-                                          'root weight in air|CO:0000157' => [
-                                                                               '',
-                                                                               ''
-                                                                             ],
-                                          'sprout count|CO:0000213' => [
-                                                                         '',
-                                                                         ''
-                                                                       ],
-                                          'root weight in water|CO:0000158' => [
-                                                                                 '',
-                                                                                 ''
-                                                                               ]
-                                        }
-                    }
-        }, 'check parse simple');
+    'data' => {
+        'test_trial213' => {'CO_334:0000011' => ['',''],'sprout count|CO_334:0000213' => ['',''],'root weight in air|CO_334:0000157' => ['',''],'root weight in water|CO_334:0000158' => ['',''],'number of planted stakes counting|CO_334:0000159' => ['','']},
+        'test_trial28' => {'number of planted stakes counting|CO_334:0000159' => ['20',''],'root weight in water|CO_334:0000158' => ['0.32',''],'sprout count|CO_334:0000213' => ['14',''],'root weight in air|CO_334:0000157' => ['3',''],'CO_334:0000011' => ['','']},
+        'test_trial29' => {'number of planted stakes counting|CO_334:0000159' => ['',''],'root weight in water|CO_334:0000158' => ['',''],'sprout count|CO_334:0000213' => ['',''],'root weight in air|CO_334:0000157' => ['',''],'CO_334:0000011' => ['','']},
+        'test_trial25' => {'CO_334:0000011' => ['',''],'root weight in air|CO_334:0000157' => ['3',''],'root weight in water|CO_334:0000158' => ['',''],'number of planted stakes counting|CO_334:0000159' => ['20','']},
+        'test_trial212' => {'CO_334:0000011' => ['',''],'root weight in air|CO_334:0000157' => ['',''],'sprout count|CO_334:0000213' => ['',''],'root weight in water|CO_334:0000158' => ['',''],'number of planted stakes counting|CO_334:0000159' => ['','']},
+        'test_trial214' => {'number of planted stakes counting|CO_334:0000159' => ['',''],'root weight in water|CO_334:0000158' => ['',''],'sprout count|CO_334:0000213' => ['',''],'root weight in air|CO_334:0000157' => ['',''],'CO_334:0000011' => ['','']},
+        'test_trial210' => {'number of planted stakes counting|CO_334:0000159' => ['0',''],'root weight in water|CO_334:0000158' => ['',''],'root weight in air|CO_334:0000157' => ['',''],'sprout count|CO_334:0000213' => ['',''],'CO_334:0000011' => ['','']},
+        'test_trial215' => {'CO_334:0000011' => ['',''],'sprout count|CO_334:0000213' => ['',''],'root weight in air|CO_334:0000157' => ['',''],'root weight in water|CO_334:0000158' => ['',''],'number of planted stakes counting|CO_334:0000159' => ['','']},
+        'test_trial27' => {'number of planted stakes counting|CO_334:0000159' => ['20',''],'root weight in water|CO_334:0000158' => ['0.32',''],'sprout count|CO_334:0000213' => ['14',''],'root weight in air|CO_334:0000157' => ['3',''],'CO_334:0000011' => ['','']},
+        'test_trial23' => {'number of planted stakes counting|CO_334:0000159' => ['20',''],'root weight in water|CO_334:0000158' => ['0.32',''],'sprout count|CO_334:0000213' => ['20',''],'root weight in air|CO_334:0000157' => ['3',''],'CO_334:0000011' => ['4','']},
+        'test_trial211' => {'number of planted stakes counting|CO_334:0000159' => ['',''],'root weight in water|CO_334:0000158' => ['',''],'sprout count|CO_334:0000213' => ['0',''],'root weight in air|CO_334:0000157' => ['',''],'CO_334:0000011' => ['','']},
+        'test_trial26' => {'CO_334:0000011' => ['',''],'root weight in air|CO_334:0000157' => ['3',''],'sprout count|CO_334:0000213' => ['18',''],'root weight in water|CO_334:0000158' => ['0.36',''],'number of planted stakes counting|CO_334:0000159' => ['20','']},
+        'test_trial24' => {'number of planted stakes counting|CO_334:0000159' => ['20',''],'root weight in water|CO_334:0000158' => ['',''],'root weight in air|CO_334:0000157' => ['3',''],'sprout count|CO_334:0000213' => ['6',''],'CO_334:0000011' => ['','']},
+        'test_trial22' => {'number of planted stakes counting|CO_334:0000159' => ['20',''],'root weight in water|CO_334:0000158' => ['',''],'sprout count|CO_334:0000213' => ['',''],'root weight in air|CO_334:0000157' => ['3',''],'CO_334:0000011' => ['3','']},
+        'test_trial21' => {'CO_334:0000011' => ['2',''],'sprout count|CO_334:0000213' => ['18',''],'root weight in air|CO_334:0000157' => ['3',''],'root weight in water|CO_334:0000158' => ['0.3',''],'number of planted stakes counting|CO_334:0000159' => ['20','']}
+    },
+    'units' => ['test_trial21','test_trial210','test_trial211','test_trial212','test_trial213','test_trial214','test_trial215','test_trial22','test_trial23','test_trial24','test_trial25','test_trial26','test_trial27','test_trial28','test_trial29'],
+    'variables' => ['CO_334:0000011','number of planted stakes counting|CO_334:0000159','root weight in air|CO_334:0000157','root weight in water|CO_334:0000158','sprout count|CO_334:0000213']}, 'check parse simple');
 
+$phenotype_metadata{'archived_file'} = $archived_filename_with_path;
+$phenotype_metadata{'archived_file_type'}="spreadsheet phenotype simple file";
+$phenotype_metadata{'operator'}="janedoe";
+$phenotype_metadata{'date'}="2016-02-26_05:55:21";
+%parsed_data = %{$parsed_file->{'data'}};
+@plots = @{$parsed_file->{'units'}};
+@traits = @{$parsed_file->{'variables'}};
+
+my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    basepath=>$f->config->{basepath},
+    dbhost=>$f->config->{dbhost},
+    dbname=>$f->config->{dbname},
+    dbuser=>$f->config->{dbuser},
+    dbpass=>$f->config->{dbpass},
+    temp_file_nd_experiment_id=>$f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete",
+    bcs_schema=>$f->bcs_schema,
+    metadata_schema=>$f->metadata_schema,
+    phenome_schema=>$f->phenome_schema,
+    user_id=>41,
+    stock_list=>\@plots,
+    trait_list=>\@traits,
+    values_hash=>\%parsed_data,
+    has_timestamps=>1,
+    overwrite_values=>1,
+    metadata_hash=>\%phenotype_metadata,
+);
+my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+ok(!$verified_error);
+my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
+ok(!$stored_phenotype_error_msg, "check that store phenotype spreadsheet simple works");
+
+my $bs = CXGN::BreederSearch->new( { dbh=>$f->bcs_schema->storage->dbh, dbname=>$f->config->{dbname} } );
+my $refresh = $bs->refresh_matviews($f->config->{dbhost}, $f->config->{dbname}, $f->config->{dbuser}, $f->config->{dbpass}, 'fullview', 'concurrent', $f->config->{basepath});
+sleep(20);
+
+my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+	search_type=>'MaterializedViewTable',
+	bcs_schema=>$f->bcs_schema,
+	data_level=>'plot',
+	trial_list=>[137],
+	include_timestamp=>0,
+);
+my @data = $phenotypes_search->get_phenotype_matrix();
+print STDERR Dumper \@data;
+is_deeply(\@data, [
+['studyYear','programDbId','programName','programDescription','studyDbId','studyName','studyDescription','studyDesign','plotWidth','plotLength','fieldSize','fieldTrialIsPlannedToBeGenotyped','fieldTrialIsPlannedToCross','plantingDate','harvestDate','locationDbId','locationName','germplasmDbId','germplasmName','germplasmSynonyms','observationLevel','observationUnitDbId','observationUnitName','replicate','blockNumber','plotNumber','rowNumber','colNumber','entryType','plantNumber','plantedSeedlotStockDbId','plantedSeedlotStockUniquename','plantedSeedlotCurrentCount','plantedSeedlotCurrentWeightGram','plantedSeedlotBoxName','plantedSeedlotTransactionCount','plantedSeedlotTransactionWeight','plantedSeedlotTransactionDescription','availableGermplasmSeedlotUniquenames','dry matter content percentage|CO_334:0000092','dry yield|CO_334:0000014','fieldbook_image|CO_334:0010472','flower|CO_334:0000111','fresh root weight|CO_334:0000012','fresh shoot weight measurement in kg|CO_334:0000016','harvest index variable|CO_334:0000015','number of planted stakes counting|CO_334:0000159','root number counting|CO_334:0000011','root weight in air|CO_334:0000157','root weight in water|CO_334:0000158','sprout count at one-month|CO_334:0000213','sprouting proportion|CO_334:0000008','top yield|CO_334:0000017','notes'],
+['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38843,'test_accession4','','plot',38857,'test_trial21','1','1','1',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','27','42','/storage/emulated/0/fieldBook/plot_data/test_trial/photos/test_trial21_2016-09-12-11-15-12.jpg','0','15','20','0.8','20','2','3','0.3','18','45','2','test note1 (Operator: janedoe, Time: )'],
+['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38842,'test_accession3','','plot',38866,'test_trial210','3','1','10',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','29','12',undef,'0','15','29','9.8','0',undef,undef,undef,undef,'45','2',undef],
+['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38840,'test_accession1','','plot',38867,'test_trial211','3','1','11',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','31','13',undef,'0','15','30','10.8',undef,'4',undef,undef,'0','2','4',undef],
+['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38844,'test_accession5','','plot',38868,'test_trial212','3','1','12',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','33','42',undef,'0','15','31','11.8',undef,'6',undef,undef,undef,'56','7',undef],
+['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38841,'test_accession2','','plot',38869,'test_trial213','2','1','13',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','35','35',undef,'1','15','32','12.8',undef,'8',undef,undef,undef,'8','4.4',undef],
+['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38843,'test_accession4','','plot',38870,'test_trial214','3','1','14',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','37','32',undef,'1','15','33','13.8',undef,'4',undef,undef,undef,'87','7.5',undef],
+['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38841,'test_accession2','','plot',38871,'test_trial215','3','1','15',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','39','31',undef,'1','15','34','14.8',undef,'5',undef,undef,undef,'25','7',undef],
+['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38844,'test_accession5','','plot',38858,'test_trial22','1','1','2',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','29','45','/storage/emulated/0/fieldBook/plot_data/test_trial/photos/test_trial22_2016-09-12-11-15-26.jpg','1','15','21','1.8','20','3','3',undef,undef,'43','3','testnote2 (Operator: janedoe, Time: )'],
+['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38842,'test_accession3','','plot',38859,'test_trial23','1','1','3',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','28','41',undef,'1','15','22','2.8','20','4','3','0.32','20','23','5',undef],
+['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38842,'test_accession3','','plot',38860,'test_trial24','2','1','4',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','17','14',undef,'1','15','23','3.8','20','11','3',undef,'6','78','7',undef],
+['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38840,'test_accession1','','plot',38861,'test_trial25','1','1','5',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','18','25',undef,'1','15','24','0.8','20','6','3',undef,undef,'56','2',undef],
+['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38843,'test_accession4','','plot',38862,'test_trial26','2','1','6',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','21','0',undef,'1','15','25','5.8','20','4','3','0.36','18','45','4',undef],
+['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38844,'test_accession5','','plot',38863,'test_trial27','2','1','7',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','23','0',undef,'1','15','26','6.8','20','8','3','0.32','14','34','9',undef],
+['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38840,'test_accession1','','plot',38864,'test_trial28','2','1','8',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','13','41',undef,'0','15','27','7.8','20','9','3','0.32','14','23','6',undef],
+['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38841,'test_accession2','','plot',38865,'test_trial29','1','1','9',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','27','24',undef,'1','15','28','8.8',undef,'6',undef,undef,undef,'76','3',undef]]);
 
 $mech->get_ok('http://localhost:3010/ajax/search/images?image_description_filename_composite=26');
 $response = decode_json $mech->content;
@@ -5849,7 +5637,7 @@ ok($parsed_file, "Check if parse parse associated_images phenotype spreadsheet w
 
 print STDERR Dumper $parsed_file;
 
-is_deeply($parsed_file, {'data' => {'test_trial22' => {'CO_334:0000011' => ['4','','','',2429],'CO_334:0000010' => ['5','','nmorales','',2429]},'test_trial21' => {'CO_334:0000008' => ['12','','nmorales','',2430],'CO_334:0000013' => ['23','','','',2430]}},'variables' => ['CO_334:0000008','CO_334:0000010','CO_334:0000011','CO_334:0000013'],'units' => ['test_trial21','test_trial22']}, "check parse associated_images phenotype spreadsheet file");
+is_deeply($parsed_file, {'data' => {'test_trial22' => {'CO_334:0000011' => ['0','','','',2429],'CO_334:0000010' => ['5','','nmorales','',2429]},'test_trial21' => {'CO_334:0000008' => ['12','','nmorales','',2430],'CO_334:0000013' => ['23','','','',2430]}},'variables' => ['CO_334:0000008','CO_334:0000010','CO_334:0000011','CO_334:0000013'],'units' => ['test_trial21','test_trial22']}, "check parse associated_images phenotype spreadsheet file");
 
 $phenotype_metadata{'archived_file'} = $filename;
 $phenotype_metadata{'archived_file_type'}="spreadsheet phenotype associated_images file";
@@ -5882,6 +5670,10 @@ ok(!$verified_error);
 my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store phenotype spreadsheet associated_images works");
 
+my $bs = CXGN::BreederSearch->new( { dbh=>$f->bcs_schema->storage->dbh, dbname=>$f->config->{dbname} } );
+my $refresh = $bs->refresh_matviews($f->config->{dbhost}, $f->config->{dbname}, $f->config->{dbuser}, $f->config->{dbpass}, 'fullview', 'concurrent', $f->config->{basepath});
+sleep(20);
+
 $mech->get_ok('http://localhost:3010/ajax/search/images');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
@@ -5889,6 +5681,34 @@ is($response->{recordsTotal}, 6);
 is($response->{data}[0][4], 'Stock (plot): <a href=\'/stock/38858/view\' >test_trial22</a>');
 is($response->{data}[1][4], 'Stock (plot): <a href=\'/stock/38857/view\' >test_trial21</a>');
 is($response->{data}[2][4], 'Stock (plot): <a href=\'/stock/38858/view\' >test_trial22</a><br/>Project (phenotype_spreadsheet_associated_images): test_trial');
+
+my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+	search_type=>'MaterializedViewTable',
+	bcs_schema=>$f->bcs_schema,
+	data_level=>'plot',
+	trial_list=>[137],
+	include_timestamp=>0,
+);
+my @data = $phenotypes_search->get_phenotype_matrix();
+print STDERR Dumper \@data;
+is_deeply(\@data, [
+['studyYear','programDbId','programName','programDescription','studyDbId','studyName','studyDescription','studyDesign','plotWidth','plotLength','fieldSize','fieldTrialIsPlannedToBeGenotyped','fieldTrialIsPlannedToCross','plantingDate','harvestDate','locationDbId','locationName','germplasmDbId','germplasmName','germplasmSynonyms','observationLevel','observationUnitDbId','observationUnitName','replicate','blockNumber','plotNumber','rowNumber','colNumber','entryType','plantNumber','plantedSeedlotStockDbId','plantedSeedlotStockUniquename','plantedSeedlotCurrentCount','plantedSeedlotCurrentWeightGram','plantedSeedlotBoxName','plantedSeedlotTransactionCount','plantedSeedlotTransactionWeight','plantedSeedlotTransactionDescription','availableGermplasmSeedlotUniquenames','dry matter content percentage|CO_334:0000092','dry yield|CO_334:0000014','fieldbook_image|CO_334:0010472','flower|CO_334:0000111','fresh root weight|CO_334:0000012','fresh root yield|CO_334:0000013','fresh shoot weight measurement in kg|CO_334:0000016','harvest index variable|CO_334:0000015','number of planted stakes counting|CO_334:0000159','plant stands harvested counting|CO_334:0000010','root number counting|CO_334:0000011','root weight in air|CO_334:0000157','root weight in water|CO_334:0000158','sprout count at one-month|CO_334:0000213','sprouting proportion|CO_334:0000008','top yield|CO_334:0000017','notes'],
+['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38843,'test_accession4','','plot',38857,'test_trial21','1','1','1',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','27','42','/storage/emulated/0/fieldBook/plot_data/test_trial/photos/test_trial21_2016-09-12-11-15-12.jpg','0','15','23','20','0.8','20',undef,undef,'3','0.3','18','12','2','test note1 (Operator: janedoe, Time: )'],
+['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38842,'test_accession3','','plot',38866,'test_trial210','3','1','10',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','29','12',undef,'0','15',undef,'29','9.8','0',undef,undef,undef,undef,undef,'45','2',undef],
+['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38840,'test_accession1','','plot',38867,'test_trial211','3','1','11',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','31','13',undef,'0','15',undef,'30','10.8',undef,undef,'4',undef,undef,'0','2','4',undef],
+['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38844,'test_accession5','','plot',38868,'test_trial212','3','1','12',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','33','42',undef,'0','15',undef,'31','11.8',undef,undef,'6',undef,undef,undef,'56','7',undef],
+['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38841,'test_accession2','','plot',38869,'test_trial213','2','1','13',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','35','35',undef,'1','15',undef,'32','12.8',undef,undef,'8',undef,undef,undef,'8','4.4',undef],
+['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38843,'test_accession4','','plot',38870,'test_trial214','3','1','14',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','37','32',undef,'1','15',undef,'33','13.8',undef,undef,'4',undef,undef,undef,'87','7.5',undef],
+['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38841,'test_accession2','','plot',38871,'test_trial215','3','1','15',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','39','31',undef,'1','15',undef,'34','14.8',undef,undef,'5',undef,undef,undef,'25','7',undef],
+['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38844,'test_accession5','','plot',38858,'test_trial22','1','1','2',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','29','45','/storage/emulated/0/fieldBook/plot_data/test_trial/photos/test_trial22_2016-09-12-11-15-26.jpg','1','15',undef,'21','1.8','20','5','0','3',undef,undef,undef,'3','testnote2 (Operator: janedoe, Time: )'],
+['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38842,'test_accession3','','plot',38859,'test_trial23','1','1','3',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','28','41',undef,'1','15',undef,'22','2.8','20',undef,'4','3','0.32','20','23','5',undef],
+['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38842,'test_accession3','','plot',38860,'test_trial24','2','1','4',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','17','14',undef,'1','15',undef,'23','3.8','20',undef,'11','3',undef,'6','78','7',undef],
+['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38840,'test_accession1','','plot',38861,'test_trial25','1','1','5',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','18','25',undef,'1','15',undef,'24','0.8','20',undef,'6','3',undef,undef,'56','2',undef],
+['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38843,'test_accession4','','plot',38862,'test_trial26','2','1','6',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','21','0',undef,'1','15',undef,'25','5.8','20',undef,'4','3','0.36','18','45','4',undef],
+['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38844,'test_accession5','','plot',38863,'test_trial27','2','1','7',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','23','0',undef,'1','15',undef,'26','6.8','20',undef,'8','3','0.32','14','34','9',undef],
+['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38840,'test_accession1','','plot',38864,'test_trial28','2','1','8',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','13','41',undef,'0','15',undef,'27','7.8','20',undef,'9','3','0.32','14','23','6',undef],
+['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38841,'test_accession2','','plot',38865,'test_trial29','1','1','9',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','27','24',undef,'1','15',undef,'28','8.8',undef,undef,'6',undef,undef,undef,'76','3',undef]
+]);
 
 $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
 my $response = decode_json $mech->content;
@@ -5902,15 +5722,15 @@ my $stored_image_ids_string = encode_json $stored_image_ids;
 $mech->post_ok('http://localhost:3010/ajax/image_analysis/submit?service=necrosis&selected_image_ids='.$stored_image_ids_string.'&sgn_session_id='.$sgn_session_id);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is(scalar(@{$response->{results}}), 2);
-is(scalar(@{$response->{results}->[1]->{observations_array}}), 2);
+is(scalar(@{$response->{results}}), 1);
+is(scalar(@{$response->{results}->[0]->{details}}), 1);
 
 my $stored_image_ids_string = encode_json $stored_image_ids;
 $mech->post_ok('http://localhost:3010/ajax/image_analysis/submit?service=whitefly_count&selected_image_ids='.$stored_image_ids_string.'&sgn_session_id='.$sgn_session_id);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is(scalar(@{$response->{results}}), 2);
-is(scalar(@{$response->{results}->[1]->{observations_array}}), 2);
+# is(scalar(@{$response->{results}}), 1);
+# is(scalar(@{$response->{results}->[0]->{details}}), 1);
 
 my $python_dependencies_installed = `locate keras.py`;
 

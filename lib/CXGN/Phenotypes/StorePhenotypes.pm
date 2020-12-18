@@ -427,10 +427,13 @@ sub store {
     $self->create_hash_lookups();
     my %linked_data = %{$self->get_linked_data()};
     my @plot_list = @{$self->stock_list};
+    print STDERR Dumper \@plot_list;
     my @trait_list = @{$self->trait_list};
+    print STDERR Dumper \@trait_list;
     @trait_list = map { $_ eq 'notes' ? () : ($_) } @trait_list; # omit notes so they can be handled separately
     my %trait_objs = %{$self->trait_objs};
     my %plot_trait_value = %{$self->values_hash};
+    print STDERR Dumper %plot_trait_value;
     my %phenotype_metadata = %{$self->metadata_hash};
     my $timestamp_included = $self->has_timestamps;
     my $archived_image_zipfile_with_path = $self->image_zipfile_path;
@@ -466,7 +469,7 @@ sub store {
     my $rs;
     my %data;
     $rs = $schema->resultset('Stock::Stock')->search(
-        {'type.name' => ['field_layout', 'analysis_experiment'], 'me.type_id' => [$plot_cvterm_id, $plant_cvterm_id, $subplot_cvterm_id, $tissue_sample_cvterm_id, $analysis_instance_cvterm_id], 'me.stock_id' => {-in=>$self->stock_id_list } },
+        {'type.name' => ['field_layout', 'analysis_experiment', 'sampling_layout'], 'me.type_id' => [$plot_cvterm_id, $plant_cvterm_id, $subplot_cvterm_id, $tissue_sample_cvterm_id, $analysis_instance_cvterm_id], 'me.stock_id' => {-in=>$self->stock_id_list } },
         {join=> {'nd_experiment_stocks' => {'nd_experiment' => ['type', 'nd_experiment_projects'  ] } } ,
             '+select'=> ['me.stock_id', 'me.uniquename', 'nd_experiment.nd_geolocation_id', 'nd_experiment_projects.project_id'],
             '+as'=> ['stock_id', 'uniquename', 'nd_geolocation_id', 'project_id']
@@ -609,7 +612,7 @@ sub store {
                             $nd_experiment_md_images{$experiment->nd_experiment_id()} = $image_id;
                         }
                     }
-
+                    my $observationVariableDbId = $trait_cvterm->cvterm_id;
                     my %details = (
                         "germplasmDbId"=> $linked_data{$plot_name}->{germplasmDbId},
                         "germplasmName"=> $linked_data{$plot_name}->{germplasmName},
@@ -617,7 +620,7 @@ sub store {
                         "observationLevel"=> $linked_data{$plot_name}->{observationLevel},
                         "observationUnitDbId"=> $linked_data{$plot_name}->{observationUnitDbId},
                         "observationUnitName"=> $linked_data{$plot_name}->{observationUnitName},
-                        "observationVariableDbId"=> $trait_name,
+                        "observationVariableDbId"=> qq|$observationVariableDbId|,
                         "observationVariableName"=> $trait_cvterm->name,
                         "studyDbId"=> $project_id,
                         "uploadedBy"=> $user_id,
@@ -692,8 +695,10 @@ sub store_nirs_data {
     my $nirs_hashref = shift;
     my $nd_experiment_id = shift;
     my %nirs_hash = %{$nirs_hashref};
-    # print STDERR "NIRS hashref is " . Dumper($nirs_hashref);
-    #convert hashref to json, store in md_json table with type 'nirs_spectra'
+
+    my $protocol_id = $nirs_hash{protocol_id};
+    delete $nirs_hash{protocol_id};
+
     my $nirs_json = encode_json \%nirs_hash;
 
     my $insert_query = "INSERT INTO metadata.md_json (json_type, json) VALUES ('nirs_spectra',?) RETURNING json_id;";
@@ -702,26 +707,14 @@ sub store_nirs_data {
     my ($json_id) = $dbh->fetchrow_array();
 
     my $linking_query = "INSERT INTO phenome.nd_experiment_md_json ( nd_experiment_id, json_id) VALUES (?,?);";
-
     $dbh = $self->bcs_schema->storage->dbh()->prepare($linking_query);
     $dbh->execute($nd_experiment_id,$json_id);
-    #while (my ($unit_id, $unit_name, $level, $accession_id, $accession_name, $location_id, $project_id) = $h->fetchrow_array()) {
 
-    # my $json_row = $self->metadata_schema->resultset("MdJson")
-    #     ->create({
-    #         json_type => 'nirs_spectra',
-    #         json => $nirs_json,
-    #     });
-    #     $json_row->insert();
-    #
-    #     ## Link the json to the experiment
-    #     my $experiment_json = $self->phenome_schema->resultset("NdExperimentMdJson")
-    #         ->create({
-    #             nd_experiment_id => $nd_experiment_id,
-    #             json_id => $json_row->json_id(),
-    #         });
-    #     $experiment_json->insert();
-        print STDERR "[StorePhenotypes] Linked json with id $json_id to nd_experiment $nd_experiment_id\n";
+    my $protocol_query = "INSERT INTO nd_experiment_protocol ( nd_experiment_id, nd_protocol_id) VALUES (?,?);";
+    $dbh = $self->bcs_schema->storage->dbh()->prepare($protocol_query);
+    $dbh->execute($nd_experiment_id,$protocol_id);
+
+    print STDERR "[StorePhenotypes] Linked json with id $json_id to nd_experiment $nd_experiment_id to protocol $protocol_id\n";
 }
 
 sub delete_previous_phenotypes {
@@ -838,6 +831,7 @@ sub save_archived_images_metadata {
 
     my $q = "INSERT into phenome.nd_experiment_md_images (nd_experiment_id, image_id) VALUES (?, ?);";
     my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+    # Check for single image id vs array, then handle accordingly
     while (my ($nd_experiment_id, $image_id) = each %$nd_experiment_md_images) {
         $h->execute($nd_experiment_id, $image_id);
     }

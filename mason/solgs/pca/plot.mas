@@ -47,13 +47,14 @@ $pop_id = undef if $list_id || $combo_pops_id;
   stroke: #000;
   shape-rendering: crispEdges;
 }
+
 </style>
 
 <div id="pca_canvas">
 
   <& /solgs/spinner.mas &>
     
-    <div id="pca_message"  style="font-weight:bold;text-align:center;color:#A7C942;display:block;clear:both"> </div>
+    <div id="pca_message"  class="message"> </div>
 
     <div id="pca_plot">
       <input type="hidden"  id="training_pop_id" value="<% $pop_id %>" />

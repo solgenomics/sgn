@@ -97,6 +97,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     my $location_data = $trial->get_location();
     $c->stash->{location_id} = $location_data->[0];
     $c->stash->{location_name} = $location_data->[1];
+    $c->stash->{country_name} = $trial->get_location_country_name();
 
     my $breeding_program_data = $program_object->get_breeding_programs_by_trial($c->stash->{trial_id});
     $c->stash->{breeding_program_id} = $breeding_program_data->[0]->[0];
@@ -137,6 +138,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         $c->stash->{genotyping_facility} = $trial->get_genotyping_facility;
         $c->stash->{genotyping_facility_submitted} = $trial->get_genotyping_facility_submitted;
         $c->stash->{genotyping_facility_status} = $trial->get_genotyping_facility_status;
+        $c->stash->{genotyping_vendor_order_id} = $trial->get_genotyping_vendor_order_id;
         $c->stash->{genotyping_plate_sample_type} = $trial->get_genotyping_plate_sample_type;
         if ($trial->get_genotyping_plate_format){
             $c->stash->{genotyping_plate_format} = $trial->get_genotyping_plate_format;
@@ -147,6 +149,9 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         else {
             $c->stash->{template} = '/breeders_toolbox/genotyping_trials/detail.mas';
         }
+    }
+    elsif ($design_type eq "sampling_trial"){
+        $c->stash->{template} = '/breeders_toolbox/sampling_trials/detail.mas';
     }
     elsif ($design_type eq "treatment"){
         $c->stash->{management_factor_type} = $trial->get_management_factor_type;
@@ -187,6 +192,24 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 
     print STDERR "End Load Trial Detail Page: ".localtime()."\n";
 
+}
+
+
+=head2 view_by_name 
+
+Public Path: /breeders/trial/view_by_name/$name
+Path Params:
+    name = trial unique name
+
+Search for the trial that matches the provided trial name.
+If 1 match is found, display the trial detail page.  Display an 
+error message if no matches are found.
+
+=cut
+
+sub view_trial_by_name :Path('/breeders/trial/view_by_name') CaptureArgs(1) {
+    my ($self, $c, $trial_query) = @_;
+    $self->search_trial($c, $trial_query);
 }
 
 
@@ -232,6 +255,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $self = shift;
     my $c = shift;
     my $what = shift;
+    print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     my $user = $c->user();
@@ -244,6 +268,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $data_level = $c->req->param("dataLevel") || "plot";
     my $timestamp_option = $c->req->param("timestamp") || 0;
     my $trait_list = $c->req->param("trait_list");
+    my $include_measured = $c->req->param('include_measured') || '';
     my $search_type = $c->req->param("search_type") || 'fast';
 
     my $trial = $c->stash->{trial};
@@ -265,6 +290,9 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $selected_cols = $c->req->param('selected_columns') ? JSON::XS->new()->decode( $c->req->param('selected_columns') ) : {};
     if ($data_level eq 'plate'){
         $selected_cols = {'trial_name'=>1, 'acquisition_date'=>1, 'plot_name'=>1, 'plot_number'=>1, 'row_number'=>1, 'col_number'=>1, 'source_observation_unit_name'=>1, 'accession_name'=>1, 'synonyms'=>1, 'dna_person'=>1, 'notes'=>1, 'tissue_type'=>1, 'extraction'=>1, 'concentration'=>1, 'volume'=>1, 'is_blank'=>1};
+    }
+    if ($data_level eq 'samplingtrial'){
+        $selected_cols = {'trial_name'=>1, 'year'=>1, 'location'=>1, 'sampling_facility'=>1, 'sampling_trial_sample_type'=>1, 'acquisition_date'=>1, 'tissue_sample_name'=>1, 'plot_number'=>1, 'rep_number'=>1, 'source_observation_unit_name'=>1, 'accession_name'=>1, 'synonyms'=>1, 'dna_person'=>1, 'notes'=>1, 'tissue_type'=>1, 'extraction'=>1, 'concentration'=>1, 'volume'=>1 };
     }
     my $selected_trait_list_id = $c->req->param('trait_list_id');
     my @trait_list;
@@ -335,7 +363,8 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         search_type => $search_type,
         include_timestamp => $timestamp_option,
         treatment_project_ids => \@treatment_project_ids,
-        selected_columns => $selected_cols
+        selected_columns => $selected_cols,
+        include_measured => $include_measured
     });
 
     my $error = $download->download();
@@ -359,6 +388,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
 sub trials_download_layouts : Path('/breeders/trials/download/layout') Args(0) {
     my $self = shift;
     my $c = shift;
+    print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $user = $c->user();
     if (!$user) {
@@ -435,6 +465,47 @@ sub _parse_list_from_json {
     }
     else {
 	return;
+    }
+}
+
+
+# Search for trial by trial name
+# Display trial detail page for 1 match, error messages for no matches
+sub search_trial : Private {
+    my ( $self, $c, $trial_query ) = @_;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $rs = $schema->resultset('Project::Project');
+    
+    my $matches;
+    my $count = 0;
+
+    # Search by name
+    if ( defined($trial_query) ) {
+        $matches = $rs->search({
+                'UPPER(name)' => uc($trial_query)
+            }
+        );
+        $count = $matches->count;
+    }
+
+    # NO MATCH FOUND
+    if ( $count != 1 ) {
+        $c->stash->{template} = "generic_message.mas";
+        $c->stash->{message} = "<strong>No Matching Trial Found</strong> ($trial_query)<br />You can view and search for trials from the <a href='/search/trials'>Trial Search Page</a>";
+    }
+
+    # 1 MATCH FOUND - FORWARD TO VIEW TRIAL
+    else {
+        my $trial_id = $matches->first->project_id;
+        $c->stash->{trial_id} = $trial_id;
+
+        my $schema = $c->dbic_schema("Bio::Chado::Schema");
+        $c->stash->{schema} = $schema;
+        
+        my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
+        $c->stash->{trial} = $trial;
+
+        $c->forward('trial_info');
     }
 }
 

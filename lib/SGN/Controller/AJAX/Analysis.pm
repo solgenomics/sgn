@@ -5,7 +5,6 @@ use Moose;
 use File::Slurp;
 use Data::Dumper;
 use CXGN::Phenotypes::ParseUpload;
-use CXGN::Phenotypes::StorePhenotypes;
 use CXGN::Trial::TrialDesign;
 use CXGN::Analysis::AnalysisCreate;
 use CXGN::AnalysisModel::GetModel;
@@ -69,10 +68,16 @@ sub store_analysis_json_POST {
     my $analysis_model_auxiliary_files = $c->req->param("analysis_model_auxiliary_files") ? decode_json $c->req->param("analysis_model_auxiliary_files") : [];
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
-    my $check_name = $schema->resultset("Project::Project")->find({ name => $analysis_name });
-    if ($check_name) {
-        $c->stash->{rest} = {error => "An analysis with name $analysis_name already exists in the database. Please choose another name."};
+    if ($analysis_to_save_boolean eq 'yes' && !$analysis_name) {
+        $c->stash->{rest} = {error => "You are trying to save an analysis, but no name was given."};
         return;
+    }
+    if ($analysis_name) {
+        my $check_name = $schema->resultset("Project::Project")->find({ name => $analysis_name });
+        if ($check_name) {
+            $c->stash->{rest} = {error => "An analysis with name $analysis_name already exists in the database. Please choose another name."};
+            return;
+        }
     }
 
     $self->store_data($c,
@@ -415,8 +420,8 @@ sub store_analysis_spreadsheet_POST {
 sub store_data {
     my $self = shift;
     my ($c, $analysis_to_save_boolean, $analysis_name, $analysis_description, $analysis_year, $analysis_breeding_program_id, $analysis_protocol, $analysis_dataset_id, $analysis_accession_names, $analysis_trait_names, $analysis_statistical_ontology_term, $analysis_precomputed_design_optional, $analysis_result_values, $analysis_result_values_type, $analysis_result_summary, $analysis_result_trait_compose_info, $analysis_model_id, $analysis_model_name, $analysis_model_description, $analysis_model_is_public, $analysis_model_language, $analysis_model_type, $analysis_model_properties, $analysis_model_application_name, $analysis_model_application_version, $analysis_model_file, $analysis_model_file_type, $analysis_model_training_data_file, $analysis_model_training_data_file_type, $analysis_model_auxiliary_files, $user_id, $user_name, $user_role) = @_;
-    
-    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');;
+
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");

@@ -48,7 +48,7 @@ $model_link
 
 </%perl>
 
-  <& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.traitGebvFlot", 
+  <& /util/import_javascript.mas, classes => ["solGS.solGS",
                                               "flot.flot", "flot.categories", 
                                               "flot.tooltip", "flot.selection", "flot.navigate", 
                                               "flot.axisLabels", "d3.d3Min",
@@ -85,14 +85,14 @@ $model_link
 </&>
 
 <& /solgs/pca/analysis.mas &>
-  
-<& /solgs/model/top_blups.mas, 
-   top_blups          => $top_blups,
-   blups_download_url => $blups_download_url,
-   pop_id             => $combo_pops_id,
-   trait_id           => $trait_id
-&>
+ 
 
+<& /solgs/model/gebvs.mas, 
+   top_blups         => $top_blups,
+  blups_download_url => $blups_download_url,
+  
+&>
+  
 <& /solgs/genetic_gain/genetic_gain.mas,
    trait_id         => $trait_id,
    training_pop_id  => $combo_pops_id,
@@ -103,10 +103,10 @@ $model_link
 
   <input type="hidden" id="model_id" value="<% $combo_pops_id %>" />
   <input type="hidden" id="training_pop_id" value="<% $combo_pops_id %>" />
- <input type="hidden" id="training_pop_name" value="<% $training_pop_name %>" />
- <input type="hidden" id="combo_pops_id" value="<% $combo_pops_id %>" /> 
- <input type="hidden" id="trait_id" value="<% $trait_id %>" />
- <input type="hidden" id="selection_pop_id" value="<% $selection_pop_id %>" />
- <input type="hidden" id="selection_pop_name" value="<% $selection_pop_name %>" />
- <input type="hidden" id="prediction_pop_id" value="<% $selection_pop_id %>" />
- <input type="hidden" id="genotyping_protocol_id" value="<% $genotyping_protocol_id %>" />
+  <input type="hidden" id="training_pop_name" value="<% $training_pop_name %>" />
+  <input type="hidden" id="combo_pops_id" value="<% $combo_pops_id %>" /> 
+  <input type="hidden" id="trait_id" value="<% $trait_id %>" />
+  <input type="hidden" id="selection_pop_id" value="<% $selection_pop_id %>" />
+  <input type="hidden" id="selection_pop_name" value="<% $selection_pop_name %>" />
+  <input type="hidden" id="prediction_pop_id" value="<% $selection_pop_id %>" />
+  <input type="hidden" id="genotyping_protocol_id" value="<% $genotyping_protocol_id %>" />

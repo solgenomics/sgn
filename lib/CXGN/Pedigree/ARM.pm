@@ -305,12 +305,12 @@ sub download_arm {
                     my $s2_male_parent = $parent_hash->{$c}->{male_stock_id};
                     my $rel = 0;
                     if ($s1_female_parent == $s2_female_parent) {
-                        $rel += 0.5;
+                        $rel += 1;
                     }
                     if ($s1_male_parent == $s2_male_parent) {
-                        $rel += 0.5;
+                        $rel += 1;
                     }
-                    push @row, $rel;
+                    push @row, $rel/2;
                 }
                 my $line = join "\t", @row;
                 $data .= "$line\n";
@@ -338,12 +338,12 @@ sub download_arm {
                         my $s2_male_parent = $parent_hash->{$c}->{male_stock_id};
                         my $rel = 0;
                         if ($s1_female_parent == $s2_female_parent) {
-                            $rel += 0.5;
+                            $rel += 1;
                         }
                         if ($s1_male_parent == $s2_male_parent) {
-                            $rel += 0.5;
+                            $rel += 1;
                         }
-                        $result_hash{$s}->{$c} = $rel;
+                        $result_hash{$s}->{$c} = $rel/2;
                         $seen_stock_ids{$s}++;
                         $seen_stock_ids{$c}++;
                     }
@@ -386,12 +386,12 @@ sub download_arm {
                         my $s2_male_parent = $parent_hash->{$c}->{male_stock_id};
                         my $rel = 0;
                         if ($s1_female_parent == $s2_female_parent) {
-                            $rel += 0.5;
+                            $rel += 1;
                         }
                         if ($s1_male_parent == $s2_male_parent) {
-                            $rel += 0.5;
+                            $rel += 1;
                         }
-                        $result_hash{$s}->{$c} = $rel;
+                        $result_hash{$s}->{$c} = $rel/2;
                         $seen_stock_ids{$s}++;
                         $seen_stock_ids{$c}++;
                     }
@@ -435,12 +435,12 @@ sub download_arm {
                         my $s2_male_parent = $parent_hash->{$c}->{male_stock_id};
                         my $rel = 0;
                         if ($s1_female_parent == $s2_female_parent) {
-                            $rel += 0.5;
+                            $rel += 1;
                         }
                         if ($s1_male_parent == $s2_male_parent) {
-                            $rel += 0.5;
+                            $rel += 1;
                         }
-                        $result_hash{$s}->{$c} = $rel;
+                        $result_hash{$s}->{$c} = $rel/2;
                         $seen_stock_ids{$s}++;
                         $seen_stock_ids{$c}++;
                     }
@@ -487,12 +487,12 @@ sub download_arm {
                         my $s2_male_parent = $parent_hash->{$c}->{male_stock_id};
                         my $rel = 0;
                         if ($s1_female_parent == $s2_female_parent) {
-                            $rel += 0.5;
+                            $rel += 1;
                         }
                         if ($s1_male_parent == $s2_male_parent) {
-                            $rel += 0.5;
+                            $rel += 1;
                         }
-                        $result_hash{$s}->{$c} = $rel;
+                        $result_hash{$s}->{$c} = $rel/2;
                         $seen_stock_ids{$s}++;
                         $seen_stock_ids{$c}++;
                     }
@@ -539,12 +539,12 @@ sub download_arm {
                         my $s2_male_parent = $parent_hash->{$c}->{male_stock_id};
                         my $rel = 0;
                         if ($s1_female_parent == $s2_female_parent) {
-                            $rel += 0.5;
+                            $rel += 1;
                         }
                         if ($s1_male_parent == $s2_male_parent) {
-                            $rel += 0.5;
+                            $rel += 1;
                         }
-                        $result_hash{$s}->{$c} = $rel;
+                        $result_hash{$s}->{$c} = $rel/2;
                         $seen_stock_ids{$s}++;
                         $seen_stock_ids{$c}++;
                     }

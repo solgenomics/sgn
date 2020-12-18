@@ -69,20 +69,19 @@ sub get_regression_data_files {
 
 
 sub get_heritability {
-    my ($self, $c) = @_;
+    my ($self, $c, $pop_id, $trait_id) = @_;
     
-    my $trait_abbr = $c->stash->{trait_abbr};
-    my $pop_id     = $c->stash->{pop_id};
-    my $cache_dir  = $c->stash->{solgs_cache_dir};
-
+    $c->stash->{training_pop_id} = $pop_id;
+    $c->controller("solGS::solGS")->get_trait_details($c, $trait_id);
+    
     $c->controller('solGS::Files')->variance_components_file($c);
     my $var_comp_file = $c->stash->{variance_components_file};
-
+ 
     my ($txt, $value) = map { split(/\t/)  } 
                         grep {/SNP heritability/}
                         read_file($var_comp_file, {binmode => ':utf8'});
 
-    $c->stash->{heritability} = $value;
+    return $value;
 }
 
 
@@ -128,9 +127,8 @@ sub heritability_regeression_data :Path('/heritability/regression/data/') Args(0
    
     my @pheno_deviations = map { [$_->[0], $round->round(( $_->[1] - $pheno_mean ))] } @pheno_data;
 
-    $self->get_heritability($c);
-    my $heritability = $c->stash->{heritability};
-    
+    my $heritability =  $self->get_heritability($c);
+ 
     my $ret->{status} = 'failed';
 
     if (@gebv_data && @pheno_data)

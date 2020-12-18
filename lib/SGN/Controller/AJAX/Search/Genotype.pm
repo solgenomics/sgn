@@ -52,7 +52,8 @@ sub genotyping_data_search_GET : Args(0) {
         #marker_score_search_hash_list=>[{'S80_265728' => {'GT' => '0/0', 'GQ' => '99'}}],
         genotypeprop_hash_select=>['DS'],
         protocolprop_marker_hash_select=>[],
-        protocolprop_top_key_select=>[]
+        protocolprop_top_key_select=>[],
+        forbid_cache=>$clean_inputs->{forbid_cache}->[0]
     });
     my $file_handle = $genotypes_search->get_cached_file_search_json($c->config->{cluster_shared_tempdir}, 1); #only gets metadata and not all genotype data!
     my @result;
@@ -81,7 +82,7 @@ sub genotyping_data_search_GET : Args(0) {
                     $g->{genotypeDescription},
                     $g->{resultCount},
                     $g->{igd_number},
-                    "<a href=\"/stock/$g->{stock_id}/genotypes?genotypeprop_id=$g->{markerProfileDbId}\">Download</a>"
+                    "<a href=\"/stock/$g->{stock_id}/genotypes?genotype_id=$g->{markerProfileDbId}\">Download</a>"
                 ];
             }
             $counter++;

@@ -104,4 +104,40 @@ sub tissue_sample_genotyping_trials_GET : Args(0) {
     $c->stash->{rest} = { data => \@result };
 }
 
+sub tissue_sample_sampling_trials : Path('/ajax/tissue_samples/sampling_trials') : ActionClass('REST') { }
+
+sub tissue_sample_sampling_trials_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $trial_search = CXGN::Trial::Search->new({
+        bcs_schema=>$bcs_schema,
+        trial_design_list=>['sampling_trial']
+    });
+    my ($data, $total_count) = $trial_search->search();
+    my @result;
+    foreach (@$data){
+        my $folder_string = '';
+        if ($_->{folder_name}){
+            $folder_string = "<a href=\"/folder/$_->{folder_id}\">$_->{folder_name}</a>";
+        }
+        push @result,
+          [
+            "<a href=\"/breeders_toolbox/trial/$_->{trial_id}\">$_->{trial_name}</a>",
+            $_->{description},
+            "<a href=\"/breeders/program/$_->{breeding_program_id}\">$_->{breeding_program_name}</a>",
+            $folder_string,
+            $_->{year},
+            $_->{location_name},
+            $_->{sampling_facility},
+            $_->{sampling_trial_sample_type},
+            "<a class='btn btn-sm btn-default' href='/breeders/trial/$_->{trial_id}/download/layout?format=csv&dataLevel=samplingtrial'>Download Layout</a>"
+          ];
+    }
+    #print STDERR Dumper \@result;
+
+    $c->stash->{rest} = { data => \@result };
+}
+
 1;

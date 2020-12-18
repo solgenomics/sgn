@@ -4,6 +4,7 @@ use Moose;
 use Data::Dumper;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
+use CXGN::Location::LocationLookup;
 
 extends 'CXGN::BrAPI::v2::Common';
 
@@ -170,10 +171,10 @@ sub store_crossingproject {
 
         if ($error){
             return CXGN::BrAPI::JSONResponse->return_error($self->status, $error);
-        } 
+        }
         push @list, $crossingproj_id;
     }
-    
+
     my $counter = scalar @list;
     my %result;
 
@@ -225,6 +226,13 @@ sub update_crossingproject {
         trial_id => $crossingproj_id
     });
 
+    my $location_id;
+    if ($location) {
+        my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema => $schema);
+    	$geolocation_lookup->set_location_name($location);
+    	$location_id = $geolocation_lookup->get_geolocation()->nd_geolocation_id;
+    }
+
     my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
     my $program_ref = $program_object->get_breeding_programs_by_trial($crossingproj_id);
 
@@ -242,7 +250,7 @@ sub update_crossingproject {
     eval {
       if ($crossingtrial_name) { $trial->set_name($crossingtrial_name); }
       if ($breeding_program_id) { $trial->set_breeding_program($breeding_program_id); }
-      if ($location) { $trial->set_location($location); }
+      if ($location_id) { $trial->set_location($location_id); }
       if ($year) { $trial->set_year($year); }
       if ($project_description) { $trial->set_description($project_description); }
     };
@@ -298,8 +306,8 @@ sub crosses {
         my @crosses;
         foreach my $r (@$result){
 
-            my ($cross_id, $cross_name, $cross_combination, $cross_type, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name) =@$r;
-           
+            my ($cross_id, $cross_name, $cross_combination, $cross_type, $female_parent_id, $female_parent_name, $female_ploidy, $male_parent_id, $male_parent_name, $male_ploidy, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name) =@$r;
+
             push @data, {
                 additionalInfo=>{},
                 crossAttributes=>[
@@ -320,7 +328,7 @@ sub crosses {
                   observationUnitDbId=>$female_plot_id,
                   observationUnitName=>$female_plot_name,
                   parentType=>"FEMALE",
-                },      
+                },
                 parent2=>{
                   germplasmDbId=>qq|$male_parent_id|,
                   germplasmName=>$male_parent_name,
@@ -422,7 +430,7 @@ sub store_crosses { #crosses must belong to same experiment
     foreach my $r (@$result){
 
         my ($cross_id, $cross_name, $cross_combination, $cross_type, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name, $female_plant_id, $female_plant_name, $male_plant_id, $male_plant_name) =@$r;
-       
+
         push @data, {
             additionalInfo=>{},
             crossAttributes=>[
@@ -443,7 +451,7 @@ sub store_crosses { #crosses must belong to same experiment
               observationUnitDbId=>$female_plot_id,
               observationUnitName=>$female_plot_name,
               parentType=>"FEMALE",
-            },      
+            },
             parent2=>{
               germplasmDbId=>qq|$male_parent_id|,
               germplasmName=>$male_parent_name,
@@ -456,7 +464,7 @@ sub store_crosses { #crosses must belong to same experiment
         $counter++;
     }
 
-    
+
     my %result = (data=>\@data);
     my @data_files;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);

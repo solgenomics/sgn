@@ -1,19 +1,12 @@
 /*jslint browser: true, devel: true */
 
 /**
-
 =head1 Trial.js
-
 Display for managing genotyping plates
-
-
 =head1 AUTHOR
-
 Jeremy D. Edwards <jde22@cornell.edu>
 Lukas Mueller <lam87@cornell.edu>
-
 =cut
-
 */
 
 
@@ -475,8 +468,11 @@ jQuery(document).ready(function ($) {
                 return;
             }
             if (response.success) {
+                var success_string = "<h4>Go to new <a href='/breeders_toolbox/protocol/"+response.nd_protocol_id+"'>protocol detail page</a></h4>";
+                console.log(success_string);
+                jQuery('#upload_genotype_submit_complete').html(success_string);
                 Workflow.complete('#upload_genotype_submit');
-                Workflow.focus("#upload_genotypes_workflow", -1); //Go to success page
+                Workflow.focus("#upload_genotypes_workflow", 5);
             }
         }
     });

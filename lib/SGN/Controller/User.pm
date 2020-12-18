@@ -15,6 +15,15 @@ sub login :Path('/user/login') Args(0) {
     $c->stash->{template} = '/user/login.mas';
 }
 
+sub new_user :Path('/user/new') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    # Redirect to the login page and display the new user form
+    $c->res->redirect('/user/login?goto_url=/&new_user=1');
+    $c->detach();
+}
+
 sub update_account :Path('/user/update') Args(0) { 
     my $self = shift;
     my $c = shift;
