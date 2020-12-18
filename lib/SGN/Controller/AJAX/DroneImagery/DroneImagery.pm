@@ -244,7 +244,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $tolparinv = $c->req->param('tolparinv');
     my $legendre_order_number = $c->req->param('legendre_order_number');
     my $permanent_environment_structure = $c->req->param('permanent_environment_structure');
-    my $permanent_environment_structure_phenotype_correlation_traits = decode_json $c->req->param('permanent_environment_structure_phenotype_correlation_traits');
+    my $permanent_environment_structure_phenotype_correlation_traits = $c->req->param('permanent_environment_structure_phenotype_correlation_traits') ? decode_json $c->req->param('permanent_environment_structure_phenotype_correlation_traits') : [];
 
     my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
     my $tmp_stats_dir = $shared_cluster_dir_config."/tmp_drone_statistics";
