@@ -8,10 +8,10 @@ package CXGN::Phenotypes::ParseUpload::Plugin::TranscriptomicsSpreadsheetCSV;
 #   data => {
 #       tissue_samples1 => {
 #           transcriptomics => {
-#              transcripts => {
+#              transcripts => [{
 #                 "Manes.01G000100" => "0.939101707",
 #                 "Manes.01G000200" => "0.93868202",
-#              },
+#              }],
 #          }
 #       }
 #   },

@@ -8,10 +8,10 @@ package CXGN::Phenotypes::ParseUpload::Plugin::MetabolomicsSpreadsheetCSV;
 #   data => {
 #       tissue_samples1 => {
 #           metabolomics => {
-#              metabolites => {
+#              metabolites => [{
 #                 "M1" => "0.939101707",
 #                 "M2" => "0.93868202",
-#              },
+#              }],
 #          }
 #       }
 #   },

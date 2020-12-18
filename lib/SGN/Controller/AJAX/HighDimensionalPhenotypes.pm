@@ -206,16 +206,6 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
         }
     }
 
-    my %parsed_data_agg_coalesced;
-    while (my ($stock_name, $o) = each %parsed_data) {
-       my $spectras = $o->{nirs}->{spectra};
-       $parsed_data_agg_coalesced{$stock_name}->{nirs}->{device_type} = $protocol_device_type;
-       $parsed_data_agg_coalesced{$stock_name}->{nirs}->{spectra} = $spectras->[0];
-    }
-
-    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
-    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
-
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
         basepath=>$c->config->{basepath},
         dbhost=>$c->config->{dbhost},
@@ -229,7 +219,7 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
         user_id=>$user_id,
         stock_list=>\@plots_agg,
         trait_list=>[],
-        values_hash=>\%parsed_data_agg_coalesced,
+        values_hash=>\%parsed_data_agg,
         has_timestamps=>0,
         metadata_hash=>\%phenotype_metadata
     });
@@ -475,7 +465,7 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
     }
 
     my %parsed_data_agg_coalesced;
-    while (my ($stock_name, $o) = each %parsed_data) {
+    while (my ($stock_name, $o) = each %parsed_data_agg) {
        my $spectras = $o->{nirs}->{spectra};
        $parsed_data_agg_coalesced{$stock_name}->{nirs}->{protocol_id} = $protocol_id;
        $parsed_data_agg_coalesced{$stock_name}->{nirs}->{device_type} = $protocol_device_type;
@@ -682,17 +672,6 @@ sub high_dimensional_phenotypes_transcriptomics_upload_verify_POST : Args(0) {
     my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
     my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
 
-    my %parsed_data_agg_coalesced;
-    while (my ($stock_name, $o) = each %parsed_data) {
-        my $spectras = $o->{transcriptomics}->{transcripts};
-        $parsed_data_agg_coalesced{$stock_name}->{transcriptomics}->{protocol_id} = $protocol_id;
-        $parsed_data_agg_coalesced{$stock_name}->{transcriptomics}->{expression_unit} = $protocol_unit;
-        $parsed_data_agg_coalesced{$stock_name}->{transcriptomics}->{genome_version} = $protocol_genome_version;
-        $parsed_data_agg_coalesced{$stock_name}->{transcriptomics}->{annotation_version} = $protocol_genome_annotation_version;
-        $parsed_data_agg_coalesced{$stock_name}->{transcriptomics}->{transcripts} = $spectras->[0];
-    }
-
-    
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
         basepath=>$c->config->{basepath},
         dbhost=>$c->config->{dbhost},
@@ -706,7 +685,7 @@ sub high_dimensional_phenotypes_transcriptomics_upload_verify_POST : Args(0) {
         user_id=>$user_id,
         stock_list=>\@plots,
         trait_list=>[],
-        values_hash=>\%parsed_data_agg_coalesced,
+        values_hash=>\%parsed_data,
         has_timestamps=>0,
         metadata_hash=>\%phenotype_metadata
     });
@@ -885,8 +864,8 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
     my %parsed_data_agg_coalesced;
     while (my ($stock_name, $o) = each %parsed_data) {
         my $spectras = $o->{transcriptomics}->{transcripts};
+        $parsed_data_agg_coalesced{$stock_name}->{transcriptomics} = $spectras->[0];
         $parsed_data_agg_coalesced{$stock_name}->{transcriptomics}->{protocol_id} = $protocol_id;
-        $parsed_data_agg_coalesced{$stock_name}->{transcriptomics}->{transcripts} = $spectras->[0];
     }
 
     ## Set metadata
@@ -1281,6 +1260,13 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
         $dbh->execute($protocol_desc, $protocol_id);
     }
 
+    my %parsed_data_agg;
+    while (my ($stock_name, $o) = each %parsed_data) {
+        my $spectras = $o->{metabolomics}->{metabolites};
+        $parsed_data_agg{$stock_name}->{metabolomics} = $spectras->[0];
+        $parsed_data_agg{$stock_name}->{metabolomics}->{protocol_id} = $protocol_id;
+    }
+
     ## Set metadata
     my %phenotype_metadata;
     $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
@@ -1304,7 +1290,7 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
         user_id=>$user_id,
         stock_list=>\@plots,
         trait_list=>[],
-        values_hash=>\%parsed_data,
+        values_hash=>\%parsed_data_agg,
         has_timestamps=>0,
         metadata_hash=>\%phenotype_metadata
     });
