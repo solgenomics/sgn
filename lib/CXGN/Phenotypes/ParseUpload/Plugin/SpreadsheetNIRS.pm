@@ -8,10 +8,10 @@ package CXGN::Phenotypes::ParseUpload::Plugin::SpreadsheetNIRS;
 #   data => {
 #       plotname1 => {
 #           nirs => {
-#              spectra => {
+#              spectra => [{
 #                 "740" => "0.939101707",
 #                 "741" => "0.93868202",
-#              },
+#              }],
 #          }
 #       }
 #   },
