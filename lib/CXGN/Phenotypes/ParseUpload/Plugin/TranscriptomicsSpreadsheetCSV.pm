@@ -7,14 +7,7 @@ package CXGN::Phenotypes::ParseUpload::Plugin::TranscriptomicsSpreadsheetCSV;
 # Parse Returns %parsed_result = (
 #   data => {
 #       tissue_samples1 => {
-#           varname1 => [RNAseqUG150-rep1-UG15F118P001_100_plant_1_leaf1, '2015-06-16T00:53:26Z']
-#           transcript => {
-#              observationunit_name => 'RNAseqUG150-rep1-UG15F118P001_100_plant_1_leaf1',
-#              observation_name => 'UG15F118P001',
-#              sample_type => 'leaf',
-#              sampling_condition => 'day',
-#              sample_replication => '1',
-#              expression_unit => 'RPKM',
+#           transcriptomics => {
 #              transcripts => {
 #                 "Manes.01G000100" => "0.939101707",
 #                 "Manes.01G000200" => "0.93868202",
@@ -169,10 +162,6 @@ sub validate {
             $parse_result{'error'}= "End position is required!";
             return \%parse_result;
         }
-        if (not $transcript_name=~/^[+]?\d+\.?\d*$/){
-            $parse_result{'error'}= "It is not a real value for trancripts: $transcript_name. Must be numeric.";
-            return \%parse_result;
-        }
     }
     close $fh;
 
@@ -270,13 +259,13 @@ sub parse {
             $observation_units_seen{$observationunit_name} = 1;
             # print "The plots are $observationunit_name\n";
             my %spectra;
-            foreach my $col (0..$num_cols-1){
+            foreach my $col (1..$num_cols-1){
                 my $column_name = $header[$col];
-                if ($column_name ne '' && $column_name =~ /^Manes/){
-                    my $wavelength = $column_name;
-                    $traits_seen{$wavelength}++;
-                    my $nir_value = $columns[$col];
-                    $spectra{$wavelength} = $nir_value;
+                if ($column_name ne ''){
+                    my $transcript_name = $column_name;
+                    $traits_seen{$transcript_name}++;
+                    my $transcipt_value = $columns[$col];
+                    $spectra{$transcript_name} = $transcipt_value;
                 }
             }
             push @{$data{$observationunit_name}->{'transcriptomics'}->{'transcripts'}}, \%spectra;
