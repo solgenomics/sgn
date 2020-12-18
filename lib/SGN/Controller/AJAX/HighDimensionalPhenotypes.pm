@@ -1252,11 +1252,13 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
     my %parsed_data;
     my @plots;
     my @metabolites;
+    my %metabolites_details;
     if (scalar(@error_status) == 0) {
         if ($parsed_file && !$parsed_file->{'error'}) {
             %parsed_data = %{$parsed_file->{'data'}};
             @plots = @{$parsed_file->{'units'}};
             @metabolites = @{$parsed_file->{'variables'}};
+            %metabolites_details = %{$parsed_file->{'variables_desc'}};
             push @success_status, "File data successfully parsed.";
         }
     }
@@ -1264,7 +1266,7 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
     if (!$protocol_id) {
         my %metabolomics_protocol_prop = (
             header_column_names => \@metabolites,
-            header_column_details => {}
+            header_column_details => %metabolites_details
         );
 
         my $protocol = $schema->resultset('NaturalDiversity::NdProtocol')->create({
