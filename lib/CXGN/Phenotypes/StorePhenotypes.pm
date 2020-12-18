@@ -691,7 +691,7 @@ sub _store_high_dimensional_phenotype {
     my $pheno_hashref = shift;
     my $pheno_dbh = shift;
     my $pheno_type = shift;
-    $stored_protocol_id = $pheno_hashref->{protocol_id};
+    my $stored_protocol_id = $pheno_hashref->{protocol_id};
     delete $pheno_hashref->{protocol_id};
 
     my $pheno_json = encode_json $pheno_hashref;
