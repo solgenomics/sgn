@@ -164,11 +164,11 @@ $sampling_facilities => ()
 % } #End trial_upload_files
 % if ($info_section_id eq 'trial_analysis_tools'){
 
-				  
+
 			        <!-- analysis tools on saved measurements -->
 			       <& /breeders_toolbox/trial/saved_measurement_analysis.mas,
 				     trial_id => $trial_id
-				&>    
+				&>
                                 <!-- Phenotypic correlation analysis -->
                                 <& /solgs/population/correlation.mas,
                                     trial_id => $trial_id

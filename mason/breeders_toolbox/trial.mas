@@ -20,7 +20,7 @@ $breeding_program_id
 $breeding_program_name
 $location_id
 $location_name
-$country_name
+$country_name => ""
 $main_production_site_url => undef
 $year => undef
 $trial_type => undef

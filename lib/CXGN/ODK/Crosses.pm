@@ -519,7 +519,7 @@ sub save_ona_cross_info {
 #                            print STDERR "CROSS COMBINATION =".Dumper($cross_combination)."\n";
 
                             my $cross_exists_rs = $schema->resultset("Stock::Stock")->find({uniquename => $odk_cross_unique_id});
-                            if (!defined $cross_exists_rs) {
+                            if ((!defined $cross_exists_rs) && (defined $db_female_accession_name) && (defined $db_male_accession_name)) {
                                 my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name => $odk_cross_unique_id, cross_combination=>$cross_combination, cross_type =>'biparental');
                                 my $female_parent_individual = Bio::GeneticRelationships::Individual->new(name => $db_female_accession_name);
                                 $pedigree->set_female_parent($female_parent_individual);
