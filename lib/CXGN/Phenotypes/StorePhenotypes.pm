@@ -477,8 +477,8 @@ sub store {
         $data{$s->get_column('uniquename')} = [$s->get_column('stock_id'), $s->get_column('nd_geolocation_id'), $s->get_column('project_id') ];
     }
 
-    my $nirs_insert_query = "INSERT INTO metadata.md_json (json_type, json) VALUES ('nirs_spectra',?) RETURNING json_id;";
-    my $nirs_dbh = $self->bcs_schema->storage->dbh()->prepare($nirs_insert_query);
+    my $high_dim_pheno_insert_query = "INSERT INTO metadata.md_json (json_type, json) VALUES (?,?) RETURNING json_id;";
+    my $high_dim_pheno_dbh = $self->bcs_schema->storage->dbh()->prepare($high_dim_pheno_insert_query);
 
     my $nd_experiment_phenotype_bridge_q = "INSERT INTO nd_experiment_phenotype_bridge (stock_id, project_id, phenotype_id, nd_protocol_id, nd_geolocation_id, file_id, image_id, json_id, upload_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);";
     my $nd_experiment_phenotype_bridge_dbh = $self->bcs_schema->storage->dbh()->prepare($nd_experiment_phenotype_bridge_q);
@@ -505,17 +505,20 @@ sub store {
             my $stored_json_id;
             my $stored_protocol_id;
 
-            # Check if there is nirs data for this plot, If so add it using dedicated function
+            # Check if there is nirs data for this plot
             my $nirs_hashref = $plot_trait_value{$plot_name}->{'nirs'};
             if (defined $nirs_hashref) {
-                $stored_protocol_id = $nirs_hashref->{protocol_id};
-                delete $nirs_hashref->{protocol_id};
-
-                my $nirs_json = encode_json $nirs_hashref;
-
-                $nirs_dbh->execute($nirs_json);
-                my ($json_id) = $nirs_dbh->fetchrow_array();
-                $stored_json_id = $json_id;
+                ($stored_json_id, $stored_protocol_id) = _store_high_dimensional_phenotype($nirs_hashref, $high_dim_pheno_dbh, 'nirs_spectra');
+            }
+            # Check if there is transcriptomics data for this plot
+            my $transcriptomics_hashref = $plot_trait_value{$plot_name}->{'transcriptomics'};
+            if (defined $transcriptomics_hashref) {
+                ($stored_json_id, $stored_protocol_id) = _store_high_dimensional_phenotype($transcriptomics_hashref, $high_dim_pheno_dbh, 'transcriptomics');
+            }
+            # Check if there is metabolomics data for this plot
+            my $metabolomics_hashref = $plot_trait_value{$plot_name}->{'metabolomics'};
+            if (defined $metabolomics_hashref) {
+                ($stored_json_id, $stored_protocol_id) = _store_high_dimensional_phenotype($metabolomics_hashref, $high_dim_pheno_dbh, 'metabolomics');
             }
 
             # Check if there is a note for this plot, If so add it using dedicated function
@@ -682,6 +685,20 @@ sub store_stock_note {
     $note = $note ." (Operator: $operator, Time: $timestamp)";
     my $stock = $self->bcs_schema()->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
     $stock->create_stockprops( { 'notes' => $note } );
+}
+
+sub _store_high_dimensional_phenotype {
+    my $pheno_hashref = shift;
+    my $pheno_dbh = shift;
+    my $pheno_type = shift;
+    $stored_protocol_id = $pheno_hashref->{protocol_id};
+    delete $pheno_hashref->{protocol_id};
+
+    my $pheno_json = encode_json $pheno_hashref;
+
+    $pheno_dbh->execute($pheno_type, $pheno_json);
+    my ($json_id) = $pheno_dbh->fetchrow_array();
+    return ($json_id, $stored_protocol_id);
 }
 
 sub delete_previous_phenotypes {
