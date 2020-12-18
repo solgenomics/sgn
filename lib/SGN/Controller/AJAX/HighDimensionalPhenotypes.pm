@@ -273,15 +273,15 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
     my $protocol_device_type = $c->req->param('upload_nirs_spreadsheet_protocol_device_type');
 
     if ($protocol_id && $protocol_name) {
-        $c->stash->{rest} = {error => "Please give a protocol name or select a previous protocol, not both!"};
+        $c->stash->{rest} = {error => ["Please give a protocol name or select a previous protocol, not both!"]};
         $c->detach();
     }
     if (!$protocol_id && (!$protocol_name || !$protocol_desc)) {
-        $c->stash->{rest} = {error => "Please give a protocol name and description, or select a previous protocol!"};
+        $c->stash->{rest} = {error => ["Please give a protocol name and description, or select a previous protocol!"]};
         $c->detach();
     }
     if ($protocol_name && !$protocol_device_type) {
-        $c->stash->{rest} = {error => "Please give a NIRS device type to save a new protocol!"};
+        $c->stash->{rest} = {error => ["Please give a NIRS device type to save a new protocol!"]};
         $c->detach();
     }
 
@@ -559,10 +559,12 @@ sub high_dimensional_phenotypes_transcriptomics_upload_verify_POST : Args(0) {
 
 
     if ($protocol_id && $protocol_name) {
-        return {error => ["Please give a protocol name or select a previous protocol, not both!"]};
+        $c->stash->{rest} = {error => ["Please give a protocol name or select a previous protocol, not both!"]};
+        $c->detach();
     }
     if (!$protocol_id && (!$protocol_name || !$protocol_desc || !$protocol_unit || !$protocol_genome_version || !$protocol_genome_annotation_version)) {
-        return {error => ["Please give a protocol name, description, unit, genome and annotation version, or select a previous protocol!"]};
+        $c->stash->{rest} = {error => ["Please give a protocol name, description, unit, genome and annotation version, or select a previous protocol!"]};
+        $c->detach();
     }
 
     my $high_dim_transcriptomics_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_transcriptomics_protocol', 'protocol_type')->cvterm_id();
@@ -746,10 +748,12 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
     my $protocol_genome_annotation_version = $c->req->param('upload_transcriptomics_spreadsheet_protocol_annotation');
 
     if ($protocol_id && $protocol_name) {
-        return {error => ["Please give a protocol name or select a previous protocol, not both!"]};
+        $c->stash->{rest} = {error => ["Please give a protocol name or select a previous protocol, not both!"]};
+        $c->detach();
     }
     if (!$protocol_id && (!$protocol_name || !$protocol_desc || !$protocol_unit || !$protocol_genome_version || !$protocol_genome_annotation_version)) {
-        return {error => ["Please give a protocol name, description, unit, genome and annotation version, or select a previous protocol!"]};
+        $c->stash->{rest} = {error => ["Please give a protocol name, description, unit, genome and annotation version, or select a previous protocol!"]};
+        $c->detach();
     }
 
     my $high_dim_transcriptomics_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_transcriptomics_protocol', 'protocol_type')->cvterm_id();
@@ -957,12 +961,21 @@ sub high_dimensional_phenotypes_metabolomics_upload_verify_POST : Args(0) {
     my $protocol_id = $c->req->param('upload_metabolomics_spreadsheet_protocol_id');
     my $protocol_name = $c->req->param('upload_metabolomics_spreadsheet_protocol_name');
     my $protocol_desc = $c->req->param('upload_metabolomics_spreadsheet_protocol_desc');
+    my $protocol_equipment_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_equipment_type');
+    my $protocol_equipment_desc = $c->req->param('upload_metabolomics_spreadsheet_protocol_equipment_description');
+    my $protocol_data_process_desc = $c->req->param('upload_metabolomics_spreadsheet_protocol_data_process_description');
 
     if ($protocol_id && $protocol_name) {
-        return {error => ["Please give a protocol name or select a previous protocol, not both!"]};
+        $c->stash->{rest} = {error => ["Please give a protocol name or select a previous protocol, not both!"]};
+        $c->detach();
     }
     if (!$protocol_id && (!$protocol_name || !$protocol_desc)) {
-        return {error => ["Please give a protocol name and description, or select a previous protocol!"]};
+        $c->stash->{rest} = {error => ["Please give a protocol name and description, or select a previous protocol!"]};
+        $c->detach();
+    }
+    if (!$protocol_id && (!$protocol_equipment_type || !$protocol_equipment_desc || !$protocol_data_process_desc)) {
+        $c->stash->{rest} = {error => ["Please give all protocol equipment descriptions, or select a previous protocol!"]};
+        $c->detach();
     }
 
     my $high_dim_metabolomics_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_metabolomics_protocol', 'protocol_type')->cvterm_id();
@@ -1128,12 +1141,21 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
     my $protocol_id = $c->req->param('upload_metabolomics_spreadsheet_protocol_id');
     my $protocol_name = $c->req->param('upload_metabolomics_spreadsheet_protocol_name');
     my $protocol_desc = $c->req->param('upload_metabolomics_spreadsheet_protocol_desc');
+    my $protocol_equipment_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_equipment_type');
+    my $protocol_equipment_desc = $c->req->param('upload_metabolomics_spreadsheet_protocol_equipment_description');
+    my $protocol_data_process_desc = $c->req->param('upload_metabolomics_spreadsheet_protocol_data_process_description');
 
     if ($protocol_id && $protocol_name) {
-        return {error => ["Please give a protocol name or select a previous protocol, not both!"]};
+        $c->stash->{rest} = {error => ["Please give a protocol name or select a previous protocol, not both!"]};
+        $c->detach();
     }
     if (!$protocol_id && (!$protocol_name || !$protocol_desc)) {
-        return {error => ["Please give a protocol name and description, or select a previous protocol!"]};
+        $c->stash->{rest} = {error => ["Please give a protocol name and description, or select a previous protocol!"]};
+        $c->detach();
+    }
+    if (!$protocol_id && (!$protocol_equipment_type || !$protocol_equipment_desc || !$protocol_data_process_desc)) {
+        $c->stash->{rest} = {error => ["Please give all protocol equipment descriptions, or select a previous protocol!"]};
+        $c->detach();
     }
 
     my $high_dim_metabolomics_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_metabolomics_protocol', 'protocol_type')->cvterm_id();
