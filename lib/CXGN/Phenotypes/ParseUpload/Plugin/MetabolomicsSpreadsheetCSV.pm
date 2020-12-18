@@ -142,7 +142,7 @@ sub validate {
     close $fh;
 
     my $samples_validator = CXGN::List::Validate->new();
-    my @samples_missing = @{$samples_validator->validate($schema,'tissue_samples',\@samples)->{'missing'}};
+    my @samples_missing = @{$samples_validator->validate($schema, $data_level, \@samples)->{'missing'}};
     if (scalar(@samples_missing) > 0) {
         my $samples_string = join ', ', @samples_missing;
         $parse_result{'error'}= "The following samples in your file are not valid in the database (".$samples_string."). Please add them in a sampling trial first!";
