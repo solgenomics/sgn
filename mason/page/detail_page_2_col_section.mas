@@ -162,48 +162,9 @@ $sampling_facilities => ()
                                 <& /breeders_toolbox/trial/files_section.mas, trial_id => $trial_id, trial_phenotype_files => $trial_phenotype_files, trial_stock_type => $trial_stock_type, for_analysis_page => $for_analysis_page &>
 % } #End trial_upload_files
 % if ($info_section_id eq 'trial_analysis_tools'){
-
                                 <& /breeders_toolbox/trial/correlation_workflow.mas, trial_id => $trial_id &>
-
                                 <& /breeders_toolbox/trial/time_series_accessions_workflow.mas, trial_id => $trial_id, data_level=>'plot' &>
-
                                 <& /breeders_toolbox/trial/numerical_derivatives_row_and_column_workflow.mas, trial_id => $trial_id, data_level=>'plot' &>
-
-                                <!-- Phenotypic correlation analysis -->
-                                <& /solgs/population/correlation.mas,
-                                    trial_id => $trial_id
-                                &>
-
-                                <& /solgs/anova/analysis.mas,
-                                    trial_id => $trial_id
-                                &>
-
-                                 <!-- Population structure analysis PCA -->
-                                <& /solgs/pca/analysis.mas,
-                                    trial_id => $trial_id
-                                  &>
-
-				<!-- Clustering -->
-                                <& /solgs/cluster/analysis.mas,
-                                    trial_id => $trial_id
-                                  &>
-
-				<!-- kinship and inbreeding-->
-                                <& /solgs/kinship/analysis.mas,
-                                    trial_id => $trial_id
-                                &>
-
-
-                                  <& /tools/heritability/heritability.mas,
-                                    trial_id => $trial_id
-                                &>
-
-% if ($c->req->base =~ /sweetpotatobase/) {
-                                <& /tools/qualityControl/qualityControl.mas,
-                                    trial_id => $trial_id
-                                &>
-% }
-
 % if ($hidap_enabled) {
                                 <& /hidap/hidap_trial_link.mas, main_production_site_url=>$main_production_site_url, program => $breeding_program_name, folder => $folder_name, trial => $trial_name &>
 % }

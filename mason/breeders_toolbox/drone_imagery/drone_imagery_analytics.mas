@@ -294,11 +294,24 @@
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="drone_image_analytics_permanent_env_structure_select">
                                         <option value="identity">Identity Matrix</option>
+                                        <option value="phenotype_correlation">Phenotype Correlation Matrix</option>
                                         <option value="euclidean_rows_and_columns">Euclidean Distance From Rows and Columns Matrix</option>
                                     </select>
                                 </div>
                             </div>
                         </div>
+
+                        <div id="drone_imagery_analytics_permanent_env_structure_phenotype_correlation_div" style="display:none">
+                            <div class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Phenotypes For Correlation Matrix: </label>
+                                    <div class="col-sm-9" >
+                                        <div id="drone_imagery_analytics_permanent_env_structure_phenotype_correlation_select_div"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
                     <br/><br/>
@@ -375,6 +388,8 @@ jQuery(document).ready(function() {
             else {
                 get_select_box('traits', 'drone_imagery_analytics_trait_select_div', { 'name' : 'drone_imagery_analytics_trait_id_select', 'id' : 'drone_imagery_analytics_trait_id_select', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':manage_drone_imagery_analytics_field_trial_id_string, 'stock_type':'plot', 'contains_composable_cv_type':manage_drone_imagery_analytics_observation_variable_type });
             }
+
+            get_select_box('traits', 'drone_imagery_analytics_permanent_env_structure_phenotype_correlation_select_div', { 'name' : 'drone_imagery_analytics_permanent_env_structure_phenotype_correlation_select', 'id' : 'drone_imagery_analytics_permanent_env_structure_phenotype_correlation_select', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':manage_drone_imagery_analytics_field_trial_id_string, 'stock_type':'plot' });
 
             Workflow.complete("#drone_imagery_analytics_field_trial_select_step");
             Workflow.focus('#drone_imagery_analytics_workflow', 1);
@@ -614,6 +629,18 @@ jQuery(document).ready(function() {
         }
     });
 
+    jQuery('#drone_image_analytics_permanent_env_structure_select').change(function(){
+        if (jQuery(this).val() == 'euclidean_rows_and_columns') {
+            jQuery('#drone_imagery_analytics_permanent_env_structure_phenotype_correlation_div').hide();
+        }
+        else if (jQuery(this).val() == 'phenotype_correlation') {
+            jQuery('#drone_imagery_analytics_permanent_env_structure_phenotype_correlation_div').show();
+        }
+        else {
+            jQuery('#drone_imagery_analytics_permanent_env_structure_phenotype_correlation_div').hide();
+        }
+    });
+
     jQuery('#drone_imagery_analytics_select_step').click(function(){
 
         if (jQuery('#drone_image_analytics_genotyping_protocol_include_pedigree_select').val() == 'yes' && jQuery('#drone_image_analytics_genotyping_protocol_compute_from_parents_select').val() != 'yes') {
@@ -623,6 +650,15 @@ jQuery(document).ready(function() {
         if (jQuery('#drone_image_analytics_genotyping_protocol_use_parental_grms_select').val() == 'yes' && jQuery('#drone_image_analytics_genotyping_protocol_compute_from_parents_select').val() != 'yes') {
             alert('You can only use parental relationship matrices if you will compute the genotypes from the parents!');
             return false;
+        }
+
+        var manage_drone_imagery_analytics_rr_structure_phenotype_correlation = [];
+        if (jQuery('#drone_image_analytics_permanent_env_structure_select').val() == 'phenotype_correlation') {
+            manage_drone_imagery_analytics_rr_structure_phenotype_correlation = jQuery('#drone_imagery_analytics_permanent_env_structure_phenotype_correlation_select').val();
+            if (!manage_drone_imagery_analytics_rr_structure_phenotype_correlation || manage_drone_imagery_analytics_rr_structure_phenotype_correlation.length < 3) {
+                alert('Please select at least three phenotypes to use in random regression phenotype correlation structure!');
+                return false;
+            }
         }
 
         jQuery.ajax({
@@ -647,7 +683,8 @@ jQuery(document).ready(function() {
                 'tolparinv':jQuery('#drone_image_analytics_tolparinv_select').val(),
                 'legendre_order_number':jQuery('#drone_image_analytics_legendre_order_number_select').val(),
                 'use_area_under_curve':jQuery('#drone_image_analytics_use_area_under_curve_select').val(),
-                'permanent_environment_structure':jQuery('#drone_image_analytics_permanent_env_structure_select').val()
+                'permanent_environment_structure':jQuery('#drone_image_analytics_permanent_env_structure_select').val(),
+                'permanent_environment_structure_phenotype_correlation_traits':JSON.stringify(manage_drone_imagery_analytics_rr_structure_phenotype_correlation)
             },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
@@ -662,34 +699,28 @@ jQuery(document).ready(function() {
                 else {
                     manage_drone_imagery_analytics_response = response;
 
-                    var html = '';
+                    var html = '<h4>Summary :</h4><ul>';
                     if (response.sum_square_residual_original) {
-                        html = html + '<h4>Sum square residual original: '+response.sum_square_residual_original+'</h4><hr>';
+                        html = html + '<li>Sum square residual original: '+response.sum_square_residual_original+'</li>';
                     }
                     if (response.sum_square_residual_altered) {
-                        html = html + '<h4>Sum square residual altered: '+response.sum_square_residual_altered+'</h4><hr>';
-                    }
-                    if (response.sum_square_residual_altered) {
-                        html = html + '<h4>Sum square residual altered with simulated env: '+response.sum_square_residual_altered_env+'</h4><hr>';
+                        html = html + '<li>Sum square residual altered: '+response.sum_square_residual_altered+'</li>';
                     }
                     if (response.genetic_effect_sum_original) {
-                        html = html + '<h4>Genetic effect sum original: '+response.genetic_effect_sum_original+'</h4><hr>';
+                        html = html + '<li>Genetic effect sum original: '+response.genetic_effect_sum_original+'</li>';
                     }
                     if (response.genetic_effect_sum_altered) {
-                        html = html + '<h4>Genetic effect sum altered: '+response.genetic_effect_sum_altered+'</h4><hr>';
-                    }
-                    if (response.genetic_effect_sum_altered_env) {
-                        html = html + '<h4>Genetic effect sum altered with simulated env: '+response.genetic_effect_sum_altered_env+'</h4><hr>';
+                        html = html + '<li>Genetic effect sum altered: '+response.genetic_effect_sum_altered+'</li>';
                     }
                     if (response.env_effect_sum_original) {
-                        html = html + '<h4>Env effect sum original: '+response.env_effect_sum_original+'</h4><hr>';
+                        html = html + '<li>Env effect sum original: '+response.env_effect_sum_original+'</li>';
                     }
                     if (response.env_effect_sum_altered) {
-                        html = html + '<h4>Env effect sum altered: '+response.env_effect_sum_altered+'</h4><hr>';
+                        html = html + '<li>Env effect sum altered: '+response.env_effect_sum_altered+'</li>';
                     }
-                    if (response.env_effect_sum_altered_env) {
-                        html = html + '<h4>Env effect sum altered with simulated env: '+response.env_effect_sum_altered_env+'</h4><hr>';
-                    }
+                    html = html + '</ul>';
+
+                    html = html + '<h4>Heritablilty (h2):</h4><ul><li>Original: '+response.original_h2+'</li><li>Altered: '+response.altered_h2+'</li><li>Linear Sim: '+response.sim1_h2+'</li><li>Random 1D Normal: '+response.sim2_h2+'</li><li>Random 2D Normal: '+response.sim3_h2+'</li><li>Random: '+response.sim4_h2+'</li></ul>';
 
                     if (response.simulated_environment_to_effect_correlations) {
                         html = html + '<h4>Simulated Env to Effects Correlations:</h4><ul><li>Linear: '+response.simulated_environment_to_effect_correlations[0]+'</li><li>Random 1D Normal: '+response.simulated_environment_to_effect_correlations[1]+'</li><li>Random 2D Normal: '+response.simulated_environment_to_effect_correlations[2]+'</li><li>Random: '+response.simulated_environment_to_effect_correlations[3]+'</li></ul><hr>';

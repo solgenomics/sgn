@@ -329,7 +329,7 @@ sub store_analysis_spreadsheet_POST {
 
     my $validate_type = 'analysis phenotype spreadsheet csv';
     my $parser = CXGN::Phenotypes::ParseUpload->new();
-    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, undef, $data_level, $schema, undef);
+    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, undef, $data_level, $schema, undef, undef);
     if (!$validate_file) {
         push @error_status, "Archived file not valid: $upload_original_name.";
         $c->stash->{rest} = {error_messages => \@error_status};
@@ -344,7 +344,7 @@ sub store_analysis_spreadsheet_POST {
         $c->detach();
     }
 
-    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, undef, $data_level, $schema, undef, $user_id);
+    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, undef, $data_level, $schema, undef, $user_id, $c, undef);
     if (!$parsed_file) {
         push @error_status, "Error parsing file $upload_original_name.";
         $c->stash->{rest} = {error_messages => \@error_status};
