@@ -132,9 +132,6 @@
         
     histLoc.style("overflow-x","auto");
     var hist = histLoc.selectAll(".histogram").data([series]);
-
-    hist.selectAll("text").remove();
-    
     newHist = hist.enter()
       .append("svg")
       .classed("histogram",true)
@@ -157,12 +154,16 @@
       .call(yaxis)
       .attr("font-size",16);
 
-    hist.append("text")             
+    hist.select("#ylabel").remove();
+    hist.select("#xlabel").remove();
+    hist.append("text")   
+      .attr("id","xlabel")       
       .attr("transform", "translate(" + (layout.width/2) + "," + (layout.height + layout.margin.top - 7 ) + ")")
       .style("text-anchor", "middle")
       .text(traitName);
 
-    hist.append("text")
+    hist.append("text")   
+      .attr("id","ylabel") 
       .attr("transform", "rotate(-90)")
       .attr("y", -10)
       .attr("x",0 - (layout.height / 2))
