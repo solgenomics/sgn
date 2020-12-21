@@ -190,13 +190,13 @@ has 'scale_db' => (
 
             if ($prop->get_column('type_id') == $self->scale_categories_label_id) {
                 $category->{'label'} = $prop->get_column('value');
+                $categories{$prop->get_column('rank')}=$category;
             }
 
             if ($prop->get_column('type_id') == $self->scale_categories_value_id) {
                 $category->{'value'} = $prop->get_column('value');
+                $categories{$prop->get_column('rank')}=$category;
             }
-
-            $categories{$prop->get_column('rank')}=$category;
 
             if ($prop->get_column('type_id') == $self->scale_format_id) {
                 $scale_ref->{'dataType'} = $prop->get_column('value');
@@ -213,10 +213,12 @@ has 'scale_db' => (
             }
         }
 
-        my $ref = \%categories;
-        my $maxkey = max keys %$ref;
-        my @array = @{$ref}{0 .. $maxkey};
-        $scale_ref->{'validValues'}{'categories'} = \@array;
+        if (%categories) {
+            my $ref = \%categories;
+            my $maxkey = max keys %$ref;
+            my @array = @{$ref}{0 .. $maxkey};
+            $scale_ref->{'validValues'}{'categories'} = \@array;
+        }
 
         return $scale_ref;
     }

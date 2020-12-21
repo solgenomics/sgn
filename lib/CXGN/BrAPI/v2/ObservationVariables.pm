@@ -186,7 +186,7 @@ sub get_query {
     my $limit = $page_size;
     my $offset = $page*$page_size;
     my $total_count = 0;
-    my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, db.url, dbxref.dbxref_id, dbxref.accession, array_agg(cvtermsynonym.synonym), cvterm.is_obsolete, count(cvterm.cvterm_id) OVER() AS full_count FROM cvterm ".
+    my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, db.url, dbxref.dbxref_id, dbxref.accession, array_agg(cvtermsynonym.synonym) filter (where cvtermsynonym.synonym is not null), cvterm.is_obsolete, count(cvterm.cvterm_id) OVER() AS full_count FROM cvterm ".
         "JOIN dbxref USING(dbxref_id) ".
         "JOIN db using(db_id) ".
         "LEFT JOIN cvtermsynonym using(cvterm_id) ". # left join to include non-synoynm variables, may break field book due to bug
