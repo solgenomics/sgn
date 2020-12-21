@@ -31,6 +31,9 @@ sub validate {
     my $timestamp_included = shift;
     my $data_level = shift;
     my $schema = shift;
+    my $zipfile = shift; #not relevant for this plugin
+    my $nd_protocol_id = shift; #not relevant for this plugin
+    my $nd_protocol_filename = shift; #not relevant for this plugin
     my @file_lines;
     my $delimiter = ',';
     my $header;
@@ -201,7 +204,13 @@ sub parse {
     my $timestamp_included = shift;
     my $data_level = shift;
     my $schema = shift;
-    my $composable_cvterm_format = shift // 'extended';
+    my $zipfile = shift; #not relevant for this plugin
+    my $user_id = shift; #not relevant for this plugin
+    my $c = shift; #not relevant for this plugin
+    my $nd_protocol_id = shift; #not relevant for this plugin
+    my $nd_protocol_filename = shift; #not relevant for this plugin
+
+    my $composable_cvterm_format = $c ? $c->config->{composable_cvterm_format} : 'extended';
     my %parse_result;
     my @file_lines;
     my $delimiter = ',';
