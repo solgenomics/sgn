@@ -132,13 +132,16 @@
         
     histLoc.style("overflow-x","auto");
     var hist = histLoc.selectAll(".histogram").data([series]);
+
+    hist.selectAll("text").remove();
+    
     newHist = hist.enter()
       .append("svg")
       .classed("histogram",true)
       .style("width",layout.width+"px")
       .style("min-width",layout.width)
       .style("margin","auto")
-      .attr("viewBox","0 0 "+layout.width+" "+layout.height)
+      .attr("viewBox","-10 0 "+layout.width+" "+(layout.height+30))
       .style("background","#fff");
     newHist.append("g").classed("series-groups",true);
     newHist.append("g").classed("xaxis",true);
@@ -153,6 +156,20 @@
       .attr('transform', 'translate(' + layout.margin.left + ',0)')
       .call(yaxis)
       .attr("font-size",16);
+
+    hist.append("text")             
+      .attr("transform", "translate(" + (layout.width/2) + "," + (layout.height + layout.margin.top - 7 ) + ")")
+      .style("text-anchor", "middle")
+      .text(traitName);
+
+    hist.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", -10)
+      .attr("x",0 - (layout.height / 2))
+      .attr("dy", "1em")
+      .style("text-anchor", "middle")
+      .text("Frequency (Count)");
+
     
     var groups = hist.select(".series-groups").selectAll(".series")
       .data(function(d){return d;},function(d){return d.key;});
