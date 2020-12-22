@@ -406,6 +406,8 @@ sub store {
 
 	my $variable_of_id = $variable_of_cvterm->get_column('cvterm_id');
 
+	my $new_term;
+
 	# setup transaction for rollbacks in case of error
 	my $coderef = sub {
 
@@ -419,7 +421,7 @@ sub store {
 		);
 
 		# add trait info to cvterm
-		my $new_term = $schema->resultset("Cv::Cvterm")->create(
+		$new_term = $schema->resultset("Cv::Cvterm")->create(
 			{ cv_id         => $cv_id,
 				name        => $name,
 				definition  => $description,
@@ -495,8 +497,8 @@ sub store {
 		return {error => "Transaction error trying to write to db"}
 	}
 
-	$self->cvterm_id($variable_of_id);
-	$self->cvterm($cvterm);
+	$self->cvterm_id($new_term->get_column('cvterm_id'));
+	$self->cvterm($new_term);
 
 	return { success => "Variable added successfully\n", variable=>$self };
 }
