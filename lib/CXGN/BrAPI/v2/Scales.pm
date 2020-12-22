@@ -250,7 +250,7 @@ sub store {
     my $scale_minimum = $scale->{'validValues'}{'min'};
 
     my $rank = 0;
-    my $categories_v1;
+    my $categories_v1 = "";
 
     my $coderef = sub {
 
