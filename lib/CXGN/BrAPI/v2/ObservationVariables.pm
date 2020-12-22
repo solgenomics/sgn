@@ -233,22 +233,6 @@ sub get_query {
             institution             => undef,
             language                => 'eng',
             method                  => $method,
-            # {
-            # additionalInfo
-            # bibliographicalReference
-            # description
-            # externalReferences
-            # formula
-            # methodClass
-            # methodDbId
-            #methodName
-            # ontologyReference => {
-            #         documentationLinks
-            #         ontologyDbId
-            #         ontologyName
-            #         version
-            #     }
-            #},
             observationVariableDbId => qq|$cvterm_id|,
             observationVariableName => $cvterm_name . "|" . $db_name . ":" . $accession,
             ontologyReference       => {
@@ -341,16 +325,6 @@ sub store {
             scale                                 => $scale
         });
         my $variable = $trait->store();
-        #my $method_object = CXGN::BrAPI::v2::Methods->new({
-        #    bcs_schema => $self->bcs_schema,
-        #    cvterm_id => $variable->cvterm_id
-        #});
-        #my $m = $method_object->method_db();
-        #my $refs= CXGN::BrAPI::v2::ExternalReferences->new({
-        #    bcs_schema => $self->bcs_schema,
-        #    dbxref_id => $variable->dbxref_id
-        #});
-        my $external_references = ""; #$refs->references_db();
 
         if ($variable->{'error'}) {
             # TODO: status codes
@@ -360,6 +334,22 @@ sub store {
             push @variable_ids, $variable;
             #print "New variable is ".Dumper($variable)."\n";
         }
+
+        my $method_object = CXGN::BrAPI::v2::Methods->new({
+            bcs_schema => $self->bcs_schema,
+            cvterm_id => $variable->cvterm_id
+        });
+        my $method_json = $method_object->method_db();
+        my $scale_object = CXGN::BrAPI::v2::Scales->new({
+            bcs_schema => $self->bcs_schema,
+            cvterm_id => $variable->cvterm_id
+        });
+        my $scale_json = $scale_object->scale_db();
+        my $refs= CXGN::BrAPI::v2::ExternalReferences->new({
+            bcs_schema => $self->bcs_schema,
+            dbxref_id => $variable->dbxref_id
+        });
+        my $external_references = $refs->references_db();
 
         %result = (
             additionalInfo => undef,
@@ -371,23 +361,7 @@ sub store {
             growthStage => undef,
             institution  => undef,
             language => 'eng',
-            method => {},#$m,
-                #{
-                # additionalInfo
-                # bibliographicalReference
-                # description
-                # externalReferences
-                # formula
-                # methodClass
-                # methodDbId
-                # methodName
-                # ontologyReference => {
-                #         documentationLinks
-                #         ontologyDbId
-                #         ontologyName
-                #         version
-                #     }
-            #},
+            method => $method_json,
             observationVariableDbId => $variable->cvterm_id,
             observationVariableName => $variable->display_name,
             ontologyReference => {
@@ -396,32 +370,14 @@ sub store {
                 ontologyName => $variable->db ? $variable->db : undef,
                 version => undef,
             },
-            scale => {
-                datatype => $variable->format,
-                decimalPlaces => undef,
-                externalReferences => $external_references,
-                ontologyReference => {
-                    documentationLinks => $variable->uri ? $variable->uri : undef,
-                    ontologyDbId => $variable->db_id ? $variable->db_id : undef,
-                    ontologyName => $variable->db ? $variable->db : undef,
-                    version => undef,
-                },
-                scaleDbId => undef,
-                scaleName => undef,
-                validValues => {
-                    min =>$variable->minimum ? $variable->minimum : undef,
-                    max =>$variable->maximum ? $variable->maximum : undef,
-                    #categories => \@brapi_categories,
-                },
-            #
-            },
+            scale => $scale_json,
             scientist => undef,
-            # status => $obsolete = 0 ? "Obsolete" : "Active",
+            status => "Active", # creating so will always be active
             submissionTimestamp => undef,
-            # synonyms => $synonym,
+            synonyms => $synonyms, # kind of cheating, not reading out
             trait => {
                 alternativeAbbreviations => undef,
-            #     attribute => $cvterm_name,
+                attribute => $variable->name,
                 entity => undef,
                 externalReferences => $external_references,
                 mainAbbreviation => undef,
@@ -431,12 +387,12 @@ sub store {
                     ontologyName => $variable->db ? $variable->db : undef,
                     version => undef,
                 },
-            #     status => $obsolete = 0 ? "Obsolete" : "Active",
-            #     synonyms => $synonym,
+                status => "Active",
+                synonyms => $synonyms,
                 traitClass => undef,
-            #     traitDescription => $cvterm_definition,
+                traitDescription => $variable->definition,
                 traitDbId => $variable->cvterm_id,
-            #     traitName => $cvterm_name,
+                traitName => $variable->name,
             },
         );
     }
