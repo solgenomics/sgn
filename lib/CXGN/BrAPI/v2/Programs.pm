@@ -6,6 +6,7 @@ use SGN::Model::Cvterm;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
+use CXGN::BrAPI::v2::ExternalReferences;
 
 extends 'CXGN::BrAPI::v2::Common';
 
@@ -27,8 +28,8 @@ sub search {
 	my @program_ids = $inputs->{programDbIds} ? @{$inputs->{programDbIds}} : ();
 	my @program_names = $inputs->{programNames} ? @{$inputs->{programNames}} : ();
 
-	if (scalar(@abbreviations)>0 || scalar(@externalreference_sources)>0 || scalar(@externalreference_ids)>0){
-        push @$status, { 'error' => 'The following parameters are not implemented: abbreviations, externalReferenceID, externalReferenceSource' };
+	if (scalar(@abbreviations)>0 || scalar(@externalreference_sources)>0){
+        push @$status, { 'error' => 'The following parameters are not implemented: abbreviations, externalReferenceSource' };
     }
 
 	my $ps = CXGN::BreedersToolbox::Projects->new({ schema => $self->bcs_schema });
@@ -38,10 +39,17 @@ sub search {
 	my %program_names = map { $_ => 1 } @program_names;
 	my %program_ids = map { $_ => 1 } @program_ids;
 	my %objectives = map { $_ => 1 } @objectives;
+	my %reference_ids = map { $_ => 1 } @externalreference_ids;
+	my %reference_sources = map { $_ => 1 } @externalreference_sources;
+
+	print Dumper($programs);
+	print Dumper(\@externalreference_ids);
+	print Dumper(\%reference_ids);
 
 	foreach (@$programs){
 		my $passes_search;
-		if (scalar(@program_names)>0 || scalar(@program_ids)>0 || scalar(@objectives)>0 || scalar(@commoncrop_names)>0 ){
+		if (scalar(@program_names)>0 || scalar(@program_ids)>0 || scalar(@objectives)>0 || scalar(@commoncrop_names)>0 ||
+		 	scalar(@externalreference_ids)>0){
 			if(exists($program_names{$_->[1]})){
 				$passes_search = 1;
 			}
@@ -51,6 +59,23 @@ sub search {
 			if(exists($objectives{$_->[2]})){
 				$passes_search = 1;
 			}
+
+			# combine referenceID and referenceSource into AND check as used by bi-api filter
+			# won't work with general search but wasn't implemented anyways
+
+			if ($_->[3]) {
+				print Dumper($_->[3]);
+				foreach my $reference (@{$_->[3]}) {
+
+					my $ref_id = $reference->{'referenceID'};
+					my $ref_source = $reference->{'referenceSource'};
+
+					if (exists($reference_ids{$ref_id}) && exists($reference_sources{$ref_source})) {
+						$passes_search = 1;
+					}
+				}
+			}
+
 			if ( grep( /^$crop$/, @commoncrop_names ) ) {
 				$passes_search = 1;
 			}
@@ -62,6 +87,8 @@ sub search {
 			push @available, $_;
 		}
 	}
+
+
 
 	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@available, $page_size, $page);
 	my @data;
@@ -96,6 +123,15 @@ sub search {
 		}
 
 		if ($passes_search){
+
+			my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+				bcs_schema => $self->bcs_schema,
+				table_name => 'Project::Projectprop',
+				base_id_key => 'project_id',
+				base_id => $_->[0]
+			});
+			my $external_references = $references->references_db();
+
 			push @data, {
 				programDbId=>qq|$_->[0]|,
 				programName=>$_->[1],
@@ -103,7 +139,7 @@ sub search {
 				additionalInfo => {},
 	            commonCropName => $inputs->{crop},
 	            documentationURL => undef,
-	            externalReferences  => [],
+	            externalReferences  => $external_references,
 	            leadPersonDbId => $person_id,
 	            leadPersonName=> $names,
 	            objective=>$_->[2],
@@ -148,6 +184,14 @@ sub detail {
 	}
     my $names = join ',', @sp_person_names;
     my $person_id = join ',',  @sp_persons;
+
+	my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+		bcs_schema => $self->bcs_schema,
+		table_name => 'Project::Projectprop',
+		base_id_key => 'project_id',
+		base_id => $id
+	});
+	my $external_references = $references->references_db();
     
 	%result = (
 		programDbId=>qq|$id|,
@@ -156,7 +200,7 @@ sub detail {
 		additionalInfo => {},
         commonCropName => $crop,
         documentationURL => undef,
-        externalReferences  => [],
+        externalReferences  => $external_references,
         leadPersonDbId => $person_id ? $person_id : undef,
         leadPersonName=> $names ? $names : undef,
         objective=>$description,
@@ -183,14 +227,17 @@ sub store {
 	#}
 	my @program_ids;
 
+	print Dumper($data);
+
 	foreach my $params (@{$data}) {
 
 		my $name = $params->{programName} || undef;
 		my $desc = $params->{objective} || 'N/A'; # needs an objective due to db constraints
+		my $external_references = $params->{externalReferences};
 
 		my $p = CXGN::BreedersToolbox::Projects->new({ schema => $schema });
 
-		my $new_program = $p->new_breeding_program($name, $desc);
+		my $new_program = $p->new_breeding_program($name, $desc, $external_references);
 
 		if ($new_program->{'error'}) {
 			return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Program %s was not stored.', $name));

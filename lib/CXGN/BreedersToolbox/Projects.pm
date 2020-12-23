@@ -7,6 +7,7 @@ use SGN::Model::Cvterm;
 use CXGN::People::Roles;
 use JSON;
 use Encode;
+use CXGN::BrAPI::v2::ExternalReferences;
 
 has 'schema' => (
 		 is       => 'rw',
@@ -36,7 +37,16 @@ sub get_breeding_programs {
 
     my @projects;
     while (my $row = $rs->next()) {
-	push @projects, [ $row->project_id, $row->name, $row->description ];
+
+        my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+            bcs_schema => $self->schema,
+            table_name => 'Project::Projectprop',
+            base_id_key => 'project_id',
+            base_id => $row->project_id
+        });
+        my $external_references = $references->references_db();
+
+	    push @projects, [ $row->project_id, $row->name, $row->description, $external_references ];
     }
 
     return \@projects;
@@ -437,6 +447,7 @@ sub new_breeding_program {
     my $self= shift;
     my $name = shift;
     my $description = shift;
+    my $external_references = shift;
 
     my $type_id = $self->get_breeding_program_cvterm_id();
 
@@ -457,22 +468,40 @@ sub new_breeding_program {
 			die $error;
 		}
 
-	my $row = $self->schema()->resultset("Project::Project")->create(
-	    {
-		name => $name,
-		description => $description,
-	    });
+        my $row = $self->schema()->resultset("Project::Project")->create(
+            {
+            name => $name,
+            description => $description,
+            });
 
-	$row->insert();
-    $project_id = $row->project_id();
+        $row->insert();
+        $project_id = $row->project_id();
 
-	my $prop_row = $self->schema()->resultset("Project::Projectprop")->create(
-	    {
-		type_id => $type_id,
-		project_id => $row->project_id(),
+        my $prop_row = $self->schema()->resultset("Project::Projectprop")->create(
+            {
+            type_id => $type_id,
+            project_id => $row->project_id(),
 
-	    });
-	$prop_row->insert();
+            });
+        $prop_row->insert();
+
+        print Dumper($external_references);
+        print Dumper($project_id);
+
+        # save external references
+        my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+            bcs_schema => $self->schema,
+			external_references => $external_references,
+			table_name => 'Project::Projectprop',
+			base_id_key => 'project_id',
+			base_id => $project_id
+        });
+
+        $references->store();
+
+        if ($references->{'error'}) {
+            return {error => $references->{'error'}};
+        }
 
     };
 
