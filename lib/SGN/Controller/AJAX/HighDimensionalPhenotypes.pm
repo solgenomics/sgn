@@ -206,6 +206,7 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
             push @success_status, "Aggregated file data successfully parsed.";
         }
     }
+    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
 
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
         basepath=>$c->config->{basepath},
