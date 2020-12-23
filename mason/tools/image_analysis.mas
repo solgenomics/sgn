@@ -290,23 +290,61 @@ jQuery(document).ready(function(){
             return false;
         }
 
+        var results = [];
+        var working_modal = jQuery('#working_modal');
+        working_modal.modal('show');
+
+        selected_image_ids.forEach(function(image_id, index) {
+            jQuery.ajax({
+                url: '/ajax/image_analysis/submit',
+                method: 'POST',
+                data: {
+                    'selected_image_ids': image_id,
+                    'service': jQuery('#image_analysis_service_select').val(),
+                    'trait': jQuery('#image_analysis_trait_select').val(),
+                },
+                dataType:'json',
+                beforeSend: function() {
+                    working_modal.find('.modal-body').append('<p id="'+image_id+'">Working on image number '+index+'.');
+                },
+                success: function(response) {
+                    console.log(response);
+                    jQuery('#'+image_id).text('Finished analyzing image number '+index+'.');
+                    results.push(response.results);
+                    // jQuery('#working_msg').html('');
+                    // jQuery('#working_modal').modal('hide');
+                    // jQuery('#image_analysis_result').show();
+                },
+                error: function(response) {
+                    // jQuery('#working_msg').html('');
+                    // jQuery('#working_modal').modal('hide');
+                    console.log('Error: '+response);
+                    jQuery('#'+image_id).text('Error analyzing image number '+index+'. '+response);
+                    // alert("An error occurred submitting necrosis image analysis");
+                }
+            });
+        });
+
         jQuery.ajax({
-            url: '/ajax/image_analysis/submit',
+            url: '/ajax/image_analysis/group',
             method: 'POST',
             data: {
-                'selected_image_ids': JSON.stringify(selected_image_ids),
-                'service': jQuery('#image_analysis_service_select').val(),
-                'trait': jQuery('#image_analysis_trait_select').val(),
+                'result': results,
+                // 'service': jQuery('#image_analysis_service_select').val(),
+                // 'trait': jQuery('#image_analysis_trait_select').val(),
             },
             dataType:'json',
             beforeSend: function() {
-                jQuery('#working_modal').modal('show');
+                // working_modal.find('.modal-body').append('<p id="'+image_id+'">Working on image number '+index+'.');
             },
             success: function(response) {
                 console.log(response);
-                jQuery('#working_msg').html('');
+                // jQuery('#'+image_id).text('Finished analyzing image number '+index+'.');
+                // results.push(response.results);
+                // jQuery('#working_msg').html('');
                 jQuery('#working_modal').modal('hide');
                 jQuery('#image_analysis_result').show();
+
                 var table = jQuery('#image_analysis_result_table').DataTable( {
                     "data": response.results,
                     "columns": [
@@ -349,15 +387,69 @@ jQuery(document).ready(function(){
                         tdi.first().addClass('fa-minus-square');
                     }
                 } );
-
             },
             error: function(response) {
-                jQuery('#working_msg').html('');
+                // jQuery('#working_msg').html('');
                 jQuery('#working_modal').modal('hide');
+                console.log('Error: '+response);
+                // jQuery('#'+image_id).text('Error analyzing image number '+index+'. '+response);
                 alert("An error occurred submitting necrosis image analysis");
             }
         });
     });
+
+
+            //     var table = jQuery('#image_analysis_result_table').DataTable( {
+            //         "data": response.results,
+            //         "columns": [
+            //             {
+            //                 "className":      'details-control',
+            //                 "orderable":      false,
+            //                 "data":           null,
+            //                 "defaultContent": '',
+            //                 "render": function () {
+            //                      return '<i class="fa fa-plus-square" aria-hidden="true"></i>';
+            //                  },
+            //                  width:"15px"
+            //             },
+            //             { "data": "observationUnitName" },
+            //             { "data": "observationVariableName" },
+            //             { "data": "numberAnalyzed" },
+            //             { "data": "value" }
+            //         ],
+            //         "order": [[1, 'asc']]
+            //     } );
+            //
+            //     // Add event listener for opening and closing details
+            //     jQuery('#image_analysis_result_table tbody').on('click', 'td.details-control', function () {
+            //         var tr = jQuery(this).closest('tr');
+            //         var tdi = tr.find("i.fa");
+            //         var row = table.row( tr );
+            //
+            //         if ( row.child.isShown() ) {
+            //             // This row is already open - close it
+            //             row.child.hide();
+            //             tr.removeClass('shown');
+            //             tdi.first().removeClass('fa-minus-square');
+            //             tdi.first().addClass('fa-plus-square');
+            //         }
+            //         else {
+            //             // Open this row
+            //             row.child( format(row.data()) ).show();
+            //             tr.addClass('shown');
+            //             tdi.first().removeClass('fa-plus-square');
+            //             tdi.first().addClass('fa-minus-square');
+            //         }
+            //     } );
+            //
+            // },
+            // error: function(response) {
+            //     jQuery('#working_msg').html('');
+            //     jQuery('#working_modal').modal('hide');
+            //     alert("An error occurred submitting necrosis image analysis");
+            // }
+    //     });
+    // });
 
     jQuery('#image_analysis_save_results').click(function(){
 
