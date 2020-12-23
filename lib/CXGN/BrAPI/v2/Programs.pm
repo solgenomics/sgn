@@ -42,10 +42,6 @@ sub search {
 	my %reference_ids = map { $_ => 1 } @externalreference_ids;
 	my %reference_sources = map { $_ => 1 } @externalreference_sources;
 
-	print Dumper($programs);
-	print Dumper(\@externalreference_ids);
-	print Dumper(\%reference_ids);
-
 	foreach (@$programs){
 		my $passes_search;
 		if (scalar(@program_names)>0 || scalar(@program_ids)>0 || scalar(@objectives)>0 || scalar(@commoncrop_names)>0 ||
@@ -64,7 +60,6 @@ sub search {
 			# won't work with general search but wasn't implemented anyways
 
 			if ($_->[3]) {
-				print Dumper($_->[3]);
 				foreach my $reference (@{$_->[3]}) {
 
 					my $ref_id = $reference->{'referenceID'};
@@ -226,8 +221,6 @@ sub store {
 	#	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must login and have permission to access this BrAPI call.'));
 	#}
 	my @program_ids;
-
-	print Dumper($data);
 
 	foreach my $params (@{$data}) {
 

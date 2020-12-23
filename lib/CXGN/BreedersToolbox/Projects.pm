@@ -8,6 +8,7 @@ use CXGN::People::Roles;
 use JSON;
 use Encode;
 use CXGN::BrAPI::v2::ExternalReferences;
+use Try::Tiny;
 
 has 'schema' => (
 		 is       => 'rw',
@@ -460,7 +461,8 @@ sub new_breeding_program {
 
     }
     my $project_id;
-    eval {
+
+    my $coderef = sub {
 
 		my $role = CXGN::People::Roles->new({bcs_schema=>$self->schema});
 		my $error = $role->add_sp_role($name);
@@ -485,9 +487,6 @@ sub new_breeding_program {
             });
         $prop_row->insert();
 
-        print Dumper($external_references);
-        print Dumper($project_id);
-
         # save external references
         my $references = CXGN::BrAPI::v2::ExternalReferences->new({
             bcs_schema => $self->schema,
@@ -505,14 +504,20 @@ sub new_breeding_program {
 
     };
 
+    my $transaction_error;
 
+    try {
+        $self->schema()->txn_do($coderef);
+    } catch {
+        $transaction_error =  $_;
+    };
 
-    if ($@) {
-        return { error => "An error occurred while generating a new breeding program. ($@)" };
-    } else {
-        print STDERR "The new breeding program $name was created with id $project_id\n";
-        return { success => "The new breeding program $name was created.", id => $project_id };
+    if ($transaction_error) {
+        return {error => "An error occurred while generating a new breeding program."}
     }
+
+    print STDERR "The new breeding program $name was created with id $project_id\n";
+    return { success => "The new breeding program $name was created.", id => $project_id };
 
 }
 
