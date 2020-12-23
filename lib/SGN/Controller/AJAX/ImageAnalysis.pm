@@ -267,12 +267,24 @@ sub image_analysis_submit_POST : Args(0) {
         $it++;
     }
 
-    $result = _group_results_by_observationunit($result);
+    print STDERR "Before grouping result is: ".Dumper($result);
+
+    # $result = _group_results_by_observationunit($result);
     $c->stash->{rest} = { success => 1, results => $result };
 }
 
-sub _group_results_by_observationunit {
-    my $result = shift;
+sub image_analysis_group : Path('/ajax/image_analysis/group') : ActionClass('REST') { }
+sub image_analysis_group_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    # my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    # my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    # my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $result = decode_json $c->req->param('result');
+    # my $service = $c->req->param('service');
+    # my $trait = $c->req->param('trait');
+# sub _group_results_by_observationunit {
+    # my $result = shift;
     my %grouped_results = ();
     my @table_data = ();
 
@@ -329,7 +341,8 @@ sub _group_results_by_observationunit {
         $old_uniquename = $uniquename;
     }
     # print STDERR "table data is ".Dumper(@table_data);
-    return \@table_data;
+    $c->stash->{rest} = { success => 1, results => \@table_data; };
+    # return \@table_data;
 }
 
 sub _check_user_login {
