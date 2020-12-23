@@ -662,7 +662,8 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "download_accessions_XXXXX", UNLINK=> 0);
 
     # Build Accession Info
-    my $rows = $self->build_accession_properties_info($schema, \@accession_ids);
+    my @editable_stock_props = split ',', $c->config->{editable_stock_props};
+    my $rows = $self->build_accession_properties_info($schema, \@accession_ids, \@editable_stock_props);
 
     # Create and Return XLS file
     if ( $file_format eq ".xls" ) {
@@ -729,56 +730,59 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
 
 }
 
+# 
+# Build Accession Properties Info
+#
+# Generate the rows in the accession info table for the specified Accessions
+#
+# Usage: my $rows = $self->build_accession_properties_info($schema, \@accession_ids, \@editable_stock_props);
+# Returns: an arrayref where each array item is an array of accession properties
+#          the first item is an array of the header values
+#
 sub build_accession_properties_info {
     my $self = shift;
     my $schema = shift;
     my $accession_ids = shift;
+    my $editable_stock_props = shift;
 
-    # TODO: Support editable stock props
+    # Setup Stock Props
+    my @required_stock_props = ("accession_name", "species_name", "population_name", "organization", "synonym", "PUI");
+    my @parsed_editable_stock_props = ();
+    foreach my $esp (@$editable_stock_props) {
+        if ( !grep(/^$esp$/, @required_stock_props) ) {
+            push(@parsed_editable_stock_props, $esp)
+        }
+    }
 
-    # my @accession_headers = ("accession_name", "species_name", "population_name", "organization_name(s)", "synonym(s)", "location_code(s)", "ploidy_level(s)", "genome_structure(s)", "variety(s)", "donor(s)", "donor_institute(s)", "donor_PUI(s)", "country_of_origin(s)", "state(s)", "institute_code(s)", "institute_name(s)", "biological_status_of_accession_code(s)", "notes(s)", "accession_number(s)", "PUI(s)", "seed_source(s)", "type_of_germplasm_storage_code(s)", "acquisition_date(s)", "transgenic", "introgression_parent", "introgression_backcross_parent", "introgression_map_version", "introgression_chromosome", "introgression_start_position_bp", "introgression_end_position_bp", "purdy_pedigree", "filial_generation");
-    my @accession_headers = ("accession_name", "species_name", "population_name", "organization_name(s)", "synonym(s)", "location_code(s)", "ploidy_level(s)", "genome_structure(s)", "variety(s)", "donor(s)", "donor_institute(s)", "donor_PUI(s)", "country_of_origin(s)", "state(s)", "institute_code(s)", "institute_name(s)", "biological_status_of_accession_code(s)", "notes(s)", "accession_number(s)", "PUI(s)", "seed_source(s)", "type_of_germplasm_storage_code(s)", "acquisition_date(s)", "transgenic", "introgression_parent", "introgression_backcross_parent", "introgression_map_version", "introgression_chromosome", "introgression_start_position_bp", "introgression_end_position_bp");
+    # Build Header
+    my @accession_headers = ();
+    push(@accession_headers, @required_stock_props);
+    push(@accession_headers, @parsed_editable_stock_props);
+
+    # Add Header to Rows
     my @accession_rows = ();
     push(@accession_rows, \@accession_headers);
 
+    # Build Row for each Accession
     foreach my $stock_id ( @$accession_ids ) {
         my $a = new CXGN::Stock::Accession({ schema => $schema, stock_id => $stock_id});
-        my $synonym_string = join(', ', @{$a->synonyms()});
-        my $donor_string = join(', ', @{$a->donors()});
+        my $synonym_string = join(',', @{$a->synonyms()});
+        
+        # Setup row with required stock props
         my @r = (
             $a->uniquename(),
             $a->get_species(),
             $a->population_name(),
             $a->organization_name(),
             $synonym_string,
-            $a->locationCode(),
-            $a->ploidyLevel(),
-            $a->genomeStructure(),
-            $a->variety(),
-            $donor_string,
-            $a->_retrieve_stockprop('donor institute'),
-            $a->_retrieve_stockprop('donor PUI'),
-            $a->countryOfOriginCode(),
-            $a->state(),
-            $a->instituteCode(),
-            $a->instituteName(),
-            $a->biologicalStatusOfAccessionCode(),
-            $a->notes(),
-            $a->accessionNumber(),
-            $a->germplasmPUI(),
-            $a->germplasmSeedSource(),
-            $a->typeOfGermplasmStorageCode(),
-            $a->acquisitionDate(),
-            $a->transgenic(),
-            $a->introgression_parent(),
-            $a->introgression_backcross_parent(),
-            $a->introgression_map_version(),
-            $a->introgression_chromosome(),
-            $a->introgression_start_position_bp(),
-            $a->introgression_end_position_bp(),
-            # $a->purdyPedigree(),
-            # $a->filialGeneration()
+            $a->germplasmPUI()
         );
+
+        # Add parsed editable stock props
+        foreach my $esp (@parsed_editable_stock_props) {
+            push(@r, $a->_retrieve_stockprop($esp));
+        }
+
         push(@accession_rows, \@r);
     }
     
