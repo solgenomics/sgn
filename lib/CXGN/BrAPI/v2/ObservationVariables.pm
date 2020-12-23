@@ -175,7 +175,6 @@ sub get_query {
     my $and_where = shift;
     my $join = shift;
     my $array = shift;
-
     #my $page_size = $self->page_size;
     my $page_size = 1000; # ignore page size for now
     my $page = $self->page;
@@ -217,7 +216,9 @@ sub get_query {
         my $scale = $scale_object->scale_db();
         my $references = CXGN::BrAPI::v2::ExternalReferences->new({
             bcs_schema => $self->bcs_schema,
-            dbxref_id => $dbxref_id
+            table_name => 'Cv::Dbxrefprop',
+            base_id_key => 'dbxref_id',
+            base_id => $dbxref_id
         });
         my $external_references = $references->references_db();
         my $categories = $trait->categories;
@@ -347,7 +348,9 @@ sub store {
         my $scale_json = $scale_object->scale_db();
         my $refs= CXGN::BrAPI::v2::ExternalReferences->new({
             bcs_schema => $self->bcs_schema,
-            dbxref_id => $variable->dbxref_id
+            table_name => "Cv::Dbxrefprop",
+            base_id_key => "dbxref_id",
+            base_id => $variable->dbxref_id
         });
         my $external_references = $refs->references_db();
 

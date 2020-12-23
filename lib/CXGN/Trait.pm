@@ -472,7 +472,9 @@ sub store {
 		my $references = CXGN::BrAPI::v2::ExternalReferences->new({
 			bcs_schema => $self->bcs_schema,
 			external_references => $self->external_references,
-			dbxref_id => $new_term_dbxref->dbxref_id()
+			table_name => "Cv::Dbxrefprop",
+			base_id_key => "dbxref_id",
+			base_id => $new_term_dbxref->dbxref_id()
 		});
 
 		$references->store();
