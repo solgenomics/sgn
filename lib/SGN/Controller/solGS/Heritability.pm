@@ -56,8 +56,8 @@ sub get_regression_data_files {
     my $trait_abbr = $c->stash->{trait_abbr}; 
     my $cache_dir  = $c->stash->{solgs_cache_dir};
 
-    $c->controller('solGS::Files')->trait_phenodata_file($c);
-    my $phenotype_file = $c->stash->{trait_phenodata_file};
+    $c->controller('solGS::Files')->model_phenodata_file($c);
+    my $phenotype_file = $c->stash->{model_phenodata_file};
     
     $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
     my $gebv_file = $c->stash->{rrblup_training_gebvs_file};
