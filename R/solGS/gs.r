@@ -37,15 +37,18 @@ outputFiles <- scan(grep("output_files", allArgs, value = TRUE),
 traitsFile <- grep("traits", inputFiles,  value = TRUE)
 modelInfoFile  <- grep("model_info", inputFiles, value = TRUE)
 message('model_info_file ', modelInfoFile)
-modelInfo  <- read.table(modelInfoFile, header=TRUE, sep ="\t")
+
+modelInfo  <- read.table(modelInfoFile,
+                         header=TRUE, sep ="\t",
+                         as.is = c('Value'))
+
 modelInfo  <- column_to_rownames(modelInfo, var="Name")
-traitId    <- as.vector(modelInfo["trait_id", 1])
-traitAbbr  <- as.vector(modelInfo["trait_abbr", 1])
-print(str(traitAbbr))
+traitId    <- modelInfo["trait_id", 1]
+traitAbbr  <- modelInfo["trait_abbr", 1]
+modelId    <- modelInfo["model_id", 1]
+protocolId <- modelInfo["protocol_id", 1]
 
-modelId    <- as.vector(modelInfo["model_id", 1])
-protocolId <- as.vector(modelInfo["protocol_id", 1])
-
+message('class ', class(traitAbbr))
 message('trait_id ', traitId)
 message('trait_abbr ', traitAbbr)
 message('protocol_id ', protocolId)
