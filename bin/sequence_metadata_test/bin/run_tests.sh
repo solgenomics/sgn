@@ -22,10 +22,11 @@
 db_host="localhost"
 db_name="breedbase"
 db_user="postgres"
-query_count=5
-counts="1 2 3 4 5 6 7 8 9 10"
-chunks="100 1000 10000 100000"
-lengths="1 100 500 1000 10000"
+counts="10 15 20"
+chunks="100 500 1000 2000 4000 6000 8000 10000 50000 100000"
+lengths="1000"
+query_count=5000
+query_length_delta=1000
 type_name="feature_test_type"
 query_start_length_pos=1
 query_chromosome="chr1D"
@@ -123,28 +124,33 @@ for chunk in "${chunks[@]}"; do
 
         # Loop through the sequence lengths to query
         for length in "${lengths[@]}"; do
-            echo "==> Querying a sequence length of $length kb"
-            
-            # Set up the query
-            start=$query_start_length_pos
-            end=$((start+length*1000))
-            chromosome=$query_chromosome
-            type="$type_name"_$count
-            sql="SELECT feature_json_id, feature_id, type_id, s.json->>'start' AS start, s.json->>'end' AS end, s.json->>'score' AS score
+            echo "==> Querying a sequence length of $length kb $query_count times..."
+
+            # Run each query
+            SECONDS=0
+            n=0
+            query_offset=0
+            while [[ $n -lt $query_count ]]; do
+
+                # Set up the query
+                start=$((n*query_length_delta+query_start_length_pos))
+                end=$((start+length*1000))
+                chromosome=$query_chromosome
+                type="$type_name"_1
+                sql="SELECT feature_json_id, feature_id, type_id, s.json->>'start' AS start, s.json->>'end' AS end, s.json->>'score' AS score
 FROM featureprop_json, jsonb_array_elements(featureprop_json.json) as s
 WHERE (s.json->>'start')::int >= $start AND (s.json->>'end')::int <= $end
 AND ((start_pos <= $start AND end_pos >= $start) OR (start_pos <= $end AND end_pos >= $end) OR (start_pos >= $start AND end_pos <= $end))
 AND feature_id = (SELECT feature_id FROM feature WHERE uniquename = '$chromosome')
 AND type_id = (SELECT cvterm_id FROM cvterm WHERE name = '$type');"
 
-            # Run the query
-            SECONDS=0
-            n=1
-            while [[ $n -le $query_count ]]; do
-                echo "--> Performing query #$n/$query_count..."
+                # echo "--> Query #$n ($start->$end)..."
+
+                # Perform the query
                 results=$(psql -h $db_host -d $db_name -U $db_user -XAtc "$sql")
                 results_count=$(echo "$results" | wc -l)
                 n=$((n+1))
+
             done
             query_total=$SECONDS
             query_avg=$(echo $query_total/$query_count | R --vanilla --quiet | sed -n '2s/.* //p')
