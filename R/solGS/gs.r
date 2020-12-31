@@ -142,20 +142,27 @@ if (length(formattedPhenoFile) != 0 && file.info(formattedPhenoFile)$size != 0) 
                                             ))
 
 } else {
-  phenoFile <- grep("\\/phenotype_data", inputFiles, value = TRUE)
 
-  if (is.null(phenoFile)) {
-    stop("phenotype data file is missing.")
-  }
+    if (datasetInfo == 'combined populations') {
+        
+         phenoFile <- grep("model_phenodata", inputFiles, value = TRUE)
+    } else {
+    
+        phenoFile <- grep("\\/phenotype_data", inputFiles, value = TRUE)
+    }
 
-  if (file.info(phenoFile)$size == 0) {
-    stop("phenotype data file is empty.")
-  }
+    if (is.null(phenoFile)) {
+        stop("phenotype data file is missing.")
+    }
 
-  phenoData <- data.frame(fread(phenoFile,
-                     sep="\t",
-                     na.strings = c("NA", "", "--", "-", "."),
-                     header = TRUE))
+    if (file.info(phenoFile)$size == 0) {
+        stop("phenotype data file is empty.")
+    }
+
+    phenoData <- data.frame(fread(phenoFile,
+                                  sep = "\t",
+                                  na.strings = c("NA", "", "--", "-", "."),
+                                  header = TRUE))
 }
 
 phenoTrait <- c()
