@@ -56,7 +56,7 @@ sub observations_store {
     my $data_level = 'stocks';
 
     my $parser = CXGN::Phenotypes::ParseUpload->new();
-    my $validated_request = $parser->validate('brapi observations', $observations, $timestamp_included, $data_level, $schema);
+    my $validated_request = $parser->validate('brapi observations', $observations, $timestamp_included, $data_level, $schema, undef, undef);
 
     if (!$validated_request || $validated_request->{'error'}) {
         my $parse_error = $validated_request ? $validated_request->{'error'} : "Error parsing request structure";
@@ -67,7 +67,7 @@ sub observations_store {
     }
 
 
-    my $parsed_request = $parser->parse('brapi observations', $observations, $timestamp_included, $data_level, $schema);
+    my $parsed_request = $parser->parse('brapi observations', $observations, $timestamp_included, $data_level, $schema, undef, $user_id, undef, undef);
     my %parsed_data;
     my @units;
     my @variables;

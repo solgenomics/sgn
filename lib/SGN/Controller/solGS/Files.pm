@@ -44,13 +44,11 @@ sub variance_components_file {
    
     my $pop_id = $c->stash->{training_pop_id};
     my $trait  = $c->stash->{trait_abbr};
-    
     my $data_set_type = $c->stash->{data_set_type};
-    
     my $protocol_id = $c->stash->{genotyping_protocol_id};
+    
     my $file_id = "${pop_id}-${trait}-GP-${protocol_id}";
  
-
     no warnings 'uninitialized';
 
 
@@ -64,25 +62,46 @@ sub variance_components_file {
 }
 
 
-sub trait_phenodata_file {
+sub model_phenodata_file {
     my ($self, $c) = @_;
    
-    my $pop_id        = $c->stash->{pop_id};
+    my $pop_id        = $c->stash->{pop_id} || $c->stash->{combo_pops_id} ;
     my $trait_abbr    = $c->stash->{trait_abbr};    
-    my $data_set_type = $c->stash->{data_set_type};
+    my $protocol_id   = $c->stash->{genotyping_protocol_id};
     
+    my $id =   "${pop_id}-${trait_abbr}-${protocol_id}";
     if ($trait_abbr)
     {
 	no warnings 'uninitialized';
 
-	my $cache_data = {key       => 'phenotype_' . $pop_id . '_'.  $trait_abbr,
-			  file      => 'phenotype_data_' . $trait_abbr .'_' . $pop_id . '.txt',
-			  stash_key => 'trait_phenodata_file',
+	my $cache_data = {key       => 'model_phenodata_' . $id,
+			  file      => 'model_phenodata_' .  $id . '.txt',
+			  stash_key => 'model_phenodata_file',
 			  cache_dir => $c->stash->{solgs_cache_dir}
 	};
 
 	$self->cache_file($c, $cache_data);
     }
+}
+
+
+sub model_info_file {
+    my ($self, $c) = @_;
+
+    my $pop_id = $c->stash->{pop_id} || $c->stash->{combo_pops_id};
+    my $trait_id = $c->stash->{trait_id};
+    my $trait_abbr = $c->stash->{trait_abbr};
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+      
+    my $file_id  = "${trait_id}-${pop_id}-GP-${protocol_id}"; 
+   
+    my $cache_data = { key       => 'model_info_file_' . $file_id, 
+                       file      => 'model_info_file_' . $file_id . '.txt',
+                       stash_key => 'model_info_file',
+		       cache_dir => $c->stash->{solgs_cache_dir}
+    };
+    
+    $self->cache_file($c, $cache_data); 
 }
 
 
@@ -395,6 +414,8 @@ sub combined_gebvs_file {
 sub trait_phenotype_file {
     my ($self, $c, $pop_id, $trait) = @_;
 
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    
     my $dir = $c->stash->{solgs_cache_dir};
     my $exp = "phenotype_data_${trait}_${pop_id}";
     my $file = $self->grep_file($dir, $exp);
