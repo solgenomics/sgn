@@ -6,6 +6,7 @@ use SGN::Model::Cvterm;
 use CXGN::Trial;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
+use CXGN::BrAPI::v2::ExternalReferences;
 
 extends 'CXGN::BrAPI::v2::Common';
 
@@ -136,6 +137,7 @@ sub detail {
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 	my $status = $self->status;
+	my $schema = $self->bcs_schema();
 	my $locations = CXGN::Trial::get_all_locations($self->bcs_schema , $location_id);
 	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array($locations,$page_size,$page);
 	my @data;
@@ -153,6 +155,16 @@ sub detail {
             },
             type=>'Feature'
         };
+
+		my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+			bcs_schema => $schema,
+			table_name => 'NaturalDiversity::NdGeolocationprop',
+			base_id_key => 'nd_geolocation_id',
+			base_id => $_->[0]
+		});
+
+		my $external_references = $references->references_db();
+
 		push @data, {
 			locationDbId => qq|$_->[0]|,
 			locationType=> $_->[8],
@@ -172,7 +184,7 @@ sub detail {
 			coordinates=>\@coordinates,
 			topography => undef,
 			coordinateUncertainty => undef,
-			externalReferences=> undef
+			externalReferences=> $external_references
 		};
 	}
 
@@ -210,6 +222,7 @@ sub store {
 		my $longitude = $geo_coordinates->[1] || undef;
 		my $altitude  = $geo_coordinates->[2]|| undef;
 		my $noaa_station_id    = $params->{additionalInfo}->{noaaStationId} || undef;
+		my $external_references = $params->{externalReferences};
 		my $program_name;
 	
 		my $existing_name_count = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { description => $name } )->count();
@@ -239,7 +252,8 @@ sub store {
 			latitude => $latitude,
 			longitude => $longitude,
 			altitude => $altitude,
-			noaa_station_id => $noaa_station_id
+			noaa_station_id => $noaa_station_id,
+			external_references => $external_references
 		});
 
 		my $store = $location->store_location();
