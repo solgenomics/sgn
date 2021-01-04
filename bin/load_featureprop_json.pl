@@ -13,7 +13,7 @@ usage: load_featureprop_json.pl -H [hostname] -D [database] -U [dbuser] -p [dbpa
 -U database username (default: postgres)
 -p database password
 -i path to input file (required)
--t cvterm name of featureprop type (cvterm of 'genotype_property' CV) (required)
+-t cvterm id of featureprop type (required)
 -n protocol id (nd_protocol_id of the protocol describing the data) (required)
 -c chunk count (max number of items to include in a single JSON value)
 
@@ -48,7 +48,7 @@ my $dbname = $opt_D ? $opt_D : "breedbase";
 my $dbuser = $opt_U ? $opt_U : "postgres";
 my $dbpass = $opt_p;
 my $infile = $opt_i;
-my $type_cvterm_name = $opt_t;
+my $cvterm_id = $opt_t;
 my $nd_protocol_id = $opt_n;
 my $chunk_size = $opt_c ? $opt_c : 10000;
 
@@ -63,18 +63,12 @@ my $dbh = CXGN::DB::Connection->new({
 my $schema = Bio::Chado::Schema->connect(sub { $dbh->get_actual_dbh() });
 
 
-# Get type cvterm ID
-my $cv = $schema->resultset("Cv::Cv")->find({ name => 'genotype_property' });
-my $cvterm = $schema->resultset("Cv::Cvterm")->find({
-    name  => $type_cvterm_name,
-    cv_id => $cv->cv_id()
-});
+# Check cvterm id
+my $cvterm = $schema->resultset("Cv::Cvterm")->find({ cvterm_id => $cvterm_id });
 if ( !$cvterm ) {
-    print STDERR "ERROR: No matching cvterm found for the specified type [$type_cvterm_name]\n";
+    print STDERR "ERROR: No matching cvterm found for the specified type id [$cvterm_id]\n";
     exit 1;
 }
-my $cvterm_id = $cvterm->cvterm_id();
-
 
 # TODO: Make sure nd_protocol_id is valid: exists, is appropriate type
 
