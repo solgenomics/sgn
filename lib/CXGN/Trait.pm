@@ -442,7 +442,7 @@ sub store {
 			$new_term->add_synonym($synonym);
 		}
 
-		# TODO: save scale properties
+		# save scale properties
 		my $scale = CXGN::BrAPI::v2::Scales->new({
 			bcs_schema => $self->bcs_schema,
 			scale => $self->scale,
@@ -455,7 +455,7 @@ sub store {
 			return {error => $scale->{'error'}};
 		}
 
-		# TODO: save method properties
+		# save method properties
 		my $m = CXGN::BrAPI::v2::Methods->new({
 			bcs_schema => $self->bcs_schema,
 			method => $self->method,
