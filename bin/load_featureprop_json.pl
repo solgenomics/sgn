@@ -96,11 +96,19 @@ while ( defined(my $line = <$fh>) ) {
 
     # Get data from line
     my @data = split(/\t/, $line);
-    my $feature = @data[0];
-    my $start = @data[3];
-    my $end = @data[4];
+    my $feature = @data[0] ne "." ? @data[0] : "";
+    my $start = @data[3] ne "." ? @data[3] : "";
+    my $end = @data[4] ne "." ? @data[4] : "";;
     my $score = @data[5] ne "." ? @data[5] : "";
-    my $attributes = @data[8];
+    my $attributes = @data[8] ne "." ? @data[8] : "";
+
+    # Skip values that do not have a start and end position
+    if ( $start eq "" || $end eq "" ) {
+        print STDERR "WARNING: Skipping value because it has no start and/or end position!\n";
+        print STDERR "LINE: $line\n";
+        next;
+    }
+
 
     # Write the current chunk to the database
     # when the feature changes or the chunk size has been reached
