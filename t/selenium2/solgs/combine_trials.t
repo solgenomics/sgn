@@ -325,31 +325,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('combine_trait_trials', 'id', 'combine trials')->click();
     sleep(5);
 
-    # `rm -r /tmp/localhost/`;
-    # $d->find_element_ok('//table[@id="all_trials_table"]//input[@value="139"]', 'xpath', 'select trial kasese')->click();
-    # sleep(2);
-    # $d->find_element_ok('combine_trait_trials', 'id', 'combine trials')->click();
-    # sleep(3);
-    # $d->find_element_ok('queue_job', 'id', 'submit job tr pop')->click();
-    # sleep(2);
-    # $d->find_element_ok('analysis_name', 'id', 'job queueing')->send_keys('combined trait single trial');
-    # sleep(2);
-    # $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    # sleep(200);
-    # $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
-    # sleep(5);
-
-    # `rm -r /tmp/localhost/`;
-    # $d->find_element_ok('Kasese', 'partial_link_text', 'select trial kasese')->click();
-    # sleep(2);
-    # $d->find_element_ok('queue_job', 'id', 'submit job tr pop')->click();
-    # sleep(2);
-    # $d->find_element_ok('analysis_name', 'id', 'job queueing')->send_keys('combined trait single trial link');
-    # sleep(2);
-    # $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    # sleep(200);
-    # $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
-    # sleep(5);   
+   
 
 });
 done_testing();
