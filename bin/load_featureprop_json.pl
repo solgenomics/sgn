@@ -70,7 +70,12 @@ if ( !$cvterm ) {
     exit 1;
 }
 
-# TODO: Make sure nd_protocol_id is valid: exists, is appropriate type
+# Check nd protocol id
+my $nd_protocol = $schema->resultset("NaturalDiversity::NdProtocol")->find({ nd_protocol_id => $nd_protocol_id });
+if ( !$nd_protocol ) {
+    print STDERR "ERROR: No matching nd protocol found for the specified nd protocol id [$nd_protocol_id]\n";
+    exit 1;
+}
 
 
 # Open the input file
@@ -154,7 +159,11 @@ sub write_chunk() {
     $sth->execute($chunk_feature);
     my ($feature_id) = $sth->fetchrow_array();
 
-    # TODO: Exit with an error if the feature is not found
+    # Check Feature ID
+    if ( !$feature_id || $feature_id eq "" ) {
+        print STDERR "ERROR: No matching feature for specified seqid [$chunk_feature]\n";
+        exit 1;
+    }
 
     # Convert values to JSON array string
     my $json_str = encode_json(\@chunk_values);
