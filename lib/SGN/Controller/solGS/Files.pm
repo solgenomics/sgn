@@ -567,9 +567,9 @@ sub list_of_prediction_pops_file {
 
 
 sub first_stock_genotype_file {
-    my ($self, $c, $pop_id) = @_;
+    my ($self, $c, $pop_id, $protocol_id) = @_;
 
-    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    $protocol_id = $c->stash->{genotyping_protocol_id} if !$protocol_id;
     
     my $file_id = $pop_id . '-GP-' . $protocol_id;
   

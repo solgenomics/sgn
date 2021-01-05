@@ -2241,9 +2241,6 @@ sub phenotype_graph :Path('/solgs/phenotype/graph') Args(0) {
 sub model_phenodata_type {
     my ($self, $c, $model_pheno_file) = @_;
 
-    #$c->controller("solGS::Files")->trait_phenodata_file($c);
-    #my $trait_pheno_file = $c->{stash}->{trait_phenodata_file};
-
     my $mean_type;
     if (-s $model_pheno_file)
     {
@@ -2366,7 +2363,6 @@ sub gebv_graph :Path('/solgs/trait/gebv/graph') Args(0) {
     my $combo_pops_id    = $c->req->param('combo_pops_id');
     my $protocol_id      = $c->req->param('genotyping_protocol_id');
     
-
     if ($combo_pops_id)
     {
 	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
@@ -2999,10 +2995,19 @@ sub get_cluster_genotype_query_job_args {
 
 
 sub first_stock_genotype_data {
-    my ($self, $c, $pr_id, $protocol_id) = @_;
+    my ($self, $c, $pop_id, $protocol_id) = @_;
     
     $c->stash->{check_data_exists} = 1;
-    $self->submit_cluster_genotype_query($c, [$pr_id], $protocol_id);  
+    $c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
+    my $geno_file = $c->stash->{genotype_file_name};
+   
+    $c->controller('solGS::Files')->first_stock_genotype_file($c, $pop_id, $protocol_id);
+    my $f_geno_file = $c->stash->{first_stock_genotype_file};
+    
+    if (!-s $geno_file && !-s $f_geno_file) 
+    {
+	$self->submit_cluster_genotype_query($c, [$pop_id], $protocol_id);
+    }
 }
 
 
