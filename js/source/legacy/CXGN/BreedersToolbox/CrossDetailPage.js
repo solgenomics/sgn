@@ -8,6 +8,8 @@ jQuery(document).ready(function() {
 
     display_membership(get_cross_id());
 
+    display_transactions(get_cross_id());
+
     function get_cross_id() {
         var cross_id = jQuery('#cross_id').html();
         var regex = /\n|\r/g;
@@ -273,5 +275,13 @@ jQuery(document).ready(function() {
 
         return;
     }
+
+    function display_transactions(cross_id){
+        var transaction_table = jQuery('#cross_transactions').DataTable({
+            'ajax': '/ajax/cross/transactions/'+cross_id,
+        });
+        return;
+    }
+
 
 });

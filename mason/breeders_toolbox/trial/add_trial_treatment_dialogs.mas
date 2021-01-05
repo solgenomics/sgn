@@ -45,6 +45,7 @@ $management_factor_types => ()
                             <div class="col-sm-8">
                                 <select class="form-control" id="new_treatment_unit" name="new_treatment_unit">
                                     <option value='plot'>Plots</option>
+                                    <option value='plant'>Plants</option>
                                     <!--option value='subplot'>Subplots</option-->
                                 </select>
                             </div>

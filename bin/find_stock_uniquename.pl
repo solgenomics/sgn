@@ -1,4 +1,3 @@
-
 #!/usr/bin/perl
 
 use strict;
@@ -87,13 +86,16 @@ while (my $line = <$file_fh>) {
 	$uniquename = $g2s{$line};
 	$match_type = "hash_direct";
 	$stats{hash_direct}++;
-	$stock_type = "accession";
+	my $stock_row = $schema->resultset("Stock::Stock")->find( { uniquename => { ilike => $line } });
+	
+	$stock_type = $stock_types{$stock_row->type_id};# "accession";
     }
     elsif( $g2s{$id}) {
 	$uniquename = $g2s{$id};
 	$match_type = "hash_modified";
 	$stats{hash_modified}++;
-	$stock_type = "accession";
+	my $stock_row = $schema->resultset("Stock::Stock")->find( { uniquename => { ilike => $id } });
+	$stock_type = $stock_types{$stock_row->type_id}; #"accession";
     }
     else { 
 	my $stock_row = $schema->resultset("Stock::Stock")->find( { uniquename => { ilike => $id } });

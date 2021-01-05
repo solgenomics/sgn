@@ -53,7 +53,10 @@ jQuery(document).ready(function ($) {
         var description = $("#add_project_description").val();
         var design_type = $("#select_design_method").val();
         var stock_type = $("#select_stock_type").val();
+        var plot_width = $("#add_project_plot_width").val();
+        var plot_length = $("#add_project_plot_length").val();
 
+        
         if (trial_name === '') {
             alert("Please supply a trial name");
         }
@@ -66,8 +69,20 @@ jQuery(document).ready(function ($) {
         else if (trial_year === '') {
             alert("Please select a trial year");
         }
+        else if (plot_width < 0 ){
+            alert("Please check the plot width");
+        }
+        else if (plot_width > 13){
+            alert("Please check the plot width is too high");
+        }
+        else if (plot_length < 0){
+            alert("Please check the plot length");
+        }
+        else if (plot_length > 13){
+            alert("Please check the plot length is too high");
+        }
         else if (description === '') {
-            alert("Please supply a description");
+            alert("Please suplly a description!");
         }
         else if (design_type === '') {
             alert("Please select a design type");

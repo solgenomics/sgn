@@ -273,9 +273,11 @@ function jqueryStuff() {
 %       $sequencing_status_button = '<button disabled id="show_sequencing_info_dialog_button" class="btn btn-primary btn-sm" data-toggle="modal" style="margin:3px" data-target="#edit_sequencing_info_dialog">Add sequencing info</button>';
 %   }
 
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Sequencing Status</h4>", info_section_subtitle => 'View and edit sequencing status info for this stock.', icon_class => "glyphicon glyphicon-inbox", info_section_id => "stock_sequencing_status_section", buttons_html => "$sequencing_status_button", map_html => $map_html &>
-
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Genotype Marker Data</h4>", info_section_subtitle => 'View and download phenotypic data for this stock.', icon_class => "glyphicon glyphicon-map-marker", info_section_id => "stock_genotypes_section", buttons_html => '<a class="btn btn-default btn-sm" style="margin:3px" href = "/stock/'.$stock_id.'/genotypes">Download All Genotypes</a>', map_html => $map_html &>
+      <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Sequencing Status</h4>", info_section_subtitle => 'View and edit sequencing status info for this stock.', icon_class => "glyphicon glyphicon-inbox", info_section_id => "stock_sequencing_status_section", buttons_html => "$sequencing_status_button", map_html => $map_html &>
+	
+	<!-- buttons_html => '<a class="btn btn-default btn-sm" style="margin:3px" href = "/stock/'.$stock_id.'/genotypes">Download All Genotypes</a>', -->
+	
+    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Genotype Marker Data</h4>", info_section_subtitle => 'View and download phenotypic data for this stock.', icon_class => "glyphicon glyphicon-map-marker", info_section_id => "stock_genotypes_section",  map_html => $map_html &>
 % }
 
 % if ($type_name eq 'accession'){

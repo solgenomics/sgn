@@ -135,7 +135,6 @@ $identifier_prefix => ''
     </div>
  </&>
 
-
 <div id="edit_properties_dialog">
 
     <select id="properties_select">
@@ -151,6 +150,29 @@ $identifier_prefix => ''
     <p><b>WARNING!</b>&nbsp;Changing the parameters can have unpredicatable results in downstream analyses if they are inconsistent with other data.</p>
 
 </div>
+
+<&| /page/info_section.mas, title => 'Cross Transactions', collapsible => 1, collapsed => 0, subtitle => 'View crossing activities of this cross'&>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <div style="overflow:scroll">
+                    <table id = "cross_transactions" class="table table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th>Transaction ID</th>
+                                <th>Operator</th>
+                                <th>Timestamp</th>
+                                <th>Number of Flowers</th>
+                                <th>Number of Fruits</th>
+                                <th>Number of Seeds</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</&>
 
 % if ($odk_crossing_data_service_name eq 'ONA') {
     <&| /page/info_section.mas, id=>'tissue_culture_summary_section', title => 'Tissue culture IDs of this Cross', collapsible=>1, collapsed=>1, subtitle => 'View tissue culture IDs in each step (e.g., embryo IDs, subculture IDs, rooting IDs, weaning1 IDs)'&>

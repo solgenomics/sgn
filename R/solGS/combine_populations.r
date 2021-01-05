@@ -22,6 +22,10 @@ inFile <- grep("input_files",
                value = TRUE
                )
 
+inFiles <- scan(inFile,
+                what = "character"
+                )
+
 outFile <- grep("output_files",
                 allArgs,
                 ignore.case = TRUE,
@@ -40,31 +44,48 @@ combinedGenoFile <- grep("genotype_data",
                          value = TRUE
                          )
 
-combinedPhenoFile <- grep("phenotype_data",
+combinedPhenoFile <- grep("model_phenodata",
                           outFiles,
                           ignore.case = TRUE,
                           fixed = FALSE,
                           value = TRUE
                           )
 
-inFiles <- scan(inFile,
-                what = "character"
-                )
 
-traitFile <- grep("trait_",
-                  inFiles,
-                  ignore.case = TRUE,
-                  fixed = FALSE,
-                  value = TRUE
-                  )
 
-trait <- scan(traitFile,
-              what = "character",
-              )
+## traitFile <- grep("model_phenodata",
+##                   inFiles,
+##                   ignore.case = TRUE,
+##                   fixed = FALSE,
+##                   value = TRUE
+##                   )
 
-traitInfo <- strsplit(trait, "\t");
-traitId   <- traitInfo[[1]]
-traitName <- traitInfo[[2]]
+## trait <- scan(traitFile,
+##               what = "character",
+##               )
+
+## traitInfo <- strsplit(trait, "\t");
+## traitId   <- traitInfo[[1]]
+## traitName <- traitInfo[[2]]
+
+modelInfoFile  <- grep("model_info", inFiles, value = TRUE)
+message('model_info_file ', modelInfoFile)
+
+modelInfo  <- read.table(modelInfoFile,
+                         header=TRUE, sep ="\t",
+                         as.is = c('Value'))
+
+modelInfo  <- column_to_rownames(modelInfo, var="Name")
+traitId    <- modelInfo["trait_id", 1]
+traitAbbr  <- modelInfo["trait_abbr", 1]
+modelId    <- modelInfo["model_id", 1]
+protocolId <- modelInfo["protocol_id", 1]
+
+message('class ', class(traitAbbr))
+message('trait_id ', traitId)
+message('trait_abbr ', traitAbbr)
+message('protocol_id ', protocolId)
+message('model_id ', modelId)
 
 #extract trait phenotype data from all populations
 #and combine them into one dataset
@@ -100,14 +121,14 @@ for (popPhenoFile in allPhenoFiles) {
      phenoData <- data.frame(phenoData)
     
      phenoTrait <- getAdjMeans(phenoData,
-                               traitName=traitName,
-                               calcAverages=TRUE)
+                               traitName = traitAbbr,
+                               calcAverages = TRUE)
 
      popIdFile <- basename(popPhenoFile)
      popId     <- str_extract(popIdFile, "\\d+")
      popIds    <- c(popIds, popId)
     
-     newTraitName <- paste(traitName, popId, sep = "_")
+     newTraitName <- paste(traitAbbr, popId, sep = "_")
      colnames(phenoTrait)[2] <- newTraitName
 
      if (cnt == 1 ) {
