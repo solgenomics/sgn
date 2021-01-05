@@ -8,10 +8,10 @@ package CXGN::Phenotypes::ParseUpload::Plugin::SpreadsheetNIRS;
 #   data => {
 #       plotname1 => {
 #           nirs => {
-#              spectra => {
+#              spectra => [{
 #                 "740" => "0.939101707",
 #                 "741" => "0.93868202",
-#              },
+#              }],
 #          }
 #       }
 #   },
@@ -38,6 +38,7 @@ sub validate {
     my $schema = shift;
     my $zipfile = shift; #not relevant for this plugin
     my $nd_protocol_id = shift;
+    my $nd_protocol_filename = shift;
     my $delimiter = ',';
     my %parse_result;
 
@@ -105,7 +106,7 @@ sub validate {
     close $fh;
 
     my $samples_validator = CXGN::List::Validate->new();
-    my @samples_missing = @{$samples_validator->validate($schema,'tissue_samples',\@samples)->{'missing'}};
+    my @samples_missing = @{$samples_validator->validate($schema, $data_level, \@samples)->{'missing'}};
     if (scalar(@samples_missing) > 0) {
         my $samples_string = join ', ', @samples_missing;
         $parse_result{'error'}= "The following samples in your file are not valid in the database (".$samples_string."). Please add them in a sampling trial first!";
@@ -152,7 +153,8 @@ sub parse {
     my $user_id = shift; #not relevant for this plugin
     my $c = shift; #not relevant for this plugin
     my $nd_protocol_id = shift;
-    
+    my $nd_protocol_filename = shift;
+
     my $delimiter = ',';
     my %parse_result;
 

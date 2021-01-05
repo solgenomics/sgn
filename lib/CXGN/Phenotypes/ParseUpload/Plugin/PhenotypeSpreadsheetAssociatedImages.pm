@@ -37,6 +37,7 @@ sub validate {
     my $schema = shift;
     my $image_zipfile = shift;
     my $nd_protocol_id = shift; #not relevant for this plugin
+    my $nd_protocol_filename = shift; #not relevant for this plugin
     my @file_lines;
     my $header;
     my @header_row;
@@ -153,6 +154,7 @@ sub parse {
     my $user_id = shift;
     my $c = shift;
     my $nd_protocol_id = shift; #not relevant for this plugin
+    my $nd_protocol_filename = shift; #not relevant for this plugin
     my %parse_result;
     my %observationunits_seen;
     my %observationvariables_seen;

@@ -1,4 +1,4 @@
-package CXGN::Phenotypes::ParseUpload::Plugin::TranscriptomicsSpreadsheetCSV;
+package CXGN::Phenotypes::ParseUpload::Plugin::MetabolomicsSpreadsheetCSV;
 
 # Validate Returns %validate_result = (
 #   error => 'error message'
@@ -7,10 +7,10 @@ package CXGN::Phenotypes::ParseUpload::Plugin::TranscriptomicsSpreadsheetCSV;
 # Parse Returns %parsed_result = (
 #   data => {
 #       tissue_samples1 => {
-#           transcriptomics => {
-#              transcripts => [{
-#                 "Manes.01G000100" => "0.939101707",
-#                 "Manes.01G000200" => "0.93868202",
+#           metabolomics => {
+#              metabolites => [{
+#                 "M1" => "0.939101707",
+#                 "M2" => "0.93868202",
 #              }],
 #          }
 #       }
@@ -18,19 +18,13 @@ package CXGN::Phenotypes::ParseUpload::Plugin::TranscriptomicsSpreadsheetCSV;
 #   units => [tissue_samples1],
 #   variables => [varname1, varname2],
 #   variables_desc => {
-#       "Manes.01G000100" => {
-#           "chr" => "1",
-#           "start" => "100",
-#           "end" => "101",
-#           "gene_desc" => "gene1",
-#           "notes" => ""
+#       "M1" => {
+#           "inchi_key" => "AAJHVVLGKCKBSH-UHFFFAOYNA-N",
+#           "compound_name" => "Avenacoside A",
 #       },
-#       "Manes.01G000200" => {
-#           "chr" => "1",
-#           "start" => "200",
-#           "end" => "201",
-#           "gene_desc" => "gene2",
-#           "notes" => ""
+#       "M2" => {
+#           "inchi_key" => "UHISGSDYAIIBMO-HZJYTTRNNA-N",
+#           "compound_name" => "Gingerglycolipid B",
 #       }
 #   }
 #)
@@ -42,7 +36,7 @@ use Text::CSV;
 use CXGN::List::Validate;
 
 sub name {
-    return "highdimensionalphenotypes spreadsheet transcriptomics";
+    return "highdimensionalphenotypes spreadsheet metabolomics";
 }
 
 sub validate {
@@ -86,7 +80,7 @@ sub validate {
       return \%parse_result;
     }
 
-    my @transcripts = @columns;
+    my @metabolite = @columns;
 
     my @samples;
     while (my $line = <$fh>) {
@@ -99,7 +93,7 @@ sub validate {
 
         foreach (@fields) {
             if (not $_=~/^[+]?\d+\.?\d*$/){
-                $parse_result{'error'}= "It is not a real value for trancripts. Must be numeric: '$_'";
+                $parse_result{'error'}= "It is not a real value for metabolite. Must be numeric: '$_'";
                 return \%parse_result;
             }
         }
@@ -125,13 +119,10 @@ sub validate {
         return \%parse_result;
     }
     
-    if ( $columns[0] ne "transcript_name" ||
-        $columns[1] ne "chromosome" ||
-        $columns[2] ne "start_position" ||
-        $columns[3] ne "end_position" ||
-        $columns[4] ne "gene_description" ||
-        $columns[5] ne "notes") {
-      $parse_result{'error'} = "Header row must be 'transcript_name', 'chromosome', 'start_position', 'end_position', 'gene_description', 'notes'. Please, check your file.";
+    if ( $columns[0] ne "metabolite_name" ||
+        $columns[1] ne "inchi_key" ||
+        $columns[2] ne "compound_name") {
+      $parse_result{'error'} = "Header row must be 'metabolite_name', 'inchi_key', 'compound_name'. Please, check your file.";
       return \%parse_result;
     }
     while (my $line = <$fh>) {
@@ -139,27 +130,12 @@ sub validate {
         if ($csv->parse($line)) {
             @fields = $csv->fields();
         }
-        my $transcript_name = $fields[0];
-        my $chromosome = $fields[1];
-        my $start_position = $fields[2];
-        my $end_position = $fields[3];
-        my $gene_description = $fields[4];
-        my $notes = $fields[5];
+        my $metabolite_name = $fields[0];
+        my $inchi_key = $fields[1];
+        my $compound_name = $fields[2];
 
-        if (!$transcript_name){
-            $parse_result{'error'}= "Transcript name is required!";
-            return \%parse_result;
-        }
-        if (!defined($chromosome) && !length($chromosome)) {
-            $parse_result{'error'}= "Chromosome is required!";
-            return \%parse_result;
-        }
-        if (!defined($start_position) && !length($start_position)){
-            $parse_result{'error'}= "Start position is required!";
-            return \%parse_result;
-        }
-        if (!defined($end_position) && !length($end_position)){
-            $parse_result{'error'}= "End position is required!";
+        if (!$metabolite_name){
+            $parse_result{'error'}= "Metabolite name is required!";
             return \%parse_result;
         }
     }
@@ -174,28 +150,28 @@ sub validate {
     }
 
     if ($nd_protocol_id) {
-        my $transcriptomics_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_transcriptomics_protocol', 'protocol_type')->cvterm_id();
+        my $metabolomics_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_metabolomics_protocol', 'protocol_type')->cvterm_id();
         my $protocol = CXGN::Phenotypes::HighDimensionalPhenotypeProtocol->new({
             bcs_schema => $schema,
             nd_protocol_id => $nd_protocol_id,
-            nd_protocol_type_id => $transcriptomics_protocol_cvterm_id
+            nd_protocol_type_id => $metabolomics_protocol_cvterm_id
         });
-        my $transcripts_in_protocol = $protocol->header_column_names;
-        my %transcripts_in_protocol_hash;
-        foreach (@$transcripts_in_protocol) {
-            $transcripts_in_protocol_hash{$_}++;
+        my $metabolite_in_protocol = $protocol->header_column_names;
+        my %metabolites_in_protocol_hash;
+        foreach (@$metabolite_in_protocol) {
+            $metabolites_in_protocol_hash{$_}++;
         }
 
-        my @transcripts_not_in_protocol;
-        foreach (@transcripts) {
-            if (!exists($transcripts_in_protocol_hash{$_})) {
-                push @transcripts_not_in_protocol, $_;
+        my @metabolites_not_in_protocol;
+        foreach (@metabolite) {
+            if (!exists($metabolites_in_protocol_hash{$_})) {
+                push @metabolites_not_in_protocol, $_;
             }
         }
 
         #If there are markers in the uploaded file that are not saved in the protocol, they will be returned along in the error message
-        if (scalar(@transcripts_not_in_protocol)>0){
-            $parse_result{'error'} = "The following transcripts are not in the database for the selected protocol: ".join(',',@transcripts_not_in_protocol);
+        if (scalar(@metabolites_not_in_protocol)>0){
+            $parse_result{'error'} = "The following metabolites are not in the database for the selected protocol: ".join(',',@metabolites_not_in_protocol);
             return \%parse_result;
         }
     }
@@ -262,13 +238,13 @@ sub parse {
             foreach my $col (1..$num_cols-1){
                 my $column_name = $header[$col];
                 if ($column_name ne ''){
-                    my $transcript_name = $column_name;
-                    $traits_seen{$transcript_name}++;
-                    my $transcipt_value = $columns[$col];
-                    $spectra{$transcript_name} = $transcipt_value;
+                    my $metabolite_name = $column_name;
+                    $traits_seen{$metabolite_name}++;
+                    my $metabolite_value = $columns[$col];
+                    $spectra{$metabolite_name} = $metabolite_value;
                 }
             }
-            push @{$data{$observationunit_name}->{'transcriptomics'}->{'transcripts'}}, \%spectra;
+            push @{$data{$observationunit_name}->{'metabolomics'}->{'metabolites'}}, \%spectra;
         }
         $row_number++;
     }
@@ -299,19 +275,13 @@ sub parse {
         if ($csv->parse($line)) {
             @fields = $csv->fields();
         }
-        my $transcript_name = $fields[0];
-        my $chromosome = $fields[1];
-        my $start_position = $fields[2];
-        my $end_position = $fields[3];
-        my $gene_description = $fields[4];
-        my $notes = $fields[5];
+        my $metabolite_name = $fields[0];
+        my $inchi_key = $fields[1];
+        my $compound_name = $fields[2];
 
-        $header_column_details{$transcript_name} = {
-            chr => $chromosome,
-            start => $start_position,
-            end => $end_position,
-            gene_desc => $gene_description,
-            notes => $notes
+        $header_column_details{$metabolite_name} = {
+            inchi_key => $inchi_key,
+            compound_name => $compound_name,
         };
     }
     close $fh;
