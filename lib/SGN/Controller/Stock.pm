@@ -149,144 +149,151 @@ our $time;
 sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     my ( $self, $c, $action) = @_;
 
-    $time = time();
+     if (!$c->user()) {
+	
+	my $url = '/' . $c->req->path;	
+	$c->res->redirect("/user/login?goto_url=$url");
+	
+    } else {
+	$time = time();
 
-    if( $c->stash->{stock_row} ) {
-        $c->forward('get_stock_extended_info');
+	if( $c->stash->{stock_row} ) {
+	    $c->forward('get_stock_extended_info');
+	}
+
+	my $logged_user = $c->user;
+	my $person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
+	my $user_role = 1 if $logged_user;
+	my $curator   = $logged_user->check_roles('curator') if $logged_user;
+	my $submitter = $logged_user->check_roles('submitter') if $logged_user;
+	my $sequencer = $logged_user->check_roles('sequencer') if $logged_user;
+
+	my $dbh = $c->dbc->dbh;
+
+	##################
+
+	###Check if a stock page can be printed###
+
+	my $stock = $c->stash->{stock};
+	my $stock_id = $stock ? $stock->get_stock_id : undef ;
+	my $stock_type = $stock->get_object_row ? $stock->get_object_row->type->name : undef ;
+	my $type = 1 if $stock_type && !$stock_type=~ m/population/;
+	# print message if stock_id is not valid
+	unless ( ( $stock_id =~ m /^\d+$/ ) || ($action eq 'new' && !$stock_id) ) {
+	    $c->throw_404( "No stock/accession exists for that identifier." );
+	}
+	unless ( $stock->get_object_row || !$stock_id && $action && $action eq 'new' ) {
+	    $c->throw_404( "No stock/accession exists for that identifier." );
+	}
+
+	print STDERR "Checkpoint 2: Elapsed ".(time() - $time)."\n";
+
+	my $props = $self->_stockprops($stock);
+	# print message if the stock is visible only to certain user roles
+	my @logged_user_roles = $logged_user->roles if $logged_user;
+	my @prop_roles = @{ $props->{visible_to_role} } if  ref($props->{visible_to_role} );
+	my $lc = List::Compare->new( {
+	    lists    => [\@logged_user_roles, \@prop_roles],
+	    unsorted => 1,
+				     } );
+	my @intersection = $lc->get_intersection;
+	if ( !$curator && @prop_roles  && !@intersection) { # if there is no match between user roles and stock visible_to_role props
+	    # $c->throw(is_client_error => 0,
+	    #           title             => 'Restricted page',
+	    #           message           => "Stock $stock_id is not visible to your user!",
+	    #           developer_message => 'only logged in users of certain roles can see this stock' . join(',' , @prop_roles),
+	    #           notify            => 0,   #< does not send an error email
+	    #     );
+
+	    $c->stash->{template} = "generic_message.mas";
+	    $c->stash->{message}  = "You do not have sufficient privileges to view the page of stock with database id $stock_id. You may need to log in to view this page.";
+	    return;
+	}
+
+	print STDERR "Checkpoint 3: Elapsed ".(time() - $time)."\n";
+
+	# print message if the stock is obsolete
+	my $obsolete = $stock->get_is_obsolete();
+	if ( $obsolete  && !$curator ) {
+	    #$c->throw(is_client_error => 0,
+	    #          title             => 'Obsolete stock',
+	    #          message           => "Stock $stock_id is obsolete!",
+	    #          developer_message => 'only curators can see obsolete stock',
+	    #          notify            => 0,   #< does not send an error email
+	    #    );
+
+	    $c->stash->{template} = "generic_message.mas";
+	    $c->stash->{message}  = "The stock with database id $stock_id has been deleted. It can no longer be viewed.";
+	    return;
+	}
+	# print message if stock_id does not exist
+	if ( !$stock && $action ne 'new' && $action ne 'store' ) {
+	    $c->throw_404('No stock exists for this identifier');
+	}
+
+	####################
+	my $is_owner;
+	my $owner_ids = $c->stash->{owner_ids} || [] ;
+	my $editor_info = $self->_stock_editor_info($stock);
+	if ( $stock && ($curator || $person_id && ( grep /^$person_id$/, @$owner_ids ) ) ) {
+	    $is_owner = 1;
+	}
+	my $dbxrefs = $self->_dbxrefs($stock);
+	my $pubs = $self->_stock_pubs($stock);
+	my $image_ids = $self->_stock_images($stock, $type);
+	my $related_image_ids = $self->_related_stock_images($stock, $type);
+	my $cview_tmp_dir = $c->tempfiles_subdir('cview');
+
+	my $barcode_tempuri  = $c->tempfiles_subdir('image');
+	my $barcode_tempdir = $c->get_conf('basepath')."/$barcode_tempuri";
+
+	my $editable_stockprops = $c->get_conf('editable_stock_props');
+	$editable_stockprops .= ",PUI,organization";
+
+	print STDERR "Checkpoint 4: Elapsed ".(time() - $time)."\n";
+	################
+	$c->stash(
+	    template => '/stock/index.mas',
+
+	    stockref => {
+		action    => $action,
+		stock_id  => $stock_id ,
+		user      => $user_role,
+		curator   => $curator,
+		submitter => $submitter,
+		sequencer => $sequencer,
+		person_id => $person_id,
+		stock     => $stock,
+		schema    => $self->schema,
+		dbh       => $dbh,
+		is_owner  => $is_owner,
+		owners    => $owner_ids,
+		editor_info => $editor_info,
+		props     => $props,
+		dbxrefs   => $dbxrefs,
+		pubs      => $pubs,
+		members_phenotypes => $c->stash->{members_phenotypes},
+		direct_phenotypes  => $c->stash->{direct_phenotypes},
+		has_qtl_data   => $c->stash->{has_qtl_data},
+		cview_tmp_dir  => $cview_tmp_dir,
+		cview_basepath => $c->get_conf('basepath'),
+		image_ids      => $image_ids,
+		related_image_ids => $related_image_ids,
+		allele_count   => $c->stash->{allele_count},
+		ontology_count => $c->stash->{ontology_count},
+		has_pedigree => $c->stash->{has_pedigree},
+		has_descendants => $c->stash->{has_descendants},
+		trait_ontology_db_name => $c->get_conf('trait_ontology_db_name'),
+		editable_stock_props   => $editable_stockprops,
+
+	    },
+	    locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
+	    cvterm_add_uri => $c->uri_for( '/ajax/stock/associate_ontology'),
+	    barcode_tempdir  => $barcode_tempdir,
+	    barcode_tempuri   => $barcode_tempuri,
+	    identifier_prefix => $c->config->{identifier_prefix},
+	    );
     }
-
-    my $logged_user = $c->user;
-    my $person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
-    my $user_role = 1 if $logged_user;
-    my $curator   = $logged_user->check_roles('curator') if $logged_user;
-    my $submitter = $logged_user->check_roles('submitter') if $logged_user;
-    my $sequencer = $logged_user->check_roles('sequencer') if $logged_user;
-
-    my $dbh = $c->dbc->dbh;
-
-    ##################
-
-    ###Check if a stock page can be printed###
-
-    my $stock = $c->stash->{stock};
-    my $stock_id = $stock ? $stock->get_stock_id : undef ;
-    my $stock_type = $stock->get_object_row ? $stock->get_object_row->type->name : undef ;
-    my $type = 1 if $stock_type && !$stock_type=~ m/population/;
-    # print message if stock_id is not valid
-    unless ( ( $stock_id =~ m /^\d+$/ ) || ($action eq 'new' && !$stock_id) ) {
-        $c->throw_404( "No stock/accession exists for that identifier." );
-    }
-    unless ( $stock->get_object_row || !$stock_id && $action && $action eq 'new' ) {
-        $c->throw_404( "No stock/accession exists for that identifier." );
-    }
-
-    print STDERR "Checkpoint 2: Elapsed ".(time() - $time)."\n";
-
-    my $props = $self->_stockprops($stock);
-    # print message if the stock is visible only to certain user roles
-    my @logged_user_roles = $logged_user->roles if $logged_user;
-    my @prop_roles = @{ $props->{visible_to_role} } if  ref($props->{visible_to_role} );
-    my $lc = List::Compare->new( {
-        lists    => [\@logged_user_roles, \@prop_roles],
-        unsorted => 1,
-                              } );
-    my @intersection = $lc->get_intersection;
-    if ( !$curator && @prop_roles  && !@intersection) { # if there is no match between user roles and stock visible_to_role props
-       # $c->throw(is_client_error => 0,
-       #           title             => 'Restricted page',
-       #           message           => "Stock $stock_id is not visible to your user!",
-       #           developer_message => 'only logged in users of certain roles can see this stock' . join(',' , @prop_roles),
-       #           notify            => 0,   #< does not send an error email
-       #     );
-
-	$c->stash->{template} = "generic_message.mas";
-	$c->stash->{message}  = "You do not have sufficient privileges to view the page of stock with database id $stock_id. You may need to log in to view this page.";
-	return;
-    }
-
-    print STDERR "Checkpoint 3: Elapsed ".(time() - $time)."\n";
-
-    # print message if the stock is obsolete
-    my $obsolete = $stock->get_is_obsolete();
-    if ( $obsolete  && !$curator ) {
-        #$c->throw(is_client_error => 0,
-        #          title             => 'Obsolete stock',
-        #          message           => "Stock $stock_id is obsolete!",
-        #          developer_message => 'only curators can see obsolete stock',
-        #          notify            => 0,   #< does not send an error email
-        #    );
-
-	$c->stash->{template} = "generic_message.mas";
-	$c->stash->{message}  = "The stock with database id $stock_id has been deleted. It can no longer be viewed.";
-	return;
-    }
-    # print message if stock_id does not exist
-    if ( !$stock && $action ne 'new' && $action ne 'store' ) {
-        $c->throw_404('No stock exists for this identifier');
-    }
-
-    ####################
-    my $is_owner;
-    my $owner_ids = $c->stash->{owner_ids} || [] ;
-    my $editor_info = $self->_stock_editor_info($stock);
-    if ( $stock && ($curator || $person_id && ( grep /^$person_id$/, @$owner_ids ) ) ) {
-        $is_owner = 1;
-    }
-    my $dbxrefs = $self->_dbxrefs($stock);
-    my $pubs = $self->_stock_pubs($stock);
-    my $image_ids = $self->_stock_images($stock, $type);
-    my $related_image_ids = $self->_related_stock_images($stock, $type);
-    my $cview_tmp_dir = $c->tempfiles_subdir('cview');
-
-    my $barcode_tempuri  = $c->tempfiles_subdir('image');
-    my $barcode_tempdir = $c->get_conf('basepath')."/$barcode_tempuri";
-
-    my $editable_stockprops = $c->get_conf('editable_stock_props');
-    $editable_stockprops .= ",PUI,organization";
-
-    print STDERR "Checkpoint 4: Elapsed ".(time() - $time)."\n";
-################
-    $c->stash(
-        template => '/stock/index.mas',
-
-        stockref => {
-            action    => $action,
-            stock_id  => $stock_id ,
-            user      => $user_role,
-            curator   => $curator,
-            submitter => $submitter,
-            sequencer => $sequencer,
-            person_id => $person_id,
-            stock     => $stock,
-            schema    => $self->schema,
-            dbh       => $dbh,
-            is_owner  => $is_owner,
-            owners    => $owner_ids,
-            editor_info => $editor_info,
-            props     => $props,
-            dbxrefs   => $dbxrefs,
-            pubs      => $pubs,
-            members_phenotypes => $c->stash->{members_phenotypes},
-            direct_phenotypes  => $c->stash->{direct_phenotypes},
-            has_qtl_data   => $c->stash->{has_qtl_data},
-            cview_tmp_dir  => $cview_tmp_dir,
-            cview_basepath => $c->get_conf('basepath'),
-            image_ids      => $image_ids,
-            related_image_ids => $related_image_ids,
-            allele_count   => $c->stash->{allele_count},
-            ontology_count => $c->stash->{ontology_count},
-	    has_pedigree => $c->stash->{has_pedigree},
-	    has_descendants => $c->stash->{has_descendants},
-            trait_ontology_db_name => $c->get_conf('trait_ontology_db_name'),
-	    editable_stock_props   => $editable_stockprops,
-
-        },
-        locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
-        cvterm_add_uri => $c->uri_for( '/ajax/stock/associate_ontology'),
-	barcode_tempdir  => $barcode_tempdir,
-	barcode_tempuri   => $barcode_tempuri,
-	identifier_prefix => $c->config->{identifier_prefix},
-        );
 }
 
 
@@ -372,57 +379,77 @@ sub download_phenotypes : Chained('get_stock') PathPart('phenotypes') Args(0) {
 
 sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
     my ($self, $c) = @_;
+
+    if (! $c->user()) {
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	return;
+    }
+
+    
     my $stock_row = $c->stash->{stock_row};
     my $stock_id = $stock_row->stock_id;
     my $stock_name = $stock_row->uniquename;
     my $genotype_id = $c->req->param('genotype_id') ? [$c->req->param('genotype_id')] : undef;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    my $dl_token = $c->req->param("gbs_download_token") || "no_token";
-    my $dl_cookie = "download".$dl_token;
 
-    my $stock = CXGN::Stock->new({schema => $schema, stock_id => $stock_id});
-    my $stock_type = $stock->type();
+    if (!$genotype_id) {
 
-    if ($stock_id) {
-        my %genotype_download_factory = (
-            bcs_schema=>$schema,
-            people_schema=>$people_schema,
-            cache_root_dir=>$c->config->{cache_file_path},
-            markerprofile_id_list=>$genotype_id,
-            #genotype_data_project_list=>$genotype_data_project_list,
-            #marker_name_list=>['S80_265728', 'S80_265723'],
-            #limit=>$limit,
-            #offset=>$offset
-        );
+	my $referer = $c->req->referer;
+	my $message = "<p>Genotype data download for the stock is missing an associated genotype id. <br/>"
+	    .  "<a href=\"$referer\">[ Go back ]</a></p>";
+	   
+	$c->stash->{message} = $message;
+	$c->stash->{template} = "/generic_message.mas";
+	
+    } else {
+	my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+	my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+	my $dl_token = $c->req->param("gbs_download_token") || "no_token";
+	my $dl_cookie = "download".$dl_token;
 
-        if ($stock_type eq 'accession') {
-            $genotype_download_factory{accession_list} = [$stock_id];
-        }
-        elsif ($stock_type eq 'tissue_sample') {
-            $genotype_download_factory{tissue_sample_list} = [$stock_id];
-        }
+	my $stock = CXGN::Stock->new({schema => $schema, stock_id => $stock_id});
+	my $stock_type = $stock->type();
 
-        my $geno = CXGN::Genotype::DownloadFactory->instantiate(
-            'VCF',    #can be either 'VCF' or 'GenotypeMatrix'
-            \%genotype_download_factory
-        );
-        my $file_handle = $geno->download(
-            $c->config->{cluster_shared_tempdir},
-            $c->config->{backend},
-            $c->config->{cluster_host},
-            $c->config->{'web_cluster_queue'},
-            $c->config->{basepath}
-        );
+	if ($stock_id) {
+	    my %genotype_download_factory = (
+		bcs_schema=>$schema,
+		people_schema=>$people_schema,
+		cache_root_dir=>$c->config->{cache_file_path},
+		markerprofile_id_list=>$genotype_id,
+		#genotype_data_project_list=>$genotype_data_project_list,
+		#marker_name_list=>['S80_265728', 'S80_265723'],
+		#limit=>$limit,
+		#offset=>$offset
+		);
 
-        $c->res->content_type("application/text");
-        $c->res->cookies->{$dl_cookie} = {
-            value => $dl_token,
-            expires => '+1m',
-        };
-        $c->res->header('Content-Disposition', qq[attachment; filename="BreedBaseGenotypesDownload.vcf"]);
-        $c->res->body($file_handle);
+	    if ($stock_type eq 'accession') {
+		$genotype_download_factory{accession_list} = [$stock_id];
+	    }
+	    elsif ($stock_type eq 'tissue_sample') {
+		$genotype_download_factory{tissue_sample_list} = [$stock_id];
+	    }
+
+	    my $geno = CXGN::Genotype::DownloadFactory->instantiate(
+		'VCF',    #can be either 'VCF' or 'GenotypeMatrix'
+		\%genotype_download_factory
+		);
+	    my $file_handle = $geno->download(
+		$c->config->{cluster_shared_tempdir},
+		$c->config->{backend},
+		$c->config->{cluster_host},
+		$c->config->{'web_cluster_queue'},
+		$c->config->{basepath}
+		);
+
+	    $c->res->content_type("application/text");
+	    $c->res->cookies->{$dl_cookie} = {
+		value => $dl_token,
+		expires => '+1m',
+	    };
+	    $c->res->header('Content-Disposition', qq[attachment; filename="BreedBaseGenotypesDownload.vcf"]);
+	    $c->res->body($file_handle);
+	}
     }
+    
 }
 
 sub chr_sort {

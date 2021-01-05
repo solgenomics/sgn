@@ -32,7 +32,7 @@ my $data = {
         {
             observationDbId => '',
             observationUnitDbId => $plot_id1,
-            observationVariableDbId => 'dry matter content|CO_334:0000092',
+            observationVariableDbId => '70741',
             collector => 'collector1',
             observationTimeStamp => '2015-06-16T00:53:26Z',
             value => '11'
@@ -40,7 +40,7 @@ my $data = {
         {
             observationDbId => '',
             observationUnitDbId => $plot_id2,
-            observationVariableDbId => 'fresh shoot weight|CO_334:0000016',
+            observationVariableDbId => '70773',
             collector => 'collector1',
             observationTimeStamp => '2015-06-16T00:53:26Z',
             value => '110'
@@ -135,7 +135,7 @@ is_deeply($response, {
                                               'observationUnitDbId' => 38866,
                                               'value' => '11',
                                               'observationVariableName' => 'dry matter content percentage',
-                                              'observationVariableDbId' => 'dry matter content percentage|CO_334:0000092',
+                                              'observationVariableDbId' => '70741',
                                               'studyDbId' => 137
                                             },
                                             {
@@ -148,7 +148,7 @@ is_deeply($response, {
                                               'germplasmDbId' => 38843,
                                               'observationUnitDbId' => 38870,
                                               'value' => '110',
-                                              'observationVariableDbId' => 'fresh shoot weight measurement in kg|CO_334:0000016',
+                                              'observationVariableDbId' => '70773',
                                               'observationVariableName' => 'fresh shoot weight measurement in kg',
                                               'studyDbId' => 137
                                             }

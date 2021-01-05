@@ -296,21 +296,28 @@ sub delete_uploaded_phenotype_files : Path('/ajax/breeders/phenotyping/delete/')
     $h->execute($file_id);
 
     my %phenotype_ids_and_nd_experiment_ids_to_delete;
+    my $count = 0;
     while (my ($phenotype_id, $nd_experiment_id, $file_id) = $h->fetchrow_array()) {
         push @{$phenotype_ids_and_nd_experiment_ids_to_delete{phenotype_ids}}, $phenotype_id;
         push @{$phenotype_ids_and_nd_experiment_ids_to_delete{nd_experiment_ids}}, $nd_experiment_id;
+        $count++;
     }
 
-    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
-    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
-    my $delete_phenotype_values_error = CXGN::Project::delete_phenotype_values_and_nd_experiment_md_values($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $temp_file_nd_experiment_id, $c->config->{basepath}, $self->bcs_schema, \%phenotype_ids_and_nd_experiment_ids_to_delete);
-    if ($delete_phenotype_values_error) {
-        die "Error deleting phenotype values ".$delete_phenotype_values_error."\n";
+    if ( $count > 0 ) {
+        my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+        my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+        my $delete_phenotype_values_error = CXGN::Project::delete_phenotype_values_and_nd_experiment_md_values($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $temp_file_nd_experiment_id, $c->config->{basepath}, $schema, \%phenotype_ids_and_nd_experiment_ids_to_delete);
+        if ($delete_phenotype_values_error) {
+            die "Error deleting phenotype values ".$delete_phenotype_values_error."\n";
+        }
     }
 
     my $h4 = $dbh->prepare("UPDATE metadata.md_metadata SET obsolete = 1 where metadata_id IN (SELECT metadata_id from metadata.md_files where file_id=?);");
     $h4->execute($file_id);
     print STDERR "Phenotype file successfully made obsolete (AKA deleted).\n";
+
+    my $async_refresh = CXGN::Tools::Run->new();
+    $async_refresh->run_async("perl " . $c->config->{basepath} . "/bin/refresh_matviews.pl -H " . $c->config->{dbhost} . " -D " . $c->config->{dbname} . " -U " . $c->config->{dbuser} . " -P " . $c->config->{dbpass} . " -m fullview -c");
 
     $c->stash->{rest} = {success => 1};
 }

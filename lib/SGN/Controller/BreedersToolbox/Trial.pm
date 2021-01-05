@@ -97,6 +97,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     my $location_data = $trial->get_location();
     $c->stash->{location_id} = $location_data->[0];
     $c->stash->{location_name} = $location_data->[1];
+    $c->stash->{country_name} = $trial->get_location_country_name();
 
     my $breeding_program_data = $program_object->get_breeding_programs_by_trial($c->stash->{trial_id});
     $c->stash->{breeding_program_id} = $breeding_program_data->[0]->[0];

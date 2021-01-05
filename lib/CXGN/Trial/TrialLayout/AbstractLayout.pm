@@ -607,7 +607,7 @@ sub retrieve_plot_info {
 	my %plants_tissue_hash;
 	while (my $p = $plants->next()) {
 	    if ($self->get_verify_layout){
-		my $plant_accession_check = $p->search_related('stock_relationship_subjects', {'me.type_id'=>$self->cvterm('plant_of')})->search_related('object', {'object.stock_id'=>$accession_id, 'object.type_id'=>$self->cvterm_id('accession')});
+		my $plant_accession_check = $p->search_related('stock_relationship_subjects', {'me.type_id'=>$self->cvterm_id('plant_of')})->search_related('object', {'object.stock_id'=>$accession_id, 'object.type_id'=>$self->cvterm_id('accession')});
 		if (!$plant_accession_check->first){
 		    push @{$verify_errors{errors}->{layout_errors}}, "Plant: ".$p->uniquename." does not have the same accession: $accession_name as the plot: $plot_name.";
 		}

@@ -32,7 +32,6 @@ $odk_phenotyping_data_service_url => undef
 
 <div class="well">
 
-<& /breeders_toolbox/cross_wishlist.mas &>
 <&| /page/info_section.mas, title=>'Crossing Data: ONA ODK Application', collapsible=>1, collapsed=>0, is_subsection=>1, subtitle=>'' &>
 
 <div class="panel panel-default">
@@ -57,8 +56,6 @@ $odk_phenotyping_data_service_url => undef
                 <span style="font-size:3em;" class="glyphicon glyphicon-transfer"></span>
             </div>
             <div class="col-sm-11">
-                <button class="pull-right btn btn-primary btn-sm" id="create_cross_wishlist" >Export Cross Wishlist (Crossing Plan) to Selected Form on ONA</button>
-                <br/><br/>
                 <button class="pull-right btn btn-info btn-sm" id="import_odk_cross_data" >Import Crossing Data from Selected Form on ONA</button>
             </div>
         </div>

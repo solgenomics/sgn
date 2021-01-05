@@ -624,7 +624,7 @@ sub store {
                             $nd_experiment_md_images{$experiment->nd_experiment_id()} = $image_id;
                         }
                     }
-
+                    my $observationVariableDbId = $trait_cvterm->cvterm_id;
                     my %details = (
                         "germplasmDbId"=> $linked_data{$plot_name}->{germplasmDbId},
                         "germplasmName"=> $linked_data{$plot_name}->{germplasmName},
@@ -632,7 +632,7 @@ sub store {
                         "observationLevel"=> $linked_data{$plot_name}->{observationLevel},
                         "observationUnitDbId"=> $linked_data{$plot_name}->{observationUnitDbId},
                         "observationUnitName"=> $linked_data{$plot_name}->{observationUnitName},
-                        "observationVariableDbId"=> $trait_name,
+                        "observationVariableDbId"=> qq|$observationVariableDbId|,
                         "observationVariableName"=> $trait_cvterm->name,
                         "studyDbId"=> $project_id,
                         "uploadedBy"=> $user_id,
