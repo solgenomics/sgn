@@ -32,6 +32,7 @@ use Time::Seconds;
 use CXGN::Calendar;
 use JSON;
 use File::Basename qw | basename dirname|;
+use CXGN::BrAPI::v2::ExternalReferences;
 
 =head1 NAME
 
@@ -175,7 +176,15 @@ sub get_all_locations {
             }
         }
 
-        push @locations, [$s->nd_geolocation_id(), $s->description(), $s->latitude(), $s->longitude(), $s->altitude(), $country, $country_code, \%attr, $location_type, $abbreviation, $address],
+        my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+            bcs_schema => $schema,
+            table_name => 'NaturalDiversity::NdGeolocationprop',
+            base_id_key => 'nd_geolocation_id',
+            base_id => $s->nd_geolocation_id()
+        });
+        my $external_references = $references->references_db();
+
+        push @locations, [$s->nd_geolocation_id(), $s->description(), $s->latitude(), $s->longitude(), $s->altitude(), $country, $country_code, \%attr, $location_type, $abbreviation, $address, $external_references],
     }
 
     return \@locations;

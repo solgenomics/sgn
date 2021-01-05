@@ -58,7 +58,6 @@ sub search {
 
 			# combine referenceID and referenceSource into AND check as used by bi-api filter
 			# won't work with general search but wasn't implemented anyways
-
 			if ($_->[3]) {
 				foreach my $reference (@{$_->[3]}) {
 

@@ -31,8 +31,8 @@ sub search {
 	my $location_names_arrayref  = $params->{locationNames } || ($params->{locationNames } || ());
 	my $location_types_arrayref = $params->{locationType} || ($params->{locationTypes} || ());
 
-    if (($institute_names_arrayref && scalar($institute_names_arrayref)>0) || ($coordinates && scalar($coordinates)>0 )|| ( $externalreference_sources_arrayref && scalar($externalreference_sources_arrayref)>0) || ($externalreference_ids_arrayref && scalar($externalreference_ids_arrayref)>0)){
-        push @$status, { 'error' => 'The following search parameters are not implemented: instituteNames, coordinates, externalReferenceID, externalReferenceSource' };
+    if (($institute_names_arrayref && scalar($institute_names_arrayref)>0) || ($coordinates && scalar($coordinates)>0 )|| ( $externalreference_sources_arrayref && scalar($externalreference_sources_arrayref)>0)){
+        push @$status, { 'error' => 'The following search parameters are not implemented: instituteNames, coordinates'};
     }
 
 	my %location_ids_arrayref;
@@ -75,11 +75,21 @@ sub search {
         %location_types_arrayref = map { $_ => 1} @$location_types_arrayref;
     }
 
+	my %externalreference_ids_arrayref;
+	if ($externalreference_ids_arrayref && scalar(@$externalreference_ids_arrayref)>0){
+		%externalreference_ids_arrayref = map { $_ => 1} @$externalreference_ids_arrayref;
+	}
+
+	my %externalreference_sources_arrayref;
+	if ($externalreference_sources_arrayref && scalar(@$externalreference_sources_arrayref)>0){
+		%externalreference_sources_arrayref = map { $_ => 1} @$externalreference_sources_arrayref;
+	}
+
 	my $locations = CXGN::Trial::get_all_locations($self->bcs_schema ); #, $location_id);
-	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array($locations,$page_size,$page);
-	my @data;
-	
-	foreach (@$data_window){
+
+	my @available;
+
+	foreach (@$locations){
 		if ( (%location_ids_arrayref && !exists($location_ids_arrayref{$_->[0]}))) { next; }
 		if ( (%abbreviations_arrayref && !exists($abbreviations_arrayref{$_->[9]}))) { next; }
         if ( (%country_codes_arrayref && !exists($country_codes_arrayref{$_->[6]}))) { next; }
@@ -89,82 +99,83 @@ sub search {
         if ( (%location_names_arrayref && !exists($location_names_arrayref{$_->[1]}))) { next; }
         if ( (%location_types_arrayref && !exists($location_types_arrayref{$_->[8]}))) { next; }
         if ( $altitude_max && $_->[4] > $altitude_max ) { next; } 
-        if ( $altitude_min && $_->[4] < $altitude_min ) { next; } 
+        if ( $altitude_min && $_->[4] < $altitude_min ) { next; }
 
-		my @coordinates;
-		push @coordinates, {
-            geometry=>{
-            	coordinates=>[
-	            	$_->[2], #latitude
-					$_->[3], #longitude
-					$_->[4], #altitude
-            	],
-            	type=>'Point'
-            },
-            type=>'Feature'
-        };
-		push @data, {
-			locationDbId => qq|$_->[0]|,
-			locationType=> $_->[8],
-			locationName=> $_->[1],
-			abbreviation=>$_->[9],
-			countryCode=> $_->[6],
-			countryName=> $_->[5],
-            instituteName=>'',
-            instituteAddress=>$_->[10],
-			additionalInfo=> $_->[7],
-			documentationURL=> undef,
-			siteStatus => undef,
-			exposure => undef,
-			slope => undef,
-			coordinateDescription => undef,
-			environmentType => undef,
-			coordinates=>\@coordinates,
-			topography => undef,
-			coordinateUncertainty => undef,
-			externalReferences=> undef
-		};
+		# combine referenceID and referenceSource into AND check as used by bi-api filter
+		# won't work with general search but wasn't implemented anyways
+		my $passes_search = 0;
+
+		# if location has external references
+		if ($_->[11]) { #
+			# see if any of the references match search parameters
+			foreach my $reference (@{$_->[11]}) {
+				my $ref_id = $reference->{'referenceID'};
+				my $ref_source = $reference->{'referenceSource'};
+				if (exists($externalreference_ids_arrayref{$ref_id}) && exists($externalreference_sources_arrayref{$ref_source})) {
+					$passes_search = 1;
+				}
+			}
+		}
+
+		if (!$passes_search && %externalreference_ids_arrayref && %externalreference_sources_arrayref) { next; }
+		push @available, $_;
 	}
 
-	my %result = (data=>\@data);
-	my @data_files;
-	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Locations list result constructed');
+	$self->get_response(\@available);
 }
 
 sub detail {
 	my $self = shift;
 	my $location_id = shift;
+	my $locations = CXGN::Trial::get_all_locations($self->bcs_schema , $location_id);
+
+	$self->get_response($locations);
+}
+
+sub get_response {
+	my $self = shift;
+	my $locations = shift;
+
+	my $status = $self->status;
 	my $page_size = $self->page_size;
 	my $page = $self->page;
-	my $status = $self->status;
-	my $schema = $self->bcs_schema();
-	my $locations = CXGN::Trial::get_all_locations($self->bcs_schema , $location_id);
-	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array($locations,$page_size,$page);
 	my @data;
-	
+
+	my @locations = @{$locations};
+
+	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@locations,$page_size,$page);
+
 	foreach (@$data_window){
+
+		my $coordinates = undef;
 		my @coordinates;
-		push @coordinates, {
-            geometry=>{
-            	coordinates=>[
-	            	$_->[2], #latitude
-					$_->[3], #longitude
-					$_->[4], #altitude
-            	],
-            	type=>'Point'
-            },
-            type=>'Feature'
-        };
+
+		# if lat & lon exist
+		if ($_->[2] && $_->[3]) {
+			my @coords;
+			push @coords, $_->[2]; # lat
+			push @coords, $_->[3]; # lon
+			if ($_->[4]) {
+				push @coords, $_->[4]; #alt
+			}
+
+			push @coordinates, {
+				geometry=>{
+					coordinates=>\@coords,
+					type=>'Point'
+				},
+				type=>'Feature'
+			};
+			$coordinates = \@coordinates;
+		}
 
 		my $references = CXGN::BrAPI::v2::ExternalReferences->new({
-			bcs_schema => $schema,
+			bcs_schema => $self->bcs_schema,
 			table_name => 'NaturalDiversity::NdGeolocationprop',
 			base_id_key => 'nd_geolocation_id',
 			base_id => $_->[0]
 		});
-
 		my $external_references = $references->references_db();
-
 		push @data, {
 			locationDbId => qq|$_->[0]|,
 			locationType=> $_->[8],
@@ -172,8 +183,8 @@ sub detail {
 			abbreviation=>$_->[9],
 			countryCode=> $_->[6],
 			countryName=> $_->[5],
-            instituteName=>'',
-            instituteAddress=>$_->[10],
+			instituteName=>'',
+			instituteAddress=>$_->[10],
 			additionalInfo=> $_->[7],
 			documentationURL=> undef,
 			siteStatus => undef,
@@ -181,7 +192,7 @@ sub detail {
 			slope => undef,
 			coordinateDescription => undef,
 			environmentType => undef,
-			coordinates=>\@coordinates,
+			coordinates=>$coordinates,
 			topography => undef,
 			coordinateUncertainty => undef,
 			externalReferences=> $external_references

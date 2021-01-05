@@ -249,7 +249,7 @@ sub store_location {
         my $transaction_error;
 
         try {
-            $self->schema()->txn_do($coderef);
+            $schema->txn_do($coderef);
         } catch {
             $transaction_error =  $_;
         };
