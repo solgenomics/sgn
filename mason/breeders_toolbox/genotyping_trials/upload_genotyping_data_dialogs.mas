@@ -30,6 +30,27 @@ $facilities
                                 </center>
                             </&>
 
+                            <&| /util/workflow.mas:step, title=> "Data Type" &>
+                                <& /page/page_title.mas, title=>"Select the type of genotyping data being uploaded" &>
+                                <div class="form-group">
+                                    <label class="col-sm-5 control-label">Type of genotyping data: </label>
+                                    <div class="col-sm-7">
+                                        <select class="form-control" id="genotype_data_type_select" name="genotype_data_type_select">
+                                            <option value="">Select data type</option>
+                                            <option value="vcf">VCF</option>
+                                            <option value="tassel_hdf5">Tassel HDF5</option>
+                                            <option value="intertek">Intertek</option>
+                                            <option value="ssr">SSR</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <br/><br/>
+                                <center>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                </center>
+                            </&>
+
                             <&| /util/workflow.mas:step, title=> "Genotyping Project" &>
                                 <& /page/page_title.mas, title=>"Select the genotyping project or create a new one. A genotyping project is a specific genotyping event. You can have many genotyping projects under the same genotyping protocol to indicate that those genotyping events used the same markers." &>
 
@@ -158,6 +179,37 @@ $facilities
                                                 <input type="radio" name="upload_genotype_vcf_observation_type" value="tissue_sample" checked>&nbsp;&nbsp;&nbsp;Exported Tissue Sample Name: The sample names in your VCF are tissue_sample_names that already exist in genotyping plates (e.g. 96 well plates) in the database. The sample names in your VCF file can be the tissue_sample_name triple pipe joined to the accession_name (e.g. tissue_sample_name|||accession_name) or just simply the tissue_sample_name corresponding to the genotyping plate well.
                                                 <br/><br/>
                                                 <input type="radio" name="upload_genotype_vcf_observation_type" value="accession">&nbsp;&nbsp;&nbsp;Accession: The sample names are of accession names
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="upload_ssr_protocol" style="display:none">
+                                    <div class="well">
+                                        <div class="form-group">
+                                            <label class="col-sm-5 control-label">Genotyping Protocol Name:</label>
+                                            <div class="col-sm-7">
+                                                <input class="form-control" id="upload_ssr_protocol_name" name="upload_ssr_protocol_name" type="text" placeholder=" e.g. SSR Cassava set 1"/>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-sm-5 control-label">Species:</label>
+                                            <div class="col-sm-7">
+                                                <input class="form-control" id="upload_ssr_species_name_input" name="upload_ssr_species_name_input" type="text" placeholder=" e.g. Manihot esculenta"/>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-sm-5 control-label">Description:</label>
+                                            <div class="col-sm-7">
+                                                <input class="form-control" id="upload_ssr_protocol_description_input" name="upload_ssr_protocol_description_input" type="text" />
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-sm-5 control-label">Choose Sample Unit: </label>
+                                            <div class="col-sm-7">
+                                                <input type="radio" name="upload_ssr_observation_type" value="tissue_sample" checked>&nbsp;&nbsp;&nbsp;Exported Tissue Sample Name: The sample names in your VCF are tissue_sample_names that already exist in genotyping plates (e.g. 96 well plates) in the database. The sample names in your VCF file can be the tissue_sample_name triple pipe joined to the accession_name (e.g. tissue_sample_name|||accession_name) or just simply the tissue_sample_name corresponding to the genotyping plate well.
+                                                <br/><br/>
+                                                <input type="radio" name="upload_ssr_observation_type" value="accession">&nbsp;&nbsp;&nbsp;Accession: The sample names are of accession names
                                             </div>
                                         </div>
                                     </div>
@@ -580,6 +632,12 @@ $facilities
 <script>
 jQuery(document).ready(function(){
 
+    var data_type;
+
+    jQuery('#genotype_data_type_select').change(function() {
+        data_type = jQuery('#genotype_data_type_select').val();
+    });
+
     var upload_genotyping_data_trial_table = jQuery('#upload_genotyping_data_project_search_results').DataTable( {
         'ajax': {
             'url':'/ajax/genotyping_data/projects?select_checkbox_name=upload_genotyping_data_project_select',
@@ -612,7 +670,7 @@ jQuery(document).ready(function(){
             } else if (selected.length == 1 && jQuery('#upload_genotype_vcf_project_name').val() == ''){
                 jQuery('#upload_genotype_project_id').val(selected[0]);
                 Workflow.complete('#upload_genotyping_data_project_check_button');
-                Workflow.focus('#upload_genotypes_workflow', 2);
+                Workflow.focus('#upload_genotypes_workflow', 3);
             } else if (selected.length == 0 && jQuery('#upload_genotype_vcf_project_name').val() != '') {
                 if (jQuery('#upload_genotype_year_select').val() == ''){
                     alert('Please give a year');
@@ -621,7 +679,7 @@ jQuery(document).ready(function(){
                 } else {
                     jQuery('#upload_genotype_project_id').val(undefined);
                     Workflow.complete('#upload_genotyping_data_project_check_button');
-                    Workflow.focus('#upload_genotypes_workflow', 2);
+                    Workflow.focus('#upload_genotypes_workflow', 3);
                 }
             }
         }
@@ -629,9 +687,19 @@ jQuery(document).ready(function(){
     });
 
     jQuery('#upload_genotyping_data_protocol_missing_button').click(function(){
-        jQuery('#upload_genotype_data_protocol_details').show();
+        if (data_type == 'ssr') {
+            jQuery('#upload_ssr_protocol').show();
+        } else {
+            jQuery('#upload_genotype_data_protocol_details').show();
+        }
         return false;
     });
+
+    jQuery('#upload_genotyping_data_protocol_missing_button').click(function(){
+        jQuery('#upload_genotype_data_type_select').show();
+        return false;
+    });
+
 
     jQuery('#upload_genotyping_data_protocol_check_button').click(function(){
         selected = [];
