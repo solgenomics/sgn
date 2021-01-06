@@ -92,6 +92,7 @@ tr.shown td.details-control {
                     <th>Description</th>
                     <th>Submitter</th>
                     <th>Associations</th>
+                    <th>Observations</th>
                     <th>Tags</th>
                 </tr>
                 </thead>
@@ -216,7 +217,6 @@ jQuery(document).ready(function(){
     });$
 
     jQuery('#image_analysis_service_select').change(function() {
-        console.log( "Service select .change() called." );
         var service = jQuery('#image_analysis_service_select').val();
         jQuery('#image_analysis_trait_select').html('<option value="">Select A Trait</option>');
         if (service) {
@@ -225,8 +225,6 @@ jQuery(document).ready(function(){
             var all_traits = service_traits[service];
             var trait_names = Object.keys(all_traits);
             var options =  [];
-            console.log("all traits are "+all_traits);
-            console.log("trait names are "+trait_names);
 
             jQuery.ajax({
                 url: '/brapi/v2/commoncropnames/',
@@ -289,8 +287,6 @@ jQuery(document).ready(function(){
         }
 
         var results = [];
-        // var working_modal = jQuery('#working_modal');
-        // working_modal.modal('show');
         var progress_modal = jQuery('#progress_modal');
         var progress_bar = jQuery('#progress_bar');
         var image_total = selected_image_ids.length;
@@ -299,18 +295,13 @@ jQuery(document).ready(function(){
         progress_modal.modal('show');
         jQuery('#progress_msg').text('Submitting images for analysis');
 
-        // current_progress += 10;
-
-     // progress_bar.css("width", current_progress + "%")
-     // .attr("aria-valuenow", current_progress)
-     // .text(current_progress + "%");
-
         var deferred_calls = selected_image_ids.map(function(image_id, index) {
             jQuery('#progress_msg').text('Submitting image '+index+' out of '+image_total+' images');
             current_progress += (1 / image_total) * 10;
             progress_bar.css("width", current_progress + "%")
             .attr("aria-valuenow", current_progress)
             .text(current_progress + "%");
+
             var call = jQuery.ajax({
                 url: '/ajax/image_analysis/submit',
                 method: 'POST',
@@ -320,12 +311,9 @@ jQuery(document).ready(function(){
                     'trait': jQuery('#image_analysis_trait_select').val(),
                 },
                 dataType:'json',
-                // beforeSend: function() {
-                //     working_modal.find('.modal-body').append('<p id="'+image_id+'">Working on image number '+index+'.');
-                // },
                 success: function(response) {
                     images_finished++;
-                    console.log(response);
+                    // console.log(response);
                     jQuery('#progress_msg').text('Responses received for '+images_finished+' out of '+image_total+' images');
                     current_progress += (1 / image_total) * 90;
                     progress_bar.css("width", current_progress + "%")
@@ -336,48 +324,38 @@ jQuery(document).ready(function(){
                             progress_modal.find('.modal-footer').append(
                                 '<ul class="list-group"><li class="list-group-item list-group-item-danger"><span class="badge"><span class="glyphicon glyphicon-remove"></span></span>Error analyzing image number '+index+': '+item.result.error+'</li></ul>'
                             );
-                                // '<p id="'+image_id+'">Error analyzing image number '+index+': '+item.result.error
-                            // .text('Error analyzing image number '+index+'. '+item.result.error);
                         }
                         else {
-                            results.push(item);
-                            // jQuery('#'+image_id).text('Finished analyzing image number '+index+'.');
+                            // results.push(item);
                         }
-                        // results.push(item)
+                        results.push(item);
                     });
                 },
                 error: function(response) {
                     images_finished++;
-                    console.log(response);
+                    // console.log(response);
                     jQuery('#progress_msg').text('Finished analyzing '+images_finished+' out of '+image_total+' images');
                     current_progress += (1 / image_total) * 90
                     progress_modal.find('.modal-footer').append(
                         '<ul class="list-group"><li class="list-group-item list-group-item-danger"><span class="badge"><span class="glyphicon glyphicon-remove"></span></span>Error analyzing image number '+index+': '+response+'</li></ul>'
                     );
-                    // jQuery('#'+image_id).text('Error analyzing image number '+index+'. '+response);
                 }
             });
             return call;
         });
 
         jQuery('#progress_msg').text('All '+image_total+' images submitted, waiting for results.');
-        // current_progress += 10;
-        // progress_bar.css("width", current_progress + "%")
-        // .attr("aria-valuenow", current_progress)
-        // .text(current_progress + "%");
-
-        // console.log("deferred_calls are:");
-        // console.log(JSON.stringify(Object.values(deferred_calls)));
 
         jQuery.when.apply(jQuery, deferred_calls).then(function() {
-            // console.log("Results are:");
-            // console.log(JSON.stringify(results));
+            console.log("Results are:");
+            console.log(results);
             if (results.length > 0) {
                 jQuery.ajax({
                     url: '/ajax/image_analysis/group',
                     method: 'POST',
                     data: { 'result': JSON.stringify(results) },
                     success: function(response) {
+                        console.log("Grouped Results are:");
                         console.log(response);
                         current_progress = 100;
                         progress_bar.css("width", current_progress + "%")
