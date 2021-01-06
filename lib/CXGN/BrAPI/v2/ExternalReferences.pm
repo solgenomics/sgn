@@ -13,7 +13,7 @@ has 'bcs_schema' => (
 
 has 'external_references' => (
     is => 'ro',
-    isa => 'ArrayRef[HashRef[Str]]',
+    isa => 'ArrayRef[HashRef[Str]|Undef]',
 );
 
 has 'dbxref_id' => (
@@ -78,7 +78,7 @@ has 'reference_source_id' => (
 );
 
 has 'references_db' => (
-    isa => 'ArrayRef[HashRef[Str]]',
+    isa => 'ArrayRef[HashRef[Str]|Undef]',
     is => 'ro',
     lazy => 1,
     default => sub {
