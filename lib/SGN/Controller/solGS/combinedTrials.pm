@@ -144,11 +144,11 @@ sub combined_trials_page :Path('/solgs/populations/combined') Args() {
     
     if (!$cached)
     {	 
-    	$c->stash->{message} = "Cached output for this training population  does not exist anymore.\n" 
+    	my $msg = "Cached output for this training population  does not exist anymore.\n" 
     	    . "Please go to <a href=\"/solgs/search/\">the search page</a>"
     	    . " and create the training population data.";
-    
-    	$c->stash->{template} = "/generic_message.mas"; 
+	
+	$c->controller('solGS::Utils')->generic_message($c, $msg);
     }
     else
     {       
@@ -215,10 +215,10 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args() {
     
     if (!@traits_ids)
     {	 
-	$c->stash->{message} = "Cached output for this page does not exist anymore.\n" . 
-	    " Please go to $training_pop_page and run the analysis.";
-	
-	$c->stash->{template} = "/generic_message.mas"; 
+	my $msg = "Cached output for this page does not exist anymore.\n"
+	    . " Please go to $training_pop_page and run the analysis.";
+
+	$c->controller('solGS::Utils')->generic_message($c, $msg);
     } 
     else 
     {

@@ -244,6 +244,14 @@ sub save_metadata {
 }
 
 
+sub generic_message {
+    my ($self, $c, $msg) = @_;
+
+    $c->stash->{message} = $msg;
+	 
+    $c->stash->{template} = "/generic_message.mas"; 
+}
+
 ####
 1;
 ####

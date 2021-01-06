@@ -1076,13 +1076,13 @@ sub confirm_request :Path('/solgs/confirm/request/') Args(0) {
     my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $referer = $c->req->referer;
     
-    $c->stash->{message} = "<p>$job_type</p>
-                            <p>You will receive an email when it is completed. " . 
-			    "You can also check the status of the job on " . 
-			    "<a href=\"/solpeople/profile/$user_id\">your profile page</a>.</p>
-                            <p><a href=\"$referer\">[ Go back ]</a></p>";
+    my $msg = "<p>$job_type</p>" 
+	. "<p>You will receive an email when it is completed. " 
+	. "You can also check the status of the job on " 
+	. "<a href=\"/solpeople/profile/$user_id\">your profile page</a>"
+        . "<p><a href=\"$referer\">[ Go back ]</a></p>";
 
-    $c->stash->{template} = "/generic_message.mas";
+    $c->controller('solGS::Utils')->generic_message($c, $msg);
 
 }
 

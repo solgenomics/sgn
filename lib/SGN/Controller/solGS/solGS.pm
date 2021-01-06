@@ -82,12 +82,10 @@ sub solgs_login_message :Path('/solgs/login/message') Args(0) {
 
     my $page = $c->req->param('page');
 
-    my $message = "This is a private data. If you are the owner, "
+    my $msg = "This is a private data. If you are the owner, "
 	. "please <a href=\"/user/login?goto_url=$page\">login</a> to view it.";
 
-    $c->stash->{message} = $message;
-
-    $c->stash->{template} = "/generic_message.mas"; 
+    $c->controller('solGS::Utils')->generic_message($c, $msg);
    
 }
 
@@ -461,8 +459,8 @@ sub population : Path('/solgs/population') Args() {
 
     if (!$pop_id)
     {	 
-	$c->stash->{message} = "You can not access this page with out population id.";
-	$c->stash->{template} = "/generic_message.mas"; 
+	my $msg = "You can not access this page with out population id.";
+	$c->controller('solGS::Utils')->generic_message($c, $msg); 
     }
     
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
@@ -483,11 +481,11 @@ sub population : Path('/solgs/population') Args() {
   
     if (!$cached)
     {	 
-	$c->stash->{message} = "Cached output for this training population  does not exist anymore.\n" 
+	my $msg = "Cached output for this training population  does not exist anymore.\n" 
 	    . "Please go to <a href=\"/solgs/search/\">the search page</a>"
 	    . " and create the training population data.";
-	
-	$c->stash->{template} = "/generic_message.mas"; 
+
+	$c->controller('solGS::Utils')->generic_message($c, $msg);
     }
     else 
     {
@@ -744,10 +742,10 @@ sub selection_trait :Path('/solgs/selection/') Args() {
     {    
     	my $model_page = qq | <a href="/solgs/trait/$trait_id/population/$training_pop_id">training model page</a> |;
 	    
-    	$c->stash->{message} = "No cached output was found for this trait.\n" . 
-    	    " Please go to the $model_page and run the prediction.";
-	 
-    	$c->stash->{template} = "/generic_message.mas"; 	
+    	my $msg = "No cached output was found for this trait.\n"
+    	    . " Please go to the $model_page and run the prediction.";
+	
+	$c->controller('solGS::Utils')->generic_message($c, $msg);
     }
     else
     {
@@ -896,10 +894,11 @@ sub trait :Path('/solgs/trait') Args() {
 	    #my $training_pop_desc = $c->stash->{project_desc};
 	    my $training_pop_page = qq | <a href="/solgs/population/$pop_id">$training_pop_name</a> |;
 	    
-	    $c->stash->{message} = "Cached output for this model does not exist anymore.\n" . 
-	     " Please go to $training_pop_page and run the analysis.";
+	    my $msg = "Cached output for this model does not exist anymore.\n"
+		. " Please go to $training_pop_page and run the analysis.";
+
+	    $c->controller('solGS::Utils')->generic_message($c, $msg);
 	 
-	    $c->stash->{template} = "/generic_message.mas"; 
 	} 
 	else 
 	{	    
@@ -1963,10 +1962,10 @@ sub all_traits_output :Path('/solgs/traits/all/population') Args() {
     
      if(!@traits_ids)
      {	 
-	 $c->stash->{message} = "Cached output for this page does not exist anymore.\n" . 
-	     " Please go to $training_pop_page and run the analysis.";
+	 my $msg = "Cached output for this page does not exist anymore.\n"
+	     . " Please go to $training_pop_page and run the analysis.";
 	 
-	 $c->stash->{template} = "/generic_message.mas"; 
+	 $c->controller('solGS::Utils')->generic_message($c, $msg);
      } 
      else 
      {
