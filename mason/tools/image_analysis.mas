@@ -175,7 +175,7 @@ tr.shown td.details-control {
 var service_traits = {
     'necrosis': {
         "CBSDpct|CO_334:0002078" : "Cassava",
-        "Vine dry matter content computing percent|CO_331:0001014" : "Cassava",
+        "Vine dry matter content computing percent|CO_331:0001014" : "SweetPotato",
         "Necrosis rating|CO_331:01234567": "SweetPotato",
     },
     'largest_contour_percent': {},
@@ -289,10 +289,28 @@ jQuery(document).ready(function(){
         }
 
         var results = [];
-        var working_modal = jQuery('#working_modal');
-        working_modal.modal('show');
+        // var working_modal = jQuery('#working_modal');
+        // working_modal.modal('show');
+        var progress_modal = jQuery('#progress_modal');
+        var progress_bar = jQuery('#progress_bar');
+        var image_total = selected_image_ids.length;
+        var images_finished = 0;
+        var current_progress = 0;
+        progress_modal.modal('show');
+        jQuery('#progress_msg').text('Submitting images for analysis');
+
+        // current_progress += 10;
+
+     // progress_bar.css("width", current_progress + "%")
+     // .attr("aria-valuenow", current_progress)
+     // .text(current_progress + "%");
 
         var deferred_calls = selected_image_ids.map(function(image_id, index) {
+            jQuery('#progress_msg').text('Submitting image '+index+' out of '+image_total+' images');
+            current_progress += (1 / image_total) * 10;
+            progress_bar.css("width", current_progress + "%")
+            .attr("aria-valuenow", current_progress)
+            .text(current_progress + "%");
             var call = jQuery.ajax({
                 url: '/ajax/image_analysis/submit',
                 method: 'POST',
@@ -302,93 +320,135 @@ jQuery(document).ready(function(){
                     'trait': jQuery('#image_analysis_trait_select').val(),
                 },
                 dataType:'json',
-                beforeSend: function() {
-                    working_modal.find('.modal-body').append('<p id="'+image_id+'">Working on image number '+index+'.');
-                },
+                // beforeSend: function() {
+                //     working_modal.find('.modal-body').append('<p id="'+image_id+'">Working on image number '+index+'.');
+                // },
                 success: function(response) {
+                    images_finished++;
                     console.log(response);
+                    jQuery('#progress_msg').text('Responses received for '+images_finished+' out of '+image_total+' images');
+                    current_progress += (1 / image_total) * 90;
+                    progress_bar.css("width", current_progress + "%")
+                    .attr("aria-valuenow", current_progress)
+                    .text(current_progress + "%");
                     response.results.map(function(item) {
                         if (item.result.error) {
-                            jQuery('#'+image_id).text('Error analyzing image number '+index+'. '+item.result.error);
+                            progress_modal.find('.modal-footer').append(
+                                '<ul class="list-group"><li class="list-group-item list-group-item-danger"><span class="badge"><span class="glyphicon glyphicon-remove"></span></span>Error analyzing image number '+index+': '+item.result.error+'</li></ul>'
+                            );
+                                // '<p id="'+image_id+'">Error analyzing image number '+index+': '+item.result.error
+                            // .text('Error analyzing image number '+index+'. '+item.result.error);
                         }
                         else {
-                            jQuery('#'+image_id).text('Finished analyzing image number '+index+'.');
+                            results.push(item);
+                            // jQuery('#'+image_id).text('Finished analyzing image number '+index+'.');
                         }
-                        results.push(item)
+                        // results.push(item)
                     });
                 },
                 error: function(response) {
-                    console.log('Error: '+response);
-                    jQuery('#'+image_id).text('Error analyzing image number '+index+'. '+response);
+                    images_finished++;
+                    console.log(response);
+                    jQuery('#progress_msg').text('Finished analyzing '+images_finished+' out of '+image_total+' images');
+                    current_progress += (1 / image_total) * 90
+                    progress_modal.find('.modal-footer').append(
+                        '<ul class="list-group"><li class="list-group-item list-group-item-danger"><span class="badge"><span class="glyphicon glyphicon-remove"></span></span>Error analyzing image number '+index+': '+response+'</li></ul>'
+                    );
+                    // jQuery('#'+image_id).text('Error analyzing image number '+index+'. '+response);
                 }
             });
             return call;
         });
-        console.log("deferred_calls are:");
-        console.log(JSON.stringify(Object.values(deferred_calls)));
+
+        jQuery('#progress_msg').text('All '+image_total+' images submitted, waiting for results.');
+        // current_progress += 10;
+        // progress_bar.css("width", current_progress + "%")
+        // .attr("aria-valuenow", current_progress)
+        // .text(current_progress + "%");
+
+        // console.log("deferred_calls are:");
+        // console.log(JSON.stringify(Object.values(deferred_calls)));
 
         jQuery.when.apply(jQuery, deferred_calls).then(function() {
-            console.log("Results are:");
-            console.log(JSON.stringify(results));
-            jQuery.ajax({
-                url: '/ajax/image_analysis/group',
-                method: 'POST',
-                data: { 'result': JSON.stringify(results) },
-                success: function(response) {
-                    console.log(response);
-                    jQuery('#working_modal').modal('hide');
-                    jQuery('#image_analysis_result').show();
+            // console.log("Results are:");
+            // console.log(JSON.stringify(results));
+            if (results.length > 0) {
+                jQuery.ajax({
+                    url: '/ajax/image_analysis/group',
+                    method: 'POST',
+                    data: { 'result': JSON.stringify(results) },
+                    success: function(response) {
+                        console.log(response);
+                        current_progress = 100;
+                        progress_bar.css("width", current_progress + "%")
+                        .attr("aria-valuenow", current_progress)
+                        .text(current_progress + "%");
+                        jQuery('#progress_msg').text('Building results table.');
+                        jQuery('#image_analysis_result').show();
 
-                    var table = jQuery('#image_analysis_result_table').DataTable( {
-                        "data": response.results,
-                        "columns": [
-                            {
-                                "className":      'details-control',
-                                "orderable":      false,
-                                "data":           null,
-                                "defaultContent": '',
-                                "render": function () {
-                                     return '<i class="fa fa-plus-square" aria-hidden="true"></i>';
-                                 },
-                                 width:"15px"
-                            },
-                            { "data": "observationUnitName" },
-                            { "data": "observationVariableName" },
-                            { "data": "numberAnalyzed" },
-                            { "data": "value" }
-                        ],
-                        "order": [[1, 'asc']]
-                    } );
+                        var table = jQuery('#image_analysis_result_table').DataTable( {
+                            "data": response.results,
+                            "columns": [
+                                {
+                                    "className":      'details-control',
+                                    "orderable":      false,
+                                    "data":           null,
+                                    "defaultContent": '',
+                                    "render": function () {
+                                         return '<i class="fa fa-plus-square" aria-hidden="true"></i>';
+                                     },
+                                     width:"15px"
+                                },
+                                { "data": "observationUnitName" },
+                                { "data": "observationVariableName" },
+                                { "data": "numberAnalyzed" },
+                                { "data": "value" }
+                            ],
+                            "order": [[1, 'asc']]
+                        } );
 
-                    // Add event listener for opening and closing details
-                    jQuery('#image_analysis_result_table tbody').on('click', 'td.details-control', function () {
-                        var tr = jQuery(this).closest('tr');
-                        var tdi = tr.find("i.fa");
-                        var row = table.row( tr );
+                        // Add event listener for opening and closing details
+                        jQuery('#image_analysis_result_table tbody').on('click', 'td.details-control', function () {
+                            var tr = jQuery(this).closest('tr');
+                            var tdi = tr.find("i.fa");
+                            var row = table.row( tr );
 
-                        if ( row.child.isShown() ) {
-                            // This row is already open - close it
-                            row.child.hide();
-                            tr.removeClass('shown');
-                            tdi.first().removeClass('fa-minus-square');
-                            tdi.first().addClass('fa-plus-square');
-                        }
-                        else {
-                            // Open this row
-                            row.child( format(row.data()) ).show();
-                            tr.addClass('shown');
-                            tdi.first().removeClass('fa-plus-square');
-                            tdi.first().addClass('fa-minus-square');
-                        }
-                    } );
-                },
-                error: function(response) {
-                    jQuery('#working_modal').modal('hide');
-                    console.log('Error: '+response);
-                    // jQuery('#'+image_id).text('Error analyzing image number '+index+'. '+response);
-                    alert("An error occurred submitting necrosis image analysis");
-                }
-            });
+                            if ( row.child.isShown() ) {
+                                // This row is already open - close it
+                                row.child.hide();
+                                tr.removeClass('shown');
+                                tdi.first().removeClass('fa-minus-square');
+                                tdi.first().addClass('fa-plus-square');
+                            }
+                            else {
+                                // Open this row
+                                row.child( format(row.data()) ).show();
+                                tr.addClass('shown');
+                                tdi.first().removeClass('fa-plus-square');
+                                tdi.first().addClass('fa-minus-square');
+                            }
+                        } );
+
+                        setTimeout(function(){
+                            progress_modal.find('.modal-footer').html('');
+                            progress_modal.modal('hide');
+                        }, 1000);
+
+                    },
+                    error: function(response) {
+                        // jQuery('#working_modal').modal('hide');
+                        progress_modal.modal('hide');
+                        console.log('Error: '+response);
+                        // jQuery('#'+image_id).text('Error analyzing image number '+index+'. '+response);
+                        alert("An error occurred while displaying image analysis results.");
+                    }
+                });
+            }
+            else {
+                progress_modal.find('.modal-footer').html('');
+                progress_modal.modal('hide');
+                alert("No usable results returned from the service, aborting analysis.");                 // alert("No usable results returned from the service, aborting analysis.");
+            }
         });
     });
 
