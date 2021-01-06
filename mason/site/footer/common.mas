@@ -41,6 +41,30 @@
   </div>
 </div>
 
+<div class="modal fade" id="progress_modal" name="progress_modal" tabindex="-1" role="dialog" aria-labelledby="progressModalDialog" data-controls-modal="your_div_id" data-backdrop="static" data-keyboard="false" href="#">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+	<center>
+          <h4 class="modal-title" id="progressModalDialog">Progress</h4>
+	</center>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	  <center>
+		  <div id="progress_msg"></div>
+		  <div class="progress">
+		    <div id="progress_bar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: 75%"></div>
+		  </div>
+	  </center>
+        </div>
+      </div>
+      <div class="modal-footer">
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- END CONTENT WRAPPER -->
 
 </div>
