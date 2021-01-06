@@ -186,7 +186,7 @@ $facilities
                                 <div id="upload_ssr_protocol" style="display:none">
                                     <div class="well">
                                         <div class="form-group">
-                                            <label class="col-sm-5 control-label">Genotyping Protocol Name:</label>
+                                            <label class="col-sm-5 control-label">SSR Protocol Name:</label>
                                             <div class="col-sm-7">
                                                 <input class="form-control" id="upload_ssr_protocol_name" name="upload_ssr_protocol_name" type="text" placeholder=" e.g. SSR Cassava set 1"/>
                                             </div>
@@ -203,14 +203,36 @@ $facilities
                                                 <input class="form-control" id="upload_ssr_protocol_description_input" name="upload_ssr_protocol_description_input" type="text" />
                                             </div>
                                         </div>
-                                        <div class="form-group">
-                                            <label class="col-sm-5 control-label">Choose Sample Unit: </label>
+                                        <div class="row">
+                                            <div class="col-sm-5">
+                                                <&| /page/explanation.mas, title=>'Template information' &>
+                                                    <p>
+                                                        <b>File format information</b>
+                                                        <br>
+                                                        <a id="upload_ssr_protocol_format">Spreadsheet format</a>
+                                                    </p>
+                                                </&>
+                                            </div>
                                             <div class="col-sm-7">
-                                                <input type="radio" name="upload_ssr_observation_type" value="tissue_sample" checked>&nbsp;&nbsp;&nbsp;Exported Tissue Sample Name: The sample names in your VCF are tissue_sample_names that already exist in genotyping plates (e.g. 96 well plates) in the database. The sample names in your VCF file can be the tissue_sample_name triple pipe joined to the accession_name (e.g. tissue_sample_name|||accession_name) or just simply the tissue_sample_name corresponding to the genotyping plate well.
-                                                <br/><br/>
-                                                <input type="radio" name="upload_ssr_observation_type" value="accession">&nbsp;&nbsp;&nbsp;Accession: The sample names are of accession names
+                                                <br/>
+                                                <div class="panel panel-default">
+                                                    <div class="panel-body">
+                                                        <div class="form-group">
+                                                            <label class="col-sm-4 control-label">Select an XLS File: </label>
+                                                            <div class="col-sm-4">
+                                                                <input type="file" name="xls_ssr_protocol_file" id="xls_ssr_protocol_file" encoding="multipart/form-data" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
+
+                                        <center>
+                                        <button class="btn btn-primary" id="upload_ssr_protocol_submit">Upload SSR Marker Info</button>
+                                        </center>
+                                        <br/>
+
                                     </div>
                                 </div>
 
@@ -617,6 +639,44 @@ $facilities
     </div>
 </div>
 
+<div class="modal fade" id="upload_ssr_protocol_format_dialog" name="upload_ssr_protocol_format_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadSSRProtocolDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadSSRProtocolDialog">Upload SSR Marker Info Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>SSR marker info may be uploaded in an Excel file (.xls)</b>
+                    <br />
+                        (.xlsx format not supported)
+                    <br /><br />
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) must contain the following fields:
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>marker name</td>
+                                <td>forward primer</td>
+                                <td>reverse primer</td>
+                                <td>annealing temperature</td>
+                                <td>product sizes</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
 
 .ui-autocomplete { z-index:2147483647; }
@@ -652,6 +712,15 @@ jQuery(document).ready(function(){
             jQuery('#upload_genotype_data_format_tassel_hdf5').hide();
             jQuery('#upload_genotype_data_format_ssr').show();
         }
+
+    jQuery('#upload_genotyping_data_protocol_missing_button').click(function(){
+        if (data_type == 'ssr') {
+            jQuery('#upload_ssr_protocol').show();
+        } else {
+            jQuery('#upload_genotype_data_protocol_details').show();
+        }
+        return false;
+    });
 
     });
 
@@ -703,11 +772,6 @@ jQuery(document).ready(function(){
         return false;
     });
 
-    jQuery('#upload_genotyping_data_protocol_missing_button').click(function(){
-        jQuery('#upload_genotype_data_protocol_details').show();
-        return false;
-    });
-
     jQuery('#upload_genotyping_data_protocol_check_button').click(function(){
         selected = [];
         jQuery('input[name="upload_genotyping_data_protocol_select"]:checked').each(function() {
@@ -749,6 +813,10 @@ jQuery(document).ready(function(){
 
     jQuery('#upload_genotype_intertek_spreadsheet_info_format').click(function(){
         jQuery('#upload_genotype_intertek_spreadsheet_info_format_dialog').modal('show');
+    });
+
+    jQuery('#upload_ssr_protocol_format').click(function(){
+        jQuery('#upload_ssr_protocol_format_dialog').modal('show');
     });
 
 
