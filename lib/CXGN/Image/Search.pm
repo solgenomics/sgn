@@ -447,7 +447,7 @@ sub search {
         $limit_clause
         $offset_clause;";
 
-    print STDERR Dumper $q;
+    # print STDERR Dumper $q;
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
 
