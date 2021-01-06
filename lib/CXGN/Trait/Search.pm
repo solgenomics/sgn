@@ -157,7 +157,7 @@ sub search {
         $where_join{'type.name'} = 'VARIABLE_OF';
     }
 
-    $schema->storage->debug(1);
+    # $schema->storage->debug(1);
     my $trait_rs = $schema->resultset("Cv::Cvterm")->search(
         \%and_conditions,
         {

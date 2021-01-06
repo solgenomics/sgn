@@ -64,12 +64,14 @@ sub image_analysis_submit_POST : Args(0) {
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
     my $main_production_site_url = $c->config->{main_production_site_url};
 
+    unless (ref($image_ids) eq 'ARRAY') { $image_ids = [$image_ids]; }
+
     my ($trait_name, $db_accession) = split(/\|/, $trait);
     my ($db, $accession) = split(/:/, $db_accession);
-    my ($trait_details, $records_total) = CXGN::Trait::Search->new({
+    my ($trait_details, $record_number) = CXGN::Trait::Search->new({
         bcs_schema=>$schema,
         ontology_db_name_list => [$db],
-        accession_list => [$accession] #[$message_hashref->{trait_name}]
+        accession_list => [$accession]
     })->search();
 
     my $image_search = CXGN::Image::Search->new({
@@ -277,14 +279,8 @@ sub image_analysis_group : Path('/ajax/image_analysis/group') : ActionClass('RES
 sub image_analysis_group_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    # my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    # my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    # my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $result = decode_json $c->req->param('result');
-    # my $service = $c->req->param('service');
-    # my $trait = $c->req->param('trait');
-# sub _group_results_by_observationunit {
-    # my $result = shift;
+    # print STDERR Dumper($result);
     my %grouped_results = ();
     my @table_data = ();
 
@@ -334,15 +330,15 @@ sub image_analysis_group_POST : Args(0) {
                     observationVariableDbId => $old_uniquename_data->{$trait}[0]->{'trait_id'},
                     observationVariableName => $trait,
                     value => $mean_value,
-                    details => $old_uniquename_data->{$trait}
+                    details => $details,
+                    numberAnalyzed => scalar @{$details}
                 };
             }
         }
         $old_uniquename = $uniquename;
     }
     # print STDERR "table data is ".Dumper(@table_data);
-    $c->stash->{rest} = { success => 1, results => \@table_data; };
-    # return \@table_data;
+    $c->stash->{rest} = { success => 1, results => \@table_data };
 }
 
 sub _check_user_login {
