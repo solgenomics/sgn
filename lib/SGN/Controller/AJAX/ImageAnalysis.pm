@@ -332,6 +332,7 @@ sub image_analysis_group_POST : Args(0) {
                     value => $mean_value,
                     details => $details,
                     numberAnalyzed => scalar @{$details}
+                    # Add previously observed trait value
                 };
             }
         }
