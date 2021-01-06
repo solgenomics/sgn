@@ -33,8 +33,8 @@ $facilities
                             <&| /util/workflow.mas:step, title=> "Data Type" &>
                                 <& /page/page_title.mas, title=>"Select the type of genotyping data being uploaded" &>
                                 <div class="form-group">
-                                    <label class="col-sm-5 control-label">Type of genotyping data: </label>
-                                    <div class="col-sm-7">
+                                    <label class="col-sm-3 control-label">Type of genotyping data: </label>
+                                    <div class="col-sm-9">
                                         <select class="form-control" id="genotype_data_type_select" name="genotype_data_type_select">
                                             <option value="">Select data type</option>
                                             <option value="vcf">VCF</option>
@@ -44,7 +44,6 @@ $facilities
                                         </select>
                                     </div>
                                 </div>
-
                                 <br/><br/>
                                 <center>
                                 <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
@@ -239,18 +238,13 @@ $facilities
                                 <& /page/page_title.mas, title=>"Provide genotype information" &>
                                 <br/><br/>
 
-
                                 <div class="form-group">
-                                    <label class="col-sm-5 control-label">Select type of genotyping data: </label>
+                                    <label class="col-sm-5 control-label">Type of Genotype Data:</label>
                                     <div class="col-sm-7">
-                                        <select class="form-control" id="upload_genotype_data_format_select" name="upload_genotype_data_format_select">
-                                            <option value="vcf">VCF</option>
-                                            <option value="tassel_hdf5">Tassel HDF5</option>
-                                            <option value="intertek">Intertek</option>
-                                            <option value="ssr">SSR</option>
-                                        </select>
+                                        <input class="form-control" id="upload_genotype_data_type" name="upload_genotype_data_type" type="text" value = "" disabled />
                                     </div>
                                 </div>
+
                                 <div class="form-group">
                                     <label class="col-sm-5 control-label">Ignore any possible warnings and upload genotypes?: </label>
                                     <div class="col-sm-7">
@@ -352,7 +346,7 @@ $facilities
                                     </div>
                                 </div>
 
-                                <div class="well well-sm" id="upload_genotype_data_format_ssr">
+                                <div class="well well-sm" id="upload_genotype_data_format_ssr" style="display:none">
                                     <div class="row">
                                         <div class="col-sm-4">
                                             <&| /page/explanation.mas, title=>'Template information' &>
@@ -632,10 +626,33 @@ $facilities
 <script>
 jQuery(document).ready(function(){
 
-    var data_type;
-
     jQuery('#genotype_data_type_select').change(function() {
-        data_type = jQuery('#genotype_data_type_select').val();
+        var data_type = jQuery('#genotype_data_type_select').val();
+
+        document.getElementById('upload_genotype_data_type').value = data_type;
+
+        if (data_type == 'vcf') {
+            jQuery('#upload_genotype_data_format_vcf').show();
+            jQuery('#upload_genotype_data_format_intertek').hide();
+            jQuery('#upload_genotype_data_format_tassel_hdf5').hide();
+            jQuery('#upload_genotype_data_format_ssr').hide();
+        } else if (data_type == 'intertek') {
+            jQuery('#upload_genotype_data_format_vcf').hide();
+            jQuery('#upload_genotype_data_format_intertek').show();
+            jQuery('#upload_genotype_data_format_tassel_hdf5').hide();
+            jQuery('#upload_genotype_data_format_ssr').hide();
+        } else if (data_type == 'tassel_hdf5') {
+            jQuery('#upload_genotype_data_format_vcf').hide();
+            jQuery('#upload_genotype_data_format_intertek').hide();
+            jQuery('#upload_genotype_data_format_tassel_hdf5').show();
+            jQuery('#upload_genotype_data_format_ssr').hide();
+        } else if (data_type == 'ssr') {
+            jQuery('#upload_genotype_data_format_vcf').hide();
+            jQuery('#upload_genotype_data_format_intertek').hide();
+            jQuery('#upload_genotype_data_format_tassel_hdf5').hide();
+            jQuery('#upload_genotype_data_format_ssr').show();
+        }
+
     });
 
     var upload_genotyping_data_trial_table = jQuery('#upload_genotyping_data_project_search_results').DataTable( {
@@ -687,19 +704,9 @@ jQuery(document).ready(function(){
     });
 
     jQuery('#upload_genotyping_data_protocol_missing_button').click(function(){
-        if (data_type == 'ssr') {
-            jQuery('#upload_ssr_protocol').show();
-        } else {
-            jQuery('#upload_genotype_data_protocol_details').show();
-        }
+        jQuery('#upload_genotype_data_protocol_details').show();
         return false;
     });
-
-    jQuery('#upload_genotyping_data_protocol_missing_button').click(function(){
-        jQuery('#upload_genotype_data_type_select').show();
-        return false;
-    });
-
 
     jQuery('#upload_genotyping_data_protocol_check_button').click(function(){
         selected = [];
@@ -716,7 +723,7 @@ jQuery(document).ready(function(){
             } else if (selected.length == 1 && jQuery('#upload_genotype_vcf_protocol_name').val() == ''){
                 jQuery('#upload_genotype_protocol_id').val(selected[0]);
                 Workflow.complete('#upload_genotyping_data_protocol_check_button');
-                Workflow.focus('#upload_genotypes_workflow', 3);
+                Workflow.focus('#upload_genotypes_workflow', 4);
             } else if (selected.length == 0 && jQuery('#upload_genotype_vcf_protocol_name').val() != '') {
                 if (jQuery('#upload_genotype_vcf_reference_genome_name').val() == ''){
                     alert('Please give a reference genome name.');
@@ -725,7 +732,7 @@ jQuery(document).ready(function(){
                 } else {
                     jQuery('#upload_genotype_protocol_id').val(undefined);
                     Workflow.complete('#upload_genotyping_data_protocol_check_button');
-                    Workflow.focus('#upload_genotypes_workflow', 3);
+                    Workflow.focus('#upload_genotypes_workflow', 4);
                 }
             }
         }
@@ -744,30 +751,6 @@ jQuery(document).ready(function(){
         jQuery('#upload_genotype_intertek_spreadsheet_info_format_dialog').modal('show');
     });
 
-    jQuery('#upload_genotype_data_format_select').change(function(){
-        var selected_option = jQuery(this).val();
-        if (selected_option == 'vcf') {
-            jQuery('#upload_genotype_data_format_vcf').show();
-            jQuery('#upload_genotype_data_format_intertek').hide();
-            jQuery('#upload_genotype_data_format_tassel_hdf5').hide();
-            jQuery('#upload_genotype_data_format_ssr').hide();
-        } else if (selected_option == 'intertek') {
-            jQuery('#upload_genotype_data_format_vcf').hide();
-            jQuery('#upload_genotype_data_format_intertek').show();
-            jQuery('#upload_genotype_data_format_tassel_hdf5').hide();
-            jQuery('#upload_genotype_data_format_ssr').hide();
-        } else if (selected_option == 'tassel_hdf5') {
-            jQuery('#upload_genotype_data_format_vcf').hide();
-            jQuery('#upload_genotype_data_format_intertek').hide();
-            jQuery('#upload_genotype_data_format_tassel_hdf5').show();
-            jQuery('#upload_genotype_data_format_ssr').hide();
-        } else if (selected_option == 'ssr') {
-            jQuery('#upload_genotype_data_format_vcf').hide();
-            jQuery('#upload_genotype_data_format_intertek').hide();
-            jQuery('#upload_genotype_data_format_tassel_hdf5').hide();
-            jQuery('#upload_genotype_data_format_ssr').show();
-        }
-    });
 
 });
 </script>
