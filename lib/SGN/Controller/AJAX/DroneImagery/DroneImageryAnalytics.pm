@@ -3536,24 +3536,46 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
     my $cmd_plotcorrsum_plot = 'R -e "library(data.table); library(ggplot2); library(GGally);
     mat_orig <- fread(\''.$phenotypes_original_heatmap_tempfile.'\', header=TRUE, sep=\',\');
-    mat_altered <- fread(\''.$phenotypes_post_heatmap_tempfile.'\', header=TRUE, sep=\',\');
-    mat_eff <- fread(\''.$effects_heatmap_tempfile.'\', header=TRUE, sep=\',\');
-    mat_eff_altered <- fread(\''.$effects_post_heatmap_tempfile.'\', header=TRUE, sep=\',\');
+    mat_altered_1 <- fread(\''.$phenotypes_post_heatmap_tempfile.'\', header=TRUE, sep=\',\');
+    mat_altered_2 <- fread(\''.$phenotypes_post_heatmap_tempfile_2.'\', header=TRUE, sep=\',\');
+    mat_altered_3 <- fread(\''.$phenotypes_post_heatmap_tempfile_3.'\', header=TRUE, sep=\',\');
+    mat_eff_1 <- fread(\''.$effects_heatmap_tempfile.'\', header=TRUE, sep=\',\');
+    mat_eff_2 <- fread(\''.$effects_heatmap_tempfile_2.'\', header=TRUE, sep=\',\');
+    mat_eff_3 <- fread(\''.$effects_heatmap_tempfile_3.'\', header=TRUE, sep=\',\');
+    mat_eff_altered_1 <- fread(\''.$effects_post_heatmap_tempfile.'\', header=TRUE, sep=\',\');
+    mat_eff_altered_2 <- fread(\''.$effects_post_heatmap_tempfile_2.'\', header=TRUE, sep=\',\');
+    mat_eff_altered_3 <- fread(\''.$effects_post_heatmap_tempfile_3.'\', header=TRUE, sep=\',\');
     mat_env <- fread(\''.$phenotypes_env_heatmap_tempfile.'\', header=TRUE, sep=\',\');
-    mat_p_sim <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile.'\', header=TRUE, sep=\',\');
-    mat_eff_sim <- fread(\''.$effects_sim_heatmap_tempfile.'\', header=TRUE, sep=\',\');
+    mat_p_sim1_1 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile.'\', header=TRUE, sep=\',\');
+    mat_p_sim1_2 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile_2.'\', header=TRUE, sep=\',\');
+    mat_p_sim1_3 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile_3.'\', header=TRUE, sep=\',\');
+    mat_eff_sim1_1 <- fread(\''.$effects_sim_heatmap_tempfile.'\', header=TRUE, sep=\',\');
+    mat_eff_sim1_2 <- fread(\''.$effects_sim_heatmap_tempfile_2.'\', header=TRUE, sep=\',\');
+    mat_eff_sim1_3 <- fread(\''.$effects_sim_heatmap_tempfile_3.'\', header=TRUE, sep=\',\');
     mat_env2 <- fread(\''.$phenotypes_env_heatmap_tempfile2.'\', header=TRUE, sep=\',\');
-    mat_p_sim2 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile2.'\', header=TRUE, sep=\',\');
-    mat_eff_sim2 <- fread(\''.$effects_sim_heatmap_tempfile2.'\', header=TRUE, sep=\',\');
+    mat_p_sim2_1 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile2.'\', header=TRUE, sep=\',\');
+    mat_p_sim2_2 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile2_2.'\', header=TRUE, sep=\',\');
+    mat_p_sim2_3 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile2_3.'\', header=TRUE, sep=\',\');
+    mat_eff_sim2_1 <- fread(\''.$effects_sim_heatmap_tempfile2.'\', header=TRUE, sep=\',\');
+    mat_eff_sim2_2 <- fread(\''.$effects_sim_heatmap_tempfile2_2.'\', header=TRUE, sep=\',\');
+    mat_eff_sim2_3 <- fread(\''.$effects_sim_heatmap_tempfile2_3.'\', header=TRUE, sep=\',\');
     mat_env3 <- fread(\''.$phenotypes_env_heatmap_tempfile3.'\', header=TRUE, sep=\',\');
-    mat_p_sim3 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile3.'\', header=TRUE, sep=\',\');
-    mat_eff_sim3 <- fread(\''.$effects_sim_heatmap_tempfile3.'\', header=TRUE, sep=\',\');
+    mat_p_sim3_1 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile3.'\', header=TRUE, sep=\',\');
+    mat_p_sim3_2 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile3_2.'\', header=TRUE, sep=\',\');
+    mat_p_sim3_3 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile3_3.'\', header=TRUE, sep=\',\');
+    mat_eff_sim3_1 <- fread(\''.$effects_sim_heatmap_tempfile3.'\', header=TRUE, sep=\',\');
+    mat_eff_sim3_2 <- fread(\''.$effects_sim_heatmap_tempfile3_2.'\', header=TRUE, sep=\',\');
+    mat_eff_sim3_3 <- fread(\''.$effects_sim_heatmap_tempfile3_3.'\', header=TRUE, sep=\',\');
     mat_env4 <- fread(\''.$phenotypes_env_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
-    mat_p_sim4 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
-    mat_eff_sim4 <- fread(\''.$effects_sim_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
-    mat <- data.frame(pheno_original = mat_orig\$value, pheno_altered = mat_altered\$value, effect_original = mat_eff\$value, effect_altered = mat_eff_altered\$value, env_linear = mat_env\$value, pheno_linear = mat_p_sim\$value, linear_effect = mat_eff_sim\$value, env_n1d = mat_env2\$value, pheno_n1d = mat_p_sim2\$value, n1d_effect = mat_eff_sim2\$value, env_n2d = mat_env3\$value, pheno_n2d = mat_p_sim3\$value, n2d_effect = mat_eff_sim3\$value, env_random = mat_env4\$value, pheno_random = mat_p_sim4\$value, random_effect = mat_eff_sim4\$value);
+    mat_p_sim4_1 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
+    mat_p_sim4_2 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile4_2.'\', header=TRUE, sep=\',\');
+    mat_p_sim4_3 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile4_3.'\', header=TRUE, sep=\',\');
+    mat_eff_sim4_1 <- fread(\''.$effects_sim_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
+    mat_eff_sim4_2 <- fread(\''.$effects_sim_heatmap_tempfile4_2.'\', header=TRUE, sep=\',\');
+    mat_eff_sim4_3 <- fread(\''.$effects_sim_heatmap_tempfile4_3.'\', header=TRUE, sep=\',\');
+    mat <- data.frame(pheno_orig = mat_orig\$value, pheno_altm1 = mat_altered_1\$value, pheno_altm2 = mat_altered_2\$value, pheno_altm3 = mat_altered_3\$value, eff_origm1 = mat_eff_1\$value, eff_origm2 = mat_eff_2\$value, eff_origm3 = mat_eff_3\$value, eff_altm1 = mat_eff_altered_1\$value, eff_altm2 = mat_eff_altered_2\$value, eff_altm3 = mat_eff_altered_3\$value, env_lin = mat_env\$value, pheno_linm1 = mat_p_sim1_1\$value, pheno_linm2 = mat_p_sim1_2\$value, pheno_linm3 = mat_p_sim1_3\$value, lin_effm1 = mat_eff_sim1_1\$value, lin_effm2 = mat_eff_sim1_2\$value, lin_effm3 = mat_eff_sim1_3\$value, env_n1d = mat_env2\$value, pheno_n1dm1 = mat_p_sim2_1\$value, pheno_n1dm2 = mat_p_sim2_2\$value, pheno_n1dm3 = mat_p_sim2_3\$value, n1d_effm1 = mat_eff_sim2_1\$value, n1d_effm2 = mat_eff_sim2_2\$value, n1d_effm3 = mat_eff_sim2_3\$value, env_n2d = mat_env3\$value, pheno_n2dm1 = mat_p_sim3_1\$value, pheno_n2dm2 = mat_p_sim3_2\$value, pheno_n2dm3 = mat_p_sim3_3\$value, n2d_effm1 = mat_eff_sim3_1\$value, n2d_effm2 = mat_eff_sim3_2\$value, n2d_effm3 = mat_eff_sim3_3\$value, env_rand = mat_env4\$value, pheno_randm1 = mat_p_sim4_1\$value, pheno_randm2 = mat_p_sim4_2\$value, pheno_randm3 = mat_p_sim4_3\$value, rand_effm1 = mat_eff_sim4_1\$value, rand_effm2 = mat_eff_sim4_2\$value, rand_effm3 = mat_eff_sim4_3\$value);
     gg <- ggcorr(data=mat, hjust = 1, size = 2, color = \'grey50\', layout.exp = 1, label = TRUE, label_round = 2);
-    ggsave(\''.$plot_corr_summary_figure_tempfile.'\', gg, device=\'png\', width=10, height=10, units=\'in\');
+    ggsave(\''.$plot_corr_summary_figure_tempfile.'\', gg, device=\'png\', width=15, height=15, units=\'in\');
     "';
     # print STDERR Dumper $cmd;
     my $status_plotcorrsum_plot = system($cmd_plotcorrsum_plot);
@@ -3578,11 +3600,19 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
     my $cmd_spatialfirst_plot = 'R -e "library(data.table); library(ggplot2); library(dplyr); library(viridis); library(GGally); library(gridExtra);
     mat_orig <- fread(\''.$phenotypes_original_heatmap_tempfile.'\', header=TRUE, sep=\',\');
-    mat_altered <- fread(\''.$phenotypes_post_heatmap_tempfile.'\', header=TRUE, sep=\',\');
-    mat_eff <- fread(\''.$effects_heatmap_tempfile.'\', header=TRUE, sep=\',\');
-    mat_eff_altered <- fread(\''.$effects_post_heatmap_tempfile.'\', header=TRUE, sep=\',\');
-    pheno_mat <- rbind(mat_orig, mat_altered);
-    effect_mat <- rbind(mat_eff, mat_eff_altered);
+    mat_altered_1 <- fread(\''.$phenotypes_post_heatmap_tempfile.'\', header=TRUE, sep=\',\');
+    mat_altered_2 <- fread(\''.$phenotypes_post_heatmap_tempfile_2.'\', header=TRUE, sep=\',\');
+    mat_altered_3 <- fread(\''.$phenotypes_post_heatmap_tempfile_3.'\', header=TRUE, sep=\',\');
+    mat_eff_1 <- fread(\''.$effects_heatmap_tempfile.'\', header=TRUE, sep=\',\');
+    mat_eff_2 <- fread(\''.$effects_heatmap_tempfile_2.'\', header=TRUE, sep=\',\');
+    mat_eff_3 <- fread(\''.$effects_heatmap_tempfile_3.'\', header=TRUE, sep=\',\');
+    mat_eff_altered_1 <- fread(\''.$effects_post_heatmap_tempfile.'\', header=TRUE, sep=\',\');
+    mat_eff_altered_2 <- fread(\''.$effects_post_heatmap_tempfile_2.'\', header=TRUE, sep=\',\');
+    mat_eff_altered_3 <- fread(\''.$effects_post_heatmap_tempfile_3.'\', header=TRUE, sep=\',\');
+    pheno_mat <- rbind(mat_orig, mat_altered_1, mat_altered_2, mat_altered_3);
+    effect_mat_1 <- rbind(mat_eff_1, mat_eff_altered_1);
+    effect_mat_2 <- rbind(mat_eff_2, mat_eff_altered_2);
+    effect_mat_3 <- rbind(mat_eff_3, mat_eff_altered_3);
     mat_env <- fread(\''.$phenotypes_env_heatmap_tempfile.'\', header=TRUE, sep=\',\');
     mat_p_sim <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile.'\', header=TRUE, sep=\',\');
     mat_eff_sim <- fread(\''.$effects_sim_heatmap_tempfile.'\', header=TRUE, sep=\',\');
@@ -3602,12 +3632,22 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         scale_fill_viridis(discrete=FALSE) +
         coord_equal() +
         facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
-    gg_eff <- ggplot(effect_mat, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+    gg_eff_1 <- ggplot(effect_mat_1, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
         geom_tile() +
         scale_fill_viridis(discrete=FALSE) +
         coord_equal() +
         facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
-    ggsave(\''.$env_effects_first_figure_tempfile.'\', arrangeGrob(gg, gg_eff, nrow=2), device=\'png\', width=20, height=20, units=\'in\');
+    gg_eff_2 <- ggplot(effect_mat_2, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_eff_3 <- ggplot(effect_mat_3, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    ggsave(\''.$env_effects_first_figure_tempfile.'\', arrangeGrob(gg, gg_eff_1, gg_eff_2, gg_eff_3, nrow=4), device=\'png\', width=20, height=20, units=\'in\');
     write.table(data.frame(env1 = c(cor(mat_env\$value, mat_eff_sim\$value)), env2 = c(cor(mat_env2\$value, mat_eff_sim2\$value)), env3 = c(cor(mat_env3\$value, mat_eff_sim3\$value)), env4 = c(cor(mat_env4\$value, mat_eff_sim4\$value))), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');
     "';
     # print STDERR Dumper $cmd;
