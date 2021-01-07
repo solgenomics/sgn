@@ -677,6 +677,49 @@ $facilities
     </div>
 </div>
 
+<div class="modal fade" id="upload_ssr_protocol_error_display" name="upload_ssr_protocol_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadSSRProtocolErrorDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadSSRProtocolErrorDialog">Upload SSR Marker Info Error</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="ssr_protocol_saved_dialog_message" name="ssr_protocol_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="SSRProtocolSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="SSRProtocolSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        SSR marker info was saved successfully. You can now proceed with SSR genotyping data upload.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_ssr_protocol_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
 
 .ui-autocomplete { z-index:2147483647; }
@@ -818,6 +861,42 @@ jQuery(document).ready(function(){
     jQuery('#upload_ssr_protocol_format').click(function(){
         jQuery('#upload_ssr_protocol_format_dialog').modal('show');
     });
+
+    jQuery("#upload_ssr_protocol_submit").click(function(){
+        var uploadFile = jQuery("#xls_ssr_protocol_file").val();
+        jQuery('#upload_genotypes_form').attr("action", "/ajax/genotype/upload_ssr_protocol");
+        if (uploadFile === ''){
+            alert("Please select a file");
+            return;
+        }
+        jQuery("#upload_genotypes_form").submit();
+    });
+
+    jQuery('#upload_genotypes_form').iframePostForm({
+        json: true,
+        post: function(){
+            jQuery("#working_modal").modal("show");
+        },
+        complete: function(response) {
+            jQuery("#working_modal").modal("hide");
+            if (response.error_string) {
+                jQuery("#upload_ssr_protocol_error_display tbody").html('');
+                jQuery("#upload_ssr_protocol_error_display tbody").append(response.error_string);
+                jQuery("#upload_ssr_protocol_error_display").modal("show");
+                return;
+            }
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            if (response.success) {
+                jQuery('#ssr_protocol_saved_dialog_message').modal("show");
+            }
+        }
+    });
+
+
+
 
 
 });

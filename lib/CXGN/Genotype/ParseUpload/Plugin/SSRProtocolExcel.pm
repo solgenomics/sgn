@@ -119,10 +119,6 @@ sub _validate_with_plugin {
             push @error_messages, "Cell D$row_name: product_sizes missing";
         }
 
-        if ($cross_name){
-            $cross_name =~ s/^\s+|\s+$//g;
-            $seen_cross_names{$cross_name}++;
-        }
     }
 
     #store any errors found in the parsed file to parse_errors accessor

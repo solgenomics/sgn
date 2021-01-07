@@ -107,16 +107,23 @@ sub upload_ssr_protocol_POST : Args(0) {
     }
     unlink $upload_tempfile;
 
+    my $protocol_name = $c->req->param('upload_ssr_protocol_name');
+    my $protocol_description = $c->req->param('upload_ssr_protocol_description_input');
+    my $species_name = $c->req->param('upload_ssr_species_name_input');
+    print STDERR "PROTOCOL NAME =".Dumper($protocol_name)."\n";
+    print STDERR "PROTOCOL DESCRIPTION =".Dumper($protocol_description)."\n";
+    print STDERR "SPECIES NAME =".Dumper($species_name)."\n";
+
     $upload_metadata{'archived_file'} = $archived_filename_with_path;
     $upload_metadata{'archived_file_type'}="ssr upload file";
     $upload_metadata{'user_id'}=$user_id;
     $upload_metadata{'date'}="$timestamp";
 
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+    $parser = CXGN::Genotype::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
     $parser->load_plugin($upload_type);
     $parsed_data = $parser->parse();
-    #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
+    print STDERR "PARSED DATA =". Dumper($parsed_data)."\n";
 
     if (!$parsed_data){
         my $return_error = '';
