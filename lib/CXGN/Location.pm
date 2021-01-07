@@ -144,8 +144,6 @@ sub store_location {
     my $noaa_station_id = $self->noaa_station_id();
     my $external_references = $self->external_references();
 
-    print Dumper($external_references);
-
     # Validate properties
 
     if (!$nd_geolocation_id && !$name) {
