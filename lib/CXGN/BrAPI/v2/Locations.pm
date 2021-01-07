@@ -31,7 +31,7 @@ sub search {
 	my $location_names_arrayref  = $params->{locationNames } || ($params->{locationNames } || ());
 	my $location_types_arrayref = $params->{locationType} || ($params->{locationTypes} || ());
 
-    if (($institute_names_arrayref && scalar($institute_names_arrayref)>0) || ($coordinates && scalar($coordinates)>0 )|| ( $externalreference_sources_arrayref && scalar($externalreference_sources_arrayref)>0)){
+    if (($institute_names_arrayref && scalar($institute_names_arrayref)>0) || ($coordinates && scalar($coordinates)>0 )){
         push @$status, { 'error' => 'The following search parameters are not implemented: instituteNames, coordinates'};
     }
 
