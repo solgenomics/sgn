@@ -3585,10 +3585,6 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     $env_effects_first_figure_tempfile_string .= '.png';
     my $env_effects_first_figure_tempfile = $c->config->{basepath}."/".$env_effects_first_figure_tempfile_string;
 
-    my $env_effects_sim_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
-    $env_effects_sim_figure_tempfile_string .= '.png';
-    my $env_effects_sim_figure_tempfile = $c->config->{basepath}."/".$env_effects_sim_figure_tempfile_string;
-
     my $output_plot_row = 'row';
     my $output_plot_col = 'col';
     if ($max_col > $max_row) {
@@ -3653,6 +3649,10 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     # print STDERR Dumper $cmd;
     my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
     push @$spatial_effects_plots, $env_effects_first_figure_tempfile_string;
+
+    my $env_effects_sim_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
+    $env_effects_sim_figure_tempfile_string .= '.png';
+    my $env_effects_sim_figure_tempfile = $c->config->{basepath}."/".$env_effects_sim_figure_tempfile_string;
 
     my $cmd_spatialenvsim_plot = 'R -e "library(data.table); library(ggplot2); library(dplyr); library(viridis); library(GGally); library(gridExtra);
     mat_env <- fread(\''.$phenotypes_env_heatmap_tempfile.'\', header=TRUE, sep=\',\');
@@ -3734,6 +3734,176 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     # print STDERR Dumper $cmd;
     my $status_spatialenvsim_plot = system($cmd_spatialenvsim_plot);
     push @$spatial_effects_plots, $env_effects_sim_figure_tempfile_string;
+
+    my $env_effects_sim_figure_tempfile_string_2 = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
+    $env_effects_sim_figure_tempfile_string_2 .= '.png';
+    my $env_effects_sim_figure_tempfile_2 = $c->config->{basepath}."/".$env_effects_sim_figure_tempfile_string_2;
+
+    my $cmd_spatialenvsim_plot_2 = 'R -e "library(data.table); library(ggplot2); library(dplyr); library(viridis); library(GGally); library(gridExtra);
+    mat_env <- fread(\''.$phenotypes_env_heatmap_tempfile.'\', header=TRUE, sep=\',\');
+    mat_p_sim <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile_2.'\', header=TRUE, sep=\',\');
+    mat_eff_sim <- fread(\''.$effects_sim_heatmap_tempfile_2.'\', header=TRUE, sep=\',\');
+    mat_env2 <- fread(\''.$phenotypes_env_heatmap_tempfile2.'\', header=TRUE, sep=\',\');
+    mat_p_sim2 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile2_2.'\', header=TRUE, sep=\',\');
+    mat_eff_sim2 <- fread(\''.$effects_sim_heatmap_tempfile2_2.'\', header=TRUE, sep=\',\');
+    mat_env3 <- fread(\''.$phenotypes_env_heatmap_tempfile3.'\', header=TRUE, sep=\',\');
+    mat_p_sim3 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile3_2.'\', header=TRUE, sep=\',\');
+    mat_eff_sim3 <- fread(\''.$effects_sim_heatmap_tempfile3_2.'\', header=TRUE, sep=\',\');
+    mat_env4 <- fread(\''.$phenotypes_env_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
+    mat_p_sim4 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile4_2.'\', header=TRUE, sep=\',\');
+    mat_eff_sim4 <- fread(\''.$effects_sim_heatmap_tempfile4_2.'\', header=TRUE, sep=\',\');
+    options(device=\'png\');
+    par();
+    gg_env <- ggplot(mat_env, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_p_sim <- ggplot(mat_p_sim, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_eff_sim <- ggplot(mat_eff_sim, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_env2 <- ggplot(mat_env2, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_p_sim2 <- ggplot(mat_p_sim2, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_eff_sim2 <- ggplot(mat_eff_sim2, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_env3 <- ggplot(mat_env3, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_p_sim3 <- ggplot(mat_p_sim3, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_eff_sim3 <- ggplot(mat_eff_sim3, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_env4 <- ggplot(mat_env4, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_p_sim4 <- ggplot(mat_p_sim4, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_eff_sim4 <- ggplot(mat_eff_sim4, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    ggsave(\''.$env_effects_sim_figure_tempfile_2.'\', arrangeGrob(gg_env, gg_p_sim, gg_eff_sim, gg_env2, gg_p_sim2, gg_eff_sim2, gg_env3, gg_p_sim3, gg_eff_sim3, gg_env4, gg_p_sim4, gg_eff_sim4, nrow=4), device=\'png\', width=35, height=35, units=\'in\');
+    "';
+    # print STDERR Dumper $cmd;
+    my $status_spatialenvsim_plot_2 = system($cmd_spatialenvsim_plot_2);
+    push @$spatial_effects_plots, $env_effects_sim_figure_tempfile_string_2;
+
+    my $env_effects_sim_figure_tempfile_string_3 = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
+    $env_effects_sim_figure_tempfile_string_3 .= '.png';
+    my $env_effects_sim_figure_tempfile_3 = $c->config->{basepath}."/".$env_effects_sim_figure_tempfile_string_3;
+
+    my $cmd_spatialenvsim_plot_3 = 'R -e "library(data.table); library(ggplot2); library(dplyr); library(viridis); library(GGally); library(gridExtra);
+    mat_env <- fread(\''.$phenotypes_env_heatmap_tempfile.'\', header=TRUE, sep=\',\');
+    mat_p_sim <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile_3.'\', header=TRUE, sep=\',\');
+    mat_eff_sim <- fread(\''.$effects_sim_heatmap_tempfile_3.'\', header=TRUE, sep=\',\');
+    mat_env2 <- fread(\''.$phenotypes_env_heatmap_tempfile2.'\', header=TRUE, sep=\',\');
+    mat_p_sim2 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile2_3.'\', header=TRUE, sep=\',\');
+    mat_eff_sim2 <- fread(\''.$effects_sim_heatmap_tempfile2_3.'\', header=TRUE, sep=\',\');
+    mat_env3 <- fread(\''.$phenotypes_env_heatmap_tempfile3.'\', header=TRUE, sep=\',\');
+    mat_p_sim3 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile3_3.'\', header=TRUE, sep=\',\');
+    mat_eff_sim3 <- fread(\''.$effects_sim_heatmap_tempfile3_3.'\', header=TRUE, sep=\',\');
+    mat_env4 <- fread(\''.$phenotypes_env_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
+    mat_p_sim4 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile4_3.'\', header=TRUE, sep=\',\');
+    mat_eff_sim4 <- fread(\''.$effects_sim_heatmap_tempfile4_3.'\', header=TRUE, sep=\',\');
+    options(device=\'png\');
+    par();
+    gg_env <- ggplot(mat_env, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_p_sim <- ggplot(mat_p_sim, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_eff_sim <- ggplot(mat_eff_sim, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_env2 <- ggplot(mat_env2, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_p_sim2 <- ggplot(mat_p_sim2, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_eff_sim2 <- ggplot(mat_eff_sim2, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_env3 <- ggplot(mat_env3, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_p_sim3 <- ggplot(mat_p_sim3, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_eff_sim3 <- ggplot(mat_eff_sim3, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_env4 <- ggplot(mat_env4, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_p_sim4 <- ggplot(mat_p_sim4, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    gg_eff_sim4 <- ggplot(mat_eff_sim4, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+        geom_tile() +
+        scale_fill_viridis(discrete=FALSE) +
+        coord_equal() +
+        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+    ggsave(\''.$env_effects_sim_figure_tempfile_3.'\', arrangeGrob(gg_env, gg_p_sim, gg_eff_sim, gg_env2, gg_p_sim2, gg_eff_sim2, gg_env3, gg_p_sim3, gg_eff_sim3, gg_env4, gg_p_sim4, gg_eff_sim4, nrow=4), device=\'png\', width=35, height=35, units=\'in\');
+    "';
+    # print STDERR Dumper $cmd;
+    my $status_spatialenvsim_plot_3 = system($cmd_spatialenvsim_plot_3);
+    push @$spatial_effects_plots, $env_effects_sim_figure_tempfile_string_3;
 
     my @env_corr_res;
     open(my $fh_corr_result, '<', $sim_effects_corr_results)
