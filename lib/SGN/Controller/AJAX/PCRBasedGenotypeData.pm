@@ -26,6 +26,7 @@ use CXGN::Genotype::ParseUpload;
 use CXGN::Login;
 use CXGN::People::Person;
 use CXGN::Genotype::Protocol;
+use CXGN::Genotype::StorePCRMarkerInfo;
 use File::Basename qw | basename dirname|;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -142,7 +143,24 @@ sub upload_ssr_protocol_POST : Args(0) {
         $c->detach();
     }
 
-    $c->stash->{rest} = {success => "1",};
+    my $pcr_markers = CXGN::Genotype::StorePCRMarkerInfo->new({
+        bcs_schema => $chado_schema,
+        protocol_name => $protocol_name,
+        protocol_description => $protocol_description,
+        species_name => $species_name,
+        marker_type => 'SSR',
+        marker_details => $parsed_data
+    });
+
+    my $protocol_id = $pcr_markers->store_pcr_marker_info();
+    print STDERR "PROTOCOL ID =".Dumper($protocol_id)."\n";
+
+    if (!$protocol_id) {
+        $c->stash->{rest} = {error_string => "Error saving PCR marker info",};
+        return;
+    }
+
+    $c->stash->{rest} = {success => "1", protocol_id => $protocol_id};
 
 }
 
