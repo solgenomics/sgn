@@ -183,58 +183,6 @@ $facilities
                                     </div>
                                 </div>
 
-                                <div id="upload_ssr_protocol" style="display:none">
-                                    <div class="well">
-                                        <div class="form-group">
-                                            <label class="col-sm-5 control-label">SSR Protocol Name:</label>
-                                            <div class="col-sm-7">
-                                                <input class="form-control" id="upload_ssr_protocol_name" name="upload_ssr_protocol_name" type="text" placeholder=" e.g. SSR Cassava set 1"/>
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="col-sm-5 control-label">Species:</label>
-                                            <div class="col-sm-7">
-                                                <input class="form-control" id="upload_ssr_species_name_input" name="upload_ssr_species_name_input" type="text" placeholder=" e.g. Manihot esculenta"/>
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="col-sm-5 control-label">Description:</label>
-                                            <div class="col-sm-7">
-                                                <input class="form-control" id="upload_ssr_protocol_description_input" name="upload_ssr_protocol_description_input" type="text" />
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-sm-5">
-                                                <&| /page/explanation.mas, title=>'Template information' &>
-                                                    <p>
-                                                        <b>File format information</b>
-                                                        <br>
-                                                        <a id="upload_ssr_protocol_format">Spreadsheet format</a>
-                                                    </p>
-                                                </&>
-                                            </div>
-                                            <div class="col-sm-7">
-                                                <br/>
-                                                <div class="panel panel-default">
-                                                    <div class="panel-body">
-                                                        <div class="form-group">
-                                                            <label class="col-sm-4 control-label">Select an XLS File: </label>
-                                                            <div class="col-sm-4">
-                                                                <input type="file" name="xls_ssr_protocol_file" id="xls_ssr_protocol_file" encoding="multipart/form-data" />
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <center>
-                                        <button class="btn btn-primary" id="upload_ssr_protocol_submit">Upload SSR Marker Info</button>
-                                        </center>
-                                        <br/>
-
-                                    </div>
-                                </div>
 
                                 <div class="well">
                                     <div class="form-group">
@@ -639,12 +587,12 @@ $facilities
     </div>
 </div>
 
-<div class="modal fade" id="upload_ssr_protocol_format_dialog" name="upload_ssr_protocol_format_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadSSRProtocolDialog">
+<div class="modal fade" id="upload_ssr_protocol_format_dialog" name="upload_ssr_protocol_format_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadSSRProtocolFormatDialog">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadSSRProtocolDialog">Upload SSR Marker Info Template Information</h4>
+                <h4 class="modal-title" id="uploadSSRProtocolFormatDialog">Upload SSR Marker Info Template Information</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -720,6 +668,70 @@ $facilities
     </div>
 </div>
 
+<div class="modal fade" id="upload_ssr_protocol_dialog" name="upload_ssr_protocol_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadSSRProtocolDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadSSRProtocolDialog">Upload SSR Protocol (Marker Info) </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_ssr_protocol_form" name="upload_ssr_protocol_form">
+                        <div class="form-group">
+                            <label class="col-sm-5 control-label">SSR Protocol Name:</label>
+                            <div class="col-sm-7">
+                                <input class="form-control" id="upload_ssr_protocol_name" name="upload_ssr_protocol_name" type="text" placeholder=" e.g. SSR Cassava set 1"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-5 control-label">Species:</label>
+                            <div class="col-sm-7">
+                                <input class="form-control" id="upload_ssr_species_name_input" name="upload_ssr_species_name_input" type="text" placeholder=" e.g. Manihot esculenta"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-5 control-label">Description:</label>
+                            <div class="col-sm-7">
+                                <input class="form-control" id="upload_ssr_protocol_description_input" name="upload_ssr_protocol_description_input" type="text" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-5">
+                                <&| /page/explanation.mas, title=>'Template information' &>
+                                    <p>
+                                        <b>File format information</b>
+                                        <br>
+                                        <a id="upload_ssr_protocol_format">Spreadsheet format</a>
+                                    </p>
+                                </&>
+                            </div>
+                            <div class="col-sm-7">
+                                <br/>
+                                <div class="panel panel-default">
+                                    <div class="panel-body">
+                                        <div class="form-group">
+                                            <label class="col-sm-4 control-label">Select an XLS File: </label>
+                                            <div class="col-sm-4">
+                                                <input type="file" name="xls_ssr_protocol_file" id="xls_ssr_protocol_file" encoding="multipart/form-data" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" name="upload_ssr_protocol_submit" id="upload_ssr_protocol_submit">Upload File</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <style>
 
 .ui-autocomplete { z-index:2147483647; }
@@ -758,7 +770,7 @@ jQuery(document).ready(function(){
 
     jQuery('#upload_genotyping_data_protocol_missing_button').click(function(){
         if (data_type == 'ssr') {
-            jQuery('#upload_ssr_protocol').show();
+            jQuery('#upload_ssr_protocol_dialog').modal('show');
         } else {
             jQuery('#upload_genotype_data_protocol_details').show();
         }
@@ -864,15 +876,16 @@ jQuery(document).ready(function(){
 
     jQuery("#upload_ssr_protocol_submit").click(function(){
         var uploadFile = jQuery("#xls_ssr_protocol_file").val();
-        jQuery('#upload_genotypes_form').attr("action", "/ajax/genotype/upload_ssr_protocol");
+        jQuery('#upload_ssr_protocol_form').attr("action", "/ajax/genotype/upload_ssr_protocol");
         if (uploadFile === ''){
             alert("Please select a file");
             return;
         }
-        jQuery("#upload_genotypes_form").submit();
+        jQuery('#upload_ssr_protocol_form').submit();
+        jQuery('#upload_ssr_protocol_dialog').modal("hide");
     });
 
-    jQuery('#upload_genotypes_form').iframePostForm({
+    jQuery('#upload_ssr_protocol_form').iframePostForm({
         json: true,
         post: function(){
             jQuery("#working_modal").modal("show");
