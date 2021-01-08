@@ -55,13 +55,14 @@ has 'marker_details' => (
 
 sub store_pcr_marker_info {
     my $self = shift;
+    my $schema = $self->bcs_schema();
     my $protocol_name = $self->protocol_name();
     my $protocol_description = $self->protocol_description();
     my $species_name = $self->species_name();
     my $marker_type = $self->marker_type();
     my $marker_details = $self->marker_details();
 
-    my $genotyping_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping experiment', 'experiment_type')->cvterm_id();
+    my $genotyping_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
     my $pcr_marker_prop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pcr_marker_details', 'protocol_property')->cvterm_id();
 
     my %pcr_marker_info;
@@ -83,9 +84,9 @@ sub store_pcr_marker_info {
     }
     else {
         $protocol_rs = $schema->resultset("NaturalDiversity::NdProtocol")->create({
-            name => $model_name,
+            name => $protocol_name,
             type_id => $genotyping_experiment_cvterm_id,
-            nd_protocolprops => $pcr_marker_info_prop;
+            nd_protocolprops => $pcr_marker_info_prop
         });
         $protocol_id = $protocol_rs->nd_protocol_id();
     }
