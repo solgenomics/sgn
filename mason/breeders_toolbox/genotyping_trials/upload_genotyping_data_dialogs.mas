@@ -323,7 +323,7 @@ $facilities
                                                 <p>
                                                     <b>File format information</b>
                                                     <br>
-                                                    <a id="upload_genotype_ssr_spreadsheet_info_format">SSR format</a>
+                                                    <a id="upload_ssr_data_spreadsheet_info">SSR format</a>
                                                 </p>
                                             </&>
                                         </div>
@@ -608,11 +608,11 @@ $facilities
                         <thead></thead>
                         <tbody>
                             <tr>
-                                <td>marker name</td>
-                                <td>forward primer</td>
-                                <td>reverse primer</td>
-                                <td>annealing temperature</td>
-                                <td>product sizes</td>
+                                <td>marker_name</td>
+                                <td>forward_primer</td>
+                                <td>reverse_primer</td>
+                                <td>annealing_temperature</td>
+                                <td>product_sizes</td>
                             </tr>
                         </tbody>
                     </table>
@@ -725,6 +725,103 @@ $facilities
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" name="upload_ssr_protocol_submit" id="upload_ssr_protocol_submit">Upload File</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_ssr_spreadsheet_info_dialog" name="upload_ssr_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadSSRSpreadsheetInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadSSRSpreadsheetInfoDialog">Upload SSR Data Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>SSR data may be uploaded in an Excel file (.xls)</b>
+                    <br />
+                        (.xlsx format not supported)
+                    <br /><br />
+                    <b>Example of SSR Data Spreadsheet:</b>
+                    <br>
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>sample_name</td>
+                                <td>s01</td>
+                                <td>s01</td>
+                                <td>s01</td>
+                                <td>s02</td>
+                                <td>s02</td>
+                                <td>s02</td>
+                            </tr>
+                        </tbody>
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td></td>
+                                <td>139</td>
+                                <td>170</td>
+                                <td>194</td>
+                                <td>203</td>
+                                <td>229</td>
+                                <td>290</td>
+                            </tr>
+                        </tbody>
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>sample_A</td>
+                                <td>1</td>
+                                <td>0</td>
+                                <td>0</td>
+                                <td>0</td>
+                                <td>1</td>
+                                <td>1</td>
+                            </tr>
+                        </tbody>
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>sample_B</td>
+                                <td>0</td>
+                                <td>0</td>
+                                <td>0</td>
+                                <td>1</td>
+                                <td>0</td>
+                                <td>0</td>
+                            </tr>
+                        </tbody>
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>sample_C</td>
+                                <td>0</td>
+                                <td>1</td>
+                                <td>1</td>
+                                <td>0</td>
+                                <td>1</td>
+                                <td>0</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>
+                        Column Info:
+                    </b>
+                    <ul>
+                        <li>s01 and s02 are marker names.</li>
+                        <li>139, 170, 194 are product sizes generated by marker s01 and 203,229,290 are product sizes generated by marker s02.</li>
+                        <li>sample_A, sample_B, sample_C are accession names.</li>
+                        <li>"1" indicates the presence of PCR product.</li>
+                        <li>"0" indicates the absence of PCR product.</li>
+                        <br>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
@@ -868,6 +965,10 @@ jQuery(document).ready(function(){
 
     jQuery('#upload_genotype_intertek_spreadsheet_info_format').click(function(){
         jQuery('#upload_genotype_intertek_spreadsheet_info_format_dialog').modal('show');
+    });
+
+    jQuery('#upload_ssr_data_spreadsheet_info').click(function(){
+        jQuery('#upload_ssr_spreadsheet_info_dialog').modal('show');
     });
 
     jQuery('#upload_ssr_protocol_format').click(function(){
