@@ -472,7 +472,7 @@ jQuery(document).ready(function ($) {
                 console.log(success_string);
                 jQuery('#upload_genotype_submit_complete').html(success_string);
                 Workflow.complete('#upload_genotype_submit');
-                Workflow.focus("#upload_genotypes_workflow", 5);
+                Workflow.focus("#upload_genotypes_workflow", 6);
             }
         }
     });
