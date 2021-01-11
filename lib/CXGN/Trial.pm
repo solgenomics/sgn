@@ -75,6 +75,7 @@ use CXGN::PhenotypingTrial;
 use CXGN::GenotypingTrial;
 use CXGN::CrossingTrial;
 use CXGN::Analysis;
+use CXGN::SamplingTrial;
 use CXGN::ManagementFactor;
 use CXGN::GenotypeDataProject;
 use CXGN::AerialImagingEventBandProject;
@@ -109,6 +110,9 @@ sub new {
         }
         elsif ($val eq "treatment") {
             return CXGN::ManagementFactor->new($args);
+        }
+        elsif ($val eq "sampling_trial") {
+            return CXGN::SamplingTrial->new($args);
         }
         elsif ($val eq "genotype_data_project") {
             return CXGN::GenotypeDataProject->new($args);

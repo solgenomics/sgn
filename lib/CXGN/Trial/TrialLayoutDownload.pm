@@ -68,6 +68,7 @@ use CXGN::Trial::TrialLayoutDownload::PlantLayout;
 use CXGN::Trial::TrialLayoutDownload::SubplotLayout;
 use CXGN::Trial::TrialLayoutDownload::TissueSampleLayout;
 use CXGN::Trial::TrialLayoutDownload::GenotypingPlateLayout;
+use CXGN::Trial::TrialLayoutDownload::SamplingTrialLayout;
 
 has 'schema' => (
     is       => 'rw',
@@ -134,7 +135,7 @@ has 'design' => (
 
 subtype 'Trial',
   as 'Ref',
-    where { $_ =~ /CXGN::Trial/ || $_ =~ /CXGN::PhenotypingTrial/ || $_ =~  /CXGN::GenotypingTrial/ || $_ =~ /CXGN::Folder/ || $_ =~ /CXGN::CrossingTrial/ || $_ =~ /CXGN::ManagementFactor/},
+    where { $_ =~ /CXGN::Trial/ || $_ =~ /CXGN::PhenotypingTrial/ || $_ =~  /CXGN::GenotypingTrial/ || $_ =~ /CXGN::Folder/ || $_ =~ /CXGN::CrossingTrial/ || $_ =~ /CXGN::ManagementFactor/ || $_ =~ /CXGN::SamplingTrial/},
   message { "The string, $_, was not a valid trial object type"};
 
 
@@ -421,6 +422,9 @@ sub get_layout_output {
     if ($data_level eq 'plate' ) {
         $layout_output = CXGN::Trial::TrialLayoutDownload::GenotypingPlateLayout->new($layout_build);
     }
+    if ($data_level eq 'samplingtrial' ) {
+        $layout_output = CXGN::Trial::TrialLayoutDownload::SamplingTrialLayout->new($layout_build);
+    }
 
     print STDERR "TrialLayoutDownload retrieving output ".localtime."\n";
 
@@ -477,14 +481,16 @@ sub _get_all_pedigrees {
     }
     my @accession_ids = keys %accession_id_hash;
 
-    # retrieve pedigree info using batch download (fastest method), then extract pedigree strings from download rows.
-    my $stock = CXGN::Stock->new ( schema => $schema);
-    my $pedigree_rows = $stock->get_pedigree_rows(\@accession_ids, 'parents_only');
     my %pedigree_strings;
-    foreach my $row (@$pedigree_rows) {
-        my ($progeny, $female_parent, $male_parent, $cross_type) = split "\t", $row;
-        my $string = join ('/', $female_parent ? $female_parent : 'NA', $male_parent ? $male_parent : 'NA');
-        $pedigree_strings{$progeny} = $string;
+    if (scalar(@accession_ids)>0) {
+        # retrieve pedigree info using batch download (fastest method), then extract pedigree strings from download rows.
+        my $stock = CXGN::Stock->new ( schema => $schema);
+        my $pedigree_rows = $stock->get_pedigree_rows(\@accession_ids, 'parents_only');
+        foreach my $row (@$pedigree_rows) {
+            my ($progeny, $female_parent, $male_parent, $cross_type) = split "\t", $row;
+            my $string = join ('/', $female_parent ? $female_parent : 'NA', $male_parent ? $male_parent : 'NA');
+            $pedigree_strings{$progeny} = $string;
+        }
     }
 
     print STDERR "TrialLayoutDownload get_all_pedigrees finished at ".localtime()."\n";

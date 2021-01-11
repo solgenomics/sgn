@@ -137,7 +137,7 @@ $phenotype_metadata{'archived_file_type'} = $metadata_file_type;
 $phenotype_metadata{'operator'} = $opt_u;
 $phenotype_metadata{'date'} = $timestamp;
 
-my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema);
+my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, undef, undef);
 if (!$validate_file) {
     die "Input file itself not valid.\n";
 }
@@ -149,7 +149,7 @@ if ($validate_file == 1){
     }
 }
 
-my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema);
+my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, undef, $sp_person_id, undef, undef);
 if (!$parsed_file) {
     die "Error parsing file.\n";
 }

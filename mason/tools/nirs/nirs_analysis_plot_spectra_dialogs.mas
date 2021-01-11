@@ -42,7 +42,11 @@
                             <label class="col-sm-5 control-label">Device Type: </label>
                             <div class="col-sm-7" >
                                 <select class="form-control" id="nirs_analysis_plot_spectra_device_select_id" name="nirs_analysis_plot_spectra_device_select_id">
-                                    <option value="SCIO">NIRS generic format</option>
+                                    <option value="SCIO">SCIO</option>
+                                    <option value="QST">QST</option>
+                                    <option value="Foss6500">Foss6500</option>
+                                    <option value="BunchiN500">BunchiN500</option>
+                                    <option value="LinkSquare">LinkSquare</option>
                                 </select>
                             </div>
                         </div>

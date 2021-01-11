@@ -119,7 +119,9 @@ sub search : Path('/ajax/search/traits') Args(0) {
                 "<a href=\"/cvterm/$_->{trait_id}/view\">$trait_accession</a>",
                 "<a href=\"/cvterm/$_->{trait_id}/view\">$_->{trait_name}</a>",
                 $_->{trait_definition},
-                $trait_usage
+                $trait_usage,
+                $_->{trait_name},
+                $trait_accession
             ];
     }
     #print STDERR Dumper \@result;

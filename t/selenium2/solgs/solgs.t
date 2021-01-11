@@ -86,7 +86,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('trial2 NaCRRI');
     sleep(2);
     $d->find_element_ok('search_selection_pop', 'id', 'search for selection pop')->click();
-    sleep(20);
+    sleep(40);
     $d->find_element_ok('//table[@id="selection_pops_list"]//*[contains(text(), "Predict")]', 'xpath', 'click training pop')->click();
     sleep(5);
     $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();

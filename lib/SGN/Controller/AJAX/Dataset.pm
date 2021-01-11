@@ -25,12 +25,6 @@ sub store_dataset :Path('/ajax/dataset/save') Args(0) {
 	$c->stash->{rest} = { error => "Login required to perform requested action." };
 	return;
     }
-    else {
-	if (! ($c->user->check_roles('submitter') || $c->user->check_roles('curator'))) {
-	    $c->stash->{rest} = { error => "Insufficient privileges to perform requested action." };
-	    return;
-	}
-    }
 
     my %data;
 

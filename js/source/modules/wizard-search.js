@@ -268,8 +268,13 @@ export function Wizard(main_id,col_number){
     reflow(d.index, true);
   });
   allCols.select(".wizard-select-all").on("click",function(d){
-    d.items.forEach(i=>{i.selected=true});
-    reflow(d.index,true);
+      var s = d3.selectAll(".wizard-search").filter(function(e, i) { return i === d.index });
+      var search_txt = s ? s.property("value").replace(/\s+/g, "").toLowerCase() : undefined;
+      d.items.forEach(i=>{
+          var val = i.name.replace(/\s+/g, "").toLowerCase();
+          i.selected = search_txt ? val.indexOf(search_txt) != -1 : true;
+      });
+      reflow(d.index,true);
   })
   allCols.select(".wizard-select-clear").on("click",function(d){
     d.items.forEach(i=>{i.selected=false});

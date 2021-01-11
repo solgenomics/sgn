@@ -77,7 +77,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(5);
     $d->find_element_ok('dry matter', 'partial_link_text',  'build model')->click();
-    sleep(20);
+    sleep(40);
 
     ### combined trials training population: single trait prediction of trial type selection population
 
@@ -89,7 +89,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('trial2 NaCRRI');
     sleep(5);
     $d->find_element_ok('search_selection_pop', 'id', 'search for selection pop')->click();
-    sleep(30);
+    sleep(70);
     $d->find_element_ok('//table[@id="selection_pops_list"]//*[contains(text(), "Predict")]', 'xpath', 'click training pop')->click();
     sleep(5);
     $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
@@ -99,7 +99,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(360);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
-    sleep(3);
+    sleep(5);
 
     my $sel_pred = $d->find_element('Predict', 'partial_link_text', 'scroll to selection pred');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
@@ -318,31 +318,14 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
 
 
-    `rm -r /tmp/localhost/`;
     $d->find_element_ok('//table[@id="all_trials_table"]//input[@value="139"]', 'xpath', 'select trial kasese')->click();
     sleep(2);
+    $d->find_element_ok('//table[@id="all_trials_table"]//input[@value="141"]', 'xpath', 'select trial nacrri')->click();
+    sleep(2);
     $d->find_element_ok('combine_trait_trials', 'id', 'combine trials')->click();
-    sleep(3);
-    $d->find_element_ok('queue_job', 'id', 'submit job tr pop')->click();
-    sleep(2);
-    $d->find_element_ok('analysis_name', 'id', 'job queueing')->send_keys('combined trait single trial');
-    sleep(2);
-    $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(200);
-    $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(5);
 
-    `rm -r /tmp/localhost/`;
-    $d->find_element_ok('Kasese', 'partial_link_text', 'select trial kasese')->click();
-    sleep(2);
-    $d->find_element_ok('queue_job', 'id', 'submit job tr pop')->click();
-    sleep(2);
-    $d->find_element_ok('analysis_name', 'id', 'job queueing')->send_keys('combined trait single trial link');
-    sleep(2);
-    $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(200);
-    $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
-    sleep(5);   
+   
 
 });
 done_testing();

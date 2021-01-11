@@ -40,18 +40,22 @@ my $file = $f->config->{basepath}."/t/data/NIRS/C16Mval_spectra.csv";
 
 my $ua = LWP::UserAgent->new;
 $response = $ua->post(
-        'http://localhost:3010/ajax/Nirs/upload_verify',
+        'http://localhost:3010/ajax/highdimensionalphenotypes/nirs_upload_verify',
         Content_Type => 'form-data',
         Content => [
             upload_nirs_spreadsheet_file_input => [ $file, 'nirs_data_upload' ],
             "sgn_session_id"=>$sgn_session_id,
-            "upload_nirs_spreadsheet_data_level"=>"plots"
+            "upload_nirs_spreadsheet_data_level"=>"plots",
+            "upload_nirs_spreadsheet_protocol_name"=>"NIRS SCIO Protocol",
+            "upload_nirs_spreadsheet_protocol_desc"=>"description",
+            "upload_nirs_spreadsheet_protocol_device_type"=>"SCIO"
         ]
     );
 
 #print STDERR Dumper $response;
 ok($response->is_success);
 my $message = $response->decoded_content;
+print STDERR Dumper $message;
 my $message_hash = decode_json $message;
 print STDERR Dumper $message_hash;
 ok($message_hash->{figure});
@@ -59,12 +63,15 @@ is_deeply($message_hash->{success}, ['File nirs_data_upload saved in archive.','
 
 my $ua = LWP::UserAgent->new;
 $response = $ua->post(
-        'http://localhost:3010/ajax/Nirs/upload_store',
+        'http://localhost:3010/ajax/highdimensionalphenotypes/nirs_upload_store',
         Content_Type => 'form-data',
         Content => [
             upload_nirs_spreadsheet_file_input => [ $file, 'nirs_data_upload' ],
             "sgn_session_id"=>$sgn_session_id,
-            "upload_nirs_spreadsheet_data_level"=>"plots"
+            "upload_nirs_spreadsheet_data_level"=>"plots",
+            "upload_nirs_spreadsheet_protocol_name"=>"NIRS SCIO Protocol",
+            "upload_nirs_spreadsheet_protocol_desc"=>"description",
+            "upload_nirs_spreadsheet_protocol_device_type"=>"SCIO"
         ]
     );
 
