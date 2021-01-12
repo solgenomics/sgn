@@ -2,7 +2,7 @@
 =head1 NAME
 
 SGN::Controller::AJAX::DroneImagery::DroneImageryAnalytics - a REST controller class to provide the
-functions for uploading and analyzing drone imagery
+functions for drone imagery analytics
 
 =head1 DESCRIPTION
 
