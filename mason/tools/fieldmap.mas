@@ -67,7 +67,7 @@
     jQuery(document).ready(function() {
         jQuery('#ranking_formula').html("<center><i>Select a trial, then pick traits and weights (or load a saved formula).</i></center>");
         get_select_box('trials', 'select_trial_for_selection_index', { 'name' : 'html_select_trial_for_selection_index', 'id' : 'html_select_trial_for_selection_index' , 'empty' : 1 });
-        jQuery('#select_trial_for_selection_index').change( load);     // });
+        jQuery('#select_trial_for_selection_index').change(load);
     });
 
     document.getElementById("formwidth").style.display="none";
@@ -94,7 +94,12 @@
     function load() {
         var studyDbId = $('#select_trial_for_selection_index').val();
         setupBrAPI();
-        fieldMap.load(studyDbId).then(()=>{},(resp)=>alert(resp));
+        fieldMap.load(studyDbId).then((value)=>{if (!value) return setLocation(studyDbId); });
+    }
+
+    function setLocation() {
+        var studyDbId = $('#select_trial_for_selection_index').val();
+        fieldMap.setLocation(studyDbId).then(()=>alert("Please select the area and click Load plots"), ()=>console.log("No location!"));
     }
     
     function update() {
