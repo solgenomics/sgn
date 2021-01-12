@@ -18,7 +18,8 @@ $is_owner
 
         <&| /page/info_section.mas, title => "Synonyms", is_subsection => 1 &>
             <& /stock/stockprops.mas,
-                stock_id    => $stock_id,
+               stock_id    => $stock_id,
+	        form_div_id => 'stock_add_synonym',
                 props      => $stockprops ,
                 div_name   =>'synonyms',
                 subset     => [ 'stock_synonym', 'solcap number'],
@@ -35,6 +36,7 @@ $is_owner
         <&| /page/info_section.mas, title => "Additional information", is_subsection => 1 &>
             <& /stock/stockprops.mas,
                 stock_id  =>$stock_id,
+                form_div_id => 'stock_add_props',
                 props      => $stockprops,
                 div_name   => 'stockprops',
                 edit_privs => $edit_privs,

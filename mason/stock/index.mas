@@ -186,6 +186,11 @@ my $basepath = $path_parts[1];
 my $test_url = "/" . $basepath . "/jbrowse.conf";
 my $jbrowse_url = $jbrowse_path . "%2Faccessions%2F" . $stock_id . "&tracks=DNA%2CGene%20exons%2C" . $uniquename . "_2015_V6_imputed&highlight=";
 
+
+my $released_variety_link = '<button class="btn btn-default btn-sm" style="margin:3px" id="released_variety_link" disabled>Add released variety name</button>';
+
+if ($person_id && ($submitter || $curator || $sequencer)) { $released_variety_link = qq | <button class="btn btn-default btn-sm" style="margin:3px" id="released_variety_link" >Add released variety name</button> |; }
+
 </%perl>
 
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
@@ -232,6 +237,7 @@ function jqueryStuff() {
                         alternate_ghosted_delete_button => ''
                     &>
 
+		     
                 </div>
                 <div class="col-sm-6">
                     <br /><br />
@@ -239,11 +245,31 @@ function jqueryStuff() {
                     <br /><br />
                 </div>
             </div>
-        </div>
-    </div>
 
+	    <div class="row">
+              <div class="col-sm-6">
+		<&| /page/info_section.mas, title => "Released variety name", subtitle=>$released_variety_link, is_subsection => 1 &>
+		  <& /stock/stockprops.mas,
+		     stock_id  =>$stock_id,
+		    form_div_id => 'released_variety_link', 
+		    props      => ['released_variety_name'],
+		    div_name   => 'released_variety_name',
+		    edit_privs => $edit_privs,
+		    subset     => ['released_variety_name'],
+		    editable   => ['released_variety_name']  &>
+                 </&>  
+	      </div>
+              </div>
+              <div class="row">
+                <div class="col-sm-6">
+	        </div>
+	      </div>
+          </div>
+       </div>
 </&>
 
+
+                      
 
 <&| /page/info_section.mas, title => "Navigator" , collapsible=> 1, collapsed=>0 &>
 
@@ -307,7 +333,7 @@ function jqueryStuff() {
 
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Comments</h4>", info_section_subtitle => 'View and add comments to this stock.', icon_class => "glyphicon glyphicon-pencil", info_section_id => "stock_comments_section", referer => $this_page &>
 
-    <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Obsolete This Stock</h4>", info_section_subtitle => 'Make a stock obsolete so that it does not show in searches.', icon_class => "glyphicon glyphicon-trash", info_section_id => "stock_delete_section" &>
+      <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Obsolete This Stock</h4>", info_section_subtitle => 'Make a stock obsolete so that it does not show in searches.', icon_class => "glyphicon glyphicon-trash", info_section_id => "stock_delete_section" &>
 
 </&>
 
@@ -377,14 +403,6 @@ function jqueryStuff() {
 
         jQuery('[name="stock_go_to_stock_search"]').click(function(){
             window.location.href = '/search/stocks/';
-        });
-
-        jQuery('#stock_add_synonym').click(function(){
-            synonyms_addPropDialog();
-        });
-
-        jQuery('#stock_add_props').click(function(){
-            stockprops_addPropDialog();
         });
 
         jQuery('#remove_parent_link').click( function() {
