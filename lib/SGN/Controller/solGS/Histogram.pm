@@ -22,6 +22,9 @@ sub histogram_phenotype_data :Path('/histogram/phenotype/data/') Args(0) {
     $c->stash->{training_pop_id} = $c->req->param('training_pop_id');
     $c->stash->{trait_id} = $c->req->param('trait_id');
 
+    my $protocol_id = $c->req->param('genotyping_protocol_id');
+    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
+
     if ($c->req->referer =~ /combined/) 
     {    
 	$c->stash->{data_set_type} = 'combined populations';
@@ -32,7 +35,7 @@ sub histogram_phenotype_data :Path('/histogram/phenotype/data/') Args(0) {
     
     my $data = $self->get_histogram_data($c);
     
-    $c->controller('solGS::solGS')->trait_phenotype_stat($c);
+    $c->controller('solGS::solGS')->model_phenotype_stat($c);
     my $stat = $c->stash->{descriptive_stat};
 
     my $ret->{status} = 'failed';
@@ -57,10 +60,10 @@ sub get_histogram_data {
 
     my $trait_id = $c->stash->{trait_id};
     $c->controller('solGS::solGS')->get_trait_details($c, $trait_id); 
-    $c->controller('solGS::Files')->trait_phenodata_file($c);    
-    my $trait_pheno_file = $c->stash->{trait_phenodata_file}; 
+    $c->controller('solGS::Files')->model_phenodata_file($c);    
+    my $model_pheno_file = $c->stash->{model_phenodata_file}; 
     
-    my $data = $c->controller('solGS::Utils')->read_file_data($trait_pheno_file);
+    my $data = $c->controller('solGS::Utils')->read_file_data($model_pheno_file);
   
    return $data;
    
@@ -88,7 +91,7 @@ sub histogram_r_jobs {
     $c->stash->{analysis_tempfiles_dir} = $c->stash->{histogram_temp_dir};
 
     my $input_file = $self->histogram_input_files($c);
-    my $trait_file = $c->controller('solGS::Files')->trait_phenodata_file($c);
+    my $trait_file = $c->controller('solGS::Files')->model_phenodata_file($c);
  
     $c->stash->{r_temp_file}  = "histogram-data-${pop_id}-${trait_abbr}";
     $c->stash->{r_script}     = 'R/solGS/histogram.r';

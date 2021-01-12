@@ -1197,4 +1197,39 @@ sub get_cross_female_parents {
 }
 
 
+=head2 get_cross_identifiers_in_crossing_experiment
+
+    Class method.
+    Returns all cross identifiers in a specific crossing_experiment together with the corresponding cross unique ids.
+    Example: my $crosses = CXGN::Cross->new({schema => $schema, trial_id => $crossing_experiment_id});
+             my $identifiers = $crosses->get_cross_identifiers_in_crossing_experiment();
+
+=cut
+
+sub get_cross_identifiers_in_crossing_experiment {
+    my $self = shift;
+    my $schema = $self->schema;
+    my $trial_id = $self->trial_id;
+
+    my $cross_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id;
+    my $cross_identifier_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_identifier', 'stock_property')->cvterm_id;
+
+    my $q = "SELECT stock.uniquename, stockprop.value FROM nd_experiment_project
+        JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        JOIN stock ON (nd_experiment_stock.stock_id = stock.stock_id) AND stock.type_id = ?
+        JOIN stockprop ON (stock.stock_id = stockprop.stock_id)
+        WHERE stockprop.type_id = ? AND nd_experiment_project.project_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($cross_type_id, $cross_identifier_type_id, $trial_id);
+
+    my %cross_identifier_hash;
+    while(my($cross_unique_id, $cross_identifier) = $h->fetchrow_array()){
+        $cross_identifier_hash{$cross_identifier} = $cross_unique_id;
+    }
+
+    return \%cross_identifier_hash;
+}
+
+
 1;

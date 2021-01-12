@@ -122,6 +122,7 @@ sub generate_spectral_plot_POST : Args(0) {
         }
     }
 
+    # print STDERR Dumper \@all_stock_ids;
     my $stock_ids_sql = join ',', @all_stock_ids;
     my $nirs_training_q = "SELECT stock.uniquename, stock.stock_id, metadata.md_json.json->>'spectra', metadata.md_json.json->>'device_type'
         FROM stock
@@ -154,8 +155,8 @@ sub generate_spectral_plot_POST : Args(0) {
     }
     # print STDERR Dumper \@training_data_input;
 
-    if (scalar(@training_data_input) < 10) {
-        $c->stash->{rest} = { error => "Not enough data! Need atleast 10 samples with a phenotype and spectra! Maybe choose a different device type?"};
+    if (scalar(@training_data_input) < 5) {
+        $c->stash->{rest} = { error => "Not enough data! Need atleast 5 samples with a phenotype and spectra! Maybe choose a different device type?"};
         $c->detach();
     }
 
