@@ -228,19 +228,21 @@ sub store_location {
                 $self->_store_ndgeolocationprop('noaa_station_id', 'geolocation_property', $noaa_station_id);
             }
 
-            # save external references
-            my $references = CXGN::BrAPI::v2::ExternalReferences->new({
-                bcs_schema => $schema,
-                external_references => $external_references,
-                table_name => 'NaturalDiversity::NdGeolocationprop',
-                base_id_key => 'nd_geolocation_id',
-                base_id => $self->location()->nd_geolocation_id()
-            });
+            # save external references if specified
+            if ($external_references) {
+                my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+                    bcs_schema          => $schema,
+                    external_references => $external_references,
+                    table_name          => 'NaturalDiversity::NdGeolocationprop',
+                    base_id_key         => 'nd_geolocation_id',
+                    base_id             => $self->location()->nd_geolocation_id()
+                });
 
-            $references->store();
+                $references->store();
 
-            if ($references->{'error'}) {
-                return {error => $references->{'error'}};
+                if ($references->{'error'}) {
+                    return { error => $references->{'error'} };
+                }
             }
         };
 

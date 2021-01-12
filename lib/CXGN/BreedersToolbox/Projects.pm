@@ -494,19 +494,21 @@ sub new_breeding_program {
             });
         $prop_row->insert();
 
-        # save external references
-        my $references = CXGN::BrAPI::v2::ExternalReferences->new({
-            bcs_schema => $self->schema,
-			external_references => $external_references,
-			table_name => 'Project::Projectprop',
-			base_id_key => 'project_id',
-			base_id => $project_id
-        });
+        # save external references if specified
+        if ($external_references) {
+            my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+                bcs_schema          => $self->schema,
+                external_references => $external_references,
+                table_name          => 'Project::Projectprop',
+                base_id_key         => 'project_id',
+                base_id             => $project_id
+            });
 
-        $references->store();
+            $references->store();
 
-        if ($references->{'error'}) {
-            return {error => $references->{'error'}};
+            if ($references->{'error'}) {
+                return { error => $references->{'error'} };
+            }
         }
 
     };
