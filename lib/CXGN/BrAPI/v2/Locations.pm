@@ -192,9 +192,10 @@ sub store {
     my $schema = $self->bcs_schema();
     my @location_ids;
 
-	if (!$user_id) {
-		return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must login and have permission to access this BrAPI call.'));
-	}
+	# TODO: removed check for use with bi-api for now without token
+	#if (!$user_id) {
+	#	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must login and have permission to access this BrAPI call.'));
+	#}
 
 	foreach my $params (@{$data}) {
 		my $id = $params->{locationDbId} || undef;

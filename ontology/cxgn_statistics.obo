@@ -190,3 +190,13 @@ is_a: SGNSTAT:0000000
 id: SGNSTAT:0000037
 name: Phenotypic BLUEs using LMER R
 is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000038
+name: Univariate linear mixed model 2D spline genetic BLUPs using genetic relationship matrix and row and column spatial effects computed using Sommer R
+is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000039
+name: Univariate linear mixed model 2D spline spatial BLUPs using genetic relationship matrix and row and column spatial effects computed using Sommer R
+is_a: SGNSTAT:0000000
