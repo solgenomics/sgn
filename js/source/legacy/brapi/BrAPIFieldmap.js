@@ -2251,7 +2251,7 @@
 	  load(studyDbId) {
 	    this.generatePlots(studyDbId);
 	    return this.data.then(()=>{
-	      this.drawPlots();
+	      this.drawPlots(); return true;
 	    }).catch(resp=>{
 	      console.log(resp);
 	    });
@@ -2555,7 +2555,6 @@
 
 	    if(!data.plots_shaped){
 	      if (!this.polygon || !turf.area(this.polygon.toGeoJSON())) {
-	      	alert(NO_POLYGON_ERROR);
 	        throw NO_POLYGON_ERROR;
 	      }
 	      this.geoJson = this.polygon.toGeoJSON();
@@ -2693,12 +2692,34 @@
 	  }
 
 	  setLocation(studyDbId) {
-	    this.brapi = BrAPI(this.brapi_endpoint, "2.0", this.opts.brapi_auth);
-	    this.brapi.studies_detail({studyDbId: studyDbId})
-	      .map((study)=>{
-	        if (!(study && study.location)) return;
-	        this.map.setView([study.location.latitude, study.location.longitude], this.opts.normalZoom);
+	    return new Promise((resolve, reject) => {
+	      this.brapi = BrAPI(this.brapi_endpoint, "2.0", this.opts.brapi_auth);
+	      this.brapi.studies_detail({studyDbId: studyDbId}).map((study) => {
+	        if (!study) {
+	          reject();
+	          return;
+	        }
+	        if (study.location && study.location.latitude && study.location.longitude) {
+	          // XXX some clients use the brapi v1 format
+	          this.map.setView([
+	            study.location.latitude,
+	            study.location.longitude
+	          ], this.opts.normalZoom);
+	          resolve();
+	        } else if (study.locationDbId) {
+	          this.brapi.locations_detail({locationDbId: study.locationDbId}).map((location) => {
+	            if (!location || !location.coordinates) {
+	              reject();
+	              return;
+	            }
+	            this.map.setView(Fieldmap.featureToL(location.coordinates), this.opts.normalZoom);
+	            resolve();
+	          });
+	        } else {
+	          reject();
+	        }
 	      });
+	    });
 	  }
 
 	  debug(feature) {
@@ -2719,7 +2740,7 @@
 	      };
 	      // XXX Using internal brapijs method for now
 	      nodes.push(brapi.simple_brapi_call({
-	        'defaultMethod': 'patch',
+	        'defaultMethod': 'put', // TODO patch
 	        'urlTemplate': '/observationunits/{observationUnitDbId}',
 	        'params': params,
 	        'behavior': 'map',

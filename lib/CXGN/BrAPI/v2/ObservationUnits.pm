@@ -399,7 +399,6 @@ sub observationunits_update {
     my $self = shift;
     my $data = shift;
     my $c = shift;
-    my $user_id = shift;
 
     my $page_size = $self->page_size;
     my $page = $self->page;
