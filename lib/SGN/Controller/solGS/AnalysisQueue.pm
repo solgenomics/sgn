@@ -27,12 +27,19 @@ sub check_user_login :Path('/solgs/check/user/login') Args(0) {
       my $salutation = $user->get_salutation();
       my $first_name = $user->get_first_name();
       my $last_name  = $user->get_last_name();
+      my $user_role  = $user->get_object->get_user_type();
+
           
       $self->get_user_email($c);
       my $email = $c->stash->{user_email};
 
       $ret->{loggedin} = 1;
-      my $contact = { 'name' => $first_name, 'email' => $email};
+      
+      my $contact = { 
+	  'name' => $first_name, 
+	  'email'=> $email, 
+	  'role' => $user_role
+      };
      
       $ret->{contact} = $contact;
   }
