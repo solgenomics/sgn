@@ -2964,31 +2964,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
         foreach my $t (@sorted_trait_names) {
             if (defined($phenotype_data_original_5{$p}->{$t})) {
-                if ($use_area_under_curve) {
-                    my $val = 0;
-                    foreach my $counter (0..$current_trait_index) {
-                        if ($counter == 0) {
-                            $val = $val + $phenotype_data_original_5{$p}->{$sorted_trait_names[$counter]} + 0;
-                        }
-                        else {
-                            my $t1 = $sorted_trait_names[$counter-1];
-                            my $t2 = $sorted_trait_names[$counter];
-                            my $p1 = $phenotype_data_original_5{$p}->{$t1} + 0;
-                            my $p2 = $phenotype_data_original_5{$p}->{$t2} + 0;
-                            my $neg = 1;
-                            my $min_val = $p1;
-                            if ($p2 < $p1) {
-                                $neg = -1;
-                                $min_val = $p2;
-                            }
-                            $val = $val + (($neg*($p2-$p1)*($t2-$t1))/2)+($t2-$t1)*$min_val;
-                        }
-                    }
-                    push @row, $val;
-                }
-                else {
-                    push @row, $phenotype_data_original_5{$p}->{$t} + 0;
-                }
+                push @row, $phenotype_data_original_5{$p}->{$t} + 0;
             } else {
                 print STDERR $p." : $t : $germplasm_name : NA \n";
                 push @row, '';
@@ -7048,11 +7024,9 @@ sub _perform_drone_imagery_analytics {
                     my $minimizer = 0;
                     if ($analytics_select eq 'minimize_local_env_effect') {
                         $minimizer = $result_blup_spatial_data_original->{$p}->{$t}->[0];
-                        # $minimizer = $minimizer * ($phenotype_max_original - $phenotype_min_original)/($env_effect_max_original - $env_effect_min_original);
                     }
                     elsif ($analytics_select eq 'minimize_genetic_effect') {
                         $minimizer = $result_blup_data_original->{$p}->{$t}->[0];
-                        # $minimizer = $minimizer * ($phenotype_max_original - $phenotype_min_original)/($genetic_effect_max_original - $genetic_effect_min_original);
                     }
                     my $new_val = $phenotype_data_original{$p}->{$t} + 0 - $minimizer;
 
@@ -7157,11 +7131,9 @@ sub _perform_drone_imagery_analytics {
                         my $minimizer = 0;
                         if ($analytics_select eq 'minimize_local_env_effect') {
                             $minimizer = $result_blup_pe_data_delta_original->{$p}->{$t}->[0];
-                            # $minimizer = $minimizer * ($phenotype_max_original - $phenotype_min_original)/($env_effect_max_original - $env_effect_min_original);
                         }
                         elsif ($analytics_select eq 'minimize_genetic_effect') {
                             $minimizer = $result_blup_data_delta_original->{$p}->{$t}->[0];
-                            # $minimizer = $minimizer * ($phenotype_max_original - $phenotype_min_original)/($genetic_effect_max_original - $genetic_effect_min_original);
                         }
                         my $new_val = $val - $minimizer;
 
@@ -7204,7 +7176,62 @@ sub _perform_drone_imagery_analytics {
         close($F2);
     }
     elsif ($statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups') {
-        
+        foreach my $p (@unique_plot_names) {
+            my $row_number = $stock_name_row_col{$p}->{row_number};
+            my $col_number = $stock_name_row_col{$p}->{col_number};
+            my $replicate = $stock_name_row_col{$p}->{rep};
+            my $block = $stock_name_row_col{$p}->{block};
+            my $germplasm_stock_id = $stock_name_row_col{$p}->{germplasm_stock_id};
+            my $germplasm_name = $stock_name_row_col{$p}->{germplasm_name};
+            my $obsunit_stock_id = $stock_name_row_col{$p}->{obsunit_stock_id};
+
+            my @row = (
+                $germplasm_stock_id,
+                $obsunit_stock_id,
+                $replicate,
+                $row_number,
+                $col_number,
+                $accession_id_factor_map{$germplasm_stock_id},
+                $stock_row_col{$obsunit_stock_id}->{plot_id_factor}
+            );
+
+            foreach my $t (@sorted_trait_names) {
+                if (defined($phenotype_data_original{$p}->{$t})) {
+                    my $val = $phenotype_data_original{$p}->{$t} + 0;
+
+                    my $minimizer = 0;
+                    if ($analytics_select eq 'minimize_local_env_effect') {
+                        $minimizer = $result_blup_spatial_data_original->{$p}->{$t}->[0];
+                    }
+                    elsif ($analytics_select eq 'minimize_genetic_effect') {
+                        $minimizer = $result_blup_data_original->{$p}->{$t}->[0];
+                    }
+                    my $new_val = $val - $minimizer;
+
+                    if ($new_val < $phenotype_min_altered) {
+                        $phenotype_min_altered = $new_val;
+                    }
+                    elsif ($new_val >= $phenotype_max_altered) {
+                        $phenotype_max_altered = $new_val;
+                    }
+
+                    $phenotype_data_altered{$p}->{$t} = $new_val;
+                    push @row, $new_val;
+                } else {
+                    print STDERR $p." : $t : $germplasm_name : NA \n";
+                    push @row, '';
+                }
+            }
+            push @data_matrix_altered, \@row;
+        }
+
+        open(my $F, ">", $stats_tempfile_2) || die "Can't open file ".$stats_tempfile_2;
+            print $F $header_string."\n";
+            foreach (@data_matrix_altered) {
+                my $line = join ',', @$_;
+                print $F "$line\n";
+            }
+        close($F);
     }
 
     print STDERR Dumper [$phenotype_min_altered, $phenotype_max_altered];
@@ -7905,6 +7932,46 @@ sub _perform_drone_imagery_analytics {
         print STDERR "ALTERED $statistics_select ENV EFFECT SUM $env_effect_sum_altered\n";
     }
     elsif ($statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups') {
+
+        my $stats_tempfile_2_basename = basename($stats_tempfile_2);
+        my $grm_file_basename = basename($grm_rename_tempfile);
+        #my @phenotype_header = ("id", "plot_id", "replicate", "rowNumber", "colNumber"", "id_factor", "plot_id_factor", "@times");
+
+        foreach my $time (@sorted_trait_names) {
+            my @param_file_rows = (
+                '!NOGRAPHICS !DEBUG !QUIET',
+                'Single Trait analysis',
+                ' id !I',
+                ' plot_id !I',
+                ' replicate !I',
+                ' rowNumber !I',
+                ' colNumber !I',
+                ' id_factor !I',
+                ' plot_id_factor !I'
+            );
+            foreach my $t (@sorted_trait_names) {
+                push @param_file_rows, " t$t";
+            }
+            push @param_file_rows, (
+                "$grm_file_basename !NSD",
+                "$stats_tempfile_2_basename !CSV !SKIP 1 !MVINCLUDE !MAXIT 200 !EXTRA 5",
+                '',
+                "t$time ~ mu replicate !r grm1(id_factor) ar1(rowNumber).ar1v(colNumber)",
+            );
+
+            open(my $Fp, ">", $parameter_asreml_tempfile) || die "Can't open file ".$parameter_asreml_tempfile;
+                print STDERR "WRITE ASREML PARAMFILE $parameter_asreml_tempfile\n";
+                foreach (@param_file_rows) {
+                    print $Fp "$_\n";
+                }
+            close($Fp);
+
+            my $parameter_asreml_tempfile_basename = basename($parameter_asreml_tempfile);
+            $stats_out_tempfile .= '.log';
+            $cmd_asreml = 'cd '.$tmp_stats_dir.'; asreml '.$parameter_asreml_tempfile_basename.' > '.$stats_out_tempfile;
+            print STDERR Dumper $cmd_asreml;
+            my $status = system($cmd_asreml);
+        }
         
     }
 
@@ -8191,7 +8258,57 @@ sub _perform_drone_imagery_analytics {
         close($F2);
     }
     elsif ($statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups') {
-        
+        foreach my $p (@unique_plot_names) {
+            my $row_number = $stock_name_row_col{$p}->{row_number};
+            my $col_number = $stock_name_row_col{$p}->{col_number};
+            my $replicate = $stock_name_row_col{$p}->{rep};
+            my $block = $stock_name_row_col{$p}->{block};
+            my $germplasm_stock_id = $stock_name_row_col{$p}->{germplasm_stock_id};
+            my $germplasm_name = $stock_name_row_col{$p}->{germplasm_name};
+            my $obsunit_stock_id = $stock_name_row_col{$p}->{obsunit_stock_id};
+
+            my @row = (
+                $germplasm_stock_id,
+                $obsunit_stock_id,
+                $replicate,
+                $row_number,
+                $col_number,
+                $accession_id_factor_map{$germplasm_stock_id},
+                $stock_row_col{$obsunit_stock_id}->{plot_id_factor}
+            );
+
+            foreach my $t (@sorted_trait_names) {
+                if (defined($phenotype_data_original{$p}->{$t})) {
+                    my $new_val = $phenotype_data_altered{$p}->{$t} + 0;
+                    my $sim_val = eval $env_sim_exec->{$env_simulation};
+                    $sim_val = (($sim_val - $env_sim_min)/($env_sim_max - $env_sim_min))/10;
+                    $new_val += $sim_val;
+
+                    if ($new_val < $phenotype_min_altered_env) {
+                        $phenotype_min_altered_env = $new_val;
+                    }
+                    elsif ($new_val >= $phenotype_max_altered_env) {
+                        $phenotype_max_altered_env = $new_val;
+                    }
+
+                    $sim_data{$p}->{$t} = $sim_val;
+                    $phenotype_data_altered_env{$p}->{$t} = $new_val;
+                    push @row, $new_val;
+                } else {
+                    print STDERR $p." : $t : $germplasm_name : NA \n";
+                    push @row, '';
+                }
+            }
+            push @data_matrix_altered_env, \@row;
+        }
+
+        open(my $F, ">", $stats_tempfile_2) || die "Can't open file ".$stats_tempfile_2;
+            print $F $header_string."\n";
+            foreach (@data_matrix_altered_env) {
+                my $line = join ',', @$_;
+                print $F "$line\n";
+            }
+        close($F);
     }
 
     print STDERR Dumper [$phenotype_min_altered_env, $phenotype_max_altered_env];
@@ -8900,7 +9017,45 @@ sub _perform_drone_imagery_analytics {
         print STDERR "ALTERED w/SIM_ENV $statistics_select ENV EFFECT SUM $env_effect_sum_altered_env\n";
     }
     elsif ($statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups') {
-        
+        my $stats_tempfile_2_basename = basename($stats_tempfile_2);
+        my $grm_file_basename = basename($grm_rename_tempfile);
+        #my @phenotype_header = ("id", "plot_id", "replicate", "rowNumber", "colNumber"", "id_factor", "plot_id_factor", "@times");
+
+        foreach my $time (@sorted_trait_names) {
+            my @param_file_rows = (
+                '!NOGRAPHICS !DEBUG !QUIET',
+                'Single Trait analysis',
+                ' id !I',
+                ' plot_id !I',
+                ' replicate !I',
+                ' rowNumber !I',
+                ' colNumber !I',
+                ' id_factor !I',
+                ' plot_id_factor !I'
+            );
+            foreach my $t (@sorted_trait_names) {
+                push @param_file_rows, " t$t";
+            }
+            push @param_file_rows, (
+                "$grm_file_basename !NSD",
+                "$stats_tempfile_2_basename !CSV !SKIP 1 !MVINCLUDE !MAXIT 200 !EXTRA 5",
+                '',
+                "t$time ~ mu replicate !r grm1(id_factor) ar1(rowNumber).ar1v(colNumber)",
+            );
+
+            open(my $Fp, ">", $parameter_asreml_tempfile) || die "Can't open file ".$parameter_asreml_tempfile;
+                print STDERR "WRITE ASREML PARAMFILE $parameter_asreml_tempfile\n";
+                foreach (@param_file_rows) {
+                    print $Fp "$_\n";
+                }
+            close($Fp);
+
+            my $parameter_asreml_tempfile_basename = basename($parameter_asreml_tempfile);
+            $stats_out_tempfile .= '.log';
+            $cmd_asreml = 'cd '.$tmp_stats_dir.'; asreml '.$parameter_asreml_tempfile_basename.' > '.$stats_out_tempfile;
+            print STDERR Dumper $cmd_asreml;
+            my $status = system($cmd_asreml);
+        }
     }
 
     print STDERR Dumper [$genetic_effect_min_altered_env, $genetic_effect_max_altered_env, $env_effect_min_altered_env, $env_effect_max_altered_env];
@@ -9176,7 +9331,57 @@ sub _perform_drone_imagery_analytics {
         close($F2);
     }
     elsif ($statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups') {
-        
+        foreach my $p (@unique_plot_names) {
+            my $row_number = $stock_name_row_col{$p}->{row_number};
+            my $col_number = $stock_name_row_col{$p}->{col_number};
+            my $replicate = $stock_name_row_col{$p}->{rep};
+            my $block = $stock_name_row_col{$p}->{block};
+            my $germplasm_stock_id = $stock_name_row_col{$p}->{germplasm_stock_id};
+            my $germplasm_name = $stock_name_row_col{$p}->{germplasm_name};
+            my $obsunit_stock_id = $stock_name_row_col{$p}->{obsunit_stock_id};
+
+            my @row = (
+                $germplasm_stock_id,
+                $obsunit_stock_id,
+                $replicate,
+                $row_number,
+                $col_number,
+                $accession_id_factor_map{$germplasm_stock_id},
+                $stock_row_col{$obsunit_stock_id}->{plot_id_factor}
+            );
+
+            foreach my $t (@sorted_trait_names) {
+                if (defined($phenotype_data_altered{$p}->{$t})) {
+                    my $new_val = $phenotype_data_altered{$p}->{$t} + 0;
+                    my $sim_val = eval $env_sim_exec->{$env_simulation};
+                    $sim_val = (($sim_val - $env_sim_min_2)/($env_sim_max_2 - $env_sim_min_2))/10;
+                    $new_val += $sim_val;
+
+                    if ($new_val < $phenotype_min_altered_env_2) {
+                        $phenotype_min_altered_env_2 = $new_val;
+                    }
+                    elsif ($new_val >= $phenotype_max_altered_env_2) {
+                        $phenotype_max_altered_env_2 = $new_val;
+                    }
+
+                    $sim_data_2{$p}->{$t} = $sim_val;
+                    $phenotype_data_altered_env_2{$p}->{$t} = $new_val;
+                    push @row, $new_val;
+                } else {
+                    print STDERR $p." : $t : $germplasm_name : NA \n";
+                    push @row, '';
+                }
+            }
+            push @data_matrix_altered_env_2, \@row;
+        }
+
+        open(my $F, ">", $stats_tempfile_2) || die "Can't open file ".$stats_tempfile_2;
+            print $F $header_string."\n";
+            foreach (@data_matrix_altered_env_2) {
+                my $line = join ',', @$_;
+                print $F "$line\n";
+            }
+        close($F);
     }
 
     print STDERR Dumper [$phenotype_min_altered_env_2, $phenotype_max_altered_env_2];
@@ -9885,7 +10090,46 @@ sub _perform_drone_imagery_analytics {
         print STDERR "ALTERED w/SIM_ENV $statistics_select ENV EFFECT SUM $env_effect_sum_altered_env_2\n";
     }
     elsif ($statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups') {
-        
+        my $stats_tempfile_2_basename = basename($stats_tempfile_2);
+        my $grm_file_basename = basename($grm_rename_tempfile);
+        #my @phenotype_header = ("id", "plot_id", "replicate", "rowNumber", "colNumber"", "id_factor", "plot_id_factor", "@times");
+
+        foreach my $time (@sorted_trait_names) {
+            my @param_file_rows = (
+                '!NOGRAPHICS !DEBUG !QUIET',
+                'Single Trait analysis',
+                ' id !I',
+                ' plot_id !I',
+                ' replicate !I',
+                ' rowNumber !I',
+                ' colNumber !I',
+                ' id_factor !I',
+                ' plot_id_factor !I'
+            );
+            foreach my $t (@sorted_trait_names) {
+                push @param_file_rows, " t$t";
+            }
+            push @param_file_rows, (
+                "$grm_file_basename !NSD",
+                "$stats_tempfile_2_basename !CSV !SKIP 1 !MVINCLUDE !MAXIT 200 !EXTRA 5",
+                '',
+                "t$time ~ mu replicate !r grm1(id_factor) ar1(rowNumber).ar1v(colNumber)",
+            );
+
+            open(my $Fp, ">", $parameter_asreml_tempfile) || die "Can't open file ".$parameter_asreml_tempfile;
+                print STDERR "WRITE ASREML PARAMFILE $parameter_asreml_tempfile\n";
+                foreach (@param_file_rows) {
+                    print $Fp "$_\n";
+                }
+            close($Fp);
+
+            my $parameter_asreml_tempfile_basename = basename($parameter_asreml_tempfile);
+            $stats_out_tempfile .= '.log';
+            $cmd_asreml = 'cd '.$tmp_stats_dir.'; asreml '.$parameter_asreml_tempfile_basename.' > '.$stats_out_tempfile;
+            print STDERR Dumper $cmd_asreml;
+            my $status = system($cmd_asreml);
+        }
+
     }
 
     print STDERR Dumper [$genetic_effect_min_altered_env_2, $genetic_effect_max_altered_env_2, $env_effect_min_altered_env_2, $env_effect_max_altered_env_2];
@@ -10161,7 +10405,57 @@ sub _perform_drone_imagery_analytics {
         close($F2);
     }
     elsif ($statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups') {
-        
+        foreach my $p (@unique_plot_names) {
+            my $row_number = $stock_name_row_col{$p}->{row_number};
+            my $col_number = $stock_name_row_col{$p}->{col_number};
+            my $replicate = $stock_name_row_col{$p}->{rep};
+            my $block = $stock_name_row_col{$p}->{block};
+            my $germplasm_stock_id = $stock_name_row_col{$p}->{germplasm_stock_id};
+            my $germplasm_name = $stock_name_row_col{$p}->{germplasm_name};
+            my $obsunit_stock_id = $stock_name_row_col{$p}->{obsunit_stock_id};
+
+            my @row = (
+                $germplasm_stock_id,
+                $obsunit_stock_id,
+                $replicate,
+                $row_number,
+                $col_number,
+                $accession_id_factor_map{$germplasm_stock_id},
+                $stock_row_col{$obsunit_stock_id}->{plot_id_factor}
+            );
+
+            foreach my $t (@sorted_trait_names) {
+                if (defined($phenotype_data_altered{$p}->{$t})) {
+                    my $new_val = $phenotype_data_altered{$p}->{$t} + 0;
+                    my $sim_val = eval $env_sim_exec->{$env_simulation};
+                    $sim_val = (($sim_val - $env_sim_min_3)/($env_sim_max_3 - $env_sim_min_3))/10;
+                    $new_val += $sim_val;
+
+                    if ($new_val < $phenotype_min_altered_env_3) {
+                        $phenotype_min_altered_env_3 = $new_val;
+                    }
+                    elsif ($new_val >= $phenotype_max_altered_env_3) {
+                        $phenotype_max_altered_env_3 = $new_val;
+                    }
+
+                    $sim_data_3{$p}->{$t} = $sim_val;
+                    $phenotype_data_altered_env_3{$p}->{$t} = $new_val;
+                    push @row, $new_val;
+                } else {
+                    print STDERR $p." : $t : $germplasm_name : NA \n";
+                    push @row, '';
+                }
+            }
+            push @data_matrix_altered_env_3, \@row;
+        }
+
+        open(my $F, ">", $stats_tempfile_2) || die "Can't open file ".$stats_tempfile_2;
+            print $F $header_string."\n";
+            foreach (@data_matrix_altered_env_3) {
+                my $line = join ',', @$_;
+                print $F "$line\n";
+            }
+        close($F);
     }
 
     print STDERR Dumper [$phenotype_min_altered_env_3, $phenotype_max_altered_env_3];
@@ -10870,6 +11164,45 @@ sub _perform_drone_imagery_analytics {
         print STDERR "ALTERED w/SIM_ENV $statistics_select ENV EFFECT SUM $env_effect_sum_altered_env_3\n";
     }
     elsif ($statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups') {
+        my $stats_tempfile_2_basename = basename($stats_tempfile_2);
+        my $grm_file_basename = basename($grm_rename_tempfile);
+        #my @phenotype_header = ("id", "plot_id", "replicate", "rowNumber", "colNumber"", "id_factor", "plot_id_factor", "@times");
+
+        foreach my $time (@sorted_trait_names) {
+            my @param_file_rows = (
+                '!NOGRAPHICS !DEBUG !QUIET',
+                'Single Trait analysis',
+                ' id !I',
+                ' plot_id !I',
+                ' replicate !I',
+                ' rowNumber !I',
+                ' colNumber !I',
+                ' id_factor !I',
+                ' plot_id_factor !I'
+            );
+            foreach my $t (@sorted_trait_names) {
+                push @param_file_rows, " t$t";
+            }
+            push @param_file_rows, (
+                "$grm_file_basename !NSD",
+                "$stats_tempfile_2_basename !CSV !SKIP 1 !MVINCLUDE !MAXIT 200 !EXTRA 5",
+                '',
+                "t$time ~ mu replicate !r grm1(id_factor) ar1(rowNumber).ar1v(colNumber)",
+            );
+
+            open(my $Fp, ">", $parameter_asreml_tempfile) || die "Can't open file ".$parameter_asreml_tempfile;
+                print STDERR "WRITE ASREML PARAMFILE $parameter_asreml_tempfile\n";
+                foreach (@param_file_rows) {
+                    print $Fp "$_\n";
+                }
+            close($Fp);
+
+            my $parameter_asreml_tempfile_basename = basename($parameter_asreml_tempfile);
+            $stats_out_tempfile .= '.log';
+            $cmd_asreml = 'cd '.$tmp_stats_dir.'; asreml '.$parameter_asreml_tempfile_basename.' > '.$stats_out_tempfile;
+            print STDERR Dumper $cmd_asreml;
+            my $status = system($cmd_asreml);
+        }
         
     }
 
@@ -11146,7 +11479,57 @@ sub _perform_drone_imagery_analytics {
         close($F2);
     }
     elsif ($statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups') {
-        
+        foreach my $p (@unique_plot_names) {
+            my $row_number = $stock_name_row_col{$p}->{row_number};
+            my $col_number = $stock_name_row_col{$p}->{col_number};
+            my $replicate = $stock_name_row_col{$p}->{rep};
+            my $block = $stock_name_row_col{$p}->{block};
+            my $germplasm_stock_id = $stock_name_row_col{$p}->{germplasm_stock_id};
+            my $germplasm_name = $stock_name_row_col{$p}->{germplasm_name};
+            my $obsunit_stock_id = $stock_name_row_col{$p}->{obsunit_stock_id};
+
+            my @row = (
+                $germplasm_stock_id,
+                $obsunit_stock_id,
+                $replicate,
+                $row_number,
+                $col_number,
+                $accession_id_factor_map{$germplasm_stock_id},
+                $stock_row_col{$obsunit_stock_id}->{plot_id_factor}
+            );
+
+            foreach my $t (@sorted_trait_names) {
+                if (defined($phenotype_data_altered{$p}->{$t})) {
+                    my $new_val = $phenotype_data_altered{$p}->{$t} + 0;
+                    my $sim_val = eval $env_sim_exec->{$env_simulation};
+                    $sim_val = (($sim_val - $env_sim_min_4)/($env_sim_max_4 - $env_sim_min_4))/10;
+                    $new_val += $sim_val;
+
+                    if ($new_val < $phenotype_min_altered_env_4) {
+                        $phenotype_min_altered_env_4 = $new_val;
+                    }
+                    elsif ($new_val >= $phenotype_max_altered_env_4) {
+                        $phenotype_max_altered_env_4 = $new_val;
+                    }
+
+                    $sim_data_4{$p}->{$t} = $sim_val;
+                    $phenotype_data_altered_env_4{$p}->{$t} = $new_val;
+                    push @row, $new_val;
+                } else {
+                    print STDERR $p." : $t : $germplasm_name : NA \n";
+                    push @row, '';
+                }
+            }
+            push @data_matrix_altered_env_4, \@row;
+        }
+
+        open(my $F, ">", $stats_tempfile_2) || die "Can't open file ".$stats_tempfile_2;
+            print $F $header_string."\n";
+            foreach (@data_matrix_altered_env_4) {
+                my $line = join ',', @$_;
+                print $F "$line\n";
+            }
+        close($F);
     }
 
     print STDERR Dumper [$phenotype_min_altered_env_4, $phenotype_max_altered_env_4];
@@ -11855,6 +12238,45 @@ sub _perform_drone_imagery_analytics {
         print STDERR "ALTERED w/SIM_ENV $statistics_select ENV EFFECT SUM $env_effect_sum_altered_env_4\n";
     }
     elsif ($statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups') {
+        my $stats_tempfile_2_basename = basename($stats_tempfile_2);
+        my $grm_file_basename = basename($grm_rename_tempfile);
+        #my @phenotype_header = ("id", "plot_id", "replicate", "rowNumber", "colNumber"", "id_factor", "plot_id_factor", "@times");
+
+        foreach my $time (@sorted_trait_names) {
+            my @param_file_rows = (
+                '!NOGRAPHICS !DEBUG !QUIET',
+                'Single Trait analysis',
+                ' id !I',
+                ' plot_id !I',
+                ' replicate !I',
+                ' rowNumber !I',
+                ' colNumber !I',
+                ' id_factor !I',
+                ' plot_id_factor !I'
+            );
+            foreach my $t (@sorted_trait_names) {
+                push @param_file_rows, " t$t";
+            }
+            push @param_file_rows, (
+                "$grm_file_basename !NSD",
+                "$stats_tempfile_2_basename !CSV !SKIP 1 !MVINCLUDE !MAXIT 200 !EXTRA 5",
+                '',
+                "t$time ~ mu replicate !r grm1(id_factor) ar1(rowNumber).ar1v(colNumber)",
+            );
+
+            open(my $Fp, ">", $parameter_asreml_tempfile) || die "Can't open file ".$parameter_asreml_tempfile;
+                print STDERR "WRITE ASREML PARAMFILE $parameter_asreml_tempfile\n";
+                foreach (@param_file_rows) {
+                    print $Fp "$_\n";
+                }
+            close($Fp);
+
+            my $parameter_asreml_tempfile_basename = basename($parameter_asreml_tempfile);
+            $stats_out_tempfile .= '.log';
+            $cmd_asreml = 'cd '.$tmp_stats_dir.'; asreml '.$parameter_asreml_tempfile_basename.' > '.$stats_out_tempfile;
+            print STDERR Dumper $cmd_asreml;
+            my $status = system($cmd_asreml);
+        }
         
     }
 
