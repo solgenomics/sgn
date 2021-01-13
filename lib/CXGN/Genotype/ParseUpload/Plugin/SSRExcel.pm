@@ -121,7 +121,7 @@ sub _parse_with_plugin {
     my ($col_min, $col_max) = $worksheet->col_range();
 
     my %sample_marker_hash;
-
+    my @sample_names;
     for my $row (2 .. $row_max){
         my $sample_name;
 
@@ -129,6 +129,7 @@ sub _parse_with_plugin {
             $sample_name = $worksheet->get_cell($row,0)->value();
             if ($sample_name) {
                 $sample_name =~ s/^\s+|\s+$//g;
+                push @sample_names, $sample_name;
             }
         }
 
@@ -141,7 +142,12 @@ sub _parse_with_plugin {
         }
     }
 
-    $self->_set_parsed_data(\%sample_marker_hash);
+    my %parsed_data = (
+        genotypes_info => \%sample_marker_hash,
+        observation_unit_uniquenames => \@sample_names
+    );
+
+    $self->_set_parsed_data(\%parsed_data);
 
     return 1;
 }

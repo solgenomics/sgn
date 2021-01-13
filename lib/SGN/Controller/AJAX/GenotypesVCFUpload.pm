@@ -578,6 +578,21 @@ sub upload_genotype_verify_POST : Args(0) {
             $c->detach();
         }
 
+        my $observation_unit_uniquenames = $parsed_data->{observation_unit_uniquenames};
+        my $genotype_info = $parsed_data->{genotypes_info};
+
+        my %protocolprop_info;
+        $protocolprop_info{'sample_observation_unit_type_name'} = 'accession';
+
+        $store_args->{genotype_info} = $genotype_info;
+        $store_args->{observation_unit_uniquenames} = $observation_unit_uniquenames;
+        $store_args->{protocol_info} = \%protocolprop_info;
+        $store_args->{observation_unit_type_name} = 'accession';
+        $store_args->{genotyping_data_type} = 'ssr';
+
+        my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new($store_args);
+        $store_genotypes->store_identifiers();
+
     } else {
         print STDERR "Parser plugin $parser_plugin not recognized!\n";
         $c->stash->{rest} = { error => "Parser plugin $parser_plugin not recognized!" };
