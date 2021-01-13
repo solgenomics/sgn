@@ -283,7 +283,7 @@ sub parse {
         return \%parse_result;
     }
 
-    $header_row = <$fh>;
+    my $header_row = <$fh>;
     my @columns;
     print STDERR Dumper $csv->fields();
     if ($csv->parse($header_row)) {
