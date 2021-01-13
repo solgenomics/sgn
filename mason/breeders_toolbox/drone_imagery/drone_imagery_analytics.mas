@@ -118,7 +118,7 @@
                     <& /page/page_title.mas, title=>"Select statistics to calculate" &>
 
                     <select class="form-control" id="drone_imagery_analytics_select_input">
-                        <option value="">Sommer Multi/Uni Spatial 2Dspl And REMLf90 RR Identiy/Env</option>
+                        <option value="">Sommer Multi/Uni Spatial 2Dspl, REMLf90 RR Identiy/Env, ASREML Multi/Uni Spatial AR1xAR1</option>
                         <!--option value="lmer_germplasmname_replicate">LMER BLUPs y~replicate+1|Germplasm. Univariate genetic effects</option-->
 
                         <!--option value="sommer_grm_genetic_blups">Sommer GBLUPs Y~replicate+GRM. Multivariate genetic effects using GRM</option-->
