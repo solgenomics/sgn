@@ -270,11 +270,12 @@ sub get_phenotype_matrix {
                 my $synonym_string = $synonyms ? join ("," , @$synonyms) : '';
                 my $entry_type = $d->{is_a_control} ? 'check' : 'test';
 
-		my $trial_name = $d->{trial_name};
-		my $trial_desc = $d->{trial_description};
+                my $trial_name = $d->{trial_name};
+                my $trial_desc = $d->{trial_description};
 
-		$trial_name =~ s/\s+$//g;
-		$trial_desc =~ s/\s+$//g;
+                $trial_name =~ s/\s+$//g;
+                $trial_desc =~ s/\s+$//g;
+                $trial_desc = "\"" . $trial_desc . "\"";
 
                 $obsunit_data{$obsunit_id}->{metadata} = [
                     $d->{year},
