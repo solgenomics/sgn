@@ -275,7 +275,6 @@ sub get_phenotype_matrix {
 
                 $trial_name =~ s/\s+$//g;
                 $trial_desc =~ s/\s+$//g;
-                $trial_desc = "\"" . $trial_desc . "\"";
 
                 $obsunit_data{$obsunit_id}->{metadata} = [
                     $d->{year},
