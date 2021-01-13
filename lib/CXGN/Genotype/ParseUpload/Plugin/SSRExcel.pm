@@ -57,6 +57,7 @@ sub _validate_with_plugin {
     my %seen_sample_names;
 
     for my $row (2 .. $row_max){
+        my $row_name = $row+1;
         my $sample_name;
 
         if ($worksheet->get_cell($row,0)) {
@@ -71,16 +72,12 @@ sub _validate_with_plugin {
         }
 
         for my $column (1 .. $col_max) {
+            my $column_name = $column+1;
             if ($worksheet->get_cell($row,$column)) {
                 my $ssr_data = $worksheet->get_cell($row,$column)->value();
-                if (!$ssr_data || $ssr_data eq '') {
-                    push @error_messages, "Row:$row Column:$column data missing";
-                }
-
-                if ($ssr_data) {
-                    if (($ssr_data ne '0') || ($ssr_data ne '1') {
-                        push @error_messages, "SSR data in Row:$row_name Column:$column should be either 0 or 1";
-                    }
+                $ssr_data =~ s/^\s+|\s+$//g;
+                if (($ssr_data ne '0') && ($ssr_data ne '1')) {
+                    push @error_messages, "Row:$row_name Column:$column_name data missing or incorrect data type";
                 }
             }
         }
@@ -89,7 +86,7 @@ sub _validate_with_plugin {
 
     my @samples = keys %seen_sample_names;
     my $sample_validator = CXGN::List::Validate->new();
-    my @samples_missing = @{sample_validator->validate($schema,'accessions',\@samples)->{'missing'}};
+    my @samples_missing = @{$sample_validator->validate($schema,'accessions',\@samples)->{'missing'}};
 
     if (scalar(@samples_missing) > 0){
         push @error_messages, "The following accessions are not in the database: ".join(',',@samples_missing);
