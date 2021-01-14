@@ -206,6 +206,7 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
         }
     }
 
+    my $pheno_dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
     my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
 
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({

@@ -589,9 +589,10 @@ sub retrieve_high_dimensional_phenotypes {
         high_dimensional_phenotype_identifier_list=>$high_dimensional_phenotype_identifier_list,
         accession_list=>$self->accessions(),
         plot_list=>$self->plots(),
-        plant_list=>$self->plants()
+        plant_list=>$self->plants(),
+        nirs_device_type=>$nirs_device_type
     });
-    my ($data_matrix, $identifier_metadata) = $phenotypes_search->search($nirs_device_type);
+    my ($data_matrix, $identifier_metadata) = $phenotypes_search->search();
 
     return ($data_matrix, $identifier_metadata);
 }

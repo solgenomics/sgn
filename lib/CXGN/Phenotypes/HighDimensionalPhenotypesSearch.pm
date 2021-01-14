@@ -6,15 +6,16 @@ CXGN::Phenotypes::HighDimensionalPhenotypesSearch - an object to handle searchin
 
 =head1 USAGE
 
-my $phenotypes_search = CXGN::Phenotypes::HighDimensionalPhenotypesSearch->search({
+my $phenotypes_search = CXGN::Phenotypes::HighDimensionalPhenotypesSearch->new({
     bcs_schema=>$schema,
     nd_protocol_id=>$nd_protocol_id,
     high_dimensional_phenotype_type=>$high_dimensional_phenotype_type, #NIRS, Transcriptomics, or Metabolomics
     high_dimensional_phenotype_identifier_list=>\@high_dimensional_phenotype_identifier_list,
-    query_associated_stocks=>$query_associated_stocks,
+    query_associated_stocks=>$query_associated_stocks, #Query associated plots, plants, tissue samples, etc for accessions that are given
     accession_list=>$accession_ids,
     plot_list=>$plot_ids,
-    plant_list=>$plant_ids
+    plant_list=>$plant_ids,
+    nirs_device_type=>$device_type #In the case of NIRS, the nirs_device_type is used instead of a nd_protocol_id
 });
 my (\%data, \%identifier_metadata) = $phenotypes_search->search();
 
@@ -44,16 +45,20 @@ has 'bcs_schema' => (
     required => 1
 );
 
-has 'nd_protocol_id' => (
-    isa => 'Int',
-    is => 'rw',
-    required => 1
-);
-
 has 'high_dimensional_phenotype_type' => (
     isa => 'Str',
     is => 'rw',
     required => 1
+);
+
+has 'nd_protocol_id' => (
+    isa => 'Int|Undef', #In the case of NIRS, the nirs_device_type is used instead of a nd_protocol_id
+    is => 'rw',
+);
+
+has 'nirs_device_type' => (
+    isa => 'Str|Undef',
+    is => 'rw',
 );
 
 has 'query_associated_stocks' => (
@@ -84,8 +89,6 @@ has 'plant_list' => (
 
 sub search {
     my $self = shift;
-    my $nirs_device_type = shift;
-
     my $schema = $self->bcs_schema();
     my $nd_protocol_id = $self->nd_protocol_id();
     my $high_dimensional_phenotype_type = $self->high_dimensional_phenotype_type();
@@ -94,6 +97,7 @@ sub search {
     my $plot_ids = $self->plot_list();
     my $plant_ids = $self->plant_list();
     my $query_associated_stocks = $self->query_associated_stocks();
+    my $nirs_device_type = $self->nirs_device_type();
     my $dbh = $schema->storage->dbh();
 
     if (!$accession_ids && !$plot_ids && !$plant_ids) {
@@ -172,8 +176,6 @@ sub search {
 
     my %data_matrix;
     my $identifier_metadata;
-    my $protocol_type_cvterm_id;
-
     if ($high_dimensional_phenotype_type eq 'NIRS') {
         my $q = "SELECT stock.uniquename, stock.stock_id, metadata.md_json.json->>'spectra', metadata.md_json.json->>'device_type'
             FROM stock
@@ -191,7 +193,7 @@ sub search {
             $data_matrix{$stock_id}->{device_type} = $device_type;
         }
 
-        $protocol_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_nirs_protocol', 'protocol_type')->cvterm_id();
+        my $protocol_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_nirs_protocol', 'protocol_type')->cvterm_id();
     }
     elsif ($high_dimensional_phenotype_type eq 'Transcriptomics') {
         my $q = "SELECT stock.uniquename, stock.stock_id, metadata.md_json.json
@@ -209,7 +211,13 @@ sub search {
             $data_matrix{$stock_id}->{transcriptomics} = $transcriptomics;
         }
 
-        $protocol_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_transcriptomics_protocol', 'protocol_type')->cvterm_id();
+        my $protocol_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_transcriptomics_protocol', 'protocol_type')->cvterm_id();
+        my $protocol = CXGN::Phenotypes::HighDimensionalPhenotypeProtocol->new({
+            bcs_schema => $schema,
+            nd_protocol_id => $nd_protocol_id,
+            nd_protocol_type_id => $protocol_type_cvterm_id
+        });
+        $identifier_metadata = $protocol->header_column_details;
     }
     elsif ($high_dimensional_phenotype_type eq 'Metabolomics') {
         my $q = "SELECT stock.uniquename, stock.stock_id, metadata.md_json.json
@@ -227,18 +235,17 @@ sub search {
             $data_matrix{$stock_id}->{metabolomics} = $metabolomics;
         }
 
-        $protocol_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_metabolomics_protocol', 'protocol_type')->cvterm_id();
+        my $protocol_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_metabolomics_protocol', 'protocol_type')->cvterm_id();
+        my $protocol = CXGN::Phenotypes::HighDimensionalPhenotypeProtocol->new({
+            bcs_schema => $schema,
+            nd_protocol_id => $nd_protocol_id,
+            nd_protocol_type_id => $protocol_type_cvterm_id
+        });
+        $identifier_metadata = $protocol->header_column_details;
     }
     else {
         die "NOT A VALID HIGHDIMENSIONAL PHENOTYPE TYPE $high_dimensional_phenotype_type\n";
     }
-
-    my $protocol = CXGN::Phenotypes::HighDimensionalPhenotypeProtocol->new({
-        bcs_schema => $schema,
-        nd_protocol_id => $nd_protocol_id,
-        nd_protocol_type_id => $protocol_type_cvterm_id
-    });
-    $identifier_metadata = $protocol->header_column_details;
 
     # print STDERR Dumper \%data_matrix;
     # print STDERR Dumper $identifier_metadata;
