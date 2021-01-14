@@ -1402,6 +1402,81 @@ sub high_dimensional_phenotypes_download_file_POST : Args(0) {
                     }
                 }
             }
+            elsif ($high_dimensional_download_type eq 'identifier_metadata') {
+                my $header_string = 'spectra';
+                print $F $header_string."\n";
+
+                foreach (@identifier_names_sorted) {
+                    print $F "X$_\n";
+                }
+            }
+        }
+        elsif ($high_dimensional_phenotype_type eq 'Transcriptomics') {
+
+            my @identifier_names_sorted = sort @$identifier_names;
+
+            if ($high_dimensional_download_type eq 'data_matrix') {
+                my @header = ('stock_id', @identifier_names_sorted);
+                my $header_string = join ',', @header;
+                print $F $header_string."\n";
+
+                while ( my ($stock_id, $o) = each %$data_matrix) {
+                    my $spectra = $o->{transcriptomics};
+                    if ($spectra) {
+                        my @row = ($stock_id);
+                        foreach (@identifier_names_sorted) {
+                            push @row, $spectra->{$_};
+                        }
+                        my $line = join ',', @row;
+                        print $F $line."\n";
+                    }
+                }
+            }
+            elsif ($high_dimensional_download_type eq 'identifier_metadata') {
+                my $header_string = 'transcript_name,chromosome,start_position,end_position,gene_description,notes';
+                print $F $header_string."\n";
+
+                foreach (@identifier_names_sorted) {
+                    my $chromosome = $identifier_metadata->{$_}->{chrom};
+                    my $start_position = $identifier_metadata->{$_}->{start};
+                    my $end_position = $identifier_metadata->{$_}->{end};
+                    my $gene_description = $identifier_metadata->{$_}->{gene_desc};
+                    my $notes = $identifier_metadata->{$_}->{notes};
+                    print $F "$_,$chromosome,$start_position,$end_position,$gene_description,$notes\n";
+                }
+            }
+        }
+        elsif ($high_dimensional_phenotype_type eq 'Metabolomics') {
+
+            my @identifier_names_sorted = sort @$identifier_names;
+
+            if ($high_dimensional_download_type eq 'data_matrix') {
+                my @header = ('stock_id', @identifier_names_sorted);
+                my $header_string = join ',', @header;
+                print $F $header_string."\n";
+
+                while ( my ($stock_id, $o) = each %$data_matrix) {
+                    my $spectra = $o->{metabolomics};
+                    if ($spectra) {
+                        my @row = ($stock_id);
+                        foreach (@identifier_names_sorted) {
+                            push @row, $spectra->{$_};
+                        }
+                        my $line = join ',', @row;
+                        print $F $line."\n";
+                    }
+                }
+            }
+            elsif ($high_dimensional_download_type eq 'identifier_metadata') {
+                my $header_string = 'metabolite_name,inchi_key,compound_name';
+                print $F $header_string."\n";
+
+                foreach (@identifier_names_sorted) {
+                    my $inchi = $identifier_metadata->{$_}->{inchi_key};
+                    my $compound = $identifier_metadata->{$_}->{compound_name};
+                    print $F "$_,$inchi,$compound\n";
+                }
+            }
         }
 
     close($F);
