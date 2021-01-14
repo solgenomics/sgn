@@ -515,6 +515,11 @@ has 'marker_by_marker_storage' => (
     is => 'rw'
 );
 
+has 'pcr_marker_genotyping_type_id' => (
+    isa => 'Int',
+    is => 'rw',
+);
+
 has 'genotyping_data_type' => (
     isa => 'Str|Undef',
     is => 'rw',
@@ -755,6 +760,9 @@ sub store_metadata {
     my $snp_genotype_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'snp genotyping', 'genotype_property')->cvterm_id();
     $self->snp_genotype_id($snp_genotype_id);
 
+    my $pcr_marker_genotyping_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pcr_marker_genotyping', 'genotype_property')->cvterm_id();
+    $self->pcr_marker_genotyping_type_id($pcr_marker_genotyping_type_id);
+
     my $vcf_map_details_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
     $self->vcf_map_details_id($vcf_map_details_id);
 
@@ -978,7 +986,7 @@ sub store_identifiers {
     my $observation_unit_uniquenames = $self->observation_unit_uniquenames();
     foreach (@$observation_unit_uniquenames) {
         $_ =~ s/^\s+|\s+$//g;
-
+        print STDERR "EACH NAME =".Dumper($_)."\n";
         my $observation_unit_name_with_accession_name;
         my $observation_unit_name;
         my $accession_name;
@@ -997,15 +1005,10 @@ sub store_identifiers {
         }
         print STDERR "OBSERVATION UNIT NAME =".Dumper($observation_unit_name)."\n";
         #print STDERR "SAVING GENOTYPEPROP FOR $observation_unit_name \n";
-        my $stock_lookup_obj;
-        if (defined $observation_unit_name) {
-            $stock_lookup_obj = $self->stock_lookup()->{$observation_unit_name};
-        } else {
-            $stock_lookup_obj = $self->stock_lookup()->{$_};
-        }
+        my $stock_lookup_obj = $self->stock_lookup()->{$observation_unit_name};
         my $stock_id = $stock_lookup_obj->{stock_id};
         my $genotype_id = $stock_lookup_obj->{genotype_id};
-
+        print STDERR "STOCK ID =".Dumper($stock_id)."\n";
         my $genotypeprop_json = $genotypeprop_observation_units->{$_};
         print STDERR "GENOTYPEPROP JSON =".Dumper($genotypeprop_json)."\n";
         if ($genotypeprop_json) {
@@ -1051,8 +1054,9 @@ sub store_identifiers {
 
             if ($genotyping_data_type eq 'ssr') {
                 my $json_string = encode_json $genotypeprop_json;
-                $h_new_genotypeprop->execute($genotype_id, $self->snp_genotypingprop_cvterm_id(), $chromosome_counter, $json_string);
-                my ($genotypeprop_id) = $h_new_genotypeprop->fetchrow_array();
+                $h_new_genotypeprop->execute($genotype_id, $self->pcr_marker_genotyping_type_id(), $chromosome_counter, $json_string);
+                my $genotypeprop_id = $h_new_genotypeprop->fetchrow_array();
+                print STDERR "GENOTYPEPROP ID =".Dumper($genotypeprop_id)."\n";
             } else {
                 foreach my $chromosome (sort keys %$genotypeprop_json) {
                     my $genotypeprop_id = $stock_lookup_obj->{chrom}->{$chromosome_counter};

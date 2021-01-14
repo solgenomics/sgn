@@ -591,6 +591,7 @@ sub upload_genotype_verify_POST : Args(0) {
         $store_args->{genotyping_data_type} = 'ssr';
 
         my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new($store_args);
+        $store_genotypes->store_metadata();
         $store_genotypes->store_identifiers();
 
     } else {
