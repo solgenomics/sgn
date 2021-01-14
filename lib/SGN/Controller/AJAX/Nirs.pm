@@ -39,7 +39,7 @@ sub generate_spectral_plot_POST : Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
     my $dataset_id = $c->req->param('dataset_id');
-    my $format_id = $c->req->param('device_type');
+    my $nd_protocol_id = $c->req->param('nd_protocol_id');
     my $query_associated_stocks = $c->req->param('query_associated_stocks') eq 'yes' ? 1 : 0;
 
     my $ds = CXGN::Dataset->new({
@@ -53,14 +53,14 @@ sub generate_spectral_plot_POST : Args(0) {
 
     my $phenotypes_search = CXGN::Phenotypes::HighDimensionalPhenotypesSearch->new({
         bcs_schema=>$schema,
-        nirs_device_type=>$format_id,
+        nd_protocol_id=>$nd_protocol_id,
         high_dimensional_phenotype_type=>'NIRS',
         query_associated_stocks=>$query_associated_stocks,
         accession_list=>$accession_ids,
         plot_list=>$plot_ids,
         plant_list=>$plant_ids
     });
-    my ($data_matrix, $identifier_metadata) = $phenotypes_search->search();
+    my ($data_matrix, $identifier_metadata, $identifier_names) = $phenotypes_search->search();
     # print STDERR Dumper $data_matrix;
 
     my @training_data_input;

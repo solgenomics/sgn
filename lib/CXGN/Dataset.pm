@@ -569,16 +569,12 @@ sub retrieve_high_dimensional_phenotypes {
     my $high_dimensional_phenotype_type = shift; #NIRS, Transcriptomics, or Metabolomics
     my $query_associated_stocks = shift || 1;
     my $high_dimensional_phenotype_identifier_list = shift || [];
-    my $nirs_device_type = shift;
 
     if (!$nd_protocol_id) {
         die "Must provide the protocol id!\n";
     }
     if (!$high_dimensional_phenotype_type) {
         die "Must provide the high dimensional phenotype type!\n";
-    }
-    if ($high_dimensional_phenotype_type eq 'NIRS' && !$nirs_device_type) {
-        die "If NIRS is queried, then the device_type is required\n";
     }
 
     my $phenotypes_search = CXGN::Phenotypes::HighDimensionalPhenotypesSearch->new({
@@ -590,11 +586,10 @@ sub retrieve_high_dimensional_phenotypes {
         accession_list=>$self->accessions(),
         plot_list=>$self->plots(),
         plant_list=>$self->plants(),
-        nirs_device_type=>$nirs_device_type
     });
-    my ($data_matrix, $identifier_metadata) = $phenotypes_search->search();
+    my ($data_matrix, $identifier_metadata, $identifier_names) = $phenotypes_search->search();
 
-    return ($data_matrix, $identifier_metadata);
+    return ($data_matrix, $identifier_metadata, $identifier_names);
 }
 
 =head2 retrieve_accessions()

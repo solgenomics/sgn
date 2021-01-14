@@ -15,9 +15,8 @@ my $phenotypes_search = CXGN::Phenotypes::HighDimensionalPhenotypesSearch->new({
     accession_list=>$accession_ids,
     plot_list=>$plot_ids,
     plant_list=>$plant_ids,
-    nirs_device_type=>$device_type #In the case of NIRS, the nirs_device_type is used instead of a nd_protocol_id
 });
-my (\%data, \%identifier_metadata) = $phenotypes_search->search();
+my (\%data, \%identifier_metadata, \@identifier_names) = $phenotypes_search->search();
 
 =head1 DESCRIPTION
 
@@ -52,13 +51,9 @@ has 'high_dimensional_phenotype_type' => (
 );
 
 has 'nd_protocol_id' => (
-    isa => 'Int|Undef', #In the case of NIRS, the nirs_device_type is used instead of a nd_protocol_id
+    isa => 'Int',
     is => 'rw',
-);
-
-has 'nirs_device_type' => (
-    isa => 'Str|Undef',
-    is => 'rw',
+    required => 1
 );
 
 has 'query_associated_stocks' => (
@@ -97,7 +92,6 @@ sub search {
     my $plot_ids = $self->plot_list();
     my $plant_ids = $self->plant_list();
     my $query_associated_stocks = $self->query_associated_stocks();
-    my $nirs_device_type = $self->nirs_device_type();
     my $dbh = $schema->storage->dbh();
 
     if (!$accession_ids && !$plot_ids && !$plant_ids) {
@@ -175,81 +169,82 @@ sub search {
     my $stock_ids_sql = join ',', @all_stock_ids;
 
     my %data_matrix;
-    my $identifier_metadata;
+    my $protocol_type_cvterm_id;
+
     if ($high_dimensional_phenotype_type eq 'NIRS') {
         my $q = "SELECT stock.uniquename, stock.stock_id, metadata.md_json.json->>'spectra', metadata.md_json.json->>'device_type'
             FROM stock
             JOIN nd_experiment_stock USING(stock_id)
             JOIN nd_experiment USING(nd_experiment_id)
+            JOIN nd_experiment_protocol USING(nd_experiment_id)
             JOIN phenome.nd_experiment_md_json USING(nd_experiment_id)
             JOIN metadata.md_json USING(json_id)
-            WHERE stock.stock_id IN ($stock_ids_sql) AND metadata.md_json.json_type = 'nirs_spectra' AND metadata.md_json.json->>'device_type' = ?;";
+            WHERE stock.stock_id IN ($stock_ids_sql) AND nd_experiment_protocol.nd_protocol_id = ? AND metadata.md_json.json_type = 'nirs_spectra';";
         print STDERR Dumper $q;
         my $h = $dbh->prepare($q);
-        $h->execute($nirs_device_type);
+        $h->execute($nd_protocol_id);
         while (my ($stock_uniquename, $stock_id, $spectra, $device_type) = $h->fetchrow_array()) {
             $spectra = decode_json $spectra;
             $data_matrix{$stock_id}->{spectra} = $spectra;
             $data_matrix{$stock_id}->{device_type} = $device_type;
         }
 
-        my $protocol_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_nirs_protocol', 'protocol_type')->cvterm_id();
+        $protocol_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_nirs_protocol', 'protocol_type')->cvterm_id();
     }
     elsif ($high_dimensional_phenotype_type eq 'Transcriptomics') {
         my $q = "SELECT stock.uniquename, stock.stock_id, metadata.md_json.json
             FROM stock
             JOIN nd_experiment_stock USING(stock_id)
             JOIN nd_experiment USING(nd_experiment_id)
+            JOIN nd_experiment_protocol USING(nd_experiment_id)
             JOIN phenome.nd_experiment_md_json USING(nd_experiment_id)
             JOIN metadata.md_json USING(json_id)
-            WHERE stock.stock_id IN ($stock_ids_sql) AND metadata.md_json.json_type = 'transcriptomics';";
+            WHERE stock.stock_id IN ($stock_ids_sql) AND nd_experiment_protocol.nd_protocol_id = ? AND metadata.md_json.json_type = 'transcriptomics';";
         print STDERR Dumper $q;
         my $h = $dbh->prepare($q);
-        $h->execute();
+        $h->execute($nd_protocol_id);
         while (my ($stock_uniquename, $stock_id, $transcriptomics) = $h->fetchrow_array()) {
             $transcriptomics = decode_json $transcriptomics;
             $data_matrix{$stock_id}->{transcriptomics} = $transcriptomics;
         }
 
-        my $protocol_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_transcriptomics_protocol', 'protocol_type')->cvterm_id();
-        my $protocol = CXGN::Phenotypes::HighDimensionalPhenotypeProtocol->new({
-            bcs_schema => $schema,
-            nd_protocol_id => $nd_protocol_id,
-            nd_protocol_type_id => $protocol_type_cvterm_id
-        });
-        $identifier_metadata = $protocol->header_column_details;
+        $protocol_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_transcriptomics_protocol', 'protocol_type')->cvterm_id();
     }
     elsif ($high_dimensional_phenotype_type eq 'Metabolomics') {
         my $q = "SELECT stock.uniquename, stock.stock_id, metadata.md_json.json
             FROM stock
             JOIN nd_experiment_stock USING(stock_id)
             JOIN nd_experiment USING(nd_experiment_id)
+            JOIN nd_experiment_protocol USING(nd_experiment_id)
             JOIN phenome.nd_experiment_md_json USING(nd_experiment_id)
             JOIN metadata.md_json USING(json_id)
-            WHERE stock.stock_id IN ($stock_ids_sql) AND metadata.md_json.json_type = 'metabolomics';";
+            WHERE stock.stock_id IN ($stock_ids_sql) AND nd_experiment_protocol.nd_protocol_id = ? AND metadata.md_json.json_type = 'metabolomics';";
         print STDERR Dumper $q;
         my $h = $dbh->prepare($q);
-        $h->execute();
+        $h->execute($nd_protocol_id);
         while (my ($stock_uniquename, $stock_id, $metabolomics) = $h->fetchrow_array()) {
             $metabolomics = decode_json $metabolomics;
             $data_matrix{$stock_id}->{metabolomics} = $metabolomics;
         }
 
-        my $protocol_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_metabolomics_protocol', 'protocol_type')->cvterm_id();
-        my $protocol = CXGN::Phenotypes::HighDimensionalPhenotypeProtocol->new({
-            bcs_schema => $schema,
-            nd_protocol_id => $nd_protocol_id,
-            nd_protocol_type_id => $protocol_type_cvterm_id
-        });
-        $identifier_metadata = $protocol->header_column_details;
+        $protocol_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_metabolomics_protocol', 'protocol_type')->cvterm_id();
     }
     else {
         die "NOT A VALID HIGHDIMENSIONAL PHENOTYPE TYPE $high_dimensional_phenotype_type\n";
     }
 
+    my $protocol = CXGN::Phenotypes::HighDimensionalPhenotypeProtocol->new({
+        bcs_schema => $schema,
+        nd_protocol_id => $nd_protocol_id,
+        nd_protocol_type_id => $protocol_type_cvterm_id
+    });
+    my $identifier_metadata = $protocol->header_column_details;
+    my $identifier_names = $protocol->header_column_names;
+
     # print STDERR Dumper \%data_matrix;
     # print STDERR Dumper $identifier_metadata;
-    return (\%data_matrix, $identifier_metadata);
+    # print STDERR Dumper $identifier_names;
+    return (\%data_matrix, $identifier_metadata, $identifier_names);
 }
 
 1;
