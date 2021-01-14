@@ -70,7 +70,7 @@ sub validate {
 
     my $header_row = <$fh>;
     my @columns;
-    print STDERR Dumper $csv->fields();
+    # print STDERR Dumper $csv->fields();
     if ($csv->parse($header_row)) {
         @columns = $csv->fields();
     } else {
@@ -116,7 +116,7 @@ sub validate {
     }
 
     $header_row = <$fh>;
-    print STDERR Dumper $csv->fields();
+    # print STDERR Dumper $csv->fields();
     if ($csv->parse($header_row)) {
         @columns = $csv->fields();
     } else {
@@ -285,7 +285,7 @@ sub parse {
 
     my $header_row = <$fh>;
     my @columns;
-    print STDERR Dumper $csv->fields();
+    # print STDERR Dumper $csv->fields();
     if ($csv->parse($header_row)) {
         @columns = $csv->fields();
     } else {

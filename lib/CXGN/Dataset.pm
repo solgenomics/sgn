@@ -58,6 +58,7 @@ use CXGN::BreederSearch;
 use CXGN::People::Schema;
 use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::Genotype::Search;
+use CXGN::Phenotypes::HighDimensionalPhenotypesSearch;
 
 =head2 people_schema()
 
@@ -554,6 +555,39 @@ sub retrieve_phenotypes_ref {
     my ($data, $unique_traits) = $phenotypes_search->search();
 
     return ($data, $unique_traits);
+}
+
+=head2 retrieve_high_dimensional_phenotypes()
+retrieves high-dimensional phenotypes (NIRS, transcriptomics, and metabolomics) as a hashref representation. Will return both the data-matrix and the identifier metadata (transcripts and metabolites)
+=cut
+
+sub retrieve_high_dimensional_phenotypes {
+    my $self = shift;
+    my $nd_protocol_id = shift;
+    my $high_dimensional_phenotype_type = shift; #NIRS, Transcriptomics, or Metabolomics
+    my $query_associated_stocks = shift || 1;
+    my $high_dimensional_phenotype_identifier_list = shift || [];
+
+    if (!$nd_protocol_id) {
+        die "Must provide the protocol id!\n";
+    }
+    if (!$high_dimensional_phenotype_type) {
+        die "Must provide the high dimensional phenotype type!\n";
+    }
+
+    my $phenotypes_search = CXGN::Phenotypes::HighDimensionalPhenotypesSearch->new({
+        bcs_schema=>$self->schema(),
+        nd_protocol_id=>$nd_protocol_id,
+        high_dimensional_phenotype_type=>$high_dimensional_phenotype_type,
+        query_associated_stocks=>$query_associated_stocks,
+        high_dimensional_phenotype_identifier_list=>$high_dimensional_phenotype_identifier_list,
+        accession_list=>$self->accessions(),
+        plot_list=>$self->plots(),
+        plant_list=>$self->plants(),
+    });
+    my ($data_matrix, $identifier_metadata, $identifier_names) = $phenotypes_search->search();
+
+    return ($data_matrix, $identifier_metadata, $identifier_names);
 }
 
 =head2 retrieve_accessions()

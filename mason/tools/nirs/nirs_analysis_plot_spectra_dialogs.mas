@@ -19,17 +19,22 @@
                     <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
                     </center>
                 </&>
+                <&| /util/workflow.mas:step, title=> "Protocol" &>
+                    <& /page/page_title.mas, title=>"Select the protocol you are interested in plotting spectra:" &>
+
+                    <div id="nirs_analysis_plot_spectra_protocol_select">
+                    </div>
+
+                    <center>
+                    <button class="btn btn-primary" id="nirs_analysis_plot_spectra_protocol_select_step">Go to Next Step</button>
+                    </center>
+                </&>
                 <&| /util/workflow.mas:step, title=> "Dataset" &>
                     <& /page/page_title.mas, title=>"Select the dataset you are interested in plotting spectra for (the accessions or plots or tissues samples in the dataset need to have spectra uploaded):" &>
-                    <br/><br/>
-                    <form class="form-horizontal">
-                        <div class="form-group">
-                            <label class="col-sm-1 control-label">Dataset: </label>
-                            <div class="col-sm-11" >
-                                <div id="nirs_analysis_plot_spectra_dataset_select_div"></div>
-                            </div>
-                        </div>
-                    </form>
+
+                    <div id="nirs_analysis_plot_spectra_dataset_select_div">
+                    </div>
+
                     <center>
                     <button class="btn btn-primary" id="nirs_analysis_plot_spectra_dataset_select_step">Go to Next Step</button>
                     </center>
@@ -38,18 +43,6 @@
                     <& /page/page_title.mas, title=>"Search Parameters:" &>
                     <br/><br/>
                     <form class="form-horizontal">
-                        <div class="form-group">
-                            <label class="col-sm-5 control-label">Device Type: </label>
-                            <div class="col-sm-7" >
-                                <select class="form-control" id="nirs_analysis_plot_spectra_device_select_id" name="nirs_analysis_plot_spectra_device_select_id">
-                                    <option value="SCIO">SCIO</option>
-                                    <option value="QST">QST</option>
-                                    <option value="Foss6500">Foss6500</option>
-                                    <option value="BunchiN500">BunchiN500</option>
-                                    <option value="LinkSquare">LinkSquare</option>
-                                </select>
-                            </div>
-                        </div>
                         <div class="form-group">
                             <label class="col-sm-5 control-label">Query related stocks (e.g. if you have accessions in the dataset, the query will search for spectra on associated plots, plants, etc. and vice versa): </label>
                             <div class="col-sm-7" >
@@ -88,7 +81,28 @@ jQuery(document).ready(function(){
     jQuery('#nirs_analysis_plot_spectra_show').click(function(){
         jQuery('#nirs_analysis_plot_spectra_dialog').modal('show');
 
+        get_select_box('high_dimensional_phenotypes_protocols','nirs_analysis_plot_spectra_protocol_select', {'checkbox_name':'nirs_analysis_plot_spectra_protocol_id', 'high_dimensional_phenotype_protocol_type':'high_dimensional_phenotype_nirs_protocol'});
+
         get_select_box('datasets','nirs_analysis_plot_spectra_dataset_select_div', {'checkbox_name':'nirs_analysis_plot_spectra_dataset_select_id'});
+    });
+
+    var nirs_analysis_plot_spectra_protocol_id;
+    jQuery('#nirs_analysis_plot_spectra_protocol_select_step').click(function(){
+        var selected = [];
+        jQuery('input[name="nirs_analysis_plot_spectra_protocol_id"]:checked').each(function() {
+            selected.push(jQuery(this).val());
+        });
+
+        if(selected.length > 1 || selected.length == 0) {
+            alert('Please select one dataset!');
+            return false;
+        }
+        else {
+            nirs_analysis_plot_spectra_protocol_id = selected[0];
+
+            Workflow.complete("#nirs_analysis_plot_spectra_protocol_select_step");
+            Workflow.focus('#nirs_analysis_plot_spectra_workflow', 2);
+        }
     });
 
     var nirs_analysis_plot_spectra_dataset_id;
@@ -106,7 +120,7 @@ jQuery(document).ready(function(){
             nirs_analysis_plot_spectra_dataset_id = selected[0];
 
             Workflow.complete("#nirs_analysis_plot_spectra_dataset_select_step");
-            Workflow.focus('#nirs_analysis_plot_spectra_workflow', 2);
+            Workflow.focus('#nirs_analysis_plot_spectra_workflow', 3);
             window.scrollTo(0,0);
         }
     });
@@ -118,7 +132,7 @@ jQuery(document).ready(function(){
             type : 'POST',
             data : {
                 'dataset_id' : nirs_analysis_plot_spectra_dataset_id,
-                'device_type': jQuery('#nirs_analysis_plot_spectra_device_select_id').val(),
+                'nd_protocol_id': nirs_analysis_plot_spectra_protocol_id,
                 'query_associated_stocks': jQuery('#nirs_analysis_plot_spectra_associated_stock_select_id').val(),
             },
             beforeSend: function(){
@@ -136,7 +150,7 @@ jQuery(document).ready(function(){
                 jQuery('#nir_analysis_plot_spectra_result').html('<div class="well well-sm"><h3>Plot of Spectra: </h3><img width="80%" height="80%" src="'+response.figure+'"></div>');
 
                 Workflow.complete("#nirs_analysis_plot_spectra_search_step");
-                Workflow.focus('#nirs_analysis_plot_spectra_workflow', 3);
+                Workflow.focus('#nirs_analysis_plot_spectra_workflow', 4);
                 window.scrollTo(0,0);
             },
             error: function(response){
