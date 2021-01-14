@@ -8,6 +8,7 @@ package CXGN::Genotype::StorePCRMarkerInfo;
 
 =head1 AUTHORS
 
+Titima Tantikanjana <tt15@cornell.edu>
 
 =cut
 
@@ -52,6 +53,11 @@ has 'marker_details' => (
     required => 1
 );
 
+has 'sample_observation_unit_type_name' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 1
+);
 
 sub store_pcr_marker_info {
     my $self = shift;
@@ -61,18 +67,23 @@ sub store_pcr_marker_info {
     my $species_name = $self->species_name();
     my $marker_type = $self->marker_type();
     my $marker_details = $self->marker_details();
+    my $sample_type = $self->sample_observation_unit_type_name();
 
     my $genotyping_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
     my $pcr_marker_prop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pcr_marker_details', 'protocol_property')->cvterm_id();
 
+    my %marker_hash = %$marker_details;
+    my @marker_names = keys %marker_hash;
+    print STDERR "MARKER NAMES =".Dumper(\@marker_names)."\n";
+
     my %pcr_marker_info;
     $pcr_marker_info{'marker_type'} = $marker_type;
-    $pcr_marker_info{'species'} = $species_name;
-    $pcr_marker_info{'markers'} = $marker_details;
+    $pcr_marker_info{'species_name'} = $species_name;
+    $pcr_marker_info{'marker_details'} = $marker_details;
+    $pcr_marker_info{'marker_names'} = \@marker_names;
     my $pcr_marker_info_ref = \%pcr_marker_info;
 
     my $pcr_marker_info_prop = [{value => encode_json $pcr_marker_info_ref, type_id=>$pcr_marker_prop_cvterm_id}];
-
 
 	my $protocol_id;
     my $protocol_rs = $schema->resultset("NaturalDiversity::NdProtocol")->find({

@@ -8,6 +8,7 @@ SGN::Controller::AJAX::PCRBasedGenotypeData
 
 =head1 AUTHOR
 
+
 =cut
 
 package SGN::Controller::AJAX::PCRBasedGenotypeData;
@@ -111,6 +112,25 @@ sub upload_ssr_protocol_POST : Args(0) {
     my $protocol_name = $c->req->param('upload_ssr_protocol_name');
     my $protocol_description = $c->req->param('upload_ssr_protocol_description_input');
     my $species_name = $c->req->param('upload_ssr_species_name_input');
+    my $sample_type = $c->req->param('upload_ssr_sample_type_select');
+
+    my $organism_check = "SELECT organism_id FROM organism WHERE species = ?";
+    my @found_organisms;
+    my $h = $chado_schema->storage->dbh()->prepare($organism_check);
+    $h->execute($species_name);
+    while (my ($organism_id) = $h->fetchrow_array()){
+        push @found_organisms, $organism_id;
+    }
+    if (scalar(@found_organisms) == 0){
+        $c->stash->{rest} = { error => 'The organism species you provided is not in the database! Please contact us.' };
+        $c->detach();
+    }
+    if (scalar(@found_organisms) > 1){
+        $c->stash->{rest} = { error => 'The organism species you provided is not unique in the database! Please contact us.' };
+        $c->detach();
+    }
+    my $organism_id = $found_organisms[0];
+
     print STDERR "PROTOCOL NAME =".Dumper($protocol_name)."\n";
     print STDERR "PROTOCOL DESCRIPTION =".Dumper($protocol_description)."\n";
     print STDERR "SPECIES NAME =".Dumper($species_name)."\n";
@@ -148,6 +168,7 @@ sub upload_ssr_protocol_POST : Args(0) {
         protocol_name => $protocol_name,
         protocol_description => $protocol_description,
         species_name => $species_name,
+        sample_observation_unit_type_name => $sample_type,
         marker_type => 'SSR',
         marker_details => $parsed_data
     });
