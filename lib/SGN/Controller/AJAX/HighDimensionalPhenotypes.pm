@@ -529,7 +529,7 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
     my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
 
-    $c->stash->{rest} = {success => \@success_status, error => \@error_status, figure => $output_plot_filepath_string};
+    $c->stash->{rest} = {success => \@success_status, error => \@error_status, figure => $output_plot_filepath_string, nd_protocol_id => $protocol_id};
 }
 
 sub high_dimensional_phenotypes_transcriptomics_upload_verify : Path('/ajax/highdimensionalphenotypes/transcriptomics_upload_verify') : ActionClass('REST') { }
@@ -926,7 +926,7 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
     my $bs = CXGN::BreederSearch->new({ dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname} });
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
 
-    $c->stash->{rest} = {success => \@success_status, error => \@error_status};
+    $c->stash->{rest} = {success => \@success_status, error => \@error_status, nd_protocol_id => $protocol_id};
 }
 
 sub high_dimensional_phenotypes_metabolomics_upload_verify : Path('/ajax/highdimensionalphenotypes/metabolomics_upload_verify') : ActionClass('REST') { }
@@ -1324,7 +1324,7 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
     my $bs = CXGN::BreederSearch->new({ dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname} });
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
 
-    $c->stash->{rest} = {success => \@success_status, error => \@error_status};
+    $c->stash->{rest} = {success => \@success_status, error => \@error_status, nd_protocol_id => $protocol_id};
 }
 
 sub high_dimensional_phenotypes_download_file : Path('/ajax/highdimensionalphenotypes/download_file') : ActionClass('REST') { }
@@ -1380,7 +1380,12 @@ sub high_dimensional_phenotypes_download_file_POST : Args(0) {
             if (!$identifier_names || scalar(@$identifier_names) == 0) {
                 my @stock_ids = keys %$data_matrix;
                 my @ids = keys %{$data_matrix->{$stock_ids[0]}->{spectra}};
-                $identifier_names = \@ids;
+                my @ids_stripped;
+                foreach (@ids) {
+                    my $s = substr $_, 1;
+                    push @ids_stripped, $s;
+                }
+                $identifier_names = \@ids_stripped;
             }
 
             my @identifier_names_sorted = sort { $a <=> $b } @$identifier_names;
@@ -1437,7 +1442,7 @@ sub high_dimensional_phenotypes_download_file_POST : Args(0) {
                 print $F $header_string."\n";
 
                 foreach (@identifier_names_sorted) {
-                    my $chromosome = $identifier_metadata->{$_}->{chrom};
+                    my $chromosome = $identifier_metadata->{$_}->{chr};
                     my $start_position = $identifier_metadata->{$_}->{start};
                     my $end_position = $identifier_metadata->{$_}->{end};
                     my $gene_description = $identifier_metadata->{$_}->{gene_desc};
