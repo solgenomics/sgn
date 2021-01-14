@@ -137,6 +137,7 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                                     <option value="FPKM">FPKM</option>
                                     <option value="TPM">TPM</option>
                                     <option value="VST">VST</option>
+                                    <option value="RawCount">RawCount</option>
                                     </select>
                                 </div>
                             </div>
