@@ -4,7 +4,7 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form' ] &>
 
-<!--button class="btn btn-primary" id="upload_high_dim_phenotypes_spreadsheet_link">Upload High Dimensional Data</button-->
+<!--button class="btn btn-primary" name="upload_high_dim_phenotypes_spreadsheet_link">Upload High Dimensional Data</button-->
 
 <div class="modal fade" id="upload_high_dim_phenotypes_spreadsheet_dialog" name="upload_high_dim_phenotypes_spreadsheet_dialog" tabindex="-1" role="dialog" aria-labelledby="addHighDimDataDialog">
   <div class="modal-dialog modal-xl" role="document">
@@ -58,8 +58,8 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                                 <select class="form-control" id="high_dim_data_upload_type_select"> 
 %  if ($high_dimensional_phenotype_type eq 'NIRS') {
                                     <option value="NIRS">NIRS</option>
-                                    <option value="Transcriptomics">Transcriptomics</option>
-                                    <option value="Metabolomics">Metabolomics</option>
+                                    <option disabled value="Transcriptomics">Transcriptomics</option>
+                                    <option disabled value="Metabolomics">Metabolomics</option>
 %  } elsif ($high_dimensional_phenotype_type eq 'Transcriptomics') {
                                     <option value="Transcriptomics">Transcriptomics</option>
                                     <option disabled value="NIRS">NIRS</option>
@@ -69,7 +69,6 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                                     <option disabled value="Transcriptomics">Transcriptomics</option>
                                     <option disabled value="NIRS">NIRS</option>
 %  } else {
-                                    <option selected=""></option>
                                     <option value="NIRS">NIRS</option>
                                     <option value="Transcriptomics">Transcriptomics</option>
                                     <option value="Metabolomics">Metabolomics</option>
@@ -549,7 +548,7 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
 <script>
 jQuery(document).ready(function() {
 
-    jQuery('#upload_high_dim_phenotypes_spreadsheet_link').click( function() {
+    jQuery('button[name=upload_high_dim_phenotypes_spreadsheet_link]').click( function() {
         jQuery('#upload_high_dim_phenotypes_spreadsheet_dialog').modal("show");
     });
 

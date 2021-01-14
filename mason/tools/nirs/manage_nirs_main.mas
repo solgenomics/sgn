@@ -7,7 +7,8 @@ $locations => undef
 $sampling_facilities => ()
 </%args>
 
-<& /tools/high_dimensional_phenotypes/upload_high_dim_spreadsheet_dialogs.mas, high_dimensional_phenotype_type => 'NIRS' &>
+<& /tools/high_dimensional_phenotypes/upload_high_dim_spreadsheet_dialogs.mas &>
+<& /tools/high_dimensional_phenotypes/download_high_dim_phenotypes_dialogs.mas &>
 <& /tools/nirs/nirs_analysis_train_dialogs.mas &>
 <& /tools/nirs/nirs_analysis_predict_dialogs.mas &>
 <& /tools/nirs/nirs_analysis_plot_spectra_dialogs.mas &>
