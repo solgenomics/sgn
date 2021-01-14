@@ -43,10 +43,9 @@
       </div><br>
   </center>
 </div>
-
- <div>Select an area over the field to load the plots. Plot size will be determined based on this area and the plot layout</div>
- <div>(Optional) override plot size (meters):</div>
-<form class="form-inline" style="padding:10px;" id="formwidth">
+<br>
+<form id="formPlotSize" class="form-inline" style="padding:10px;" >
+  <div>Plot size will be determined based on this area and the plot layout.(Optional) overwrite plot size (meters):</div>
  <div class="form-group">
    <label for="width">width</label>
    <input type="text" class="form-control" id="width" value="">
@@ -56,7 +55,7 @@
    <input type="text" class="form-control" id="length" value="">
  </div>
 </form>
-<form class="form-inline" style="padding:10px;">
+<form id="formOptions" class="form-inline" style="padding:10px;">
   <a class="btn btn-default" onclick="load()">Load plots</a>
  <a class="btn btn-default" onclick="update()">Save Geo coordinates</a>
 </form>
@@ -70,7 +69,8 @@
         jQuery('#select_trial_for_selection_index').change(load);
     });
 
-    document.getElementById("formwidth").style.display="none";
+    document.getElementById("formPlotSize").style.display="none";
+    document.getElementById("formOptions").style.display="none";
 
     var brapi_endpoint = "http://192.168.33.11:3010/brapi/v2";
     var auth_token;
@@ -95,11 +95,13 @@
         var studyDbId = $('#select_trial_for_selection_index').val();
         setupBrAPI();
         fieldMap.load(studyDbId).then((value)=>{if (!value) return setLocation(studyDbId); });
+        document.getElementById("formOptions").style.display="block";
+        document.getElementById("formPlotSize").style.display="block";
     }
 
     function setLocation() {
         var studyDbId = $('#select_trial_for_selection_index').val();
-        fieldMap.setLocation(studyDbId).then(()=>alert("Please select the area and click Load plots"), ()=>console.log("No location!"));
+        fieldMap.setLocation(studyDbId).then(()=>alert("Please select an area over the field and click Load plots."), ()=>console.log("No location!"));
     }
     
     function update() {

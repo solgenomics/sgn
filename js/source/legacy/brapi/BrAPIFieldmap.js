@@ -2187,7 +2187,7 @@
 	            return self.polygon;
 	          },
 	          title: 'Creates a new polygon',
-	          html: '▰'
+	          html: String.fromCodePoint(0x25B1)
 	        }
 	      });
 	      L.NewRectangleControl = L.EditControl.extend({
@@ -2198,7 +2198,7 @@
 	            return self.polygon;
 	          },
 	          title: 'Creates a new rectangle',
-	          html: '⬛'
+	          html: String.fromCodePoint(0x25AD)
 	        }
 	      });
 	      L.NewClearControl = L.EditControl.extend({
@@ -2208,7 +2208,7 @@
 	            self.map.editTools.featuresLayer.clearLayers();
 	          },
 	          title: 'Clears all polygons',
-	          html: '🚫'
+	          html: String.fromCodePoint(0x1F6AB)
 	        }
 	      });
 
