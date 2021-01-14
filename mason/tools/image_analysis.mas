@@ -300,7 +300,7 @@ jQuery(document).ready(function(){
             current_progress += (1 / image_total) * 10;
             progress_bar.css("width", current_progress + "%")
             .attr("aria-valuenow", current_progress)
-            .text(current_progress + "%");
+            .text(Math.round(current_progress) + "%");
 
             var call = jQuery.ajax({
                 url: '/ajax/image_analysis/submit',
@@ -318,7 +318,7 @@ jQuery(document).ready(function(){
                     current_progress += (1 / image_total) * 90;
                     progress_bar.css("width", current_progress + "%")
                     .attr("aria-valuenow", current_progress)
-                    .text(current_progress + "%");
+                    .text(Math.round(current_progress) + "%");
                     response.results.map(function(item) {
                         if (item.result.error) {
                             progress_modal.find('.modal-footer').append(
@@ -344,7 +344,7 @@ jQuery(document).ready(function(){
             return call;
         });
 
-        jQuery('#progress_msg').text('All '+image_total+' images submitted, waiting for results.');
+        jQuery('#progress_msg').text('All '+image_total+' images submitted, waiting for responses.');
 
         jQuery.when.apply(jQuery, deferred_calls).then(function() {
             console.log("Results are:");
@@ -360,7 +360,7 @@ jQuery(document).ready(function(){
                         current_progress = 100;
                         progress_bar.css("width", current_progress + "%")
                         .attr("aria-valuenow", current_progress)
-                        .text(current_progress + "%");
+                        .text(Math.round(current_progress) + "%");
                         jQuery('#progress_msg').text('Building results table.');
                         jQuery('#image_analysis_result').show();
 
