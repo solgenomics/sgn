@@ -10,6 +10,7 @@ use SGN::Model::Cvterm;
 use CXGN::BrAPI::v2::ExternalReferences;
 use CXGN::BrAPI::v2::Methods;
 use CXGN::BrAPI::v2::Scales;
+use CXGN::BrAPI::Exceptions::NotFoundException;
 
 extends 'CXGN::BrAPI::v2::Common';
 
@@ -70,8 +71,8 @@ sub observation_levels {
 sub search {
     my $self = shift;
     my $inputs = shift;
+    my $c = shift;
     my $status = $self->status;
-    my $supported_crop = $inputs->{supportedCrop};
     my @classes = $inputs->{traitClasses} ? @{$inputs->{traitClasses}} : ();
     my @cvterm_names = $inputs->{observationVariableNames} ? @{$inputs->{observationVariableNames}} : ();
     my @datatypes = $inputs->{datatypes} ? @{$inputs->{datatypes}} : ();
@@ -145,7 +146,7 @@ sub search {
 
     my $and_where_clause = join ' AND ', @and_wheres;
 
-    $self->get_query($supported_crop, $and_where_clause, $join, 1);
+    $self->get_query($c, $and_where_clause, $join, 1);
 
 }
 
@@ -153,7 +154,6 @@ sub detail {
     my $self = shift;
     my $trait_id = shift;
     my $c = shift;
-    my $supported_crop = $c->config->{'supportedCrop'};
 
     my $join = '';
     my $and_where;
@@ -165,13 +165,13 @@ sub detail {
         $and_where = $and_where." AND cvterm.cvterm_id IN ($trait_id)";
     }
 
-    $self->get_query($supported_crop, $and_where, $join, 0);
+    $self->get_query($c, $and_where, $join, 0);
 
 }
 
 sub get_query {
     my $self = shift;
-    my $supported_crop = shift;
+    my $c = shift;
     my $and_where = shift;
     my $join = shift;
     my $array = shift;
@@ -185,6 +185,7 @@ sub get_query {
     my $limit = $page_size;
     my $offset = $page*$page_size;
     my $total_count = 0;
+    #TODO: Can try a pivot to speed up this function so we retrieve all at once;
     my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, db.url, dbxref.dbxref_id, dbxref.accession, array_agg(cvtermsynonym.synonym) filter (where cvtermsynonym.synonym is not null), cvterm.is_obsolete, count(cvterm.cvterm_id) OVER() AS full_count FROM cvterm ".
         "JOIN dbxref USING(dbxref_id) ".
         "JOIN db using(db_id) ".
@@ -199,74 +200,21 @@ sub get_query {
     $sth->execute();
     while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $db_url, $dbxref_id, $accession, $synonym, $obsolete, $count) = $sth->fetchrow_array()) {
         $total_count = $count;
-        #foreach (@$synonym) {
-        #    $_ =~ s/ EXACT \[\]//;
-        #    $_ =~ s/\"//g;
-        #}
-        my $trait = CXGN::Trait->new({bcs_schema=>$self->bcs_schema, cvterm_id=>$cvterm_id});
-        my $method_object = CXGN::BrAPI::v2::Methods->new({
+
+        #TODO: This is running many queries each time, can make one big query above if need be
+        #TODO: Fill in as many values as possible to reduce the number of queries
+        # Retrieve the trait, which retrieves its scales and methods
+        print Dumper($dbxref_id);
+        my $trait = CXGN::Trait->new({
             bcs_schema => $self->bcs_schema,
-            cvterm_id => $cvterm_id
+            cvterm_id  => $cvterm_id,
+            dbxref_id  => $dbxref_id,
+            db_id      => $db_id,
+            db         => $db_name,
+            accession       => $accession
         });
-        my $method = $method_object->method_db();
-        my $scale_object = CXGN::BrAPI::v2::Scales->new({
-            bcs_schema => $self->bcs_schema,
-            cvterm_id => $cvterm_id
-        });
-        my $scale = $scale_object->scale_db();
-        my $references = CXGN::BrAPI::v2::ExternalReferences->new({
-            bcs_schema => $self->bcs_schema,
-            table_name => 'Cv::Dbxrefprop',
-            base_id_key => 'dbxref_id',
-            base_id => $dbxref_id
-        });
-        my $external_references = $references->references_db();
-        my $categories = $trait->categories;
-        my @brapi_categories = split '/', $categories;
-        push @variables, {
-            additionalInfo          => undef,
-            commonCropName          => $supported_crop,
-            contextOfUse            => undef,
-            defaultValue            => $trait->default_value,
-            documentationURL        => $trait->uri,
-            externalReferences      => $external_references,
-            growthStage             => undef,
-            institution             => undef,
-            language                => 'eng',
-            method                  => $method,
-            observationVariableDbId => qq|$cvterm_id|,
-            observationVariableName => $cvterm_name . "|" . $db_name . ":" . $accession,
-            ontologyReference       => {
-                documentationLinks => $trait->uri ? $trait->uri : undef,
-                ontologyDbId       => $trait->db_id ? $trait->db_id : undef,
-                ontologyName       => $trait->db ? $trait->db : undef,
-                version            => undef,
-            },
-            scale                   => $scale,
-            scientist               => undef,
-            status                  => $obsolete = 0 ? "Obsolete" : "Active",
-            submissionTimestamp     => undef,
-            synonyms                => $synonym,
-            trait                   => {
-                alternativeAbbreviations => undef,
-                attribute                => $cvterm_name,
-                entity                   => undef,
-                externalReferences       => $external_references,
-                mainAbbreviation         => undef,
-                ontologyReference        => {
-                    documentationLinks => $trait->uri ? $trait->uri : undef,
-                    ontologyDbId       => $trait->db_id ? $trait->db_id : undef,
-                    ontologyName       => $trait->db ? $trait->db : undef,
-                    version            => undef,
-                },
-                status                   => $obsolete = 0 ? "Obsolete" : "Active",
-                synonyms                 => $synonym,
-                traitClass               => undef,
-                traitDescription         => $cvterm_definition,
-                traitDbId                => qq|$cvterm_id|,
-                traitName                => $cvterm_name,
-            },
-        };
+
+        push @variables, $self->_construct_variable_response($c, $trait);
     }
 
     my $pagination;
@@ -285,7 +233,7 @@ sub get_query {
 
 }
 
-# TODO: handle create and update, just create for now
+# TODO: Make validation errors better
 sub store {
 
     my $self = shift;
@@ -299,110 +247,106 @@ sub store {
 
     my @variable_ids;
 
-    # nothing for now, eventually edit
-    my $cvterm_id = undef;
-    my $supported_crop = $c->config->{'supportedCrop'};
-    my %result;
+    my @result;
 
-    #print Dumper(\$data);
     foreach my $params (@{$data}) {
         my $cvterm_id = $params->{observationVariableDbId} || undef;
         my $name = $params->{observationVariableName};
         my $ontology_id = $params->{ontologyReference}{ontologyDbId};
         my $description = $params->{trait}{traitDescription};
-        my $synonyms = $params->{trait}{synonyms};
-        my $references = $params->{externalReferences};
-        my $method = $params->{method};
-        my $scale = $params->{scale};
-        #print Dumper($method);
+        my $synonyms = $params->{synonyms};
+
+        #TODO: Parse this when it initially comes into the brapi controller
+        my $scale = CXGN::BrAPI::v2::Scales->new({
+            bcs_schema => $self->bcs_schema,
+            scale => $params->{scale}
+        });
+        my $method = CXGN::BrAPI::v2::Methods->new({
+            bcs_schema => $self->bcs_schema,
+            method => $params->{method}
+        });
+        my $external_references = CXGN::BrAPI::v2::ExternalReferences->new({
+            bcs_schema => $self->bcs_schema,
+            external_references => $params->{externalReferences},
+            table_name => "Cv::Dbxrefprop",
+            base_id_key => "dbxref_id"
+        });
         my $trait = CXGN::Trait->new({ bcs_schema => $self->bcs_schema,
             cvterm_id                             => $cvterm_id,
             name                                  => $name,
             ontology_id                           => $ontology_id,
             definition                            => $description,
             synonyms                              => $synonyms,
-            external_references                   => $references,
+            external_references                   => $external_references,
             method                                => $method,
             scale                                 => $scale
         });
+
         my $variable = $trait->store();
-
-        if ($variable->{'error'}) {
-            # TODO: status codes
-            return CXGN::BrAPI::JSONResponse->return_error($self->status, $variable->{'error'});
-        } else {
-            $variable = $variable->{variable};
-            push @variable_ids, $variable;
-            #print "New variable is ".Dumper($variable)."\n";
-        }
-
-        my $method_object = CXGN::BrAPI::v2::Methods->new({
-            bcs_schema => $self->bcs_schema,
-            cvterm_id => $variable->cvterm_id
-        });
-        my $method_json = $method_object->method_db();
-        my $scale_object = CXGN::BrAPI::v2::Scales->new({
-            bcs_schema => $self->bcs_schema,
-            cvterm_id => $variable->cvterm_id
-        });
-        my $scale_json = $scale_object->scale_db();
-        my $refs= CXGN::BrAPI::v2::ExternalReferences->new({
-            bcs_schema => $self->bcs_schema,
-            table_name => "Cv::Dbxrefprop",
-            base_id_key => "dbxref_id",
-            base_id => $variable->dbxref_id
-        });
-        my $external_references = $refs->references_db();
-
-        %result = (
-            additionalInfo => undef,
-            commonCropName => $supported_crop,
-            contextOfUse => undef,
-            defaultValue => $variable->default_value,
-            documentationURL => $variable->uri,
-            externalReferences => $external_references,
-            growthStage => undef,
-            institution  => undef,
-            language => 'eng',
-            method => $method_json,
-            observationVariableDbId => $variable->cvterm_id,
-            observationVariableName => $variable->display_name,
-            ontologyReference => {
-                documentationLinks => $variable->uri ? $variable->uri : undef,
-                ontologyDbId => $variable->db_id ? $variable->db_id : undef,
-                ontologyName => $variable->db ? $variable->db : undef,
-                version => undef,
-            },
-            scale => $scale_json,
-            scientist => undef,
-            status => "Active", # creating so will always be active
-            submissionTimestamp => undef,
-            synonyms => $synonyms, # kind of cheating, not reading out
-            trait => {
-                alternativeAbbreviations => undef,
-                attribute => $variable->name,
-                entity => undef,
-                externalReferences => $external_references,
-                mainAbbreviation => undef,
-                ontologyReference => {
-                    documentationLinks => $variable->uri ? $variable->uri : undef,
-                    ontologyDbId => $variable->db_id ? $variable->db_id : undef,
-                    ontologyName => $variable->db ? $variable->db : undef,
-                    version => undef,
-                },
-                status => "Active",
-                synonyms => $synonyms,
-                traitClass => undef,
-                traitDescription => $variable->definition,
-                traitDbId => $variable->cvterm_id,
-                traitName => $variable->name,
-            },
-        );
+        print Dumper($variable);
+        push @result, $self->_construct_variable_response($c, $variable);
     }
 
     my $count = scalar @variable_ids;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success( \%result, $pagination, undef, $self->status(), $count . " Variables were saved.");
+    return CXGN::BrAPI::JSONResponse->return_success( @result, $pagination, undef, $self->status(), $count . " Variables were saved.");
+}
+
+sub update {
+
+    my $self = shift;
+    my $data = shift;
+    my $user_id = shift;
+    my $c = shift;
+
+    my $schema = $self->bcs_schema();
+
+    # Check that cvterm that was passed in exists
+    #TODO: This can go away once trait parsed in controller
+    if ($data->{observationVariableDbId}){
+        my ($existing_cvterm) = $schema->resultset("Cv::Cvterm")->find({ cvterm_id => $data->{observationVariableDbId} });
+        if (!defined($existing_cvterm)) {
+            warn "An observationVariableId is required for variable update.";
+            CXGN::BrAPI::Exceptions::NotFoundException->throw({message => 'observationVariableId not specified.'});
+        }
+    }
+
+    #TODO: Add a check for these required values
+    my $cvterm_id = $data->{observationVariableDbId} || undef;
+    my $name = $data->{observationVariableName};
+    my $ontology_id = $data->{ontologyReference}{ontologyDbId};
+    my $description = $data->{trait}{traitDescription};
+    my $synonyms = $data->{synonyms};
+
+    my $scale = CXGN::BrAPI::v2::Scales->new({
+        bcs_schema => $self->bcs_schema,
+        scale => $data->{scale}
+    });
+    my $method = CXGN::BrAPI::v2::Methods->new({
+        bcs_schema => $self->bcs_schema,
+        method => $data->{method}
+    });
+    my $external_references = CXGN::BrAPI::v2::ExternalReferences->new({
+        bcs_schema => $self->bcs_schema,
+        external_references => $data->{externalReferences},
+        table_name => "Cv::Dbxrefprop",
+        base_id_key => "dbxref_id"
+    });
+    my $trait = CXGN::Trait->new({ bcs_schema => $self->bcs_schema,
+        cvterm_id                             => $cvterm_id,
+        name                                  => $name,
+        ontology_id                           => $ontology_id,
+        definition                            => $description,
+        synonyms                              => $synonyms,
+        external_references                   => $external_references,
+        method                                => $method,
+        scale                                 => $scale
+    });
+
+    my $variable = $trait->update();
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response(1,1,1);
+    my $response = $self->_construct_variable_response($c, $variable);
+    return CXGN::BrAPI::JSONResponse->return_success($response, $pagination, undef, $self->status(), "Variable was updated.");
 }
 
 sub observation_variable_ontologies {
@@ -456,6 +400,64 @@ sub observation_variable_ontologies {
     my %result = (data=>$data_window);
     my @data_files;
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Ontologies result constructed');
+}
+
+sub _construct_variable_response {
+    my $self = shift;
+    my $c = shift;
+    my $variable = shift;
+
+    my $external_references_json;
+    if (defined($variable->external_references)) { $external_references_json = $variable->external_references->references_db();}
+    my $method_json;
+    if (defined($variable->method)) { $method_json = $variable->method->method_db();}
+    my $scale_json;
+    if (defined($variable->scale)) { $scale_json = $variable->scale->scale_db();}
+
+    return {
+        additionalInfo => undef,
+        commonCropName => $c->config->{'supportedCrop'},
+        contextOfUse => undef,
+        defaultValue => $variable->default_value,
+        documentationURL => $variable->uri,
+        externalReferences => $external_references_json,
+        growthStage => undef,
+        institution  => undef,
+        language => 'eng',
+        method => $method_json,
+        observationVariableDbId => $variable->cvterm_id,
+        observationVariableName => $variable->name,
+        ontologyReference => {
+            documentationLinks => $variable->uri ? $variable->uri : undef,
+            ontologyDbId => $variable->db_id ? $variable->db_id : undef,
+            ontologyName => $variable->db ? $variable->db : undef,
+            version => undef,
+        },
+        scale => $scale_json,
+        scientist => undef,
+        status => "Active", # creating so will always be active
+        submissionTimestamp => undef,
+        synonyms => $variable->synonyms, # kind of cheating, not reading out
+        trait => {
+            alternativeAbbreviations => undef,
+            attribute => undef,
+            entity => undef,
+            externalReferences => $external_references_json,
+            mainAbbreviation => undef,
+            ontologyReference => {
+                documentationLinks => $variable->uri ? $variable->uri : undef,
+                ontologyDbId => $variable->db_id ? $variable->db_id : undef,
+                ontologyName => $variable->db ? $variable->db : undef,
+                version => undef,
+            },
+            status => "Active",
+            synonyms => $variable->synonyms,
+            traitClass => undef,
+            traitDescription => $variable->definition,
+            traitDbId => $variable->cvterm_id,
+            traitName => $variable->name,
+        }
+    }
 }
 
 1;

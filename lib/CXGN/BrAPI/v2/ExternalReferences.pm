@@ -4,6 +4,7 @@ use Moose;
 use Data::Dumper;
 use Try::Tiny;
 use List::Util 'max';
+use CXGN::BrAPI::Exceptions::ServerException;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -17,9 +18,9 @@ has 'external_references' => (
 );
 
 has 'base_id' => (
-    isa => 'Int',
+    isa => 'Maybe[Int]',
     is => 'rw',
-    required => 1,
+    required => 0,
 );
 
 has 'table_name' => (
@@ -136,6 +137,11 @@ sub store {
     my $base_id = $self->base_id();
     my $base_id_key = $self->base_id_key();
 
+    if (!defined($self->base_id)) {
+        warn "External References base id not specified, cannot store";
+        CXGN::BrAPI::Exceptions::ServerException->throw({message => "Error storing external reference"});
+    }
+
     my @references = @{$self->external_references()};
     my $rank = 0;
 
@@ -144,6 +150,9 @@ sub store {
     # get cvterm ids for reference_id & reference_source
     my $reference_id = $self->reference_id;
     my $reference_source = $self->reference_source_id;
+
+    # delete previous references
+    $self->delete();
 
     my $coderef = sub {
 
@@ -188,6 +197,23 @@ sub store {
 
     return { success => "External References added successfully" };
 
+}
+
+sub delete {
+    my $self = shift;
+    my $schema = $self->bcs_schema();
+
+    $schema->resultset($self->table_name())->search(
+        {
+            $self->base_id_key => $self->base_id,
+            type_id   => { -in =>
+                [
+                    $self->reference_id,
+                    $self->reference_source_id,
+                ]
+            }
+        }
+    ) -> delete;
 }
 
 1;

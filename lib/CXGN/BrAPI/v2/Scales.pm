@@ -19,7 +19,7 @@ has 'scale' => (
 has 'cvterm_id' => (
     isa => 'Int',
     is => 'rw',
-    required => 1,
+    required => 0,
 );
 
 has 'cv_id' => (
@@ -231,6 +231,15 @@ sub store {
     my $scale = $self->scale();
     my @scale_categories;
 
+    print Dumper($cvterm_id);
+    if (!defined($cvterm_id)) {
+        warn "Error: Scale cvterm_id not specified, cannot store";
+        CXGN::BrAPI::Exceptions::ServerException->throw({message => "Error storing trait scale"});
+    }
+
+    # Clear out old scale
+    $self->delete();
+
     if ($self->scale->{'validValues'}{'categories'}) {
         @scale_categories = @{$self->scale->{'validValues'}{'categories'}};
     }
@@ -354,6 +363,29 @@ sub store {
 
     return { success => "Scale added successfully" };
 
+}
+
+sub delete {
+
+    my $self = shift;
+    my $schema = $self->bcs_schema();
+    my $cvterm_id = $self->cvterm_id();
+
+    $schema->resultset("Cv::Cvtermprop")->search(
+        {   cvterm_id => $cvterm_id,
+            type_id   => { -in =>
+                [
+                    $self->scale_format_id,
+                    $self->scale_decimal_places_id,
+                    $self->scale_categories_id,
+                    $self->scale_categories_label_id,
+                    $self->scale_categories_value_id,
+                    $self->scale_maximum_id,
+                    $self->scale_minimum_id
+                ]
+            }
+        }
+    )->delete;
 }
 
 1;

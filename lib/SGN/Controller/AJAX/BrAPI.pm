@@ -3319,17 +3319,31 @@ sub observationvariable_list_POST {
 	# TODO: auth later, not doing for now
 	# my ($auth,$user_id) = _authenticate_user($c);
 	my $user_id;
-	my $clean_inputs = $c->stash->{clean_inputs};
-	my $data = $clean_inputs;
-	my @all_variables;
-	foreach my $variable (values %{$data}) {
-		push @all_variables, $variable;
-	}
 
-	my $brapi = $self->brapi_module;
-	my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
-	my $brapi_package_result = $brapi_module->store(\@all_variables,$user_id, $c);
-	_standard_response_construction($c, $brapi_package_result);
+	my $response;
+	try {
+		my $clean_inputs = $c->stash->{clean_inputs};
+		my $data = $clean_inputs;
+		my @all_variables;
+		foreach my $variable (values %{$data}) {
+			push @all_variables, $variable;
+		}
+
+		my $brapi = $self->brapi_module;
+		my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
+		$response = $brapi_module->store(\@all_variables,$user_id, $c);
+	} catch {
+		warn Dumper($_);
+		if ($_->isa('CXGN::BrAPI::Exceptions::ConflictException')){
+			my $error = CXGN::BrAPI::JSONResponse->return_error([], $_->message);
+			_standard_response_construction($c, $error, 409);
+		} else {
+			my $error = CXGN::BrAPI::JSONResponse->return_error([], "An unknown error has occurred.");
+			_standard_response_construction($c, $error, 500);
+		}
+	};
+
+	_standard_response_construction($c, $response);
 }
 
 sub observationvariable_list_GET {
@@ -3366,6 +3380,38 @@ sub observationvariable_detail_GET {
 		$trait_id,$c
 	);
 	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub observationvariable_detail_PUT {
+	my $self = shift;
+	my $c = shift;
+	my $variableDbId = shift;
+	# TODO: auth later, not doing for now
+	# my ($auth,$user_id) = _authenticate_user($c);
+	my $user_id;
+
+	my $response;
+	try {
+		my $clean_inputs = $c->stash->{clean_inputs};
+		#TODO: Parse into a trait object to check bad requests
+		my $data = $clean_inputs;
+		$data->{observationVariableDbId} = $variableDbId;
+
+		my $brapi = $self->brapi_module;
+		my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
+		$response = $brapi_module->update($data,$user_id,$c);
+	} catch {
+		warn Dumper($_);
+		if ($_->isa('CXGN::BrAPI::Exceptions::NotFoundException')){
+			my $error = CXGN::BrAPI::JSONResponse->return_error([], $_->message);
+			_standard_response_construction($c, $error, 404);
+		} else {
+			my $error = CXGN::BrAPI::JSONResponse->return_error([], "An unknown error has occurred.");
+			_standard_response_construction($c, $error, 500);
+		}
+	};
+
+	_standard_response_construction($c, $response);
 }
 
 

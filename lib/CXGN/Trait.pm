@@ -7,6 +7,8 @@ use Try::Tiny;
 use CXGN::BrAPI::v2::ExternalReferences;
 use CXGN::BrAPI::v2::Methods;
 use CXGN::BrAPI::v2::Scales;
+use CXGN::BrAPI::Exceptions::ConflictException;
+use CXGN::BrAPI::Exceptions::ServerException;
 
 ## to do: add concept of trait short name; provide alternate constructors for term, shortname, and synonyms etc.
 
@@ -51,7 +53,7 @@ has 'display_name' => (isa => 'Str',
     );
 
 has 'accession' => (isa => 'Str',
-		    is => 'ro',
+		    is => 'rw',
 		    lazy => 1,
 		    default => sub { 
 			my $self = shift;
@@ -82,7 +84,7 @@ has 'term' => (isa => 'Str',
     );
 
 has 'db'   => ( isa => 'Str',
-		is => 'ro',
+		is => 'rw',
 		lazy => 1,
 		default => sub { 
 		    my $self = shift;
@@ -99,15 +101,17 @@ has 'db'   => ( isa => 'Str',
 
 has 'db_id'   => (
 	isa => 'Int',
-	is => 'ro',
+	is => 'rw',
 	lazy => 1,
 	default => sub {
 		my $self = shift;
-		my $rs = $self->cvterm->search_related("dbxref");
-		if ($rs->count() == 1) {
-			my $db_id =  $rs->first()->get_column("db_id");
-			#print STDERR "DBID = $db_id\n";
-			return $db_id;
+		if ($self->cvterm){
+			my $rs = $self->cvterm->search_related("dbxref");
+			if ($rs->count() == 1) {
+				my $db_id =  $rs->first()->get_column("db_id");
+				#print STDERR "DBID = $db_id\n";
+				return $db_id;
+			}
 		}
 		return "";
 	}
@@ -115,14 +119,16 @@ has 'db_id'   => (
 
 has 'dbxref_id' => (
 	isa => 'Int',
-	is => 'ro',
+	is => 'rw',
 	lazy => 1,
 	default => sub {
 		my $self = shift;
-		my $rs = $self->cvterm->search_related("dbxref");
-		if ($rs->count() == 1) {
-			my $dbxref_id =  $rs->first()->get_column("dbxref_id");
-			return $dbxref_id;
+		if ($self->cvterm){
+			my $rs = $self->cvterm->search_related("dbxref");
+			if ($rs->count() == 1) {
+				my $dbxref_id =  $rs->first()->get_column("dbxref_id");
+				return $dbxref_id;
+			}
 		}
 		return "";
 	}
@@ -266,24 +272,57 @@ has 'ontology_id' => (
 
 has 'synonyms' => (
 	isa => 'Maybe[Any]',
-	is  => 'rw'
+	is  => 'rw',
+	lazy => 1,
+	builder => '_fetch_synonyms'
 );
 
 has 'external_references' => (
-	isa => 'Maybe[ArrayRef[HashRef[Str]]]',
-	is  => 'rw'
+	isa => 'Maybe[CXGN::BrAPI::v2::ExternalReferences]',
+	is  => 'rw',
+	lazy => 1,
+	default => sub {
+		my $self = shift;
+		if (defined($self->dbxref_id)) {
+			return CXGN::BrAPI::v2::ExternalReferences->new({
+				bcs_schema => $self->bcs_schema,
+				table_name => 'Cv::Dbxrefprop',
+				base_id_key => 'dbxref_id',
+				base_id => $self->dbxref_id
+			});
+		} else {return undef;}
+	}
 );
 
 has 'method' => (
-	isa => 'Maybe[HashRef[Any]]',
-	is  => 'rw'
+	isa => 'Maybe[CXGN::BrAPI::v2::Methods]',
+	is  => 'rw',
+	lazy => 1,
+	default => sub {
+		my $self = shift;
+		if (defined($self->cvterm_id)) {
+			return CXGN::BrAPI::v2::Methods->new({
+				bcs_schema => $self->bcs_schema,
+				cvterm_id => $self->cvterm_id
+			});
+		} else { return undef;}
+	}
 );
 
 has 'scale' => (
-	isa => 'Maybe[HashRef[Any]]',
-	is  => 'rw'
+	isa => 'Maybe[CXGN::BrAPI::v2::Scales]',
+	is  => 'rw',
+	lazy => 1,
+	default => sub {
+		my $self = shift;
+		if (defined($self->cvterm_id)) {
+			return CXGN::BrAPI::v2::Scales->new({
+				bcs_schema => $self->bcs_schema,
+				cvterm_id => $self->cvterm_id
+			});
+		} else {return undef;}
+	}
 );
-
 
 sub BUILD { 
     #print STDERR "BUILDING...\n";
@@ -291,24 +330,13 @@ sub BUILD {
     my $cvterm;
 
     if ($self->cvterm_id){
+		# TODO: Throw a good error if cvterm can't be found
         $cvterm = $self->bcs_schema()->resultset("Cv::Cvterm")->find( { cvterm_id => $self->cvterm_id });
         $self->cvterm($cvterm);
     }
     if (defined $cvterm) {
         $self->name($self->name || $cvterm->name );
-		$self->definition($self->definition());
-		$self->ontology_id($self->ontology_id);
-		$self->synonyms($self->synonyms());
-		$self->external_references($self->external_references());
-		$self->method($self->method());
-		$self->scale($self->scale());
     }
-
-    #my $cvterm = $self->bcs_schema()->resultset("Cv::Cvterm")->find( { cvterm_id => $self->cvterm_id() });
-    #if ($cvterm) {
-	#print STDERR "Cvterm with ID ".$self->cvterm_id()." was found!\n";
-    #}
-    #$self->cvterm($cvterm);
 
     return $self;
 }
@@ -352,8 +380,6 @@ sub store {
 
 	my $root_id = $cvterm->get_column('cvterm_id');
 
-
-
 	# check to see if specified ontology exists
 	my $db = $schema->resultset("General::Db")->find(
 		{
@@ -363,7 +389,8 @@ sub store {
 	);
 
 	if (!defined($db)) {
-		return {error => "Ontology id does not exist"}
+		warn "Error: Unable to create trait, ontology does not exist";
+		CXGN::BrAPI::Exceptions::ServerException->throw({message => "Unable to create trait"});
 	}
 
 	$ontology_id = $db->get_column('db_id');
@@ -379,7 +406,7 @@ sub store {
 	);
 
 	if (defined($cvterm_exists)) {
-		return {error => "Variable with that name already exists"}
+		CXGN::BrAPI::Exceptions::ConflictException->throw({message => "Variable with that name already exists"});
 	}
 
 	# lookup last numeric accession number in ontology if one exists so we can increment off that
@@ -443,66 +470,100 @@ sub store {
 		}
 
 		# save scale properties
-		my $scale = CXGN::BrAPI::v2::Scales->new({
-			bcs_schema => $self->bcs_schema,
-			scale => $self->scale,
-			cvterm_id => $new_term->get_column('cvterm_id')
-		});
-
-		$scale->store();
-
-		if ($scale->{'error'}) {
-			return {error => $scale->{'error'}};
-		}
-
-		# save method properties
-		my $m = CXGN::BrAPI::v2::Methods->new({
-			bcs_schema => $self->bcs_schema,
-			method => $self->method,
-			cvterm_id => $new_term->get_column('cvterm_id')
-		});
-
-		$m->store();
-
-		if ($m->{'error'}) {
-			return {error => $m->{'error'}};
-		}
-
-		# save external references
-		my $references = CXGN::BrAPI::v2::ExternalReferences->new({
-			bcs_schema => $self->bcs_schema,
-			external_references => $self->external_references,
-			table_name => "Cv::Dbxrefprop",
-			base_id_key => "dbxref_id",
-			base_id => $new_term_dbxref->dbxref_id()
-		});
-
-		$references->store();
-
-		if ($references->{'error'}) {
-			return {error => $references->{'error'}};
-		}
-
-
+		try {
+			$self->scale->{cvterm_id} = $new_term->cvterm_id;
+			$self->scale->store();
+			$self->method->{cvterm_id} = $new_term->cvterm_id;
+			$self->method->store();
+			$self->external_references->{base_id} = $new_term->dbxref_id;
+			$self->external_references->store();
+		} catch {
+			print Dumper($_);
+			if ($_->isa('CXGN::BrAPI::Exceptions::Exception')){
+				$_->throw();
+			} else {
+				warn "Error: " . Dumper($_);
+				CXGN::BrAPI::Exceptions::ServerException->throw({message => 'Unknown error has occurred.'});
+			}
+		};
 
 	};
 
-	my $transaction_error;
-
-	try {
-		$self->bcs_schema()->txn_do($coderef);
-	} catch {
-		$transaction_error =  $_;
-	};
-
-	if ($transaction_error) {
-		return {error => "Transaction error trying to write to db"}
-	}
+	$self->bcs_schema()->txn_do($coderef);
 
 	$self->cvterm_id($new_term->get_column('cvterm_id'));
 	$self->cvterm($new_term);
 
-	return { success => "Variable added successfully\n", variable=>$self };
+	return $self;
+}
+
+sub update {
+
+	my $self = shift;
+	my $schema = $self->bcs_schema();
+
+	# new variable
+	my $name = _trim($self->name());
+	my $description = $self->definition();
+	my $synonyms = $self->synonyms();
+	my $cvterm_id = $self->cvterm_id();
+
+	$self->bcs_schema()->txn_do(sub {
+
+		# Update the variable
+		$self->cvterm->update({
+			name       => $name,
+			definition => $description
+		});
+
+		# Remove old synonyms
+		$self->delete_existing_synonyms();
+
+		# Add new synonyms
+		foreach my $synonym (@{$synonyms}) {
+			$self->cvterm->add_synonym($synonym);
+		}
+
+		# update scale properties
+		try {
+			$self->scale->{cvterm_id} = $cvterm_id;
+			$self->scale->store();
+			$self->method->{cvterm_id} = $cvterm_id;
+			$self->method->store();
+			$self->external_references->{base_id} = $self->dbxref_id;
+			$self->external_references->store();
+		} catch {
+			if ($_->isa('CXGN::BrAPI::Exceptions::Exception')){
+				$_->throw();
+			} else {
+				warn "Error: " . Dumper($_);
+				CXGN::BrAPI::Exceptions::ServerException->throw({message => 'Unknown error has occurred.'});
+			}
+		};
+	});
+
+	# Get the variable
+	#TODO: Query the variable
+	return $self;
+}
+
+sub delete_existing_synonyms {
+	my $self = shift;
+	my $schema = $self->bcs_schema();
+	$schema->resultset("Cv::Cvtermsynonym")->search(
+		{cvterm_id => $self->cvterm_id}
+	)->delete;
+}
+
+sub _fetch_synonyms {
+	my $self = shift;
+	my $synonym_rs = $self->cvterm->cvtermsynonyms;
+
+	my @synonyms =() ;
+	while ( my $s = $synonym_rs->next ) {
+		push (@synonyms, $s->synonym)  ;
+	}
+	return @synonyms;
 }
 
 # TODO: common utilities somewhere, used by Location also
