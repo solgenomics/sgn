@@ -265,7 +265,7 @@ sub store {
         });
         my $external_references = CXGN::BrAPI::v2::ExternalReferences->new({
             bcs_schema => $self->bcs_schema,
-            external_references => $params->{externalReferences},
+            external_references => $params->{externalReferences} || [],
             table_name => "Cv::Dbxrefprop",
             base_id_key => "dbxref_id"
         });
@@ -325,7 +325,7 @@ sub update {
     });
     my $external_references = CXGN::BrAPI::v2::ExternalReferences->new({
         bcs_schema => $self->bcs_schema,
-        external_references => $data->{externalReferences},
+        external_references => $data->{externalReferences} || [],
         table_name => "Cv::Dbxrefprop",
         base_id_key => "dbxref_id"
     });
