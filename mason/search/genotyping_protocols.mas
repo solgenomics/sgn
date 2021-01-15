@@ -10,18 +10,19 @@
     <div class="panel panel-default">
         <div class="panel-body">
             <table id="genotyping_protocol_search_results" width="100%" class="table table-hover table-striped">
-            <thead>
-              <tr>
-                  <th>Protocol</th>
-                  <th>Header Description</th>
-                  <th>Number of Markers</th>
-                  <th>Protocol Description</th>
-                  <th>Reference Genome</th>
-                  <th>Species Name</th>
-                  <th>Sample Type</th>
-                  <th>Create Date</th>
-            </tr>
-            </thead>
+                <thead>
+                    <tr>
+                        <th>Protocol</th>
+                        <th>Marker Type</th>
+                        <th>Header Description</th>
+                        <th>Number of Markers</th>
+                        <th>Protocol Description</th>
+                        <th>Reference Genome</th>
+                        <th>Species Name</th>
+                        <th>Sample Type</th>
+                        <th>Create Date</th>
+                    </tr>
+                </thead>
             </table>
         </div>
     </div>
