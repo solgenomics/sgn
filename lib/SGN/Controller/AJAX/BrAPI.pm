@@ -3333,11 +3333,11 @@ sub observationvariable_list_POST {
 		my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
 		$response = $brapi_module->store(\@all_variables,$user_id, $c);
 	} catch {
-		warn Dumper($_);
 		if ($_->isa('CXGN::BrAPI::Exceptions::ConflictException')){
 			my $error = CXGN::BrAPI::JSONResponse->return_error([], $_->message);
 			_standard_response_construction($c, $error, 409);
 		} else {
+			warn Dumper($_);
 			my $error = CXGN::BrAPI::JSONResponse->return_error([], "An unknown error has occurred.");
 			_standard_response_construction($c, $error, 500);
 		}

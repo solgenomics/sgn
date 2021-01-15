@@ -389,8 +389,7 @@ sub store {
 	);
 
 	if (!defined($db)) {
-		warn "Error: Unable to create trait, ontology does not exist";
-		CXGN::BrAPI::Exceptions::ServerException->throw({message => "Unable to create trait"});
+		CXGN::BrAPI::Exceptions::ServerException->throw({message => "Error: Unable to create trait, ontology does not exist"});
 	}
 
 	$ontology_id = $db->get_column('db_id');
@@ -478,12 +477,10 @@ sub store {
 			$self->external_references->{base_id} = $new_term->dbxref_id;
 			$self->external_references->store();
 		} catch {
-			print Dumper($_);
 			if ($_->isa('CXGN::BrAPI::Exceptions::Exception')){
 				$_->throw();
 			} else {
-				warn "Error: " . Dumper($_);
-				CXGN::BrAPI::Exceptions::ServerException->throw({message => 'Unknown error has occurred.'});
+				CXGN::BrAPI::Exceptions::ServerException->throw({message => $_->{message} || 'Unknown error has occurred.'});
 			}
 		};
 
@@ -536,8 +533,7 @@ sub update {
 			if ($_->isa('CXGN::BrAPI::Exceptions::Exception')){
 				$_->throw();
 			} else {
-				warn "Error: " . Dumper($_);
-				CXGN::BrAPI::Exceptions::ServerException->throw({message => 'Unknown error has occurred.'});
+				CXGN::BrAPI::Exceptions::ServerException->throw({message => $_->{message} || 'Unknown error has occurred.'});
 			}
 		};
 	});

@@ -154,8 +154,7 @@ sub store {
     my $cv_id = $self->cv_id;
 
     if (!defined($cvterm_id)) {
-        warn "Error: Method cvterm_id not specified, cannot store";
-        CXGN::BrAPI::Exceptions::ServerException->throw({message => "Error storing trait method"});
+        CXGN::BrAPI::Exceptions::ServerException->throw({message => "Error: Method cvterm_id not specified, cannot store"});
     }
 
     # Clear our old method

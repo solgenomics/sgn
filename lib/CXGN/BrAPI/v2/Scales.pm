@@ -231,10 +231,8 @@ sub store {
     my $scale = $self->scale();
     my @scale_categories;
 
-    print Dumper($cvterm_id);
     if (!defined($cvterm_id)) {
-        warn "Error: Scale cvterm_id not specified, cannot store";
-        CXGN::BrAPI::Exceptions::ServerException->throw({message => "Error storing trait scale"});
+        CXGN::BrAPI::Exceptions::ServerException->throw({message => "Error: Scale cvterm_id not specified, cannot store"});
     }
 
     # Clear out old scale

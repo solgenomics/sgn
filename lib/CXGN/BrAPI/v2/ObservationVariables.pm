@@ -202,9 +202,7 @@ sub get_query {
         $total_count = $count;
 
         #TODO: This is running many queries each time, can make one big query above if need be
-        #TODO: Fill in as many values as possible to reduce the number of queries
         # Retrieve the trait, which retrieves its scales and methods
-        print Dumper($dbxref_id);
         my $trait = CXGN::Trait->new({
             bcs_schema => $self->bcs_schema,
             cvterm_id  => $cvterm_id,
@@ -283,7 +281,6 @@ sub store {
         });
 
         my $variable = $trait->store();
-        print Dumper($variable);
         push @result, $self->_construct_variable_response($c, $variable);
     }
 

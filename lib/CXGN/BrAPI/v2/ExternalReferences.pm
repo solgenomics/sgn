@@ -138,8 +138,7 @@ sub store {
     my $base_id_key = $self->base_id_key();
 
     if (!defined($self->base_id)) {
-        warn "External References base id not specified, cannot store";
-        CXGN::BrAPI::Exceptions::ServerException->throw({message => "Error storing external reference"});
+        CXGN::BrAPI::Exceptions::ServerException->throw({message => "Error: External References base id not specified, cannot store"});
     }
 
     my @references = @{$self->external_references()};
