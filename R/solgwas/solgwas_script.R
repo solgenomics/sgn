@@ -10,7 +10,7 @@ library("dplyr")
 ########################################
 args = commandArgs(trailingOnly = TRUE)
 
-pheno <- read.table(args[1], sep = "\t", header = TRUE)
+pheno <- read.table(args[1], sep = "\t", header = TRUE, stringsAsFactors = FALSE, check.names = FALSE)
 colnames(pheno)
 
 #### Current script accepts genotype data with markers as rows and accessions as columns
@@ -31,10 +31,11 @@ pc_check
 print("kinship_check:")
 kinship_check
 
-
 # pheno[1:5,1:21]
 # Note: still need to test how well this pmatch deals with other trickier cases
-pheno_vector <- pheno[,pmatch(study_trait, names(pheno))]
+pheno_names <- names(pheno)
+pheno_names <- gsub(" ", ".", pheno_names)
+pheno_vector <- pheno[,pmatch(study_trait, pheno_names)]
 pheno_vector[1:5]
 # Make a new phenotype table, including only the phenotype selected:
 pheno_mod <- cbind(pheno, pheno_vector)
