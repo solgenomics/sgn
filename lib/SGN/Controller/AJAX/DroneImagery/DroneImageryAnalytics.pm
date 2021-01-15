@@ -1657,7 +1657,10 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     $model_sum_square_residual_altered_env_3, $genetic_effect_min_altered_env_3, $genetic_effect_max_altered_env_3, $env_effect_min_altered_env_3, $env_effect_max_altered_env_3, $genetic_effect_sum_square_altered_env_3, $genetic_effect_sum_altered_env_3, $env_effect_sum_square_altered_env_3, $env_effect_sum_altered_env_3, $residual_sum_square_altered_env_3, $residual_sum_altered_env_3,
     $phenotype_data_altered_env_4_hash, $data_matrix_altered_env_4_array, $data_matrix_phenotypes_altered_env_4_array, $phenotype_min_altered_env_4, $phenotype_max_altered_env_4, $env_sim_min_4, $env_sim_max_4, $sim_data_4_hash,
     $result_blup_data_altered_env_4, $result_blup_data_delta_altered_env_4, $result_blup_spatial_data_altered_env_4, $result_blup_pe_data_altered_env_4, $result_blup_pe_data_delta_altered_env_4, $result_residual_data_altered_env_4, $result_fitted_data_altered_env_4, $fixed_effects_altered_env_4_hash, $rr_genetic_coefficients_altered_env_4_hash, $rr_temporal_coefficients_altered_env_4_hash,
-    $model_sum_square_residual_altered_env_4, $genetic_effect_min_altered_env_4, $genetic_effect_max_altered_env_4, $env_effect_min_altered_env_4, $env_effect_max_altered_env_4, $genetic_effect_sum_square_altered_env_4, $genetic_effect_sum_altered_env_4, $env_effect_sum_square_altered_env_4, $env_effect_sum_altered_env_4, $residual_sum_square_altered_env_4, $residual_sum_altered_env_4) = _perform_drone_imagery_analytics($c, $schema, $env_factor, $a_env, $b_env, $ro_env, $row_ro_env, $env_variance_percent, $protocol_id, $statistics_select, $analytics_select, $tolparinv, $use_area_under_curve, $env_simulation, $legendre_order_number, $permanent_environment_structure, \@legendre_coeff_exec, \%trait_name_encoder, \%trait_name_encoder_rev, \%stock_info, \%plot_id_map, \@sorted_trait_names, \%accession_id_factor_map, \@rep_time_factors, \@ind_rep_factors, \@unique_accession_names, \%plot_id_count_map_reverse, \@sorted_scaled_ln_times, \%time_count_map_reverse, \%accession_id_factor_map_reverse, \%seen_times, \%plot_id_factor_map_reverse, \%trait_to_time_map, \@unique_plot_names, \%stock_name_row_col, \%phenotype_data_original, \%plot_rep_time_factor_map, \%stock_row_col, \%stock_row_col_id, \%polynomial_map, \@plot_ids_ordered, $csv, $timestamp, $user_name, $stats_tempfile, $grm_file, $grm_rename_tempfile, $tmp_stats_dir, $stats_out_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_residual, $stats_out_tempfile_2dspl, $stats_prep2_tempfile, $stats_out_param_tempfile, $parameter_tempfile, $parameter_asreml_tempfile, $stats_tempfile_2, $permanent_environment_structure_tempfile, $permanent_environment_structure_env_tempfile, $permanent_environment_structure_env_tempfile2, $permanent_environment_structure_env_tempfile_mat, $yhat_residual_tempfile, $blupf90_solutions_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $time_min, $time_max, $header_string, $env_sim_exec, $min_row, $max_row, $min_col, $max_col, $mean_row, $sig_row, $mean_col, $sig_col);
+    $model_sum_square_residual_altered_env_4, $genetic_effect_min_altered_env_4, $genetic_effect_max_altered_env_4, $env_effect_min_altered_env_4, $env_effect_max_altered_env_4, $genetic_effect_sum_square_altered_env_4, $genetic_effect_sum_altered_env_4, $env_effect_sum_square_altered_env_4, $env_effect_sum_altered_env_4, $residual_sum_square_altered_env_4, $residual_sum_altered_env_4,
+    $phenotype_data_altered_env_5_hash, $data_matrix_altered_env_5_array, $data_matrix_phenotypes_altered_env_5_array, $phenotype_min_altered_env_5, $phenotype_max_altered_env_5, $env_sim_min_5, $env_sim_max_5, $sim_data_5_hash,
+    $result_blup_data_altered_env_5, $result_blup_data_delta_altered_env_5, $result_blup_spatial_data_altered_env_5, $result_blup_pe_data_altered_env_5, $result_blup_pe_data_delta_altered_env_5, $result_residual_data_altered_env_5, $result_fitted_data_altered_env_5, $fixed_effects_altered_env_5_hash, $rr_genetic_coefficients_altered_env_5_hash, $rr_temporal_coefficients_altered_env_5_hash,
+    $model_sum_square_residual_altered_env_5, $genetic_effect_min_altered_env_5, $genetic_effect_max_altered_env_5, $env_effect_min_altered_env_5, $env_effect_max_altered_env_5, $genetic_effect_sum_square_altered_env_5, $genetic_effect_sum_altered_env_5, $env_effect_sum_square_altered_env_5, $env_effect_sum_altered_env_5, $residual_sum_square_altered_env_5, $residual_sum_altered_env_5) = _perform_drone_imagery_analytics($c, $schema, $env_factor, $a_env, $b_env, $ro_env, $row_ro_env, $env_variance_percent, $protocol_id, $statistics_select, $analytics_select, $tolparinv, $use_area_under_curve, $env_simulation, $legendre_order_number, $permanent_environment_structure, \@legendre_coeff_exec, \%trait_name_encoder, \%trait_name_encoder_rev, \%stock_info, \%plot_id_map, \@sorted_trait_names, \%accession_id_factor_map, \@rep_time_factors, \@ind_rep_factors, \@unique_accession_names, \%plot_id_count_map_reverse, \@sorted_scaled_ln_times, \%time_count_map_reverse, \%accession_id_factor_map_reverse, \%seen_times, \%plot_id_factor_map_reverse, \%trait_to_time_map, \@unique_plot_names, \%stock_name_row_col, \%phenotype_data_original, \%plot_rep_time_factor_map, \%stock_row_col, \%stock_row_col_id, \%polynomial_map, \@plot_ids_ordered, $csv, $timestamp, $user_name, $stats_tempfile, $grm_file, $grm_rename_tempfile, $tmp_stats_dir, $stats_out_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_residual, $stats_out_tempfile_2dspl, $stats_prep2_tempfile, $stats_out_param_tempfile, $parameter_tempfile, $parameter_asreml_tempfile, $stats_tempfile_2, $permanent_environment_structure_tempfile, $permanent_environment_structure_env_tempfile, $permanent_environment_structure_env_tempfile2, $permanent_environment_structure_env_tempfile_mat, $yhat_residual_tempfile, $blupf90_solutions_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $time_min, $time_max, $header_string, $env_sim_exec, $min_row, $max_row, $min_col, $max_col, $mean_row, $sig_row, $mean_col, $sig_col);
     %trait_to_time_map = %$trait_to_time_map_hash;
     my @sorted_residual_trait_names = @$sorted_residual_trait_names_array;
     my %rr_unique_traits = %$rr_unique_traits_hash;
@@ -1699,6 +1702,13 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my %fixed_effects_altered_env_4 = %$fixed_effects_altered_env_4_hash;
     my %rr_genetic_coefficients_altered_env_4 = %$rr_genetic_coefficients_altered_env_4_hash;
     my %rr_temporal_coefficients_altered_env_4 = %$rr_temporal_coefficients_altered_env_4_hash;
+    my %phenotype_data_altered_env_5 = %$phenotype_data_altered_env_5_hash;
+    my @data_matrix_altered_env_5 = @$data_matrix_altered_env_5_array;
+    my @data_matrix_phenotypes_altered_env_5 = @$data_matrix_phenotypes_altered_env_5_array;
+    my %sim_data_5 = %$sim_data_5_hash;
+    my %fixed_effects_altered_env_5 = %$fixed_effects_altered_env_5_hash;
+    my %rr_genetic_coefficients_altered_env_5 = %$rr_genetic_coefficients_altered_env_5_hash;
+    my %rr_temporal_coefficients_altered_env_5 = %$rr_temporal_coefficients_altered_env_5_hash;
 
     $permanent_environment_structure = 'env_corr_structure';
 
@@ -1719,7 +1729,10 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     $model_sum_square_residual_altered_env_3_4, $genetic_effect_min_altered_env_3_4, $genetic_effect_max_altered_env_3_4, $env_effect_min_altered_env_3_4, $env_effect_max_altered_env_3_4, $genetic_effect_sum_square_altered_env_3_4, $genetic_effect_sum_altered_env_3_4, $env_effect_sum_square_altered_env_3_4, $env_effect_sum_altered_env_3_4, $residual_sum_square_altered_env_3_4, $residual_sum_altered_env_3_4,
     $phenotype_data_altered_env_4_hash_4, $data_matrix_altered_env_4_array_4, $data_matrix_phenotypes_altered_env_4_array_4, $phenotype_min_altered_env_4_4, $phenotype_max_altered_env_4_4, $env_sim_min_4_4, $env_sim_max_4_4, $sim_data_4_hash_4,
     $result_blup_data_altered_env_4_4, $result_blup_data_delta_altered_env_4_4, $result_blup_spatial_data_altered_env_4_4, $result_blup_pe_data_altered_env_4_4, $result_blup_pe_data_delta_altered_env_4_4, $result_residual_data_altered_env_4_4, $result_fitted_data_altered_env_4_4, $fixed_effects_altered_env_4_hash_4, $rr_genetic_coefficients_altered_env_4_hash_4, $rr_temporal_coefficients_altered_env_4_hash_4,
-    $model_sum_square_residual_altered_env_4_4, $genetic_effect_min_altered_env_4_4, $genetic_effect_max_altered_env_4_4, $env_effect_min_altered_env_4_4, $env_effect_max_altered_env_4_4, $genetic_effect_sum_square_altered_env_4_4, $genetic_effect_sum_altered_env_4_4, $env_effect_sum_square_altered_env_4_4, $env_effect_sum_altered_env_4_4, $residual_sum_square_altered_env_4_4, $residual_sum_altered_env_4_4) = _perform_drone_imagery_analytics($c, $schema, $env_factor, $a_env, $b_env, $ro_env, $row_ro_env, $env_variance_percent, $protocol_id, $statistics_select, $analytics_select, $tolparinv, $use_area_under_curve, $env_simulation, $legendre_order_number, $permanent_environment_structure, \@legendre_coeff_exec, \%trait_name_encoder, \%trait_name_encoder_rev, \%stock_info, \%plot_id_map, \@sorted_trait_names, \%accession_id_factor_map, \@rep_time_factors, \@ind_rep_factors, \@unique_accession_names, \%plot_id_count_map_reverse, \@sorted_scaled_ln_times, \%time_count_map_reverse, \%accession_id_factor_map_reverse, \%seen_times, \%plot_id_factor_map_reverse, \%trait_to_time_map, \@unique_plot_names, \%stock_name_row_col, \%phenotype_data_original, \%plot_rep_time_factor_map, \%stock_row_col, \%stock_row_col_id, \%polynomial_map, \@plot_ids_ordered, $csv, $timestamp, $user_name, $stats_tempfile, $grm_file, $grm_rename_tempfile, $tmp_stats_dir, $stats_out_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_residual, $stats_out_tempfile_2dspl, $stats_prep2_tempfile, $stats_out_param_tempfile, $parameter_tempfile, $parameter_asreml_tempfile, $stats_tempfile_2, $permanent_environment_structure_tempfile, $permanent_environment_structure_env_tempfile, $permanent_environment_structure_env_tempfile2, $permanent_environment_structure_env_tempfile_mat, $yhat_residual_tempfile, $blupf90_solutions_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $time_min, $time_max, $header_string, $env_sim_exec, $min_row, $max_row, $min_col, $max_col, $mean_row, $sig_row, $mean_col, $sig_col);
+    $model_sum_square_residual_altered_env_4_4, $genetic_effect_min_altered_env_4_4, $genetic_effect_max_altered_env_4_4, $env_effect_min_altered_env_4_4, $env_effect_max_altered_env_4_4, $genetic_effect_sum_square_altered_env_4_4, $genetic_effect_sum_altered_env_4_4, $env_effect_sum_square_altered_env_4_4, $env_effect_sum_altered_env_4_4, $residual_sum_square_altered_env_4_4, $residual_sum_altered_env_4_4,
+    $phenotype_data_altered_env_5_hash_4, $data_matrix_altered_env_5_array_4, $data_matrix_phenotypes_altered_env_5_array_4, $phenotype_min_altered_env_5_4, $phenotype_max_altered_env_5_4, $env_sim_min_5_4, $env_sim_max_5_4, $sim_data_5_hash_4,
+    $result_blup_data_altered_env_5_4, $result_blup_data_delta_altered_env_5_4, $result_blup_spatial_data_altered_env_5_4, $result_blup_pe_data_altered_env_5_4, $result_blup_pe_data_delta_altered_env_5_4, $result_residual_data_altered_env_5_4, $result_fitted_data_altered_env_5_4, $fixed_effects_altered_env_5_hash_4, $rr_genetic_coefficients_altered_env_5_hash_4, $rr_temporal_coefficients_altered_env_5_hash_4,
+    $model_sum_square_residual_altered_env_5_4, $genetic_effect_min_altered_env_5_4, $genetic_effect_max_altered_env_5_4, $env_effect_min_altered_env_5_4, $env_effect_max_altered_env_5_4, $genetic_effect_sum_square_altered_env_5_4, $genetic_effect_sum_altered_env_5_4, $env_effect_sum_square_altered_env_5_4, $env_effect_sum_altered_env_5_4, $residual_sum_square_altered_env_5_4, $residual_sum_altered_env_5_4) = _perform_drone_imagery_analytics($c, $schema, $env_factor, $a_env, $b_env, $ro_env, $row_ro_env, $env_variance_percent, $protocol_id, $statistics_select, $analytics_select, $tolparinv, $use_area_under_curve, $env_simulation, $legendre_order_number, $permanent_environment_structure, \@legendre_coeff_exec, \%trait_name_encoder, \%trait_name_encoder_rev, \%stock_info, \%plot_id_map, \@sorted_trait_names, \%accession_id_factor_map, \@rep_time_factors, \@ind_rep_factors, \@unique_accession_names, \%plot_id_count_map_reverse, \@sorted_scaled_ln_times, \%time_count_map_reverse, \%accession_id_factor_map_reverse, \%seen_times, \%plot_id_factor_map_reverse, \%trait_to_time_map, \@unique_plot_names, \%stock_name_row_col, \%phenotype_data_original, \%plot_rep_time_factor_map, \%stock_row_col, \%stock_row_col_id, \%polynomial_map, \@plot_ids_ordered, $csv, $timestamp, $user_name, $stats_tempfile, $grm_file, $grm_rename_tempfile, $tmp_stats_dir, $stats_out_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_residual, $stats_out_tempfile_2dspl, $stats_prep2_tempfile, $stats_out_param_tempfile, $parameter_tempfile, $parameter_asreml_tempfile, $stats_tempfile_2, $permanent_environment_structure_tempfile, $permanent_environment_structure_env_tempfile, $permanent_environment_structure_env_tempfile2, $permanent_environment_structure_env_tempfile_mat, $yhat_residual_tempfile, $blupf90_solutions_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $time_min, $time_max, $header_string, $env_sim_exec, $min_row, $max_row, $min_col, $max_col, $mean_row, $sig_row, $mean_col, $sig_col);
     my @sorted_residual_trait_names_4 = @$sorted_residual_trait_names_array_4;
     my %rr_unique_traits_4 = %$rr_unique_traits_hash_4;
     my %rr_residual_unique_traits_4 = %$rr_residual_unique_traits_hash_4;
@@ -1760,6 +1773,13 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my %fixed_effects_altered_env_4_4 = %$fixed_effects_altered_env_4_hash_4;
     my %rr_genetic_coefficients_altered_env_4_4 = %$rr_genetic_coefficients_altered_env_4_hash_4;
     my %rr_temporal_coefficients_altered_env_4_4 = %$rr_temporal_coefficients_altered_env_4_hash_4;
+    my %phenotype_data_altered_env_5_4 = %$phenotype_data_altered_env_5_hash_4;
+    my @data_matrix_altered_env_5_4 = @$data_matrix_altered_env_5_array_4;
+    my @data_matrix_phenotypes_altered_env_5_4 = @$data_matrix_phenotypes_altered_env_5_array_4;
+    my %sim_data_5_4 = %$sim_data_5_hash_4;
+    my %fixed_effects_altered_env_5_4 = %$fixed_effects_altered_env_5_hash_4;
+    my %rr_genetic_coefficients_altered_env_5_4 = %$rr_genetic_coefficients_altered_env_5_hash_4;
+    my %rr_temporal_coefficients_altered_env_5_4 = %$rr_temporal_coefficients_altered_env_5_hash_4;
 
     $statistics_select = 'sommer_grm_spatial_genetic_blups';
 
@@ -2724,7 +2744,10 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     $model_sum_square_residual_altered_env_3_2, $genetic_effect_min_altered_env_3_2, $genetic_effect_max_altered_env_3_2, $env_effect_min_altered_env_3_2, $env_effect_max_altered_env_3_2, $genetic_effect_sum_square_altered_env_3_2, $genetic_effect_sum_altered_env_3_2, $env_effect_sum_square_altered_env_3_2, $env_effect_sum_altered_env_3_2, $residual_sum_square_altered_env_3_2, $residual_sum_altered_env_3_2,
     $phenotype_data_altered_env_4_hash_2, $data_matrix_altered_env_4_array_2, $data_matrix_phenotypes_altered_env_4_array_2, $phenotype_min_altered_env_4_2, $phenotype_max_altered_env_4_2, $env_sim_min_4_2, $env_sim_max_4_2, $sim_data_4_hash_2,
     $result_blup_data_altered_env_4_2, $result_blup_data_delta_altered_env_4_2, $result_blup_spatial_data_altered_env_4_2, $result_blup_pe_data_altered_env_4_2, $result_blup_pe_data_delta_altered_env_4_2, $result_residual_data_altered_env_4_2, $result_fitted_data_altered_env_4_2, $fixed_effects_altered_env_4_hash_2, $rr_genetic_coefficients_altered_env_4_hash_2, $rr_temporal_coefficients_altered_env_4_hash_2,
-    $model_sum_square_residual_altered_env_4_2, $genetic_effect_min_altered_env_4_2, $genetic_effect_max_altered_env_4_2, $env_effect_min_altered_env_4_2, $env_effect_max_altered_env_4_2, $genetic_effect_sum_square_altered_env_4_2, $genetic_effect_sum_altered_env_4_2, $env_effect_sum_square_altered_env_4_2, $env_effect_sum_altered_env_4_2, $residual_sum_square_altered_env_4_2, $residual_sum_altered_env_4_2) = _perform_drone_imagery_analytics($c, $schema, $env_factor, $a_env, $b_env, $ro_env, $row_ro_env, $env_variance_percent, $protocol_id, $statistics_select, $analytics_select, $tolparinv, $use_area_under_curve, $env_simulation, $legendre_order_number, $permanent_environment_structure, \@legendre_coeff_exec, \%trait_name_encoder_2, \%trait_name_encoder_rev_2, \%stock_info_2, \%plot_id_map, \@sorted_trait_names_2, \%accession_id_factor_map, \@rep_time_factors, \@ind_rep_factors, \@unique_accession_names, \%plot_id_count_map_reverse, \@sorted_scaled_ln_times, \%time_count_map_reverse, \%accession_id_factor_map_reverse, \%seen_times, \%plot_id_factor_map_reverse, \%trait_to_time_map, \@unique_plot_names, \%stock_name_row_col, \%phenotype_data_original_2, \%plot_rep_time_factor_map, \%stock_row_col, \%stock_row_col_id, \%polynomial_map, \@plot_ids_ordered, $csv, $timestamp, $user_name, $stats_tempfile, $grm_file, $grm_rename_tempfile, $tmp_stats_dir, $stats_out_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_residual, $stats_out_tempfile_2dspl, $stats_prep2_tempfile, $stats_out_param_tempfile, $parameter_tempfile, $parameter_asreml_tempfile, $stats_tempfile_2, $permanent_environment_structure_tempfile, $permanent_environment_structure_env_tempfile, $permanent_environment_structure_env_tempfile2, $permanent_environment_structure_env_tempfile_mat, $yhat_residual_tempfile, $blupf90_solutions_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $time_min, $time_max, $header_string_2, $env_sim_exec, $min_row, $max_row, $min_col, $max_col, $mean_row, $sig_row, $mean_col, $sig_col);
+    $model_sum_square_residual_altered_env_4_2, $genetic_effect_min_altered_env_4_2, $genetic_effect_max_altered_env_4_2, $env_effect_min_altered_env_4_2, $env_effect_max_altered_env_4_2, $genetic_effect_sum_square_altered_env_4_2, $genetic_effect_sum_altered_env_4_2, $env_effect_sum_square_altered_env_4_2, $env_effect_sum_altered_env_4_2, $residual_sum_square_altered_env_4_2, $residual_sum_altered_env_4_2,
+    $phenotype_data_altered_env_5_hash_2, $data_matrix_altered_env_5_array_2, $data_matrix_phenotypes_altered_env_5_array_2, $phenotype_min_altered_env_5_2, $phenotype_max_altered_env_5_2, $env_sim_min_5_2, $env_sim_max_5_2, $sim_data_5_hash_2,
+    $result_blup_data_altered_env_5_2, $result_blup_data_delta_altered_env_5_2, $result_blup_spatial_data_altered_env_5_2, $result_blup_pe_data_altered_env_5_2, $result_blup_pe_data_delta_altered_env_5_2, $result_residual_data_altered_env_5_2, $result_fitted_data_altered_env_5_2, $fixed_effects_altered_env_5_hash_2, $rr_genetic_coefficients_altered_env_5_hash_2, $rr_temporal_coefficients_altered_env_5_hash_2,
+    $model_sum_square_residual_altered_env_5_2, $genetic_effect_min_altered_env_5_2, $genetic_effect_max_altered_env_5_2, $env_effect_min_altered_env_5_2, $env_effect_max_altered_env_5_2, $genetic_effect_sum_square_altered_env_5_2, $genetic_effect_sum_altered_env_5_2, $env_effect_sum_square_altered_env_5_2, $env_effect_sum_altered_env_5_2, $residual_sum_square_altered_env_5_2, $residual_sum_altered_env_5_2) = _perform_drone_imagery_analytics($c, $schema, $env_factor, $a_env, $b_env, $ro_env, $row_ro_env, $env_variance_percent, $protocol_id, $statistics_select, $analytics_select, $tolparinv, $use_area_under_curve, $env_simulation, $legendre_order_number, $permanent_environment_structure, \@legendre_coeff_exec, \%trait_name_encoder_2, \%trait_name_encoder_rev_2, \%stock_info_2, \%plot_id_map, \@sorted_trait_names_2, \%accession_id_factor_map, \@rep_time_factors, \@ind_rep_factors, \@unique_accession_names, \%plot_id_count_map_reverse, \@sorted_scaled_ln_times, \%time_count_map_reverse, \%accession_id_factor_map_reverse, \%seen_times, \%plot_id_factor_map_reverse, \%trait_to_time_map, \@unique_plot_names, \%stock_name_row_col, \%phenotype_data_original_2, \%plot_rep_time_factor_map, \%stock_row_col, \%stock_row_col_id, \%polynomial_map, \@plot_ids_ordered, $csv, $timestamp, $user_name, $stats_tempfile, $grm_file, $grm_rename_tempfile, $tmp_stats_dir, $stats_out_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_residual, $stats_out_tempfile_2dspl, $stats_prep2_tempfile, $stats_out_param_tempfile, $parameter_tempfile, $parameter_asreml_tempfile, $stats_tempfile_2, $permanent_environment_structure_tempfile, $permanent_environment_structure_env_tempfile, $permanent_environment_structure_env_tempfile2, $permanent_environment_structure_env_tempfile_mat, $yhat_residual_tempfile, $blupf90_solutions_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $time_min, $time_max, $header_string_2, $env_sim_exec, $min_row, $max_row, $min_col, $max_col, $mean_row, $sig_row, $mean_col, $sig_col);
     %trait_to_time_map_2 = %$trait_to_time_map_hash_2;
     my @sorted_residual_trait_names_2 = @$sorted_residual_trait_names_array_2;
     my %rr_unique_traits_2 = %$rr_unique_traits_hash_2;
@@ -2766,6 +2789,13 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my %fixed_effects_altered_env_4_2 = %$fixed_effects_altered_env_4_hash_2;
     my %rr_genetic_coefficients_altered_env_4_2 = %$rr_genetic_coefficients_altered_env_4_hash_2;
     my %rr_temporal_coefficients_altered_env_4_2 = %$rr_temporal_coefficients_altered_env_4_hash_2;
+    my %phenotype_data_altered_env_5_2 = %$phenotype_data_altered_env_5_hash_2;
+    my @data_matrix_altered_env_5_2 = @$data_matrix_altered_env_5_array_2;
+    my @data_matrix_phenotypes_altered_env_5_2 = @$data_matrix_phenotypes_altered_env_5_array_2;
+    my %sim_data_5_2 = %$sim_data_5_hash_2;
+    my %fixed_effects_altered_env_5_2 = %$fixed_effects_altered_env_5_hash_2;
+    my %rr_genetic_coefficients_altered_env_5_2 = %$rr_genetic_coefficients_altered_env_5_hash_2;
+    my %rr_temporal_coefficients_altered_env_5_2 = %$rr_temporal_coefficients_altered_env_5_hash_2;
 
     $statistics_select = 'sommer_grm_univariate_spatial_genetic_blups';
 
@@ -2786,7 +2816,10 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     $model_sum_square_residual_altered_env_3_3, $genetic_effect_min_altered_env_3_3, $genetic_effect_max_altered_env_3_3, $env_effect_min_altered_env_3_3, $env_effect_max_altered_env_3_3, $genetic_effect_sum_square_altered_env_3_3, $genetic_effect_sum_altered_env_3_3, $env_effect_sum_square_altered_env_3_3, $env_effect_sum_altered_env_3_3, $residual_sum_square_altered_env_3_3, $residual_sum_altered_env_3_3,
     $phenotype_data_altered_env_4_hash_3, $data_matrix_altered_env_4_array_3, $data_matrix_phenotypes_altered_env_4_array_3, $phenotype_min_altered_env_4_3, $phenotype_max_altered_env_4_3, $env_sim_min_4_3, $env_sim_max_4_3, $sim_data_4_hash_3,
     $result_blup_data_altered_env_4_3, $result_blup_data_delta_altered_env_4_3, $result_blup_spatial_data_altered_env_4_3, $result_blup_pe_data_altered_env_4_3, $result_blup_pe_data_delta_altered_env_4_3, $result_residual_data_altered_env_4_3, $result_fitted_data_altered_env_4_3, $fixed_effects_altered_env_4_hash_3, $rr_genetic_coefficients_altered_env_4_hash_3, $rr_temporal_coefficients_altered_env_4_hash_3,
-    $model_sum_square_residual_altered_env_4_3, $genetic_effect_min_altered_env_4_3, $genetic_effect_max_altered_env_4_3, $env_effect_min_altered_env_4_3, $env_effect_max_altered_env_4_3, $genetic_effect_sum_square_altered_env_4_3, $genetic_effect_sum_altered_env_4_3, $env_effect_sum_square_altered_env_4_3, $env_effect_sum_altered_env_4_3, $residual_sum_square_altered_env_4_3, $residual_sum_altered_env_4_3) = _perform_drone_imagery_analytics($c, $schema, $env_factor, $a_env, $b_env, $ro_env, $row_ro_env, $env_variance_percent, $protocol_id, $statistics_select, $analytics_select, $tolparinv, $use_area_under_curve, $env_simulation, $legendre_order_number, $permanent_environment_structure, \@legendre_coeff_exec, \%trait_name_encoder_2, \%trait_name_encoder_rev_2, \%stock_info_2, \%plot_id_map, \@sorted_trait_names_2, \%accession_id_factor_map, \@rep_time_factors, \@ind_rep_factors, \@unique_accession_names, \%plot_id_count_map_reverse, \@sorted_scaled_ln_times, \%time_count_map_reverse, \%accession_id_factor_map_reverse, \%seen_times, \%plot_id_factor_map_reverse, \%trait_to_time_map, \@unique_plot_names, \%stock_name_row_col, \%phenotype_data_original_2, \%plot_rep_time_factor_map, \%stock_row_col, \%stock_row_col_id, \%polynomial_map, \@plot_ids_ordered, $csv, $timestamp, $user_name, $stats_tempfile, $grm_file, $grm_rename_tempfile, $tmp_stats_dir, $stats_out_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_residual, $stats_out_tempfile_2dspl, $stats_prep2_tempfile, $stats_out_param_tempfile, $parameter_tempfile, $parameter_asreml_tempfile, $stats_tempfile_2, $permanent_environment_structure_tempfile, $permanent_environment_structure_env_tempfile, $permanent_environment_structure_env_tempfile2, $permanent_environment_structure_env_tempfile_mat, $yhat_residual_tempfile, $blupf90_solutions_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $time_min, $time_max, $header_string_2, $env_sim_exec, $min_row, $max_row, $min_col, $max_col, $mean_row, $sig_row, $mean_col, $sig_col);
+    $model_sum_square_residual_altered_env_4_3, $genetic_effect_min_altered_env_4_3, $genetic_effect_max_altered_env_4_3, $env_effect_min_altered_env_4_3, $env_effect_max_altered_env_4_3, $genetic_effect_sum_square_altered_env_4_3, $genetic_effect_sum_altered_env_4_3, $env_effect_sum_square_altered_env_4_3, $env_effect_sum_altered_env_4_3, $residual_sum_square_altered_env_4_3, $residual_sum_altered_env_4_3,
+    $phenotype_data_altered_env_5_hash_3, $data_matrix_altered_env_5_array_3, $data_matrix_phenotypes_altered_env_5_array_3, $phenotype_min_altered_env_5_3, $phenotype_max_altered_env_5_3, $env_sim_min_5_3, $env_sim_max_5_3, $sim_data_5_hash_3,
+    $result_blup_data_altered_env_5_3, $result_blup_data_delta_altered_env_5_3, $result_blup_spatial_data_altered_env_5_3, $result_blup_pe_data_altered_env_5_3, $result_blup_pe_data_delta_altered_env_5_3, $result_residual_data_altered_env_5_3, $result_fitted_data_altered_env_5_3, $fixed_effects_altered_env_5_hash_3, $rr_genetic_coefficients_altered_env_5_hash_3, $rr_temporal_coefficients_altered_env_5_hash_3,
+    $model_sum_square_residual_altered_env_5_3, $genetic_effect_min_altered_env_5_3, $genetic_effect_max_altered_env_5_3, $env_effect_min_altered_env_5_3, $env_effect_max_altered_env_5_3, $genetic_effect_sum_square_altered_env_5_3, $genetic_effect_sum_altered_env_5_3, $env_effect_sum_square_altered_env_5_3, $env_effect_sum_altered_env_5_3, $residual_sum_square_altered_env_5_3, $residual_sum_altered_env_5_3) = _perform_drone_imagery_analytics($c, $schema, $env_factor, $a_env, $b_env, $ro_env, $row_ro_env, $env_variance_percent, $protocol_id, $statistics_select, $analytics_select, $tolparinv, $use_area_under_curve, $env_simulation, $legendre_order_number, $permanent_environment_structure, \@legendre_coeff_exec, \%trait_name_encoder_2, \%trait_name_encoder_rev_2, \%stock_info_2, \%plot_id_map, \@sorted_trait_names_2, \%accession_id_factor_map, \@rep_time_factors, \@ind_rep_factors, \@unique_accession_names, \%plot_id_count_map_reverse, \@sorted_scaled_ln_times, \%time_count_map_reverse, \%accession_id_factor_map_reverse, \%seen_times, \%plot_id_factor_map_reverse, \%trait_to_time_map, \@unique_plot_names, \%stock_name_row_col, \%phenotype_data_original_2, \%plot_rep_time_factor_map, \%stock_row_col, \%stock_row_col_id, \%polynomial_map, \@plot_ids_ordered, $csv, $timestamp, $user_name, $stats_tempfile, $grm_file, $grm_rename_tempfile, $tmp_stats_dir, $stats_out_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_residual, $stats_out_tempfile_2dspl, $stats_prep2_tempfile, $stats_out_param_tempfile, $parameter_tempfile, $parameter_asreml_tempfile, $stats_tempfile_2, $permanent_environment_structure_tempfile, $permanent_environment_structure_env_tempfile, $permanent_environment_structure_env_tempfile2, $permanent_environment_structure_env_tempfile_mat, $yhat_residual_tempfile, $blupf90_solutions_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $time_min, $time_max, $header_string_2, $env_sim_exec, $min_row, $max_row, $min_col, $max_col, $mean_row, $sig_row, $mean_col, $sig_col);
     my @sorted_residual_trait_names_3 = @$sorted_residual_trait_names_array_3;
     my %rr_unique_traits_3 = %$rr_unique_traits_hash_3;
     my %rr_residual_unique_traits_3 = %$rr_residual_unique_traits_hash_3;
@@ -2827,6 +2860,13 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my %fixed_effects_altered_env_4_3 = %$fixed_effects_altered_env_4_hash_3;
     my %rr_genetic_coefficients_altered_env_4_3 = %$rr_genetic_coefficients_altered_env_4_hash_3;
     my %rr_temporal_coefficients_altered_env_4_3 = %$rr_temporal_coefficients_altered_env_4_hash_3;
+    my %phenotype_data_altered_env_5_3 = %$phenotype_data_altered_env_5_hash_3;
+    my @data_matrix_altered_env_5_3 = @$data_matrix_altered_env_5_array_3;
+    my @data_matrix_phenotypes_altered_env_5_3 = @$data_matrix_phenotypes_altered_env_5_array_3;
+    my %sim_data_5_3 = %$sim_data_5_hash_3;
+    my %fixed_effects_altered_env_5_3 = %$fixed_effects_altered_env_5_hash_3;
+    my %rr_genetic_coefficients_altered_env_5_3 = %$rr_genetic_coefficients_altered_env_5_hash_3;
+    my %rr_temporal_coefficients_altered_env_5_3 = %$rr_temporal_coefficients_altered_env_5_hash_3;
 
     $statistics_select = 'asreml_grm_univariate_spatial_genetic_blups';
 
@@ -3825,7 +3865,10 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     # $model_sum_square_residual_altered_env_3_5, $genetic_effect_min_altered_env_3_5, $genetic_effect_max_altered_env_3_5, $env_effect_min_altered_env_3_5, $env_effect_max_altered_env_3_5, $genetic_effect_sum_square_altered_env_3_5, $genetic_effect_sum_altered_env_3_5, $env_effect_sum_square_altered_env_3_5, $env_effect_sum_altered_env_3_5, $residual_sum_square_altered_env_3_5, $residual_sum_altered_env_3_5,
     # $phenotype_data_altered_env_4_hash_5, $data_matrix_altered_env_4_array_5, $data_matrix_phenotypes_altered_env_4_array_5, $phenotype_min_altered_env_4_5, $phenotype_max_altered_env_4_5, $env_sim_min_4_5, $env_sim_max_4_5, $sim_data_4_hash_5,
     # $result_blup_data_altered_env_4_5, $result_blup_data_delta_altered_env_4_5, $result_blup_spatial_data_altered_env_4_5, $result_blup_pe_data_altered_env_4_5, $result_blup_pe_data_delta_altered_env_4_5, $result_residual_data_altered_env_4_5, $result_fitted_data_altered_env_4_5, $fixed_effects_altered_env_4_hash_5, $rr_genetic_coefficients_altered_env_4_hash_5, $rr_temporal_coefficients_altered_env_4_hash_5,
-    # $model_sum_square_residual_altered_env_4_5, $genetic_effect_min_altered_env_4_5, $genetic_effect_max_altered_env_4_5, $env_effect_min_altered_env_4_5, $env_effect_max_altered_env_4_5, $genetic_effect_sum_square_altered_env_4_5, $genetic_effect_sum_altered_env_4_5, $env_effect_sum_square_altered_env_4_5, $env_effect_sum_altered_env_4_5, $residual_sum_square_altered_env_4_5, $residual_sum_altered_env_4_5) = _perform_drone_imagery_analytics($c, $schema, $env_factor, $a_env, $b_env, $ro_env, $row_ro_env, $env_variance_percent, $protocol_id, $statistics_select, $analytics_select, $tolparinv, $use_area_under_curve, $env_simulation, $legendre_order_number, $permanent_environment_structure, \@legendre_coeff_exec, \%trait_name_encoder_5, \%trait_name_encoder_rev_5, \%stock_info_5, \%plot_id_map, \@sorted_trait_names_5, \%accession_id_factor_map, \@rep_time_factors, \@ind_rep_factors, \@unique_accession_names, \%plot_id_count_map_reverse, \@sorted_scaled_ln_times, \%time_count_map_reverse, \%accession_id_factor_map_reverse, \%seen_times, \%plot_id_factor_map_reverse, \%trait_to_time_map, \@unique_plot_names, \%stock_name_row_col, \%phenotype_data_original_5, \%plot_rep_time_factor_map, \%stock_row_col, \%stock_row_col_id, \%polynomial_map, \@plot_ids_ordered, $csv, $timestamp, $user_name, $stats_tempfile, $grm_file, $grm_rename_tempfile, $tmp_stats_dir, $stats_out_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_residual, $stats_out_tempfile_2dspl, $stats_prep2_tempfile, $stats_out_param_tempfile, $parameter_tempfile, $parameter_asreml_tempfile, $stats_tempfile_2, $permanent_environment_structure_tempfile, $permanent_environment_structure_env_tempfile, $permanent_environment_structure_env_tempfile2, $permanent_environment_structure_env_tempfile_mat, $yhat_residual_tempfile, $blupf90_solutions_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $time_min, $time_max, $header_string_5, $env_sim_exec, $min_row, $max_row, $min_col, $max_col, $mean_row, $sig_row, $mean_col, $sig_col);
+    # $model_sum_square_residual_altered_env_4_5, $genetic_effect_min_altered_env_4_5, $genetic_effect_max_altered_env_4_5, $env_effect_min_altered_env_4_5, $env_effect_max_altered_env_4_5, $genetic_effect_sum_square_altered_env_4_5, $genetic_effect_sum_altered_env_4_5, $env_effect_sum_square_altered_env_4_5, $env_effect_sum_altered_env_4_5, $residual_sum_square_altered_env_4_5, $residual_sum_altered_env_4_5,
+    # $phenotype_data_altered_env_5_hash_5, $data_matrix_altered_env_5_array_5, $data_matrix_phenotypes_altered_env_5_array_5, $phenotype_min_altered_env_5_5, $phenotype_max_altered_env_5_5, $env_sim_min_5_5, $env_sim_max_5_5, $sim_data_5_hash_5,
+    # $result_blup_data_altered_env_5_5, $result_blup_data_delta_altered_env_5_5, $result_blup_spatial_data_altered_env_5_5, $result_blup_pe_data_altered_env_5_5, $result_blup_pe_data_delta_altered_env_5_5, $result_residual_data_altered_env_5_5, $result_fitted_data_altered_env_5_5, $fixed_effects_altered_env_5_hash_5, $rr_genetic_coefficients_altered_env_5_hash_5, $rr_temporal_coefficients_altered_env_5_hash_5,
+    # $model_sum_square_residual_altered_env_5_5, $genetic_effect_min_altered_env_5_5, $genetic_effect_max_altered_env_5_5, $env_effect_min_altered_env_5_5, $env_effect_max_altered_env_5_5, $genetic_effect_sum_square_altered_env_5_5, $genetic_effect_sum_altered_env_5_5, $env_effect_sum_square_altered_env_5_5, $env_effect_sum_altered_env_5_5, $residual_sum_square_altered_env_5_5, $residual_sum_altered_env_5_5) = _perform_drone_imagery_analytics($c, $schema, $env_factor, $a_env, $b_env, $ro_env, $row_ro_env, $env_variance_percent, $protocol_id, $statistics_select, $analytics_select, $tolparinv, $use_area_under_curve, $env_simulation, $legendre_order_number, $permanent_environment_structure, \@legendre_coeff_exec, \%trait_name_encoder_5, \%trait_name_encoder_rev_5, \%stock_info_5, \%plot_id_map, \@sorted_trait_names_5, \%accession_id_factor_map, \@rep_time_factors, \@ind_rep_factors, \@unique_accession_names, \%plot_id_count_map_reverse, \@sorted_scaled_ln_times, \%time_count_map_reverse, \%accession_id_factor_map_reverse, \%seen_times, \%plot_id_factor_map_reverse, \%trait_to_time_map, \@unique_plot_names, \%stock_name_row_col, \%phenotype_data_original_5, \%plot_rep_time_factor_map, \%stock_row_col, \%stock_row_col_id, \%polynomial_map, \@plot_ids_ordered, $csv, $timestamp, $user_name, $stats_tempfile, $grm_file, $grm_rename_tempfile, $tmp_stats_dir, $stats_out_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_residual, $stats_out_tempfile_2dspl, $stats_prep2_tempfile, $stats_out_param_tempfile, $parameter_tempfile, $parameter_asreml_tempfile, $stats_tempfile_2, $permanent_environment_structure_tempfile, $permanent_environment_structure_env_tempfile, $permanent_environment_structure_env_tempfile2, $permanent_environment_structure_env_tempfile_mat, $yhat_residual_tempfile, $blupf90_solutions_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $time_min, $time_max, $header_string_5, $env_sim_exec, $min_row, $max_row, $min_col, $max_col, $mean_row, $sig_row, $mean_col, $sig_col);
     # %trait_to_time_map_5 = %$trait_to_time_map_hash_5;
     # my @sorted_residual_trait_names_5 = @$sorted_residual_trait_names_array_5;
     # my %rr_unique_traits_5 = %$rr_unique_traits_hash_5;
@@ -3867,6 +3910,13 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     # my %fixed_effects_altered_env_4_5 = %$fixed_effects_altered_env_4_hash_5;
     # my %rr_genetic_coefficients_altered_env_4_5 = %$rr_genetic_coefficients_altered_env_4_hash_5;
     # my %rr_temporal_coefficients_altered_env_4_5 = %$rr_temporal_coefficients_altered_env_4_hash_5;
+    # my %phenotype_data_altered_env_5_5 = %$phenotype_data_altered_env_5_hash_5;
+    # my @data_matrix_altered_env_5_5 = @$data_matrix_altered_env_5_array_5;
+    # my @data_matrix_phenotypes_altered_env_5_5 = @$data_matrix_phenotypes_altered_env_5_array_5;
+    # my %sim_data_5_5 = %$sim_data_5_hash_5;
+    # my %fixed_effects_altered_env_5_5 = %$fixed_effects_altered_env_5_hash_5;
+    # my %rr_genetic_coefficients_altered_env_5_5 = %$rr_genetic_coefficients_altered_env_5_hash_5;
+    # my %rr_temporal_coefficients_altered_env_5_5 = %$rr_temporal_coefficients_altered_env_5_hash_5;
 
     my $spatial_effects_plots;
     my @env_corr_res;
@@ -3883,7 +3933,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             'sim_env1_', 'simm1_pheno1_', 'simm2_pheno1_', 'simm3_pheno1_', 'simm4_pheno1_', 'effm1_sim1_', 'effm2_sim1_', 'effm3_sim1_', 'effm4_sim1_',
             'sim_env2_', 'simm1_pheno2_', 'simm2_pheno2_', 'simm3_pheno2_', 'simm4_pheno2_', 'effm1_sim2_', 'effm2_sim2_', 'effm3_sim2_', 'effm4_sim2_',
             'sim_env3_', 'simm1_pheno3_', 'simm2_pheno3_', 'simm3_pheno3_', 'simm4_pheno3_', 'effm1_sim3_', 'effm2_sim3_', 'effm3_sim3_', 'effm4_sim3_',
-            'sim_env4_', 'simm1_pheno4_', 'simm2_pheno4_', 'simm3_pheno4_', 'simm4_pheno4_', 'effm1_sim4_', 'effm2_sim4_', 'effm3_sim4_', 'effm4_sim4_');
+            'sim_env4_', 'simm1_pheno4_', 'simm2_pheno4_', 'simm3_pheno4_', 'simm4_pheno4_', 'effm1_sim4_', 'effm2_sim4_', 'effm3_sim4_', 'effm4_sim4_',
+            'sim_env5_', 'simm1_pheno5_', 'simm2_pheno5_', 'simm3_pheno5_', 'simm4_pheno5_', 'effm1_sim5_', 'effm2_sim5_', 'effm3_sim5_', 'effm4_sim5_');
             foreach my $type (@types_full_plot_corr) {
                 foreach my $t (@sorted_trait_names) {
                     push @header_full_plot_corr, $type.$trait_name_encoder{$t};
@@ -3954,6 +4005,17 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     my $effect_sim4_3 = $result_blup_spatial_data_altered_env_4_3->{$p}->{$t_conv}->[0];
                     my $effect_sim4_4 = $result_blup_pe_data_delta_altered_env_4_4->{$p}->{$t}->[0];
                     push @row, ($sim_env4, $pheno_sim4_1, $pheno_sim4_2, $pheno_sim4_3, $pheno_sim4_4, $effect_sim4_1, $effect_sim4_2, $effect_sim4_3, $effect_sim4_4);
+
+                    my $sim_env5 = $sim_data_5{$p}->{$t};
+                    my $pheno_sim5_1 = $phenotype_data_altered_env_5{$p}->{$t};
+                    my $pheno_sim5_2 = $phenotype_data_altered_env_5_2{$p}->{$t_conv};
+                    my $pheno_sim5_3 = $phenotype_data_altered_env_5_3{$p}->{$t_conv};
+                    my $pheno_sim5_4 = $phenotype_data_altered_env_5_4{$p}->{$t};
+                    my $effect_sim5_1 = $result_blup_pe_data_delta_altered_env_5->{$p}->{$t}->[0];
+                    my $effect_sim5_2 = $result_blup_spatial_data_altered_env_5_2->{$p}->{$t_conv}->[0];
+                    my $effect_sim5_3 = $result_blup_spatial_data_altered_env_5_3->{$p}->{$t_conv}->[0];
+                    my $effect_sim5_4 = $result_blup_pe_data_delta_altered_env_5_4->{$p}->{$t}->[0];
+                    push @row, ($sim_env5, $pheno_sim5_1, $pheno_sim5_2, $pheno_sim5_3, $pheno_sim5_4, $effect_sim5_1, $effect_sim5_2, $effect_sim5_3, $effect_sim5_4);
                 }
                 my $line = join ',', @row;
                 print $F_fullplot "$line\n";
@@ -3967,7 +4029,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         my $cmd_plotcorr_plot = 'R -e "library(data.table); library(ggplot2); library(GGally);
         mat_orig <- fread(\''.$full_plot_level_correlation_tempfile.'\', header=TRUE, sep=\',\');
         gg <- ggcorr(data=mat_orig, hjust = 1, size = 2, color = \'grey50\', layout.exp = 1, label = TRUE);
-        ggsave(\''.$plot_corr_figure_tempfile.'\', gg, device=\'png\', width=45, height=45, units=\'in\');
+        ggsave(\''.$plot_corr_figure_tempfile.'\', gg, device=\'png\', width=55, height=55, units=\'in\');
         "';
         # print STDERR Dumper $cmd;
         my $status_plotcorr_plot = system($cmd_plotcorr_plot);
@@ -3993,6 +4055,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         my $original_pheno_stat = Statistics::Descriptive::Full->new();
         $original_pheno_stat->add_data(@original_pheno_vals);
         my $sig_original_pheno = $original_pheno_stat->variance();
+
+        #PHENO POST M START
 
         my @altered_pheno_vals;
         my ($phenotypes_post_heatmap_tempfile_fh, $phenotypes_post_heatmap_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
@@ -4070,6 +4134,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         $altered_pheno_stat_4->add_data(@altered_pheno_vals_4);
         my $sig_altered_pheno_4 = $altered_pheno_stat_4->variance();
 
+        # EFFECT ORIGINAL M
+
         my @original_effect_vals;
         my ($effects_heatmap_tempfile_fh, $effects_heatmap_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
         open(my $F_eff, ">", $effects_heatmap_tempfile) || die "Can't open file ".$effects_heatmap_tempfile;
@@ -4146,6 +4212,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         $original_effect_stat_4->add_data(@original_effect_vals_4);
         my $sig_original_effect_4 = $original_effect_stat_4->variance();
 
+        # EFFECT POST M MIN
+
         my @altered_effect_vals;
         my ($effects_post_heatmap_tempfile_fh, $effects_post_heatmap_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
         open($F_eff, ">", $effects_post_heatmap_tempfile) || die "Can't open file ".$effects_post_heatmap_tempfile;
@@ -4221,6 +4289,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         my $altered_effect_stat_4 = Statistics::Descriptive::Full->new();
         $altered_effect_stat_4->add_data(@altered_effect_vals_4);
         my $sig_altered_effect_4 = $altered_effect_stat_4->variance();
+
+        # SIM ENV 1: ALTERED PHENO + EFFECT
 
         my ($phenotypes_env_heatmap_tempfile_fh, $phenotypes_env_heatmap_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
         open($F_pheno, ">", $phenotypes_env_heatmap_tempfile) || die "Can't open file ".$phenotypes_env_heatmap_tempfile;
@@ -4386,6 +4456,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         $sim_effect1_stat_4->add_data(@sim_effect1_vals_4);
         my $sig_sim4_effect1 = $sim_effect1_stat_4->variance();
 
+        # SIM ENV 2: ALTERED PHENO + EFFECT
+
         my ($phenotypes_env_heatmap_tempfile2_fh, $phenotypes_env_heatmap_tempfile2) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
         open($F_pheno, ">", $phenotypes_env_heatmap_tempfile2) || die "Can't open file ".$phenotypes_env_heatmap_tempfile2;
             print $F_pheno "trait_type,row,col,value\n";
@@ -4545,6 +4617,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         my $sim_effect2_stat_4 = Statistics::Descriptive::Full->new();
         $sim_effect2_stat_4->add_data(@sim_effect2_vals_4);
         my $sig_sim_effect2_4 = $sim_effect2_stat_4->variance();
+
+        # SIM ENV 3: ALTERED PHENO + EFFECT
 
         my ($phenotypes_env_heatmap_tempfile3_fh, $phenotypes_env_heatmap_tempfile3) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
         open($F_pheno, ">", $phenotypes_env_heatmap_tempfile3) || die "Can't open file ".$phenotypes_env_heatmap_tempfile3;
@@ -4710,6 +4784,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         $sim_effect3_stat_4->add_data(@sim_effect3_vals_4);
         my $sig_sim_effect3_4 = $sim_effect3_stat_4->variance();
 
+        # SIM ENV 4: ALTERED PHENO + EFFECT
+
         my ($phenotypes_env_heatmap_tempfile4_fh, $phenotypes_env_heatmap_tempfile4) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
         open($F_pheno, ">", $phenotypes_env_heatmap_tempfile4) || die "Can't open file ".$phenotypes_env_heatmap_tempfile4;
             print $F_pheno "trait_type,row,col,value\n";
@@ -4874,6 +4950,172 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         $sim_effect4_stat_4->add_data(@sim_effect4_vals_4);
         my $sig_sim_effect4_4 = $sim_effect4_stat_4->variance();
 
+        # SIM ENV 5: ALTERED PHENO + EFFECT
+
+        my ($phenotypes_env_heatmap_tempfile5_fh, $phenotypes_env_heatmap_tempfile5) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+        open($F_pheno, ">", $phenotypes_env_heatmap_tempfile5) || die "Can't open file ".$phenotypes_env_heatmap_tempfile5;
+            print $F_pheno "trait_type,row,col,value\n";
+            foreach my $p (@unique_plot_names) {
+                foreach my $t (@sorted_trait_names) {
+                    my @row = ("sim_env5_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_5{$p}->{$t});
+                    my $line = join ',', @row;
+                    print $F_pheno "$line\n";
+                }
+            }
+        close($F_pheno);
+
+        my @sim_pheno5_vals;
+        my ($phenotypes_pheno_sim_heatmap_tempfile5_fh, $phenotypes_pheno_sim_heatmap_tempfile5) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+        open($F_pheno, ">", $phenotypes_pheno_sim_heatmap_tempfile5) || die "Can't open file ".$phenotypes_pheno_sim_heatmap_tempfile5;
+            print $F_pheno "trait_type,row,col,value\n";
+            foreach my $p (@unique_plot_names) {
+                foreach my $t (@sorted_trait_names) {
+                    my $val = $phenotype_data_altered_env_5{$p}->{$t};
+                    my @row = ("simm1_pheno5_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
+                    my $line = join ',', @row;
+                    print $F_pheno "$line\n";
+                    push @sim_pheno5_vals, $val;
+                }
+            }
+        close($F_pheno);
+
+        my $sim_pheno5_stat = Statistics::Descriptive::Full->new();
+        $sim_pheno5_stat->add_data(@sim_pheno5_vals);
+        my $sig_sim_pheno5 = $sim_pheno5_stat->variance();
+
+        my @sim_pheno5_vals_2;
+        my ($phenotypes_pheno_sim_heatmap_tempfile5_fh_2, $phenotypes_pheno_sim_heatmap_tempfile5_2) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+        open($F_pheno, ">", $phenotypes_pheno_sim_heatmap_tempfile5_2) || die "Can't open file ".$phenotypes_pheno_sim_heatmap_tempfile5_2;
+            print $F_pheno "trait_type,row,col,value\n";
+            foreach my $p (@unique_plot_names) {
+                foreach my $t (@sorted_trait_names_2) {
+                    my $val = $phenotype_data_altered_env_5_2{$p}->{$t};
+                    my @row = ("simm2_pheno5_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
+                    my $line = join ',', @row;
+                    print $F_pheno "$line\n";
+                    push @sim_pheno5_vals_2, $val;
+                }
+            }
+        close($F_pheno);
+
+        my $sim_pheno5_stat_2 = Statistics::Descriptive::Full->new();
+        $sim_pheno5_stat_2->add_data(@sim_pheno5_vals_2);
+        my $sig_sim_pheno5_2 = $sim_pheno5_stat_2->variance();
+
+        my @sim_pheno5_vals_3;
+        my ($phenotypes_pheno_sim_heatmap_tempfile5_fh_3, $phenotypes_pheno_sim_heatmap_tempfile5_3) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+        open($F_pheno, ">", $phenotypes_pheno_sim_heatmap_tempfile5_3) || die "Can't open file ".$phenotypes_pheno_sim_heatmap_tempfile5_3;
+            print $F_pheno "trait_type,row,col,value\n";
+            foreach my $p (@unique_plot_names) {
+                foreach my $t (@sorted_trait_names_2) {
+                    my $val = $phenotype_data_altered_env_5_3{$p}->{$t};
+                    my @row = ("simm3_pheno5_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
+                    my $line = join ',', @row;
+                    print $F_pheno "$line\n";
+                    push @sim_pheno5_vals_3, $val;
+                }
+            }
+        close($F_pheno);
+
+        my $sim_pheno5_stat_3 = Statistics::Descriptive::Full->new();
+        $sim_pheno5_stat_3->add_data(@sim_pheno5_vals_3);
+        my $sig_sim_pheno5_3 = $sim_pheno5_stat_3->variance();
+
+        my @sim_pheno5_vals_4;
+        my ($phenotypes_pheno_sim_heatmap_tempfile5_fh_4, $phenotypes_pheno_sim_heatmap_tempfile5_4) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+        open($F_pheno, ">", $phenotypes_pheno_sim_heatmap_tempfile5_4) || die "Can't open file ".$phenotypes_pheno_sim_heatmap_tempfile5_4;
+            print $F_pheno "trait_type,row,col,value\n";
+            foreach my $p (@unique_plot_names) {
+                foreach my $t (@sorted_trait_names) {
+                    my $val = $phenotype_data_altered_env_5_4{$p}->{$t};
+                    my @row = ("simm4_pheno5_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
+                    my $line = join ',', @row;
+                    print $F_pheno "$line\n";
+                    push @sim_pheno5_vals_4, $val;
+                }
+            }
+        close($F_pheno);
+
+        my $sim_pheno5_stat_4 = Statistics::Descriptive::Full->new();
+        $sim_pheno5_stat_4->add_data(@sim_pheno5_vals_4);
+        my $sig_sim_pheno5_4 = $sim_pheno5_stat_4->variance();
+
+        my @sim_effect5_vals;
+        my ($effects_sim_heatmap_tempfile5_fh, $effects_sim_heatmap_tempfile5) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+        open($F_eff, ">", $effects_sim_heatmap_tempfile5) || die "Can't open file ".$effects_sim_heatmap_tempfile5;
+            print $F_eff "trait_type,row,col,value\n";
+            foreach my $p (@unique_plot_names) {
+                foreach my $t (@sorted_trait_names) {
+                    my $val = $result_blup_pe_data_delta_altered_env_5->{$p}->{$t}->[0];
+                    my @row = ("effm1_sim5_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
+                    my $line = join ',', @row;
+                    print $F_eff "$line\n";
+                    push @sim_effect5_vals, $val;
+                }
+            }
+        close($F_eff);
+
+        my $sim_effect5_stat = Statistics::Descriptive::Full->new();
+        $sim_effect5_stat->add_data(@sim_effect5_vals);
+        my $sig_sim_effect5 = $sim_effect5_stat->variance();
+
+        my @sim_effect5_vals_2;
+        my ($effects_sim_heatmap_tempfile5_fh_2, $effects_sim_heatmap_tempfile5_2) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+        open($F_eff, ">", $effects_sim_heatmap_tempfile5_2) || die "Can't open file ".$effects_sim_heatmap_tempfile5_2;
+            print $F_eff "trait_type,row,col,value\n";
+            foreach my $p (@unique_plot_names) {
+                foreach my $t (@sorted_trait_names_2) {
+                    my $val = $result_blup_spatial_data_altered_env_5_2->{$p}->{$t}->[0];
+                    my @row = ("effm2_sim5_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
+                    my $line = join ',', @row;
+                    print $F_eff "$line\n";
+                    push @sim_effect5_vals_2, $val;
+                }
+            }
+        close($F_eff);
+
+        my $sim_effect5_stat_2 = Statistics::Descriptive::Full->new();
+        $sim_effect5_stat_2->add_data(@sim_effect5_vals_2);
+        my $sig_sim_effect5_2 = $sim_effect5_stat_2->variance();
+
+        my @sim_effect5_vals_3;
+        my ($effects_sim_heatmap_tempfile5_fh_3, $effects_sim_heatmap_tempfile5_3) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+        open($F_eff, ">", $effects_sim_heatmap_tempfile5_3) || die "Can't open file ".$effects_sim_heatmap_tempfile5_3;
+            print $F_eff "trait_type,row,col,value\n";
+            foreach my $p (@unique_plot_names) {
+                foreach my $t (@sorted_trait_names_2) {
+                    my $val = $result_blup_spatial_data_altered_env_5_3->{$p}->{$t}->[0];
+                    my @row = ("effm3_sim5_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
+                    my $line = join ',', @row;
+                    print $F_eff "$line\n";
+                    push @sim_effect5_vals_3, $val;
+                }
+            }
+        close($F_eff);
+
+        my $sim_effect5_stat_3 = Statistics::Descriptive::Full->new();
+        $sim_effect5_stat_3->add_data(@sim_effect5_vals_3);
+        my $sig_sim_effect5_3 = $sim_effect5_stat_3->variance();
+
+        my @sim_effect5_vals_4;
+        my ($effects_sim_heatmap_tempfile5_fh_4, $effects_sim_heatmap_tempfile5_4) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+        open($F_eff, ">", $effects_sim_heatmap_tempfile5_4) || die "Can't open file ".$effects_sim_heatmap_tempfile5_4;
+            print $F_eff "trait_type,row,col,value\n";
+            foreach my $p (@unique_plot_names) {
+                foreach my $t (@sorted_trait_names) {
+                    my $val = $result_blup_pe_data_delta_altered_env_5_4->{$p}->{$t}->[0];
+                    my @row = ("effm4_sim5_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
+                    my $line = join ',', @row;
+                    print $F_eff "$line\n";
+                    push @sim_effect5_vals_4, $val;
+                }
+            }
+        close($F_eff);
+
+        my $sim_effect5_stat_4 = Statistics::Descriptive::Full->new();
+        $sim_effect5_stat_4->add_data(@sim_effect5_vals_4);
+        my $sig_sim_effect5_4 = $sim_effect5_stat_4->variance();
+
         my $plot_corr_summary_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
         $plot_corr_summary_figure_tempfile_string .= '.png';
         my $plot_corr_summary_figure_tempfile = $c->config->{basepath}."/".$plot_corr_summary_figure_tempfile_string;
@@ -4928,9 +5170,18 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         mat_eff_sim4_2 <- fread(\''.$effects_sim_heatmap_tempfile4_2.'\', header=TRUE, sep=\',\');
         mat_eff_sim4_3 <- fread(\''.$effects_sim_heatmap_tempfile4_3.'\', header=TRUE, sep=\',\');
         mat_eff_sim4_4 <- fread(\''.$effects_sim_heatmap_tempfile4_4.'\', header=TRUE, sep=\',\');
-        mat <- data.frame(pheno_orig = mat_orig\$value, pheno_altm1 = mat_altered_1\$value, pheno_altm2 = mat_altered_2\$value, pheno_altm3 = mat_altered_3\$value, pheno_altm4 = mat_altered_4\$value, eff_origm1 = mat_eff_1\$value, eff_origm2 = mat_eff_2\$value, eff_origm3 = mat_eff_3\$value, eff_origm4 = mat_eff_4\$value, eff_altm1 = mat_eff_altered_1\$value, eff_altm2 = mat_eff_altered_2\$value, eff_altm3 = mat_eff_altered_3\$value, eff_altm4 = mat_eff_altered_4\$value, env_lin = mat_env\$value, pheno_linm1 = mat_p_sim1_1\$value, pheno_linm2 = mat_p_sim1_2\$value, pheno_linm3 = mat_p_sim1_3\$value, pheno_linm4 = mat_p_sim1_4\$value, lin_effm1 = mat_eff_sim1_1\$value, lin_effm2 = mat_eff_sim1_2\$value, lin_effm3 = mat_eff_sim1_3\$value, lin_effm4 = mat_eff_sim1_4\$value, env_n1d = mat_env2\$value, pheno_n1dm1 = mat_p_sim2_1\$value, pheno_n1dm2 = mat_p_sim2_2\$value, pheno_n1dm3 = mat_p_sim2_3\$value, pheno_n1dm4 = mat_p_sim2_4\$value, n1d_effm1 = mat_eff_sim2_1\$value, n1d_effm2 = mat_eff_sim2_2\$value, n1d_effm3 = mat_eff_sim2_3\$value, n1d_effm4 = mat_eff_sim2_4\$value, env_n2d = mat_env3\$value, pheno_n2dm1 = mat_p_sim3_1\$value, pheno_n2dm2 = mat_p_sim3_2\$value, pheno_n2dm3 = mat_p_sim3_3\$value, pheno_n2dm4 = mat_p_sim3_4\$value, n2d_effm1 = mat_eff_sim3_1\$value, n2d_effm2 = mat_eff_sim3_2\$value, n2d_effm3 = mat_eff_sim3_3\$value, n2d_effm4 = mat_eff_sim3_4\$value, env_rand = mat_env4\$value, pheno_randm1 = mat_p_sim4_1\$value, pheno_randm2 = mat_p_sim4_2\$value, pheno_randm3 = mat_p_sim4_3\$value, pheno_randm4 = mat_p_sim4_4\$value, rand_effm1 = mat_eff_sim4_1\$value, rand_effm2 = mat_eff_sim4_2\$value, rand_effm3 = mat_eff_sim4_3\$value, rand_effm4 = mat_eff_sim4_4\$value);
+        mat_env5 <- fread(\''.$phenotypes_env_heatmap_tempfile5.'\', header=TRUE, sep=\',\');
+        mat_p_sim5_1 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile5.'\', header=TRUE, sep=\',\');
+        mat_p_sim5_2 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile5_2.'\', header=TRUE, sep=\',\');
+        mat_p_sim5_3 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile5_3.'\', header=TRUE, sep=\',\');
+        mat_p_sim5_4 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile5_4.'\', header=TRUE, sep=\',\');
+        mat_eff_sim5_1 <- fread(\''.$effects_sim_heatmap_tempfile5.'\', header=TRUE, sep=\',\');
+        mat_eff_sim5_2 <- fread(\''.$effects_sim_heatmap_tempfile5_2.'\', header=TRUE, sep=\',\');
+        mat_eff_sim5_3 <- fread(\''.$effects_sim_heatmap_tempfile5_3.'\', header=TRUE, sep=\',\');
+        mat_eff_sim5_4 <- fread(\''.$effects_sim_heatmap_tempfile5_4.'\', header=TRUE, sep=\',\');
+        mat <- data.frame(pheno_orig = mat_orig\$value, pheno_altm1 = mat_altered_1\$value, pheno_altm2 = mat_altered_2\$value, pheno_altm3 = mat_altered_3\$value, pheno_altm4 = mat_altered_4\$value, eff_origm1 = mat_eff_1\$value, eff_origm2 = mat_eff_2\$value, eff_origm3 = mat_eff_3\$value, eff_origm4 = mat_eff_4\$value, eff_altm1 = mat_eff_altered_1\$value, eff_altm2 = mat_eff_altered_2\$value, eff_altm3 = mat_eff_altered_3\$value, eff_altm4 = mat_eff_altered_4\$value, env_lin = mat_env\$value, pheno_linm1 = mat_p_sim1_1\$value, pheno_linm2 = mat_p_sim1_2\$value, pheno_linm3 = mat_p_sim1_3\$value, pheno_linm4 = mat_p_sim1_4\$value, lin_effm1 = mat_eff_sim1_1\$value, lin_effm2 = mat_eff_sim1_2\$value, lin_effm3 = mat_eff_sim1_3\$value, lin_effm4 = mat_eff_sim1_4\$value, env_n1d = mat_env2\$value, pheno_n1dm1 = mat_p_sim2_1\$value, pheno_n1dm2 = mat_p_sim2_2\$value, pheno_n1dm3 = mat_p_sim2_3\$value, pheno_n1dm4 = mat_p_sim2_4\$value, n1d_effm1 = mat_eff_sim2_1\$value, n1d_effm2 = mat_eff_sim2_2\$value, n1d_effm3 = mat_eff_sim2_3\$value, n1d_effm4 = mat_eff_sim2_4\$value, env_n2d = mat_env3\$value, pheno_n2dm1 = mat_p_sim3_1\$value, pheno_n2dm2 = mat_p_sim3_2\$value, pheno_n2dm3 = mat_p_sim3_3\$value, pheno_n2dm4 = mat_p_sim3_4\$value, n2d_effm1 = mat_eff_sim3_1\$value, n2d_effm2 = mat_eff_sim3_2\$value, n2d_effm3 = mat_eff_sim3_3\$value, n2d_effm4 = mat_eff_sim3_4\$value, env_rand = mat_env4\$value, pheno_randm1 = mat_p_sim4_1\$value, pheno_randm2 = mat_p_sim4_2\$value, pheno_randm3 = mat_p_sim4_3\$value, pheno_randm4 = mat_p_sim4_4\$value, rand_effm1 = mat_eff_sim4_1\$value, rand_effm2 = mat_eff_sim4_2\$value, rand_effm3 = mat_eff_sim4_3\$value, rand_effm4 = mat_eff_sim4_4\$value, env_ar1 = mat_env4\$value, pheno_ar1m1 = mat_p_sim5_1\$value, pheno_ar1m2 = mat_p_sim5_2\$value, pheno_ar1m3 = mat_p_sim5_3\$value, pheno_ar1m4 = mat_p_sim5_4\$value, ar1_effm1 = mat_eff_sim5_1\$value, ar1_effm2 = mat_eff_sim5_2\$value, ar1_effm3 = mat_eff_sim5_3\$value, ar1_effm4 = mat_eff_sim5_4\$value);
         gg <- ggcorr(data=mat, hjust = 1, size = 2, color = \'grey50\', layout.exp = 1, label = TRUE, label_round = 2);
-        ggsave(\''.$plot_corr_summary_figure_tempfile.'\', gg, device=\'png\', width=20, height=20, units=\'in\');
+        ggsave(\''.$plot_corr_summary_figure_tempfile.'\', gg, device=\'png\', width=30, height=30, units=\'in\');
         "';
         # print STDERR Dumper $cmd;
         my $status_plotcorrsum_plot = system($cmd_plotcorrsum_plot);
@@ -5075,6 +5326,9 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         mat_env4 <- fread(\''.$phenotypes_env_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
         mat_p_sim4 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
         mat_eff_sim4 <- fread(\''.$effects_sim_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
+        mat_env5 <- fread(\''.$phenotypes_env_heatmap_tempfile5.'\', header=TRUE, sep=\',\');
+        mat_p_sim5 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile5.'\', header=TRUE, sep=\',\');
+        mat_eff_sim5 <- fread(\''.$effects_sim_heatmap_tempfile5.'\', header=TRUE, sep=\',\');
         options(device=\'png\');
         par();
         gg_env <- ggplot(mat_env, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
@@ -5137,9 +5391,24 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             scale_fill_viridis(discrete=FALSE) +
             coord_equal() +
             facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
-        ggsave(\''.$env_effects_sim_figure_tempfile.'\', arrangeGrob(gg_env, gg_p_sim, gg_eff_sim, gg_env2, gg_p_sim2, gg_eff_sim2, gg_env3, gg_p_sim3, gg_eff_sim3, gg_env4, gg_p_sim4, gg_eff_sim4, nrow=4), device=\'png\', width=35, height=35, units=\'in\');
+        gg_env5 <- ggplot(mat_env5, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+            geom_tile() +
+            scale_fill_viridis(discrete=FALSE) +
+            coord_equal() +
+            facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+        gg_p_sim5 <- ggplot(mat_p_sim5, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+            geom_tile() +
+            scale_fill_viridis(discrete=FALSE) +
+            coord_equal() +
+            facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+        gg_eff_sim5 <- ggplot(mat_eff_sim5, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+            geom_tile() +
+            scale_fill_viridis(discrete=FALSE) +
+            coord_equal() +
+            facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+        ggsave(\''.$env_effects_sim_figure_tempfile.'\', arrangeGrob(gg_env, gg_p_sim, gg_eff_sim, gg_env2, gg_p_sim2, gg_eff_sim2, gg_env3, gg_p_sim3, gg_eff_sim3, gg_env4, gg_p_sim4, gg_eff_sim4, gg_env5, gg_p_sim5, gg_eff_sim5, nrow=5), device=\'png\', width=35, height=35, units=\'in\');
         "';
-        # print STDERR Dumper $cmd;
+        # print STDERR Dumper $cmd_spatialenvsim_plot;
         my $status_spatialenvsim_plot = system($cmd_spatialenvsim_plot);
         push @$spatial_effects_plots, $env_effects_sim_figure_tempfile_string;
 
@@ -5160,6 +5429,9 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         mat_env4 <- fread(\''.$phenotypes_env_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
         mat_p_sim4 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile4_2.'\', header=TRUE, sep=\',\');
         mat_eff_sim4 <- fread(\''.$effects_sim_heatmap_tempfile4_2.'\', header=TRUE, sep=\',\');
+        mat_env5 <- fread(\''.$phenotypes_env_heatmap_tempfile5.'\', header=TRUE, sep=\',\');
+        mat_p_sim5 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile5_2.'\', header=TRUE, sep=\',\');
+        mat_eff_sim5 <- fread(\''.$effects_sim_heatmap_tempfile5_2.'\', header=TRUE, sep=\',\');
         options(device=\'png\');
         par();
         gg_env <- ggplot(mat_env, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
@@ -5222,7 +5494,22 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             scale_fill_viridis(discrete=FALSE) +
             coord_equal() +
             facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
-        ggsave(\''.$env_effects_sim_figure_tempfile_2.'\', arrangeGrob(gg_env, gg_p_sim, gg_eff_sim, gg_env2, gg_p_sim2, gg_eff_sim2, gg_env3, gg_p_sim3, gg_eff_sim3, gg_env4, gg_p_sim4, gg_eff_sim4, nrow=4), device=\'png\', width=35, height=35, units=\'in\');
+        gg_env5 <- ggplot(mat_env5, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+            geom_tile() +
+            scale_fill_viridis(discrete=FALSE) +
+            coord_equal() +
+            facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+        gg_p_sim5 <- ggplot(mat_p_sim5, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+            geom_tile() +
+            scale_fill_viridis(discrete=FALSE) +
+            coord_equal() +
+            facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+        gg_eff_sim5 <- ggplot(mat_eff_sim5, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+            geom_tile() +
+            scale_fill_viridis(discrete=FALSE) +
+            coord_equal() +
+            facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+        ggsave(\''.$env_effects_sim_figure_tempfile_2.'\', arrangeGrob(gg_env, gg_p_sim, gg_eff_sim, gg_env2, gg_p_sim2, gg_eff_sim2, gg_env3, gg_p_sim3, gg_eff_sim3, gg_env4, gg_p_sim4, gg_eff_sim4, gg_env5, gg_p_sim5, gg_eff_sim5, nrow=5), device=\'png\', width=35, height=35, units=\'in\');
         "';
         # print STDERR Dumper $cmd;
         my $status_spatialenvsim_plot_2 = system($cmd_spatialenvsim_plot_2);
@@ -5245,6 +5532,9 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         mat_env4 <- fread(\''.$phenotypes_env_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
         mat_p_sim4 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile4_3.'\', header=TRUE, sep=\',\');
         mat_eff_sim4 <- fread(\''.$effects_sim_heatmap_tempfile4_3.'\', header=TRUE, sep=\',\');
+        mat_env5 <- fread(\''.$phenotypes_env_heatmap_tempfile5.'\', header=TRUE, sep=\',\');
+        mat_p_sim5 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile5_3.'\', header=TRUE, sep=\',\');
+        mat_eff_sim5 <- fread(\''.$effects_sim_heatmap_tempfile5_3.'\', header=TRUE, sep=\',\');
         options(device=\'png\');
         par();
         gg_env <- ggplot(mat_env, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
@@ -5307,7 +5597,22 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             scale_fill_viridis(discrete=FALSE) +
             coord_equal() +
             facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
-        ggsave(\''.$env_effects_sim_figure_tempfile_3.'\', arrangeGrob(gg_env, gg_p_sim, gg_eff_sim, gg_env2, gg_p_sim2, gg_eff_sim2, gg_env3, gg_p_sim3, gg_eff_sim3, gg_env4, gg_p_sim4, gg_eff_sim4, nrow=4), device=\'png\', width=35, height=35, units=\'in\');
+        gg_env5 <- ggplot(mat_env5, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+            geom_tile() +
+            scale_fill_viridis(discrete=FALSE) +
+            coord_equal() +
+            facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+        gg_p_sim5 <- ggplot(mat_p_sim5, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+            geom_tile() +
+            scale_fill_viridis(discrete=FALSE) +
+            coord_equal() +
+            facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+        gg_eff_sim5 <- ggplot(mat_eff_sim5, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+            geom_tile() +
+            scale_fill_viridis(discrete=FALSE) +
+            coord_equal() +
+            facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+        ggsave(\''.$env_effects_sim_figure_tempfile_3.'\', arrangeGrob(gg_env, gg_p_sim, gg_eff_sim, gg_env2, gg_p_sim2, gg_eff_sim2, gg_env3, gg_p_sim3, gg_eff_sim3, gg_env4, gg_p_sim4, gg_eff_sim4, gg_env5, gg_p_sim5, gg_eff_sim5, nrow=5), device=\'png\', width=35, height=35, units=\'in\');
         "';
         # print STDERR Dumper $cmd;
         my $status_spatialenvsim_plot_3 = system($cmd_spatialenvsim_plot_3);
@@ -5330,6 +5635,9 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         mat_env4 <- fread(\''.$phenotypes_env_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
         mat_p_sim4 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile4_4.'\', header=TRUE, sep=\',\');
         mat_eff_sim4 <- fread(\''.$effects_sim_heatmap_tempfile4_4.'\', header=TRUE, sep=\',\');
+        mat_env5 <- fread(\''.$phenotypes_env_heatmap_tempfile5.'\', header=TRUE, sep=\',\');
+        mat_p_sim5 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile5_4.'\', header=TRUE, sep=\',\');
+        mat_eff_sim5 <- fread(\''.$effects_sim_heatmap_tempfile5_4.'\', header=TRUE, sep=\',\');
         options(device=\'png\');
         par();
         gg_env <- ggplot(mat_env, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
@@ -5392,7 +5700,22 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             scale_fill_viridis(discrete=FALSE) +
             coord_equal() +
             facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
-        ggsave(\''.$env_effects_sim_figure_tempfile_4.'\', arrangeGrob(gg_env, gg_p_sim, gg_eff_sim, gg_env2, gg_p_sim2, gg_eff_sim2, gg_env3, gg_p_sim3, gg_eff_sim3, gg_env4, gg_p_sim4, gg_eff_sim4, nrow=4), device=\'png\', width=35, height=35, units=\'in\');
+        gg_env5 <- ggplot(mat_env5, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+            geom_tile() +
+            scale_fill_viridis(discrete=FALSE) +
+            coord_equal() +
+            facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+        gg_p_sim5 <- ggplot(mat_p_sim5, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+            geom_tile() +
+            scale_fill_viridis(discrete=FALSE) +
+            coord_equal() +
+            facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+        gg_eff_sim5 <- ggplot(mat_eff_sim5, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+            geom_tile() +
+            scale_fill_viridis(discrete=FALSE) +
+            coord_equal() +
+            facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+        ggsave(\''.$env_effects_sim_figure_tempfile_4.'\', arrangeGrob(gg_env, gg_p_sim, gg_eff_sim, gg_env2, gg_p_sim2, gg_eff_sim2, gg_env3, gg_p_sim3, gg_eff_sim3, gg_env4, gg_p_sim4, gg_eff_sim4, gg_env5, gg_p_sim5, gg_eff_sim5, nrow=5), device=\'png\', width=35, height=35, units=\'in\');
         "';
         # print STDERR Dumper $cmd;
         my $status_spatialenvsim_plot_4 = system($cmd_spatialenvsim_plot_4);
@@ -13425,7 +13748,13 @@ sub _perform_drone_imagery_analytics {
     
     $result_blup_data_altered_env_4, $result_blup_data_delta_altered_env_4, $result_blup_spatial_data_altered_env_4, $result_blup_pe_data_altered_env_4, $result_blup_pe_data_delta_altered_env_4, $result_residual_data_altered_env_4, $result_fitted_data_altered_env_4, \%fixed_effects_altered_env_4, \%rr_genetic_coefficients_altered_env_4, \%rr_temporal_coefficients_altered_env_4,
 
-    $model_sum_square_residual_altered_env_4, $genetic_effect_min_altered_env_4, $genetic_effect_max_altered_env_4, $env_effect_min_altered_env_4, $env_effect_max_altered_env_4, $genetic_effect_sum_square_altered_env_4, $genetic_effect_sum_altered_env_4, $env_effect_sum_square_altered_env_4, $env_effect_sum_altered_env_4, $residual_sum_square_altered_env_4, $residual_sum_altered_env_4
+    $model_sum_square_residual_altered_env_4, $genetic_effect_min_altered_env_4, $genetic_effect_max_altered_env_4, $env_effect_min_altered_env_4, $env_effect_max_altered_env_4, $genetic_effect_sum_square_altered_env_4, $genetic_effect_sum_altered_env_4, $env_effect_sum_square_altered_env_4, $env_effect_sum_altered_env_4, $residual_sum_square_altered_env_4, $residual_sum_altered_env_4,
+    
+    \%phenotype_data_altered_env_5, \@data_matrix_altered_env_5, \@data_matrix_phenotypes_altered_env_5, $phenotype_min_altered_env_5, $phenotype_max_altered_env_5, $env_sim_min_5, $env_sim_max_5, \%sim_data_5,
+    
+    $result_blup_data_altered_env_5, $result_blup_data_delta_altered_env_5, $result_blup_spatial_data_altered_env_5, $result_blup_pe_data_altered_env_5, $result_blup_pe_data_delta_altered_env_5, $result_residual_data_altered_env_5, $result_fitted_data_altered_env_5, \%fixed_effects_altered_env_5, \%rr_genetic_coefficients_altered_env_5, \%rr_temporal_coefficients_altered_env_5,
+
+    $model_sum_square_residual_altered_env_5, $genetic_effect_min_altered_env_5, $genetic_effect_max_altered_env_5, $env_effect_min_altered_env_5, $env_effect_max_altered_env_5, $genetic_effect_sum_square_altered_env_5, $genetic_effect_sum_altered_env_5, $env_effect_sum_square_altered_env_5, $env_effect_sum_altered_env_5, $residual_sum_square_altered_env_5, $residual_sum_altered_env_5
     );
 }
 
