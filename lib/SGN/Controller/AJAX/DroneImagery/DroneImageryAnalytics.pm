@@ -12370,9 +12370,9 @@ sub _perform_drone_imagery_analytics {
             while (my $sim_val = <$pe_rel_res>) {
                 chomp $sim_val;
 
-                if ($current_col_num <= $max_col) {
-                    $sim_data_check_5{$current_row_num}->{$current_col_num} = $sim_val;
+                $sim_data_check_5{$current_row_num}->{$current_col_num} = $sim_val;
 
+                if ($current_col_num < $max_col) {
                     $current_col_num++;
                 }
                 else {
@@ -12389,7 +12389,6 @@ sub _perform_drone_imagery_analytics {
             }
         close($pe_rel_res);
     };
-    print STDERR Dumper \%sim_data_check_5;
 
     if ($permanent_environment_structure eq 'env_corr_structure') {
         my %rel_pe_result_hash;
@@ -12456,7 +12455,6 @@ sub _perform_drone_imagery_analytics {
             foreach my $t (@sorted_trait_names) {
                 if (defined($phenotype_data_altered{$p}->{$t})) {
                     my $new_val = $phenotype_data_altered{$p}->{$t} + 0;
-                    print STDERR Dumper [$row_number, $col_number];
                     my $sim_val = $sim_data_check_5{$row_number}->{$col_number};
                     $sim_val = (($sim_val - $env_sim_min_5)/($env_sim_max_5 - $env_sim_min_5))*$env_variance_percent;
                     $new_val += $sim_val;
@@ -12553,7 +12551,6 @@ sub _perform_drone_imagery_analytics {
                     }
                     else {
                         my $val = $phenotype_data_altered{$p}->{$t} + 0;
-
                         my $sim_val = $sim_data_check_5{$row_number}->{$col_number};
                         $sim_val = (($sim_val - $env_sim_min_5)/($env_sim_max_5 - $env_sim_min_5))*$env_variance_percent;
                         $val += $sim_val;
@@ -12650,7 +12647,6 @@ sub _perform_drone_imagery_analytics {
             }
         close($F);
     }
-
     print STDERR Dumper [$phenotype_min_altered_env_5, $phenotype_max_altered_env_5];
 
     my ($result_blup_data_altered_env_5, $result_blup_data_delta_altered_env_5, $result_blup_spatial_data_altered_env_5, $result_blup_pe_data_altered_env_5, $result_blup_pe_data_delta_altered_env_5, $result_residual_data_altered_env_5, $result_fitted_data_altered_env_5, %fixed_effects_altered_env_5, %rr_genetic_coefficients_altered_env_5, %rr_temporal_coefficients_altered_env_5);
