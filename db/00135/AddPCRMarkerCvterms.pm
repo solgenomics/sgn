@@ -13,11 +13,12 @@ this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
-This patch adds pcr_marker_details and pcr_marker_genotyping cvterms
+This patch adds pcr_marker_details, pcr_marker_genotyping and pcr_marker_protocol cvterms
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
 
+Titima Tantikanjana <tt15@cornell.edu>
 
 =head1 COPYRIGHT & LICENSE
 
@@ -38,7 +39,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch adds the 'pcr_marker_details' protocol_property cvterm and 'pcr_marker_genotyping' genotype_property cvterm
+This patch adds the 'pcr_marker_details' protocol_property cvterm, 'pcr_marker_genotyping' genotype_property cvterm and pcr_marker_protocol protocol_type cvterm.
 
 has '+prereq' => (
 	default => sub {
@@ -66,6 +67,9 @@ sub patch {
         ],
         'protocol_property' => [
             'pcr_marker_details'
+        ],
+        'protocol_type' => [
+            'pcr_marker_protocol'
         ]
     };
 

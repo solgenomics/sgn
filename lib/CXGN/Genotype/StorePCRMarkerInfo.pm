@@ -69,7 +69,7 @@ sub store_pcr_marker_info {
     my $marker_details = $self->marker_details();
     my $sample_type = $self->sample_observation_unit_type_name();
 
-    my $genotyping_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
+    my $pcr_marker_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pcr_marker_protocol', 'protocol_type')->cvterm_id();
     my $pcr_marker_prop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pcr_marker_details', 'protocol_property')->cvterm_id();
 
     my %marker_hash = %$marker_details;
@@ -81,6 +81,8 @@ sub store_pcr_marker_info {
     $pcr_marker_info{'species_name'} = $species_name;
     $pcr_marker_info{'marker_details'} = $marker_details;
     $pcr_marker_info{'marker_names'} = \@marker_names;
+    $pcr_marker_info{'sample_observation_unit_type_name'} = $sample_type;
+
     my $pcr_marker_info_ref = \%pcr_marker_info;
 
     my $pcr_marker_info_prop = [{value => encode_json $pcr_marker_info_ref, type_id=>$pcr_marker_prop_cvterm_id}];
