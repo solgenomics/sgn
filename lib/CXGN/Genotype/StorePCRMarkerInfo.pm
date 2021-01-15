@@ -90,7 +90,6 @@ sub store_pcr_marker_info {
 	my $protocol_id;
     my $protocol_rs = $schema->resultset("NaturalDiversity::NdProtocol")->find({
         name => $protocol_name,
-        type_id => $genotyping_experiment_cvterm_id
     });
     if ($protocol_rs) {
         return { error => "The protocol name: $protocol_name has already been used! Please use a new name." };
@@ -98,7 +97,7 @@ sub store_pcr_marker_info {
     else {
         $protocol_rs = $schema->resultset("NaturalDiversity::NdProtocol")->create({
             name => $protocol_name,
-            type_id => $genotyping_experiment_cvterm_id,
+            type_id => $pcr_marker_protocol_cvterm_id,
             nd_protocolprops => $pcr_marker_info_prop
         });
         $protocol_id = $protocol_rs->nd_protocol_id();
