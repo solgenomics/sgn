@@ -1594,13 +1594,18 @@ sub get_shared_trials_GET :Args(1) {
 sub get_stock_trait_list :Chained('/stock/get_stock') PathPart('datatables/traitlist') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
-    my @trait_list = $c->stash->{stock}->get_trait_list();
+    my $stock = CXGN::Stock->new({schema => $schema, stock_id =>$c->stash->{stock_id}});
+
+    my @trait_list = $stock->get_trait_list();
 
     my @formatted_list;
     foreach my $t (@trait_list) {
-	#print STDERR Dumper($t);
-	push @formatted_list, [ '<a href="/cvterm/'.$t->[0].'/view">'.$t->[1].'</a>', $t->[2], sprintf("%3.1f", $t->[3]), sprintf("%3.1f", $t->[4]) ];
+        #print STDERR Dumper($t);
+        my $avg = $t->[3] ? $t->[3] : '0.0';
+        my $std = $t->[4] ? $t->[4] : '0.0';
+        push @formatted_list, [ '<a href="/cvterm/'.$t->[0].'/view">'.$t->[1].'</a>', $t->[2], sprintf("%3.1f", $avg), sprintf("%3.1f", $std) ];
     }
     #print STDERR Dumper(\@formatted_list);
 

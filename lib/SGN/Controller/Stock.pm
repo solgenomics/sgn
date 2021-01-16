@@ -501,6 +501,7 @@ Path part: /stock/<stock_id>
 sub get_stock : Chained('/')  PathPart('stock')  CaptureArgs(1) {
     my ($self, $c, $stock_id) = @_;
 
+    $c->stash->{stock_id}  = $stock_id;
     $c->stash->{stock}     = CXGN::Chado::Stock->new($self->schema, $stock_id);
     $c->stash->{stock_row} = $self->schema->resultset('Stock::Stock')
                                   ->find({ stock_id => $stock_id });
