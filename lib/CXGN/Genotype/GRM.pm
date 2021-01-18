@@ -18,7 +18,8 @@ my $geno = CXGN::Genotype::GRM->new({
     download_format=>'matrix', #either 'matrix', 'three_column', or 'heatmap'
     minor_allele_frequency=>0.01,
     marker_filter=>0.6,
-    individuals_filter=>0.8
+    individuals_filter=>0.8,
+    return_inverse=>0
 });
 RECOMMENDED
 $geno->download_grm();
@@ -129,6 +130,12 @@ has 'individuals_filter' => (
     default => sub{0.80}
 );
 
+has 'return_inverse' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 0
+);
+
 has 'accession_id_list' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'rw'
@@ -185,6 +192,7 @@ sub get_grm {
     my $protocol_id = $self->protocol_id();
     my $get_grm_for_parental_accessions = $self->get_grm_for_parental_accessions();
     my $grm_tempfile = $self->grm_temp_file();
+    my $return_inverse = $self->return_inverse();
 
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
@@ -432,6 +440,9 @@ sub get_grm {
             A = U%*%diag(ev)%*%t(U);
         }
         ';
+        if ($return_inverse) {
+            $cmd .= 'A <- solve(A);';
+        }
         $cmd .= 'write.table(A, file=\''.$grm_tempfile_out.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
         print STDERR Dumper $cmd;
 
