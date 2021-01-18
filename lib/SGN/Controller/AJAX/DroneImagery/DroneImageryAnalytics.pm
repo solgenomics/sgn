@@ -7293,7 +7293,7 @@ sub _perform_drone_imagery_analytics {
             eval {
                 my $status = system($statistics_cmd);
             };
-            die;
+
             my $run_stats_fault = 0;
             if ($@) {
                 print STDERR "R ERROR\n";
@@ -7303,92 +7303,7 @@ sub _perform_drone_imagery_analytics {
             else {
                 my $current_gen_row_count = 0;
                 my $current_env_row_count = 0;
-
-                open(my $fh, '<', $stats_out_tempfile)
-                    or die "Could not open file '$stats_out_tempfile' $!";
-
-                    print STDERR "Opened $stats_out_tempfile\n";
-                    my $header = <$fh>;
-                    my @header_cols;
-                    if ($csv->parse($header)) {
-                        @header_cols = $csv->fields();
-                    }
-
-                    while (my $row = <$fh>) {
-                        my @columns;
-                        if ($csv->parse($row)) {
-                            @columns = $csv->fields();
-                        }
-                        my $col_counter = 0;
-                        foreach my $encoded_trait (@header_cols) {
-                            if ($encoded_trait eq $t) {
-                                my $trait = $trait_name_encoder_rev{$encoded_trait};
-                                my $stock_id = $columns[0];
-
-                                my $stock_name = $stock_info{$stock_id}->{uniquename};
-                                my $value = $columns[$col_counter+1];
-                                if (defined $value && $value ne '') {
-                                    $result_blup_data_original->{$stock_name}->{$trait} = [$value, $timestamp, $user_name, '', ''];
-
-                                    if ($value < $genetic_effect_min_original) {
-                                        $genetic_effect_min_original = $value;
-                                    }
-                                    elsif ($value >= $genetic_effect_max_original) {
-                                        $genetic_effect_max_original = $value;
-                                    }
-
-                                    $genetic_effect_sum_original += abs($value);
-                                    $genetic_effect_sum_square_original = $genetic_effect_sum_square_original + $value*$value;
-                                }
-                            }
-                            $col_counter++;
-                        }
-                        $current_gen_row_count++;
-                    }
-                close($fh);
-
-                open(my $fh_2dspl, '<', $stats_out_tempfile_2dspl)
-                    or die "Could not open file '$stats_out_tempfile_2dspl' $!";
-
-                    print STDERR "Opened $stats_out_tempfile_2dspl\n";
-                    my $header_2dspl = <$fh_2dspl>;
-                    my @header_cols_2dspl;
-                    if ($csv->parse($header_2dspl)) {
-                        @header_cols_2dspl = $csv->fields();
-                    }
-                    shift @header_cols_2dspl;
-                    while (my $row_2dspl = <$fh_2dspl>) {
-                        my @columns;
-                        if ($csv->parse($row_2dspl)) {
-                            @columns = $csv->fields();
-                        }
-                        my $col_counter = 0;
-                        foreach my $encoded_trait (@header_cols_2dspl) {
-                            if ($encoded_trait eq $t) {
-                                my $trait = $trait_name_encoder_rev{$encoded_trait};
-                                my $plot_id = $columns[0];
-
-                                my $plot_name = $plot_id_map{$plot_id};
-                                my $value = $columns[$col_counter+1];
-                                if (defined $value && $value ne '') {
-                                    $result_blup_spatial_data_original->{$plot_name}->{$trait} = [$value, $timestamp, $user_name, '', ''];
-
-                                    if ($value < $env_effect_min_original) {
-                                        $env_effect_min_original = $value;
-                                    }
-                                    elsif ($value >= $env_effect_max_original) {
-                                        $env_effect_max_original = $value;
-                                    }
-
-                                    $env_effect_sum_original += abs($value);
-                                    $env_effect_sum_square_original = $env_effect_sum_square_original + $value*$value;
-                                }
-                            }
-                            $col_counter++;
-                        }
-                        $current_env_row_count++;
-                    }
-                close($fh_2dspl);
+                my @row_col_ordered_plots_names;
 
                 open(my $fh_residual, '<', $stats_out_tempfile_residual)
                     or die "Could not open file '$stats_out_tempfile_residual' $!";
@@ -7405,21 +7320,75 @@ sub _perform_drone_imagery_analytics {
                             @columns = $csv->fields();
                         }
 
-                        my $trait_name = $trait_name_encoder_rev{$t};
                         my $stock_id = $columns[0];
                         my $residual = $columns[1];
                         my $fitted = $columns[2];
                         my $stock_name = $plot_id_map{$stock_id};
+                        push @row_col_ordered_plots_names, $stock_name;
                         if (defined $residual && $residual ne '') {
-                            $result_residual_data_original->{$stock_name}->{$trait_name} = [$residual, $timestamp, $user_name, '', ''];
+                            $result_residual_data_original->{$stock_name}->{$t} = [$residual, $timestamp, $user_name, '', ''];
                             $residual_sum_original += abs($residual);
                         }
                         if (defined $fitted && $fitted ne '') {
-                            $result_fitted_data_original->{$stock_name}->{$trait_name} = [$fitted, $timestamp, $user_name, '', ''];
+                            $result_fitted_data_original->{$stock_name}->{$t} = [$fitted, $timestamp, $user_name, '', ''];
                         }
                         $model_sum_square_residual_original = $model_sum_square_residual_original + $residual*$residual;
                     }
                 close($fh_residual);
+
+                print STDERR Dumper \%accession_id_factor_map_reverse;
+                open(my $fh, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
+                    print STDERR "Opened $stats_out_tempfile\n";
+                    my $header = <$fh>;
+
+                    my $solution_file_counter = 0;
+                    while (defined(my $row = <$fh>)) {
+                        # print STDERR $row;
+                        my @columns;
+                        if ($csv->parse($row)) {
+                            @columns = $csv->fields();
+                        }
+                        my $level = $columns[0];
+                        my $value = $columns[1];
+                        my $std = $columns[2];
+                        my $z_ratio = $columns[3];
+                        if (defined $value && $value ne '') {
+                            if ($solution_file_counter < $number_accessions) {
+                                my $stock_name = $accession_id_factor_map_reverse{$solution_file_counter};
+                                $result_blup_data_original->{$stock_name}->{$t} = [$value, $timestamp, $user_name, '', ''];
+
+                                if ($value < $genetic_effect_min_original) {
+                                    $genetic_effect_min_original = $value;
+                                }
+                                elsif ($value >= $genetic_effect_max_original) {
+                                    $genetic_effect_max_original = $value;
+                                }
+
+                                $genetic_effect_sum_original += abs($value);
+                                $genetic_effect_sum_square_original = $genetic_effect_sum_square_original + $value*$value;
+
+                                $current_gen_row_count++;
+                            }
+                            else {
+                                my $plot_name = $row_col_ordered_plots_names[$current_env_row_count-$number_accessions];
+                                $result_blup_spatial_data_original->{$plot_name}->{$t} = [$value, $timestamp, $user_name, '', ''];
+
+                                if ($value < $env_effect_min_original) {
+                                    $env_effect_min_original = $value;
+                                }
+                                elsif ($value >= $env_effect_max_original) {
+                                    $env_effect_max_original = $value;
+                                }
+
+                                $env_effect_sum_original += abs($value);
+                                $env_effect_sum_square_original = $env_effect_sum_square_original + $value*$value;
+
+                                $current_env_row_count++;
+                            }
+                        }
+                        $solution_file_counter++;
+                    }
+                close($fh);
 
                 if ($current_env_row_count == 0 || $current_gen_row_count == 0) {
                     $run_stats_fault = 1;
@@ -7430,6 +7399,10 @@ sub _perform_drone_imagery_analytics {
                     $c->detach();
                     print STDERR "ERROR IN R CMD\n";
                 }
+                
+                print STDERR Dumper $result_blup_data_original;
+                print STDERR Dumper $result_blup_spatial_data_original;
+                die;
             }
         }
 
