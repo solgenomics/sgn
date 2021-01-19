@@ -6131,7 +6131,6 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         my $status_spatialenvsim_plot_5 = system($cmd_spatialenvsim_plot_5);
         push @$spatial_effects_plots, $env_effects_sim_figure_tempfile_string_5;
     };
-    die;
 
     eval {
         my @sorted_germplasm_names = sort keys %unique_accessions;
