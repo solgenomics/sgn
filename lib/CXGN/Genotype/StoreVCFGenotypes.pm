@@ -540,6 +540,7 @@ sub validate {
     my $genotype_info = $self->genotype_info;
     my $include_igd_numbers = $self->igd_numbers_included;
     my $include_lab_numbers = $self->lab_numbers_included;
+    my $genotyping_data_type = $self->genotyping_data_type;
     my @error_messages;
     my @warning_messages;
 
@@ -560,6 +561,8 @@ sub validate {
     $self->snp_genotype_id($snp_genotype_id);
     my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
     $self->geno_cvterm_id($geno_cvterm_id);
+    my $pcr_marker_genotypeprop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pcr_marker_genotyping', 'genotype_property')->cvterm_id();
+    $self->pcr_marker_genotyping_type_id($pcr_marker_genotypeprop_cvterm_id);
 
     my $snp_genotypingprop_cvterm_id;
     if ($self->archived_file_type eq 'genotype_vcf'){
@@ -637,54 +640,55 @@ sub validate {
     }
 
     #check if protocol_info is correct
-    while (my ($chromosome, $protocol_info_chrom) = each %{$protocol_info->{markers}}) {
-        while (my ($marker_name, $marker_info) = each %{$protocol_info_chrom}) {
-            if (!$marker_name || !$marker_info){
-                push @error_messages, "No genotype info provided";
-            }
-            foreach (keys %$marker_info){
-                if ($_ ne 'name' && $_ ne 'chrom' && $_ ne 'pos' && $_ ne 'ref' && $_ ne 'alt' && $_ ne 'qual' && $_ ne 'filter' && $_ ne 'info' && $_ ne 'format' && $_ ne 'intertek_name'){
-                    push @error_messages, "protocol_info key not recognized: $_";
+    if ($genotyping_data_type ne 'ssr') {
+        while (my ($chromosome, $protocol_info_chrom) = each %{$protocol_info->{markers}}) {
+            while (my ($marker_name, $marker_info) = each %{$protocol_info_chrom}) {
+                if (!$marker_name || !$marker_info){
+                    push @error_messages, "No genotype info provided";
+                }
+                foreach (keys %$marker_info){
+                    if ($_ ne 'name' && $_ ne 'chrom' && $_ ne 'pos' && $_ ne 'ref' && $_ ne 'alt' && $_ ne 'qual' && $_ ne 'filter' && $_ ne 'info' && $_ ne 'format' && $_ ne 'intertek_name'){
+                        push @error_messages, "protocol_info key not recognized: $_";
+                    }
+                }
+                if(!exists($marker_info->{'name'})){
+                    push @error_messages, "protocol_info missing name key";
+                }
+                if(!exists($marker_info->{'chrom'})){
+                    push @error_messages, "protocol_info missing chrom key";
+                }
+                if(!exists($marker_info->{'pos'})){
+                    push @error_messages, "protocol_info missing pos key";
+                }
+                if(!exists($marker_info->{'ref'})){
+                    push @error_messages, "protocol_info missing ref key";
+                }
+                if(!exists($marker_info->{'alt'})){
+                    push @error_messages, "protocol_info missing alt key";
+                }
+                if(!exists($marker_info->{'qual'})){
+                    push @error_messages, "protocol_info missing qual key";
+                }
+                if(!exists($marker_info->{'filter'})){
+                    push @error_messages, "protocol_info missing filter key";
+                }
+                if(!exists($marker_info->{'info'})){
+                    push @error_messages, "protocol_info missing info key";
+                }
+                if(!exists($marker_info->{'format'})){
+                    push @error_messages, "protocol_info missing format key";
                 }
             }
-            if(!exists($marker_info->{'name'})){
-                push @error_messages, "protocol_info missing name key";
-            }
-            if(!exists($marker_info->{'chrom'})){
-                push @error_messages, "protocol_info missing chrom key";
-            }
-            if(!exists($marker_info->{'pos'})){
-                push @error_messages, "protocol_info missing pos key";
-            }
-            if(!exists($marker_info->{'ref'})){
-                push @error_messages, "protocol_info missing ref key";
-            }
-            if(!exists($marker_info->{'alt'})){
-                push @error_messages, "protocol_info missing alt key";
-            }
-            if(!exists($marker_info->{'qual'})){
-                push @error_messages, "protocol_info missing qual key";
-            }
-            if(!exists($marker_info->{'filter'})){
-                push @error_messages, "protocol_info missing filter key";
-            }
-            if(!exists($marker_info->{'info'})){
-                push @error_messages, "protocol_info missing info key";
-            }
-            if(!exists($marker_info->{'format'})){
-                push @error_messages, "protocol_info missing format key";
+        }
+        if (scalar(@{$protocol_info->{marker_names}}) == 0){
+            push @error_messages, "No marker info in file";
+        }
+        while (my ($chromosome, $protocol_info_chrom) = each %{$protocol_info->{markers_array}}) {
+            if (scalar(@{$protocol_info_chrom}) == 0){
+                push @error_messages, "No marker info in markers_array file";
             }
         }
     }
-    if (scalar(@{$protocol_info->{marker_names}}) == 0){
-        push @error_messages, "No marker info in file";
-    }
-    while (my ($chromosome, $protocol_info_chrom) = each %{$protocol_info->{markers_array}}) {
-        if (scalar(@{$protocol_info_chrom}) == 0){
-            push @error_messages, "No marker info in markers_array file";
-        }
-    }
-
     #check if genotype_info is correct
     #print STDERR Dumper($genotype_info);
 
@@ -695,12 +699,18 @@ sub validate {
     }
 
     my $previous_genotypes_exist;
+    my $genotype_property_type_id;
+    if ($genotype_data_type eq 'ssr') {
+        $genotype_property_type_id = $pcr_marker_genotypeprop_cvterm_id;
+    } else {
+        $genotype_property_type_id = $snp_genotype_id;
+    }
     my $previous_genotypes_rs = $schema->resultset("Stock::Stock")->search({
         'me.uniquename' => {-in => \@observation_unit_uniquenames_stripped},
         'me.type_id' => $stock_type_id,
         'me.organism_id' => $organism_id,
         'nd_experiment.type_id' => $geno_cvterm_id,
-        'genotype.type_id' => $snp_genotype_id
+        'genotype.type_id' => $genotype_property_type_id
     }, {
         join => {'nd_experiment_stocks' => {'nd_experiment' => [ {'nd_experiment_genotypes' => 'genotype'}, {'nd_experiment_protocols' => 'nd_protocol'}, {'nd_experiment_projects' => 'project'} ] } },
         '+select' => ['nd_protocol.nd_protocol_id', 'nd_protocol.name', 'project.project_id', 'project.name'],

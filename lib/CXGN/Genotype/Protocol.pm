@@ -344,13 +344,13 @@ sub list_simple {
     my @results;
     while (my ($protocol_id, $protocol_name, $protocol_description, $create_date, $header_information_lines, $reference_genome_name, $species_name, $sample_type_name, $marker_count, $marker_type) = $h->fetchrow_array()) {
         my $header_information_lines = $header_information_lines ? decode_json $header_information_lines : [];
-        my $reference_genome_name = $reference_genome_name || 'Not set. Please reload these genotypes using new genotype format!';
         my $species_name = $species_name || 'Not set. Please reload these genotypes using new genotype format!';
         my $sample_observation_unit_type_name = $sample_type_name || 'Not set. Please reload these genotypes using new genotype format!';
         my $protocol_description = $protocol_description || 'Not set. Please reload these genotypes using new genotype format!';
         $create_date = $create_date || 'Not set. Please reload these genotypes using new genotype format!';
         if (!$marker_type) {
             $marker_type = 'SNP';
+            $reference_genome_name = $reference_genome_name || 'Not set. Please reload these genotypes using new genotype format!';
         }
         push @results, {
             protocol_id => $protocol_id,
