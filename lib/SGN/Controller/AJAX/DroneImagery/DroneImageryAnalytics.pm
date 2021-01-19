@@ -13557,7 +13557,6 @@ sub _perform_drone_imagery_analytics {
         write.table(Resscr, file=\''.$permanent_environment_structure_env_tempfile2.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
         print STDERR Dumper $pe_rel_cmd;
         my $status_pe_rel = system($pe_rel_cmd);
-        die;
 
         my %rel_pe_result_hash;
         open(my $pe_rel_res, '<', $permanent_environment_structure_env_tempfile2) or die "Could not open file '$permanent_environment_structure_env_tempfile2' $!";
@@ -13587,6 +13586,7 @@ sub _perform_drone_imagery_analytics {
             }
         close($pe_rel_res);
     };
+    die;
 
     if ($permanent_environment_structure eq 'env_corr_structure') {
         my %rel_pe_result_hash;
