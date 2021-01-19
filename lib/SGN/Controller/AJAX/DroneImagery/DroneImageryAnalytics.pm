@@ -2996,7 +2996,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         foreach (@sorted_trait_names) {
             push @phenotype_header_5, "t$_";
         }
-        push @data_matrix_original_5, \@phenotype_header_5;
+        $header_string_5 = join ',', @phenotype_header_5;
 
         foreach my $p (@unique_plot_names) {
             my $row_number = $stock_name_row_col{$p}->{row_number};
@@ -3951,13 +3951,13 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             print STDERR "OPENED PLOTCORR FILE $full_plot_level_correlation_tempfile\n";
 
             my @header_full_plot_corr;
-            my @types_full_plot_corr = ('pheno_orig_', 'pheno_postm1_', 'pheno_postm2_', 'pheno_postm3_', 'pheno_postm4_',
-            'eff_origm1_', 'eff_origm2_', 'eff_origm3_', 'eff_origm4_', 'eff_postm1_', 'eff_postm2_', 'eff_postm3_', 'eff_postm4_',
-            'sim_env1_', 'simm1_pheno1_', 'simm2_pheno1_', 'simm3_pheno1_', 'simm4_pheno1_', 'effm1_sim1_', 'effm2_sim1_', 'effm3_sim1_', 'effm4_sim1_',
-            'sim_env2_', 'simm1_pheno2_', 'simm2_pheno2_', 'simm3_pheno2_', 'simm4_pheno2_', 'effm1_sim2_', 'effm2_sim2_', 'effm3_sim2_', 'effm4_sim2_',
-            'sim_env3_', 'simm1_pheno3_', 'simm2_pheno3_', 'simm3_pheno3_', 'simm4_pheno3_', 'effm1_sim3_', 'effm2_sim3_', 'effm3_sim3_', 'effm4_sim3_',
-            'sim_env4_', 'simm1_pheno4_', 'simm2_pheno4_', 'simm3_pheno4_', 'simm4_pheno4_', 'effm1_sim4_', 'effm2_sim4_', 'effm3_sim4_', 'effm4_sim4_',
-            'sim_env5_', 'simm1_pheno5_', 'simm2_pheno5_', 'simm3_pheno5_', 'simm4_pheno5_', 'effm1_sim5_', 'effm2_sim5_', 'effm3_sim5_', 'effm4_sim5_');
+            my @types_full_plot_corr = ('pheno_orig_', 'pheno_postm1_', 'pheno_postm2_', 'pheno_postm3_', 'pheno_postm4_', 'pheno_postm5_',
+            'eff_origm1_', 'eff_origm2_', 'eff_origm3_', 'eff_origm4_', 'eff_origm5_', 'eff_postm1_', 'eff_postm2_', 'eff_postm3_', 'eff_postm4_', 'eff_postm5_',
+            'sim_env1_', 'simm1_pheno1_', 'simm2_pheno1_', 'simm3_pheno1_', 'simm4_pheno1_', 'simm5_pheno1_', 'effm1_sim1_', 'effm2_sim1_', 'effm3_sim1_', 'effm4_sim1_', 'effm5_sim1_',
+            'sim_env2_', 'simm1_pheno2_', 'simm2_pheno2_', 'simm3_pheno2_', 'simm4_pheno2_', 'simm5_pheno2_', 'effm1_sim2_', 'effm2_sim2_', 'effm3_sim2_', 'effm4_sim2_', 'effm5_sim2_',
+            'sim_env3_', 'simm1_pheno3_', 'simm2_pheno3_', 'simm3_pheno3_', 'simm4_pheno3_', 'simm5_pheno3_', 'effm1_sim3_', 'effm2_sim3_', 'effm3_sim3_', 'effm4_sim3_', 'effm5_sim3_',
+            'sim_env4_', 'simm1_pheno4_', 'simm2_pheno4_', 'simm3_pheno4_', 'simm4_pheno4_', 'simm5_pheno4_', 'effm1_sim4_', 'effm2_sim4_', 'effm3_sim4_', 'effm4_sim4_', 'effm5_sim4_',
+            'sim_env5_', 'simm1_pheno5_', 'simm2_pheno5_', 'simm3_pheno5_', 'simm4_pheno5_', 'simm5_pheno5_', 'effm1_sim5_', 'effm2_sim5_', 'effm3_sim5_', 'effm4_sim5_', 'effm5_sim5_');
             foreach my $type (@types_full_plot_corr) {
                 foreach my $t (@sorted_trait_names) {
                     push @header_full_plot_corr, $type.$trait_name_encoder{$t};
@@ -3975,70 +3975,83 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     my $phenotype_post_2 = $phenotype_data_altered_2{$p}->{$t_conv};
                     my $phenotype_post_3 = $phenotype_data_altered_3{$p}->{$t_conv};
                     my $phenotype_post_4 = $phenotype_data_altered_4{$p}->{$t};
+                    my $phenotype_post_5 = $phenotype_data_altered_5{$p}->{$t};
                     my $effect_original_1 = $result_blup_pe_data_delta_original->{$p}->{$t}->[0];
                     my $effect_original_2 = $result_blup_spatial_data_original_2->{$p}->{$t_conv}->[0];
                     my $effect_original_3 = $result_blup_spatial_data_original_3->{$p}->{$t_conv}->[0];
                     my $effect_original_4 = $result_blup_pe_data_delta_original_4->{$p}->{$t}->[0];
+                    my $effect_original_5 = $result_blup_spatial_data_original_5->{$p}->{$t}->[0];
                     my $effect_post_1 = $result_blup_pe_data_delta_altered->{$p}->{$t}->[0];
                     my $effect_post_2 = $result_blup_spatial_data_altered_1_2->{$p}->{$t_conv}->[0];
                     my $effect_post_3 = $result_blup_spatial_data_altered_1_3->{$p}->{$t_conv}->[0];
                     my $effect_post_4 = $result_blup_pe_data_delta_altered_1_4->{$p}->{$t}->[0];
-                    push @row, ($phenotype_original, $phenotype_post_1, $phenotype_post_2, $phenotype_post_3, $phenotype_post_4, $effect_original_1, $effect_original_2, $effect_original_3, $effect_original_4, $effect_post_1, $effect_post_2, $effect_post_3, $effect_post_4);
+                    my $effect_post_5 = $result_blup_spatial_data_altered_1_5->{$p}->{$t}->[0];
+                    push @row, ($phenotype_original, $phenotype_post_1, $phenotype_post_2, $phenotype_post_3, $phenotype_post_4, $phenotype_post_5, $effect_original_1, $effect_original_2, $effect_original_3, $effect_original_4, $effect_original_5, $effect_post_1, $effect_post_2, $effect_post_3, $effect_post_4, $effect_post_5);
 
                     my $sim_env = $sim_data{$p}->{$t};
                     my $pheno_sim_1 = $phenotype_data_altered_env{$p}->{$t};
                     my $pheno_sim_2 = $phenotype_data_altered_env_1_2{$p}->{$t_conv};
                     my $pheno_sim_3 = $phenotype_data_altered_env_1_3{$p}->{$t_conv};
                     my $pheno_sim_4 = $phenotype_data_altered_env_1_4{$p}->{$t};
+                    my $pheno_sim_5 = $phenotype_data_altered_env_1_5{$p}->{$t};
                     my $effect_sim_1 = $result_blup_pe_data_delta_altered_env->{$p}->{$t}->[0];
                     my $effect_sim_2 = $result_blup_spatial_data_altered_env_1_2->{$p}->{$t_conv}->[0];
                     my $effect_sim_3 = $result_blup_spatial_data_altered_env_1_3->{$p}->{$t_conv}->[0];
                     my $effect_sim_4 = $result_blup_pe_data_delta_altered_env_1_4->{$p}->{$t}->[0];
-                    push @row, ($sim_env, $pheno_sim_1, $pheno_sim_2, $pheno_sim_3, $pheno_sim_4, $effect_sim_1, $effect_sim_2, $effect_sim_3, $effect_sim_4);
+                    my $effect_sim_5 = $result_blup_spatial_data_altered_env_1_5->{$p}->{$t}->[0];
+                    push @row, ($sim_env, $pheno_sim_1, $pheno_sim_2, $pheno_sim_3, $pheno_sim_4, $pheno_sim_5, $effect_sim_1, $effect_sim_2, $effect_sim_3, $effect_sim_4, $effect_sim_5);
 
                     my $sim_env2 = $sim_data_2{$p}->{$t};
                     my $pheno_sim2_1 = $phenotype_data_altered_env_2{$p}->{$t};
                     my $pheno_sim2_2 = $phenotype_data_altered_env_2_2{$p}->{$t_conv};
                     my $pheno_sim2_3 = $phenotype_data_altered_env_2_3{$p}->{$t_conv};
                     my $pheno_sim2_4 = $phenotype_data_altered_env_2_4{$p}->{$t};
+                    my $pheno_sim2_5 = $phenotype_data_altered_env_2_5{$p}->{$t};
                     my $effect_sim2_1 = $result_blup_pe_data_delta_altered_env_2->{$p}->{$t}->[0];
                     my $effect_sim2_2 = $result_blup_spatial_data_altered_env_2_2->{$p}->{$t_conv}->[0];
                     my $effect_sim2_3 = $result_blup_spatial_data_altered_env_2_3->{$p}->{$t_conv}->[0];
                     my $effect_sim2_4 = $result_blup_pe_data_delta_altered_env_2_4->{$p}->{$t}->[0];
-                    push @row, ($sim_env2, $pheno_sim2_1, $pheno_sim2_2, $pheno_sim2_3, $pheno_sim2_4, $effect_sim2_1, $effect_sim2_2, $effect_sim2_3, $effect_sim2_4);
+                    my $effect_sim2_5 = $result_blup_spatial_data_altered_env_2_5->{$p}->{$t}->[0];
+                    push @row, ($sim_env2, $pheno_sim2_1, $pheno_sim2_2, $pheno_sim2_3, $pheno_sim2_4, $pheno_sim2_5, $effect_sim2_1, $effect_sim2_2, $effect_sim2_3, $effect_sim2_4, $effect_sim2_5);
 
                     my $sim_env3 = $sim_data_3{$p}->{$t};
                     my $pheno_sim3_1 = $phenotype_data_altered_env_3{$p}->{$t};
                     my $pheno_sim3_2 = $phenotype_data_altered_env_3_2{$p}->{$t_conv};
                     my $pheno_sim3_3 = $phenotype_data_altered_env_3_3{$p}->{$t_conv};
                     my $pheno_sim3_4 = $phenotype_data_altered_env_3_4{$p}->{$t};
+                    my $pheno_sim3_5 = $phenotype_data_altered_env_3_5{$p}->{$t};
                     my $effect_sim3_1 = $result_blup_pe_data_delta_altered_env_3->{$p}->{$t}->[0];
                     my $effect_sim3_2 = $result_blup_spatial_data_altered_env_3_2->{$p}->{$t_conv}->[0];
                     my $effect_sim3_3 = $result_blup_spatial_data_altered_env_3_3->{$p}->{$t_conv}->[0];
                     my $effect_sim3_4 = $result_blup_pe_data_delta_altered_env_3_4->{$p}->{$t}->[0];
-                    push @row, ($sim_env3, $pheno_sim3_1, $pheno_sim3_2, $pheno_sim3_3, $pheno_sim3_4, $effect_sim3_1, $effect_sim3_2, $effect_sim3_3, $effect_sim3_4);
+                    my $effect_sim3_5 = $result_blup_spatial_data_altered_env_3_5->{$p}->{$t}->[0];
+                    push @row, ($sim_env3, $pheno_sim3_1, $pheno_sim3_2, $pheno_sim3_3, $pheno_sim3_4, $pheno_sim3_5, $effect_sim3_1, $effect_sim3_2, $effect_sim3_3, $effect_sim3_4, $effect_sim3_5);
 
                     my $sim_env4 = $sim_data_4{$p}->{$t};
                     my $pheno_sim4_1 = $phenotype_data_altered_env_4{$p}->{$t};
                     my $pheno_sim4_2 = $phenotype_data_altered_env_4_2{$p}->{$t_conv};
                     my $pheno_sim4_3 = $phenotype_data_altered_env_4_3{$p}->{$t_conv};
                     my $pheno_sim4_4 = $phenotype_data_altered_env_4_4{$p}->{$t};
+                    my $pheno_sim4_5 = $phenotype_data_altered_env_4_5{$p}->{$t};
                     my $effect_sim4_1 = $result_blup_pe_data_delta_altered_env_4->{$p}->{$t}->[0];
                     my $effect_sim4_2 = $result_blup_spatial_data_altered_env_4_2->{$p}->{$t_conv}->[0];
                     my $effect_sim4_3 = $result_blup_spatial_data_altered_env_4_3->{$p}->{$t_conv}->[0];
                     my $effect_sim4_4 = $result_blup_pe_data_delta_altered_env_4_4->{$p}->{$t}->[0];
-                    push @row, ($sim_env4, $pheno_sim4_1, $pheno_sim4_2, $pheno_sim4_3, $pheno_sim4_4, $effect_sim4_1, $effect_sim4_2, $effect_sim4_3, $effect_sim4_4);
+                    my $effect_sim4_5 = $result_blup_spatial_data_altered_env_4_5->{$p}->{$t}->[0];
+                    push @row, ($sim_env4, $pheno_sim4_1, $pheno_sim4_2, $pheno_sim4_3, $pheno_sim4_4, $pheno_sim4_5, $effect_sim4_1, $effect_sim4_2, $effect_sim4_3, $effect_sim4_4, $effect_sim4_5);
 
                     my $sim_env5 = $sim_data_5{$p}->{$t};
                     my $pheno_sim5_1 = $phenotype_data_altered_env_5{$p}->{$t};
                     my $pheno_sim5_2 = $phenotype_data_altered_env_5_2{$p}->{$t_conv};
                     my $pheno_sim5_3 = $phenotype_data_altered_env_5_3{$p}->{$t_conv};
                     my $pheno_sim5_4 = $phenotype_data_altered_env_5_4{$p}->{$t};
+                    my $pheno_sim5_5 = $phenotype_data_altered_env_5_5{$p}->{$t};
                     my $effect_sim5_1 = $result_blup_pe_data_delta_altered_env_5->{$p}->{$t}->[0];
                     my $effect_sim5_2 = $result_blup_spatial_data_altered_env_5_2->{$p}->{$t_conv}->[0];
                     my $effect_sim5_3 = $result_blup_spatial_data_altered_env_5_3->{$p}->{$t_conv}->[0];
                     my $effect_sim5_4 = $result_blup_pe_data_delta_altered_env_5_4->{$p}->{$t}->[0];
-                    push @row, ($sim_env5, $pheno_sim5_1, $pheno_sim5_2, $pheno_sim5_3, $pheno_sim5_4, $effect_sim5_1, $effect_sim5_2, $effect_sim5_3, $effect_sim5_4);
+                    my $effect_sim5_5 = $result_blup_spatial_data_altered_env_5_5->{$p}->{$t}->[0];
+                    push @row, ($sim_env5, $pheno_sim5_1, $pheno_sim5_2, $pheno_sim5_3, $pheno_sim5_4, $pheno_sim5_5, $effect_sim5_1, $effect_sim5_2, $effect_sim5_3, $effect_sim5_4, $effect_sim5_5);
                 }
                 my $line = join ',', @row;
                 print $F_fullplot "$line\n";
@@ -4052,7 +4065,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         my $cmd_plotcorr_plot = 'R -e "library(data.table); library(ggplot2); library(GGally);
         mat_orig <- fread(\''.$full_plot_level_correlation_tempfile.'\', header=TRUE, sep=\',\');
         gg <- ggcorr(data=mat_orig, hjust = 1, size = 2, color = \'grey50\', layout.exp = 1, label = TRUE);
-        ggsave(\''.$plot_corr_figure_tempfile.'\', gg, device=\'png\', width=55, height=55, units=\'in\');
+        ggsave(\''.$plot_corr_figure_tempfile.'\', gg, device=\'png\', width=50, height=50, limitsize = FALSE, units=\'in\');
         "';
         # print STDERR Dumper $cmd;
         my $status_plotcorr_plot = system($cmd_plotcorr_plot);
@@ -4060,6 +4073,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     };
 
     eval {
+        my @plot_corr_full_vals;
+        
         my @original_pheno_vals;
         my ($phenotypes_original_heatmap_tempfile_fh, $phenotypes_original_heatmap_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
         open(my $F_pheno, ">", $phenotypes_original_heatmap_tempfile) || die "Can't open file ".$phenotypes_original_heatmap_tempfile;
@@ -4074,6 +4089,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_pheno);
+        push @plot_corr_full_vals, \@original_pheno_vals;
 
         my $original_pheno_stat = Statistics::Descriptive::Full->new();
         $original_pheno_stat->add_data(@original_pheno_vals);
@@ -4095,6 +4111,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_pheno);
+        push @plot_corr_full_vals, \@altered_pheno_vals;
 
         my $altered_pheno_stat = Statistics::Descriptive::Full->new();
         $altered_pheno_stat->add_data(@altered_pheno_vals);
@@ -4114,6 +4131,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_pheno);
+        push @plot_corr_full_vals, \@altered_pheno_vals_2;
 
         my $altered_pheno_stat_2 = Statistics::Descriptive::Full->new();
         $altered_pheno_stat_2->add_data(@altered_pheno_vals_2);
@@ -4133,6 +4151,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_pheno);
+        push @plot_corr_full_vals, \@altered_pheno_vals_3;
 
         my $altered_pheno_stat_3 = Statistics::Descriptive::Full->new();
         $altered_pheno_stat_3->add_data(@altered_pheno_vals_3);
@@ -4152,10 +4171,31 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_pheno);
+        push @plot_corr_full_vals, \@altered_pheno_vals_4;
 
         my $altered_pheno_stat_4 = Statistics::Descriptive::Full->new();
         $altered_pheno_stat_4->add_data(@altered_pheno_vals_4);
         my $sig_altered_pheno_4 = $altered_pheno_stat_4->variance();
+
+        my @altered_pheno_vals_5;
+        my ($phenotypes_post_heatmap_tempfile_fh_5, $phenotypes_post_heatmap_tempfile_5) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+        open($F_pheno, ">", $phenotypes_post_heatmap_tempfile_5) || die "Can't open file ".$phenotypes_post_heatmap_tempfile_5;
+            print $F_pheno "trait_type,row,col,value\n";
+            foreach my $p (@unique_plot_names) {
+                foreach my $t (@sorted_trait_names) {
+                    my $val = $phenotype_data_altered_5{$p}->{$t};
+                    my @row = ("pheno_postm5_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
+                    push @altered_pheno_vals_5, $val;
+                    my $line = join ',', @row;
+                    print $F_pheno "$line\n";
+                }
+            }
+        close($F_pheno);
+        push @plot_corr_full_vals, \@altered_pheno_vals_5;
+
+        my $altered_pheno_stat_5 = Statistics::Descriptive::Full->new();
+        $altered_pheno_stat_5->add_data(@altered_pheno_vals_5);
+        my $sig_altered_pheno_5 = $altered_pheno_stat_5->variance();
 
         # EFFECT ORIGINAL M
 
@@ -4173,6 +4213,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_eff);
+        push @plot_corr_full_vals, \@original_effect_vals;
 
         my $original_effect_stat = Statistics::Descriptive::Full->new();
         $original_effect_stat->add_data(@original_effect_vals);
@@ -4192,6 +4233,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_eff);
+        push @plot_corr_full_vals, \@original_effect_vals_2;
 
         my $original_effect_stat_2 = Statistics::Descriptive::Full->new();
         $original_effect_stat_2->add_data(@original_effect_vals_2);
@@ -4211,6 +4253,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_eff);
+        push @plot_corr_full_vals, \@original_effect_vals_3;
 
         my $original_effect_stat_3 = Statistics::Descriptive::Full->new();
         $original_effect_stat_3->add_data(@original_effect_vals_3);
@@ -4230,10 +4273,31 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_eff);
+        push @plot_corr_full_vals, \@original_effect_vals_4;
 
         my $original_effect_stat_4 = Statistics::Descriptive::Full->new();
         $original_effect_stat_4->add_data(@original_effect_vals_4);
         my $sig_original_effect_4 = $original_effect_stat_4->variance();
+
+        my @original_effect_vals_5;
+        my ($effects_heatmap_tempfile_fh_5, $effects_heatmap_tempfile_5) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+        open($F_eff, ">", $effects_heatmap_tempfile_5) || die "Can't open file ".$effects_heatmap_tempfile_5;
+            print $F_eff "trait_type,row,col,value\n";
+            foreach my $p (@unique_plot_names) {
+                foreach my $t (@sorted_trait_names) {
+                    my $val = $result_blup_spatial_data_original_5->{$p}->{$t}->[0];
+                    my @row = ("eff_origm5_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
+                    my $line = join ',', @row;
+                    print $F_eff "$line\n";
+                    push @original_effect_vals_5, $val;
+                }
+            }
+        close($F_eff);
+        push @plot_corr_full_vals, \@original_effect_vals_5;
+
+        my $original_effect_stat_5 = Statistics::Descriptive::Full->new();
+        $original_effect_stat_5->add_data(@original_effect_vals_5);
+        my $sig_original_effect_5 = $original_effect_stat_5->variance();
 
         # EFFECT POST M MIN
 
@@ -4251,6 +4315,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_eff);
+        push @plot_corr_full_vals, \@altered_effect_vals;
 
         my $altered_effect_stat = Statistics::Descriptive::Full->new();
         $altered_effect_stat->add_data(@altered_effect_vals);
@@ -4270,6 +4335,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_eff);
+        push @plot_corr_full_vals, \@altered_effect_vals_2;
 
         my $altered_effect_stat_2 = Statistics::Descriptive::Full->new();
         $altered_effect_stat_2->add_data(@altered_effect_vals_2);
@@ -4289,6 +4355,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_eff);
+        push @plot_corr_full_vals, \@altered_effect_vals_3;
 
         my $altered_effect_stat_3 = Statistics::Descriptive::Full->new();
         $altered_effect_stat_3->add_data(@altered_effect_vals_3);
@@ -4308,10 +4375,31 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_eff);
+        push @plot_corr_full_vals, \@altered_effect_vals_4;
 
         my $altered_effect_stat_4 = Statistics::Descriptive::Full->new();
         $altered_effect_stat_4->add_data(@altered_effect_vals_4);
         my $sig_altered_effect_4 = $altered_effect_stat_4->variance();
+
+        my @altered_effect_vals_5;
+        my ($effects_post_heatmap_tempfile_fh_5, $effects_post_heatmap_tempfile_5) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+        open($F_eff, ">", $effects_post_heatmap_tempfile_5) || die "Can't open file ".$effects_post_heatmap_tempfile_5;
+            print $F_eff "trait_type,row,col,value\n";
+            foreach my $p (@unique_plot_names) {
+                foreach my $t (@sorted_trait_names) {
+                    my $val = $result_blup_spatial_data_altered_1_5->{$p}->{$t}->[0];
+                    my @row = ("eff_postm5_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
+                    my $line = join ',', @row;
+                    print $F_eff "$line\n";
+                    push @altered_effect_vals_5, $val;
+                }
+            }
+        close($F_eff);
+        push @plot_corr_full_vals, \@altered_effect_vals_5;
+
+        my $altered_effect_stat_5 = Statistics::Descriptive::Full->new();
+        $altered_effect_stat_5->add_data(@altered_effect_vals_5);
+        my $sig_altered_effect_5 = $altered_effect_stat_5->variance();
 
         # SIM ENV 1: ALTERED PHENO + EFFECT
 
@@ -4341,6 +4429,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_pheno);
+        push @plot_corr_full_vals, \@sim_pheno1_vals;
 
         my $sim_pheno1_stat = Statistics::Descriptive::Full->new();
         $sim_pheno1_stat->add_data(@sim_pheno1_vals);
@@ -4360,6 +4449,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_pheno);
+        push @plot_corr_full_vals, \@sim_pheno1_vals_2;
 
         my $sim_pheno1_stat_2 = Statistics::Descriptive::Full->new();
         $sim_pheno1_stat_2->add_data(@sim_pheno1_vals_2);
@@ -4379,6 +4469,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_pheno);
+        push @plot_corr_full_vals, \@sim_pheno1_vals_3;
 
         my $sim_pheno1_stat_3 = Statistics::Descriptive::Full->new();
         $sim_pheno1_stat_3->add_data(@sim_pheno1_vals_3);
@@ -4398,10 +4489,31 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_pheno);
+        push @plot_corr_full_vals, \@sim_pheno1_vals_4;
 
         my $sim_pheno1_stat_4 = Statistics::Descriptive::Full->new();
         $sim_pheno1_stat_4->add_data(@sim_pheno1_vals_4);
         my $sig_sim4_pheno1 = $sim_pheno1_stat_4->variance();
+
+        my @sim_pheno1_vals_5;
+        my ($phenotypes_pheno_sim_heatmap_tempfile_fh_5, $phenotypes_pheno_sim_heatmap_tempfile_5) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+        open($F_pheno, ">", $phenotypes_pheno_sim_heatmap_tempfile_5) || die "Can't open file ".$phenotypes_pheno_sim_heatmap_tempfile_5;
+            print $F_pheno "trait_type,row,col,value\n";
+            foreach my $p (@unique_plot_names) {
+                foreach my $t (@sorted_trait_names) {
+                    my $val = $phenotype_data_altered_env_1_5{$p}->{$t};
+                    my @row = ("simm5_pheno1_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
+                    my $line = join ',', @row;
+                    print $F_pheno "$line\n";
+                    push @sim_pheno1_vals_5, $val;
+                }
+            }
+        close($F_pheno);
+        push @plot_corr_full_vals, \@sim_pheno1_vals_5;
+
+        my $sim_pheno1_stat_5 = Statistics::Descriptive::Full->new();
+        $sim_pheno1_stat_5->add_data(@sim_pheno1_vals_5);
+        my $sig_sim5_pheno1 = $sim_pheno1_stat_5->variance();
 
         my @sim_effect1_vals;
         my ($effects_sim_heatmap_tempfile_fh, $effects_sim_heatmap_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
@@ -4417,6 +4529,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_eff);
+        push @plot_corr_full_vals, \@sim_effect1_vals;
 
         my $sim_effect1_stat = Statistics::Descriptive::Full->new();
         $sim_effect1_stat->add_data(@sim_effect1_vals);
@@ -4436,6 +4549,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_eff);
+        push @plot_corr_full_vals, \@sim_effect1_vals_2;
 
         my $sim_effect1_stat_2 = Statistics::Descriptive::Full->new();
         $sim_effect1_stat_2->add_data(@sim_effect1_vals_2);
@@ -4455,6 +4569,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_eff);
+        push @plot_corr_full_vals, \@sim_effect1_vals_3;
 
         my $sim_effect1_stat_3 = Statistics::Descriptive::Full->new();
         $sim_effect1_stat_3->add_data(@sim_effect1_vals_3);
@@ -4474,10 +4589,31 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_eff);
+        push @plot_corr_full_vals, \@sim_effect1_vals_4;
 
         my $sim_effect1_stat_4 = Statistics::Descriptive::Full->new();
         $sim_effect1_stat_4->add_data(@sim_effect1_vals_4);
         my $sig_sim4_effect1 = $sim_effect1_stat_4->variance();
+
+        my @sim_effect1_vals_5;
+        my ($effects_sim_heatmap_tempfile_fh_5, $effects_sim_heatmap_tempfile_5) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+        open($F_eff, ">", $effects_sim_heatmap_tempfile_5) || die "Can't open file ".$effects_sim_heatmap_tempfile_5;
+            print $F_eff "trait_type,row,col,value\n";
+            foreach my $p (@unique_plot_names) {
+                foreach my $t (@sorted_trait_names) {
+                    my $val = $result_blup_spatial_data_altered_env_1_5->{$p}->{$t}->[0];
+                    my @row = ("effm5_sim1_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
+                    my $line = join ',', @row;
+                    print $F_eff "$line\n";
+                    push @sim_effect1_vals_5, $val;
+                }
+            }
+        close($F_eff);
+        push @plot_corr_full_vals, \@sim_effect1_vals_5;
+
+        my $sim_effect1_stat_5 = Statistics::Descriptive::Full->new();
+        $sim_effect1_stat_5->add_data(@sim_effect1_vals_5);
+        my $sig_sim5_effect1 = $sim_effect1_stat_5->variance();
 
         # SIM ENV 2: ALTERED PHENO + EFFECT
 
@@ -4507,6 +4643,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_pheno);
+        push @plot_corr_full_vals, \@sim_pheno2_vals;
 
         my $sim_pheno2_stat = Statistics::Descriptive::Full->new();
         $sim_pheno2_stat->add_data(@sim_pheno2_vals);
@@ -4526,6 +4663,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_pheno);
+        push @plot_corr_full_vals, \@sim_pheno2_vals_2;
 
         my $sim_pheno2_stat_2 = Statistics::Descriptive::Full->new();
         $sim_pheno2_stat_2->add_data(@sim_pheno2_vals_2);
@@ -4545,6 +4683,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_pheno);
+        push @plot_corr_full_vals, \@sim_pheno2_vals_3;
 
         my $sim_pheno2_stat_3 = Statistics::Descriptive::Full->new();
         $sim_pheno2_stat_3->add_data(@sim_pheno2_vals_3);
@@ -4564,10 +4703,31 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_pheno);
+        push @plot_corr_full_vals, \@sim_pheno2_vals_4;
 
         my $sim_pheno2_stat_4 = Statistics::Descriptive::Full->new();
         $sim_pheno2_stat_4->add_data(@sim_pheno2_vals_4);
         my $sig_sim_pheno2_4 = $sim_pheno2_stat_4->variance();
+
+        my @sim_pheno2_vals_5;
+        my ($phenotypes_pheno_sim_heatmap_tempfile2_fh_5, $phenotypes_pheno_sim_heatmap_tempfile2_5) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+        open($F_pheno, ">", $phenotypes_pheno_sim_heatmap_tempfile2_5) || die "Can't open file ".$phenotypes_pheno_sim_heatmap_tempfile2_5;
+            print $F_pheno "trait_type,row,col,value\n";
+            foreach my $p (@unique_plot_names) {
+                foreach my $t (@sorted_trait_names) {
+                    my $val = $phenotype_data_altered_env_2_5{$p}->{$t};
+                    my @row = ("simm5_pheno2_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
+                    my $line = join ',', @row;
+                    print $F_pheno "$line\n";
+                    push @sim_pheno2_vals_5, $val;
+                }
+            }
+        close($F_pheno);
+        push @plot_corr_full_vals, \@sim_pheno2_vals_5;
+
+        my $sim_pheno2_stat_5 = Statistics::Descriptive::Full->new();
+        $sim_pheno2_stat_5->add_data(@sim_pheno2_vals_5);
+        my $sig_sim_pheno2_5 = $sim_pheno2_stat_5->variance();
 
         my @sim_effect2_vals;
         my ($effects_sim_heatmap_tempfile2_fh, $effects_sim_heatmap_tempfile2) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
@@ -4583,6 +4743,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_eff);
+        push @plot_corr_full_vals, \@sim_effect2_vals;
 
         my @sim_effect2_vals_2;
         my ($effects_sim_heatmap_tempfile2_fh_2, $effects_sim_heatmap_tempfile2_2) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
@@ -4598,6 +4759,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_eff);
+        push @plot_corr_full_vals, \@sim_effect2_vals_2;
 
         my $sim_effect2_stat_2 = Statistics::Descriptive::Full->new();
         $sim_effect2_stat_2->add_data(@sim_effect2_vals_2);
@@ -4617,6 +4779,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_eff);
+        push @plot_corr_full_vals, \@sim_effect2_vals_3;
 
         my $sim_effect2_stat_3 = Statistics::Descriptive::Full->new();
         $sim_effect2_stat_3->add_data(@sim_effect2_vals_3);
@@ -4636,10 +4799,31 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_eff);
+        push @plot_corr_full_vals, \@sim_effect2_vals_4;
 
         my $sim_effect2_stat_4 = Statistics::Descriptive::Full->new();
         $sim_effect2_stat_4->add_data(@sim_effect2_vals_4);
         my $sig_sim_effect2_4 = $sim_effect2_stat_4->variance();
+
+        my @sim_effect2_vals_5;
+        my ($effects_sim_heatmap_tempfile2_fh_5, $effects_sim_heatmap_tempfile2_5) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+        open($F_eff, ">", $effects_sim_heatmap_tempfile2_5) || die "Can't open file ".$effects_sim_heatmap_tempfile2_5;
+            print $F_eff "trait_type,row,col,value\n";
+            foreach my $p (@unique_plot_names) {
+                foreach my $t (@sorted_trait_names) {
+                    my $val = $result_blup_spatial_data_altered_env_2_5->{$p}->{$t}->[0];
+                    my @row = ("effm5_sim2_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
+                    my $line = join ',', @row;
+                    print $F_eff "$line\n";
+                    push @sim_effect2_vals_5, $val;
+                }
+            }
+        close($F_eff);
+        push @plot_corr_full_vals, \@sim_effect2_vals_5;
+
+        my $sim_effect2_stat_5 = Statistics::Descriptive::Full->new();
+        $sim_effect2_stat_5->add_data(@sim_effect2_vals_5);
+        my $sig_sim_effect2_5 = $sim_effect2_stat_5->variance();
 
         # SIM ENV 3: ALTERED PHENO + EFFECT
 
@@ -4669,6 +4853,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_pheno);
+        push @plot_corr_full_vals, \@sim_pheno3_vals;
 
         my $sim_pheno3_stat = Statistics::Descriptive::Full->new();
         $sim_pheno3_stat->add_data(@sim_pheno3_vals);
@@ -4688,6 +4873,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_pheno);
+        push @plot_corr_full_vals, \@sim_pheno3_vals_2;
 
         my $sim_pheno3_stat_2 = Statistics::Descriptive::Full->new();
         $sim_pheno3_stat_2->add_data(@sim_pheno3_vals_2);
@@ -4707,6 +4893,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_pheno);
+        push @plot_corr_full_vals, \@sim_pheno3_vals_3;
 
         my $sim_pheno3_stat_3 = Statistics::Descriptive::Full->new();
         $sim_pheno3_stat_3->add_data(@sim_pheno3_vals_3);
@@ -4726,10 +4913,31 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_pheno);
+        push @plot_corr_full_vals, \@sim_pheno3_vals_4;
 
         my $sim_pheno3_stat_4 = Statistics::Descriptive::Full->new();
         $sim_pheno3_stat_4->add_data(@sim_pheno3_vals_4);
         my $sig_sim_pheno3_4 = $sim_pheno3_stat_4->variance();
+
+        my @sim_pheno3_vals_5;
+        my ($phenotypes_pheno_sim_heatmap_tempfile3_fh_5, $phenotypes_pheno_sim_heatmap_tempfile3_5) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+        open($F_pheno, ">", $phenotypes_pheno_sim_heatmap_tempfile3_5) || die "Can't open file ".$phenotypes_pheno_sim_heatmap_tempfile3_5;
+            print $F_pheno "trait_type,row,col,value\n";
+            foreach my $p (@unique_plot_names) {
+                foreach my $t (@sorted_trait_names) {
+                    my $val = $phenotype_data_altered_env_3_5{$p}->{$t};
+                    my @row = ("simm5_pheno3_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
+                    my $line = join ',', @row;
+                    print $F_pheno "$line\n";
+                    push @sim_pheno3_vals_5, $val;
+                }
+            }
+        close($F_pheno);
+        push @plot_corr_full_vals, \@sim_pheno3_vals_5;
+
+        my $sim_pheno3_stat_5 = Statistics::Descriptive::Full->new();
+        $sim_pheno3_stat_5->add_data(@sim_pheno3_vals_5);
+        my $sig_sim_pheno3_5 = $sim_pheno3_stat_5->variance();
 
         my @sim_effect3_vals;
         my ($effects_sim_heatmap_tempfile3_fh, $effects_sim_heatmap_tempfile3) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
@@ -4745,6 +4953,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_eff);
+        push @plot_corr_full_vals, \@sim_effect3_vals;
 
         my $sim_effect3_stat = Statistics::Descriptive::Full->new();
         $sim_effect3_stat->add_data(@sim_effect3_vals);
@@ -4764,6 +4973,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_eff);
+        push @plot_corr_full_vals, \@sim_effect3_vals_2;
 
         my $sim_effect3_stat_2 = Statistics::Descriptive::Full->new();
         $sim_effect3_stat_2->add_data(@sim_effect3_vals_2);
@@ -4783,6 +4993,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_eff);
+        push @plot_corr_full_vals, \@sim_effect3_vals_3;
 
         my $sim_effect3_stat_3 = Statistics::Descriptive::Full->new();
         $sim_effect3_stat_3->add_data(@sim_effect3_vals_3);
@@ -4802,10 +5013,31 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_eff);
+        push @plot_corr_full_vals, \@sim_effect3_vals_4;
 
         my $sim_effect3_stat_4 = Statistics::Descriptive::Full->new();
         $sim_effect3_stat_4->add_data(@sim_effect3_vals_4);
         my $sig_sim_effect3_4 = $sim_effect3_stat_4->variance();
+
+        my @sim_effect3_vals_5;
+        my ($effects_sim_heatmap_tempfile3_fh_5, $effects_sim_heatmap_tempfile3_5) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+        open($F_eff, ">", $effects_sim_heatmap_tempfile3_5) || die "Can't open file ".$effects_sim_heatmap_tempfile3_5;
+            print $F_eff "trait_type,row,col,value\n";
+            foreach my $p (@unique_plot_names) {
+                foreach my $t (@sorted_trait_names) {
+                    my $val = $result_blup_spatial_data_altered_env_3_5->{$p}->{$t}->[0];
+                    my @row = ("effm5_sim3_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
+                    my $line = join ',', @row;
+                    print $F_eff "$line\n";
+                    push @sim_effect3_vals_5, $val;
+                }
+            }
+        close($F_eff);
+        push @plot_corr_full_vals, \@sim_effect3_vals_5;
+
+        my $sim_effect3_stat_5 = Statistics::Descriptive::Full->new();
+        $sim_effect3_stat_5->add_data(@sim_effect3_vals_5);
+        my $sig_sim_effect3_5 = $sim_effect3_stat_5->variance();
 
         # SIM ENV 4: ALTERED PHENO + EFFECT
 
@@ -4835,6 +5067,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_pheno);
+        push @plot_corr_full_vals, \@sim_pheno4_vals;
 
         my $sim_pheno4_stat = Statistics::Descriptive::Full->new();
         $sim_pheno4_stat->add_data(@sim_pheno4_vals);
@@ -4854,6 +5087,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_pheno);
+        push @plot_corr_full_vals, \@sim_pheno4_vals_2;
 
         my $sim_pheno4_stat_2 = Statistics::Descriptive::Full->new();
         $sim_pheno4_stat_2->add_data(@sim_pheno4_vals_2);
@@ -4873,6 +5107,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_pheno);
+        push @plot_corr_full_vals, \@sim_pheno4_vals_3;
 
         my $sim_pheno4_stat_3 = Statistics::Descriptive::Full->new();
         $sim_pheno4_stat_3->add_data(@sim_pheno4_vals_3);
@@ -4892,10 +5127,31 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_pheno);
+        push @plot_corr_full_vals, \@sim_pheno4_vals_4;
 
         my $sim_pheno4_stat_4 = Statistics::Descriptive::Full->new();
         $sim_pheno4_stat_4->add_data(@sim_pheno4_vals_4);
         my $sig_sim_pheno4_4 = $sim_pheno4_stat_4->variance();
+
+        my @sim_pheno4_vals_5;
+        my ($phenotypes_pheno_sim_heatmap_tempfile4_fh_5, $phenotypes_pheno_sim_heatmap_tempfile4_5) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+        open($F_pheno, ">", $phenotypes_pheno_sim_heatmap_tempfile4_5) || die "Can't open file ".$phenotypes_pheno_sim_heatmap_tempfile4_5;
+            print $F_pheno "trait_type,row,col,value\n";
+            foreach my $p (@unique_plot_names) {
+                foreach my $t (@sorted_trait_names) {
+                    my $val = $phenotype_data_altered_env_4_5{$p}->{$t};
+                    my @row = ("simm5_pheno4_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
+                    my $line = join ',', @row;
+                    print $F_pheno "$line\n";
+                    push @sim_pheno4_vals_5, $val;
+                }
+            }
+        close($F_pheno);
+        push @plot_corr_full_vals, \@sim_pheno4_vals_5;
+
+        my $sim_pheno4_stat_5 = Statistics::Descriptive::Full->new();
+        $sim_pheno4_stat_5->add_data(@sim_pheno4_vals_5);
+        my $sig_sim_pheno4_5 = $sim_pheno4_stat_5->variance();
 
         my @sim_effect4_vals;
         my ($effects_sim_heatmap_tempfile4_fh, $effects_sim_heatmap_tempfile4) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
@@ -4911,6 +5167,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_eff);
+        push @plot_corr_full_vals, \@sim_effect4_vals;
 
         my $sim_effect4_stat = Statistics::Descriptive::Full->new();
         $sim_effect4_stat->add_data(@sim_effect4_vals);
@@ -4930,6 +5187,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_eff);
+        push @plot_corr_full_vals, \@sim_effect4_vals_2;
 
         my $sim_effect4_stat_2 = Statistics::Descriptive::Full->new();
         $sim_effect4_stat_2->add_data(@sim_effect4_vals_2);
@@ -4949,6 +5207,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_eff);
+        push @plot_corr_full_vals, \@sim_effect4_vals_3;
 
         my $sim_effect4_stat_3 = Statistics::Descriptive::Full->new();
         $sim_effect4_stat_3->add_data(@sim_effect4_vals_3);
@@ -4968,10 +5227,31 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_eff);
+        push @plot_corr_full_vals, \@sim_effect4_vals_4;
 
         my $sim_effect4_stat_4 = Statistics::Descriptive::Full->new();
         $sim_effect4_stat_4->add_data(@sim_effect4_vals_4);
         my $sig_sim_effect4_4 = $sim_effect4_stat_4->variance();
+
+        my @sim_effect4_vals_5;
+        my ($effects_sim_heatmap_tempfile4_fh_5, $effects_sim_heatmap_tempfile4_5) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+        open($F_eff, ">", $effects_sim_heatmap_tempfile4_5) || die "Can't open file ".$effects_sim_heatmap_tempfile4_5;
+            print $F_eff "trait_type,row,col,value\n";
+            foreach my $p (@unique_plot_names) {
+                foreach my $t (@sorted_trait_names) {
+                    my $val = $result_blup_spatial_data_altered_env_4_5->{$p}->{$t}->[0];
+                    my @row = ("effm5_sim4_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
+                    my $line = join ',', @row;
+                    print $F_eff "$line\n";
+                    push @sim_effect4_vals_5, $val;
+                }
+            }
+        close($F_eff);
+        push @plot_corr_full_vals, \@sim_effect4_vals_5;
+
+        my $sim_effect4_stat_5 = Statistics::Descriptive::Full->new();
+        $sim_effect4_stat_5->add_data(@sim_effect4_vals_5);
+        my $sig_sim_effect4_5 = $sim_effect4_stat_5->variance();
 
         # SIM ENV 5: ALTERED PHENO + EFFECT
 
@@ -5001,6 +5281,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_pheno);
+        push @plot_corr_full_vals, \@sim_pheno5_vals;
 
         my $sim_pheno5_stat = Statistics::Descriptive::Full->new();
         $sim_pheno5_stat->add_data(@sim_pheno5_vals);
@@ -5020,6 +5301,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_pheno);
+        push @plot_corr_full_vals, \@sim_pheno5_vals_2;
 
         my $sim_pheno5_stat_2 = Statistics::Descriptive::Full->new();
         $sim_pheno5_stat_2->add_data(@sim_pheno5_vals_2);
@@ -5039,6 +5321,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_pheno);
+        push @plot_corr_full_vals, \@sim_pheno5_vals_3;
 
         my $sim_pheno5_stat_3 = Statistics::Descriptive::Full->new();
         $sim_pheno5_stat_3->add_data(@sim_pheno5_vals_3);
@@ -5058,10 +5341,31 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_pheno);
+        push @plot_corr_full_vals, \@sim_pheno5_vals_4;
 
         my $sim_pheno5_stat_4 = Statistics::Descriptive::Full->new();
         $sim_pheno5_stat_4->add_data(@sim_pheno5_vals_4);
         my $sig_sim_pheno5_4 = $sim_pheno5_stat_4->variance();
+
+        my @sim_pheno5_vals_5;
+        my ($phenotypes_pheno_sim_heatmap_tempfile5_fh_5, $phenotypes_pheno_sim_heatmap_tempfile5_5) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+        open($F_pheno, ">", $phenotypes_pheno_sim_heatmap_tempfile5_5) || die "Can't open file ".$phenotypes_pheno_sim_heatmap_tempfile5_5;
+            print $F_pheno "trait_type,row,col,value\n";
+            foreach my $p (@unique_plot_names) {
+                foreach my $t (@sorted_trait_names) {
+                    my $val = $phenotype_data_altered_env_5_5{$p}->{$t};
+                    my @row = ("simm5_pheno5_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
+                    my $line = join ',', @row;
+                    print $F_pheno "$line\n";
+                    push @sim_pheno5_vals_5, $val;
+                }
+            }
+        close($F_pheno);
+        push @plot_corr_full_vals, \@sim_pheno5_vals_5;
+
+        my $sim_pheno5_stat_5 = Statistics::Descriptive::Full->new();
+        $sim_pheno5_stat_5->add_data(@sim_pheno5_vals_5);
+        my $sig_sim_pheno5_5 = $sim_pheno5_stat_5->variance();
 
         my @sim_effect5_vals;
         my ($effects_sim_heatmap_tempfile5_fh, $effects_sim_heatmap_tempfile5) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
@@ -5077,6 +5381,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_eff);
+        push @plot_corr_full_vals, \@sim_effect5_vals;
 
         my $sim_effect5_stat = Statistics::Descriptive::Full->new();
         $sim_effect5_stat->add_data(@sim_effect5_vals);
@@ -5096,6 +5401,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_eff);
+        push @plot_corr_full_vals, \@sim_effect5_vals_2;
 
         my $sim_effect5_stat_2 = Statistics::Descriptive::Full->new();
         $sim_effect5_stat_2->add_data(@sim_effect5_vals_2);
@@ -5115,6 +5421,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_eff);
+        push @plot_corr_full_vals, \@sim_effect5_vals_3;
 
         my $sim_effect5_stat_3 = Statistics::Descriptive::Full->new();
         $sim_effect5_stat_3->add_data(@sim_effect5_vals_3);
@@ -5134,79 +5441,65 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         close($F_eff);
+        push @plot_corr_full_vals, \@sim_effect5_vals_4;
 
         my $sim_effect5_stat_4 = Statistics::Descriptive::Full->new();
         $sim_effect5_stat_4->add_data(@sim_effect5_vals_4);
         my $sig_sim_effect5_4 = $sim_effect5_stat_4->variance();
+
+        my @sim_effect5_vals_5;
+        my ($effects_sim_heatmap_tempfile5_fh_5, $effects_sim_heatmap_tempfile5_5) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+        open($F_eff, ">", $effects_sim_heatmap_tempfile5_5) || die "Can't open file ".$effects_sim_heatmap_tempfile5_5;
+            print $F_eff "trait_type,row,col,value\n";
+            foreach my $p (@unique_plot_names) {
+                foreach my $t (@sorted_trait_names) {
+                    my $val = $result_blup_spatial_data_altered_env_5_5->{$p}->{$t}->[0];
+                    my @row = ("effm5_sim5_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
+                    my $line = join ',', @row;
+                    print $F_eff "$line\n";
+                    push @sim_effect5_vals_5, $val;
+                }
+            }
+        close($F_eff);
+        push @plot_corr_full_vals, \@sim_effect5_vals_5;
+
+        my $sim_effect5_stat_5 = Statistics::Descriptive::Full->new();
+        $sim_effect5_stat_5->add_data(@sim_effect5_vals_5);
+        my $sig_sim_effect5_5 = $sim_effect5_stat_5->variance();
+
+        my $plot_corr_summary_figure_inputfile_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'tmp_drone_statistics/fileXXXX');
+        open($F_eff, ">", $plot_corr_summary_figure_inputfile_tempfile) || die "Can't open file ".$plot_corr_summary_figure_inputfile_tempfile;
+            foreach (@plot_corr_full_vals) {
+                my $line = join ',', @$_;
+                print $F_eff $line."\n";
+            }
+        close($F_eff);
+
 
         my $plot_corr_summary_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
         $plot_corr_summary_figure_tempfile_string .= '.png';
         my $plot_corr_summary_figure_tempfile = $c->config->{basepath}."/".$plot_corr_summary_figure_tempfile_string;
 
         my $cmd_plotcorrsum_plot = 'R -e "library(data.table); library(ggplot2); library(GGally);
-        mat_orig <- fread(\''.$phenotypes_original_heatmap_tempfile.'\', header=TRUE, sep=\',\');
-        mat_altered_1 <- fread(\''.$phenotypes_post_heatmap_tempfile.'\', header=TRUE, sep=\',\');
-        mat_altered_2 <- fread(\''.$phenotypes_post_heatmap_tempfile_2.'\', header=TRUE, sep=\',\');
-        mat_altered_3 <- fread(\''.$phenotypes_post_heatmap_tempfile_3.'\', header=TRUE, sep=\',\');
-        mat_altered_4 <- fread(\''.$phenotypes_post_heatmap_tempfile_4.'\', header=TRUE, sep=\',\');
-        mat_eff_1 <- fread(\''.$effects_heatmap_tempfile.'\', header=TRUE, sep=\',\');
-        mat_eff_2 <- fread(\''.$effects_heatmap_tempfile_2.'\', header=TRUE, sep=\',\');
-        mat_eff_3 <- fread(\''.$effects_heatmap_tempfile_3.'\', header=TRUE, sep=\',\');
-        mat_eff_4 <- fread(\''.$effects_heatmap_tempfile_4.'\', header=TRUE, sep=\',\');
-        mat_eff_altered_1 <- fread(\''.$effects_post_heatmap_tempfile.'\', header=TRUE, sep=\',\');
-        mat_eff_altered_2 <- fread(\''.$effects_post_heatmap_tempfile_2.'\', header=TRUE, sep=\',\');
-        mat_eff_altered_3 <- fread(\''.$effects_post_heatmap_tempfile_3.'\', header=TRUE, sep=\',\');
-        mat_eff_altered_4 <- fread(\''.$effects_post_heatmap_tempfile_4.'\', header=TRUE, sep=\',\');
+        mat_full_t <- fread(\''.$plot_corr_summary_figure_inputfile_tempfile.'\', header=FALSE, sep=\',\');
+        mat_full <- data.frame(t(mat_full_t));
+        colnames(mat_full) <- c(\'mat_orig\', \'mat_altered_1\', \'mat_altered_2\', \'mat_altered_3\', \'mat_altered_4\', \'mat_altered_5\', \'mat_eff_1\', \'mat_eff_2\', \'mat_eff_3\', \'mat_eff_4\', \'mat_eff_5\', \'mat_eff_altered_1\', \'mat_eff_altered_2\', \'mat_eff_altered_3\', \'mat_eff_altered_4\', \'mat_eff_altered_5\',
+        \'mat_p_sim1_1\', \'mat_p_sim1_2\', \'mat_p_sim1_3\', \'mat_p_sim1_4\', \'mat_p_sim1_5\', \'mat_eff_sim1_1\', \'mat_eff_sim1_2\', \'mat_eff_sim1_3\', \'mat_eff_sim1_4\', \'mat_eff_sim1_5\',
+        \'mat_p_sim2_1\', \'mat_p_sim2_2\', \'mat_p_sim2_3\', \'mat_p_sim2_4\', \'mat_p_sim2_5\', \'mat_eff_sim2_1\', \'mat_eff_sim2_2\', \'mat_eff_sim2_3\', \'mat_eff_sim2_4\', \'mat_eff_sim2_5\',
+        \'mat_p_sim3_1\', \'mat_p_sim3_2\', \'mat_p_sim3_3\', \'mat_p_sim3_4\', \'mat_p_sim3_5\', \'mat_eff_sim3_1\', \'mat_eff_sim3_2\', \'mat_eff_sim3_3\', \'mat_eff_sim3_4\', \'mat_eff_sim3_5\',
+        \'mat_p_sim4_1\', \'mat_p_sim4_2\', \'mat_p_sim4_3\', \'mat_p_sim4_4\', \'mat_p_sim4_5\', \'mat_eff_sim4_1\', \'mat_eff_sim4_2\', \'mat_eff_sim4_3\', \'mat_eff_sim4_4\', \'mat_eff_sim4_5\',
+        \'mat_p_sim5_1\', \'mat_p_sim5_2\', \'mat_p_sim5_3\', \'mat_p_sim5_4\', \'mat_p_sim5_5\', \'mat_eff_sim5_1\', \'mat_eff_sim5_2\', \'mat_eff_sim5_3\', \'mat_eff_sim5_4\', \'mat_eff_sim5_5\');
         mat_env <- fread(\''.$phenotypes_env_heatmap_tempfile.'\', header=TRUE, sep=\',\');
-        mat_p_sim1_1 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile.'\', header=TRUE, sep=\',\');
-        mat_p_sim1_2 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile_2.'\', header=TRUE, sep=\',\');
-        mat_p_sim1_3 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile_3.'\', header=TRUE, sep=\',\');
-        mat_p_sim1_4 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile_4.'\', header=TRUE, sep=\',\');
-        mat_eff_sim1_1 <- fread(\''.$effects_sim_heatmap_tempfile.'\', header=TRUE, sep=\',\');
-        mat_eff_sim1_2 <- fread(\''.$effects_sim_heatmap_tempfile_2.'\', header=TRUE, sep=\',\');
-        mat_eff_sim1_3 <- fread(\''.$effects_sim_heatmap_tempfile_3.'\', header=TRUE, sep=\',\');
-        mat_eff_sim1_4 <- fread(\''.$effects_sim_heatmap_tempfile_4.'\', header=TRUE, sep=\',\');
         mat_env2 <- fread(\''.$phenotypes_env_heatmap_tempfile2.'\', header=TRUE, sep=\',\');
-        mat_p_sim2_1 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile2.'\', header=TRUE, sep=\',\');
-        mat_p_sim2_2 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile2_2.'\', header=TRUE, sep=\',\');
-        mat_p_sim2_3 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile2_3.'\', header=TRUE, sep=\',\');
-        mat_p_sim2_4 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile2_4.'\', header=TRUE, sep=\',\');
-        mat_eff_sim2_1 <- fread(\''.$effects_sim_heatmap_tempfile2.'\', header=TRUE, sep=\',\');
-        mat_eff_sim2_2 <- fread(\''.$effects_sim_heatmap_tempfile2_2.'\', header=TRUE, sep=\',\');
-        mat_eff_sim2_3 <- fread(\''.$effects_sim_heatmap_tempfile2_3.'\', header=TRUE, sep=\',\');
-        mat_eff_sim2_4 <- fread(\''.$effects_sim_heatmap_tempfile2_4.'\', header=TRUE, sep=\',\');
         mat_env3 <- fread(\''.$phenotypes_env_heatmap_tempfile3.'\', header=TRUE, sep=\',\');
-        mat_p_sim3_1 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile3.'\', header=TRUE, sep=\',\');
-        mat_p_sim3_2 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile3_2.'\', header=TRUE, sep=\',\');
-        mat_p_sim3_3 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile3_3.'\', header=TRUE, sep=\',\');
-        mat_p_sim3_4 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile3_4.'\', header=TRUE, sep=\',\');
-        mat_eff_sim3_1 <- fread(\''.$effects_sim_heatmap_tempfile3.'\', header=TRUE, sep=\',\');
-        mat_eff_sim3_2 <- fread(\''.$effects_sim_heatmap_tempfile3_2.'\', header=TRUE, sep=\',\');
-        mat_eff_sim3_3 <- fread(\''.$effects_sim_heatmap_tempfile3_3.'\', header=TRUE, sep=\',\');
-        mat_eff_sim3_4 <- fread(\''.$effects_sim_heatmap_tempfile3_4.'\', header=TRUE, sep=\',\');
         mat_env4 <- fread(\''.$phenotypes_env_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
-        mat_p_sim4_1 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
-        mat_p_sim4_2 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile4_2.'\', header=TRUE, sep=\',\');
-        mat_p_sim4_3 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile4_3.'\', header=TRUE, sep=\',\');
-        mat_p_sim4_4 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile4_4.'\', header=TRUE, sep=\',\');
-        mat_eff_sim4_1 <- fread(\''.$effects_sim_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
-        mat_eff_sim4_2 <- fread(\''.$effects_sim_heatmap_tempfile4_2.'\', header=TRUE, sep=\',\');
-        mat_eff_sim4_3 <- fread(\''.$effects_sim_heatmap_tempfile4_3.'\', header=TRUE, sep=\',\');
-        mat_eff_sim4_4 <- fread(\''.$effects_sim_heatmap_tempfile4_4.'\', header=TRUE, sep=\',\');
         mat_env5 <- fread(\''.$phenotypes_env_heatmap_tempfile5.'\', header=TRUE, sep=\',\');
-        mat_p_sim5_1 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile5.'\', header=TRUE, sep=\',\');
-        mat_p_sim5_2 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile5_2.'\', header=TRUE, sep=\',\');
-        mat_p_sim5_3 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile5_3.'\', header=TRUE, sep=\',\');
-        mat_p_sim5_4 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile5_4.'\', header=TRUE, sep=\',\');
-        mat_eff_sim5_1 <- fread(\''.$effects_sim_heatmap_tempfile5.'\', header=TRUE, sep=\',\');
-        mat_eff_sim5_2 <- fread(\''.$effects_sim_heatmap_tempfile5_2.'\', header=TRUE, sep=\',\');
-        mat_eff_sim5_3 <- fread(\''.$effects_sim_heatmap_tempfile5_3.'\', header=TRUE, sep=\',\');
-        mat_eff_sim5_4 <- fread(\''.$effects_sim_heatmap_tempfile5_4.'\', header=TRUE, sep=\',\');
-        mat <- data.frame(pheno_orig = mat_orig\$value, pheno_altm1 = mat_altered_1\$value, pheno_altm2 = mat_altered_2\$value, pheno_altm3 = mat_altered_3\$value, pheno_altm4 = mat_altered_4\$value, eff_origm1 = mat_eff_1\$value, eff_origm2 = mat_eff_2\$value, eff_origm3 = mat_eff_3\$value, eff_origm4 = mat_eff_4\$value, eff_altm1 = mat_eff_altered_1\$value, eff_altm2 = mat_eff_altered_2\$value, eff_altm3 = mat_eff_altered_3\$value, eff_altm4 = mat_eff_altered_4\$value, env_lin = mat_env\$value, pheno_linm1 = mat_p_sim1_1\$value, pheno_linm2 = mat_p_sim1_2\$value, pheno_linm3 = mat_p_sim1_3\$value, pheno_linm4 = mat_p_sim1_4\$value, lin_effm1 = mat_eff_sim1_1\$value, lin_effm2 = mat_eff_sim1_2\$value, lin_effm3 = mat_eff_sim1_3\$value, lin_effm4 = mat_eff_sim1_4\$value, env_n1d = mat_env2\$value, pheno_n1dm1 = mat_p_sim2_1\$value, pheno_n1dm2 = mat_p_sim2_2\$value, pheno_n1dm3 = mat_p_sim2_3\$value, pheno_n1dm4 = mat_p_sim2_4\$value, n1d_effm1 = mat_eff_sim2_1\$value, n1d_effm2 = mat_eff_sim2_2\$value, n1d_effm3 = mat_eff_sim2_3\$value, n1d_effm4 = mat_eff_sim2_4\$value, env_n2d = mat_env3\$value, pheno_n2dm1 = mat_p_sim3_1\$value, pheno_n2dm2 = mat_p_sim3_2\$value, pheno_n2dm3 = mat_p_sim3_3\$value, pheno_n2dm4 = mat_p_sim3_4\$value, n2d_effm1 = mat_eff_sim3_1\$value, n2d_effm2 = mat_eff_sim3_2\$value, n2d_effm3 = mat_eff_sim3_3\$value, n2d_effm4 = mat_eff_sim3_4\$value, env_rand = mat_env4\$value, pheno_randm1 = mat_p_sim4_1\$value, pheno_randm2 = mat_p_sim4_2\$value, pheno_randm3 = mat_p_sim4_3\$value, pheno_randm4 = mat_p_sim4_4\$value, rand_effm1 = mat_eff_sim4_1\$value, rand_effm2 = mat_eff_sim4_2\$value, rand_effm3 = mat_eff_sim4_3\$value, rand_effm4 = mat_eff_sim4_4\$value, env_ar1 = mat_env4\$value, pheno_ar1m1 = mat_p_sim5_1\$value, pheno_ar1m2 = mat_p_sim5_2\$value, pheno_ar1m3 = mat_p_sim5_3\$value, pheno_ar1m4 = mat_p_sim5_4\$value, ar1_effm1 = mat_eff_sim5_1\$value, ar1_effm2 = mat_eff_sim5_2\$value, ar1_effm3 = mat_eff_sim5_3\$value, ar1_effm4 = mat_eff_sim5_4\$value);
+        mat <- data.frame(pheno_orig = mat_full\$mat_orig, pheno_altm1 = mat_full\$mat_altered_1, pheno_altm2 = mat_full\$mat_altered_2, pheno_altm3 = mat_full\$mat_altered_3, pheno_altm4 = mat_full\$mat_altered_4, pheno_altm5 = mat_full\$mat_altered_5, eff_origm1 = mat_full\$mat_eff_1, eff_origm2 = mat_full\$mat_eff_2, eff_origm3 = mat_full\$mat_eff_3, eff_origm4 = mat_full\$mat_eff_4, eff_origm5 = mat_full\$mat_eff_5, eff_altm1 = mat_full\$mat_eff_altered_1, eff_altm2 = mat_full\$mat_eff_altered_2, eff_altm3 = mat_full\$mat_eff_altered_3, eff_altm4 = mat_full\$mat_eff_altered_4, eff_altm5 = mat_full\$mat_eff_altered_5, env_lin = mat_env\$value, pheno_linm1 = mat_full\$mat_p_sim1_1, pheno_linm2 = mat_full\$mat_p_sim1_2, pheno_linm3 = mat_full\$mat_p_sim1_3, pheno_linm4 = mat_full\$mat_p_sim1_4, pheno_linm5 = mat_full\$mat_p_sim1_5, lin_effm1 = mat_full\$mat_eff_sim1_1, lin_effm2 = mat_full\$mat_eff_sim1_2, lin_effm3 = mat_full\$mat_eff_sim1_3, lin_effm4 = mat_full\$mat_eff_sim1_4, lin_effm5 = mat_full\$mat_eff_sim1_5, env_n1d = mat_env2\$value, pheno_n1dm1 = mat_full\$mat_p_sim2_1, pheno_n1dm2 = mat_full\$mat_p_sim2_2, pheno_n1dm3 = mat_full\$mat_p_sim2_3, pheno_n1dm4 = mat_full\$mat_p_sim2_4, pheno_n1dm5 = mat_full\$mat_p_sim2_5, n1d_effm1 = mat_full\$mat_eff_sim2_1, n1d_effm2 = mat_full\$mat_eff_sim2_2, n1d_effm3 = mat_full\$mat_eff_sim2_3, n1d_effm4 = mat_full\$mat_eff_sim2_4, n1d_effm5 = mat_full\$mat_eff_sim2_5, env_n2d = mat_env3\$value, pheno_n2dm1 = mat_full\$mat_p_sim3_1, pheno_n2dm2 = mat_full\$mat_p_sim3_2, pheno_n2dm3 = mat_full\$mat_p_sim3_3, pheno_n2dm4 = mat_full\$mat_p_sim3_4, pheno_n2dm5 = mat_full\$mat_p_sim3_5, n2d_effm1 = mat_full\$mat_eff_sim3_1, n2d_effm2 = mat_full\$mat_eff_sim3_2, n2d_effm3 = mat_full\$mat_eff_sim3_3, n2d_effm4 = mat_full\$mat_eff_sim3_4, n2d_effm5 = mat_full\$mat_eff_sim3_5, env_rand = mat_env4\$value, pheno_randm1 = mat_full\$mat_p_sim4_1, pheno_randm2 = mat_full\$mat_p_sim4_2, pheno_randm3 = mat_full\$mat_p_sim4_3, pheno_randm4 = mat_full\$mat_p_sim4_4, pheno_randm5 = mat_full\$mat_p_sim4_5, rand_effm1 = mat_full\$mat_eff_sim4_1, rand_effm2 = mat_full\$mat_eff_sim4_2, rand_effm3 = mat_full\$mat_eff_sim4_3, rand_effm4 = mat_full\$mat_eff_sim4_4, rand_effm5 = mat_full\$mat_eff_sim4_5, env_ar1 = mat_env5\$value, pheno_ar1m1 = mat_full\$mat_p_sim5_1, pheno_ar1m2 = mat_full\$mat_p_sim5_2, pheno_ar1m3 = mat_full\$mat_p_sim5_3, pheno_ar1m4 = mat_full\$mat_p_sim5_4, pheno_ar1m5 = mat_full\$mat_p_sim5_5, ar1_effm1 = mat_full\$mat_eff_sim5_1, ar1_effm2 = mat_full\$mat_eff_sim5_2, ar1_effm3 = mat_full\$mat_eff_sim5_3, ar1_effm4 = mat_full\$mat_eff_sim5_4, ar1_effm5 = mat_full\$mat_eff_sim5_5);
         gg <- ggcorr(data=mat, hjust = 1, size = 2, color = \'grey50\', layout.exp = 1, label = TRUE, label_round = 2);
-        ggsave(\''.$plot_corr_summary_figure_tempfile.'\', gg, device=\'png\', width=30, height=30, units=\'in\');
+        ggsave(\''.$plot_corr_summary_figure_tempfile.'\', gg, device=\'png\', width=40, height=40, units=\'in\');
         "';
-        # print STDERR Dumper $cmd;
+        # print STDERR Dumper $cmd_plotcorrsum_plot;
+
         my $status_plotcorrsum_plot = system($cmd_plotcorrsum_plot);
         push @$spatial_effects_plots, $plot_corr_summary_figure_tempfile_string;
 
@@ -5231,7 +5524,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         mat_altered_2 <- fread(\''.$phenotypes_post_heatmap_tempfile_2.'\', header=TRUE, sep=\',\');
         mat_altered_3 <- fread(\''.$phenotypes_post_heatmap_tempfile_3.'\', header=TRUE, sep=\',\');
         mat_altered_4 <- fread(\''.$phenotypes_post_heatmap_tempfile_4.'\', header=TRUE, sep=\',\');
-        pheno_mat <- rbind(mat_orig, mat_altered_1, mat_altered_2, mat_altered_3, mat_altered_4);
+        mat_altered_5 <- fread(\''.$phenotypes_post_heatmap_tempfile_5.'\', header=TRUE, sep=\',\');
+        pheno_mat <- rbind(mat_orig, mat_altered_1, mat_altered_2, mat_altered_3, mat_altered_4, mat_altered_5);
         options(device=\'png\');
         par();
         gg <- ggplot(pheno_mat, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
@@ -5248,48 +5542,34 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         my ($sim_effects_corr_results_fh, $sim_effects_corr_results) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
 
         my $cmd_spatialfirst_plot = 'R -e "library(data.table); library(ggplot2); library(dplyr); library(viridis); library(GGally); library(gridExtra);
-        mat_orig <- fread(\''.$phenotypes_original_heatmap_tempfile.'\', header=TRUE, sep=\',\');
-        mat_altered_1 <- fread(\''.$phenotypes_post_heatmap_tempfile.'\', header=TRUE, sep=\',\');
-        mat_altered_2 <- fread(\''.$phenotypes_post_heatmap_tempfile_2.'\', header=TRUE, sep=\',\');
-        mat_altered_3 <- fread(\''.$phenotypes_post_heatmap_tempfile_3.'\', header=TRUE, sep=\',\');
-        mat_altered_4 <- fread(\''.$phenotypes_post_heatmap_tempfile_4.'\', header=TRUE, sep=\',\');
+        mat_full_t <- fread(\''.$plot_corr_summary_figure_inputfile_tempfile.'\', header=FALSE, sep=\',\');
+        mat_full <- data.frame(t(mat_full_t));
+        colnames(mat_full) <- c(\'mat_orig\', \'mat_altered_1\', \'mat_altered_2\', \'mat_altered_3\', \'mat_altered_4\', \'mat_altered_5\', \'mat_eff_1\', \'mat_eff_2\', \'mat_eff_3\', \'mat_eff_4\', \'mat_eff_5\', \'mat_eff_altered_1\', \'mat_eff_altered_2\', \'mat_eff_altered_3\', \'mat_eff_altered_4\', \'mat_eff_altered_5\',
+        \'mat_p_sim1_1\', \'mat_p_sim1_2\', \'mat_p_sim1_3\', \'mat_p_sim1_4\', \'mat_p_sim1_5\', \'mat_eff_sim1_1\', \'mat_eff_sim1_2\', \'mat_eff_sim1_3\', \'mat_eff_sim1_4\', \'mat_eff_sim1_5\',
+        \'mat_p_sim2_1\', \'mat_p_sim2_2\', \'mat_p_sim2_3\', \'mat_p_sim2_4\', \'mat_p_sim2_5\', \'mat_eff_sim2_1\', \'mat_eff_sim2_2\', \'mat_eff_sim2_3\', \'mat_eff_sim2_4\', \'mat_eff_sim2_5\',
+        \'mat_p_sim3_1\', \'mat_p_sim3_2\', \'mat_p_sim3_3\', \'mat_p_sim3_4\', \'mat_p_sim3_5\', \'mat_eff_sim3_1\', \'mat_eff_sim3_2\', \'mat_eff_sim3_3\', \'mat_eff_sim3_4\', \'mat_eff_sim3_5\',
+        \'mat_p_sim4_1\', \'mat_p_sim4_2\', \'mat_p_sim4_3\', \'mat_p_sim4_4\', \'mat_p_sim4_5\', \'mat_eff_sim4_1\', \'mat_eff_sim4_2\', \'mat_eff_sim4_3\', \'mat_eff_sim4_4\', \'mat_eff_sim4_5\',
+        \'mat_p_sim5_1\', \'mat_p_sim5_2\', \'mat_p_sim5_3\', \'mat_p_sim5_4\', \'mat_p_sim5_5\', \'mat_eff_sim5_1\', \'mat_eff_sim5_2\', \'mat_eff_sim5_3\', \'mat_eff_sim5_4\', \'mat_eff_sim5_5\');
         mat_eff_1 <- fread(\''.$effects_heatmap_tempfile.'\', header=TRUE, sep=\',\');
         mat_eff_2 <- fread(\''.$effects_heatmap_tempfile_2.'\', header=TRUE, sep=\',\');
         mat_eff_3 <- fread(\''.$effects_heatmap_tempfile_3.'\', header=TRUE, sep=\',\');
         mat_eff_4 <- fread(\''.$effects_heatmap_tempfile_4.'\', header=TRUE, sep=\',\');
+        mat_eff_5 <- fread(\''.$effects_heatmap_tempfile_5.'\', header=TRUE, sep=\',\');
         mat_eff_altered_1 <- fread(\''.$effects_post_heatmap_tempfile.'\', header=TRUE, sep=\',\');
         mat_eff_altered_2 <- fread(\''.$effects_post_heatmap_tempfile_2.'\', header=TRUE, sep=\',\');
         mat_eff_altered_3 <- fread(\''.$effects_post_heatmap_tempfile_3.'\', header=TRUE, sep=\',\');
         mat_eff_altered_4 <- fread(\''.$effects_post_heatmap_tempfile_4.'\', header=TRUE, sep=\',\');
-        pheno_mat <- rbind(mat_orig, mat_altered_1, mat_altered_2, mat_altered_3, mat_altered_4);
+        mat_eff_altered_5 <- fread(\''.$effects_post_heatmap_tempfile_5.'\', header=TRUE, sep=\',\');
         effect_mat_1 <- rbind(mat_eff_1, mat_eff_altered_1);
         effect_mat_2 <- rbind(mat_eff_2, mat_eff_altered_2);
         effect_mat_3 <- rbind(mat_eff_3, mat_eff_altered_3);
         effect_mat_4 <- rbind(mat_eff_4, mat_eff_altered_4);
+        effect_mat_5 <- rbind(mat_eff_5, mat_eff_altered_5);
         mat_env <- fread(\''.$phenotypes_env_heatmap_tempfile.'\', header=TRUE, sep=\',\');
-        mat_p_sim <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile.'\', header=TRUE, sep=\',\');
-        mat_eff_sim_1 <- fread(\''.$effects_sim_heatmap_tempfile.'\', header=TRUE, sep=\',\');
-        mat_eff_sim_2 <- fread(\''.$effects_sim_heatmap_tempfile_2.'\', header=TRUE, sep=\',\');
-        mat_eff_sim_3 <- fread(\''.$effects_sim_heatmap_tempfile_3.'\', header=TRUE, sep=\',\');
-        mat_eff_sim_4 <- fread(\''.$effects_sim_heatmap_tempfile_4.'\', header=TRUE, sep=\',\');
         mat_env2 <- fread(\''.$phenotypes_env_heatmap_tempfile2.'\', header=TRUE, sep=\',\');
-        mat_p_sim2 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile2.'\', header=TRUE, sep=\',\');
-        mat_eff_sim2_1 <- fread(\''.$effects_sim_heatmap_tempfile2.'\', header=TRUE, sep=\',\');
-        mat_eff_sim2_2 <- fread(\''.$effects_sim_heatmap_tempfile2_2.'\', header=TRUE, sep=\',\');
-        mat_eff_sim2_3 <- fread(\''.$effects_sim_heatmap_tempfile2_3.'\', header=TRUE, sep=\',\');
-        mat_eff_sim2_4 <- fread(\''.$effects_sim_heatmap_tempfile2_4.'\', header=TRUE, sep=\',\');
         mat_env3 <- fread(\''.$phenotypes_env_heatmap_tempfile3.'\', header=TRUE, sep=\',\');
-        mat_p_sim3 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile3.'\', header=TRUE, sep=\',\');
-        mat_eff_sim3_1 <- fread(\''.$effects_sim_heatmap_tempfile3.'\', header=TRUE, sep=\',\');
-        mat_eff_sim3_2 <- fread(\''.$effects_sim_heatmap_tempfile3_2.'\', header=TRUE, sep=\',\');
-        mat_eff_sim3_3 <- fread(\''.$effects_sim_heatmap_tempfile3_3.'\', header=TRUE, sep=\',\');
-        mat_eff_sim3_4 <- fread(\''.$effects_sim_heatmap_tempfile3_4.'\', header=TRUE, sep=\',\');
         mat_env4 <- fread(\''.$phenotypes_env_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
-        mat_p_sim4 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
-        mat_eff_sim4_1 <- fread(\''.$effects_sim_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
-        mat_eff_sim4_2 <- fread(\''.$effects_sim_heatmap_tempfile4_2.'\', header=TRUE, sep=\',\');
-        mat_eff_sim4_3 <- fread(\''.$effects_sim_heatmap_tempfile4_3.'\', header=TRUE, sep=\',\');
-        mat_eff_sim4_4 <- fread(\''.$effects_sim_heatmap_tempfile4_4.'\', header=TRUE, sep=\',\');
+        mat_env5 <- fread(\''.$phenotypes_env_heatmap_tempfile5.'\', header=TRUE, sep=\',\');
         options(device=\'png\');
         par();
         gg_eff_1 <- ggplot(effect_mat_1, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
@@ -5312,15 +5592,19 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             scale_fill_viridis(discrete=FALSE) +
             coord_equal() +
             facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
-        ggsave(\''.$env_effects_first_figure_tempfile.'\', arrangeGrob(gg_eff_1, gg_eff_2, gg_eff_3, gg_eff_4, nrow=4), device=\'png\', width=20, height=20, units=\'in\');
-        write.table(data.frame(m1env1 = c(cor(mat_env\$value, mat_eff_sim_1\$value)), m1env2 = c(cor(mat_env2\$value, mat_eff_sim2_1\$value)), m1env3 = c(cor(mat_env3\$value, mat_eff_sim3_1\$value)), m1env4 = c(cor(mat_env4\$value, mat_eff_sim4_1\$value)), m2env1 = c(cor(mat_env\$value, mat_eff_sim_2\$value)), m2env2 = c(cor(mat_env2\$value, mat_eff_sim2_2\$value)), m2env3 = c(cor(mat_env3\$value, mat_eff_sim3_2\$value)), m2env4 = c(cor(mat_env4\$value, mat_eff_sim4_2\$value)), m3env1 = c(cor(mat_env\$value, mat_eff_sim_3\$value)), m3env2 = c(cor(mat_env2\$value, mat_eff_sim2_3\$value)), m3env3 = c(cor(mat_env3\$value, mat_eff_sim3_3\$value)), m3env4 = c(cor(mat_env4\$value, mat_eff_sim4_3\$value)), m4env1 = c(cor(mat_env\$value, mat_eff_sim_4\$value)), m4env2 = c(cor(mat_env2\$value, mat_eff_sim2_4\$value)), m4env3 = c(cor(mat_env3\$value, mat_eff_sim3_4\$value)), m4env4 = c(cor(mat_env4\$value, mat_eff_sim4_4\$value))), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');
+        gg_eff_5 <- ggplot(effect_mat_5, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+            geom_tile() +
+            scale_fill_viridis(discrete=FALSE) +
+            coord_equal() +
+            facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+        ggsave(\''.$env_effects_first_figure_tempfile.'\', arrangeGrob(gg_eff_1, gg_eff_2, gg_eff_3, gg_eff_4, gg_eff_5, nrow=5), device=\'png\', width=25, height=25, units=\'in\');
+        write.table(data.frame(m1env1 = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_1)), m1env2 = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_1)), m1env3 = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_1)), m1env4 = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_1)), m1env5 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_1)), m2env1 = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_2)), m2env2 = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_2)), m2env3 = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_2)), m2env4 = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_2)), m2env5 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_2)), m3env1 = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_3)), m3env2 = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_3)), m3env3 = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_3)), m3env4 = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_3)), m3env5 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_3)), m4env1 = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_4)), m4env2 = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_4)), m4env3 = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_4)), m4env4 = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_4)), m4env5 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_4)), m5env1 = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_5)), m5env2 = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_5)), m5env3 = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_5)), m5env4 = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_5)), m5env5 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_5))), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');
         "';
         # print STDERR Dumper $cmd;
         my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
         push @$spatial_effects_plots, $env_effects_first_figure_tempfile_string;
 
-        open(my $fh_corr_result, '<', $sim_effects_corr_results)
-            or die "Could not open file '$sim_effects_corr_results' $!";
+        open(my $fh_corr_result, '<', $sim_effects_corr_results) or die "Could not open file '$sim_effects_corr_results' $!";
             print STDERR "Opened $sim_effects_corr_results\n";
 
             while (my $row = <$fh_corr_result>) {
@@ -5743,7 +6027,111 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         # print STDERR Dumper $cmd;
         my $status_spatialenvsim_plot_4 = system($cmd_spatialenvsim_plot_4);
         push @$spatial_effects_plots, $env_effects_sim_figure_tempfile_string_4;
+        
+        my $env_effects_sim_figure_tempfile_string_5 = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
+        $env_effects_sim_figure_tempfile_string_5 .= '.png';
+        my $env_effects_sim_figure_tempfile_5 = $c->config->{basepath}."/".$env_effects_sim_figure_tempfile_string_5;
+
+        my $cmd_spatialenvsim_plot_5 = 'R -e "library(data.table); library(ggplot2); library(dplyr); library(viridis); library(GGally); library(gridExtra);
+        mat_env <- fread(\''.$phenotypes_env_heatmap_tempfile.'\', header=TRUE, sep=\',\');
+        mat_p_sim <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile_5.'\', header=TRUE, sep=\',\');
+        mat_eff_sim <- fread(\''.$effects_sim_heatmap_tempfile_5.'\', header=TRUE, sep=\',\');
+        mat_env2 <- fread(\''.$phenotypes_env_heatmap_tempfile2.'\', header=TRUE, sep=\',\');
+        mat_p_sim2 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile2_5.'\', header=TRUE, sep=\',\');
+        mat_eff_sim2 <- fread(\''.$effects_sim_heatmap_tempfile2_5.'\', header=TRUE, sep=\',\');
+        mat_env3 <- fread(\''.$phenotypes_env_heatmap_tempfile3.'\', header=TRUE, sep=\',\');
+        mat_p_sim3 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile3_5.'\', header=TRUE, sep=\',\');
+        mat_eff_sim3 <- fread(\''.$effects_sim_heatmap_tempfile3_5.'\', header=TRUE, sep=\',\');
+        mat_env4 <- fread(\''.$phenotypes_env_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
+        mat_p_sim4 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile4_5.'\', header=TRUE, sep=\',\');
+        mat_eff_sim4 <- fread(\''.$effects_sim_heatmap_tempfile4_5.'\', header=TRUE, sep=\',\');
+        mat_env5 <- fread(\''.$phenotypes_env_heatmap_tempfile5.'\', header=TRUE, sep=\',\');
+        mat_p_sim5 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile5_5.'\', header=TRUE, sep=\',\');
+        mat_eff_sim5 <- fread(\''.$effects_sim_heatmap_tempfile5_5.'\', header=TRUE, sep=\',\');
+        options(device=\'png\');
+        par();
+        gg_env <- ggplot(mat_env, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+            geom_tile() +
+            scale_fill_viridis(discrete=FALSE) +
+            coord_equal() +
+            facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+        gg_p_sim <- ggplot(mat_p_sim, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+            geom_tile() +
+            scale_fill_viridis(discrete=FALSE) +
+            coord_equal() +
+            facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+        gg_eff_sim <- ggplot(mat_eff_sim, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+            geom_tile() +
+            scale_fill_viridis(discrete=FALSE) +
+            coord_equal() +
+            facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+        gg_env2 <- ggplot(mat_env2, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+            geom_tile() +
+            scale_fill_viridis(discrete=FALSE) +
+            coord_equal() +
+            facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+        gg_p_sim2 <- ggplot(mat_p_sim2, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+            geom_tile() +
+            scale_fill_viridis(discrete=FALSE) +
+            coord_equal() +
+            facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+        gg_eff_sim2 <- ggplot(mat_eff_sim2, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+            geom_tile() +
+            scale_fill_viridis(discrete=FALSE) +
+            coord_equal() +
+            facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+        gg_env3 <- ggplot(mat_env3, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+            geom_tile() +
+            scale_fill_viridis(discrete=FALSE) +
+            coord_equal() +
+            facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+        gg_p_sim3 <- ggplot(mat_p_sim3, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+            geom_tile() +
+            scale_fill_viridis(discrete=FALSE) +
+            coord_equal() +
+            facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+        gg_eff_sim3 <- ggplot(mat_eff_sim3, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+            geom_tile() +
+            scale_fill_viridis(discrete=FALSE) +
+            coord_equal() +
+            facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+        gg_env4 <- ggplot(mat_env4, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+            geom_tile() +
+            scale_fill_viridis(discrete=FALSE) +
+            coord_equal() +
+            facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+        gg_p_sim4 <- ggplot(mat_p_sim4, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+            geom_tile() +
+            scale_fill_viridis(discrete=FALSE) +
+            coord_equal() +
+            facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+        gg_eff_sim4 <- ggplot(mat_eff_sim4, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+            geom_tile() +
+            scale_fill_viridis(discrete=FALSE) +
+            coord_equal() +
+            facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+        gg_env5 <- ggplot(mat_env5, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+            geom_tile() +
+            scale_fill_viridis(discrete=FALSE) +
+            coord_equal() +
+            facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+        gg_p_sim5 <- ggplot(mat_p_sim5, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+            geom_tile() +
+            scale_fill_viridis(discrete=FALSE) +
+            coord_equal() +
+            facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+        gg_eff_sim5 <- ggplot(mat_eff_sim5, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+            geom_tile() +
+            scale_fill_viridis(discrete=FALSE) +
+            coord_equal() +
+            facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+        ggsave(\''.$env_effects_sim_figure_tempfile_5.'\', arrangeGrob(gg_env, gg_p_sim, gg_eff_sim, gg_env2, gg_p_sim2, gg_eff_sim2, gg_env3, gg_p_sim3, gg_eff_sim3, gg_env4, gg_p_sim4, gg_eff_sim4, gg_env5, gg_p_sim5, gg_eff_sim5, nrow=5), device=\'png\', width=35, height=35, units=\'in\');
+        "';
+        # print STDERR Dumper $cmd_spatialenvsim_plot_5;
+        my $status_spatialenvsim_plot_5 = system($cmd_spatialenvsim_plot_5);
+        push @$spatial_effects_plots, $env_effects_sim_figure_tempfile_string_5;
     };
+    die;
 
     eval {
         my @sorted_germplasm_names = sort keys %unique_accessions;
@@ -6339,7 +6727,7 @@ sub _perform_drone_imagery_analytics {
 
     print STDERR "CALC $permanent_environment_structure\n";
 
-    my ($statistical_ontology_term, $analysis_model_training_data_file_type, $analysis_model_language, @sorted_residual_trait_names, %rr_unique_traits, %rr_residual_unique_traits, $statistics_cmd, $cmd_f90, $cmd_asreml, $number_traits);
+    my ($statistical_ontology_term, $analysis_model_training_data_file_type, $analysis_model_language, @sorted_residual_trait_names, %rr_unique_traits, %rr_residual_unique_traits, $statistics_cmd, $cmd_f90, $cmd_asreml, $number_traits, $number_accessions);
 
     my ($result_blup_data_original, $result_blup_data_delta_original, $result_blup_spatial_data_original, $result_blup_pe_data_original, $result_blup_pe_data_delta_original, $result_residual_data_original, $result_fitted_data_original, %fixed_effects_original, %rr_genetic_coefficients_original, %rr_temporal_coefficients_original);
     my $model_sum_square_residual_original = 0;
@@ -6516,6 +6904,7 @@ sub _perform_drone_imagery_analytics {
                         if (defined $residual && $residual ne '') {
                             $result_residual_data_original->{$stock_name}->{$trait_name} = [$residual, $timestamp, $user_name, '', ''];
                             $residual_sum_original += abs($residual);
+                            $residual_sum_square_original = $residual_sum_square_original + $residual*$residual;
                         }
                         if (defined $fitted && $fitted ne '') {
                             $result_fitted_data_original->{$stock_name}->{$trait_name} = [$fitted, $timestamp, $user_name, '', ''];
@@ -6535,9 +6924,6 @@ sub _perform_drone_imagery_analytics {
             $c->detach();
             print STDERR "ERROR IN R CMD\n";
         }
-
-        print STDERR "ORIGINAL $statistics_select GENETIC EFFECT SUM $genetic_effect_sum_original\n";
-        print STDERR "ORIGINAL $statistics_select ENV EFFECT SUM $env_effect_sum_original\n";
     }
     elsif ($statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups') {
         $statistical_ontology_term = "Univariate linear mixed model genetic BLUPs using genetic relationship matrix and row and column spatial effects computed using Sommer R|SGNSTAT:0000001"; #In the JS this is set to either the genetic or spatial BLUP term (Multivariate linear mixed model 2D spline spatial BLUPs using genetic relationship matrix and row and column spatial effects computed using Sommer R|SGNSTAT:0000003) when saving analysis results
@@ -6695,6 +7081,7 @@ sub _perform_drone_imagery_analytics {
                         if (defined $residual && $residual ne '') {
                             $result_residual_data_original->{$stock_name}->{$trait_name} = [$residual, $timestamp, $user_name, '', ''];
                             $residual_sum_original += abs($residual);
+                            $residual_sum_square_original = $residual_sum_square_original + $residual*$residual;
                         }
                         if (defined $fitted && $fitted ne '') {
                             $result_fitted_data_original->{$stock_name}->{$trait_name} = [$fitted, $timestamp, $user_name, '', ''];
@@ -6714,9 +7101,6 @@ sub _perform_drone_imagery_analytics {
                 }
             }
         }
-
-        print STDERR "ORIGINAL $statistics_select GENETIC EFFECT SUM $genetic_effect_sum_original\n";
-        print STDERR "ORIGINAL $statistics_select ENV EFFECT SUM $env_effect_sum_original\n";
     }
     elsif ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
 
@@ -7178,9 +7562,6 @@ sub _perform_drone_imagery_analytics {
                 $env_effect_sum_square_original = $env_effect_sum_square_original + $value*$value;
             }
         }
-
-        print STDERR "ORIGINAL $statistics_select GENETIC EFFECT SUM $genetic_effect_sum_original\n";
-        print STDERR "ORIGINAL $statistics_select ENV EFFECT SUM $env_effect_sum_original\n";
     }
     elsif ($statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups') {
         $analysis_model_language = "R";
@@ -7268,7 +7649,7 @@ sub _perform_drone_imagery_analytics {
 
         my @encoded_traits = values %trait_name_encoder;
         $number_traits = scalar(@sorted_trait_names);
-        my $number_accessions = scalar(@unique_accession_names);
+        $number_accessions = scalar(@unique_accession_names);
         foreach my $t (@sorted_trait_names) {
 
             $statistics_cmd = 'R -e "library(asreml); library(data.table); library(reshape2);
@@ -7328,6 +7709,7 @@ sub _perform_drone_imagery_analytics {
                         if (defined $residual && $residual ne '') {
                             $result_residual_data_original->{$stock_name}->{$t} = [$residual, $timestamp, $user_name, '', ''];
                             $residual_sum_original += abs($residual);
+                            $residual_sum_square_original = $residual_sum_square_original + $residual*$residual;
                         }
                         if (defined $fitted && $fitted ne '') {
                             $result_fitted_data_original->{$stock_name}->{$t} = [$fitted, $timestamp, $user_name, '', ''];
@@ -7336,7 +7718,6 @@ sub _perform_drone_imagery_analytics {
                     }
                 close($fh_residual);
 
-                print STDERR Dumper \%accession_id_factor_map_reverse;
                 open(my $fh, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                     print STDERR "Opened $stats_out_tempfile\n";
                     my $header = <$fh>;
@@ -7354,7 +7735,7 @@ sub _perform_drone_imagery_analytics {
                         my $z_ratio = $columns[3];
                         if (defined $value && $value ne '') {
                             if ($solution_file_counter < $number_accessions) {
-                                my $stock_name = $accession_id_factor_map_reverse{$solution_file_counter};
+                                my $stock_name = $accession_id_factor_map_reverse{$solution_file_counter+1};
                                 $result_blup_data_original->{$stock_name}->{$t} = [$value, $timestamp, $user_name, '', ''];
 
                                 if ($value < $genetic_effect_min_original) {
@@ -7399,18 +7780,11 @@ sub _perform_drone_imagery_analytics {
                     $c->detach();
                     print STDERR "ERROR IN R CMD\n";
                 }
-                
-                print STDERR Dumper $result_blup_data_original;
-                print STDERR Dumper $result_blup_spatial_data_original;
-                die;
             }
         }
-
-        print STDERR "ORIGINAL $statistics_select GENETIC EFFECT SUM $genetic_effect_sum_original\n";
-        print STDERR "ORIGINAL $statistics_select ENV EFFECT SUM $env_effect_sum_original\n";
-
     }
-    print STDERR Dumper [$genetic_effect_min_original, $genetic_effect_max_original, $env_effect_min_original, $env_effect_max_original];
+    print STDERR "ORIGINAL $statistics_select GENETIC EFFECT SUM $genetic_effect_sum_original\n";
+    print STDERR "ORIGINAL $statistics_select ENV EFFECT SUM $env_effect_sum_original\n";print STDERR Dumper [$genetic_effect_min_original, $genetic_effect_max_original, $env_effect_min_original, $env_effect_max_original];
 
     my (%phenotype_data_altered, @data_matrix_altered, @data_matrix_phenotypes_altered, @phenotype_data_altered_values);
     my $phenotype_min_altered = 1000000000;
@@ -7810,9 +8184,6 @@ sub _perform_drone_imagery_analytics {
             $c->detach();
             print STDERR "ERROR IN R CMD\n";
         }
-
-        print STDERR "ALTERED $statistics_select GENETIC EFFECT SUM $genetic_effect_sum_altered\n";
-        print STDERR "ALTERED $statistics_select ENV EFFECT SUM $env_effect_sum_altered\n";
     }
     elsif ($statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups') {
         my @encoded_traits = values %trait_name_encoder;
@@ -8346,54 +8717,143 @@ sub _perform_drone_imagery_analytics {
                 $env_effect_sum_square_altered = $env_effect_sum_square_altered + $value*$value;
             }
         }
-
-        print STDERR "ALTERED $statistics_select GENETIC EFFECT SUM $genetic_effect_sum_altered\n";
-        print STDERR "ALTERED $statistics_select ENV EFFECT SUM $env_effect_sum_altered\n";
     }
     elsif ($statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups') {
 
-        my $stats_tempfile_2_basename = basename($stats_tempfile_2);
-        my $grm_file_basename = basename($grm_rename_tempfile);
-        #my @phenotype_header = ("id", "plot_id", "replicate", "rowNumber", "colNumber"", "id_factor", "plot_id_factor", "@times");
+        foreach my $t (@sorted_trait_names) {
 
-        foreach my $time (@sorted_trait_names) {
-            my @param_file_rows = (
-                '!NOGRAPHICS !DEBUG !QUIET',
-                'Single Trait analysis',
-                ' id !I',
-                ' plot_id !I',
-                ' replicate !I',
-                ' rowNumber !I',
-                ' colNumber !I',
-                ' id_factor !I',
-                ' plot_id_factor !I'
-            );
-            foreach my $t (@sorted_trait_names) {
-                push @param_file_rows, " t$t";
+            $statistics_cmd = 'R -e "library(asreml); library(data.table); library(reshape2);
+            mat <- data.frame(fread(\''.$stats_tempfile_2.'\', header=TRUE, sep=\',\'));
+            geno_mat_3col <- data.frame(fread(\''.$grm_rename_tempfile.'\', header=FALSE, sep=\' \'));
+            mat\$rowNumber <- as.numeric(mat\$rowNumber);
+            mat\$colNumber <- as.numeric(mat\$colNumber);
+            mat\$rowNumberFactor <- as.factor(mat\$rowNumber);
+            mat\$colNumberFactor <- as.factor(mat\$colNumber);
+            mat\$id_factor <- as.factor(mat\$id_factor);
+            mat <- mat[order(mat\$rowNumber, mat\$colNumber),];
+            attr(geno_mat_3col,\'rowNames\') <- as.character(seq(1,'.$number_accessions.'));
+            attr(geno_mat_3col,\'colNames\') <- as.character(seq(1,'.$number_accessions.'));
+            attr(geno_mat_3col,\'INVERSE\') <- TRUE;
+            mix <- asreml(t'.$t.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~idv(units), data=mat);
+            if (!is.null(summary(mix,coef=TRUE)\$coef.random)) {
+            write.table(summary(mix,coef=TRUE)\$coef.random, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
+            write.table(data.frame(plot_id = mat\$plot_id, residuals = mix\$residuals, fitted = mix\$linear.predictors), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
             }
-            push @param_file_rows, (
-                "$grm_file_basename !NSD",
-                "$stats_tempfile_2_basename !CSV !SKIP 1 !MVINCLUDE !MAXIT 200 !EXTRA 5",
-                '',
-                "t$time ~ mu replicate !r grm1(id_factor) ar1(rowNumber).ar1v(colNumber)",
-            );
+            "';
+            print STDERR Dumper $statistics_cmd;
+            eval {
+                my $status = system($statistics_cmd);
+            };
 
-            open(my $Fp, ">", $parameter_asreml_tempfile) || die "Can't open file ".$parameter_asreml_tempfile;
-                print STDERR "WRITE ASREML PARAMFILE $parameter_asreml_tempfile\n";
-                foreach (@param_file_rows) {
-                    print $Fp "$_\n";
+            my $run_stats_fault = 0;
+            if ($@) {
+                print STDERR "R ERROR\n";
+                print STDERR Dumper $@;
+                $run_stats_fault = 1;
+            }
+            else {
+                my $current_gen_row_count = 0;
+                my $current_env_row_count = 0;
+                my @row_col_ordered_plots_names;
+
+                open(my $fh_residual, '<', $stats_out_tempfile_residual)
+                    or die "Could not open file '$stats_out_tempfile_residual' $!";
+                
+                    print STDERR "Opened $stats_out_tempfile_residual\n";
+                    my $header_residual = <$fh_residual>;
+                    my @header_cols_residual;
+                    if ($csv->parse($header_residual)) {
+                        @header_cols_residual = $csv->fields();
+                    }
+                    while (my $row = <$fh_residual>) {
+                        my @columns;
+                        if ($csv->parse($row)) {
+                            @columns = $csv->fields();
+                        }
+
+                        my $stock_id = $columns[0];
+                        my $residual = $columns[1];
+                        my $fitted = $columns[2];
+                        my $stock_name = $plot_id_map{$stock_id};
+                        push @row_col_ordered_plots_names, $stock_name;
+                        if (defined $residual && $residual ne '') {
+                            $result_residual_data_altered->{$stock_name}->{$t} = [$residual, $timestamp, $user_name, '', ''];
+                            $residual_sum_altered += abs($residual);
+                            $residual_sum_square_altered = $residual_sum_square_altered + $residual*$residual;}
+                        if (defined $fitted && $fitted ne '') {
+                            $result_fitted_data_altered->{$stock_name}->{$t} = [$fitted, $timestamp, $user_name, '', ''];
+                        }
+                        $model_sum_square_residual_altered = $model_sum_square_residual_altered + $residual*$residual;
+                    }
+                close($fh_residual);
+
+                open(my $fh, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
+                    print STDERR "Opened $stats_out_tempfile\n";
+                    my $header = <$fh>;
+
+                    my $solution_file_counter = 0;
+                    while (defined(my $row = <$fh>)) {
+                        # print STDERR $row;
+                        my @columns;
+                        if ($csv->parse($row)) {
+                            @columns = $csv->fields();
+                        }
+                        my $level = $columns[0];
+                        my $value = $columns[1];
+                        my $std = $columns[2];
+                        my $z_ratio = $columns[3];
+                        if (defined $value && $value ne '') {
+                            if ($solution_file_counter < $number_accessions) {
+                                my $stock_name = $accession_id_factor_map_reverse{$solution_file_counter+1};
+                                $result_blup_data_altered->{$stock_name}->{$t} = [$value, $timestamp, $user_name, '', ''];
+
+                                if ($value < $genetic_effect_min_altered) {
+                                    $genetic_effect_min_altered = $value;
+                                }
+                                elsif ($value >= $genetic_effect_max_altered) {
+                                    $genetic_effect_max_altered = $value;
+                                }
+
+                                $genetic_effect_sum_altered += abs($value);
+                                $genetic_effect_sum_square_altered = $genetic_effect_sum_square_altered + $value*$value;
+
+                                $current_gen_row_count++;
+                            }
+                            else {
+                                my $plot_name = $row_col_ordered_plots_names[$current_env_row_count-$number_accessions];
+                                $result_blup_spatial_data_altered->{$plot_name}->{$t} = [$value, $timestamp, $user_name, '', ''];
+
+                                if ($value < $env_effect_min_altered) {
+                                    $env_effect_min_altered = $value;
+                                }
+                                elsif ($value >= $env_effect_max_altered) {
+                                    $env_effect_max_altered = $value;
+                                }
+
+                                $env_effect_sum_altered += abs($value);
+                                $env_effect_sum_square_altered = $env_effect_sum_square_altered + $value*$value;
+
+                                $current_env_row_count++;
+                            }
+                        }
+                        $solution_file_counter++;
+                    }
+                close($fh);
+
+                if ($current_env_row_count == 0 || $current_gen_row_count == 0) {
+                    $run_stats_fault = 1;
                 }
-            close($Fp);
 
-            my $parameter_asreml_tempfile_basename = basename($parameter_asreml_tempfile);
-            $stats_out_tempfile .= '.log';
-            $cmd_asreml = 'cd '.$tmp_stats_dir.'; asreml '.$parameter_asreml_tempfile_basename.' > '.$stats_out_tempfile;
-            print STDERR Dumper $cmd_asreml;
-            my $status = system($cmd_asreml);
+                if ($run_stats_fault == 1) {
+                    $c->stash->{rest} = {error=>'Error in R! Try a larger tolerance'};
+                    $c->detach();
+                    print STDERR "ERROR IN R CMD\n";
+                }
+            }
         }
-        
     }
-
+    print STDERR "ALTERED $statistics_select GENETIC EFFECT SUM $genetic_effect_sum_altered\n";
+    print STDERR "ALTERED $statistics_select ENV EFFECT SUM $env_effect_sum_altered\n";
     print STDERR Dumper [$genetic_effect_min_altered, $genetic_effect_max_altered, $env_effect_min_altered, $env_effect_max_altered];
 
     my @sim_env_types = ("linear_gradient", "random_1d_normal_gradient", "random_2d_normal_gradient", "random", "ar1xar1", "row_plus_col");
@@ -8699,7 +9159,7 @@ sub _perform_drone_imagery_analytics {
             );
 
             foreach my $t (@sorted_trait_names) {
-                if (defined($phenotype_data_original{$p}->{$t})) {
+                if (defined($phenotype_data_altered{$p}->{$t})) {
                     my $new_val = $phenotype_data_altered{$p}->{$t} + 0;
                     my $sim_val = eval $env_sim_exec->{$env_simulation};
                     $sim_val = (($sim_val - $env_sim_min)/($env_sim_max - $env_sim_min))*$env_variance_percent;
@@ -8889,9 +9349,6 @@ sub _perform_drone_imagery_analytics {
             $c->detach();
             print STDERR "ERROR IN R CMD\n";
         }
-
-        print STDERR "ALTERED w/SIM_ENV $statistics_select GENETIC EFFECT SUM $genetic_effect_sum_altered_env\n";
-        print STDERR "ALTERED w/SIM_ENV $statistics_select ENV EFFECT SUM $env_effect_sum_altered_env\n";
     }
     elsif ($statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups') {
         my @encoded_traits = values %trait_name_encoder;
@@ -9433,52 +9890,142 @@ sub _perform_drone_imagery_analytics {
                 $env_effect_sum_square_altered_env = $env_effect_sum_square_altered_env + $value*$value;
             }
         }
-
-        print STDERR "ALTERED w/SIM_ENV $statistics_select GENETIC EFFECT SUM $genetic_effect_sum_altered_env\n";
-        print STDERR "ALTERED w/SIM_ENV $statistics_select ENV EFFECT SUM $env_effect_sum_altered_env\n";
     }
     elsif ($statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups') {
-        my $stats_tempfile_2_basename = basename($stats_tempfile_2);
-        my $grm_file_basename = basename($grm_rename_tempfile);
-        #my @phenotype_header = ("id", "plot_id", "replicate", "rowNumber", "colNumber"", "id_factor", "plot_id_factor", "@times");
+        foreach my $t (@sorted_trait_names) {
 
-        foreach my $time (@sorted_trait_names) {
-            my @param_file_rows = (
-                '!NOGRAPHICS !DEBUG !QUIET',
-                'Single Trait analysis',
-                ' id !I',
-                ' plot_id !I',
-                ' replicate !I',
-                ' rowNumber !I',
-                ' colNumber !I',
-                ' id_factor !I',
-                ' plot_id_factor !I'
-            );
-            foreach my $t (@sorted_trait_names) {
-                push @param_file_rows, " t$t";
+            $statistics_cmd = 'R -e "library(asreml); library(data.table); library(reshape2);
+            mat <- data.frame(fread(\''.$stats_tempfile_2.'\', header=TRUE, sep=\',\'));
+            geno_mat_3col <- data.frame(fread(\''.$grm_rename_tempfile.'\', header=FALSE, sep=\' \'));
+            mat\$rowNumber <- as.numeric(mat\$rowNumber);
+            mat\$colNumber <- as.numeric(mat\$colNumber);
+            mat\$rowNumberFactor <- as.factor(mat\$rowNumber);
+            mat\$colNumberFactor <- as.factor(mat\$colNumber);
+            mat\$id_factor <- as.factor(mat\$id_factor);
+            mat <- mat[order(mat\$rowNumber, mat\$colNumber),];
+            attr(geno_mat_3col,\'rowNames\') <- as.character(seq(1,'.$number_accessions.'));
+            attr(geno_mat_3col,\'colNames\') <- as.character(seq(1,'.$number_accessions.'));
+            attr(geno_mat_3col,\'INVERSE\') <- TRUE;
+            mix <- asreml(t'.$t.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~idv(units), data=mat);
+            if (!is.null(summary(mix,coef=TRUE)\$coef.random)) {
+            write.table(summary(mix,coef=TRUE)\$coef.random, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
+            write.table(data.frame(plot_id = mat\$plot_id, residuals = mix\$residuals, fitted = mix\$linear.predictors), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
             }
-            push @param_file_rows, (
-                "$grm_file_basename !NSD",
-                "$stats_tempfile_2_basename !CSV !SKIP 1 !MVINCLUDE !MAXIT 200 !EXTRA 5",
-                '',
-                "t$time ~ mu replicate !r grm1(id_factor) ar1(rowNumber).ar1v(colNumber)",
-            );
+            "';
+            print STDERR Dumper $statistics_cmd;
+            eval {
+                my $status = system($statistics_cmd);
+            };
 
-            open(my $Fp, ">", $parameter_asreml_tempfile) || die "Can't open file ".$parameter_asreml_tempfile;
-                print STDERR "WRITE ASREML PARAMFILE $parameter_asreml_tempfile\n";
-                foreach (@param_file_rows) {
-                    print $Fp "$_\n";
+            my $run_stats_fault = 0;
+            if ($@) {
+                print STDERR "R ERROR\n";
+                print STDERR Dumper $@;
+                $run_stats_fault = 1;
+            }
+            else {
+                my $current_gen_row_count = 0;
+                my $current_env_row_count = 0;
+                my @row_col_ordered_plots_names;
+
+                open(my $fh_residual, '<', $stats_out_tempfile_residual)
+                    or die "Could not open file '$stats_out_tempfile_residual' $!";
+                
+                    print STDERR "Opened $stats_out_tempfile_residual\n";
+                    my $header_residual = <$fh_residual>;
+                    my @header_cols_residual;
+                    if ($csv->parse($header_residual)) {
+                        @header_cols_residual = $csv->fields();
+                    }
+                    while (my $row = <$fh_residual>) {
+                        my @columns;
+                        if ($csv->parse($row)) {
+                            @columns = $csv->fields();
+                        }
+
+                        my $stock_id = $columns[0];
+                        my $residual = $columns[1];
+                        my $fitted = $columns[2];
+                        my $stock_name = $plot_id_map{$stock_id};
+                        push @row_col_ordered_plots_names, $stock_name;
+                        if (defined $residual && $residual ne '') {
+                            $result_residual_data_altered_env->{$stock_name}->{$t} = [$residual, $timestamp, $user_name, '', ''];
+                            $residual_sum_altered_env += abs($residual);
+                            $residual_sum_square_altered_env = $residual_sum_square_altered_env + $residual*$residual;}
+                        if (defined $fitted && $fitted ne '') {
+                            $result_fitted_data_altered_env->{$stock_name}->{$t} = [$fitted, $timestamp, $user_name, '', ''];
+                        }
+                        $model_sum_square_residual_altered_env = $model_sum_square_residual_altered_env + $residual*$residual;
+                    }
+                close($fh_residual);
+
+                open(my $fh, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
+                    print STDERR "Opened $stats_out_tempfile\n";
+                    my $header = <$fh>;
+
+                    my $solution_file_counter = 0;
+                    while (defined(my $row = <$fh>)) {
+                        # print STDERR $row;
+                        my @columns;
+                        if ($csv->parse($row)) {
+                            @columns = $csv->fields();
+                        }
+                        my $level = $columns[0];
+                        my $value = $columns[1];
+                        my $std = $columns[2];
+                        my $z_ratio = $columns[3];
+                        if (defined $value && $value ne '') {
+                            if ($solution_file_counter < $number_accessions) {
+                                my $stock_name = $accession_id_factor_map_reverse{$solution_file_counter+1};
+                                $result_blup_data_altered_env->{$stock_name}->{$t} = [$value, $timestamp, $user_name, '', ''];
+
+                                if ($value < $genetic_effect_min_altered_env) {
+                                    $genetic_effect_min_altered_env = $value;
+                                }
+                                elsif ($value >= $genetic_effect_max_altered_env) {
+                                    $genetic_effect_max_altered_env = $value;
+                                }
+
+                                $genetic_effect_sum_altered_env += abs($value);
+                                $genetic_effect_sum_square_altered_env = $genetic_effect_sum_square_altered_env + $value*$value;
+
+                                $current_gen_row_count++;
+                            }
+                            else {
+                                my $plot_name = $row_col_ordered_plots_names[$current_env_row_count-$number_accessions];
+                                $result_blup_spatial_data_altered_env->{$plot_name}->{$t} = [$value, $timestamp, $user_name, '', ''];
+
+                                if ($value < $env_effect_min_altered_env) {
+                                    $env_effect_min_altered_env = $value;
+                                }
+                                elsif ($value >= $env_effect_max_altered_env) {
+                                    $env_effect_max_altered_env = $value;
+                                }
+
+                                $env_effect_sum_altered_env += abs($value);
+                                $env_effect_sum_square_altered_env = $env_effect_sum_square_altered_env + $value*$value;
+
+                                $current_env_row_count++;
+                            }
+                        }
+                        $solution_file_counter++;
+                    }
+                close($fh);
+
+                if ($current_env_row_count == 0 || $current_gen_row_count == 0) {
+                    $run_stats_fault = 1;
                 }
-            close($Fp);
 
-            my $parameter_asreml_tempfile_basename = basename($parameter_asreml_tempfile);
-            $stats_out_tempfile .= '.log';
-            $cmd_asreml = 'cd '.$tmp_stats_dir.'; asreml '.$parameter_asreml_tempfile_basename.' > '.$stats_out_tempfile;
-            print STDERR Dumper $cmd_asreml;
-            my $status = system($cmd_asreml);
+                if ($run_stats_fault == 1) {
+                    $c->stash->{rest} = {error=>'Error in R! Try a larger tolerance'};
+                    $c->detach();
+                    print STDERR "ERROR IN R CMD\n";
+                }
+            }
         }
     }
-
+    print STDERR "ALTERED w/SIM_ENV linear $statistics_select GENETIC EFFECT SUM $genetic_effect_sum_altered_env\n";
+    print STDERR "ALTERED w/SIM_ENV linear $statistics_select ENV EFFECT SUM $env_effect_sum_altered_env\n";
     print STDERR Dumper [$genetic_effect_min_altered_env, $genetic_effect_max_altered_env, $env_effect_min_altered_env, $env_effect_max_altered_env];
 
     $env_simulation = "random_1d_normal_gradient";
@@ -9964,9 +10511,6 @@ sub _perform_drone_imagery_analytics {
             $c->detach();
             print STDERR "ERROR IN R CMD\n";
         }
-
-        print STDERR "ALTERED w/SIM_ENV $statistics_select GENETIC EFFECT SUM $genetic_effect_sum_altered_env_2\n";
-        print STDERR "ALTERED w/SIM_ENV $statistics_select ENV EFFECT SUM $env_effect_sum_altered_env_2\n";
     }
     elsif ($statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups') {
         my @encoded_traits = values %trait_name_encoder;
@@ -10508,53 +11052,142 @@ sub _perform_drone_imagery_analytics {
                 $env_effect_sum_square_altered_env_2 = $env_effect_sum_square_altered_env_2 + $value*$value;
             }
         }
-
-        print STDERR "ALTERED w/SIM_ENV $statistics_select GENETIC EFFECT SUM $genetic_effect_sum_altered_env_2\n";
-        print STDERR "ALTERED w/SIM_ENV $statistics_select ENV EFFECT SUM $env_effect_sum_altered_env_2\n";
     }
     elsif ($statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups') {
-        my $stats_tempfile_2_basename = basename($stats_tempfile_2);
-        my $grm_file_basename = basename($grm_rename_tempfile);
-        #my @phenotype_header = ("id", "plot_id", "replicate", "rowNumber", "colNumber"", "id_factor", "plot_id_factor", "@times");
+        foreach my $t (@sorted_trait_names) {
 
-        foreach my $time (@sorted_trait_names) {
-            my @param_file_rows = (
-                '!NOGRAPHICS !DEBUG !QUIET',
-                'Single Trait analysis',
-                ' id !I',
-                ' plot_id !I',
-                ' replicate !I',
-                ' rowNumber !I',
-                ' colNumber !I',
-                ' id_factor !I',
-                ' plot_id_factor !I'
-            );
-            foreach my $t (@sorted_trait_names) {
-                push @param_file_rows, " t$t";
+            $statistics_cmd = 'R -e "library(asreml); library(data.table); library(reshape2);
+            mat <- data.frame(fread(\''.$stats_tempfile_2.'\', header=TRUE, sep=\',\'));
+            geno_mat_3col <- data.frame(fread(\''.$grm_rename_tempfile.'\', header=FALSE, sep=\' \'));
+            mat\$rowNumber <- as.numeric(mat\$rowNumber);
+            mat\$colNumber <- as.numeric(mat\$colNumber);
+            mat\$rowNumberFactor <- as.factor(mat\$rowNumber);
+            mat\$colNumberFactor <- as.factor(mat\$colNumber);
+            mat\$id_factor <- as.factor(mat\$id_factor);
+            mat <- mat[order(mat\$rowNumber, mat\$colNumber),];
+            attr(geno_mat_3col,\'rowNames\') <- as.character(seq(1,'.$number_accessions.'));
+            attr(geno_mat_3col,\'colNames\') <- as.character(seq(1,'.$number_accessions.'));
+            attr(geno_mat_3col,\'INVERSE\') <- TRUE;
+            mix <- asreml(t'.$t.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~idv(units), data=mat);
+            if (!is.null(summary(mix,coef=TRUE)\$coef.random)) {
+            write.table(summary(mix,coef=TRUE)\$coef.random, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
+            write.table(data.frame(plot_id = mat\$plot_id, residuals = mix\$residuals, fitted = mix\$linear.predictors), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
             }
-            push @param_file_rows, (
-                "$grm_file_basename !NSD",
-                "$stats_tempfile_2_basename !CSV !SKIP 1 !MVINCLUDE !MAXIT 200 !EXTRA 5",
-                '',
-                "t$time ~ mu replicate !r grm1(id_factor) ar1(rowNumber).ar1v(colNumber)",
-            );
+            "';
+            print STDERR Dumper $statistics_cmd;
+            eval {
+                my $status = system($statistics_cmd);
+            };
 
-            open(my $Fp, ">", $parameter_asreml_tempfile) || die "Can't open file ".$parameter_asreml_tempfile;
-                print STDERR "WRITE ASREML PARAMFILE $parameter_asreml_tempfile\n";
-                foreach (@param_file_rows) {
-                    print $Fp "$_\n";
+            my $run_stats_fault = 0;
+            if ($@) {
+                print STDERR "R ERROR\n";
+                print STDERR Dumper $@;
+                $run_stats_fault = 1;
+            }
+            else {
+                my $current_gen_row_count = 0;
+                my $current_env_row_count = 0;
+                my @row_col_ordered_plots_names;
+
+                open(my $fh_residual, '<', $stats_out_tempfile_residual)
+                    or die "Could not open file '$stats_out_tempfile_residual' $!";
+                
+                    print STDERR "Opened $stats_out_tempfile_residual\n";
+                    my $header_residual = <$fh_residual>;
+                    my @header_cols_residual;
+                    if ($csv->parse($header_residual)) {
+                        @header_cols_residual = $csv->fields();
+                    }
+                    while (my $row = <$fh_residual>) {
+                        my @columns;
+                        if ($csv->parse($row)) {
+                            @columns = $csv->fields();
+                        }
+
+                        my $stock_id = $columns[0];
+                        my $residual = $columns[1];
+                        my $fitted = $columns[2];
+                        my $stock_name = $plot_id_map{$stock_id};
+                        push @row_col_ordered_plots_names, $stock_name;
+                        if (defined $residual && $residual ne '') {
+                            $result_residual_data_altered_env_2->{$stock_name}->{$t} = [$residual, $timestamp, $user_name, '', ''];
+                            $residual_sum_altered_env_2 += abs($residual);
+                            $residual_sum_square_altered_env_2 = $residual_sum_square_altered_env_2 + $residual*$residual;}
+                        if (defined $fitted && $fitted ne '') {
+                            $result_fitted_data_altered_env_2->{$stock_name}->{$t} = [$fitted, $timestamp, $user_name, '', ''];
+                        }
+                        $model_sum_square_residual_altered_env_2 = $model_sum_square_residual_altered_env_2 + $residual*$residual;
+                    }
+                close($fh_residual);
+
+                open(my $fh, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
+                    print STDERR "Opened $stats_out_tempfile\n";
+                    my $header = <$fh>;
+
+                    my $solution_file_counter = 0;
+                    while (defined(my $row = <$fh>)) {
+                        # print STDERR $row;
+                        my @columns;
+                        if ($csv->parse($row)) {
+                            @columns = $csv->fields();
+                        }
+                        my $level = $columns[0];
+                        my $value = $columns[1];
+                        my $std = $columns[2];
+                        my $z_ratio = $columns[3];
+                        if (defined $value && $value ne '') {
+                            if ($solution_file_counter < $number_accessions) {
+                                my $stock_name = $accession_id_factor_map_reverse{$solution_file_counter+1};
+                                $result_blup_data_altered_env_2->{$stock_name}->{$t} = [$value, $timestamp, $user_name, '', ''];
+
+                                if ($value < $genetic_effect_min_altered_env_2) {
+                                    $genetic_effect_min_altered_env_2 = $value;
+                                }
+                                elsif ($value >= $genetic_effect_max_altered_env_2) {
+                                    $genetic_effect_max_altered_env_2 = $value;
+                                }
+
+                                $genetic_effect_sum_altered_env_2 += abs($value);
+                                $genetic_effect_sum_square_altered_env_2 = $genetic_effect_sum_square_altered_env_2 + $value*$value;
+
+                                $current_gen_row_count++;
+                            }
+                            else {
+                                my $plot_name = $row_col_ordered_plots_names[$current_env_row_count-$number_accessions];
+                                $result_blup_spatial_data_altered_env_2->{$plot_name}->{$t} = [$value, $timestamp, $user_name, '', ''];
+
+                                if ($value < $env_effect_min_altered_env_2) {
+                                    $env_effect_min_altered_env_2 = $value;
+                                }
+                                elsif ($value >= $env_effect_max_altered_env_2) {
+                                    $env_effect_max_altered_env_2 = $value;
+                                }
+
+                                $env_effect_sum_altered_env_2 += abs($value);
+                                $env_effect_sum_square_altered_env_2 = $env_effect_sum_square_altered_env_2 + $value*$value;
+
+                                $current_env_row_count++;
+                            }
+                        }
+                        $solution_file_counter++;
+                    }
+                close($fh);
+
+                if ($current_env_row_count == 0 || $current_gen_row_count == 0) {
+                    $run_stats_fault = 1;
                 }
-            close($Fp);
 
-            my $parameter_asreml_tempfile_basename = basename($parameter_asreml_tempfile);
-            $stats_out_tempfile .= '.log';
-            $cmd_asreml = 'cd '.$tmp_stats_dir.'; asreml '.$parameter_asreml_tempfile_basename.' > '.$stats_out_tempfile;
-            print STDERR Dumper $cmd_asreml;
-            my $status = system($cmd_asreml);
+                if ($run_stats_fault == 1) {
+                    $c->stash->{rest} = {error=>'Error in R! Try a larger tolerance'};
+                    $c->detach();
+                    print STDERR "ERROR IN R CMD\n";
+                }
+            }
         }
-
     }
-
+    print STDERR "ALTERED w/SIM_ENV 1dn $statistics_select GENETIC EFFECT SUM $genetic_effect_sum_altered_env_2\n";
+    print STDERR "ALTERED w/SIM_ENV 1dn $statistics_select ENV EFFECT SUM $env_effect_sum_altered_env_2\n";
     print STDERR Dumper [$genetic_effect_min_altered_env_2, $genetic_effect_max_altered_env_2, $env_effect_min_altered_env_2, $env_effect_max_altered_env_2];
 
     $env_simulation = "random_2d_normal_gradient";
@@ -11040,9 +11673,6 @@ sub _perform_drone_imagery_analytics {
             $c->detach();
             print STDERR "ERROR IN R CMD\n";
         }
-
-        print STDERR "ALTERED w/SIM_ENV $statistics_select GENETIC EFFECT SUM $genetic_effect_sum_altered_env_3\n";
-        print STDERR "ALTERED w/SIM_ENV $statistics_select ENV EFFECT SUM $env_effect_sum_altered_env_3\n";
     }
     elsif ($statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups') {
         my @encoded_traits = values %trait_name_encoder;
@@ -11584,53 +12214,142 @@ sub _perform_drone_imagery_analytics {
                 $env_effect_sum_square_altered_env_3 = $env_effect_sum_square_altered_env_3 + $value*$value;
             }
         }
-
-        print STDERR "ALTERED w/SIM_ENV $statistics_select GENETIC EFFECT SUM $genetic_effect_sum_altered_env_3\n";
-        print STDERR "ALTERED w/SIM_ENV $statistics_select ENV EFFECT SUM $env_effect_sum_altered_env_3\n";
     }
     elsif ($statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups') {
-        my $stats_tempfile_2_basename = basename($stats_tempfile_2);
-        my $grm_file_basename = basename($grm_rename_tempfile);
-        #my @phenotype_header = ("id", "plot_id", "replicate", "rowNumber", "colNumber"", "id_factor", "plot_id_factor", "@times");
+        foreach my $t (@sorted_trait_names) {
 
-        foreach my $time (@sorted_trait_names) {
-            my @param_file_rows = (
-                '!NOGRAPHICS !DEBUG !QUIET',
-                'Single Trait analysis',
-                ' id !I',
-                ' plot_id !I',
-                ' replicate !I',
-                ' rowNumber !I',
-                ' colNumber !I',
-                ' id_factor !I',
-                ' plot_id_factor !I'
-            );
-            foreach my $t (@sorted_trait_names) {
-                push @param_file_rows, " t$t";
+            $statistics_cmd = 'R -e "library(asreml); library(data.table); library(reshape2);
+            mat <- data.frame(fread(\''.$stats_tempfile_2.'\', header=TRUE, sep=\',\'));
+            geno_mat_3col <- data.frame(fread(\''.$grm_rename_tempfile.'\', header=FALSE, sep=\' \'));
+            mat\$rowNumber <- as.numeric(mat\$rowNumber);
+            mat\$colNumber <- as.numeric(mat\$colNumber);
+            mat\$rowNumberFactor <- as.factor(mat\$rowNumber);
+            mat\$colNumberFactor <- as.factor(mat\$colNumber);
+            mat\$id_factor <- as.factor(mat\$id_factor);
+            mat <- mat[order(mat\$rowNumber, mat\$colNumber),];
+            attr(geno_mat_3col,\'rowNames\') <- as.character(seq(1,'.$number_accessions.'));
+            attr(geno_mat_3col,\'colNames\') <- as.character(seq(1,'.$number_accessions.'));
+            attr(geno_mat_3col,\'INVERSE\') <- TRUE;
+            mix <- asreml(t'.$t.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~idv(units), data=mat);
+            if (!is.null(summary(mix,coef=TRUE)\$coef.random)) {
+            write.table(summary(mix,coef=TRUE)\$coef.random, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
+            write.table(data.frame(plot_id = mat\$plot_id, residuals = mix\$residuals, fitted = mix\$linear.predictors), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
             }
-            push @param_file_rows, (
-                "$grm_file_basename !NSD",
-                "$stats_tempfile_2_basename !CSV !SKIP 1 !MVINCLUDE !MAXIT 200 !EXTRA 5",
-                '',
-                "t$time ~ mu replicate !r grm1(id_factor) ar1(rowNumber).ar1v(colNumber)",
-            );
+            "';
+            print STDERR Dumper $statistics_cmd;
+            eval {
+                my $status = system($statistics_cmd);
+            };
 
-            open(my $Fp, ">", $parameter_asreml_tempfile) || die "Can't open file ".$parameter_asreml_tempfile;
-                print STDERR "WRITE ASREML PARAMFILE $parameter_asreml_tempfile\n";
-                foreach (@param_file_rows) {
-                    print $Fp "$_\n";
+            my $run_stats_fault = 0;
+            if ($@) {
+                print STDERR "R ERROR\n";
+                print STDERR Dumper $@;
+                $run_stats_fault = 1;
+            }
+            else {
+                my $current_gen_row_count = 0;
+                my $current_env_row_count = 0;
+                my @row_col_ordered_plots_names;
+
+                open(my $fh_residual, '<', $stats_out_tempfile_residual)
+                    or die "Could not open file '$stats_out_tempfile_residual' $!";
+                
+                    print STDERR "Opened $stats_out_tempfile_residual\n";
+                    my $header_residual = <$fh_residual>;
+                    my @header_cols_residual;
+                    if ($csv->parse($header_residual)) {
+                        @header_cols_residual = $csv->fields();
+                    }
+                    while (my $row = <$fh_residual>) {
+                        my @columns;
+                        if ($csv->parse($row)) {
+                            @columns = $csv->fields();
+                        }
+
+                        my $stock_id = $columns[0];
+                        my $residual = $columns[1];
+                        my $fitted = $columns[2];
+                        my $stock_name = $plot_id_map{$stock_id};
+                        push @row_col_ordered_plots_names, $stock_name;
+                        if (defined $residual && $residual ne '') {
+                            $result_residual_data_altered_env_3->{$stock_name}->{$t} = [$residual, $timestamp, $user_name, '', ''];
+                            $residual_sum_altered_env_3 += abs($residual);
+                            $residual_sum_square_altered_env_3 = $residual_sum_square_altered_env_3 + $residual*$residual;}
+                        if (defined $fitted && $fitted ne '') {
+                            $result_fitted_data_altered_env_3->{$stock_name}->{$t} = [$fitted, $timestamp, $user_name, '', ''];
+                        }
+                        $model_sum_square_residual_altered_env_3 = $model_sum_square_residual_altered_env_3 + $residual*$residual;
+                    }
+                close($fh_residual);
+
+                open(my $fh, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
+                    print STDERR "Opened $stats_out_tempfile\n";
+                    my $header = <$fh>;
+
+                    my $solution_file_counter = 0;
+                    while (defined(my $row = <$fh>)) {
+                        # print STDERR $row;
+                        my @columns;
+                        if ($csv->parse($row)) {
+                            @columns = $csv->fields();
+                        }
+                        my $level = $columns[0];
+                        my $value = $columns[1];
+                        my $std = $columns[2];
+                        my $z_ratio = $columns[3];
+                        if (defined $value && $value ne '') {
+                            if ($solution_file_counter < $number_accessions) {
+                                my $stock_name = $accession_id_factor_map_reverse{$solution_file_counter+1};
+                                $result_blup_data_altered_env_3->{$stock_name}->{$t} = [$value, $timestamp, $user_name, '', ''];
+
+                                if ($value < $genetic_effect_min_altered_env_3) {
+                                    $genetic_effect_min_altered_env_3 = $value;
+                                }
+                                elsif ($value >= $genetic_effect_max_altered_env_3) {
+                                    $genetic_effect_max_altered_env_3 = $value;
+                                }
+
+                                $genetic_effect_sum_altered_env_3 += abs($value);
+                                $genetic_effect_sum_square_altered_env_3 = $genetic_effect_sum_square_altered_env_3 + $value*$value;
+
+                                $current_gen_row_count++;
+                            }
+                            else {
+                                my $plot_name = $row_col_ordered_plots_names[$current_env_row_count-$number_accessions];
+                                $result_blup_spatial_data_altered_env_3->{$plot_name}->{$t} = [$value, $timestamp, $user_name, '', ''];
+
+                                if ($value < $env_effect_min_altered_env_3) {
+                                    $env_effect_min_altered_env_3 = $value;
+                                }
+                                elsif ($value >= $env_effect_max_altered_env_3) {
+                                    $env_effect_max_altered_env_3 = $value;
+                                }
+
+                                $env_effect_sum_altered_env_3 += abs($value);
+                                $env_effect_sum_square_altered_env_3 = $env_effect_sum_square_altered_env_3 + $value*$value;
+
+                                $current_env_row_count++;
+                            }
+                        }
+                        $solution_file_counter++;
+                    }
+                close($fh);
+
+                if ($current_env_row_count == 0 || $current_gen_row_count == 0) {
+                    $run_stats_fault = 1;
                 }
-            close($Fp);
 
-            my $parameter_asreml_tempfile_basename = basename($parameter_asreml_tempfile);
-            $stats_out_tempfile .= '.log';
-            $cmd_asreml = 'cd '.$tmp_stats_dir.'; asreml '.$parameter_asreml_tempfile_basename.' > '.$stats_out_tempfile;
-            print STDERR Dumper $cmd_asreml;
-            my $status = system($cmd_asreml);
+                if ($run_stats_fault == 1) {
+                    $c->stash->{rest} = {error=>'Error in R! Try a larger tolerance'};
+                    $c->detach();
+                    print STDERR "ERROR IN R CMD\n";
+                }
+            }
         }
-        
     }
-
+    print STDERR "ALTERED w/SIM_ENV 2dn $statistics_select GENETIC EFFECT SUM $genetic_effect_sum_altered_env_3\n";
+    print STDERR "ALTERED w/SIM_ENV 2dn $statistics_select ENV EFFECT SUM $env_effect_sum_altered_env_3\n";
     print STDERR Dumper [$genetic_effect_min_altered_env_3, $genetic_effect_max_altered_env_3, $env_effect_min_altered_env_3, $env_effect_max_altered_env_3];
 
     $env_simulation = "random";
@@ -12116,9 +12835,6 @@ sub _perform_drone_imagery_analytics {
             $c->detach();
             print STDERR "ERROR IN R CMD\n";
         }
-
-        print STDERR "ALTERED w/SIM_ENV $statistics_select GENETIC EFFECT SUM $genetic_effect_sum_altered_env_4\n";
-        print STDERR "ALTERED w/SIM_ENV $statistics_select ENV EFFECT SUM $env_effect_sum_altered_env_4\n";
     }
     elsif ($statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups') {
         my @encoded_traits = values %trait_name_encoder;
@@ -12660,53 +13376,142 @@ sub _perform_drone_imagery_analytics {
                 $env_effect_sum_square_altered_env_4 = $env_effect_sum_square_altered_env_4 + $value*$value;
             }
         }
-
-        print STDERR "ALTERED w/SIM_ENV $statistics_select GENETIC EFFECT SUM $genetic_effect_sum_altered_env_4\n";
-        print STDERR "ALTERED w/SIM_ENV $statistics_select ENV EFFECT SUM $env_effect_sum_altered_env_4\n";
     }
     elsif ($statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups') {
-        my $stats_tempfile_2_basename = basename($stats_tempfile_2);
-        my $grm_file_basename = basename($grm_rename_tempfile);
-        #my @phenotype_header = ("id", "plot_id", "replicate", "rowNumber", "colNumber"", "id_factor", "plot_id_factor", "@times");
+        foreach my $t (@sorted_trait_names) {
 
-        foreach my $time (@sorted_trait_names) {
-            my @param_file_rows = (
-                '!NOGRAPHICS !DEBUG !QUIET',
-                'Single Trait analysis',
-                ' id !I',
-                ' plot_id !I',
-                ' replicate !I',
-                ' rowNumber !I',
-                ' colNumber !I',
-                ' id_factor !I',
-                ' plot_id_factor !I'
-            );
-            foreach my $t (@sorted_trait_names) {
-                push @param_file_rows, " t$t";
+            $statistics_cmd = 'R -e "library(asreml); library(data.table); library(reshape2);
+            mat <- data.frame(fread(\''.$stats_tempfile_2.'\', header=TRUE, sep=\',\'));
+            geno_mat_3col <- data.frame(fread(\''.$grm_rename_tempfile.'\', header=FALSE, sep=\' \'));
+            mat\$rowNumber <- as.numeric(mat\$rowNumber);
+            mat\$colNumber <- as.numeric(mat\$colNumber);
+            mat\$rowNumberFactor <- as.factor(mat\$rowNumber);
+            mat\$colNumberFactor <- as.factor(mat\$colNumber);
+            mat\$id_factor <- as.factor(mat\$id_factor);
+            mat <- mat[order(mat\$rowNumber, mat\$colNumber),];
+            attr(geno_mat_3col,\'rowNames\') <- as.character(seq(1,'.$number_accessions.'));
+            attr(geno_mat_3col,\'colNames\') <- as.character(seq(1,'.$number_accessions.'));
+            attr(geno_mat_3col,\'INVERSE\') <- TRUE;
+            mix <- asreml(t'.$t.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~idv(units), data=mat);
+            if (!is.null(summary(mix,coef=TRUE)\$coef.random)) {
+            write.table(summary(mix,coef=TRUE)\$coef.random, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
+            write.table(data.frame(plot_id = mat\$plot_id, residuals = mix\$residuals, fitted = mix\$linear.predictors), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
             }
-            push @param_file_rows, (
-                "$grm_file_basename !NSD",
-                "$stats_tempfile_2_basename !CSV !SKIP 1 !MVINCLUDE !MAXIT 200 !EXTRA 5",
-                '',
-                "t$time ~ mu replicate !r grm1(id_factor) ar1(rowNumber).ar1v(colNumber)",
-            );
+            "';
+            print STDERR Dumper $statistics_cmd;
+            eval {
+                my $status = system($statistics_cmd);
+            };
 
-            open(my $Fp, ">", $parameter_asreml_tempfile) || die "Can't open file ".$parameter_asreml_tempfile;
-                print STDERR "WRITE ASREML PARAMFILE $parameter_asreml_tempfile\n";
-                foreach (@param_file_rows) {
-                    print $Fp "$_\n";
+            my $run_stats_fault = 0;
+            if ($@) {
+                print STDERR "R ERROR\n";
+                print STDERR Dumper $@;
+                $run_stats_fault = 1;
+            }
+            else {
+                my $current_gen_row_count = 0;
+                my $current_env_row_count = 0;
+                my @row_col_ordered_plots_names;
+
+                open(my $fh_residual, '<', $stats_out_tempfile_residual)
+                    or die "Could not open file '$stats_out_tempfile_residual' $!";
+                
+                    print STDERR "Opened $stats_out_tempfile_residual\n";
+                    my $header_residual = <$fh_residual>;
+                    my @header_cols_residual;
+                    if ($csv->parse($header_residual)) {
+                        @header_cols_residual = $csv->fields();
+                    }
+                    while (my $row = <$fh_residual>) {
+                        my @columns;
+                        if ($csv->parse($row)) {
+                            @columns = $csv->fields();
+                        }
+
+                        my $stock_id = $columns[0];
+                        my $residual = $columns[1];
+                        my $fitted = $columns[2];
+                        my $stock_name = $plot_id_map{$stock_id};
+                        push @row_col_ordered_plots_names, $stock_name;
+                        if (defined $residual && $residual ne '') {
+                            $result_residual_data_altered_env_4->{$stock_name}->{$t} = [$residual, $timestamp, $user_name, '', ''];
+                            $residual_sum_altered_env_4 += abs($residual);
+                            $residual_sum_square_altered_env_4 = $residual_sum_square_altered_env_4 + $residual*$residual;}
+                        if (defined $fitted && $fitted ne '') {
+                            $result_fitted_data_altered_env_4->{$stock_name}->{$t} = [$fitted, $timestamp, $user_name, '', ''];
+                        }
+                        $model_sum_square_residual_altered_env_4 = $model_sum_square_residual_altered_env_4 + $residual*$residual;
+                    }
+                close($fh_residual);
+
+                open(my $fh, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
+                    print STDERR "Opened $stats_out_tempfile\n";
+                    my $header = <$fh>;
+
+                    my $solution_file_counter = 0;
+                    while (defined(my $row = <$fh>)) {
+                        # print STDERR $row;
+                        my @columns;
+                        if ($csv->parse($row)) {
+                            @columns = $csv->fields();
+                        }
+                        my $level = $columns[0];
+                        my $value = $columns[1];
+                        my $std = $columns[2];
+                        my $z_ratio = $columns[3];
+                        if (defined $value && $value ne '') {
+                            if ($solution_file_counter < $number_accessions) {
+                                my $stock_name = $accession_id_factor_map_reverse{$solution_file_counter+1};
+                                $result_blup_data_altered_env_4->{$stock_name}->{$t} = [$value, $timestamp, $user_name, '', ''];
+
+                                if ($value < $genetic_effect_min_altered_env_4) {
+                                    $genetic_effect_min_altered_env_4 = $value;
+                                }
+                                elsif ($value >= $genetic_effect_max_altered_env_4) {
+                                    $genetic_effect_max_altered_env_4 = $value;
+                                }
+
+                                $genetic_effect_sum_altered_env_4 += abs($value);
+                                $genetic_effect_sum_square_altered_env_4 = $genetic_effect_sum_square_altered_env_4 + $value*$value;
+
+                                $current_gen_row_count++;
+                            }
+                            else {
+                                my $plot_name = $row_col_ordered_plots_names[$current_env_row_count-$number_accessions];
+                                $result_blup_spatial_data_altered_env_4->{$plot_name}->{$t} = [$value, $timestamp, $user_name, '', ''];
+
+                                if ($value < $env_effect_min_altered_env_4) {
+                                    $env_effect_min_altered_env_4 = $value;
+                                }
+                                elsif ($value >= $env_effect_max_altered_env_4) {
+                                    $env_effect_max_altered_env_4 = $value;
+                                }
+
+                                $env_effect_sum_altered_env_4 += abs($value);
+                                $env_effect_sum_square_altered_env_4 = $env_effect_sum_square_altered_env_4 + $value*$value;
+
+                                $current_env_row_count++;
+                            }
+                        }
+                        $solution_file_counter++;
+                    }
+                close($fh);
+
+                if ($current_env_row_count == 0 || $current_gen_row_count == 0) {
+                    $run_stats_fault = 1;
                 }
-            close($Fp);
 
-            my $parameter_asreml_tempfile_basename = basename($parameter_asreml_tempfile);
-            $stats_out_tempfile .= '.log';
-            $cmd_asreml = 'cd '.$tmp_stats_dir.'; asreml '.$parameter_asreml_tempfile_basename.' > '.$stats_out_tempfile;
-            print STDERR Dumper $cmd_asreml;
-            my $status = system($cmd_asreml);
+                if ($run_stats_fault == 1) {
+                    $c->stash->{rest} = {error=>'Error in R! Try a larger tolerance'};
+                    $c->detach();
+                    print STDERR "ERROR IN R CMD\n";
+                }
+            }
         }
-        
     }
-
+    print STDERR "ALTERED w/SIM_ENV random $statistics_select GENETIC EFFECT SUM $genetic_effect_sum_altered_env_4\n";
+    print STDERR "ALTERED w/SIM_ENV random $statistics_select ENV EFFECT SUM $env_effect_sum_altered_env_4\n";
     print STDERR Dumper [$genetic_effect_min_altered_env_4, $genetic_effect_max_altered_env_4, $env_effect_min_altered_env_4, $env_effect_max_altered_env_4];
 
     $env_simulation = "ar1xar1";
@@ -13195,9 +14000,6 @@ sub _perform_drone_imagery_analytics {
             $c->detach();
             print STDERR "ERROR IN R CMD\n";
         }
-
-        print STDERR "ALTERED w/SIM_ENV $statistics_select GENETIC EFFECT SUM $genetic_effect_sum_altered_env_5\n";
-        print STDERR "ALTERED w/SIM_ENV $statistics_select ENV EFFECT SUM $env_effect_sum_altered_env_5\n";
     }
     elsif ($statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups') {
         my @encoded_traits = values %trait_name_encoder;
@@ -13735,53 +14537,142 @@ sub _perform_drone_imagery_analytics {
                 $env_effect_sum_square_altered_env_5 = $env_effect_sum_square_altered_env_5 + $value*$value;
             }
         }
-    
-        print STDERR "ALTERED w/SIM_ENV $statistics_select GENETIC EFFECT SUM $genetic_effect_sum_altered_env_5\n";
-        print STDERR "ALTERED w/SIM_ENV $statistics_select ENV EFFECT SUM $env_effect_sum_altered_env_5\n";
     }
     elsif ($statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups') {
-        my $stats_tempfile_2_basename = basename($stats_tempfile_2);
-        my $grm_file_basename = basename($grm_rename_tempfile);
-        #my @phenotype_header = ("id", "plot_id", "replicate", "rowNumber", "colNumber"", "id_factor", "plot_id_factor", "@times");
+        foreach my $t (@sorted_trait_names) {
 
-        foreach my $time (@sorted_trait_names) {
-            my @param_file_rows = (
-                '!NOGRAPHICS !DEBUG !QUIET',
-                'Single Trait analysis',
-                ' id !I',
-                ' plot_id !I',
-                ' replicate !I',
-                ' rowNumber !I',
-                ' colNumber !I',
-                ' id_factor !I',
-                ' plot_id_factor !I'
-            );
-            foreach my $t (@sorted_trait_names) {
-                push @param_file_rows, " t$t";
+            $statistics_cmd = 'R -e "library(asreml); library(data.table); library(reshape2);
+            mat <- data.frame(fread(\''.$stats_tempfile_2.'\', header=TRUE, sep=\',\'));
+            geno_mat_3col <- data.frame(fread(\''.$grm_rename_tempfile.'\', header=FALSE, sep=\' \'));
+            mat\$rowNumber <- as.numeric(mat\$rowNumber);
+            mat\$colNumber <- as.numeric(mat\$colNumber);
+            mat\$rowNumberFactor <- as.factor(mat\$rowNumber);
+            mat\$colNumberFactor <- as.factor(mat\$colNumber);
+            mat\$id_factor <- as.factor(mat\$id_factor);
+            mat <- mat[order(mat\$rowNumber, mat\$colNumber),];
+            attr(geno_mat_3col,\'rowNames\') <- as.character(seq(1,'.$number_accessions.'));
+            attr(geno_mat_3col,\'colNames\') <- as.character(seq(1,'.$number_accessions.'));
+            attr(geno_mat_3col,\'INVERSE\') <- TRUE;
+            mix <- asreml(t'.$t.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~idv(units), data=mat);
+            if (!is.null(summary(mix,coef=TRUE)\$coef.random)) {
+            write.table(summary(mix,coef=TRUE)\$coef.random, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
+            write.table(data.frame(plot_id = mat\$plot_id, residuals = mix\$residuals, fitted = mix\$linear.predictors), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
             }
-            push @param_file_rows, (
-                "$grm_file_basename !NSD",
-                "$stats_tempfile_2_basename !CSV !SKIP 1 !MVINCLUDE !MAXIT 200 !EXTRA 5",
-                '',
-                "t$time ~ mu replicate !r grm1(id_factor) ar1(rowNumber).ar1v(colNumber)",
-            );
+            "';
+            print STDERR Dumper $statistics_cmd;
+            eval {
+                my $status = system($statistics_cmd);
+            };
 
-            open(my $Fp, ">", $parameter_asreml_tempfile) || die "Can't open file ".$parameter_asreml_tempfile;
-                print STDERR "WRITE ASREML PARAMFILE $parameter_asreml_tempfile\n";
-                foreach (@param_file_rows) {
-                    print $Fp "$_\n";
+            my $run_stats_fault = 0;
+            if ($@) {
+                print STDERR "R ERROR\n";
+                print STDERR Dumper $@;
+                $run_stats_fault = 1;
+            }
+            else {
+                my $current_gen_row_count = 0;
+                my $current_env_row_count = 0;
+                my @row_col_ordered_plots_names;
+
+                open(my $fh_residual, '<', $stats_out_tempfile_residual)
+                    or die "Could not open file '$stats_out_tempfile_residual' $!";
+                
+                    print STDERR "Opened $stats_out_tempfile_residual\n";
+                    my $header_residual = <$fh_residual>;
+                    my @header_cols_residual;
+                    if ($csv->parse($header_residual)) {
+                        @header_cols_residual = $csv->fields();
+                    }
+                    while (my $row = <$fh_residual>) {
+                        my @columns;
+                        if ($csv->parse($row)) {
+                            @columns = $csv->fields();
+                        }
+
+                        my $stock_id = $columns[0];
+                        my $residual = $columns[1];
+                        my $fitted = $columns[2];
+                        my $stock_name = $plot_id_map{$stock_id};
+                        push @row_col_ordered_plots_names, $stock_name;
+                        if (defined $residual && $residual ne '') {
+                            $result_residual_data_altered_env_5->{$stock_name}->{$t} = [$residual, $timestamp, $user_name, '', ''];
+                            $residual_sum_altered_env_5 += abs($residual);
+                            $residual_sum_square_altered_env_5 = $residual_sum_square_altered_env_5 + $residual*$residual;}
+                        if (defined $fitted && $fitted ne '') {
+                            $result_fitted_data_altered_env_5->{$stock_name}->{$t} = [$fitted, $timestamp, $user_name, '', ''];
+                        }
+                        $model_sum_square_residual_altered_env_5 = $model_sum_square_residual_altered_env_5 + $residual*$residual;
+                    }
+                close($fh_residual);
+
+                open(my $fh, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
+                    print STDERR "Opened $stats_out_tempfile\n";
+                    my $header = <$fh>;
+
+                    my $solution_file_counter = 0;
+                    while (defined(my $row = <$fh>)) {
+                        # print STDERR $row;
+                        my @columns;
+                        if ($csv->parse($row)) {
+                            @columns = $csv->fields();
+                        }
+                        my $level = $columns[0];
+                        my $value = $columns[1];
+                        my $std = $columns[2];
+                        my $z_ratio = $columns[3];
+                        if (defined $value && $value ne '') {
+                            if ($solution_file_counter < $number_accessions) {
+                                my $stock_name = $accession_id_factor_map_reverse{$solution_file_counter+1};
+                                $result_blup_data_altered_env_5->{$stock_name}->{$t} = [$value, $timestamp, $user_name, '', ''];
+
+                                if ($value < $genetic_effect_min_altered_env_5) {
+                                    $genetic_effect_min_altered_env_5 = $value;
+                                }
+                                elsif ($value >= $genetic_effect_max_altered_env_5) {
+                                    $genetic_effect_max_altered_env_5 = $value;
+                                }
+
+                                $genetic_effect_sum_altered_env_5 += abs($value);
+                                $genetic_effect_sum_square_altered_env_5 = $genetic_effect_sum_square_altered_env_5 + $value*$value;
+
+                                $current_gen_row_count++;
+                            }
+                            else {
+                                my $plot_name = $row_col_ordered_plots_names[$current_env_row_count-$number_accessions];
+                                $result_blup_spatial_data_altered_env_5->{$plot_name}->{$t} = [$value, $timestamp, $user_name, '', ''];
+
+                                if ($value < $env_effect_min_altered_env_5) {
+                                    $env_effect_min_altered_env_5 = $value;
+                                }
+                                elsif ($value >= $env_effect_max_altered_env_5) {
+                                    $env_effect_max_altered_env_5 = $value;
+                                }
+
+                                $env_effect_sum_altered_env_5 += abs($value);
+                                $env_effect_sum_square_altered_env_5 = $env_effect_sum_square_altered_env_5 + $value*$value;
+
+                                $current_env_row_count++;
+                            }
+                        }
+                        $solution_file_counter++;
+                    }
+                close($fh);
+
+                if ($current_env_row_count == 0 || $current_gen_row_count == 0) {
+                    $run_stats_fault = 1;
                 }
-            close($Fp);
 
-            my $parameter_asreml_tempfile_basename = basename($parameter_asreml_tempfile);
-            $stats_out_tempfile .= '.log';
-            $cmd_asreml = 'cd '.$tmp_stats_dir.'; asreml '.$parameter_asreml_tempfile_basename.' > '.$stats_out_tempfile;
-            print STDERR Dumper $cmd_asreml;
-            my $status = system($cmd_asreml);
+                if ($run_stats_fault == 1) {
+                    $c->stash->{rest} = {error=>'Error in R! Try a larger tolerance'};
+                    $c->detach();
+                    print STDERR "ERROR IN R CMD\n";
+                }
+            }
         }
-
     }
-
+    print STDERR "ALTERED w/SIM_ENV ar1xar1 $statistics_select GENETIC EFFECT SUM $genetic_effect_sum_altered_env_5\n";
+    print STDERR "ALTERED w/SIM_ENV ar1xar1 $statistics_select ENV EFFECT SUM $env_effect_sum_altered_env_5\n";
     print STDERR Dumper [$genetic_effect_min_altered_env_5, $genetic_effect_max_altered_env_5, $env_effect_min_altered_env_5, $env_effect_max_altered_env_5];
 
     return ($statistical_ontology_term, $analysis_model_training_data_file_type, $analysis_model_language, \@sorted_residual_trait_names, \%rr_unique_traits, \%rr_residual_unique_traits, $statistics_cmd, $cmd_f90, $number_traits, \%trait_to_time_map,
