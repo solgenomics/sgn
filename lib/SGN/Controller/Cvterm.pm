@@ -3,7 +3,7 @@ package SGN::Controller::Cvterm;
 
 use CXGN::Chado::Cvterm; #DEPRECATE this !! 
 use CXGN::Cvterm;
-
+use URI::FromHash 'uri';
 use Moose;
 
 BEGIN { extends 'Catalyst::Controller' };
@@ -33,7 +33,13 @@ sub view_cvterm : Chained('get_cvterm') PathPart('view') Args(0) {
     my ( $self, $c, $action) = @_;
     my $cvterm = $c->stash->{cvterm};
     my $cvterm_id = $cvterm ? $cvterm->cvterm_id : undef ;
-   
+
+    if (!$c->user()) {
+        # redirect to login page
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
     my $bcs_cvterm = $cvterm->cvterm;
        
     my $logged_user = $c->user;

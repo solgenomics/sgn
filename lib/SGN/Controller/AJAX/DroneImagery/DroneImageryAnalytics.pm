@@ -13564,8 +13564,8 @@ sub _perform_drone_imagery_analytics {
         open(my $pe_rel_res, '<', $permanent_environment_structure_env_tempfile2) or die "Could not open file '$permanent_environment_structure_env_tempfile2' $!";
             print STDERR "Opened PERMANENT ENV $env_simulation VAL FILE $permanent_environment_structure_env_tempfile2\n";
 
-            my $current_row_num = 1;
-            my $current_col_num = 1;
+            my $current_row_num = $min_row;
+            my $current_col_num = $min_col;
             while (my $sim_val = <$pe_rel_res>) {
                 chomp $sim_val;
 
