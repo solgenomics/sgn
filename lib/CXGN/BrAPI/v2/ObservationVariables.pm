@@ -286,7 +286,7 @@ sub store {
 
     my $count = scalar @variable_ids;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success( @result, $pagination, undef, $self->status(), $count . " Variables were saved.");
+    return CXGN::BrAPI::JSONResponse->return_success( \@result, $pagination, undef, $self->status(), $count . " Variables were saved.");
 }
 
 sub update {
