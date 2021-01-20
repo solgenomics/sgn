@@ -14,7 +14,7 @@ see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
 
-This patch updates the materialized views to have analysis results
+This patch updates the materialized views to allow genotypes from mixed stock types
 
 =head1 AUTHOR
 
@@ -37,7 +37,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch updates the materialized views to have analysis results
+This patch updates the materialized views to allow genotypes from mixed stock types
 
 
 sub patch {

@@ -694,7 +694,6 @@ sub validate {
     }
 
     my $previous_genotypes_exist;
-    $schema->storage->debug(1);
     my $previous_genotypes_rs = $schema->resultset("Stock::Stock")->search($previous_genotypes_search_params, {
         join => {'nd_experiment_stocks' => {'nd_experiment' => [ {'nd_experiment_genotypes' => 'genotype'}, {'nd_experiment_protocols' => 'nd_protocol'}, {'nd_experiment_projects' => 'project'} ] } },
         '+select' => ['nd_protocol.nd_protocol_id', 'nd_protocol.name', 'project.project_id', 'project.name'],
