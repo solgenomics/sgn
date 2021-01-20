@@ -700,7 +700,7 @@ sub validate {
 
     my $previous_genotypes_exist;
     my $genotype_property_type_id;
-    if ($genotype_data_type eq 'ssr') {
+    if ($genotyping_data_type eq 'ssr') {
         $genotype_property_type_id = $pcr_marker_genotypeprop_cvterm_id;
     } else {
         $genotype_property_type_id = $snp_genotype_id;

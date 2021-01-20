@@ -130,13 +130,15 @@ sub BUILD {
     my $schema = $self->bcs_schema;
     my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
     my $protocol_vcf_details_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
+    my $pcr_marker_protocolprop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pcr_marker_details', 'protocol_property')->cvterm_id();
+    my $pcr_marker_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pcr_marker_protocol', 'protocol_type')->cvterm_id();
 
     my $q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocolprop.value, nd_protocol.create_date, nd_protocol.description
         FROM nd_protocol
-        LEFT JOIN nd_protocolprop ON(nd_protocol.nd_protocol_id = nd_protocolprop.nd_protocol_id AND nd_protocolprop.type_id=$protocol_vcf_details_cvterm_id)
-        WHERE nd_protocol.type_id=$geno_cvterm_id AND nd_protocol.nd_protocol_id=?;";
+        LEFT JOIN nd_protocolprop ON(nd_protocol.nd_protocol_id = nd_protocolprop.nd_protocol_id AND nd_protocolprop.type_id IN (?,?))
+        WHERE nd_protocol.type_id IN (?,?) AND nd_protocol.nd_protocol_id=?;";
     my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute($self->nd_protocol_id);
+    $h->execute($protocol_vcf_details_cvterm_id, $pcr_marker_protocolprop_cvterm_id, $geno_cvterm_id, $pcr_marker_protocol_cvterm_id, $self->nd_protocol_id);
     my ($nd_protocol_id, $nd_protocol_name, $value, $create_date, $description) = $h->fetchrow_array();
 
     my $map_details = $value ? decode_json $value : {};
@@ -147,8 +149,12 @@ sub BUILD {
     my $sample_observation_unit_type_name = $map_details->{sample_observation_unit_type_name} || 'Not set. Please reload these genotypes using new genotype format!';
     $self->marker_names($marker_names);
     $self->protocol_name($nd_protocol_name);
-    $self->header_information_lines($header_information_lines);
-    $self->reference_genome_name($reference_genome_name);
+    if ($header_information_lines) {
+        $self->header_information_lines($header_information_lines);
+    }
+    if ($reference_genome_name) {
+        $self->reference_genome_name($reference_genome_name);
+    }
     $self->species_name($species_name);
     $self->sample_observation_unit_type_name($sample_observation_unit_type_name);
     if ($create_date) {
