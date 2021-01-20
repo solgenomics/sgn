@@ -271,10 +271,14 @@ has 'ontology_id' => (
 );
 
 has 'synonyms' => (
-	isa => 'Maybe[Any]',
+	isa => 'Maybe[ArrayRef[Str]]',
 	is  => 'rw',
 	lazy => 1,
-	builder => '_fetch_synonyms'
+	default => sub {
+		my $self = shift;
+		my @synonyms = $self -> _fetch_synonyms();
+		return [@synonyms];
+	}
 );
 
 has 'external_references' => (
@@ -533,6 +537,7 @@ sub update {
 			if ($_->isa('CXGN::BrAPI::Exceptions::Exception')){
 				$_->throw();
 			} else {
+				if (!defined($_->message)) { warn $_; }
 				CXGN::BrAPI::Exceptions::ServerException->throw({message => $_->{message} || 'Unknown error has occurred.'});
 			}
 		};
@@ -553,11 +558,13 @@ sub delete_existing_synonyms {
 
 sub _fetch_synonyms {
 	my $self = shift;
-	my $synonym_rs = $self->cvterm->cvtermsynonyms;
+	my @synonyms = ();
+	if (defined($self->cvterm)){
+		my $synonym_rs = $self->cvterm->cvtermsynonyms;
 
-	my @synonyms =() ;
-	while ( my $s = $synonym_rs->next ) {
-		push (@synonyms, $s->synonym)  ;
+		while ( my $s = $synonym_rs->next ) {
+			push @synonyms, $s->synonym;
+		}
 	}
 	return @synonyms;
 }

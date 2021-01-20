@@ -410,6 +410,7 @@ sub _construct_variable_response {
     if (defined($variable->method)) { $method_json = $variable->method->method_db();}
     my $scale_json;
     if (defined($variable->scale)) { $scale_json = $variable->scale->scale_db();}
+    my @synonyms = $variable->synonyms;
 
     return {
         additionalInfo => undef,
@@ -434,7 +435,7 @@ sub _construct_variable_response {
         scientist => undef,
         status => "Active", # creating so will always be active
         submissionTimestamp => undef,
-        synonyms => $variable->synonyms, # kind of cheating, not reading out
+        synonyms => @synonyms,
         trait => {
             alternativeAbbreviations => undef,
             attribute => undef,
@@ -448,7 +449,7 @@ sub _construct_variable_response {
                 version => undef,
             },
             status => "Active",
-            synonyms => $variable->synonyms,
+            synonyms => @synonyms,
             traitClass => undef,
             traitDescription => $variable->definition,
             traitDbId => $variable->cvterm_id,
