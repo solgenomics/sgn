@@ -13554,9 +13554,9 @@ sub _perform_drone_imagery_analytics {
             }
         }
         Rscr <- kronecker(Rc,Rr)*'.$var_e.';
-        Rscr_inverse <- solve(Rscr);
+        Rscr <- round(Rscr, 8);
         Resscr <- mvrnorm(1,rep(0,length(Rscr[1,])),Rscr);
-        write.table(Rscr_inverse, file=\''.$permanent_environment_structure_env_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');
+        write.table(Rscr, file=\''.$permanent_environment_structure_env_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');
         write.table(Resscr, file=\''.$permanent_environment_structure_env_tempfile2.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
         print STDERR Dumper $pe_rel_cmd;
         my $status_pe_rel = system($pe_rel_cmd);
@@ -14269,7 +14269,7 @@ sub _perform_drone_imagery_analytics {
         }
         elsif ($permanent_environment_structure eq 'env_corr_structure') {
             push @param_file_rows, (
-                'user_file',
+                'user_file_inv',
                 'FILE',
                 $permanent_environment_structure_env_file_basename
             );
