@@ -124,10 +124,12 @@ $dataset_id => undef
           <div class="input-group">
             <select class="form-control input-sm wizard-dataset-select">
               <option selected value="" disabled>Load Dataset</option>
-              <optgroup class="wizard-dataset-group" label="--------------------"></optgroup>
+              <optgroup class="wizard-dataset-group" label="--------- Private --"></optgroup>
+              <optgroup class="wizard-dataset-pubgroup" label="---------- Public --"></optgroup>
             </select>
             <span class="input-group-btn">
               <span><button style="width:5em;margin-left:4px;" class="btn btn-sm btn-primary wizard-dataset-load">Load</button></span>
+              <span><button style="width:9em;margin-left:4px;" class="btn btn-sm btn-primary wizard-dataset-public">Make Public</button></span>
               <span><button style="width:5em;margin-left:4px;" class="btn btn-sm btn-danger wizard-dataset-delete">Delete</button></span>
             </span>
           </div>
