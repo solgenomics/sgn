@@ -155,9 +155,15 @@ $facilities
                                         <div class="form-group">
                                             <label class="col-sm-5 control-label">Choose Sample Unit: </label>
                                             <div class="col-sm-7">
-                                                <input type="radio" name="upload_genotype_vcf_observation_type" value="tissue_sample" checked>&nbsp;&nbsp;&nbsp;Exported Tissue Sample Name: The sample names in your VCF are tissue_sample_names that already exist in genotyping plates (e.g. 96 well plates) in the database. The sample names in your VCF file can be the tissue_sample_name triple pipe joined to the accession_name (e.g. tissue_sample_name|||accession_name) or just simply the tissue_sample_name corresponding to the genotyping plate well.
-                                                <br/><br/>
-                                                <input type="radio" name="upload_genotype_vcf_observation_type" value="accession">&nbsp;&nbsp;&nbsp;Accession: The sample names are of accession names
+                                                <div class="panel panel-default">
+                                                    <div class="panel-body">
+                                                        <input type="radio" name="upload_genotype_vcf_observation_type" value="tissue_sample" checked>&nbsp;&nbsp;&nbsp;Exported Tissue Sample Name: The sample names in your VCF are tissue_sample_names that already exist in genotyping plates (e.g. 96 well plates) or sampling trials in the database. The sample names in your VCF file can be the tissue_sample_name triple pipe joined to the accession_name (e.g. tissue_sample_name|||accession_name) or just simply the tissue_sample_name corresponding to the genotyping plate well or sampling trial sample. This is the <strong>recommended format</strong>.
+                                                        <br/><br/>
+                                                        <input type="radio" name="upload_genotype_vcf_observation_type" value="accession">&nbsp;&nbsp;&nbsp;Accession: The sample names are of accession names
+                                                        <br/><br/>
+                                                        <input type="radio" name="upload_genotype_vcf_observation_type" value="stocks">&nbsp;&nbsp;&nbsp;Mixed Stocks: The sample names are a mix of accession names or plot names or sample names or other stock names. This is <strong>not recommended</strong> because it will lead to messy sample metadata.
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
