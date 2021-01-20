@@ -81,6 +81,51 @@ sub get_datasets_by_user :Path('/ajax/dataset/by_user') Args(0) {
     $c->stash->{rest} = $datasets;
 }
 
+sub get_datasets_public :Path('/ajax/dataset/get_public') {
+    my $self = shift;
+    my $c = shift;
+
+    my $datasets = CXGN::Dataset->get_datasets_public(
+        $c->dbic_schema("CXGN::People::Schema")
+        );
+
+    $c->stash->{rest} = $datasets;
+}
+
+sub set_datasets_public :Path('/ajax/dataset/set_public') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = shift;
+
+    my $user = $c->user();
+    if (!$user) {
+        $c->stash->{rest} = { error => "No logged in user error." };
+        return;
+    }
+
+    my $logged_in_user = $c->user()->get_object()->get_sp_person_id();
+
+    my $dataset = CXGN::Dataset->new(
+        {
+	    schema => $c->dbic_schema("Bio::Chado::Schema"),
+            people_schema => $c->dbic_schema("CXGN::People::Schema"),
+            sp_dataset_id=> $dataset_id,
+        });
+    print STDERR "Dataset owner: ".$dataset->sp_person_id.", logged in: $logged_in_user\n";
+    if ($dataset->sp_person_id() != $logged_in_user) {
+        $c->stash->{rest} = { error => "Only the owner can change a dataset" };
+        return;
+    }
+    print STDERR "set public dataset_id $dataset_id\n";
+    my $error = $dataset->set_dataset_public();
+
+    if ($error) {
+        $c->stash->{rest} = { error => $error };
+    } else {
+        $c->stash->{rest} = { success => 1 };
+    }
+}
+
 sub get_dataset :Path('/ajax/dataset/get') Args(1) {
     my $self = shift;
     my $c = shift;
