@@ -1,0 +1,62 @@
+<%args>
+$protocol_id
+</%args>
+
+<div class="well well-sm">
+    <div class="form form-horizontal" id="pcr_markers_table_search_form">
+        <div class="form-group form-group-sm">
+            <label class="col-sm-3 control-label">Marker Name(s): </label>
+            <div class="col-sm-9" >
+                <input class="form-control" id="pcr_marker_names_search" type="text" placeholder="Marker name(s) (comma separated)"/>
+            </div>
+        </div>
+    </div>
+    <center>
+    <button class="btn btn-primary btn-sm" id="pcr_marker_table_search_submit">Search</button>
+    </center>
+</div>
+
+<table id="pcr_protocol_markers_table" class="table table-hover table-bordered">
+    <thead>
+        <tr>
+            <th>Marker Name</th>
+            <th>Forword Primer</th>
+            <th>Reverse Primer</th>
+            <th>Annealing Temperature</th>
+            <th>Product Sizes</th>
+        </tr>
+    </thead>
+    </tbody>
+</table>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    var genotyping_protocol_table = jQuery('#pcr_protocol_markers_table').DataTable({
+        'searching' : false,
+        'ordering'  : false,
+        'processing': true,
+        'serverSide': true,
+        'lengthMenu': [10,20,50,100,1000],
+        'ajax': { 'url': '/ajax/genotyping_protocol/pcr_markers_search',
+                  'data': function(d) {
+                     d.protocol_id = <% $protocol_id %>;
+                     d.marker_names = jQuery('#pcr_marker_names_search').val();
+                }
+        },
+    });
+
+    jQuery('#pcr_marker_table_search_submit').click( function() {
+        genotyping_protocol_table.search("available_seedlots_table").draw();
+    });
+
+    jQuery('#pcr_markers_table_search_form').keypress( function( e ) {
+        var code = e.keyCode || e.which;
+        if( code == 13 ) {
+            jQuery('#pcr_marker_table_search_submit').click();
+        }
+    });
+});
+
+</script>
