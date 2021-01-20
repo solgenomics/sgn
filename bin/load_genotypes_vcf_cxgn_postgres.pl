@@ -34,7 +34,7 @@ perl bin/load_genotypes_vcf_cxgn_postgres.pl -H localhost -D imagebreedv4 -U pos
  -d project description (required) e.g. "Diversity study"
  -n genotype facility name (required) e.g. "igd"
  -g population name (required) e.g. "NaCRRI training population"
- -b observation unit type name (required) e.g. "tissue_sample" or "accession"
+ -b observation unit type name (required) e.g. "tissue_sample" or "accession" or "stocks"
  -e breeding program name (required) e.g. "IITA"
  -m protocol name (required) e.g. "GBS ApeKI Cassava genome v6"
  -k protocol description (required)
