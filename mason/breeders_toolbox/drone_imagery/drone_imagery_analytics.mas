@@ -43,7 +43,7 @@
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Observation Variables Phenotyped in the Selected Field Trial: </label>
                             <div class="col-sm-9" >
-                                <div id="drone_imagery_analytics_trait_select_div"></div>
+                                <div id="drone_imagery_analytics_trait_select_div">Loading...</div>
                             </div>
                         </div>
                     </form>
@@ -53,7 +53,23 @@
                 </&>
                 <&| /util/workflow.mas:step, title=> "Analytics Reporting" &>
                     <& /page/page_title.mas, title=>"Save the analytics results" &>
-                    <form class="form-horizontal">
+
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Available Analytics Projects: </label>
+                            <div class="col-sm-9" >
+                                <div id="drone_imagery_analytics_analytics_project_select_div">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <center>
+                        <button class="btn btn-default" id="drone_imagery_analytics_analytics_project_new_button">Create a New Analytics Project</button>
+                    </center>
+                    <br/><br/>
+
+                    <div class="form-horizontal" id="drone_imagery_analytics_analytics_project_new_div" style="display:none">
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Analytics Name: </label>
                             <div class="col-sm-9" >
@@ -72,10 +88,10 @@
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Analytics Description: </label>
                             <div class="col-sm-9" >
-                                <input type="text" class="form-control" id="drone_imagery_analytics_select_analytics_name" />
+                                <input type="text" class="form-control" id="drone_imagery_analytics_select_analytics_desc" />
                             </div>
                         </div>
-                    </form>
+                    </div>
                     <center>
                     <button class="btn btn-primary" id="drone_imagery_analytics_analytics_step">Go to Next Step</button>
                     </center>
@@ -322,6 +338,8 @@ jQuery(document).ready(function() {
     var manage_drone_imagery_analytics_phenotype_training_file;
     var manage_drone_imagery_analytics_grm_training_file;
     var manage_drone_imagery_analytics_response = {};
+    var manage_drone_imagery_analytics_name = "";
+    var manage_drone_imagery_analytics_desc = "";
 
     jQuery('#drone_imagery_analytics_field_trial_select_step').click(function(){
         manage_drone_imagery_analytics_field_trial_id_array = undefined;
@@ -392,7 +410,16 @@ jQuery(document).ready(function() {
         return false;
     });
 
+    jQuery('#drone_imagery_analytics_analytics_project_new_button').click(function(){
+        jQuery('#drone_imagery_analytics_analytics_project_new_div').show();
+    });
+
     jQuery('#drone_imagery_analytics_analytics_step').click(function(){
+        manage_drone_imagery_analytics_name = jQuery('#drone_imagery_analytics_select_analytics_name').val();
+        if (manage_drone_imagery_analytics_name == '') {
+            alert('Please give an analytics name or select a previously saved analytics report.');
+            return false;
+        }
 
         Workflow.complete("#drone_imagery_analytics_analytics_step");
         Workflow.focus('#drone_imagery_analytics_workflow', 3);
