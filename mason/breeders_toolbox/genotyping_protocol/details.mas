@@ -8,6 +8,7 @@ $reference_genome_name
 $species_name
 $create_date
 $sample_observation_unit_type_name
+$marker_type
 </%args>
 
 <div class="row">
@@ -30,9 +31,16 @@ $sample_observation_unit_type_name
             </tr>
 
             <tr>
+                <td><b>Marker Type</b></td>
+                <td>
+                    <% $marker_type %>
+                </td>
+            </tr>
+
+            <tr>
                 <td><b>Number of Markers</b></td>
                 <td>
-%                   print scalar(@$marker_names);                        
+%                   print scalar(@$marker_names);
                 </td>
             </tr>
 

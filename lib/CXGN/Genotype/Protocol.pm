@@ -103,6 +103,11 @@ has 'create_date' => (
     is => 'rw'
 );
 
+has 'marker_type' => (
+    isa => 'Str',
+    is => 'rw'
+);
+
 #Filtering KEYS
 
 has 'chromosome_list' => (
@@ -143,12 +148,22 @@ sub BUILD {
 
     my $map_details = $value ? decode_json $value : {};
     my $marker_names = $map_details->{marker_names} || [];
+    my $marker_type = $map_details->{marker_type};
+    if (!$marker_type) {
+        $marker_type = 'SNP';
+    }
     my $header_information_lines = $map_details->{header_information_lines} || [];
-    my $reference_genome_name = $map_details->{reference_genome_name} || 'Not set. Please reload these genotypes using new genotype format!';
+    my $reference_genome_name;
+    if ($marker_type eq 'SSR') {
+        $reference_genome_name = 'NA';
+    } else {
+        $reference_genome_name = $map_details->{reference_genome_name} || 'Not set. Please reload these genotypes using new genotype format!';
+    }
     my $species_name = $map_details->{species_name} || 'Not set. Please reload these genotypes using new genotype format!';
     my $sample_observation_unit_type_name = $map_details->{sample_observation_unit_type_name} || 'Not set. Please reload these genotypes using new genotype format!';
     $self->marker_names($marker_names);
     $self->protocol_name($nd_protocol_name);
+    $self->marker_type($marker_type);
     if ($header_information_lines) {
         $self->header_information_lines($header_information_lines);
     }

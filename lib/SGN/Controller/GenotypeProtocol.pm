@@ -26,12 +26,12 @@ sub protocol_page :Path("/breeders_toolbox/protocol") Args(1) {
     my $protocol_id = shift;
 
     if (!$c->user()) {
-	
-	my $url = '/' . $c->req->path;	
+
+	my $url = '/' . $c->req->path;
 	$c->res->redirect("/user/login?goto_url=$url");
-	
+
     } else {
-     
+
 	my $protocol = CXGN::Genotype::Protocol->new({
 	    bcs_schema => $self->schema,
 	    nd_protocol_id => $protocol_id
@@ -46,6 +46,7 @@ sub protocol_page :Path("/breeders_toolbox/protocol") Args(1) {
 	$c->stash->{species_name} = $protocol->species_name;
 	$c->stash->{create_date} = $protocol->create_date;
 	$c->stash->{sample_observation_unit_type_name} = $protocol->sample_observation_unit_type_name;
+    $c->stash->{marker_type} = $protocol->marker_type;
 	$c->stash->{template} = '/breeders_toolbox/genotyping_protocol/index.mas';
     }
 }
