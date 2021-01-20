@@ -51,62 +51,28 @@
                     <button class="btn btn-primary" id="drone_imagery_analytics_trait_select_step">Go to Next Step</button>
                     </center>
                 </&>
-                <&| /util/workflow.mas:step, title=> "Analytics" &>
-                    <& /page/page_title.mas, title=>"Select the analytics you are interested in" &>
-                    <br/><br/>
+                <&| /util/workflow.mas:step, title=> "Analytics Reporting" &>
+                    <& /page/page_title.mas, title=>"Save the analytics results" &>
                     <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Analytics Name: </label>
+                            <div class="col-sm-9" >
+                                <input type="text" class="form-control" id="drone_imagery_analytics_select_analytics_name" />
+                            </div>
+                        </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Analytics Type: </label>
                             <div class="col-sm-9" >
                                 <select class="form-control" id="drone_imagery_analytics_select_analytics_type">
-                                    <option value="">Select One</option>
                                     <option value="minimize_local_env_effect">Minimize Spatial or PE Effects</option>
                                     <!--option value="minimize_genetic_effect">Minimize Genetic Effects</option-->
                                 </select>
                             </div>
                         </div>
-                        <div class="form-group" id="drone_imagery_analytics_select_analytics_genetic_threshold_div" style="display:none">
-                            <label class="col-sm-3 control-label">Minimization Threshold: </label>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Analytics Description: </label>
                             <div class="col-sm-9" >
-                                <select class="form-control" id="drone_imagery_analytics_select_analytics_genetic_threshold">
-                                    <option value="0.001">0.001</option>
-                                    <option value="0.0001">0.0001</option>
-                                    <option value="0.00001">0.00001</option>
-                                    <option value="0.000001">0.000001</option>
-                                    <option value="0.0000001">0.0000001</option>
-                                    <option value="0.00000001">0.00000001</option>
-                                    <option value="0.000000001">0.000000001</option>
-                                    <option value="0.01">0.01</option>
-                                    <option value="0.1">0.1</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group" id="drone_imagery_analytics_select_analytics_env_threshold_div" style="display:none">
-                            <label class="col-sm-3 control-label">Minimization Threshold: </label>
-                            <div class="col-sm-9" >
-                                <select class="form-control" id="drone_imagery_analytics_select_analytics_env_threshold">
-                                    <option value="0.001">0.001</option>
-                                    <option value="0.0001">0.0001</option>
-                                    <option value="0.00001">0.00001</option>
-                                    <option value="0.000001">0.000001</option>
-                                    <option value="0.0000001">0.0000001</option>
-                                    <option value="0.00000001">0.00000001</option>
-                                    <option value="0.000000001">0.000000001</option>
-                                    <option value="0.01">0.01</option>
-                                    <option value="0.1">0.1</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group" id="drone_imagery_analytics_select_analytics_env_sim_div" style="display:none">
-                            <label class="col-sm-3 control-label">Simulate Spatial or PE Effect: </label>
-                            <div class="col-sm-9" >
-                                <select class="form-control" id="drone_imagery_analytics_select_analytics_env_sim">
-                                    <option value="all">All of Below</option>
-                                    <option value="linear_gradient" disabled>Linear Gradient</option>
-                                    <option value="random_1d_normal_gradient" disabled>Random 1D Normal Gradient</option>
-                                    <option value="random_2d_normal_gradient" disabled>Random 2D Normal Gradient</option>
-                                    <option value="random" disabled>Random</option>
-                                </select>
+                                <input type="text" class="form-control" id="drone_imagery_analytics_select_analytics_name" />
                             </div>
                         </div>
                     </form>
@@ -118,17 +84,23 @@
                     <& /page/page_title.mas, title=>"Select statistics to calculate" &>
 
                     <select class="form-control" id="drone_imagery_analytics_select_input">
-                        <option value="">Sommer Multi/Uni Spatial 2Dspl, REMLf90 RR Identiy/Env, ASREML Multi/Uni Spatial AR1xAR1</option>
+                        <option value="">Sommer Multi/Uni Spatial 2Dspl, REMLf90 RR Identiy/Env, ASREML Uni Spatial AR1xAR1</option>
                         <!--option value="lmer_germplasmname_replicate">LMER BLUPs y~replicate+1|Germplasm. Univariate genetic effects</option-->
 
                         <!--option value="sommer_grm_genetic_blups">Sommer GBLUPs Y~replicate+GRM. Multivariate genetic effects using GRM</option-->
-                        <!--option value="sommer_grm_spatial_genetic_blups">Sommer Spatial GBLUPs Y~replicate+GRM+spatial. Multivariate genetic + 2Dspl spatial effects</option-->
+
+                        <option value="sommer_grm_spatial_genetic_blups">Sommer Spatial GBLUPs Y~replicate+GRM+spatial. Multivariate genetic + 2Dspl spatial effects</option>
+                        <option value="sommer_grm_univariate_spatial_genetic_blups">Sommer Spatial GBLUPs Y~replicate+GRM+spatial. Univariate genetic + 2Dspl spatial effects</option>
 
                         <!--option value="blupf90_grm_random_regression_dap_blups">BLUPf90 GBLUPs Y~replicate+GRM+temporal random regression using days after planting. Multivariate genetic + permanent environment effects</option>
                         <option value="blupf90_grm_random_regression_gdd_blups">BLUPf90 GBLUPs Y~replicate+GRM+temporal random regression using growing degree days. Multivariate genetic + permanent environment effects</option-->
 
-                        <!--option value="airemlf90_grm_random_regression_dap_blups">AIREMLf90 GBLUPs Y~replicate+GRM+temporal random regression using days after planting. Multivariate genetic + permanent environment effects</option>
-                        <option value="airemlf90_grm_random_regression_gdd_blups">AIREMLf90 GBLUPs Y~replicate+GRM+temporal random regression using growing degree days. Multivariate genetic + permanent environment effects</option-->
+                        <option value="airemlf90_grm_random_regression_dap_blups">AIREMLf90 GBLUPs Y~replicate+GRM+temporal random regression using days after planting. Multivariate genetic + permanent environment effects</option>
+                        <option value="airemlf90_grm_random_regression_PEcorr_dap_blups">AIREMLf90 GBLUPs Y~replicate+GRM+temporal random regression using days after planting. Multivariate genetic + permanent environment effects with PE Correlation Structure</option>
+
+                        <option value="asreml_grm_univariate_spatial_genetic_blups">ASREML Spatial GBLUPs Y~replicate+GRM+spatial. Univariate genetic + AR1xAR1 spatial effects</option>
+
+                        <!--option value="airemlf90_grm_random_regression_gdd_blups">AIREMLf90 GBLUPs Y~replicate+GRM+temporal random regression using growing degree days. Multivariate genetic + permanent environment effects</option-->
 
                         <!--option value="sommer_grm_temporal_random_regression_dap_genetic_blups">Sommer Temporal Random Regression GBLUPs Y~replicate+GRM+LegendrePoly. Multivariate genetic + permanent environment effects using days after planting</option>
                         <option value="sommer_grm_temporal_random_regression_gdd_genetic_blups">Sommer Temporal Random Regression GBLUPs Y~replicate+GRM+LegendrePoly. Multivariate genetic + permanent environment effects using growing degree days</option>
@@ -144,8 +116,8 @@
                             <div class="col-sm-9" >
                                 <select class="form-control" id="drone_imagery_analytics_relationship_matrix_type_select_div">
                                     <option value="">Identity</option>
-                                    <option value="htp_phenotypes">High-throughput Phenotyping Data</option>
                                     <option value="genotypes">Genotyping Data</option>
+                                    <option value="htp_phenotypes">High-throughput Phenotyping Data</option>
                                 </select>
                             </div>
                         </div>
@@ -228,7 +200,7 @@
                         </div>
                     </div>
 
-                    <hr>
+                    <!--hr>
                     <div class="form-horizontal">
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Use Cumulative Area-Under-Curve Phenotype in Analysis: </label>
@@ -239,7 +211,7 @@
                                 </select>
                             </div>
                         </div>
-                    </div>
+                    </div-->
 
                     <hr>
                     <div class="form-horizontal">
@@ -260,10 +232,6 @@
                                 </select>
                             </div>
                         </div>
-                    </div>
-
-                    <hr>
-                    <div class="form-horizontal">
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Legendre Polynomial Order: </label>
                             <div class="col-sm-9" >
@@ -351,7 +319,6 @@ jQuery(document).ready(function() {
     var manage_drone_imagery_analytics_accession_names = [];
     var manage_drone_imagery_analytics_plot_names = [];
     var manage_drone_imagery_analytics_statistics_select = '';
-    var manage_drone_imagery_analytics_type_select = '';
     var manage_drone_imagery_analytics_phenotype_training_file;
     var manage_drone_imagery_analytics_grm_training_file;
     var manage_drone_imagery_analytics_response = {};
@@ -426,33 +393,9 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#drone_imagery_analytics_analytics_step').click(function(){
-        manage_drone_imagery_analytics_type_select = jQuery('#drone_imagery_analytics_select_analytics_type').val();
-        
-        if (manage_drone_imagery_analytics_type_select == '') {
-            alert('Please select an analytics minimization!');
-            return false;
-        }
 
         Workflow.complete("#drone_imagery_analytics_analytics_step");
         Workflow.focus('#drone_imagery_analytics_workflow', 3);
-    });
-
-    jQuery('#drone_imagery_analytics_select_analytics_type').change(function(){
-        if (jQuery(this).val() == 'minimize_local_env_effect') {
-            jQuery('#drone_imagery_analytics_select_analytics_env_threshold_div').hide();
-            jQuery('#drone_imagery_analytics_select_analytics_env_sim_div').show();
-            jQuery('#drone_imagery_analytics_select_analytics_genetic_threshold_div').hide();
-        }
-        else if (jQuery(this).val() == 'minimize_genetic_effect') {
-            jQuery('#drone_imagery_analytics_select_analytics_genetic_threshold_div').hide();
-            jQuery('#drone_imagery_analytics_select_analytics_env_threshold_div').hide();
-            jQuery('#drone_imagery_analytics_select_analytics_env_sim_div').hide();
-        }
-        else {
-            jQuery('#drone_imagery_analytics_select_analytics_env_threshold_div').hide();
-            jQuery('#drone_imagery_analytics_select_analytics_genetic_threshold_div').hide();
-            jQuery('#drone_imagery_analytics_select_analytics_env_sim_div').hide();
-        }
     });
 
     jQuery('#drone_imagery_analytics_select_input').change(function(){
@@ -460,15 +403,6 @@ jQuery(document).ready(function() {
         jQuery("#drone_image_analytics_genotyping_protocol_compute_from_parents_select").val('no').change();
 
         manage_drone_imagery_analytics_statistics_select = jQuery('#drone_imagery_analytics_select_input').val();
-
-        if (manage_drone_imagery_analytics_type_select == 'minimize_local_env_effect' && manage_drone_imagery_analytics_statistics_select == 'sommer_grm_genetic_blups') {
-            alert('Cannot minimize local environmental effects in a model that is only with genetic effects.');
-            return false;
-        }
-        if (manage_drone_imagery_analytics_type_select == 'minimize_local_env_effect' && (manage_drone_imagery_analytics_statistics_select == 'sommer_grm_genetic_only_random_regression_dap_genetic_blups' || manage_drone_imagery_analytics_statistics_select == 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups') ) {
-            alert('Cannot minimize local environmental effects in a model that is only with genetic effects.');
-            return false;
-        }
 
         if (manage_drone_imagery_analytics_statistics_select == 'lmer_germplasmname_replicate') {
             jQuery('#drone_imagery_analytics_genotyping_protocol_div').hide();
@@ -534,6 +468,13 @@ jQuery(document).ready(function() {
             jQuery('#drone_imagery_analytics_analysis_save_fitted').hide();
         }
 
+        jQuery('#drone_imagery_analytics_genotyping_protocol_div').hide();
+        jQuery('#drone_imagery_analytics_analysis_save_blups_genetic_pe_residual').hide();
+        jQuery('#drone_imagery_analytics_analysis_save_blups_genetic').hide();
+        jQuery('#drone_imagery_analytics_analysis_save_blups_spatial').hide();
+        jQuery('#drone_imagery_analytics_analysis_save_blups_pe').hide();
+        jQuery('#drone_imagery_analytics_analysis_save_residuals').hide();
+        jQuery('#drone_imagery_analytics_analysis_save_fitted').hide();
     });
 
     jQuery('#drone_imagery_analytics_relationship_matrix_type_select_div').change(function(){
@@ -623,9 +564,6 @@ jQuery(document).ready(function() {
                 'field_trial_id_list':JSON.stringify(manage_drone_imagery_analytics_field_trial_id_array),
                 'statistics_select':manage_drone_imagery_analytics_statistics_select,
                 'analytics_select':jQuery('#drone_imagery_analytics_select_analytics_type').val(),
-                //'genetic_minimization_threshold':jQuery('#drone_imagery_analytics_select_analytics_genetic_threshold').val(),
-                //'env_minimization_threshold':jQuery('#drone_imagery_analytics_select_analytics_env_threshold').val(),
-                'env_simulation':jQuery('#drone_imagery_analytics_select_analytics_env_sim').val(),
                 'relationship_matrix_type':jQuery('#drone_imagery_analytics_relationship_matrix_type_select_div').val(),
                 'protocol_id':jQuery('#drone_image_analytics_genotyping_protocol_select').val(),
                 'compute_from_parents':jQuery('#drone_image_analytics_genotyping_protocol_compute_from_parents_select').val(),

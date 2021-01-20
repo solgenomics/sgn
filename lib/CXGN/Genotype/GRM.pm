@@ -512,7 +512,11 @@ sub grm_cache_key {
     my $maf = $self->minor_allele_frequency();
     my $marker_filter = $self->marker_filter();
     my $individuals_filter = $self->individuals_filter();
-    my $key = md5_hex($accessions.$plots.$protocol.$genotypeprophash.$protocolprophash.$protocolpropmarkerhash.$self->get_grm_for_parental_accessions().$self->return_only_first_genotypeprop_for_stock()."_MAF$maf"."_mfilter$marker_filter"."_ifilter$individuals_filter"."_$datatype");
+    my $q_params = $accessions.$plots.$protocol.$genotypeprophash.$protocolprophash.$protocolpropmarkerhash.$self->get_grm_for_parental_accessions().$self->return_only_first_genotypeprop_for_stock()."_MAF$maf"."_mfilter$marker_filter"."_ifilter$individuals_filter"."_$datatype";
+    if ($self->return_inverse()) {
+        $q_params .= $self->return_inverse();
+    }
+    my $key = md5_hex($q_params);
     return $key;
 }
 
