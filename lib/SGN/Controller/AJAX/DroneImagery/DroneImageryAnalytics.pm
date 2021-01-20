@@ -13589,8 +13589,6 @@ sub _perform_drone_imagery_analytics {
         close($pe_rel_res);
     };
 
-    print STDERR Dumper \%sim_data_check_5;
-
     if ($permanent_environment_structure eq 'env_corr_structure') {
         my %rel_pe_result_hash;
         open(my $pe_rel_res, '<', $permanent_environment_structure_env_tempfile) or die "Could not open file '$permanent_environment_structure_env_tempfile' $!";
@@ -13752,7 +13750,6 @@ sub _perform_drone_imagery_analytics {
                     }
                     else {
                         my $val = $phenotype_data_altered{$p}->{$t} + 0;
-                        print STDERR $row_number." ".$col_number."\n";
                         my $sim_val = $sim_data_check_5{$row_number}->{$col_number};
                         $sim_val = (($sim_val - $env_sim_min_5)/($env_sim_max_5 - $env_sim_min_5))*$env_variance_percent;
                         $val += $sim_val;
@@ -13795,8 +13792,6 @@ sub _perform_drone_imagery_analytics {
                 print $F2 "$line\n";
             }
         close($F2);
-        
-        die;
     }
     elsif ($statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups') {
         foreach my $p (@unique_plot_names) {
