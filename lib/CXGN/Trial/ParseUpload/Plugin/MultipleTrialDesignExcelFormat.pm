@@ -351,11 +351,11 @@ sub _validate_with_plugin {
     else {
         $plot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
         if ($seen_plot_names{$plot_name}) {
-            push @error_messages, "Cell M$row_name: duplicate plot name <b>$plot_name</b> at cell A".$seen_plot_names{$plot_name}.".";
+            push @error_messages, "Cell M$row_name: duplicate plot name <b>$plot_name</b> seen before at cell M".$seen_plot_names{$plot_name}.".";
         }
-        $seen_plot_names{$row_name}=$plot_name;
+        $seen_plot_names{$plot_name}=$row_name;
     }
-
+    
     ## ACCESSSION NAME CHECK
     if (!$accession_name || $accession_name eq '') {
       push @error_messages, "Cell N$row_name: accession name missing";
@@ -529,8 +529,7 @@ sub _validate_with_plugin {
 
   ## PLOT NAMES OVERALL VALIDATION
   my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
-  my @plots = keys %seen_plot_names;
-  my @uniquenames = values %seen_plot_names;
+  my @uniquenames = keys %seen_plot_names;
   my $rs = $schema->resultset("Stock::Stock")->search({
       'type_id' => $plot_type_id,
       'is_obsolete' => { '!=' => 't' },
