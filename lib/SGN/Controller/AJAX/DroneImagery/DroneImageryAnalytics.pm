@@ -13575,7 +13575,7 @@ sub _perform_drone_imagery_analytics {
                     $current_col_num++;
                 }
                 else {
-                    $current_col_num = 1;
+                    $current_col_num = $min_col;
                     $current_row_num++;
                 }
 
@@ -13795,6 +13795,8 @@ sub _perform_drone_imagery_analytics {
                 print $F2 "$line\n";
             }
         close($F2);
+        
+        die;
     }
     elsif ($statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups') {
         foreach my $p (@unique_plot_names) {
