@@ -13528,25 +13528,27 @@ sub _perform_drone_imagery_analytics {
     my $var_e = $phenotype_variance_altered*$env_variance_percent;
 
     eval {
-        foreach my $r (1..$max_row) {
-            foreach my $c (1..$max_col) {
+        foreach my $r ($min_row..$max_row) {
+            foreach my $c ($min_col..$max_col) {
                 push @stock_row_col_id_ordered, $stock_row_col_id{$r}->{$c};
             }
         }
+        my $max_row_dim = $max_row - $min_row + 1;
+        my $max_col_dim = $max_col - $min_col + 1;
 
         my $pe_rel_cmd = 'R -e "library(data.table); library(MASS);
         pr <- '.$row_ro_env.';
         pc <- '.$col_ro_env.';
-        Rr <- matrix(0,'.$max_row.','.$max_row.');
-        for(i in c(1:'.$max_row.')){
-            for(j in c(i:'.$max_row.')){
+        Rr <- matrix(0,'.$max_row_dim.','.$max_row_dim.');
+        for(i in c(1:'.$max_row_dim.')){
+            for(j in c(i:'.$max_row_dim.')){
                 Rr[i,j]=pr**(j-i);
                 Rr[j,i]=Rr[i,j];
             }
         }
-        Rc <- matrix(0,'.$max_col.','.$max_col.');
-        for(i in c(1:'.$max_col.')){
-            for(j in c(i:'.$max_col.')){
+        Rc <- matrix(0,'.$max_col_dim.','.$max_col_dim.');
+        for(i in c(1:'.$max_col_dim.')){
+            for(j in c(i:'.$max_col_dim.')){
                 Rc[i,j]=pc**(j-i);
                 Rc[j,i]=Rc[i,j];
             }
@@ -13586,7 +13588,6 @@ sub _perform_drone_imagery_analytics {
             }
         close($pe_rel_res);
     };
-    die;
 
     if ($permanent_environment_structure eq 'env_corr_structure') {
         my %rel_pe_result_hash;
