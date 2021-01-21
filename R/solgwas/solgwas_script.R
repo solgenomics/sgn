@@ -211,3 +211,8 @@ which(gwasresults$PHENO>alpha_bonferroni)
 #which(gwasresults2$PHENO>alpha_bonferroni)
 #which(gwasresults3$PHENO>alpha_bonferroni)
 #which(gwasresults4$PHENO>alpha_bonferroni)
+
+##### Write data to a CSV file #####
+gwasresults[,3] <- as.numeric(as.character(gwasresults[,3]))
+gwasresults_prnt <- gwasresults[,3:4]
+write.csv(gwasresults_prnt, "/home/vagrant/cxgn/sgn/R/solgwas/solgwas.csv", row.names = FALSE, quote = FALSE)
