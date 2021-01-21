@@ -299,7 +299,7 @@ has 'observation_unit_uniquenames' => (
     required => 1
 );
 
-has 'observation_unit_type_name' => ( #Can be accession, plot, plant, tissue_sample
+has 'observation_unit_type_name' => ( #Can be accession, plot, plant, tissue_sample, or stocks
     isa => 'Str',
     is => 'rw',
     required => 1,
@@ -420,11 +420,6 @@ has 'synonym_type_id' => (
     );
 
 has 'accession_type_id' => (
-    isa => 'Int',
-    is => 'rw',
-    );
-
-has 'synonym_type_id' => (
     isa => 'Int',
     is => 'rw',
     );
@@ -581,19 +576,25 @@ sub validate {
         }
     }
 
+    my $synonym_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
+    $self->synonym_type_id($synonym_type_id);
+
     my $stock_type = $self->observation_unit_type_name;
-    my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type, 'stock_type')->cvterm_id();
-    $self->stock_type_id($stock_type_id);
+    my $stock_type_id;
     my @missing_stocks;
     my $validator = CXGN::List::Validate->new();
     if ($stock_type eq 'tissue_sample'){
         @missing_stocks = @{$validator->validate($schema,'tissue_samples',\@observation_unit_uniquenames_stripped)->{'missing'}};
+        $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type, 'stock_type')->cvterm_id();
+        $self->stock_type_id($stock_type_id);
+    } elsif ($stock_type eq 'stocks'){
+        @missing_stocks = @{$validator->validate($schema,'stocks',\@observation_unit_uniquenames_stripped)->{'missing'}};
     } elsif ($stock_type eq 'accession'){
         @missing_stocks = @{$validator->validate($schema,'accessions',\@observation_unit_uniquenames_stripped)->{'missing'}};
+        $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type, 'stock_type')->cvterm_id();
+        $self->stock_type_id($stock_type_id);
 
         my %all_names;
-        my $synonym_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
-        $self->synonym_type_id($synonym_type_id);
         my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
         $self->accession_type_id($accession_type_id);
         my $q = "SELECT stock.stock_id, stock.uniquename, stockprop.value, stockprop.type_id FROM stock LEFT JOIN stockprop USING(stock_id) WHERE stock.type_id=$accession_type_id AND stock.is_obsolete = 'F';";
@@ -612,7 +613,7 @@ sub validate {
             }
         }
     } else {
-        push @error_messages, "You can only upload genotype data for a tissue_sample OR accession (including synonyms)!"
+        push @error_messages, "You can only upload genotype data for a tissue_sample OR accession (including synonyms) OR stocks!"
     }
 
     my %unique_stocks;
@@ -683,14 +684,17 @@ sub validate {
         }
     }
 
-    my $previous_genotypes_exist;
-    my $previous_genotypes_rs = $schema->resultset("Stock::Stock")->search({
+    my $previous_genotypes_search_params = {
         'me.uniquename' => {-in => \@observation_unit_uniquenames_stripped},
-        'me.type_id' => $stock_type_id,
-        'me.organism_id' => $organism_id,
         'nd_experiment.type_id' => $geno_cvterm_id,
         'genotype.type_id' => $snp_genotype_id
-    }, {
+    };
+    if ($stock_type_id) {
+        $previous_genotypes_search_params->{'me.type_id'} = $stock_type_id;
+    }
+
+    my $previous_genotypes_exist;
+    my $previous_genotypes_rs = $schema->resultset("Stock::Stock")->search($previous_genotypes_search_params, {
         join => {'nd_experiment_stocks' => {'nd_experiment' => [ {'nd_experiment_genotypes' => 'genotype'}, {'nd_experiment_protocols' => 'nd_protocol'}, {'nd_experiment_projects' => 'project'} ] } },
         '+select' => ['nd_protocol.nd_protocol_id', 'nd_protocol.name', 'project.project_id', 'project.name'],
         '+as' => ['protocol_id', 'protocol_name', 'project_id', 'project_name'],
@@ -769,9 +773,6 @@ sub store_metadata {
     
     my $genotyping_facility_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_facility', 'project_property');
     $self->genotyping_facility_cvterm($genotyping_facility_cvterm);
-
-    my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type, 'stock_type')->cvterm_id();
-    $self->stock_type_id($stock_type_id);
 
     #when project_id is provided, a new project is not created
     my $project_id;
@@ -886,16 +887,18 @@ sub store_metadata {
     print STDERR "Generating stock synonym lookup table...\n";
     tie my (%stock_lookup), 'Hash::Case::Preserve';
     my %all_names;
-    my $q = "SELECT stock.stock_id, stock.uniquename, stockprop.value, stockprop.type_id FROM stock LEFT JOIN stockprop USING(stock_id) WHERE stock.type_id IN (".$self->accession_type_id().",".$self->tissue_sample_type_id().") AND stock.is_obsolete = 'F';";
+    my $stock_lookup_where = '';
+    if ($self->stock_type_id) {
+        $stock_lookup_where = 'stock.type_id IN ('.$self->accession_type_id().','.$self->tissue_sample_type_id().') AND';
+    }
+    my $q = "SELECT stock.stock_id, stock.uniquename, stockprop.value, stockprop.type_id FROM stock LEFT JOIN stockprop USING(stock_id) WHERE $stock_lookup_where stock.is_obsolete = 'F';";
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
 
     while (my ($stock_id, $uniquename, $synonym, $type_id) = $h->fetchrow_array()) {
         $stock_lookup{$uniquename} = { stock_id => $stock_id };
-        if ($type_id) {
-            if ($type_id == $self->synonym_type_id()) {
-                $stock_lookup{$synonym} = { stock_id => $stock_id };
-            }
+        if ($type_id && $type_id == $self->synonym_type_id()) {
+            $stock_lookup{$synonym} = { stock_id => $stock_id };
         }
     }
 
@@ -908,7 +911,7 @@ sub store_metadata {
         JOIN genotypeprop ON(genotypeprop.genotype_id=nd_experiment_genotype.genotype_id AND genotypeprop.type_id=".$self->snp_vcf_cvterm_id.")
         JOIN nd_experiment_protocol USING(nd_experiment_id)
         JOIN nd_experiment_project USING(nd_experiment_id)
-        WHERE stock.type_id IN (".$self->accession_type_id().",".$self->tissue_sample_type_id().") AND stock.is_obsolete = 'F' AND nd_protocol_id=$protocol_id AND project_id=$project_id;";
+        WHERE $stock_lookup_where stock.is_obsolete = 'F' AND nd_protocol_id=$protocol_id AND project_id=$project_id;";
     my $q_g_h = $schema->storage->dbh()->prepare($q_g);
     $q_g_h->execute();
     while (my ($stock_id, $uniquename, $synonym, $type_id, $genotype_id, $genotypeprop_id, $chromosome_counter) = $q_g_h->fetchrow_array()) {
