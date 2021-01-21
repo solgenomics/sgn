@@ -57,7 +57,6 @@ export function WizardDatasets(main_id,wizard){
         if ( confirm(`Dataset ${name} contains\: ${details}\nAre you sure you would like to delete it? Deletion cannot be undone.`)) {
             datasets.deleteDataset(val);
             load_datasets();
-	    load_datasets_pub();
         }
     }
   });
@@ -75,7 +74,7 @@ export function WizardDatasets(main_id,wizard){
 	    }
         });
         datasets.makePublicDataset(val);
-	load_datasets_pub();
+	load_datasets();
     }
   });
 
@@ -155,31 +154,6 @@ export function WizardDatasets(main_id,wizard){
     }
   })
 
-  var load_datasets_pub = ()=>(new Promise((resolve,reject)=>{
-    resolve(datasets.getPublicDatasets());
-  })).then(datasets_data=>{
-    if(datasets_data.error){
-      main.selectAll(".wizard-dataset-load, .wizard-dataset-delete, .wizard-dataset-create").attr("disabled",true);
-      main.select(".wizard-dataset-select")
-        .attr("disabled",true)
-        .select("option[selected]")
-        .text(datasets_data.error);
-      main.select(".wizard-dataset-name")
-        .attr("disabled",true)
-        .attr("placeholder","");
-    }
-    else {
-      var opt = main.select(".wizard-dataset-pubgroup")
-        .selectAll("option").data(datasets_data,d=>d[0]);
-      opt.exit().remove();
-      opt.enter().append("option")
-        .merge(opt)
-        .attr("value",d=>d[0])
-        .text(d=>d[1]);
-    }
-  })
-
   load_datasets();
-  load_datasets_pub();
 
 }
