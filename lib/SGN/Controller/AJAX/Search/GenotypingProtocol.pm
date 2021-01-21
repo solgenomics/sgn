@@ -125,4 +125,37 @@ sub genotyping_protocol_markers_search_GET : Args(0) {
     $c->stash->{rest} = { data => \@result, recordsTotal => $total_count, recordsFiltered => $total_count };
 }
 
+
+sub genotyping_protocol_pcr_markers : Path('/ajax/genotyping_protocol/pcr_markers') : ActionClass('REST') { }
+
+sub genotyping_protocol_pcr_markers_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $protocol_id = $c->req->param('protocol_id');
+
+    my $pcr_marker_details_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pcr_marker_details', 'protocol_property')->cvterm_id();
+
+    my $q = "SELECT nd_protocolprop.value FROM nd_protocolprop WHERE nd_protocolprop.type_id = ? AND nd_protocolprop.nd_protocol_id = ?";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($pcr_marker_details_cvterm_id, $protocol_id);
+    my @info = $h->fetchrow_array();
+    my $protocol_info_string = $info[0];
+
+    my $protocol_info_ref = decode_json $protocol_info_string;
+    my $marker_details_ref = $protocol_info_ref->{marker_details};
+    my %marker_details = %{$marker_details_ref};
+    my @results;
+    foreach my $marker_name (keys %marker_details) {
+        my $product_sizes = $marker_details{$marker_name}{'product_sizes'};
+        my $forward_primer = $marker_details{$marker_name}{'forward_primer'};
+        my $reverse_primer = $marker_details{$marker_name}{'reverse_primer'};
+        my $annealing_temperature = $marker_details{$marker_name}{'annealing_temperature'};
+        push @results, [$marker_name, $product_sizes, $forward_primer, $reverse_primer, $annealing_temperature];
+    }
+    print STDERR "MARKER INFO =".Dumper(\@results)."\n";
+    $c->stash->{rest} = {data => \@results};
+}
+
+
 1;
