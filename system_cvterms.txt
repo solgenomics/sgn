@@ -301,6 +301,7 @@ protocol_property	vcf_map_details_markers	Genotyping protocol marker info in an 
 protocol_property	vcf_map_details_markers_array	Genotyping protocol marker info in an array format	9/17/2019	nm529	00115
 protocol_property	analysis_model_properties	Properties of analysis model in json	6/8/2020	nm529	00125
 protocol_property	high_dimensional_phenotype_protocol_properties	Properties of high dimensional data protocol in json	11/16/2020	nm529	00132
+protocol_property	analytics_protocol_properties	Properties of an analytics protocol in json	1/21/2021	nm529	00136
 protocol_type	trained_keras_cnn_model	An nd_protocol for a saved trained keras cnn model	9/30/2019	nm529	00116
 protocol_type	trained_keras_mask_r_cnn_model	An nd_protocol for a saved trained keras mask r cnn model	5/27/2020	nm529	00125
 protocol_type	sommer_grm_spatial_genetic_blups	An nd_protocol for analysis using R Sommer for multivariate genetic and spatial blups using replicate, genetic relationship matrix, and row and column positions	6/11/2020	nm529	00125
@@ -315,6 +316,7 @@ protocol_type	blupf90_grm_random_regression_dap_blups	An nd_protocol for analysi
 protocol_type	high_dimensional_phenotype_nirs_protocol	An nd_protocol for storing high dimensional phenotype NIRS data	11/16/2020	nm529	00132
 protocol_type	high_dimensional_phenotype_transcriptomics_protocol	An nd_protocol for storing high dimensional phenotype transcriptomics data	11/16/2020	nm529	00132
 protocol_type	high_dimensional_phenotype_metabolomics_protocol	An nd_protocol for storing high dimensional phenotype metabolomics data	11/16/2020	nm529	00132
+protocol_type	drone_imagery_analytics_env_simulation_protocol	An nd_protocol for storing analytics results from drone imagery environmental simulation	1/21/2021	nm529	00136
 composable_cvtypes	trait_ontology		05/01/2017		00073
 composable_cvtypes	composed_trait_ontology		05/01/2017		00073
 composable_cvtypes	object_ontology		05/01/2017		00073

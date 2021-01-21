@@ -76,38 +76,83 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $statistics_select = $c->req->param('statistics_select');
-    my $analytics_select = $c->req->param('analytics_select') || 'minimize_local_env_effect';
+    my $analytics_protocol_id = $c->req->param('analytics_protocol_id');
+    my $analytics_protocol_name = $c->req->param('analytics_protocol_name');
+    my $analytics_protocol_desc = $c->req->param('analytics_protocol_desc');
 
     my $field_trial_id_list = $c->req->param('field_trial_id_list') ? decode_json $c->req->param('field_trial_id_list') : [];
     my $field_trial_id_list_string = join ',', @$field_trial_id_list;
-    
+
     if (scalar(@$field_trial_id_list) != 1) {
         $c->stash->{rest} = { error => "Please select one field trial!"};
         return;
     }
 
-    my $trait_id_list = $c->req->param('observation_variable_id_list') ? decode_json $c->req->param('observation_variable_id_list') : [];
-    my $compute_relationship_matrix_from_htp_phenotypes = $c->req->param('relationship_matrix_type') || 'genotypes';
-    my $compute_relationship_matrix_from_htp_phenotypes_type = $c->req->param('htp_pheno_rel_matrix_type');
-    my $compute_relationship_matrix_from_htp_phenotypes_time_points = $c->req->param('htp_pheno_rel_matrix_time_points');
-    my $compute_relationship_matrix_from_htp_phenotypes_blues_inversion = $c->req->param('htp_pheno_rel_matrix_blues_inversion');
-    my $compute_from_parents = $c->req->param('compute_from_parents') eq 'yes' ? 1 : 0;
-    my $include_pedgiree_info_if_compute_from_parents = $c->req->param('include_pedgiree_info_if_compute_from_parents') eq 'yes' ? 1 : 0;
-    my $use_parental_grms_if_compute_from_parents = $c->req->param('use_parental_grms_if_compute_from_parents') eq 'yes' ? 1 : 0;
-    my $use_area_under_curve = $c->req->param('use_area_under_curve') eq 'yes' ? 1 : 0;
-    my $protocol_id = $c->req->param('protocol_id');
-    my $tolparinv = $c->req->param('tolparinv');
-    my $legendre_order_number = $c->req->param('legendre_order_number');
-    my $permanent_environment_structure = $c->req->param('permanent_environment_structure');
-    my $permanent_environment_structure_phenotype_correlation_traits = decode_json $c->req->param('permanent_environment_structure_phenotype_correlation_traits');
+    my $protocol_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_imagery_analytics_env_simulation_protocol', 'protocol_type')->cvterm_id();
+    my $protocolprop_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analytics_protocol_properties', 'protocol_property')->cvterm_id();
+    my $protocol_properties;
+    if (!$analytics_protocol_id) {
+        my $q = "INSERT INTO nd_protocol (name, description, type_id) VALUES (?,?,?) RETURNING nd_protocol_id;";
+        my $h = $schema->storage->dbh()->prepare($q);
+        $h->execute($analytics_protocol_name, $analytics_protocol_desc, $protocol_type_cvterm_id);
+        ($analytics_protocol_id) = $h->fetchrow_array();
 
-    my $a_env = $c->req->param('a_env') || rand(1);
-    my $b_env = $c->req->param('b_env') || rand(1);
-    my $ro_env = $c->req->param('ro_env') || rand(1);
-    my $row_ro_env = $c->req->param('row_ro_env') || rand(1);
-    my $env_variance_percent = $c->req->param('env_variance_percent') || 0.2;
+        $protocol_properties = {
+            analytics_select => $c->req->param('analytics_select') || 'minimize_local_env_effect',
+            observation_variable_id_list => $c->req->param('observation_variable_id_list') ? decode_json $c->req->param('observation_variable_id_list') : [],
+            relationship_matrix_type => $c->req->param('relationship_matrix_type') || 'genotypes',
+            htp_pheno_rel_matrix_type => $c->req->param('htp_pheno_rel_matrix_type'),
+            htp_pheno_rel_matrix_time_points => $c->req->param('htp_pheno_rel_matrix_time_points'),
+            htp_pheno_rel_matrix_blues_inversion => $c->req->param('htp_pheno_rel_matrix_blues_inversion'),
+            genotype_compute_from_parents => $c->req->param('compute_from_parents') eq 'yes' ? 1 : 0,
+            include_pedgiree_info_if_compute_from_parents => $c->req->param('include_pedgiree_info_if_compute_from_parents') eq 'yes' ? 1 : 0,
+            use_parental_grms_if_compute_from_parents => $c->req->param('use_parental_grms_if_compute_from_parents') eq 'yes' ? 1 : 0,
+            use_area_under_curve => $c->req->param('use_area_under_curve') eq 'yes' ? 1 : 0,
+            genotyping_protocol_id => $c->req->param('protocol_id'),
+            tolparinv => $c->req->param('tolparinv'),
+            legendre_order_number => $c->req->param('legendre_order_number'),
+            permanent_environment_structure => $c->req->param('permanent_environment_structure'),
+            permanent_environment_structure_phenotype_correlation_traits => decode_json $c->req->param('permanent_environment_structure_phenotype_correlation_traits'),
+            a_env => $c->req->param('a_env') || rand(1),
+            b_env => $c->req->param('b_env') || rand(1),
+            ro_env => $c->req->param('ro_env') || rand(1),
+            row_ro_env => $c->req->param('row_ro_env') || rand(1),
+            env_variance_percent => $c->req->param('env_variance_percent') || 0.2,
+            number_iterations => $c->req->param('number_iterations') || 1
+        };
+        my $q2 = "INSERT INTO nd_protocolprop (nd_protocol_id, value, type_id) VALUES (?,?,?);";
+        my $h2 = $schema->storage->dbh()->prepare($q2);
+        $h2->execute($analytics_protocol_id, encode_json $protocol_properties, $protocolprop_type_cvterm_id);
+    }
+    else {
+        my $q = "SELECT value FROM nd_protocolprop WHERE nd_protocol_id=?;";
+        my $h = $schema->storage->dbh()->prepare($q);
+        $h->execute($analytics_protocol_id);
+        my ($value) = $h->fetchrow_array();
+        $protocol_properties = decode_json $value;
+    }
 
-    my $number_iterations = $c->req->param('number_iterations') || 1;
+    my $analytics_select = $protocol_properties->{analytics_select};
+    my $trait_id_list = $protocol_properties->{observation_variable_id_list};
+    my $compute_relationship_matrix_from_htp_phenotypes = $protocol_properties->{relationship_matrix_type};
+    my $compute_relationship_matrix_from_htp_phenotypes_type = $protocol_properties->{htp_pheno_rel_matrix_type};
+    my $compute_relationship_matrix_from_htp_phenotypes_time_points = $protocol_properties->{htp_pheno_rel_matrix_time_points};
+    my $compute_relationship_matrix_from_htp_phenotypes_blues_inversion = $protocol_properties->{htp_pheno_rel_matrix_blues_inversion};
+    my $compute_from_parents = $protocol_properties->{genotype_compute_from_parents};
+    my $include_pedgiree_info_if_compute_from_parents = $protocol_properties->{include_pedgiree_info_if_compute_from_parents};
+    my $use_parental_grms_if_compute_from_parents = $protocol_properties->{use_parental_grms_if_compute_from_parents};
+    my $use_area_under_curve = $protocol_properties->{use_area_under_curve};
+    my $protocol_id = $protocol_properties->{genotyping_protocol_id};
+    my $tolparinv = $protocol_properties->{tolparinv};
+    my $legendre_order_number = $protocol_properties->{legendre_order_number};
+    my $permanent_environment_structure = $protocol_properties->{permanent_environment_structure};
+    my $permanent_environment_structure_phenotype_correlation_traits = $protocol_properties->{permanent_environment_structure_phenotype_correlation_traits};
+    my $a_env = $protocol_properties->{a_env};
+    my $b_env = $protocol_properties->{b_env};
+    my $ro_env = $protocol_properties->{ro_env};
+    my $row_ro_env = $protocol_properties->{row_ro_env};
+    my $env_variance_percent = $protocol_properties->{env_variance_percent};
+    my $number_iterations = $protocol_properties->{number_iterations};
 
     my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
     my $tmp_stats_dir = $shared_cluster_dir_config."/tmp_drone_statistics";
