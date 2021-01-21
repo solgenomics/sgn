@@ -327,14 +327,30 @@ sub get_datasets_by_user {
     my $class = shift;
     my $people_schema = shift;
     my $sp_person_id = shift;
+    my $found;
 
     my $rs = $people_schema->resultset("SpDataset")->search( { sp_person_id => $sp_person_id });
 
     my @datasets;
+    my @datasets_id;
     while (my $row = $rs->next()) {
 	push @datasets,  [ $row->sp_dataset_id(), $row->name(), $row->description() ];
+	push @datasets_id, $row->sp_dataset_id();
     }
 
+    $rs = $people_schema->resultset("SpDataset")->search( { is_public => 1 });
+
+    while (my $row = $rs->next()) {
+	$found = 0;
+	for (@datasets_id) {
+	    if ( $_ == $row->sp_dataset_id() ) { 
+	        $found = 1; 
+	    }
+	}
+        if (!$found) {
+            push @datasets,  [ $row->sp_dataset_id(), 'public - ' . $row->name(), $row->description() ];
+        }
+    }
     return \@datasets;
 }
 
