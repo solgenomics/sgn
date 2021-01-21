@@ -483,7 +483,6 @@ sub store_analysis_values {
     my $dbname = shift;
     my $dbuser = shift;
     my $dbpass = shift;
-    my $tempfile_path = shift;
 
     print STDERR "Storing analysis values...\n";
 

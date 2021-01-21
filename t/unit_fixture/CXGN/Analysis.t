@@ -104,7 +104,6 @@ my $m = CXGN::Analysis::AnalysisCreate->new({
     metadata_schema=>$metadata_schema,
     phenome_schema=>$phenome_schema,
     archive_path=>$t->config->{archive_path},
-    tempfile_for_deleting_nd_experiment_ids=>"/tmp/nd_experiment_id_del_file",
     base_path=>$t->config->{basepath},
     dbhost=>$t->config->{dbhost},
     dbname=>$t->config->{dbname},

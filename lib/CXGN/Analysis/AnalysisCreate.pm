@@ -126,12 +126,6 @@ has 'dbuser' => (
     required => 1
 );
 
-has 'tempfile_for_deleting_nd_experiment_ids' => (
-    isa => 'Str',
-    is => 'rw',
-    required => 1
-);
-
 has 'analysis_to_save_boolean' => (
     isa => 'Str',
     is => 'rw',
@@ -325,7 +319,6 @@ sub store {
     my $dbname = $self->dbname();
     my $dbuser = $self->dbuser();
     my $dbpass = $self->dbpass();
-    my $tempfile_for_deleting_nd_experiment_ids = $self->tempfile_for_deleting_nd_experiment_ids();
     my $analysis_to_save_boolean = $self->analysis_to_save_boolean();
     my $analysis_name = $self->analysis_name();
     my $analysis_description = $self->analysis_description();
@@ -570,8 +563,7 @@ sub store {
                 $dbhost,
                 $dbname,
                 $dbuser,
-                $dbpass,
-                $tempfile_for_deleting_nd_experiment_ids,
+                $dbpass
             );
         };
 

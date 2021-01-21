@@ -5037,7 +5037,6 @@ sub drone_imagery_calculate_statistics_store_analysis_POST : Args(0) {
 
     my $plots;
     my $values;
-    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
 
     eval {
         $a->store_analysis_values(
@@ -5051,8 +5050,7 @@ sub drone_imagery_calculate_statistics_store_analysis_POST : Args(0) {
             $c->config->{dbhost},
             $c->config->{dbname},
             $c->config->{dbuser},
-            $c->config->{dbpass},
-            $temp_file_nd_experiment_id,
+            $c->config->{dbpass}
         );
     };
 

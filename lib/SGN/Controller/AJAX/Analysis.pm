@@ -430,16 +430,12 @@ sub store_data {
     my $composable_cvterm_delimiter = $c->config->{composable_cvterm_delimiter};
     my $composable_cvterm_format = $c->config->{composable_cvterm_format};
 
-    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
-    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
-
     my $m = CXGN::Analysis::AnalysisCreate->new({
         bcs_schema=>$bcs_schema,
         people_schema=>$people_schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
         archive_path=>$c->config->{archive_path},
-        tempfile_for_deleting_nd_experiment_ids=>$temp_file_nd_experiment_id,
         base_path=>$c->config->{basepath},
         dbhost=>$c->config->{dbhost},
         dbname=>$c->config->{dbname},
