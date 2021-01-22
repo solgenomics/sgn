@@ -1,0 +1,199 @@
+
+<%args>
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form' ] &>
+
+<div class="modal fade" id="upload_sequence_metadata_workflow_modal" name="upload_high_dim_phenotypes_spreadsheet_dialog" tabindex="-1" role="dialog" aria-labelledby="addHighDimDataDialog">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addHighDimDataDialog">Upload Sequence Metadata</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            
+          <&| /util/workflow.mas, id=> "upload_sequence_metadata_workflow" &>
+            
+            <!-- Step 1: Intro -->
+            <&| /util/workflow.mas:step, title=> "Intro" &>
+              <& /page/page_title.mas, title=>"Upload Sequence Metadata" &>
+              <div class="well">
+                  <p>This workflow will guide you through the process of uploading sequence metadata to the database using a gff3-formatted file.</p>
+                  <p>The following gff3 columns are used by the sequence metadata uploader:</p>
+                  <ul>
+                    <li><strong>#1 / seqid:</strong> The name of the feature (ie chromosome) the metadata is associated with</li>
+                    <li><strong>#4 / start:</strong> The metadata's start position</li>
+                    <li><strong>#5 / end:</strong> The metadata's end position</li>
+                    <li><strong>#6 / score:</strong> The primary score value of the metadata</li>
+                    <li><strong>#9 / attributes:</strong> Secondary key/value attributes to be saved with the score (the attribute key cannot be either <em>score</em>, <em>start</em>, or <em>end</em>)</li> 
+                  </ul>
+              </div>
+
+              <div class="center">
+                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+              </div>
+            </&>
+            <!-- End Intro -->
+
+
+            <!-- Step 2: Data Type -->
+            <&| /util/workflow.mas:step, title=> "Data Type" &>
+              <& /page/page_title.mas, title=>"Select the type of sequence metadata" &>
+              <br /><br />
+              <form class="form-horizontal">
+                <div class="form-group">
+                  <label class="col-sm-3 control-label">Data Type:&nbsp;</label>
+                  <div class="col-sm-9">
+                    <select class="form-control" id="sequence_metadata_upload_type_select">
+                      <option value="mnase">MNase</option>
+                      <option value="vep">VEP</option>
+                      <option value="">...</option>
+                    </select>
+                    <br />
+                    <p><span class="glyphicon glyphicon-info-sign"></span>&nbsp;If your data is not one of the above data types, please <a href="/contact/form">contact us</a> about adding a new data type.</p>
+                  </div>
+                </div>
+              </form>
+
+              <br /><br />
+
+              <div class="center">
+                <button class="btn btn-primary" id="sequence_metadata_upload_type_step">Go to Next Step</button>
+              </div>
+            </&>
+            <!-- End Data Type -->
+
+
+            <!-- Step 3: Protocol Info -->
+            <&| /util/workflow.mas:step, title=> "Protocol Info" &>
+              <& /page/page_title.mas, title=>"Select a protocol for how your data was generated or create a new protocol" &>
+
+              <!-- Will be filled with existing protocol table -->
+              <div id="sequence_metadata_upload_protocol_select"></div>
+
+              <hr />
+
+              <div class="center">
+                <button class="btn btn-primary" id="sequence_metadata_upload_new_protocol">Protocol Not Shown. Create a New Protocol</button>
+              </div>
+
+              <br /><br />
+              
+              <!-- Form for creating a new protocol -->
+              <div id="sequence_metadata_upload_protocol_div" style="display:none">
+                <div class="form-horizontal">
+                  
+                  <!-- Protocol Name -->
+                  <div class="form-group">
+                    <label class="col-sm-3 control-label">Protocol Name: </label>
+                    <div class="col-sm-9" >
+                      <input class="form-control" id="sequence_metadata_upload_protocol_name" type="text">
+                    </div>
+                  </div>
+
+                  <!-- Protocol Description -->
+                  <div class="form-group">
+                    <label class="col-sm-3 control-label">Protocol Description: </label>
+                    <div class="col-sm-9" >
+                      <textarea class="form-control" id="sequence_metadata_upload_protocol_desc" rows="5"></textarea>
+                    </div>
+                  </div>
+
+                  <!-- Sequence Metadata Type -->
+                  <div class="form-group">
+                    <label class="col-sm-3 control-label">Sequence Metadata Type: </label>
+                    <div class="col-sm-9" >
+                      <input class="form-control" id="sequence_metadata_upload_protocol_sequence_metadata_type" type="text" disabled>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+              <!-- End new protocol form -->
+
+              <br /><br />
+
+              <div class="center">
+                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+              </div>
+
+            </&>
+            <!-- End Protocol Info -->
+
+
+            <!-- Step 4: Upload -->
+            <&| /util/workflow.mas:step, title=> "Upload" &>
+              <& /page/page_title.mas, title=>"Upload your gff3 file" &>
+              <br /><br />
+              
+              <p>Select your gff file to upload.</p>
+              <p>Pre-processing steps:</p>
+              <p>
+                <ul>
+                  <li>Sort the file by seqid column, then start column</li>
+                  <li>
+                    Check if features exist in the database
+                    <ul>
+                      <li>What do we do if the features don't exist?</li>
+                    </ul>
+                  </li>
+                </ul>
+                </p>
+              <p>Once verified, store the data</p>
+
+              <br /><br />
+
+              <div class="center">
+                <button class="btn btn-info">Verify</button>
+                <button class="btn btn-primary" disabled>Store</button>
+              </div>
+            </&>
+            <!-- End Upload -->
+
+          </&>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  div.center {
+    text-align: center
+  }
+</style>
+
+<script>
+jQuery(document).ready(function() {
+
+    // Start SMD Upload Workflow
+    jQuery('#upload_smd').click( function() {
+        jQuery('#upload_sequence_metadata_workflow_modal').modal("show");
+    });
+
+    // Complete the Data Type Step
+    var sequence_metadata_upload_type = undefined;
+    jQuery('#sequence_metadata_upload_type_step').click(function() {
+      sequence_metadata_upload_type = jQuery('#sequence_metadata_upload_type_select').val();
+      
+      // Set the existing protocol list
+      get_select_box('sequence_metadata_protocols', 'sequence_metadata_upload_protocol_select', {'checkbox_name':'sequence_metadata_upload_protocol_id', 'sequence_metadata_data_type':sequence_metadata_upload_type});
+      jQuery('#sequence_metadata_upload_protocol_sequence_metadata_type:text').val(sequence_metadata_upload_type);
+
+      Workflow.complete("#sequence_metadata_upload_type_step");
+      Workflow.focus('#upload_sequence_metadata_workflow', 2);
+    });
+
+    // Display the new protocol form
+    jQuery('#sequence_metadata_upload_new_protocol').click(function() {
+      jQuery('#sequence_metadata_upload_protocol_div').show();
+    });
+
+});
+</script>
