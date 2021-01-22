@@ -121,6 +121,7 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                                         <option value="Foss6500">Foss6500</option>
                                         <option value="BunchiN500">BunchiN500</option>
                                         <option value="LinkSquare">LinkSquare</option>
+                                        <option value="Foss DS2500">Foss DS2500</option>
                                     </select>
                                 </div>                   
                             </div>
