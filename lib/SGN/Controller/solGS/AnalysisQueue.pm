@@ -21,27 +21,13 @@ sub check_user_login :Path('/solgs/check/user/login') Args(0) {
 
   my $user = $c->user();
   my $ret->{loggedin} = 0;
-
+ 
   if ($user) 
-  { 
-      my $salutation = $user->get_salutation();
-      my $first_name = $user->get_first_name();
-      my $last_name  = $user->get_last_name();
-      my $user_role  = $user->get_object->get_user_type();
-
-          
-      $self->get_user_email($c);
-      my $email = $c->stash->{user_email};
-
-      $ret->{loggedin} = 1;
-      
-      my $contact = { 
-	  'name' => $first_name, 
-	  'email'=> $email, 
-	  'role' => $user_role
-      };
-     
+  {     
+      my $contact = $self->get_user_detail($c);
+  
       $ret->{contact} = $contact;
+      $ret->{loggedin} = 1;
   }
    
   $ret = to_json($ret);
@@ -62,7 +48,7 @@ sub save_analysis_profile :Path('/solgs/save/analysis/profile') Args(0) {
     $c->stash->{analysis_page} = $analysis_page;
    
     my $ret->{result} = 0;
-   
+    
     $self->save_profile($c);
     my $error_saving = $c->stash->{error};
     
@@ -78,6 +64,62 @@ sub save_analysis_profile :Path('/solgs/save/analysis/profile') Args(0) {
     
 }
 
+
+sub check_analysis_name :Path('/solgs/check/analysis/name') Args() {
+    my ($self, $c) = @_;
+
+    my $new_name = $c->req->param('name');
+      
+    my $match = $self->check_analyses_names($c, $new_name);
+
+    my $ret->{match} = $match; 
+    $ret = to_json($ret);
+       
+    $c->res->content_type('application/json');
+    $c->res->body($ret); 
+   
+}
+
+
+sub check_analyses_names {
+    my ($self, $c, $new_name) = @_;
+
+    my $logged_names = $self->check_log_analyses_names($c);
+   
+    my $log_match;
+    if ($logged_names) 
+    {
+        $log_match = grep { $_ =~ /$new_name/ } @$logged_names;
+    }
+
+    my $db_match;
+    
+    if ($new_name) {
+	my $schema = $c->dbic_schema("Bio::Chado::Schema");
+        $db_match = $schema->resultset("Project::Project")->find({ name => $new_name });
+    }
+    
+    my $match = $log_match || $db_match ? 1 : 0;
+
+    return $match;
+}
+
+
+sub check_log_analyses_names {
+    my ($self, $c) = @_;
+
+    my $log_file = $self->analysis_log_file($c);
+    my $names = qx(cut -f 2 $log_file);
+    
+    if ($names) {
+	my @names = split(/\n/, $names);
+
+	shift(@names);
+	return \@names;
+    } else {
+	return 0;
+    }
+}
 
 sub save_profile {
     my ($self, $c) = @_;
@@ -106,7 +148,6 @@ sub add_log_headers {
   unless ($headers) 
   {  
       $headers = 'User_name' . 
-	  "\t" . 'User_email' . 
 	  "\t" . 'Analysis_name' . 
 	  "\t" . "Analysis_page" . 	 
 	  "\t" . "Status" .
@@ -180,8 +221,7 @@ sub create_selection_pop_page {
 
 sub format_log_entry {
     my ($self, $c) = @_; 
-    
-   
+       
     my $profile = $c->stash->{analysis_profile};
   
     if ($profile->{analysis_page} =~ /solgs\/model\/(\d+|\w+_\d+)\/prediction\//)
@@ -195,7 +235,6 @@ sub format_log_entry {
     my $entry   = join("\t", 
 		       (
 			$profile->{user_name}, 
-			$profile->{user_email}, 
 			$profile->{analysis_name}, 
 			$profile->{analysis_page},
 			'Submitted',
@@ -1040,19 +1079,39 @@ sub update_analysis_progress {
 }
 
 
-sub get_user_email {
+sub get_user_detail {
     my ($self, $c) = @_;
    
     my $user = $c->user();
-
-    my $private_email = $user->get_private_email();
-    my $public_email  = $user->get_contact_email();
+    
+    my $contact;
+    if ($user)
+    {
+	my $private_email = $user->get_private_email();
+	my $public_email  = $user->get_contact_email();
      
-    my $email = $public_email 
-	? $public_email 
-	: $private_email;
+	my $email = $public_email 
+	    ? $public_email 
+	    : $private_email;
+	
+	my $salutation = $user->get_salutation();
+	my $first_name = $user->get_first_name();
+	my $last_name  = $user->get_last_name();
+	my $user_role  = $user->get_object->get_user_type();
+	my $user_id    = $user->get_object()->get_sp_person_id();
+	my $user_name  = $user->id();
+	
+	$contact = { 
+	    'first_name' => $first_name, 
+	    'email'=> $email, 
+	    'role' => $user_role,
+	    'user_id' => $user_id,
+	    'user_name' => $user_name,
+	};
 
-    $c->stash->{user_email} = $email;
+    }
+
+    return $contact;
 
 }
 
