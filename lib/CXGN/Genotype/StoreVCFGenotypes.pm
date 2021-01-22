@@ -1040,11 +1040,17 @@ sub store_identifiers {
                     nd_experiment_protocols => [ {nd_protocol_id => $self->protocol_id()} ]
                 });
                 my $nd_experiment_id = $experiment->nd_experiment_id();
+                my $genotype_description;
+                if ($genotyping_data_type eq 'ssr') {
+                    $genotype_description = "SSR genotypes for stock " . "(name = " . $observation_unit_name . ", id = " . $stock_id . ")";
+                } else {
+                    $genotype_description = "SNP genotypes for stock " . "(name = " . $observation_unit_name . ", id = " . $stock_id . ")";
+                }
 
                 my $genotype = $genotype_schema->create({
                     name        => $observation_unit_name . "|" . $nd_experiment_id,
                     uniquename  => $observation_unit_name . "|" . $nd_experiment_id,
-                    description => "SNP genotypes for stock " . "(name = " . $observation_unit_name . ", id = " . $stock_id . ")",
+                    description => $genotype_description,
                     type_id     => $self->snp_genotype_id(),
                 });
                 $genotype_id = $genotype->genotype_id();
