@@ -661,7 +661,11 @@ jQuery(document).ready(function() {
                     html = html + '<h4>Heritablilty (h2):</h4><ul><li>Original: '+response.original_h2+'</li><li>Altered: '+response.altered_h2+'</li><li>Linear Sim: '+response.sim1_h2+'</li><li>Random 1D Normal: '+response.sim2_h2+'</li><li>Random 2D Normal: '+response.sim3_h2+'</li><li>Random: '+response.sim4_h2+'</li></ul>';
 
                     if (response.simulated_environment_to_effect_correlations) {
-                        html = html + '<h4>Simulated Env to Effects Correlations:</h4><ul><li>RR Linear: '+response.simulated_environment_to_effect_correlations[0]+'</li><li>RR Random 1D Normal: '+response.simulated_environment_to_effect_correlations[1]+'</li><li>RR Random 2D Normal: '+response.simulated_environment_to_effect_correlations[2]+'</li><li>RR Random: '+response.simulated_environment_to_effect_correlations[3]+'</li><li>Multi2Dspl Linear: '+response.simulated_environment_to_effect_correlations[4]+'</li><li>Multi2Dspl Random 1D Normal: '+response.simulated_environment_to_effect_correlations[5]+'</li><li>Multi2Dspl Random 2D Normal: '+response.simulated_environment_to_effect_correlations[6]+'</li><li>Multi2Dspl Random: '+response.simulated_environment_to_effect_correlations[7]+'</li><li>Uni2Dspl Linear: '+response.simulated_environment_to_effect_correlations[8]+'</li><li>Uni2Dspl Random 1D Normal: '+response.simulated_environment_to_effect_correlations[9]+'</li><li>Uni2Dspl Random 2D Normal: '+response.simulated_environment_to_effect_correlations[10]+'</li><li>Uni2Dspl Random: '+response.simulated_environment_to_effect_correlations[11]+'</li><li>RREnv Linear: '+response.simulated_environment_to_effect_correlations[12]+'</li><li>RREnv Random 1D Normal: '+response.simulated_environment_to_effect_correlations[13]+'</li><li>RREnv Random 2D Normal: '+response.simulated_environment_to_effect_correlations[14]+'</li><li>RREnv Random: '+response.simulated_environment_to_effect_correlations[15]+'</li></ul><hr>';
+                        html = html + '<h4>Simulated Env to Effects Correlations:</h4><ul>';
+                        for(var i=0; i<response.simulated_environment_to_effect_correlations.length; i++) {
+                            html = html + '<li>' + response.simulated_environment_to_effect_correlations[i] + '</li>';
+                        }
+                        html = html + '</ul><hr>';
                     }
 
                     if (response.spatial_effects_plots) {

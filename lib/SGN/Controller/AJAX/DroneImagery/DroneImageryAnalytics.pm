@@ -2310,7 +2310,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 coord_equal() +
                 facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
             ggsave(\''.$env_effects_first_figure_tempfile.'\', arrangeGrob(gg_eff_1, nrow=1), device=\'png\', width=20, height=20, units=\'in\');
-            write.table(data.frame(m1env1 = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_1)), m1env2 = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_1)), m1env3 = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_1)), m1env4 = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_1)), m1env5 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_1)) ), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');
+            write.table(data.frame(airemlf90_grm_random_regression_dap_blups_env_linear = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_1)), airemlf90_grm_random_regression_dap_blups_env_1DN = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_1)), airemlf90_grm_random_regression_dap_blups_env_2DN = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_1)), airemlf90_grm_random_regression_dap_blups_env_random = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_1)), airemlf90_grm_random_regression_dap_blups_env_ar1xar1 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_1)) ), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
             "';
             # print STDERR Dumper $cmd;
             my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
@@ -2319,12 +2319,22 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             open(my $fh_corr_result, '<', $sim_effects_corr_results) or die "Could not open file '$sim_effects_corr_results' $!";
                 print STDERR "Opened $sim_effects_corr_results\n";
 
+                my $header = <$fh_corr_result>;
+                my @header;
+                if ($csv->parse($header)) {
+                    @header = $csv->fields();
+                }
+
                 while (my $row = <$fh_corr_result>) {
                     my @columns;
+                    my $counter = 0;
                     if ($csv->parse($row)) {
                         @columns = $csv->fields();
                     }
-                    @env_corr_res = @columns;
+                    foreach (@columns) {
+                        push @env_corr_res, $header[$counter].": ".$_;
+                        $counter++;
+                    }
                 }
             close($fh_corr_result);
 
@@ -4757,7 +4767,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 coord_equal() +
                 facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
             ggsave(\''.$env_effects_first_figure_tempfile.'\', arrangeGrob(gg_eff_4, nrow=1), device=\'png\', width=25, height=25, units=\'in\');
-            write.table(data.frame(m4env1 = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_4)), m4env2 = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_4)), m4env3 = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_4)), m4env4 = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_4)), m4env5 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_4))), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');
+            write.table(data.frame(airemlf90_grm_random_regression_PEcorr_dap_blups_env_linear = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_4)), airemlf90_grm_random_regression_PEcorr_dap_blups_env_1DN = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_4)), airemlf90_grm_random_regression_PEcorr_dap_blups_env_2DN = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_4)), airemlf90_grm_random_regression_PEcorr_dap_blups_env_random = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_4)), airemlf90_grm_random_regression_PEcorr_dap_blups_env_ar1xar1 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_4))), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
             "';
             # print STDERR Dumper $cmd;
             my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
@@ -4766,12 +4776,22 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             open(my $fh_corr_result, '<', $sim_effects_corr_results) or die "Could not open file '$sim_effects_corr_results' $!";
                 print STDERR "Opened $sim_effects_corr_results\n";
 
+                my $header = <$fh_corr_result>;
+                my @header;
+                if ($csv->parse($header)) {
+                    @header = $csv->fields();
+                }
+
                 while (my $row = <$fh_corr_result>) {
                     my @columns;
+                    my $counter = 0;
                     if ($csv->parse($row)) {
                         @columns = $csv->fields();
                     }
-                    @env_corr_res = @columns;
+                    foreach (@columns) {
+                        push @env_corr_res, $header[$counter].": ".$_;
+                        $counter++;
+                    }
                 }
             close($fh_corr_result);
 
@@ -6777,7 +6797,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 coord_equal() +
                 facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
             ggsave(\''.$env_effects_first_figure_tempfile.'\', arrangeGrob(gg_eff_2, nrow=1), device=\'png\', width=25, height=25, units=\'in\');
-            write.table(data.frame(m2env1 = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_2)), m2env2 = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_2)), m2env3 = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_2)), m2env4 = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_2)), m2env5 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_2))), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');
+            write.table(data.frame(sommer_grm_spatial_genetic_blups_env_linear = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_2)), sommer_grm_spatial_genetic_blups_env_1DN = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_2)), sommer_grm_spatial_genetic_blups_env_2DN = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_2)), sommer_grm_spatial_genetic_blups_env_random = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_2)), sommer_grm_spatial_genetic_blups_env_ar1xar1 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_2))), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
             "';
             # print STDERR Dumper $cmd;
             my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
@@ -6786,12 +6806,22 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             open(my $fh_corr_result, '<', $sim_effects_corr_results) or die "Could not open file '$sim_effects_corr_results' $!";
                 print STDERR "Opened $sim_effects_corr_results\n";
 
+                my $header = <$fh_corr_result>;
+                my @header;
+                if ($csv->parse($header)) {
+                    @header = $csv->fields();
+                }
+
                 while (my $row = <$fh_corr_result>) {
                     my @columns;
+                    my $counter = 0;
                     if ($csv->parse($row)) {
                         @columns = $csv->fields();
                     }
-                    @env_corr_res = @columns;
+                    foreach (@columns) {
+                        push @env_corr_res, $header[$counter].": ".$_;
+                        $counter++;
+                    }
                 }
             close($fh_corr_result);
 
@@ -8787,7 +8817,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 coord_equal() +
                 facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
             ggsave(\''.$env_effects_first_figure_tempfile.'\', arrangeGrob(gg_eff_3, nrow=1), device=\'png\', width=25, height=25, units=\'in\');
-            write.table(data.frame(m3env1 = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_3)), m3env2 = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_3)), m3env3 = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_3)), m3env4 = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_3)), m3env5 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_3))), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');
+            write.table(data.frame(sommer_grm_univariate_spatial_genetic_blups_env_linear = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_3)), sommer_grm_univariate_spatial_genetic_blups_env_1DN = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_3)), sommer_grm_univariate_spatial_genetic_blups_env_2DN = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_3)), sommer_grm_univariate_spatial_genetic_blups_env_random = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_3)), sommer_grm_univariate_spatial_genetic_blups_env_ar1xar1 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_3))), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
             "';
             # print STDERR Dumper $cmd;
             my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
@@ -8796,12 +8826,22 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             open(my $fh_corr_result, '<', $sim_effects_corr_results) or die "Could not open file '$sim_effects_corr_results' $!";
                 print STDERR "Opened $sim_effects_corr_results\n";
 
+                my $header = <$fh_corr_result>;
+                my @header;
+                if ($csv->parse($header)) {
+                    @header = $csv->fields();
+                }
+
                 while (my $row = <$fh_corr_result>) {
                     my @columns;
+                    my $counter = 0;
                     if ($csv->parse($row)) {
                         @columns = $csv->fields();
                     }
-                    @env_corr_res = @columns;
+                    foreach (@columns) {
+                        push @env_corr_res, $header[$counter].": ".$_;
+                        $counter++;
+                    }
                 }
             close($fh_corr_result);
 
@@ -10862,7 +10902,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 coord_equal() +
                 facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
             ggsave(\''.$env_effects_first_figure_tempfile.'\', arrangeGrob(gg_eff_5, nrow=1), device=\'png\', width=25, height=25, units=\'in\');
-            write.table(data.frame(m5env1 = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_5)), m5env2 = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_5)), m5env3 = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_5)), m5env4 = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_5)), m5env5 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_5))), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');
+            write.table(data.frame(asreml_grm_univariate_spatial_genetic_blups_env_linear = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_5)), asreml_grm_univariate_spatial_genetic_blups_env_1DN = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_5)), asreml_grm_univariate_spatial_genetic_blups_env_2DN = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_5)), asreml_grm_univariate_spatial_genetic_blups_env_random = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_5)), asreml_grm_univariate_spatial_genetic_blups_env_ar1xar1 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_5))), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
             "';
             # print STDERR Dumper $cmd;
             my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
@@ -10871,12 +10911,22 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             open(my $fh_corr_result, '<', $sim_effects_corr_results) or die "Could not open file '$sim_effects_corr_results' $!";
                 print STDERR "Opened $sim_effects_corr_results\n";
 
+                my $header = <$fh_corr_result>;
+                my @header;
+                if ($csv->parse($header)) {
+                    @header = $csv->fields();
+                }
+
                 while (my $row = <$fh_corr_result>) {
                     my @columns;
+                    my $counter = 0;
                     if ($csv->parse($row)) {
                         @columns = $csv->fields();
                     }
-                    @env_corr_res = @columns;
+                    foreach (@columns) {
+                        push @env_corr_res, $header[$counter].": ".$_;
+                        $counter++;
+                    }
                 }
             close($fh_corr_result);
 
