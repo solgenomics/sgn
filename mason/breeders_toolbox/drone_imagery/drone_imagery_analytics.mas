@@ -292,6 +292,8 @@
                     <& /page/page_title.mas, title=>"Statistics results" &>
 
                     <hr>
+                    <button class="btn btn-primary" id="drone_imagery_analytics_analysis_save_analytics_results" >Save Analytics Results</button>
+
                     <button class="btn btn-primary" id="drone_imagery_analytics_analysis_save_blups_genetic_pe_residual" style="display:none">Go To Save Analysis Results For Genetic and Environment BLUPS and Residuals</button>
                     <button class="btn btn-primary" id="drone_imagery_analytics_analysis_save_blups_genetic" style="display:none">Go To Save Analysis Results For Genetic BLUPS</button>
                     <button class="btn btn-primary" id="drone_imagery_analytics_analysis_save_blups_spatial" style="display:none">Go To Save Analysis Results For Spatial BLUPS</button>
@@ -636,6 +638,7 @@ jQuery(document).ready(function() {
                 }
                 else {
                     manage_drone_imagery_analytics_response = response;
+                    manage_drone_imagery_analytics_protocol_id = response.analytics_protocol_id;
 
                     var html = '<h4>Summary :</h4><ul>';
                     if (response.sum_square_residual_original) {
@@ -668,7 +671,7 @@ jQuery(document).ready(function() {
 
                     if (response.spatial_effects_plots) {
                         for (i=0; i<response.spatial_effects_plots.length; i++) {
-                            html = html + '<img src="'+response.spatial_effects_plots[i]+'"><hr>';
+                            html = html + '<p>'+response.spatial_effects_plots[i][1]+'</p><img src="'+response.spatial_effects_plots[i][0]+'"><hr>';
                         }
                     }
 
@@ -759,6 +762,34 @@ jQuery(document).ready(function() {
             error: function(response){
                 jQuery("#working_modal").modal("hide");
                 alert('Error calculating statistics analytics!')
+            }
+        });
+    });
+
+    jQuery('#drone_imagery_analytics_analysis_save_analytics_results').click(function(){
+        jQuery.ajax({
+            url : '/api/drone_imagery/save_analytics',
+            type : 'POST',
+            data : {
+                'analytics_protocol_id':manage_drone_imagery_analytics_protocol_id,
+            },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+                if (response.error) {
+                    alert(response.error);
+                }
+                else {
+                    
+                }
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert('Error saving analytics results!')
             }
         });
     });

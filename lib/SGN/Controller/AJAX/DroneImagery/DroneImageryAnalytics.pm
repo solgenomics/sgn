@@ -324,7 +324,6 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $sig_col;
 
     my $spatial_effects_plots;
-    my $spatial_effects_plots_store;
     my $spatial_effects_files_store;
     my @env_corr_res;
 
@@ -1810,7 +1809,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd;
                 my $status_plotcorr_plot = system($cmd_plotcorr_plot);
-                push @$spatial_effects_plots, $plot_corr_figure_tempfile_string;
+                push @$spatial_effects_plots, [$plot_corr_figure_tempfile_string, $statistics_select."_fullcorr_".$iterations];
             };
 
             eval {
@@ -2202,7 +2201,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 # print STDERR Dumper $cmd_plotcorrsum_plot;
 
                 my $status_plotcorrsum_plot = system($cmd_plotcorrsum_plot);
-                push @$spatial_effects_plots, $plot_corr_summary_figure_tempfile_string;
+                push @$spatial_effects_plots, [$plot_corr_summary_figure_tempfile_string, $statistics_select."_envsimscorr_".$iterations];
 
                 my $env_effects_first_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                 $env_effects_first_figure_tempfile_string .= '.png';
@@ -2234,7 +2233,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd;
                 my $status_spatialfirst_plot_2 = system($cmd_spatialfirst_plot_2);
-                push @$spatial_effects_plots, $env_effects_first_figure_tempfile_string_2;
+                push @$spatial_effects_plots, [$env_effects_first_figure_tempfile_string_2, $statistics_select."_origheatmap_".$iterations];
 
                 my ($sim_effects_corr_results_fh, $sim_effects_corr_results) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
 
@@ -2267,7 +2266,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd;
                 my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
-                push @$spatial_effects_plots, $env_effects_first_figure_tempfile_string;
+                push @$spatial_effects_plots, [$env_effects_first_figure_tempfile_string, $statistics_select."_originaleffheatmap_".$iterations];
 
                 open(my $fh_corr_result, '<', $sim_effects_corr_results) or die "Could not open file '$sim_effects_corr_results' $!";
                     print STDERR "Opened $sim_effects_corr_results\n";
@@ -2320,7 +2319,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd_spatialenvsim_plot_env1;
                 my $status_spatialenvsim_plot_env1 = system($cmd_spatialenvsim_plot_env1);
-                push @$spatial_effects_plots, $env_effects_sim_figure_tempfile_string_env1;
+                push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_env1, $statistics_select."_env1effheatmap_".$iterations];
 
                 my $env_effects_sim_figure_tempfile_string_env2 = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                 $env_effects_sim_figure_tempfile_string_env2 .= '.png';
@@ -2351,7 +2350,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd_spatialenvsim_plot_env2;
                 my $status_spatialenvsim_plot_env2 = system($cmd_spatialenvsim_plot_env2);
-                push @$spatial_effects_plots, $env_effects_sim_figure_tempfile_string_env2;
+                push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_env2, $statistics_select."_env2effheatmap_".$iterations];
 
                 my $env_effects_sim_figure_tempfile_string_env3 = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                 $env_effects_sim_figure_tempfile_string_env3 .= '.png';
@@ -2382,7 +2381,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd_spatialenvsim_plot_env3;
                 my $status_spatialenvsim_plot_env3 = system($cmd_spatialenvsim_plot_env3);
-                push @$spatial_effects_plots, $env_effects_sim_figure_tempfile_string_env3;
+                push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_env3, $statistics_select."_env3effheatmap_".$iterations];
 
                 my $env_effects_sim_figure_tempfile_string_env4 = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                 $env_effects_sim_figure_tempfile_string_env4 .= '.png';
@@ -2413,7 +2412,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd_spatialenvsim_plot_env4;
                 my $status_spatialenvsim_plot_env4 = system($cmd_spatialenvsim_plot_env4);
-                push @$spatial_effects_plots, $env_effects_sim_figure_tempfile_string_env4;
+                push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_env4, $statistics_select."_env4effheatmap_".$iterations];
 
                 my $env_effects_sim_figure_tempfile_string_env5 = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                 $env_effects_sim_figure_tempfile_string_env5 .= '.png';
@@ -2444,7 +2443,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd_spatialenvsim_plot_env5;
                 my $status_spatialenvsim_plot_env5 = system($cmd_spatialenvsim_plot_env5);
-                push @$spatial_effects_plots, $env_effects_sim_figure_tempfile_string_env5;
+                push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_env5, $statistics_select."_env5effheatmap_".$iterations];
             };
 
             eval {
@@ -2640,7 +2639,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_plot;
                 my $status_gen_plot = system($cmd_gen_plot);
-                push @$spatial_effects_plots, $genetic_effects_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_figure_tempfile_string, $statistics_select."_efforigline_".$iterations];
 
                 my $cmd_gen_alt_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                 mat <- fread(\''.$effects_altered_line_chart_tempfile.'\', header=TRUE, sep=\',\');
@@ -2662,7 +2661,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_alt_plot;
                 my $status_gen_alt_plot = system($cmd_gen_alt_plot);
-                push @$spatial_effects_plots, $genetic_effects_alt_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_alt_figure_tempfile_string, $statistics_select."_effaltline_".$iterations];
 
                 my $cmd_gen_env1_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                 mat <- fread(\''.$effects_altered_env1_line_chart_tempfile.'\', header=TRUE, sep=\',\');
@@ -2684,7 +2683,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_env1_plot;
                 my $status_gen_env1_plot = system($cmd_gen_env1_plot);
-                push @$spatial_effects_plots, $genetic_effects_alt_env1_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_alt_env1_figure_tempfile_string, $statistics_select."_effaltenv1line_".$iterations];
 
                 my $cmd_gen_env2_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                 mat <- fread(\''.$effects_altered_env2_line_chart_tempfile.'\', header=TRUE, sep=\',\');
@@ -2706,7 +2705,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_env2_plot;
                 my $status_gen_env2_plot = system($cmd_gen_env2_plot);
-                push @$spatial_effects_plots, $genetic_effects_alt_env2_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_alt_env2_figure_tempfile_string, $statistics_select."_effaltenv2line_".$iterations];
 
                 my $cmd_gen_env3_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                 mat <- fread(\''.$effects_altered_env3_line_chart_tempfile.'\', header=TRUE, sep=\',\');
@@ -2728,7 +2727,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_env3_plot;
                 my $status_gen_env3_plot = system($cmd_gen_env3_plot);
-                push @$spatial_effects_plots, $genetic_effects_alt_env3_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_alt_env3_figure_tempfile_string, $statistics_select."_effaltenv3line_".$iterations];
 
                 my $cmd_gen_env4_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                 mat <- fread(\''.$effects_altered_env4_line_chart_tempfile.'\', header=TRUE, sep=\',\');
@@ -2750,7 +2749,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_env4_plot;
                 my $status_gen_env4_plot = system($cmd_gen_env4_plot);
-                push @$spatial_effects_plots, $genetic_effects_alt_env4_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_alt_env4_figure_tempfile_string, $statistics_select."_effaltenv4line_".$iterations];
 
                 my $cmd_gen_env5_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                 mat <- fread(\''.$effects_altered_env5_line_chart_tempfile.'\', header=TRUE, sep=\',\');
@@ -2772,7 +2771,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_env5_plot;
                 my $status_gen_env5_plot = system($cmd_gen_env5_plot);
-                push @$spatial_effects_plots, $genetic_effects_alt_env5_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_alt_env5_figure_tempfile_string, $statistics_select."_effaltenv5line_".$iterations];
             };
         }
 
@@ -4245,7 +4244,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd;
                 my $status_plotcorr_plot = system($cmd_plotcorr_plot);
-                push @$spatial_effects_plots, $plot_corr_figure_tempfile_string;
+                push @$spatial_effects_plots, [$plot_corr_figure_tempfile_string, $statistics_select."_fullcorr_".$iterations];
             };
 
             eval {
@@ -4641,7 +4640,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 # print STDERR Dumper $cmd_plotcorrsum_plot;
 
                 my $status_plotcorrsum_plot = system($cmd_plotcorrsum_plot);
-                push @$spatial_effects_plots, $plot_corr_summary_figure_tempfile_string;
+                push @$spatial_effects_plots, [$plot_corr_summary_figure_tempfile_string, $statistics_select."_envsimscorr_".$iterations];
 
                 my $env_effects_first_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                 $env_effects_first_figure_tempfile_string .= '.png';
@@ -4673,7 +4672,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd;
                 my $status_spatialfirst_plot_2 = system($cmd_spatialfirst_plot_2);
-                push @$spatial_effects_plots, $env_effects_first_figure_tempfile_string_2;
+                push @$spatial_effects_plots, [$env_effects_first_figure_tempfile_string_2, $statistics_select."_origheatmap_".$iterations];
 
                 my ($sim_effects_corr_results_fh, $sim_effects_corr_results) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
 
@@ -4706,7 +4705,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd;
                 my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
-                push @$spatial_effects_plots, $env_effects_first_figure_tempfile_string;
+                push @$spatial_effects_plots, [$env_effects_first_figure_tempfile_string, $statistics_select."_originaleffheatmap_".$iterations];
 
                 open(my $fh_corr_result, '<', $sim_effects_corr_results) or die "Could not open file '$sim_effects_corr_results' $!";
                     print STDERR "Opened $sim_effects_corr_results\n";
@@ -4759,7 +4758,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd_spatialenvsim_plot_4_env1;
                 my $status_spatialenvsim_plot_4_env1 = system($cmd_spatialenvsim_plot_4_env1);
-                push @$spatial_effects_plots, $env_effects_sim_figure_tempfile_string_4_env1;
+                push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_4_env1, $statistics_select."_env1effheatmap_".$iterations];
 
                 my $env_effects_sim_figure_tempfile_string_4_env2 = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                 $env_effects_sim_figure_tempfile_string_4_env2 .= '.png';
@@ -4790,7 +4789,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd_spatialenvsim_plot_4_env2;
                 my $status_spatialenvsim_plot_4_env2 = system($cmd_spatialenvsim_plot_4_env2);
-                push @$spatial_effects_plots, $env_effects_sim_figure_tempfile_string_4_env2;
+                push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_4_env2, $statistics_select."_env2effheatmap_".$iterations];
 
                 my $env_effects_sim_figure_tempfile_string_4_env3 = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                 $env_effects_sim_figure_tempfile_string_4_env3 .= '.png';
@@ -4821,7 +4820,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd_spatialenvsim_plot_4_env3;
                 my $status_spatialenvsim_plot_4_env3 = system($cmd_spatialenvsim_plot_4_env3);
-                push @$spatial_effects_plots, $env_effects_sim_figure_tempfile_string_4_env3;
+                push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_4_env3, $statistics_select."_env3effheatmap_".$iterations];
 
                 my $env_effects_sim_figure_tempfile_string_4_env4 = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                 $env_effects_sim_figure_tempfile_string_4_env4 .= '.png';
@@ -4852,7 +4851,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd_spatialenvsim_plot_4_env4;
                 my $status_spatialenvsim_plot_4_env4 = system($cmd_spatialenvsim_plot_4_env4);
-                push @$spatial_effects_plots, $env_effects_sim_figure_tempfile_string_4_env4;
+                push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_4_env4, $statistics_select."_env4effheatmap_".$iterations];
 
                 my $env_effects_sim_figure_tempfile_string_4_env5 = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                 $env_effects_sim_figure_tempfile_string_4_env5 .= '.png';
@@ -4883,7 +4882,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd_spatialenvsim_plot_4_env5;
                 my $status_spatialenvsim_plot_4_env5 = system($cmd_spatialenvsim_plot_4_env5);
-                push @$spatial_effects_plots, $env_effects_sim_figure_tempfile_string_4_env5;
+                push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_4_env5, $statistics_select."_env5effheatmap_".$iterations];
             };
 
             eval {
@@ -5079,7 +5078,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_plot;
                 my $status_gen_plot = system($cmd_gen_plot);
-                push @$spatial_effects_plots, $genetic_effects_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_figure_tempfile_string, $statistics_select."_efforigline_".$iterations];
 
                 my $cmd_gen_alt_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                 mat <- fread(\''.$effects_altered_line_chart_tempfile_4.'\', header=TRUE, sep=\',\');
@@ -5101,7 +5100,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_alt_plot;
                 my $status_gen_alt_plot = system($cmd_gen_alt_plot);
-                push @$spatial_effects_plots, $genetic_effects_alt_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_alt_figure_tempfile_string, $statistics_select."_effaltline_".$iterations];
 
                 my $cmd_gen_env1_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                 mat <- fread(\''.$effects_altered_env1_line_chart_tempfile_4.'\', header=TRUE, sep=\',\');
@@ -5123,7 +5122,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_env1_plot;
                 my $status_gen_env1_plot = system($cmd_gen_env1_plot);
-                push @$spatial_effects_plots, $genetic_effects_alt_env1_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_alt_env1_figure_tempfile_string, $statistics_select."_effaltenv1line_".$iterations];
 
                 my $cmd_gen_env2_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                 mat <- fread(\''.$effects_altered_env2_line_chart_tempfile_4.'\', header=TRUE, sep=\',\');
@@ -5145,7 +5144,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_env2_plot;
                 my $status_gen_env2_plot = system($cmd_gen_env2_plot);
-                push @$spatial_effects_plots, $genetic_effects_alt_env2_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_alt_env2_figure_tempfile_string, $statistics_select."_effaltenv2line_".$iterations];
 
                 my $cmd_gen_env3_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                 mat <- fread(\''.$effects_altered_env3_line_chart_tempfile_4.'\', header=TRUE, sep=\',\');
@@ -5167,7 +5166,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_env3_plot;
                 my $status_gen_env3_plot = system($cmd_gen_env3_plot);
-                push @$spatial_effects_plots, $genetic_effects_alt_env3_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_alt_env3_figure_tempfile_string, $statistics_select."_effaltenv3line_".$iterations];
 
                 my $cmd_gen_env4_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                 mat <- fread(\''.$effects_altered_env4_line_chart_tempfile_4.'\', header=TRUE, sep=\',\');
@@ -5189,7 +5188,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_env4_plot;
                 my $status_gen_env4_plot = system($cmd_gen_env4_plot);
-                push @$spatial_effects_plots, $genetic_effects_alt_env4_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_alt_env4_figure_tempfile_string, $statistics_select."_effaltenv4line_".$iterations];
 
                 my $cmd_gen_env5_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                 mat <- fread(\''.$effects_altered_env5_line_chart_tempfile_4.'\', header=TRUE, sep=\',\');
@@ -5211,7 +5210,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_env5_plot;
                 my $status_gen_env5_plot = system($cmd_gen_env5_plot);
-                push @$spatial_effects_plots, $genetic_effects_alt_env5_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_alt_env5_figure_tempfile_string, $statistics_select."_effaltenv5line_".$iterations];
             };
         }
 
@@ -6313,7 +6312,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd;
                 my $status_plotcorr_plot = system($cmd_plotcorr_plot);
-                push @$spatial_effects_plots, $plot_corr_figure_tempfile_string;
+                push @$spatial_effects_plots, [$plot_corr_figure_tempfile_string, $statistics_select."_fullcorr_".$iterations];
             };
 
             eval {
@@ -6708,7 +6707,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd_plotcorrsum_plot;
                 my $status_plotcorrsum_plot = system($cmd_plotcorrsum_plot);
-                push @$spatial_effects_plots, $plot_corr_summary_figure_tempfile_string;
+                push @$spatial_effects_plots, [$plot_corr_summary_figure_tempfile_string, $statistics_select."_envsimscorr_".$iterations];
 
                 my $env_effects_first_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                 $env_effects_first_figure_tempfile_string .= '.png';
@@ -6740,7 +6739,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd;
                 my $status_spatialfirst_plot_2 = system($cmd_spatialfirst_plot_2);
-                push @$spatial_effects_plots, $env_effects_first_figure_tempfile_string_2;
+                push @$spatial_effects_plots, [$env_effects_first_figure_tempfile_string_2, $statistics_select."_origheatmap_".$iterations];
 
                 my ($sim_effects_corr_results_fh, $sim_effects_corr_results) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
 
@@ -6773,7 +6772,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd;
                 my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
-                push @$spatial_effects_plots, $env_effects_first_figure_tempfile_string;
+                push @$spatial_effects_plots, [$env_effects_first_figure_tempfile_string, $statistics_select."_originaleffheatmap_".$iterations];
 
                 open(my $fh_corr_result, '<', $sim_effects_corr_results) or die "Could not open file '$sim_effects_corr_results' $!";
                     print STDERR "Opened $sim_effects_corr_results\n";
@@ -6826,7 +6825,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd_spatialenvsim_plot_2_env1;
                 my $status_spatialenvsim_plot_2_env1 = system($cmd_spatialenvsim_plot_2_env1);
-                push @$spatial_effects_plots, $env_effects_sim_figure_tempfile_string_2_env1;
+                push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_2_env1, $statistics_select."_env1effheatmap_".$iterations];
 
                 my $env_effects_sim_figure_tempfile_string_2_env2 = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                 $env_effects_sim_figure_tempfile_string_2_env2 .= '.png';
@@ -6857,7 +6856,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd_spatialenvsim_plot_2_env2;
                 my $status_spatialenvsim_plot_2_env2 = system($cmd_spatialenvsim_plot_2_env2);
-                push @$spatial_effects_plots, $env_effects_sim_figure_tempfile_string_2_env2;
+                push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_2_env2, $statistics_select."_env2effheatmap_".$iterations];
 
                 my $env_effects_sim_figure_tempfile_string_2_env3 = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                 $env_effects_sim_figure_tempfile_string_2_env3 .= '.png';
@@ -6888,7 +6887,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd_spatialenvsim_plot_2_env3;
                 my $status_spatialenvsim_plot_2_env3 = system($cmd_spatialenvsim_plot_2_env3);
-                push @$spatial_effects_plots, $env_effects_sim_figure_tempfile_string_2_env3;
+                push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_2_env3, $statistics_select."_env3effheatmap_".$iterations];
 
                 my $env_effects_sim_figure_tempfile_string_2_env4 = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                 $env_effects_sim_figure_tempfile_string_2_env4 .= '.png';
@@ -6919,7 +6918,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd_spatialenvsim_plot_2_env4;
                 my $status_spatialenvsim_plot_2_env4 = system($cmd_spatialenvsim_plot_2_env4);
-                push @$spatial_effects_plots, $env_effects_sim_figure_tempfile_string_2_env4;
+                push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_2_env4, $statistics_select."_env4effheatmap_".$iterations];
 
                 my $env_effects_sim_figure_tempfile_string_2_env5 = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                 $env_effects_sim_figure_tempfile_string_2_env5 .= '.png';
@@ -6950,7 +6949,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd_spatialenvsim_plot_2_env5;
                 my $status_spatialenvsim_plot_2_env5 = system($cmd_spatialenvsim_plot_2_env5);
-                push @$spatial_effects_plots, $env_effects_sim_figure_tempfile_string_2_env5;
+                push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_2_env5, $statistics_select."_env5effheatmap_".$iterations];
             };
 
             eval {
@@ -7145,7 +7144,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_plot;
                 my $status_gen_plot = system($cmd_gen_plot);
-                push @$spatial_effects_plots, $genetic_effects_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_figure_tempfile_string, $statistics_select."_efforigline_".$iterations];
 
                 my $cmd_gen_alt_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                 mat <- fread(\''.$effects_altered_line_chart_tempfile_2.'\', header=TRUE, sep=\',\');
@@ -7167,7 +7166,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_alt_plot;
                 my $status_gen_alt_plot = system($cmd_gen_alt_plot);
-                push @$spatial_effects_plots, $genetic_effects_alt_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_alt_figure_tempfile_string, $statistics_select."_effaltline_".$iterations];
 
                 my $cmd_gen_env1_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                 mat <- fread(\''.$effects_altered_env1_line_chart_tempfile_2.'\', header=TRUE, sep=\',\');
@@ -7189,7 +7188,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_env1_plot;
                 my $status_gen_env1_plot = system($cmd_gen_env1_plot);
-                push @$spatial_effects_plots, $genetic_effects_alt_env1_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_alt_env1_figure_tempfile_string, $statistics_select."_effaltenv1line_".$iterations];
 
                 my $cmd_gen_env2_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                 mat <- fread(\''.$effects_altered_env2_line_chart_tempfile_2.'\', header=TRUE, sep=\',\');
@@ -7211,7 +7210,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_env2_plot;
                 my $status_gen_env2_plot = system($cmd_gen_env2_plot);
-                push @$spatial_effects_plots, $genetic_effects_alt_env2_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_alt_env2_figure_tempfile_string, $statistics_select."_effaltenv2line_".$iterations];
 
                 my $cmd_gen_env3_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                 mat <- fread(\''.$effects_altered_env3_line_chart_tempfile_2.'\', header=TRUE, sep=\',\');
@@ -7233,7 +7232,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_env3_plot;
                 my $status_gen_env3_plot = system($cmd_gen_env3_plot);
-                push @$spatial_effects_plots, $genetic_effects_alt_env3_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_alt_env3_figure_tempfile_string, $statistics_select."_effaltenv3line_".$iterations];
 
                 my $cmd_gen_env4_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                 mat <- fread(\''.$effects_altered_env4_line_chart_tempfile_2.'\', header=TRUE, sep=\',\');
@@ -7255,7 +7254,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_env4_plot;
                 my $status_gen_env4_plot = system($cmd_gen_env4_plot);
-                push @$spatial_effects_plots, $genetic_effects_alt_env4_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_alt_env4_figure_tempfile_string, $statistics_select."_effaltenv4line_".$iterations];
 
                 my $cmd_gen_env5_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                 mat <- fread(\''.$effects_altered_env5_line_chart_tempfile_2.'\', header=TRUE, sep=\',\');
@@ -7277,7 +7276,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_env5_plot;
                 my $status_gen_env5_plot = system($cmd_gen_env5_plot);
-                push @$spatial_effects_plots, $genetic_effects_alt_env5_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_alt_env5_figure_tempfile_string, $statistics_select."_effaltenv5line_".$iterations];
             };
         }
 
@@ -8372,7 +8371,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd;
                 my $status_plotcorr_plot = system($cmd_plotcorr_plot);
-                push @$spatial_effects_plots, $plot_corr_figure_tempfile_string;
+                push @$spatial_effects_plots, [$plot_corr_figure_tempfile_string, $statistics_select."_fullcorr_".$iterations];
             };
 
             eval {
@@ -8768,7 +8767,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 # print STDERR Dumper $cmd_plotcorrsum_plot;
 
                 my $status_plotcorrsum_plot = system($cmd_plotcorrsum_plot);
-                push @$spatial_effects_plots, $plot_corr_summary_figure_tempfile_string;
+                push @$spatial_effects_plots, [$plot_corr_summary_figure_tempfile_string, $statistics_select."_envsimscorr_".$iterations];
 
                 my $env_effects_first_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                 $env_effects_first_figure_tempfile_string .= '.png';
@@ -8800,7 +8799,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd;
                 my $status_spatialfirst_plot_2 = system($cmd_spatialfirst_plot_2);
-                push @$spatial_effects_plots, $env_effects_first_figure_tempfile_string_2;
+                push @$spatial_effects_plots, [$env_effects_first_figure_tempfile_string_2, $statistics_select."_origheatmap_".$iterations];
 
                 my ($sim_effects_corr_results_fh, $sim_effects_corr_results) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
 
@@ -8833,7 +8832,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd;
                 my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
-                push @$spatial_effects_plots, $env_effects_first_figure_tempfile_string;
+                push @$spatial_effects_plots, [$env_effects_first_figure_tempfile_string, $statistics_select."_originaleffheatmap_".$iterations];
 
                 open(my $fh_corr_result, '<', $sim_effects_corr_results) or die "Could not open file '$sim_effects_corr_results' $!";
                     print STDERR "Opened $sim_effects_corr_results\n";
@@ -8886,7 +8885,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd_spatialenvsim_plot_3_env1;
                 my $status_spatialenvsim_plot_3_env1 = system($cmd_spatialenvsim_plot_3_env1);
-                push @$spatial_effects_plots, $env_effects_sim_figure_tempfile_string_3_env1;
+                push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_3_env1, $statistics_select."_env1effheatmap_".$iterations];
 
                 my $env_effects_sim_figure_tempfile_string_3_env2 = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                 $env_effects_sim_figure_tempfile_string_3_env2 .= '.png';
@@ -8917,7 +8916,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd_spatialenvsim_plot_3_env2;
                 my $status_spatialenvsim_plot_3_env2 = system($cmd_spatialenvsim_plot_3_env2);
-                push @$spatial_effects_plots, $env_effects_sim_figure_tempfile_string_3_env2;
+                push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_3_env2, $statistics_select."_env2effheatmap_".$iterations];
 
                 my $env_effects_sim_figure_tempfile_string_3_env3 = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                 $env_effects_sim_figure_tempfile_string_3_env3 .= '.png';
@@ -8948,7 +8947,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd_spatialenvsim_plot_3_env3;
                 my $status_spatialenvsim_plot_3_env3 = system($cmd_spatialenvsim_plot_3_env3);
-                push @$spatial_effects_plots, $env_effects_sim_figure_tempfile_string_3_env3;
+                push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_3_env3, $statistics_select."_env3effheatmap_".$iterations];
 
                 my $env_effects_sim_figure_tempfile_string_3_env4 = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                 $env_effects_sim_figure_tempfile_string_3_env4 .= '.png';
@@ -8979,7 +8978,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd_spatialenvsim_plot_3_env4;
                 my $status_spatialenvsim_plot_3_env4 = system($cmd_spatialenvsim_plot_3_env4);
-                push @$spatial_effects_plots, $env_effects_sim_figure_tempfile_string_3_env4;
+                push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_3_env4, $statistics_select."_env4effheatmap_".$iterations];
 
                 my $env_effects_sim_figure_tempfile_string_3_env5 = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                 $env_effects_sim_figure_tempfile_string_3_env5 .= '.png';
@@ -9010,7 +9009,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd_spatialenvsim_plot_3_env5;
                 my $status_spatialenvsim_plot_3_env5 = system($cmd_spatialenvsim_plot_3_env5);
-                push @$spatial_effects_plots, $env_effects_sim_figure_tempfile_string_3_env5;
+                push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_3_env5, $statistics_select."_env5effheatmap_".$iterations];
             };
 
             eval {
@@ -9205,7 +9204,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_plot;
                 my $status_gen_plot = system($cmd_gen_plot);
-                push @$spatial_effects_plots, $genetic_effects_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_figure_tempfile_string, $statistics_select."_efforigline_".$iterations];
 
                 my $cmd_gen_alt_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                 mat <- fread(\''.$effects_altered_line_chart_tempfile_3.'\', header=TRUE, sep=\',\');
@@ -9227,7 +9226,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_alt_plot;
                 my $status_gen_alt_plot = system($cmd_gen_alt_plot);
-                push @$spatial_effects_plots, $genetic_effects_alt_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_alt_figure_tempfile_string, $statistics_select."_effaltline_".$iterations];
 
                 my $cmd_gen_env1_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                 mat <- fread(\''.$effects_altered_env1_line_chart_tempfile_3.'\', header=TRUE, sep=\',\');
@@ -9249,7 +9248,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_env1_plot;
                 my $status_gen_env1_plot = system($cmd_gen_env1_plot);
-                push @$spatial_effects_plots, $genetic_effects_alt_env1_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_alt_env1_figure_tempfile_string, $statistics_select."_effaltenv1line_".$iterations];
 
                 my $cmd_gen_env2_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                 mat <- fread(\''.$effects_altered_env2_line_chart_tempfile_3.'\', header=TRUE, sep=\',\');
@@ -9271,7 +9270,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_env2_plot;
                 my $status_gen_env2_plot = system($cmd_gen_env2_plot);
-                push @$spatial_effects_plots, $genetic_effects_alt_env2_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_alt_env2_figure_tempfile_string, $statistics_select."_effaltenv2line_".$iterations];
 
                 my $cmd_gen_env3_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                 mat <- fread(\''.$effects_altered_env3_line_chart_tempfile_3.'\', header=TRUE, sep=\',\');
@@ -9293,7 +9292,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_env3_plot;
                 my $status_gen_env3_plot = system($cmd_gen_env3_plot);
-                push @$spatial_effects_plots, $genetic_effects_alt_env3_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_alt_env3_figure_tempfile_string, $statistics_select."_effaltenv3line_".$iterations];
 
                 my $cmd_gen_env4_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                 mat <- fread(\''.$effects_altered_env4_line_chart_tempfile_3.'\', header=TRUE, sep=\',\');
@@ -9315,7 +9314,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_env4_plot;
                 my $status_gen_env4_plot = system($cmd_gen_env4_plot);
-                push @$spatial_effects_plots, $genetic_effects_alt_env4_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_alt_env4_figure_tempfile_string, $statistics_select."_effaltenv4line_".$iterations];
 
                 my $cmd_gen_env5_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                 mat <- fread(\''.$effects_altered_env5_line_chart_tempfile_3.'\', header=TRUE, sep=\',\');
@@ -9337,7 +9336,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_env5_plot;
                 my $status_gen_env5_plot = system($cmd_gen_env5_plot);
-                push @$spatial_effects_plots, $genetic_effects_alt_env5_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_alt_env5_figure_tempfile_string, $statistics_select."_effaltenv5line_".$iterations];
             };
         }
 
@@ -10534,7 +10533,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd;
                 my $status_plotcorr_plot = system($cmd_plotcorr_plot);
-                push @$spatial_effects_plots, $plot_corr_figure_tempfile_string;
+                push @$spatial_effects_plots, [$plot_corr_figure_tempfile_string, $statistics_select."_fullcorr_".$iterations];
             };
 
             eval {
@@ -10930,7 +10929,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 # print STDERR Dumper $cmd_plotcorrsum_plot;
 
                 my $status_plotcorrsum_plot = system($cmd_plotcorrsum_plot);
-                push @$spatial_effects_plots, $plot_corr_summary_figure_tempfile_string;
+                push @$spatial_effects_plots, [$plot_corr_summary_figure_tempfile_string, $statistics_select."_envsimscorr_".$iterations];
 
                 my $env_effects_first_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                 $env_effects_first_figure_tempfile_string .= '.png';
@@ -10962,7 +10961,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd;
                 my $status_spatialfirst_plot_2 = system($cmd_spatialfirst_plot_2);
-                push @$spatial_effects_plots, $env_effects_first_figure_tempfile_string_2;
+                push @$spatial_effects_plots, [$env_effects_first_figure_tempfile_string_2, $statistics_select."_origheatmap_".$iterations];
 
                 my ($sim_effects_corr_results_fh, $sim_effects_corr_results) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
 
@@ -10995,7 +10994,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd;
                 my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
-                push @$spatial_effects_plots, $env_effects_first_figure_tempfile_string;
+                push @$spatial_effects_plots, [$env_effects_first_figure_tempfile_string, $statistics_select."_originaleffheatmap_".$iterations];
 
                 open(my $fh_corr_result, '<', $sim_effects_corr_results) or die "Could not open file '$sim_effects_corr_results' $!";
                     print STDERR "Opened $sim_effects_corr_results\n";
@@ -11048,7 +11047,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd_spatialenvsim_plot_5_env1;
                 my $status_spatialenvsim_plot_5_env1 = system($cmd_spatialenvsim_plot_5_env1);
-                push @$spatial_effects_plots, $env_effects_sim_figure_tempfile_string_5_env1;
+                push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_5_env1, $statistics_select."_env1effheatmap_".$iterations];
 
                 my $env_effects_sim_figure_tempfile_string_5_env2 = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                 $env_effects_sim_figure_tempfile_string_5_env2 .= '.png';
@@ -11079,7 +11078,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd_spatialenvsim_plot_5_env2;
                 my $status_spatialenvsim_plot_5_env2 = system($cmd_spatialenvsim_plot_5_env2);
-                push @$spatial_effects_plots, $env_effects_sim_figure_tempfile_string_5_env2;
+                push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_5_env2, $statistics_select."_env2effheatmap_".$iterations];
 
                 my $env_effects_sim_figure_tempfile_string_5_env3 = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                 $env_effects_sim_figure_tempfile_string_5_env3 .= '.png';
@@ -11110,28 +11109,16 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd_spatialenvsim_plot_5_env3;
                 my $status_spatialenvsim_plot_5_env3 = system($cmd_spatialenvsim_plot_5_env3);
-                push @$spatial_effects_plots, $env_effects_sim_figure_tempfile_string_5_env3;
+                push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_5_env3, $statistics_select."_env3effheatmap_".$iterations];
 
                 my $env_effects_sim_figure_tempfile_string_5_env4 = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                 $env_effects_sim_figure_tempfile_string_5_env4 .= '.png';
                 my $env_effects_sim_figure_tempfile_5_env4 = $c->config->{basepath}."/".$env_effects_sim_figure_tempfile_string_5_env4;
 
                 my $cmd_spatialenvsim_plot_5_env4 = 'R -e "library(data.table); library(ggplot2); library(dplyr); library(viridis); library(GGally); library(gridExtra);
-                mat_env <- fread(\''.$phenotypes_env_heatmap_tempfile.'\', header=TRUE, sep=\',\');
-                mat_p_sim <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile_5.'\', header=TRUE, sep=\',\');
-                mat_eff_sim <- fread(\''.$effects_sim_heatmap_tempfile_5.'\', header=TRUE, sep=\',\');
-                mat_env2 <- fread(\''.$phenotypes_env_heatmap_tempfile2.'\', header=TRUE, sep=\',\');
-                mat_p_sim2 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile2_5.'\', header=TRUE, sep=\',\');
-                mat_eff_sim2 <- fread(\''.$effects_sim_heatmap_tempfile2_5.'\', header=TRUE, sep=\',\');
-                mat_env3 <- fread(\''.$phenotypes_env_heatmap_tempfile3.'\', header=TRUE, sep=\',\');
-                mat_p_sim3 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile3_5.'\', header=TRUE, sep=\',\');
-                mat_eff_sim3 <- fread(\''.$effects_sim_heatmap_tempfile3_5.'\', header=TRUE, sep=\',\');
                 mat_env4 <- fread(\''.$phenotypes_env_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
                 mat_p_sim4 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile4_5.'\', header=TRUE, sep=\',\');
                 mat_eff_sim4 <- fread(\''.$effects_sim_heatmap_tempfile4_5.'\', header=TRUE, sep=\',\');
-                mat_env5 <- fread(\''.$phenotypes_env_heatmap_tempfile5.'\', header=TRUE, sep=\',\');
-                mat_p_sim5 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile5_5.'\', header=TRUE, sep=\',\');
-                mat_eff_sim5 <- fread(\''.$effects_sim_heatmap_tempfile5_5.'\', header=TRUE, sep=\',\');
                 options(device=\'png\');
                 par();
                 gg_env4 <- ggplot(mat_env4, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
@@ -11153,7 +11140,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd_spatialenvsim_plot_5_env4;
                 my $status_spatialenvsim_plot_5_env4 = system($cmd_spatialenvsim_plot_5_env4);
-                push @$spatial_effects_plots, $env_effects_sim_figure_tempfile_string_5_env4;
+                push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_5_env4, $statistics_select."_env4effheatmap_".$iterations];
 
                 my $env_effects_sim_figure_tempfile_string_5_env5 = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                 $env_effects_sim_figure_tempfile_string_5_env5 .= '.png';
@@ -11184,7 +11171,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 # print STDERR Dumper $cmd_spatialenvsim_plot_5_env5;
                 my $status_spatialenvsim_plot_5_env5 = system($cmd_spatialenvsim_plot_5_env5);
-                push @$spatial_effects_plots, $env_effects_sim_figure_tempfile_string_5_env5;
+                push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_5_env5, $statistics_select."_env5effheatmap_".$iterations];
             };
 
             eval {
@@ -11379,7 +11366,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_plot;
                 my $status_gen_plot = system($cmd_gen_plot);
-                push @$spatial_effects_plots, $genetic_effects_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_figure_tempfile_string, $statistics_select."_efforigline_".$iterations];
 
                 my $cmd_gen_alt_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                 mat <- fread(\''.$effects_altered_line_chart_tempfile_5.'\', header=TRUE, sep=\',\');
@@ -11401,7 +11388,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_alt_plot;
                 my $status_gen_alt_plot = system($cmd_gen_alt_plot);
-                push @$spatial_effects_plots, $genetic_effects_alt_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_alt_figure_tempfile_string, $statistics_select."_effaltline_".$iterations];
 
                 my $cmd_gen_env1_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                 mat <- fread(\''.$effects_altered_env1_line_chart_tempfile_5.'\', header=TRUE, sep=\',\');
@@ -11423,7 +11410,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_env1_plot;
                 my $status_gen_env1_plot = system($cmd_gen_env1_plot);
-                push @$spatial_effects_plots, $genetic_effects_alt_env1_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_alt_env1_figure_tempfile_string, $statistics_select."_effaltenv1line_".$iterations];
 
                 my $cmd_gen_env2_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                 mat <- fread(\''.$effects_altered_env2_line_chart_tempfile_5.'\', header=TRUE, sep=\',\');
@@ -11445,7 +11432,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_env2_plot;
                 my $status_gen_env2_plot = system($cmd_gen_env2_plot);
-                push @$spatial_effects_plots, $genetic_effects_alt_env2_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_alt_env2_figure_tempfile_string, $statistics_select."_effaltenv2line_".$iterations];
 
                 my $cmd_gen_env3_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                 mat <- fread(\''.$effects_altered_env3_line_chart_tempfile_5.'\', header=TRUE, sep=\',\');
@@ -11467,7 +11454,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_env3_plot;
                 my $status_gen_env3_plot = system($cmd_gen_env3_plot);
-                push @$spatial_effects_plots, $genetic_effects_alt_env3_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_alt_env3_figure_tempfile_string, $statistics_select."_effaltenv3line_".$iterations];
 
                 my $cmd_gen_env4_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                 mat <- fread(\''.$effects_altered_env4_line_chart_tempfile_5.'\', header=TRUE, sep=\',\');
@@ -11489,7 +11476,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_env4_plot;
                 my $status_gen_env4_plot = system($cmd_gen_env4_plot);
-                push @$spatial_effects_plots, $genetic_effects_alt_env4_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_alt_env4_figure_tempfile_string, $statistics_select."_effaltenv4line_".$iterations];
 
                 my $cmd_gen_env5_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                 mat <- fread(\''.$effects_altered_env5_line_chart_tempfile_5.'\', header=TRUE, sep=\',\');
@@ -11511,12 +11498,13 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 "';
                 print STDERR Dumper $cmd_gen_env5_plot;
                 my $status_gen_env5_plot = system($cmd_gen_env5_plot);
-                push @$spatial_effects_plots, $genetic_effects_alt_env5_figure_tempfile_string;
+                push @$spatial_effects_plots, [$genetic_effects_alt_env5_figure_tempfile_string, $statistics_select."_effaltenv5line_".$iterations];
             };
         }
     }
 
     $c->stash->{rest} = {
+        analytics_protocol_id => $analytics_protocol_id,
         unique_traits => \@sorted_trait_names,
         unique_accessions => \@unique_accession_names,
         unique_plots => \@unique_plot_names,
