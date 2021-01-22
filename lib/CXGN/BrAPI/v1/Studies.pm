@@ -688,8 +688,8 @@ sub observation_units {
 
         my $entry_type = $obs_unit->{is_a_control} ? 'check' : 'test';
         push @data_window, {
-			X => $obs_unit->{obsunit_col_number},
-			Y => $obs_unit->{obsunit_row_number},
+			X => $obs_unit->{obsunit_row_number},
+			Y => $obs_unit->{obsunit_col_number},
 			blockNumber => $obs_unit->{obsunit_block_number},
 			entryNumber => '',
 			entryType => $entry_type,
