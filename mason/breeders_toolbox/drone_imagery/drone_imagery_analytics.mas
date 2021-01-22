@@ -658,8 +658,6 @@ jQuery(document).ready(function() {
                     }
                     html = html + '</ul>';
 
-                    html = html + '<h4>Heritablilty (h2):</h4><ul><li>Original: '+response.original_h2+'</li><li>Altered: '+response.altered_h2+'</li><li>Linear Sim: '+response.sim1_h2+'</li><li>Random 1D Normal: '+response.sim2_h2+'</li><li>Random 2D Normal: '+response.sim3_h2+'</li><li>Random: '+response.sim4_h2+'</li></ul>';
-
                     if (response.simulated_environment_to_effect_correlations) {
                         html = html + '<h4>Simulated Env to Effects Correlations:</h4><ul>';
                         for(var i=0; i<response.simulated_environment_to_effect_correlations.length; i++) {

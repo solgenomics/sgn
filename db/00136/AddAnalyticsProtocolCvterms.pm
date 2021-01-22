@@ -64,6 +64,9 @@ sub patch {
         ],
         'protocol_property' => [
             'analytics_protocol_properties'
+        ],
+        'experiment_type' => [
+            'analytics_protocol_experiment'
         ]
     };
 
