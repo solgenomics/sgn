@@ -342,6 +342,18 @@ sub manage_nirs :Path("/breeders/nirs") Args(0) {
 
 }
 
+sub manage_smd :Path("/breeders/smd") Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()) {
+	    $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	    return;
+    }
+
+    $c->stash->{template} = '/breeders_toolbox/manage_smd.mas';
+}
+
 sub manage_upload :Path("/breeders/upload") Args(0) {
     my $self =shift;
     my $c = shift;
