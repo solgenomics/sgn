@@ -179,12 +179,13 @@ solGS.submitJob = {
 	    type    : 'POST',
 	    dataType: 'json',
 	    url     : '/solgs/check/user/login/',
-	    success : function(response) {
-		if (response.loggedin) {
-		    var contact = response.contact;
-		    
-		    args['user_name']  = contact.name;
+	    success : function(res) {
+		if (res.loggedin) {
+		    var contact = res.contact;
+		  
+		    args['first_name']  = contact.first_name;
 		    args['user_email'] = contact.email;
+		    args['user_name'] = contact.user_name;
 
 		    solGS.submitJob.getProfileDialog(page, args);
 
@@ -326,11 +327,15 @@ solGS.submitJob = {
 	var referer = window.location.href;
 	
 	if ( referer.match(/solgs\/populations\/combined\//) ) {
-	    action = ' action="/solgs/models/combined/trials/' + popId + '/gp/' + protocolId + '"';		 		 
+	    action = ' action="/solgs/models/combined/trials/'
+		+ popId + '/gp/'
+		+ protocolId + '"';		 		 
 	}
 
 	if ( referer.match(/solgs\/population\//) ) {
-	    action = ' action="/solgs/traits/all/population/' + popId + '/gp/' + protocolId + '"';
+	    action = ' action="/solgs/traits/all/population/'
+		+ popId + '/gp/'
+		+ protocolId + '"';
 	}
 	
 	var method = ' method="POST"';
@@ -365,42 +370,43 @@ solGS.submitJob = {
 	jQuery('<div />', {id: 'email-form'})
 	    .html(form)
 	    .dialog({	
-		height : 350,
-		width  : 400,
+		height : 'auto',
+		width  : 'auto',
 		modal  : true,
-		title  : 'Info about your analysis.',
+		title  : 'Please fill in some info about your analysis.',
  		buttons: {
 		    Submit: {
-			click: function() { 
-			    
-			    var userName  = jQuery("#user_name").val();		
-			    var userEmail = jQuery("#user_email").val();
-			    
+			click: function(e) { 
+						    
+			    var userEmail = jQuery("#user_email").val();			    
 			    var analysisName = jQuery('#analysis_name').val();
 			    var analysisType = args.analysis_type;
-			    
+			    var userName  = args.user_name;	
 			    var dataSetType = args.data_set_type;
 			    
 			    args['user_email'] = userEmail;
-			    args = JSON.stringify(args);
+			    args['analysis_name'] = analysisName;
+			    args['analysis_page'] = page;
+			    
+			    //args = JSON.stringify(args);
 			    
 			    var analysisProfile = {
 				'user_name'    : userName, 
-				'user_email'   : userEmail,
 				'analysis_name': analysisName,
 				'analysis_page': page,
 				'analysis_type': analysisType,
 				'data_set_type': dataSetType,
 				'arguments'    : args,
-			    };
-			    
-			    jQuery(this).dialog('close');
-			    
-			    solGS.submitJob.saveAnalysisProfile(analysisProfile);
+			    };			   
+
+			   
+			    solGS.submitJob.checkAnalysisName(analysisName, analysisProfile);
+			    solGS.submitJob.checkEmail(userEmail);
+					   
 			},
 			id   :'submit_job',
 			class: 'btn btn-success',
-			text: 'Submit'
+			text: 'Submit',
 		    },
 
 		    Cancel:  {
@@ -413,6 +419,74 @@ solGS.submitJob = {
 		}
 	    });
 
+    },
+
+
+    checkEmail: function(email) {
+
+	if (email) {
+	     jQuery("#user_email")
+		.css('border', 'solid #96d3ec');
+	    
+	    jQuery("#form-feedback-email")
+		.empty();
+	  	    
+	} else {
+	    alert('email else ' + email);
+	    jQuery("#user_email")
+		.css('border', 'solid #FF0000');
+	    
+	    jQuery("#form-feedback-email")
+		.text('Please give your email.');
+	}
+		
+    },
+    
+    
+    checkAnalysisName: function(name, analysisProfile) {
+
+	jQuery.ajax({
+	    dataType: 'json',
+	    type    : 'POST',
+ 	    data    : {'name': name},
+	    url     : '/solgs/check/analysis/name',
+	    success : function(res) {
+	
+		if (res.match > 0) {
+		    jQuery("#analysis_name")
+			.css('border', 'solid #FF0000');
+		    
+		    jQuery("#form-feedback-analysis-name")
+			.text('The same name exists. Please give a new name.');
+
+		    var email = jQuery('#user_email').val();
+	 	    solGS.submitJob.checkEmail(email);
+		    
+		} else {
+		     jQuery("#analysis_name")
+			.css('border', 'solid #96d3ec');
+
+		    jQuery("#form-feedback-analysis-name")
+			.empty();
+		    
+		    analysisProfile['arguments'] = JSON.stringify(analysisProfile.arguments);
+		    
+		    var email = jQuery('#user_email').val();
+	 	    solGS.submitJob.checkEmail(email);
+		   
+		    if (email) {
+		    jQuery("#email-form").dialog('close');
+			solGS.submitJob.saveAnalysisProfile(analysisProfile);
+		    }
+		}
+	    },
+	    error: function (response) {
+		var message = 'Error occured submitting the job. Please contact the developers.'
+		    + "\n\nHint: " + response.result;
+		solGS.alertMessage(message);		
+	    }
+	});	
+	
     },
 
 
@@ -559,28 +633,27 @@ solGS.submitJob = {
 	    email = args.user_email;
 	}
 	
-	var userName = '';
-	if (args.user_name) {
-	    userName = args.user_name;
+	var firstName = '';
+	if (args.first_name) {
+	    firstName = args.first_name;
 	}
+
+	var emailForm = '<form><div class="form-group">'	 
+     	    + '<label for="first_name">Name:</label>'
+     	    + '<input type="text" class="form-control" id="first_name"  value=\"' + firstName + '\"/>'
+	    + '</div>'
+	    + '<div class="form-group">'
+	    + '<label for="analysis_name">Analysis name:</label>'
+	    + '<input type="text" class="form-control" id="analysis_name">'
+	    + '<div style="color:red" id="form-feedback-analysis-name"> </div>'
+	    + '</div>'
+	    + '<div class="form-group">'
+     	    + '<label for="user_email">Email:</label>'
+     	    + '<input type="email" class="form-control" id="user_email" value=\"' + email + '\"/>'
+	    + '<div style="color:red" id="form-feedback-email"> </div>'
+	    + '</div>'
 	
-	var emailForm = '<p>Please fill in your:</p>'
-            + '<div class="form-group">'
-	    + '<table class="table">'
-	    + '<tr>'
-     	    + '<td>Name:</td>'
-     	    + '<td><input type="text" class="form-control" name="user_name" id="user_name" value=\"' + userName + '\"/></td>' 
-     	    + '</tr>'
-	    + '<tr>'
-	    + '<td>Analysis name:</td>'
-	    + '<td><input  type="text"  class="form-control" name="analysis_name" id="analysis_name"></td>'
-	    + '</tr>'
-            + '<tr>'
-     	    + '<td>Email:</td>'
-     	    + '<td><input type="text" class="form-control" name="user_email" id="user_email" value=\"' + email + '\"/></td>' 
-     	    + '</tr>'
-	    + '</table>'
-	    + '<div>';
+	    +'</form>';
 	
 	return emailForm;
 
@@ -874,4 +947,6 @@ jQuery.fn.doesExist = function() {
 
         return jQuery(this).length > 0;
 
- };
+};
+
+
