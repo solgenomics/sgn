@@ -20,7 +20,8 @@
             <&| /util/workflow.mas:step, title=> "Intro" &>
               <& /page/page_title.mas, title=>"Upload Sequence Metadata" &>
               <div class="well">
-                  <p>This workflow will guide you through the process of uploading sequence metadata to the database using a gff3-formatted file.</p>
+                  <p>This workflow will guide you through the process of uploading sequence metadata to the database using a 
+                  <a href="https://m.ensembl.org/info/website/upload/gff3.html">gff3-formatted</a> file.</p>
                   <p>The following gff3 columns are used by the sequence metadata uploader:</p>
                   <ul>
                     <li><strong>#1 / seqid:</strong> The name of the feature (ie chromosome) the metadata is associated with</li>
@@ -32,7 +33,7 @@
               </div>
 
               <div class="center">
-                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                <button class="btn btn-primary" id="sequence_metadata_intro_step">Go to Next Step</button>
               </div>
             </&>
             <!-- End Intro -->
@@ -46,17 +47,16 @@
                 <div class="form-group">
                   <label class="col-sm-3 control-label">Data Type:&nbsp;</label>
                   <div class="col-sm-9">
-                    <select class="form-control" id="sequence_metadata_upload_type_select">
-                      <option value="mnase">MNase</option>
-                      <option value="vep">VEP</option>
-                      <option value="">...</option>
-                    </select>
+                    <div id="sequence_metadata_upload_type_select_div">Loading...</div>
                     <br />
-                    <p><span class="glyphicon glyphicon-info-sign"></span>&nbsp;If your data is not one of the above data types, please <a href="/contact/form">contact us</a> about adding a new data type.</p>
+                    <div class="well">
+                      <p><span class="glyphicon glyphicon-info-sign"></span>&nbsp;<span id="sequence_metadata_upload_type_definition"></span></p>
+                    </div>
                   </div>
                 </div>
               </form>
-
+              <p><span class="glyphicon glyphicon-question-sign"></span>&nbsp;If your data is not one of the above data types, please <a href="/contact/form">contact us</a> about adding a new data type.</p>
+              
               <br /><br />
 
               <div class="center">
@@ -177,22 +177,70 @@ jQuery(document).ready(function() {
         jQuery('#upload_sequence_metadata_workflow_modal').modal("show");
     });
 
+
+    // Complete the Intro Step
+    var sequence_metadata_data_types = [];
+    jQuery('#sequence_metadata_intro_step').click(function() {
+
+      // Get and set the data types
+      jQuery.ajax({
+        type: 'GET',
+        dataType: 'json',
+        url: '/ajax/html/select/sequence_metadata_types?id=sequence_metadata_upload_type_select',
+        success: function(data) {
+          if ( data && data.select && data.json ) {
+            sequence_metadata_data_types = data.json;
+            jQuery('#sequence_metadata_upload_type_select_div').html(data.select);
+            jQuery('#sequence_metadata_upload_type_select').on('change', function() {
+              setDataTypeDefinition(this.value);
+            });
+            setDataTypeDefinition(data.json[0].id);
+          }
+          else {
+            alert("ERROR: Could not load data types!");
+          }
+        },
+        error: function() {
+          alert("ERROR: Could not load data types!");
+        }
+      });
+
+      Workflow.complete('#sequence_metadata_intro_step');
+      Workflow.focus('#upload_sequence_metadata_workflow', 1);
+    });
+
+
+    // Update Data Type Definition
+    function setDataTypeDefinition(id) {
+      for ( let i = 0; i < sequence_metadata_data_types.length; i++ ) {
+        if ( parseInt(sequence_metadata_data_types[i].id) === parseInt(id) ) {
+          jQuery('#sequence_metadata_upload_type_definition').html(sequence_metadata_data_types[i].definition);
+        }
+      }
+    }
+
+
     // Complete the Data Type Step
-    var sequence_metadata_upload_type = undefined;
+    var sequence_metadata_upload_type_id = undefined;
     jQuery('#sequence_metadata_upload_type_step').click(function() {
-      sequence_metadata_upload_type = jQuery('#sequence_metadata_upload_type_select').val();
-      
+      sequence_metadata_upload_type_id = jQuery('#sequence_metadata_upload_type_select').val();
+
       // Set the existing protocol list
-      get_select_box('sequence_metadata_protocols', 'sequence_metadata_upload_protocol_select', {'checkbox_name':'sequence_metadata_upload_protocol_id', 'sequence_metadata_data_type':sequence_metadata_upload_type});
-      jQuery('#sequence_metadata_upload_protocol_sequence_metadata_type:text').val(sequence_metadata_upload_type);
+      get_select_box('sequence_metadata_protocols', 'sequence_metadata_upload_protocol_select', {'checkbox_name':'sequence_metadata_upload_protocol_id', 'sequence_metadata_data_type_id':sequence_metadata_upload_type_id});
+      for ( let i = 0; i < sequence_metadata_data_types.length; i++ ) {
+        if ( parseInt(sequence_metadata_data_types[i].id) === parseInt(sequence_metadata_upload_type_id) ) {
+          jQuery('#sequence_metadata_upload_protocol_sequence_metadata_type:text').val(sequence_metadata_data_types[i].name);
+        }
+      }
 
       Workflow.complete("#sequence_metadata_upload_type_step");
       Workflow.focus('#upload_sequence_metadata_workflow', 2);
     });
 
+
     // Display the new protocol form
     jQuery('#sequence_metadata_upload_new_protocol').click(function() {
-      jQuery('#sequence_metadata_upload_protocol_div').show();
+      jQuery('#sequence_metadata_upload_protocol_div').toggle();
     });
 
 });
