@@ -734,11 +734,45 @@ sub get_high_dimensional_phenotypes_protocols : Path('/ajax/html/select/high_dim
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_sequence_metadata_types : Path('/ajax/html/select/sequence_metadata_types') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $id = $c->req->param("id") || "sequence_metadata_upload_type_select";
+    my $name = $c->req->param("name") || "sequence_metadata_upload_type_select";
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $sequence_metadata_types_cv_id = $schema->resultset("Cv::Cv")->find( { name => "sequence_metadata_types" } )->cv_id();
+    my $cvterms = $schema->resultset("Cv::Cvterm")->search( { cv_id => $sequence_metadata_types_cv_id } );
+
+    my @json = ();
+    my @options = ();
+    while (my $cvterm = $cvterms->next) {
+        my %result = (
+            id => $cvterm->get_column('cvterm_id'),
+            name => $cvterm->get_column('name'),
+            definition => $cvterm->get_column('definition')
+        );
+        push(@json, \%result);
+        push(@options, [$result{'id'}, $result{'name'}]);
+    }
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@options
+    );
+
+    $c->stash->{rest} = { 
+        select => $html,
+        json => \@json
+    };
+}
+
 sub get_sequence_metadata_protocols : Path('/ajax/html/select/sequence_metadata_protocols') Args(0) {
     my $self = shift;
     my $c = shift;
     my $checkbox_name = $c->req->param('checkbox_name');
-    my $data_type = $c->req->param('sequence_metadata_data_type');
+    my $data_type_cvterm_id = $c->req->param('sequence_metadata_data_type_id');
     
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
@@ -750,7 +784,7 @@ sub get_sequence_metadata_protocols : Path('/ajax/html/select/sequence_metadata_
         FROM nd_protocol
         JOIN nd_protocolprop USING(nd_protocol_id)
         WHERE nd_protocol.type_id=$protocol_type_cvterm_id AND nd_protocolprop.type_id=$protocolprop_type_cvterm_id
-        AND nd_protocolprop.value->>'sequence_metadata_type' = '$data_type';";
+        AND (nd_protocolprop.value->>'sequence_metadata_type_id')::integer = $data_type_cvterm_id;";
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
 
