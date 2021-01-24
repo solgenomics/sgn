@@ -73,6 +73,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $statistics_select_original = $c->req->param('statistics_select');
@@ -11501,6 +11503,43 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 push @$spatial_effects_plots, [$genetic_effects_alt_env5_figure_tempfile_string, $statistics_select."_effaltenv5line_".$iterations];
             };
         }
+    }
+
+    foreach my $f (@$spatial_effects_plots) {
+        my $auxiliary_model_file = $f->[0];
+        my $auxiliary_model_file_archive_type = $f->[1];
+
+        my $model_aux_original_name = basename($auxiliary_model_file);
+
+        my $uploader_autoencoder = CXGN::UploadFile->new({
+            tempfile => $auxiliary_model_file,
+            subdirectory => $auxiliary_model_file_archive_type,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $model_aux_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_role
+        });
+        my $archived_aux_filename_with_path = $uploader_autoencoder->archive();
+        my $md5_aux = $uploader_autoencoder->get_md5($archived_aux_filename_with_path);
+        if (!$archived_aux_filename_with_path) {
+            return { error => "Could not save file $model_aux_original_name in archive." };
+        }
+        print STDERR "Archived Analytics Figure File: $archived_aux_filename_with_path\n";
+
+        my $md_row_aux = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
+        my $file_row_aux = $metadata_schema->resultset("MdFiles")->create({
+            basename => basename($archived_aux_filename_with_path),
+            dirname => dirname($archived_aux_filename_with_path),
+            filetype => $auxiliary_model_file_archive_type,
+            md5checksum => $md5_aux->hexdigest(),
+            metadata_id => $md_row_aux->metadata_id()
+        });
+
+        my $experiment_files_aux = $phenome_schema->resultset("NdExperimentMdFiles")->create({
+            nd_experiment_id => $analytics_nd_experiment_id,
+            file_id => $file_row_aux->file_id()
+        });
     }
 
     $c->stash->{rest} = {
