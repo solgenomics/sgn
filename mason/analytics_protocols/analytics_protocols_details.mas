@@ -1,0 +1,72 @@
+<%args>
+$analytics_protocol_id
+$analytics_protocol_name
+$analytics_protocol_description
+$analytics_protocol_type_id
+$analytics_protocol_type_name
+$analytics_protocol_create_date
+$analytics_protocol_properties
+</%args>
+
+<div class="row">
+    <div class="col-sm-8">
+
+        <table class="table table-hover table-bordered" >
+
+            <tr>
+                <td><b>Analytics Protocol Name</b></td>
+                <td>
+                    <div id="analytics_protocol_name">
+% if ($analytics_protocol_name) {
+%   print "$analytics_protocol_name";
+% } else {
+%   print "<span class='text-danger'>[No Analytics Protocol Name]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr><td><b>Description</b></td>
+                <td>
+                    <div id="analytics_protocol_description">
+% if ($analytics_protocol_description) {
+%  print "$analytics_protocol_description";
+% } else {
+%  print "<span class='text-danger'>[No Description]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr><td><b>Type</b></td>
+                <td>
+                    <div id="analytics_protocol_type_name">
+%  print "$analytics_protocol_type_name";
+                    </div>
+                </td>
+            </tr>
+
+            <tr><td><b>Created</b></td>
+                <td>
+                    <div id="analytics_protocol_create_date">
+%  print "$analytics_protocol_create_date";
+                    </div>
+                </td>
+            </tr>
+
+            <tr><td><b>Properties</b></td>
+                <td>
+                    <div id="analytics_protocol_properties">
+%  if ($analytics_protocol_properties) {
+%    while (my($k,$v) = each %{$analytics_protocol_properties}) {
+%       print $k." : ".$v."<br/>";
+%    }
+%  }
+                    </div>
+                </td>
+            </tr>
+
+        </table>
+
+    </div>
+</div>

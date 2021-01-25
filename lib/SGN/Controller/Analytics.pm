@@ -4,6 +4,7 @@ package SGN::Controller::Analytics;
 use Moose;
 use URI::FromHash 'uri';
 use Data::Dumper;
+use JSON::XS;
 
 BEGIN { extends 'Catalyst::Controller' };
 
@@ -66,7 +67,8 @@ sub analytics_protocol_detail :Path('/analytics_protocols') Args(1) {
     $c->stash->{analytics_protocol_description} = $description;
     $c->stash->{analytics_protocol_type_id} = $type_id;
     $c->stash->{analytics_protocol_type_name} = $available_types{$type_id};
-    $c->stash->{analytics_protocol_properties} = $props_json;
+    $c->stash->{analytics_protocol_create_date} = $create_date;
+    $c->stash->{analytics_protocol_properties} = decode_json $props_json;
     $c->stash->{template} = '/analytics_protocols/detail.mas';
 }
 

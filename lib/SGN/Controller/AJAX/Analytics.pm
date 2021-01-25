@@ -60,6 +60,26 @@ sub list_analytics_protocols_by_user_table :Path('/ajax/analytics_protocols/by_u
     $c->stash->{rest} = { data => \@table };
 }
 
+sub list_analytics_protocols_result_files :Path('/ajax/analytics_protocols/result_files') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+    my $analytics_protocol_id = $c->req->param('analytics_protocol_id');
+
+    if (!$analytics_protocol_id) {
+        $c->stash->{rest} = { error => "No ID given!" };
+        $c->detach();
+    }
+
+    my @table;
+    $c->stash->{rest} = { data => \@table };
+}
+
 sub _check_user_login {
     my $c = shift;
     my $role_check = shift;
