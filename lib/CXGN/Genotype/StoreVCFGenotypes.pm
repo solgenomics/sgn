@@ -580,7 +580,6 @@ sub validate {
 
     my $stock_type = $self->observation_unit_type_name;
     my $stock_type_id;
-    $self->stock_type_id($stock_type_id);
     my @missing_stocks;
     my $validator = CXGN::List::Validate->new();
     if ($stock_type eq 'tissue_sample'){

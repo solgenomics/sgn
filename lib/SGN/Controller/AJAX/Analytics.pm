@@ -76,7 +76,31 @@ sub list_analytics_protocols_result_files :Path('/ajax/analytics_protocols/resul
         $c->detach();
     }
 
+    my $analytics_experiment_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analytics_protocol_experiment', 'experiment_type')->cvterm_id();
+
+    my $q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, basename, dirname, md.file_id, md.filetype, nd_protocol.type_id, nd_experiment.type_id
+        FROM metadata.md_files AS md
+        JOIN metadata.md_metadata AS meta ON (md.metadata_id=meta.metadata_id)
+        JOIN phenome.nd_experiment_md_files using(file_id)
+        JOIN nd_experiment using(nd_experiment_id)
+        JOIN nd_experiment_protocol using(nd_experiment_id)
+        JOIN nd_protocol using(nd_protocol_id)
+        WHERE nd_protocol.nd_protocol_id=? AND nd_experiment.type_id=$analytics_experiment_type_cvterm_id;";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($analytics_protocol_id);
     my @table;
+    while (my ($model_id, $model_name, $model_description, $basename, $filename, $file_id, $filetype, $model_type_id, $experiment_type_id, $property_type_id, $property_value) = $h->fetchrow_array()) {
+        # $result{$model_id}->{model_id} = $model_id;
+        # $result{$model_id}->{model_name} = $model_name;
+        # $result{$model_id}->{model_description} = $model_description;
+        # $result{$model_id}->{model_type_id} = $model_type_id;
+        # $result{$model_id}->{model_type_name} = $schema->resultset("Cv::Cvterm")->find({cvterm_id => $model_type_id })->name();
+        # $result{$model_id}->{model_experiment_type_id} = $experiment_type_id;
+        # $result{$model_id}->{model_files}->{$filetype} = $filename."/".$basename;
+        # $result{$model_id}->{model_file_ids}->{$file_id} = $basename;
+        push @table, [$basename, $filetype, "<a href='/breeders/phenotyping/download/$file_id'>Download</a>"];
+    }
+
     $c->stash->{rest} = { data => \@table };
 }
 
