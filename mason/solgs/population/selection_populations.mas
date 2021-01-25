@@ -42,11 +42,17 @@ if ($c->req->path =~ /solgs\/traits\/all\/population/) {
 &>
 
   <div  class="form-inline">
-    <input  type="text" class="form-control" placeholder="search for a selection population" size="30" id="population_search_entry"/>   
-    <button type="submit" class="btn btn-primary" id="search_selection_pop">
+    <input  type="text"
+	    class="form-control"
+	    placeholder="search for a selection population"
+	    size="30" id="population_search_entry"/>
+    
+    <button type="submit"
+	    class="btn btn-success"
+	    id="search_selection_pop">
       <span class="glyphicon glyphicon-search"></span>
     </button>
-
+<div style="color:red" id="form-feedback-search-trials"> </div>
   <!-- <button id="search_all_selection_pops" style="position:absolute;right:20px;display:none;" class="btn btn-success" type="submit">  -->
   <!--     <span value="Search for all relevant selection populations">Search for all relevant selection populations</span>  -->
   <!--   </button> -->

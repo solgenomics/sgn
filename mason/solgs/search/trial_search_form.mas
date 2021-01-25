@@ -22,8 +22,14 @@ Isaak Y Tecle (iyt2@cornell.edu)
     title       => "Search for a training population or create a new one using one or more trials",
   &>
 
-  <div   style="padding:40px 0px 20px 0px" align="center" class="form-inline">
-    <input  type="text" class="form-control" placeholder="search for a trial or training population" size="50" id="population_search_entry"/>   
+  <div class="form-group">
+  <div style="padding:40px 0px 20px 0px" align="center" class="form-inline">
+
+    <input  type="text"
+	    class="form-control"
+	    placeholder="search for a trial or training population"
+	    size="50" id="population_search_entry"/>
+    
     <button type="submit" class="btn btn-success" id="search_training_pop">
       <span class="glyphicon glyphicon-search"></span>
     </button>
@@ -31,9 +37,9 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <!-- <button id="search_all_training_pops" style="position:absolute;right:20px;" class="btn btn-success" type="submit">  -->
 <!--       <span value="Search for all training populations">Search for all training populations</span>  -->
 <!--     </button> -->
-  </div>
-
-
+<div style="color:red" id="form-feedback-search-trials"> </div>
+  </div>  
+</div>
   <div id="searched_trials_message"  style="padding:20px 0px 10px 0px;font-weight:bold;text-align:center;color:#A7C942"></div>
   <div id="searched_trials_div" style="display:none;"></div>
  <br />
