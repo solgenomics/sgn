@@ -248,13 +248,14 @@ has 'category_order' => ( isa => 'Maybe[ArrayRef]',
 			  predicate => 'has_category_order',
     );
 
-
-
-
-
 has 'is_live' =>     ( isa => 'Bool',
 		       is => 'rw',
 		       default => 0,
+    );
+
+has 'is_public' => ( isa => 'Bool',
+			is => 'rw',
+			default => 0,
     );
 
 
@@ -279,7 +280,6 @@ has 'exclude_phenotype_outlier' => (
 );
 
 has 'breeder_search' => (isa => 'CXGN::BreederSearch', is => 'rw');
-
 
 sub BUILD {
     my $self = shift;
@@ -309,11 +309,10 @@ sub BUILD {
 	$self->trial_types($dataset->{categories}->{trial_types});
 	$self->category_order($dataset->{category_order});
 	$self->is_live($dataset->{is_live});
+	$self->is_public($dataset->{is_public});
     }
 
-
     else { print STDERR "Creating empty dataset object\n"; }
-
 
 }
 
@@ -329,15 +328,101 @@ sub get_datasets_by_user {
     my $class = shift;
     my $people_schema = shift;
     my $sp_person_id = shift;
+    my $found;
 
     my $rs = $people_schema->resultset("SpDataset")->search( { sp_person_id => $sp_person_id });
 
     my @datasets;
+    my @datasets_id;
     while (my $row = $rs->next()) {
 	push @datasets,  [ $row->sp_dataset_id(), $row->name(), $row->description() ];
+	push @datasets_id, $row->sp_dataset_id();
+    }
+
+    $rs = $people_schema->resultset("SpDataset")->search( { is_public => 1 });
+
+    while (my $row = $rs->next()) {
+	$found = 0;
+	for (@datasets_id) {
+	    if ( $_ == $row->sp_dataset_id() ) { 
+	        $found = 1; 
+	    }
+	}
+        if (!$found) {
+            push @datasets,  [ $row->sp_dataset_id(), 'public - ' . $row->name(), $row->description() ];
+        }
+    }
+    return \@datasets;
+}
+
+=head2 datasets_public()
+
+=cut
+
+sub get_datasets_public {
+    my $class = shift;
+    my $people_schema = shift;
+
+    my $rs = $people_schema->resultset("SpDataset")->search( { is_public => 1 });
+
+    my @datasets;
+    while (my $row = $rs->next()) {
+        push @datasets,  [ $row->sp_dataset_id(), $row->name(), $row->description() ];
     }
 
     return \@datasets;
+}
+
+=head2 datasets_public()
+
+=cut
+
+sub set_dataset_public {
+    my $self = shift;
+
+    my $row = $self->people_schema()->resultset("SpDataset")->find( { sp_dataset_id => $self->sp_dataset_id() });
+
+    if (! $row) {
+        return "The specified dataset does not exist";
+    } else {
+        eval {
+	   $row->is_public(1);
+	   $row->sp_person_id($self->sp_person_id());
+	   $row->sp_dataset_id($self->sp_dataset_id());
+	   $row->update();
+        };
+        if ($@) {
+            return "An error occurred, $@";
+        } else {
+            return undef;
+        }
+    }
+}
+
+=head2 datasets_public()
+
+=cut
+
+sub set_dataset_private {
+    my $self = shift;
+    
+    my $row = $self->people_schema()->resultset("SpDataset")->find( { sp_dataset_id => $self->sp_dataset_id() });
+    
+    if (! $row) {
+        return "The specified dataset does not exist";
+    } else { 
+        eval {
+           $row->is_public(0);
+           $row->sp_person_id($self->sp_person_id());
+           $row->sp_dataset_id($self->sp_dataset_id());
+           $row->update();
+        }; 
+        if ($@) {
+            return "An error occurred, $@";
+        } else {
+            return undef;
+        }
+    }
 }
 
 =head2 exists_dataset_name
@@ -400,8 +485,6 @@ sub to_hashref {
 
 sub store {
     my $self = shift;
-
- 
 
     print STDERR "dataset_id = ".$self->sp_dataset_id()."\n";
     if (!$self->has_sp_dataset_id()) {

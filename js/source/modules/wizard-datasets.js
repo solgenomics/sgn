@@ -50,12 +50,45 @@ export function WizardDatasets(main_id,wizard){
         var details = '';
         dataset.category_order.forEach(function(cat) {
             var contents = dataset.categories[cat];
-            details+= `\n    ${contents.length} ${cat}`;
+	    if(contents) {
+                details+= `\n    ${contents.length} ${cat}`;
+	    }
         })
         if ( confirm(`Dataset ${name} contains\: ${details}\nAre you sure you would like to delete it? Deletion cannot be undone.`)) {
             datasets.deleteDataset(val);
             load_datasets();
         }
+    }
+  });
+
+  main.select(".wizard-dataset-public").on("click",function(){
+    var name = main.select(".wizard-dataset-select option:checked").text();
+    var val = main.select(".wizard-dataset-select").node().value;
+    if(val!==""){
+        var dataset = datasets.getDataset(val);
+        var details = "";
+        dataset.category_order.forEach(function(cat) {
+            var contents = dataset.categories[cat];
+	    if(contents) {
+                details+= `\n    ${contents.length} ${cat}`;
+	    }
+        });
+        datasets.makePublicDataset(val);
+	load_datasets();
+    }
+  });
+
+  main.select(".wizard-dataset-private").on("click",function(){
+    var name = main.select(".wizard-dataset-select option:checked").text();
+    var val = main.select(".wizard-dataset-select").node().value;
+    if(val!==""){
+        var dataset = datasets.getDataset(val);
+        var details = "";
+        dataset.category_order.forEach(function(cat) {
+            var contents = dataset.categories[cat];
+            details+= `\n    ${contents.length} ${cat}`;
+        });
+        datasets.makePrivateDataset(val);
     }
   });
 
