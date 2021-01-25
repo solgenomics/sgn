@@ -166,20 +166,33 @@ function checkTrainingPopulation (popId) {
 jQuery(document).ready( function () {
     
     jQuery('#population_search_entry').keyup(function(e) {
-     	
-	if(e.keycode == 13) {	    
+
+	jQuery("#population_search_entry")
+		.css('border', 'solid #96d3ec');
+	    
+	jQuery("#form-feedback-search-trials")
+	    .empty();
+	
+	if(e.keycode == 13) {
+	    
      	    jQuery('#search_training_pop').click();
     	}
     });
 
     jQuery('#search_training_pop').on('click', function () {
 	
+	var entry = jQuery('#population_search_entry').val();
 	jQuery("#searched_trials_message").hide();
 
-	var entry = jQuery('#population_search_entry').val();
-
 	if (entry) {
+	     	    
 	    checkPopulationExists(entry);
+	} else {
+	    jQuery("#population_search_entry")
+		.css('border', 'solid #FF0000');
+	    
+	    jQuery("#form-feedback-search-trials")
+		.text('Please enter trial name.');
 	}
     });
           

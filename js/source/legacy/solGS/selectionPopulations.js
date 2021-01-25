@@ -55,10 +55,16 @@ function checkSelectionPopulations () {
 jQuery(document).ready( function () {
     
     jQuery('#population_search_entry').keyup(function(e){
+	
+	jQuery("#population_search_entry")
+		.css('border', 'solid #96d3ec');
+	    
+	jQuery("#form-feedback-search-trials")
+	    .empty();
      	
 	if(e.keycode == 13) {	    
      	    jQuery('#search_selection_pop').click();
-    	}
+    	} 
     });
 
     jQuery('#search_selection_pop').on('click', function () {
@@ -69,6 +75,12 @@ jQuery(document).ready( function () {
 
 	if (entry) {
 	    checkSelectionPopulationRelevance(entry);
+	}  else {
+	    jQuery("#population_search_entry")
+		.css('border', 'solid #FF0000');
+	    
+	    jQuery("#form-feedback-search-trials")
+		.text('Please enter trial name.');
 	}
     });
           
@@ -110,6 +122,8 @@ function checkSelectionPopulationRelevance (popName) {
 	    
 	    var selectionPopId = response.selection_pop_id;
 	    if (selectionPopId) {
+		console.log('tr pop id ' + trainingPopId)
+		console.log('se pop id ' + selectionPopId)
 		
 		if (selectionPopId != trainingPopId) {
 	
