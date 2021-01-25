@@ -217,57 +217,137 @@ sub germplasm_pedigree {
         }
     }
 
+    my $direct_descendant_ids;
     my %result;
-    my @data_files;
     my $total_count = 0;
-    my $s = CXGN::Stock->new( schema => $self->bcs_schema(), stock_id => $stock_id);
-    if ($s) {
+    my @data_files;
+
+    push @$direct_descendant_ids, $stock_id; #excluded in parent retrieval to prevent loops
+
+    my $stock = $self->bcs_schema->resultset("Stock::Stock")->find({stock_id => $stock_id});
+
+    if ($stock) {
         $total_count = 1;
-        my $uniquename = $s->uniquename;
-        my $parents = $s->get_parents();
-        my $pedigree_string = $s->get_pedigree_string('Parents');
-        my $female_name = $parents->{'mother'};
-        my $male_name = $parents->{'father'};
-        my $female_id = $parents->{'mother_id'};
-        my $male_id = $parents->{'father_id'};
+        my $stock_uniquename = $stock->uniquename();
+        my $stock_type = $stock->type_id();
 
-        my $cross_info = CXGN::Cross->get_cross_info_for_progeny($self->bcs_schema, $female_id, $male_id, $stock_id);
-        my $cross_id = $cross_info ? $cross_info->[0] : '';
-        my $cross_name = $cross_info ? $cross_info->[1] : '';
-        my $cross_year = $cross_info ? $cross_info->[3] : '';
-        my $cross_type = $cross_info ? $cross_info->[2] : '';
+        my $mother;
+        my $father;
 
-        my @siblings;
-        if ($female_name || $male_name){
-            my $progenies = CXGN::Cross->get_progeny_info($self->bcs_schema, $female_name, $male_name);
-            #print STDERR Dumper $progenies;
-            foreach (@$progenies){
-                if ($_->[5] ne $uniquename){
-                    my $germplasm_id = $_->[4];
-                    push @siblings, {
-                        germplasmDbId => qq|$germplasm_id|,
-                        defaultDisplayName => $_->[5]
-                    };
-                }
+        ## Get parents relationships
+        my $cvterm_female_parent = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'female_parent', 'stock_relationship')->cvterm_id();
+        my $cvterm_male_parent = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'male_parent', 'stock_relationship')->cvterm_id();
+        my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
+
+        #get the stock relationships for the stock
+        my $female_parent_stock_id;
+        my $male_parent_stock_id;
+
+        my $stock_relationships = $stock->search_related("stock_relationship_objects",undef,{ prefetch => ['type','subject'] });
+
+        my $female_parent_relationship = $stock_relationships->find({type_id => $cvterm_female_parent, subject_id => {'not_in' => $direct_descendant_ids}});
+        if ($female_parent_relationship) {
+            $female_parent_stock_id = $female_parent_relationship->subject_id();
+            $mother = $self->bcs_schema->resultset("Stock::Stock")->find({stock_id => $female_parent_stock_id})->uniquename();
+        }
+        my $male_parent_relationship = $stock_relationships->find({type_id => $cvterm_male_parent, subject_id => {'not_in' => $direct_descendant_ids}});
+        if ($male_parent_relationship) {
+            $male_parent_stock_id = $male_parent_relationship->subject_id();
+            $father = $self->bcs_schema->resultset("Stock::Stock")->find({stock_id => $male_parent_stock_id})->uniquename();
+        }
+
+        ##Get sibblings
+        my $q = "SELECT DISTINCT female_parent.stock_id, female_parent.uniquename, male_parent.stock_id, male_parent.uniquename, progeny.stock_id, progeny.uniquename, stock_relationship1.value
+            FROM stock_relationship as stock_relationship1
+            INNER JOIN stock AS female_parent ON (stock_relationship1.subject_id = female_parent.stock_id) AND stock_relationship1.type_id = ?
+            INNER JOIN stock AS progeny ON (stock_relationship1.object_id = progeny.stock_id) AND progeny.type_id = ?
+            LEFT JOIN stock_relationship AS stock_relationship2 ON (progeny.stock_id = stock_relationship2.object_id) AND stock_relationship2.type_id = ?
+            LEFT JOIN stock AS male_parent ON (stock_relationship2.subject_id = male_parent.stock_id) "; 
+
+        my $h;
+
+        if($female_parent_stock_id && $male_parent_stock_id){
+            $q = $q . "WHERE female_parent.stock_id = ? AND male_parent.stock_id = ?";
+            $h = $self->bcs_schema()->storage->dbh()->prepare($q);
+            $h->execute($cvterm_female_parent, $accession_cvterm, $cvterm_male_parent, $female_parent_stock_id, $male_parent_stock_id);
+        }
+        elsif ($female_parent_stock_id) {
+            $q = $q . "WHERE female_parent.stock_id = ? ORDER BY male_parent.stock_id";
+            $h = $self->bcs_schema()->storage->dbh()->prepare($q);
+            $h->execute($cvterm_female_parent, $accession_cvterm, $cvterm_male_parent, $female_parent_stock_id);
+        }
+        elsif ($male_parent_stock_id) {
+            $q = $q . "WHERE male_parent.stock_id = ? ORDER BY female_parent.stock_id";
+            $h = $self->bcs_schema()->storage->dbh()->prepare($q);
+            $h->execute($cvterm_female_parent, $accession_cvterm, $cvterm_male_parent, $male_parent_stock_id);
+        }
+        else {
+            $h = $self->bcs_schema()->storage->dbh()->prepare($q);
+            $h->execute($cvterm_female_parent, $accession_cvterm, $cvterm_male_parent);
+        }
+
+        my @siblings1 = ();
+        my $cross_plan;
+
+        while (my($female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $progeny_id, $progeny_name, $cross_type) = $h->fetchrow_array()){
+             if ($progeny_id ne $stock_id){
+                push @siblings1, {
+                    germplasmDbId => qq|$progeny_id|,
+                    defaultDisplayName => $progeny_name
+                };
             }
+            $cross_plan = $cross_type;
+            $mother = $female_parent_name;
+            $father = $male_parent_name;
+        }
+
+        #Cross information
+        my @membership_info = ();
+        my $cross_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'cross', 'stock_type')->cvterm_id();
+
+        if ($stock_type eq $cross_cvterm){
+
+            my $cross_member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "cross_member_of", "stock_relationship")->cvterm_id();
+            my $cross_experiment_type_id =  SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'cross_experiment', 'experiment_type')->cvterm_id();
+            my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "family_name", "stock_type")->cvterm_id();
+            my $project_year_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project year', 'project_property')->cvterm_id();
+
+            my $q = "SELECT project.project_id, project.name, project.description, stock.stock_id, stock.uniquename, year.value 
+                FROM nd_experiment_stock
+                JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id = nd_experiment.nd_experiment_id) AND nd_experiment.type_id = ?
+                JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id = nd_experiment.nd_experiment_id)
+                JOIN project ON (nd_experiment_project.project_id = project.project_id)
+                LEFT JOIN projectprop AS year ON (project.project_id=year.project_id) 
+                LEFT JOIN stock_relationship ON (nd_experiment_stock.stock_id = stock_relationship.subject_id) AND stock_relationship.type_id = ?
+                LEFT JOIN stock ON (stock_relationship.object_id = stock.stock_id) AND stock.type_id = ?
+                WHERE nd_experiment_stock.stock_id = ? AND year.type_id = ?";
+
+            my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+            $h->execute($cross_experiment_type_id, $cross_member_of_type_id, $family_name_type_id, $stock_id, $project_year_cvterm_id);
+
+            
+            while (my ($crossing_experiment_id, $crossing_experiment_name, $description, $family_id, $family_name, $year) = $h->fetchrow_array()){
+                push @membership_info, [$crossing_experiment_id, $crossing_experiment_name, $description, $family_id, $family_name, $year]
+            }
+             # print STDERR Dumper(\@membership_info);
         }
 
         %result = (
-            germplasmDbId=>qq|$stock_id|,
-            defaultDisplayName=>$uniquename,
-            pedigree=>$pedigree_string,
-            crossingPlan=>$cross_type,
-            crossingYear=>$cross_year,
-            familyCode=>$cross_name,
-            parent1Id=>$female_id,
-            parent2Id=>$male_id,
-            parent1DbId=>$female_id,
-            parent1Name=>$female_name,
-            parent1Type=>'FEMALE',
-            parent2DbId=>$male_id,
-            parent2Name=>$male_name,
-            parent2Type=>'MALE',
-            siblings=>\@siblings
+                germplasmDbId=>qq|$stock_id|,
+                defaultDisplayName=>$stock_uniquename,
+                pedigree=>"$mother/$father",
+                crossingPlan=>$cross_plan,
+                crossingYear=>$membership_info[0][5],
+                familyCode=>$membership_info[0][4],
+                parent1Id=>$female_parent_stock_id,
+                parent2Id=>$male_parent_stock_id,
+                parent1DbId=>$female_parent_stock_id,
+                parent1Name=>$mother,
+                parent1Type=>'FEMALE',
+                parent2DbId=>$male_parent_stock_id,
+                parent2Name=>$father,
+                parent2Type=>'MALE',
+                siblings=>\@siblings1
         );
     }
 
