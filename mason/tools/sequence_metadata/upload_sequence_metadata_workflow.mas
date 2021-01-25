@@ -72,11 +72,9 @@
 
               <!-- Will be filled with existing protocol table -->
               <div id="sequence_metadata_upload_protocol_select"></div>
-
-              <hr />
-
+              
               <div class="center">
-                <button class="btn btn-primary" id="sequence_metadata_upload_new_protocol">Protocol Not Shown. Create a New Protocol</button>
+                <button class="btn btn-primary" id="sequence_metadata_upload_new_protocol">Create New Protocol</button>
               </div>
 
               <br /><br />
@@ -241,6 +239,8 @@ jQuery(document).ready(function() {
     // Display the new protocol form
     jQuery('#sequence_metadata_upload_new_protocol').click(function() {
       jQuery('#sequence_metadata_upload_protocol_div').toggle();
+      jQuery('#sequence_metadata_upload_protocol_select').toggle();
+      jQuery('#sequence_metadata_upload_new_protocol').html(jQuery('#sequence_metadata_upload_protocol_select').is(':visible') ? "Create New Protocol" : "Use Existing Protocol");
     });
 
 });

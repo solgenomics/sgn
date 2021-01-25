@@ -15,7 +15,16 @@ usage: load_featureprop_json.pl -H [hostname] -D [database] -U [dbuser] -p [dbpa
 -i path to input file (required)
 -t cvterm id of featureprop type (required)
 -n protocol id (nd_protocol_id of the protocol describing the data) (required)
--c chunk count (max number of items to include in a single JSON value)
+-c chunk count (max number of items to include in a single JSON value) (default: 8000)
+
+This script will load seqeuence metadata (annotations for a specific region of sequence of a 
+feature, ie chromosome) into the featureprop_json table.  The metadata will be loaded as an 
+array of JSON objects (one object for each sequence region) with up to {chunk count} objects 
+per row in the database.
+
+The verify_featureprop_json.pl script can be used to pre-process the input gff file (sort 
+the lines by the seqid and start columns) and verify the features exist for each seqid 
+in the file.
 
 The input file needs to be formatted as a gff file.  The following columns are used:
 - 1: seqid - the name of the feature (chromosome name)
@@ -50,7 +59,7 @@ my $dbpass = $opt_p;
 my $infile = $opt_i;
 my $cvterm_id = $opt_t;
 my $nd_protocol_id = $opt_n;
-my $chunk_size = $opt_c ? $opt_c : 10000;
+my $chunk_size = $opt_c ? $opt_c : 8000;
 
 
 # Connect to Database
