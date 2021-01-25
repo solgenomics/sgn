@@ -92,10 +92,13 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
     my $protocol_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_imagery_analytics_env_simulation_protocol', 'protocol_type')->cvterm_id();
     my $protocolprop_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analytics_protocol_properties', 'protocol_property')->cvterm_id();
+    my $protocolprop_result_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analytics_protocol_result_summary', 'protocol_property')->cvterm_id();
     my $analytics_experiment_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analytics_protocol_experiment', 'experiment_type')->cvterm_id();
 
     my $protocol_properties;
     my $analytics_nd_experiment_id;
+    my $protocol_result_summary = [];
+    my $protocol_result_summary_id;
     if (!$analytics_protocol_id) {
         my $q = "INSERT INTO nd_protocol (name, description, type_id) VALUES (?,?,?) RETURNING nd_protocol_id;";
         my $h = $schema->storage->dbh()->prepare($q);
@@ -118,16 +121,17 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             legendre_order_number => $c->req->param('legendre_order_number'),
             permanent_environment_structure => $c->req->param('permanent_environment_structure'),
             permanent_environment_structure_phenotype_correlation_traits => decode_json $c->req->param('permanent_environment_structure_phenotype_correlation_traits'),
-            a_env => $c->req->param('a_env') || rand(1),
-            b_env => $c->req->param('b_env') || rand(1),
-            ro_env => $c->req->param('ro_env') || rand(1),
-            row_ro_env => $c->req->param('row_ro_env') || rand(1),
             env_variance_percent => $c->req->param('env_variance_percent') || 0.2,
-            number_iterations => $c->req->param('number_iterations') || 1
+            number_iterations => $c->req->param('number_iterations') || 2
         };
         my $q2 = "INSERT INTO nd_protocolprop (nd_protocol_id, value, type_id) VALUES (?,?,?);";
         my $h2 = $schema->storage->dbh()->prepare($q2);
         $h2->execute($analytics_protocol_id, encode_json $protocol_properties, $protocolprop_type_cvterm_id);
+
+        my $q3 = "INSERT INTO nd_protocolprop (nd_protocol_id, value, type_id) VALUES (?,?,?) RETURNING nd_protocolprop_id;";
+        my $h3 = $schema->storage->dbh()->prepare($q3);
+        $h3->execute($analytics_protocol_id, encode_json $protocol_result_summary, $protocolprop_result_type_cvterm_id);
+        ($protocol_result_summary_id) = $h3->fetchrow_array();
 
         my $location_id = $schema->resultset("NaturalDiversity::NdGeolocation")->search({description=>'[Computation]'})->first->nd_geolocation_id();
         my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create({
@@ -138,19 +142,26 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         $analytics_nd_experiment_id = $experiment->nd_experiment_id();
     }
     else {
-        my $q = "SELECT value FROM nd_protocolprop WHERE nd_protocol_id=?;";
+        my $q = "SELECT value FROM nd_protocolprop WHERE nd_protocol_id=? AND type_id=?;";
         my $h = $schema->storage->dbh()->prepare($q);
-        $h->execute($analytics_protocol_id);
+        $h->execute($analytics_protocol_id, $protocolprop_type_cvterm_id);
         my ($value) = $h->fetchrow_array();
         $protocol_properties = decode_json $value;
 
-        my $q2 = "SELECT nd_experiment.nd_experiment_id
+        my $q2 = "SELECT nd_protocolprop_id, value FROM nd_protocolprop WHERE nd_protocol_id=? AND type_id=?;";
+        my $h2 = $schema->storage->dbh()->prepare($q2);
+        $h2->execute($analytics_protocol_id, $protocolprop_result_type_cvterm_id);
+        my ($protocol_result_summary_id_select, $value2) = $h2->fetchrow_array();
+        $protocol_result_summary = $value2 ? decode_json $value2 : [];
+        $protocol_result_summary_id = $protocol_result_summary_id_select;
+
+        my $q3 = "SELECT nd_experiment.nd_experiment_id
             FROM nd_experiment_protocol
             JOIN nd_experiment ON(nd_experiment_protocol.nd_experiment_id = nd_experiment.nd_experiment_id)
             WHERE nd_protocol_id=? AND nd_experiment.type_id = ?;";
-        my $h2 = $schema->storage->dbh()->prepare($q2);
-        $h2->execute($analytics_protocol_id, $analytics_experiment_type_cvterm_id);
-        ($analytics_nd_experiment_id) = $h2->fetchrow_array();
+        my $h3 = $schema->storage->dbh()->prepare($q3);
+        $h3->execute($analytics_protocol_id, $analytics_experiment_type_cvterm_id);
+        ($analytics_nd_experiment_id) = $h3->fetchrow_array();
     }
 
     my $analytics_select = $protocol_properties->{analytics_select};
@@ -168,10 +179,6 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $legendre_order_number = $protocol_properties->{legendre_order_number};
     my $permanent_environment_structure = $protocol_properties->{permanent_environment_structure};
     my $permanent_environment_structure_phenotype_correlation_traits = $protocol_properties->{permanent_environment_structure_phenotype_correlation_traits};
-    my $a_env = $protocol_properties->{a_env};
-    my $b_env = $protocol_properties->{b_env};
-    my $ro_env = $protocol_properties->{ro_env};
-    my $row_ro_env = $protocol_properties->{row_ro_env};
     my $env_variance_percent = $protocol_properties->{env_variance_percent};
     my $number_iterations = $protocol_properties->{number_iterations};
 
@@ -327,24 +334,40 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
     my $spatial_effects_plots;
     my $spatial_effects_files_store;
-    my @env_corr_res;
+    my $env_corr_res;
+    my $env_iterations;
 
-    my (%phenotype_data_original, @data_matrix_original, @data_matrix_phenotypes_original);
-    my (%trait_name_encoder, %trait_name_encoder_rev, %stock_info, %unique_accessions, %seen_days_after_plantings, %seen_times, %trait_to_time_map, %obsunit_row_col, %stock_row_col, %stock_name_row_col, %stock_row_col_id, %seen_rows, %seen_cols, %seen_plots, %seen_plot_names, %plot_id_map, %trait_composing_info, @sorted_trait_names, @unique_accession_names, @unique_plot_names, %seen_trial_ids, %seen_trait_names, %unique_traits_ids, @phenotype_header, $header_string);
-    my (@sorted_scaled_ln_times, %plot_id_factor_map_reverse, %plot_id_count_map_reverse, %accession_id_factor_map, %accession_id_factor_map_reverse, %time_count_map_reverse, @rep_time_factors, @ind_rep_factors, %plot_rep_time_factor_map, %seen_rep_times, %seen_ind_reps, @legs_header, %polynomial_map);
-    my $time_min = 100000000;
-    my $time_max = 0;
-    my $min_row = 10000000000;
-    my $max_row = 0;
-    my $min_col = 10000000000;
-    my $max_col = 0;
-    my $phenotype_min_original = 1000000000;
-    my $phenotype_max_original = -1000000000;
+    my (@sorted_trait_names, @unique_accession_names, @unique_plot_names);
 
     for my $iterations (1..$number_iterations) {
 
+        my $a_env = rand(1);
+        my $b_env = rand(1);
+        my $ro_env = rand(1);
+        my $row_ro_env = rand(1);
+
+        $env_iterations->{$iterations} = {
+            a_env => $a_env,
+            b_env => $b_env,
+            ro_env => $ro_env,
+            row_ro_env => $row_ro_env,
+        };
+
+        my (%phenotype_data_original, @data_matrix_original, @data_matrix_phenotypes_original);
+        my (%trait_name_encoder, %trait_name_encoder_rev, %stock_info, %unique_accessions, %seen_days_after_plantings, %seen_times, %trait_to_time_map, %obsunit_row_col, %stock_row_col, %stock_name_row_col, %stock_row_col_id, %seen_rows, %seen_cols, %seen_plots, %seen_plot_names, %plot_id_map, %trait_composing_info, %seen_trial_ids, %seen_trait_names, %unique_traits_ids, @phenotype_header, $header_string);
+        my (@sorted_scaled_ln_times, %plot_id_factor_map_reverse, %plot_id_count_map_reverse, %accession_id_factor_map, %accession_id_factor_map_reverse, %time_count_map_reverse, @rep_time_factors, @ind_rep_factors, %plot_rep_time_factor_map, %seen_rep_times, %seen_ind_reps, @legs_header, %polynomial_map);
+        my $time_min = 100000000;
+        my $time_max = 0;
+        my $min_row = 10000000000;
+        my $max_row = 0;
+        my $min_col = 10000000000;
+        my $max_col = 0;
+        my $phenotype_min_original = 1000000000;
+        my $phenotype_max_original = -1000000000;
+
         if ($statistics_select_original eq '' || $statistics_select_original eq 'airemlf90_grm_random_regression_dap_blups') {
             $statistics_select = 'airemlf90_grm_random_regression_dap_blups';
+            $permanent_environment_structure = 'identity';
 
             eval {
                 print STDERR "PREPARE ORIGINAL PHENOTYPE FILES\n";
@@ -2286,7 +2309,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             @columns = $csv->fields();
                         }
                         foreach (@columns) {
-                            push @env_corr_res, $header[$counter].": ".$_;
+                            push @{$env_corr_res->{$header[$counter]}->{values}}, $_;
                             $counter++;
                         }
                     }
@@ -4725,7 +4748,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             @columns = $csv->fields();
                         }
                         foreach (@columns) {
-                            push @env_corr_res, $header[$counter].": ".$_;
+                            push @{$env_corr_res->{$header[$counter]}->{values}}, $_;
                             $counter++;
                         }
                     }
@@ -6792,7 +6815,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             @columns = $csv->fields();
                         }
                         foreach (@columns) {
-                            push @env_corr_res, $header[$counter].": ".$_;
+                            push @{$env_corr_res->{$header[$counter]}->{values}}, $_;
                             $counter++;
                         }
                     }
@@ -8852,7 +8875,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             @columns = $csv->fields();
                         }
                         foreach (@columns) {
-                            push @env_corr_res, $header[$counter].": ".$_;
+                            push @{$env_corr_res->{$header[$counter]}->{values}}, $_;
                             $counter++;
                         }
                     }
@@ -11014,7 +11037,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             @columns = $csv->fields();
                         }
                         foreach (@columns) {
-                            push @env_corr_res, $header[$counter].": ".$_;
+                            push @{$env_corr_res->{$header[$counter]}->{values}}, $_;
                             $counter++;
                         }
                     }
@@ -11505,8 +11528,28 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         }
     }
 
+    foreach my $t (keys %$env_corr_res) {
+        my $vals = $env_corr_res->{$t}->{values};
+        my $env_corr_res_stat = Statistics::Descriptive::Full->new();
+        $env_corr_res_stat->add_data(@$vals);
+        $env_corr_res->{$t}->{std} = $env_corr_res_stat->standard_deviation();
+        $env_corr_res->{$t}->{mean} = $env_corr_res_stat->mean();
+    }
+    print STDERR Dumper $env_corr_res;
+    print STDERR Dumper $env_iterations;
+
+    push @$protocol_result_summary, {
+        statistics_select_original => $statistics_select_original,
+        number_iterations => $number_iterations,
+        env_iterations => $env_iterations,
+        env_correlation_results => $env_corr_res
+    };
+    my $q2 = "UPDATE nd_protocolprop SET value=? WHERE nd_protocolprop_id=?;";
+    my $h2 = $schema->storage->dbh()->prepare($q2);
+    $h2->execute(encode_json $protocol_result_summary, $protocol_result_summary_id);
+
     foreach my $f (@$spatial_effects_plots) {
-        my $auxiliary_model_file = $f->[0];
+        my $auxiliary_model_file = $c->config->{basepath}.$f->[0];
         my $auxiliary_model_file_archive_type = $f->[1];
 
         my $model_aux_original_name = basename($auxiliary_model_file);
@@ -11567,9 +11610,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         application_name => "NickMorales Mixed Models Analytics",
         application_version => "V1.01",
         field_trial_design => $field_trial_design,
-        trait_composing_info => \%trait_composing_info,
         spatial_effects_plots => $spatial_effects_plots,
-        simulated_environment_to_effect_correlations => \@env_corr_res,
+        simulated_environment_to_effect_correlations => $env_corr_res,
     };
 }
 

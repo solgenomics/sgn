@@ -85,9 +85,10 @@ sub list_analytics_protocols_result_files :Path('/ajax/analytics_protocols/resul
         JOIN nd_experiment using(nd_experiment_id)
         JOIN nd_experiment_protocol using(nd_experiment_id)
         JOIN nd_protocol using(nd_protocol_id)
-        WHERE nd_protocol.nd_protocol_id=? AND nd_experiment.type_id=$analytics_experiment_type_cvterm_id;";
+        WHERE nd_protocol.nd_protocol_id=$analytics_protocol_id AND nd_experiment.type_id=$analytics_experiment_type_cvterm_id;";
+    print STDERR $q."\n";
     my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute($analytics_protocol_id);
+    $h->execute();
     my @table;
     while (my ($model_id, $model_name, $model_description, $basename, $filename, $file_id, $filetype, $model_type_id, $experiment_type_id, $property_type_id, $property_value) = $h->fetchrow_array()) {
         # $result{$model_id}->{model_id} = $model_id;

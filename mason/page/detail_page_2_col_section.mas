@@ -119,6 +119,7 @@ $analytics_protocol_type_id => undef
 $analytics_protocol_type_name => undef
 $analytics_protocol_create_date => undef
 $analytics_protocol_properties => {}
+$analytics_protocol_result_summary => {}
 
 </%args>
 
@@ -402,7 +403,7 @@ $analytics_protocol_properties => {}
                                 <& /analyses/model_detail_page_analyses_section.mas, model_id => $model_id &>
 % } #End model_analyses
 % if ($info_section_id eq 'analytics_protocol_details'){
-                                <& /analytics_protocols/analytics_protocols_details.mas, analytics_protocol_id=>$analytics_protocol_id, analytics_protocol_name=>$analytics_protocol_name, analytics_protocol_description=>$analytics_protocol_description, analytics_protocol_type_id=>$analytics_protocol_type_id, analytics_protocol_type_name=>$analytics_protocol_type_name, analytics_protocol_create_date=>$analytics_protocol_create_date, analytics_protocol_properties=>$analytics_protocol_properties &>
+                                <& /analytics_protocols/analytics_protocols_details.mas, analytics_protocol_id=>$analytics_protocol_id, analytics_protocol_name=>$analytics_protocol_name, analytics_protocol_description=>$analytics_protocol_description, analytics_protocol_type_id=>$analytics_protocol_type_id, analytics_protocol_type_name=>$analytics_protocol_type_name, analytics_protocol_create_date=>$analytics_protocol_create_date, analytics_protocol_properties=>$analytics_protocol_properties, analytics_protocol_result_summary=>$analytics_protocol_result_summary &>
 % } #End analytics_protocol_details
 % if ($info_section_id eq 'analytics_protocol_result_files'){
                                 <& /analytics_protocols/analytics_protocols_result_files.mas, analytics_protocol_id=>$analytics_protocol_id, analytics_protocol_name=>$analytics_protocol_name &>

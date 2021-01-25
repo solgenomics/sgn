@@ -18,7 +18,7 @@ Displays a page with a table of all the analytics run by the currently logged in
   
 </%doc>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ], entries => ['analyses' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ], entries => [] &>
 
 <& /page/page_title.mas, title => "Your Analytics Protocols" &>
 

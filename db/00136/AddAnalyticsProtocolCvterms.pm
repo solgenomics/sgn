@@ -63,7 +63,8 @@ sub patch {
             'drone_imagery_analytics_env_simulation_protocol'
         ],
         'protocol_property' => [
-            'analytics_protocol_properties'
+            'analytics_protocol_properties',
+            'analytics_protocol_result_summary',
         ],
         'experiment_type' => [
             'analytics_protocol_experiment'
