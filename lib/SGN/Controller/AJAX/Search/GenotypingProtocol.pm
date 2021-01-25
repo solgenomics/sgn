@@ -151,7 +151,10 @@ sub genotyping_protocol_pcr_markers_GET : Args(0) {
         my $forward_primer = $marker_details{$marker_name}{'forward_primer'};
         my $reverse_primer = $marker_details{$marker_name}{'reverse_primer'};
         my $annealing_temperature = $marker_details{$marker_name}{'annealing_temperature'};
-        push @results, [$marker_name, $product_sizes, $forward_primer, $reverse_primer, $annealing_temperature];
+        my $sequence_motif = $marker_details{$marker_name}{'sequence_motif'};
+        my $sequence_source = $marker_details{$marker_name}{'sequence_source'};
+        my $linkage_group = $marker_details{$marker_name}{'linkage_group'};
+        push @results, [$marker_name, $product_sizes, $forward_primer, $reverse_primer, $annealing_temperature, $sequence_motif, $sequence_source, $linkage_group];
     }
     print STDERR "MARKER INFO =".Dumper(\@results)."\n";
     $c->stash->{rest} = {data => \@results};

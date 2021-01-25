@@ -10,6 +10,9 @@ $protocol_id
             <th>Forword Primer</th>
             <th>Reverse Primer</th>
             <th>Annealing Temperature</th>
+            <th>Sequence Motif</th>
+            <th>Sequence Source</th>
+            <th>Linkage Group</th>
         </tr>
     </thead>
     </tbody>
