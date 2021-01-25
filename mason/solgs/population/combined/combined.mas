@@ -104,5 +104,12 @@ $genotyping_protocol_id
 </&>
 %}
 
- <input type="hidden" id="population_id" value="<% $combo_pops_id %>" />
- <input type="hidden" id="genotyping_protocol_id" value="<% $genotyping_protocol_id %>" />
+
+ <& /solgs/population/hidden_input.mas,
+    pop_id  => $combo_pops_id,
+   combo_pops_id => $combo_pops_id,
+     pop_name => $project_name,
+     pop_desc => $project_desc,
+     genotyping_protocol_id => $genotyping_protocol_id,
+     
+   &>
