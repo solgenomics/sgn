@@ -424,19 +424,13 @@ solGS.submitJob = {
 
     checkEmail: function(email) {
 
-	if (email) {
-	     jQuery("#user_email")
-		.css('border', 'solid #96d3ec');
-	    
-	    jQuery("#form-feedback-email")
-		.empty();
-	  	    
-	} else {
-	    alert('email else ' + email);
+	alert('check email ' + email)
+	
+	if (email == '') {	   
 	    jQuery("#user_email")
 		.css('border', 'solid #FF0000');
 	    
-	    jQuery("#form-feedback-email")
+	    jQuery("#form-feedback-user-email")
 		.text('Please give your email.');
 	}
 		
@@ -462,13 +456,7 @@ solGS.submitJob = {
 		    var email = jQuery('#user_email').val();
 	 	    solGS.submitJob.checkEmail(email);
 		    
-		} else {
-		     jQuery("#analysis_name")
-			.css('border', 'solid #96d3ec');
-
-		    jQuery("#form-feedback-analysis-name")
-			.empty();
-		    
+		} else {		    
 		    analysisProfile['arguments'] = JSON.stringify(analysisProfile.arguments);
 		    
 		    var email = jQuery('#user_email').val();
@@ -618,7 +606,10 @@ solGS.submitJob = {
 	if(!protocolId) {
 	    protocolId = jQuery('#genotyping_protocol_id').val();
 	}
-	
+
+	var popDesc = jQuery('#population_desc').val();
+	console.log('pop desc ' + popDesc)
+	args['pop_desc'] = jQuery('#population_desc').val();
 	args['genotyping_protocol_id'] = protocolId;
 	
 	return args;
@@ -650,7 +641,7 @@ solGS.submitJob = {
 	    + '<div class="form-group">'
      	    + '<label for="user_email">Email:</label>'
      	    + '<input type="email" class="form-control" id="user_email" value=\"' + email + '\"/>'
-	    + '<div style="color:red" id="form-feedback-email"> </div>'
+	    + '<div style="color:red" id="form-feedback-user-email"> </div>'
 	    + '</div>'
 	
 	    +'</form>';
@@ -948,5 +939,27 @@ jQuery.fn.doesExist = function() {
         return jQuery(this).length > 0;
 
 };
+
+
+    
+jQuery(document).on('keyup', '#user_email', function(e) {
+
+    jQuery("#user_email")
+	.css('border', 'solid #96d3ec');
+    
+    jQuery("#form-feedback-user-email")
+	.empty();
+});
+
+jQuery(document).on('keyup', '#analysis_name', function(e) {
+
+    jQuery("#analysis_name")
+	.css('border', 'solid #96d3ec');
+    
+    jQuery("#form-feedback-analysis-name")
+	.empty();
+});
+
+
 
 
