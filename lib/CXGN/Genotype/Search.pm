@@ -2119,4 +2119,37 @@ sub _check_filtered_markers {
     return @all_marker_objects;
 }
 
+
+sub get_pcr_genotype_info {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $genotype_data_project_list = $self->genotype_data_project_list;
+    my $protocol_id_list = $self->protocol_id_list;
+    my $protocol_id = $protocol_id_list->[0];
+#    print STDERR "PROTOCOL ID =".Dumper($protocol_id)."\n";
+    my $pcr_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pcr_marker_genotyping', 'genotype_property')->cvterm_id();
+    my $pcr_protocolprop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pcr_marker_details', 'protocol_property')->cvterm_id();
+    my $pcr_protocol_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pcr_marker_protocol', 'protocol_type')->cvterm_id();
+
+    my $q = "SELECT stock.stock_id, stock.uniquename, genotypeprop.value
+        FROM nd_experiment_protocol
+        JOIN nd_experiment_genotype ON (nd_experiment_protocol.nd_experiment_id = nd_experiment_genotype.nd_experiment_id)
+        JOIN genotypeprop ON (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id) AND genotypeprop.type_id = ?
+        JOIN nd_experiment_stock ON (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        JOIN stock ON (nd_experiment_stock.stock_id = stock.stock_id)
+        WHERE nd_experiment_protocol.nd_protocol_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($pcr_genotyping_cvterm_id, $protocol_id);
+
+    my @pcr_genotype_info = ();
+    while (my ($stock_id, $stock_name, $genotype_data) = $h->fetchrow_array()){
+        push @pcr_genotype_info, [$stock_id, $stock_name, $genotype_data]
+    }
+
+    print STDERR "PCR GENOTYPE INFO =".Dumper(\@pcr_genotype_info)."\n";
+    return \@pcr_genotype_info;
+
+}
+
 1;

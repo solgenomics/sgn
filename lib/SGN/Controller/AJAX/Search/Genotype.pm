@@ -119,4 +119,27 @@ sub _clean_inputs {
 	return $params;
 }
 
+
+sub pcr_genotyping_data_search : Path('/ajax/pcr_genotyping_data/search') : ActionClass('REST') { }
+
+sub pcr_genotyping_data_search_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $clean_inputs = _clean_inputs($c->req->params);
+    my $protocol_id = $clean_inputs->{protocol_id_list};
+    print STDERR "AJAX PROTOCOL ID =".Dumper($protocol_id)."\n";
+    my $genotypes_search = CXGN::Genotype::Search->new({
+        bcs_schema=>$bcs_schema,
+        people_schema=>$people_schema,
+        protocol_id_list=>$protocol_id,
+    });
+    my $result = $genotypes_search->get_pcr_genotype_info();
+    print STDERR "AJAX PCR GENOTYPE INFO =".Dumper($result)."\n";
+
+    my @results;
+    $c->stash->{rest} = { data => \@results};
+}
+
 1;
