@@ -92,6 +92,16 @@
                                         <input type="text" class="form-control" id="drone_imagery_analytics_select_analytics_desc" />
                                     </div>
                                 </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Number Interations: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="drone_imagery_analytics_number_iterations">
+                                            <option value="2">2</option>
+                                            <option value="10">10</option>
+                                            <option value="25">25</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -610,6 +620,7 @@ jQuery(document).ready(function() {
                 'analytics_protocol_name':manage_drone_imagery_analytics_name,
                 'analytics_protocol_desc':manage_drone_imagery_analytics_desc,
                 'analytics_select':manage_drone_imagery_analytics_type,
+                'number_iterations':jQuery('#drone_imagery_analytics_number_iterations').val(),
                 'relationship_matrix_type':jQuery('#drone_imagery_analytics_relationship_matrix_type_select_div').val(),
                 'protocol_id':jQuery('#drone_image_analytics_genotyping_protocol_select').val(),
                 'compute_from_parents':jQuery('#drone_image_analytics_genotyping_protocol_compute_from_parents_select').val(),
