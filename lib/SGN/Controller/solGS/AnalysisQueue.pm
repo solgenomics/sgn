@@ -89,7 +89,7 @@ sub check_analyses_names {
     my $log_match;
     if ($logged_names) 
     {
-        $log_match = grep { $_ =~ /$new_name/ } @$logged_names;
+        $log_match = grep { $_ =~ /$new_name/i } @$logged_names;
     }
 
     my $db_match;
@@ -1141,7 +1141,7 @@ sub confirm_request :Path('/solgs/confirm/request/') Args(0) {
     my $job_type = $self->get_confirm_msg($c);
     my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $referer = $c->req->referer;
-    
+
     my $msg = "<p>$job_type</p>" 
 	. "<p>You will receive an email when it is completed. " 
 	. "You can also check the status of the job on " 
