@@ -149,6 +149,11 @@ has 'offset' => (
     is => 'rw'
 );
 
+has 'order_by' => (
+    isa => 'Str|Undef',
+    is => 'rw'
+);
+
 sub search {
     my $self = shift;
     my $schema = $self->bcs_schema();
@@ -161,7 +166,7 @@ sub search {
     my %synonym_hash_lookup = %{$stock_lookup->get_synonym_hash_lookup()};
 
     my $select_clause = "SELECT observationunit_stock_id, observationunit_uniquename, observationunit_type_name, germplasm_uniquename, germplasm_stock_id, rep, block, plot_number, row_number, col_number, plant_number, is_a_control, notes, trial_id, trial_name, trial_description, plot_width, plot_length, field_size, field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross, breeding_program_id, breeding_program_name, breeding_program_description, year, design, location_id, planting_date, harvest_date, folder_id, folder_name, folder_description, seedlot_transaction, seedlot_stock_id, seedlot_uniquename, seedlot_current_weight_gram, seedlot_current_count, seedlot_box_name, available_germplasm_seedlots, treatments, observations, count(observationunit_stock_id) OVER() AS full_count FROM materialized_phenotype_jsonb_table ";
-    my $order_clause = " ORDER BY trial_name, observationunit_uniquename";
+    my $order_clause = $self->order_by ? " ORDER BY ".$self->order_by : " ORDER BY trial_name, observationunit_uniquename";
 
     my @where_clause;
 

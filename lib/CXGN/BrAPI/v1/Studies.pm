@@ -643,7 +643,8 @@ sub observation_units {
             trait_list=>\@trait_ids_array,
             include_timestamp=>1,
             limit=>$limit,
-            offset=>$offset
+            offset=>$offset,
+            order_by=>"plot_number"
         }
     );
     my ($data, $unique_traits) = $phenotypes_search->search();
