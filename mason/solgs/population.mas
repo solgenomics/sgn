@@ -122,9 +122,9 @@ $genotyping_protocol_id
 %}
 
  <& /solgs/population/hidden_input.mas,
-      pop_id  => $training_pop_id,
-     pop_name => $project_name,
-     pop_desc => $project_desc,
+      training_pop_id  => $training_pop_id,
+     training_pop_name => $project_name,
+     training_pop_desc => $project_desc,
      genotyping_protocol_id => $genotyping_protocol_id,
      
    &>
