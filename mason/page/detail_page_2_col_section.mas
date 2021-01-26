@@ -353,6 +353,9 @@ $sampling_facilities => ()
 % if ($info_section_id eq 'pcr_based_genotyping_markers'){
                                 <& /breeders_toolbox/genotyping_protocol/pcr_markers.mas, protocol_id => $protocol_id &>
 % } #End pcr_based_genotyping_markers
+% if ($info_section_id eq 'pcr_genotyping_protocol_genotype_data'){
+                                <& /breeders_toolbox/genotyping_protocol/pcr_genotype_data.mas, protocol_id => $protocol_id, marker_names => $marker_names &>
+% } #End pcr_genotyping_protocol_genotype_data
 
 
 % if ($info_section_id eq 'crossingtrial_details'){
