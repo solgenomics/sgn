@@ -1041,17 +1041,20 @@ sub store_identifiers {
                 });
                 my $nd_experiment_id = $experiment->nd_experiment_id();
                 my $genotype_description;
+                my $genotype_type_id;
                 if ($genotyping_data_type eq 'ssr') {
                     $genotype_description = "SSR genotypes for stock " . "(name = " . $observation_unit_name . ", id = " . $stock_id . ")";
+                    $genotype_type_id = $self->pcr_marker_genotyping_type_id();
                 } else {
                     $genotype_description = "SNP genotypes for stock " . "(name = " . $observation_unit_name . ", id = " . $stock_id . ")";
+                    $genotype_type_id = $self->snp_genotype_id();
                 }
 
                 my $genotype = $genotype_schema->create({
                     name        => $observation_unit_name . "|" . $nd_experiment_id,
                     uniquename  => $observation_unit_name . "|" . $nd_experiment_id,
                     description => $genotype_description,
-                    type_id     => $self->snp_genotype_id(),
+                    type_id     => $genotype_type_id,
                 });
                 $genotype_id = $genotype->genotype_id();
                 my $nd_experiment_genotype = $experiment->create_related('nd_experiment_genotypes', { genotype_id => $genotype_id } );
