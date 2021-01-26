@@ -65,7 +65,9 @@ $trial_stock_type => undef
            <button class="btn btn-default" id="create_tissue_sample_entries_button">Add tissue sample entries</button>
            <& /breeders_toolbox/trial/add_tissue_sample_per_plant.mas, trial_id => $trial_id, trial_name => $trial_name, trial_has_plants => $has_plant_entries &>
 % } else {
-            <& /breeders_toolbox/trial/trial_tissue_samples.mas, trial_id => $trial_id &>
+		   <button class="btn btn-default" id="create_tissue_sample_entries_button">Add tissue sample entries</button>
+           <& /breeders_toolbox/trial/add_tissue_sample_per_plant.mas, trial_id => $trial_id, trial_name => $trial_name, trial_has_plants => $has_plant_entries &>
+           <& /breeders_toolbox/trial/trial_tissue_samples.mas, trial_id => $trial_id &>
 % }
 
         </div><!--closes tissue_sample_entries_section -->
