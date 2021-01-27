@@ -491,8 +491,12 @@ sub population : Path('/solgs/population') Args() {
     {
 	$c->controller('solGS::Utils')->save_metadata($c);	
         $self->get_all_traits($c);  
-        $self->project_description($c, $pop_id);
- 
+        
+	$self->project_description($c, $pop_id);
+	
+	$c->stash->{training_pop_name} = $c->stash->{project_name};
+	$c->stash->{training_pop_desc} = $c->stash->{project_desc};
+	
         $c->stash->{template} = $c->controller('solGS::Files')->template('/population.mas');
           
         my $acronym = $self->get_acronym_pairs($c, $pop_id);
@@ -1962,6 +1966,7 @@ sub all_traits_output :Path('/solgs/traits/all/population') Args() {
      $self->project_description($c, $training_pop_id);
      my $training_pop_name = $c->stash->{project_name};
      my $training_pop_desc = $c->stash->{project_desc};
+     
      my $training_pop_page = qq | <a href="/solgs/population/$training_pop_id/gp/$protocol_id">$training_pop_name</a> |;
      
      my @select_analysed_traits;
@@ -2004,7 +2009,11 @@ sub all_traits_output :Path('/solgs/traits/all/population') Args() {
 	 my @training_pop_data = ([$training_pop_page, $training_pop_desc, \@traits_pages]);
 	 
 	 $c->stash->{model_data} = \@training_pop_data;
-	 $c->stash->{pop_id} = $training_pop_id;
+	 $c->stash->{training_pop_id} = $training_pop_id;
+	 $c->stash->{training_pop_name} = $training_pop_name;
+	 $c->stash->{training_pop_desc} = $training_pop_desc;
+	 
+	 
 	 $self->get_acronym_pairs($c, $training_pop_id);
 
 	 $c->stash->{template} = '/solgs/population/multiple_traits_output.mas';	

@@ -1,11 +1,12 @@
 <%args>
 
+$pop_id => ''
 $training_pop_id
+$training_pop_name
+$training_pop_desc
 $show_data => 1;
 $traits_form => ''
 $all_traits_file
-$project_name
-$project_desc
 $stocks_no
 $markers_no
 $traits_no
@@ -19,6 +20,10 @@ $genotyping_protocol_id
 <%perl>
 
 #my $submit_new = qq | <a href="/submit/intro">Submit GS population</a> |;
+
+if ($pop_id && !$training_pop_id) {
+$training_pop_id = $pop_id;
+}
  
 </%perl>
 
@@ -30,7 +35,7 @@ $genotyping_protocol_id
 <br />
 
 <& /page/page_title.mas, 
-   title => "Select one or more traits from training population \"$project_name\" to build a GS model and predict GEBVs for."
+   title => "Select one or more traits from training population \"$training_pop_name\" to build a GS model and predict GEBVs for."
 &>
 
 <&| /page/info_section.mas, 
@@ -41,8 +46,8 @@ $genotyping_protocol_id
 
  <& population/summary.mas,
     project_id   => $training_pop_id,
-    project_name => $project_name,
-    project_desc => $project_desc,
+    project_name => $training_pop_name,
+    project_desc => $training_pop_desc,
     stocks_no    => $stocks_no,
     markers_no   => $markers_no,
     traits_no    => $traits_no,
@@ -123,8 +128,8 @@ $genotyping_protocol_id
 
  <& /solgs/population/hidden_input.mas,
       training_pop_id  => $training_pop_id,
-     training_pop_name => $project_name,
-     training_pop_desc => $project_desc,
+     training_pop_name => $training_pop_name,
+     training_pop_desc => $training_pop_desc,
      genotyping_protocol_id => $genotyping_protocol_id,
      
    &>
