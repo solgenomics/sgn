@@ -129,17 +129,57 @@ sub pcr_genotyping_data_search_GET : Args(0) {
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $clean_inputs = _clean_inputs($c->req->params);
     my $protocol_id = $clean_inputs->{protocol_id_list};
-    print STDERR "AJAX PROTOCOL ID =".Dumper($protocol_id)."\n";
+
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$bcs_schema,
         people_schema=>$people_schema,
         protocol_id_list=>$protocol_id,
     });
     my $result = $genotypes_search->get_pcr_genotype_info();
-    print STDERR "AJAX PCR GENOTYPE INFO =".Dumper($result)."\n";
 
+    my $protocol_marker_names = $result->{'marker_names'};
+    my $protocol_genotype_data = $result->{'protocol_genotype_data'};
+
+    my $protocol_marker_names_ref = decode_json $protocol_marker_names;
+    my @marker_name_arrays = sort @$protocol_marker_names_ref;
+
+    my @protocol_genotype_data_array = @$protocol_genotype_data;
     my @results;
+    foreach my $genotype_data (@protocol_genotype_data_array) {
+        my @each_genotype = ();
+        my $stock_id = $genotype_data->[0];
+        my $stock_name = $genotype_data->[1];
+        push @each_genotype, qq{<a href="/stock/$stock_id/view">$stock_name</a>} ;
+
+        my $marker_genotype_json = $genotype_data->[2];
+        my $marker_genotype_ref = decode_json $marker_genotype_json;
+        my %marker_genotype_hash = %$marker_genotype_ref;
+        foreach my $marker (@marker_name_arrays) {
+            my @positive_bands = ();
+            my $product_sizes_ref = $marker_genotype_hash{$marker};
+
+            if (!$product_sizes_ref) {
+                push @each_genotype, 'NA';
+            } else {
+                my %product_sizes_hash = %$product_sizes_ref;
+                foreach my $product_size (keys %product_sizes_hash) {
+                    my $pcr_result = $product_sizes_hash{$product_size};
+                    if ($pcr_result eq '1') {
+                        push @positive_bands, $product_size;
+                    }
+                }
+                if (scalar @positive_bands == 0) {
+                    push @positive_bands, 'neg';
+                }
+                my $pcr_result = join(",", sort @positive_bands);
+                push @each_genotype, $pcr_result ;
+            }
+        }
+        push @results, [@each_genotype];
+    }
+#    print STDERR "RESULTS =".Dumper(\@results)."\n";
     $c->stash->{rest} = { data => \@results};
 }
+
 
 1;

@@ -2126,10 +2126,15 @@ sub get_pcr_genotype_info {
     my $genotype_data_project_list = $self->genotype_data_project_list;
     my $protocol_id_list = $self->protocol_id_list;
     my $protocol_id = $protocol_id_list->[0];
-#    print STDERR "PROTOCOL ID =".Dumper($protocol_id)."\n";
+
     my $pcr_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pcr_marker_genotyping', 'genotype_property')->cvterm_id();
     my $pcr_protocolprop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pcr_marker_details', 'protocol_property')->cvterm_id();
     my $pcr_protocol_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pcr_marker_protocol', 'protocol_type')->cvterm_id();
+
+    my $q1 = "SELECT nd_protocolprop.value->>'marker_names' FROM nd_protocolprop WHERE nd_protocol_id = ? AND nd_protocolprop.type_id = ?";
+    my $h1 = $schema->storage->dbh()->prepare($q1);
+    $h1->execute($protocol_id, $pcr_protocolprop_cvterm_id);
+    my $marker_names = $h1->fetchrow_array();
 
     my $q = "SELECT stock.stock_id, stock.uniquename, genotypeprop.value
         FROM nd_experiment_protocol
@@ -2142,13 +2147,19 @@ sub get_pcr_genotype_info {
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute($pcr_genotyping_cvterm_id, $protocol_id);
 
-    my @pcr_genotype_info = ();
+    my @pcr_genotype_data = ();
     while (my ($stock_id, $stock_name, $genotype_data) = $h->fetchrow_array()){
-        push @pcr_genotype_info, [$stock_id, $stock_name, $genotype_data]
+        push @pcr_genotype_data, [$stock_id, $stock_name, $genotype_data]
     }
 
-    print STDERR "PCR GENOTYPE INFO =".Dumper(\@pcr_genotype_info)."\n";
-    return \@pcr_genotype_info;
+    my %protocol_genotype_data = (
+        marker_names => $marker_names,
+        protocol_genotype_data => \@pcr_genotype_data
+    );
+
+#    print STDERR "PCR GENOTYPE INFO =".Dumper(\%protocol_genotype_data)."\n";
+
+    return \%protocol_genotype_data;
 
 }
 
