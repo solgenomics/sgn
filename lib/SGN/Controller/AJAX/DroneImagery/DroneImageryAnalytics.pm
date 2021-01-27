@@ -11646,7 +11646,7 @@ sub _perform_drone_imagery_analytics {
     print STDERR "CALC $permanent_environment_structure\n";
 
     my ($statistical_ontology_term, $analysis_model_training_data_file_type, $analysis_model_language, @sorted_residual_trait_names, %rr_unique_traits, %rr_residual_unique_traits, $statistics_cmd, $cmd_f90, $cmd_asreml, $number_traits, $number_accessions);
-
+    my $tolparinv_10 = $tolparinv*10;
     my ($result_blup_data_original, $result_blup_data_delta_original, $result_blup_spatial_data_original, $result_blup_pe_data_original, $result_blup_pe_data_delta_original, $result_residual_data_original, $result_fitted_data_original, %fixed_effects_original, %rr_genetic_coefficients_original, %rr_temporal_coefficients_original);
     my $model_sum_square_residual_original = 0;
     my $genetic_effect_min_original = 1000000000;
@@ -11862,7 +11862,7 @@ sub _perform_drone_imagery_analytics {
             mat\$colNumber <- as.numeric(mat\$colNumber);
             mat\$rowNumberFactor <- as.factor(mat\$rowNumberFactor);
             mat\$colNumberFactor <- as.factor(mat\$colNumberFactor);
-            mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm(1)) +vs(rowNumberFactor, Gtc=diag(1)) +vs(colNumberFactor, Gtc=diag(1)) +vs(spl2D(rowNumber, colNumber), Gtc=diag(1)), rcov=~vs(units, Gtc=unsm(1)), data=mat, tolparinv='.$tolparinv.');
+            mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm(1)) +vs(rowNumberFactor, Gtc=diag(1)) +vs(colNumberFactor, Gtc=diag(1)) +vs(spl2D(rowNumber, colNumber), Gtc=diag(1)), rcov=~vs(units, Gtc=unsm(1)), data=mat, tolparinv='.$tolparinv_10.');
             if (!is.null(mix\$U)) {
             #gen_cor <- cov2cor(mix\$sigma\$\`u:id\`);
             write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
@@ -13115,7 +13115,7 @@ sub _perform_drone_imagery_analytics {
             mat\$colNumber <- as.numeric(mat\$colNumber);
             mat\$rowNumberFactor <- as.factor(mat\$rowNumberFactor);
             mat\$colNumberFactor <- as.factor(mat\$colNumberFactor);
-            mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm(1)) +vs(rowNumberFactor, Gtc=diag(1)) +vs(colNumberFactor, Gtc=diag(1)) +vs(spl2D(rowNumber, colNumber), Gtc=diag(1)), rcov=~vs(units, Gtc=unsm(1)), data=mat, tolparinv='.$tolparinv.');
+            mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm(1)) +vs(rowNumberFactor, Gtc=diag(1)) +vs(colNumberFactor, Gtc=diag(1)) +vs(spl2D(rowNumber, colNumber), Gtc=diag(1)), rcov=~vs(units, Gtc=unsm(1)), data=mat, tolparinv='.$tolparinv_10.');
             if (!is.null(mix\$U)) {
             #gen_cor <- cov2cor(mix\$sigma\$\`u:id\`);
             write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
@@ -14280,7 +14280,7 @@ sub _perform_drone_imagery_analytics {
             mat\$colNumber <- as.numeric(mat\$colNumber);
             mat\$rowNumberFactor <- as.factor(mat\$rowNumberFactor);
             mat\$colNumberFactor <- as.factor(mat\$colNumberFactor);
-            mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm(1)) +vs(rowNumberFactor, Gtc=diag(1)) +vs(colNumberFactor, Gtc=diag(1)) +vs(spl2D(rowNumber, colNumber), Gtc=diag(1)), rcov=~vs(units, Gtc=unsm(1)), data=mat, tolparinv='.$tolparinv.');
+            mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm(1)) +vs(rowNumberFactor, Gtc=diag(1)) +vs(colNumberFactor, Gtc=diag(1)) +vs(spl2D(rowNumber, colNumber), Gtc=diag(1)), rcov=~vs(units, Gtc=unsm(1)), data=mat, tolparinv='.$tolparinv_10.');
             if (!is.null(mix\$U)) {
             #gen_cor <- cov2cor(mix\$sigma\$\`u:id\`);
             write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
@@ -15442,7 +15442,7 @@ sub _perform_drone_imagery_analytics {
             mat\$colNumber <- as.numeric(mat\$colNumber);
             mat\$rowNumberFactor <- as.factor(mat\$rowNumberFactor);
             mat\$colNumberFactor <- as.factor(mat\$colNumberFactor);
-            mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm(1)) +vs(rowNumberFactor, Gtc=diag(1)) +vs(colNumberFactor, Gtc=diag(1)) +vs(spl2D(rowNumber, colNumber), Gtc=diag(1)), rcov=~vs(units, Gtc=unsm(1)), data=mat, tolparinv='.$tolparinv.');
+            mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm(1)) +vs(rowNumberFactor, Gtc=diag(1)) +vs(colNumberFactor, Gtc=diag(1)) +vs(spl2D(rowNumber, colNumber), Gtc=diag(1)), rcov=~vs(units, Gtc=unsm(1)), data=mat, tolparinv='.$tolparinv_10.');
             if (!is.null(mix\$U)) {
             #gen_cor <- cov2cor(mix\$sigma\$\`u:id\`);
             write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
@@ -16604,7 +16604,7 @@ sub _perform_drone_imagery_analytics {
             mat\$colNumber <- as.numeric(mat\$colNumber);
             mat\$rowNumberFactor <- as.factor(mat\$rowNumberFactor);
             mat\$colNumberFactor <- as.factor(mat\$colNumberFactor);
-            mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm(1)) +vs(rowNumberFactor, Gtc=diag(1)) +vs(colNumberFactor, Gtc=diag(1)) +vs(spl2D(rowNumber, colNumber), Gtc=diag(1)), rcov=~vs(units, Gtc=unsm(1)), data=mat, tolparinv='.$tolparinv.');
+            mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm(1)) +vs(rowNumberFactor, Gtc=diag(1)) +vs(colNumberFactor, Gtc=diag(1)) +vs(spl2D(rowNumber, colNumber), Gtc=diag(1)), rcov=~vs(units, Gtc=unsm(1)), data=mat, tolparinv='.$tolparinv_10.');
             if (!is.null(mix\$U)) {
             #gen_cor <- cov2cor(mix\$sigma\$\`u:id\`);
             write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
@@ -17766,7 +17766,7 @@ sub _perform_drone_imagery_analytics {
             mat\$colNumber <- as.numeric(mat\$colNumber);
             mat\$rowNumberFactor <- as.factor(mat\$rowNumberFactor);
             mat\$colNumberFactor <- as.factor(mat\$colNumberFactor);
-            mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm(1)) +vs(rowNumberFactor, Gtc=diag(1)) +vs(colNumberFactor, Gtc=diag(1)) +vs(spl2D(rowNumber, colNumber), Gtc=diag(1)), rcov=~vs(units, Gtc=unsm(1)), data=mat, tolparinv='.$tolparinv.');
+            mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm(1)) +vs(rowNumberFactor, Gtc=diag(1)) +vs(colNumberFactor, Gtc=diag(1)) +vs(spl2D(rowNumber, colNumber), Gtc=diag(1)), rcov=~vs(units, Gtc=unsm(1)), data=mat, tolparinv='.$tolparinv_10.');
             if (!is.null(mix\$U)) {
             #gen_cor <- cov2cor(mix\$sigma\$\`u:id\`);
             write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
@@ -18934,7 +18934,7 @@ sub _perform_drone_imagery_analytics {
             mat\$colNumber <- as.numeric(mat\$colNumber);
             mat\$rowNumberFactor <- as.factor(mat\$rowNumberFactor);
             mat\$colNumberFactor <- as.factor(mat\$colNumberFactor);
-            mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm(1)) +vs(rowNumberFactor, Gtc=diag(1)) +vs(colNumberFactor, Gtc=diag(1)) +vs(spl2D(rowNumber, colNumber), Gtc=diag(1)), rcov=~vs(units, Gtc=unsm(1)), data=mat, tolparinv='.$tolparinv.');
+            mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm(1)) +vs(rowNumberFactor, Gtc=diag(1)) +vs(colNumberFactor, Gtc=diag(1)) +vs(spl2D(rowNumber, colNumber), Gtc=diag(1)), rcov=~vs(units, Gtc=unsm(1)), data=mat, tolparinv='.$tolparinv_10.');
             if (!is.null(mix\$U)) {
             #gen_cor <- cov2cor(mix\$sigma\$\`u:id\`);
             write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
