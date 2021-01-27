@@ -67,7 +67,6 @@ module.exports = {
             },
             'sourceMap': true,
             'parallel': 4,
-
         })],
         runtimeChunk: {
             name: 'runtime'
