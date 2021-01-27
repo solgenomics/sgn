@@ -473,7 +473,7 @@ sub studies_observation_variables {
 					reference=>""
 				},
 				name => $trait->name . "|" . $trait->term,
-				observationVariableDbId => $trait->name . "|" . $trait->term,
+				observationVariableDbId => $trait_id,
 				observationVariableName => $trait->name,
 				ontologyDbId => qq|$trait_db_id|,
 				ontologyName => $trait->db,
