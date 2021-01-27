@@ -81,7 +81,7 @@
               
               <!-- Form for creating a new protocol -->
               <div id="sequence_metadata_upload_protocol_div" style="display:none">
-                <form class="form-horizontal">
+                <form class="form-horizontal" id="sequence_metadata_upload_protocol_form" name="sequence_metadata_upload_file_form">
 
                   <h3>Protocol Information</h3>
                   
@@ -114,7 +114,7 @@
                     <label class="col-sm-3 control-label">Reference Genome: </label>
                     <div class="col-sm-9">
                       <select class="form-control" id="sequence_metadata_upload_protocol_reference_genome" disabled>
-                        <option val="">Loading...</option>
+                        <option value="">Loading...</option>
                       </select>
                     </div>
                   </div>
@@ -192,14 +192,13 @@
 
               <br /><br />
 
-              <form class="form-horizontal" role="form" method="post" action="/ajax/sequence_metadata/file_upload_verify" enctype="multipart/form-data" encoding="multipart/form-data" id="sequence_metadata_upload_file_form" name="sequence_metadata_upload_file_form">
+              <form id="sequence_metadata_upload_file_form" class="form-horizontal" enctype="multipart/form-data">
                 <div class="form-group">
                   <label class="col-sm-3 control-label">Select GFF3 File: </label>
                   <div class="col-sm-9" >
                       <input type="file" id="sequence_metadata_upload_file_input" name="sequence_metadata_upload_file_input" encoding="multipart/form-data" />
                   </div>
                 </div>
-                <div id="sequence_metadata_upload_file_props" style="display:none"></div>
               </form>
 
               <br /><br />
@@ -208,6 +207,10 @@
                 <button id="sequence_metadata_upload_verify" class="btn btn-info">Verify</button>
                 <button id="sequence_metadata_upload_store" class="btn btn-primary" disabled>Store</button>
               </div>
+
+              <br /><br />
+
+              <div id="sequence_metdata_upload_messages"></div>
             </&>
             <!-- End Upload -->
 
@@ -311,7 +314,7 @@ jQuery(document).ready(function() {
                 }
                 map_label += ")";
               }
-              options += "<option val='" + map_id + "'>" + map_label + "</option>";
+              options += "<option value='" + map_id + "'>" + map_label + "</option>";
             }
             jQuery('#sequence_metadata_upload_protocol_reference_genome').html(options);
             jQuery('#sequence_metadata_upload_protocol_reference_genome').prop('disabled', false);
@@ -339,8 +342,10 @@ jQuery(document).ready(function() {
 
 
     // Save a new attribute description
-    var new_attribute_count = 1;
+    var new_attribute_count = 0;
     jQuery('#sequence_metadata_upload_new_attribute_submit').click(function() {
+      new_attribute_count++;
+
       let key = jQuery('#sequence_metadata_upload_new_attribute_key').val();
       let description = jQuery('#sequence_metadata_upload_new_attribute_description').val();
       if ( !key || key === "" || !description || description === "" ) {
@@ -361,47 +366,25 @@ jQuery(document).ready(function() {
         let row = jQuery(this).attr('data-row');
         jQuery('#sequence_metadata_upload_new_attributes_table_row_' + row).remove();
       });
-      new_attribute_count++;
 
       return false;
     });
 
     // Complete Protocol Step
-    let use_existing_protocol = undefined;
-    let selected_protocol_id = undefined;
-    let new_protocol_name = undefined;
-    let new_protocol_description = undefined;
-    let new_protocol_data_type = undefined;
-    let new_protocol_reference_genome = undefined;
-    let new_protocol_score_description = undefined;
-    let new_protocol_attributes = [];
+    var use_existing_protocol = undefined;
+    var new_protocol_name = undefined;
+    var new_protocol_description = undefined;
     jQuery('#sequence_metadata_upload_protocol_step').click(function() {
       use_existing_protocol = jQuery('#sequence_metadata_upload_protocol_select').is(':visible');
       if ( use_existing_protocol ) {
-        let selected = [];
-        jQuery('input[name="sequence_metadata_upload_protocol_id"]:checked').each(function() {
-          selected.push(jQuery(this).val());
-        });
-        if ( selected.length != 1 ) {
+        if ( jQuery('input[name="sequence_metadata_upload_protocol_id"]:checked').length !== 1 ) {
           alert('Please select one existing protocol!');
           return false;
         }
-        selected_protocol_id = selected[0];
       }
       else {
         new_protocol_name = jQuery('#sequence_metadata_upload_protocol_name').val();
         new_protocol_description = jQuery('#sequence_metadata_upload_protocol_description').val();
-        new_protocol_data_type = jQuery('#sequence_metadata_upload_protocol_sequence_metadata_type').val();
-        new_protocol_reference_genome = jQuery('#sequence_metadata_upload_protocol_reference_genome').val();
-        new_protocol_score_description = jQuery('#sequence_metadata_upload_score_description').val();
-        for ( let i = 0; i < new_protocol_attributes; i++ ) {
-          let attribute_key = jQuery('#sequence_metadata_upload_attribute_key' + i).val();
-          let attribute_description = jQuery('#sequence_metadata_upload_attribute_description' + i).val();
-          if ( attribute_key || attribute_key !== "" || attribute_description || attribute_description !== "" ) {
-            new_protocol_attributes.push({key: attribute_key, description: attribute_description});
-          }
-        }
-
         if ( !new_protocol_name || new_protocol_name === "" ) {
           alert('Please enter a name for the new protocol');
           return false;
@@ -412,24 +395,8 @@ jQuery(document).ready(function() {
         }
       }
 
-      // Set hidden input fields in upload form
-      jQuery('#sequence_metadata_upload_file_props').empty();
-      let html = "";
-      if ( use_existing_protocol ) {
-        html += "<input name='sequence_metadata_upload_selected_protocol_id' val='" + selected_protocol_id + "'>";
-      }
-      else {
-        html += "<input name='sequence_metadata_upload_new_protocol_name' val='" + new_protocol_name + "'>";
-        html += "<input name='sequence_metadata_upload_new_protocol_description' val='" + new_protocol_description + "'>";
-        html += "<input name='sequence_metadata_upload_new_protocol_data_type' val='" + new_protocol_data_type + "'>";
-        html += "<input name='sequence_metadata_upload_new_protocol_reference_genome' val='" + new_protocol_reference_genome + "'>";
-        html += "<input name='sequence_metadata_upload_new_protocol_score_description' val='" + new_protocol_score_description + "'>";
-        for ( let i = 0; i < new_protocol_attributes.length; i++ ) {
-          html += "<input name='sequence_metadata_upload_new_protocol_attribute_key_" + i + "' val='" + new_protocol_attribtes[i].key + "'>";
-          html += "<input name='sequence_metadata_upload_new_protocol_attribute_description_" + i + "' val='" + new_protocol_attribtes[i].description + "'>";
-        }
-      }
-      jQuery('#sequence_metadata_upload_file_props').append(html);
+      jQuery('#sequence_metadata_upload_verify').attr('disabled', false);
+      jQuery('#sequence_metadata_upload_store').attr('disabled', true);
 
       Workflow.complete("#sequence_metadata_upload_protocol_step");
       Workflow.focus('#upload_sequence_metadata_workflow', 3);
@@ -444,32 +411,136 @@ jQuery(document).ready(function() {
         return false;
       }
 
-      jQuery('#working_msg').html("Verifying GFF File");
+      jQuery('#working_msg').html("Uploading GFF File");
+      jQuery('#working_modal_progress').css('width', 0).attr('aria-valuenow', 0);
+      jQuery('#working_modal_progress_div').css('display', 'block');
       jQuery('#working_modal').modal("show");
-      jQuery('#sequence_metadata_upload_file_form').submit();
-    });
-
-    jQuery('#sequence_metadata_upload_file_form').iframePostForm({
-      json: false,
-      post: function() {},
-      timeout: 7200000,
-      complete: function(response) {
-        jQuery('#working_msg').html("");
-        jQuery('#working_modal').modal("hide");
-        
-        // Parse and handle the response
-        try {
-          response = JSON.parse(response);
-          console.log(response);
-
-        }
-        catch(err) {
-          alert("ERROR: could not parse verification response!");
-          console.log(response);
-          console.log(err);
+      jQuery('#sequence_metdata_upload_messages').empty();
+      
+      
+      // Build the FormData to pass as POST arguments
+      let formData = new FormData();
+      formData.append('file', jQuery('#sequence_metadata_upload_file_input').prop('files')[0]);
+      formData.append('use_existing_protocol', use_existing_protocol);
+      if ( use_existing_protocol ) {
+        formData.append('existing_protocol_id', jQuery('input[name="sequence_metadata_upload_protocol_id"]:checked').val());
+      }
+      else {
+        formData.append('new_protocol_name', new_protocol_name);
+        formData.append('new_protocol_description', new_protocol_description);
+        formData.append('new_protocol_sequence_metadata_type', jQuery('#sequence_metadata_upload_type_select option:selected').val());
+        formData.append('new_protocol_reference_genome', jQuery('#sequence_metadata_upload_protocol_reference_genome option:selected').val());
+        formData.append('new_protocol_score_description', jQuery('#sequence_metadata_upload_score_description').val());
+        formData.append('new_protocol_attribute_count', new_attribute_count);
+        for ( let i = 1; i <= new_attribute_count; i++ ) {
+          formData.append('new_protocol_attribute_key_' + i, jQuery('#sequence_metadata_upload_attribute_key_' + i).val());
+          formData.append('new_protocol_attribute_description_' + i, jQuery('#sequence_metadata_upload_attribute_description_' + i).val());
         }
       }
-    });
+
+      // Make the POST request
+      jQuery.ajax({
+        url: '/ajax/sequence_metadata/file_upload_verify',
+        type: 'POST',
+        data: formData,
+        cache: false,
+        contentType: false,
+        processData: false,
+        xhr: function () {
+          var myXhr = jQuery.ajaxSettings.xhr();
+          if (myXhr.upload) {
+            myXhr.upload.addEventListener('progress', function (e) {
+              if (e.lengthComputable) {
+                let prog = (e.loaded / e.total)*100;
+                jQuery('#working_modal_progress').css('width', prog + "%").attr('aria-valuenow', prog);
+                if ( prog >= 100 ) {
+                  jQuery('#working_msg').html("Verifying GFF File");
+                }
+              }
+            }, false);
+          }
+          return myXhr;
+        },
+        success: function(response) {
+          jQuery('#working_msg').html("");
+          jQuery('#working_modal_progress').css('width', 0).attr('aria-valuenow', 0);
+          jQuery('#working_modal_progress_div').css('display', 'none');
+          jQuery('#working_modal').modal("hide");
+
+          console.log("RESPONSE");
+          console.log(response);
+
+          // Build Response Messages
+          let message_text = "<hr><ul class='list-group'>";
+          if ( response && response.error ) {
+            message_text += "<li class='list-group-item list-group-item-danger'>";
+            message_text += "<span class='badge'><span class='glyphicon glyphicon-remove'></span></span>";
+            message_text += response.error;
+            message_text += "</li>";
+          }
+          else if ( response && response.success ) {
+            if ( response.success.processed === 1 ) {
+              message_text += "<li class='list-group-item list-group-item-success'>";
+              message_text += "<span class='badge'><span class='glyphicon glyphicon-ok'></span></span>";
+              message_text += "File successfully uploaded and processed";
+              message_text += "</li>";
+            }
+            else {
+              message_text += "<li class='list-group-item list-group-item-danger'>";
+              message_text += "<span class='badge'><span class='glyphicon glyphicon-remove'></span></span>";
+              message_text += "ERROR: File not successfully uploaded and processed!";
+              message_text += "</li>";
+            }
+            
+            if ( response.success.verified === 1 ) {
+              message_text += "<li class='list-group-item list-group-item-success'>";
+              message_text += "<span class='badge'><span class='glyphicon glyphicon-ok'></span></span>";
+              message_text += "File successfully verified";
+              message_text += "</li>";
+            }
+            else {
+              message_text += "<li class='list-group-item list-group-item-danger'>";
+              message_text += "<span class='badge'><span class='glyphicon glyphicon-remove'></span></span>";
+              message_text += "ERROR: File not successfully verfied!";
+              message_text += "</li>";
+            }
+
+            if ( response.success.missing_features && response.success.missing_features.length > 0 ) {
+              message_text += "<li class='list-group-item list-group-item-danger'>";
+              message_text += "<span class='badge'><span class='glyphicon glyphicon-remove'></span></span>";
+              message_text += "ERROR: The following features do not exist in the database.  Contact us to have them added or change the feature names to match existing features.";
+              message_text += "<ul>";
+              for ( let i = 0; i < response.success.missing_features.length; i++ ) {
+                message_text += "<li>" + response.success.missing_features[i] + "</li>";
+              }
+              message_text += "</ul>";
+              message_text += "</li>";
+            }
+          }
+          message_text += "</ul>";
+
+          // Enable the Store button if processed and verified
+          if ( response && response.success && response.success.processed && response.success.processed === 1 && response.success.verified && response.success.verified === 1 ) {
+            jQuery('#sequence_metadata_upload_verify').attr('disabled', true);
+            jQuery('#sequence_metadata_upload_store').attr('disabled', false);
+            message_text += "<br /><br />";
+            message_text += "<p><strong>Next, click the <em>Store</em> button to save the data to the database.</p>";
+          }
+
+          jQuery('#sequence_metdata_upload_messages').html(message_text);
+
+        },
+        error: function() {
+          jQuery('#working_msg').html("");
+          jQuery('#working_modal_progress').css('width', 0).attr('aria-valuenow', 0);
+          jQuery('#working_modal_progress_div').css('display', 'none');
+          jQuery('#working_modal').modal("hide");
+
+          alert("ERROR: Could not upload and verify gff file due to server error!");
+        }
+      });
+
+    }); 
 
 });
 </script>
