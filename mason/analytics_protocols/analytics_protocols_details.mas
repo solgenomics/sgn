@@ -59,8 +59,8 @@ $analytics_protocol_result_summary
                 <td>
                     <div id="analytics_protocol_properties">
 %  if ($analytics_protocol_properties) {
-%    while (my($k,$v) = each %{$analytics_protocol_properties}) {
-%       print $k." : ".$v."<br/>";
+%    foreach my $k (sort keys %{$analytics_protocol_properties}) {
+%       print $k." : ".$analytics_protocol_properties->{$k}."<br/>";
 %    }
 %  }
                     </div>
@@ -83,18 +83,18 @@ $analytics_protocol_result_summary
 %           if ($env_corr_results) {
 %               print "<strong>Simulated Environment Correlation Results</strong><br/>";
 %               print $number_iterations." iterations<br/>";
-%                   while (my ($env_type, $r) = each %$env_corr_results) {
-%                   my $mean = $r->{mean};
-%                   my $std = $r->{std};
+%               foreach my $env_type (sort keys %$env_corr_results) {
+%                   my $mean = $env_corr_results->{$env_type}->{mean};
+%                   my $std = $env_corr_results->{$env_type}->{std};
 %                   print $env_type." : ".$mean." +- ".$std."<br/>";
 %               }
 %           }
 %           if ($env_iterations) {
 %               print "<br/><strong>Simulated Environment Parameters</strong><br/>";
-%               while ( my($iteration, $v) = each %$env_iterations) {
+%               foreach my $iteration (sort keys %$env_iterations) {
 %                   print $iteration." : ";
-%                   while ( my($param, $val) = each %$v) {
-%                       print " ".$param." : ".$val." ";
+%                   foreach my $param (sort keys %{$env_iterations->{$iteration}}) {
+%                       print " ".$param." : ".$env_iterations->{$iteration}->{$param}." ";
 %                   }
 %                   print "<br/>";
 %               }
