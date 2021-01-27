@@ -184,8 +184,8 @@ sub search {
 sub info {
 	my $permissions  = {
 				'GET' => 'any',
-				'POST' => 'curator',
-				'PUT' => 'curator'
+				'POST' => 'any',
+				'PUT' => 'any'
 			};
 
 	return $permissions;

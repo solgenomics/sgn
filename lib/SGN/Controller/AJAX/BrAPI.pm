@@ -3316,8 +3316,7 @@ sub observationvariable_list : Chained('brapi') PathPart('variables') Args(0) : 
 sub observationvariable_list_POST {
 	my $self = shift;
 	my $c = shift;
-	# TODO: auth later, not doing for now
-	# my ($auth,$user_id) = _authenticate_user($c);
+	my ($auth,$user_id) = _authenticate_user($c);
 	my $user_id;
 
 	my $response;
@@ -3386,8 +3385,7 @@ sub observationvariable_detail_PUT {
 	my $self = shift;
 	my $c = shift;
 	my $variableDbId = shift;
-	# TODO: auth later, not doing for now
-	# my ($auth,$user_id) = _authenticate_user($c);
+	my ($auth,$user_id) = _authenticate_user($c);
 	my $user_id;
 
 	my $response;
