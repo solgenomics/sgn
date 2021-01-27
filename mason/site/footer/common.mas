@@ -23,20 +23,25 @@
   <div class="modal-dialog modal-sm" role="document">
     <div class="modal-content">
       <div class="modal-header">
-	<center>
+	      <center>
           <h4 class="modal-title" id="workingModalDialog">Working</h4>
-	</center>
+	      </center>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-	  <center>
-	    <img src="/img/wheel.gif" />
-    	    <div id="working_msg"></div>
-	  </center>
+	        <center>
+	          <img src="/img/wheel.gif" />
+    	      <div id="working_msg"></div>
+	        </center>
+          <div id="working_modal_progress_div" style="display: none">
+            <br /><br />
+            <div class="progress">
+              <div id="working_modal_progress" class="progress-bar progress-bar-success" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" style="width: 0"></div>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="modal-footer">
-      </div>
+      <div class="modal-footer"></div>
     </div>
   </div>
 </div>
