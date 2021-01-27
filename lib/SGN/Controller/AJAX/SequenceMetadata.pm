@@ -108,11 +108,12 @@ sub sequence_metadata_upload_verify_POST : Args(0) {
             user_role => $user_role
         });
         my $archived_filepath = $uploader->archive();
-        my $verified_filepath = $archived_filepath . ".verified";
+        my $processed_filepath = $archived_filepath . ".processed";
 
         # Run the verification
         my $smd = CXGN::Genotype::SequenceMetadata->new(bcs_schema => $schema);
-        my $verification_results = $smd->verify($archived_filepath, $verified_filepath);
+        my $verification_results = $smd->verify($archived_filepath, $processed_filepath);
+        $verification_results->{'processed_filepath'} = $processed_filepath;
 
         # Verification Error
         if ( defined $verification_results->{'error'} ) {
@@ -132,7 +133,7 @@ sub sequence_metadata_upload_verify_POST : Args(0) {
 # Process the sequence metadata protocol info and store the previously uploaded gff file
 # PATH: POST /ajax/sequence_metadata/store
 # PARAMS:
-#   - verified_file_path = path to previously uploaded and verified file
+#   - processed_filepath = path to previously uploaded and processed file
 #   - use_existing_protocol = true (use existing protocol) / false (create new protocol)
 #   - existing_protocol_id = nd_protocol_id of existing protocol to use
 #   - new_protocol_name = name of new protocol
@@ -154,7 +155,7 @@ sub sequence_metadata_store_POST : Args(0) {
     my $dbh = $schema->storage->dbh();
 
     use Data::Dumper;
-    print STDERR "UPLOAD VERIFY:\n";
+    print STDERR "Store:\n";
     print STDERR Dumper \@params;
 
     # Check Logged In Status
@@ -170,11 +171,16 @@ sub sequence_metadata_store_POST : Args(0) {
         $c->detach();
     }
 
-    # Check for verified_file_path
-
     # Information required for the load script
+    my $processed_filepath = $c->req->param('processed_filepath');
     my $protocol_id = undef;
     my $type_id = undef;
+
+    # Check for processed filepath
+    if ( !defined $processed_filepath || $processed_filepath eq '' ) {
+        $c->stash->{rest} = {error => 'The path to the previously processed and verified file must be defined!'};
+        $c->detach();
+    }
     
     # Create new protocol, if requested
     if ( $c->req->param('use_existing_protocol') eq 'false' ) {
@@ -236,8 +242,6 @@ sub sequence_metadata_store_POST : Args(0) {
             }
         }
         $sequence_metadata_protocol_props{'attribute_descriptions'} = \%attributes;
-
-        print STDERR Dumper \%sequence_metadata_protocol_props;
         
         my $sequence_metadata_protocol_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'sequence_metadata_protocol', 'protocol_type')->cvterm_id();
         my $sequence_metadata_protocol_prop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'sequence_metadata_protocol_properties', 'protocol_property')->cvterm_id();
@@ -246,8 +250,12 @@ sub sequence_metadata_store_POST : Args(0) {
             type_id => $sequence_metadata_protocol_type_id,
             nd_protocolprops => [{type_id => $sequence_metadata_protocol_prop_cvterm_id, value => encode_json \%sequence_metadata_protocol_props}]
         });
-
         $protocol_id = $protocol->nd_protocol_id();
+        
+        my $sql = "UPDATE nd_protocol SET description=? WHERE nd_protocol_id=?;";
+        my $sth = $dbh->prepare($sql);
+        $sth->execute($protocol_description, $protocol_id);
+
         $type_id = $protocol_sequence_metadata_type_id;
     }
 
