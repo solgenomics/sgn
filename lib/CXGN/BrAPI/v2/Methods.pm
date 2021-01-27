@@ -19,7 +19,7 @@ has 'method' => (
 has 'cvterm_id' => (
     isa => 'Int',
     is => 'rw',
-    required => 1,
+    required => 0,
 );
 
 has 'cv_id' => (
@@ -153,6 +153,13 @@ sub store {
     my $method = $self->method();
     my $cv_id = $self->cv_id;
 
+    if (!defined($cvterm_id)) {
+        CXGN::BrAPI::Exceptions::ServerException->throw({message => "Error: Method cvterm_id not specified, cannot store"});
+    }
+
+    # Clear our old method
+    $self->delete();
+
     my $method_name_id = $self->method_name_id;
     my $method_description_id = $self->method_description_id;
     my $method_class_id = $self->method_class_id;
@@ -219,6 +226,25 @@ sub store {
 
     return { success => "Method added successfully" };
 
+}
+
+sub delete {
+    my $self = shift;
+    my $schema = $self->bcs_schema();
+    my $cvterm_id = $self->cvterm_id();
+
+    $schema->resultset("Cv::Cvtermprop")->search(
+        {   cvterm_id => $cvterm_id,
+            type_id   => { -in =>
+                [
+                    $self->method_name_id,
+                    $self->method_description_id,
+                    $self->method_class_id,
+                    $self->method_formula_id
+                ]
+            }
+        }
+    )->delete;
 }
 
 1;

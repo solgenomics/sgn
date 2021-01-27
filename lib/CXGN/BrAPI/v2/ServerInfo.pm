@@ -71,7 +71,7 @@ sub search {
 		[['application/json'],['GET'], 'ontologies',['2.0']],
 		[['application/json'],['GET'], 'traits',['2.0']],
 		[['application/json'],['GET'], 'traits/{traitDbId}',['2.0']],
-		[['application/json'],['GET', 'POST'], 'variables',['2.0']],
+		[['application/json'],['GET', 'POST','PUT'], 'variables',['2.0']],
 		[['application/json'],['GET'], 'variables/{observationVariableDbId}',['2.0']],
 		[['application/json'],['POST'],'search/variables',['2.0']],
 		[['application/json'],['GET'], 'search/variables/{searchResultsDbId}',['2.0']],
@@ -184,8 +184,8 @@ sub search {
 sub info {
 	my $permissions  = {
 				'GET' => 'any',
-				'POST' => 'curator',
-				'PUT' => 'curator'
+				'POST' => 'any',
+				'PUT' => 'any'
 			};
 
 	return $permissions;

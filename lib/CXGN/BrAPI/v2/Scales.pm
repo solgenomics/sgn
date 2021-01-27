@@ -19,7 +19,7 @@ has 'scale' => (
 has 'cvterm_id' => (
     isa => 'Int',
     is => 'rw',
-    required => 1,
+    required => 0,
 );
 
 has 'cv_id' => (
@@ -231,6 +231,13 @@ sub store {
     my $scale = $self->scale();
     my @scale_categories;
 
+    if (!defined($cvterm_id)) {
+        CXGN::BrAPI::Exceptions::ServerException->throw({message => "Error: Scale cvterm_id not specified, cannot store"});
+    }
+
+    # Clear out old scale
+    $self->delete();
+
     if ($self->scale->{'validValues'}{'categories'}) {
         @scale_categories = @{$self->scale->{'validValues'}{'categories'}};
     }
@@ -255,6 +262,7 @@ sub store {
     my $coderef = sub {
 
         # write category values for v2
+        my $label_counter = 1;
         foreach my $category (@scale_categories) {
             my $label = $category->{'label'};
             my $value = $category->{'value'};
@@ -264,10 +272,11 @@ sub store {
                 {
                     cvterm_id => $cvterm_id,
                     type_id   => $scale_categories_label_id,
-                    value     => $label,
+                    value     => $label || $label_counter,
                     rank      => $rank
                 }
             );
+            $label_counter += 1;
 
             my $prop_source = $schema->resultset("Cv::Cvtermprop")->create(
                 {
@@ -354,6 +363,29 @@ sub store {
 
     return { success => "Scale added successfully" };
 
+}
+
+sub delete {
+
+    my $self = shift;
+    my $schema = $self->bcs_schema();
+    my $cvterm_id = $self->cvterm_id();
+
+    $schema->resultset("Cv::Cvtermprop")->search(
+        {   cvterm_id => $cvterm_id,
+            type_id   => { -in =>
+                [
+                    $self->scale_format_id,
+                    $self->scale_decimal_places_id,
+                    $self->scale_categories_id,
+                    $self->scale_categories_label_id,
+                    $self->scale_categories_value_id,
+                    $self->scale_maximum_id,
+                    $self->scale_minimum_id
+                ]
+            }
+        }
+    )->delete;
 }
 
 1;
