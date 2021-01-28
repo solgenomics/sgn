@@ -14676,9 +14676,9 @@ sub _perform_drone_imagery_analytics {
         open(my $fh_grm_new, '>', $grm_rename_tempfile) or die "Could not open file '$grm_rename_tempfile' $!";
             print STDERR "Opened $grm_rename_tempfile\n";
 
-            foreach my $i (sort keys %grm_hash_ordered) {
+            foreach my $i (sort {$a <=> $b} keys %grm_hash_ordered) {
                 my $v = $grm_hash_ordered{$i};
-                foreach my $j (sort keys %$v) {
+                foreach my $j (sort {$a <=> $b} keys %$v) {
                     my $val = $v->{$j};
                     print $fh_grm_new "$i $j $val\n";
                 }
@@ -14895,9 +14895,9 @@ sub _perform_drone_imagery_analytics {
         open(my $fh_grm_new, '>', $grm_rename_tempfile) or die "Could not open file '$grm_rename_tempfile' $!";
             print STDERR "Opened $grm_rename_tempfile\n";
 
-            foreach my $i (sort keys %grm_hash_ordered) {
+            foreach my $i (sort {$a <=> $b} keys %grm_hash_ordered) {
                 my $v = $grm_hash_ordered{$i};
-                foreach my $j (sort keys %$v) {
+                foreach my $j (sort {$a <=> $b} keys %$v) {
                     my $val = $v->{$j};
                     print $fh_grm_new "$i $j $val\n";
                 }
