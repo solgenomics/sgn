@@ -169,7 +169,7 @@ sub pcr_genotyping_data_search_GET : Args(0) {
                     }
                 }
                 if (scalar @positive_bands == 0) {
-                    push @positive_bands, 'neg';
+                    push @positive_bands, '-';
                 }
                 my $pcr_result = join(",", sort @positive_bands);
                 push @each_genotype, $pcr_result ;

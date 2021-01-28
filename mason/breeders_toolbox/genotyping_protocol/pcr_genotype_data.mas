@@ -4,17 +4,18 @@ $marker_names => []
 
 </%args>
 
-<table id="pcr_protocol_genotype_data" width="100%" class="table table-hover table-striped">
-    <thead>
-        <tr>
-            <th>Sample Name</th>
+<div style="overflow:scroll">
+    <table id="pcr_protocol_genotype_data" width="100%" class="table table-hover table-striped">
+        <thead>
+            <tr>
+                <th>Sample Name</th>
 % foreach my $column_header(sort @$marker_names){
-            <th><%$column_header%></th>
+                <th><%$column_header%></th>
 %}
-        </tr>
-    </thead>
-</table>
-
+            </tr>
+        </thead>
+    </table>
+</div>
 
 <script>
 
