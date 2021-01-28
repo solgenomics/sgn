@@ -59,10 +59,14 @@ module.exports = {
     optimization: {
         minimize: true,
         namedChunks: true,
-        minimizer: [new UglifyWebpackPlugin({ 
+        minimizer: [new UglifyWebpackPlugin({
+            uglifyOptions: {
+                output: {
+                    ascii_only: true
+                },
+            },
             'sourceMap': true,
             'parallel': 4,
-            
         })],
         runtimeChunk: {
             name: 'runtime'
