@@ -57,7 +57,7 @@ The query will do an AND between keys and an OR between comma separated values f
 To return stockprop values in your result, use "stockprop_columns_view".
 stockprop_columns_view is a HashRef of the form for example:
 {
-    'country of orogin' => 1,
+    'country of origin' => 1,
     'ploidy_level' => 1
 }
 This example would include these keys in each resulting hashref for each stock that is returned.
@@ -86,6 +86,7 @@ use CXGN::Chado::Organism;
 use JSON;
 use utf8;
 use Encode;
+use List::MoreUtils qw | distinct |;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     is => 'rw',
@@ -202,6 +203,12 @@ has 'year_list' => (
     isa => 'ArrayRef[Str]|Undef',
     is => 'rw',
 );
+
+#has 'editable_stock_props' => (
+#    isa => 'ArrayRef|Undef',
+#    is => 'rw',
+#    default => sub { return []; },
+#);
 
 has 'stockprops_values' => (
     isa => 'HashRef|Undef',
@@ -651,8 +658,52 @@ ORDER BY organism_id ASC;";
         $result_hash{$stock_id}{subtaxaAuthority} = defined($organism_props{$organism_id}) ? $organism_props{$organism_id}->{'subtaxa authority'} : undef;
     }
 
-    if ($self->stockprop_columns_view && scalar(keys %{$self->stockprop_columns_view})>0 && scalar(@result_stock_ids)>0){
-        my @stockprop_view = keys %{$self->stockprop_columns_view};
+    my $errors = ""; # also return an error string
+    my $warnings = ""; # also return warnings
+    
+    # need to check whether stockprop_columns_view items already have associated data,
+    # otherwise refreshing the materialized view will fail.
+    #
+    print STDERR "StockProp Columns view: ". Dumper([ keys %{$self->stockprop_columns_view}]);
+
+    # exclude 'organization' key
+    my @final_stockprops;
+    my @test_stockprops;
+    my @stockprop_columns = keys %{$self->stockprop_columns_view};
+    foreach my $sc (@stockprop_columns) {
+	push @test_stockprops, $sc if ($sc ne 'organization');
+    }
+
+    print STDERR "Final stockprop = ".Dumper(\@test_stockprops);
+
+    my @valid_stockprops;
+    my @invalid_stockprops;
+    if (@test_stockprops) {
+	foreach my $fs (@test_stockprops) { 
+	    my $check_columns_view_rs = $self->bcs_schema()->resultset('Stock::Stockprop')->search( { 'type.name' =>  $fs }, { join => 'type' } );
+
+	    print STDERR "$fs has ".$check_columns_view_rs->count()." stock props in the db...\n";
+	    
+	    if ($check_columns_view_rs->count() == 0) {
+		push @invalid_stockprops, $fs;
+	    }
+	    else {
+		push @valid_stockprops, $fs;
+	    }
+
+	}
+
+	$warnings = "The following stockprop could not be found: ".join(",",@invalid_stockprops)."\n";
+
+	print STDERR "Generated warning: $warnings\n";
+
+    }
+    unshift @valid_stockprops, "organization";
+
+    my @stockprop_view = @valid_stockprops;
+   
+    if (@valid_stockprops && scalar(@valid_stockprops) >0 && scalar(@result_stock_ids)>0){
+        @stockprop_view = @valid_stockprops; #keys %{$self->stockprop_columns_view};
         my $result_stock_ids_sql = join ",", @result_stock_ids;
         my $stockprop_where = "WHERE stock_id IN ($result_stock_ids_sql)";
 
@@ -690,7 +741,7 @@ ORDER BY organism_id ASC;";
 
     #print STDERR Dumper \@result;
     print STDERR "CXGN::Stock::Search search end\n";
-    return (\@result, $records_total);
+    return (\@result, $records_total, $warnings, $errors, \@stockprop_view);
 }
 
 sub _refresh_materialized_stockprop {
@@ -698,6 +749,8 @@ sub _refresh_materialized_stockprop {
     my $stockprop_view = shift;
     my $schema = $self->bcs_schema;
 
+    print STDERR "Stockprop_view = ". Dumper($stockprop_view);
+    
     eval {
         my $stockprop_select_sql .= ', "' . join ('","', @$stockprop_view) . '"';
         my $stockprop_query = "SELECT stock_id $stockprop_select_sql FROM materialized_stockprop;";
@@ -707,7 +760,18 @@ sub _refresh_materialized_stockprop {
     if ($@) {
         my @stock_props = ('block', 'col_number', 'igd_synonym', 'is a control', 'location_code', 'organization', 'plant_index_number', 'subplot_index_number', 'tissue_sample_index_number', 'plot number', 'plot_geo_json', 'range', 'replicate', 'row_number', 'stock_synonym', 'T1', 'T2', 'variety',
         'notes', 'state', 'accession number', 'PUI', 'donor', 'donor institute', 'donor PUI', 'seed source', 'institute code', 'institute name', 'biological status of accession code', 'country of origin', 'type of germplasm storage code', 'entry number', 'acquisition date', 'current_count', 'current_weight_gram', 'crossing_metadata_json', 'ploidy_level', 'genome_structure',
-        'introgression_parent', 'introgression_backcross_parent', 'introgression_map_version', 'introgression_chromosome', 'introgression_start_position_bp', 'introgression_end_position_bp', 'is_blank', 'concentration', 'volume', 'extraction', 'dna_person', 'tissue_type', 'ncbi_taxonomy_id', 'seedlot_quality');
+			   'introgression_parent', 'introgression_backcross_parent', 'introgression_map_version', 'introgression_chromosome', 'introgression_start_position_bp', 'introgression_end_position_bp', 'is_blank', 'concentration', 'volume', 'extraction', 'dna_person', 'tissue_type', 'ncbi_taxonomy_id', 'seedlot_quality');
+
+	# these default stockprops need to be combined with the user editable stockprops
+	# that are specified in sgn_local.conf using the 'editable_stock_props' key
+	# and the list made unique
+	#
+	#my @combined_stockprops = (@stock_props, @{$self->editable_stock_props()});
+
+	#@stock_props = distinct(@combined_stockprops);
+
+	print STDERR "STOCK PROPS: ".Dumper(\@stock_props);
+	
         my %stockprop_check = map { $_ => 1 } @stock_props;
         my @additional_terms;
         foreach (@$stockprop_view) {

@@ -41,7 +41,6 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
     my $offset = $params->{start};
     my $limit = defined($offset) && defined($rows) ? ($offset+$rows)-1 : undef;
 
-    # my %stockprops_values;
     my $stockprops_values = $params->{editable_stockprop_values} ? decode_json $params->{editable_stockprop_values} : {};
 
     # print STDERR "Stockprops are: ".Dumper($stockprops_search);
@@ -60,6 +59,10 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
     #print STDERR Dumper $stockprop_columns_view;
     #print STDERR Dumper $stockprop_columns_view_array;
 
+    my $editable_stock_props_string = $c->config->{editable_stock_props};
+
+    my @editable_stock_props = split /\,/, $editable_stock_props_string;
+    
     my $stock_search = CXGN::Stock::Search->new({
         bcs_schema=>$schema,
         people_schema=>$people_schema,
@@ -77,6 +80,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
         breeding_program_id_list=>$params->{breeding_program} ? [$params->{breeding_program}] : undef,
         location_name_list=>$params->{location} ? [$params->{location}] : undef,
         year_list=>$params->{year} ? [$params->{year}] : undef,
+	#editable_stock_props =>  $editable_stock_props_string ? \@editable_stock_props  : [],
         stockprops_values=>$stockprops_values,
         stockprop_columns_view=>$stockprop_columns_view,
         limit=>$limit,
@@ -84,8 +88,10 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
         minimal_info=>$params->{minimal_info},
         display_pedigree=>0
     });
-    my ($result, $records_total) = $stock_search->search();
+    my ($result, $records_total, $warning, $error, $stockprop_view) = $stock_search->search();
 
+
+    
     my $draw = $params->{draw};
     if ($draw){
         $draw =~ s/\D//g; # cast to int
@@ -117,7 +123,8 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
             } else {
                 @return_row = ( "<a href=\"/stock/$stock_id/view\">$uniquename</a>", $type, $organism, $synonym_string, $owners_string );
             }
-            foreach my $property (@$stockprop_columns_view_array){
+            #foreach my $property (@$stockprop_columns_view_array){
+	    foreach my $property (@$stockprop_view) { 
                 push @return_row, $_->{$property};
             }
             push @return, \@return_row;
@@ -128,7 +135,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
     }
 
     #print STDERR Dumper \@return;
-    $c->stash->{rest} = { data => [ @return ], draw => $draw, recordsTotal => $records_total,  recordsFiltered => $records_total };
+    $c->stash->{rest} = { data => [ @return ], draw => $draw, recordsTotal => $records_total,  recordsFiltered => $records_total, error => $error, warning => $warning };
 }
 
 1;

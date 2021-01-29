@@ -467,9 +467,18 @@ jQuery(document).ready(function () {
                     jQuery('#stock_search_graphical_filter_div').html("[LOADING...]");
                 },
                 success: function(response){
-                    //console.log(response);
-                    jQuery("#working_modal").modal("hide");
-                    var stock_ids = [];
+						      //console.log(response);
+						      alert(JSON.stringify(response));
+         	      jQuery("#working_modal").modal("hide");
+		      if (response.error) {
+                        alert(error);
+         	        return;
+		      }
+
+         	      if (response.warning) {
+	                alert(warning);					      
+		      }
+        	     var stock_ids = [];
                     for (var i=0; i<response.data.length; i++){
                         stock_ids.push(response.data[i][0]);
                     }
