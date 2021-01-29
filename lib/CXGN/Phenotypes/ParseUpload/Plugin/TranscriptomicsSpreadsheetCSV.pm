@@ -70,7 +70,7 @@ sub validate {
 
     my $header_row = <$fh>;
     my @columns;
-    print STDERR Dumper $csv->fields();
+    # print STDERR Dumper $csv->fields();
     if ($csv->parse($header_row)) {
         @columns = $csv->fields();
     } else {
@@ -98,7 +98,7 @@ sub validate {
         push @samples, $sample_name;
 
         foreach (@fields) {
-            if (not $_=~/^[+]?\d+\.?\d*$/){
+            if (not $_=~/^[-+]?\d+\.?\d*$/){
                 $parse_result{'error'}= "It is not a real value for trancripts. Must be numeric: '$_'";
                 return \%parse_result;
             }
@@ -116,7 +116,7 @@ sub validate {
     }
 
     $header_row = <$fh>;
-    print STDERR Dumper $csv->fields();
+    # print STDERR Dumper $csv->fields();
     if ($csv->parse($header_row)) {
         @columns = $csv->fields();
     } else {
