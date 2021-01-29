@@ -794,7 +794,15 @@ sub get_sequence_metadata_protocols : Path('/ajax/html/select/sequence_metadata_
         my $props = decode_json $props_json;
         $html .= '<tr><td><input type="checkbox" name="'.$checkbox_name.'" value="'.$nd_protocol_id.'"></td><td>'.$name.'</td><td>'.$description.'</td><td>';
         while (my($k,$v) = each %$props) {
-            $html .= "$k: $v<br/>";
+            if (ref $v eq ref {}) {
+                $html .= "$k:<br />";
+                while (my($k2,$v2) = each %$v) {
+                    $html .= "&nbsp;&nbsp;$k2: $v2<br />";
+                }
+            }
+            else {
+                $html .= "$k: $v<br />";
+            }
         }
         $html .= '</td></tr>';
     }

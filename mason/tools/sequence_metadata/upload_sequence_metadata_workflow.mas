@@ -333,6 +333,8 @@ function complete_data_type_step() {
 
   // Set the existing protocol list
   get_select_box('sequence_metadata_protocols', 'sequence_metadata_upload_protocol_select', {'checkbox_name': 'sequence_metadata_upload_protocol_id', 'sequence_metadata_data_type_id': sequence_metadata_upload_type_id});
+  
+  // Set sequence metadata type value
   for ( let i = 0; i < sequence_metadata_data_types.length; i++ ) {
     if ( parseInt(sequence_metadata_data_types[i].id) === parseInt(sequence_metadata_upload_type_id) ) {
       jQuery('#sequence_metadata_upload_protocol_sequence_metadata_type:text').val(sequence_metadata_data_types[i].name);
@@ -480,26 +482,26 @@ function upload_and_verify() {
       if ( response && response.error ) {
         add_message("error", response.error);
       }
-      else if ( response && response.success ) {
-        if ( response.success.processed === 1 ) {
+      else if ( response && response.results ) {
+        if ( response.results.processed === 1 ) {
           add_message("success", "File successfully uploaded and processed");
         }
         else {
           add_message("error", "ERROR: File not successfully uploaded and processed!");
         }
         
-        if ( response.success.verified === 1 ) {
+        if ( response.results.verified === 1 ) {
           add_message("success", "File successfully verified");
         }
         else {
           add_message("error", "ERROR: File not successfully verfied!");
         }
 
-        if ( response.success.missing_features && response.success.missing_features.length > 0 ) {
+        if ( response.results.missing_features && response.results.missing_features.length > 0 ) {
           let msg = "ERROR: The following features do not exist in the database.  Contact us to have them added or change the feature names to match existing features.";
           msg += "<ul>";
-          for ( let i = 0; i < response.success.missing_features.length; i++ ) {
-            msg += "<li>" + response.success.missing_features[i] + "</li>";
+          for ( let i = 0; i < response.results.missing_features.length; i++ ) {
+            msg += "<li>" + response.results.missing_features[i] + "</li>";
           }
           msg += "</ul>";
           add_message("error", msg);
@@ -507,11 +509,11 @@ function upload_and_verify() {
       }
 
       // Enable the Store button if processed and verified
-      if ( response && response.success && response.success.processed && response.success.processed === 1 && response.success.verified && response.success.verified === 1 && response.success.processed_filepath ) {
+      if ( response && response.results && response.results.processed && response.results.processed === 1 && response.results.verified && response.results.verified === 1 && response.results.processed_filepath ) {
         jQuery('#sequence_metadata_upload_verify').attr('disabled', true);
         jQuery('#sequence_metadata_upload_store').attr('disabled', false);
         add_message("warning", "Verification Complete.  Next, click the <strong>Store</strong> button to save the data to the database.");
-        processed_filepath = response.success.processed_filepath;
+        processed_filepath = response.results.processed_filepath;
       }
 
     },
@@ -542,6 +544,7 @@ function store() {
   formData.append('use_existing_protocol', use_existing_protocol);
   if ( use_existing_protocol ) {
     formData.append('existing_protocol_id', jQuery('input[name="sequence_metadata_upload_protocol_id"]:checked').val());
+    formData.append('existing_protocol_sequence_metadata_type', jQuery('#sequence_metadata_upload_type_select option:selected').val());
   }
   else {
     formData.append('new_protocol_name', new_protocol_name);
@@ -575,8 +578,6 @@ function store() {
     },
     error: function() {
       jQuery('#working_msg').html("");
-      jQuery('#working_modal_progress').css('width', 0).attr('aria-valuenow', 0);
-      jQuery('#working_modal_progress_div').css('display', 'none');
       jQuery('#working_modal').modal("hide");
 
       alert("ERROR: Could not store sequence metadata due to server error!");
