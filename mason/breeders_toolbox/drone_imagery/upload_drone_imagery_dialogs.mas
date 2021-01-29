@@ -160,9 +160,9 @@
 
                         <div class="well">
                             <ul>
-                                <li>Raw images (unstitched) coming from your drone can be uploaded in a zip file. Maximum zipfile size is 2GB, but you can upload many zipfiles in the process.</li>
-                                <li>Or you can choose to upload orthomosaic images (PNG).</li>
-                                <li>Or you can upload any image and the single image can be for interpolated soil data, such as altitude or electrical conductance EC measurement s(CH1m, IH1m) from an EM38. </li>
+                                <li>You can choose to upload orthomosaic images (PNG).</li>
+                                <li>Or you can upload any image, for example, the single image can be for interpolated soil data, such as altitude or electrical conductance EC measurements (CH1m, IH1m) from an EM38. </li>
+                                <li>Or raw images (unstitched) coming from your drone can be uploaded in a zip file. Maximum zipfile size is 2GB, but you can upload many zipfiles in the process. To have OpenDroneMap stitch the images into orthophotmosaics, please name the zip file images.zip (e.g. images.zip/IMG001_1.tiff). OpenDroneMap can stitch MicaSense 5-spectra images.</li>
                             </ul>
                         </div>
                         <div class="well">
@@ -170,7 +170,7 @@
                                 <li>It is possible to upload regular RGB or Black and White photos.</li>
                                 <li>For multi-spectral cameras, it is possible to upload individual spectra orthomosaicphotos.</li>
                                 <li>It is possible to upload raster digital surface model (DSM) images to estimate plant heights/volumes.</li>
-                                <li>When uploading many separate bands of unstitched images, you will upload a single zipfile (.zip) which contains all images. In the zipfile each image is named following the template IMG_0001_1.tif, IMG_0001_2.tif, ..., IMG_0001_5.tif, ..., IMG_9999_5.tif. The final number represents the 5 bands coming from the camera, while the middle number is an index for the image capture. The middle number can be as many digits long as needed. The images should be in order in the zipfile. You will also need to upload a zipfile (.zip) containing the Micasense radiometrix calibration panel images, so that ImageBreed can produce the best result possible.</li>
+                                <li>When uploading many separate bands of unstitched images, you will upload a single zipfile (.zip) which contains all images. In the zipfile each image is named following the template IMG_0001_1.tif, IMG_0001_2.tif, ..., IMG_0001_5.tif, ..., IMG_9999_5.tif. The final number represents the 5 bands coming from the camera, while the middle number is an index for the image capture. The middle number can be as many digits long as needed. The images should be in order in the zipfile. You will also need to upload a zipfile (.zip) containing the Micasense radiometric calibration panel images, so that ImageBreed can produce the best result possible.</li>
                             </ul>
                         </div>
 
@@ -182,8 +182,8 @@
                                     <!-- option value="yes">Yes, I am uploading a zipfile of raw images to stitch</option -->
                                     <!-- option value="yes_automated">Yes, I am uploading a zipfile of raw images to automatically get plot images from</option -->
                                     <option value="no">No, I am uploading a stitched orthomosaic</option>
+                                    <option value="yes_open_data_map_stitch">Yes, I am uploading a zipfile of raw images to stitch using OpenDroneMap</option>
                                     <option value="yes_raw">Yes, I am uploading a zipfile of raw images</option>
-                                    <!--option value="yes_open_data_map_stitch">Yes, I am uploading a zipfile of raw images to stitch using OpenDataMap</option-->
                                 </select>
                             </div>
                         </div>

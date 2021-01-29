@@ -27,6 +27,7 @@ use URI::Encode qw(uri_encode uri_decode);
 use CXGN::Calendar;
 use Image::Size;
 use CXGN::DroneImagery::ImageTypes;
+use LWP::UserAgent;
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -1124,41 +1125,37 @@ sub upload_drone_imagery_POST : Args(0) {
         my @stitched_bands;
         my %raw_image_bands;
         if ($new_drone_run_camera_info eq 'micasense_5') {
-            my $upload_original_name_panel = $upload_panel_file->filename();
-            my $upload_tempfile_panel = $upload_panel_file->tempname;
-            $time = DateTime->now();
-            $timestamp = $time->ymd()."_".$time->hms();
-
-            my $uploader_panel = CXGN::UploadFile->new({
-                tempfile => $upload_tempfile_panel,
-                subdirectory => "drone_imagery_upload_panel",
-                archive_path => $c->config->{archive_path},
-                archive_filename => $upload_original_name_panel,
-                timestamp => $timestamp,
-                user_id => $user_id,
-                user_role => $user_role
-            });
-            my $archived_filename_with_path_panel = $uploader_panel->archive();
-            my $md5_panel = $uploader->get_md5($archived_filename_with_path_panel);
-            if (!$archived_filename_with_path_panel) {
-                $c->stash->{rest} = { error => "Could not save file $upload_original_name_panel in archive." };
-                $c->detach();
-            }
-            unlink $upload_tempfile_panel;
-            print STDERR "Archived Drone Image Panel File: $archived_filename_with_path_panel\n";
-
-            $image = SGN::Image->new( $c->dbc->dbh, undef, $c );
-            my $zipfile_return_panel = $image->upload_drone_imagery_zipfile($archived_filename_with_path_panel, $user_id, $selected_drone_run_id);
-            print STDERR Dumper $zipfile_return_panel;
-            if ($zipfile_return_panel->{error}) {
-                $c->stash->{rest} = { error => "Problem saving panel images!".$zipfile_return_panel->{error} };
-                $c->detach();
-            }
-            my $image_paths_panel = $zipfile_return_panel->{image_files};
-
-            $cmd = "docker run --rm -v $image_path_remaining:/datasets/code opendronemap/odm --project-path /$image_path_project_name";
-            print STDERR Dumper $cmd;
-            my $status = system($cmd);
+            # my $upload_original_name_panel = $upload_panel_file->filename();
+            # my $upload_tempfile_panel = $upload_panel_file->tempname;
+            # $time = DateTime->now();
+            # $timestamp = $time->ymd()."_".$time->hms();
+            # 
+            # my $uploader_panel = CXGN::UploadFile->new({
+            #     tempfile => $upload_tempfile_panel,
+            #     subdirectory => "drone_imagery_upload_panel",
+            #     archive_path => $c->config->{archive_path},
+            #     archive_filename => $upload_original_name_panel,
+            #     timestamp => $timestamp,
+            #     user_id => $user_id,
+            #     user_role => $user_role
+            # });
+            # my $archived_filename_with_path_panel = $uploader_panel->archive();
+            # my $md5_panel = $uploader->get_md5($archived_filename_with_path_panel);
+            # if (!$archived_filename_with_path_panel) {
+            #     $c->stash->{rest} = { error => "Could not save file $upload_original_name_panel in archive." };
+            #     $c->detach();
+            # }
+            # unlink $upload_tempfile_panel;
+            # print STDERR "Archived Drone Image Panel File: $archived_filename_with_path_panel\n";
+            # 
+            # $image = SGN::Image->new( $c->dbc->dbh, undef, $c );
+            # my $zipfile_return_panel = $image->upload_drone_imagery_zipfile($archived_filename_with_path_panel, $user_id, $selected_drone_run_id);
+            # print STDERR Dumper $zipfile_return_panel;
+            # if ($zipfile_return_panel->{error}) {
+            #     $c->stash->{rest} = { error => "Problem saving panel images!".$zipfile_return_panel->{error} };
+            #     $c->detach();
+            # }
+            # my $image_paths_panel = $zipfile_return_panel->{image_files};
 
             my $temp_file_raw_image_blue = $c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX').".png";
             my $temp_file_raw_image_green = $c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX').".png";
@@ -1166,15 +1163,25 @@ sub upload_drone_imagery_POST : Args(0) {
             my $temp_file_raw_image_nir = $c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX').".png";
             my $temp_file_raw_image_red_edge = $c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX').".png";
 
-            my $cmd_2 = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/ODMOpenImage.py --image_path '$image_path_remaining/$image_path_project_name/odm_orthophoto/odm_orthophoto_render.tif' --outfile_path_b1 '$temp_file_raw_image_blue' --outfile_path_b2 '$temp_file_raw_image_green' --outfile_path_b3 '$temp_file_raw_image_red' --outfile_path_b4 '$temp_file_raw_image_nir' --outfile_path_b5 '$temp_file_raw_image_red_edge' ";
-            system($cmd_2);
+            my $dtm_string = '';
+            my $ua       = LWP::UserAgent->new();
+            my $response = $ua->post( $c->config->{main_production_site_url}."/RunODMDocker.php", { 'file_path' => $image_path_remaining, 'dtm_string' => $dtm_string } );
+            my $content  = $response->decoded_content();
+
+            my $odm_b1 = "$image_path_remaining/odm_orthophoto/b1.png";
+            my $odm_b2 = "$image_path_remaining/odm_orthophoto/b2.png";
+            my $odm_b3 = "$image_path_remaining/odm_orthophoto/b3.png";
+            my $odm_b4 = "$image_path_remaining/odm_orthophoto/b4.png";
+            my $odm_b5 = "$image_path_remaining/odm_orthophoto/b5.png";
+            my $odm_cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/ODMOpenImage.py --image_path $image_path_remaining/odm_orthophoto/odm_orthophoto.tif --outfile_path_b1 $odm_b1 --outfile_path_b2 b2 $odm_b2 --outfile_path_b3 $odm_b3 --outfile_path_b4 $odm_b4 --outfile_path_b5 $odm_b5";
+            my $odm_status = system($odm_cmd);
 
             @stitched_bands = (
-                ["Band 1", "Blue", "Blue (450-520nm)", $temp_file_raw_image_blue],
-                ["Band 2", "Green", "Green (515-600nm)", $temp_file_raw_image_green],
-                ["Band 3", "Red", "Red (600-690nm)", $temp_file_raw_image_red],
-                ["Band 4", "NIR", "NIR (780-3000nm)", $temp_file_raw_image_nir],
-                ["Band 5", "RedEdge", "Red Edge (690-750nm)", $temp_file_raw_image_red_edge]
+                ["Band 1", "Blue", "Blue (450-520nm)", $odm_b1],
+                ["Band 2", "Green", "Green (515-600nm)", $odm_b2],
+                ["Band 3", "Red", "Red (600-690nm)", $odm_b3],
+                ["Band 4", "NIR", "NIR (780-3000nm)", $odm_b4],
+                ["Band 5", "RedEdge", "Red Edge (690-750nm)", $odm_b5]
             );
         }
         # elsif ($new_drone_run_camera_info eq 'ccd_color' || $new_drone_run_camera_info eq 'cmos_color') {
