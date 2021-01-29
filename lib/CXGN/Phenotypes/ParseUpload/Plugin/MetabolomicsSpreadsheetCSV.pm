@@ -92,7 +92,7 @@ sub validate {
         push @samples, $sample_name;
 
         foreach (@fields) {
-            if (not $_=~/^[+]?\d+\.?\d*$/){
+            if (not $_=~/^[-+]?\d+\.?\d*$/){
                 $parse_result{'error'}= "It is not a real value for metabolite. Must be numeric: '$_'";
                 return \%parse_result;
             }
