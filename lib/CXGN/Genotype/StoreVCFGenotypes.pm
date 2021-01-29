@@ -753,6 +753,8 @@ sub store_metadata {
     my $stock_type = $self->observation_unit_type_name;
     my $organism_id = $self->organism_id;
     my $observation_unit_uniquenames = $self->observation_unit_uniquenames;
+    my $genotyping_data_type = $self->genotyping_data_type;
+
     $dbh->do('SET search_path TO public,sgn');
 
     my $population_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'population', 'stock_type')->cvterm_id();
@@ -812,7 +814,11 @@ sub store_metadata {
         $project_id = $project->project_id();
         $project->create_projectprops( { $project_year_cvterm->name() => $opt_y } );
         $project->create_projectprops( { $self->genotyping_facility_cvterm()->name() => $genotype_facility } );
-        $project->create_projectprops( { $self->design_cvterm->name() => 'genotype_data_project' } );
+        if ($genotyping_data_type eq 'ssr') {
+            $project->create_projectprops( { $self->design_cvterm->name() => 'pcr_genotype_data_project' } );
+        } else {
+            $project->create_projectprops( { $self->design_cvterm->name() => 'genotype_data_project' } );
+        }
 
         my $t = CXGN::Trial->new({
             bcs_schema => $schema,

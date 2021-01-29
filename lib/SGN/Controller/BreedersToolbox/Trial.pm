@@ -158,7 +158,12 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         $c->stash->{management_factor_date} = $trial->get_management_factor_date;
         $c->stash->{template} = '/breeders_toolbox/management_factor.mas';
     }
-    elsif ($design_type eq "genotype_data_project"){
+    elsif (($design_type eq "genotype_data_project") || ($design_type eq "pcr_genotype_data_project")){
+        if ($design_type eq "pcr_genotype_data_project") {
+            $c->stash->{genotype_data_type} = 'pcr_genotype_project'
+        } else {
+            $c->stash->{genotype_data_type} = 'snp_genotype_project'
+        }
         $c->stash->{template} = '/breeders_toolbox/genotype_data_project.mas';
     }
     elsif ($design_type eq "drone_run"){
@@ -195,14 +200,14 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 }
 
 
-=head2 view_by_name 
+=head2 view_by_name
 
 Public Path: /breeders/trial/view_by_name/$name
 Path Params:
     name = trial unique name
 
 Search for the trial that matches the provided trial name.
-If 1 match is found, display the trial detail page.  Display an 
+If 1 match is found, display the trial detail page.  Display an
 error message if no matches are found.
 
 =cut
@@ -475,7 +480,7 @@ sub search_trial : Private {
     my ( $self, $c, $trial_query ) = @_;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $rs = $schema->resultset('Project::Project');
-    
+
     my $matches;
     my $count = 0;
 
@@ -501,7 +506,7 @@ sub search_trial : Private {
 
         my $schema = $c->dbic_schema("Bio::Chado::Schema");
         $c->stash->{schema} = $schema;
-        
+
         my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
         $c->stash->{trial} = $trial;
 

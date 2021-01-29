@@ -259,9 +259,11 @@ sub list {
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
     my $nd_protocol_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
+    my $pcr_marker_details_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pcr_marker_details', 'protocol_property')->cvterm_id();
+    my $pcr_marker_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pcr_marker_protocol', 'protocol_type')->cvterm_id();
 
     #push @where_clause, "nd_protocolprop.type_id = $vcf_map_details_cvterm_id";
-    push @where_clause, "nd_protocol.type_id = $nd_protocol_type_id";
+    push @where_clause, "nd_protocol.type_id IN ($nd_protocol_type_id, $pcr_marker_protocol_cvterm_id)";
     if ($protocol_list && scalar(@$protocol_list)>0) {
         my $protocol_sql = join ("," , @$protocol_list);
         push @where_clause, "nd_protocol.nd_protocol_id in ($protocol_sql)";
@@ -291,7 +293,7 @@ sub list {
     }
     my $where_clause = scalar(@where_clause) > 0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
 
-    my $q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, nd_protocol.create_date, nd_protocolprop.value, project.project_id, project.name, count(nd_protocol.nd_protocol_id) OVER() AS full_count
+    my $q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, nd_protocol.create_date, nd_protocolprop.value, project.project_id, project.name, count(nd_protocol.nd_protocol_id) OVER() AS full_count, nd_protocolprop.value->>'marker_type'
         FROM stock
         JOIN cvterm AS stock_cvterm ON(stock.type_id = stock_cvterm.cvterm_id)
         JOIN nd_experiment_stock USING(stock_id)
@@ -299,7 +301,7 @@ sub list {
         JOIN nd_experiment_protocol USING(nd_experiment_id)
         JOIN nd_experiment_project USING(nd_experiment_id)
         JOIN nd_protocol USING(nd_protocol_id)
-        LEFT JOIN nd_protocolprop ON(nd_protocolprop.nd_protocol_id = nd_protocol.nd_protocol_id AND nd_protocolprop.type_id=$vcf_map_details_cvterm_id)
+        LEFT JOIN nd_protocolprop ON(nd_protocolprop.nd_protocol_id = nd_protocol.nd_protocol_id AND nd_protocolprop.type_id IN (?,?))
         JOIN project USING(project_id)
         $where_clause
         GROUP BY (nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, nd_protocol.create_date, nd_protocolprop.value, project.project_id, project.name)
@@ -307,19 +309,25 @@ sub list {
         $limit_clause
         $offset_clause;";
 
-    print STDERR Dumper $q;
+    #print STDERR Dumper $q;
     my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute();
+    $h->execute($vcf_map_details_cvterm_id, $pcr_marker_details_cvterm_id);
 
     my @results;
-    while (my ($protocol_id, $protocol_name, $protocol_description, $create_date, $protocolprop_json, $project_id, $project_name, $sample_count) = $h->fetchrow_array()) {
+    while (my ($protocol_id, $protocol_name, $protocol_description, $create_date, $protocolprop_json, $project_id, $project_name, $sample_count, $marker_type) = $h->fetchrow_array()) {
         my $protocol = $protocolprop_json ? decode_json $protocolprop_json : {};
         my $marker_names = $protocol->{marker_names} || [];
         my $header_information_lines = $protocol->{header_information_lines} || [];
-        my $reference_genome_name = $protocol->{reference_genome_name} || 'Not set. Please reload these genotypes using new genotype format!';
         my $species_name = $protocol->{species_name} || 'Not set. Please reload these genotypes using new genotype format!';
         my $sample_observation_unit_type_name = $protocol->{sample_observation_unit_type_name} || 'Not set. Please reload these genotypes using new genotype format!';
+        my $reference_genome_name = $protocol->{reference_genome_name};
         $create_date = $create_date || 'Not set. Please reload these genotypes using new genotype format!';
+        if (!$marker_type) {
+            $marker_type = 'SNP';
+            if (!$reference_genome_name) {
+                $reference_genome_name = 'Not set. Please reload these genotypes using new genotype format!';
+            }
+        }
         push @results, {
             protocol_id => $protocol_id,
             protocol_name => $protocol_name,
@@ -333,10 +341,11 @@ sub list {
             project_id => $project_id,
             create_date => $create_date,
             observation_unit_count => $sample_count,
-            marker_count => scalar(@$marker_names)
+            marker_count => scalar(@$marker_names),
+            marker_type => $marker_type
         };
     }
-    #print STDERR Dumper \@results;
+    print STDERR "PROTOCOL LIST =".Dumper(\@results);
     return \@results;
 }
 
@@ -386,7 +395,7 @@ sub list_simple {
             marker_type => $marker_type
         };
     }
-    print STDERR "SIMPLE LIST =".Dumper \@results."\n";
+    #print STDERR "SIMPLE LIST =".Dumper \@results."\n";
     return \@results;
 }
 

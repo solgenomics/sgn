@@ -78,7 +78,7 @@ sub genotyping_protocol_search_GET : Args(0) {
             $_->{create_date}
           ];
     }
-    #print STDERR Dumper \@result;
+    #print STDERR "PROTOCOL LIST =".Dumper \@result."\n";
 
     $c->stash->{rest} = { data => \@result };
 }

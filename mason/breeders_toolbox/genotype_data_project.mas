@@ -42,6 +42,7 @@ $design_name => undef
 $phenotypes_fully_uploaded => undef
 $identifier_prefix => 'SGN'
 $genotyping_facility => undef
+$genotype_data_type => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>
