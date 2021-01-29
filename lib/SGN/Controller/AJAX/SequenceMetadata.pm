@@ -61,6 +61,13 @@ sub get_reference_genomes : Path('/ajax/sequence_metadata/reference_genomes') :A
 # PATH: POST /ajax/sequence_metadata/file_upload_verify
 # PARAMS:
 #   - file = upload file
+# RETURNS:
+#   - error = error message
+#   - results = verification results
+#       - processed_filepath = server filepath to processed file
+#       - processed = 1 if file successfully uploaded and processed / 0 if not
+#       - verified = 1 if file sucessfully verified / 0 if not
+#       - missing_features = list of seqid's not in the database as features
 #
 sub sequence_metadata_upload_verify : Path('/ajax/sequence_metadata/file_upload_verify') : ActionClass('REST') { }
 sub sequence_metadata_upload_verify_POST : Args(0) {
@@ -122,9 +129,7 @@ sub sequence_metadata_upload_verify_POST : Args(0) {
         }
 
         # Verification Results
-        $c->stash->{rest} = {
-            success => $verification_results
-        };
+        $c->stash->{rest} = { results => $verification_results };
     }
 }
 
@@ -163,8 +168,6 @@ sub sequence_metadata_store_POST : Args(0) {
         $c->stash->{rest} = {error => 'You must be logged in to do this!'};
         $c->detach();
     }
-    my $user_id = $c->user()->get_object()->get_sp_person_id();
-    my $user_name = $c->user()->get_object()->get_username();
     my $user_role = $c->user->get_object->get_user_type();
     if ( $user_role ne 'submitter' && $user_role ne 'curator' ) {
         $c->stash->{rest} = {error => 'You do not have permission in the database to do this! Please contact us.'};
@@ -259,8 +262,28 @@ sub sequence_metadata_store_POST : Args(0) {
         $type_id = $protocol_sequence_metadata_type_id;
     }
 
-    $c->stash->{rest} = {
-        success => "Yes",
-        error => ()
-    };
+    # Use existing protocol
+    else {
+        print STDERR "USE EXISTING PROTOCOL:\n";
+
+        $protocol_id = $c->req->param('existing_protocol_id');
+        $type_id = $c->req->param('existing_protocol_sequence_metadata_type');
+
+        if ( !defined $protocol_id || $protocol_id eq '' ) {
+            $c->stash->{rest} = {error => 'The existing protocol id must be defined!'};
+            $c->detach();
+        }
+        if ( !defined $type_id || $type_id eq '' ) {
+            $c->stash->{rest} = {error => 'The existing protocol sequence metadata type must be defined!'};
+            $c->detach();
+        }
+    }
+
+
+    # Run the store script
+    my $smd = CXGN::Genotype::SequenceMetadata->new(bcs_schema => $schema, type_id => $type_id, nd_protocol_id => $protocol_id);
+    my $store_results = $smd->store($processed_filepath);
+    
+
+    $c->stash->{rest} = { results => $store_results };
 }
