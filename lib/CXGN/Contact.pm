@@ -75,7 +75,7 @@ sub send_email {
 
     $body .= $request_info;
     print STDERR "$subject\n\n$body";
-    if ( $vhost_conf->get_conf('production_server') ) {
+    #if ( $vhost_conf->get_conf('production_server') ) {
         if ( $vhost_conf->get_conf('disable_emails') ) {
             print STDERR "CXGN::Contact: Configured as production server, but not configured to send emails; no email sent from $mailfrom to $mailto.\n";
         }
@@ -129,11 +129,11 @@ sub send_email {
               }
 
             }
-        }
-    }
-    else {
-        print STDERR "CXGN::Contact: Not configured as production server; no email sent from $mailfrom to $mailto.\n";
-    }
+       # }
+   # }
+    #else {
+     #   print STDERR "CXGN::Contact: Not configured as production server; no email sent from $mailfrom to $mailto.\n";
+    #}
 }
 
 
