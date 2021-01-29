@@ -1165,7 +1165,7 @@ sub upload_drone_imagery_POST : Args(0) {
 
             my $dtm_string = '';
             my $ua       = LWP::UserAgent->new();
-            my $response = $ua->get( $c->config->{main_production_site_url}."/RunODMDocker.php?file_path=$image_path_remaining&dtm_string=$dtm_string" );
+            my $response = $ua->post( $c->config->{main_production_site_url}."/RunODMDocker.php", { 'file_path' => $image_path_remaining, 'dtm_string' => $dtm_string } );
             my $content  = $response->decoded_content();
             print STDERR Dumper $content;
 
