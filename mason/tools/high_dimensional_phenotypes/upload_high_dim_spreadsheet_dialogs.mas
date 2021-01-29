@@ -170,8 +170,8 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                                 <label class="col-sm-3 control-label">Equipment Type: </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="high_dim_data_upload_metabolomics_equipment_type">
-                                        <option value="MS">MS</option>
                                         <option value="NMR">NMR</option>
+                                        <option value="MS">MS</option>
                                     </select>
                                 </div>
                             </div>
