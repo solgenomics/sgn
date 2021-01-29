@@ -172,18 +172,6 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Equipment Description: </label>
-                                <div class="col-sm-9" >
-                                    <input class="form-control" id="high_dim_data_upload_metabolomics_equipment_description" type="text" placeholder="e.g. ThermoFisher MS100 Electron Ionization TOF Negative Ion Mode">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-sm-3 control-label">Data Process Description: </label>
-                                <div class="col-sm-9" >
-                                    <textarea rows="10" class="form-control" id="high_dim_data_upload_metabolomics_data_process_description" placeholder="e.g. This describes mode, instrument settings, calibration procedure. Also, describes how the files from the LCMS machine were transformed into peak area. Finally, describes how metabolite annotations were assinged to peaks"></textarea>
-                                </div>
-                            </div>
-                            <div class="form-group">
                                 <label class="col-sm-3 control-label">Phenotype Type: </label>
                                 <div class="col-sm-9" >
                                     <input class="form-control" id="high_dim_data_upload_metabolomics_phenotype_type" type="text" placeholder="e.g. relative abundance, BLUP, drBLUP, concentration">
@@ -247,6 +235,21 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                                             <option value="both">Both</option>
                                         </select>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-horizontal">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Equipment Description: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="high_dim_data_upload_metabolomics_equipment_description" type="text" placeholder="e.g. ThermoFisher MS100 Electron Ionization TOF Negative Ion Mode">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Data Process Description: </label>
+                                <div class="col-sm-9" >
+                                    <textarea rows="10" class="form-control" id="high_dim_data_upload_metabolomics_data_process_description" placeholder="e.g. This describes mode, instrument settings, calibration procedure. Also, describes how the files from the LCMS machine were transformed into peak area. Finally, describes how metabolite annotations were assinged to peaks"></textarea>
                                 </div>
                             </div>
                         </div>
@@ -379,9 +382,6 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                                 <label class="col-sm-3 control-label">Data Level: </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="upload_metabolomics_spreadsheet_data_level" name="upload_metabolomics_spreadsheet_data_level">
-                                        <option value="plots">Plots</option>
-                                        <option value="plants">Plants</option>
-                                        <option value="subplots">Subplots</option>
                                         <option value="tissue_samples">Tissue Samples</option>
                                     </select>
                                 </div>
